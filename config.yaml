@@ -4081,6 +4081,12 @@ modules:
         expected_output:
           - CEntitySaveRestoreBlockHandler_vtable.{platform}.yaml
 
+      - name: find-CEntitySaveRestoreBlockHandler_PreSave
+        expected_output:
+          - CEntitySaveRestoreBlockHandler_PreSave.{platform}.yaml
+        expected_input:
+          - CEntitySaveRestoreBlockHandler_vtable.{platform}.yaml
+
       - name: find-CEntitySaveRestoreBlockHandler_SaveInternal
         expected_output:
           - CEntitySaveRestoreBlockHandler_SaveInternal.{platform}.yaml
@@ -4266,6 +4272,11 @@ modules:
 
       - name: CEntitySaveRestoreBlockHandler_vtable
         category: vtable
+
+      - name: CEntitySaveRestoreBlockHandler_PreSave
+        category: vfunc
+        alias:
+          - CEntitySaveRestoreBlockHandler::PreSave
 
       - name: CEntitySaveRestoreBlockHandler_SaveInternal
         category: func
