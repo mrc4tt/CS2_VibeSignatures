@@ -4133,6 +4133,12 @@ modules:
         expected_output:
           - CEntitySaveRestoreBlockHandler_DoRestoreEntity.{platform}.yaml
 
+      - name: find-CEntitySaveRestoreBlockHandler_RestoreEntity
+        expected_output:
+          - CEntitySaveRestoreBlockHandler_RestoreEntity.{platform}.yaml
+        expected_input:
+          - CEntitySaveRestoreBlockHandler_DoRestoreEntity.{platform}.yaml
+
       - name: find-CEntityInstance_Restore
         expected_output:
           - CEntityInstance_Restore.{platform}.yaml
@@ -4352,6 +4358,11 @@ modules:
         category: func
         alias:
           - CEntitySaveRestoreBlockHandler::DoRestoreEntity
+
+      - name: CEntitySaveRestoreBlockHandler_RestoreEntity
+        category: func
+        alias:
+          - CEntitySaveRestoreBlockHandler::RestoreEntity
 
       - name: CEntityInstance_ObjectCaps
         category: vfunc
