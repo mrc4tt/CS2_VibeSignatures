@@ -610,6 +610,30 @@ modules:
         expected_output:
           - CNetworkGameServerBase_ConnectClient.{platform}.yaml
 
+      - name: find-CNetworkGameServerBase_vtable
+        expected_output:
+          - CNetworkGameServerBase_vtable.{platform}.yaml
+
+      - name: find-CNetworkGameServerBase_ServerSimulate-windows
+        platform: windows
+        expected_output:
+          - CNetworkGameServerBase_ServerSimulate.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_vtable.{platform}.yaml
+
+      - name: find-CNetworkGameServerBase_ServerSimulateInternal-linux
+        platform: linux
+        expected_output:
+          - CNetworkGameServerBase_ServerSimulateInternal.{platform}.yaml
+
+      - name: find-CNetworkGameServerBase_ServerSimulate-linux
+        platform: linux
+        expected_output:
+          - CNetworkGameServerBase_ServerSimulate.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_ServerSimulateInternal.{platform}.yaml
+          - CNetworkGameServerBase_vtable.{platform}.yaml
+
       - name: find-CNetworkGameServer_GetFreeClient
         expected_output:
           - CNetworkGameServer_GetFreeClient.{platform}.yaml
@@ -1033,6 +1057,19 @@ modules:
         category: func
         alias:
           - CNetworkGameServerBase::ConnectClient
+
+      - name: CNetworkGameServerBase_vtable
+        category: vtable
+
+      - name: CNetworkGameServerBase_ServerSimulateInternal
+        category: func
+        alias:
+          - CNetworkGameServerBase::ServerSimulateInternal
+
+      - name: CNetworkGameServerBase_ServerSimulate
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::ServerSimulate
 
       - name: CNetworkGameServer_GetFreeClient
         category: func
