@@ -181,6 +181,9 @@ downloads:
             depotdir="cs2_depot",
             app="730",
             os="all-platform",
+            username=None,
+            password=None,
+            remember_password=False,
         )
         fake_entry = {
             "tag": "alpha",
