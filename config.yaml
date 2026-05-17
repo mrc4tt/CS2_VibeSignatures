@@ -2609,6 +2609,111 @@ modules:
         expected_output:
           - CBaseModelEntity_SetRenderAttribute.{platform}.yaml
 
+      - name: find-CBaseEntity_GetScriptDescInternal
+        expected_output:
+          - CBaseEntity_GetScriptDescInternal.{platform}.yaml
+
+      - name: find-CBaseEntity_RegisteredScriptFuncs
+        expected_output:
+          - CBaseEntity_ScriptInputKill.{platform}.yaml
+          - CBaseEntity_ScriptGetForward.{platform}.yaml
+          - CBaseEntity_ScriptGetRight.{platform}.yaml
+          - CBaseEntity_ScriptGetLeft.{platform}.yaml
+          - CBaseEntity_ScriptGetUp.{platform}.yaml
+          - CBaseEntity_ScriptGetModelName.{platform}.yaml
+          - CBaseEntity_ScriptGetMoveParent.{platform}.yaml
+          - CBaseEntity_ScriptGetRootMoveParent.{platform}.yaml
+          - CBaseEntity_ScriptFirstMoveChild.{platform}.yaml
+          - CBaseEntity_ScriptNextMovePeer.{platform}.yaml
+          - CBaseEntity_ScriptGetOwnerEntity.{platform}.yaml
+          - CBaseEntity_Script_GetChildren.{platform}.yaml
+          - CBaseEntity_ScriptSetParent.{platform}.yaml
+          - CBaseEntity_ScriptEyePosition.{platform}.yaml
+          - CBaseEntity_ScriptSetAngles.{platform}.yaml
+          - CBaseEntity_ScriptSetAbsAngles.{platform}.yaml
+          - CBaseEntity_ScriptGetAngles.{platform}.yaml
+          - CBaseEntity_ScriptEyeAngles.{platform}.yaml
+          - CBaseEntity_ScriptSetOrigin.{platform}.yaml
+          - CBaseEntity_ScriptSetLocalAngles.{platform}.yaml
+          - CBaseEntity_ScriptGetLocalAngles.{platform}.yaml
+          - CBaseEntity_ScriptSetLocalOrigin.{platform}.yaml
+          - CBaseEntity_ScriptGetLocalOrigin.{platform}.yaml
+          - CBaseEntity_ScriptTransformPointEntityToWorld.{platform}.yaml
+          - CBaseEntity_ScriptTransformPointWorldToEntity.{platform}.yaml
+          - CBaseEntity_ScriptSetForward.{platform}.yaml
+          - CBaseEntity_ScriptGetBoundingMins.{platform}.yaml
+          - CBaseEntity_ScriptGetBoundingMaxs.{platform}.yaml
+          - CBaseEntity_ScriptGetBounds.{platform}.yaml
+          - CBaseEntity_ScriptGetLocalAngularVelocity_OBSOLETE.{platform}.yaml
+          - CBaseEntity_ScriptSetLocalAngularVelocity_OBSOLETE.{platform}.yaml
+          - CBaseEntity_ScriptAddEffects.{platform}.yaml
+          - CBaseEntity_ScriptRemoveEffects.{platform}.yaml
+          - CBaseEntity_ScriptSetAttributeFloatValue.{platform}.yaml
+          - CBaseEntity_ScriptGetAttributeFloatValue.{platform}.yaml
+          - CBaseEntity_ScriptSetAttributeIntValue.{platform}.yaml
+          - CBaseEntity_ScriptGetAttributeIntValue.{platform}.yaml
+          - CBaseEntity_ScriptHasAttribute.{platform}.yaml
+          - CBaseEntity_ScriptDeleteAttribute.{platform}.yaml
+          - CBaseEntity_GetScriptOwnerEntity.{platform}.yaml
+          - CBaseEntity_SetScriptOwnerEntity.{platform}.yaml
+          - CBaseEntity_ScriptSetEntityName.{platform}.yaml
+          - CBaseEntity_ScriptGetMass.{platform}.yaml
+          - CBaseEntity_ScriptSetMass.{platform}.yaml
+          - CBaseEntity_ScriptGetSpawnGroupHandle.{platform}.yaml
+          - CBaseEntity_GetAbsAngles.{platform}.yaml
+          - CBaseEntity_Script_GetTeamNumber.{platform}.yaml
+          - CBaseEntity_Script_FollowEntity.{platform}.yaml
+          - CBaseEntity_Script_FollowEntityMerge.{platform}.yaml
+          - CBaseEntity_Script_Trigger.{platform}.yaml
+          - CBaseEntity_Script_SetContextThink.{platform}.yaml
+          - CBaseEntity_AddContextForScript.{platform}.yaml
+          - CBaseEntity_AddContextForScriptNumeric.{platform}.yaml
+          - CBaseEntity_GetContextForScript.{platform}.yaml
+          - CBaseEntity_ScriptGatherCriteria.{platform}.yaml
+          - CBaseEntity_Script_TakeDamage.{platform}.yaml
+          - CBaseEntity_SetGravityScale.{platform}.yaml
+          - CBaseEntity_SetAbsVelocity.{platform}.yaml
+          - CBaseEntity_GetAbsVelocity.{platform}.yaml
+          - CBaseEntity_Script_ApplyLocalAngularVelocityImpulse.{platform}.yaml
+          - CBaseEntity_GetLocalAngularVelocity_OBSOLETE.{platform}.yaml
+          - CBaseEntity_ScriptEmitSoundParams.{platform}.yaml
+          - CBaseEntity_ScriptStopSound.{platform}.yaml
+          - CBaseEntity_ScriptSoundDuration.{platform}.yaml
+          - CBaseEntity_ScriptGetAbsOrigin.{platform}.yaml
+        expected_input:
+          - CBaseEntity_GetScriptDescInternal.{platform}.yaml
+
+      - name: find-CBaseModelEntity_GetScriptDescInternal
+        expected_output:
+          - CBaseModelEntity_GetScriptDescInternal.{platform}.yaml
+
+      - name: find-CBaseModelEntity_RegisteredScriptFuncs
+        expected_output:
+          - CBaseModelEntity_GetModelScale.{platform}.yaml
+          - CBaseModelEntity_Script_SetModelScale.{platform}.yaml
+          - CBaseModelEntity_ScriptLookupAttachment.{platform}.yaml
+          - CBaseModelEntity_ScriptGetAttachmentOrigin.{platform}.yaml
+          - CBaseModelEntity_ScriptGetAttachmentAngles.{platform}.yaml
+          - CBaseModelEntity_ScriptGetAttachmentForward.{platform}.yaml
+          - CBaseModelEntity_ScriptSetSize.{platform}.yaml
+          - CBaseModelEntity_ScriptSetModel.{platform}.yaml
+          - CBaseModelEntity_ScriptGetRenderAlpha.{platform}.yaml
+          - CBaseModelEntity_ScriptSetRenderAlpha.{platform}.yaml
+          - CBaseModelEntity_ScriptSetRenderMode.{platform}.yaml
+          - CBaseModelEntity_ScriptSetRenderColor.{platform}.yaml
+          - CBaseModelEntity_ScriptGetRenderColor.{platform}.yaml
+          - CBaseModelEntity_ScriptSetMaterialGroup.{platform}.yaml
+          - CBaseModelEntity_ScriptSetMaterialGroupHash.{platform}.yaml
+          - CBaseModelEntity_ScriptGetMaterialGroupHash.{platform}.yaml
+          - CBaseModelEntity_ScriptSetSingleMeshGroup.{platform}.yaml
+          - CBaseModelEntity_ScriptSetMeshGroupMask.{platform}.yaml
+          - CBaseModelEntity_ScriptGetMeshGroupMask.{platform}.yaml
+          - CBaseModelEntity_ScriptSetBodygroupByName.{platform}.yaml
+          - CBaseModelEntity_Script_SetBodygroup.{platform}.yaml
+          - CBaseModelEntity_Script_SetSkin.{platform}.yaml
+        expected_input:
+          - CBaseModelEntity_GetScriptDescInternal.{platform}.yaml
+
       - name: find-CEntityInstance_NetworkUpdateState_thunk
         expected_output:
           - CEntityInstance_NetworkUpdateState_thunk.{platform}.yaml
@@ -2917,9 +3022,9 @@ modules:
         expected_input:
           - CCSPlayerPawn_vtable.{platform}.yaml
 
-      - name: find-CCSPlayerPawn_OnItemEquip
+      - name: find-CCSPlayerPawn_OnSwitchWeapons
         expected_output:
-          - CCSPlayerPawn_OnItemEquip.{platform}.yaml
+          - CCSPlayerPawn_OnSwitchWeapons.{platform}.yaml
 
       - name: find-CCSPlayerPawn_ProcessSuicideAsKillReward
         expected_output:
@@ -3269,7 +3374,7 @@ modules:
         expected_output:
           - CCSPlayer_WeaponServices_SelectItem.{platform}.yaml
         expected_input:
-          - CCSPlayerPawn_OnItemEquip.{platform}.yaml
+          - CCSPlayerPawn_OnSwitchWeapons.{platform}.yaml
           - CCSPlayer_WeaponServices_vtable.{platform}.yaml
 
       - name: find-NetworkStateChanged
@@ -3340,6 +3445,39 @@ modules:
         expected_output:
           - WeaponBuy.{platform}.yaml
 
+      - name: find-CCSWeaponBase_ItemPostFrame_ProcessReloadAction
+        expected_output:
+          - CCSWeaponBase_ItemPostFrame_ProcessReloadAction.{platform}.yaml
+
+      - name: find-CCSPlayer_WeaponServices_HandleDropWeapon
+        expected_output:
+          - CCSPlayer_WeaponServices_HandleDropWeapon.{platform}.yaml
+
+      - name: find-CCSPlayer_UseServices_BumpWeapon
+        expected_output:
+          - CCSPlayer_UseServices_BumpWeapon.{platform}.yaml
+
+      - name: find-CCSPlayerPawn_HandleDropWeapon
+        expected_output:
+          - CCSPlayerPawn_HandleDropWeapon.{platform}.yaml
+        expected_input:
+          - CCSPlayer_WeaponServices_HandleDropWeapon.{platform}.yaml
+          - CCSPlayer_UseServices_BumpWeapon.{platform}.yaml
+
+      - name: find-CCSPlayerPawn_ClientCommand
+        expected_output:
+          - CCSPlayerPawn_ClientCommand.{platform}.yaml
+        expected_input:
+          - CCSPlayerPawn_vtable.{platform}.yaml
+
+      - name: find-CCSPlayerController_HandleCommandDrop
+        expected_output:
+          - CCSPlayerController_HandleCommandDrop.{platform}.yaml
+        expected_input:
+          - CCSPlayerPawn_HandleDropWeapon.{platform}.yaml
+          - CBasePlayerController_GetPawn.{platform}.yaml
+          - CCSPlayer_WeaponServices_HandleDropWeapon.{platform}.yaml
+
       - name: find-IGameSystem_InitAllSystems
         expected_output:
           - IGameSystem_InitAllSystems.{platform}.yaml
@@ -3386,10 +3524,6 @@ modules:
         expected_input:
           - CBaseEntity_vtable.{platform}.yaml
           - CEntityInstance_Precache.{platform}.yaml
-
-      - name: find-CBaseEntity_EmitSoundParams
-        expected_output:
-          - CBaseEntity_EmitSoundParams.{platform}.yaml
 
       - name: find-CEnvShake_Spawn
         expected_output:
@@ -4973,6 +5107,126 @@ modules:
         alias:
           - CBaseModelEntity::SetRenderAttribute
 
+      - name: CBaseEntity_GetScriptDescInternal
+        category: func
+        alias:
+          - CBaseEntity::GetScriptDescInternal
+
+      - name: CBaseModelEntity_GetScriptDescInternal
+        category: func
+        alias:
+          - CBaseModelEntity::GetScriptDescInternal
+
+      - name: CBaseModelEntity_GetModelScale
+        category: func
+        alias:
+          - CBaseModelEntity::GetModelScale
+
+      - name: CBaseModelEntity_Script_SetModelScale
+        category: func
+        alias:
+          - CBaseModelEntity::Script_SetModelScale
+
+      - name: CBaseModelEntity_ScriptLookupAttachment
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptLookupAttachment
+
+      - name: CBaseModelEntity_ScriptGetAttachmentOrigin
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptGetAttachmentOrigin
+
+      - name: CBaseModelEntity_ScriptGetAttachmentAngles
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptGetAttachmentAngles
+
+      - name: CBaseModelEntity_ScriptGetAttachmentForward
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptGetAttachmentForward
+
+      - name: CBaseModelEntity_ScriptSetSize
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptSetSize
+
+      - name: CBaseModelEntity_ScriptSetModel
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptSetModel
+
+      - name: CBaseModelEntity_ScriptGetRenderAlpha
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptGetRenderAlpha
+
+      - name: CBaseModelEntity_ScriptSetRenderAlpha
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptSetRenderAlpha
+
+      - name: CBaseModelEntity_ScriptSetRenderMode
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptSetRenderMode
+
+      - name: CBaseModelEntity_ScriptSetRenderColor
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptSetRenderColor
+
+      - name: CBaseModelEntity_ScriptGetRenderColor
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptGetRenderColor
+
+      - name: CBaseModelEntity_ScriptSetMaterialGroup
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptSetMaterialGroup
+
+      - name: CBaseModelEntity_ScriptSetMaterialGroupHash
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptSetMaterialGroupHash
+
+      - name: CBaseModelEntity_ScriptGetMaterialGroupHash
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptGetMaterialGroupHash
+
+      - name: CBaseModelEntity_ScriptSetSingleMeshGroup
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptSetSingleMeshGroup
+
+      - name: CBaseModelEntity_ScriptSetMeshGroupMask
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptSetMeshGroupMask
+
+      - name: CBaseModelEntity_ScriptGetMeshGroupMask
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptGetMeshGroupMask
+
+      - name: CBaseModelEntity_ScriptSetBodygroupByName
+        category: func
+        alias:
+          - CBaseModelEntity::ScriptSetBodygroupByName
+
+      - name: CBaseModelEntity_Script_SetBodygroup
+        category: func
+        alias:
+          - CBaseModelEntity::Script_SetBodygroup
+
+      - name: CBaseModelEntity_Script_SetSkin
+        category: func
+        alias:
+          - CBaseModelEntity::Script_SetSkin
+
       - name: CEntityInstance_NetworkUpdateState_thunk
         category: func
         alias:
@@ -5304,10 +5558,10 @@ modules:
           - CCSPlayerPawn_PostThink
           - PostThink
 
-      - name: CCSPlayerPawn_OnItemEquip
+      - name: CCSPlayerPawn_OnSwitchWeapons
         category: func
         alias:
-          - CCSPlayerPawn::OnItemEquip
+          - CCSPlayerPawn::OnSwitchWeapons
 
       - name: CCSPlayerPawn_ProcessSuicideAsKillReward
         category: func
@@ -5618,6 +5872,36 @@ modules:
       - name: WeaponBuy
         category: func
 
+      - name: CCSWeaponBase_ItemPostFrame_ProcessReloadAction
+        category: func
+        alias:
+          - CCSWeaponBase::ItemPostFrame::ProcessReloadAction
+
+      - name: CCSPlayer_WeaponServices_HandleDropWeapon
+        category: func
+        alias:
+          - CCSPlayer_WeaponServices::HandleDropWeapon
+
+      - name: CCSPlayer_UseServices_BumpWeapon
+        category: func
+        alias:
+          - CCSPlayer_UseServices::BumpWeapon
+
+      - name: CCSPlayerPawn_HandleDropWeapon
+        category: func
+        alias:
+          - CCSPlayerPawn::HandleDropWeapon
+
+      - name: CCSPlayerPawn_ClientCommand
+        category: vfunc
+        alias:
+          - CCSPlayerPawn::ClientCommand
+
+      - name: CCSPlayerController_HandleCommandDrop
+        category: func
+        alias:
+          - CCSPlayerController::HandleCommandDrop
+
       - name: IGameSystem_InitAllSystems
         category: func
         alias:
@@ -5659,10 +5943,332 @@ modules:
         alias:
           - CBaseEntity::EmitSoundFilter
 
-      - name: CBaseEntity_EmitSoundParams
+      - name: CBaseEntity_ScriptInputKill
         category: func
         alias:
+          - CBaseEntity::ScriptInputKill
+
+      - name: CBaseEntity_ScriptGetForward
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetForward
+
+      - name: CBaseEntity_ScriptGetRight
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetRight
+
+      - name: CBaseEntity_ScriptGetLeft
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetLeft
+
+      - name: CBaseEntity_ScriptGetUp
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetUp
+
+      - name: CBaseEntity_ScriptGetModelName
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetModelName
+
+      - name: CBaseEntity_ScriptGetMoveParent
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetMoveParent
+
+      - name: CBaseEntity_ScriptGetRootMoveParent
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetRootMoveParent
+
+      - name: CBaseEntity_ScriptFirstMoveChild
+        category: func
+        alias:
+          - CBaseEntity::ScriptFirstMoveChild
+
+      - name: CBaseEntity_ScriptNextMovePeer
+        category: func
+        alias:
+          - CBaseEntity::ScriptNextMovePeer
+
+      - name: CBaseEntity_ScriptGetOwnerEntity
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetOwnerEntity
+
+      - name: CBaseEntity_Script_GetChildren
+        category: func
+        alias:
+          - CBaseEntity::Script_GetChildren
+
+      - name: CBaseEntity_ScriptSetParent
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetParent
+
+      - name: CBaseEntity_ScriptEyePosition
+        category: func
+        alias:
+          - CBaseEntity::ScriptEyePosition
+
+      - name: CBaseEntity_ScriptSetAngles
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetAngles
+
+      - name: CBaseEntity_ScriptSetAbsAngles
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetAbsAngles
+
+      - name: CBaseEntity_ScriptGetAngles
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetAngles
+
+      - name: CBaseEntity_ScriptEyeAngles
+        category: func
+        alias:
+          - CBaseEntity::ScriptEyeAngles
+
+      - name: CBaseEntity_ScriptSetOrigin
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetOrigin
+
+      - name: CBaseEntity_ScriptSetLocalAngles
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetLocalAngles
+
+      - name: CBaseEntity_ScriptGetLocalAngles
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetLocalAngles
+
+      - name: CBaseEntity_ScriptSetLocalOrigin
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetLocalOrigin
+
+      - name: CBaseEntity_ScriptGetLocalOrigin
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetLocalOrigin
+
+      - name: CBaseEntity_ScriptTransformPointEntityToWorld
+        category: func
+        alias:
+          - CBaseEntity::ScriptTransformPointEntityToWorld
+
+      - name: CBaseEntity_ScriptTransformPointWorldToEntity
+        category: func
+        alias:
+          - CBaseEntity::ScriptTransformPointWorldToEntity
+
+      - name: CBaseEntity_ScriptSetForward
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetForward
+
+      - name: CBaseEntity_ScriptGetBoundingMins
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetBoundingMins
+
+      - name: CBaseEntity_ScriptGetBoundingMaxs
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetBoundingMaxs
+
+      - name: CBaseEntity_ScriptGetBounds
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetBounds
+
+      - name: CBaseEntity_ScriptGetLocalAngularVelocity_OBSOLETE
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetLocalAngularVelocity_OBSOLETE
+
+      - name: CBaseEntity_ScriptSetLocalAngularVelocity_OBSOLETE
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetLocalAngularVelocity_OBSOLETE
+
+      - name: CBaseEntity_ScriptAddEffects
+        category: func
+        alias:
+          - CBaseEntity::ScriptAddEffects
+
+      - name: CBaseEntity_ScriptRemoveEffects
+        category: func
+        alias:
+          - CBaseEntity::ScriptRemoveEffects
+
+      - name: CBaseEntity_ScriptSetAttributeFloatValue
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetAttributeFloatValue
+
+      - name: CBaseEntity_ScriptGetAttributeFloatValue
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetAttributeFloatValue
+
+      - name: CBaseEntity_ScriptSetAttributeIntValue
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetAttributeIntValue
+
+      - name: CBaseEntity_ScriptGetAttributeIntValue
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetAttributeIntValue
+
+      - name: CBaseEntity_ScriptHasAttribute
+        category: func
+        alias:
+          - CBaseEntity::ScriptHasAttribute
+
+      - name: CBaseEntity_ScriptDeleteAttribute
+        category: func
+        alias:
+          - CBaseEntity::ScriptDeleteAttribute
+
+      - name: CBaseEntity_GetScriptOwnerEntity
+        category: func
+        alias:
+          - CBaseEntity::GetScriptOwnerEntity
+
+      - name: CBaseEntity_SetScriptOwnerEntity
+        category: func
+        alias:
+          - CBaseEntity::SetScriptOwnerEntity
+
+      - name: CBaseEntity_ScriptSetEntityName
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetEntityName
+
+      - name: CBaseEntity_ScriptGetMass
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetMass
+
+      - name: CBaseEntity_ScriptSetMass
+        category: func
+        alias:
+          - CBaseEntity::ScriptSetMass
+
+      - name: CBaseEntity_ScriptGetSpawnGroupHandle
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetSpawnGroupHandle
+
+      - name: CBaseEntity_GetAbsAngles
+        category: func
+        alias:
+          - CBaseEntity::GetAbsAngles
+
+      - name: CBaseEntity_Script_GetTeamNumber
+        category: func
+        alias:
+          - CBaseEntity::Script_GetTeamNumber
+
+      - name: CBaseEntity_Script_FollowEntity
+        category: func
+        alias:
+          - CBaseEntity::Script_FollowEntity
+
+      - name: CBaseEntity_Script_FollowEntityMerge
+        category: func
+        alias:
+          - CBaseEntity::Script_FollowEntityMerge
+
+      - name: CBaseEntity_Script_Trigger
+        category: func
+        alias:
+          - CBaseEntity::Script_Trigger
+
+      - name: CBaseEntity_Script_SetContextThink
+        category: func
+        alias:
+          - CBaseEntity::Script_SetContextThink
+
+      - name: CBaseEntity_AddContextForScript
+        category: func
+        alias:
+          - CBaseEntity::AddContextForScript
+
+      - name: CBaseEntity_AddContextForScriptNumeric
+        category: func
+        alias:
+          - CBaseEntity::AddContextForScriptNumeric
+
+      - name: CBaseEntity_GetContextForScript
+        category: func
+        alias:
+          - CBaseEntity::GetContextForScript
+
+      - name: CBaseEntity_ScriptGatherCriteria
+        category: func
+        alias:
+          - CBaseEntity::ScriptGatherCriteria
+
+      - name: CBaseEntity_Script_TakeDamage
+        category: func
+        alias:
+          - CBaseEntity::Script_TakeDamage
+
+      - name: CBaseEntity_SetGravityScale
+        category: func
+        alias:
+          - CBaseEntity::SetGravityScale
+
+      - name: CBaseEntity_SetAbsVelocity
+        category: func
+        alias:
+          - CBaseEntity::SetAbsVelocity
+
+      - name: CBaseEntity_GetAbsVelocity
+        category: func
+        alias:
+          - CBaseEntity::GetAbsVelocity
+
+      - name: CBaseEntity_Script_ApplyLocalAngularVelocityImpulse
+        category: func
+        alias:
+          - CBaseEntity::Script_ApplyLocalAngularVelocityImpulse
+
+      - name: CBaseEntity_GetLocalAngularVelocity_OBSOLETE
+        category: func
+        alias:
+          - CBaseEntity::GetLocalAngularVelocity_OBSOLETE
+
+      - name: CBaseEntity_ScriptEmitSoundParams
+        category: func
+        alias:
+          - CBaseEntity::ScriptEmitSoundParams
           - CBaseEntity::EmitSoundParams
+          - CBaseEntity_EmitSoundParams
+
+      - name: CBaseEntity_ScriptStopSound
+        category: func
+        alias:
+          - CBaseEntity::ScriptStopSound
+
+      - name: CBaseEntity_ScriptSoundDuration
+        category: func
+        alias:
+          - CBaseEntity::ScriptSoundDuration
+
+      - name: CBaseEntity_ScriptGetAbsOrigin
+        category: func
+        alias:
+          - CBaseEntity::ScriptGetAbsOrigin
 
       - name: CBaseEntity_Precache
         category: vfunc

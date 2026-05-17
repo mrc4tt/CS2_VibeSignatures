@@ -37,6 +37,14 @@ uv run copy_depot_bin.py -gamever 14156 -platform all-platform -checkonly
 
 Use `-checkonly` in CI or preflight scripts when you only need to know whether all expected target binaries already exist under `bin/<gamever>/...`. In this mode the script only checks target paths, does not require a populated `cs2_depot`, returns `0` when all expected binaries are ready, `1` when any target is missing, and `2` for configuration or argument errors.
 
+The scheduled `Bump Download` GitHub Actions workflow keeps this download list fresh. It runs `bump_download.py` against the CS2 default branch, appends a new `download.yaml` entry only when the discovered `PatchVersion` and depot manifests require it, creates the matching local commit/tag, and pushes them from the workflow. For a local preview without writing git state, run:
+
+```bash
+uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
+```
+
+If DepotDownloader needs authentication, add the same `-username`, `-password`, and `-remember-password` flags used by the workflow.
+
 ### 2. Find and generate signatures for all symbols declared in `config.yaml`
 
  ```bash

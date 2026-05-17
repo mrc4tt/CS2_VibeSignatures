@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CCSPlayerPawn_OnItemEquip skill."""
+"""Preprocess script for find-CBaseModelEntity_GetScriptDescInternal skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CCSPlayerPawn_OnItemEquip",
+    "CBaseModelEntity_GetScriptDescInternal",
 ]
 
 FUNC_XREFS = [
     {
-        "func_name": "CCSPlayerPawn_OnItemEquip",
+        "func_name": "CBaseModelEntity_GetScriptDescInternal",
         "xref_strings": [
-            "FULLMATCH:item_equip",
-            "FULLMATCH:userid",
-            "FULLMATCH:canzoom",
+            "Set scale of entity's model.",
         ],
         "xref_gvs": [],
         "xref_signatures": [],
@@ -28,10 +26,11 @@ FUNC_XREFS = [
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CCSPlayerPawn_OnItemEquip",
+        "CBaseModelEntity_GetScriptDescInternal",
         [
             "func_name",
             "func_sig",
+            "func_sig_allow_across_function_boundary:true",
             "func_va",
             "func_rva",
             "func_size",
