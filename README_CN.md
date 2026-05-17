@@ -39,6 +39,14 @@ uv run copy_depot_bin.py -gamever 14146 -platform all-platform -checkonly
 
 当只需要确认 `bin/<gamever>/...` 下的目标二进制是否已经齐全时，可在 CI 或预检查脚本中使用 `-checkonly`。该模式只检查目标路径，不要求 `cs2_depot` 已准备完成；当所有目标文件都已就绪时返回 `0`，缺少任一目标文件时返回 `1`，配置或参数错误时返回 `2`。
 
+定时的 `Bump Download` GitHub Actions 工作流会维护这份下载清单。它通过 `bump_download.py` 查询 CS2 default branch，只有当发现的 `PatchVersion` 与 depot manifest 需要新增记录时，才追加 `download.yaml`，创建对应本地 commit/tag，并由工作流推送。若只想本地预览且不写入 git 状态，可运行：
+
+```bash
+uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
+```
+
+如果 DepotDownloader 需要登录，可追加工作流中同样使用的 `-username`、`-password` 与 `-remember-password` 参数。
+
 
 ### 2. 为 `config.yaml` 的符号生成对应的 signatures
 
