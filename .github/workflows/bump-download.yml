@@ -32,6 +32,8 @@ jobs:
       - name: Synchronize git refs
         shell: pwsh
         run: |
+          $workspace = (Resolve-Path -LiteralPath $env:GITHUB_WORKSPACE).Path -replace '\\', '/'
+          git config --global --add safe.directory "$workspace"
           git fetch origin --prune --prune-tags --tags
 
       - name: Configure git
