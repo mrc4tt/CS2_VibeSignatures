@@ -1289,10 +1289,6 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
 
-      - name: find-CNetSupportImpl_vtable
-        expected_output:
-          - CNetSupportImpl_vtable.{platform}.yaml
-
     symbols:
       - name: CNetworkGameServer_vtable
         category: vtable
@@ -5207,12 +5203,6 @@ modules:
           - CBaseEntity_Use.{platform}.yaml
           - CPhysBox_vtable.{platform}.yaml
 
-      - name: find-CPhysBox_Use_PatchCaller
-        expected_output:
-          - CPhysBox_Use_PatchCaller.{platform}.yaml
-        expected_input:
-          - CPhysBox_Use.{platform}.yaml
-
       - name: find-CBaseEntity_SetGroundEntity
         expected_output:
           - CBaseEntity_SetGroundEntity.{platform}.yaml
@@ -8250,9 +8240,6 @@ modules:
         alias:
           - CPhysBox::Use
 
-      - name: CPhysBox_Use_PatchCaller
-        category: patch
-
       - name: CBaseEntity_SetGroundEntity
         category: func
         alias:
@@ -9346,6 +9333,10 @@ modules:
           - CLoopTypeBase_GetClientServerMode.{platform}.yaml
         expected_input:
           - CEngineServiceMgr_GetActiveLoopClientServerMode.{platform}.yaml
+
+      - name: find-CNetSupportImpl_vtable
+        expected_output:
+          - CNetSupportImpl_vtable.{platform}.yaml
 
       - name: find-CNetSupportImpl_Connect
         expected_output:
