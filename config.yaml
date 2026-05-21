@@ -4905,6 +4905,13 @@ modules:
         expected_input:
           - CEnvEntityIgniter_Precache.{platform}.yaml
 
+      - name: find-CEntitySystem_BuildResourceManifestForEntity
+        expected_output:
+          - CEntitySystem_BuildResourceManifestForEntity.{platform}.yaml
+        expected_input:
+          - UTIL_PrecacheOther.{platform}.yaml
+          - CEntitySystem_vtable.{platform}.yaml
+
       - name: find-CEnvShake_Spawn
         expected_output:
           - CEnvShake_Spawn.{platform}.yaml
@@ -6492,6 +6499,11 @@ modules:
         category: vfunc
         alias:
           - CEntitySystem::OnSetDormant
+
+      - name: CEntitySystem_BuildResourceManifestForEntity
+        category: vfunc
+        alias:
+          - CEntitySystem::BuildResourceManifestForEntity
 
       - name: CEntityInstance_ObjectCaps
         category: vfunc
