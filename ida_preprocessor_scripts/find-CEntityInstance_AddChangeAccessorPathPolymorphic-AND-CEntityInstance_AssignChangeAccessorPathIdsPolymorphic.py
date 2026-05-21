@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEntityInstance_AddChangeAccessorPath-AND-CEntityInstance_AssignChangeAccessorPathIds skill."""
+"""Preprocess script for find-CEntityInstance_AddChangeAccessorPathPolymorphic-AND-CEntityInstance_AssignChangeAccessorPathIdsPolymorphic skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CEntityInstance_AddChangeAccessorPath",
-    "CEntityInstance_AssignChangeAccessorPathIds",
+    "CEntityInstance_AddChangeAccessorPathPolymorphic",
+    "CEntityInstance_AssignChangeAccessorPathIdsPolymorphic",
 ]
 
 LLM_DECOMPILE = [
     (
-        "CEntityInstance_AddChangeAccessorPath",
+        "CEntityInstance_AddChangeAccessorPathPolymorphic",
         "prompt/call_llm_decompile.md",
         "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
     ),
     (
-        "CEntityInstance_AssignChangeAccessorPathIds",
+        "CEntityInstance_AssignChangeAccessorPathIdsPolymorphic",
         "prompt/call_llm_decompile.md",
         "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
     ),
 ]
 
 FUNC_VTABLE_RELATIONS = [
-    ("CEntityInstance_AddChangeAccessorPath", "CEntityInstance"),
-    ("CEntityInstance_AssignChangeAccessorPathIds", "CEntityInstance"),
+    ("CEntityInstance_AddChangeAccessorPathPolymorphic", "CEntityInstance"),
+    ("CEntityInstance_AssignChangeAccessorPathIdsPolymorphic", "CEntityInstance"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     (
-        "CEntityInstance_AddChangeAccessorPath",
+        "CEntityInstance_AddChangeAccessorPathPolymorphic",
         [
             "func_name",
             "vfunc_sig",
@@ -39,7 +39,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
         ],
     ),
     (
-        "CEntityInstance_AssignChangeAccessorPathIds",
+        "CEntityInstance_AssignChangeAccessorPathIdsPolymorphic",
         [
             "func_name",
             "vfunc_sig",

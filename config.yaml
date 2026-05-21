@@ -6103,10 +6103,10 @@ modules:
         expected_output:
           - PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml
 
-      - name: find-CEntityInstance_AddChangeAccessorPath-AND-CEntityInstance_AssignChangeAccessorPathIds
+      - name: find-CEntityInstance_AddChangeAccessorPathPolymorphic-AND-CEntityInstance_AssignChangeAccessorPathIdsPolymorphic
         expected_output:
-          - CEntityInstance_AddChangeAccessorPath.{platform}.yaml
-          - CEntityInstance_AssignChangeAccessorPathIds.{platform}.yaml
+          - CEntityInstance_AddChangeAccessorPathPolymorphic.{platform}.yaml
+          - CEntityInstance_AssignChangeAccessorPathIdsPolymorphic.{platform}.yaml
         expected_input:
           - PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml
           - CEntityInstance_vtable.{platform}.yaml
@@ -6518,15 +6518,15 @@ modules:
         alias:
           - PolymorphicHelper_t::SetPolymorphicPointer
 
-      - name: CEntityInstance_AddChangeAccessorPath
+      - name: CEntityInstance_AddChangeAccessorPathPolymorphic
         category: vfunc
         alias:
-          - CEntityInstance::AddChangeAccessorPath
+          - CEntityInstance::AddChangeAccessorPathPolymorphic
 
-      - name: CEntityInstance_AssignChangeAccessorPathIds
+      - name: CEntityInstance_AssignChangeAccessorPathIdsPolymorphic
         category: vfunc
         alias:
-          - CEntityInstance::AssignChangeAccessorPathIds
+          - CEntityInstance::AssignChangeAccessorPathIdsPolymorphic
 
       - name: CGameSceneNode_vtable
         category: vtable
