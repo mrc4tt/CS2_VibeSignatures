@@ -4598,6 +4598,13 @@ modules:
         expected_output:
           - CEntitySystem_RegisterEntityClass.{platform}.yaml
 
+      - name: find-CEntitySystem_m_entClassesByCPPClassname-AND-CEntitySystem_m_entClassesByClassname
+        expected_output:
+          - CEntitySystem_m_entClassesByCPPClassname.{platform}.yaml
+          - CEntitySystem_m_entClassesByClassname.{platform}.yaml
+        expected_input:
+          - CEntitySystem_RegisterEntityClass.{platform}.yaml
+
       - name: find-CEntitySystem_CreateEntityByName
         expected_output:
           - CEntitySystem_CreateEntityByName.{platform}.yaml
@@ -7343,6 +7350,16 @@ modules:
         category: func
         alias:
           - CEntitySystem::RegisterEntityClass
+
+      - name: CEntitySystem_m_entClassesByCPPClassname
+        category: structmember
+        struct: CEntitySystem
+        member: m_entClassesByCPPClassname
+
+      - name: CEntitySystem_m_entClassesByClassname
+        category: structmember
+        struct: CEntitySystem
+        member: m_entClassesByClassname
 
       - name: CEntitySystem_CreateEntityByName
         category: func
