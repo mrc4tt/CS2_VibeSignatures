@@ -4594,6 +4594,10 @@ modules:
         expected_output:
           - CEntitySystem_vtable.{platform}.yaml
 
+      - name: find-CEntitySystem_RegisterEntityClass
+        expected_output:
+          - CEntitySystem_RegisterEntityClass.{platform}.yaml
+
       - name: find-CEntitySystem_CreateEntityByName
         expected_output:
           - CEntitySystem_CreateEntityByName.{platform}.yaml
@@ -7334,6 +7338,11 @@ modules:
 
       - name: CEntitySystem_vtable
         category: vtable
+
+      - name: CEntitySystem_RegisterEntityClass
+        category: func
+        alias:
+          - CEntitySystem::RegisterEntityClass
 
       - name: CEntitySystem_CreateEntityByName
         category: func
