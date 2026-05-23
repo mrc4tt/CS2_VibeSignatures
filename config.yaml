@@ -2749,6 +2749,12 @@ modules:
           - CSource2EntitySystem_StaticInit.{platform}.yaml
           - CGameSystemReallocatingFactory_CSource2EntitySystem_vtable.{platform}.yaml
 
+      - name: find-IGameSystemFactory_Init
+        expected_output:
+          - IGameSystemFactory_Init.{platform}.yaml
+        expected_input:
+          - CGameSystemReallocatingFactory_CSource2EntitySystem_Init.{platform}.yaml
+
       - name: find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem-impl
         expected_output:
           - CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.{platform}.yaml
@@ -3329,6 +3335,11 @@ modules:
         category: vfunc
         alias:
           - IGameSystemFactory::DestroyGameSystem
+
+      - name: IGameSystemFactory_Init
+        category: vfunc
+        alias:
+          - IGameSystemFactory::Init
 
       - name: CPrediction_vtable
         category: vtable
@@ -5610,6 +5621,12 @@ modules:
           - CSource2EntitySystem_StaticInit.{platform}.yaml
           - CGameSystemReallocatingFactory_CSource2EntitySystem_vtable.{platform}.yaml
 
+      - name: find-IGameSystemFactory_Init
+        expected_output:
+          - IGameSystemFactory_Init.{platform}.yaml
+        expected_input:
+          - CGameSystemReallocatingFactory_CSource2EntitySystem_Init.{platform}.yaml
+
       - name: find-CSpawnGroupMgrGameSystem_DoesGameSystemReallocate
         expected_output:
           - CSpawnGroupMgrGameSystem_DoesGameSystemReallocate.{platform}.yaml
@@ -6543,6 +6560,11 @@ modules:
         category: vfunc
         alias:
           - CGameSystemReallocatingFactory<CSource2EntitySystem>::Init
+
+      - name: IGameSystemFactory_Init
+        category: vfunc
+        alias:
+          - IGameSystemFactory::Init
 
       - name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem
         category: vfunc
