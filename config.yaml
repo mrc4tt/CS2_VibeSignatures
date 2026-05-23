@@ -1932,6 +1932,21 @@ modules:
         alias:
           - CLoopTypeBase::GetClientServerMode
 
+      - name: CLoopTypeBase_GetImplType
+        category: vfunc
+        alias:
+          - CLoopTypeBase::GetImplType
+
+      - name: ILoopModeFactory_GetLoopModeType
+        category: vfunc
+        alias:
+          - ILoopModeFactory::GetLoopModeType
+
+      - name: ILoopModeFactory_Shutdown
+        category: vfunc
+        alias:
+          - ILoopModeFactory::Shutdown
+
       - name: CEngineServiceMgr_vtable
         category: vtable
 
@@ -9990,6 +10005,14 @@ modules:
           - CLoopTypeBase_GetClientServerMode.{platform}.yaml
         expected_input:
           - CEngineServiceMgr_GetActiveLoopClientServerMode.{platform}.yaml
+
+      - name: find-CLoopTypeBase_GetImplType-AND-ILoopModeFactory_GetLoopModeType-AND-ILoopModeFactory_Shutdown
+        expected_output:
+          - CLoopTypeBase_GetImplType.{platform}.yaml
+          - ILoopModeFactory_GetLoopModeType.{platform}.yaml
+          - ILoopModeFactory_Shutdown.{platform}.yaml
+        expected_input:
+          - CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml
 
       - name: find-CNetSupportImpl_vtable
         expected_output:
