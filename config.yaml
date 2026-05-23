@@ -606,6 +606,12 @@ modules:
         expected_input:
           - CGameResourceService_vtable.{platform}.yaml
 
+      - name: find-CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest
+        expected_output:
+          - CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest.{platform}.yaml
+        expected_input:
+          - CGameResourceService_vtable.{platform}.yaml
+
       - name: find-CGameResourceService_PrecacheEntitiesAndConfirmResourcesAreLoaded
         expected_output:
           - CGameResourceService_PrecacheEntitiesAndConfirmResourcesAreLoaded.{platform}.yaml
@@ -1354,6 +1360,11 @@ modules:
         category: vfunc
         alias:
           - CGameResourceService::PrecacheEntitiesAndConfirmResourcesAreLoaded
+
+      - name: CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest
+        category: vfunc
+        alias:
+          - CGameResourceService::LoadGameResourceManifest
 
       - name: IEntityResourceManifestBuilder_BuildResourceManifest_ManifestNameOrGroupName
         category: vfunc
