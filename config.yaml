@@ -2742,6 +2742,13 @@ modules:
         expected_output:
           - CGameSystemReallocatingFactory_CSource2EntitySystem_vtable.{platform}.yaml
 
+      - name: find-CGameSystemReallocatingFactory_CSource2EntitySystem_Init
+        expected_output:
+          - CGameSystemReallocatingFactory_CSource2EntitySystem_Init.{platform}.yaml
+        expected_input:
+          - CSource2EntitySystem_StaticInit.{platform}.yaml
+          - CGameSystemReallocatingFactory_CSource2EntitySystem_vtable.{platform}.yaml
+
       - name: find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_Deallocate-impl
         expected_output:
           - CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_Deallocate.{platform}.yaml
@@ -3378,6 +3385,11 @@ modules:
 
       - name: CGameSystemReallocatingFactory_CSource2EntitySystem_vtable
         category: vtable
+
+      - name: CGameSystemReallocatingFactory_CSource2EntitySystem_Init
+        category: vfunc
+        alias:
+          - CGameSystemReallocatingFactory<CSource2EntitySystem>::Init
 
       - name: CSkeletonInstance
         category: struct
@@ -5572,6 +5584,13 @@ modules:
         expected_output:
           - CGameSystemReallocatingFactory_CSource2EntitySystem_vtable.{platform}.yaml
 
+      - name: find-CGameSystemReallocatingFactory_CSource2EntitySystem_Init
+        expected_output:
+          - CGameSystemReallocatingFactory_CSource2EntitySystem_Init.{platform}.yaml
+        expected_input:
+          - CSource2EntitySystem_StaticInit.{platform}.yaml
+          - CGameSystemReallocatingFactory_CSource2EntitySystem_vtable.{platform}.yaml
+
       - name: find-CSpawnGroupMgrGameSystem_DoesGameSystemReallocate
         expected_output:
           - CSpawnGroupMgrGameSystem_DoesGameSystemReallocate.{platform}.yaml
@@ -6492,6 +6511,11 @@ modules:
 
       - name: CGameSystemReallocatingFactory_CSource2EntitySystem_vtable
         category: vtable
+
+      - name: CGameSystemReallocatingFactory_CSource2EntitySystem_Init
+        category: vfunc
+        alias:
+          - CGameSystemReallocatingFactory<CSource2EntitySystem>::Init
 
       - name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_Deallocate
         category: vfunc
