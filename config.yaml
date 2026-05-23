@@ -1123,6 +1123,20 @@ modules:
         expected_input:
           - CEngineServiceMgr_vtable.{platform}.yaml
 
+      - name: find-CEngineServiceMgr_UnregisterLoopMode
+        expected_output:
+          - CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml
+        expected_input:
+          - CEngineServiceMgr_vtable.{platform}.yaml
+          - ../server/IEngineServiceMgr_UnregisterLoopMode.{platform}.yaml
+
+      - name: find-CEngineServiceMgr_UnregisterEngineService
+        expected_output:
+          - CEngineServiceMgr_UnregisterEngineService.{platform}.yaml
+        expected_input:
+          - CEngineServiceMgr_vtable.{platform}.yaml
+          - ../server/IEngineServiceMgr_UnregisterEngineService.{platform}.yaml
+
       - name: find-CEngineServiceMgr_SwitchToLoop
         expected_output:
           - CEngineServiceMgr_SwitchToLoop.{platform}.yaml
@@ -1930,6 +1944,16 @@ modules:
         category: vfunc
         alias:
           - CEngineServiceMgr::RegisterLoopMode
+
+      - name: CEngineServiceMgr_UnregisterLoopMode
+        category: vfunc
+        alias:
+          - CEngineServiceMgr::UnregisterLoopMode
+
+      - name: CEngineServiceMgr_UnregisterEngineService
+        category: vfunc
+        alias:
+          - CEngineServiceMgr::UnregisterEngineService
 
       - name: CEngineServiceMgr_SwitchToLoop
         category: vfunc
