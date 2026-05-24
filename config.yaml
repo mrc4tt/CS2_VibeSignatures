@@ -4204,6 +4204,10 @@ modules:
         expected_output:
           - CBaseEntity_vtable.{platform}.yaml
 
+      - name: find-CNetworkTransmitComponent_vtable
+        expected_output:
+          - CNetworkTransmitComponent_vtable.{platform}.yaml
+
       - name: find-CGameSceneNode_vtable
         expected_output:
           - CGameSceneNode_vtable.{platform}.yaml
@@ -5541,6 +5545,32 @@ modules:
       - name: find-CEntFireOutputAutoCompletionFunctor_vtable
         expected_output:
           - CEntFireOutputAutoCompletionFunctor_vtable.{platform}.yaml
+
+      - name: find-CEntityIOOutput_vtable
+        expected_output:
+          - CEntityIOOutput_vtable.{platform}.yaml
+
+      - name: find-CBaseEntity_ctor
+        expected_output:
+          - CBaseEntity_ctor.{platform}.yaml
+        expected_input:
+          - CNetworkTransmitComponent_vtable.{platform}.yaml
+          - CBaseEntity_vtable.{platform}.yaml
+          - CEntityIOOutput_vtable.{platform}.yaml
+
+      - name: find-CBaseEntity_dtor
+        expected_output:
+          - CBaseEntity_dtor.{platform}.yaml
+        expected_input:
+          - CBaseEntity_vtable.{platform}.yaml
+          - CBaseEntity_ctor.{platform}.yaml
+
+      - name: find-CBaseEntity_vdtor
+        expected_output:
+          - CBaseEntity_vdtor.{platform}.yaml
+        expected_input:
+          - CBaseEntity_dtor.{platform}.yaml
+          - CBaseEntity_vtable.{platform}.yaml
 
       - name: find-CEntFireOutputAutoCompletionFunctor_FireOutput
         expected_output:
@@ -7066,6 +7096,24 @@ modules:
 
       - name: CBaseEntity_vtable
         category: vtable
+
+      - name: CNetworkTransmitComponent_vtable
+        category: vtable
+
+      - name: CBaseEntity_ctor
+        category: func
+        alias:
+          - CBaseEntity::CBaseEntity
+
+      - name: CBaseEntity_dtor
+        category: func
+        alias:
+          - CBaseEntity::~CBaseEntity
+
+      - name: CBaseEntity_vdtor
+        category: vfunc
+        alias:
+          - CBaseEntity::~CBaseEntity (virtual)
 
       - name: CEntitySaveRestoreBlockHandler_vtable
         category: vtable
@@ -8787,6 +8835,9 @@ modules:
         category: vfunc
         alias:
           - CEntityInstance::ScriptEntityIO
+
+      - name: CEntityIOOutput_vtable
+        category: vtable
 
       - name: CEntityIOOutput_FireOutputInternal
         category: func
