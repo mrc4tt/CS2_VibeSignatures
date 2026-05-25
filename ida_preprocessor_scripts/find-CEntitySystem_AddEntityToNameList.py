@@ -20,24 +20,23 @@ FUNC_XREFS_WINDOWS = [
     },
 ]
 
-# Linux: the CUtlRBTree type string and CEntityNameList strings are absent in the Linux
-# binary.  The common assertion strings "!link" and "Found existing value when inserting..."
-# each appear in ~148 functions -- too many to be unique.
-# Instead, identify by xref_funcs: this function is a direct callee of
-# CEntityIdentity_SetEntityName (which IS reliably tracked in the YAML database).
-# Among all callees of CEntityIdentity_SetEntityName, this is the only one that
-# allocates 32 bytes (new CEntityNameList) and calls CUtlRBTree helpers internally.
+# Linux: the CUtlRBTree template type string is absent in the Linux binary.
+# The assertion string "Found existing value when inserting..." appears in ~148 functions,
+# but is needed to build the initial candidate set.
+# Narrow with xref_signatures: the prologue ends with `mov r14, [rsi+18h]` (4C 8B 76 18)
+# which reads the entity name from CEntityIdentity->m_iszEntityName -- unique to
+# functions taking a CEntityIdentity* in rsi as the second argument.
 FUNC_XREFS_LINUX = [
     {
         "func_name": "CEntitySystem_AddEntityToNameList",
-        "xref_strings": [],
+        "xref_strings": [
+            "Found existing value when inserting into tree",
+        ],
         "xref_gvs": [],
         "xref_signatures": [
-            "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 83 EC ??",  # prologue: push rbp; mov rbp,rsp; push r15..r12,rbx; sub rsp,N
+            "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 83 EC ?? 4C 8B 76 18",  # prologue + mov r14,[rsi+18h]
         ],
-        "xref_funcs": [
-            "CEntityIdentity_SetEntityName",
-        ],
+        "xref_funcs": [],
         "exclude_funcs": [], "exclude_strings": [], "exclude_gvs": [], "exclude_signatures": [],
     },
 ]
