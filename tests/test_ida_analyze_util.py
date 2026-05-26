@@ -1305,6 +1305,7 @@ class TestGenerateYamlDesiredFieldsContract(unittest.IsolatedAsyncioTestCase):
                     "generation_options": {
                         "vfunc_sig_max_match": 10,
                     },
+                    "optional_fields": set(),
                 }
             },
             result,
@@ -1520,6 +1521,7 @@ class TestGenerateYamlDesiredFieldsContract(unittest.IsolatedAsyncioTestCase):
                         "gv_sig_allow_across_function_boundary": True,
                         "offset_sig_allow_across_function_boundary": True,
                     },
+                    "optional_fields": set(),
                 }
             },
             result,
@@ -5526,7 +5528,10 @@ found_struct_offset: []
                     )
                 if name == "py_eval":
                     code = arguments["code"]
-                    self.assertIn("inst_addr = sig_addr + 0", code)
+                    self.assertIn("offset_sig_disp = 0", code)
+                    self.assertIn(
+                        "inst_addr = sig_addr + offset_sig_disp", code
+                    )
                     return _py_eval_payload(
                         {
                             "offset": 0x58,
@@ -7933,6 +7938,7 @@ found_struct_offset: []
             size="8",
             old_path=str(old_struct_yaml_path),
             allow_across_function_boundary=False,
+            offset_sig_max_match=1,
             debug=True,
         )
         mock_write_func_yaml.assert_called_once()
@@ -8139,6 +8145,7 @@ found_struct_offset: []
             size="8",
             old_path=str(old_struct_yaml_path),
             allow_across_function_boundary=True,
+            offset_sig_max_match=1,
             debug=True,
         )
         mock_write_struct_offset_yaml.assert_called_once()

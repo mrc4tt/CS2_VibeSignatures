@@ -543,6 +543,43 @@ def _normalize_generate_yaml_desired_fields(generate_yaml_desired_fields, debug=
                 generation_options["vfunc_sig_max_match"] = max_match
                 continue
 
+            if field_name == "offset_sig_max_match":
+                if debug:
+                    print(
+                        f"    Preprocess: bare offset_sig_max_match field is "
+                        f"not allowed for {symbol_name}"
+                    )
+                return None
+
+            if field_name.startswith("offset_sig_max_match:"):
+                if "offset_sig_max_match" in generation_options:
+                    if debug:
+                        print(
+                            f"    Preprocess: duplicated offset_sig_max_match "
+                            f"directive for {symbol_name}"
+                        )
+                    return None
+                max_match_text = field_name.split(":", 1)[1]
+                try:
+                    max_match = int(max_match_text)
+                except ValueError:
+                    if debug:
+                        print(
+                            f"    Preprocess: invalid offset_sig_max_match "
+                            f"value for {symbol_name}: {max_match_text}"
+                        )
+                    return None
+                if max_match <= 0:
+                    if debug:
+                        print(
+                            f"    Preprocess: invalid offset_sig_max_match "
+                            f"value for {symbol_name}: {max_match_text}"
+                        )
+                    return None
+                desired_output_fields.append("offset_sig_max_match")
+                generation_options["offset_sig_max_match"] = max_match
+                continue
+
             handled_true_directive = False
             for directive_name in true_directive_fields:
                 directive_parse_result = _handle_true_directive(
@@ -563,6 +600,13 @@ def _normalize_generate_yaml_desired_fields(generate_yaml_desired_fields, debug=
             if debug:
                 print(
                     f"    Preprocess: vfunc_sig_max_match requires vfunc_sig "
+                    f"for {symbol_name}"
+                )
+            return None
+        if "offset_sig_max_match" in generation_options and "offset_sig" not in desired_output_fields:
+            if debug:
+                print(
+                    f"    Preprocess: offset_sig_max_match requires offset_sig "
                     f"for {symbol_name}"
                 )
             return None
@@ -763,6 +807,7 @@ STRUCT_MEMBER_YAML_ORDER = [
     "size",
     "offset_sig",
     "offset_sig_disp",
+    "offset_sig_max_match",
     "offset_sig_allow_across_function_boundary",
 ]
 TARGET_KIND_TO_FIELD_ORDER = {
@@ -1026,11 +1071,20 @@ def _get_preprocessor_scripts_dir():
     return Path(__file__).resolve().parent / "ida_preprocessor_scripts"
 
 
-def _resolve_llm_decompile_template_value(value, platform):
+def _derive_module_name(new_binary_dir):
+    if not new_binary_dir:
+        return ""
+    return os.path.basename(os.path.normpath(str(new_binary_dir)))
+
+
+def _resolve_llm_decompile_template_value(value, platform, module_name=None):
     resolved = str(value or "")
     platform_text = str(platform or "").strip()
     if platform_text:
         resolved = resolved.replace("{platform}", platform_text)
+    module_text = str(module_name or "").strip()
+    if module_text:
+        resolved = resolved.replace("{module_name}", module_text)
     return resolved
 
 
@@ -2398,8 +2452,10 @@ def _prepare_llm_decompile_request(
     llm_decompile_specs_map,
     llm_config,
     platform=None,
+    new_binary_dir=None,
     debug=False,
 ):
+    module_name = _derive_module_name(new_binary_dir)
     llm_spec = (llm_decompile_specs_map or {}).get(func_name)
     if llm_spec is None:
         return None
@@ -2522,6 +2578,7 @@ def _prepare_llm_decompile_request(
         _resolve_llm_decompile_template_value(
             prompt_value,
             platform,
+            module_name=module_name,
         )
     )
     if not prompt_path.is_absolute():
@@ -2562,6 +2619,7 @@ def _prepare_llm_decompile_request(
             _resolve_llm_decompile_template_value(
                 reference_value,
                 platform,
+                module_name=module_name,
             )
         )
         if not reference_yaml_path.is_absolute():
@@ -2684,6 +2742,7 @@ async def call_llm_decompile(
     target_blocks=None,
     prompt_template=None,
     platform=None,
+    new_binary_dir=None,
     temperature=None,
     effort=None,
     api_key=None,
@@ -2695,6 +2754,7 @@ async def call_llm_decompile(
     retry_max_delay=None,
     debug=False,
 ):
+    module_name = _derive_module_name(new_binary_dir)
     if not callable(call_llm_text):
         if debug:
             print("    Preprocess: call_llm_text unavailable for llm_decompile")
@@ -2734,6 +2794,7 @@ async def call_llm_decompile(
             prompt = _resolve_llm_decompile_template_value(
                 prompt_template,
                 platform,
+                module_name=module_name,
             ).format(
                 symbol_name_list=symbol_name_text,
                 disasm_for_reference=str(disasm_for_reference or ""),
@@ -2743,6 +2804,7 @@ async def call_llm_decompile(
                 reference_blocks=str(reference_blocks or ""),
                 target_blocks=str(target_blocks or ""),
                 platform=str(platform or "").strip(),
+                module_name=module_name,
             )
         except Exception as exc:
             if debug:
@@ -5228,6 +5290,29 @@ async def preprocess_struct_offset_sig_via_mcp(
             print(f"    Preprocess: offset_sig_disp must be >= 0 in {os.path.basename(old_path)}")
         return None
 
+    offset_sig_max_match = 1
+    try:
+        raw_max_match = old_data.get("offset_sig_max_match")
+        if raw_max_match is not None:
+            offset_sig_max_match = _parse_int_field(
+                raw_max_match, "offset_sig_max_match"
+            )
+    except Exception:
+        if debug:
+            print(
+                "    Preprocess: invalid offset_sig_max_match in "
+                f"{os.path.basename(old_path)}"
+            )
+        return None
+
+    if offset_sig_max_match <= 0:
+        if debug:
+            print(
+                "    Preprocess: offset_sig_max_match must be > 0 in "
+                f"{os.path.basename(old_path)}"
+            )
+        return None
+
     old_offset = None
     try:
         if old_data.get("offset") is not None:
@@ -5240,7 +5325,10 @@ async def preprocess_struct_offset_sig_via_mcp(
     try:
         fb_result = await session.call_tool(
             name="find_bytes",
-            arguments={"patterns": [offset_sig], "limit": 2}
+            arguments={
+                "patterns": [offset_sig],
+                "limit": offset_sig_max_match + 1,
+            },
         )
         fb_data = parse_mcp_result(fb_result)
     except Exception as e:
@@ -5255,24 +5343,45 @@ async def preprocess_struct_offset_sig_via_mcp(
     matches = entry.get("matches", [])
     match_count = entry.get("n", len(matches))
 
-    if match_count != 1:
+    if match_count < 1 or not matches:
         if debug:
-            print(f"    Preprocess: {os.path.basename(old_path)} offset sig matched {match_count} (need 1)")
+            print(
+                f"    Preprocess: {os.path.basename(old_path)} offset sig "
+                f"matched {match_count} (need >= 1)"
+            )
+        return None
+    if match_count > offset_sig_max_match:
+        if debug:
+            print(
+                f"    Preprocess: {os.path.basename(old_path)} offset sig "
+                f"matched {match_count} (max {offset_sig_max_match})"
+            )
         return None
 
-    match_addr = matches[0]
+    try:
+        match_addr_ints = [_parse_int_field(m, "match_addr") for m in matches]
+    except Exception:
+        if debug:
+            print(
+                f"    Preprocess: invalid match addr in {os.path.basename(old_path)}"
+            )
+        return None
     expected_offset_expr = "None" if old_offset is None else str(old_offset)
+    sig_addrs_literal = "[" + ", ".join(str(a) for a in match_addr_ints) + "]"
 
     py_code = (
         "import idaapi, ida_bytes, idautils, ida_ua, json\n"
-        f"sig_addr = {match_addr}\n"
-        f"inst_addr = sig_addr + {offset_sig_disp}\n"
+        f"sig_addrs = {sig_addrs_literal}\n"
+        f"offset_sig_disp = {offset_sig_disp}\n"
         f"expected_offset = {expected_offset_expr}\n"
-        "insn = idautils.DecodeInstruction(inst_addr)\n"
-        "raw = ida_bytes.get_bytes(inst_addr, insn.size) if insn and insn.size > 0 else None\n"
-        "if not insn or insn.size <= 0 or not raw:\n"
-        "    result = json.dumps(None)\n"
-        "else:\n"
+        "best_result = None\n"
+        "any_result = None\n"
+        "for sig_addr in sig_addrs:\n"
+        "    inst_addr = sig_addr + offset_sig_disp\n"
+        "    insn = idautils.DecodeInstruction(inst_addr)\n"
+        "    raw = ida_bytes.get_bytes(inst_addr, insn.size) if insn and insn.size > 0 else None\n"
+        "    if not insn or insn.size <= 0 or not raw:\n"
+        "        continue\n"
         "    candidates = []\n"
         "    for op in insn.ops:\n"
         "        ot = int(op.type)\n"
@@ -5317,20 +5426,25 @@ async def preprocess_struct_offset_sig_via_mcp(
         "        seen.add(key)\n"
         "        uniq.append(c)\n"
         "    if not uniq:\n"
-        "        result = json.dumps(None)\n"
-        "    else:\n"
-        "        preferred = [c for c in uniq if c['expected']]\n"
-        "        pool = preferred if preferred else uniq\n"
-        "        pool.sort(key=lambda c: (c['size'], -c['off']), reverse=True)\n"
-        "        best = pool[0]\n"
-        "        final_offset = best['signed'] if best['signed'] < 0 else best['unsigned']\n"
-        "        result = json.dumps({\n"
-        "            'offset': final_offset,\n"
-        "            'sig_va': hex(sig_addr),\n"
-        "            'inst_va': hex(inst_addr),\n"
-        "            'offset_size': best['size'],\n"
-        "            'matched_expected': bool(preferred),\n"
-        "        })\n"
+        "        continue\n"
+        "    preferred = [c for c in uniq if c['expected']]\n"
+        "    pool = preferred if preferred else uniq\n"
+        "    pool.sort(key=lambda c: (c['size'], -c['off']), reverse=True)\n"
+        "    best = pool[0]\n"
+        "    final_offset = best['signed'] if best['signed'] < 0 else best['unsigned']\n"
+        "    candidate_result = {\n"
+        "        'offset': final_offset,\n"
+        "        'sig_va': hex(sig_addr),\n"
+        "        'inst_va': hex(inst_addr),\n"
+        "        'offset_size': best['size'],\n"
+        "        'matched_expected': bool(preferred),\n"
+        "    }\n"
+        "    if any_result is None:\n"
+        "        any_result = candidate_result\n"
+        "    if candidate_result['matched_expected']:\n"
+        "        best_result = candidate_result\n"
+        "        break\n"
+        "result = json.dumps(best_result if best_result is not None else any_result)\n"
     )
 
     try:
@@ -5357,16 +5471,22 @@ async def preprocess_struct_offset_sig_via_mcp(
             except (json.JSONDecodeError, TypeError):
                 pass
 
+    matches_preview = _debug_format_addr_preview(match_addr_ints)
     if not isinstance(offset_info, dict) or "offset" not in offset_info:
         if debug:
-            print(f"    Preprocess: could not resolve struct offset at {match_addr}")
+            print(
+                f"    Preprocess: could not resolve struct offset at "
+                f"{matches_preview}"
+            )
         return None
 
     try:
         offset_int = _parse_int_field(offset_info["offset"], "offset")
     except Exception:
         if debug:
-            print(f"    Preprocess: invalid parsed offset at {match_addr}")
+            print(
+                f"    Preprocess: invalid parsed offset at {matches_preview}"
+            )
         return None
 
     new_data = {
@@ -5376,6 +5496,8 @@ async def preprocess_struct_offset_sig_via_mcp(
         "offset_sig": offset_sig,
         "offset_sig_disp": offset_sig_disp,
     }
+    if offset_sig_max_match > 1:
+        new_data["offset_sig_max_match"] = offset_sig_max_match
 
     raw_size = old_data.get("size")
     if raw_size is not None:
@@ -5388,9 +5510,10 @@ async def preprocess_struct_offset_sig_via_mcp(
                 print(f"    Preprocess: invalid size in {os.path.basename(old_path)}")
 
     if debug:
+        resolved_sig_va = offset_info.get("sig_va", matches_preview)
         print(
             "    Preprocess: reused offset_sig at "
-            f"{match_addr} for {os.path.basename(new_path)}"
+            f"{resolved_sig_va} for {os.path.basename(new_path)}"
         )
 
     return new_data
@@ -6695,6 +6818,7 @@ async def _preprocess_direct_struct_offset_sig_via_mcp(
     size=None,
     old_path=None,
     allow_across_function_boundary=False,
+    offset_sig_max_match=1,
     debug=False,
 ):
     metadata = _load_struct_member_metadata_from_yaml(old_path)
@@ -6736,6 +6860,7 @@ async def _preprocess_direct_struct_offset_sig_via_mcp(
         image_base=image_base,
         size=resolved_size,
         allow_across_function_boundary=allow_across_function_boundary,
+        max_match_count=offset_sig_max_match,
         debug=debug,
     )
     if not isinstance(payload, dict):
@@ -6760,6 +6885,7 @@ async def preprocess_gen_struct_offset_sig_via_mcp(
     max_instructions=64,
     extra_wildcard_offsets=None,
     allow_across_function_boundary=False,
+    max_match_count=1,
     debug=False,
 ):
     _ = image_base
@@ -6770,7 +6896,16 @@ async def preprocess_gen_struct_offset_sig_via_mcp(
         min_sig_bytes = max(1, int(min_sig_bytes))
         max_sig_bytes = max(1, int(max_sig_bytes))
         max_instructions = max(1, int(max_instructions))
+        max_match_count = int(max_match_count)
     except Exception:
+        return None
+
+    if max_match_count <= 0:
+        if debug:
+            print(
+                "    Preprocess: invalid max_match_count for struct offset sig "
+                f"of {struct_name}.{member_name}"
+            )
         return None
 
     resolved_size = None
@@ -6985,7 +7120,10 @@ async def preprocess_gen_struct_offset_sig_via_mcp(
             try:
                 fb_result = await session.call_tool(
                     name="find_bytes",
-                    arguments={"patterns": [candidate_sig], "limit": 2},
+                    arguments={
+                        "patterns": [candidate_sig],
+                        "limit": max_match_count + 1,
+                    },
                 )
                 fb_data = parse_mcp_result(fb_result)
             except Exception:
@@ -7012,7 +7150,7 @@ async def preprocess_gen_struct_offset_sig_via_mcp(
                         f"hits={match_preview}"
                     )
                 continue
-            if match_count != 1:
+            if match_count > max_match_count:
                 if debug:
                     print(
                         "    Preprocess: struct offset candidate rejected with "
@@ -7022,8 +7160,10 @@ async def preprocess_gen_struct_offset_sig_via_mcp(
                     )
                 continue
 
+            match_addrs = set()
             try:
-                match_addr = _parse_int_value(matches[0])
+                for match in matches:
+                    match_addrs.add(_parse_int_value(match))
             except Exception:
                 if debug:
                     print(
@@ -7033,11 +7173,11 @@ async def preprocess_gen_struct_offset_sig_via_mcp(
                         f"hits={match_preview}"
                     )
                 continue
-            if match_addr != offset_inst_va_int:
+            if offset_inst_va_int not in match_addrs:
                 if debug:
                     print(
                         "    Preprocess: struct offset candidate rejected "
-                        "because unique hit does not match target address for "
+                        "because hits do not include target address for "
                         f"{struct_name}.{member_name}: sig={candidate_sig}; "
                         f"hits={match_preview}; expected={hex(offset_inst_va_int)}"
                     )
@@ -7050,6 +7190,8 @@ async def preprocess_gen_struct_offset_sig_via_mcp(
                 "offset_sig": candidate_sig,
                 "offset_sig_disp": 0,
             }
+            if max_match_count > 1:
+                payload["offset_sig_max_match"] = max_match_count
             if resolved_size is not None:
                 payload["size"] = resolved_size
             return payload
@@ -8463,6 +8605,7 @@ async def preprocess_common_skill(
                     llm_decompile_specs_map,
                     llm_config,
                     platform=platform,
+                    new_binary_dir=new_binary_dir,
                     debug=debug,
                 )
             candidate_request = llm_request_cache.get(candidate_func_name)
@@ -8490,6 +8633,7 @@ async def preprocess_common_skill(
                     llm_decompile_specs_map,
                     llm_config,
                     platform=platform,
+                    new_binary_dir=new_binary_dir,
                     debug=debug,
                 )
             candidate_request = llm_request_cache.get(candidate_gv_name)
@@ -8527,6 +8671,7 @@ async def preprocess_common_skill(
                     llm_decompile_specs_map,
                     llm_config,
                     platform=platform,
+                    new_binary_dir=new_binary_dir,
                     debug=debug,
                 )
             candidate_request = llm_request_cache.get(candidate_struct_name)
@@ -8571,6 +8716,7 @@ async def preprocess_common_skill(
                 target_blocks=target_blocks,
                 prompt_template=llm_request["prompt_template"],
                 platform=platform,
+                new_binary_dir=new_binary_dir,
                 temperature=llm_request.get("temperature"),
                 effort=llm_request.get("effort"),
                 api_key=llm_request.get("api_key"),
@@ -8627,6 +8773,7 @@ async def preprocess_common_skill(
                     llm_decompile_specs_map,
                     llm_config,
                     platform=platform,
+                    new_binary_dir=new_binary_dir,
                     debug=debug,
                 )
             llm_request = llm_request_cache.get(func_name)
@@ -8907,6 +9054,7 @@ async def preprocess_common_skill(
                     llm_decompile_specs_map,
                     llm_config,
                     platform=platform,
+                    new_binary_dir=new_binary_dir,
                     debug=debug,
                 )
             llm_request = llm_request_cache.get(gv_name)
@@ -9045,6 +9193,7 @@ async def preprocess_common_skill(
                     llm_decompile_specs_map,
                     llm_config,
                     platform=platform,
+                    new_binary_dir=new_binary_dir,
                     debug=debug,
                 )
             llm_request = llm_request_cache.get(struct_member_name)
@@ -9117,6 +9266,10 @@ async def preprocess_common_skill(
                     allow_across_function_boundary=_struct_gen_opts.get(
                         "offset_sig_allow_across_function_boundary",
                         False,
+                    ),
+                    offset_sig_max_match=_struct_gen_opts.get(
+                        "offset_sig_max_match",
+                        1,
                     ),
                     debug=debug,
                     size=entry.get("size"),

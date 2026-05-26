@@ -4674,6 +4674,19 @@ modules:
         expected_input:
           - ScriptBinding_Entity_SetEntityName.{platform}.yaml
 
+      - name: find-CEntitySystem_RemoveEntityFromNameMap-AND-CEntitySystem_AddEntityToNameMap
+        expected_output:
+          - CEntitySystem_RemoveEntityFromNameMap.{platform}.yaml
+          - CEntitySystem_AddEntityToNameMap.{platform}.yaml
+        expected_input:
+          - CEntityIdentity_SetEntityName.{platform}.yaml
+
+      - name: find-CEntitySystem_m_entityNames
+        expected_output:
+          - CEntitySystem_m_entityNames.{platform}.yaml
+        expected_input:
+          - CEntitySystem_AddEntityToNameMap.{platform}.yaml
+
       - name: find-ScriptBinding_Entity_SetEntityName
         expected_output:
           - ScriptBinding_Entity_SetEntityName.{platform}.yaml
@@ -6781,6 +6794,79 @@ modules:
           - CEntitySaveRestoreBlockHandler_SaveInternal.{platform}.yaml
           - CEntityInstance_vtable.{platform}.yaml
 
+      - name: find-CreateEntityTransitionList
+        expected_output:
+          - CreateEntityTransitionList.{platform}.yaml
+
+      - name: find-CEntitySaveRestoreBlockHandler_WriteSaveHeaders
+        expected_output:
+          - CEntitySaveRestoreBlockHandler_WriteSaveHeaders.{platform}.yaml
+        expected_input:
+          - CEntitySaveRestoreBlockHandler_vtable.{platform}.yaml
+
+      - name: find-CEntitySaveRestoreBlockHandler_ReadRestoreHeaders
+        expected_output:
+          - CEntitySaveRestoreBlockHandler_ReadRestoreHeaders.{platform}.yaml
+        expected_input:
+          - CEntitySaveRestoreBlockHandler_vtable.{platform}.yaml
+          - CEntitySaveRestoreBlockHandler_WriteSaveHeaders.{platform}.yaml
+
+      - name: find-CEntity2SaveRestore_vtable
+        expected_output:
+          - CEntity2SaveRestore_vtable.{platform}.yaml
+
+      - name: find-CEntity2SaveRestore_StreamEntitiesFromFile
+        expected_output:
+          - CEntity2SaveRestore_StreamEntitiesFromFile.{platform}.yaml
+        expected_input:
+          - CEntity2SaveRestore_vtable.{platform}.yaml
+
+      - name: find-CSaveRestoreBlockSet_vtable
+        expected_output:
+          - CSaveRestoreBlockSet_vtable.{platform}.yaml
+
+      - name: find-CEntity2SaveRestore_StreamEntitiesFromFile-decompiles
+        expected_output:
+          - CSaveRestoreBlockSet_PreRestore.{platform}.yaml
+          - CSaveRestoreBlockSet_PostRestore.{platform}.yaml
+        expected_input:
+          - CEntity2SaveRestore_StreamEntitiesFromFile.{platform}.yaml
+          - CSaveRestoreBlockSet_vtable.{platform}.yaml
+
+      - name: find-CEntitySaveRestoreBlockHandler_PreRestore
+        expected_output:
+          - CEntitySaveRestoreBlockHandler_PreRestore.{platform}.yaml
+        expected_input:
+          - CEntitySaveRestoreBlockHandler_vtable.{platform}.yaml
+          - CSaveRestoreBlockSet_PreRestore.{platform}.yaml
+
+      - name: find-CEntitySystem_ForceSetInPVSCallsIntoQueue
+        expected_output:
+          - CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml
+        expected_input:
+          - CEntitySaveRestoreBlockHandler_PreRestore.{platform}.yaml
+
+      - name: find-CEntitySystem_m_nSuppressDormancyChangeCount-AND-CEntitySystem_m_nExecuteQueuedCreationDepth-AND-CEntitySystem_ExecuteQueuedSetInPVS
+        expected_output:
+          - CEntitySystem_m_nSuppressDormancyChangeCount.{platform}.yaml
+          - CEntitySystem_m_nExecuteQueuedCreationDepth.{platform}.yaml
+          - CEntitySystem_ExecuteQueuedSetInPVS.{platform}.yaml
+        expected_input:
+          - CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml
+
+      - name: find-CEntitySystem_m_queuedDormancyChanges
+        expected_output:
+          - CEntitySystem_m_queuedDormancyChanges.{platform}.yaml
+        expected_input:
+          - CEntitySystem_ExecuteQueuedSetInPVS.{platform}.yaml
+
+      - name: find-CEntitySaveRestoreBlockHandler_PostRestore
+        expected_output:
+          - CEntitySaveRestoreBlockHandler_PostRestore.{platform}.yaml
+        expected_input:
+          - CEntitySaveRestoreBlockHandler_vtable.{platform}.yaml
+          - CSaveRestoreBlockSet_PostRestore.{platform}.yaml
+
       - name: find-PolymorphicHelper_t__SetPolymorphicPointer
         expected_output:
           - PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml
@@ -7242,6 +7328,83 @@ modules:
         category: func
         alias:
           - CEntitySaveRestoreBlockHandler::RestoreEntity
+
+      - name: CreateEntityTransitionList
+        category: func
+        alias:
+          - CreateEntityTransitionList
+
+      - name: CEntitySaveRestoreBlockHandler_WriteSaveHeaders
+        category: vfunc
+        alias:
+          - CEntitySaveRestoreBlockHandler::WriteSaveHeaders
+
+      - name: CEntitySaveRestoreBlockHandler_ReadRestoreHeaders
+        category: vfunc
+        alias:
+          - CEntitySaveRestoreBlockHandler::ReadRestoreHeaders
+
+      - name: CEntity2SaveRestore_vtable
+        category: vtable
+
+      - name: CEntity2SaveRestore_StreamEntitiesFromFile
+        category: vfunc
+        alias:
+          - CEntity2SaveRestore::StreamEntitiesFromFile
+
+      - name: CSaveRestoreBlockSet_vtable
+        category: vtable
+
+      - name: CSaveRestoreBlockSet_PreRestore
+        category: vfunc
+        alias:
+          - CSaveRestoreBlockSet::PreRestore
+
+      - name: CSaveRestoreBlockSet_PostRestore
+        category: vfunc
+        alias:
+          - CSaveRestoreBlockSet::PostRestore
+
+      - name: CEntitySaveRestoreBlockHandler_PreRestore
+        category: vfunc
+        alias:
+          - CEntitySaveRestoreBlockHandler::PreRestore
+
+      - name: CEntitySaveRestoreBlockHandler_PostRestore
+        category: vfunc
+        alias:
+          - CEntitySaveRestoreBlockHandler::PostRestore
+
+      - name: CEntitySystem_ForceSetInPVSCallsIntoQueue
+        category: func
+        alias:
+          - CEntitySystem::ForceSetInPVSCallsIntoQueue
+
+      - name: CEntitySystem_ExecuteQueuedSetInPVS
+        category: func
+        alias:
+          - CEntitySystem::ExecuteQueuedSetInPVS
+
+      - name: CEntitySystem_m_nSuppressDormancyChangeCount
+        category: structmember
+        struct: CEntitySystem
+        member: m_nSuppressDormancyChangeCount
+        alias:
+          - CEntitySystem::m_nSuppressDormancyChangeCount
+
+      - name: CEntitySystem_m_nExecuteQueuedCreationDepth
+        category: structmember
+        struct: CEntitySystem
+        member: m_nExecuteQueuedCreationDepth
+        alias:
+          - CEntitySystem::m_nExecuteQueuedCreationDepth
+
+      - name: CEntitySystem_m_queuedDormancyChanges
+        category: structmember
+        struct: CEntitySystem
+        member: m_queuedDormancyChanges
+        alias:
+          - CEntitySystem::m_queuedDormancyChanges
 
       - name: CEntitySystem_SetInPVS
         category: func
@@ -7725,6 +7888,16 @@ modules:
         alias:
           - CEntityIdentity::SetEntityName
 
+      - name: CEntitySystem_RemoveEntityFromNameMap
+        category: func
+        alias:
+          - CEntitySystem::RemoveEntityFromNameMap
+
+      - name: CEntitySystem_AddEntityToNameMap
+        category: func
+        alias:
+          - CEntitySystem::AddEntityToNameMap
+
       - name: ScriptBinding_Entity_SetEntityName
         category: func
         alias:
@@ -8177,6 +8350,13 @@ modules:
         member: m_EntityList
         alias:
           - CEntitySystem::m_EntityList
+
+      - name: CEntitySystem_m_entityNames
+        category: structmember
+        struct: CEntitySystem
+        member: m_entityNames
+        alias:
+          - CEntitySystem::m_entityNames
 
       - name: CEntityIdentity_FreeAttributes
         category: func
@@ -10746,6 +10926,38 @@ cpp_tests:
     reference_modules:
       - server # bin/{gamever}/server/IGameSystemFactory_*.{platform}.yaml
       - client # bin/{gamever}/client/IGameSystemFactory_*.{platform}.yaml
+
+  - name: CEntitySystem_MSVC
+    symbol: CEntitySystem
+    alias_symbols:
+      - CGameEntitySystem
+    cpp: cpp_tests/centitysystem.cpp
+    headers:
+    - hl2sdk_cs2/public/entity2/entitysystem.h # This is for LLM agent
+    claude_permission_mode: acceptEdits
+    claude_allowed_tools: Read,Edit,MultiEdit,Write
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+      - Xclang
+      - fdump-record-layouts
+    reference_modules:
+      - server # bin/{gamever}/server/{CEntitySystem,CGameEntitySystem}_*.{platform}.yaml
+      - client # bin/{gamever}/client/{CEntitySystem,CGameEntitySystem}_*.{platform}.yaml
 
   - name: SDL_Mouse_MSVC
     symbol: SDL_Mouse
