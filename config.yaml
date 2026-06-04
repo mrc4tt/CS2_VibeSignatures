@@ -5365,6 +5365,10 @@ modules:
         expected_input:
           - CCSPlayerPawn_vtable.{platform}.yaml
 
+      - name: find-CCSPlayerPawn_SprayPaint
+        expected_output:
+          - CCSPlayerPawn_SprayPaint.{platform}.yaml
+
       - name: find-CCSPlayerController_HandleCommandDrop
         expected_output:
           - CCSPlayerController_HandleCommandDrop.{platform}.yaml
@@ -8620,6 +8624,11 @@ modules:
         category: vfunc
         alias:
           - CCSPlayerPawn::ClientCommand
+
+      - name: CCSPlayerPawn_SprayPaint
+        category: func
+        alias:
+          - CCSPlayerPawn::SprayPaint
 
       - name: CCSPlayerController_HandleCommandDrop
         category: func
