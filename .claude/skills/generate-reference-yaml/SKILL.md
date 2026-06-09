@@ -25,11 +25,21 @@ Do not call IDA API directly in this skill. Always run `generate_reference_yaml.
 uv run generate_reference_yaml.py -gamever 14141 -module engine -platform windows -func_name CNetworkGameClient_RecordEntityBandwidth -mcp_host 127.0.0.1 -mcp_port 13337
 ```
 
-### 2) Auto-start `idalib-mcp` with binary
+### 2) Auto-start `idalib-mcp` with binary (fallback when no MCP is attached)
 
 ```bash
-uv run generate_reference_yaml.py -gamever 14141 -module engine -platform windows -func_name CNetworkGameClient_RecordEntityBandwidth -auto_start_mcp -binary bin/14141/engine/engine2.dll
+# Windows -- always pass -platform windows explicitly
+uv run generate_reference_yaml.py -func_name {FUNC_NAME} -auto_start_mcp -binary "bin/{gamever}/{module}/{binary_name}.dll" -platform windows -debug
+
+# Linux -- always pass -platform linux explicitly
+uv run generate_reference_yaml.py -func_name {FUNC_NAME} -auto_start_mcp -binary "bin/{gamever}/{module}/lib{module}.so" -platform linux -debug
 ```
+
+where `{gamever}` can be obtained from `.env` -> `CS2VIBE_GAMEVER`.
+
+**IMPORTANT -- Always pass `-platform` explicitly.** While `-platform` can theoretically be inferred from the binary extension (`.dll` -> windows, `.so` -> linux), auto-inference is unreliable and may produce the wrong platform's reference YAML. Always pass `-platform windows` or `-platform linux` explicitly.
+
+**IMPORTANT -- Run `generate_reference_yaml.py` sequentially, NOT in parallel.** All invocations share the same IDA MCP connection. Running them in parallel will cause connection conflicts and failures. Run one command at a time, waiting for each to complete before starting the next.
 
 ## Output path
 
