@@ -125,6 +125,8 @@ GENERATE_YAML_DESIRED_FIELDS = [
             #"size",
             "offset_sig",
             "offset_sig_disp",
+            #"offset_sig_max_match:2",
+            "offset_sig_allow_across_function_boundary:true",
         ],
     ),
     (
@@ -136,6 +138,8 @@ GENERATE_YAML_DESIRED_FIELDS = [
             #"size",
             "offset_sig",
             "offset_sig_disp",
+            #"offset_sig_max_match:2",
+            "offset_sig_allow_across_function_boundary:true",
         ],
     ),
 ]

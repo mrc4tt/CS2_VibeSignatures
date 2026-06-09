@@ -133,7 +133,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "struct_name",
             "member_name",
             "offset",
-            "size?",  # lea-based access has no natural operand size
+            #"size?",  # lea-based access has no natural operand size
             "offset_sig",
             "offset_sig_disp",
             "offset_sig_allow_across_function_boundary:true",
