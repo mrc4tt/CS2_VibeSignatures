@@ -6392,6 +6392,7 @@ modules:
           - CEntitySystem_m_Symbols.{platform}.yaml
           - CEntitySystem_m_pNetworkFieldChangedEventQueue.{platform}.yaml
           - CEntitySystem_m_pNetworkFieldScratchData.{platform}.yaml
+          - CEntitySystem_m_pFieldChangeLimitSpew.{platform}.yaml
         expected_input:
           - CEntitySystem_Init.{platform}.yaml
 
@@ -10089,6 +10090,13 @@ modules:
         member: m_Symbols
         alias:
           - CEntitySystem::m_pNetworkFieldScratchData
+
+      - name: CEntitySystem_m_pFieldChangeLimitSpew
+        category: structmember
+        struct: CEntitySystem
+        member: m_Symbols
+        alias:
+          - CEntitySystem::m_pFieldChangeLimitSpew
 
       - name: CEntitySystem_m_nSuppressDestroyImmediateCount
         category: structmember
