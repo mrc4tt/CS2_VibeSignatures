@@ -260,7 +260,7 @@ jobs:
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
-          uv run python -m unittest discover -s tests
+          uv run python -m unittest discover -s tests -b
 
       - name: Analyze binaries
         shell: pwsh

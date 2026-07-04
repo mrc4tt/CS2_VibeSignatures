@@ -580,7 +580,11 @@ class TestPostProcessActionCollection(unittest.TestCase):
                 debug=False,
             )
 
-        self.assertEqual([(str(valid_path.resolve()), {"func_name": "Valid", "func_va": "0x180100000"})], result)
+        expected_path = ida_analyze_bin._absolute_path_preserve_spelling(valid_path)
+        self.assertEqual(
+            [(expected_path, {"func_name": "Valid", "func_va": "0x180100000"})],
+            result,
+        )
 
     def test_collect_post_process_yaml_mappings_skips_paths_outside_current_binary_dir(
         self,
