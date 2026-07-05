@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEntitySystem_m_EntityPostSpawnCallback skill."""
+"""Preprocess script for find-CEntitySystem_m_DataDescKeyUnserializers skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_STRUCT_MEMBER_NAMES = [
-    "CEntitySystem_m_EntityPostSpawnCallback",
+    "CEntitySystem_m_DataDescKeyUnserializers",
 ]
 
 LLM_DECOMPILE = [
     # (symbol_name, path_to_prompt, path_to_reference)
     (
-        "CEntitySystem_m_EntityPostSpawnCallback",
+        "CEntitySystem_m_DataDescKeyUnserializers",
         "prompt/call_llm_decompile.md",
         "references/server/CEntitySystem_InstallCreationWrapperCallbacks.{platform}.yaml",
     ),
@@ -19,7 +19,7 @@ LLM_DECOMPILE = [
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CEntitySystem_m_EntityPostSpawnCallback",
+        "CEntitySystem_m_DataDescKeyUnserializers",
         [
             "struct_name",
             "member_name",

@@ -6626,9 +6626,9 @@ modules:
           - CEntitySystem_ProcessEntityRegistrars.{platform}.yaml
         platform: linux
 
-      - name: find-CEntitySystem_m_EntityPostSpawnCallback
+      - name: find-CEntitySystem_m_DataDescKeyUnserializers
         expected_output:
-          - CEntitySystem_m_EntityPostSpawnCallback.{platform}.yaml
+          - CEntitySystem_m_DataDescKeyUnserializers.{platform}.yaml
         expected_input:
           - CEntitySystem_InstallCreationWrapperCallbacks.{platform}.yaml
 
@@ -8786,12 +8786,12 @@ modules:
         alias:
           - CEntitySystem::m_entityComponentHelpers
 
-      - name: CEntitySystem_m_EntityPostSpawnCallback
+      - name: CEntitySystem_m_DataDescKeyUnserializers
         category: structmember
         struct: CEntitySystem
-        member: m_EntityPostSpawnCallback
+        member: m_DataDescKeyUnserializers
         alias:
-          - CEntitySystem::m_EntityPostSpawnCallback
+          - CEntitySystem::m_DataDescKeyUnserializers
 
       - name: CEntityIdentity_FreeAttributes
         category: func
