@@ -6586,7 +6586,6 @@ modules:
         expected_output:
           - CSource2EntitySystem_StaticInit.{platform}.yaml
 
-
       - name: find-CSource2EntitySystem_StaticInit-decompiles
         expected_output:
           - IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml

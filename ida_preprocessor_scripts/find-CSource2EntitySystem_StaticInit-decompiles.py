@@ -207,6 +207,11 @@ async def preprocess_skill(
             "prompt/call_llm_decompile.md",
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ),
+        (
+            "CEntitySystem_InstallCreationWrapperCallbacks",
+            "prompt/call_llm_decompile.md",
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ),
     ]
 
     func_names = list(TARGET_FUNCTION_NAMES)
