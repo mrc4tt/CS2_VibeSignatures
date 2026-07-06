@@ -12,9 +12,7 @@ GENERATED_REFERENCE_YAML_PREFIX = "ida_preprocessor_scripts/references/"
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Format git-tracked *.py and *.yaml files with Ruff and yamlfix."
-    )
+    parser = argparse.ArgumentParser(description="Format git-tracked *.py and *.yaml files with Ruff and yamlfix.")
     parser.add_argument(
         "--check",
         action="store_true",
