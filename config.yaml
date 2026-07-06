@@ -4284,6 +4284,18 @@ modules:
         expected_input:
           - CEntityIdentity_SetEntityName.{platform}.yaml
           - CEntityIdentity_FreeAttributes.{platform}.yaml
+      - name: find-CEntitySystem_SortEntities
+        expected_output:
+          - CEntitySystem_SortEntities.{platform}.yaml
+        expected_input:
+          - CEntitySystem_HelperExecuteQueuedSpawn.{platform}.yaml
+          - CEntitySystem_vtable.{platform}.yaml
+      - name: find-CGameEntitySystem_SortEntities
+        expected_output:
+          - CGameEntitySystem_SortEntities.{platform}.yaml
+        expected_input:
+          - CEntitySystem_SortEntities.{platform}.yaml
+          - CGameEntitySystem_vtable.{platform}.yaml
       - name: find-CEntitySystem_ExecuteQueuedActivates-AND-CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates
         expected_output:
           - CEntitySystem_ExecuteQueuedActivates.{platform}.yaml
@@ -7172,6 +7184,14 @@ modules:
         category: func
         alias:
           - CEntitySystem::HelperExecuteQueuedSpawn
+      - name: CEntitySystem_SortEntities
+        category: vfunc
+        alias:
+          - CEntitySystem::SortEntities
+      - name: CGameEntitySystem_SortEntities
+        category: vfunc
+        alias:
+          - CGameEntitySystem::SortEntities
       - name: CEntitySystem_InstallCreationWrapperCallbacks
         category: func
         alias:
