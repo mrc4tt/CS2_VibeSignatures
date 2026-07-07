@@ -1,35 +1,17 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEngineServer_CreateFakeClient skill."""
+"""Preprocess script for find-CNetworkGameServer_PreWorldUpdate skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
-TARGET_FUNCTION_NAMES = [
-    "CEngineServer_CreateFakeClient",
-]
-
-FUNC_XREFS = [
-    {
-        "func_name": "CEngineServer_CreateFakeClient",
-        "xref_strings": [],
-        "xref_gvs": [],
-        "xref_signatures": [],
-        "xref_funcs": ["CNetworkGameServerBase_CreateFakeClient"],
-        "exclude_funcs": [],
-        "exclude_strings": [],
-        "exclude_gvs": [],
-        "exclude_signatures": [],
-    },
-]
-
-FUNC_VTABLE_RELATIONS = [
-    # (func_name, vtable_class)
-    ("CEngineServer_CreateFakeClient", "CEngineServer_vtable"),
+INHERIT_VFUNCS = [
+    # (target_func_name, inherit_vtable_class, base_vfunc_name, generate_func_sig)
+    ("CNetworkGameServer_PreWorldUpdate", "CNetworkGameServer", "INetworkGameServer_PreWorldUpdate", True),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CEngineServer_CreateFakeClient",
+        "CNetworkGameServer_PreWorldUpdate",
         [
             "func_name",
             "func_va",
@@ -54,7 +36,9 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Reuse previous gamever func_sig to locate target function(s) and write YAML."""
+    """Reuse old func_sig first; fallback to vtable index + generated signature when needed."""
+    _ = skill_name
+
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -62,9 +46,7 @@ async def preprocess_skill(
         new_binary_dir=new_binary_dir,
         platform=platform,
         image_base=image_base,
-        func_names=TARGET_FUNCTION_NAMES,
-        func_xrefs=FUNC_XREFS,
-        func_vtable_relations=FUNC_VTABLE_RELATIONS,
+        inherit_vfuncs=INHERIT_VFUNCS,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )

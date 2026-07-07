@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEngineServer_CreateFakeClient skill."""
+"""Preprocess script for find-CNetworkGameServer_ActivateServer skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CEngineServer_CreateFakeClient",
+    "CNetworkGameServer_ActivateServer",
 ]
 
 FUNC_XREFS = [
     {
-        "func_name": "CEngineServer_CreateFakeClient",
-        "xref_strings": [],
+        "func_name": "CNetworkGameServer_ActivateServer",
+        "xref_strings": [
+            "CNetworkGameServer::ActivateServer",
+        ],
         "xref_gvs": [],
         "xref_signatures": [],
-        "xref_funcs": ["CNetworkGameServerBase_CreateFakeClient"],
+        "xref_funcs": [],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],
@@ -23,13 +25,13 @@ FUNC_XREFS = [
 
 FUNC_VTABLE_RELATIONS = [
     # (func_name, vtable_class)
-    ("CEngineServer_CreateFakeClient", "CEngineServer_vtable"),
+    ("CNetworkGameServer_ActivateServer", "CNetworkGameServer_vtable"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CEngineServer_CreateFakeClient",
+        "CNetworkGameServer_ActivateServer",
         [
             "func_name",
             "func_va",
