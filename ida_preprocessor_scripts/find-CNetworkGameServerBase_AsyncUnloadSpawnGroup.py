@@ -17,9 +17,7 @@ FUNC_XREFS = [
         "xref_signatures": [],
         "xref_funcs": [],
         "exclude_funcs": [],
-        "exclude_strings": [
-            "SV:  AsyncUnloadSpawnGroup( %s ) -- unloading loading spawngroup"
-        ],
+        "exclude_strings": ["SV:  AsyncUnloadSpawnGroup( %s ) -- unloading loading spawngroup"],
         "exclude_gvs": [],
         "exclude_signatures": [],
     },
