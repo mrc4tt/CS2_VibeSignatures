@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CNetworkGameServer_CreateFakeClient_Impl skill."""
+"""Preprocess script for find-CNetworkGameServerBase_CreateFakeClient skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CNetworkGameServer_CreateFakeClient_Impl",
+    "CNetworkGameServerBase_CreateFakeClient",
 ]
 
 FUNC_XREFS = [
     {
-        "func_name": "CNetworkGameServer_CreateFakeClient_Impl",
+        "func_name": "CNetworkGameServerBase_CreateFakeClient",
         "xref_strings": [
-            "30000",
-            "rate",
+            "FULLMATCH:30000",
+            "FULLMATCH:rate",
         ],
         "xref_gvs": [],
         "xref_signatures": [],
@@ -27,7 +27,7 @@ FUNC_XREFS = [
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CNetworkGameServer_CreateFakeClient_Impl",
+        "CNetworkGameServerBase_CreateFakeClient",
         [
             "func_name",
             "func_sig",
