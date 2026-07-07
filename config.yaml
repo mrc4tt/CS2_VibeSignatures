@@ -469,6 +469,9 @@ modules:
           - CNetworkGameServerBase_SetMaxClients.{platform}.yaml
         expected_input:
           - CNetworkGameServer_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_CheckTimeouts
+        expected_output:
+          - CNetworkGameServerBase_CheckTimeouts.{platform}.yaml
       - name: find-CServerSideClient_vtable
         expected_output:
           - CServerSideClient_vtable.{platform}.yaml
@@ -1420,6 +1423,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::SetMaxClients
+      - name: CNetworkGameServerBase_CheckTimeouts
+        category: func
+        alias:
+          - CNetworkGameServerBase::CheckTimeouts
       - name: CNetworkGameClient_SendMovePacket
         category: func
         alias:
