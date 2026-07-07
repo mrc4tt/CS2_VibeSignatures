@@ -646,6 +646,9 @@ modules:
           - CNetworkGameServerBase_AsyncUnloadSpawnGroup.{platform}.yaml
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_AsyncUnloadSpawnGroupInterrnal
+        expected_output:
+          - CNetworkGameServerBase_AsyncUnloadSpawnGroupInterrnal.{platform}.yaml
       - name: find-CNetworkGameServer_PrepareForAssetLoad
         expected_output:
           - CNetworkGameServer_PrepareForAssetLoad.{platform}.yaml
@@ -1631,6 +1634,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::AsyncUnloadSpawnGroup
+      - name: CNetworkGameServerBase_AsyncUnloadSpawnGroupInterrnal
+        category: func
+        alias:
+          - CNetworkGameServerBase::AsyncUnloadSpawnGroupInterrnal
       - name: CNetworkGameServer_PrepareForAssetLoad
         category: vfunc
         alias:
