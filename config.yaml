@@ -454,6 +454,11 @@ modules:
       - name: find-CNetworkGameServer_vtable
         expected_output:
           - CNetworkGameServer_vtable.{platform}.yaml
+      - name: find-CNetworkGameServer_ActivateServer
+        expected_output:
+          - CNetworkGameServer_ActivateServer.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
       - name: find-CServerSideClient_vtable
         expected_output:
           - CServerSideClient_vtable.{platform}.yaml
@@ -567,6 +572,11 @@ modules:
           - CNetworkGameServer_GetFreeClient.{platform}.yaml
       - name: find-CNetworkGameServerBase_CreateFakeClient
         expected_output:
+          - CNetworkGameServerBase_CreateFakeClient.{platform}.yaml
+      - name: find-CNetworkGameServerBase_StartHLTVMaster
+        expected_output:
+          - CNetworkGameServerBase_StartHLTVMaster.{platform}.yaml
+        expected_input:
           - CNetworkGameServerBase_CreateFakeClient.{platform}.yaml
       - name: find-g_pGameServer-AND-CServerSideClientBase_ClientPrintf-AND-CNetworkGameServer_ClientList
         expected_output:
@@ -1378,6 +1388,14 @@ modules:
         category: func
         alias:
           - CNetworkGameServerBase::CreateFakeClient
+      - name: CNetworkGameServerBase_StartHLTVMaster
+        category: func
+        alias:
+          - CNetworkGameServerBase::StartHLTVMaster
+      - name: CNetworkGameServer_ActivateServer
+        category: vfunc
+        alias:
+          - CNetworkGameServer::ActivateServer
       - name: CNetworkGameClient_SendMovePacket
         category: func
         alias:
