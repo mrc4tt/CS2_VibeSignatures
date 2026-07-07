@@ -464,6 +464,11 @@ modules:
           - CNetworkGameServer_DirectUpdate.{platform}.yaml
         expected_input:
           - CNetworkGameServer_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_ServerPollNetworking
+        expected_output:
+          - CNetworkGameServerBase_ServerPollNetworking.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
       - name: find-CNetworkGameServerBase_SetMaxClients
         expected_output:
           - CNetworkGameServerBase_SetMaxClients.{platform}.yaml
@@ -768,6 +773,11 @@ modules:
       - name: find-CNetworkServerService_Init
         expected_output:
           - CNetworkServerService_Init.{platform}.yaml
+        expected_input:
+          - CNetworkServerService_vtable.{platform}.yaml
+      - name: find-CNetworkServerService_StartupServer
+        expected_output:
+          - CNetworkServerService_StartupServer.{platform}.yaml
         expected_input:
           - CNetworkServerService_vtable.{platform}.yaml
       - name: find-CNetworkServerService_RegisterEventMapInternal
@@ -1422,6 +1432,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::ServerSimulate
+      - name: CNetworkGameServerBase_ServerPollNetworking
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::ServerPollNetworking
       - name: CNetworkGameServer_GetFreeClient
         category: func
         alias:
@@ -1644,6 +1658,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkServerService::Init
+      - name: CNetworkServerService_StartupServer
+        category: vfunc
+        alias:
+          - CNetworkServerService::StartupServer
       - name: CNetworkServerService_RegisterEventMapInternal
         category: func
         alias:
