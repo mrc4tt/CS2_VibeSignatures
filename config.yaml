@@ -1251,6 +1251,9 @@ modules:
         expected_input:
           - CServerSideClientBase_ProcessSplitPlayerConnectInternal.{platform}.yaml
           - CServerSideClientBase_vtable.{platform}.yaml
+      - name: find-CServerSideClientBase_GetUserIDString
+        expected_output:
+          - CServerSideClientBase_GetUserIDString.{platform}.yaml
       - name: find-CNetworkGameClientBase_vtable
         expected_output:
           - CNetworkGameClientBase_vtable.{platform}.yaml
@@ -1994,6 +1997,10 @@ modules:
         category: vfunc
         alias:
           - CServerSideClientBase::ProcessSplitPlayerConnect
+      - name: CServerSideClientBase_GetUserIDString
+        category: func
+        alias:
+          - CServerSideClientBase::GetUserIDString
       - name: CNetworkGameClientBase_vtable
         category: vtable
       - name: CNetworkGameClientBase_ProcessSetConVar
