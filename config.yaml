@@ -464,6 +464,17 @@ modules:
           - CNetworkGameServer_DirectUpdate.{platform}.yaml
         expected_input:
           - CNetworkGameServer_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_SetMaxClients
+        expected_output:
+          - CNetworkGameServerBase_SetMaxClients.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_CheckTimeouts
+        expected_output:
+          - CNetworkGameServerBase_CheckTimeouts.{platform}.yaml
+      - name: find-CNetworkGameServerBase_OnKickById
+        expected_output:
+          - CNetworkGameServerBase_OnKickById.{platform}.yaml
       - name: find-CServerSideClient_vtable
         expected_output:
           - CServerSideClient_vtable.{platform}.yaml
@@ -759,6 +770,9 @@ modules:
       - name: find-CNetworkServerService_RegisterEventMapInternal
         expected_output:
           - CNetworkServerService_RegisterEventMapInternal.{platform}.yaml
+      - name: find-CNetworkServerService_OnKickByIdHLTV
+        expected_output:
+          - CNetworkServerService_OnKickByIdHLTV.{platform}.yaml
       - name: find-CNetworkServerService_OnEventMapCallbacks-engine
         expected_output:
           - CNetworkServerService_OnServerAdvanceTick.{platform}.yaml
@@ -1246,6 +1260,18 @@ modules:
         expected_input:
           - CServerSideClientBase_ProcessSplitPlayerConnectInternal.{platform}.yaml
           - CServerSideClientBase_vtable.{platform}.yaml
+      - name: find-CServerSideClientBase_GetUserIDString
+        expected_output:
+          - CServerSideClientBase_GetUserIDString.{platform}.yaml
+      - name: find-CServerSideClientBase_GetNetworkIDString
+        expected_output:
+          - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
+      - name: find-CEngineServer_GetPlayerNetworkIDString
+        expected_output:
+          - CEngineServer_GetPlayerNetworkIDString.{platform}.yaml
+        expected_input:
+          - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
+          - CEngineServer_vtable.{platform}.yaml
       - name: find-CNetworkGameClientBase_vtable
         expected_output:
           - CNetworkGameClientBase_vtable.{platform}.yaml
@@ -1405,6 +1431,18 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServer::DirectUpdate
+      - name: CNetworkGameServerBase_SetMaxClients
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::SetMaxClients
+      - name: CNetworkGameServerBase_CheckTimeouts
+        category: func
+        alias:
+          - CNetworkGameServerBase::CheckTimeouts
+      - name: CNetworkGameServerBase_OnKickById
+        category: func
+        alias:
+          - CNetworkGameServerBase::OnKickById
       - name: CNetworkGameClient_SendMovePacket
         category: func
         alias:
@@ -1630,6 +1668,10 @@ modules:
         category: func
         alias:
           - CNetworkServerService::OnSimpleLoopFrameUpdate
+      - name: CNetworkServerService_OnKickByIdHLTV
+        category: func
+        alias:
+          - CNetworkServerService::OnKickByIdHLTV
       - name: INetworkGameServer_PreWorldUpdate
         category: vfunc
         alias:
@@ -1985,6 +2027,26 @@ modules:
         category: vfunc
         alias:
           - CServerSideClientBase::ProcessSplitPlayerConnect
+      - name: CServerSideClientBase_GetUserIDString
+        category: func
+        alias:
+          - CServerSideClientBase::GetUserIDString
+      - name: CServerSideClientBase_GetNetworkIDString
+        category: func
+        alias:
+          - CServerSideClientBase::GetNetworkIDString
+      - name: CNetworkGameServerBase_GetPlayerNetworkIDString
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::GetPlayerNetworkIDString
+      - name: CNetworkGameServerBase_RemoveClientFromGame
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::RemoveClientFromGame
+      - name: CEngineServer_GetPlayerNetworkIDString
+        category: vfunc
+        alias:
+          - CEngineServer::GetPlayerNetworkIDString
       - name: CNetworkGameClientBase_vtable
         category: vtable
       - name: CNetworkGameClientBase_ProcessSetConVar
@@ -9378,6 +9440,30 @@ modules:
           - g_pNavGameTest.{platform}.yaml
         expected_input:
           - g_pInterfaceGlobals.{platform}.yaml
+      # Placed in the late engine pass because it depends on g_pSource2GameClients,
+      # which is only produced for engine2.dll here (via find-g_pInterfaceGlobals_ppGlobal).
+      # The script also excludes CNetworkGameServerBase_ConnectClient (an extra xref
+      # collider on Linux) via exclude_funcs; it is produced in the primary engine pass and
+      # listed in expected_input below (only its func_va is consumed for the xref exclude).
+      - name: find-CNetworkGameServerBase_GetPlayerNetworkIDString
+        expected_output:
+          - CNetworkGameServerBase_GetPlayerNetworkIDString.{platform}.yaml
+        expected_input:
+          - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
+          - CNetworkGameServer_vtable.{platform}.yaml
+          - g_pSource2GameClients.{platform}.yaml
+          - CNetworkGameServerBase_ConnectClient.{platform}.yaml
+      # Same late-pass placement/reason as the skill above: depends on g_pSource2GameClients.
+      # Discovered as the CNetworkGameServer_vtable entry that BOTH calls
+      # CServerSideClientBase_GetNetworkIDString and references g_pSource2GameClients (the
+      # xref_funcs + xref_gvs + vtable intersection uniquely selects it, no excludes needed).
+      - name: find-CNetworkGameServerBase_RemoveClientFromGame
+        expected_output:
+          - CNetworkGameServerBase_RemoveClientFromGame.{platform}.yaml
+        expected_input:
+          - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
+          - CNetworkGameServer_vtable.{platform}.yaml
+          - g_pSource2GameClients.{platform}.yaml
   - name: client  # Execute Shutdown-dependent client skills after engine2.dll generates ILoopModeFactory_Shutdown
     path_windows: game/csgo/bin/win64/client.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libclient.so
