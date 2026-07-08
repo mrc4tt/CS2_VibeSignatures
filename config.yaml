@@ -1254,6 +1254,14 @@ modules:
         expected_output:
           - CLoopTypeBase_LoadDependentServices.{platform}.yaml
         platform: linux
+      - name: find-IEngineService_GetServiceDependencies-AND-IEngineService_GetName
+        expected_output:
+          - IEngineService_GetServiceDependencies.{platform}.yaml
+          - IEngineService_GetName.{platform}.yaml
+        expected_input_windows:
+          - CLoopTypeBase_AddDependentServices.{platform}.yaml
+        expected_input_linux:
+          - CLoopTypeBase_LoadDependentServices.{platform}.yaml
       - name: find-CLoopTypeClientServerService_OnLoopActivate
         expected_output:
           - CLoopTypeClientServerService_OnLoopActivate.{platform}.yaml
@@ -2229,6 +2237,14 @@ modules:
         category: func
         alias:
           - CLoopTypeBase::LoadDependentServices
+      - name: IEngineService_GetServiceDependencies
+        category: vfunc
+        alias:
+          - IEngineService::GetServiceDependencies
+      - name: IEngineService_GetName
+        category: vfunc
+        alias:
+          - IEngineService::GetName
       - name: ILoopModeFactory_GetLoopModeType
         category: vfunc
         alias:
