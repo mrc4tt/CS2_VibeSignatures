@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEngineServer_ShowFrameTimeReport_Impl skill."""
+"""Preprocess script for find-ShowFrameTimeReport skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CEngineServer_ShowFrameTimeReport_Impl",
+    "ShowFrameTimeReport",
 ]
 
 FUNC_XREFS = [
     {
-        "func_name": "CEngineServer_ShowFrameTimeReport_Impl",
+        "func_name": "ShowFrameTimeReport",
         "xref_strings": [
             "Summary of %d frames.  (%d frames excluded from analysis.)",
         ],
@@ -26,7 +26,7 @@ FUNC_XREFS = [
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CEngineServer_ShowFrameTimeReport_Impl",
+        "ShowFrameTimeReport",
         [
             "func_name",
             "func_sig",

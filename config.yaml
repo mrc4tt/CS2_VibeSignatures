@@ -1026,14 +1026,14 @@ modules:
         expected_input:
           - CEngineServer_GetFrameTimeAmnesty_Impl.{platform}.yaml
           - CEngineServer_vtable.{platform}.yaml
-      - name: find-CEngineServer_ShowFrameTimeReport_Impl
+      - name: find-ShowFrameTimeReport
         expected_output:
-          - CEngineServer_ShowFrameTimeReport_Impl.{platform}.yaml
+          - ShowFrameTimeReport.{platform}.yaml
       - name: find-CEngineServer_ShowFrameTimeReport
         expected_output:
           - CEngineServer_ShowFrameTimeReport.{platform}.yaml
         expected_input:
-          - CEngineServer_ShowFrameTimeReport_Impl.{platform}.yaml
+          - ShowFrameTimeReport.{platform}.yaml
           - CEngineServer_vtable.{platform}.yaml
       - name: find-CEngineServer_SetFrameTimeAmnesty_Impl
         expected_output:
@@ -2006,7 +2006,7 @@ modules:
         platform: windows
         alias:
           - CEngineServer::GetFrameTimeAmnesty_Impl
-      - name: CEngineServer_ShowFrameTimeReport_Impl
+      - name: ShowFrameTimeReport
         category: func
         alias:
           - CEngineServer::ShowFrameTimeReport
