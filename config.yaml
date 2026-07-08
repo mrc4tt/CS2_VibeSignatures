@@ -2115,6 +2115,14 @@ modules:
         category: vfunc
         alias:
           - CEngineServer::KickClient
+      - name: CEngineServer_IsDedicatedServer
+        category: vfunc
+        alias:
+          - CEngineServer::IsDedicatedServer
+      - name: CEngineServer_ServerCommand
+        category: vfunc
+        alias:
+          - CEngineServer::ServerCommand
       - name: CLoopTypeClientServerService_vtable
         category: vtable
       - name: CLoopTypeClientServerService_vtable2
@@ -3957,6 +3965,15 @@ modules:
       - name: find-CMultiplayRules_vtable
         expected_output:
           - CMultiplayRules_vtable.{platform}.yaml
+      - name: find-CMultiplayRules_ctor
+        expected_output:
+          - CMultiplayRules_ctor.{platform}.yaml
+      - name: find-CMultiplayRules_ctor-decompiles
+        expected_output:
+          - IVEngineServer2_ServerCommand.{platform}.yaml
+          - IVEngineServer2_IsDedicatedServer.{platform}.yaml
+        expected_input:
+          - CMultiplayRules_ctor.{platform}.yaml
       - name: find-CCSGameRules_vtable
         expected_output:
           - CCSGameRules_vtable.{platform}.yaml
@@ -6702,6 +6719,10 @@ modules:
         category: vtable
       - name: CMultiplayRules_vtable
         category: vtable
+      - name: CMultiplayRules_ctor
+        category: func
+        alias:
+          - CMultiplayRules::CMultiplayRules
       - name: CCSGameRules_vtable
         category: vtable
       - name: CGameMoney_vtable
@@ -7583,6 +7604,14 @@ modules:
         category: vfunc
         alias:
           - IAppSystem::PreShutdown
+      - name: IVEngineServer2_ServerCommand
+        category: vfunc
+        alias:
+          - IVEngineServer2::ServerCommand
+      - name: IVEngineServer2_IsDedicatedServer
+        category: vfunc
+        alias:
+          - IVEngineServer2::IsDedicatedServer
       - name: CSource2Server_Shutdown
         category: vfunc
         alias:
@@ -9651,6 +9680,18 @@ modules:
         expected_input:
           - ../server/IAppSystem_Connect.{platform}.yaml
           - CNetSupportImpl_vtable.{platform}.yaml
+      - name: find-CEngineServer_IsDedicatedServer
+        expected_output:
+          - CEngineServer_IsDedicatedServer.{platform}.yaml
+        expected_input:
+          - CEngineServer_vtable.{platform}.yaml
+          - ../server/IVEngineServer2_IsDedicatedServer.{platform}.yaml
+      - name: find-CEngineServer_ServerCommand
+        expected_output:
+          - CEngineServer_ServerCommand.{platform}.yaml
+        expected_input:
+          - CEngineServer_vtable.{platform}.yaml
+          - ../server/IVEngineServer2_ServerCommand.{platform}.yaml
       - name: find-ConnectInterfaces
         expected_output:
           - ConnectInterfaces.{platform}.yaml
@@ -10096,6 +10137,8 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - engine  # bin/{gamever}/engine/CEngineServer_*.{platform}.yaml
+      - client  # bin/{gamever}/client/IVEngineServer2_*.{platform}.yaml
+      - server  # bin/{gamever}/server/IVEngineServer2_*.{platform}.yaml
   - name: IGameSystemFactory_MSVC
     symbol: IGameSystemFactory
     cpp: cpp_tests/igamesystemfactory.cpp
