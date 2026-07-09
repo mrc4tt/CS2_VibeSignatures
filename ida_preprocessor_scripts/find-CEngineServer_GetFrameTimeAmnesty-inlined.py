@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEngineServer_GetFrameTimeAmnesty-windows skill."""
+"""Preprocess script for find-CEngineServer_GetFrameTimeAmnesty-inlined skill.
+
+Resolves ``CEngineServer_GetFrameTimeAmnesty`` (a vfunc of ``CEngineServer_vtable``)
+directly from the ``"!engine_frametime_warnings_enable"`` string reference.  This
+applies when ``GetFrameTimeAmnesty`` is inlined into ``CEngineServer_GetFrameTimeAmnesty``
+so the string lives inside the vfunc body.  It is the fallback for the
+``find-CEngineServer_GetFrameTimeAmnesty-noinline`` path (which handles the de-inlined
+case) and is skipped whenever ``CEngineServer_GetFrameTimeAmnesty.{platform}.yaml``
+already exists.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
@@ -10,10 +19,12 @@ TARGET_FUNCTION_NAMES = [
 FUNC_XREFS = [
     {
         "func_name": "CEngineServer_GetFrameTimeAmnesty",
-        "xref_strings": [],
+        "xref_strings": [
+            "!engine_frametime_warnings_enable",
+        ],
         "xref_gvs": [],
         "xref_signatures": [],
-        "xref_funcs": ["GetFrameTimeAmnesty"],
+        "xref_funcs": [],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],
@@ -21,12 +32,13 @@ FUNC_XREFS = [
     },
 ]
 
-# CEngineServer_GetFrameTimeAmnesty is a vfunc of CEngineServer
 FUNC_VTABLE_RELATIONS = [
+    # (func_name, vtable_class)
     ("CEngineServer_GetFrameTimeAmnesty", "CEngineServer_vtable"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
+    # (symbol_name, generate_yaml_fields)
     (
         "CEngineServer_GetFrameTimeAmnesty",
         [

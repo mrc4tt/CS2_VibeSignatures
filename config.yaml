@@ -1056,20 +1056,27 @@ modules:
           - CEngineServer_ClientPrintf.{platform}.yaml
         expected_input:
           - CEngineServer_vtable.{platform}.yaml
-      - name: find-CEngineServer_GetFrameTimeAmnesty-linux-AND-GetFrameTimeAmnesty-windows
-        expected_output_linux:
-          - CEngineServer_GetFrameTimeAmnesty.{platform}.yaml
-        expected_output_windows:
+      - name: find-GetFrameTimeAmnesty
+        optional_output:
           - GetFrameTimeAmnesty.{platform}.yaml
-        expected_input_linux:
+        skip_if_exists:
+          - CEngineServer_GetFrameTimeAmnesty.{platform}.yaml
+      - name: find-CEngineServer_GetFrameTimeAmnesty-noinline
+        optional_output:
+          - CEngineServer_GetFrameTimeAmnesty.{platform}.yaml
+        expected_input:
           - CEngineServer_vtable.{platform}.yaml
-      - name: find-CEngineServer_GetFrameTimeAmnesty-windows
-        platform: windows
+        prerequisite:
+          - find-GetFrameTimeAmnesty
+      - name: find-CEngineServer_GetFrameTimeAmnesty-inlined
         expected_output:
           - CEngineServer_GetFrameTimeAmnesty.{platform}.yaml
         expected_input:
-          - GetFrameTimeAmnesty.{platform}.yaml
           - CEngineServer_vtable.{platform}.yaml
+        skip_if_exists:
+          - CEngineServer_GetFrameTimeAmnesty.{platform}.yaml
+        prerequisite:
+          - find-CEngineServer_GetFrameTimeAmnesty-noinline
       - name: find-ShowFrameTimeReport
         expected_output:
           - ShowFrameTimeReport.{platform}.yaml
@@ -2121,16 +2128,8 @@ modules:
           - CEngineServer::ClientPrintf
       - name: CEngineServer_GetFrameTimeAmnesty
         category: vfunc
-        platform: linux
         alias:
           - CEngineServer::GetFrameTimeAmnesty
-      - name: CEngineServer_GetFrameTimeAmnesty
-        category: vfunc
-        platform: windows
-        alias:
-          - CEngineServer::GetFrameTimeAmnesty
-      - name: GetFrameTimeAmnesty
-        category: func
       - name: ShowFrameTimeReport
         category: func
       - name: SetFrameTimeAmnesty
