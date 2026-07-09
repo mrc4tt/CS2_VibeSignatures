@@ -10,9 +10,9 @@ TARGET_FUNCTION_NAMES = [
 FUNC_XREFS = [
     {
         "func_name": "CNetworkSystem_SendNetworkStats",
-        "xref_strings": ["Stack depth limit hit (%d)", "groupnames"],
+        "xref_strings": ["Stack depth limit hit (%d)"],
         "xref_gvs": [],
-        "xref_signatures": [],
+        "xref_signatures": ["E0 00 00 00 04"],
         "xref_funcs": [],
         "exclude_funcs": [],
         "exclude_strings": [],
