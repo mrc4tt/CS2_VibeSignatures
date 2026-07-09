@@ -1187,20 +1187,36 @@ modules:
         expected_input:
           - IsMapValid.{platform}.yaml
           - CMapListService_vtable.{platform}.yaml
-      - name: find-CEngineServer_IsMapValid-windows
-        platform: windows
-        expected_output:
-          - CEngineServer_IsMapValid.{platform}.yaml
-        expected_input:
-          - CMapListService_IsMapValid.{platform}.yaml
-          - CEngineServer_vtable.{platform}.yaml
-      - name: find-CEngineServer_IsMapValid-linux
-        platform: linux
-        expected_output:
-          - CEngineServer_IsMapValid.{platform}.yaml
-        expected_input:
+      # CNetworkGameServer_IsMapValid de-inlined out of CEngineServer_IsMapValid on
+      # Linux 14168 (the guard between the vfunc and the string-owning IsMapValid body).
+      # 3-skill inline/noinline fallback chain (cross-platform, no platform split):
+      - name: find-CNetworkGameServer_IsMapValid
+        optional_output:
+          - CNetworkGameServer_IsMapValid.{platform}.yaml
+        expected_input_linux:
           - IsMapValid.{platform}.yaml
+        skip_if_exists:
+          - CEngineServer_IsMapValid.{platform}.yaml
+      - name: find-CEngineServer_IsMapValid-noinline
+        optional_output:
+          - CEngineServer_IsMapValid.{platform}.yaml
+        expected_input:
           - CEngineServer_vtable.{platform}.yaml
+        prerequisite:
+          - find-CNetworkGameServer_IsMapValid
+      - name: find-CEngineServer_IsMapValid-inlined
+        expected_output:
+          - CEngineServer_IsMapValid.{platform}.yaml
+        expected_input:
+          - CEngineServer_vtable.{platform}.yaml
+        expected_input_windows:
+          - CMapListService_IsMapValid.{platform}.yaml
+        expected_input_linux:
+          - IsMapValid.{platform}.yaml
+        skip_if_exists:
+          - CEngineServer_IsMapValid.{platform}.yaml
+        prerequisite:
+          - find-CEngineServer_IsMapValid-noinline
       - name: find-CEngineServer_PrecacheGeneric
         expected_output:
           - CEngineServer_PrecacheGeneric.{platform}.yaml
