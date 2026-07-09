@@ -12,3 +12,6 @@ bin
 vcall_finder
 .codex/skills
 .agents/skills
+*.sh
+libtier0.so
+hm
