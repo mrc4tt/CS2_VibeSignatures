@@ -123,7 +123,61 @@ jobs:
       - name: Analyze binaries
         shell: pwsh
         run: |
-          uv run ida_analyze_bin.py -gamever "$env:GAMEVER" -debug
+          function Get-GameVersionBase {
+            param(
+              [Parameter(Mandatory=$true)][string]$Version
+            )
+
+            if ($Version -match '^(\d+)[a-z]*$') {
+              return $Matches[1]
+            }
+
+            return $null
+          }
+
+          $previousTagScript = @'
+          import sys
+          import yaml
+
+          gamever = sys.argv[1]
+          with open("download.yaml", encoding="utf-8") as f:
+              downloads = yaml.safe_load(f).get("downloads", [])
+
+          tags = [str(item.get("tag", "")).strip() for item in downloads]
+          try:
+              index = tags.index(gamever)
+          except ValueError:
+              print("")
+          else:
+              print(tags[index - 1] if index > 0 else "")
+          '@
+
+          $previousGamever = uv run python -c $previousTagScript "$env:GAMEVER"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to determine previous game version from download.yaml."
+          }
+
+          $previousGamever = $previousGamever.Trim()
+          $gameverBase = Get-GameVersionBase -Version $env:GAMEVER
+          $previousGameverBase = if ([string]::IsNullOrWhiteSpace($previousGamever)) {
+            $null
+          } else {
+            Get-GameVersionBase -Version $previousGamever
+          }
+
+          $analyzeArgs = @('-gamever', $env:GAMEVER)
+          if ($gameverBase -and $previousGameverBase -and $gameverBase -eq $previousGameverBase) {
+            Write-Host "GAMEVER=$env:GAMEVER is a small version change from $previousGamever; reusing old signatures."
+          } else {
+            Write-Host "GAMEVER=$env:GAMEVER is a major version change from $previousGamever; forcing fresh signatures."
+            $analyzeArgs += @('-oldgamever', '0')
+          }
+
+          $analyzeArgs += '-debug'
+          uv run ida_analyze_bin.py @analyzeArgs
+          if ($LASTEXITCODE -ne 0) {
+            throw "ida_analyze_bin.py failed with exit code $LASTEXITCODE"
+          }
 
       - name: Update gamedata
         shell: pwsh
