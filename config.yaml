@@ -1308,12 +1308,30 @@ modules:
       - name: find-CLoopTypeClientServer_WritePerfStats
         expected_output:
           - CLoopTypeClientServer_WritePerfStats.{platform}.yaml
-      - name: find-CLoopTypeClientServer_DeactivateLoop
+      - name: find-CLoopTypeClientServer_DeactivateLoopInternal
+        optional_output:
+          - CLoopTypeClientServer_DeactivateLoopInternal.{platform}.yaml
+        expected_input:
+          - CLoopTypeClientServer_WritePerfStats.{platform}.yaml
+        skip_if_exists:
+          - CLoopTypeClientServer_DeactivateLoop.{platform}.yaml
+      - name: find-CLoopTypeClientServer_DeactivateLoop-noinline
+        optional_output:
+          - CLoopTypeClientServer_DeactivateLoop.{platform}.yaml
+        expected_input:
+          - CLoopTypeClientServer_vtable.{platform}.yaml
+        prerequisite:
+          - find-CLoopTypeClientServer_DeactivateLoopInternal
+      - name: find-CLoopTypeClientServer_DeactivateLoop-inlined
         expected_output:
           - CLoopTypeClientServer_DeactivateLoop.{platform}.yaml
         expected_input:
           - CLoopTypeClientServer_vtable.{platform}.yaml
           - CLoopTypeClientServer_WritePerfStats.{platform}.yaml
+        skip_if_exists:
+          - CLoopTypeClientServer_DeactivateLoop.{platform}.yaml
+        prerequisite:
+          - find-CLoopTypeClientServer_DeactivateLoop-noinline
       - name: find-CLoopTypeClientServer_OutputListeners
         expected_output:
           - CLoopTypeClientServer_OutputListeners.{platform}.yaml

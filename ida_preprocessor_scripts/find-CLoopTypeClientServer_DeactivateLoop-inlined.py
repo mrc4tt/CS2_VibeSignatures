@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CLoopTypeClientServer_DeactivateLoop skill."""
+"""Preprocess script for find-CLoopTypeClientServer_DeactivateLoop-inlined skill.
+
+Resolves ``CLoopTypeClientServer_DeactivateLoop`` (a vfunc of ``CLoopTypeClientServer``)
+as the single caller of ``CLoopTypeClientServer_WritePerfStats``.  This applies when
+``DeactivateLoopInternal`` is inlined into ``DeactivateLoop`` so the
+``if (m_bShouldWritePerfStats) WritePerfStats()`` guard (and thus the direct call to
+``WritePerfStats``) lives inside the vfunc body itself.
+
+It is the fallback for the ``find-CLoopTypeClientServer_DeactivateLoop-noinline`` path
+(which handles the de-inlined case) and is skipped whenever
+``CLoopTypeClientServer_DeactivateLoop.{platform}.yaml`` already exists.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
@@ -24,10 +35,17 @@ FUNC_XREFS = [
 ]
 
 FUNC_VTABLE_RELATIONS = [
+    # (func_name, vtable_class)
     ("CLoopTypeClientServer_DeactivateLoop", "CLoopTypeClientServer"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
+    # (symbol_name, generate_yaml_fields)
+    # NOTE: func_sig is intentionally omitted to match the -noinline path.  Although the
+    # inlined vfunc body is large enough to sign, the de-inlined vfunc is a small forwarder
+    # whose head bytes differ; dropping func_sig on both paths keeps the symbol's output
+    # shape identical regardless of inline state.  The vtable slot (vfunc_offset/
+    # vfunc_index) is the stable locator.
     (
         "CLoopTypeClientServer_DeactivateLoop",
         [
@@ -35,7 +53,6 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_va",
             "func_rva",
             "func_size",
-            "func_sig",
             "vtable_name",
             "vfunc_offset",
             "vfunc_index",
