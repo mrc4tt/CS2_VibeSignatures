@@ -459,11 +459,27 @@ modules:
           - CNetworkGameServer_ActivateServer.{platform}.yaml
         expected_input:
           - CNetworkGameServer_vtable.{platform}.yaml
-      - name: find-CNetworkGameServer_DirectUpdate
+      - name: find-CNetworkStringTableContainer_DirectUpdate
+        optional_output:
+          - CNetworkStringTableContainer_DirectUpdate.{platform}.yaml
+        skip_if_exists:
+          - CNetworkGameServer_DirectUpdate.{platform}.yaml
+      - name: find-CNetworkGameServer_DirectUpdate-noinline
+        optional_output:
+          - CNetworkGameServer_DirectUpdate.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
+        prerequisite:
+          - find-CNetworkStringTableContainer_DirectUpdate
+      - name: find-CNetworkGameServer_DirectUpdate-inlined
         expected_output:
           - CNetworkGameServer_DirectUpdate.{platform}.yaml
         expected_input:
           - CNetworkGameServer_vtable.{platform}.yaml
+        skip_if_exists:
+          - CNetworkGameServer_DirectUpdate.{platform}.yaml
+        prerequisite:
+          - find-CNetworkGameServer_DirectUpdate-noinline
       - name: find-CNetworkGameServer_Init
         expected_output:
           - CNetworkGameServer_Init.{platform}.yaml

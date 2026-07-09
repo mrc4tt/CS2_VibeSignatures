@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CNetworkGameServer_DirectUpdate skill."""
+"""Preprocess script for find-CNetworkGameServer_DirectUpdate-noinline skill.
+
+Resolves ``CNetworkGameServer_DirectUpdate`` (a vfunc of ``CNetworkGameServer_vtable``)
+as the caller of the standalone ``CNetworkStringTableContainer_DirectUpdate`` helper.
+This path only applies when the helper is NOT inlined into the vfunc (e.g. Linux 14168,
+where ``CNetworkGameServer_DirectUpdate`` merely calls
+``CNetworkStringTableContainer_DirectUpdate`` after its ``m_nMaxClients > 1`` guard).  When
+it is inlined the helper YAML resolves to the vfunc's own address and the ``func_xrefs``
+vtable-self fallback re-selects it; either way the ``CNetworkGameServer_vtable`` relation
+collapses the caller set to the single vtable member.  Its output is optional, so when the
+caller cannot be resolved (e.g. the helper YAML is absent) the
+``find-CNetworkGameServer_DirectUpdate-inlined`` fallback runs instead.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
@@ -10,12 +22,12 @@ TARGET_FUNCTION_NAMES = [
 FUNC_XREFS = [
     {
         "func_name": "CNetworkGameServer_DirectUpdate",
-        "xref_strings": [
-            "FULLMATCH:CNetworkStringTableContainer::DirectUpdate",
-        ],
+        "xref_strings": [],
         "xref_gvs": [],
         "xref_signatures": [],
-        "xref_funcs": [],
+        "xref_funcs": [
+            "CNetworkStringTableContainer_DirectUpdate",
+        ],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],
