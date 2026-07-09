@@ -1196,11 +1196,47 @@ modules:
         expected_input:
           - CNetworkGameServerBase_CreateFakeClient.{platform}.yaml
           - CEngineServer_vtable.{platform}.yaml
-      - name: find-CEngineServer_GetPlayerInfo
+      - name: find-CNetworkGameServerBase_GetPlayerInfo
+        expected_output:
+          - CNetworkGameServerBase_GetPlayerInfo.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_vtable.{platform}.yaml
+          - CNetworkGameServer_GetFreeClient.{platform}.yaml
+      - name: find-CServerSideClientBase_Connect
+        expected_output:
+          - CServerSideClientBase_Connect.{platform}.yaml
+        expected_input:
+          - CServerSideClientBase_vtable.{platform}.yaml
+      - name: find-CServerSideClientBase_GetPlayerInfo
+        expected_output:
+          - CServerSideClientBase_GetPlayerInfo.{platform}.yaml
+        expected_input:
+          - CServerSideClientBase_vtable.{platform}.yaml
+      - name: find-GetPlayerInfo
+        optional_output:
+          - GetPlayerInfo.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_GetPlayerInfo.{platform}.yaml
+          - CServerSideClientBase_Connect.{platform}.yaml
+          - CServerSideClientBase_GetPlayerInfo.{platform}.yaml
+        skip_if_exists:
+          - CEngineServer_GetPlayerInfo.{platform}.yaml
+      - name: find-CEngineServer_GetPlayerInfo-noinline
+        optional_output:
+          - CEngineServer_GetPlayerInfo.{platform}.yaml
+        expected_input:
+          - CEngineServer_vtable.{platform}.yaml
+        prerequisite:
+          - find-GetPlayerInfo
+      - name: find-CEngineServer_GetPlayerInfo-inlined
         expected_output:
           - CEngineServer_GetPlayerInfo.{platform}.yaml
         expected_input:
           - CEngineServer_vtable.{platform}.yaml
+        skip_if_exists:
+          - CEngineServer_GetPlayerInfo.{platform}.yaml
+        prerequisite:
+          - find-CEngineServer_GetPlayerInfo-noinline
       - name: find-CEngineServer_ClientCommandKeyValues
         expected_output:
           - CEngineServer_ClientCommandKeyValues.{platform}.yaml
@@ -1709,6 +1745,10 @@ modules:
         category: func
         alias:
           - CNetworkGameServerBase::CreateFakeClient
+      - name: CNetworkGameServerBase_GetPlayerInfo
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::GetPlayerInfo
       - name: CNetworkGameServerBase_StartHLTVMaster
         category: func
         alias:
@@ -2481,6 +2521,14 @@ modules:
         category: func
         alias:
           - CServerSideClientBase::GetNetworkIDString
+      - name: CServerSideClientBase_Connect
+        category: vfunc
+        alias:
+          - CServerSideClientBase::Connect
+      - name: CServerSideClientBase_GetPlayerInfo
+        category: vfunc
+        alias:
+          - CServerSideClientBase::GetPlayerInfo
       - name: CNetworkGameServerBase_GetPlayerNetworkIDString
         category: vfunc
         alias:

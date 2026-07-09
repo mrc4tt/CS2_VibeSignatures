@@ -3366,6 +3366,81 @@ class TestFuncXrefsSignatureSupport(unittest.IsolatedAsyncioTestCase):
         )
         mock_gen_sig.assert_awaited_once()
 
+    async def test_preprocess_func_xrefs_exclude_callees_drops_calling_candidates(
+        self,
+    ) -> None:
+        # Two candidates share the positive string xref; only the collider CALLS
+        # the excluded callee, so exclude_callees must drop it and keep the target.
+        with (
+            patch.object(
+                ida_analyze_util,
+                "_collect_xref_func_starts_for_string",
+                AsyncMock(return_value={0x180100000, 0x180200000}),
+            ) as mock_collect_string,
+            patch.object(
+                ida_analyze_util,
+                "_load_symbol_addr_from_current_yaml",
+                return_value=0x18000F100,
+            ) as mock_load_symbol,
+            patch.object(
+                ida_analyze_util,
+                "_collect_xref_func_starts_for_ea",
+                AsyncMock(return_value={0x180100000}),
+            ) as mock_collect_ea,
+            patch.object(
+                ida_analyze_util,
+                "preprocess_gen_func_sig_via_mcp",
+                AsyncMock(
+                    return_value={
+                        "func_va": "0x180200000",
+                        "func_rva": "0x200000",
+                        "func_size": "0x40",
+                        "func_sig": "48 89 5C 24 08",
+                    }
+                ),
+            ) as mock_gen_sig,
+        ):
+            result = await ida_analyze_util.preprocess_func_xrefs_via_mcp(
+                session="session",
+                func_name="CNetworkGameServerBase_GetPlayerInfo",
+                xref_strings=["FULLMATCH:userinfo"],
+                xref_gvs=[],
+                xref_signatures=[],
+                xref_funcs=[],
+                exclude_funcs=[],
+                exclude_strings=[],
+                exclude_gvs=[],
+                exclude_signatures=[],
+                new_binary_dir="bin_dir",
+                platform="linux",
+                image_base=0x0,
+                debug=True,
+                exclude_callees=["CNetworkGameServer_GetFreeClient"],
+            )
+
+        self.assertEqual("0x180200000", result["func_va"])
+        mock_collect_string.assert_awaited_once_with(
+            session="session",
+            xref_string="FULLMATCH:userinfo",
+            debug=True,
+        )
+        mock_load_symbol.assert_called_once_with(
+            "bin_dir",
+            "linux",
+            "CNetworkGameServer_GetFreeClient",
+            "func_va",
+            debug=True,
+            debug_label="exclude_callee",
+        )
+        mock_collect_ea.assert_awaited_once_with(
+            session="session",
+            target_ea=0x18000F100,
+            debug=True,
+        )
+        # The surviving candidate must be the non-calling target (0x180200000),
+        # not the collider (0x180100000) that calls the excluded callee.
+        self.assertEqual(0x180200000, mock_gen_sig.await_args.kwargs["func_va"])
+
     async def test_preprocess_func_xrefs_accepts_literal_exclude_gv_address(
         self,
     ) -> None:

@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEngineServer_GetPlayerInfo skill."""
+"""Preprocess script for find-CEngineServer_GetPlayerInfo-noinline skill.
+
+Resolves ``CEngineServer_GetPlayerInfo`` (a vfunc of ``CEngineServer_vtable``) as the
+single caller of the standalone ``GetPlayerInfo``.  This path only applies when
+``GetPlayerInfo`` is NOT inlined into ``CEngineServer_GetPlayerInfo``; when it is
+inlined the xref callee is absent and this skill legitimately produces nothing (its
+output is optional), so the ``find-CEngineServer_GetPlayerInfo-inlined`` fallback runs
+instead.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
@@ -10,12 +18,10 @@ TARGET_FUNCTION_NAMES = [
 FUNC_XREFS = [
     {
         "func_name": "CEngineServer_GetPlayerInfo",
-        "xref_strings": [
-            "userinfo",
-        ],
+        "xref_strings": [],
         "xref_gvs": [],
         "xref_signatures": [],
-        "xref_funcs": [],
+        "xref_funcs": ["GetPlayerInfo"],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],
@@ -23,13 +29,12 @@ FUNC_XREFS = [
     },
 ]
 
+# CEngineServer_GetPlayerInfo is a vfunc of CEngineServer
 FUNC_VTABLE_RELATIONS = [
-    # (func_name, vtable_class)
     ("CEngineServer_GetPlayerInfo", "CEngineServer_vtable"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
-    # (symbol_name, generate_yaml_fields)
     (
         "CEngineServer_GetPlayerInfo",
         [

@@ -6485,6 +6485,7 @@ async def preprocess_func_xrefs_via_mcp(
     xref_floats=None,
     exclude_floats=None,
     inline_alias=None,
+    exclude_callees=None,
 ):
     """
     Resolve target function by intersecting candidate sets collected from
@@ -6513,7 +6514,12 @@ async def preprocess_func_xrefs_via_mcp(
             print(f"    Preprocess: no explicit xref candidate sources configured for {func_name}")
         return None
 
-    dep_func_names = list(xref_funcs or []) + list(exclude_funcs or []) + ([inline_alias] if inline_alias else [])
+    dep_func_names = (
+        list(xref_funcs or [])
+        + list(exclude_funcs or [])
+        + list(exclude_callees or [])
+        + ([inline_alias] if inline_alias else [])
+    )
     dep_gv_names = [
         gv_name
         for gv_name in list(xref_gvs or []) + list(exclude_gvs or [])
@@ -6767,6 +6773,37 @@ async def preprocess_func_xrefs_via_mcp(
     if excluded_gv_func_addrs:
         common_funcs -= excluded_gv_func_addrs
 
+    # exclude_callees: drop candidates that CALL the named function(s). This is the
+    # inverse of xref_funcs (which keeps callers of the named function); use it when
+    # the collider is distinguished only by a callee the target does not have, and the
+    # collider itself is unnamed so exclude_funcs cannot address it.
+    excluded_callee_caller_addrs = set()
+    for excluded_callee_name in exclude_callees or []:
+        excluded_callee_va = _load_symbol_addr_from_current_yaml(
+            new_binary_dir,
+            platform,
+            excluded_callee_name,
+            "func_va",
+            debug=debug,
+            debug_label="exclude_callee",
+        )
+        if excluded_callee_va is None:
+            return None
+
+        addr_set = await _collect_xref_func_starts_for_ea(
+            session=session,
+            target_ea=excluded_callee_va,
+            debug=debug,
+        )
+        if addr_set is None:
+            if debug:
+                print(f"    Preprocess: failed to collect exclude callee xref: {excluded_callee_name}")
+            return None
+        excluded_callee_caller_addrs |= set(addr_set)
+
+    if excluded_callee_caller_addrs:
+        common_funcs -= excluded_callee_caller_addrs
+
     for excluded_signature in exclude_signatures or []:
         if not common_funcs:
             break
@@ -6926,6 +6963,7 @@ async def _try_preprocess_func_without_llm(
             exclude_gvs=xref_spec["exclude_gvs"],
             exclude_signatures=xref_spec["exclude_signatures"],
             exclude_floats=xref_spec["exclude_floats"],
+            exclude_callees=xref_spec["exclude_callees"],
             new_binary_dir=new_binary_dir,
             platform=platform,
             image_base=image_base,
@@ -6953,6 +6991,7 @@ def _can_probe_future_func_fast_path(
     dependency_symbol_names = (
         list(xref_spec.get("xref_funcs") or [])
         + list(xref_spec.get("exclude_funcs") or [])
+        + list(xref_spec.get("exclude_callees") or [])
         + ([inline_alias] if inline_alias else [])
         + [gv_name for gv_name in (xref_spec.get("xref_gvs") or []) if not _is_explicit_address_literal(gv_name)]
         + [gv_name for gv_name in (xref_spec.get("exclude_gvs") or []) if not _is_explicit_address_literal(gv_name)]
@@ -7044,7 +7083,10 @@ async def preprocess_common_skill(
       ``inline_alias``) and optional post-intersection scalar readonly
       float/double filters (``xref_floats``)
       and exclusions (``exclude_funcs``, ``exclude_strings``,
-      ``exclude_gvs``, ``exclude_signatures``, ``exclude_floats``).
+      ``exclude_gvs``, ``exclude_signatures``, ``exclude_floats``,
+      ``exclude_callees``). ``exclude_callees`` drops candidates that CALL the
+      named function(s) -- the inverse of ``xref_funcs`` -- for cases where the
+      collider is unnamed and separated only by a callee the target lacks.
       ``xref_floats``/``exclude_floats`` do not count as positive xref
       candidate sources. ``xref_gvs``/``exclude_gvs``
       entries may be YAML symbol names or explicit ``0x...`` addresses.
@@ -7080,7 +7122,7 @@ async def preprocess_common_skill(
             (may be empty/None). Supported keys are func_name,
             xref_strings/xref_gvs/xref_signatures/xref_funcs,
             inline_alias, xref_floats, exclude_funcs/exclude_strings/
-            exclude_gvs/exclude_signatures/exclude_floats.
+            exclude_gvs/exclude_signatures/exclude_floats/exclude_callees.
         func_vtable_relations: List of (func_name, vtable_class) tuples for
             enriching function YAML with vtable metadata; the vtable value may
             be a canonical class name or a vtable artifact stem
@@ -7136,6 +7178,7 @@ async def preprocess_common_skill(
         "exclude_gvs",
         "exclude_signatures",
         "exclude_floats",
+        "exclude_callees",
     }
     func_xrefs_list_keys = (
         "xref_strings",
@@ -7148,6 +7191,7 @@ async def preprocess_common_skill(
         "exclude_gvs",
         "exclude_signatures",
         "exclude_floats",
+        "exclude_callees",
     )
     func_xrefs_map = {}
     for spec in func_xrefs:
