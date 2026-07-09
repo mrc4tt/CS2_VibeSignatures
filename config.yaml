@@ -1640,12 +1640,10 @@ modules:
       - name: find-CServerSideClientBase_GetNetworkIDString
         expected_output:
           - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
-      - name: find-CEngineServer_GetPlayerNetworkIDString
-        expected_output:
-          - CEngineServer_GetPlayerNetworkIDString.{platform}.yaml
-        expected_input:
-          - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
-          - CEngineServer_vtable.{platform}.yaml
+      # find-CEngineServer_GetPlayerNetworkIDString moved to the late engine pass and
+      # split into a -noinline/-inlined fallback chain (deinline-fix): the -noinline link
+      # anchors on the standalone CNetworkGameServer_GetPlayerNetworkIDString helper, which
+      # is only produced in the late engine pass (it depends on g_pSource2GameClients).
       - name: find-CNetworkGameClientBase_vtable
         expected_output:
           - CNetworkGameClientBase_vtable.{platform}.yaml
@@ -10050,6 +10048,30 @@ modules:
           - CNetworkGameServer_vtable.{platform}.yaml
           - g_pSource2GameClients.{platform}.yaml
           - CNetworkGameServerBase_ConnectClient.{platform}.yaml
+      # Inline/noinline fallback chain for CEngineServer::GetPlayerNetworkIDString (moved
+      # here from the primary engine pass). On Linux 14168 CNetworkGameServer::
+      # GetPlayerNetworkIDString de-inlined out of the CEngineServer vfunc, which now just
+      # calls the standalone helper (found just above), so -noinline resolves the target as
+      # that helper's CEngineServer_vtable caller. On Windows 14168 the helper is inlined
+      # into the target (the CServerSideClientBase_GetNetworkIDString call stays inside it),
+      # so -noinline finds no vtable caller and soft-skips, and -inlined resolves it via the
+      # original anchor.
+      - name: find-CEngineServer_GetPlayerNetworkIDString-noinline
+        optional_output:
+          - CEngineServer_GetPlayerNetworkIDString.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_GetPlayerNetworkIDString.{platform}.yaml
+          - CEngineServer_vtable.{platform}.yaml
+      - name: find-CEngineServer_GetPlayerNetworkIDString-inlined
+        expected_output:
+          - CEngineServer_GetPlayerNetworkIDString.{platform}.yaml
+        expected_input:
+          - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
+          - CEngineServer_vtable.{platform}.yaml
+        skip_if_exists:
+          - CEngineServer_GetPlayerNetworkIDString.{platform}.yaml
+        prerequisite:
+          - find-CEngineServer_GetPlayerNetworkIDString-noinline
       # Same late-pass placement/reason as the skill above: depends on g_pSource2GameClients.
       # Discovered as the CNetworkGameServer_vtable entry that BOTH calls
       # CServerSideClientBase_GetNetworkIDString and references g_pSource2GameClients (the

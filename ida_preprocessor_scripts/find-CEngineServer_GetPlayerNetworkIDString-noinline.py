@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEngineServer_GetPlayerNetworkIDString skill."""
+"""Preprocess script for find-CEngineServer_GetPlayerNetworkIDString-noinline skill.
+
+Inline/noinline fallback chain (deinline-fix), noinline link. Covers builds where
+CNetworkGameServer::GetPlayerNetworkIDString is compiled as a standalone function and
+CEngineServer::GetPlayerNetworkIDString merely calls it (e.g. Linux 14168): the
+CServerSideClientBase_GetNetworkIDString call has moved out of the CEngineServer vfunc,
+so the -inlined finder no longer resolves it. Here the target is instead found as the
+CEngineServer_vtable entry that calls the (already renamed) standalone helper
+CNetworkGameServer_GetPlayerNetworkIDString.
+
+On inlined builds (Windows 14168) CEngineServer::GetPlayerNetworkIDString does not call
+the standalone helper, so the xref intersection is empty and this skill soft-skips
+(optional_output); find-CEngineServer_GetPlayerNetworkIDString-inlined then resolves the
+target. The helper CNetworkGameServer_GetPlayerNetworkIDString is a full standalone
+symbol on both platforms (its own finder runs earlier in this late engine pass), so it
+is listed in expected_input to guarantee it is renamed in IDA before this script runs.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
@@ -14,7 +30,7 @@ FUNC_XREFS = [
         "xref_gvs": [],
         "xref_signatures": [],
         "xref_funcs": [
-            "CServerSideClientBase_GetNetworkIDString",
+            "CNetworkGameServer_GetPlayerNetworkIDString",
         ],
         "exclude_funcs": [],
         "exclude_strings": [],
