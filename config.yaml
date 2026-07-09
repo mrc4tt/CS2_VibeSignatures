@@ -569,23 +569,27 @@ modules:
           - CGameResourceService_AppendToGameResourceManifest.{platform}.yaml
         expected_input:
           - CGameResourceService_vtable.{platform}.yaml
-      - name: find-CGameResourceService_RegisterEventMapInternal-windows
-        platform: windows
-        expected_output:
+      - name: find-CGameResourceService_RegisterEventMapInternal
+        optional_output:
           - CGameResourceService_RegisterEventMapInternal.{platform}.yaml
-      - name: find-CGameResourceService_RegisterEventMap-windows
-        platform: windows
-        expected_output:
+        skip_if_exists:
           - CGameResourceService_RegisterEventMap.{platform}.yaml
-        expected_input:
-          - CGameResourceService_RegisterEventMapInternal.{platform}.yaml
-          - CGameResourceService_vtable.{platform}.yaml
-      - name: find-CGameResourceService_RegisterEventMap-linux
-        platform: linux
-        expected_output:
+      - name: find-CGameResourceService_RegisterEventMap-noinline
+        optional_output:
           - CGameResourceService_RegisterEventMap.{platform}.yaml
         expected_input:
           - CGameResourceService_vtable.{platform}.yaml
+        prerequisite:
+          - find-CGameResourceService_RegisterEventMapInternal
+      - name: find-CGameResourceService_RegisterEventMap-inlined
+        expected_output:
+          - CGameResourceService_RegisterEventMap.{platform}.yaml
+        expected_input:
+          - CGameResourceService_vtable.{platform}.yaml
+        skip_if_exists:
+          - CGameResourceService_RegisterEventMap.{platform}.yaml
+        prerequisite:
+          - find-CGameResourceService_RegisterEventMap-noinline
       - name: find-CNetworkGameServerBase_SendPeerList
         expected_output:
           - CNetworkGameServerBase_SendPeerList.{platform}.yaml
@@ -1663,10 +1667,6 @@ modules:
         category: vfunc
         alias:
           - CGameResourceService::AppendToGameResourceManifest
-      - name: CGameResourceService_RegisterEventMapInternal
-        category: func
-        alias:
-          - CGameResourceService::RegisterEventMapInternal
       - name: CGameResourceService_RegisterEventMap
         category: vfunc
         alias:

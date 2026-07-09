@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CGameResourceService_RegisterEventMap-windows skill."""
+"""Preprocess script for find-CGameResourceService_RegisterEventMap-inlined skill.
+
+Resolves ``CGameResourceService_RegisterEventMap`` (a vfunc of ``CGameResourceService``)
+directly from the ``CGameResourceService`` / ``OnClientSimulate`` / ``OnServerEndSimulate``
+string references.  This applies when ``RegisterEventMapInternal`` is inlined into
+``CGameResourceService_RegisterEventMap`` so the strings live inside the vfunc body.  It
+is the fallback for the ``find-CGameResourceService_RegisterEventMap-noinline`` path
+(which handles the de-inlined case) and is skipped whenever
+``CGameResourceService_RegisterEventMap.{platform}.yaml`` already exists.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
@@ -10,10 +19,14 @@ TARGET_FUNCTION_NAMES = [
 FUNC_XREFS = [
     {
         "func_name": "CGameResourceService_RegisterEventMap",
-        "xref_strings": [],
+        "xref_strings": [
+            "FULLMATCH:CGameResourceService",
+            "FULLMATCH:OnClientSimulate",
+            "FULLMATCH:OnServerEndSimulate",
+        ],
         "xref_gvs": [],
         "xref_signatures": [],
-        "xref_funcs": ["CGameResourceService_RegisterEventMapInternal"],
+        "xref_funcs": [],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],
@@ -28,6 +41,10 @@ FUNC_VTABLE_RELATIONS = [
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
+    # NOTE: func_sig is intentionally omitted to match the -noinline path.  Although the
+    # inlined vfunc body is large enough to sign, the de-inlined vtable member is a tiny
+    # forwarding thunk that cannot be signed uniquely; dropping func_sig on both paths
+    # keeps the symbol's output shape identical regardless of inline state.
     (
         "CGameResourceService_RegisterEventMap",
         [
@@ -35,7 +52,6 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_va",
             "func_rva",
             "func_size",
-            "func_sig",
             "vtable_name",
             "vfunc_offset",
             "vfunc_index",

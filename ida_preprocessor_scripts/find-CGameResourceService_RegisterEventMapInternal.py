@@ -1,15 +1,25 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CGameResourceService_RegisterEventMap-linux skill."""
+"""Preprocess script for find-CGameResourceService_RegisterEventMapInternal skill.
+
+Resolves the standalone ``CGameResourceService_RegisterEventMapInternal`` helper from
+the intersection of the ``CGameResourceService`` / ``OnClientSimulate`` /
+``OnServerEndSimulate`` string references.
+
+This is the first link of the inline/noinline fallback chain: when
+``RegisterEventMapInternal`` is inlined into ``CGameResourceService_RegisterEventMap``
+the standalone helper is absent, so this skill's output is optional and it is skipped
+whenever ``CGameResourceService_RegisterEventMap.{platform}.yaml`` already exists.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CGameResourceService_RegisterEventMap",
+    "CGameResourceService_RegisterEventMapInternal",
 ]
 
 FUNC_XREFS = [
     {
-        "func_name": "CGameResourceService_RegisterEventMap",
+        "func_name": "CGameResourceService_RegisterEventMapInternal",
         "xref_strings": [
             "FULLMATCH:CGameResourceService",
             "FULLMATCH:OnClientSimulate",
@@ -25,24 +35,16 @@ FUNC_XREFS = [
     },
 ]
 
-FUNC_VTABLE_RELATIONS = [
-    # (func_name, vtable_class)
-    ("CGameResourceService_RegisterEventMap", "CGameResourceService"),
-]
-
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CGameResourceService_RegisterEventMap",
+        "CGameResourceService_RegisterEventMapInternal",
         [
             "func_name",
+            "func_sig",
             "func_va",
             "func_rva",
             "func_size",
-            "func_sig",
-            "vtable_name",
-            "vfunc_offset",
-            "vfunc_index",
         ],
     ),
 ]
@@ -68,7 +70,6 @@ async def preprocess_skill(
         image_base=image_base,
         func_names=TARGET_FUNCTION_NAMES,
         func_xrefs=FUNC_XREFS,
-        func_vtable_relations=FUNC_VTABLE_RELATIONS,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )
