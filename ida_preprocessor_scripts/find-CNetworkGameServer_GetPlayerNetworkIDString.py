@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CNetworkGameServerBase_GetPlayerNetworkIDString skill."""
+"""Preprocess script for find-CNetworkGameServer_GetPlayerNetworkIDString skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CNetworkGameServerBase_GetPlayerNetworkIDString",
+    "CNetworkGameServer_GetPlayerNetworkIDString",
 ]
 
 FUNC_XREFS = [
     {
-        "func_name": "CNetworkGameServerBase_GetPlayerNetworkIDString",
+        "func_name": "CNetworkGameServer_GetPlayerNetworkIDString",
         "xref_strings": [],
         "xref_gvs": [],
         "xref_signatures": [],
@@ -33,13 +33,13 @@ FUNC_XREFS = [
 
 FUNC_VTABLE_RELATIONS = [
     # (func_name, vtable_class)
-    ("CNetworkGameServerBase_GetPlayerNetworkIDString", "CNetworkGameServer_vtable"),
+    ("CNetworkGameServer_GetPlayerNetworkIDString", "CNetworkGameServer_vtable"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CNetworkGameServerBase_GetPlayerNetworkIDString",
+        "CNetworkGameServer_GetPlayerNetworkIDString",
         [
             "func_name",
             "func_va",

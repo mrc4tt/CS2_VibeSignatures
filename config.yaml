@@ -2601,10 +2601,10 @@ modules:
         category: vfunc
         alias:
           - CServerSideClientBase::GetPlayerInfo
-      - name: CNetworkGameServerBase_GetPlayerNetworkIDString
+      - name: CNetworkGameServer_GetPlayerNetworkIDString
         category: vfunc
         alias:
-          - CNetworkGameServerBase::GetPlayerNetworkIDString
+          - CNetworkGameServer::GetPlayerNetworkIDString
       - name: CNetworkGameServerBase_RemoveClientFromGame
         category: vfunc
         alias:
@@ -10042,9 +10042,9 @@ modules:
       # The script also excludes CNetworkGameServerBase_ConnectClient (an extra xref
       # collider on Linux) via exclude_funcs; it is produced in the primary engine pass and
       # listed in expected_input below (only its func_va is consumed for the xref exclude).
-      - name: find-CNetworkGameServerBase_GetPlayerNetworkIDString
+      - name: find-CNetworkGameServer_GetPlayerNetworkIDString
         expected_output:
-          - CNetworkGameServerBase_GetPlayerNetworkIDString.{platform}.yaml
+          - CNetworkGameServer_GetPlayerNetworkIDString.{platform}.yaml
         expected_input:
           - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
           - CNetworkGameServer_vtable.{platform}.yaml
