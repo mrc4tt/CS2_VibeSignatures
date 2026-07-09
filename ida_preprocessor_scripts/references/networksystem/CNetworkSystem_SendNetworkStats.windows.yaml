@@ -698,7 +698,7 @@ procedure: |-
             if ( v12 )
             {
               v13 = (*(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)g_pNetworkMessages
-                                                                + 128LL))(// g_pNetworkMessages->GetNetworkGroupCount(...), 128LL =  INetworkMessages_GetNetworkGroupCount
+                                                                + 128LL))( // 128LL = INetworkMessages_GetNetworkGroupCount
                       g_pNetworkMessages,
                       v10);
               v16 = *(_BYTE *)(v2 + 224);

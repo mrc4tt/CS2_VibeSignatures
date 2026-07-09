@@ -63,7 +63,7 @@ disasm_code: |-
   .text:00000000003EA819                 mov     r12, cs:g_pNetworkMessages
   .text:00000000003EA820                 lea     rdx, sub_3B3880
   .text:00000000003EA827                 mov     rax, [r12]
-  .text:00000000003EA82B                 mov     rax, [rax+80h]; g_pNetworkMessages->GetNetworkGroupCount(...), 0x80 =  INetworkMessages_GetNetworkGroupCount
+  .text:00000000003EA82B                 mov     rax, [rax+80h]; 0x80 = INetworkMessages_GetNetworkGroupCount
   .text:00000000003EA832                 cmp     rax, rdx
   .text:00000000003EA835                 jnz     loc_3ECD41
   .text:00000000003EA83B                 cmp     cs:__pthread_key_create_ptr, 0
@@ -2880,7 +2880,7 @@ procedure: |-
       }
       v11 = g_pNetworkMessages;
       v12 = sub_3B3880;
-      v13 = *(__int64 (__fastcall **)())(*(_QWORD *)g_pNetworkMessages + 128LL);// g_pNetworkMessages->GetNetworkGroupCount(...), 128LL =  INetworkMessages_GetNetworkGroupCount
+      v13 = *(__int64 (__fastcall **)())(*(_QWORD *)g_pNetworkMessages + 128LL);// 128LL = INetworkMessages_GetNetworkGroupCount
       if ( v13 == sub_3B3880 )
       {
         if ( &_pthread_key_create )
