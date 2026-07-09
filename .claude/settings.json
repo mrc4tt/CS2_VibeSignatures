@@ -36,7 +36,8 @@
       "Bash(ls -la)",
       "Bash(git commit -m ' *)",
       "Bash(uv run *)",
-      "Bash(git ls-remote *)"
+      "Bash(git ls-remote *)",
+      "Bash(git tag *)"
     ],
     "additionalDirectories": [
       "\\tmp"
