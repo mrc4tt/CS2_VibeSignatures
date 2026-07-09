@@ -1016,9 +1016,26 @@ modules:
       - name: find-CL_NET_PrintSummary_CommandHandler
         expected_output:
           - CL_NET_PrintSummary_CommandHandler.{platform}.yaml
-      - name: find-CMsgSource2NetworkFlowQuality_PrintStats
+      - name: find-CMsgSource2NetworkFlowQuality_PrintStatsInternal
+        optional_output:
+          - CMsgSource2NetworkFlowQuality_PrintStatsInternal.{platform}.yaml
+        skip_if_exists:
+          - CMsgSource2NetworkFlowQuality_PrintStats.{platform}.yaml
+        platform: linux
+      - name: find-CMsgSource2NetworkFlowQuality_PrintStats-noinline
+        optional_output:
+          - CMsgSource2NetworkFlowQuality_PrintStats.{platform}.yaml
+        expected_input:
+          - CNetworkGameClient_PrintNetStats.{platform}.yaml
+        prerequisite:
+          - find-CMsgSource2NetworkFlowQuality_PrintStatsInternal
+      - name: find-CMsgSource2NetworkFlowQuality_PrintStats-inlined
         expected_output:
           - CMsgSource2NetworkFlowQuality_PrintStats.{platform}.yaml
+        skip_if_exists:
+          - CMsgSource2NetworkFlowQuality_PrintStats.{platform}.yaml
+        prerequisite:
+          - find-CMsgSource2NetworkFlowQuality_PrintStats-noinline
       - name: find-CNetworkGameClient_vtable
         expected_output:
           - CNetworkGameClient_vtable.{platform}.yaml

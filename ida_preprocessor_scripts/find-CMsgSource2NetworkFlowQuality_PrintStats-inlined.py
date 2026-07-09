@@ -1,5 +1,23 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CMsgSource2NetworkFlowQuality_PrintStats skill."""
+"""Preprocess script for find-CMsgSource2NetworkFlowQuality_PrintStats-inlined skill.
+
+Resolves ``CMsgSource2NetworkFlowQuality_PrintStats`` directly from the
+``"Bandwidth . . . . . . . : Total:%.1fkb"`` status string.  This path is correct
+whenever ``CMsgSource2NetworkFlowQuality_PrintStatsInternal`` (the actual printing
+body that owns that string) is *inlined* into ``PrintStats`` -- i.e. ``PrintStats``
+is the single fused function that both holds the string and is called by
+``CEngineServer_DumpNetStats`` / ``CNetworkGameClient_PrintNetStats`` (Windows on all
+observed builds; Linux <= 14167).
+
+When the body is *de-inlined* (Linux 14168+), the string moves out of ``PrintStats``
+(a thin guard wrapper) into the standalone ``PrintStatsInternal``, so this finder would
+resolve to ``PrintStatsInternal`` instead of the wrapper.  In that case the
+``find-CMsgSource2NetworkFlowQuality_PrintStats-noinline`` fallback runs first and
+produces the correct wrapper address, and this skill is skipped via ``skip_if_exists``.
+
+``PrintStats`` is a regular function (not a vfunc), so ``func_sig`` is its stable
+cross-build locator and is retained.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
