@@ -897,6 +897,7 @@ class TestFindILoopModeHandleInputEvent(unittest.IsolatedAsyncioTestCase):
             target_name=module.TARGET_FUNCTION_NAME,
             vtable_name=module.VTABLE_CLASS,
             generate_yaml_desired_fields=module.GENERATE_YAML_DESIRED_FIELDS,
+            resolve_load_then_branch=True,
             debug=True,
         )
 
