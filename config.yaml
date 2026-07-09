@@ -1349,10 +1349,11 @@ modules:
           - CLoopTypeBase_LoopTypeInit.{platform}.yaml
         expected_input:
           - CLoopTypeClientServer_LoopTypeInit.{platform}.yaml
-      - name: find-CLoopTypeBase_AddDependentServices-windows
-        expected_output:
+      - name: find-CLoopTypeBase_AddDependentServices
+        optional_output:
           - CLoopTypeBase_AddDependentServices.{platform}.yaml
-        platform: windows
+        skip_if_exists:
+          - CLoopTypeBase_LoadDependentServices.{platform}.yaml
       - name: find-CLoopTypeBase_GenerateServiceDependencies-windows
         expected_output:
           - CLoopTypeBase_GenerateServiceDependencies.{platform}.yaml
@@ -1361,18 +1362,38 @@ modules:
         expected_output:
           - CLoopTypeBase_GenerateSecondaryDependencies.{platform}.yaml
         platform: windows
-      - name: find-CLoopTypeBase_LoadDependentServices-linux
+      - name: find-CLoopTypeBase_LoadDependentServices-noinline
+        optional_output:
+          - CLoopTypeBase_LoadDependentServices.{platform}.yaml
+        prerequisite:
+          - find-CLoopTypeBase_AddDependentServices
+      - name: find-CLoopTypeBase_LoadDependentServices-inlined
         expected_output:
           - CLoopTypeBase_LoadDependentServices.{platform}.yaml
-        platform: linux
-      - name: find-IEngineService_GetServiceDependencies-AND-IEngineService_GetName
+        skip_if_exists:
+          - CLoopTypeBase_LoadDependentServices.{platform}.yaml
+        prerequisite:
+          - find-CLoopTypeBase_LoadDependentServices-noinline
+      - name: find-CLoopTypeBase_AddDependentServices-decompiles
+        optional_output:
+          - IEngineService_GetServiceDependencies.{platform}.yaml
+          - IEngineService_GetName.{platform}.yaml
+        skip_if_exists:
+          - IEngineService_GetServiceDependencies.{platform}.yaml
+          - IEngineService_GetName.{platform}.yaml
+        prerequisite:
+          - find-CLoopTypeBase_AddDependentServices
+      - name: find-CLoopTypeBase_LoadDependentServices-decompiles
         expected_output:
           - IEngineService_GetServiceDependencies.{platform}.yaml
           - IEngineService_GetName.{platform}.yaml
-        expected_input_windows:
-          - CLoopTypeBase_AddDependentServices.{platform}.yaml
-        expected_input_linux:
+        expected_input:
           - CLoopTypeBase_LoadDependentServices.{platform}.yaml
+        skip_if_exists:
+          - IEngineService_GetServiceDependencies.{platform}.yaml
+          - IEngineService_GetName.{platform}.yaml
+        prerequisite:
+          - find-CLoopTypeBase_AddDependentServices-decompiles
       - name: find-CLoopTypeClientServerService_OnLoopActivate
         expected_output:
           - CLoopTypeClientServerService_OnLoopActivate.{platform}.yaml

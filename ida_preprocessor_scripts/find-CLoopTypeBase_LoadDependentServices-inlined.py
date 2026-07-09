@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CLoopTypeBase_LoadDependentServices-linux skill.
+"""Preprocess script for find-CLoopTypeBase_LoadDependentServices-inlined skill.
 
-On Linux, the three dependency helpers (AddDependentServices,
-GenerateServiceDependencies, GenerateSecondaryDependencies) are inlined into a
-single function. All three assertion strings live in that one function, so the
-intersection of their string xrefs uniquely identifies it (Linux only).
+Resolves ``CLoopTypeBase_LoadDependentServices`` directly from the intersection of the
+three dependency-helper assertion strings.  This applies when the helpers
+(``AddDependentServices``, ``GenerateServiceDependencies``,
+``GenerateSecondaryDependencies``) are inlined into ``LoadDependentServices`` (Linux), so
+all three assertion strings live inside the single parent function body and their string
+xrefs AND-intersect to exactly that function.
+
+This is the fallback for the ``find-CLoopTypeBase_LoadDependentServices-noinline`` path
+(which handles the de-inlined case via ``xref_funcs``) and is skipped whenever
+``CLoopTypeBase_LoadDependentServices.{platform}.yaml`` already exists (Windows, where the
+-noinline path wins).  ``LoadDependentServices`` is a regular function, so ``func_sig`` is
+its stable cross-build locator and is retained.
 """
 
 from ida_analyze_util import preprocess_common_skill

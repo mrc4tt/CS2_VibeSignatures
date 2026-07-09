@@ -1,21 +1,33 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CLoopTypeBase_AddDependentServices-windows skill."""
+"""Preprocess script for find-CLoopTypeBase_LoadDependentServices-noinline skill.
+
+Resolves ``CLoopTypeBase_LoadDependentServices`` as the single caller of the standalone
+``CLoopTypeBase_AddDependentServices`` helper.  This path only applies when the
+dependency helpers are NOT inlined into ``LoadDependentServices`` (Windows: de-inlined),
+so the parent still contains a direct call to the standalone helper.
+
+When the helpers ARE inlined (Linux), the standalone ``AddDependentServices`` is absent,
+so the xref callee cannot be resolved and this skill legitimately produces nothing (its
+output is optional); the ``find-CLoopTypeBase_LoadDependentServices-inlined`` fallback
+runs instead.
+
+``CLoopTypeBase_LoadDependentServices`` is a regular function (not a vfunc), so ``func_sig``
+is its stable cross-build locator and is retained (no vtable slot is available).
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CLoopTypeBase_AddDependentServices",
+    "CLoopTypeBase_LoadDependentServices",
 ]
 
 FUNC_XREFS = [
     {
-        "func_name": "CLoopTypeBase_AddDependentServices",
-        "xref_strings": [
-            'Unable to find service "%s" which is depended on by service "%s"!',
-        ],
+        "func_name": "CLoopTypeBase_LoadDependentServices",
+        "xref_strings": [],
         "xref_gvs": [],
         "xref_signatures": [],
-        "xref_funcs": [],
+        "xref_funcs": ["CLoopTypeBase_AddDependentServices"],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],
@@ -26,7 +38,7 @@ FUNC_XREFS = [
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CLoopTypeBase_AddDependentServices",
+        "CLoopTypeBase_LoadDependentServices",
         [
             "func_name",
             "func_sig",

@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-IEngineService_GetServiceDependencies-AND-IEngineService_GetName skill.
+"""Preprocess script for find-CLoopTypeBase_AddDependentServices-decompiles skill.
 
-IEngineService::GetServiceDependencies and IEngineService::GetName are the first
-two IEngineService-specific vfuncs (pure-virtual interface methods). They are
-discovered by decompiling a predecessor that calls them through the interface
-vtable and reporting the vcall slot offsets.
+IEngineService::GetServiceDependencies and IEngineService::GetName are the first two
+IEngineService-specific vfuncs (pure-virtual interface methods). They are discovered by
+decompiling a predecessor that calls them through the interface vtable and reporting the
+vcall slot offsets (0x58 = GetServiceDependencies, 0x60 = GetName).
 
-The predecessor differs by platform:
-  - Windows: CLoopTypeBase_AddDependentServices calls both vfuncs directly.
-  - Linux:   AddDependentServices/GenerateServiceDependencies/GenerateSecondaryDependencies
-             are all inlined into a single function, CLoopTypeBase_LoadDependentServices,
-             so both vcalls live there instead.
+This is the de-inlined link of an inline/noinline decompile fallback pair: it decompiles
+the standalone ``CLoopTypeBase_AddDependentServices`` helper, which contains both vcalls
+whenever it is compiled as a separate function (Windows on all builds; Linux once the
+dependency helpers are de-inlined, e.g. 14168). When ``AddDependentServices`` is inlined
+into ``CLoopTypeBase_LoadDependentServices`` (e.g. Linux 14167) the standalone helper is
+absent, so the predecessor cannot be resolved and this skill legitimately produces
+nothing (its output is optional); the
+``find-CLoopTypeBase_LoadDependentServices-decompiles`` fallback (which decompiles the
+inlined parent) runs instead.
 """
 
 from ida_analyze_util import preprocess_common_skill
@@ -20,8 +24,8 @@ TARGET_FUNCTION_NAMES = [
     "IEngineService_GetName",
 ]
 
-# Windows: both vfuncs are called inside CLoopTypeBase_AddDependentServices.
-LLM_DECOMPILE_WINDOWS = [
+# Both vfuncs are called inside the standalone CLoopTypeBase_AddDependentServices helper.
+LLM_DECOMPILE = [
     (
         "IEngineService_GetServiceDependencies",
         "prompt/call_llm_decompile.md",
@@ -31,21 +35,6 @@ LLM_DECOMPILE_WINDOWS = [
         "IEngineService_GetName",
         "prompt/call_llm_decompile.md",
         "references/engine/CLoopTypeBase_AddDependentServices.{platform}.yaml",
-    ),
-]
-
-# Linux: the three dependency helpers are inlined into CLoopTypeBase_LoadDependentServices,
-# so both vcalls are found there.
-LLM_DECOMPILE_LINUX = [
-    (
-        "IEngineService_GetServiceDependencies",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CLoopTypeBase_LoadDependentServices.{platform}.yaml",
-    ),
-    (
-        "IEngineService_GetName",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CLoopTypeBase_LoadDependentServices.{platform}.yaml",
     ),
 ]
 
@@ -76,6 +65,12 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "vfunc_offset",
             "vfunc_index",
             "vtable_name",
+            # On de-inlined Linux builds the only GetName vcall inside AddDependentServices
+            # is a generic Plat_FatalError path that is byte-identical to sibling helpers'
+            # fatal paths and sits ~0x17 bytes from the function end; allow the signature to
+            # extend past the boundary (through 0xCC padding into the next code head) so it
+            # can diverge from the collision and become unique.
+            "vfunc_sig_allow_across_function_boundary:true",
         ],
     ),
 ]
@@ -92,8 +87,7 @@ async def preprocess_skill(
     llm_config=None,
     debug=False,
 ):
-    """Locate IEngineService GetServiceDependencies/GetName vfuncs via LLM decompile of predecessor."""
-    llm_decompile = LLM_DECOMPILE_WINDOWS if platform == "windows" else LLM_DECOMPILE_LINUX
+    """Locate IEngineService GetServiceDependencies/GetName vfuncs via LLM decompile of AddDependentServices."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -103,7 +97,7 @@ async def preprocess_skill(
         image_base=image_base,
         func_names=TARGET_FUNCTION_NAMES,
         func_vtable_relations=FUNC_VTABLE_RELATIONS,
-        llm_decompile_specs=llm_decompile,
+        llm_decompile_specs=LLM_DECOMPILE,
         llm_config=llm_config,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,

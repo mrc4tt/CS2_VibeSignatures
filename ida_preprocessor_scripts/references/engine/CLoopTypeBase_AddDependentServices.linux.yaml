@@ -1,0 +1,280 @@
+func_name: CLoopTypeBase_AddDependentServices
+func_va: '0x376760'
+disasm_code: |-
+  .text:0000000000376760                 mov     ecx, [rsi]
+  .text:0000000000376762                 test    ecx, ecx
+  .text:0000000000376764                 jle     loc_37698F
+  .text:000000000037676A                 push    rbp
+  .text:000000000037676B                 mov     rbp, rsp
+  .text:000000000037676E                 push    r15
+  .text:0000000000376770                 push    r14
+  .text:0000000000376772                 push    r13
+  .text:0000000000376774                 mov     r13, rsi
+  .text:0000000000376777                 push    r12
+  .text:0000000000376779                 xor     r12d, r12d
+  .text:000000000037677C                 push    rbx
+  .text:000000000037677D                 sub     rsp, 18h
+  .text:0000000000376781                 nop     dword ptr [rax+00000000h]
+  .text:0000000000376788                 mov     rdx, [r13+8]
+  .text:000000000037678C                 lea     rax, [r12+r12*4]
+  .text:0000000000376790                 lea     rax, [rdx+rax*8]
+  .text:0000000000376794                 mov     rdi, [rax]
+  .text:0000000000376797                 mov     rax, [rdi]
+  .text:000000000037679A                 mov     [rbp-38h], rdi
+  .text:000000000037679E                 call    qword ptr [rax+58h]; 0x58 = 88LL = IEngineService_GetServiceDependencies
+  .text:00000000003767A1                 mov     r15, rax
+  .text:00000000003767A4                 test    rax, rax
+  .text:00000000003767A7                 jz      loc_376890
+  .text:00000000003767AD                 mov     rsi, [rax]
+  .text:00000000003767B0                 test    rsi, rsi
+  .text:00000000003767B3                 jnz     short loc_3767D1
+  .text:00000000003767B5                 jmp     loc_376890
+  .text:00000000003767C0                 mov     rsi, [r15+10h]
+  .text:00000000003767C4                 add     r15, 10h
+  .text:00000000003767C8                 test    rsi, rsi
+  .text:00000000003767CB                 jz      loc_376890
+  .text:00000000003767D1                 test    byte ptr [r15+8], 1
+  .text:00000000003767D6                 jz      short loc_3767C0
+  .text:00000000003767D8                 lea     rax, qword_9E6208+28BAF0h
+  .text:00000000003767DF                 mov     rdi, [rax]
+  .text:00000000003767E2                 mov     rax, [rdi]
+  .text:00000000003767E5                 call    qword ptr [rax+88h]
+  .text:00000000003767EB                 mov     rbx, rax
+  .text:00000000003767EE                 test    rax, rax
+  .text:00000000003767F1                 jz      loc_376995
+  .text:00000000003767F7                 movsxd  r14, dword ptr [r13+0]
+  .text:00000000003767FB                 test    r14d, r14d
+  .text:00000000003767FE                 jle     short loc_376831
+  .text:0000000000376800                 mov     rax, [r13+8]
+  .text:0000000000376804                 xor     edx, edx
+  .text:0000000000376806                 nop     word ptr [rax+rax+00000000h]
+  .text:0000000000376811                 nop     word ptr [rax+rax+00000000h]
+  .text:000000000037681C                 nop     dword ptr [rax+00h]
+  .text:0000000000376820                 cmp     rbx, [rax]
+  .text:0000000000376823                 jz      short loc_3767C0
+  .text:0000000000376825                 add     edx, 1
+  .text:0000000000376828                 add     rax, 28h ; '('
+  .text:000000000037682C                 cmp     edx, r14d
+  .text:000000000037682F                 jnz     short loc_376820
+  .text:0000000000376831                 ; _QWORD
+  .text:0000000000376831                 mov     edi, [r13+10h]; _QWORD
+  .text:0000000000376835                 cmp     edi, r14d
+  .text:0000000000376838                 jz      short loc_3768B2
+  .text:000000000037683A                 mov     rdx, [r13+8]
+  .text:000000000037683E                 mov     eax, r14d
+  .text:0000000000376841                 add     eax, 1
+  .text:0000000000376844                 add     r15, 10h
+  .text:0000000000376848                 mov     [r13+0], eax
+  .text:000000000037684C                 lea     rax, [r14+r14*4]
+  .text:0000000000376850                 shl     rax, 3
+  .text:0000000000376854                 add     rdx, rax
+  .text:0000000000376857                 mov     qword ptr [rdx+10h], 0
+  .text:000000000037685F                 mov     qword ptr [rdx+18h], 0
+  .text:0000000000376867                 mov     qword ptr [rdx+20h], 0
+  .text:000000000037686F                 add     rax, [r13+8]
+  .text:0000000000376873                 mov     [rax], rbx
+  .text:0000000000376876                 mov     byte ptr [rax+8], 0
+  .text:000000000037687A                 mov     rsi, [r15]
+  .text:000000000037687D                 test    rsi, rsi
+  .text:0000000000376880                 jnz     loc_3767D1
+  .text:0000000000376886                 nop     word ptr [rax+rax+00000000h]
+  .text:0000000000376890                 add     r12, 1
+  .text:0000000000376894                 cmp     [r13+0], r12d
+  .text:0000000000376898                 jg      loc_376788
+  .text:000000000037689E                 add     rsp, 18h
+  .text:00000000003768A2                 mov     eax, 1
+  .text:00000000003768A7                 pop     rbx
+  .text:00000000003768A8                 pop     r12
+  .text:00000000003768AA                 pop     r13
+  .text:00000000003768AC                 pop     r14
+  .text:00000000003768AE                 pop     r15
+  .text:00000000003768B0                 pop     rbp
+  .text:00000000003768B1                 retn
+  .text:00000000003768B2                 mov     esi, [r13+14h]
+  .text:00000000003768B6                 cmp     esi, 3FFFFFFFh
+  .text:00000000003768BC                 jbe     short loc_3768D0
+  .text:00000000003768BE                 mov     eax, esi
+  .text:00000000003768C0                 and     eax, 0C0000000h
+  .text:00000000003768C5                 cmp     eax, 80000000h
+  .text:00000000003768CA                 jnz     loc_37683A
+  .text:00000000003768D0                 cmp     edi, 7FFFFFFFh
+  .text:00000000003768D6                 jz      loc_376978
+  .text:00000000003768DC                 ; _QWORD
+  .text:00000000003768DC                 lea     edx, [rdi+1]; _QWORD
+  .text:00000000003768DF                 ; _QWORD
+  .text:00000000003768DF                 and     esi, 3FFFFFFFh; _QWORD
+  .text:00000000003768E5                 ; _QWORD
+  .text:00000000003768E5                 mov     ecx, 28h ; '('; _QWORD
+  .text:00000000003768EA                 mov     [rbp-3Ch], edx
+  .text:00000000003768ED                 call    _UtlVectorMemory_CalcNewAllocationCount
+  .text:00000000003768F2                 mov     edx, [rbp-3Ch]
+  .text:00000000003768F5                 mov     r9d, eax
+  .text:00000000003768F8                 cmp     edx, eax
+  .text:00000000003768FA                 jg      short loc_376960
+  .text:00000000003768FC                 movsxd  rax, dword ptr [r13+10h]
+  .text:0000000000376900                 xor     esi, esi
+  .text:0000000000376902                 mov     [rbp-3Ch], r9d
+  .text:0000000000376906                 ; _QWORD
+  .text:0000000000376906                 mov     rdi, [r13+8]; _QWORD
+  .text:000000000037690A                 lea     rcx, [rax+rax*4]
+  .text:000000000037690E                 movsxd  rax, r9d
+  .text:0000000000376911                 lea     rdx, [rax+rax*4]
+  .text:0000000000376915                 ; _QWORD
+  .text:0000000000376915                 shl     rcx, 3; _QWORD
+  .text:0000000000376919                 ; _QWORD
+  .text:0000000000376919                 shl     rdx, 3; _QWORD
+  .text:000000000037691D                 cmp     dword ptr [r13+14h], 3FFFFFFFh
+  .text:0000000000376925                 ; _QWORD
+  .text:0000000000376925                 setbe   sil; _QWORD
+  .text:0000000000376929                 call    _UtlVectorMemory_Alloc
+  .text:000000000037692E                 mov     r9d, [rbp-3Ch]
+  .text:0000000000376932                 mov     rdx, rax
+  .text:0000000000376935                 mov     [r13+8], rax
+  .text:0000000000376939                 mov     eax, [r13+14h]
+  .text:000000000037693D                 cmp     eax, 3FFFFFFFh
+  .text:0000000000376942                 jbe     short loc_37694D
+  .text:0000000000376944                 and     eax, 3FFFFFFFh
+  .text:0000000000376949                 mov     [r13+14h], eax
+  .text:000000000037694D                 mov     eax, [r13+0]
+  .text:0000000000376951                 mov     [r13+10h], r9d
+  .text:0000000000376955                 jmp     loc_376841
+  .text:0000000000376960                 lea     eax, [rdx+r9]
+  .text:0000000000376964                 mov     r9d, eax
+  .text:0000000000376967                 shr     r9d, 1Fh
+  .text:000000000037696B                 add     r9d, eax
+  .text:000000000037696E                 sar     r9d, 1
+  .text:0000000000376971                 cmp     edx, r9d
+  .text:0000000000376974                 jg      short loc_376960
+  .text:0000000000376976                 jmp     short loc_3768FC
+  .text:0000000000376978                 ; _QWORD
+  .text:0000000000376978                 mov     esi, 1; _QWORD
+  .text:000000000037697D                 call    _UtlVectorMemory_FailedAllocation
+  .text:0000000000376982                 mov     edi, [r13+10h]
+  .text:0000000000376986                 mov     esi, [r13+14h]
+  .text:000000000037698A                 jmp     loc_3768DC
+  .text:000000000037698F                 mov     eax, 1
+  .text:0000000000376994                 retn
+  .text:0000000000376995                 mov     rdi, [rbp-38h]
+  .text:0000000000376999                 mov     rax, [rdi]
+  .text:000000000037699C                 call    qword ptr [rax+60h]; 0x60 = 96LL = IEngineService_GetName
+  .text:000000000037699F                 mov     rsi, [r15]
+  .text:00000000003769A2                 lea     rdi, aUnableToFindSe; "Unable to find service \"%s\" which is "...
+  .text:00000000003769A9                 mov     rdx, rax
+  .text:00000000003769AC                 xor     eax, eax
+  .text:00000000003769AE                 call    _Plat_FatalError
+procedure: |-
+  __int64 __fastcall CLoopTypeBase_LoadDependentServices(__int64 a1, int *a2)
+  {
+    __int64 v3; // r12
+    const char **v4; // rax
+    const char **v5; // r15
+    const char *v6; // rsi
+    __int64 v7; // rbx
+    __int64 v8; // r14
+    _QWORD *v9; // rax
+    int v10; // edx
+    __int64 v11; // rdi
+    __int64 v12; // rdx
+    int v13; // eax
+    _QWORD *v14; // rdx
+    __int64 v15; // rax
+    unsigned int v17; // esi
+    int v18; // eax
+    int v19; // edx
+    int i; // r9d
+    unsigned int v21; // eax
+    const char *v22; // rax
+    int v23; // [rsp-44h] [rbp-44h]
+    __int64 v24; // [rsp-40h] [rbp-40h]
+
+    if ( *a2 > 0 )
+    {
+      v3 = 0;
+      while ( 1 )
+      {
+        v24 = *(_QWORD *)(*((_QWORD *)a2 + 1) + 40 * v3);
+        v4 = (const char **)(*(__int64 (**)(void))(*(_QWORD *)v24 + 88LL))();// 0x58 = 88LL = IEngineService_GetServiceDependencies
+        v5 = v4;
+        if ( v4 )
+        {
+          if ( *v4 )
+            break;
+        }
+  LABEL_16:
+        if ( *a2 <= (int)++v3 )
+          return 1;
+      }
+      while ( 1 )
+      {
+        while ( ((_BYTE)v5[1] & 1) == 0 )
+        {
+  LABEL_6:
+          v6 = v5[2];
+          v5 += 2;
+          if ( !v6 )
+            goto LABEL_16;
+        }
+        v7 = (*(__int64 (__fastcall **)(_QWORD))(*(_QWORD *)qword_9E6208[333662] + 136LL))(qword_9E6208[333662]);
+        if ( !v7 )
+        {
+          v22 = (const char *)(*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v24 + 96LL))(v24);// 0x60 = 96LL = IEngineService_GetName
+          Plat_FatalError("Unable to find service \"%s\" which is depended on by service \"%s\"!\n", *v5, v22);
+          JUMPOUT(0x3769B3);
+        }
+        v8 = *a2;
+        if ( (int)v8 > 0 )
+        {
+          v9 = *((_QWORD **)a2 + 1);
+          v10 = 0;
+          while ( v7 != *v9 )
+          {
+            ++v10;
+            v9 += 5;
+            if ( v10 == (_DWORD)v8 )
+              goto LABEL_13;
+          }
+          goto LABEL_6;
+        }
+  LABEL_13:
+        v11 = (unsigned int)a2[4];
+        if ( (_DWORD)v11 == (_DWORD)v8 && ((v17 = a2[5], v17 <= 0x3FFFFFFF) || (v17 & 0xC0000000) == 0x80000000) )
+        {
+          if ( (_DWORD)v11 == 0x7FFFFFFF )
+          {
+            UtlVectorMemory_FailedAllocation(v11, 1);
+            v11 = (unsigned int)a2[4];
+            v17 = a2[5];
+          }
+          v18 = UtlVectorMemory_CalcNewAllocationCount(v11, v17 & 0x3FFFFFFF, (unsigned int)(v11 + 1), 40);
+          v19 = v11 + 1;
+          for ( i = v18; v19 > i; i = (v19 + i) / 2 )
+            ;
+          v23 = i;
+          v12 = UtlVectorMemory_Alloc(*((_QWORD *)a2 + 1), (unsigned int)a2[5] <= 0x3FFFFFFF, 40LL * i, 40LL * a2[4]);
+          *((_QWORD *)a2 + 1) = v12;
+          v21 = a2[5];
+          if ( v21 > 0x3FFFFFFF )
+            a2[5] = v21 & 0x3FFFFFFF;
+          v13 = *a2;
+          a2[4] = v23;
+        }
+        else
+        {
+          v12 = *((_QWORD *)a2 + 1);
+          v13 = *a2;
+        }
+        v5 += 2;
+        *a2 = v13 + 1;
+        v14 = (_QWORD *)(40 * v8 + v12);
+        v14[2] = 0;
+        v14[3] = 0;
+        v14[4] = 0;
+        v15 = *((_QWORD *)a2 + 1) + 40 * v8;
+        *(_QWORD *)v15 = v7;
+        *(_BYTE *)(v15 + 8) = 0;
+        if ( !*v5 )
+          goto LABEL_16;
+      }
+    }
+    return 1;
+  }
