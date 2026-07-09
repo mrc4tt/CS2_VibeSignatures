@@ -15,3 +15,9 @@ vcall_finder
 *.sh
 libtier0.so
 hm
+libtier0.so.*
+libtier0.so
+hm
+clear_ida_db.sh
+pop.sh
+update_css_gamedata.sh
