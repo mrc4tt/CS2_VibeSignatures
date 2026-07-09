@@ -3,7 +3,7 @@
 
 Resolves ``CEngineServer_ChangeLevel`` (a vfunc of ``CEngineServer_vtable``)
 directly from the ``"Changelevel %s %s"`` string reference.  This applies when
-``CNetworkGameServerBase_ChangeLevel`` is inlined into ``CEngineServer_ChangeLevel``
+``ChangeLevel`` is inlined into ``CEngineServer_ChangeLevel``
 so the string lives inside the vfunc body.  It is the fallback for the
 ``find-CEngineServer_ChangeLevel-noinline`` path (which handles the de-inlined
 case) and is skipped whenever ``CEngineServer_ChangeLevel.{platform}.yaml``

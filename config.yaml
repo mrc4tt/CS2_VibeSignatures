@@ -1112,9 +1112,9 @@ modules:
         expected_input:
           - GetSteamUniverse.{platform}.yaml
           - CEngineServer_vtable.{platform}.yaml
-      - name: find-CNetworkGameServerBase_ChangeLevel
+      - name: find-ChangeLevel
         optional_output:
-          - CNetworkGameServerBase_ChangeLevel.{platform}.yaml
+          - ChangeLevel.{platform}.yaml
         skip_if_exists:
           - CEngineServer_ChangeLevel.{platform}.yaml
       - name: find-CEngineServer_ChangeLevel-noinline
@@ -1123,7 +1123,7 @@ modules:
         expected_input:
           - CEngineServer_vtable.{platform}.yaml
         prerequisite:
-          - find-CNetworkGameServerBase_ChangeLevel
+          - find-ChangeLevel
       - name: find-CEngineServer_ChangeLevel-inlined
         expected_output:
           - CEngineServer_ChangeLevel.{platform}.yaml

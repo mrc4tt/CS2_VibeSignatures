@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CNetworkGameServerBase_ChangeLevel skill."""
+"""Preprocess script for find-ChangeLevel skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CNetworkGameServerBase_ChangeLevel",
+    "ChangeLevel",
 ]
 
 FUNC_XREFS = [
     {
-        "func_name": "CNetworkGameServerBase_ChangeLevel",
+        "func_name": "ChangeLevel",
         "xref_strings": [
             "Changelevel %s %s",
         ],
@@ -26,7 +26,7 @@ FUNC_XREFS = [
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CNetworkGameServerBase_ChangeLevel",
+        "ChangeLevel",
         [
             "func_name",
             "func_sig",

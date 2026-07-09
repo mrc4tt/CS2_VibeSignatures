@@ -2,8 +2,8 @@
 """Preprocess script for find-CEngineServer_ChangeLevel-noinline skill.
 
 Resolves ``CEngineServer_ChangeLevel`` (a vfunc of ``CEngineServer_vtable``) as
-the single caller of the standalone ``CNetworkGameServerBase_ChangeLevel``.  This
-path only applies when ``CNetworkGameServerBase_ChangeLevel`` is NOT inlined into
+the single caller of the standalone ``ChangeLevel``.  This
+path only applies when ``ChangeLevel`` is NOT inlined into
 ``CEngineServer_ChangeLevel``; when it is inlined the xref callee is absent and
 this skill legitimately produces nothing (its output is optional), so the
 ``find-CEngineServer_ChangeLevel-inlined`` fallback runs instead.
@@ -22,7 +22,7 @@ FUNC_XREFS = [
         "xref_gvs": [],
         "xref_signatures": [],
         "xref_funcs": [
-            "CNetworkGameServerBase_ChangeLevel",
+            "ChangeLevel",
         ],
         "exclude_funcs": [],
         "exclude_strings": [],
