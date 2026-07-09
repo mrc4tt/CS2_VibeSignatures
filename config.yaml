@@ -124,6 +124,18 @@ modules:
     path_linux: game/bin/linuxsteamrt64/libscenesystem.so
     skills: []
     symbols: []
+  - name: tier0
+    path_windows: game/bin/win64/tier0.dll
+    path_linux: game/bin/linuxsteamrt64/libtier0.so
+    skills:
+      - name: find-LoggingSystem_LogDirect
+        expected_output:
+          - LoggingSystem_LogDirect.{platform}.yaml
+    symbols:
+      - name: LoggingSystem_LogDirect
+        category: func
+        alias:
+          - LoggingSystem_LogDirect
   - name: networksystem
     path_windows: game/bin/win64/networksystem.dll
     path_linux: game/bin/linuxsteamrt64/libnetworksystem.so
@@ -4281,6 +4293,21 @@ modules:
       - name: find-CSmokeGrenadeProjectile_Create
         expected_output:
           - CSmokeGrenadeProjectile_Create.{platform}.yaml
+      - name: find-CHEGrenadeProjectile_Create
+        expected_output:
+          - CHEGrenadeProjectile_Create.{platform}.yaml
+      - name: find-CMolotovProjectile_Create
+        expected_output:
+          - CMolotovProjectile_Create.{platform}.yaml
+      - name: find-CDecoyProjectile_Create
+        expected_output:
+          - CDecoyProjectile_Create.{platform}.yaml
+      - name: find-CAttributeList_SetOrAddAttributeValueByName
+        expected_output:
+          - CAttributeList_SetOrAddAttributeValueByName.{platform}.yaml
+      - name: find-UpdateItemView
+        expected_output:
+          - UpdateItemView.{platform}.yaml
       - name: find-SV_Kill_SmokeGrenade_CommandHandler
         expected_output:
           - SV_Kill_SmokeGrenade_CommandHandler.{platform}.yaml
@@ -4890,6 +4917,11 @@ modules:
           - CSmokeGrenadeProjectile_Create.{platform}.yaml
       - name: find-GiveNamedItem
         expected_output:
+          - GiveNamedItem.{platform}.yaml
+      - name: find-GiveNamedItem2
+        expected_output:
+          - GiveNamedItem2.{platform}.yaml
+        expected_input:
           - GiveNamedItem.{platform}.yaml
       - name: find-CEntitySystem_vtable
         expected_output:
@@ -7214,6 +7246,26 @@ modules:
         category: func
         alias:
           - CSmokeGrenadeProjectile::Create
+      - name: CHEGrenadeProjectile_Create
+        category: func
+        alias:
+          - CHEGrenadeProjectile::Create
+      - name: CMolotovProjectile_Create
+        category: func
+        alias:
+          - CMolotovProjectile::Create
+      - name: CDecoyProjectile_Create
+        category: func
+        alias:
+          - CDecoyProjectile::Create
+      - name: CAttributeList_SetOrAddAttributeValueByName
+        category: func
+        alias:
+          - CAttributeList::SetOrAddAttributeValueByName
+      - name: UpdateItemView
+        category: func
+        alias:
+          - UpdateItemView
       - name: SV_Kill_SmokeGrenade_CommandHandler
         category: func
       - name: CEntitySystem_QueueDestroyEntity
@@ -7771,6 +7823,10 @@ modules:
         category: func
       - name: GiveNamedItem
         category: func
+      - name: GiveNamedItem2
+        category: func
+        alias:
+          - GiveNamedItem2
       - name: CEntitySystem_vtable
         category: vtable
       - name: CEntitySystem_RegisterEntityClass

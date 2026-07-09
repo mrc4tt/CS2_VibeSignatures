@@ -1,0 +1,13 @@
+func_name: GiveNamedItem2
+func_va: '0x13ed4b0'
+disasm_code: |-
+  .text:00000000013ED4B0                 xor     r9d, r9d
+  .text:00000000013ED4B3                 xor     r8d, r8d
+  .text:00000000013ED4B6                 xor     ecx, ecx
+  .text:00000000013ED4B8                 xor     edx, edx
+  .text:00000000013ED4BA                 jmp     GiveNamedItem
+procedure: |-
+  __int64 __fastcall GiveNamedItem2(__int64 a1, __int64 a2)
+  {
+    return GiveNamedItem(a1, a2, 0, 0, 0, 0);
+  }

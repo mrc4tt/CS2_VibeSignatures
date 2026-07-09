@@ -1,0 +1,301 @@
+func_name: RunCommand
+func_va: '0x180bd6810'
+disasm_code: |-
+  .text:0000000180BD6810                 mov qword ptr [rsp + 0x20], rbx
+  .text:0000000180BD6815                 push rbp
+  .text:0000000180BD6816                 push rsi
+  .text:0000000180BD6817                 push rdi
+  .text:0000000180BD6818                 push r12
+  .text:0000000180BD681A                 push r13
+  .text:0000000180BD681C                 push r14
+  .text:0000000180BD681E                 push r15
+  .text:0000000180BD6820                 sub rsp, 0x20
+  .text:0000000180BD6824                 xor r15d, r15d
+  .text:0000000180BD6827                 mov r13, rdx
+  .text:0000000180BD682A                 mov rbx, rcx
+  .text:0000000180BD682D                 mov qword ptr [rsp + 0x68], r15
+  .text:0000000180BD6832                 cmp qword ptr [rcx + 0x38], r15
+  .text:0000000180BD6836                 jne 0x180bd683d
+  .text:0000000180BD6838                 call 0x180bdce00
+  .text:0000000180BD683D                 mov rcx, qword ptr [rbx + 0x38]
+  .text:0000000180BD6841                 lea r8, [rsp + 0x68]
+  .text:0000000180BD6846                 mov rdx, r13
+  .text:0000000180BD6849                 call 0x180c789e0
+  .text:0000000180BD684E                 mov rcx, qword ptr [rsp + 0x68]
+  .text:0000000180BD6853                 or qword ptr [rbx + 0x78], rcx
+  .text:0000000180BD6857                 not rcx
+  .text:0000000180BD685A                 and qword ptr [rbx + 0x70], rcx
+  .text:0000000180BD685E                 mov rcx, rbx
+  .text:0000000180BD6861                 mov rax, qword ptr [rbx + 0x58]
+  .text:0000000180BD6865                 mov qword ptr [rsp + 0x70], rax
+  .text:0000000180BD686A                 call 0x180bde110
+  .text:0000000180BD686F                 test rax, rax
+  .text:0000000180BD6872                 je 0x180bd68a4
+  .text:0000000180BD6874                 cmp qword ptr [rbx + 0x38], r15
+  .text:0000000180BD6878                 jne 0x180bd6882
+  .text:0000000180BD687A                 mov rcx, rbx
+  .text:0000000180BD687D                 call 0x180bdce00
+  .text:0000000180BD6882                 mov rcx, qword ptr [rbx + 0x38]
+  .text:0000000180BD6886                 mov rax, qword ptr [rcx]
+  .text:0000000180BD6889                 call qword ptr [rax + 0xc38]
+  .text:0000000180BD688F                 test al, al
+  .text:0000000180BD6891                 jne 0x180bd68a4
+  .text:0000000180BD6893                 mov rcx, rbx
+  .text:0000000180BD6896                 call 0x180bde110
+  .text:0000000180BD689B                 mov rdi, qword ptr [rax + 0x4b0]
+  .text:0000000180BD68A2                 jmp 0x180bd68a7
+  .text:0000000180BD68A4                 mov rdi, r15
+  .text:0000000180BD68A7                 mov r9, qword ptr [rbx + 0x190]
+  .text:0000000180BD68AE                 lea rdx, [r13 + 0x58]
+  .text:0000000180BD68B2                 mov r8, rdi
+  .text:0000000180BD68B5                 lea rcx, [rbx + 0x50]
+  .text:0000000180BD68B9                 call 0x180652ef0
+  .text:0000000180BD68BE                 mov r8, qword ptr [rbx + 0x70]
+  .text:0000000180BD68C2                 lea rcx, [rbx + 0x50]
+  .text:0000000180BD68C6                 mov rdx, qword ptr [rbx + 0x78]
+  .text:0000000180BD68CA                 call 0x1806536e0
+  .text:0000000180BD68CF                 mov rbp, qword ptr [rbx + 0x58]
+  .text:0000000180BD68D3                 and rbp, rdi
+  .text:0000000180BD68D6                 cmp qword ptr [rbx + 0x190], rbp
+  .text:0000000180BD68DD                 je 0x180bd68fd
+  .text:0000000180BD68DF                 mov edx, 0xffffffff
+  .text:0000000180BD68E4                 lea rcx, [rbx + 0x190]
+  .text:0000000180BD68EB                 mov r8d, 0xffffffff
+  .text:0000000180BD68F1                 call 0x180bcf8a0
+  .text:0000000180BD68F6                 mov qword ptr [rbx + 0x190], rbp
+  .text:0000000180BD68FD                 cmp qword ptr [rbx + 0x38], r15
+  .text:0000000180BD6901                 jne 0x180bd690b
+  .text:0000000180BD6903                 mov rcx, rbx
+  .text:0000000180BD6906                 call 0x180bdce00
+  .text:0000000180BD690B                 mov rcx, qword ptr [rbx + 0x38]
+  .text:0000000180BD690F                 mov rax, qword ptr [rcx]
+  .text:0000000180BD6912                 call qword ptr [rax + 0xc38]
+  .text:0000000180BD6918                 test al, al
+  .text:0000000180BD691A                 je 0x180bd6940
+  .text:0000000180BD691C                 cmp qword ptr [rbx + 0x38], r15
+  .text:0000000180BD6920                 jne 0x180bd692a
+  .text:0000000180BD6922                 mov rcx, rbx
+  .text:0000000180BD6925                 call 0x180bdce00
+  .text:0000000180BD692A                 mov rcx, qword ptr [rbx + 0x38]
+  .text:0000000180BD692E                 mov rax, qword ptr [rcx]
+  .text:0000000180BD6931                 call qword ptr [rax + 0xc40]
+  .text:0000000180BD6937                 test al, al
+  .text:0000000180BD6939                 jne 0x180bd6940
+  .text:0000000180BD693B                 mov rcx, r15
+  .text:0000000180BD693E                 jmp 0x180bd695a
+  .text:0000000180BD6940                 mov rax, qword ptr [rbx + 0x70]
+  .text:0000000180BD6944                 not rax
+  .text:0000000180BD6947                 and qword ptr [rbx + 0x78], rax
+  .text:0000000180BD694B                 mov rcx, qword ptr [rbx + 0x78]
+  .text:0000000180BD694F                 not rcx
+  .text:0000000180BD6952                 or rcx, qword ptr [r13 + 0x60]
+  .text:0000000180BD6956                 and rcx, qword ptr [rbx + 0x78]
+  .text:0000000180BD695A                 mov qword ptr [rbx + 0x78], rcx
+  .text:0000000180BD695E                 mov edx, 0xffffffff
+  .text:0000000180BD6963                 lea rcx, [rip + 0x139241e]
+  .text:0000000180BD696A                 mov qword ptr [rbx + 0x70], r15
+  .text:0000000180BD696E                 call 0x1801bbd40
+  .text:0000000180BD6973                 mulss xmm0, dword ptr [rip + 0x9d52c5]
+  .text:0000000180BD697B                 lea r14, [rbx + 0x88]
+  .text:0000000180BD6982                 mov qword ptr [rbx + 0x80], r15
+  .text:0000000180BD6989                 lea rsi, [r13 + 8]
+  .text:0000000180BD698D                 mov edi, 1
+  .text:0000000180BD6992                 addss xmm0, dword ptr [rip + 0x9d0e22]
+  .text:0000000180BD699A                 cvttss2si eax, xmm0
+  .text:0000000180BD699E                 mov dword ptr [rsp + 0x60], eax
+  .text:0000000180BD69A2                 mov rdx, rdi
+  .text:0000000180BD69A5                 lea rcx, [rbx + 0x50]
+  .text:0000000180BD69A9                 call 0x1806603a0
+  .text:0000000180BD69AE                 mov rdx, rdi
+  .text:0000000180BD69B1                 lea rcx, [rbx + 0x50]
+  .text:0000000180BD69B5                 movzx ebp, al
+  .text:0000000180BD69B8                 call 0x180660460
+  .text:0000000180BD69BD                 test al, al
+  .text:0000000180BD69BF                 jne 0x180bd69cc
+  .text:0000000180BD69C1                 test bpl, bpl
+  .text:0000000180BD69C4                 jne 0x180bd69dc
+  .text:0000000180BD69C6                 lea rsi, [r13 + 8]
+  .text:0000000180BD69CA                 jmp 0x180bd69e8
+  .text:0000000180BD69CC                 test bpl, bpl
+  .text:0000000180BD69CF                 jne 0x180bd69dc
+  .text:0000000180BD69D1                 mov eax, dword ptr [rsi]
+  .text:0000000180BD69D3                 sub eax, dword ptr [r14]
+  .text:0000000180BD69D6                 cmp eax, dword ptr [rsp + 0x60]
+  .text:0000000180BD69DA                 jae 0x180bd69e3
+  .text:0000000180BD69DC                 or qword ptr [rbx + 0x80], rdi
+  .text:0000000180BD69E3                 mov eax, dword ptr [rsi]
+  .text:0000000180BD69E5                 mov dword ptr [r14], eax
+  .text:0000000180BD69E8                 inc r15d
+  .text:0000000180BD69EB                 rol rdi, 1
+  .text:0000000180BD69EE                 add r14, 4
+  .text:0000000180BD69F2                 cmp r15d, 0x40
+  .text:0000000180BD69F6                 jb 0x180bd69a2
+  .text:0000000180BD69F8                 mov eax, dword ptr [rsi]
+  .text:0000000180BD69FA                 mov rdx, r13
+  .text:0000000180BD69FD                 mov r8, qword ptr [rsp + 0x70]
+  .text:0000000180BD6A02                 mov rcx, rbx
+  .text:0000000180BD6A05                 mov dword ptr [rbx + 0x188], eax
+  .text:0000000180BD6A0B                 call 0x180bc3290
+  .text:0000000180BD6A10                 mov rax, qword ptr [r13 + 0x40]
+  .text:0000000180BD6A14                 lea rdx, [rip + 0x1008935]
+  .text:0000000180BD6A1B                 test rax, rax
+  .text:0000000180BD6A1E                 mov rcx, rdx
+  .text:0000000180BD6A21                 cmovne rcx, rax
+  .text:0000000180BD6A25                 mov eax, dword ptr [rcx + 0x10]
+  .text:0000000180BD6A28                 shr eax, 9
+  .text:0000000180BD6A2B                 test al, 1
+  .text:0000000180BD6A2D                 je 0x180bd6a39
+  .text:0000000180BD6A2F                 mov eax, dword ptr [rcx + 0x64]
+  .text:0000000180BD6A32                 test eax, eax
+  .text:0000000180BD6A34                 je 0x180bd6a39
+  .text:0000000180BD6A36                 mov dword ptr [rbx + 0x48], eax
+  .text:0000000180BD6A39                 mov rcx, qword ptr [r13 + 0x40]
+  .text:0000000180BD6A3D                 mov rax, rdx
+  .text:0000000180BD6A40                 test rcx, rcx
+  .text:0000000180BD6A43                 cmovne rax, rcx
+  .text:0000000180BD6A47                 mov eax, dword ptr [rax + 0x58]
+  .text:0000000180BD6A4A                 mov dword ptr [rbx + 0x1a0], eax
+  .text:0000000180BD6A50                 mov rax, rdx
+  .text:0000000180BD6A53                 mov rcx, qword ptr [r13 + 0x40]
+  .text:0000000180BD6A57                 test rcx, rcx
+  .text:0000000180BD6A5A                 cmovne rax, rcx
+  .text:0000000180BD6A5E                 mov eax, dword ptr [rax + 0x5c]
+  .text:0000000180BD6A61                 mov dword ptr [rbx + 0x1a4], eax
+  .text:0000000180BD6A67                 mov rax, qword ptr [r13 + 0x40]
+  .text:0000000180BD6A6B                 test rax, rax
+  .text:0000000180BD6A6E                 cmovne rdx, rax
+  .text:0000000180BD6A72                 mov eax, dword ptr [rdx + 0x60]
+  .text:0000000180BD6A75                 mov dword ptr [rbx + 0x1a8], eax
+  .text:0000000180BD6A7B                 mov rbx, qword ptr [rsp + 0x78]
+  .text:0000000180BD6A80                 add rsp, 0x20
+  .text:0000000180BD6A84                 pop r15
+  .text:0000000180BD6A86                 pop r14
+  .text:0000000180BD6A88                 pop r13
+  .text:0000000180BD6A8A                 pop r12
+  .text:0000000180BD6A8C                 pop rdi
+  .text:0000000180BD6A8D                 pop rsi
+  .text:0000000180BD6A8E                 pop rbp
+  .text:0000000180BD6A8F                 ret
+procedure: |-
+  __int64 __fastcall RunCommand(__int64 a1, __int64 a2)
+  {
+    unsigned int v2; // r15d
+    __int64 v5; // rcx
+    __int64 v6; // rdi
+    __int64 v7; // rbp
+    __int64 v8; // rcx
+    float v9; // xmm0_4
+    _DWORD *v10; // r14
+    _DWORD *v11; // rsi
+    __int64 v12; // rdi
+    float v13; // xmm0_4
+    char v14; // bp
+    __int64 v15; // r8
+    void ***v16; // rdx
+    void ***v17; // rcx
+    int v18; // eax
+    void ***v19; // rax
+    void ***v20; // rax
+    __int64 result; // rax
+    __int64 v22; // [rsp+68h] [rbp+10h] BYREF
+    __int64 v23; // [rsp+70h] [rbp+18h]
+  
+    v2 = 0;
+    v22 = 0;
+    if ( !*(_QWORD *)(a1 + 56) )
+      nullsub_603(a1);
+    sub_180C789E0(*(_QWORD *)(a1 + 56), a2, &v22);
+    v5 = v22;
+    *(_QWORD *)(a1 + 120) |= v22;
+    *(_QWORD *)(a1 + 112) &= ~v5;
+    v23 = *(_QWORD *)(a1 + 88);
+    if ( !sub_180BDE110(a1) )
+      goto LABEL_8;
+    if ( !*(_QWORD *)(a1 + 56) )
+      nullsub_603(a1);
+    if ( (*(unsigned __int8 (__fastcall **)(_QWORD))(**(_QWORD **)(a1 + 56) + 3128LL))(*(_QWORD *)(a1 + 56)) )
+  LABEL_8:
+      v6 = 0;
+    else
+      v6 = *(_QWORD *)(sub_180BDE110(a1) + 1200);
+    sub_180652EF0(a1 + 80, a2 + 88, v6, *(_QWORD *)(a1 + 400));
+    sub_1806536E0(a1 + 80, *(_QWORD *)(a1 + 120), *(_QWORD *)(a1 + 112));
+    v7 = v6 & *(_QWORD *)(a1 + 88);
+    if ( *(_QWORD *)(a1 + 400) != v7 )
+    {
+      sub_180BCF8A0(a1 + 400, 0xFFFFFFFFLL, 0xFFFFFFFFLL);
+      *(_QWORD *)(a1 + 400) = v7;
+    }
+    if ( !*(_QWORD *)(a1 + 56) )
+      nullsub_603(a1);
+    if ( !(*(unsigned __int8 (__fastcall **)(_QWORD))(**(_QWORD **)(a1 + 56) + 3128LL))(*(_QWORD *)(a1 + 56)) )
+      goto LABEL_18;
+    if ( !*(_QWORD *)(a1 + 56) )
+      nullsub_603(a1);
+    if ( (*(unsigned __int8 (__fastcall **)(_QWORD))(**(_QWORD **)(a1 + 56) + 3136LL))(*(_QWORD *)(a1 + 56)) )
+    {
+  LABEL_18:
+      *(_QWORD *)(a1 + 120) &= ~*(_QWORD *)(a1 + 112);
+      v8 = *(_QWORD *)(a1 + 120) & (*(_QWORD *)(a2 + 96) | ~*(_QWORD *)(a1 + 120));
+    }
+    else
+    {
+      v8 = 0;
+    }
+    *(_QWORD *)(a1 + 120) = v8;
+    *(_QWORD *)(a1 + 112) = 0;
+    v9 = sub_1801BBD40(&unk_181F68D88, 0xFFFFFFFFLL);
+    v10 = (_DWORD *)(a1 + 136);
+    *(_QWORD *)(a1 + 128) = 0;
+    v11 = (_DWORD *)(a2 + 8);
+    v12 = 1;
+    v13 = (float)(v9 * 64.0) + 0.5;
+    do
+    {
+      v14 = sub_1806603A0(a1 + 80, v12);
+      if ( (unsigned __int8)sub_180660460(a1 + 80, v12) )
+      {
+        if ( !v14 && *v11 - *v10 >= (unsigned int)(int)v13 )
+          goto LABEL_26;
+      }
+      else if ( !v14 )
+      {
+        v11 = (_DWORD *)(a2 + 8);
+        goto LABEL_27;
+      }
+      *(_QWORD *)(a1 + 128) |= v12;
+  LABEL_26:
+      *v10 = *v11;
+  LABEL_27:
+      ++v2;
+      v12 = __ROL8__(v12, 1);
+      ++v10;
+    }
+    while ( v2 < 0x40 );
+    v15 = v23;
+    *(_DWORD *)(a1 + 392) = *v11;
+    sub_180BC3290(a1, a2, v15);
+    v16 = &off_181BDF350;
+    v17 = &off_181BDF350;
+    if ( *(_QWORD *)(a2 + 64) )
+      v17 = *(void ****)(a2 + 64);
+    if ( ((_DWORD)v17[2] & 0x200) != 0 )
+    {
+      v18 = *((_DWORD *)v17 + 25);
+      if ( v18 )
+        *(_DWORD *)(a1 + 72) = v18;
+    }
+    v19 = &off_181BDF350;
+    if ( *(_QWORD *)(a2 + 64) )
+      v19 = *(void ****)(a2 + 64);
+    *(_DWORD *)(a1 + 416) = *((_DWORD *)v19 + 22);
+    v20 = &off_181BDF350;
+    if ( *(_QWORD *)(a2 + 64) )
+      v20 = *(void ****)(a2 + 64);
+    *(_DWORD *)(a1 + 420) = *((_DWORD *)v20 + 23);
+    if ( *(_QWORD *)(a2 + 64) )
+      v16 = *(void ****)(a2 + 64);
+    result = *((unsigned int *)v16 + 24);
+    *(_DWORD *)(a1 + 424) = result;
+    return result;
+  }

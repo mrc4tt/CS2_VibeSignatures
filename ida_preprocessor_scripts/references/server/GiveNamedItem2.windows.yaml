@@ -1,0 +1,16 @@
+func_name: GiveNamedItem2
+func_va: '0x180a3e320'
+disasm_code: |-
+  .text:0000000180A3E320                 sub     rsp, 38h
+  .text:0000000180A3E324                 mov     [rsp+38h+var_10], 0
+  .text:0000000180A3E32D                 xor     r9d, r9d
+  .text:0000000180A3E330                 xor     r8d, r8d
+  .text:0000000180A3E333                 mov     [rsp+38h+var_18], 0
+  .text:0000000180A3E338                 call    GiveNamedItem
+  .text:0000000180A3E33D                 add     rsp, 38h
+  .text:0000000180A3E341                 retn
+procedure: |-
+  __int64 __fastcall GiveNamedItem2(int a1, int a2)
+  {
+    return GiveNamedItem(a1, a2, 0, 0, 0, 0);
+  }
