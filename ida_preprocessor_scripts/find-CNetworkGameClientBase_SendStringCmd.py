@@ -7,7 +7,7 @@ TARGET_FUNCTION_NAMES = [
     "CNetworkGameClientBase_SendStringCmd",
 ]
 
-FUNC_XREFS = [
+FUNC_XREFS_WINDOWS = [
     {
         "func_name": "CNetworkGameClientBase_SendStringCmd",
         "xref_strings": [
@@ -20,6 +20,22 @@ FUNC_XREFS = [
         "exclude_strings": [],
         "exclude_gvs": [],
         "exclude_signatures": [],
+    },
+]
+
+FUNC_XREFS_LINUX = [
+    {
+        "func_name": "CNetworkGameClientBase_SendStringCmd",
+        "xref_strings": [
+            "CL:  SendStringCmd(disconnect)",
+        ],
+        "xref_gvs": [],
+        "xref_signatures": [],
+        "xref_funcs": [],
+        "exclude_funcs": [],
+        "exclude_strings": [],
+        "exclude_gvs": [],
+        "exclude_signatures": ["BE FF FF FF FF"],
     },
 ]
 
@@ -65,7 +81,7 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         func_names=TARGET_FUNCTION_NAMES,
-        func_xrefs=FUNC_XREFS,
+        func_xrefs=FUNC_XREFS_WINDOWS if platform == "windows" else FUNC_XREFS_LINUX,
         func_vtable_relations=FUNC_VTABLE_RELATIONS,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
