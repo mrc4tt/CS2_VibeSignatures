@@ -80,6 +80,7 @@ From the user's input, determine:
    - Target is an `IGameSystem` vfunc visible as the callback argument to `IGameSystem_DispatchCall(...)` in a known predecessor's decompile -> **Pattern J**
    - Target is an `IGameSystem` abstract vfunc (slot-only output: `func_name, vtable_name, vfunc_offset, vfunc_index`; no `func_sig`) dispatched by a known `IGameSystem_Loop*AllSystems` function that iterates all game systems via vtable; the dispatcher's output YAML (`func_va`) is already available -> **Pattern K**
    - Target is an **abstract/interface vfunc** dispatched by a thin thunk/caller whose body has exactly one register-indirect vtable call (`jmp/call qword ptr [reg+disp]`), and no `func_sig`/`vfunc_sig` is feasible (a `jmp [reg+disp8]` for offset `<= 0x7F` is only 3 bytes and cannot be signed uniquely) -> **Pattern L** (slot-only output: `func_name, vtable_name, vfunc_offset, vfunc_index`; a downstream Pattern F standard override consumes the `vfunc_index`)
+   - Target `X` was found by a single Pattern A/B finder, but a helper that used to be inlined into `X` **de-inlined** on some build (the anchor string/call left `X`, so `X.{platform}.yaml` stopped being produced and the fail-fast run aborts the module) -> **Pattern M** (split into a helper + `X-noinline` + `X-inlined` fallback chain)
 
 2. **Do xref strings differ between Windows and Linux?** If yes, use platform-specific `FUNC_XREFS_WINDOWS` / `FUNC_XREFS_LINUX` variant.
 
@@ -108,6 +109,7 @@ Read the reference for your chosen pattern:
 - [Pattern I -- Interface vfunc offset via thunk walk](references/pattern-I.md)
 - [Pattern J -- IGameSystem vfunc via dispatch scan](references/pattern-J.md)
 - [Pattern L -- Interface vfunc slot via indirect vcall scan (reusable)](references/pattern-L.md)
+- [Pattern M -- Inline/noinline fallback chain (de-inlined helper)](references/pattern-M.md)
 
 ### Cross-Cutting Notes
 
@@ -1038,3 +1040,27 @@ async def preprocess_skill(session, skill_name, expected_outputs, old_yaml_map,
 ```
 
 **Key insight -- `expected_input` for `xref_funcs`:** The `xref_funcs` lookup resolves the callee by its IDA name. The callee is only renamed when its output YAML is written. Always list the callee's YAML in `expected_input` to guarantee it runs (and gets renamed in IDA) before this script executes. Without this ordering, the name lookup silently finds nothing and the skill fails.
+
+---
+
+### Example: De-inlined helper via inline/noinline fallback chain (Pattern M)
+
+**User says:** `find-CNetworkGameServer_DirectUpdate` stopped producing
+`CNetworkGameServer_DirectUpdate.linux.yaml` at 14168 -- `CNetworkStringTableContainer::DirectUpdate`
+(which owns the VProf string the finder anchors on) de-inlined out of the vfunc on Linux, so the
+string left the vtable member and the string-cap-vtable intersection went empty (then the fail-fast
+run aborted the rest of engine/linux).
+
+**Result:** the single finder is replaced by a 3-skill chain:
+- `find-CNetworkStringTableContainer_DirectUpdate` -- helper; `xref_strings` on the string;
+  `optional_output` + `skip_if_exists`; left unregistered as a gamedata symbol.
+- `find-CNetworkGameServer_DirectUpdate-noinline` -- `xref_funcs: ["CNetworkStringTableContainer_DirectUpdate"]`
+  + `CNetworkGameServer_vtable`; `optional_output` + `prerequisite` the helper.
+- `find-CNetworkGameServer_DirectUpdate-inlined` -- the renamed original (`xref_strings` + vtable);
+  `expected_output` + `skip_if_exists` + `prerequisite` the -noinline.
+
+`func_sig` kept on both target paths (the de-inlined body is substantial). Validated 14167 (inlined)
++ 14168 (Linux de-inlined) x win/linux -> vtable index 59 / offset 0x1d8, `Failed 0`.
+
+**Full recipe (templates, config.yaml chain, func_sig keep/drop rule, validation, inverted-topology
+variant):** see [Pattern M](references/pattern-M.md).

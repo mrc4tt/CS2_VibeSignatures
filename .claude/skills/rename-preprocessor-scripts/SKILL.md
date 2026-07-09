@@ -20,9 +20,9 @@ the Python script, `config.yaml`, and every per-gamever YAML output file under `
 - A naming-convention fix applies to one or more existing preprocessor scripts
 - **Deinline-fix:** a single `find-X` finder must be split into an inline/noinline chain
   because a helper that used to be inlined became a separate function (de-inlined) on some
-  build → see [Deinline-Fix Variant](#deinline-fix-variant-split-a-finder-into-an-inlinenoinline-chain)
-  at the end of this document (it reuses the `git mv` rename mechanics below for its
-  `-inlined` step)
+  build. This skill covers the `find-X-inlined` rename step (Step 1–3 below); the full
+  3-skill chain recipe lives in
+  [create-preprocessor-scripts Pattern M](../create-preprocessor-scripts/references/pattern-M.md)
 
 ## Inputs
 
@@ -384,123 +384,18 @@ and `IGameSystemFactory_Deallocate` → `IGameSystemFactory_DestroyGameSystem`.
 
 ---
 
-## Deinline-Fix Variant: Split a Finder into an Inline/Noinline Chain
+## Deinline-Fix Variant (see create-preprocessor-scripts Pattern M)
 
-A helper function that CS2 **inlines into its caller on some builds but compiles as a
-separate function on others** (the compiler flips this across gamevers/platforms) breaks a
-single-skill finder. Once the helper de-inlines, the anchor it carried — the debug string
-it owns, or the call the target made into it — moves out of the target, so `find-X` stops
-producing `X.{platform}.yaml` on that build. Because `ida_analyze_bin.py` is fail-fast, the
-rest of that module then aborts.
+When a helper that used to be inlined into a target **de-inlines** on some build, its anchor (the
+debug string it owns, or the call the target made into it) leaves the target, so the single
+`find-X` finder stops producing `X.{platform}.yaml` there and the fail-fast run aborts the module.
+The fix is a **3-skill inline/noinline fallback chain**: the original finder is renamed to
+`find-X-inlined` using this skill's Step 1–3 `git mv` + content-update mechanics, and a helper
+finder plus a `find-X-noinline` finder are added around it (`optional_output` / `prerequisite` /
+`skip_if_exists` wiring).
 
-**Symptom:** `X.{platform}.yaml` is present for older gamevers / one platform but missing
-for the newest gamever / other platform, and the module run aborts partway through.
-
-**Fix:** replace the single `find-X` skill with a **3-skill fallback chain**. The original
-finder is renamed to `find-X-inlined` — use the Step 1–3 `git mv` + content-update mechanics
-above for that part — and two new skills are added around it. (Reference chains: ChangeLevel,
-CLoopTypeClientServer_DeactivateLoop, CMsgSource2NetworkFlowQuality_PrintStats.)
-
-### The 3-skill chain
-
-| Skill | Role | `func_xrefs` positive source | config.yaml fields |
-|-------|------|------------------------------|--------------------|
-| `find-Helper` | resolve the de-inlined helper | `xref_strings` on the helper's own debug string (or `xref_funcs` on a stable callee) | `optional_output: Helper` + `skip_if_exists: X` — **no** `expected_input` |
-| `find-X-noinline` | resolve X as the helper's caller | `xref_funcs: [Helper]` (+ `func_vtable_relations` if X is a vfunc) | `optional_output: X` + `expected_input: <vtable>` (if vfunc) + `prerequisite: [find-Helper]` |
-| `find-X-inlined` | the ORIGINAL finder, renamed | unchanged from the original (`xref_strings`/`xref_funcs` on the anchor) | `expected_output: X` + `expected_input: <vtable>` + `skip_if_exists: X` + `prerequisite: [find-X-noinline]` |
-
-Order the three entries in `config.yaml` exactly as above (Helper → -noinline → -inlined).
-The vanilla chain is **cross-platform** — no `platform:` field. (The inverted variant below
-may need one.)
-
-### How each build resolves
-
-- **De-inlined build:** `find-Helper` finds the standalone helper by its anchor;
-  `find-X-noinline` finds X as the (vtable-filtered) caller of that helper. `find-X-inlined`
-  skips (`X` already exists).
-- **Inlined build:** the anchor lives inside X, so `find-Helper` resolves to **X's own
-  address** (harmless — see rules); `find-X-noinline` finds no callers but re-selects X via
-  the **vtable-self fallback** (`func_xrefs` uses the callee itself when it has no callers but
-  its address is in the target vtable). `find-X-inlined` skips.
-- **Ambiguous inlined anchor** (the inlined string has >1 xref): `find-Helper` and
-  `find-X-noinline` both soft-skip, and `find-X-inlined`'s string∩vtable intersection is the
-  load-bearing path — which is exactly why the original finder must stay in the chain.
-
-### Key rules
-
-- **`optional_output`, not `expected_output`, on Helper and -noinline.** They must *soft-skip*
-  (not hard-fail) when their path doesn't apply, so control falls through to the next skill.
-  Only `find-X-inlined` carries `expected_output`.
-- **Depend on the helper via `prerequisite`, never `expected_input`.** The helper is optional
-  and may be absent; a missing `expected_input` hard-fails. Put the *vtable* in `expected_input`.
-- **Do NOT register `Helper` as a gamedata `symbol`.** In the inlined case its YAML points at
-  X's own address, which would be a wrong gamedata entry. It is an intermediate only.
-- **`func_sig` keep/drop** (apply the same choice to **both** -noinline and -inlined so X's
-  output shape does not flip per build):
-  - vfunc with a **substantial** de-inlined body → **keep** `func_sig` (it signs uniquely;
-    e.g. ChangeLevel, DirectUpdate).
-  - vfunc that de-inlines to a **tiny forwarding thunk** → **drop** `func_sig` on both paths
-    (the head bytes aren't unique; the vtable slot `vfunc_offset`/`vfunc_index` is the stable
-    locator; e.g. DeactivateLoop, RegisterEventMap). Keep `func_name, func_va, func_rva,
-    func_size, vtable_name, vfunc_offset, vfunc_index`.
-  - regular func (no vtable) → **keep** `func_sig` on all three (it is the only stable locator).
-
-### Validate on BOTH inline states
-
-`bin/*.yaml` are gitignored, so regenerating is free. Validate in isolation with a scratch
-config and `-oldgamever none` (forces the xref paths; version reuse would short-circuit
--noinline):
-
-```bash
-# _scratch.yaml = just this module (real path_windows/path_linux) + the 3 new skills + X's symbol entry
-rm -f bin/<inlined_ver>/<mod>/X.*.yaml bin/<deinlined_ver>/<mod>/X.*.yaml   # force the chain to run
-uv run ida_analyze_bin.py -configyaml=_scratch.yaml -gamever <deinlined_ver> -modules=<mod> -oldgamever none -maxretry 1 -debug
-uv run ida_analyze_bin.py -configyaml=_scratch.yaml -gamever <inlined_ver>  -modules=<mod> -oldgamever none -maxretry 1 -debug
-```
-
-Confirm **both** gamevers × **both** platforms resolve X to the same vtable slot (or
-`func_sig`) with `Failed 0`. Delete `_scratch.yaml` before committing.
-
-### Worked example: `CNetworkGameServer_DirectUpdate` (engine, 14168)
-
-`CNetworkStringTableContainer::DirectUpdate` (owns the `"CNetworkStringTableContainer::DirectUpdate"`
-VProf string) de-inlined out of the `CNetworkGameServer::DirectUpdate` vfunc on Linux at
-14168, so the string left the vfunc and `CNetworkGameServer_DirectUpdate.linux.yaml` stopped
-building.
-
-1. `git mv find-CNetworkGameServer_DirectUpdate.py find-CNetworkGameServer_DirectUpdate-inlined.py`
-   (original = `xref_strings` on the VProf string + `CNetworkGameServer_vtable`); update its docstring.
-2. New `find-CNetworkStringTableContainer_DirectUpdate.py`: `xref_strings` on the same string;
-   fields `func_name/func_sig/func_va/func_rva/func_size`.
-3. New `find-CNetworkGameServer_DirectUpdate-noinline.py`:
-   `xref_funcs: ["CNetworkStringTableContainer_DirectUpdate"]` +
-   `func_vtable_relations: [(…, "CNetworkGameServer_vtable")]`; **kept** `func_sig` (substantial body).
-4. `config.yaml`: replaced the one skill entry with the 3-skill chain; left the
-   `CNetworkGameServer_DirectUpdate` symbol entry as-is; did NOT add a helper symbol.
-5. Validated 14167 (inlined) + 14168 (Linux de-inlined) × win/linux, `-oldgamever none`: all
-   four → vtable index 59 / offset 0x1d8, `Failed 0` (14168 Linux de-inlined body signs at 7
-   bytes `83 7F ?? ?? 76 ?? 55` = the `m_nMaxClients > 1` guard).
-
-### Inverted topology (string-LESS guard wrapper)
-
-If the de-inline instead splits a thin **string-less guard wrapper** off a string-heavy body
-(the public function is the wrapper; the body keeps the string — e.g.
-`CMsgSource2NetworkFlowQuality_PrintStats`), the vanilla recipe mis-resolves: skill 1 finds
-the body on *both* builds and the -noinline target has no anchor but the body as its only
-named callee, so it collides with structurally-identical vtable-mates. Extra handling:
-`find-Helper` is `platform:`-scoped and unregistered; `find-X-noinline` adds a guard-thunk
-`xref_signatures` (a positive identity unique to the extracted wrapper) plus
-`exclude_funcs`/`exclude_callees` for the colliders. Treat this as a special case and diff
-against the `PrintStats` chain before writing it.
-
-### Deinline-fix checklist (in addition to the rename checklist)
-
-- [ ] Original finder `git mv`'d to `find-X-inlined` + docstring updated
-- [ ] `find-Helper` created (`optional_output`, `skip_if_exists: X`, no `expected_input`, unregistered symbol)
-- [ ] `find-X-noinline` created (`xref_funcs: [Helper]` + vtable if vfunc; `optional_output`, `prerequisite: [find-Helper]`)
-- [ ] `find-X-inlined` config = `expected_output` + `skip_if_exists` + `prerequisite: [find-X-noinline]`
-- [ ] `func_sig` kept/dropped consistently on both -noinline and -inlined per the rule above
-- [ ] Helper NOT added as a gamedata `symbol`
-- [ ] `config.yaml` entries ordered Helper → -noinline → -inlined
-- [ ] Validated on an inlined AND a de-inlined gamever, both platforms, `-oldgamever none`, `Failed 0`
-- [ ] Scratch config deleted; only the 3 skill files + `config.yaml` committed
+The de-inline fix is fundamentally a script-*creation* pattern -- only the `-inlined` rename step
+belongs to this skill. The full recipe (script templates, the `config.yaml` chain, the `func_sig`
+keep/drop rule, validation on both inline states, the `CNetworkGameServer_DirectUpdate` worked
+example, and the inverted string-less-wrapper variant) lives in
+**[create-preprocessor-scripts Pattern M](../create-preprocessor-scripts/references/pattern-M.md)**.
