@@ -7,11 +7,27 @@ TARGET_FUNCTION_NAMES = [
     "CEnvHudHint_API_ShowHudHint",
 ]
 
-FUNC_XREFS = [
+FUNC_XREFS_WINDOWS = [
     {
         "func_name": "CEnvHudHint_API_ShowHudHint",
         "xref_strings": [
             "FULLMATCH:CEnvHudHint_API::ShowHudHint",
+        ],
+        "xref_gvs": [],
+        "xref_signatures": [],
+        "xref_funcs": [],
+        "exclude_funcs": [],
+        "exclude_strings": [],
+        "exclude_gvs": [],
+        "exclude_signatures": [],
+    },
+]
+
+FUNC_XREFS_LINUX = [
+    {
+        "func_name": "CEnvHudHint_API_ShowHudHint",
+        "xref_strings": [
+            "FULLMATCH:ShowHudHint",
         ],
         "xref_gvs": [],
         "xref_signatures": [],
@@ -57,7 +73,7 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         func_names=TARGET_FUNCTION_NAMES,
-        func_xrefs=FUNC_XREFS,
+        func_xrefs=FUNC_XREFS_WINDOWS if platform == "windows" else FUNC_XREFS_LINUX,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )
