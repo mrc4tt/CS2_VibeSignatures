@@ -3,16 +3,22 @@
 from __future__ import annotations
 
 import json
+import uuid
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 import httpx
 from openai import OpenAI
 
-CODEX_CLI_USER_AGENT = "codex_cli_rs/0.80.0 (Windows 15.7.2; x86_64) Terminal"
-CODEX_CLI_ORIGINATOR = "codex_cli_rs"
+CODEX_CLI_USER_AGENT = "codex-tui/0.144.1 (Windows 10.0.26200; x86_64) WindowsTerminal (codex-tui; 0.144.1)"
+CODEX_CLI_ORIGINATOR = "codex-tui"
 _ALLOWED_LLM_EFFORTS = {"none", "minimal", "low", "medium", "high", "xhigh"}
+_CODEX_FAKER_TEMPLATE_PATH = Path(__file__).resolve().parent / "codex_faker.json"
+_CODEX_TEMPLATE_MODEL_PLACEHOLDER = "<TEMPLATE_MODEL_NAME>"
+_CODEX_TEMPLATE_USER_PROMPT_PLACEHOLDER = "<TEMPLATE_USER_PROMPT>"
+_CODEX_TEMPLATE_CACHE_KEY_PLACEHOLDER = "<TEMPLATE_PROMPT_CACHE_KEY>"
 
 
 def require_nonempty_text(value: Any, name: str) -> str:
@@ -186,6 +192,60 @@ def _extract_error_message_from_payload(payload) -> str:
     return str(payload)
 
 
+def _load_codex_faker_template() -> dict[str, Any]:
+    try:
+        raw = _CODEX_FAKER_TEMPLATE_PATH.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise RuntimeError(
+            f"failed to read codex request template at {_CODEX_FAKER_TEMPLATE_PATH}: {exc}"
+        ) from exc
+    for placeholder in (
+        _CODEX_TEMPLATE_MODEL_PLACEHOLDER,
+        _CODEX_TEMPLATE_USER_PROMPT_PLACEHOLDER,
+        _CODEX_TEMPLATE_CACHE_KEY_PLACEHOLDER,
+    ):
+        if placeholder not in raw:
+            raise RuntimeError(
+                f"codex request template {_CODEX_FAKER_TEMPLATE_PATH} is missing placeholder {placeholder}"
+            )
+    try:
+        template = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            f"codex request template {_CODEX_FAKER_TEMPLATE_PATH} is not valid JSON: {exc}"
+        ) from exc
+    if not isinstance(template, dict):
+        raise RuntimeError(f"codex request template {_CODEX_FAKER_TEMPLATE_PATH} must be a JSON object")
+    return template
+
+
+def _fill_codex_template(node, *, model, user_prompt, cache_key) -> Any:
+    if isinstance(node, dict):
+        filled: dict[str, Any] = {}
+        for key, value in node.items():
+            if key == "id" and isinstance(value, str) and value.startswith("msg_"):
+                filled[key] = f"msg_{uuid.uuid4()}"
+            else:
+                filled[key] = _fill_codex_template(
+                    value, model=model, user_prompt=user_prompt, cache_key=cache_key
+                )
+        return filled
+    if isinstance(node, list):
+        return [
+            _fill_codex_template(item, model=model, user_prompt=user_prompt, cache_key=cache_key)
+            for item in node
+        ]
+    if isinstance(node, str):
+        if node == _CODEX_TEMPLATE_MODEL_PLACEHOLDER:
+            return model
+        if node == _CODEX_TEMPLATE_USER_PROMPT_PLACEHOLDER:
+            return user_prompt
+        if _CODEX_TEMPLATE_CACHE_KEY_PLACEHOLDER in node:
+            return node.replace(_CODEX_TEMPLATE_CACHE_KEY_PLACEHOLDER, cache_key)
+        return node
+    return node
+
+
 def _call_llm_text_via_codex_http(
     *,
     model,
@@ -204,12 +264,19 @@ def _call_llm_text_via_codex_http(
         raise ValueError("base_url must include host")
 
     normalized_effort = normalize_optional_effort(effort)
-    body = {
-        "input": _build_responses_input(messages),
-        "model": normalized_model,
-        "reasoning": {"effort": normalized_effort},
-        "stream": True,
-    }
+    merged_user_prompt = _build_responses_input(messages)[0]["content"]
+    cache_key = str(uuid.uuid4())
+    body = _fill_codex_template(
+        _load_codex_faker_template(),
+        model=normalized_model,
+        user_prompt=merged_user_prompt,
+        cache_key=cache_key,
+    )
+    reasoning = body.get("reasoning")
+    if isinstance(reasoning, dict):
+        reasoning["effort"] = normalized_effort
+    else:
+        body["reasoning"] = {"effort": normalized_effort}
     normalized_temperature = normalize_optional_temperature(temperature)
     if normalized_temperature is not None:
         body["temperature"] = normalized_temperature
@@ -218,9 +285,14 @@ def _call_llm_text_via_codex_http(
         "Authorization": f"Bearer {normalized_api_key}",
         "Content-Type": "application/json",
         "Accept": "text/event-stream",
-        "Accept-Encoding": "identity",
+        #"Accept-Encoding": "identity",
         "User-Agent": CODEX_CLI_USER_AGENT,
         "Originator": CODEX_CLI_ORIGINATOR,
+        "X-Client-Request-Id": cache_key,
+        "Session-Id": cache_key,
+        "X-Codex-Window-Id": cache_key+":0",
+        "X-Openai-Internal-Codex-Responses-Lite": "true",
+        "X-Codex-Beta-Features": "remote_compaction_v2",
         "Host": host,
     }
     endpoint = normalized_base_url.rstrip("/") + "/responses"
