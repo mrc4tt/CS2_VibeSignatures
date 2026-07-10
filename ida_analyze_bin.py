@@ -2544,6 +2544,8 @@ def process_binary(
                 skip_count += 1
                 continue
 
+            print(f"  Start skill: {skill_name}")
+
             # Ensure MCP connection is alive before running the skill
             process, mcp_ok = ensure_mcp_available(process, binary_path, host, port, ida_args, debug)
             if not mcp_ok:
