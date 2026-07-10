@@ -32,8 +32,10 @@ import argparse
 import hashlib
 import inspect
 import json
+import logging
 import os
 import re
+import signal
 import socket
 import subprocess
 import sys
@@ -43,6 +45,11 @@ import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+# idalib-mcp 2.0.0 returns HTTP 501 for the streamable-http session-close DELETE,
+# so the SDK logs "Session termination failed: 501" on every tool call. The call
+# already succeeded — silence just that logger.
+logging.getLogger("mcp.client.streamable_http").setLevel(logging.ERROR)
 
 try:
     import yaml
@@ -81,6 +88,8 @@ DEFAULT_PORT = 13337
 POST_PROCESS_FUNC_RENAME_BATCH_SIZE = 50
 MCP_STARTUP_TIMEOUT = 1200  # seconds to wait for MCP server
 SKILL_TIMEOUT = 1200  # 10 minutes per skill
+VERIFY_SURVEY_TIMEOUT = 300  # seconds to wait for the opened binary's async analysis before failing
+VERIFY_SURVEY_POLL_INTERVAL = 3  # seconds between survey_binary polls while the worker warms up
 MCP_LIST_TIMEOUT = 30
 ERROR_MARKER_RE = re.compile(
     r"(?<![A-Za-z0-9])error(?![A-Za-z0-9])",
@@ -687,16 +696,37 @@ def validate_opened_binary_identity(binary_path, platform, survey_payload):
 
 
 def verify_opened_binary_via_mcp(binary_path, platform, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=False):
-    try:
-        survey = asyncio.run(survey_binary_via_mcp(host=host, port=port, detail_level="minimal"))
-    except Exception as exc:
-        survey = None
-        if debug:
-            print(f"  Opened binary survey failed: {exc}")
+    # idalib-mcp 2.0.0 binds the HTTP port from the supervisor immediately but
+    # analyzes the database asynchronously in a worker, so survey_binary can
+    # return no metadata for the first several seconds. Poll until the survey
+    # yields identity metadata (or the deadline passes) instead of failing on the
+    # first empty response.
+    survey = None
+    ok = False
+    reasons = ["survey_binary returned no metadata"]
+    deadline = time.time() + VERIFY_SURVEY_TIMEOUT
+    attempt = 0
+    while True:
+        attempt += 1
+        try:
+            survey = asyncio.run(survey_binary_via_mcp(host=host, port=port, detail_level="minimal"))
+        except Exception as exc:
+            survey = None
+            if debug:
+                print(f"  Opened binary survey failed (attempt {attempt}): {exc}")
 
-    ok, reasons = validate_opened_binary_identity(binary_path, platform, survey)
-    if ok:
-        return True
+        ok, reasons = validate_opened_binary_identity(binary_path, platform, survey)
+        if ok:
+            return True
+
+        has_metadata = isinstance(survey, dict) and isinstance(survey.get("metadata"), dict) and any(
+            survey["metadata"].get(k) for k in ("sha256", "md5", "path")
+        )
+        if has_metadata or time.time() >= deadline:
+            break
+        if debug:
+            print(f"  Waiting for opened binary analysis (attempt {attempt})...")
+        time.sleep(VERIFY_SURVEY_POLL_INTERVAL)
 
     metadata = survey.get("metadata") if isinstance(survey, dict) else {}
     opened_path = metadata.get("path") if isinstance(metadata, dict) else None
@@ -937,41 +967,82 @@ async def quit_ida_via_mcp(host=DEFAULT_HOST, port=DEFAULT_PORT):
         return False
 
 
+def _kill_pid(pid):
+    """SIGKILL a single pid, ignoring races. Requires `import signal`."""
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except Exception:
+        pass
+
+
+def _reap_idalib_servers(port):
+    """Kill the idalib-mcp supervisor bound to `port` plus any idalib workers.
+
+    idalib-mcp 2.0.0 detaches its supervisor/worker into their own session, so
+    killing the `uv run` wrapper's process group does not reach them and the
+    supervisor keeps holding the port. Match the actual processes by cmdline:
+    the supervisor carries `idalib-mcp ... --port <port>`, the workers run
+    `-m ida_pro_mcp.idalib_server`. Only this pipeline runs these, so reaping
+    every idalib worker at teardown is safe.
+    """
+    port_token = "--port %d" % port
+    self_pid = os.getpid()
+    for entry in os.listdir("/proc"):
+        if not entry.isdigit():
+            continue
+        pid = int(entry)
+        if pid == self_pid:
+            continue
+        try:
+            with open("/proc/%s/cmdline" % entry, "rb") as f:
+                cmd = f.read().replace(b"\x00", b" ").decode("utf-8", "replace")
+        except (IOError, OSError):
+            continue
+        if ("idalib-mcp" in cmd and port_token in cmd) or "ida_pro_mcp.idalib_server" in cmd:
+            _kill_pid(pid)
+
+
+def _terminate_process_group(process, port=None):
+    """Force-kill the idalib-mcp server tree (uv wrapper + detached supervisor/workers)."""
+    if process is not None:
+        _kill_pid(process.pid)
+        try:
+            process.kill()
+        except Exception:
+            pass
+    if port is not None:
+        _reap_idalib_servers(port)
+
+
 async def quit_ida_gracefully_async(process, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=False):
     """
-    Attempt to quit IDA gracefully via MCP, fall back to terminate if needed.
+    Attempt to quit IDA gracefully via MCP, then force-reap the detached server.
 
     Args:
         process: subprocess.Popen object
         host: MCP server host
         port: MCP server port
     """
-    if process is None:
-        return
-
-    if process.poll() is not None:
-        return  # Process already exited
-
     if debug:
         print("  Quitting IDA gracefully via MCP...")
 
-    try:
-        await asyncio.wait_for(quit_ida_via_mcp(host, port), timeout=5)
-    except Exception:
-        pass
-
-    try:
-        await asyncio.to_thread(process.wait, timeout=10)
-        if debug:
-            print("  IDA exited gracefully")
-        return
-    except subprocess.TimeoutExpired:
-        if debug:
-            print("  Warning: IDA did not exit after qexit, forcing kill...")
-
-    if process.poll() is None:
+    # Best-effort graceful qexit while the uv wrapper is still alive.
+    if process is not None and process.poll() is None:
         try:
-            process.kill()
+            await asyncio.wait_for(quit_ida_via_mcp(host, port), timeout=5)
+        except Exception:
+            pass
+        try:
+            await asyncio.to_thread(process.wait, timeout=3)
+        except subprocess.TimeoutExpired:
+            if debug:
+                print("  Warning: IDA did not exit after qexit, forcing kill...")
+
+    # Always force-reap: the 2.0.0 supervisor detaches into its own session and
+    # survives both qexit (worker-only) and killing the uv wrapper.
+    _terminate_process_group(process, port)
+    if process is not None and process.poll() is None:
+        try:
             await asyncio.to_thread(process.wait, timeout=5)
         except Exception:
             pass
@@ -2059,16 +2130,20 @@ def start_idalib_mcp(binary_path, host=DEFAULT_HOST, port=DEFAULT_PORT, ida_args
     print(f"  Starting idalib-mcp: {' '.join(cmd)}")
 
     try:
+        # start_new_session=True puts idalib-mcp in its own process group so
+        # _terminate_process_group can reap the whole tree.
         if debug:
-            process = subprocess.Popen(cmd)
+            process = subprocess.Popen(cmd, start_new_session=True)
         else:
-            process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            process = subprocess.Popen(
+                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True
+            )
 
         # Wait for MCP server to be ready
         print(f"  Waiting for MCP server on {host}:{port}...")
         if not wait_for_port(host, port, timeout=MCP_STARTUP_TIMEOUT):
             print(f"  Error: MCP server failed to start within {MCP_STARTUP_TIMEOUT} seconds")
-            process.kill()
+            _terminate_process_group(process, port)
             return None
 
         print("  MCP server is ready")
@@ -2664,9 +2739,8 @@ def process_binary(
                     fail_count += 1
                     missing_names = [os.path.basename(p) for p in missing_required_outputs]
                     print(f"  Pre-processed but missing expected_output: {skill_name} ({', '.join(missing_names)})")
-                    print("  Aborting remaining skills after preprocess output validation failure")
-                    abort_binary_processing = True
-                    break
+                    # Skip and continue instead of aborting; failure still counted.
+                    continue
                 elif not required_outputs and optional_outputs and not optional_output_generated:
                     skip_count += 1
                     print(f"  Skipping skill: {skill_name} (optional outputs not generated)")
@@ -2721,9 +2795,9 @@ def process_binary(
             else:
                 fail_count += 1
                 print("    Failed")
-                print("  Aborting remaining skills after fallback skill failure")
-                abort_binary_processing = True
-                break
+                # Skip this skill and keep going instead of aborting the binary/run;
+                # one unresolved skill should not block the rest. Counted in summary.
+                continue
 
         if abort_binary_processing:
             return success_count, fail_count, skip_count
@@ -2840,11 +2914,40 @@ def process_binary(
     finally:
         # Gracefully quit IDA via MCP to avoid breaking IDB
         if skip_graceful_quit:
-            print("  Skipping automatic IDA shutdown after opened binary verification failure")
+            # Skip the graceful qexit (binary never verified) but still reap the
+            # detached supervisor/workers so they don't hold the port / leave a lock.
+            print("  Skipping graceful IDA shutdown after verification failure; reaping server")
+            _terminate_process_group(process, port)
         else:
             quit_ida_gracefully(process, host, port, debug=debug)
 
     return success_count, fail_count, skip_count
+
+
+def _preflight_cleanup(bin_dir, gamever, port=DEFAULT_PORT):
+    """Reap stale idalib-mcp servers and purge orphaned IDB lock files.
+
+    An interrupted/aborted prior run can leave a detached idalib-mcp supervisor
+    holding the port plus an uncompacted IDA database
+    (.id0/.id1/.id2/.nam/.til) that trips "IDB lock file detected". The pipeline
+    starts its own server per module, so any idalib-mcp already on the port at
+    startup is stale and safe to reap.
+    """
+    _reap_idalib_servers(port)
+    lock_suffixes = (".id0", ".id1", ".id2", ".nam", ".til")
+    base = os.path.join(bin_dir, str(gamever))
+    removed = 0
+    if os.path.isdir(base):
+        for root, _dirs, files in os.walk(base):
+            for fn in files:
+                if fn.endswith(lock_suffixes):
+                    try:
+                        os.remove(os.path.join(root, fn))
+                        removed += 1
+                    except OSError:
+                        pass
+    if removed:
+        print(f"Preflight: removed {removed} stale IDA database lock file(s) under {base}")
 
 
 def main():
@@ -2865,6 +2968,9 @@ def main():
     if not os.path.exists(config_path):
         print(f"Error: Config file not found: {config_path}")
         sys.exit(1)
+
+    # Clean up stale idalib-mcp servers / IDB locks left by an interrupted run
+    _preflight_cleanup(bin_dir, gamever)
 
     # Print configuration
     print(f"Config file: {config_path}")
@@ -2976,10 +3082,8 @@ def main():
             total_success += success
             total_fail += fail
             total_skip += skip
-            if fail > 0:
-                abort_processing = True
-                print("  Aborting remaining modules after binary processing failure")
-                break
+            # Continue with remaining modules even if this binary had failures;
+            # all failures are tallied in total_fail and shown in the summary.
 
         if abort_processing:
             break

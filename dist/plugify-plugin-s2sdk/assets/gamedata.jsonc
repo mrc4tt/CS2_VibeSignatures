@@ -62,7 +62,7 @@
       "CEntityInstance::AcceptInput": {
         "library": "server",
         "win64": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F0 48 8B D9 48 8B 0D ? ? ? ?",
-        "linuxsteamrt64": "55 48 89 F0 48 89 E5 41 57 49 89 FF 41 56 48 8D 7D ?"
+        "linuxsteamrt64": "55 48 89 E5 41 56 49 89 FE 41 55 48 8D 7D ?"
       },
       // String: "Multisource %s enabled (%d inputs)\n"
       "CEntityIOOutput::FireOutputInternal": {
@@ -74,7 +74,7 @@
       "CGameRules::TerminateRound": {
         "library": "server",
         "win64": "48 8B C4 4C 89 48 ? 48 89 48 ? 55 56 41 56",
-        "linuxsteamrt64": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? F3 0F 11 85 ? ? ? ?"
+        "linuxsteamrt64": "55 48 89 E5 41 57 41 89 F7 41 56 48 8D 35 ? ? ? ?"
       },
       // "chicken" is passed to this
       "CGameEntitySystem::CreateEntityByName": {
@@ -93,7 +93,7 @@
       "CBaseEntity::EmitSoundFilter": {
         "library": "server",
         "win64": "48 89 74 24 ? 57 41 56 41 57 48 83 EC ? BE ? ? ? ?",
-        "linuxsteamrt64": "55 48 89 E5 41 57 41 56 49 89 F6 BE ? ? ? ? 41 55 49 89 D5 41 54 53"
+        "linuxsteamrt64": "55 48 89 E5 41 57 41 56 49 89 F6 BE ? ? ? ? 41 55 49 89 D5 41 54 53 48 89 FB 48 8D 3D ? ? ? ?"
       },
       // String: "info_player_logo"
       "CBaseEntity::SetMoveType": {
@@ -127,7 +127,7 @@
       "GetCSWeaponDataFromKey": {
         "library": "server",
         "win64": "48 89 5C 24 ? 57 48 83 EC ? 33 FF 4C 8B CA 8B D9",
-        "linuxsteamrt64": "48 85 F6 0F 84 ? ? ? ? 55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 81 EC ? ? ? ? 80 3E ? 75 ? 31 C0 48 81 C4 ? ? ? ? 5B 41 5C 41 5D 41 5E 41 5F 5D C3 0F 1F 80 00 00 00 00 4C 8D A5 ? ? ? ?"
+        "linuxsteamrt64": "48 85 F6 0F 84 ? ? ? ? 55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 81 EC ? ? ? ? 80 3E ? 75 ? 31 C0 48 81 C4 ? ? ? ? 5B 41 5C 41 5D 41 5E 41 5F 5D C3 0F 1F 80 ? ? ? ? 4C 8D A5 ? ? ? ? 89 FB"
       },
 
       // patches
@@ -152,7 +152,7 @@
       "CPhysBox_Use": {
         "library": "server",
         "win64": "48 89 5C 24 ? 57 48 83 EC ? 48 8B DA 48 8B F9 E8 ? ? ? ? 80 BF ? 08 00 00 ? 74 ?",
-        "linuxsteamrt64": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 83 EC 10 E8 ? 88 E6 ?"
+        "linuxsteamrt64": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 83 EC 10 E8 7A 98 E2 ?"
       },
       // "Error - cannot add bots after game is over.\n"
       // patching jz
@@ -224,11 +224,11 @@
       // 2976 (372 * 8) is the offset
       "CBasePlayerPawn::CommitSuicide": {
         "win64": 390,
-        "linuxsteamrt64": 390
+        "linuxsteamrt64": 384
       },
       "CCSPlayer_WeaponServices::CanUse": {
         "win64": 24,
-        "linuxsteamrt64": 25
+        "linuxsteamrt64": 28
       },
       "CCSPlayer_WeaponServices::DropWeapon": {
         "win64": 25,
@@ -236,7 +236,7 @@
       },
       "CCSPlayer_WeaponServices::SelectItem": {
         "win64": 27,
-        "linuxsteamrt64": 28
+        "linuxsteamrt64": 31
       },
       "CCSPlayer_WeaponServices::SwitchWeapon": {
         "win64": 21,
@@ -244,7 +244,7 @@
       },
       "CCSPlayer_ItemServices::GiveNamedItem": {
         "win64": 20,
-        "linuxsteamrt64": 21
+        "linuxsteamrt64": 24
       },
       "CCSPlayer_ItemServices::RemoveAllItems": {
         "win64": 24,

@@ -5,7 +5,7 @@
     },
     "CBasePlayerPawn::CommitSuicide": {
         "windows": 390,
-        "linux": 390
+        "linux": 384
     },
     "CCSPlayerController::ChangeTeam": {
         "windows": 103,
@@ -28,7 +28,7 @@
     },
     "CGameSceneNode::GetSkeletonInstance": {
         "windows": 9,
-        "linux": 11
+        "linux": 14
     },
     "GetHammerUniqueID": {
         "windows": 111,
@@ -71,15 +71,15 @@
     },
     "CCSPlayer_ItemServices::RemoveWeapons": {
         "windows": 24,
-        "linux": 25
+        "linux": 28
     },
     "CCSPlayer_ItemServices::GiveNamedItem": {
         "windows": 20,
-        "linux": 21
+        "linux": 24
     },
     "CCSPlayer_WeaponServices::CanUse": {
         "windows": 24,
-        "linux": 25
+        "linux": 28
     },
     "CCSPlayer_WeaponServices::DropWeapon": {
         "windows": 25,
