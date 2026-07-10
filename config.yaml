@@ -4806,20 +4806,21 @@ modules:
           - CCSGameRules_PlayerSpawn.{platform}.yaml
         expected_input:
           - CCSGameRules_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #  CBasePlayerController_Respawn no longer exists since 14168; CCSPlayerController_Respawn
+      #  is still a vfunc of CCSPlayerController_vtable but is now direct-called from
+      #  CCSGameRules_BeginRound, so it is found via LLM_DECOMPILE directly (see below).
       #- name: find-CBasePlayerController_Respawn
       #  expected_output:
       #    - CBasePlayerController_Respawn.{platform}.yaml
       #  expected_input:
       #    - CCSGameRules_BeginRound.{platform}.yaml
       #    - CBasePlayerController_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CCSPlayerController_Respawn
-      #  expected_output:
-      #    - CCSPlayerController_Respawn.{platform}.yaml
-      #  expected_input:
-      #    - CCSPlayerController_vtable.{platform}.yaml
-      #    - CBasePlayerController_Respawn.{platform}.yaml
+      - name: find-CCSPlayerController_Respawn
+        expected_output:
+          - CCSPlayerController_Respawn.{platform}.yaml
+        expected_input:
+          - CCSGameRules_BeginRound.{platform}.yaml
+          - CCSPlayerController_vtable.{platform}.yaml
       - name: find-CCSPlayerController_Connect
         expected_output:
           - CCSPlayerController_Connect.{platform}.yaml
