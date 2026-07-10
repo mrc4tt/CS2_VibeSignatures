@@ -21,3 +21,4 @@ hm
 clear_ida_db.sh
 pop.sh
 update_css_gamedata.sh
+gamedatatest.json
