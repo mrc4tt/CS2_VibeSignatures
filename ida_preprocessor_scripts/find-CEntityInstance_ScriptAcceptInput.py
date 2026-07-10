@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEntityInstance_ScriptAcceptInput-linux skill."""
+"""Preprocess script for find-CEntityInstance_ScriptAcceptInput skill."""
 
 from ida_analyze_util import preprocess_common_skill
 

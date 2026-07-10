@@ -4699,28 +4699,15 @@ modules:
           - CEntityIdentity_AcceptInput.{platform}.yaml
         expected_input:
           - CEntityInstance_AcceptInput.{platform}.yaml
-      - name: find-CEntityInstance_ScriptAcceptInput-windows
-        platform: windows
+      - name: find-CEntityIdentity_AcceptInputInternal
+        expected_output:
+          - CEntityIdentity_AcceptInputInternal.{platform}.yaml
+      - name: find-CEntityInstance_ScriptAcceptInput
         expected_output:
           - CEntityInstance_ScriptAcceptInput.{platform}.yaml
         expected_input:
-          - CEntityIdentity_AcceptInput.{platform}.yaml
+          - CEntityIdentity_AcceptInputInternal.{platform}.yaml
           - CEntityInstance_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CEntityIdentity_AcceptInputInternal
-      #  platform: linux
-      #  expected_output:
-      #    - CEntityIdentity_AcceptInputInternal.{platform}.yaml
-      #  expected_input:
-      #    - CEntityIdentity_AcceptInput.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CEntityInstance_ScriptAcceptInput-linux
-      #  platform: linux
-      #  expected_output:
-      #    - CEntityInstance_ScriptAcceptInput.{platform}.yaml
-      #  expected_input:
-      #    - CEntityIdentity_AcceptInputInternal.{platform}.yaml
-      #    - CEntityInstance_vtable.{platform}.yaml
       - name: find-CEntityIdentity_SetEntityName
         expected_output:
           - CEntityIdentity_SetEntityName.{platform}.yaml
