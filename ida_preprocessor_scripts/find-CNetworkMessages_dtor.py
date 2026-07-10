@@ -76,16 +76,10 @@ async def preprocess_skill(
     # references the vtable global. On Linux that reference points at the
     # _ZTV symbol = vtable_va - 0x10; on Windows it is the vtable_va directly.
     func_xrefs = None
-    vtable_yaml_path = os.path.join(
-        new_binary_dir, "CNetworkMessages_vtable.%s.yaml" % platform
-    )
+    vtable_yaml_path = os.path.join(new_binary_dir, "CNetworkMessages_vtable.%s.yaml" % platform)
     vtable_va = _read_vtable_va(vtable_yaml_path)
     if vtable_va:
-        xref_va = (
-            vtable_va
-            if platform == "windows"
-            else hex(int(vtable_va, 16) - 0x10)
-        )
+        xref_va = vtable_va if platform == "windows" else hex(int(vtable_va, 16) - 0x10)
         func_xrefs = [
             {
                 "func_name": "CNetworkMessages_dtor",
@@ -100,8 +94,7 @@ async def preprocess_skill(
             },
         ]
     elif debug:
-        print("    Preprocess: CNetworkMessages_vtable vtable_va not found, "
-              "relying on func_sig reuse only")
+        print("    Preprocess: CNetworkMessages_vtable vtable_va not found, relying on func_sig reuse only")
 
     return await preprocess_common_skill(
         session=session,

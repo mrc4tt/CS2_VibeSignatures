@@ -16,6 +16,7 @@ Defaults: -gamedata = the CSS install gamedata.json under $CSS_INSTALL
 (or the repo dist copy if the install is absent). Without -write it is a
 dry-run (reports what would change).
 """
+
 import argparse
 import asyncio
 import json
@@ -94,6 +95,7 @@ async def get_image_base(session):
 
 async def wait_ready(session, timeout=600):
     import time as _t
+
     deadline = _t.time() + timeout
     while _t.time() < deadline:
         txt = await _call_text(session, "survey_binary", {"detail_level": "minimal"})
@@ -164,8 +166,15 @@ async def run(args, gd, binpath):
                         reason = "no-match" if len(hits) == 0 else f"multi({len(hits)})"
                         broken_list.append((key, reason))
                         print(f"  BROKEN  {key} [{reason}]")
-    return dict(kept=kept, regen=regen, broken=broken, offset=offset,
-                changed=changed, broken_list=broken_list, offset_list=offset_list)
+    return dict(
+        kept=kept,
+        regen=regen,
+        broken=broken,
+        offset=offset,
+        changed=changed,
+        broken_list=broken_list,
+        offset_list=offset_list,
+    )
 
 
 def main():
@@ -181,8 +190,10 @@ def main():
 
     css_install = os.environ.get("CSS_INSTALL", os.path.expanduser("~/CounterStrikeSharp"))
     install_gd = os.path.join(css_install, "configs/addons/counterstrikesharp/gamedata/gamedata.json")
-    dist_gd = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           "dist/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json")
+    dist_gd = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "dist/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json",
+    )
     gdpath = args.gamedata or (install_gd if os.path.exists(install_gd) else dist_gd)
     if not os.path.exists(gdpath):
         print(f"Error: gamedata not found: {gdpath}")
@@ -228,6 +239,7 @@ def main():
     if args.write and stats["changed"]:
         if args.backup:
             import time as _t
+
             bak = gdpath + ".bak." + str(int(os.path.getmtime(gdpath)))
             with open(bak, "w", encoding="utf-8") as f:
                 json.dump(gd, f, indent=2)

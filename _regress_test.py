@@ -53,6 +53,7 @@ try:
     say("RESULT: %s" % ("PASS" if ok else "FAIL"))
 except Exception as e:
     import traceback
+
     say("EXCEPTION: %r\n%s" % (e, traceback.format_exc()))
     subprocess.run(["pkill", "-9", "-f", "idalib-mcp"])
     say("RESULT: FAIL (exception)")

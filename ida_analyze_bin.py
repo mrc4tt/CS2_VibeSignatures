@@ -719,8 +719,10 @@ def verify_opened_binary_via_mcp(binary_path, platform, host=DEFAULT_HOST, port=
         if ok:
             return True
 
-        has_metadata = isinstance(survey, dict) and isinstance(survey.get("metadata"), dict) and any(
-            survey["metadata"].get(k) for k in ("sha256", "md5", "path")
+        has_metadata = (
+            isinstance(survey, dict)
+            and isinstance(survey.get("metadata"), dict)
+            and any(survey["metadata"].get(k) for k in ("sha256", "md5", "path"))
         )
         if has_metadata or time.time() >= deadline:
             break
