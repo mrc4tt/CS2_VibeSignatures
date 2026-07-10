@@ -1,39 +1,44 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CBasePlayerPawn_DropActivePlayerWeapon skill."""
+"""Preprocess script for find-CCSPlayerPawn_Event_Killed skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CBasePlayerPawn_DropActivePlayerWeapon",
+    "CCSPlayerPawn_Event_Killed",
 ]
 
-LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBasePlayerPawn_DropActivePlayerWeapon",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBasePlayerPawn_Event_Killed.{platform}.yaml",
-    ),
+FUNC_XREFS = [
+    {
+        "func_name": "CCSPlayerPawn_Event_Killed",
+        "xref_strings": ["FULLMATCH:#Cstrike_TitlesTXT_Hint_cannot_play_because_tk"],
+        "xref_gvs": [],
+        "xref_signatures": [],
+        "xref_funcs": [],
+        "exclude_funcs": [],
+        "exclude_strings": [],
+        "exclude_gvs": [],
+        "exclude_signatures": [],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [
-    # (func_name, vtable_class)
-    ("CBasePlayerPawn_DropActivePlayerWeapon", "CBasePlayerPawn"),
+    # (func_name, vtable_artifact_stem)
+    ("CCSPlayerPawn_Event_Killed", "CCSPlayerPawn_vtable"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CBasePlayerPawn_DropActivePlayerWeapon",
+        "CCSPlayerPawn_Event_Killed",
         [
             "func_name",
             "func_va",
             "func_rva",
             "func_size",
-            "vfunc_sig",
+            "func_sig",
+            "vtable_name",
             "vfunc_offset",
             "vfunc_index",
-            "vtable_name",
         ],
     ),
 ]
@@ -47,10 +52,9 @@ async def preprocess_skill(
     new_binary_dir,
     platform,
     image_base,
-    llm_config=None,
     debug=False,
 ):
-    """Reuse previous gamever vfunc_sig to locate target function(s) and write YAML."""
+    """Reuse previous gamever func_sig to locate target function(s) and write YAML."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -59,9 +63,8 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         func_names=TARGET_FUNCTION_NAMES,
+        func_xrefs=FUNC_XREFS,
         func_vtable_relations=FUNC_VTABLE_RELATIONS,
-        llm_decompile_specs=LLM_DECOMPILE,
-        llm_config=llm_config,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )

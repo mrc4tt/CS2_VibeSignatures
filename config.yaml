@@ -5060,7 +5060,7 @@ modules:
       - name: find-CEntitySystem_RegisterEntityClass
         expected_output:
           - CEntitySystem_RegisterEntityClass.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #  We don't really need this, two funcs reference the string on Linux
       #- name: find-CEntitySystem_AddComponentFieldUnserializer
       #  expected_output:
       #    - CEntitySystem_AddComponentFieldUnserializer.{platform}.yaml
@@ -5217,20 +5217,34 @@ modules:
       - name: find-CBaseCombatCharacter_OnKilled
         expected_output:
           - CBaseCombatCharacter_OnKilled.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CBasePlayerPawn_DropActivePlayerWeapon
-      #  expected_output:
-      #    - CBasePlayerPawn_DropActivePlayerWeapon.{platform}.yaml
-      #  expected_input:
-      #    - CBaseCombatCharacter_OnKilled.{platform}.yaml
-      #    - CBasePlayerPawn_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CCSPlayer_ItemServices_DropActivePlayerWeapon
-      #  expected_output:
-      #    - CCSPlayer_ItemServices_DropActivePlayerWeapon.{platform}.yaml
-      #  expected_input:
-      #    - CBasePlayerPawn_DropActivePlayerWeapon.{platform}.yaml
-      #    - CCSPlayer_ItemServices_vtable.{platform}.yaml
+      - name: find-CCSPlayerPawn_Event_KilledOther
+        expected_output:
+          - CCSPlayerPawn_Event_KilledOther.{platform}.yaml
+        expected_input:
+          - CCSPlayerPawn_vtable.{platform}.yaml
+      - name: find-CCSPlayerPawn_Event_Killed
+        expected_output:
+          - CCSPlayerPawn_Event_Killed.{platform}.yaml
+        expected_input:
+          - CCSPlayerPawn_vtable.{platform}.yaml
+      - name: find-CBasePlayerPawn_Event_Killed
+        expected_output:
+          - CBasePlayerPawn_Event_Killed.{platform}.yaml
+        expected_input:
+          - CBasePlayerPawn_vtable.{platform}.yaml
+          - CCSPlayerPawn_Event_Killed.{platform}.yaml
+      - name: find-CBasePlayerPawn_DropActivePlayerWeapon
+        expected_output:
+          - CBasePlayerPawn_DropActivePlayerWeapon.{platform}.yaml
+        expected_input:
+          - CBasePlayerPawn_Event_Killed.{platform}.yaml
+          - CBasePlayerPawn_vtable.{platform}.yaml
+      - name: find-CCSPlayer_ItemServices_DropActivePlayerWeapon
+        expected_output:
+          - CCSPlayer_ItemServices_DropActivePlayerWeapon.{platform}.yaml
+        expected_input:
+          - CBasePlayerPawn_DropActivePlayerWeapon.{platform}.yaml
+          - CCSPlayer_ItemServices_vtable.{platform}.yaml
       #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
       #- name: find-CCSPlayer_WeaponServices_DropWeapon
       #  expected_output:
@@ -7964,10 +7978,10 @@ modules:
         category: func
         alias:
           - CEntitySystem::RegisterEntityClass
-      - name: CEntitySystem_AddComponentFieldUnserializer
-        category: func
-        alias:
-          - CEntitySystem::AddComponentFieldUnserializer
+      #- name: CEntitySystem_AddComponentFieldUnserializer
+      #  category: func
+      #  alias:
+      #    - CEntitySystem::AddComponentFieldUnserializer
       - name: CEntitySystem_m_entClassesByCPPClassname
         category: structmember
         struct: CEntitySystem
@@ -8593,6 +8607,18 @@ modules:
         category: func
         alias:
           - CBaseCombatCharacter::OnKilled
+      - name: CCSPlayerPawn_Event_KilledOther
+        category: vfunc
+        alias:
+          - CCSPlayerPawn::Event_KilledOther
+      - name: CCSPlayerPawn_Event_Killed
+        category: vfunc
+        alias:
+          - CCSPlayerPawn::Event_Killed
+      - name: CBasePlayerPawn_Event_Killed
+        category: vfunc
+        alias:
+          - CBasePlayerPawn::Event_Killed
       - name: ScriptBinding_CSPlayerPawn_DestroyWeapon
         category: func
         alias:

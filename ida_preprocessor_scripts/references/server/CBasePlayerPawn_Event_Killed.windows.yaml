@@ -1,0 +1,397 @@
+func_name: CBasePlayerPawn_Event_Killed
+func_va: '0x180c5eca0'
+disasm_code: |-
+  .text:0000000180C5ECA0                 mov     [rsp-8+arg_8], rbx
+  .text:0000000180C5ECA5                 mov     [rsp-8+arg_10], rsi
+  .text:0000000180C5ECAA                 mov     [rsp-8+arg_18], rdi
+  .text:0000000180C5ECAF                 push    rbp
+  .text:0000000180C5ECB0                 push    r12
+  .text:0000000180C5ECB2                 push    r13
+  .text:0000000180C5ECB4                 push    r14
+  .text:0000000180C5ECB6                 push    r15
+  .text:0000000180C5ECB8                 lea     rbp, [rsp-37h]
+  .text:0000000180C5ECBD                 sub     rsp, 0E0h
+  .text:0000000180C5ECC4                 mov     rsi, rcx
+  .text:0000000180C5ECC7                 mov     r14, rdx
+  .text:0000000180C5ECCA                 mov     rcx, cs:off_181C4CF40
+  .text:0000000180C5ECD1                 mov     r8, rdx
+  .text:0000000180C5ECD4                 mov     rdx, rsi
+  .text:0000000180C5ECD7                 mov     rax, [rcx]
+  .text:0000000180C5ECDA                 call    qword ptr [rax+0A0h]
+  .text:0000000180C5ECE0                 mov     rax, [rsi]
+  .text:0000000180C5ECE3                 xor     r9d, r9d
+  .text:0000000180C5ECE6                 xor     r8d, r8d
+  .text:0000000180C5ECE9                 xor     edx, edx
+  .text:0000000180C5ECEB                 mov     rcx, rsi
+  .text:0000000180C5ECEE                 call    qword ptr [rax+0B98h]
+  .text:0000000180C5ECF4                 xor     r13d, r13d
+  .text:0000000180C5ECF7                 mov     r15d, 0FFFFFFFFh
+  .text:0000000180C5ECFD                 cmp     dword ptr [rsi+2D0h], 0FFFFFF9Dh
+  .text:0000000180C5ED04                 jge     short loc_180C5ED22
+  .text:0000000180C5ED06                 mov     r8d, 0FFFFFFFFh
+  .text:0000000180C5ED0C                 lea     rcx, [rsi+2D0h]
+  .text:0000000180C5ED13                 mov     edx, r15d
+  .text:0000000180C5ED16                 call    sub_1803C8510
+  .text:0000000180C5ED1B                 mov     [rsi+2D0h], r13d
+  .text:0000000180C5ED22                 mov     rax, [rsi]
+  .text:0000000180C5ED25                 lea     rdx, [rbp+57h+var_40]
+  .text:0000000180C5ED29                 mov     r8d, 3
+  .text:0000000180C5ED2F                 mov     rcx, rsi
+  .text:0000000180C5ED32                 call    qword ptr [rax+0B58h]
+  .text:0000000180C5ED38                 lea     rdx, [rbp+57h+var_40]
+  .text:0000000180C5ED3C                 mov     rcx, rsi
+  .text:0000000180C5ED3F                 call    sub_18025CB30
+  .text:0000000180C5ED44                 lea     rbx, [rsi+5E8h]
+  .text:0000000180C5ED4B                 mov     [rbp+57h+var_60], r13
+  .text:0000000180C5ED4F                 lea     rax, ??_7VPhysicsCollisionAttribute_t@@6B@; const VPhysicsCollisionAttribute_t::`vftable'
+  .text:0000000180C5ED56                 mov     [rbp+57h+var_80], rbx
+  .text:0000000180C5ED5A                 xorps   xmm0, xmm0
+  .text:0000000180C5ED5D                 mov     [rbp+57h+var_78], rax
+  .text:0000000180C5ED61                 lea     rdx, [rbx+10h]
+  .text:0000000180C5ED65                 movdqa  [rbp+57h+var_70], xmm0
+  .text:0000000180C5ED6A                 lea     rcx, [rbp+57h+var_78]
+  .text:0000000180C5ED6E                 mov     [rbp+57h+var_58], r13
+  .text:0000000180C5ED72                 mov     [rbp+57h+var_50], r13
+  .text:0000000180C5ED76                 mov     [rbp+57h+var_48], r13b
+  .text:0000000180C5ED7A                 call    sub_180C4AC00
+  .text:0000000180C5ED7F                 mov     rcx, [rbp+57h+var_80]
+  .text:0000000180C5ED83                 movzx   eax, byte ptr [rcx+3Fh]
+  .text:0000000180C5ED87                 test    al, 7
+  .text:0000000180C5ED89                 jz      short loc_180C5EDA6
+  .text:0000000180C5ED8B                 and     al, 0F8h
+  .text:0000000180C5ED8D                 mov     [rcx+3Fh], al
+  .text:0000000180C5ED90                 lea     rcx, [rbp+57h+var_80]
+  .text:0000000180C5ED94                 call    sub_180C736E0
+  .text:0000000180C5ED99                 mov     rcx, [rbx+8]
+  .text:0000000180C5ED9D                 mov     rax, [rcx]
+  .text:0000000180C5EDA0                 call    qword ptr [rax+5D0h]
+  .text:0000000180C5EDA6                 lea     rcx, [rbp+57h+var_80]
+  .text:0000000180C5EDAA                 call    sub_180C736E0
+  .text:0000000180C5EDAF                 xor     r8d, r8d
+  .text:0000000180C5EDB2                 mov     dl, 4
+  .text:0000000180C5EDB4                 mov     rcx, rsi
+  .text:0000000180C5EDB7                 call    CBaseEntity_SetMoveType
+  .text:0000000180C5EDBC                 xor     r8d, r8d
+  .text:0000000180C5EDBF                 xor     edx, edx
+  .text:0000000180C5EDC1                 mov     rcx, rsi
+  .text:0000000180C5EDC4                 call    CBaseEntity_SetGroundEntity
+  .text:0000000180C5EDC9                 mov     rdx, [rsi+10h]
+  .text:0000000180C5EDCD                 lea     rcx, [rbp+57h+arg_0]
+  .text:0000000180C5EDD1                 mov     edx, [rdx+38h]
+  .text:0000000180C5EDD4                 call    sub_1808C48C0
+  .text:0000000180C5EDD9                 movss   xmm0, dword ptr [rsi+0B9Ch]
+  .text:0000000180C5EDE1                 ucomiss xmm0, [rbp+57h+arg_0]
+  .text:0000000180C5EDE5                 jp      short loc_180C5EDE9
+  .text:0000000180C5EDE7                 jz      short loc_180C5EE0B
+  .text:0000000180C5EDE9                 mov     r8d, 0FFFFFFFFh
+  .text:0000000180C5EDEF                 lea     rcx, [rsi+0B9Ch]
+  .text:0000000180C5EDF6                 mov     edx, r15d
+  .text:0000000180C5EDF9                 call    sub_18024C0B0
+  .text:0000000180C5EDFE                 movss   xmm0, [rbp+57h+arg_0]
+  .text:0000000180C5EE03                 movss   dword ptr [rsi+0B9Ch], xmm0
+  .text:0000000180C5EE0B                 mov     rbx, [rsi+0A78h]
+  .text:0000000180C5EE12                 test    rbx, rbx
+  .text:0000000180C5EE15                 jz      short loc_180C5EE38
+  .text:0000000180C5EE17                 nop     word ptr [rax+rax+00000000h]
+  .text:0000000180C5EE20                 mov     rax, [rbx]
+  .text:0000000180C5EE23                 mov     rdx, r14
+  .text:0000000180C5EE26                 mov     rcx, rbx
+  .text:0000000180C5EE29                 call    qword ptr [rax+98h]
+  .text:0000000180C5EE2F                 mov     rbx, [rbx+40h]
+  .text:0000000180C5EE33                 test    rbx, rbx
+  .text:0000000180C5EE36                 jnz     short loc_180C5EE20
+  .text:0000000180C5EE38                 mov     rax, [rsi]
+  .text:0000000180C5EE3B                 mov     rdx, [rsi+990h]
+  .text:0000000180C5EE42                 mov     ecx, [rsi+988h]
+  .text:0000000180C5EE48                 mov     rbx, [rax+0A38h]
+  .text:0000000180C5EE4F                 call    sub_181348A50
+  .text:0000000180C5EE54                 mov     r8, rax
+  .text:0000000180C5EE57                 xor     edx, edx
+  .text:0000000180C5EE59                 mov     rcx, rsi
+  .text:0000000180C5EE5C                 call    rbx
+  .text:0000000180C5EE5E                 xor     edx, edx
+  .text:0000000180C5EE60                 lea     rcx, [rsi+988h]
+  .text:0000000180C5EE67                 call    sub_1813416F0
+  .text:0000000180C5EE6C                 lea     rcx, [rsi+9A8h]
+  .text:0000000180C5EE73                 xor     edx, edx
+  .text:0000000180C5EE75                 call    sub_1813416F0
+  .text:0000000180C5EE7A                 lea     rcx, [rsi+998h]
+  .text:0000000180C5EE81                 xor     edx, edx
+  .text:0000000180C5EE83                 call    sub_1813416F0
+  .text:0000000180C5EE88                 mov     rax, [rsi]
+  .text:0000000180C5EE8B                 mov     rdx, r14
+  .text:0000000180C5EE8E                 mov     rcx, rsi
+  .text:0000000180C5EE91                 call    qword ptr [rax+0BA0h]
+  .text:0000000180C5EE97                 mov     rcx, rsi
+  .text:0000000180C5EE9A                 call    sub_1803BD410
+  .text:0000000180C5EE9F                 xorps   xmm3, xmm3
+  .text:0000000180C5EEA2                 lea     rcx, [rbp+57h+var_B0]
+  .text:0000000180C5EEA6                 xorps   xmm1, xmm1
+  .text:0000000180C5EEA9                 movss   xmm2, dword ptr [rax+4]
+  .text:0000000180C5EEAE                 call    sub_1801C2430
+  .text:0000000180C5EEB3                 mov     rdx, rax
+  .text:0000000180C5EEB6                 mov     rcx, rsi
+  .text:0000000180C5EEB9                 call    sub_1803CFC30
+  .text:0000000180C5EEBE                 mov     rax, [rsi]
+  .text:0000000180C5EEC1                 lea     rdx, [rbp+57h+var_C0]
+  .text:0000000180C5EEC5                 mov     r8, r14
+  .text:0000000180C5EEC8                 mov     rcx, rsi
+  .text:0000000180C5EECB                 call    qword ptr [rax+9E0h]
+  .text:0000000180C5EED1                 mov     rcx, rsi
+  .text:0000000180C5EED4                 call    sub_180CA0A70
+  .text:0000000180C5EED9                 test    rax, rax
+  .text:0000000180C5EEDC                 jz      short loc_180C5EF2E
+  .text:0000000180C5EEDE                 mov     r8, rsi
+  .text:0000000180C5EEE1                 lea     rdx, [rbp+57h+var_B0]
+  .text:0000000180C5EEE5                 mov     rcx, rax
+  .text:0000000180C5EEE8                 call    sub_180CA1AE0
+  .text:0000000180C5EEED                 movss   xmm0, dword ptr [rbp+57h+var_C0]
+  .text:0000000180C5EEF2                 movss   xmm1, dword ptr [rbp+57h+var_C0+4]
+  .text:0000000180C5EEF7                 movsd   xmm2, qword ptr [rax]
+  .text:0000000180C5EEFB                 mov     ecx, [rax+8]
+  .text:0000000180C5EEFE                 addss   xmm0, xmm2
+  .text:0000000180C5EF02                 movsd   [rbp+57h+var_B0], xmm2
+  .text:0000000180C5EF07                 movss   dword ptr [rbp+57h+var_C0], xmm0
+  .text:0000000180C5EF0C                 movaps  xmm0, xmm2
+  .text:0000000180C5EF0F                 shufps  xmm0, xmm0, 55h ; 'U'
+  .text:0000000180C5EF13                 addss   xmm1, xmm0
+  .text:0000000180C5EF17                 movd    xmm0, ecx
+  .text:0000000180C5EF1B                 movss   dword ptr [rbp+57h+var_C0+4], xmm1
+  .text:0000000180C5EF20                 movss   xmm1, [rbp+57h+var_B8]
+  .text:0000000180C5EF25                 addss   xmm1, xmm0
+  .text:0000000180C5EF29                 movss   [rbp+57h+var_B8], xmm1
+  .text:0000000180C5EF2E                 mov     rax, [r14]
+  .text:0000000180C5EF31                 mov     ecx, [rax+4Ch]
+  .text:0000000180C5EF34                 bt      ecx, 0Dh
+  .text:0000000180C5EF38                 jnb     short loc_180C5EF45
+  .text:0000000180C5EF3A                 mov     r15d, ecx
+  .text:0000000180C5EF3D                 shr     r15d, 8
+  .text:0000000180C5EF41                 and     r15d, 1
+  .text:0000000180C5EF45                 mov     rax, [rsi]
+  .text:0000000180C5EF48                 lea     rdx, [rbp+57h+var_C0]
+  .text:0000000180C5EF4C                 xor     r9d, r9d
+  .text:0000000180C5EF4F                 mov     r8d, r15d
+  .text:0000000180C5EF52                 mov     rcx, rsi
+  .text:0000000180C5EF55                 call    qword ptr [rax+9F0h] ; 0x9F0 = CBasePlayerPawn_DropActivePlayerWeapon
+  .text:0000000180C5EF5B                 mov     rax, [rsi]
+  .text:0000000180C5EF5E                 mov     rdx, r14
+  .text:0000000180C5EF61                 mov     rcx, rsi
+  .text:0000000180C5EF64                 xor     r12b, r12b
+  .text:0000000180C5EF67                 call    qword ptr [rax+9E8h]
+  .text:0000000180C5EF6D                 mov     r8, [rsi]
+  .text:0000000180C5EF70                 mov     rcx, rsi
+  .text:0000000180C5EF73                 test    al, al
+  .text:0000000180C5EF75                 jz      short loc_180C5EFC4
+  .text:0000000180C5EF77                 mov     rdx, r14
+  .text:0000000180C5EF7A                 call    qword ptr [r8+9F8h]
+  .text:0000000180C5EF81                 movzx   r12d, al
+  .text:0000000180C5EF85                 mov     rdx, r14
+  .text:0000000180C5EF88                 mov     rcx, rsi
+  .text:0000000180C5EF8B                 call    CBaseCombatCharacter_OnKilled
+  .text:0000000180C5EF90                 movzx   ebx, al
+  .text:0000000180C5EF93                 test    r12b, r12b
+  .text:0000000180C5EF96                 jz      short loc_180C5EFA3
+  .text:0000000180C5EF98                 mov     rcx, rsi
+  .text:0000000180C5EF9B                 call    UTIL_Remove
+  .text:0000000180C5EFA0                 movzx   eax, bl
+  .text:0000000180C5EFA3                 lea     r11, [rsp+100h+var_20]
+  .text:0000000180C5EFAB                 mov     rbx, [r11+38h]
+  .text:0000000180C5EFAF                 mov     rsi, [r11+40h]
+  .text:0000000180C5EFB3                 mov     rdi, [r11+48h]
+  .text:0000000180C5EFB7                 mov     rsp, r11
+  .text:0000000180C5EFBA                 pop     r15
+  .text:0000000180C5EFBC                 pop     r14
+  .text:0000000180C5EFBE                 pop     r13
+  .text:0000000180C5EFC0                 pop     r12
+  .text:0000000180C5EFC2                 pop     rbp
+  .text:0000000180C5EFC3                 retn
+  .text:0000000180C5EFC4                 call    qword ptr [r8+918h]
+  .text:0000000180C5EFCB                 test    al, al
+  .text:0000000180C5EFCD                 jz      short loc_180C5EF85
+  .text:0000000180C5EFCF                 movzx   eax, byte ptr [r14+48h]
+  .text:0000000180C5EFD4                 shr     al, 7
+  .text:0000000180C5EFD7                 test    al, 1
+  .text:0000000180C5EFD9                 jnz     short loc_180C5EF85
+  .text:0000000180C5EFDB                 mov     eax, [rbp+57h+var_B8]
+  .text:0000000180C5EFDE                 lea     rcx, [rbp+57h+arg_0]
+  .text:0000000180C5EFE2                 mov     rdx, [rsi+10h]
+  .text:0000000180C5EFE6                 movsd   xmm0, [rbp+57h+var_C0]
+  .text:0000000180C5EFEB                 mov     ebx, cs:dword_1815E0750
+  .text:0000000180C5EFF1                 mov     [rbp+57h+var_98], eax
+  .text:0000000180C5EFF4                 mov     eax, [rsi+868h]
+  .text:0000000180C5EFFA                 mov     [rbp+57h+var_94], eax
+  .text:0000000180C5EFFD                 mov     rax, [rsi]
+  .text:0000000180C5F000                 mov     [rbp+57h+var_90], 100h
+  .text:0000000180C5F006                 mov     [rbp+57h+var_8C], r13d
+  .text:0000000180C5F00A                 movsd   [rbp+57h+var_A0], xmm0
+  .text:0000000180C5F00F                 mov     edx, [rdx+38h]
+  .text:0000000180C5F012                 mov     rdi, [rax+860h]
+  .text:0000000180C5F019                 movaps  [rsp+100h+var_30], xmm6
+  .text:0000000180C5F021                 movsd   xmm6, cs:qword_1815E0748
+  .text:0000000180C5F029                 call    sub_1808C48C0
+  .text:0000000180C5F02E                 mov     r8d, [rbp+57h+arg_0]
+  .text:0000000180C5F032                 lea     rax, [rbp+57h+var_B0]
+  .text:0000000180C5F036                 mov     [rsp+100h+var_D0], r13d
+  .text:0000000180C5F03B                 xor     r9d, r9d
+  .text:0000000180C5F03E                 mov     [rsp+100h+var_D8], rax
+  .text:0000000180C5F043                 xor     edx, edx
+  .text:0000000180C5F045                 mov     rcx, rsi
+  .text:0000000180C5F048                 mov     [rsp+100h+var_E0], r15d
+  .text:0000000180C5F04D                 movsd   [rbp+57h+var_B0], xmm6
+  .text:0000000180C5F052                 mov     [rbp+57h+var_A8], ebx
+  .text:0000000180C5F055                 call    rdi
+  .text:0000000180C5F057                 movaps  xmm6, [rsp+100h+var_30]
+  .text:0000000180C5F05F                 test    al, al
+  .text:0000000180C5F061                 jnz     loc_180C5EF85
+  .text:0000000180C5F067                 movzx   eax, byte ptr [r14+48h]
+  .text:0000000180C5F06C                 shr     al, 7
+  .text:0000000180C5F06F                 test    al, 1
+  .text:0000000180C5F071                 jnz     loc_180C5EF85
+  .text:0000000180C5F077                 mov     rax, [rsi]
+  .text:0000000180C5F07A                 lea     r8, [rbp+57h+var_A0]
+  .text:0000000180C5F07E                 mov     rdx, r14
+  .text:0000000180C5F081                 mov     rcx, rsi
+  .text:0000000180C5F084                 call    qword ptr [rax+0A00h]
+  .text:0000000180C5F08A                 mov     rdx, r14
+  .text:0000000180C5F08D                 mov     rcx, rsi
+  .text:0000000180C5F090                 call    CBaseCombatCharacter_OnKilled
+  .text:0000000180C5F095                 jmp     loc_180C5EFA3
+procedure: |-
+  char __fastcall CBaseCombatCharacter_Event_Killed(_DWORD *a1, char *a2)
+  {
+    unsigned int v4; // r15d
+    char v5; // al
+    _QWORD *i; // rbx
+    void (__fastcall *v7)(_DWORD *, _QWORD, __int64); // rbx
+    __int64 v8; // rax
+    __int64 v9; // rax
+    __int64 v10; // rax
+    __int64 v11; // rax
+    float v12; // ecx
+    unsigned int v13; // ecx
+    char v14; // r12
+    char v15; // al
+    __int64 v16; // r8
+    char result; // al
+    char v18; // bl
+    __int64 v19; // rdx
+    __int64 v20; // rax
+    unsigned __int8 (__fastcall *v21)(_DWORD *, _QWORD, _QWORD, _QWORD, unsigned int, unsigned __int64 *, _DWORD); // rdi
+    __int64 v22; // [rsp+40h] [rbp-69h] BYREF
+    float v23; // [rsp+48h] [rbp-61h]
+    unsigned __int64 v24; // [rsp+50h] [rbp-59h] BYREF
+    int v25; // [rsp+58h] [rbp-51h]
+    __int64 v26; // [rsp+60h] [rbp-49h] BYREF
+    float v27; // [rsp+68h] [rbp-41h]
+    int v28; // [rsp+6Ch] [rbp-3Dh]
+    __int16 v29; // [rsp+70h] [rbp-39h]
+    int v30; // [rsp+74h] [rbp-35h]
+    _DWORD *v31; // [rsp+80h] [rbp-29h] BYREF
+    void **v32; // [rsp+88h] [rbp-21h] BYREF
+    __int128 v33; // [rsp+90h] [rbp-19h]
+    __int64 v34; // [rsp+A0h] [rbp-9h]
+    __int64 v35; // [rsp+A8h] [rbp-1h]
+    __int64 v36; // [rsp+B0h] [rbp+7h]
+    char v37; // [rsp+B8h] [rbp+Fh]
+    _BYTE v38[16]; // [rsp+C0h] [rbp+17h] BYREF
+    float v39; // [rsp+110h] [rbp+67h] BYREF
+
+    ((void (__fastcall *)(void ***, _DWORD *, char *))(*off_181C4CF40)[20])(off_181C4CF40, a1, a2);
+    (*(void (__fastcall **)(_DWORD *, _QWORD, _QWORD, _QWORD))(*(_QWORD *)a1 + 2968LL))(a1, 0, 0, 0);
+    v4 = -1;
+    if ( (int)a1[180] < -99 )
+    {
+      sub_1803C8510(a1 + 180, 0xFFFFFFFFLL, 0xFFFFFFFFLL);
+      a1[180] = 0;
+    }
+    (*(void (__fastcall **)(_DWORD *, _BYTE *, __int64))(*(_QWORD *)a1 + 2904LL))(a1, v38, 3);
+    sub_18025CB30((__int64)a1, (__int64)v38);
+    v34 = 0;
+    v31 = a1 + 378;
+    v32 = &VPhysicsCollisionAttribute_t::`vftable';
+    v33 = 0;
+    v35 = 0;
+    v36 = 0;
+    v37 = 0;
+    sub_180C4AC00(&v32, a1 + 382);
+    v5 = *((_BYTE *)a1 + 1575);
+    if ( (v5 & 7) != 0 )
+    {
+      *((_BYTE *)v31 + 63) = v5 & 0xF8;
+      sub_180C736E0(&v31);
+      (*(void (__fastcall **)(_QWORD))(**((_QWORD **)a1 + 190) + 1488LL))(*((_QWORD *)a1 + 190));
+    }
+    sub_180C736E0(&v31);
+    CBaseEntity_SetMoveType(a1, 4, 0);
+    CBaseEntity_SetGroundEntity(a1, nullptr, 0);
+    sub_1808C48C0(&v39, *(unsigned int *)(*((_QWORD *)a1 + 2) + 56LL));
+    if ( *((float *)a1 + 743) != v39 )
+    {
+      sub_18024C0B0(a1 + 743, 0xFFFFFFFFLL, 0xFFFFFFFFLL);
+      *((float *)a1 + 743) = v39;
+    }
+    for ( i = *((_QWORD **)a1 + 335); i; i = (_QWORD *)i[8] )
+      (*(void (__fastcall **)(_QWORD *, char *))(*i + 152LL))(i, a2);
+    v7 = *(void (__fastcall **)(_DWORD *, _QWORD, __int64))(*(_QWORD *)a1 + 2616LL);
+    v8 = sub_181348A50((unsigned int)a1[610], *((_QWORD *)a1 + 306));
+    v7(a1, 0, v8);
+    sub_1813416F0(a1 + 610, 0);
+    sub_1813416F0(a1 + 618, 0);
+    sub_1813416F0(a1 + 614, 0);
+    (*(void (__fastcall **)(_DWORD *, char *))(*(_QWORD *)a1 + 2976LL))(a1, a2);
+    sub_1803BD410(a1);
+    v9 = sub_1801C2430(&v24);
+    sub_1803CFC30(a1, v9);
+    (*(void (__fastcall **)(_DWORD *, __int64 *, char *))(*(_QWORD *)a1 + 2528LL))(a1, &v22, a2);
+    v10 = sub_180CA0A70(a1);
+    if ( v10 )
+    {
+      v11 = sub_180CA1AE0(v10, &v24, a1);
+      v12 = *(float *)(v11 + 8);
+      v24 = *(_QWORD *)v11;
+      *(float *)&v22 = *(float *)&v22 + *(float *)&v24;
+      *((float *)&v22 + 1) = *((float *)&v22 + 1) + _mm_shuffle_ps((__m128)v24, (__m128)v24, 85).m128_f32[0];
+      v23 = v23 + v12;
+    }
+    v13 = *(_DWORD *)(*(_QWORD *)a2 + 76LL);
+    if ( (v13 & 0x2000) != 0 )
+      v4 = (v13 >> 8) & 1;
+    (*(void (__fastcall **)(_DWORD *, __int64 *, _QWORD, _QWORD))(*(_QWORD *)a1 + 2544LL))(a1, &v22, v4, 0); // 2544LL = 0x9F0 = CBasePlayerPawn_DropActivePlayerWeapon
+    v14 = 0;
+    v15 = (*(__int64 (__fastcall **)(_DWORD *, char *))(*(_QWORD *)a1 + 2536LL))(a1, a2);
+    v16 = *(_QWORD *)a1;
+    if ( v15 )
+    {
+      v14 = (*(__int64 (__fastcall **)(_DWORD *, char *))(v16 + 2552))(a1, a2);
+    }
+    else if ( (*(unsigned __int8 (__fastcall **)(_DWORD *))(v16 + 2328))(a1) )
+    {
+      if ( a2[72] >= 0 )
+      {
+        v19 = *((_QWORD *)a1 + 2);
+        v27 = v23;
+        v28 = a1[538];
+        v20 = *(_QWORD *)a1;
+        v29 = 256;
+        v30 = 0;
+        v26 = v22;
+        v21 = *(unsigned __int8 (__fastcall **)(_DWORD *, _QWORD, _QWORD, _QWORD, unsigned int, unsigned __int64 *, _DWORD))(v20 + 2144);
+        sub_1808C48C0(&v39, *(unsigned int *)(v19 + 56));
+        v24 = 0;
+        v25 = 0;
+        if ( !v21(a1, 0, LODWORD(v39), 0, v4, &v24, 0) && a2[72] >= 0 )
+        {
+          (*(void (__fastcall **)(_DWORD *, char *, __int64 *))(*(_QWORD *)a1 + 2560LL))(a1, a2, &v26);
+          return CBaseCombatCharacter_OnKilled((__int64)a1, (__int64)a2);
+        }
+      }
+    }
+    result = CBaseCombatCharacter_OnKilled((__int64)a1, (__int64)a2);
+    v18 = result;
+    if ( v14 )
+    {
+      UTIL_Remove((__int64)a1);
+      return v18;
+    }
+    return result;
+  }
