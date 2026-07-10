@@ -6161,9 +6161,10 @@ modules:
       #- name: find-ShowHudHint
       #  expected_output:
       #    - ShowHudHint.{platform}.yaml
-      - name: find-CEnvHudHint_API_ShowHudHint
-        expected_output:
-          - CEnvHudHint_API_ShowHudHint.{platform}.yaml
+      #  We don't need it anymore
+      # - name: find-CEnvHudHint_API_ShowHudHint
+      #   expected_output:
+      #     - CEnvHudHint_API_ShowHudHint.{platform}.yaml
       - name: find-CEntitySystem_ctor
         expected_output:
           - CEntitySystem_ctor.{platform}.yaml
