@@ -742,9 +742,8 @@ modules:
           - CNetworkGameServerBase_SetServerState.{platform}.yaml
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
-      - name: find-g_pGameServer-AND-CServerSideClientBase_ClientPrintf-AND-CNetworkGameServer_ClientList
+      - name: find-CEngineServer_ClientPrintf-decompiles
         expected_output:
-          - g_pGameServer.{platform}.yaml
           - CServerSideClientBase_ClientPrintf.{platform}.yaml
           - CNetworkGameServer_ClientList.{platform}.yaml
         expected_input:
@@ -1769,10 +1768,6 @@ modules:
         category: vfunc
         alias:
           - IEntityResourceManifestBuilder::BuildResourceManifest
-      - name: g_pGameServer
-        category: gv
-        alias:
-          - g_pGameServer
       - name: CServerSideClientBase_ClientPrintf
         category: vfunc
         alias:
