@@ -3321,16 +3321,22 @@ modules:
           - CSkeletonInstance_PostDataUpdate.{platform}.yaml
         expected_input:
           - CSkeletonInstance_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-m_simulationState_members-windows
-      #  platform: windows
-      #  expected_output:
-      #    - CSkeletonInstance_m_simulationState_m_nTotalTransformCount.{platform}.yaml
-      #    - CSkeletonInstance_m_simulationState_m_nBoneCount.{platform}.yaml
-      #    - CSkeletonInstance_m_simulationState_m_nAttachmentCount.{platform}.yaml
-      #    - CSkeletonInstance_m_modelState_m_hModel.{platform}.yaml
-      #  expected_input:
-      #    - CSkeletonInstance_PostDataUpdate.{platform}.yaml
+      - name: find-CSkeletonInstance_PostDataUpdate-windows
+        platform: windows
+        expected_output:
+          - CSkeletonInstance_m_modelState_m_hModel.{platform}.yaml
+          - CSkeletonInstance_m_modelState.{platform}.yaml
+          - CModelState_SetupJointState.{platform}.yaml
+        expected_input:
+          - CSkeletonInstance_PostDataUpdate.{platform}.yaml
+      - name: find-CModelState_SetupJointState-windows
+        platform: windows
+        expected_output:
+          - CModelState_m_nTotalTransformCount.{platform}.yaml
+          - CModelState_m_nBoneCount.{platform}.yaml
+          - CModelState_m_nAttachmentCount.{platform}.yaml
+        expected_input:
+          - CModelState_SetupJointState.{platform}.yaml
       - name: find-CUserMessage_ExtraUserData_vtable
         expected_output:
           - CUserMessage_ExtraUserData_vtable.{platform}.yaml
@@ -3853,30 +3859,42 @@ modules:
         category: vfunc
         alias:
           - CSkeletonInstance::PostDataUpdate
-      - name: CSkeletonInstance_m_simulationState_m_nTotalTransformCount
+      - name: CSkeletonInstance_m_modelState
         category: structmember
         struct: CSkeletonInstance
-        member: m_simulationState.m_nTotalTransformCount
+        member: m_modelState
         alias:
-          - CSkeletonInstance::m_simulationState.m_nTotalTransformCount
-      - name: CSkeletonInstance_m_simulationState_m_nBoneCount
-        category: structmember
-        struct: CSkeletonInstance
-        member: m_simulationState.m_nBoneCount
-        alias:
-          - CSkeletonInstance::m_simulationState.m_nBoneCount
-      - name: CSkeletonInstance_m_simulationState_m_nAttachmentCount
-        category: structmember
-        struct: CSkeletonInstance
-        member: m_simulationState.m_nAttachmentCount
-        alias:
-          - CSkeletonInstance::m_simulationState.m_nAttachmentCount
+          - CSkeletonInstance::m_modelState
       - name: CSkeletonInstance_m_modelState_m_hModel
         category: structmember
         struct: CSkeletonInstance
         member: m_modelState.m_hModel
         alias:
           - CSkeletonInstance::m_modelState.m_hModel
+      - name: CModelState
+        category: struct
+      - name: CModelState_SetupJointState
+        category: func
+        alias:
+          - CModelState::SetupJointState
+      - name: CModelState_m_nTotalTransformCount
+        category: structmember
+        struct: CModelState
+        member: m_nTotalTransformCount
+        alias:
+          - CModelState::m_nTotalTransformCount
+      - name: CModelState_m_nBoneCount
+        category: structmember
+        struct: CModelState
+        member: m_nBoneCount
+        alias:
+          - CModelState::m_nBoneCount
+      - name: CModelState_m_nAttachmentCount
+        category: structmember
+        struct: CModelState
+        member: m_nAttachmentCount
+        alias:
+          - CModelState::m_nAttachmentCount
       - name: CUserMessage_ExtraUserData_vtable
         category: vtable
       - name: SendViolationReport

@@ -1021,7 +1021,7 @@ def _build_struct_member_symbol_name(struct_name, member_name):
     member_name_text = str(member_name or "").strip()
     if not struct_name_text or not member_name_text:
         return None
-    return f"{struct_name_text}_{member_name_text}"
+    return f"{struct_name_text}_{member_name_text}".replace(".", "_")
 
 
 def _load_struct_member_metadata_from_yaml(old_path):

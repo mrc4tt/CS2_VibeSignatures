@@ -1,0 +1,184 @@
+func_name: CModelState_SetupJointState
+func_va: '0x180a59820'
+disasm_code: |-
+  .text:0000000180A59820                 mov     [rsp+arg_8], rbx
+  .text:0000000180A59825                 mov     [rsp+arg_10], rbp
+  .text:0000000180A5982A                 push    rsi
+  .text:0000000180A5982B                 push    rdi
+  .text:0000000180A5982C                 push    r14
+  .text:0000000180A5982E                 sub     rsp, 20h
+  .text:0000000180A59832                 mov     rsi, rcx
+  .text:0000000180A59835                 xor     edi, edi
+  .text:0000000180A59837                 mov     rcx, [rcx]
+  .text:0000000180A5983A                 mov     rbx, rdx
+  .text:0000000180A5983D                 test    rcx, rcx
+  .text:0000000180A59840                 jz      short loc_180A5984A
+  .text:0000000180A59842                 call    sub_180BCACD0
+  .text:0000000180A59847                 mov     [rsi], rdi
+  .text:0000000180A5984A                 mov     rcx, [rsi+8]
+  .text:0000000180A5984E                 test    rcx, rcx
+  .text:0000000180A59851                 jz      short loc_180A5985C
+  .text:0000000180A59853                 call    sub_180BCACD0
+  .text:0000000180A59858                 mov     [rsi+8], rdi
+  .text:0000000180A5985C                 mov     [rsi+14h], rdi
+  .text:0000000180A59860                 lea     rbp, [rsi+10h]
+  .text:0000000180A59864                 mov     [rsi+10h], edi
+  .text:0000000180A59867                 test    rbx, rbx
+  .text:0000000180A5986A                 jz      short loc_180A5987C
+  .text:0000000180A5986C                 mov     eax, [rbx+20h]
+  .text:0000000180A5986F                 lea     rbp, [rsi+10h]
+  .text:0000000180A59873                 test    eax, eax
+  .text:0000000180A59875                 jle     short loc_180A5987C
+  .text:0000000180A59877                 mov     rbx, [rbx]
+  .text:0000000180A5987A                 jmp     short loc_180A5987F
+  .text:0000000180A5987C                 mov     rbx, rdi
+  .text:0000000180A5987F                 xor     edx, edx
+  .text:0000000180A59881                 mov     rcx, rbx
+  .text:0000000180A59884                 call    sub_181638B10
+  .text:0000000180A59889                 mov     rcx, rbx
+  .text:0000000180A5988C                 mov     [rsi+14h], eax  ; 14h = CModelState::m_nBoneCount (structmember, struct=CModelState, member=m_nBoneCount)
+  .text:0000000180A5988F                 call    sub_18163BB00
+  .text:0000000180A59894                 mov     edx, [rsi+14h]
+  .text:0000000180A59897                 add     edx, eax
+  .text:0000000180A59899                 mov     [rsi+18h], eax  ; 18h = CModelState::m_nAttachmentCount (structmember, struct=CModelState, member=m_nAttachmentCount)
+  .text:0000000180A5989C                 mov     [rsi+10h], edx  ; 10h = CModelState::m_nTotalTransformCount (structmember, struct=CModelState, member=m_nTotalTransformCount)
+  .text:0000000180A5989F                 jz      loc_180A59975
+  .text:0000000180A598A5                 movsxd  r14, edx
+  .text:0000000180A598A8                 mov     eax, 20h ; ' '
+  .text:0000000180A598AD                 mul     r14
+  .text:0000000180A598B0                 mov     [rsp+38h+arg_0], r15
+  .text:0000000180A598B5                 mov     r15, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180A598BC                 cmovb   rax, r15
+  .text:0000000180A598C0                 mov     rcx, rax
+  .text:0000000180A598C3                 call    operator_new_0_0
+  .text:0000000180A598C8                 mov     rbx, rax
+  .text:0000000180A598CB                 test    rax, rax
+  .text:0000000180A598CE                 jz      short loc_180A598E9
+  .text:0000000180A598D0                 lea     r9, sub_180189900
+  .text:0000000180A598D7                 mov     r8, r14
+  .text:0000000180A598DA                 mov     edx, 20h ; ' '
+  .text:0000000180A598DF                 mov     rcx, rax
+  .text:0000000180A598E2                 call    sub_18014BB60
+  .text:0000000180A598E7                 jmp     short loc_180A598EC
+  .text:0000000180A598E9                 mov     rbx, rdi
+  .text:0000000180A598EC                 mov     [rsi], rbx
+  .text:0000000180A598EF                 cmp     [rbp+0], edi
+  .text:0000000180A598F2                 jle     short loc_180A5993A
+  .text:0000000180A598F4                 mov     rdx, rdi
+  .text:0000000180A598F7                 nop     word ptr [rax+rax+00000000h]
+  .text:0000000180A59900                 movsd   xmm0, cs:qword_18196B7F8
+  .text:0000000180A59908                 lea     rdx, [rdx+20h]
+  .text:0000000180A5990C                 mov     rcx, [rsi]
+  .text:0000000180A5990F                 inc     edi
+  .text:0000000180A59911                 movsd   qword ptr [rdx+rcx-20h], xmm0
+  .text:0000000180A59917                 mov     eax, cs:dword_18196B800
+  .text:0000000180A5991D                 mov     [rdx+rcx-18h], eax
+  .text:0000000180A59921                 movaps  xmm0, cs:xmmword_1821CFDE0
+  .text:0000000180A59928                 movups  xmmword ptr [rdx+rcx-10h], xmm0
+  .text:0000000180A5992D                 mov     dword ptr [rdx+rcx-14h], 3F800000h
+  .text:0000000180A59935                 cmp     edi, [rbp+0]
+  .text:0000000180A59938                 jl      short loc_180A59900
+  .text:0000000180A5993A                 mov     eax, [rsi+14h]
+  .text:0000000180A5993D                 add     eax, 1Fh
+  .text:0000000180A59940                 sar     eax, 5
+  .text:0000000180A59943                 movsxd  rbx, eax
+  .text:0000000180A59946                 mov     eax, 4
+  .text:0000000180A5994B                 mul     rbx
+  .text:0000000180A5994E                 cmovb   rax, r15
+  .text:0000000180A59952                 mov     rcx, rax
+  .text:0000000180A59955                 call    operator_new_0_0
+  .text:0000000180A5995A                 ; Size
+  .text:0000000180A5995A                 lea     r8, ds:0[rbx*4]; Size
+  .text:0000000180A59962                 mov     [rsi+8], rax
+  .text:0000000180A59966                 ; Val
+  .text:0000000180A59966                 xor     edx, edx; Val
+  .text:0000000180A59968                 ; void *
+  .text:0000000180A59968                 mov     rcx, rax; void *
+  .text:0000000180A5996B                 call    memset
+  .text:0000000180A59970                 mov     r15, [rsp+38h+arg_0]
+  .text:0000000180A59975                 mov     rbx, [rsp+38h+arg_8]
+  .text:0000000180A5997A                 mov     rbp, [rsp+38h+arg_10]
+  .text:0000000180A5997F                 add     rsp, 20h
+  .text:0000000180A59983                 pop     r14
+  .text:0000000180A59985                 pop     rdi
+  .text:0000000180A59986                 pop     rsi
+  .text:0000000180A59987                 retn
+procedure: |-
+  void *__fastcall CModelState_SetupJointState(__int64 modelState, __int64 hModel)
+  {
+    int v3; // edi
+    __int64 v4; // rcx
+    __int64 v6; // rcx
+    int *v7; // rbp
+    __int64 v8; // rbx
+    void *nAttachmentCount; // rax
+    int nBoneCount; // edx
+    bool v11; // zf
+    int nTotalTransformCount; // edx
+    __int64 v13; // r14
+    __int64 v14; // rax
+    __int64 v15; // rbx
+    __int64 v16; // rdx
+    __int64 v17; // rcx
+    unsigned __int64 v18; // rbx
+    void *v19; // rax
+
+    v3 = 0;
+    v4 = *(_QWORD *)modelState;
+    if ( v4 )
+    {
+      sub_180BCACD0(v4);
+      *(_QWORD *)modelState = 0;
+    }
+    v6 = *(_QWORD *)(modelState + 8);
+    if ( v6 )
+    {
+      sub_180BCACD0(v6);
+      *(_QWORD *)(modelState + 8) = 0;
+    }
+    *(_QWORD *)(modelState + 20) = 0;
+    v7 = (int *)(modelState + 16);
+    *(_DWORD *)(modelState + 16) = 0;
+    if ( hModel && (v7 = (int *)(modelState + 16), *(int *)(hModel + 32) > 0) )
+      v8 = *(_QWORD *)hModel;
+    else
+      v8 = 0;
+    *(_DWORD *)(modelState + 20) = sub_181638B10(v8, 0);// 20 = 0x14 = CModelState::m_nBoneCount (structmember, struct=CModelState, member=m_nBoneCount)
+    nAttachmentCount = (void *)sub_18163BB00(v8); // GetAttachmentCount
+    nBoneCount = *(_DWORD *)(modelState + 20);
+    v11 = (_DWORD)nAttachmentCount + nBoneCount == 0;
+    nTotalTransformCount = (_DWORD)nAttachmentCount + nBoneCount;
+    *(_DWORD *)(modelState + 24) = (_DWORD)nAttachmentCount;// 24 = 0x18 = CModelState::m_nAttachmentCount (structmember, struct=CModelState, member=m_nAttachmentCount)
+    *(_DWORD *)(modelState + 16) = nTotalTransformCount;// 16 = 0x10 = CModelState::m_nTotalTransformCount (structmember, struct=CModelState, member=m_nTotalTransformCount)
+    if ( !v11 )
+    {
+      v13 = nTotalTransformCount;
+      v14 = operator_new_0_0(saturated_mul(nTotalTransformCount, 0x20u));
+      v15 = v14;
+      if ( v14 )
+        sub_18014BB60(v14, 32, v13, (__int64 (__fastcall *)(__int64))sub_180189900);
+      else
+        v15 = 0;
+      *(_QWORD *)modelState = v15;
+      if ( *v7 > 0 )
+      {
+        v16 = 0;
+        do
+        {
+          v16 += 32;
+          v17 = *(_QWORD *)modelState;
+          ++v3;
+          *(_QWORD *)(v16 + v17 - 32) = 0;
+          *(_DWORD *)(v16 + v17 - 24) = 0;
+          *(_OWORD *)(v16 + v17 - 16) = xmmword_1821CFDE0;
+          *(_DWORD *)(v16 + v17 - 20) = 1065353216;
+        }
+        while ( v3 < *v7 );
+      }
+      v18 = (*(_DWORD *)(modelState + 20) + 31) >> 5;
+      v19 = (void *)operator_new_0_0(saturated_mul(v18, 4u));
+      *(_QWORD *)(modelState + 8) = v19;
+      return memset(v19, 0, 4 * v18);
+    }
+    return nAttachmentCount;
+  }

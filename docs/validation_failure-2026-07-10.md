@@ -1,37 +1,5 @@
 # Validation Failures — 2026-07-10
 
-## find-m_simulationState_members-windows  (module: client, platform: windows)
-
-Failure (from `ida_analyze_bin.py -debug`):
-
-    Start skill: find-m_simulationState_members-windows
-      Preprocess: CSkeletonInstance_m_simulationState_m_nTotalTransformCount.windows.yaml offset sig matched 0 (need >= 1)
-      Preprocess: llm_decompile request ready for CSkeletonInstance_m_simulationState_m_nTotalTransformCount: platform=windows, model=gpt-5.4, prompt_path=D:\CS2_VibeSignatures\ida_preprocessor_scripts\prompt\call_llm_decompile.md, reference_yaml_paths=['D:\\CS2_VibeSignatures\\ida_preprocessor_scripts\\references\\client\\CSkeletonInstance_PostDataUpdate.windows.yaml']
-      ... (llm_decompile reference payload: disasm of CSkeletonInstance_PostDataUpdate) ...
-      Preprocess: llm_decompile parsed response for CSkeletonInstance_m_simulationState_m_nTotalTransformCount, CSkeletonInstance_m_simulationState_m_nBoneCount, CSkeletonInstance_m_simulationState_m_nAttachmentCount BEGIN
-    {
-      "found_vcall": [],
-      "found_call": [],
-      "found_funcptr": [],
-      "found_gv": [],
-      "found_struct_offset": []
-    }
-      Preprocess: llm_decompile parsed response for CSkeletonInstance_m_simulationState_m_nTotalTransformCount, CSkeletonInstance_m_simulationState_m_nBoneCount, CSkeletonInstance_m_simulationState_m_nAttachmentCount END
-      Preprocess: failed to locate CSkeletonInstance_m_simulationState_m_nTotalTransformCount
-    Preprocess failed: find-m_simulationState_members-windows; falling back to AGENT SKILL
-    Processing skill: find-m_simulationState_members-windows
-      Falling back to: .claude\skills\find-m_simulationState_members-windows\SKILL.md
-      Error: Skill file not found: .claude\skills\find-m_simulationState_members-windows\SKILL.md
-      Failed
-
-Diagnosis: the existing offset signature for `CSkeletonInstance_m_simulationState_m_nTotalTransformCount` no longer
-matches (0 matches, needs >= 1) on this game version, so the preprocessor fell back to LLM_DECOMPILE against the
-predecessor `CSkeletonInstance_PostDataUpdate`. The decompile came back with no struct-offset findings at all
-(likely the member accesses moved out of `CSkeletonInstance_PostDataUpdate`'s body, or the LLM missed them), so
-preprocessing failed to relocate any of the 4 expected outputs. There is also no agent-fallback
-`.claude\skills\find-m_simulationState_members-windows\SKILL.md` to catch this case. Needs either a preprocessor/
-predecessor fix (new anchor function or improved LLM_DECOMPILE prompt) or an authored fallback SKILL.md.
-
 ## find-CBaseFilter_InputTestActivator_Register  (module: server, platform: windows)
 
 Failure (from `ida_analyze_bin.py -debug`):

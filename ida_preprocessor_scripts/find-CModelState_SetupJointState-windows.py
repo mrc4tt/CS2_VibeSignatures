@@ -1,45 +1,39 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-m_simulationState_members-windows skill."""
+"""Preprocess script for find-CModelState_SetupJointState-windows skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = []
 
 TARGET_STRUCT_MEMBER_NAMES = [
-    "CSkeletonInstance_m_simulationState_m_nTotalTransformCount",
-    "CSkeletonInstance_m_simulationState_m_nBoneCount",
-    "CSkeletonInstance_m_simulationState_m_nAttachmentCount",
-    "CSkeletonInstance_m_modelState_m_hModel",
+    "CModelState_m_nTotalTransformCount",
+    "CModelState_m_nBoneCount",
+    "CModelState_m_nAttachmentCount",
 ]
 
 LLM_DECOMPILE = [
     # (symbol_name, path_to_prompt, path_to_reference)
     (
-        "CSkeletonInstance_m_simulationState_m_nTotalTransformCount",
+        "CModelState_m_nTotalTransformCount",
         "prompt/call_llm_decompile.md",
-        "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
+        "references/client/CModelState_SetupJointState.{platform}.yaml",
     ),
     (
-        "CSkeletonInstance_m_simulationState_m_nBoneCount",
+        "CModelState_m_nBoneCount",
         "prompt/call_llm_decompile.md",
-        "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
+        "references/client/CModelState_SetupJointState.{platform}.yaml",
     ),
     (
-        "CSkeletonInstance_m_simulationState_m_nAttachmentCount",
+        "CModelState_m_nAttachmentCount",
         "prompt/call_llm_decompile.md",
-        "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
-    ),
-    (
-        "CSkeletonInstance_m_modelState_m_hModel",
-        "prompt/call_llm_decompile.md",
-        "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
+        "references/client/CModelState_SetupJointState.{platform}.yaml",
     ),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CSkeletonInstance_m_simulationState_m_nTotalTransformCount",
+        "CModelState_m_nTotalTransformCount",
         [
             "struct_name",
             "member_name",
@@ -50,7 +44,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
         ],
     ),
     (
-        "CSkeletonInstance_m_simulationState_m_nBoneCount",
+        "CModelState_m_nBoneCount",
         [
             "struct_name",
             "member_name",
@@ -61,18 +55,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
         ],
     ),
     (
-        "CSkeletonInstance_m_simulationState_m_nAttachmentCount",
-        [
-            "struct_name",
-            "member_name",
-            "offset",
-            "size",
-            "offset_sig",
-            "offset_sig_disp",
-        ],
-    ),
-    (
-        "CSkeletonInstance_m_modelState_m_hModel",
+        "CModelState_m_nAttachmentCount",
         [
             "struct_name",
             "member_name",
