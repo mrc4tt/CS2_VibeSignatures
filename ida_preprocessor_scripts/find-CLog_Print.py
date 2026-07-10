@@ -15,7 +15,7 @@ FUNC_XREFS = [
         "xref_signatures": [],
         "xref_funcs": [],
         "exclude_funcs": [],
-        "exclude_strings": ["%s: \"%s\" %s \"%s\" by \"%s\""],
+        "exclude_strings": ['%s: "%s" %s "%s" by "%s"'],
         "exclude_gvs": [],
         "exclude_signatures": ["30 00 00 00"],
     },
