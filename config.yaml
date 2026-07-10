@@ -10229,7 +10229,7 @@ modules:
       #    - CNetworkMessages_GetIsForServer.{platform}.yaml
       #  expected_input:
       #    - CNetworkMessages_vtable.{platform}.yaml
-          - CNetworkMessages_SetIsForServer.{platform}.yaml
+      #    - CNetworkMessages_SetIsForServer.{platform}.yaml
       #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
       #- name: find-CNetworkMessages_SetNetworkSerializationContextData
       #  expected_output:

@@ -14,8 +14,11 @@ disable-model-invocation: true
 
 Loop the analysis/validation pipeline until it reports **`Failed: 0`**. Each iteration: run
 `ida_analyze_bin.py -debug`; if a skill failed (the pipeline is fail-fast, so it's exactly one),
-record *why* in a dated doc, comment that skill out of `config.yaml`, then run again. Environment /
-infrastructure failures are **not** skill bugs — STOP and surface those instead of quarantining a skill.
+record *why* in a dated doc and comment that skill out of `config.yaml`. Then run the unittest suite
+before resuming validation. If the config dependency test reports consumers whose `expected_input`
+can no longer be produced, quarantine those dependent skills one at a time and re-run unittest until
+it passes. Environment / infrastructure failures are **not** skill bugs — STOP and surface those
+instead of quarantining a skill.
 
 ## When to Use
 
@@ -56,8 +59,13 @@ infrastructure failures are **not** skill bugs — STOP and surface those instea
 - **No progress → STOP.** If a run's failing skill is the *same* one you just commented (the config
   edit didn't take), or the `Failed` count did not go down, STOP and report. Never re-comment the same
   block or force past it.
+- **Unrelated unittest failure → STOP and report.** Only dependency gaps reported by
+  `TestConfigSkillDependencyGraph.test_config_module_skills_have_no_expected_input_order_gaps` may
+  quarantine more skills. Do not hide failures from any other test, exception, import error, or test
+  infrastructure problem by commenting out config entries.
 - **Only** two kinds of edits are allowed: append to the dated failure doc, and comment (prefix `#`)
-  the single failing skill's block in `config.yaml`. Do not delete config entries, do not touch other
+  a validation-failing skill or dependency-broken descendant's block in `config.yaml`. Comment one
+  skill block at a time, re-run the relevant gate, do not delete config entries, do not touch unrelated
   skills, and do not uncomment anything.
 
 ## Method
@@ -162,16 +170,45 @@ in Step 3. Use the Edit tool with an `old_string` that includes the *preceding s
 (which differs per module) so the match is unique — a bare block match would silently hit the wrong
 module.
 
-### Step 6 — Loop
+### Step 6 — Run unittest after every config.yaml quarantine
+
+Immediately after commenting out any skill block, run the repository unittest suite:
+
+```bash
+uv run python -m unittest discover -s tests -b
+```
+
+- **All tests pass** → the active `config.yaml` dependency chain is intact; continue to Step 7.
+- **Only**
+  `TestConfigSkillDependencyGraph.test_config_module_skills_have_no_expected_input_order_gaps`
+  fails → inspect its dependency-gap list. Each entry identifies a consumer whose `expected_input`
+  is no longer produced, for example:
+
+  ```text
+  windows module[2] server/find-ChildSkill missing: _artifacts/server/Parent.windows.yaml
+  ```
+
+  Here `server/find-ChildSkill` is the child skill to quarantine. Append its unittest failure and a
+  one-line dependency diagnosis to the same dated failure doc, then comment that child's full block
+  under the named module using the Step 5 rules. Re-run the full unittest suite immediately.
+- **Any other unittest failure** → STOP and report it. It is not evidence that another skill should
+  be quarantined.
+
+Quarantine one unique child skill per unittest iteration. A child may be listed once per platform;
+comment its all-platform `{platform}` block only once. Keep following newly exposed descendants and
+re-running unittest until the suite passes. Do not return to IDA validation while unittest is red.
+
+### Step 7 — Resume the validation loop
 
 Go back to Step 1. The just-disabled skill is now skipped, and previously-successful skills are
 skipped (their outputs exist), so the next run reaches the next failure quickly. Repeat until
 `Failed: 0` (DONE) or a STOP condition trips.
 
-> **Cascading is expected.** Disabling a producer can make a *consumer* skill (whose `expected_input`
-> names the disabled output) fail on the next iteration — but only if that output YAML isn't already
-> on disk. The loop simply surfaces and quarantines the consumer too. Call this out in your report so
-> the user sees the dependency chain.
+> **Cascading is expected and must be resolved before validation resumes.** Disabling a producer can
+> break a consumer whose `expected_input` names the disabled output. The unittest dependency graph
+> catches this immediately, even when stale YAML artifacts would otherwise let the validation run
+> skip past the broken config chain. Quarantine descendants until unittest passes, and call the full
+> dependency chain out in the report.
 
 ## Quick reference — failure signal lines
 
@@ -185,12 +222,17 @@ skipped (their outputs exist), so the next run reaches the next failure quickly.
 | `Failed: IDB lock file detected ...` | stale lock / another IDA instance | **STOP** (infra) |
 | `Failed: opened binary verification failed` | wrong/broken binary open | **STOP** (infra) |
 | `Failed to restore MCP connection ...` | idalib-mcp died | **STOP** (infra) |
+| unittest dependency gap: `<module>/<skill> missing: <artifact>` | active consumer has no active producer | quarantine that child, re-run unittest |
+| any other unittest failure | unrelated code/test/infrastructure failure | **STOP** |
 
 ## Notes
 
 - `tail -15` is only for the verdict; always parse the **full** `/tmp/ida_validation_output.txt` to
   identify the failing skill and its reason.
-- One skill quarantined per iteration (fail-fast). Expect several iterations after a version bump.
+- IDA validation quarantines one skill per iteration (fail-fast). The mandatory unittest loop may
+  quarantine several dependency descendants, still one block per unittest iteration.
+- Never run the next IDA validation iteration until
+  `uv run python -m unittest discover -s tests -b` passes with zero failures.
 - Purely additive to `config.yaml` (commenting only). Re-enabling a skill once it's fixed is a
   separate manual step — the commented blocks plus the dated doc are the resulting to-do list.
 - This skill does not `git commit`; leave staging/committing to the user unless they ask.
