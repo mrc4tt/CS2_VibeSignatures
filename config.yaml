@@ -5030,12 +5030,27 @@ modules:
           - CTakeDamageInfo_HitGroupInfo.{platform}.yaml
         expected_input:
           - TraceAttack.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-GetCSWeaponDataFromKey
-      #  expected_output:
-      #    - GetCSWeaponDataFromKey.{platform}.yaml
-      #  expected_input:
-      #    - CSmokeGrenadeProjectile_Create.{platform}.yaml
+      - name: find-CSmokeGrenadeProjectile_GetCSWeaponData
+        optional_output:
+          - CSmokeGrenadeProjectile_GetCSWeaponData.{platform}.yaml
+        expected_input:
+          - CSmokeGrenadeProjectile_Create.{platform}.yaml
+        skip_if_exists:
+          - GetCSWeaponDataFromKey.{platform}.yaml
+      - name: find-GetCSWeaponDataFromKey-noinline
+        optional_output:
+          - GetCSWeaponDataFromKey.{platform}.yaml
+        prerequisite:
+          - find-CSmokeGrenadeProjectile_GetCSWeaponData
+      - name: find-GetCSWeaponDataFromKey-inlined
+        expected_output:
+          - GetCSWeaponDataFromKey.{platform}.yaml
+        expected_input:
+          - CSmokeGrenadeProjectile_Create.{platform}.yaml
+        skip_if_exists:
+          - GetCSWeaponDataFromKey.{platform}.yaml
+        prerequisite:
+          - find-GetCSWeaponDataFromKey-noinline
       - name: find-GiveNamedItem
         expected_output:
           - GiveNamedItem.{platform}.yaml

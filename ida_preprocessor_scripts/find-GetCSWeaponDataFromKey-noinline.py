@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-GetCSWeaponDataFromKey skill."""
+"""Preprocess script for find-GetCSWeaponDataFromKey-noinline skill (deinline-fix chain, link 2/3)."""
 
 from ida_analyze_util import preprocess_common_skill
 
@@ -12,7 +12,7 @@ LLM_DECOMPILE = [
     (
         "GetCSWeaponDataFromKey",
         "prompt/call_llm_decompile.md",
-        "references/server/CSmokeGrenadeProjectile_Create.{platform}.yaml",
+        "references/server/CSmokeGrenadeProjectile_GetCSWeaponData.{platform}.yaml",
     ),
 ]
 
@@ -36,7 +36,7 @@ async def preprocess_skill(
     llm_config=None,
     debug=False,
 ):
-    """Reuse previous gamever func_sig to locate target function(s) and write YAML."""
+    """Locate GetCSWeaponDataFromKey as called by the de-inlined CSmokeGrenadeProjectile_GetCSWeaponData helper."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
