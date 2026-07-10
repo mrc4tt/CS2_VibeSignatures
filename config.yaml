@@ -3321,15 +3321,16 @@ modules:
           - CSkeletonInstance_PostDataUpdate.{platform}.yaml
         expected_input:
           - CSkeletonInstance_vtable.{platform}.yaml
-      - name: find-m_simulationState_members-windows
-        platform: windows
-        expected_output:
-          - CSkeletonInstance_m_simulationState_m_nTotalTransformCount.{platform}.yaml
-          - CSkeletonInstance_m_simulationState_m_nBoneCount.{platform}.yaml
-          - CSkeletonInstance_m_simulationState_m_nAttachmentCount.{platform}.yaml
-          - CSkeletonInstance_m_modelState_m_hModel.{platform}.yaml
-        expected_input:
-          - CSkeletonInstance_PostDataUpdate.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-m_simulationState_members-windows
+      #  platform: windows
+      #  expected_output:
+      #    - CSkeletonInstance_m_simulationState_m_nTotalTransformCount.{platform}.yaml
+      #    - CSkeletonInstance_m_simulationState_m_nBoneCount.{platform}.yaml
+      #    - CSkeletonInstance_m_simulationState_m_nAttachmentCount.{platform}.yaml
+      #    - CSkeletonInstance_m_modelState_m_hModel.{platform}.yaml
+      #  expected_input:
+      #    - CSkeletonInstance_PostDataUpdate.{platform}.yaml
       - name: find-CUserMessage_ExtraUserData_vtable
         expected_output:
           - CUserMessage_ExtraUserData_vtable.{platform}.yaml
@@ -4245,18 +4246,20 @@ modules:
       - name: find-CCSPlayer_MovementServices_vtable
         expected_output:
           - CCSPlayer_MovementServices_vtable.{platform}.yaml
-      - name: find-CCSPlayer_MovementServices_ProcessMovement
-        expected_output:
-          - CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml
-        expected_input:
-          - CPlayer_MovementServices_s_pRunCommandPawn.{platform}.yaml
-          - CPlayer_MovementServices_ForceButtonState.{platform}.yaml
-      - name: find-CCSPlayer_MovementServices_CheckMovingGround
-        expected_output:
-          - CCSPlayer_MovementServices_CheckMovingGround.{platform}.yaml
-        expected_input:
-          - CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml
-          - CCSPlayer_MovementServices_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CCSPlayer_MovementServices_ProcessMovement
+      #  expected_output:
+      #    - CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml
+      #  expected_input:
+      #    - CPlayer_MovementServices_s_pRunCommandPawn.{platform}.yaml
+      #    - CPlayer_MovementServices_ForceButtonState.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CCSPlayer_MovementServices_CheckMovingGround
+      #  expected_output:
+      #    - CCSPlayer_MovementServices_CheckMovingGround.{platform}.yaml
+      #  expected_input:
+      #    - CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml
+      #    - CCSPlayer_MovementServices_vtable.{platform}.yaml
       - name: find-CCSPlayer_MovementServices_CheckVelocity
         expected_output:
           - CCSPlayer_MovementServices_CheckVelocity.{platform}.yaml
@@ -4291,9 +4294,10 @@ modules:
       - name: find-CPlayer_MovementServices_ForceButtons
         expected_output:
           - CPlayer_MovementServices_ForceButtons.{platform}.yaml
-      - name: find-CPlayer_MovementServices_ForceButtonState
-        expected_output:
-          - CPlayer_MovementServices_ForceButtonState.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CPlayer_MovementServices_ForceButtonState
+      #  expected_output:
+      #    - CPlayer_MovementServices_ForceButtonState.{platform}.yaml
       - name: find-CPlayer_MovementServices_s_pRunCommandPawn
         expected_output:
           - CPlayer_MovementServices_s_pRunCommandPawn.{platform}.yaml
@@ -4687,19 +4691,21 @@ modules:
         expected_input:
           - CEntityIdentity_AcceptInput.{platform}.yaml
           - CEntityInstance_vtable.{platform}.yaml
-      - name: find-CEntityIdentity_AcceptInputInternal
-        platform: linux
-        expected_output:
-          - CEntityIdentity_AcceptInputInternal.{platform}.yaml
-        expected_input:
-          - CEntityIdentity_AcceptInput.{platform}.yaml
-      - name: find-CEntityInstance_ScriptAcceptInput-linux
-        platform: linux
-        expected_output:
-          - CEntityInstance_ScriptAcceptInput.{platform}.yaml
-        expected_input:
-          - CEntityIdentity_AcceptInputInternal.{platform}.yaml
-          - CEntityInstance_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CEntityIdentity_AcceptInputInternal
+      #  platform: linux
+      #  expected_output:
+      #    - CEntityIdentity_AcceptInputInternal.{platform}.yaml
+      #  expected_input:
+      #    - CEntityIdentity_AcceptInput.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CEntityInstance_ScriptAcceptInput-linux
+      #  platform: linux
+      #  expected_output:
+      #    - CEntityInstance_ScriptAcceptInput.{platform}.yaml
+      #  expected_input:
+      #    - CEntityIdentity_AcceptInputInternal.{platform}.yaml
+      #    - CEntityInstance_vtable.{platform}.yaml
       - name: find-CEntityIdentity_SetEntityName
         expected_output:
           - CEntityIdentity_SetEntityName.{platform}.yaml
@@ -4782,18 +4788,20 @@ modules:
           - CCSGameRules_PlayerSpawn.{platform}.yaml
         expected_input:
           - CCSGameRules_vtable.{platform}.yaml
-      - name: find-CBasePlayerController_Respawn
-        expected_output:
-          - CBasePlayerController_Respawn.{platform}.yaml
-        expected_input:
-          - CCSGameRules_BeginRound.{platform}.yaml
-          - CBasePlayerController_vtable.{platform}.yaml
-      - name: find-CCSPlayerController_Respawn
-        expected_output:
-          - CCSPlayerController_Respawn.{platform}.yaml
-        expected_input:
-          - CCSPlayerController_vtable.{platform}.yaml
-          - CBasePlayerController_Respawn.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CBasePlayerController_Respawn
+      #  expected_output:
+      #    - CBasePlayerController_Respawn.{platform}.yaml
+      #  expected_input:
+      #    - CCSGameRules_BeginRound.{platform}.yaml
+      #    - CBasePlayerController_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CCSPlayerController_Respawn
+      #  expected_output:
+      #    - CCSPlayerController_Respawn.{platform}.yaml
+      #  expected_input:
+      #    - CCSPlayerController_vtable.{platform}.yaml
+      #    - CBasePlayerController_Respawn.{platform}.yaml
       - name: find-CCSPlayerController_Connect
         expected_output:
           - CCSPlayerController_Connect.{platform}.yaml
@@ -5019,11 +5027,12 @@ modules:
           - CTakeDamageInfo_HitGroupInfo.{platform}.yaml
         expected_input:
           - TraceAttack.{platform}.yaml
-      - name: find-GetCSWeaponDataFromKey
-        expected_output:
-          - GetCSWeaponDataFromKey.{platform}.yaml
-        expected_input:
-          - CSmokeGrenadeProjectile_Create.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-GetCSWeaponDataFromKey
+      #  expected_output:
+      #    - GetCSWeaponDataFromKey.{platform}.yaml
+      #  expected_input:
+      #    - CSmokeGrenadeProjectile_Create.{platform}.yaml
       - name: find-GiveNamedItem
         expected_output:
           - GiveNamedItem.{platform}.yaml
@@ -5033,9 +5042,10 @@ modules:
       - name: find-CEntitySystem_RegisterEntityClass
         expected_output:
           - CEntitySystem_RegisterEntityClass.{platform}.yaml
-      - name: find-CEntitySystem_AddComponentFieldUnserializer
-        expected_output:
-          - CEntitySystem_AddComponentFieldUnserializer.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CEntitySystem_AddComponentFieldUnserializer
+      #  expected_output:
+      #    - CEntitySystem_AddComponentFieldUnserializer.{platform}.yaml
       - name: find-CEntitySystem_m_entClassesByCPPClassname-AND-CEntitySystem_m_entClassesByClassname
         expected_output:
           - CEntitySystem_m_entClassesByCPPClassname.{platform}.yaml
@@ -5189,24 +5199,27 @@ modules:
       - name: find-CBaseCombatCharacter_OnKilled
         expected_output:
           - CBaseCombatCharacter_OnKilled.{platform}.yaml
-      - name: find-CBasePlayerPawn_DropActivePlayerWeapon
-        expected_output:
-          - CBasePlayerPawn_DropActivePlayerWeapon.{platform}.yaml
-        expected_input:
-          - CBaseCombatCharacter_OnKilled.{platform}.yaml
-          - CBasePlayerPawn_vtable.{platform}.yaml
-      - name: find-CCSPlayer_ItemServices_DropActivePlayerWeapon
-        expected_output:
-          - CCSPlayer_ItemServices_DropActivePlayerWeapon.{platform}.yaml
-        expected_input:
-          - CBasePlayerPawn_DropActivePlayerWeapon.{platform}.yaml
-          - CCSPlayer_ItemServices_vtable.{platform}.yaml
-      - name: find-CCSPlayer_WeaponServices_DropWeapon
-        expected_output:
-          - CCSPlayer_WeaponServices_DropWeapon.{platform}.yaml
-        expected_input:
-          - CCSPlayer_ItemServices_DropActivePlayerWeapon.{platform}.yaml
-          - CCSPlayer_WeaponServices_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CBasePlayerPawn_DropActivePlayerWeapon
+      #  expected_output:
+      #    - CBasePlayerPawn_DropActivePlayerWeapon.{platform}.yaml
+      #  expected_input:
+      #    - CBaseCombatCharacter_OnKilled.{platform}.yaml
+      #    - CBasePlayerPawn_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CCSPlayer_ItemServices_DropActivePlayerWeapon
+      #  expected_output:
+      #    - CCSPlayer_ItemServices_DropActivePlayerWeapon.{platform}.yaml
+      #  expected_input:
+      #    - CBasePlayerPawn_DropActivePlayerWeapon.{platform}.yaml
+      #    - CCSPlayer_ItemServices_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CCSPlayer_WeaponServices_DropWeapon
+      #  expected_output:
+      #    - CCSPlayer_WeaponServices_DropWeapon.{platform}.yaml
+      #  expected_input:
+      #    - CCSPlayer_ItemServices_DropActivePlayerWeapon.{platform}.yaml
+      #    - CCSPlayer_WeaponServices_vtable.{platform}.yaml
       - name: find-CCSPlayer_WeaponServices_SelectItem
         expected_output:
           - CCSPlayer_WeaponServices_SelectItem.{platform}.yaml
@@ -5702,18 +5715,20 @@ modules:
         expected_input:
           - CEntitySystem_vtable.{platform}.yaml
           - CGameEntitySystem_Spawn.{platform}.yaml
-      - name: find-CBodyGameSystem_SpawnDependencyIsland-AND-CGameEntitySystem_CheckGlobalState
-        expected_output:
-          - CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml
-          - CGameEntitySystem_CheckGlobalState.{platform}.yaml
-        expected_input:
-          - CGameEntitySystem_Spawn.{platform}.yaml
-      - name: find-CGameSceneNode_PreInstanceSpawn
-        expected_output:
-          - CGameSceneNode_PreInstanceSpawn.{platform}.yaml
-        expected_input:
-          - CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml
-          - CGameSceneNode_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CBodyGameSystem_SpawnDependencyIsland-AND-CGameEntitySystem_CheckGlobalState
+      #  expected_output:
+      #    - CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml
+      #    - CGameEntitySystem_CheckGlobalState.{platform}.yaml
+      #  expected_input:
+      #    - CGameEntitySystem_Spawn.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CGameSceneNode_PreInstanceSpawn
+      #  expected_output:
+      #    - CGameSceneNode_PreInstanceSpawn.{platform}.yaml
+      #  expected_input:
+      #    - CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml
+      #    - CGameSceneNode_vtable.{platform}.yaml
       - name: find-IGameSystem_OnBuildGameSessionManifest
         expected_output:
           - IGameSystem_OnBuildGameSessionManifest.{platform}.yaml
@@ -5770,18 +5785,20 @@ modules:
           - CBaseEntity_SetGroundEntity.{platform}.yaml
         expected_input:
           - CTriggerPush_Touch.{platform}.yaml
-      - name: find-UTIL_GetPlayerControllerForEntity
-        expected_output:
-          - UTIL_GetPlayerControllerForEntity.{platform}.yaml
-        expected_input:
-          - ShowHudHint.{platform}.yaml
-      - name: find-CBaseEntity_IsPlayerPawn-AND-CBaseEntity_IsPlayerController
-        expected_output:
-          - CBaseEntity_IsPlayerPawn.{platform}.yaml
-          - CBaseEntity_IsPlayerController.{platform}.yaml
-        expected_input:
-          - UTIL_GetPlayerControllerForEntity.{platform}.yaml
-          - CBaseEntity_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-UTIL_GetPlayerControllerForEntity
+      #  expected_output:
+      #    - UTIL_GetPlayerControllerForEntity.{platform}.yaml
+      #  expected_input:
+      #    - ShowHudHint.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CBaseEntity_IsPlayerPawn-AND-CBaseEntity_IsPlayerController
+      #  expected_output:
+      #    - CBaseEntity_IsPlayerPawn.{platform}.yaml
+      #    - CBaseEntity_IsPlayerController.{platform}.yaml
+      #  expected_input:
+      #    - UTIL_GetPlayerControllerForEntity.{platform}.yaml
+      #    - CBaseEntity_vtable.{platform}.yaml
       - name: find-CBaseEntity_GetHammerUniqueId
         expected_output:
           - CBaseEntity_GetHammerUniqueId.{platform}.yaml
@@ -5840,15 +5857,17 @@ modules:
         expected_input:
           - CGameSceneNode_UpdateEntityForHierarchyChange.{platform}.yaml
           - CEntitySystem_vtable.{platform}.yaml
-      - name: find-CPointTeleportAPI_TeleportEntityInternal
-        expected_output:
-          - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
-      - name: find-CBaseEntity_Teleport
-        expected_output:
-          - CBaseEntity_Teleport.{platform}.yaml
-        expected_input:
-          - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
-          - CBaseEntity_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CPointTeleportAPI_TeleportEntityInternal
+      #  expected_output:
+      #    - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CBaseEntity_Teleport
+      #  expected_output:
+      #    - CBaseEntity_Teleport.{platform}.yaml
+      #  expected_input:
+      #    - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
+      #    - CBaseEntity_vtable.{platform}.yaml
       - name: find-CPointTeleport_Activate
         expected_output:
           - CPointTeleport_Activate.{platform}.yaml
@@ -5872,12 +5891,13 @@ modules:
           - CEntityInstance_m_pKeyValues.{platform}.yaml
         expected_input:
           - CEntityInstance_UpdateOnRemove.{platform}.yaml
-      - name: find-CBaseEntity_CollisionRulesChanged
-        expected_output:
-          - CBaseEntity_CollisionRulesChanged.{platform}.yaml
-        expected_input:
-          - PhysEnableEntityCollisions.{platform}.yaml
-          - CBaseEntity_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CBaseEntity_CollisionRulesChanged
+      #  expected_output:
+      #    - CBaseEntity_CollisionRulesChanged.{platform}.yaml
+      #  expected_input:
+      #    - PhysEnableEntityCollisions.{platform}.yaml
+      #    - CBaseEntity_vtable.{platform}.yaml
       - name: find-CGameSceneNode_PostSpawnKeyValues
         expected_output:
           - CGameSceneNode_PostSpawnKeyValues.{platform}.yaml
@@ -6076,15 +6096,17 @@ modules:
       - name: find-TraceShape
         expected_output:
           - TraceShape.{platform}.yaml
-      - name: find-CBaseFilter_InputTestActivator_Register
-        platform: windows
-        expected_output:
-          - CBaseFilter_InputTestActivator_Register.{platform}.yaml
-      - name: find-CBaseFilter_InputTestActivator
-        expected_output:
-          - CBaseFilter_InputTestActivator.{platform}.yaml
-        expected_input_windows:
-          - CBaseFilter_InputTestActivator_Register.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CBaseFilter_InputTestActivator_Register
+      #  platform: windows
+      #  expected_output:
+      #    - CBaseFilter_InputTestActivator_Register.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CBaseFilter_InputTestActivator
+      #  expected_output:
+      #    - CBaseFilter_InputTestActivator.{platform}.yaml
+      #  expected_input_windows:
+      #    - CBaseFilter_InputTestActivator_Register.{platform}.yaml
       - name: find-GameSystem_Think_CheckSteamBan
         expected_output:
           - GameSystem_Think_CheckSteamBan.{platform}.yaml
@@ -6124,9 +6146,10 @@ modules:
       - name: find-BotAdd_CommandHandler
         expected_output:
           - BotAdd_CommandHandler.{platform}.yaml
-      - name: find-ShowHudHint
-        expected_output:
-          - ShowHudHint.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-ShowHudHint
+      #  expected_output:
+      #    - ShowHudHint.{platform}.yaml
       - name: find-CEntitySystem_ctor
         expected_output:
           - CEntitySystem_ctor.{platform}.yaml
@@ -6160,23 +6183,24 @@ modules:
       - name: find-CEntitySystem_Init
         expected_output:
           - CEntitySystem_Init.{platform}.yaml
-      - name: find-CEntitySystem_Init-decompiles
-        expected_output:
-          - INetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
-          - IFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
-          - CEntitySystem_m_sEntSystemName.{platform}.yaml
-          - CEntitySystem_m_eNetworkSerializationMode.{platform}.yaml
-          - CEntitySystem_m_Symbols.{platform}.yaml
-          - CEntitySystem_m_pNetworkFieldChangedEventQueue.{platform}.yaml
-          - CEntitySystem_m_pNetworkFieldScratchData.{platform}.yaml
-          - CEntitySystem_m_pFieldChangeLimitSpew.{platform}.yaml
-          - CEntitySystem_m_ComponentUnserializerInfoAllocator.{platform}.yaml
-        expected_output_linux:
-          - CEntitySystem_ProcessEntityRegistration.{platform}.yaml
-        expected_output_windows:
-          - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
-        expected_input:
-          - CEntitySystem_Init.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CEntitySystem_Init-decompiles
+      #  expected_output:
+      #    - INetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
+      #    - IFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
+      #    - CEntitySystem_m_sEntSystemName.{platform}.yaml
+      #    - CEntitySystem_m_eNetworkSerializationMode.{platform}.yaml
+      #    - CEntitySystem_m_Symbols.{platform}.yaml
+      #    - CEntitySystem_m_pNetworkFieldChangedEventQueue.{platform}.yaml
+      #    - CEntitySystem_m_pNetworkFieldScratchData.{platform}.yaml
+      #    - CEntitySystem_m_pFieldChangeLimitSpew.{platform}.yaml
+      #    - CEntitySystem_m_ComponentUnserializerInfoAllocator.{platform}.yaml
+      #  expected_output_linux:
+      #    - CEntitySystem_ProcessEntityRegistration.{platform}.yaml
+      #  expected_output_windows:
+      #    - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
+      #  expected_input:
+      #    - CEntitySystem_Init.{platform}.yaml
       - name: find-CEntitySystem_PostCreateEntitySystem
         expected_output:
           - CEntitySystem_PostCreateEntitySystem.{platform}.yaml
@@ -6187,51 +6211,57 @@ modules:
       - name: find-CSource2EntitySystem_StaticInit
         expected_output:
           - CSource2EntitySystem_StaticInit.{platform}.yaml
-      - name: find-CSource2EntitySystem_StaticInit-decompiles
-        expected_output:
-          - IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml
-          - g_pGameResourceService.{platform}.yaml
-          - g_pGameEntitySystem.{platform}.yaml
-          - CEntitySystem_m_entityIONotifiers.{platform}.yaml
-          - CGameEntitySystem_m_pEntity2SaveRestore.{platform}.yaml
-          - CEntitySystem_EnableAutoDeletionExecution.{platform}.yaml
-          - CEntitySystem_InstallPostSpawnCallback.{platform}.yaml
-          - CEntitySystem_InstallCreationWrapperCallbacks.{platform}.yaml
-        expected_output_linux:
-          - CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses.{platform}.yaml
-        expected_output_windows:
-          - CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml
-          - CGameEntitySystem_m_pEntity2Networkables.{platform}.yaml
-        expected_input:
-          - CSource2EntitySystem_StaticInit.{platform}.yaml
-      - name: find-CGameEntitySystem_m_spawnGroupEntityFilters-windows
-        expected_output:
-          - CGameEntitySystem_m_spawnGroupEntityFilters.{platform}.yaml
-        expected_input:
-          - CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml
-        platform: windows
-      - name: find-CGameEntitySystem_m_pEntity2Networkables-linux
-        expected_output:
-          - CGameEntitySystem_m_pEntity2Networkables.{platform}.yaml
-        expected_input:
-          - CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses.{platform}.yaml
-        platform: linux
-      - name: find-CEntitySystem_m_EntityMaterialAttributes-linux
-        expected_output:
-          - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
-        expected_input:
-          - CEntitySystem_ProcessEntityRegistration.{platform}.yaml
-        platform: linux
-      - name: find-CEntitySystem_m_DataDescKeyUnserializers
-        expected_output:
-          - CEntitySystem_m_DataDescKeyUnserializers.{platform}.yaml
-        expected_input:
-          - CEntitySystem_InstallCreationWrapperCallbacks.{platform}.yaml
-      - name: find-CEntitySystem_m_EntityPostSpawnCallback
-        expected_output:
-          - CEntitySystem_m_EntityPostSpawnCallback.{platform}.yaml
-        expected_input:
-          - CEntitySystem_InstallPostSpawnCallback.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CSource2EntitySystem_StaticInit-decompiles
+      #  expected_output:
+      #    - IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml
+      #    - g_pGameResourceService.{platform}.yaml
+      #    - g_pGameEntitySystem.{platform}.yaml
+      #    - CEntitySystem_m_entityIONotifiers.{platform}.yaml
+      #    - CGameEntitySystem_m_pEntity2SaveRestore.{platform}.yaml
+      #    - CEntitySystem_EnableAutoDeletionExecution.{platform}.yaml
+      #    - CEntitySystem_InstallPostSpawnCallback.{platform}.yaml
+      #    - CEntitySystem_InstallCreationWrapperCallbacks.{platform}.yaml
+      #  expected_output_linux:
+      #    - CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses.{platform}.yaml
+      #  expected_output_windows:
+      #    - CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml
+      #    - CGameEntitySystem_m_pEntity2Networkables.{platform}.yaml
+      #  expected_input:
+      #    - CSource2EntitySystem_StaticInit.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CGameEntitySystem_m_spawnGroupEntityFilters-windows
+      #  expected_output:
+      #    - CGameEntitySystem_m_spawnGroupEntityFilters.{platform}.yaml
+      #  expected_input:
+      #    - CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml
+      #  platform: windows
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CGameEntitySystem_m_pEntity2Networkables-linux
+      #  expected_output:
+      #    - CGameEntitySystem_m_pEntity2Networkables.{platform}.yaml
+      #  expected_input:
+      #    - CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses.{platform}.yaml
+      #  platform: linux
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CEntitySystem_m_EntityMaterialAttributes-linux
+      #  expected_output:
+      #    - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
+      #  expected_input:
+      #    - CEntitySystem_ProcessEntityRegistration.{platform}.yaml
+      #  platform: linux
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CEntitySystem_m_DataDescKeyUnserializers
+      #  expected_output:
+      #    - CEntitySystem_m_DataDescKeyUnserializers.{platform}.yaml
+      #  expected_input:
+      #    - CEntitySystem_InstallCreationWrapperCallbacks.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CEntitySystem_m_EntityPostSpawnCallback
+      #  expected_output:
+      #    - CEntitySystem_m_EntityPostSpawnCallback.{platform}.yaml
+      #  expected_input:
+      #    - CEntitySystem_InstallPostSpawnCallback.{platform}.yaml
       - name: find-INetworkMessages_RegisterSchemaTypeOverride
         expected_output:
           - INetworkMessages_RegisterSchemaTypeOverride.{platform}.yaml
@@ -6377,18 +6407,20 @@ modules:
       - name: find-CPhysicsEntitySolver_vtable
         expected_output:
           - CPhysicsEntitySolver_vtable.{platform}.yaml
-      - name: find-CPhysicsEntitySolver_PhysEnableEntityCollisions
-        platform: windows
-        expected_output:
-          - CPhysicsEntitySolver_PhysEnableEntityCollisions.{platform}.yaml
-        expected_input:
-          - CPhysicsEntitySolver_vtable.{platform}.yaml
-      - name: find-PhysEnableEntityCollisions-windows
-        platform: windows
-        expected_output:
-          - PhysEnableEntityCollisions.{platform}.yaml
-        expected_input:
-          - CPhysicsEntitySolver_PhysEnableEntityCollisions.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CPhysicsEntitySolver_PhysEnableEntityCollisions
+      #  platform: windows
+      #  expected_output:
+      #    - CPhysicsEntitySolver_PhysEnableEntityCollisions.{platform}.yaml
+      #  expected_input:
+      #    - CPhysicsEntitySolver_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-PhysEnableEntityCollisions-windows
+      #  platform: windows
+      #  expected_output:
+      #    - PhysEnableEntityCollisions.{platform}.yaml
+      #  expected_input:
+      #    - CPhysicsEntitySolver_PhysEnableEntityCollisions.{platform}.yaml
       - name: find-PhysEnableEntityCollisions-linux
         platform: linux
         expected_output:
@@ -6461,12 +6493,13 @@ modules:
         expected_input:
           - CLoopModeGame_OnServerPostAdvanceTick.{platform}.yaml
           - IGameSystem_vtable.{platform}.yaml
-      - name: find-IGameSystem_OnServerBeginAsyncPostTickWork
-        expected_output:
-          - IGameSystem_OnServerBeginAsyncPostTickWork.{platform}.yaml
-        expected_input:
-          - CLoopModeGame_OnServerBeginAsyncPostTickWork.{platform}.yaml
-          - IGameSystem_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-IGameSystem_OnServerBeginAsyncPostTickWork
+      #  expected_output:
+      #    - IGameSystem_OnServerBeginAsyncPostTickWork.{platform}.yaml
+      #  expected_input:
+      #    - CLoopModeGame_OnServerBeginAsyncPostTickWork.{platform}.yaml
+      #    - IGameSystem_vtable.{platform}.yaml
       - name: find-IGameSystem_OnServerPreEndAsyncPostTickWork-AND-IGameSystem_OnServerPostEndAsyncPostTickWork
         expected_output:
           - IGameSystem_OnServerPreEndAsyncPostTickWork.{platform}.yaml
@@ -6535,26 +6568,30 @@ modules:
           - CLoopModeGame_SetGameSystemState.{platform}.yaml
         expected_input_linux:
           - CLoopModeGame_Shutdown.{platform}.yaml
-      - name: find-CLoopModeGame_ShutdownServer
-        expected_output:
-          - CLoopModeGame_ShutdownServer.{platform}.yaml
-      - name: find-CLoopModeGame_OnLoopDeactivate
-        expected_output:
-          - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
-        expected_input:
-          - CLoopModeGame_ShutdownServer.{platform}.yaml
-          - CLoopModeGame_vtable.{platform}.yaml
-      - name: find-CEntitySystem_ClearEntityDatabase
-        expected_output:
-          - CEntitySystem_ClearEntityDatabase.{platform}.yaml
-        expected_input:
-          - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
-          - CEntitySystem_vtable.{platform}.yaml
-      - name: find-ILoopMode_OnLoopDeactivate
-        expected_output:
-          - ILoopMode_OnLoopDeactivate.{platform}.yaml
-        expected_input:
-          - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CLoopModeGame_ShutdownServer
+      #  expected_output:
+      #    - CLoopModeGame_ShutdownServer.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CLoopModeGame_OnLoopDeactivate
+      #  expected_output:
+      #    - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
+      #  expected_input:
+      #    - CLoopModeGame_ShutdownServer.{platform}.yaml
+      #    - CLoopModeGame_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CEntitySystem_ClearEntityDatabase
+      #  expected_output:
+      #    - CEntitySystem_ClearEntityDatabase.{platform}.yaml
+      #  expected_input:
+      #    - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
+      #    - CEntitySystem_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-ILoopMode_OnLoopDeactivate
+      #  expected_output:
+      #    - ILoopMode_OnLoopDeactivate.{platform}.yaml
+      #  expected_input:
+      #    - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
       - name: find-CPlayerCommandQueue_vtable
         expected_output:
           - CPlayerCommandQueue_vtable.{platform}.yaml
@@ -9899,13 +9936,14 @@ modules:
           - CLoopTypeBase_GetClientServerMode.{platform}.yaml
         expected_input:
           - CEngineServiceMgr_GetActiveLoopClientServerMode.{platform}.yaml
-      - name: find-CLoopTypeBase_GetImplType-AND-ILoopModeFactory_GetLoopModeType-AND-ILoopModeFactory_Shutdown
-        expected_output:
-          - CLoopTypeBase_GetImplType.{platform}.yaml
-          - ILoopModeFactory_GetLoopModeType.{platform}.yaml
-          - ILoopModeFactory_Shutdown.{platform}.yaml
-        expected_input:
-          - CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CLoopTypeBase_GetImplType-AND-ILoopModeFactory_GetLoopModeType-AND-ILoopModeFactory_Shutdown
+      #  expected_output:
+      #    - CLoopTypeBase_GetImplType.{platform}.yaml
+      #    - ILoopModeFactory_GetLoopModeType.{platform}.yaml
+      #    - ILoopModeFactory_Shutdown.{platform}.yaml
+      #  expected_input:
+      #    - CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml
       - name: find-CNetSupportImpl_vtable
         expected_output:
           - CNetSupportImpl_vtable.{platform}.yaml
@@ -10105,95 +10143,107 @@ modules:
   - name: client  # Execute Shutdown-dependent client skills after engine2.dll generates ILoopModeFactory_Shutdown
     path_windows: game/csgo/bin/win64/client.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libclient.so
-    skills:
-      - name: find-CLoopModeFactory_CLoopModeGame_Shutdown
-        expected_output:
-          - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
-        expected_input:
-          - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
-          - ../engine/ILoopModeFactory_Shutdown.{platform}.yaml
-      - name: find-IEngineServiceMgr_GetEventDispatcher-AND-IGameSystem_ShutdownAllSystems
-        expected_output:
-          - IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
-          - IGameSystem_ShutdownAllSystems.{platform}.yaml
-        expected_input:
-          - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
-      - name: find-IGameSystemFactory_Shutdown
-        expected_output:
-          - IGameSystemFactory_Shutdown.{platform}.yaml
-        expected_input:
-          - IGameSystem_ShutdownAllSystems.{platform}.yaml
+    skills: []
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CLoopModeFactory_CLoopModeGame_Shutdown
+      #  expected_output:
+      #    - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
+      #  expected_input:
+      #    - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
+      #    - ../engine/ILoopModeFactory_Shutdown.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-IEngineServiceMgr_GetEventDispatcher-AND-IGameSystem_ShutdownAllSystems
+      #  expected_output:
+      #    - IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
+      #    - IGameSystem_ShutdownAllSystems.{platform}.yaml
+      #  expected_input:
+      #    - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-IGameSystemFactory_Shutdown
+      #  expected_output:
+      #    - IGameSystemFactory_Shutdown.{platform}.yaml
+      #  expected_input:
+      #    - IGameSystem_ShutdownAllSystems.{platform}.yaml
   - name: server  # Execute Shutdown-dependent server skills after engine2.dll generates ILoopModeFactory_Shutdown
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
-    skills:
-      - name: find-CLoopModeFactory_CLoopModeGame_Shutdown
-        expected_output:
-          - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
-        expected_input:
-          - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
-          - ../engine/ILoopModeFactory_Shutdown.{platform}.yaml
-      - name: find-IEngineServiceMgr_GetEventDispatcher-AND-IGameSystem_ShutdownAllSystems
-        expected_output:
-          - IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
-          - IGameSystem_ShutdownAllSystems.{platform}.yaml
-        expected_input:
-          - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
-      - name: find-IGameSystemFactory_Shutdown
-        expected_output:
-          - IGameSystemFactory_Shutdown.{platform}.yaml
-        expected_input:
-          - IGameSystem_ShutdownAllSystems.{platform}.yaml
+    skills: []
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CLoopModeFactory_CLoopModeGame_Shutdown
+      #  expected_output:
+      #    - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
+      #  expected_input:
+      #    - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
+      #    - ../engine/ILoopModeFactory_Shutdown.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-IEngineServiceMgr_GetEventDispatcher-AND-IGameSystem_ShutdownAllSystems
+      #  expected_output:
+      #    - IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
+      #    - IGameSystem_ShutdownAllSystems.{platform}.yaml
+      #  expected_input:
+      #    - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-IGameSystemFactory_Shutdown
+      #  expected_output:
+      #    - IGameSystemFactory_Shutdown.{platform}.yaml
+      #  expected_input:
+      #    - IGameSystem_ShutdownAllSystems.{platform}.yaml
   - name: engine  # Execute GetEventDispatcher after late client IEngineServiceMgr output
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
-    skills:
-      - name: find-CEngineServiceMgr_GetEventDispatcher
-        expected_output:
-          - CEngineServiceMgr_GetEventDispatcher.{platform}.yaml
-        expected_input:
-          - CEngineServiceMgr_vtable.{platform}.yaml
-          - ../client/IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
+    skills: []
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CEngineServiceMgr_GetEventDispatcher
+      #  expected_output:
+      #    - CEngineServiceMgr_GetEventDispatcher.{platform}.yaml
+      #  expected_input:
+      #    - CEngineServiceMgr_vtable.{platform}.yaml
+      #    - ../client/IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
   - name: networksystem  # Execute skills for networksystem.dll again after server.dll
     path_windows: game/bin/win64/networksystem.dll
     path_linux: game/bin/linuxsteamrt64/libnetworksystem.so
     skills:
-      - name: find-CFlattenedSerializers_CreateFieldChangedEventQueue
-        expected_output:
-          - CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
-        expected_input:
-          - CFlattenedSerializers_vtable.{platform}.yaml
-          - ../server/IFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
-      - name: find-INetworkMessages_GetFieldChangeCallbackOrderCount-AND-INetworkMessages_GetFieldChangeCallbackPriorities
-        expected_output:
-          - INetworkMessages_GetFieldChangeCallbackOrderCount.{platform}.yaml
-          - INetworkMessages_GetFieldChangeCallbackPriorities.{platform}.yaml
-        expected_input:
-          - CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CFlattenedSerializers_CreateFieldChangedEventQueue
+      #  expected_output:
+      #    - CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
+      #  expected_input:
+      #    - CFlattenedSerializers_vtable.{platform}.yaml
+      #    - ../server/IFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-INetworkMessages_GetFieldChangeCallbackOrderCount-AND-INetworkMessages_GetFieldChangeCallbackPriorities
+      #  expected_output:
+      #    - INetworkMessages_GetFieldChangeCallbackOrderCount.{platform}.yaml
+      #    - INetworkMessages_GetFieldChangeCallbackPriorities.{platform}.yaml
+      #  expected_input:
+      #    - CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
       - name: find-CNetworkMessages_SetIsForServer
         expected_output:
           - CNetworkMessages_SetIsForServer.{platform}.yaml
         expected_input:
           - CNetworkMessages_vtable.{platform}.yaml
           - ../engine/INetworkMessages_SetIsForServer.{platform}.yaml
-      - name: find-CNetworkMessages_GetIsForServer
-        expected_output:
-          - CNetworkMessages_GetIsForServer.{platform}.yaml
-        expected_input:
-          - CNetworkMessages_vtable.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CNetworkMessages_GetIsForServer
+      #  expected_output:
+      #    - CNetworkMessages_GetIsForServer.{platform}.yaml
+      #  expected_input:
+      #    - CNetworkMessages_vtable.{platform}.yaml
           - CNetworkMessages_SetIsForServer.{platform}.yaml
-      - name: find-CNetworkMessages_SetNetworkSerializationContextData
-        expected_output:
-          - CNetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
-        expected_input:
-          - CNetworkMessages_vtable.{platform}.yaml
-          - ../server/INetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
-      - name: find-CNetworkMessages_GetNetworkSerializationContextData
-        expected_output:
-          - CNetworkMessages_GetNetworkSerializationContextData.{platform}.yaml
-        expected_input:
-          - CNetworkMessages_vtable.{platform}.yaml
-          - CNetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CNetworkMessages_SetNetworkSerializationContextData
+      #  expected_output:
+      #    - CNetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
+      #  expected_input:
+      #    - CNetworkMessages_vtable.{platform}.yaml
+      #    - ../server/INetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
+      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #- name: find-CNetworkMessages_GetNetworkSerializationContextData
+      #  expected_output:
+      #    - CNetworkMessages_GetNetworkSerializationContextData.{platform}.yaml
+      #  expected_input:
+      #    - CNetworkMessages_vtable.{platform}.yaml
+      #    - CNetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
       - name: find-CNetworkMessages_FindNetworkGroup
         expected_output:
           - CNetworkMessages_FindNetworkGroup.{platform}.yaml
