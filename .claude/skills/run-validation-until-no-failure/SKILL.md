@@ -50,8 +50,9 @@ infrastructure failures are **not** skill bugs — STOP and surface those instea
   - `Failed to restore MCP connection ...`
   - `Error: Binary file not found` or any `idalib-mcp` startup error
   These mean the toolchain / binary / IDB is broken, not the skill. Fix the environment or ask the user.
-- **`-gamever` required error → STOP.** The command relies on `$CS2VIBE_GAMEVER`. If the run errors
-  that gamever is required, ask the user for the version (or have them export it). Not a skill failure.
+- **`-gamever` required error → STOP.** The command relies on `$CS2VIBE_GAMEVER`. If the run errors,
+  `{gamever}` can be obtained from `.env` -> `CS2VIBE_GAMEVER`,
+  gamever is required, ask the user for the version if not specified.
 - **No progress → STOP.** If a run's failing skill is the *same* one you just commented (the config
   edit didn't take), or the `Failed` count did not go down, STOP and report. Never re-comment the same
   block or force past it.
