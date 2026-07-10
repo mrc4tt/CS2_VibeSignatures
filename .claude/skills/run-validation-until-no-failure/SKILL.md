@@ -29,7 +29,7 @@ instead of quarantining a skill.
 
 ## Why the loop works (pipeline facts)
 
-- `uv run ida_analyze_bin.py -debug` ends with a summary and exits non-zero when `Failed > 0`:
+- `uv run ida_analyze_bin.py -oldgamever none -debug` ends with a summary and exits non-zero when `Failed > 0`:
   ```
   ============================================================
   Summary
@@ -73,7 +73,7 @@ instead of quarantining a skill.
 ### Step 1 — Run validation; capture full log + summary
 
 ```bash
-uv run ida_analyze_bin.py -debug > /tmp/ida_validation_output.txt 2>&1; tail -15 /tmp/ida_validation_output.txt
+uv run ida_analyze_bin.py -oldgamever none -debug > /tmp/ida_validation_output.txt 2>&1; tail -15 /tmp/ida_validation_output.txt
 ```
 
 The full log goes to `/tmp/ida_validation_output.txt`; `tail -15` is only for the pass/fail verdict.

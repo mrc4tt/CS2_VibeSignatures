@@ -179,8 +179,8 @@ config and `-oldgamever none` (forces the xref paths; version reuse would short-
 ```bash
 # _scratch.yaml = just this module (real path_windows/path_linux) + the 3 new skills + TARGET's symbol entry
 rm -f bin/<inlined_ver>/<mod>/{TARGET}.*.yaml bin/<deinlined_ver>/<mod>/{TARGET}.*.yaml   # force the chain to run
-uv run ida_analyze_bin.py -configyaml=_scratch.yaml -gamever <deinlined_ver> -modules=<mod> -oldgamever none -maxretry 1 -debug
-uv run ida_analyze_bin.py -configyaml=_scratch.yaml -gamever <inlined_ver>  -modules=<mod> -oldgamever none -maxretry 1 -debug
+uv run ida_analyze_bin.py -configyaml=_scratch.yaml -gamever <deinlined_ver>  -oldgamever none -modules=<mod> -oldgamever none -maxretry 1 -debug
+uv run ida_analyze_bin.py -configyaml=_scratch.yaml -gamever <inlined_ver>  -oldgamever none  -modules=<mod> -oldgamever none -maxretry 1 -debug
 ```
 
 Confirm **both** gamevers x **both** platforms resolve TARGET to the same vtable slot (or
