@@ -4264,20 +4264,18 @@ modules:
       - name: find-CCSPlayer_MovementServices_vtable
         expected_output:
           - CCSPlayer_MovementServices_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CCSPlayer_MovementServices_ProcessMovement
-      #  expected_output:
-      #    - CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml
-      #  expected_input:
-      #    - CPlayer_MovementServices_s_pRunCommandPawn.{platform}.yaml
-      #    - CPlayer_MovementServices_ForceButtonState.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CCSPlayer_MovementServices_CheckMovingGround
-      #  expected_output:
-      #    - CCSPlayer_MovementServices_CheckMovingGround.{platform}.yaml
-      #  expected_input:
-      #    - CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml
-      #    - CCSPlayer_MovementServices_vtable.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_ProcessMovement
+        expected_output:
+          - CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml
+        expected_input:
+          - CPlayer_MovementServices_s_pRunCommandPawn.{platform}.yaml
+          - CPlayer_MovementServices_ForceButtonState.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_CheckMovingGround
+        expected_output:
+          - CCSPlayer_MovementServices_CheckMovingGround.{platform}.yaml
+        expected_input:
+          - CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml
+          - CCSPlayer_MovementServices_vtable.{platform}.yaml
       - name: find-CCSPlayer_MovementServices_CheckVelocity
         expected_output:
           - CCSPlayer_MovementServices_CheckVelocity.{platform}.yaml
@@ -4312,10 +4310,9 @@ modules:
       - name: find-CPlayer_MovementServices_ForceButtons
         expected_output:
           - CPlayer_MovementServices_ForceButtons.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CPlayer_MovementServices_ForceButtonState
-      #  expected_output:
-      #    - CPlayer_MovementServices_ForceButtonState.{platform}.yaml
+      - name: find-CPlayer_MovementServices_ForceButtonState
+        expected_output:
+          - CPlayer_MovementServices_ForceButtonState.{platform}.yaml
       - name: find-CPlayer_MovementServices_s_pRunCommandPawn
         expected_output:
           - CPlayer_MovementServices_s_pRunCommandPawn.{platform}.yaml
