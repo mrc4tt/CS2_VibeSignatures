@@ -1,5 +1,18 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CMapListService_IsMapValid-windows skill."""
+"""Preprocess script for find-CMapListService_IsMapValid-inlined skill (deinline-fix chain).
+
+Resolves ``CMapListService_IsMapValid`` (a vfunc of ``CMapListService_vtable``) for the
+builds where the string-owning ``IsMapValid`` body is fused into the vtable member, so
+the member itself owns the map-validation strings: Windows both versions (vtable index
+25) and Linux 14168 (vtable index 26, where the former thin wrapper merged into the
+body).  ``xref_strings: ["maps/%s", "<empty>"]`` intersected with ``CMapListService_vtable``
+collapses to that single member.
+
+It is the merge of the former platform-split ``-windows`` / ``-linux`` finders and the
+fallback for ``find-CMapListService_IsMapValid-noinline`` (which handles the Linux 14167
+split-wrapper case); it is skipped whenever ``CMapListService_IsMapValid.{platform}.yaml``
+already exists.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 

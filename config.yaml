@@ -1170,23 +1170,31 @@ modules:
           - CEngineServer_ChangeLevel.{platform}.yaml
         prerequisite:
           - find-CEngineServer_ChangeLevel-noinline
-      - name: find-CMapListService_IsMapValid-windows
-        platform: windows
-        expected_output:
-          - CMapListService_IsMapValid.{platform}.yaml
-        expected_input:
-          - CMapListService_vtable.{platform}.yaml
       - name: find-IsMapValid-linux
         platform: linux
         expected_output:
           - IsMapValid.{platform}.yaml
-      - name: find-CMapListService_IsMapValid-linux
-        platform: linux
+      # CMapListService::IsMapValid: on Linux 14167 the vtable member is a thin wrapper
+      # that calls the standalone IsMapValid body (split); on Linux 14168 the wrapper
+      # merged into the body so the member IS IsMapValid (fused); on Windows the body is
+      # always fused into the member. Cross-platform inline/noinline fallback chain
+      # (no platform split):
+      - name: find-CMapListService_IsMapValid-noinline
+        optional_output:
+          - CMapListService_IsMapValid.{platform}.yaml
+        expected_input:
+          - CMapListService_vtable.{platform}.yaml
+        expected_input_linux:
+          - IsMapValid.{platform}.yaml
+      - name: find-CMapListService_IsMapValid-inlined
         expected_output:
           - CMapListService_IsMapValid.{platform}.yaml
         expected_input:
-          - IsMapValid.{platform}.yaml
           - CMapListService_vtable.{platform}.yaml
+        skip_if_exists:
+          - CMapListService_IsMapValid.{platform}.yaml
+        prerequisite:
+          - find-CMapListService_IsMapValid-noinline
       # CNetworkGameServer_IsMapValid de-inlined out of CEngineServer_IsMapValid on
       # Linux 14168 (the guard between the vfunc and the string-owning IsMapValid body).
       # 3-skill inline/noinline fallback chain (cross-platform, no platform split):
