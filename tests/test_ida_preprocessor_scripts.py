@@ -61,6 +61,7 @@ ON_EVENT_MAP_CALLBACKS_CLIENT_SCRIPT_PATH = Path(
     "ida_preprocessor_scripts/find-CLoopModeGame_OnEventMapCallbacks-client.py"
 )
 INTERFACE_GLOBALS_PPGLOBAL_SCRIPT_PATH = Path("ida_preprocessor_scripts/find-g_pInterfaceGlobals_ppGlobal.py")
+CONNECT_INTERFACES_SCRIPT_PATH = Path("ida_preprocessor_scripts/find-ConnectInterfaces.py")
 
 
 class _FakeStreamableHttpClient:
@@ -3157,6 +3158,59 @@ class TestFindCEngineServiceMgrDeactivateLoop(unittest.IsolatedAsyncioTestCase):
             )
 
         self.assertFalse(result)
+
+
+class TestFindConnectInterfaces(unittest.IsolatedAsyncioTestCase):
+    async def test_non_engine_modules_omit_engine_exclude_func(self) -> None:
+        module = _load_module(
+            CONNECT_INTERFACES_SCRIPT_PATH,
+            "find_ConnectInterfaces_non_engine",
+        )
+        mock_preprocess_common_skill = AsyncMock(return_value=True)
+
+        with patch.object(module, "preprocess_common_skill", mock_preprocess_common_skill):
+            for module_name in ("client", "server"):
+                with self.subTest(module_name=module_name):
+                    await module.preprocess_skill(
+                        session="session",
+                        skill_name="find-ConnectInterfaces",
+                        expected_outputs=["ConnectInterfaces.windows.yaml"],
+                        old_yaml_map={},
+                        new_binary_dir=str(Path("bin") / "14168" / module_name),
+                        platform="windows",
+                        image_base=0x180000000,
+                        debug=True,
+                    )
+
+                    func_xrefs = mock_preprocess_common_skill.await_args.kwargs["func_xrefs"]
+                    self.assertEqual([], func_xrefs[0]["exclude_funcs"])
+
+    async def test_engine_keeps_exclude_func_in_per_call_copy(self) -> None:
+        module = _load_module(
+            CONNECT_INTERFACES_SCRIPT_PATH,
+            "find_ConnectInterfaces_engine",
+        )
+        mock_preprocess_common_skill = AsyncMock(return_value=True)
+
+        with patch.object(module, "preprocess_common_skill", mock_preprocess_common_skill):
+            await module.preprocess_skill(
+                session="session",
+                skill_name="find-ConnectInterfaces",
+                expected_outputs=["ConnectInterfaces.windows.yaml"],
+                old_yaml_map={},
+                new_binary_dir=str(Path("bin") / "14168" / "engine"),
+                platform="windows",
+                image_base=0x180000000,
+                debug=True,
+            )
+
+        func_xrefs = mock_preprocess_common_skill.await_args.kwargs["func_xrefs"]
+        self.assertIsNot(module.FUNC_XREFS, func_xrefs)
+        self.assertEqual(["CNetSupportImpl_Connect"], func_xrefs[0]["exclude_funcs"])
+        self.assertEqual(
+            ["CNetSupportImpl_Connect"],
+            module.FUNC_XREFS[0]["exclude_funcs"],
+        )
 
 
 class TestFindGInterfaceGlobalsPpGlobal(unittest.IsolatedAsyncioTestCase):
