@@ -6156,10 +6156,13 @@ modules:
       - name: find-BotAdd_CommandHandler
         expected_output:
           - BotAdd_CommandHandler.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
+      #  ShowHudHint has been refactored as CEnvHudHint_API::ShowHudHint since 14168
       #- name: find-ShowHudHint
       #  expected_output:
       #    - ShowHudHint.{platform}.yaml
+      - name: find-CEnvHudHint_API_ShowHudHint
+        expected_output:
+          - CEnvHudHint_API_ShowHudHint.{platform}.yaml
       - name: find-CEntitySystem_ctor
         expected_output:
           - CEntitySystem_ctor.{platform}.yaml
@@ -9223,6 +9226,10 @@ modules:
           - BotNavIgnore
       - name: ShowHudHint
         category: func
+      - name: CEnvHudHint_API_ShowHudHint
+        category: func
+        alias:
+          - CEnvHudHint_API::ShowHudHint
       - name: UTIL_GetPlayerControllerForEntity
         category: func
         alias:
