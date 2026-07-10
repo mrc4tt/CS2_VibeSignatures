@@ -708,157 +708,50 @@ class TestFindShowHudHint(unittest.IsolatedAsyncioTestCase):
 
 
 class TestFindCBaseFilterInputTestActivator(unittest.IsolatedAsyncioTestCase):
-    async def test_linux_fallback_uses_shared_strings_setup_and_preserves_xref_resolution(
-        self,
-    ) -> None:
+    async def test_preprocess_skill_forwards_define_inputfunc_contract(self) -> None:
         module = _load_module(
             CBASEFILTER_INPUTTESTACTIVATOR_SCRIPT_PATH,
             "find_CBaseFilter_InputTestActivator",
         )
-        session = AsyncMock()
-        session.call_tool.side_effect = [
-            _py_eval_payload("0x180123450"),
-            {"name": "rename"},
+        mock_helper = AsyncMock(return_value=True)
+        expected_generate_yaml_desired_fields = [
+            (
+                "CBaseFilter_InputTestActivator",
+                ["func_name", "func_va", "func_rva", "func_size", "func_sig"],
+            )
         ]
 
-        with (
-            tempfile.TemporaryDirectory() as tmpdir,
-            patch.object(
-                module,
-                "preprocess_gen_func_sig_via_mcp",
-                AsyncMock(
-                    return_value={
-                        "func_sig": "48 89 5C 24 ? 57 48 83 EC ?",
-                        "func_size": "0x90",
-                    }
-                ),
-            ),
-            patch.object(module, "write_func_yaml"),
+        with patch.object(
+            module,
+            "preprocess_define_inputfunc_skill",
+            mock_helper,
+            create=True,
         ):
-            result = await module._linux_resolve_via_string_xref(
-                session=session,
-                expected_outputs=[str(Path(tmpdir) / "CBaseFilter_InputTestActivator.linux.yaml")],
-                platform="linux",
-                image_base=0x180000000,
-                debug=True,
-            )
-
-        self.assertTrue(result)
-        py_code = session.call_tool.await_args_list[0].kwargs["arguments"]["code"]
-        self.assertIn(
-            "strings = idautils.Strings(default_setup=False)",
-            py_code,
-        )
-        self.assertNotIn("strings.setup(", py_code)
-        self.assertNotIn("ida_netnode", py_code)
-        self.assertIn("for s in strings:", py_code)
-        self.assertNotIn("for s in idautils.Strings():", py_code)
-        self.assertIn("for xref in idautils.XrefsTo(s.ea, 0):", py_code)
-        self.assertTrue(("ptr_addr = xref.frm + 0x10" in py_code or "ptr_addr = xref.frm + 16" in py_code))
-        self.assertIn(
-            "func_start = idc.get_func_attr(candidate, idc.FUNCATTR_START)",
-            py_code,
-        )
-        self.assertIn("if func_start == candidate:", py_code)
-
-    async def test_preprocess_skill_linux_tolerates_missing_old_yaml_map(
-        self,
-    ) -> None:
-        module = _load_module(
-            CBASEFILTER_INPUTTESTACTIVATOR_SCRIPT_PATH,
-            "find_CBaseFilter_InputTestActivator",
-        )
-        fallback = AsyncMock(return_value=True)
-        reuse = AsyncMock()
-
-        with (
-            tempfile.TemporaryDirectory() as tmpdir,
-            patch.object(
-                module,
-                "_linux_resolve_via_string_xref",
-                fallback,
-            ),
-            patch.object(module, "preprocess_func_sig_via_mcp", reuse),
-        ):
-            output_path = str(Path(tmpdir) / "CBaseFilter_InputTestActivator.linux.yaml")
             result = await module.preprocess_skill(
                 session="session",
                 skill_name="skill",
-                expected_outputs=[output_path],
-                old_yaml_map=None,
-                new_binary_dir=tmpdir,
-                platform="linux",
+                expected_outputs=["out.yaml"],
+                old_yaml_map={"k": "v"},
+                new_binary_dir="bin_dir",
+                platform="windows",
                 image_base=0x180000000,
                 debug=True,
             )
 
         self.assertTrue(result)
-        reuse.assert_not_awaited()
-        fallback.assert_awaited_once_with(
-            "session",
-            [output_path],
-            "linux",
-            0x180000000,
-            debug=True,
-        )
-
-    async def test_preprocess_skill_linux_reuses_old_yaml_via_output_path_key(
-        self,
-    ) -> None:
-        module = _load_module(
-            CBASEFILTER_INPUTTESTACTIVATOR_SCRIPT_PATH,
-            "find_CBaseFilter_InputTestActivator",
-        )
-        reuse_result = {
-            "func_name": "CBaseFilter_InputTestActivator",
-            "func_va": "0x180123450",
-            "func_rva": "0x123450",
-            "func_size": "0x90",
-            "func_sig": "48 89 5C 24 ? 57 48 83 EC ?",
-        }
-        reuse = AsyncMock(return_value=reuse_result)
-        fallback = AsyncMock(return_value=False)
-
-        with (
-            tempfile.TemporaryDirectory() as tmpdir,
-            patch.object(
-                module,
-                "preprocess_func_sig_via_mcp",
-                reuse,
-            ),
-            patch.object(module, "_linux_resolve_via_string_xref", fallback),
-            patch.object(
-                module,
-                "write_func_yaml",
-            ) as write_func_yaml,
-            patch.object(module.os.path, "exists", return_value=True),
-        ):
-            output_path = str(Path(tmpdir) / "CBaseFilter_InputTestActivator.linux.yaml")
-            old_path = str(Path(tmpdir) / "old.CBaseFilter_InputTestActivator.linux.yaml")
-            result = await module.preprocess_skill(
-                session="session",
-                skill_name="skill",
-                expected_outputs=[output_path],
-                old_yaml_map={output_path: old_path},
-                new_binary_dir=tmpdir,
-                platform="linux",
-                image_base=0x180000000,
-                debug=True,
-            )
-
-        self.assertTrue(result)
-        reuse.assert_awaited_once_with(
+        mock_helper.assert_awaited_once_with(
             session="session",
-            new_path=output_path,
-            old_path=old_path,
+            expected_outputs=["out.yaml"],
+            platform="windows",
             image_base=0x180000000,
-            new_binary_dir=tmpdir,
-            platform="linux",
-            func_name="CBaseFilter_InputTestActivator",
+            target_name="CBaseFilter_InputTestActivator",
+            input_name="TestActivator",
+            generate_yaml_desired_fields=expected_generate_yaml_desired_fields,
+            handler_ptr_offset=0x10,
+            allowed_segment_names=(".data",),
+            rename_to="CBaseFilter_InputTestActivator",
             debug=True,
         )
-        write_func_yaml.assert_called_once_with(output_path, reuse_result)
-        fallback.assert_not_awaited()
 
 
 class TestFindILoopModeHandleInputEvent(unittest.IsolatedAsyncioTestCase):
