@@ -19,6 +19,9 @@ ERROR_MARKER_RE = re.compile(r"(?<![A-Za-z0-9])error(?![A-Za-z0-9])", re.IGNOREC
 ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 _MCP_PREFLIGHT_DONE = False
 _MCP_PREFLIGHT_FAILED = False
+CLAUDE_SKILL_RUNNER_SETTINGS = ".claude/skill_runner.settings.json"
+SKILL_RUNNER_SYSTEM_PROMPT = ".claude/SKILL_RUNNER.md"
+OPENCODE_SKILL_RUNNER_CONFIG = ".opencode/skill_runner.config.json"
 
 
 @dataclass(frozen=True)
@@ -91,6 +94,19 @@ def _format_mcp_list_output(output, limit=1200):
     return "\n".join(f"      {line}" for line in text.splitlines())
 
 
+def _agent_process_env(agent_kind: str) -> dict[str, str] | None:
+    if agent_kind != "opencode":
+        return None
+    env = os.environ.copy()
+    env.update(
+        {
+            "OPENCODE_DISABLE_CLAUDE_CODE_PROMPT": "1",
+            "OPENCODE_CONFIG": OPENCODE_SKILL_RUNNER_CONFIG,
+        }
+    )
+    return env
+
+
 def _ensure_agent_mcp_preflight(agent, debug=False, server_name="ida-pro-mcp"):
     global _MCP_PREFLIGHT_DONE, _MCP_PREFLIGHT_FAILED
 
@@ -103,7 +119,12 @@ def _ensure_agent_mcp_preflight(agent, debug=False, server_name="ida-pro-mcp"):
     cmd = [agent, "mcp", "list"]
     print(f"    Checking MCP server list: {' '.join(cmd)}")
     try:
-        result = _run_process_with_stream_capture(cmd, debug=debug, timeout=MCP_LIST_TIMEOUT)
+        result = _run_process_with_stream_capture(
+            cmd,
+            debug=debug,
+            timeout=MCP_LIST_TIMEOUT,
+            env=_agent_process_env(_detect_agent_kind(agent) or ""),
+        )
     except subprocess.TimeoutExpired:
         _MCP_PREFLIGHT_FAILED = True
         print(f"    Error: MCP list preflight timeout ({MCP_LIST_TIMEOUT} seconds): {' '.join(cmd)}")
@@ -144,13 +165,14 @@ def _drain_text_stream(stream, chunks, forward_stream=None):
             pass
 
 
-def _run_process_with_stream_capture(cmd, *, agent_input=None, debug=False, timeout=SKILL_TIMEOUT):
+def _run_process_with_stream_capture(cmd, *, agent_input=None, debug=False, timeout=SKILL_TIMEOUT, env=None):
     process = subprocess.Popen(
         cmd,
         stdin=subprocess.PIPE if agent_input is not None else None,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        env=env,
     )
     if agent_input is not None and process.stdin is not None:
         process.stdin.write(agent_input)
@@ -249,7 +271,8 @@ def _build_claude_base_args(
         args.extend(["--allowedTools", allowed_tools])
     if disallowed_tools := str(disallowed_tools or "").strip():
         args.extend(["--disallowedTools", disallowed_tools])
-    args.extend(["--settings", '{"alwaysThinkingEnabled": false}'])
+    args.extend(["--settings", CLAUDE_SKILL_RUNNER_SETTINGS])
+    args.extend(["--append-system-prompt-file", SKILL_RUNNER_SYSTEM_PROMPT])
     args.extend(_agent_permission_args("claude", claude_permission_mode=permission_mode))
     args.extend(_split_cli_args(extra_args))
     args.extend(["--resume" if is_retry else "--session-id", session_id])
@@ -259,14 +282,10 @@ def _build_claude_base_args(
 def _build_codex_base_args(agent: str, developer_instructions: str, is_retry: bool) -> list[str]:
     args = [
         agent,
+        "--profile",
+        "skill_runner",
         "-c",
         developer_instructions,
-        "-c",
-        "model_reasoning_effort=high",
-        "-c",
-        "model_reasoning_summary=none",
-        "-c",
-        "model_verbosity=low",
     ]
     args.extend(_agent_permission_args("codex"))
     args.append("exec")
@@ -403,6 +422,7 @@ def _run_skill_attempts(
     max_retries: int,
 ) -> bool:
     opencode_session_id = None
+    process_env = _agent_process_env(agent_kind)
     for attempt in range(max_retries):
         command = _build_agent_command(
             agent=agent,
@@ -416,7 +436,11 @@ def _run_skill_attempts(
         _print_command(command, attempt, max_retries)
         try:
             result = _run_process_with_stream_capture(
-                command.args, agent_input=command.input_text, debug=debug, timeout=SKILL_TIMEOUT
+                command.args,
+                agent_input=command.input_text,
+                debug=debug,
+                timeout=SKILL_TIMEOUT,
+                env=process_env,
             )
             if agent_kind == "opencode" and opencode_session_id is None:
                 opencode_session_id = _extract_opencode_session_id(result.stdout)
@@ -506,7 +530,11 @@ def _build_header_fix_command(
 
 
 def _run_header_fix_process(command: AgentCommand, *, agent_kind: str, debug: bool):
-    run_kwargs = {"timeout": HEADER_FIX_TIMEOUT, "check": False}
+    run_kwargs = {
+        "timeout": HEADER_FIX_TIMEOUT,
+        "check": False,
+        "env": _agent_process_env(agent_kind),
+    }
     if command.input_text is not None:
         run_kwargs.update({"input": command.input_text, "text": True})
     if debug and agent_kind != "opencode":

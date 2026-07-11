@@ -1,10 +1,63 @@
 import io
+import json
 import subprocess
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import agent_runner
+
+
+class TestSkillRunnerProjectPromptConfiguration(unittest.TestCase):
+    def test_claude_command_loads_skill_runner_settings_and_system_prompt(self) -> None:
+        command = agent_runner._build_claude_command(
+            "claude",
+            "find-test",
+            "session-id",
+            False,
+        )
+
+        self.assertIn(
+            ["--settings", ".claude/skill_runner.settings.json"],
+            [command.args[index : index + 2] for index in range(len(command.args) - 1)],
+        )
+        self.assertIn(
+            ["--append-system-prompt-file", ".claude/SKILL_RUNNER.md"],
+            [command.args[index : index + 2] for index in range(len(command.args) - 1)],
+        )
+
+    def test_codex_command_uses_skill_runner_profile_for_runtime_settings(self) -> None:
+        command = agent_runner._build_codex_command(
+            "codex",
+            "find-test",
+            'developer_instructions="sig finder prompt"',
+            False,
+        )
+
+        self.assertEqual(["codex", "--profile", "skill_runner"], command.args[:3])
+        self.assertNotIn("model_reasoning_effort=high", command.args)
+        self.assertNotIn("model_reasoning_summary=none", command.args)
+        self.assertNotIn("model_verbosity=low", command.args)
+
+    def test_project_configs_define_skill_runner_prompt_and_runtime_settings(self) -> None:
+        config_paths = [
+            Path(".claude/skill_runner.settings.json"),
+            Path(".codex/skill_runner.config.toml"),
+            Path(".opencode/skill_runner.config.json"),
+        ]
+        for config_path in config_paths:
+            self.assertTrue(config_path.is_file(), config_path)
+
+        claude_settings = json.loads(config_paths[0].read_text(encoding="utf-8"))
+        codex_config = config_paths[1].read_text(encoding="utf-8")
+        opencode_config = json.loads(config_paths[2].read_text(encoding="utf-8"))
+
+        self.assertEqual([".claude/CLAUDE.md"], claude_settings["claudeMdExcludes"])
+        self.assertIn('project_doc_fallback_filenames = [".claude/SKILL_RUNNER.md"]', codex_config)
+        self.assertIn('model_reasoning_effort = "high"', codex_config)
+        self.assertIn('model_reasoning_summary = "none"', codex_config)
+        self.assertIn('model_verbosity = "low"', codex_config)
+        self.assertEqual([".claude/SKILL_RUNNER.md"], opencode_config["instructions"])
 
 
 class TestAgentPermissionArgs(unittest.TestCase):
@@ -227,6 +280,37 @@ class TestOpenCodeCommandConstruction(unittest.TestCase):
         retry_args = mock_run_process.call_args_list[2].args[0]
         self.assertIn("--continue", retry_args)
         self.assertNotIn("--session", retry_args)
+
+    @patch("agent_runner.os.path.exists", return_value=True)
+    @patch("agent_runner._run_process_with_stream_capture")
+    def test_run_skill_sets_opencode_only_process_environment(
+        self,
+        mock_run_process,
+        _mock_exists,
+    ) -> None:
+        mock_run_process.side_effect = [
+            subprocess.CompletedProcess(
+                ["opencode", "mcp", "list"],
+                0,
+                "ida-pro-mcp failed\n",
+                "",
+            ),
+            subprocess.CompletedProcess(["opencode", "run"], 0, "", ""),
+        ]
+
+        self.assertTrue(
+            agent_runner.run_skill(
+                "find-IGameSystem_vtable",
+                agent="opencode",
+                max_retries=1,
+            )
+        )
+
+        for process_call in mock_run_process.call_args_list:
+            process_env = process_call.kwargs.get("env")
+            self.assertIsNotNone(process_env)
+            self.assertEqual("1", process_env["OPENCODE_DISABLE_CLAUDE_CODE_PROMPT"])
+            self.assertEqual(".opencode/skill_runner.config.json", process_env["OPENCODE_CONFIG"])
 
 
 class TestRunSkillOutputDetection(unittest.TestCase):
