@@ -56,6 +56,18 @@ class _FakePopen:
         self.killed = True
 
 
+class TestOpenCodeSigFinderAgent(unittest.TestCase):
+    def test_project_agent_preserves_required_safety_constraints(self) -> None:
+        agent_path = Path(".opencode/agents/sig-finder.md")
+
+        self.assertTrue(agent_path.is_file())
+        agent_text = agent_path.read_text(encoding="utf-8")
+        self.assertIn("mode: primary", agent_text)
+        self.assertIn("ida-pro-mcp_open_file: false", agent_text)
+        self.assertIn("currently opened in IDA", agent_text)
+        self.assertIn("DO NOT verify or check the existence of output yaml", agent_text)
+
+
 class TestRunSkillOutputDetection(unittest.TestCase):
     def setUp(self) -> None:
         agent_skill_runner._MCP_PREFLIGHT_DONE = False
