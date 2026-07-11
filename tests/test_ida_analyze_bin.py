@@ -148,6 +148,43 @@ class TestStopIdalibMcpProcess(unittest.TestCase):
 
 
 class TestSurveyBinaryViaSession(unittest.IsolatedAsyncioTestCase):
+    async def test_survey_binary_via_mcp_does_not_request_session_termination(self) -> None:
+        http_client = MagicMock()
+        http_client_context = MagicMock()
+        http_client_context.__aenter__ = AsyncMock(return_value=http_client)
+        http_client_context.__aexit__ = AsyncMock(return_value=False)
+        transport_context = MagicMock()
+        transport_context.__aenter__ = AsyncMock(return_value=(MagicMock(), MagicMock(), MagicMock()))
+        transport_context.__aexit__ = AsyncMock(return_value=False)
+        session = MagicMock()
+        session.initialize = AsyncMock()
+        session_context = MagicMock()
+        session_context.__aenter__ = AsyncMock(return_value=session)
+        session_context.__aexit__ = AsyncMock(return_value=False)
+
+        with (
+            patch.object(ida_analyze_bin.httpx, "AsyncClient", return_value=http_client_context),
+            patch.object(
+                ida_analyze_bin,
+                "streamable_http_client",
+                return_value=transport_context,
+            ) as streamable_client,
+            patch.object(ida_analyze_bin, "ClientSession", return_value=session_context),
+            patch.object(
+                ida_analyze_bin,
+                "survey_binary_via_session",
+                new=AsyncMock(return_value={"metadata": {"path": "server.dll"}}),
+            ),
+        ):
+            result = await ida_analyze_bin.survey_binary_via_mcp("127.0.0.1", 13337)
+
+        self.assertEqual({"metadata": {"path": "server.dll"}}, result)
+        streamable_client.assert_called_once_with(
+            "http://127.0.0.1:13337/mcp",
+            http_client=http_client,
+            terminate_on_close=False,
+        )
+
     async def test_survey_binary_via_session_falls_back_to_current_idb_path(self) -> None:
         session = MagicMock()
         session.call_tool = AsyncMock(

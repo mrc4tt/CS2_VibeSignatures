@@ -570,7 +570,11 @@ async def survey_binary_via_mcp(host=DEFAULT_HOST, port=DEFAULT_PORT, detail_lev
             timeout=httpx.Timeout(10.0, read=30.0),
             trust_env=False,
         ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
+            async with streamable_http_client(
+                server_url,
+                http_client=http_client,
+                terminate_on_close=False,
+            ) as (read_stream, write_stream, _):
                 async with ClientSession(read_stream, write_stream) as session:
                     await session.initialize()
                     return await survey_binary_via_session(session, detail_level=detail_level)
