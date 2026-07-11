@@ -1,4 +1,5 @@
-{"permissions": {
+{
+  "permissions": {
     "deny": [
       "mcp__ida-pro-mcp__open_file"
     ],
