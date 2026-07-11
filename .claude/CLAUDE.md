@@ -17,4 +17,4 @@ This file provides guidance and important rules working with code in this reposi
 
 ## IDA Pro MCP Tools Reference
 
-See Serena memory: `ida-pro-mcp`
+See serena memory: `ida-pro-mcp`
