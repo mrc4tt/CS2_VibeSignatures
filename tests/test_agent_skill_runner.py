@@ -624,3 +624,13 @@ class TestRunSkillMcpListPreflight(unittest.TestCase):
                 "not-ida-pro-mcp: http://127.0.0.1:13337/mcp (HTTP) - Failed\n"
             )
         )
+        self.assertTrue(
+            agent_skill_runner._mcp_list_contains_server(
+                "\x1b[34m•\x1b[39m  ✗ ida-pro-mcp \x1b[90mfailed\x1b[39m\n"
+            )
+        )
+        self.assertFalse(
+            agent_skill_runner._mcp_list_contains_server(
+                "\x1b[34m•\x1b[39m  ✗ not-ida-pro-mcp \x1b[90mfailed\x1b[39m\n"
+            )
+        )

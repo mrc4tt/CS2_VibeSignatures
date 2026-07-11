@@ -14,6 +14,7 @@ from pathlib import Path
 SKILL_TIMEOUT = 1200
 MCP_LIST_TIMEOUT = 30
 ERROR_MARKER_RE = re.compile(r"(?<![A-Za-z0-9])error(?![A-Za-z0-9])", re.IGNORECASE)
+ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 _MCP_PREFLIGHT_DONE = False
 _MCP_PREFLIGHT_FAILED = False
 
@@ -58,8 +59,10 @@ def _output_contains_error_marker(*texts: str) -> bool:
 def _mcp_list_contains_server(output, server_name="ida-pro-mcp"):
     if not output:
         return False
-    pattern = re.compile(rf"(?m)^\s*(?:[-*]\s*)?{re.escape(server_name)}(?:\s|:|$)")
-    return bool(pattern.search(output))
+    normalized_output = ANSI_ESCAPE_RE.sub("", output)
+    prefix = r"(?:[-*•|│T—]\s*)*(?:[✓✗]\s*)?"
+    pattern = re.compile(rf"(?m)^\s*{prefix}{re.escape(server_name)}(?:\s|:|$)")
+    return bool(pattern.search(normalized_output))
 
 
 def _format_mcp_list_output(output, limit=1200):
