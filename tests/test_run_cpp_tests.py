@@ -10,6 +10,23 @@ import agent_runner
 import run_cpp_tests
 
 
+class TestParseArgsAgentModel(unittest.TestCase):
+    def test_accepts_agent_model(self) -> None:
+        with patch("sys.argv", ["run_cpp_tests.py", "-gamever", "14141", "-agent_model", "sonnet"]):
+            args = run_cpp_tests.parse_args()
+
+        self.assertEqual("sonnet", args.agent_model)
+
+    def test_uses_agent_model_environment_default(self) -> None:
+        with (
+            patch.dict("os.environ", {"CS2VIBE_AGENT_MODEL": "gpt-5.4"}, clear=False),
+            patch("sys.argv", ["run_cpp_tests.py", "-gamever", "14141"]),
+        ):
+            args = run_cpp_tests.parse_args()
+
+        self.assertEqual("gpt-5.4", args.agent_model)
+
+
 class TestParseVftableLayouts(unittest.TestCase):
     def test_parses_single_entry_vftable_indices_header(self) -> None:
         compiler_output = (

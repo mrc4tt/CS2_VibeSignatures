@@ -103,6 +103,92 @@ class TestAgentPermissionArgs(unittest.TestCase):
                 )
 
 
+class TestAgentModelArgs(unittest.TestCase):
+    def test_empty_model_keeps_existing_agent_defaults(self) -> None:
+        for agent_kind in ("claude", "codex", "opencode"):
+            with self.subTest(agent_kind=agent_kind):
+                self.assertEqual([], agent_runner._agent_model_args(agent_kind, ""))
+
+    def test_returns_cli_specific_model_args(self) -> None:
+        expected_args = {
+            "claude": ["--model", "sonnet"],
+            "codex": ["-m", "gpt-5.4"],
+            "opencode": ["-m", "openai/gpt-5.4"],
+        }
+
+        for agent_kind, model_args in expected_args.items():
+            with self.subTest(agent_kind=agent_kind):
+                self.assertEqual(model_args, agent_runner._agent_model_args(agent_kind, model_args[1]))
+
+    def test_opencode_model_requires_provider_prefix(self) -> None:
+        with self.assertRaisesRegex(ValueError, "provider/model"):
+            agent_runner._agent_model_args("opencode", "gpt-5.4")
+
+    def test_skill_commands_include_custom_model(self) -> None:
+        models = {
+            "claude": "sonnet",
+            "codex": "gpt-5.4",
+            "opencode": "openai/gpt-5.4",
+        }
+
+        for agent_kind, agent_model in models.items():
+            with self.subTest(agent_kind=agent_kind):
+                command = agent_runner._build_agent_command(
+                    agent=agent_kind,
+                    agent_kind=agent_kind,
+                    agent_model=agent_model,
+                    skill_name="find-test",
+                    session_id="session-id",
+                    opencode_session_id=None,
+                    developer_instructions='developer_instructions="test"',
+                    is_retry=False,
+                )
+                expected_args = agent_runner._agent_model_args(agent_kind, agent_model)
+                model_index = command.args.index(expected_args[0])
+                self.assertEqual(expected_args, command.args[model_index : model_index + 2])
+
+    def test_header_fix_commands_include_custom_model(self) -> None:
+        models = {
+            "claude": "sonnet",
+            "codex": "gpt-5.4",
+            "opencode": "openai/gpt-5.4",
+        }
+
+        for agent_kind, agent_model in models.items():
+            with self.subTest(agent_kind=agent_kind):
+                command = agent_runner._build_header_fix_command(
+                    fix_prompt="fix it",
+                    agent=agent_kind,
+                    agent_kind=agent_kind,
+                    developer_instructions='developer_instructions="test"',
+                    claude_session_id="session-id",
+                    opencode_session_id=None,
+                    is_retry=False,
+                    claude_allowed_tools="",
+                    claude_permission_mode="",
+                    claude_extra_args="",
+                    agent_model=agent_model,
+                )
+                expected_args = agent_runner._agent_model_args(agent_kind, agent_model)
+                model_index = command.args.index(expected_args[0])
+                self.assertEqual(expected_args, command.args[model_index : model_index + 2])
+
+    @patch("agent_runner._ensure_agent_mcp_preflight")
+    def test_run_skill_rejects_invalid_opencode_model_before_preflight(self, mock_preflight) -> None:
+        output = io.StringIO()
+
+        with patch("sys.stdout", output):
+            result = agent_runner.run_skill(
+                "find-test",
+                agent="opencode",
+                agent_model="gpt-5.4",
+            )
+
+        self.assertFalse(result)
+        self.assertIn("provider/model", output.getvalue())
+        mock_preflight.assert_not_called()
+
+
 class _FakePipe:
     def __init__(self, chunks: list[str]) -> None:
         self._chunks = list(chunks)

@@ -22,6 +22,7 @@ _MCP_PREFLIGHT_FAILED = False
 CLAUDE_SKILL_RUNNER_SETTINGS = ".claude/skill_runner.settings.json"
 SKILL_RUNNER_SYSTEM_PROMPT = ".claude/SKILL_RUNNER.md"
 OPENCODE_SKILL_RUNNER_CONFIG = ".opencode/skill_runner.config.json"
+DEFAULT_AGENT_MODEL = ""
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,7 @@ class HeaderFixContext:
     claude_allowed_tools: str
     claude_permission_mode: str
     claude_extra_args: str
+    agent_model: str
 
 
 def _detect_agent_kind(agent: str) -> str | None:
@@ -254,6 +256,15 @@ def _agent_permission_args(agent_kind: str, *, claude_permission_mode: str = "")
     return ["--permission-mode", permission_mode]
 
 
+def _agent_model_args(agent_kind: str, agent_model: str = DEFAULT_AGENT_MODEL) -> list[str]:
+    model = str(agent_model or "").strip()
+    if not model:
+        return []
+    if agent_kind == "opencode" and "/" not in model:
+        raise ValueError("OpenCode model must use provider/model format")
+    return ["--model" if agent_kind == "claude" else "-m", model]
+
+
 def _build_claude_base_args(
     *,
     agent: str,
@@ -265,8 +276,10 @@ def _build_claude_base_args(
     disallowed_tools: str = "",
     permission_mode: str = "",
     extra_args: str = "",
+    agent_model: str = DEFAULT_AGENT_MODEL,
 ) -> list[str]:
     args = [agent, "-p", prompt_arg, "--agent", agent_profile]
+    args.extend(_agent_model_args("claude", agent_model))
     if allowed_tools := str(allowed_tools or "").strip():
         args.extend(["--allowedTools", allowed_tools])
     if disallowed_tools := str(disallowed_tools or "").strip():
@@ -279,7 +292,12 @@ def _build_claude_base_args(
     return args
 
 
-def _build_codex_base_args(agent: str, developer_instructions: str, is_retry: bool) -> list[str]:
+def _build_codex_base_args(
+    agent: str,
+    developer_instructions: str,
+    is_retry: bool,
+    agent_model: str = DEFAULT_AGENT_MODEL,
+) -> list[str]:
     args = [
         agent,
         "--profile",
@@ -287,6 +305,7 @@ def _build_codex_base_args(agent: str, developer_instructions: str, is_retry: bo
         "-c",
         developer_instructions,
     ]
+    args.extend(_agent_model_args("codex", agent_model))
     args.extend(_agent_permission_args("codex"))
     args.append("exec")
     if is_retry:
@@ -299,8 +318,10 @@ def _build_opencode_base_args(
     agent_profile: str,
     is_retry: bool,
     session_id: str | None,
+    agent_model: str = DEFAULT_AGENT_MODEL,
 ) -> list[str]:
     args = [agent, "run", "--format", "json"]
+    args.extend(_agent_model_args("opencode", agent_model))
     args.extend(_agent_permission_args("opencode"))
     if is_retry and session_id:
         args.extend(["--session", session_id])
@@ -310,7 +331,13 @@ def _build_opencode_base_args(
     return args
 
 
-def _build_claude_command(agent: str, skill_name: str, session_id: str, is_retry: bool) -> AgentCommand:
+def _build_claude_command(
+    agent: str,
+    skill_name: str,
+    session_id: str,
+    is_retry: bool,
+    agent_model: str = DEFAULT_AGENT_MODEL,
+) -> AgentCommand:
     args = _build_claude_base_args(
         agent=agent,
         prompt_arg=f"/{skill_name}",
@@ -319,12 +346,19 @@ def _build_claude_command(agent: str, skill_name: str, session_id: str, is_retry
         is_retry=is_retry,
         allowed_tools="mcp__ida-pro-mcp__*",
         disallowed_tools="mcp__ida-pro-mcp__open_file",
+        agent_model=agent_model,
     )
     return AgentCommand(args, None, f"session {session_id}")
 
 
-def _build_codex_command(agent: str, skill_name: str, developer_instructions: str, is_retry: bool) -> AgentCommand:
-    args = _build_codex_base_args(agent, developer_instructions, is_retry)
+def _build_codex_command(
+    agent: str,
+    skill_name: str,
+    developer_instructions: str,
+    is_retry: bool,
+    agent_model: str = DEFAULT_AGENT_MODEL,
+) -> AgentCommand:
+    args = _build_codex_base_args(agent, developer_instructions, is_retry, agent_model)
     args.append("-")
     return AgentCommand(args, f"Run SKILL: .claude/skills/{skill_name}/SKILL.md", "the latest codex session (--last)")
 
@@ -334,8 +368,9 @@ def _build_opencode_command(
     skill_name: str,
     is_retry: bool,
     session_id: str | None,
+    agent_model: str = DEFAULT_AGENT_MODEL,
 ) -> AgentCommand:
-    args = _build_opencode_base_args(agent, "sig-finder", is_retry, session_id)
+    args = _build_opencode_base_args(agent, "sig-finder", is_retry, session_id, agent_model)
     args.append(f"Run SKILL: .claude/skills/{skill_name}/SKILL.md")
     retry_target = f"OpenCode session {session_id}" if session_id else "the latest OpenCode session (--continue)"
     return AgentCommand(args, None, retry_target)
@@ -366,14 +401,15 @@ def _build_agent_command(
     opencode_session_id: str | None,
     developer_instructions: str | None,
     is_retry: bool,
+    agent_model: str = DEFAULT_AGENT_MODEL,
 ) -> AgentCommand:
     if agent_kind == "claude":
-        return _build_claude_command(agent, skill_name, session_id, is_retry)
+        return _build_claude_command(agent, skill_name, session_id, is_retry, agent_model)
     if agent_kind == "opencode":
-        return _build_opencode_command(agent, skill_name, is_retry, opencode_session_id)
+        return _build_opencode_command(agent, skill_name, is_retry, opencode_session_id, agent_model)
     if developer_instructions is None:
         raise ValueError("Codex developer instructions are required")
-    return _build_codex_command(agent, skill_name, developer_instructions, is_retry)
+    return _build_codex_command(agent, skill_name, developer_instructions, is_retry, agent_model)
 
 
 def _print_command(command: AgentCommand, attempt: int, max_retries: int) -> None:
@@ -420,6 +456,7 @@ def _run_skill_attempts(
     debug: bool,
     expected_yaml_paths,
     max_retries: int,
+    agent_model: str,
 ) -> bool:
     opencode_session_id = None
     process_env = _agent_process_env(agent_kind)
@@ -432,6 +469,7 @@ def _run_skill_attempts(
             opencode_session_id=opencode_session_id,
             developer_instructions=developer_instructions,
             is_retry=attempt > 0,
+            agent_model=agent_model,
         )
         _print_command(command, attempt, max_retries)
         try:
@@ -463,11 +501,23 @@ def _run_skill_attempts(
     return False
 
 
-def run_skill(skill_name, agent="claude", debug=False, expected_yaml_paths=None, max_retries=3) -> bool:
+def run_skill(
+    skill_name,
+    agent="claude",
+    debug=False,
+    expected_yaml_paths=None,
+    max_retries=3,
+    agent_model=DEFAULT_AGENT_MODEL,
+) -> bool:
     """Execute a skill with its configured agent and retry support."""
     agent_kind = _detect_agent_kind(agent)
     if agent_kind is None:
         print(f"    Error: Unknown agent type '{agent}'. Agent name must contain 'claude', 'codex', or 'opencode'.")
+        return False
+    try:
+        _agent_model_args(agent_kind, agent_model)
+    except ValueError as error:
+        print(f"    Error: {error}")
         return False
 
     skill_md_path = os.path.join(".claude", "skills", skill_name, "SKILL.md")
@@ -490,6 +540,7 @@ def run_skill(skill_name, agent="claude", debug=False, expected_yaml_paths=None,
         debug=debug,
         expected_yaml_paths=expected_yaml_paths,
         max_retries=max_retries,
+        agent_model=agent_model,
     )
 
 
@@ -505,6 +556,7 @@ def _build_header_fix_command(
     claude_allowed_tools: str,
     claude_permission_mode: str,
     claude_extra_args: str,
+    agent_model: str = DEFAULT_AGENT_MODEL,
 ) -> AgentCommand:
     if agent_kind == "claude":
         args = _build_claude_base_args(
@@ -516,15 +568,16 @@ def _build_header_fix_command(
             allowed_tools=claude_allowed_tools,
             permission_mode=claude_permission_mode,
             extra_args=claude_extra_args,
+            agent_model=agent_model,
         )
         return AgentCommand(args, fix_prompt, f"session {claude_session_id}")
     if agent_kind == "codex":
         if developer_instructions is None:
             raise ValueError("Codex developer instructions are required")
-        args = _build_codex_base_args(agent, developer_instructions, is_retry)
+        args = _build_codex_base_args(agent, developer_instructions, is_retry, agent_model)
         args.append("-")
         return AgentCommand(args, fix_prompt, "the latest codex session (--last)")
-    args = _build_opencode_base_args(agent, "vtable-fixer", is_retry, opencode_session_id)
+    args = _build_opencode_base_args(agent, "vtable-fixer", is_retry, opencode_session_id, agent_model)
     args.append(fix_prompt)
     return AgentCommand(args, None, _opencode_retry_target(opencode_session_id))
 
@@ -593,6 +646,7 @@ def _run_header_fix_attempts(
             claude_allowed_tools=context.claude_allowed_tools,
             claude_permission_mode=context.claude_permission_mode,
             claude_extra_args=context.claude_extra_args,
+            agent_model=context.agent_model,
         )
         _print_header_fix_command(command, context.agent, attempt, context.max_retries, is_retry)
         try:
@@ -638,11 +692,17 @@ def run_fix_header_agent(
     claude_extra_args: str = "",
     session_state: dict[str, str | None] | None = None,
     agent_prompt_path: Path = Path(".claude/agents/vtable-fixer.md"),
+    agent_model: str = DEFAULT_AGENT_MODEL,
 ) -> bool:
     """Invoke the configured Claude, Codex, or OpenCode agent to apply header fixes."""
     agent_kind = _detect_agent_kind(agent)
     if agent_kind is None:
         print(f"    Error: Unknown agent type '{agent}'. Agent name must contain 'claude', 'codex', or 'opencode'.")
+        return False
+    try:
+        _agent_model_args(agent_kind, agent_model)
+    except ValueError as error:
+        print(f"    Error: {error}")
         return False
     developer_instructions = None
     if agent_kind == "codex":
@@ -661,6 +721,7 @@ def run_fix_header_agent(
         claude_allowed_tools=claude_allowed_tools,
         claude_permission_mode=claude_permission_mode,
         claude_extra_args=claude_extra_args,
+        agent_model=agent_model,
     )
     return _run_header_fix_attempts(context, session_state)
 

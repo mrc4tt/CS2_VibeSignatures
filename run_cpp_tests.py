@@ -19,7 +19,7 @@ except ImportError as e:
     print("Please install required dependencies with: uv sync")
     sys.exit(1)
 
-from agent_runner import run_fix_header_agent
+from agent_runner import DEFAULT_AGENT_MODEL, run_fix_header_agent
 
 from cpp_tests_util import (
     compare_compiler_record_layout_with_yaml,
@@ -93,6 +93,11 @@ def parse_args():
             "Agent executable to use for analysis, e.g., claude, claude.cmd, codex, "
             f"codex.cmd, opencode, opencode.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var)"
         ),
+    )
+    parser.add_argument(
+        "-agent_model",
+        default=os.environ.get("CS2VIBE_AGENT_MODEL", DEFAULT_AGENT_MODEL),
+        help="Custom model for the selected agent (default: agent default, or set CS2VIBE_AGENT_MODEL env var)",
     )
     parser.add_argument(
         "-maxretry",
@@ -349,6 +354,7 @@ def run_fix_header_with_verification(
             claude_permission_mode=claude_permission_mode,
             claude_extra_args=claude_extra_args,
             session_state=session_state,
+            agent_model=getattr(args, "agent_model", DEFAULT_AGENT_MODEL),
         )
 
         if not agent_success:

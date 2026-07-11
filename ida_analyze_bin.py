@@ -7,6 +7,7 @@ Sequentially processes modules and symbols defined in config.yaml.
 
 Usage:
     python ida_analyze_bin.py -gamever=14134 [-platform=windows,linux] [-agent=claude/codex/opencode]
+        [-agent_model=MODEL]
 
     -gamever: Game version subdirectory name (required)
     -oldgamever: Old game version for signature reuse (default: gamever - 1)
@@ -14,6 +15,7 @@ Usage:
     -bindir: Directory containing downloaded binaries (default: bin)
     -platform: Platforms to analyze, comma-separated (default: windows,linux)
     -agent: Agent to use for analysis: claude, codex, or opencode (default: claude)
+    -agent_model: Optional model override; OpenCode requires provider/model format
     -ida_args: Additional arguments for idalib-mcp (optional)
     -debug: Enable debug output
 
@@ -41,7 +43,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from agent_runner import run_skill
+from agent_runner import DEFAULT_AGENT_MODEL, run_skill
 
 try:
     import yaml
@@ -1097,6 +1099,11 @@ def parse_args():
         ),
     )
     parser.add_argument(
+        "-agent_model",
+        default=os.environ.get("CS2VIBE_AGENT_MODEL", DEFAULT_AGENT_MODEL),
+        help="Custom model for the selected agent (default: agent default, or set CS2VIBE_AGENT_MODEL env var)",
+    )
+    parser.add_argument(
         "-modules",
         default=DEFAULT_MODULES,
         help=f"Modules to analyze, comma-separated (default: {DEFAULT_MODULES} for all). E.g., server,engine",
@@ -2043,6 +2050,7 @@ def process_binary(
     llm_effort="medium",
     llm_fake_as=None,
     rename=False,
+    agent_model=DEFAULT_AGENT_MODEL,
 ):
     """
     Process a single binary file.
@@ -2405,6 +2413,7 @@ def process_binary(
                 debug,
                 expected_yaml_paths=required_outputs,
                 max_retries=skill_max_retries,
+                agent_model=agent_model,
             ):
                 success_count += 1
                 print("    Success")
@@ -2551,6 +2560,7 @@ def main():
     platforms = args.platforms
     module_filter = args.module_filter
     agent = args.agent
+    agent_model = getattr(args, "agent_model", DEFAULT_AGENT_MODEL)
     ida_args = args.ida_args
     debug = args.debug
 
@@ -2665,6 +2675,7 @@ def main():
                 llm_effort=args.llm_effort,
                 llm_fake_as=args.llm_fake_as,
                 rename=args.rename,
+                agent_model=agent_model,
             )
             total_success += success
             total_fail += fail

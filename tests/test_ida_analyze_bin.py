@@ -3094,6 +3094,26 @@ class TestInspectFuncVaPyEvalSelfHeal(unittest.IsolatedAsyncioTestCase):
 )
 class TestParseArgsLlmOptions(unittest.TestCase):
     @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_accepts_agent_model(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            ["ida_analyze_bin.py", "-gamever", "14141", "-agent_model", "gpt-5.4"],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertEqual("gpt-5.4", args.agent_model)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_uses_agent_model_environment_default(self, _mock_resolve_oldgamever) -> None:
+        with (
+            patch.dict("os.environ", {"CS2VIBE_AGENT_MODEL": "openai/gpt-5.4"}, clear=False),
+            patch("sys.argv", ["ida_analyze_bin.py", "-gamever", "14141"]),
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertEqual("openai/gpt-5.4", args.agent_model)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
     def test_parse_args_accepts_llm_options(
         self,
         _mock_resolve_oldgamever,
