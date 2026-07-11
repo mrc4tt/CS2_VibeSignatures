@@ -4,11 +4,9 @@ Run C++ tests declared in config.yaml and compare clang vtable dumps with YAML r
 """
 
 import argparse
-import os
 import subprocess
 import sys
 import tempfile
-import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Sequence
 
@@ -19,8 +17,6 @@ except ImportError as e:
     print("Please install required dependencies with: uv sync")
     sys.exit(1)
 
-from agent_runner import DEFAULT_AGENT_MODEL, run_fix_header_agent
-
 from cpp_tests_util import (
     compare_compiler_record_layout_with_yaml,
     compare_compiler_vtable_with_yaml,
@@ -28,12 +24,10 @@ from cpp_tests_util import (
     format_compiler_vtable_entries,
     format_record_compare_differences,
     format_record_compare_report,
-    format_record_differences_for_agent,
     format_reference_record_members,
     format_reference_vtable_entries,
     format_vtable_compare_differences,
     format_vtable_compare_report,
-    format_vtable_differences_for_agent,
     map_target_triple_to_platform,
     pointer_size_from_target_triple,
 )
@@ -43,9 +37,6 @@ DEFAULT_CONFIG_FILE = "config.yaml"
 DEFAULT_BIN_DIR = "bin"
 DEFAULT_CLANG = "clang++"
 DEFAULT_CPP_STD = "c++20"
-DEFAULT_AGENT = "claude"
-DEFAULT_MAX_RETRY = 3
-DEFAULT_MAX_VERIFY = 3
 
 
 def parse_args():
@@ -81,51 +72,6 @@ def parse_args():
         action="store_true",
         help="Enable debug output",
     )
-    parser.add_argument(
-        "-fixheader",
-        action="store_true",
-        help="When vtable differences are found, invoke agent to fix configured C++ headers",
-    )
-    parser.add_argument(
-        "-agent",
-        default=os.environ.get("CS2VIBE_AGENT", DEFAULT_AGENT),
-        help=(
-            "Agent executable to use for analysis, e.g., claude, claude.cmd, codex, "
-            f"codex.cmd, opencode, opencode.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var)"
-        ),
-    )
-    parser.add_argument(
-        "-agent_model",
-        default=os.environ.get("CS2VIBE_AGENT_MODEL", DEFAULT_AGENT_MODEL),
-        help="Custom model for the selected agent (default: agent default, or set CS2VIBE_AGENT_MODEL env var)",
-    )
-    parser.add_argument(
-        "-maxretry",
-        type=int,
-        default=DEFAULT_MAX_RETRY,
-        help=f"Maximum retry attempts for header-fix agent runs (default: {DEFAULT_MAX_RETRY})",
-    )
-    parser.add_argument(
-        "-maxverify",
-        type=int,
-        default=DEFAULT_MAX_VERIFY,
-        help=f"Maximum verify-and-retry cycles after agent fix (default: {DEFAULT_MAX_VERIFY})",
-    )
-    parser.add_argument(
-        "-claude_allowed_tools",
-        default="",
-        help="Pass-through value for Claude '--allowedTools' during -fixheader runs",
-    )
-    parser.add_argument(
-        "-claude_permission_mode",
-        default="",
-        help="Pass-through value for Claude '--permission-mode' during -fixheader runs",
-    )
-    parser.add_argument(
-        "-claude_extra_args",
-        default="",
-        help="Additional raw CLI arguments appended to Claude command during -fixheader runs",
-    )
     return parser.parse_args()
 
 
@@ -138,12 +84,6 @@ def _to_list(value: Any) -> List[str]:
         text = value.strip()
         return [text] if text else []
     return [str(value).strip()]
-
-
-def _to_text(value: Any) -> str:
-    if value is None:
-        return ""
-    return str(value).strip()
 
 
 def _to_bool(value: Any, default: bool = False) -> bool:
@@ -165,13 +105,6 @@ def _to_bool(value: Any, default: bool = False) -> bool:
             return False
         raise ValueError(f"Invalid boolean value: {value!r}")
     raise ValueError(f"Invalid boolean value: {value!r}")
-
-
-def _choose_override(item_value: Any, fallback: str) -> str:
-    override = _to_text(item_value)
-    if override:
-        return override
-    return fallback
 
 
 def _normalize_option(option_text: str) -> str:
@@ -232,172 +165,6 @@ def parse_config(config_path: Path) -> List[Dict[str, Any]]:
         sys.exit(1)
 
     return cpp_tests
-
-
-def _resolve_header_paths(test_item: Dict[str, Any], config_dir: Path) -> List[Path]:
-    """Resolve configured header paths to absolute paths."""
-    headers = _to_list(test_item.get("headers"))
-    resolved: List[Path] = []
-    for header in headers:
-        path = Path(header)
-        if not path.is_absolute():
-            path = (config_dir / path).resolve()
-        resolved.append(path)
-    return resolved
-
-
-def _build_fix_prompt(
-    *,
-    symbol: str,
-    header_paths: Sequence[Path],
-    diff_reports: Sequence[Dict[str, Any]],
-) -> str:
-    """Build English prompt for fixing C++ headers based on layout differences."""
-    lines: List[str] = []
-    lines.append(
-        f"Please update the C++ header declarations for interface/class/struct '{symbol}' according to the YAML reference layout entries."
-    )
-    lines.append("Follow the existing code style, formatting, and naming conventions in the header.")
-    lines.append("Do not make unrelated edits.")
-    lines.append("")
-    lines.append("Header file paths to edit:")
-    for path in header_paths:
-        lines.append(f"- {path.as_posix()}")
-    lines.append("")
-    lines.append("VTable Information:")
-    for report in diff_reports:
-        # reference modules are unrelated and should not be populated in prompt.
-        # module_name = report.get("reference_module")
-        # if not module_name:
-        #    requested = report.get("requested_modules", [])
-        #    module_name = ", ".join(requested) if requested else "unknown"
-        # lines.append(f"Reference module: {module_name}")
-        if report.get("comparison_kind") == "record_layout":
-            lines.append("  Current record members in c++ header:")
-            for entry_line in format_compiler_record_members(report):
-                lines.append(f"    {entry_line}")
-            lines.append("  YAML reference struct members:")
-            for entry_line in format_reference_record_members(report):
-                lines.append(f"    {entry_line}")
-            lines.append("  Record Layout Differences:")
-            for diff_line in format_record_differences_for_agent(report):
-                lines.append(f"    {diff_line}")
-        else:
-            lines.append("  Current vtable entries in c++ header:")
-            for entry_line in format_compiler_vtable_entries(report):
-                lines.append(f"    {entry_line}")
-            lines.append("  YAML reference vtable entries:")
-            for entry_line in format_reference_vtable_entries(report):
-                lines.append(f"    {entry_line}")
-            lines.append("  VTable Differences:")
-            for diff_line in format_vtable_differences_for_agent(report):
-                lines.append(f"    {diff_line}")
-    lines.append("")
-    lines.append(
-        "Apply the header updates now and keep the resulting declarations consistent with the latest reference layout."
-    )
-    return "\n".join(lines)
-
-
-def run_fix_header_with_verification(
-    *,
-    symbol: str,
-    header_paths: List[Path],
-    diff_reports: List[Dict[str, Any]],
-    test_item: Dict[str, Any],
-    args: argparse.Namespace,
-    config_dir: Path,
-    bindir: Path,
-    claude_allowed_tools: str,
-    claude_permission_mode: str,
-    claude_extra_args: str,
-    debug: bool,
-) -> bool:
-    """Run fix-header agent, then verify by recompiling.
-
-    If layout diffs persist after the agent edits, re-run the agent with the
-    updated diffs.  Repeats up to ``args.maxverify`` cycles.
-
-    Returns True when all diffs are resolved, False otherwise.
-    """
-    max_verify = max(1, args.maxverify)
-    session_id = str(uuid.uuid4())
-    session_state: dict[str, str | None] = {}
-    current_diff_reports = list(diff_reports)
-
-    for verify_attempt in range(max_verify):
-        is_continuation = verify_attempt > 0
-
-        fix_prompt = _build_fix_prompt(
-            symbol=symbol,
-            header_paths=header_paths,
-            diff_reports=current_diff_reports,
-        )
-
-        if debug:
-            print(fix_prompt)
-
-        if max_verify > 1:
-            print(
-                f"  [INFO] Verify cycle {verify_attempt + 1}/{max_verify}: "
-                f"invoking agent '{args.agent}' to fix headers..."
-            )
-
-        agent_success = run_fix_header_agent(
-            fix_prompt=fix_prompt,
-            agent=args.agent,
-            debug=debug,
-            max_retries=args.maxretry,
-            session_id=session_id,
-            is_continuation=is_continuation,
-            claude_allowed_tools=claude_allowed_tools,
-            claude_permission_mode=claude_permission_mode,
-            claude_extra_args=claude_extra_args,
-            session_state=session_state,
-            agent_model=getattr(args, "agent_model", DEFAULT_AGENT_MODEL),
-        )
-
-        if not agent_success:
-            print(f"  [FAIL] Agent failed during verify cycle {verify_attempt + 1}.")
-            return False
-
-        # Agent claimed success -- verify by recompiling
-        print("  [INFO] Agent completed; re-compiling to verify fix...")
-        recompile_result = compile_and_compare(
-            test_item=test_item,
-            args=args,
-            config_dir=config_dir,
-            bindir=bindir,
-        )
-
-        if recompile_result["status"] == "compile_failed":
-            print("  [FAIL] Re-compilation failed after agent edit.")
-            if recompile_result.get("output"):
-                print(recompile_result["output"])
-            return False
-
-        if recompile_result["status"] == "invalid":
-            print(f"  [FAIL] Invalid test item during verification: {recompile_result.get('message', '')}")
-            return False
-
-        new_compare_reports = recompile_result.get("compare_reports") or []
-        new_reports_with_diff = [r for r in new_compare_reports if r.get("differences")]
-
-        if not new_reports_with_diff:
-            print("  [PASS] Verification succeeded -- all layout differences resolved.")
-            return True
-
-        remaining_diffs = sum(len(r.get("differences", [])) for r in new_reports_with_diff)
-        print(f"  [INFO] {remaining_diffs} layout difference(s) remain after agent edit.")
-        if debug:
-            for report in new_reports_with_diff:
-                for diff in report.get("differences", []):
-                    print(f"    - {diff['message']}")
-
-        current_diff_reports = new_reports_with_diff
-
-    print(f"  [FAIL] Layout differences persist after {max_verify} verify-and-retry cycle(s).")
-    return False
 
 
 def get_default_target_triple(clang: str) -> str:
@@ -732,12 +499,9 @@ def main():
     vtable_compare_diff_count = 0
     record_compare_run_count = 0
     record_compare_diff_count = 0
-    header_fix_run_count = 0
-    header_fix_fail_count = 0
 
     for test_item in runnable_tests:
         test_name = str(test_item.get("name", "unnamed_test"))
-        symbol = str(test_item.get("symbol", "")).strip()
         print(f"[RUN ] {test_name}")
 
         result = run_one_test(
@@ -767,7 +531,6 @@ def main():
 
         compare_reports = result.get("compare_reports")
         if compare_reports:
-            reports_with_diff: List[Dict[str, Any]] = []
             for compare_report in compare_reports:
                 compare_run_count += 1
                 is_record = compare_report.get("comparison_kind") == "record_layout"
@@ -785,7 +548,6 @@ def main():
                         record_compare_diff_count += 1
                     else:
                         vtable_compare_diff_count += 1
-                    reports_with_diff.append(compare_report)
                 if args.debug:
                     if is_record:
                         compiler_debug_lines = format_compiler_record_members(compare_report)
@@ -808,40 +570,6 @@ def main():
                     for diff_line in diff_lines:
                         print(f"  {diff_line}")
 
-            if args.fixheader and reports_with_diff:
-                header_paths = _resolve_header_paths(test_item, config_dir)
-                if not header_paths:
-                    header_fix_fail_count += 1
-                    print(f"  [FAIL] fixheader requested but no headers configured for test '{test_name}'.")
-                else:
-                    claude_allowed_tools = _choose_override(
-                        test_item.get("claude_allowed_tools"),
-                        args.claude_allowed_tools,
-                    )
-                    claude_permission_mode = _choose_override(
-                        test_item.get("claude_permission_mode"),
-                        args.claude_permission_mode,
-                    )
-                    claude_extra_args = _choose_override(
-                        test_item.get("claude_extra_args"),
-                        args.claude_extra_args,
-                    )
-                    print(f"  [INFO] Layout differences detected; invoking agent '{args.agent}' to fix headers...")
-                    header_fix_run_count += 1
-                    if not run_fix_header_with_verification(
-                        symbol=symbol,
-                        header_paths=header_paths,
-                        diff_reports=reports_with_diff,
-                        test_item=test_item,
-                        args=args,
-                        config_dir=config_dir,
-                        bindir=bindir,
-                        claude_allowed_tools=claude_allowed_tools,
-                        claude_permission_mode=claude_permission_mode,
-                        claude_extra_args=claude_extra_args,
-                        debug=args.debug,
-                    ):
-                        header_fix_fail_count += 1
         elif args.debug and result.get("output"):
             print("  (Compiler output)")
             print(result["output"])
@@ -855,14 +583,10 @@ def main():
     print(f"VTable compares with differences: {vtable_compare_diff_count}")
     print(f"Record layout compares run: {record_compare_run_count}")
     print(f"Record layout compares with differences: {record_compare_diff_count}")
-    if args.fixheader:
-        print(f"Header fix agent runs: {header_fix_run_count}")
-        print(f"Header fix agent failures: {header_fix_fail_count}")
-
     if compare_diff_count > 0:
         print("[FAIL] Layout compare differences are treated as test failures.")
 
-    if compile_failed_count > 0 or invalid_count > 0 or compare_diff_count > 0 or header_fix_fail_count > 0:
+    if compile_failed_count > 0 or invalid_count > 0 or compare_diff_count > 0:
         return 1
     return 0
 

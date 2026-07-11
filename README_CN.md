@@ -155,12 +155,11 @@ uv run update_gamedata.py -gamever 14141 [-debug]
 ### 4. 运行 C++ 测试并检查 cpp headers 是否与 yaml(s) 匹配
 
 ```bash
-uv run run_cpp_tests.py -gamever 14141 [-debug] [-fixheader] [-agent=claude/codex/opencode/"claude.cmd"/"codex.cmd"/"opencode.cmd"]
+uv run run_cpp_tests.py -gamever 14141 [-debug]
 ```
 
-* 使用 `-fixheader` 时，会启动一个 agent 来修复 cpp headers 中的不匹配项（会消耗少量token）
-
-* 使用 `-fixheader -agent="opencode.cmd"` 时，OpenCode 会加载 `.opencode/agents/vtable-fixer.md`，并以非交互模式运行头文件修复 Agent。
+需要修复报告的 `hl2sdk_cs2` header 差异时，使用项目级 `fix-cppheaders` SKILL。该 SKILL 会自行调用
+`run_cpp_tests.py` 获取最新 layout diff，并在修改后重复验证。
 
 ### 当前支持的 gamedata
 
@@ -389,7 +388,7 @@ uv run update_gamedata.py -gamever %CS2_GAMEVER% -debug
 ```
 
 ```bash
-@echo Find mismatches in CS2SDK headers and fix them
+@echo Find mismatches in CS2SDK headers
 
-uv run run_cpp_tests.py -gamever %CS2_GAMEVER% -debug -fixheader -agent="claude.cmd"
+uv run run_cpp_tests.py -gamever %CS2_GAMEVER% -debug
 ```

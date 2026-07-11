@@ -10306,9 +10306,7 @@ cpp_tests:
     symbol: CEntityInstance
     cpp: cpp_tests/centityinstance.cpp
     headers:
-      - hl2sdk_cs2/public/entity2/entityinstance.h  # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+      - hl2sdk_cs2/public/entity2/entityinstance.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
@@ -10333,9 +10331,7 @@ cpp_tests:
     symbol: IGameSystem
     cpp: cpp_tests/igamesystem.cpp
     headers:
-      - hl2sdk_cs2/game/shared/igamesystem.h  # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+      - hl2sdk_cs2/game/shared/igamesystem.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
@@ -10360,9 +10356,7 @@ cpp_tests:
   #   symbol: INetworkSystem
   #   cpp: cpp_tests/inetworksystem.cpp
   #   headers:
-  #   - hl2sdk_cs2/public/networksystem/inetworksystem.h  # This is for LLM agent
-  #  claude_permission_mode: acceptEdits
-  #  claude_allowed_tools: Read,Edit,MultiEdit,Write
+  #   - hl2sdk_cs2/public/networksystem/inetworksystem.h  # Used by the fix-cppheaders SKILL
   #   target: x86_64-pc-windows-msvc
   #   include_directories:
   #     - hl2sdk_cs2/game/shared
@@ -10386,9 +10380,7 @@ cpp_tests:
       - CNetworkMessages
     cpp: cpp_tests/inetworkmessages.cpp
     headers:
-      - hl2sdk_cs2/public/networksystem/inetworkmessages.h  # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+      - hl2sdk_cs2/public/networksystem/inetworkmessages.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - hl2sdk_cs2/game/shared
@@ -10413,9 +10405,7 @@ cpp_tests:
     symbol: ILoopMode
     cpp: cpp_tests/iloopmode.cpp
     headers:
-      - hl2sdk_cs2/public/iloopmode.h  # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+      - hl2sdk_cs2/public/iloopmode.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - hl2sdk_cs2/game/shared
@@ -10439,9 +10429,7 @@ cpp_tests:
     symbol: ILoopType
     cpp: cpp_tests/ilooptype.cpp
     headers:
-      - hl2sdk_cs2/public/iloopmode.h  # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+      - hl2sdk_cs2/public/iloopmode.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - hl2sdk_cs2/game/shared
@@ -10465,9 +10453,7 @@ cpp_tests:
       - CEngineServer
     cpp: cpp_tests/ivengineserver2.cpp
     headers:
-      - hl2sdk_cs2/public/eiface.h  # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+      - hl2sdk_cs2/public/eiface.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
@@ -10492,9 +10478,7 @@ cpp_tests:
     symbol: IGameSystemFactory
     cpp: cpp_tests/igamesystemfactory.cpp
     headers:
-      - hl2sdk_cs2/game/shared/igamesystemfactory.h  # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+      - hl2sdk_cs2/game/shared/igamesystemfactory.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
@@ -10520,9 +10504,7 @@ cpp_tests:
       - CGameEntitySystem
     cpp: cpp_tests/centitysystem.cpp
     headers:
-      - hl2sdk_cs2/public/entity2/entitysystem.h  # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+      - hl2sdk_cs2/public/entity2/entitysystem.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
@@ -10550,8 +10532,6 @@ cpp_tests:
     cpp: cpp_tests/SDL_Mouse.cpp
     headers:
       - cpp_tests/stubs/SDL3.stub.h
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
@@ -10570,9 +10550,7 @@ cpp_tests:
     symbol: INetworkGameServer
     cpp: cpp_tests/inetworkgameserver.cpp
     headers:
-      - hl2sdk_cs2/public/iserver.h  # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+      - hl2sdk_cs2/public/iserver.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - hl2sdk_cs2/game/shared
@@ -10595,9 +10573,7 @@ cpp_tests:
     symbol: CNetworkGameServerBase
     cpp: cpp_tests/inetworkgameserver.cpp
     headers:
-      - hl2sdk_cs2/public/iserver.h  # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+      - hl2sdk_cs2/public/iserver.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - hl2sdk_cs2/game/shared

@@ -147,32 +147,6 @@ class TestAgentModelArgs(unittest.TestCase):
                 model_index = command.args.index(expected_args[0])
                 self.assertEqual(expected_args, command.args[model_index : model_index + 2])
 
-    def test_header_fix_commands_include_custom_model(self) -> None:
-        models = {
-            "claude": "sonnet",
-            "codex": "gpt-5.4",
-            "opencode": "openai/gpt-5.4",
-        }
-
-        for agent_kind, agent_model in models.items():
-            with self.subTest(agent_kind=agent_kind):
-                command = agent_runner._build_header_fix_command(
-                    fix_prompt="fix it",
-                    agent=agent_kind,
-                    agent_kind=agent_kind,
-                    developer_instructions='developer_instructions="test"',
-                    claude_session_id="session-id",
-                    opencode_session_id=None,
-                    is_retry=False,
-                    claude_allowed_tools="",
-                    claude_permission_mode="",
-                    claude_extra_args="",
-                    agent_model=agent_model,
-                )
-                expected_args = agent_runner._agent_model_args(agent_kind, agent_model)
-                model_index = command.args.index(expected_args[0])
-                self.assertEqual(expected_args, command.args[model_index : model_index + 2])
-
     @patch("agent_runner._ensure_agent_mcp_preflight")
     def test_run_skill_rejects_invalid_opencode_model_before_preflight(self, mock_preflight) -> None:
         output = io.StringIO()

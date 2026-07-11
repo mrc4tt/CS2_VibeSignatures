@@ -30,9 +30,9 @@ End-to-end workflow:
    - The analyzer can reuse prior-version YAML first, before invoking Agent SKILLs, to avoid unnecessary token usage.
 4. Convert YAML outputs into downstream gamedata artifacts:
    - `uv run update_gamedata.py -gamever <ver>`
-5. Run C++ tests and optionally repair header mismatches:
-   - `uv run run_cpp_tests.py -gamever <ver> [-fixheader]`
-   - `-fixheader` triggers an agent-assisted header-fix workflow.
+5. Run C++ layout tests:
+   - `uv run run_cpp_tests.py -gamever <ver> [-debug]`
+   - Invoke the project-level `fix-cppheaders` SKILL when `hl2sdk_cs2` headers need repair.
 
 Analysis and automation model:
 - The repository prefers deterministic preprocessors over LLM-based decompile helpers, and prefers LLM-based preprocessors over generic Agent SKILL fallback.

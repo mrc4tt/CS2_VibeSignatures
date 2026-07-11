@@ -112,9 +112,7 @@ Append a new entry at the end of the `cpp_tests:` section in `config.yaml`:
       - {ConcreteClassName}
     cpp: cpp_tests/{interface_lowercase}.cpp
     headers:
-    - {header_path} # This is for LLM agent
-    claude_permission_mode: acceptEdits
-    claude_allowed_tools: Read,Edit,MultiEdit,Write
+    - {header_path} # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - hl2sdk_cs2/game/shared

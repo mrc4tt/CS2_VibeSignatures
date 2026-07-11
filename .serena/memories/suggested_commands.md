@@ -58,14 +58,14 @@ Convert generated YAML into downstream gamedata:
 uv run update_gamedata.py -gamever <gamever> [-debug]
 ```
 
-Run C++ validation and optionally repair header mismatches:
+Run C++ layout validation:
 
 ```bash
-uv run run_cpp_tests.py -gamever <gamever> [-debug] [-fixheader] [-agent claude|codex|"claude.cmd"|"codex.cmd"]
+uv run run_cpp_tests.py -gamever <gamever> [-debug]
 ```
 
 Notes:
-- `-fixheader` launches an agent-assisted header-fix workflow.
+- Invoke the project-level `fix-cppheaders` SKILL to repair `hl2sdk_cs2` header differences.
 
 Useful Claude Code prompts for creating preprocessors:
 

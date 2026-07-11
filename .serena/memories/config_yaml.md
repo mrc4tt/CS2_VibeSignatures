@@ -99,7 +99,7 @@ cpp_tests:
 - `name` (string, optional): Human-readable test label; defaults to `unnamed_test` if omitted.
 - `symbol` (string, required): Class/symbol key used for report labeling and vtable comparison target.
 - `cpp` (string, required): C++ source path (resolved relative to config directory when not absolute).
-- `headers` (list[string], optional): Header paths used by `--fixheader` workflow.
+- `headers` (list[string], optional): Allowed `hl2sdk_cs2` edit targets for the `fix-cppheaders` SKILL.
 - `target` (string, required): Clang target triple.
 - `include_directories` (list[string], optional): Added as `-I` include flags.
 - `defines` (list[string], optional): Added as `-D` preprocessor defines.
