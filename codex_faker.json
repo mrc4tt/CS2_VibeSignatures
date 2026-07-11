@@ -160,13 +160,5 @@
 	"prompt_cache_key": "<TEMPLATE_PROMPT_CACHE_KEY>",
 	"text": {
 		"verbosity": "low"
-	},
-	"client_metadata": {
-		"x-codex-window-id": "<TEMPLATE_PROMPT_CACHE_KEY>:0",
-		"session_id": "<TEMPLATE_PROMPT_CACHE_KEY>",
-		"thread_id": "<TEMPLATE_PROMPT_CACHE_KEY>",
-		"x-codex-turn-metadata": "{\"installation_id\":\"cbf5a482-7bda-4aaf-92a0-cecf9f02c96b\",\"session_id\":\"019f4cb8-5df5-7240-9cbe-0870e5843ca2\",\"thread_id\":\"019f4cb8-5df5-7240-9cbe-0870e5843ca2\",\"turn_id\":\"019f4cbb-172d-7ed1-87e8-7cb862149869\",\"window_id\":\"019f4cb8-5df5-7240-9cbe-0870e5843ca2:0\",\"request_kind\":\"turn\",\"thread_source\":\"user\",\"sandbox\":\"none\",\"turn_started_at_unix_ms\":1783698757422,\"workspace_kind\":\"project\"}",
-		"x-codex-installation-id": "cbf5a482-7bda-4aaf-92a0-cecf9f02c96b",
-		"turn_id": "019f4cbb-172d-7ed1-87e8-7cb862149869"
 	}
 }

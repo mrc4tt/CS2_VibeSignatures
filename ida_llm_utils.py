@@ -283,19 +283,19 @@ def _call_llm_text_via_codex_http(
         body["temperature"] = normalized_temperature
 
     turn_started_at_unix_ms = time.time_ns() // 1_000_000
-    turn_metadata = (
-        '{"installation_id":"cbf5a482-7bda-4aaf-92a0-cecf9f02c96b",'
-        f'"session_id":"{cache_key}",'
-        f'"thread_id":"{cache_key}",'
-        '"turn_id":"019f4cca-77be-7e43-951d-c1c03921035f",'
-        f'"window_id":"{cache_key}:0",'
-        '"request_kind":"turn",'
-        '"thread_source":"user",'
-        '"sandbox":"windows_elevated",'
-        '"workspaces":{"\\\\CS2_VibeSignatures"},'
-        f'"turn_started_at_unix_ms":{turn_started_at_unix_ms}'
-        "}"
-    )
+    # turn_metadata = (
+    #     '{"installation_id":"cbf5a482-7bda-4aaf-92a0-cecf9f02c96b",'
+    #     f'"session_id":"{cache_key}",'
+    #     f'"thread_id":"{cache_key}",'
+    #     '"turn_id":"019f4cca-77be-7e43-951d-c1c03921035f",'
+    #     f'"window_id":"{cache_key}:0",'
+    #     '"request_kind":"turn",'
+    #     '"thread_source":"user",'
+    #     '"sandbox":"windows_elevated",'
+    #     '"workspaces":{"\\\\CS2_VibeSignatures"},'
+    #     f'"turn_started_at_unix_ms":{turn_started_at_unix_ms}'
+    #     "}"
+    # )
 
     headers = {
         "Authorization": f"Bearer {normalized_api_key}",
@@ -309,7 +309,7 @@ def _call_llm_text_via_codex_http(
         "X-Codex-Window-Id": cache_key+":0",
         "X-Openai-Internal-Codex-Responses-Lite": "true",
         "X-Codex-Beta-Features": "remote_compaction_v2",
-        "X-Codex-Turn-Metadata": turn_metadata,
+        #"X-Codex-Turn-Metadata": turn_metadata,
         "Eagleeye-Traceid": "3daa4d2a17836997998816195e",
         "Host": host,
     }
