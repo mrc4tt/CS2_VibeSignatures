@@ -4,13 +4,18 @@ import sys
 import tempfile
 import types
 import unittest
+from contextlib import asynccontextmanager
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import ida_skill_preprocessor
 from ida_preprocessor_scripts._indirect_vcall_target_common import (
     _build_indirect_vcall_target_py_eval,
 )
+
+ida_skill_preprocessor.httpx = types.SimpleNamespace(AsyncClient=None)
+ida_skill_preprocessor.streamable_http_client = None
+ida_skill_preprocessor.ClientSession = None
 
 
 FLATTENED_SERIALIZERS_SCRIPT_PATH = Path(
@@ -99,6 +104,11 @@ class _FakeClientSession:
 
     async def call_tool(self, name, arguments):
         return {"name": name, "arguments": arguments}
+
+
+@asynccontextmanager
+async def _async_context(value):
+    yield value
 
 
 def _load_module(script_path: Path, module_name: str):
@@ -1788,6 +1798,15 @@ class TestFindCSpawnGroupMgrGameSystemDoesGameSystemReallocate(unittest.Isolated
 
 
 class TestPreprocessSingleSkillViaMcp(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self) -> None:
+        self.open_session_patcher = patch.object(
+            ida_skill_preprocessor,
+            "open_ida_mcp_session",
+            return_value=_async_context(_FakeClientSession("read-stream", "write-stream")),
+        )
+        self.open_session_patcher.start()
+        self.addCleanup(self.open_session_patcher.stop)
+
     async def test_returns_no_script_when_skill_has_no_preprocessor_script(self) -> None:
         with patch.object(
             ida_skill_preprocessor,
@@ -1806,6 +1825,63 @@ class TestPreprocessSingleSkillViaMcp(unittest.IsolatedAsyncioTestCase):
             )
 
         self.assertEqual("no_script", result)
+
+    async def test_binds_expected_binary_to_one_preprocessor_session(self) -> None:
+        session = MagicMock()
+        session.call_tool = AsyncMock(return_value={})
+        received = {}
+
+        async def fake_preprocess_skill(**kwargs):
+            received["session"] = kwargs["session"]
+            return True
+
+        with (
+            patch.object(
+                ida_skill_preprocessor,
+                "_get_preprocess_entry",
+                return_value=fake_preprocess_skill,
+            ),
+            patch.object(
+                ida_skill_preprocessor,
+                "open_ida_mcp_session",
+                return_value=_async_context(session),
+                create=True,
+            ) as open_session,
+            patch.object(
+                ida_skill_preprocessor.httpx,
+                "AsyncClient",
+                _FakeAsyncClient,
+            ),
+            patch.object(
+                ida_skill_preprocessor,
+                "streamable_http_client",
+                return_value=_FakeStreamableHttpClient(),
+            ),
+            patch.object(
+                ida_skill_preprocessor,
+                "ClientSession",
+                _FakeClientSession,
+            ),
+            patch.object(ida_skill_preprocessor, "parse_mcp_result", return_value={"result": "0x180000000"}),
+        ):
+            result = await ida_skill_preprocessor.preprocess_single_skill_via_mcp(
+                host="127.0.0.1",
+                port=13337,
+                skill_name="find-CNetworkMessages_FindNetworkGroup",
+                expected_outputs=["out.yaml"],
+                old_yaml_map=None,
+                new_binary_dir="bin_dir",
+                platform="windows",
+                expected_binary=r"D:\repo\server.dll",
+            )
+
+        self.assertEqual("success", result)
+        self.assertIs(session, received["session"])
+        open_session.assert_called_once_with(
+            "127.0.0.1",
+            13337,
+            expected_binary=r"D:\repo\server.dll",
+        )
 
     async def test_forwards_llm_config_when_script_accepts_it(self) -> None:
         received = {}

@@ -172,11 +172,15 @@ module.
 
 ### Step 6 — Run unittest after every config.yaml quarantine
 
-Immediately after commenting out any skill block, run the repository unittest suite:
+Immediately after commenting out any skill block, run the non-MCP unittest suite:
 
 ```bash
-uv run python -m unittest discover -s tests -b
+uv run python -c "from pathlib import Path; import sys, unittest; excluded={'test_ida_mcp_session', 'test_smoke_ida_mcp_2'}; modules=[f'tests.{path.stem}' for path in Path('tests').glob('test_*.py') if path.stem not in excluded]; result=unittest.TextTestRunner(buffer=True).run(unittest.defaultTestLoader.loadTestsFromNames(modules)); sys.exit(not result.wasSuccessful())"
 ```
+
+The command excludes the IDA MCP adapter and smoke modules (`test_ida_mcp_session`,
+`test_smoke_ida_mcp_2`) because this loop does not modify MCP routing or lifecycle code. Run them
+separately whenever MCP code changes.
 
 - **All tests pass** → the active `config.yaml` dependency chain is intact; continue to Step 7.
 - **Only**
@@ -231,8 +235,8 @@ skipped (their outputs exist), so the next run reaches the next failure quickly.
   identify the failing skill and its reason.
 - IDA validation quarantines one skill per iteration (fail-fast). The mandatory unittest loop may
   quarantine several dependency descendants, still one block per unittest iteration.
-- Never run the next IDA validation iteration until
-  `uv run python -m unittest discover -s tests -b` passes with zero failures.
+- Never run the next IDA validation iteration until the non-MCP unittest command above passes with
+  zero failures.
 - Purely additive to `config.yaml` (commenting only). Re-enabling a skill once it's fixed is a
   separate manual step — the commented blocks plus the dated doc are the resulting to-do list.
 - This skill does not `git commit`; leave staging/committing to the user unless they ask.

@@ -47,9 +47,6 @@ from dotenv import load_dotenv
 try:
     import yaml
     import asyncio
-    import httpx
-    from mcp import ClientSession
-    from mcp.client.streamable_http import streamable_http_client
     from mcp.types import TextContent
 except ImportError as e:
     print(f"Error: Missing required dependency: {e.name}")
@@ -62,6 +59,15 @@ from ida_skill_preprocessor import (
     PREPROCESS_STATUS_NO_SCRIPT,
     PREPROCESS_STATUS_SUCCESS,
     preprocess_single_skill_via_mcp,
+)
+from ida_mcp_session import (
+    McpConnectionError,
+    McpContractError,
+    McpDatabaseSelectionError,
+    McpToolCallError,
+    check_ida_mcp_supervisor_health,
+    normalize_binary_identity_path,
+    open_ida_mcp_session,
 )
 from ida_vcall_finder import (
     aggregate_vcall_results_for_object,
@@ -80,6 +86,7 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 13337
 POST_PROCESS_FUNC_RENAME_BATCH_SIZE = 50
 MCP_STARTUP_TIMEOUT = 1200  # seconds to wait for MCP server
+QEXIT_CONNECTION_RESET_MARKER = "[WinError 10054]"
 OPENED_BINARY_VERIFY_TIMEOUT = 60.0
 OPENED_BINARY_VERIFY_RETRY_INTERVAL = 2.0
 SKILL_TIMEOUT = 1200  # 10 minutes per skill
@@ -92,7 +99,6 @@ _MCP_PREFLIGHT_DONE = False
 _MCP_PREFLIGHT_FAILED = False
 _ARTIFACT_SYMBOL_CATEGORY_CACHE = {}
 _BINARY_HASH_CACHE = {}
-_IDA_DATABASE_SUFFIXES = (".i64", ".idb")
 _PE_STYLE_BASE_ADDRESS = 0x180000000
 
 
@@ -460,6 +466,8 @@ async def _survey_current_idb_path_via_py_eval(session):
             name="py_eval",
             arguments={"code": SURVEY_CURRENT_IDB_PATH_PY_EVAL},
         )
+    except (McpConnectionError, McpContractError, McpDatabaseSelectionError, McpToolCallError):
+        raise
     except Exception:
         return None
     return _parse_py_eval_result_json(result)
@@ -472,6 +480,8 @@ async def survey_binary_via_session(session, detail_level="minimal"):
             name="survey_binary",
             arguments={"detail_level": detail_level},
         )
+    except (McpConnectionError, McpContractError, McpDatabaseSelectionError, McpToolCallError):
+        raise
     except Exception:
         pass
     else:
@@ -484,34 +494,30 @@ async def survey_binary_via_session(session, detail_level="minimal"):
     return parsed
 
 
-async def check_mcp_health(host=DEFAULT_HOST, port=DEFAULT_PORT):
-    """
-    Verify MCP server is alive and responsive via a lightweight py_eval call.
+async def check_mcp_supervisor_health(host=DEFAULT_HOST, port=DEFAULT_PORT):
+    return await check_ida_mcp_supervisor_health(host, port)
 
-    Args:
-        host: MCP server host
-        port: MCP server port
-    Returns:
-        True if the server responded successfully, False otherwise
-    """
-    server_url = f"http://{host}:{port}/mcp"
 
+async def check_mcp_worker_health(host, port, expected_binary):
     try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(10.0, read=15.0),
-            trust_env=False,
-        ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    await session.call_tool(name="py_eval", arguments={"code": "1"})
-                    return True
+        async with open_ida_mcp_session(host, port, expected_binary=expected_binary) as session:
+            await session.call_tool(name="py_eval", arguments={"code": "1"})
+            return True
     except Exception:
         return False
 
 
-async def survey_binary_via_mcp(host=DEFAULT_HOST, port=DEFAULT_PORT, detail_level="minimal"):
+async def check_mcp_health(host=DEFAULT_HOST, port=DEFAULT_PORT):
+    return await check_mcp_supervisor_health(host, port)
+
+
+async def survey_binary_via_mcp(
+    host=DEFAULT_HOST,
+    port=DEFAULT_PORT,
+    detail_level="minimal",
+    expected_binary=None,
+    explicit_database=None,
+):
     """
     Retrieve a compact overview of the binary currently loaded in IDA.
 
@@ -562,51 +568,13 @@ async def survey_binary_via_mcp(host=DEFAULT_HOST, port=DEFAULT_PORT, detail_lev
             "_note": "Binary has 15504 functions; xref analysis was limited to the first 10000 for performance."
         }
     """
-    server_url = f"http://{host}:{port}/mcp"
-
-    try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(10.0, read=30.0),
-            trust_env=False,
-        ) as http_client:
-            async with streamable_http_client(
-                server_url,
-                http_client=http_client,
-                terminate_on_close=False,
-            ) as (read_stream, write_stream, _):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    return await survey_binary_via_session(session, detail_level=detail_level)
-    except Exception:
-        return None
-
-
-def _strip_ida_database_suffix(path):
-    normalized = str(path)
-    lowered = normalized.lower()
-    for suffix in _IDA_DATABASE_SUFFIXES:
-        if lowered.endswith(suffix):
-            return normalized[: -len(suffix)]
-    return normalized
-
-
-def _normalize_binary_identity_path(path):
-    if not isinstance(path, str) or not path.strip():
-        return ""
-
-    value = _strip_ida_database_suffix(path.strip()).replace("\\", "/")
-    mnt_match = re.match(r"^/mnt/([A-Za-z])/(.*)$", value)
-    if mnt_match:
-        value = f"{mnt_match.group(1)}:/{mnt_match.group(2)}"
-
-    has_windows_drive = bool(re.match(r"^[A-Za-z]:/", value))
-    if not has_windows_drive and not value.startswith("/"):
-        value = _absolute_path_preserve_spelling(value).replace("\\", "/")
-    else:
-        value = os.path.normpath(value).replace("\\", "/")
-
-    return value.rstrip("/").lower()
+    session_kwargs = {}
+    if expected_binary is not None:
+        session_kwargs["expected_binary"] = expected_binary
+    if explicit_database is not None:
+        session_kwargs["explicit_database"] = explicit_database
+    async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+        return await survey_binary_via_session(session, detail_level=detail_level)
 
 
 def _hash_file(path):
@@ -682,8 +650,8 @@ def validate_opened_binary_identity(binary_path, platform, survey_payload):
         return not reasons, reasons
 
     opened_path = metadata.get("path")
-    expected_path = _normalize_binary_identity_path(_absolute_path_preserve_spelling(binary_path))
-    normalized_opened_path = _normalize_binary_identity_path(opened_path) if isinstance(opened_path, str) else ""
+    expected_path = normalize_binary_identity_path(_absolute_path_preserve_spelling(binary_path))
+    normalized_opened_path = normalize_binary_identity_path(opened_path) if isinstance(opened_path, str) else ""
     if not normalized_opened_path:
         reasons.append("path mismatch: opened metadata path is missing")
     elif normalized_opened_path != expected_path:
@@ -703,7 +671,20 @@ def verify_opened_binary_via_mcp(
 ):
     deadline = time.monotonic() + max(0.0, verify_timeout)
     while True:
-        survey = asyncio.run(survey_binary_via_mcp(host=host, port=port, detail_level="minimal"))
+        try:
+            survey = asyncio.run(
+                survey_binary_via_mcp(
+                    host=host,
+                    port=port,
+                    detail_level="minimal",
+                    expected_binary=binary_path,
+                )
+            )
+        except (McpConnectionError, McpContractError, McpDatabaseSelectionError, McpToolCallError) as exc:
+            print("  Failed: opened binary verification failed")
+            print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
+            print(f"    Reason: {exc}")
+            return False
         ok, reasons = validate_opened_binary_identity(binary_path, platform, survey)
         if ok:
             return True
@@ -744,31 +725,29 @@ async def validate_expected_input_artifacts_via_mcp(
     expected_inputs=None,
     platform="",
     binary_dir=None,
+    expected_binary=None,
+    explicit_database=None,
     debug=False,
     config_path=DEFAULT_CONFIG_FILE,
 ):
     if not expected_inputs:
         return []
 
-    server_url = f"http://{host}:{port}/mcp"
-
     try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(10.0, read=30.0),
-            trust_env=False,
-        ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    return await validate_expected_input_artifacts_via_session(
-                        session,
-                        expected_inputs=expected_inputs,
-                        platform=platform,
-                        binary_dir=binary_dir,
-                        debug=debug,
-                        config_path=config_path,
-                    )
+        session_kwargs = {}
+        if expected_binary is not None:
+            session_kwargs["expected_binary"] = expected_binary
+        if explicit_database is not None:
+            session_kwargs["explicit_database"] = explicit_database
+        async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+            return await validate_expected_input_artifacts_via_session(
+                session,
+                expected_inputs=expected_inputs,
+                platform=platform,
+                binary_dir=binary_dir,
+                debug=debug,
+                config_path=config_path,
+            )
     except Exception:
         if debug:
             print("  Warning: expected_input artifact validation via MCP failed")
@@ -782,6 +761,8 @@ def _run_validate_expected_input_artifacts_via_mcp(
     expected_inputs,
     platform,
     binary_dir=None,
+    expected_binary=None,
+    explicit_database=None,
     debug=False,
     config_path=DEFAULT_CONFIG_FILE,
 ):
@@ -792,6 +773,8 @@ def _run_validate_expected_input_artifacts_via_mcp(
             expected_inputs=expected_inputs,
             platform=platform,
             binary_dir=binary_dir,
+            expected_binary=expected_binary,
+            explicit_database=explicit_database,
             debug=debug,
             config_path=config_path,
         )
@@ -803,6 +786,8 @@ def _run_post_process_expected_outputs_via_mcp(
     host,
     port,
     yaml_items,
+    expected_binary=None,
+    explicit_database=None,
     debug=False,
 ):
     """Run post_process for collected expected output YAML mappings."""
@@ -813,6 +798,8 @@ def _run_post_process_expected_outputs_via_mcp(
             host=host,
             port=port,
             yaml_items=yaml_items,
+            expected_binary=expected_binary,
+            explicit_database=explicit_database,
             debug=debug,
         )
     )
@@ -822,6 +809,8 @@ async def post_process_expected_outputs_via_mcp(
     host=DEFAULT_HOST,
     port=DEFAULT_PORT,
     yaml_items=None,
+    expected_binary=None,
+    explicit_database=None,
     debug=False,
 ):
     """Connect to IDA MCP and execute post_process actions."""
@@ -829,26 +818,18 @@ async def post_process_expected_outputs_via_mcp(
     if not yaml_items:
         return True
 
-    server_url = f"http://{host}:{port}/mcp"
-
     try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(10.0, read=120.0),
-            trust_env=False,
-        ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (
-                read_stream,
-                write_stream,
-                _,
-            ):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    return await post_process_expected_outputs_via_session(
-                        session,
-                        yaml_items,
-                        debug=debug,
-                    )
+        session_kwargs = {}
+        if expected_binary is not None:
+            session_kwargs["expected_binary"] = expected_binary
+        if explicit_database is not None:
+            session_kwargs["explicit_database"] = explicit_database
+        async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+            return await post_process_expected_outputs_via_session(
+                session,
+                yaml_items,
+                debug=debug,
+            )
     except Exception as exc:
         if debug:
             print(f"  Post-process: MCP connection failed: {exc}")
@@ -863,28 +844,26 @@ async def preprocess_single_vcall_object_via_mcp(
     module_name,
     platform,
     object_name,
+    expected_binary=None,
+    explicit_database=None,
     debug=False,
 ):
     """Export xref detail YAMLs for a single vcall_finder object via MCP."""
-    server_url = f"http://{host}:{port}/mcp"
-
-    async with httpx.AsyncClient(
-        follow_redirects=True,
-        timeout=httpx.Timeout(30.0, read=300.0),
-        trust_env=False,
-    ) as http_client:
-        async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
-            async with ClientSession(read_stream, write_stream) as session:
-                await session.initialize()
-                return await export_object_xref_details_via_mcp(
-                    session,
-                    output_root=output_root,
-                    gamever=gamever,
-                    module_name=module_name,
-                    platform=platform,
-                    object_name=object_name,
-                    debug=debug,
-                )
+    session_kwargs = {}
+    if expected_binary is not None:
+        session_kwargs["expected_binary"] = expected_binary
+    if explicit_database is not None:
+        session_kwargs["explicit_database"] = explicit_database
+    async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+        return await export_object_xref_details_via_mcp(
+            session,
+            output_root=output_root,
+            gamever=gamever,
+            module_name=module_name,
+            platform=platform,
+            object_name=object_name,
+            debug=debug,
+        )
 
 
 def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
@@ -914,11 +893,11 @@ def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
 
     # Step 2: if process appears alive, do a real MCP health check
     if process is not None:
-        healthy = asyncio.run(check_mcp_health(host, port))
+        healthy = asyncio.run(check_mcp_worker_health(host, port, binary_path))
         if healthy:
             return process, True
         print("  MCP health check failed, restarting idalib-mcp...")
-        quit_ida_gracefully(process, host, port, debug=debug)
+        quit_ida_gracefully(process, host, port, expected_binary=binary_path, debug=debug)
         process = None
 
     # Step 3: restart idalib-mcp
@@ -929,82 +908,55 @@ def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
     return new_process, True
 
 
-async def quit_ida_via_mcp(host=DEFAULT_HOST, port=DEFAULT_PORT):
-    """
-    Gracefully quit IDA using MCP py_eval tool with idc.qexit(0).
-
-    Args:
-        host: MCP server host
-        port: MCP server port
-    Returns:
-        True if successful, False otherwise
-    """
-    server_url = f"http://{host}:{port}/mcp"
-
+async def quit_ida_via_mcp(host, port, *, expected_binary, auto_started):
+    """Quit only the worker owned by this auto-started flow."""
     try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(30.0, read=300.0),
-            trust_env=False,  # Bypass system proxy to avoid 502
-        ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    await session.call_tool(name="py_eval", arguments={"code": "import idc; idc.qexit(0)"})
-                    return True
+        async with open_ida_mcp_session(
+            host,
+            port,
+            expected_binary=expected_binary,
+            auto_started=auto_started,
+        ) as session:
+            if not session.binding.should_auto_quit:
+                return False
+            try:
+                await session.call_tool("py_eval", {"code": "import idc; idc.qexit(0)"})
+            except McpToolCallError as exc:
+                if QEXIT_CONNECTION_RESET_MARKER not in str(exc):
+                    return False
+            return True
     except Exception:
         return False
 
 
-async def quit_ida_gracefully_async(process, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=False):
-    """
-    Attempt to quit IDA gracefully via MCP, fall back to terminate if needed.
-
-    Args:
-        process: subprocess.Popen object
-        host: MCP server host
-        port: MCP server port
-    """
+async def quit_ida_gracefully_async(process, host, port, *, expected_binary, debug=False):
+    """Close an owned worker when safe, then stop the supplied supervisor."""
     if process is None:
         return
-
     if process.poll() is not None:
-        return  # Process already exited
+        return
 
     if debug:
         print("  Quitting IDA gracefully via MCP...")
 
     try:
-        await asyncio.wait_for(quit_ida_via_mcp(host, port), timeout=5)
+        await asyncio.wait_for(
+            quit_ida_via_mcp(
+                host,
+                port,
+                expected_binary=expected_binary,
+                auto_started=True,
+            ),
+            timeout=5,
+        )
     except Exception:
         pass
 
-    try:
-        await asyncio.to_thread(process.wait, timeout=10)
-        if debug:
-            print("  IDA exited gracefully")
-        return
-    except subprocess.TimeoutExpired:
-        if debug:
-            print("  Warning: IDA did not exit after qexit, forcing kill...")
-
-    if process.poll() is None:
-        try:
-            process.kill()
-            await asyncio.to_thread(process.wait, timeout=5)
-        except Exception:
-            pass
+    await asyncio.to_thread(stop_idalib_mcp_process, process, debug=debug)
 
 
-def quit_ida_gracefully(process, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=False):
-    """
-    Synchronous wrapper around quit_ida_gracefully_async.
-
-    Args:
-        process: subprocess.Popen object
-        host: MCP server host
-        port: MCP server port
-    """
+def quit_ida_gracefully(process, host, port, *, expected_binary, debug=False):
+    """Run targeted worker cleanup and stop the supplied supervisor."""
     if process is None:
         return
 
@@ -1014,7 +966,15 @@ def quit_ida_gracefully(process, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=Fal
     try:
         asyncio.get_running_loop()
     except RuntimeError:
-        asyncio.run(quit_ida_gracefully_async(process, host, port, debug=debug))
+        asyncio.run(
+            quit_ida_gracefully_async(
+                process,
+                host,
+                port,
+                expected_binary=expected_binary,
+                debug=debug,
+            )
+        )
         return
 
     raise RuntimeError(
@@ -1313,6 +1273,8 @@ def _run_preprocess_single_skill_via_mcp(
     llm_effort,
     llm_fake_as,
     llm_max_retries=None,
+    expected_binary=None,
+    explicit_database=None,
 ):
     preprocess_kwargs = {
         "host": host,
@@ -1322,6 +1284,8 @@ def _run_preprocess_single_skill_via_mcp(
         "old_yaml_map": old_yaml_map,
         "new_binary_dir": new_binary_dir,
         "platform": platform,
+        "expected_binary": expected_binary,
+        "explicit_database": explicit_database,
         "debug": debug,
         "llm_model": llm_model,
         "llm_apikey": llm_apikey,
@@ -1335,20 +1299,6 @@ def _run_preprocess_single_skill_via_mcp(
     try:
         return asyncio.run(preprocess_single_skill_via_mcp(**preprocess_kwargs))
     except TypeError as exc:
-        signature = inspect.signature(preprocess_single_skill_via_mcp)
-        if any(
-            name in signature.parameters
-            for name in (
-                "llm_model",
-                "llm_apikey",
-                "llm_baseurl",
-                "llm_temperature",
-                "llm_effort",
-                "llm_fake_as",
-                "llm_max_retries",
-            )
-        ):
-            raise
         if "unexpected keyword argument" not in str(exc):
             raise
 
@@ -1360,6 +1310,8 @@ def _run_preprocess_single_skill_via_mcp(
         fallback_kwargs.pop("llm_effort", None)
         fallback_kwargs.pop("llm_fake_as", None)
         fallback_kwargs.pop("llm_max_retries", None)
+        fallback_kwargs.pop("expected_binary", None)
+        fallback_kwargs.pop("explicit_database", None)
         return asyncio.run(preprocess_single_skill_via_mcp(**fallback_kwargs))
 
 
@@ -2074,7 +2026,23 @@ def wait_for_port(host, port, timeout=60):
     return False
 
 
-def start_idalib_mcp(binary_path, host=DEFAULT_HOST, port=DEFAULT_PORT, ida_args="", debug=False):
+def is_port_in_use(host, port):
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+def start_idalib_mcp(
+    binary_path,
+    host=DEFAULT_HOST,
+    port=DEFAULT_PORT,
+    ida_args="",
+    debug=False,
+    stdout=None,
+    stderr=None,
+):
     """
     Start idalib-mcp as a background process.
 
@@ -2088,7 +2056,11 @@ def start_idalib_mcp(binary_path, host=DEFAULT_HOST, port=DEFAULT_PORT, ida_args
     Returns:
         subprocess.Popen object if successful, None if failed
     """
-    cmd = ["uv", "run", "idalib-mcp", "--unsafe", "--host", host, "--port", str(port)]
+    if is_port_in_use(host, port):
+        print(f"  Error: MCP port {host}:{port} is already in use")
+        return None
+
+    cmd = ["idalib-mcp", "--unsafe", "--host", host, "--port", str(port)]
 
     if ida_args:
         cmd.extend(ida_args.split())
@@ -2098,8 +2070,8 @@ def start_idalib_mcp(binary_path, host=DEFAULT_HOST, port=DEFAULT_PORT, ida_args
     print(f"  Starting idalib-mcp: {' '.join(cmd)}")
 
     try:
-        if debug:
-            process = subprocess.Popen(cmd)
+        if debug or stdout is not None or stderr is not None:
+            process = subprocess.Popen(cmd, stdout=stdout, stderr=stderr)
         else:
             process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -2633,6 +2605,7 @@ def process_binary(
                 expected_inputs=expected_inputs,
                 platform=platform,
                 binary_dir=binary_dir,
+                expected_binary=binary_path,
                 debug=debug,
             )
             if invalid_expected_inputs:
@@ -2677,6 +2650,7 @@ def process_binary(
                     old_yaml_map=old_yaml_map,
                     new_binary_dir=binary_dir,
                     platform=platform,
+                    expected_binary=binary_path,
                     debug=debug,
                     llm_model=llm_model,
                     llm_apikey=llm_apikey,
@@ -2804,6 +2778,7 @@ def process_binary(
                         module_name=module_name,
                         platform=platform,
                         object_name=object_name,
+                        expected_binary=binary_path,
                         debug=debug,
                     )
                 )
@@ -2870,6 +2845,7 @@ def process_binary(
                         host=host,
                         port=port,
                         yaml_items=post_process_yaml_items,
+                        expected_binary=binary_path,
                         debug=debug,
                     )
                 except Exception as exc:
@@ -2886,7 +2862,7 @@ def process_binary(
             print("  Stopping current idalib-mcp after opened binary verification failure")
             stop_idalib_mcp_process(process, debug=debug)
         else:
-            quit_ida_gracefully(process, host, port, debug=debug)
+            quit_ida_gracefully(process, host, port, expected_binary=binary_path, debug=debug)
 
     return success_count, fail_count, skip_count
 

@@ -8,25 +8,22 @@ import importlib
 import json
 import os
 from collections.abc import Mapping, Sequence
-from contextlib import AsyncExitStack, asynccontextmanager
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-try:
-    import httpx
-    from mcp import ClientSession
-    from mcp.client.streamable_http import streamable_http_client
-except ImportError:
-    httpx = None
-    ClientSession = None
-    streamable_http_client = None
-
 from ida_analyze_util import (
     build_function_detail_export_py_eval,
     build_remote_text_export_py_eval,
     parse_mcp_result,
+)
+from ida_mcp_session import (
+    McpConnectionError,
+    McpDatabaseSelectionError,
+    McpToolCallError,
+    open_ida_mcp_session,
 )
 
 
@@ -123,6 +120,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("-func_name", required=True, help="Function name (required)")
     parser.add_argument("-mcp_host", default="127.0.0.1", help="MCP host")
     parser.add_argument("-mcp_port", type=int, default=13337, help="MCP port")
+    parser.add_argument("-mcp_database", default=None, help="Explicit active MCP database session id")
     parser.add_argument("-ida_args", default="", help="Additional arguments for idalib-mcp")
     parser.add_argument("-debug", action="store_true", help="Enable debug output")
     parser.add_argument("-binary", default=None, help="Binary path for auto-start MCP mode")
@@ -620,10 +618,17 @@ def quit_ida_gracefully(
     host: str,
     port: int,
     *,
+    expected_binary: str,
     debug: bool,
 ) -> None:
     ida_analyze_bin = _load_ida_analyze_bin()
-    ida_analyze_bin.quit_ida_gracefully(process, host, port, debug=debug)
+    ida_analyze_bin.quit_ida_gracefully(
+        process,
+        host,
+        port,
+        expected_binary=expected_binary,
+        debug=debug,
+    )
 
 
 async def quit_ida_gracefully_async(
@@ -631,48 +636,39 @@ async def quit_ida_gracefully_async(
     host: str,
     port: int,
     *,
+    expected_binary: str,
     debug: bool,
 ) -> None:
     ida_analyze_bin = _load_ida_analyze_bin()
-    await ida_analyze_bin.quit_ida_gracefully_async(process, host, port, debug=debug)
+    await ida_analyze_bin.quit_ida_gracefully_async(
+        process,
+        host,
+        port,
+        expected_binary=expected_binary,
+        debug=debug,
+    )
 
 
 @asynccontextmanager
-async def _open_mcp_session(host: str, port: int):
-    if httpx is None or ClientSession is None or streamable_http_client is None:
-        raise ReferenceGenerationError("MCP client dependencies are unavailable")
-
-    server_url = f"http://{host}:{port}/mcp"
-
-    async with AsyncExitStack() as stack:
-        try:
-            http_client = await stack.enter_async_context(
-                httpx.AsyncClient(
-                    follow_redirects=True,
-                    timeout=httpx.Timeout(30.0, read=300.0),
-                    trust_env=False,
-                )
-            )
-            read_stream, write_stream, _ = await stack.enter_async_context(
-                streamable_http_client(server_url, http_client=http_client)
-            )
-            session = await stack.enter_async_context(ClientSession(read_stream, write_stream))
-            await session.initialize()
-        except Exception as exc:
-            raise ReferenceGenerationError(f"unable to open MCP session at {host}:{port}") from exc
-
-        yield session
-
-
-@asynccontextmanager
-async def attach_existing_mcp_session(host: str, port: int, debug: bool):
+async def attach_existing_mcp_session(
+    host: str,
+    port: int,
+    debug: bool,
+    *,
+    expected_binary: str | None = None,
+    explicit_database: str | None = None,
+):
     del debug
-    healthy = await check_mcp_health(host, port)
-    if not healthy:
-        raise ReferenceGenerationError(f"MCP server is not reachable at {host}:{port}")
-
-    async with _open_mcp_session(host, port) as session:
-        yield session
+    session_kwargs = {}
+    if expected_binary is not None:
+        session_kwargs["expected_binary"] = expected_binary
+    if explicit_database is not None:
+        session_kwargs["explicit_database"] = explicit_database
+    try:
+        async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+            yield session
+    except (McpConnectionError, McpDatabaseSelectionError, McpToolCallError) as exc:
+        raise ReferenceGenerationError(str(exc)) from exc
 
 
 @asynccontextmanager
@@ -682,16 +678,33 @@ async def autostart_mcp_session(
     port: int,
     ida_args: str,
     debug: bool,
+    *,
+    explicit_database: str | None = None,
 ):
     process = start_idalib_mcp(binary_path, host, port, ida_args, debug)
     if process is None:
         raise ReferenceGenerationError(f"failed to start idalib-mcp for {binary_path}")
 
     try:
-        async with _open_mcp_session(host, port) as session:
-            yield session
+        session_kwargs = {
+            "expected_binary": binary_path,
+            "auto_started": True,
+        }
+        if explicit_database is not None:
+            session_kwargs["explicit_database"] = explicit_database
+        try:
+            async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+                yield session
+        except (McpConnectionError, McpDatabaseSelectionError, McpToolCallError) as exc:
+            raise ReferenceGenerationError(str(exc)) from exc
     finally:
-        await quit_ida_gracefully_async(process, host, port, debug=debug)
+        await quit_ida_gracefully_async(
+            process,
+            host,
+            port,
+            expected_binary=binary_path,
+            debug=debug,
+        )
 
 
 async def resolve_generation_target(
@@ -700,8 +713,6 @@ async def resolve_generation_target(
     gamever: str | None,
     module: str | None,
     platform: str | None,
-    host: str,
-    port: int,
 ) -> dict[str, str]:
     resolved_target = {
         "gamever": _normalize_non_empty_text(gamever),
@@ -717,8 +728,6 @@ async def resolve_generation_target(
         }
 
     survey_result = await survey_binary_via_session(session)
-    if survey_result is None:
-        survey_result = await survey_binary_via_mcp(host, port)
     if not isinstance(survey_result, Mapping):
         missing_flags = ", ".join(f"-{key}" for key in missing_keys)
         raise ReferenceGenerationError(f"missing {missing_flags}, and failed to survey the current IDA binary via MCP")
@@ -745,19 +754,25 @@ async def run_reference_generation(
     resolved_repo_root = Path(repo_root) if repo_root is not None else Path(__file__).resolve().parent
 
     if args.auto_start_mcp:
-        session_manager = autostart_mcp_session(
-            binary_path=args.binary,
-            host=args.mcp_host,
-            port=args.mcp_port,
-            ida_args=args.ida_args,
-            debug=args.debug,
-        )
+        session_kwargs = {
+            "binary_path": args.binary,
+            "host": args.mcp_host,
+            "port": args.mcp_port,
+            "ida_args": args.ida_args,
+            "debug": args.debug,
+        }
+        if args.mcp_database is not None:
+            session_kwargs["explicit_database"] = args.mcp_database
+        session_manager = autostart_mcp_session(**session_kwargs)
     else:
-        session_manager = attach_existing_mcp_session(
-            host=args.mcp_host,
-            port=args.mcp_port,
-            debug=args.debug,
-        )
+        session_kwargs = {
+            "host": args.mcp_host,
+            "port": args.mcp_port,
+            "debug": args.debug,
+        }
+        if args.mcp_database is not None:
+            session_kwargs["explicit_database"] = args.mcp_database
+        session_manager = attach_existing_mcp_session(**session_kwargs)
 
     async with session_manager as session:
         resolved_target = await resolve_generation_target(
@@ -765,8 +780,6 @@ async def run_reference_generation(
             gamever=args.gamever,
             module=args.module,
             platform=args.platform,
-            host=args.mcp_host,
-            port=args.mcp_port,
         )
         func_va = await resolve_func_va(
             session,

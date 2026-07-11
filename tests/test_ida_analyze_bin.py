@@ -3,16 +3,23 @@ import json
 import posixpath
 import subprocess
 import unittest
+from contextlib import asynccontextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import ida_analyze_bin
+from ida_mcp_session import McpDatabaseBinding, McpDatabaseSelectionError, McpToolCallError
 
 
 def _tool_result(payload):
     return SimpleNamespace(content=[SimpleNamespace(text=json.dumps(payload))])
+
+
+@asynccontextmanager
+async def _async_context(value):
+    yield value
 
 
 def _expand_platform_paths(paths, platform):
@@ -62,26 +69,116 @@ def _find_module_skill_dependency_gaps(modules, platform):
 
 
 class TestQuitIdaGracefully(unittest.IsolatedAsyncioTestCase):
-    async def test_quit_ida_gracefully_async_quits_and_waits_for_process(self) -> None:
+    async def test_quit_ida_gracefully_async_stops_only_supplied_process(self) -> None:
         process = MagicMock()
         process.poll.return_value = None
-        process.wait.return_value = 0
 
-        with patch.object(
-            ida_analyze_bin,
-            "quit_ida_via_mcp",
-            AsyncMock(return_value=True),
-        ) as quit_ida_via_mcp:
+        with (
+            patch.object(
+                ida_analyze_bin,
+                "quit_ida_via_mcp",
+                AsyncMock(return_value=True),
+            ) as quit_ida_via_mcp,
+            patch.object(ida_analyze_bin, "stop_idalib_mcp_process") as stop_process,
+        ):
             await ida_analyze_bin.quit_ida_gracefully_async(
                 process,
                 "127.0.0.1",
                 13337,
+                expected_binary="server.dll",
                 debug=False,
             )
 
-        quit_ida_via_mcp.assert_awaited_once_with("127.0.0.1", 13337)
-        process.wait.assert_called_once_with(timeout=10)
-        process.kill.assert_not_called()
+        quit_ida_via_mcp.assert_awaited_once_with(
+            "127.0.0.1",
+            13337,
+            expected_binary="server.dll",
+            auto_started=True,
+        )
+        stop_process.assert_called_once_with(process, debug=False)
+
+    async def test_quit_owned_auto_started_worker(self) -> None:
+        session = MagicMock()
+        session.binding = McpDatabaseBinding(True, "server-db", "server.dll", "worker", True, True)
+        session.call_tool = AsyncMock()
+
+        with patch.object(
+            ida_analyze_bin,
+            "open_ida_mcp_session",
+            return_value=_async_context(session),
+        ):
+            result = await ida_analyze_bin.quit_ida_via_mcp(
+                "127.0.0.1",
+                13337,
+                expected_binary="server.dll",
+                auto_started=True,
+            )
+
+        self.assertTrue(result)
+        session.call_tool.assert_awaited_once_with("py_eval", {"code": "import idc; idc.qexit(0)"})
+
+    async def test_worker_disconnect_after_qexit_is_successful_cleanup(self) -> None:
+        session = MagicMock()
+        session.binding = McpDatabaseBinding(True, "server-db", "server.dll", "worker", True, True)
+        session.call_tool = AsyncMock(
+            side_effect=McpToolCallError("MCP tool py_eval failed: [WinError 10054] 远程主机强迫关闭了一个现有的连接。")
+        )
+
+        with patch.object(
+            ida_analyze_bin,
+            "open_ida_mcp_session",
+            return_value=_async_context(session),
+        ):
+            result = await ida_analyze_bin.quit_ida_via_mcp(
+                "127.0.0.1",
+                13337,
+                expected_binary="server.dll",
+                auto_started=True,
+            )
+
+        self.assertTrue(result)
+
+    async def test_does_not_quit_unowned_gui_or_attach_existing_worker(self) -> None:
+        bindings = (
+            McpDatabaseBinding(True, "server-db", "server.dll", "worker", False, True),
+            McpDatabaseBinding(True, "server-db", "server.dll", "gui", True, True),
+            McpDatabaseBinding(True, "server-db", "server.dll", "worker", True, False),
+        )
+
+        for binding in bindings:
+            with self.subTest(binding=binding):
+                session = MagicMock()
+                session.binding = binding
+                session.call_tool = AsyncMock()
+                with patch.object(
+                    ida_analyze_bin,
+                    "open_ida_mcp_session",
+                    return_value=_async_context(session),
+                ):
+                    result = await ida_analyze_bin.quit_ida_via_mcp(
+                        "127.0.0.1",
+                        13337,
+                        expected_binary="server.dll",
+                        auto_started=binding.auto_started,
+                    )
+
+                self.assertFalse(result)
+                session.call_tool.assert_not_awaited()
+
+    async def test_database_selection_failure_skips_qexit(self) -> None:
+        with patch.object(
+            ida_analyze_bin,
+            "open_ida_mcp_session",
+            side_effect=McpDatabaseSelectionError("multiple active MCP databases"),
+        ):
+            result = await ida_analyze_bin.quit_ida_via_mcp(
+                "127.0.0.1",
+                13337,
+                expected_binary="server.dll",
+                auto_started=True,
+            )
+
+        self.assertFalse(result)
 
     async def test_quit_ida_gracefully_rejects_running_loop(self) -> None:
         process = MagicMock()
@@ -95,6 +192,7 @@ class TestQuitIdaGracefully(unittest.IsolatedAsyncioTestCase):
                 process,
                 "127.0.0.1",
                 13337,
+                expected_binary="server.dll",
                 debug=False,
             )
 
@@ -113,6 +211,7 @@ class TestQuitIdaGracefullySyncWrapper(unittest.TestCase):
                 process,
                 "127.0.0.1",
                 13337,
+                expected_binary="server.dll",
                 debug=True,
             )
 
@@ -120,6 +219,7 @@ class TestQuitIdaGracefullySyncWrapper(unittest.TestCase):
             process,
             "127.0.0.1",
             13337,
+            expected_binary="server.dll",
             debug=True,
         )
 
@@ -148,42 +248,65 @@ class TestStopIdalibMcpProcess(unittest.TestCase):
 
 
 class TestSurveyBinaryViaSession(unittest.IsolatedAsyncioTestCase):
-    async def test_survey_binary_via_mcp_does_not_request_session_termination(self) -> None:
-        http_client = MagicMock()
-        http_client_context = MagicMock()
-        http_client_context.__aenter__ = AsyncMock(return_value=http_client)
-        http_client_context.__aexit__ = AsyncMock(return_value=False)
-        transport_context = MagicMock()
-        transport_context.__aenter__ = AsyncMock(return_value=(MagicMock(), MagicMock(), MagicMock()))
-        transport_context.__aexit__ = AsyncMock(return_value=False)
+    async def test_survey_binary_via_mcp_binds_expected_binary(self) -> None:
         session = MagicMock()
-        session.initialize = AsyncMock()
-        session_context = MagicMock()
-        session_context.__aenter__ = AsyncMock(return_value=session)
-        session_context.__aexit__ = AsyncMock(return_value=False)
+        session.call_tool = AsyncMock(
+            side_effect=[
+                _tool_result({"metadata": {"path": "server.dll"}}),
+                _tool_result({"result": json.dumps({"metadata": {"path": "server.dll.i64"}})}),
+            ]
+        )
+
+        with patch.object(
+            ida_analyze_bin,
+            "open_ida_mcp_session",
+            return_value=_async_context(session),
+        ) as open_session:
+            result = await ida_analyze_bin.survey_binary_via_mcp(
+                "127.0.0.1",
+                13337,
+                expected_binary=r"D:\repo\server.dll",
+            )
+
+        self.assertEqual("server.dll.i64", result["metadata"]["path"])
+        open_session.assert_called_once_with(
+            "127.0.0.1",
+            13337,
+            expected_binary=r"D:\repo\server.dll",
+        )
+
+    async def test_checks_supervisor_and_worker_health_separately(self) -> None:
+        session = MagicMock()
+        session.call_tool = AsyncMock(return_value=_tool_result({"result": "1"}))
 
         with (
-            patch.object(ida_analyze_bin.httpx, "AsyncClient", return_value=http_client_context),
             patch.object(
                 ida_analyze_bin,
-                "streamable_http_client",
-                return_value=transport_context,
-            ) as streamable_client,
-            patch.object(ida_analyze_bin, "ClientSession", return_value=session_context),
+                "check_ida_mcp_supervisor_health",
+                new=AsyncMock(return_value=True),
+            ) as supervisor_health,
             patch.object(
                 ida_analyze_bin,
-                "survey_binary_via_session",
-                new=AsyncMock(return_value={"metadata": {"path": "server.dll"}}),
-            ),
+                "open_ida_mcp_session",
+                return_value=_async_context(session),
+            ) as open_session,
         ):
-            result = await ida_analyze_bin.survey_binary_via_mcp("127.0.0.1", 13337)
+            self.assertTrue(await ida_analyze_bin.check_mcp_supervisor_health("127.0.0.1", 13337))
+            self.assertTrue(
+                await ida_analyze_bin.check_mcp_worker_health(
+                    "127.0.0.1",
+                    13337,
+                    r"D:\repo\server.dll",
+                )
+            )
 
-        self.assertEqual({"metadata": {"path": "server.dll"}}, result)
-        streamable_client.assert_called_once_with(
-            "http://127.0.0.1:13337/mcp",
-            http_client=http_client,
-            terminate_on_close=False,
+        supervisor_health.assert_awaited_once_with("127.0.0.1", 13337)
+        open_session.assert_called_once_with(
+            "127.0.0.1",
+            13337,
+            expected_binary=r"D:\repo\server.dll",
         )
+        session.call_tool.assert_awaited_once_with(name="py_eval", arguments={"code": "1"})
 
     async def test_survey_binary_via_session_falls_back_to_current_idb_path(self) -> None:
         session = MagicMock()
@@ -262,7 +385,87 @@ class TestSurveyBinaryViaSession(unittest.IsolatedAsyncioTestCase):
         )
 
 
+class TestMcpEntrypointRouting(unittest.IsolatedAsyncioTestCase):
+    async def test_analysis_entrypoints_bind_expected_binary(self) -> None:
+        expected_binary = r"D:\repo\server.dll"
+        session = MagicMock()
+
+        with (
+            patch.object(
+                ida_analyze_bin,
+                "open_ida_mcp_session",
+                side_effect=lambda *_args, **_kwargs: _async_context(session),
+            ) as open_session,
+            patch.object(
+                ida_analyze_bin,
+                "validate_expected_input_artifacts_via_session",
+                new=AsyncMock(return_value=[]),
+            ),
+            patch.object(
+                ida_analyze_bin,
+                "post_process_expected_outputs_via_session",
+                new=AsyncMock(return_value=True),
+            ),
+            patch.object(
+                ida_analyze_bin,
+                "export_object_xref_details_via_mcp",
+                new=AsyncMock(return_value={"status": "success"}),
+            ),
+        ):
+            validated = await ida_analyze_bin.validate_expected_input_artifacts_via_mcp(
+                expected_inputs=["fixture.yaml"],
+                expected_binary=expected_binary,
+            )
+            post_processed = await ida_analyze_bin.post_process_expected_outputs_via_mcp(
+                yaml_items=[("fixture.yaml", {})],
+                expected_binary=expected_binary,
+            )
+            vcall_result = await ida_analyze_bin.preprocess_single_vcall_object_via_mcp(
+                host="127.0.0.1",
+                port=13337,
+                output_root="vcall",
+                gamever="14168",
+                module_name="server",
+                platform="windows",
+                object_name="g_pExample",
+                expected_binary=expected_binary,
+            )
+
+        self.assertEqual([], validated)
+        self.assertTrue(post_processed)
+        self.assertEqual({"status": "success"}, vcall_result)
+        self.assertEqual(
+            [
+                call("127.0.0.1", 13337, expected_binary=expected_binary),
+                call("127.0.0.1", 13337, expected_binary=expected_binary),
+                call("127.0.0.1", 13337, expected_binary=expected_binary),
+            ],
+            open_session.call_args_list,
+        )
+
+
 class TestOpenedBinaryIdentityValidation(unittest.TestCase):
+    def test_verification_does_not_retry_mcp_tool_error(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_path = Path(temp_dir) / "server.dll"
+            binary_path.write_bytes(b"fixture")
+
+            with (
+                patch.object(
+                    ida_analyze_bin,
+                    "survey_binary_via_mcp",
+                    new=AsyncMock(side_effect=McpToolCallError("survey_binary: database is required")),
+                ) as survey,
+                patch.object(ida_analyze_bin.time, "sleep") as sleep,
+                patch("sys.stdout", new_callable=io.StringIO) as stdout,
+            ):
+                verified = ida_analyze_bin.verify_opened_binary_via_mcp(str(binary_path), "windows")
+
+        self.assertFalse(verified)
+        self.assertEqual(1, survey.await_count)
+        sleep.assert_not_called()
+        self.assertIn("database is required", stdout.getvalue())
+
     def test_verification_retries_when_survey_metadata_is_not_ready(self) -> None:
         with TemporaryDirectory() as temp_dir:
             binary_path = Path(temp_dir) / "server.dll"
@@ -1202,9 +1405,40 @@ class TestStartIdalibMcp(unittest.TestCase):
 
         self.assertIs(fake_process, process)
         mock_popen.assert_called_once()
-        _args, kwargs = mock_popen.call_args
+        args, kwargs = mock_popen.call_args
+        self.assertEqual(
+            [
+                "idalib-mcp",
+                "--unsafe",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "13337",
+                "bin/14160/client/client.dll",
+            ],
+            args[0],
+        )
         self.assertEqual(ida_analyze_bin.subprocess.DEVNULL, kwargs["stdout"])
         self.assertEqual(ida_analyze_bin.subprocess.DEVNULL, kwargs["stderr"])
+
+    @patch.object(ida_analyze_bin, "is_port_in_use", return_value=True, create=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    @patch.object(ida_analyze_bin, "wait_for_port", return_value=True)
+    def test_start_idalib_mcp_refuses_an_in_use_port(
+        self,
+        _mock_wait_for_port,
+        mock_popen,
+        _is_port_in_use,
+    ) -> None:
+        process = ida_analyze_bin.start_idalib_mcp(
+            "bin/14160/client/client.dll",
+            host="127.0.0.1",
+            port=13337,
+            debug=False,
+        )
+
+        self.assertIsNone(process)
+        mock_popen.assert_not_called()
 
 
 class TestProcessBinary(unittest.TestCase):
@@ -2071,7 +2305,13 @@ class TestProcessBinary(unittest.TestCase):
 
         self.assertEqual((0, 1, 0), (success, fail, skip))
         mock_run_skill.assert_not_called()
-        mock_quit_ida.assert_called_once_with(fake_process, "127.0.0.1", 13337, debug=False)
+        mock_quit_ida.assert_called_once_with(
+            fake_process,
+            "127.0.0.1",
+            13337,
+            expected_binary=binary_path,
+            debug=False,
+        )
 
     def test_process_binary_preserves_prefilter_failures_when_mcp_startup_fails(self) -> None:
         binary_path = str(Path("/tmp/bin/14141/networksystem/networksystem.dll"))
@@ -2150,7 +2390,13 @@ class TestProcessBinary(unittest.TestCase):
         mock_preprocess.assert_not_called()
         mock_run_skill.assert_not_called()
         self.assertIn("invalid expected_input artifact", stdout.getvalue())
-        mock_quit_ida.assert_called_once_with(fake_process, "127.0.0.1", 13337, debug=False)
+        mock_quit_ida.assert_called_once_with(
+            fake_process,
+            "127.0.0.1",
+            13337,
+            expected_binary=binary_path,
+            debug=False,
+        )
 
     def test_process_binary_does_not_start_ida_for_post_process_when_rename_is_false(
         self,
@@ -2253,7 +2499,13 @@ class TestProcessBinary(unittest.TestCase):
         self.assertEqual((0, 0, 1), (success, fail, skip))
         mock_start_ida.assert_called_once_with(binary_path, "127.0.0.1", 13337, "", False)
         mock_post_process.assert_called_once()
-        mock_quit_ida.assert_called_once_with(fake_process, "127.0.0.1", 13337, debug=False)
+        mock_quit_ida.assert_called_once_with(
+            fake_process,
+            "127.0.0.1",
+            13337,
+            expected_binary=binary_path,
+            debug=False,
+        )
 
     def test_process_binary_counts_post_process_failure_once(
         self,

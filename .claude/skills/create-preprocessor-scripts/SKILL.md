@@ -481,15 +481,19 @@ uv run python format_repo_files.py
 
 ### 6b. Regression Tests
 
-Run the unittest suite:
+Run the non-MCP unittest suite:
 
 ```bash
-uv run python -m unittest discover -s tests -b
+uv run python -c "from pathlib import Path; import sys, unittest; excluded={'test_ida_mcp_session', 'test_smoke_ida_mcp_2'}; modules=[f'tests.{path.stem}' for path in Path('tests').glob('test_*.py') if path.stem not in excluded]; result=unittest.TextTestRunner(buffer=True).run(unittest.defaultTestLoader.loadTestsFromNames(modules)); sys.exit(not result.wasSuccessful())"
 ```
 
-**Keep 0 unittest failures before committing.** If any test fails, investigate and fix it before proceeding to the commit step.
+This intentionally excludes the IDA MCP adapter and smoke modules (`test_ida_mcp_session`,
+`test_smoke_ida_mcp_2`) to keep preprocessor work fast. Run those modules separately when changing
+MCP routing or lifecycle code.
 
-This step is mandatory -- do not commit until formatting passes (`--check` is clean) and the unittest suite reports 0 failures.
+**Keep 0 selected unittest failures before committing.** If any test fails, investigate and fix it before proceeding to the commit step.
+
+This step is mandatory -- do not commit until formatting passes (`--check` is clean) and the selected unittest suite reports 0 failures.
 
 ---
 
@@ -533,7 +537,7 @@ Before finishing, verify:
 - [ ] Pattern-specific checks pass (see the Checklist section in the chosen pattern reference file)
 - [ ] `uv run ida_analyze_bin.py -debug` passes with 0 failures
 - [ ] `uv run python format_repo_files.py --check` reports no formatting issues (run `uv run python format_repo_files.py` to fix)
-- [ ] `uv run python -m unittest discover -s tests -b` passes with 0 failures
+- [ ] Non-MCP unittest command above passes with 0 failures
 - [ ] All changes committed to git (on `dev` branch, NOT `main`)
 
 ## Real-World Examples
