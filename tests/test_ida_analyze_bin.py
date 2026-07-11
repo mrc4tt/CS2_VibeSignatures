@@ -1,6 +1,7 @@
 import io
 import json
 import posixpath
+import subprocess
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -123,6 +124,29 @@ class TestQuitIdaGracefullySyncWrapper(unittest.TestCase):
         )
 
 
+class TestStopIdalibMcpProcess(unittest.TestCase):
+    def test_terminates_owned_process_without_contacting_mcp(self) -> None:
+        process = MagicMock()
+        process.poll.return_value = None
+
+        ida_analyze_bin.stop_idalib_mcp_process(process, debug=False)
+
+        process.terminate.assert_called_once_with()
+        process.wait.assert_called_once_with(timeout=10)
+        process.kill.assert_not_called()
+
+    def test_kills_owned_process_when_terminate_times_out(self) -> None:
+        process = MagicMock()
+        process.poll.return_value = None
+        process.wait.side_effect = [subprocess.TimeoutExpired("idalib-mcp", 10), 0]
+
+        ida_analyze_bin.stop_idalib_mcp_process(process, debug=False)
+
+        process.terminate.assert_called_once_with()
+        process.kill.assert_called_once_with()
+        self.assertEqual([call(timeout=10), call(timeout=5)], process.wait.call_args_list)
+
+
 class TestSurveyBinaryViaSession(unittest.IsolatedAsyncioTestCase):
     async def test_survey_binary_via_session_falls_back_to_current_idb_path(self) -> None:
         session = MagicMock()
@@ -202,6 +226,57 @@ class TestSurveyBinaryViaSession(unittest.IsolatedAsyncioTestCase):
 
 
 class TestOpenedBinaryIdentityValidation(unittest.TestCase):
+    def test_verification_retries_when_survey_metadata_is_not_ready(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_path = Path(temp_dir) / "server.dll"
+            binary_path.write_bytes(b"server-binary")
+            ready_survey = {"metadata": {"path": str(binary_path)}}
+
+            with (
+                patch.object(
+                    ida_analyze_bin,
+                    "survey_binary_via_mcp",
+                    new=AsyncMock(side_effect=[None, ready_survey]),
+                ) as survey_binary,
+                patch.object(ida_analyze_bin.time, "sleep") as sleep,
+            ):
+                verified = ida_analyze_bin.verify_opened_binary_via_mcp(
+                    str(binary_path),
+                    "windows",
+                    verify_timeout=1.0,
+                    retry_interval=0.01,
+                )
+
+        self.assertTrue(verified)
+        self.assertEqual(2, survey_binary.await_count)
+        sleep.assert_called_once_with(0.01)
+
+    def test_verification_does_not_retry_a_definite_path_mismatch(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_path = Path(temp_dir) / "server.dll"
+            binary_path.write_bytes(b"server-binary")
+            wrong_survey = {"metadata": {"path": str(Path(temp_dir) / "engine2.dll")}}
+
+            with (
+                patch.object(
+                    ida_analyze_bin,
+                    "survey_binary_via_mcp",
+                    new=AsyncMock(return_value=wrong_survey),
+                ) as survey_binary,
+                patch.object(ida_analyze_bin.time, "sleep") as sleep,
+                patch("sys.stdout", new_callable=io.StringIO),
+            ):
+                verified = ida_analyze_bin.verify_opened_binary_via_mcp(
+                    str(binary_path),
+                    "windows",
+                    verify_timeout=1.0,
+                    retry_interval=0.01,
+                )
+
+        self.assertFalse(verified)
+        self.assertEqual(1, survey_binary.await_count)
+        sleep.assert_not_called()
+
     def test_accepts_ida_database_suffix_for_expected_binary_path(self) -> None:
         with TemporaryDirectory() as temp_dir:
             binary_path = Path(temp_dir) / "bin" / "14141" / "server" / "libserver.so"
@@ -2285,6 +2360,11 @@ class TestProcessBinary(unittest.TestCase):
 
 
 class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
+    def setUp(self) -> None:
+        stop_patcher = patch.object(ida_analyze_bin, "stop_idalib_mcp_process")
+        self.mock_stop_ida = stop_patcher.start()
+        self.addCleanup(stop_patcher.stop)
+
     def test_process_binary_aborts_before_preprocess_when_opened_binary_mismatches(self) -> None:
         fake_process = object()
 
@@ -2328,6 +2408,7 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
         mock_preprocess.assert_not_called()
         mock_run_skill.assert_not_called()
         mock_quit_ida.assert_not_called()
+        self.mock_stop_ida.assert_called_once_with(fake_process, debug=False)
 
     def test_process_binary_aborts_before_skill_mcp_work_when_recheck_mismatches(self) -> None:
         fake_process = object()

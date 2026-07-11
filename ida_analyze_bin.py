@@ -80,6 +80,8 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 13337
 POST_PROCESS_FUNC_RENAME_BATCH_SIZE = 50
 MCP_STARTUP_TIMEOUT = 1200  # seconds to wait for MCP server
+OPENED_BINARY_VERIFY_TIMEOUT = 60.0
+OPENED_BINARY_VERIFY_RETRY_INTERVAL = 2.0
 SKILL_TIMEOUT = 1200  # 10 minutes per skill
 MCP_LIST_TIMEOUT = 30
 ERROR_MARKER_RE = re.compile(
@@ -686,17 +688,30 @@ def validate_opened_binary_identity(binary_path, platform, survey_payload):
     return not reasons, reasons
 
 
-def verify_opened_binary_via_mcp(binary_path, platform, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=False):
-    try:
+def verify_opened_binary_via_mcp(
+    binary_path,
+    platform,
+    host=DEFAULT_HOST,
+    port=DEFAULT_PORT,
+    debug=False,
+    verify_timeout=OPENED_BINARY_VERIFY_TIMEOUT,
+    retry_interval=OPENED_BINARY_VERIFY_RETRY_INTERVAL,
+):
+    deadline = time.monotonic() + max(0.0, verify_timeout)
+    while True:
         survey = asyncio.run(survey_binary_via_mcp(host=host, port=port, detail_level="minimal"))
-    except Exception as exc:
-        survey = None
+        ok, reasons = validate_opened_binary_identity(binary_path, platform, survey)
+        if ok:
+            return True
+        retryable = reasons in (
+            ["survey_binary returned no metadata"],
+            ["path mismatch: opened metadata path is missing"],
+        )
+        if not retryable or time.monotonic() >= deadline:
+            break
         if debug:
-            print(f"  Opened binary survey failed: {exc}")
-
-    ok, reasons = validate_opened_binary_identity(binary_path, platform, survey)
-    if ok:
-        return True
+            print("  Opened binary metadata is not ready; retrying verification...")
+        time.sleep(retry_interval)
 
     metadata = survey.get("metadata") if isinstance(survey, dict) else {}
     opened_path = metadata.get("path") if isinstance(metadata, dict) else None
@@ -1001,6 +1016,26 @@ def quit_ida_gracefully(process, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=Fal
     raise RuntimeError(
         "quit_ida_gracefully() cannot run inside an active event loop; use await quit_ida_gracefully_async() instead"
     )
+
+
+def stop_idalib_mcp_process(process, debug=False):
+    """Stop only the subprocess started by this runner, without using the MCP port."""
+    if process is None or process.poll() is not None:
+        return
+    if debug:
+        print("  Stopping the current idalib-mcp process...")
+    try:
+        process.terminate()
+        process.wait(timeout=10)
+        return
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    if process.poll() is None:
+        try:
+            process.kill()
+            process.wait(timeout=5)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
 
 
 def resolve_oldgamever(gamever, bin_dir):
@@ -2071,7 +2106,7 @@ def start_idalib_mcp(binary_path, host=DEFAULT_HOST, port=DEFAULT_PORT, ida_args
             process.kill()
             return None
 
-        print("  MCP server is ready")
+        print("  MCP server port is ready")
         return process
 
     except Exception as e:
@@ -2501,7 +2536,7 @@ def process_binary(
             skip_count,
         )
 
-    skip_graceful_quit = False
+    force_local_process_stop = False
     try:
         if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
             pending_count = _pending_binary_work_count(
@@ -2510,7 +2545,7 @@ def process_binary(
                 post_process_yaml_items=startup_post_process_yaml_items,
             )
             fail_count += pending_count
-            skip_graceful_quit = True
+            force_local_process_stop = True
             print(
                 f"  Aborting current binary after opened binary verification failure ({pending_count} pending work item(s))"
             )
@@ -2564,7 +2599,7 @@ def process_binary(
                     post_process_yaml_items=startup_post_process_yaml_items,
                 )
                 fail_count += remaining
-                skip_graceful_quit = True
+                force_local_process_stop = True
                 print(
                     "  Aborting current binary after opened binary verification failure "
                     f"({remaining} pending work item(s))"
@@ -2612,7 +2647,7 @@ def process_binary(
                     post_process_yaml_items=startup_post_process_yaml_items,
                 )
                 fail_count += remaining
-                skip_graceful_quit = True
+                force_local_process_stop = True
                 print(
                     "  Aborting current binary after opened binary verification failure "
                     f"({remaining} pending work item(s))"
@@ -2703,7 +2738,7 @@ def process_binary(
                     post_process_yaml_items=startup_post_process_yaml_items,
                 )
                 fail_count += remaining
-                skip_graceful_quit = True
+                force_local_process_stop = True
                 print(
                     "  Aborting current binary after opened binary verification failure "
                     f"({remaining} pending work item(s))"
@@ -2746,7 +2781,7 @@ def process_binary(
                     post_process_yaml_items=startup_post_process_yaml_items,
                 )
                 fail_count += remaining
-                skip_graceful_quit = True
+                force_local_process_stop = True
                 print(
                     "  Aborting current binary after opened binary verification failure "
                     f"({remaining} pending work item(s))"
@@ -2823,7 +2858,7 @@ def process_binary(
             else:
                 if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
                     fail_count += 1
-                    skip_graceful_quit = True
+                    force_local_process_stop = True
                     print("  Aborting current binary after opened binary verification failure (1 pending work item(s))")
                     return success_count, fail_count, skip_count
                 try:
@@ -2842,9 +2877,10 @@ def process_binary(
                     print("  Post-process failed")
 
     finally:
-        # Gracefully quit IDA via MCP to avoid breaking IDB
-        if skip_graceful_quit:
-            print("  Skipping automatic IDA shutdown after opened binary verification failure")
+        # Avoid sending qexit to an unverified MCP endpoint; stop only our process.
+        if force_local_process_stop:
+            print("  Stopping current idalib-mcp after opened binary verification failure")
+            stop_idalib_mcp_process(process, debug=debug)
         else:
             quit_ida_gracefully(process, host, port, debug=debug)
 
