@@ -2851,6 +2851,62 @@ class TestFuncXrefsSignatureSupport(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(result)
         session.call_tool.assert_awaited_once()
 
+    async def test_normalize_func_start_recovers_undefined_reference_source(self) -> None:
+        session = AsyncMock()
+        session.call_tool.return_value = _FakeCallToolResult({"ok": True})
+
+        with (
+            patch.object(
+                ida_analyze_util,
+                "_probe_func_start_or_entry_candidate",
+                AsyncMock(
+                    side_effect=[
+                        {
+                            "status": "blocked_existing_function",
+                            "func_start": "0x4F8820",
+                            "unresolved_ref_sources": ["0x3FD30C"],
+                        },
+                        {"status": "needs_define", "entry": "0x3FD300"},
+                        {"status": "resolved", "func_start": "0x3FD300"},
+                    ]
+                ),
+            ) as mock_probe,
+            patch.object(
+                ida_analyze_util,
+                "_read_covering_func_start_via_mcp",
+                AsyncMock(return_value=0x3FD300),
+            ) as mock_read_covering,
+        ):
+            result = await ida_analyze_util._normalize_func_start_for_code_addr(
+                session=session,
+                code_addr=0x4F8D1D,
+                debug=True,
+            )
+
+        self.assertEqual(0x3FD300, result)
+        self.assertEqual(
+            [
+                call(session=session, code_addr=0x4F8D1D, debug=True),
+                call(session=session, code_addr=0x3FD30C, debug=True),
+                call(session=session, code_addr=0x4F8D1D, debug=True),
+            ],
+            mock_probe.await_args_list,
+        )
+        self.assertEqual(
+            [
+                call(
+                    session=session,
+                    code_addr=0x3FD30C,
+                    debug=True,
+                ),
+            ],
+            mock_read_covering.await_args_list,
+        )
+        session.call_tool.assert_awaited_once_with(
+            name="define_func",
+            arguments={"items": {"addr": "0x3fd300"}},
+        )
+
     async def test_probe_func_start_preserves_candidates_before_existing_function(
         self,
     ) -> None:
@@ -2871,6 +2927,29 @@ class TestFuncXrefsSignatureSupport(unittest.IsolatedAsyncioTestCase):
             r"\s+break\n"
             r"\s+result_obj = \{\n"
             r"\s+'status': 'blocked_existing_function'",
+        )
+
+    async def test_probe_func_start_tracks_undefined_reference_sources(self) -> None:
+        session = AsyncMock()
+        session.call_tool.return_value = _py_eval_payload({"status": "no_entry"})
+
+        await ida_analyze_util._probe_func_start_or_entry_candidate(
+            session=session,
+            code_addr=0x180001050,
+            debug=True,
+        )
+
+        py_code = session.call_tool.await_args.kwargs["arguments"]["code"]
+        self.assertIn("unresolved_ref_sources = set()", py_code)
+        self.assertRegex(
+            py_code,
+            r"if not ref_func:\n"
+            r"\s+unresolved_ref_sources\.add\(xref\.frm\)\n"
+            r"\s+continue",
+        )
+        self.assertIn(
+            "result_obj['unresolved_ref_sources'] = [",
+            py_code,
         )
 
     async def test_normalize_func_start_probe_uses_conservative_filters(self) -> None:

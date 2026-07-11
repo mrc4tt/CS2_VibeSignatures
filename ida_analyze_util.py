@@ -5104,6 +5104,7 @@ def _load_symbol_addr_from_current_yaml(
 
 
 UNDEFINED_FUNC_RECOVERY_BACKTRACK_LIMIT = 0x200
+UNDEFINED_FUNC_RECOVERY_MAX_SOURCE_DEPTH = 4
 
 
 def _parse_int_set_from_py_eval(eval_data, debug=False):
@@ -5178,6 +5179,7 @@ async def _probe_func_start_or_entry_candidate(session, code_addr, debug=False):
         f"code_addr = {code_addr_int}\n"
         f"backtrack_limit = {UNDEFINED_FUNC_RECOVERY_BACKTRACK_LIMIT:#x}\n"
         "result_obj = {'status': 'no_entry'}\n"
+        "unresolved_ref_sources = set()\n"
         "func = idaapi.get_func(code_addr)\n"
         "if func:\n"
         "    result_obj = {'status': 'resolved', 'func_start': hex(func.start_ea)}\n"
@@ -5198,17 +5200,19 @@ async def _probe_func_start_or_entry_candidate(session, code_addr, debug=False):
         "        if not ida_bytes.is_code(flags):\n"
         "            continue\n"
         "        for xref in idautils.XrefsTo(probe_ea, 0):\n"
-        "            ref_func = idaapi.get_func(xref.frm)\n"
-        "            if not ref_func:\n"
-        "                continue\n"
         "            mnem = idc.print_insn_mnem(xref.frm).lower()\n"
         "            if mnem not in ('call', 'jmp', 'lea'):\n"
         "                continue\n"
         "            operand_targets = [\n"
         "                idc.get_operand_value(xref.frm, idx) for idx in range(3)\n"
         "            ]\n"
-        "            if probe_ea in operand_targets:\n"
-        "                candidates.add(probe_ea)\n"
+        "            if probe_ea not in operand_targets:\n"
+        "                continue\n"
+        "            ref_func = idaapi.get_func(xref.frm)\n"
+        "            if not ref_func:\n"
+        "                unresolved_ref_sources.add(xref.frm)\n"
+        "                continue\n"
+        "            candidates.add(probe_ea)\n"
         "    if result_obj.get('status') == 'no_entry':\n"
         "        if len(candidates) == 1:\n"
         "            result_obj = {\n"
@@ -5220,6 +5224,10 @@ async def _probe_func_start_or_entry_candidate(session, code_addr, debug=False):
         "                'status': 'multiple_entries',\n"
         "                'entries': [hex(ea) for ea in sorted(candidates)],\n"
         "            }\n"
+        "    if unresolved_ref_sources:\n"
+        "        result_obj['unresolved_ref_sources'] = [\n"
+        "            hex(ea) for ea in sorted(unresolved_ref_sources)\n"
+        "        ]\n"
         "result = json.dumps(result_obj)\n"
     )
     try:
@@ -5275,38 +5283,8 @@ async def _read_covering_func_start_via_mcp(session, code_addr, debug=False):
         return None
 
 
-async def _normalize_func_start_for_code_addr(session, code_addr, debug=False):
-    """Resolve the function start for a code address, recovering undefined funcs."""
-    try:
-        code_addr_int = _parse_int_value(code_addr)
-    except Exception:
-        return None
-
-    probe = await _probe_func_start_or_entry_candidate(
-        session=session,
-        code_addr=code_addr_int,
-        debug=debug,
-    )
-    if not probe:
-        return None
-
-    status = probe.get("status")
-    if status == "resolved":
-        try:
-            return _parse_int_value(probe.get("func_start"))
-        except Exception:
-            return None
-
-    if status != "needs_define":
-        if debug:
-            print(f"    Preprocess: undefined func recovery skipped: {status or 'unknown'}")
-        return None
-
-    try:
-        entry = _parse_int_value(probe.get("entry"))
-    except Exception:
-        return None
-
+async def _define_func_start_for_code_addr(session, entry, code_addr, *, debug=False):
+    """Define one entry and verify that it covers code_addr."""
     try:
         await session.call_tool(
             name="define_func",
@@ -5319,12 +5297,119 @@ async def _normalize_func_start_for_code_addr(session, code_addr, debug=False):
 
     func_start = await _read_covering_func_start_via_mcp(
         session=session,
-        code_addr=code_addr_int,
+        code_addr=code_addr,
         debug=debug,
     )
     if func_start is None and debug:
-        print(f"    Preprocess: recovered function does not cover {hex(code_addr_int)}")
+        print(f"    Preprocess: recovered function does not cover {hex(code_addr)}")
     return func_start
+
+
+async def _resolve_func_start_probe(session, probe, code_addr, *, debug=False):
+    """Resolve terminal probe states, or report that source recovery is needed."""
+    status = probe.get("status")
+    if status == "resolved":
+        try:
+            return True, _parse_int_value(probe.get("func_start"))
+        except Exception:
+            return True, None
+    if status != "needs_define":
+        return False, None
+    try:
+        entry = _parse_int_value(probe.get("entry"))
+    except Exception:
+        return True, None
+    func_start = await _define_func_start_for_code_addr(
+        session=session,
+        entry=entry,
+        code_addr=code_addr,
+        debug=debug,
+    )
+    return True, func_start
+
+
+async def _recover_probe_reference_source(
+    session,
+    probe,
+    *,
+    recovery_seen,
+    recovery_depth,
+    debug=False,
+):
+    """Recover one undefined function containing a valid entry reference."""
+    if recovery_depth >= UNDEFINED_FUNC_RECOVERY_MAX_SOURCE_DEPTH:
+        return False
+    sources = set()
+    for source in probe.get("unresolved_ref_sources", []):
+        try:
+            sources.add(_parse_int_value(source))
+        except Exception:
+            continue
+    for source in sorted(sources):
+        if source in recovery_seen:
+            continue
+        func_start = await _normalize_func_start_for_code_addr(
+            session=session,
+            code_addr=source,
+            debug=debug,
+            _recovery_seen=recovery_seen,
+            _recovery_depth=recovery_depth + 1,
+        )
+        if func_start is not None:
+            return True
+    return False
+
+
+async def _normalize_func_start_for_code_addr(
+    session,
+    code_addr,
+    debug=False,
+    *,
+    _recovery_seen=None,
+    _recovery_depth=0,
+):
+    """Resolve the function start for a code address, recovering undefined funcs."""
+    try:
+        code_addr_int = _parse_int_value(code_addr)
+    except Exception:
+        return None
+
+    recovery_seen = set() if _recovery_seen is None else _recovery_seen
+    if code_addr_int in recovery_seen:
+        return None
+    recovery_seen.add(code_addr_int)
+
+    probe = await _probe_func_start_or_entry_candidate(
+        session=session,
+        code_addr=code_addr_int,
+        debug=debug,
+    )
+    while probe:
+        handled, func_start = await _resolve_func_start_probe(
+            session=session,
+            probe=probe,
+            code_addr=code_addr_int,
+            debug=debug,
+        )
+        if handled:
+            return func_start
+        recovered_source = await _recover_probe_reference_source(
+            session=session,
+            probe=probe,
+            recovery_seen=recovery_seen,
+            recovery_depth=_recovery_depth,
+            debug=debug,
+        )
+        if not recovered_source:
+            if debug:
+                print(f"    Preprocess: undefined func recovery skipped: {probe.get('status') or 'unknown'}")
+            return None
+        probe = await _probe_func_start_or_entry_candidate(
+            session=session,
+            code_addr=code_addr_int,
+            debug=debug,
+        )
+    return None
 
 
 async def _normalize_func_starts_for_code_addrs(session, code_addrs, debug=False):
