@@ -283,17 +283,20 @@ class TestCallLlmTextCodexHttp(unittest.TestCase):
         self.assertEqual("found_call", result)
         self.assertEqual("/v1/responses", _CodexHandler.last_path)
         self.assertEqual("text/event-stream", _CodexHandler.last_headers["accept"])
-        self.assertEqual("identity", _CodexHandler.last_headers["accept-encoding"])
-        self.assertEqual("codex_cli_rs", _CodexHandler.last_headers["originator"])
+        self.assertEqual("codex-tui", _CodexHandler.last_headers["originator"])
         self.assertEqual(
-            "codex_cli_rs/0.80.0 (Windows 15.7.2; x86_64) Terminal",
+            "codex-tui/0.144.1 (Windows 10.0.26200; x86_64) "
+            "WindowsTerminal (codex-tui; 0.144.1)",
             _CodexHandler.last_headers["user-agent"],
         )
         self.assertEqual("high", _CodexHandler.last_json_body["reasoning"]["effort"])
         self.assertEqual(0.2, _CodexHandler.last_json_body["temperature"])
+        input_items = _CodexHandler.last_json_body["input"]
+        self.assertEqual("additional_tools", input_items[0]["type"])
+        self.assertEqual("user", input_items[-1]["role"])
         self.assertEqual(
-            [{"role": "user", "content": "Who are you?"}],
-            _CodexHandler.last_json_body["input"],
+            [{"type": "input_text", "text": "Who are you?"}],
+            input_items[-1]["content"],
         )
 
     def test_call_llm_text_codex_uses_top_level_text_attribute(self) -> None:
@@ -307,9 +310,11 @@ class TestCallLlmTextCodexHttp(unittest.TestCase):
         )
 
         self.assertEqual("found_call", result)
+        user_input = _CodexHandler.last_json_body["input"][-1]
+        self.assertEqual("user", user_input["role"])
         self.assertEqual(
-            [{"role": "user", "content": "Hello"}],
-            _CodexHandler.last_json_body["input"],
+            [{"type": "input_text", "text": "Hello"}],
+            user_input["content"],
         )
 
     def test_call_llm_text_rejects_non_sse_content_type(self) -> None:
