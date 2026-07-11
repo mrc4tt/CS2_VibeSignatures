@@ -1,4 +1,4 @@
-# CLAUDE.md
+# SKILL_RUNNER.md
 
 ## Rules
 
