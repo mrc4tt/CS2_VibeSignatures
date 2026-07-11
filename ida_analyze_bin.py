@@ -41,7 +41,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from agent_skill_runner import run_skill
+from agent_runner import run_skill
 
 try:
     import yaml

@@ -4,8 +4,6 @@ Run C++ tests declared in config.yaml and compare clang vtable dumps with YAML r
 """
 
 import argparse
-import json
-import shlex
 import os
 import subprocess
 import sys
@@ -20,6 +18,8 @@ except ImportError as e:
     print(f"Error: Missing required dependency: {e.name}")
     print("Please install required dependencies with: uv sync")
     sys.exit(1)
+
+from agent_runner import run_fix_header_agent
 
 from cpp_tests_util import (
     compare_compiler_record_layout_with_yaml,
@@ -46,8 +46,6 @@ DEFAULT_CPP_STD = "c++20"
 DEFAULT_AGENT = "claude"
 DEFAULT_MAX_RETRY = 3
 DEFAULT_MAX_VERIFY = 3
-SKILL_TIMEOUT = 600
-VTABLE_FIXER_AGENT_FILE = Path(".claude/agents/vtable-fixer.md")
 
 
 def parse_args():
@@ -171,16 +169,6 @@ def _choose_override(item_value: Any, fallback: str) -> str:
     return fallback
 
 
-def _split_cli_args(raw_args: str) -> List[str]:
-    text = _to_text(raw_args)
-    if not text:
-        return []
-    try:
-        return shlex.split(text, posix=False)
-    except ValueError:
-        return text.split()
-
-
 def _normalize_option(option_text: str) -> str:
     option_text = option_text.strip()
     if not option_text:
@@ -239,40 +227,6 @@ def parse_config(config_path: Path) -> List[Dict[str, Any]]:
         sys.exit(1)
 
     return cpp_tests
-
-
-def _strip_optional_frontmatter(markdown_text: str) -> str:
-    """Remove optional YAML frontmatter from an agent markdown file."""
-    content = markdown_text.strip()
-    if not content.startswith("---"):
-        return content
-    lines = content.splitlines()
-    frontmatter_end = None
-    for idx, line in enumerate(lines[1:], start=1):
-        if line.strip() == "---":
-            frontmatter_end = idx
-            break
-    if frontmatter_end is None:
-        return content
-    return "\n".join(lines[frontmatter_end + 1 :]).strip()
-
-
-def _load_codex_developer_instructions(agent_md_path: Path) -> str:
-    """Load and normalize Codex developer_instructions from agent markdown."""
-    try:
-        raw = agent_md_path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        print(f"Error: Codex agent prompt file not found: {agent_md_path}")
-        return ""
-    except OSError as exc:
-        print(f"Error: Failed to read Codex agent prompt file {agent_md_path}: {exc}")
-        return ""
-
-    prompt = _strip_optional_frontmatter(raw)
-    if not prompt:
-        print(f"Error: Codex agent prompt is empty in {agent_md_path}")
-        return ""
-    return f"developer_instructions={json.dumps(prompt)}"
 
 
 def _resolve_header_paths(test_item: Dict[str, Any], config_dir: Path) -> List[Path]:
@@ -338,192 +292,6 @@ def _build_fix_prompt(
         "Apply the header updates now and keep the resulting declarations consistent with the latest reference layout."
     )
     return "\n".join(lines)
-
-
-def _detect_header_fix_agent_kind(agent: str) -> str | None:
-    agent_lower = agent.lower()
-    if "claude" in agent_lower:
-        return "claude"
-    if "codex" in agent_lower:
-        return "codex"
-    if "opencode" in agent_lower:
-        return "opencode"
-    return None
-
-
-def _extract_opencode_session_id(output: str | None) -> str | None:
-    for line in (output or "").splitlines():
-        try:
-            event = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if not isinstance(event, dict):
-            continue
-        session_id = event.get("sessionID")
-        if isinstance(session_id, str) and session_id:
-            return session_id
-    return None
-
-
-def run_fix_header_agent(
-    *,
-    fix_prompt: str,
-    agent: str,
-    debug: bool,
-    max_retries: int,
-    session_id: str = "",
-    is_continuation: bool = False,
-    claude_allowed_tools: str = "",
-    claude_permission_mode: str = "",
-    claude_extra_args: str = "",
-    session_state: dict[str, str | None] | None = None,
-) -> bool:
-    """Invoke the configured Claude, Codex, or OpenCode agent to apply header fixes."""
-    max_retries = max(1, int(max_retries))
-    agent_kind = _detect_header_fix_agent_kind(agent)
-    if agent_kind is None:
-        print(f"    Error: Unknown agent type '{agent}'. Agent name must contain 'claude', 'codex', or 'opencode'.")
-        return False
-
-    claude_session_id = session_id if session_id else str(uuid.uuid4())
-    opencode_session_id = (session_state or {}).get("opencode_session_id")
-
-    codex_developer_instructions = None
-    if agent_kind == "codex":
-        codex_developer_instructions = _load_codex_developer_instructions(VTABLE_FIXER_AGENT_FILE)
-        if not codex_developer_instructions:
-            return False
-
-    for attempt in range(max_retries):
-        is_retry = (attempt > 0) or is_continuation
-        agent_input = None
-
-        if agent_kind == "claude":
-            agent_input = fix_prompt
-            cmd = [
-                agent,
-                "-p",
-                "-",
-                "--agent",
-                "vtable-fixer",
-                "--settings",
-                '{"alwaysThinkingEnabled": false}',
-            ]
-            if _to_text(claude_allowed_tools):
-                cmd.extend(["--allowedTools", _to_text(claude_allowed_tools)])
-            if _to_text(claude_permission_mode):
-                cmd.extend(["--permission-mode", _to_text(claude_permission_mode)])
-            extra_args = _split_cli_args(claude_extra_args)
-            if extra_args:
-                cmd.extend(extra_args)
-            if is_retry:
-                cmd.extend(["--resume", claude_session_id])
-            else:
-                cmd.extend(["--session-id", claude_session_id])
-            retry_target_desc = f"session {claude_session_id}"
-        elif agent_kind == "codex":
-            agent_input = fix_prompt
-            if is_retry:
-                cmd = [
-                    agent,
-                    "-c",
-                    codex_developer_instructions,
-                    "-c",
-                    "model_reasoning_effort=high",
-                    "-c",
-                    "model_reasoning_summary=none",
-                    "-c",
-                    "model_verbosity=low",
-                    "exec",
-                    "resume",
-                    "--last",
-                    "-",
-                ]
-            else:
-                cmd = [
-                    agent,
-                    "-c",
-                    codex_developer_instructions,
-                    "-c",
-                    "model_reasoning_effort=high",
-                    "-c",
-                    "model_reasoning_summary=none",
-                    "-c",
-                    "model_verbosity=low",
-                    "exec",
-                    "-",
-                ]
-            retry_target_desc = "the latest codex session (--last)"
-        else:
-            cmd = [agent, "run", "--format", "json"]
-            if is_retry and opencode_session_id:
-                cmd.extend(["--session", opencode_session_id])
-            elif is_retry:
-                cmd.append("--continue")
-            cmd.extend(["--agent", "vtable-fixer", fix_prompt])
-            retry_target_desc = (
-                f"OpenCode session {opencode_session_id}"
-                if opencode_session_id
-                else "the latest OpenCode session (--continue)"
-            )
-
-        retry_tag = "[RETRY] " if is_retry else ""
-        attempt_str = f"(attempt {attempt + 1}/{max_retries})" if max_retries > 1 else ""
-        prompt_transport = " via stdin" if agent_input is not None else ""
-        print(f"    {retry_tag}Running {attempt_str}: {agent} <vtable-fixer-prompt{prompt_transport}>")
-
-        try:
-            run_kwargs = {
-                "timeout": SKILL_TIMEOUT,
-                "check": False,
-            }
-            if agent_input is not None:
-                run_kwargs["input"] = agent_input
-                run_kwargs["text"] = True
-
-            if debug and agent_kind != "opencode":
-                result = subprocess.run(cmd, **run_kwargs)
-            else:
-                run_kwargs["capture_output"] = True
-                run_kwargs.setdefault("text", True)
-                result = subprocess.run(cmd, **run_kwargs)
-
-            if agent_kind == "opencode" and opencode_session_id is None:
-                opencode_session_id = _extract_opencode_session_id(result.stdout)
-                if session_state is not None:
-                    session_state["opencode_session_id"] = opencode_session_id
-            if agent_kind == "opencode":
-                retry_target_desc = (
-                    f"OpenCode session {opencode_session_id}"
-                    if opencode_session_id
-                    else "the latest OpenCode session (--continue)"
-                )
-                if debug:
-                    print(result.stdout, end="")
-                    print(result.stderr, end="", file=sys.stderr)
-
-            if result.returncode == 0:
-                return True
-
-            print(f"    Agent failed with return code: {result.returncode}")
-            if not debug and result.stderr:
-                print(f"    stderr: {result.stderr[:500]}")
-            if attempt < max_retries - 1:
-                print(f"    Retrying with {retry_target_desc}...")
-        except subprocess.TimeoutExpired:
-            print(f"    Error: Agent execution timeout ({SKILL_TIMEOUT} seconds)")
-            if attempt < max_retries - 1:
-                print(f"    Retrying with {retry_target_desc}...")
-        except FileNotFoundError:
-            print(f"    Error: Agent '{agent}' not found. Please ensure it is installed and in PATH.")
-            return False
-        except Exception as exc:
-            print(f"    Error executing fix-header agent: {exc}")
-            if attempt < max_retries - 1:
-                print(f"    Retrying with {retry_target_desc}...")
-
-    print(f"    Failed after {max_retries} attempts")
-    return False
 
 
 def run_fix_header_with_verification(

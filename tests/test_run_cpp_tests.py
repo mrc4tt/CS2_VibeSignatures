@@ -6,6 +6,7 @@ from subprocess import CompletedProcess
 from unittest.mock import patch
 
 import cpp_tests_util
+import agent_runner
 import run_cpp_tests
 
 
@@ -216,7 +217,7 @@ class TestRunFixHeaderAgent(unittest.TestCase):
         self.assertIn("DO NOT rely on ida-pro-mcp", agent_text)
         self.assertIn("Edit only the header files explicitly listed", agent_text)
 
-    @patch("run_cpp_tests.subprocess.run")
+    @patch("agent_runner.subprocess.run")
     def test_run_fix_header_agent_retries_opencode_with_reported_session_id(self, mock_run) -> None:
         mock_run.side_effect = [
             CompletedProcess(
@@ -262,7 +263,7 @@ class TestRunFixHeaderAgent(unittest.TestCase):
         self.assertNotIn("input", mock_run.call_args_list[0].kwargs)
         self.assertNotIn("input", mock_run.call_args_list[1].kwargs)
 
-    @patch("run_cpp_tests.subprocess.run")
+    @patch("agent_runner.subprocess.run")
     def test_run_fix_header_agent_captures_opencode_session_in_debug_mode(self, mock_run) -> None:
         mock_run.side_effect = [
             CompletedProcess(
@@ -286,7 +287,7 @@ class TestRunFixHeaderAgent(unittest.TestCase):
         self.assertTrue(mock_run.call_args_list[0].kwargs["text"])
         self.assertIn("--session", mock_run.call_args_list[1].args[0])
 
-    @patch("run_cpp_tests.subprocess.run")
+    @patch("agent_runner.subprocess.run")
     def test_run_fix_header_agent_falls_back_to_continue_without_opencode_session(self, mock_run) -> None:
         mock_run.side_effect = [
             CompletedProcess(args=["opencode.cmd", "run"], returncode=1, stdout="", stderr="first failure"),
@@ -305,7 +306,7 @@ class TestRunFixHeaderAgent(unittest.TestCase):
         self.assertIn("--continue", retry_args)
         self.assertNotIn("--session", retry_args)
 
-    @patch("run_cpp_tests.subprocess.run")
+    @patch("agent_runner.subprocess.run")
     def test_run_fix_header_agent_reuses_opencode_session_for_verification(self, mock_run) -> None:
         mock_run.return_value = CompletedProcess(args=["opencode"], returncode=0, stdout="", stderr="")
         session_state = {"opencode_session_id": "ses_verify"}
@@ -326,11 +327,11 @@ class TestRunFixHeaderAgent(unittest.TestCase):
         self.assertEqual("ses_verify", command[session_index])
 
     @patch.object(
-        run_cpp_tests,
+        agent_runner,
         "_load_codex_developer_instructions",
         return_value='developer_instructions="test prompt"',
     )
-    @patch("run_cpp_tests.subprocess.run")
+    @patch("agent_runner.subprocess.run")
     def test_run_fix_header_agent_passes_codex_prompt_via_stdin_on_retry(
         self,
         mock_run,
@@ -364,7 +365,7 @@ class TestRunFixHeaderAgent(unittest.TestCase):
         self.assertTrue(first_call.kwargs["text"])
         self.assertTrue(second_call.kwargs["text"])
 
-    @patch("run_cpp_tests.subprocess.run")
+    @patch("agent_runner.subprocess.run")
     def test_run_fix_header_agent_passes_claude_prompt_via_stdin(
         self,
         mock_run,
@@ -392,7 +393,7 @@ class TestRunFixHeaderAgent(unittest.TestCase):
         self.assertIn("--session-id", cmd)
         self.assertNotIn("--resume", cmd)
 
-    @patch("run_cpp_tests.subprocess.run")
+    @patch("agent_runner.subprocess.run")
     def test_run_fix_header_agent_passes_claude_prompt_via_stdin_on_retry(
         self,
         mock_run,
@@ -434,7 +435,7 @@ class TestRunFixHeaderAgent(unittest.TestCase):
         resume_index = second_cmd.index("--resume") + 1
         self.assertEqual(first_cmd[sid_index], second_cmd[resume_index])
 
-    @patch("run_cpp_tests.subprocess.run")
+    @patch("agent_runner.subprocess.run")
     def test_run_fix_header_agent_external_session_id(
         self,
         mock_run,
@@ -454,7 +455,7 @@ class TestRunFixHeaderAgent(unittest.TestCase):
         sid_index = cmd.index("--session-id") + 1
         self.assertEqual("custom-session-id", cmd[sid_index])
 
-    @patch("run_cpp_tests.subprocess.run")
+    @patch("agent_runner.subprocess.run")
     def test_run_fix_header_agent_is_continuation_uses_resume(
         self,
         mock_run,
@@ -478,11 +479,11 @@ class TestRunFixHeaderAgent(unittest.TestCase):
         self.assertEqual("my-session", cmd[resume_index])
 
     @patch.object(
-        run_cpp_tests,
+        agent_runner,
         "_load_codex_developer_instructions",
         return_value='developer_instructions="test"',
     )
-    @patch("run_cpp_tests.subprocess.run")
+    @patch("agent_runner.subprocess.run")
     def test_run_fix_header_agent_codex_is_continuation_uses_resume(
         self,
         mock_run,
