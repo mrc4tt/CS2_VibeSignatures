@@ -1,5 +1,11 @@
 {"permissions": {
+    "deny": [
+      "mcp__ida-pro-mcp__open_file"
+    ],
     "allow": [
+      "Read(ida_preprocessor_scripts)",
+      "Read(hl2sdk)",
+      "Read(bin)",
       "mcp__ida-pro-mcp__*"
     ]
   },
