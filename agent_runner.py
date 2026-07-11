@@ -15,6 +15,10 @@ from pathlib import Path
 SKILL_TIMEOUT = 1200
 MCP_LIST_TIMEOUT = 30
 SKILL_ERROR_RE = re.compile(r"<skill_error>\s*(.*?)\s*</skill_error>", re.IGNORECASE | re.DOTALL)
+CYBERSECURITY_BLOCK_MARKERS = (
+    "This chat was flagged for possible cybersecurity risk",
+    "flagged this message for a cybersecurity topic",
+)
 ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 _MCP_PREFLIGHT_DONE = False
 _MCP_PREFLIGHT_FAILED = False
@@ -62,6 +66,14 @@ def _extract_skill_error(*texts: str) -> str | None:
     if match is None:
         return None
     return match.group(1).strip()
+
+
+def _extract_cybersecurity_block(*texts: str) -> str | None:
+    merged_output = "\n".join(text for text in texts if text).casefold()
+    for marker in CYBERSECURITY_BLOCK_MARKERS:
+        if marker.casefold() in merged_output:
+            return marker
+    return None
 
 
 def _mcp_list_contains_server(output, server_name="ida-pro-mcp"):
@@ -405,6 +417,9 @@ def _retry_if_available(attempt: int, max_retries: int, retry_target_desc: str) 
 def _result_failure_reason(result, expected_yaml_paths):
     if result.returncode != 0:
         return "returncode"
+    cybersecurity_block = _extract_cybersecurity_block(result.stdout, result.stderr)
+    if cybersecurity_block is not None:
+        return ("cybersecurity_block", cybersecurity_block)
     skill_error = _extract_skill_error(result.stdout, result.stderr)
     if skill_error is not None:
         return ("skill_error", skill_error)
@@ -421,6 +436,8 @@ def _report_result_failure(reason, result, debug: bool) -> None:
             print(f"    stderr: {result.stderr[:500]}")
     elif isinstance(reason, tuple) and reason[0] == "skill_error":
         print(f"    Error: Skill reported: {reason[1]}")
+    elif isinstance(reason, tuple) and reason[0] == "cybersecurity_block":
+        print(f"    Error: Skill blocked by cybersecurity filter: {reason[1]}")
     elif reason:
         print(f"    Error: Expected yaml files not generated: {reason}")
 
@@ -465,6 +482,8 @@ def _run_skill_attempts(
             if reason is None:
                 return True
             _report_result_failure(reason, result, debug)
+            if isinstance(reason, tuple) and reason[0] == "cybersecurity_block":
+                return False
             _retry_if_available(attempt, max_retries, command.retry_target_desc)
         except subprocess.TimeoutExpired:
             print(f"    Error: Skill execution timeout ({SKILL_TIMEOUT} seconds)")

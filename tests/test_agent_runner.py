@@ -572,6 +572,47 @@ class TestRunSkillCodexPromptTransport(unittest.TestCase):
         self.assertEqual(expected_prompt, "".join(first_process.stdin.writes))
         self.assertEqual(expected_prompt, "".join(second_process.stdin.writes))
 
+    @patch.object(Path, "read_text", return_value="sig finder prompt")
+    @patch("agent_runner.os.path.exists", return_value=True)
+    @patch("agent_runner.subprocess.Popen")
+    def test_run_skill_does_not_retry_cybersecurity_blocks(
+        self,
+        mock_popen,
+        _mock_exists,
+        _mock_read_text,
+    ) -> None:
+        block_messages = [
+            "This chat was flagged for possible cybersecurity risk",
+            "flagged this message for a cybersecurity topic",
+        ]
+
+        for block_message in block_messages:
+            with self.subTest(block_message=block_message):
+                agent_runner._MCP_PREFLIGHT_DONE = False
+                agent_runner._MCP_PREFLIGHT_FAILED = False
+                preflight_process = _FakePopen(
+                    stdout_chunks=["ida-pro-mcp  http://127.0.0.1:13337/mcp  enabled\n"],
+                    stderr_chunks=[],
+                    returncode=0,
+                )
+                blocked_process = _FakePopen(
+                    stdout_chunks=[f"{block_message}\n"],
+                    stderr_chunks=[],
+                    returncode=0,
+                )
+                mock_popen.reset_mock(side_effect=True)
+                mock_popen.side_effect = [preflight_process, blocked_process]
+
+                result = agent_runner.run_skill(
+                    skill_name="find-IGameSystem_vtable",
+                    agent="codex",
+                    debug=False,
+                    max_retries=3,
+                )
+
+                self.assertFalse(result)
+                self.assertEqual(2, mock_popen.call_count)
+
 
 class TestRunSkillMcpListPreflight(unittest.TestCase):
     def setUp(self) -> None:
