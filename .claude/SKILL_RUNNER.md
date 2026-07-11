@@ -4,7 +4,7 @@
 
 - You **MUST** complete all tasks in SKILL specified by the initial prompt, **NEVER** stop at half unless there is an unrecoverable error.
 
-- When there is an unrecoverable error (for example: bad configuration, missing requirements), Report to user with `<skill_error>reason</skill_error>`. 
+- When there is an unrecoverable error (for example: bad configuration, missing requirements), Report to user with `<skill_error>ERROR REASON</skill_error>`.
 
 For example: 
 

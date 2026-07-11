@@ -385,16 +385,20 @@ class TestRunSkillOutputDetection(unittest.TestCase):
         agent_runner._MCP_PREFLIGHT_DONE = False
         agent_runner._MCP_PREFLIGHT_FAILED = False
 
-    def test_output_contains_error_marker_only_matches_standalone_tokens(self) -> None:
-        self.assertTrue(agent_runner._output_contains_error_marker("Error"))
-        self.assertTrue(agent_runner._output_contains_error_marker("prefix [ERROR] suffix"))
-        self.assertTrue(agent_runner._output_contains_error_marker("before **ERROR** after"))
-        self.assertTrue(agent_runner._output_contains_error_marker("line one\nerror\nline three"))
+    def test_extract_skill_error_returns_tag_contents(self) -> None:
+        self.assertEqual(
+            "lookup failed",
+            agent_runner._extract_skill_error("prefix <skill_error>lookup failed</skill_error> suffix"),
+        )
+        self.assertEqual(
+            "multi-line\nreason",
+            agent_runner._extract_skill_error("<skill_error>\nmulti-line\nreason\n</skill_error>"),
+        )
 
-        self.assertFalse(agent_runner._output_contains_error_marker("myErrorCode"))
-        self.assertFalse(agent_runner._output_contains_error_marker("error123"))
-        self.assertFalse(agent_runner._output_contains_error_marker("XerrorY"))
-        self.assertFalse(agent_runner._output_contains_error_marker("all good"))
+    def test_extract_skill_error_ignores_legacy_error_markers(self) -> None:
+        self.assertIsNone(agent_runner._extract_skill_error("Error"))
+        self.assertIsNone(agent_runner._extract_skill_error("prefix [ERROR] suffix"))
+        self.assertIsNone(agent_runner._extract_skill_error("all good"))
 
 
 class TestRunSkillCodexPromptTransport(unittest.TestCase):
@@ -524,7 +528,7 @@ class TestRunSkillCodexPromptTransport(unittest.TestCase):
     @patch.object(Path, "read_text", return_value="sig finder prompt")
     @patch("agent_runner.os.path.exists", return_value=True)
     @patch("agent_runner.subprocess.Popen")
-    def test_run_skill_retries_when_output_contains_error_marker(
+    def test_run_skill_retries_when_output_contains_skill_error(
         self,
         mock_popen,
         _mock_exists,
@@ -536,7 +540,7 @@ class TestRunSkillCodexPromptTransport(unittest.TestCase):
             returncode=0,
         )
         first_process = _FakePopen(
-            stdout_chunks=["starting\n", "[ERROR] lookup failed\n"],
+            stdout_chunks=["starting\n", "<skill_error>lookup failed</skill_error>\n"],
             stderr_chunks=[],
             returncode=0,
         )
@@ -561,7 +565,8 @@ class TestRunSkillCodexPromptTransport(unittest.TestCase):
         self.assertTrue(result)
         self.assertEqual(3, mock_popen.call_count)
         self.assertEqual(["codex", "mcp", "list"], mock_popen.call_args_list[0].args[0])
-        self.assertNotIn("[ERROR] lookup failed\n", fake_stdout.getvalue())
+        self.assertIn("Skill reported: lookup failed", fake_stdout.getvalue())
+        self.assertNotIn("<skill_error>", fake_stdout.getvalue())
         self.assertEqual("", fake_stderr.getvalue())
         expected_prompt = "Run SKILL: .claude/skills/find-IGameSystem_vtable/SKILL.md"
         self.assertEqual(expected_prompt, "".join(first_process.stdin.writes))

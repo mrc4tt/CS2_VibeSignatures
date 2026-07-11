@@ -14,7 +14,7 @@ from pathlib import Path
 
 SKILL_TIMEOUT = 1200
 MCP_LIST_TIMEOUT = 30
-ERROR_MARKER_RE = re.compile(r"(?<![A-Za-z0-9])error(?![A-Za-z0-9])", re.IGNORECASE)
+SKILL_ERROR_RE = re.compile(r"<skill_error>\s*(.*?)\s*</skill_error>", re.IGNORECASE | re.DOTALL)
 ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 _MCP_PREFLIGHT_DONE = False
 _MCP_PREFLIGHT_FAILED = False
@@ -56,9 +56,12 @@ def _extract_opencode_session_id(output: str) -> str | None:
     return None
 
 
-def _output_contains_error_marker(*texts: str) -> bool:
+def _extract_skill_error(*texts: str) -> str | None:
     merged_output = "\n".join(text for text in texts if text)
-    return bool(ERROR_MARKER_RE.search(merged_output))
+    match = SKILL_ERROR_RE.search(merged_output)
+    if match is None:
+        return None
+    return match.group(1).strip()
 
 
 def _mcp_list_contains_server(output, server_name="ida-pro-mcp"):
@@ -402,8 +405,9 @@ def _retry_if_available(attempt: int, max_retries: int, retry_target_desc: str) 
 def _result_failure_reason(result, expected_yaml_paths):
     if result.returncode != 0:
         return "returncode"
-    if _output_contains_error_marker(result.stdout, result.stderr):
-        return "error_marker"
+    skill_error = _extract_skill_error(result.stdout, result.stderr)
+    if skill_error is not None:
+        return ("skill_error", skill_error)
     missing_files = _missing_expected_outputs(expected_yaml_paths)
     if missing_files:
         return missing_files
@@ -415,8 +419,8 @@ def _report_result_failure(reason, result, debug: bool) -> None:
         print(f"    Skill failed with return code: {result.returncode}")
         if not debug and result.stderr:
             print(f"    stderr: {result.stderr[:500]}")
-    elif reason == "error_marker":
-        print("    Error: Skill output contains error marker")
+    elif isinstance(reason, tuple) and reason[0] == "skill_error":
+        print(f"    Error: Skill reported: {reason[1]}")
     elif reason:
         print(f"    Error: Expected yaml files not generated: {reason}")
 
