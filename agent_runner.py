@@ -255,18 +255,12 @@ def _build_claude_base_args(
     agent_profile: str,
     session_id: str,
     is_retry: bool,
-    allowed_tools: str = "",
-    disallowed_tools: str = "",
     permission_mode: str = "",
     extra_args: str = "",
     agent_model: str = DEFAULT_AGENT_MODEL,
 ) -> list[str]:
     args = [agent, "-p", prompt_arg, "--agent", agent_profile]
     args.extend(_agent_model_args("claude", agent_model))
-    if allowed_tools := str(allowed_tools or "").strip():
-        args.extend(["--allowedTools", allowed_tools])
-    if disallowed_tools := str(disallowed_tools or "").strip():
-        args.extend(["--disallowedTools", disallowed_tools])
     args.extend(["--settings", CLAUDE_SKILL_RUNNER_SETTINGS])
     args.extend(["--append-system-prompt-file", SKILL_RUNNER_SYSTEM_PROMPT])
     args.extend(_agent_permission_args("claude", claude_permission_mode=permission_mode))
@@ -327,8 +321,6 @@ def _build_claude_command(
         agent_profile="sig-finder",
         session_id=session_id,
         is_retry=is_retry,
-        allowed_tools="mcp__ida-pro-mcp__*",
-        disallowed_tools="mcp__ida-pro-mcp__open_file",
         agent_model=agent_model,
     )
     return AgentCommand(args, None, f"session {session_id}")

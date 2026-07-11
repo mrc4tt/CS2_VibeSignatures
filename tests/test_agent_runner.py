@@ -25,6 +25,8 @@ class TestSkillRunnerProjectPromptConfiguration(unittest.TestCase):
             ["--append-system-prompt-file", ".claude/SKILL_RUNNER.md"],
             [command.args[index : index + 2] for index in range(len(command.args) - 1)],
         )
+        self.assertNotIn("--allowedTools", command.args)
+        self.assertNotIn("--disallowedTools", command.args)
 
     def test_codex_command_uses_skill_runner_profile_for_runtime_settings(self) -> None:
         command = agent_runner._build_codex_command(
@@ -53,6 +55,11 @@ class TestSkillRunnerProjectPromptConfiguration(unittest.TestCase):
         opencode_config = json.loads(config_paths[2].read_text(encoding="utf-8"))
 
         self.assertEqual([".claude/CLAUDE.md"], claude_settings["claudeMdExcludes"])
+        self.assertEqual(["mcp__ida-pro-mcp__*"], claude_settings["permissions"]["allow"])
+        self.assertEqual(
+            ["mcp__ida-pro-mcp__open_file"],
+            claude_settings["permissions"]["deny"],
+        )
         self.assertIn('project_doc_fallback_filenames = [".claude/SKILL_RUNNER.md"]', codex_config)
         self.assertIn('model_reasoning_effort = "high"', codex_config)
         self.assertIn('model_reasoning_summary = "none"', codex_config)
@@ -487,7 +494,7 @@ class TestRunSkillCodexPromptTransport(unittest.TestCase):
 
     @patch("agent_runner.os.path.exists", return_value=True)
     @patch("agent_runner.subprocess.Popen")
-    def test_run_skill_disallows_claude_from_opening_another_ida_file(
+    def test_run_skill_loads_claude_tool_permissions_from_settings(
         self,
         mock_popen,
         _mock_exists,
@@ -509,8 +516,10 @@ class TestRunSkillCodexPromptTransport(unittest.TestCase):
 
         self.assertTrue(result)
         agent_cmd = mock_popen.call_args_list[1].args[0]
-        disallowed_index = agent_cmd.index("--disallowedTools")
-        self.assertEqual("mcp__ida-pro-mcp__open_file", agent_cmd[disallowed_index + 1])
+        settings_index = agent_cmd.index("--settings")
+        self.assertEqual(".claude/skill_runner.settings.json", agent_cmd[settings_index + 1])
+        self.assertNotIn("--allowedTools", agent_cmd)
+        self.assertNotIn("--disallowedTools", agent_cmd)
 
     @patch.object(Path, "read_text", return_value="sig finder prompt")
     @patch("agent_runner.os.path.exists", return_value=True)
