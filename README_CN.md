@@ -69,12 +69,14 @@ uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
 ### 2. 为 `config.yaml` 的符号生成对应的 signatures
 
  ```bash
- uv run ida_analyze_bin.py -gamever=14146 [-oldgamever=14145] [-configyaml=path/to/config.yaml] [-modules=server] [-platform=windows] [-agent=claude/codex/"claude.cmd"/"codex.cmd"] [-maxretry=3] [-vcall_finder=g_pNetworkMessages|*] [-llm_model=gpt-4o] [-llm_apikey=your-key] [-llm_baseurl=https://api.example.com/v1] [-llm_temperature=0.2] [-llm_effort=medium] [-llm_fake_as=codex] [-debug]
+ uv run ida_analyze_bin.py -gamever=14146 [-oldgamever=14145] [-configyaml=path/to/config.yaml] [-modules=server] [-platform=windows] [-agent=claude/codex/opencode/"claude.cmd"/"codex.cmd"/"opencode.cmd"] [-maxretry=3] [-vcall_finder=g_pNetworkMessages|*] [-llm_model=gpt-4o] [-llm_apikey=your-key] [-llm_baseurl=https://api.example.com/v1] [-llm_temperature=0.2] [-llm_effort=medium] [-llm_fake_as=codex] [-debug]
  ```
 
 * 在真正运行 Agent SKILL(s) 前，会先通过 mcp call 直接使用 `bin/{previous_gamever}/{module}/{symbol}.{platform}.yaml` 中的旧 signature 查找当前版本游戏二进制中的符号。不会消耗 token。
 
 * `-agent="claude.cmd"` 用于Windows上使用npm安装的claude cli
+
+* `-agent="opencode.cmd"` 用于 Windows 上通过 npm 安装的 OpenCode CLI。OpenCode 会自动加载 `.opencode/agents/sig-finder.md`，并以非交互模式运行 skill。
 
 * 共享 LLM CLI 参数：
   - `-llm_apikey`：启用基于 LLM 的流程时必需，包括 `vcall_finder` 聚合与 `LLM_DECOMPILE`
@@ -153,10 +155,12 @@ uv run update_gamedata.py -gamever 14141 [-debug]
 ### 4. 运行 C++ 测试并检查 cpp headers 是否与 yaml(s) 匹配
 
 ```bash
-uv run run_cpp_tests.py -gamever 14141 [-debug] [-fixheader] [-agent=claude/codex/"claude.cmd"/"codex.cmd"] 
+uv run run_cpp_tests.py -gamever 14141 [-debug] [-fixheader] [-agent=claude/codex/opencode/"claude.cmd"/"codex.cmd"/"opencode.cmd"]
 ```
 
 * 使用 `-fixheader` 时，会启动一个 agent 来修复 cpp headers 中的不匹配项（会消耗少量token）
+
+* 使用 `-fixheader -agent="opencode.cmd"` 时，OpenCode 会加载 `.opencode/agents/vtable-fixer.md`，并以非交互模式运行头文件修复 Agent。
 
 ### 当前支持的 gamedata
 

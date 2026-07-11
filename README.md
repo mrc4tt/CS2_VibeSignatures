@@ -66,7 +66,7 @@ If DepotDownloader needs authentication, add the same `-username`, `-password`, 
 ### 2. Find and generate signatures for all symbols declared in `config.yaml`
 
  ```bash
- uv run ida_analyze_bin.py -gamever 14156 [-oldgamever=14155] [-configyaml=path/to/config.yaml] [-modules=server] [-platform=windows] [-agent=claude/codex/"claude.cmd"/"codex.cmd"] [-maxretry=3] [-vcall_finder=g_pNetworkMessages|*] [-llm_model=gpt-4o] [-llm_apikey=your-key] [-llm_baseurl=https://api.example.com/v1] [-llm_temperature=0.2] [-llm_effort=medium] [-llm_fake_as=codex] [-rename] [-debug]
+ uv run ida_analyze_bin.py -gamever 14156 [-oldgamever=14155] [-configyaml=path/to/config.yaml] [-modules=server] [-platform=windows] [-agent=claude/codex/opencode/"claude.cmd"/"codex.cmd"/"opencode.cmd"] [-maxretry=3] [-vcall_finder=g_pNetworkMessages|*] [-llm_model=gpt-4o] [-llm_apikey=your-key] [-llm_baseurl=https://api.example.com/v1] [-llm_temperature=0.2] [-llm_effort=medium] [-llm_fake_as=codex] [-rename] [-debug]
  ```
 
 * Shared LLM CLI parameters:
@@ -82,6 +82,8 @@ If DepotDownloader needs authentication, add the same `-username`, `-password`, 
 * Old signatures from `bin/{previous_gamever}/{module}/{symbol}.{platform}.yaml` will be used to find symbols in current version of game binaries directly through mcp call before actually running Agent SKILL(s). No token will be consumed in this case.
 
 * `-agent="claude.cmd"` is for claude cli installed from Windows npm
+
+* `-agent="opencode.cmd"` uses the OpenCode CLI installed through npm on Windows. OpenCode loads the project Agent from `.opencode/agents/sig-finder.md` and runs skills in non-interactive mode.
 
 * We prefer programmatic preprocessor scripts > LLM_DECOMPILE based preprocessor scripts > Agent with `SKILL.md`
 
@@ -158,10 +160,12 @@ uv run update_gamedata.py -gamever 14141 [-debug]
 ### 4. Run cpp tests and check if cpp headers mismatch from yaml(s)
 
 ```bash
-uv run run_cpp_tests.py -gamever 14141 [-debug] [-fixheader] [-agent=claude/codex/"claude.cmd"/"codex.cmd"] 
+uv run run_cpp_tests.py -gamever 14141 [-debug] [-fixheader] [-agent=claude/codex/opencode/"claude.cmd"/"codex.cmd"/"opencode.cmd"]
 ```
 
 * When with `-fixheader`, an agent will be initiated to fix the mismatches in cpp headers.
+
+* With `-fixheader -agent="opencode.cmd"`, OpenCode loads `.opencode/agents/vtable-fixer.md` and runs the header-fix agent in non-interactive mode.
 
 ### Currently supported gamedata
 

@@ -207,6 +207,124 @@ class TestCompareRecordLayoutWithYaml(unittest.TestCase):
 
 
 class TestRunFixHeaderAgent(unittest.TestCase):
+    def test_opencode_vtable_fixer_preserves_header_only_constraints(self) -> None:
+        agent_path = Path(".opencode/agents/vtable-fixer.md")
+
+        self.assertTrue(agent_path.is_file())
+        agent_text = agent_path.read_text(encoding="utf-8")
+        self.assertIn("mode: primary", agent_text)
+        self.assertIn("DO NOT rely on ida-pro-mcp", agent_text)
+        self.assertIn("Edit only the header files explicitly listed", agent_text)
+
+    @patch("run_cpp_tests.subprocess.run")
+    def test_run_fix_header_agent_retries_opencode_with_reported_session_id(self, mock_run) -> None:
+        mock_run.side_effect = [
+            CompletedProcess(
+                args=["opencode", "run"],
+                returncode=1,
+                stdout='{"type":"step_start","sessionID":"ses_header"}\n',
+                stderr="first failure",
+            ),
+            CompletedProcess(
+                args=["opencode", "run"],
+                returncode=0,
+                stdout='{"type":"text","sessionID":"ses_header"}\n',
+                stderr="",
+            ),
+        ]
+
+        result = run_cpp_tests.run_fix_header_agent(
+            fix_prompt="fix the vtable diff",
+            agent="opencode",
+            debug=False,
+            max_retries=2,
+        )
+
+        self.assertTrue(result)
+        self.assertEqual(
+            ["opencode", "run", "--format", "json", "--agent", "vtable-fixer", "fix the vtable diff"],
+            mock_run.call_args_list[0].args[0],
+        )
+        self.assertEqual(
+            [
+                "opencode",
+                "run",
+                "--format",
+                "json",
+                "--session",
+                "ses_header",
+                "--agent",
+                "vtable-fixer",
+                "fix the vtable diff",
+            ],
+            mock_run.call_args_list[1].args[0],
+        )
+        self.assertNotIn("input", mock_run.call_args_list[0].kwargs)
+        self.assertNotIn("input", mock_run.call_args_list[1].kwargs)
+
+    @patch("run_cpp_tests.subprocess.run")
+    def test_run_fix_header_agent_captures_opencode_session_in_debug_mode(self, mock_run) -> None:
+        mock_run.side_effect = [
+            CompletedProcess(
+                args=["opencode", "run"],
+                returncode=1,
+                stdout='{"type":"step_start","sessionID":"ses_debug"}\n',
+                stderr="first failure",
+            ),
+            CompletedProcess(args=["opencode", "run"], returncode=0, stdout="", stderr=""),
+        ]
+
+        result = run_cpp_tests.run_fix_header_agent(
+            fix_prompt="fix the vtable diff",
+            agent="opencode",
+            debug=True,
+            max_retries=2,
+        )
+
+        self.assertTrue(result)
+        self.assertTrue(mock_run.call_args_list[0].kwargs["capture_output"])
+        self.assertTrue(mock_run.call_args_list[0].kwargs["text"])
+        self.assertIn("--session", mock_run.call_args_list[1].args[0])
+
+    @patch("run_cpp_tests.subprocess.run")
+    def test_run_fix_header_agent_falls_back_to_continue_without_opencode_session(self, mock_run) -> None:
+        mock_run.side_effect = [
+            CompletedProcess(args=["opencode.cmd", "run"], returncode=1, stdout="", stderr="first failure"),
+            CompletedProcess(args=["opencode.cmd", "run"], returncode=0, stdout="", stderr=""),
+        ]
+
+        result = run_cpp_tests.run_fix_header_agent(
+            fix_prompt="fix the vtable diff",
+            agent="opencode.cmd",
+            debug=False,
+            max_retries=2,
+        )
+
+        self.assertTrue(result)
+        retry_args = mock_run.call_args_list[1].args[0]
+        self.assertIn("--continue", retry_args)
+        self.assertNotIn("--session", retry_args)
+
+    @patch("run_cpp_tests.subprocess.run")
+    def test_run_fix_header_agent_reuses_opencode_session_for_verification(self, mock_run) -> None:
+        mock_run.return_value = CompletedProcess(args=["opencode"], returncode=0, stdout="", stderr="")
+        session_state = {"opencode_session_id": "ses_verify"}
+
+        result = run_cpp_tests.run_fix_header_agent(
+            fix_prompt="fix the remaining vtable diff",
+            agent="opencode",
+            debug=False,
+            max_retries=1,
+            is_continuation=True,
+            session_state=session_state,
+        )
+
+        self.assertTrue(result)
+        command = mock_run.call_args.args[0]
+        self.assertIn("--session", command)
+        session_index = command.index("--session") + 1
+        self.assertEqual("ses_verify", command[session_index])
+
     @patch.object(
         run_cpp_tests,
         "_load_codex_developer_instructions",

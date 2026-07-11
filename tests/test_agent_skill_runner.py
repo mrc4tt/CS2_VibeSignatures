@@ -111,9 +111,7 @@ class TestOpenCodeCommandConstruction(unittest.TestCase):
         _mock_exists,
     ) -> None:
         mock_run_process.side_effect = [
-            subprocess.CompletedProcess(
-                ["opencode", "mcp", "list"], 0, "ida-pro-mcp failed\n", ""
-            ),
+            subprocess.CompletedProcess(["opencode", "mcp", "list"], 0, "ida-pro-mcp failed\n", ""),
             subprocess.CompletedProcess(
                 ["opencode", "run"],
                 1,
@@ -165,12 +163,8 @@ class TestOpenCodeCommandConstruction(unittest.TestCase):
         _mock_exists,
     ) -> None:
         mock_run_process.side_effect = [
-            subprocess.CompletedProcess(
-                ["opencode.cmd", "mcp", "list"], 0, "ida-pro-mcp failed\n", ""
-            ),
-            subprocess.CompletedProcess(
-                ["opencode.cmd", "run"], 1, "", "failed before first event"
-            ),
+            subprocess.CompletedProcess(["opencode.cmd", "mcp", "list"], 0, "ida-pro-mcp failed\n", ""),
+            subprocess.CompletedProcess(["opencode.cmd", "run"], 1, "", "failed before first event"),
             subprocess.CompletedProcess(
                 ["opencode.cmd", "run"],
                 0,
@@ -625,9 +619,7 @@ class TestRunSkillMcpListPreflight(unittest.TestCase):
             )
         )
         self.assertTrue(
-            agent_skill_runner._mcp_list_contains_server(
-                "\x1b[34m•\x1b[39m  ✗ ida-pro-mcp \x1b[90mfailed\x1b[39m\n"
-            )
+            agent_skill_runner._mcp_list_contains_server("\x1b[34m•\x1b[39m  ✗ ida-pro-mcp \x1b[90mfailed\x1b[39m\n")
         )
         self.assertFalse(
             agent_skill_runner._mcp_list_contains_server(

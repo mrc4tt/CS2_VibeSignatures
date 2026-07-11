@@ -91,7 +91,10 @@ def parse_args():
     parser.add_argument(
         "-agent",
         default=os.environ.get("CS2VIBE_AGENT", DEFAULT_AGENT),
-        help=f"Agent executable to use for analysis, e.g., claude, claude.cmd, codex, codex.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var)",
+        help=(
+            "Agent executable to use for analysis, e.g., claude, claude.cmd, codex, "
+            f"codex.cmd, opencode, opencode.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var)"
+        ),
     )
     parser.add_argument(
         "-maxretry",
@@ -337,6 +340,31 @@ def _build_fix_prompt(
     return "\n".join(lines)
 
 
+def _detect_header_fix_agent_kind(agent: str) -> str | None:
+    agent_lower = agent.lower()
+    if "claude" in agent_lower:
+        return "claude"
+    if "codex" in agent_lower:
+        return "codex"
+    if "opencode" in agent_lower:
+        return "opencode"
+    return None
+
+
+def _extract_opencode_session_id(output: str | None) -> str | None:
+    for line in (output or "").splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, dict):
+            continue
+        session_id = event.get("sessionID")
+        if isinstance(session_id, str) and session_id:
+            return session_id
+    return None
+
+
 def run_fix_header_agent(
     *,
     fix_prompt: str,
@@ -348,24 +376,29 @@ def run_fix_header_agent(
     claude_allowed_tools: str = "",
     claude_permission_mode: str = "",
     claude_extra_args: str = "",
+    session_state: dict[str, str | None] | None = None,
 ) -> bool:
-    """Invoke claude/codex agent to apply header fixes."""
+    """Invoke the configured Claude, Codex, or OpenCode agent to apply header fixes."""
     max_retries = max(1, int(max_retries))
+    agent_kind = _detect_header_fix_agent_kind(agent)
+    if agent_kind is None:
+        print(f"    Error: Unknown agent type '{agent}'. Agent name must contain 'claude', 'codex', or 'opencode'.")
+        return False
+
     claude_session_id = session_id if session_id else str(uuid.uuid4())
+    opencode_session_id = (session_state or {}).get("opencode_session_id")
 
     codex_developer_instructions = None
-    if "codex" in agent.lower():
+    if agent_kind == "codex":
         codex_developer_instructions = _load_codex_developer_instructions(VTABLE_FIXER_AGENT_FILE)
         if not codex_developer_instructions:
             return False
 
     for attempt in range(max_retries):
         is_retry = (attempt > 0) or is_continuation
-        is_claude_agent = "claude" in agent.lower()
-        is_codex_agent = "codex" in agent.lower()
         agent_input = None
 
-        if is_claude_agent:
+        if agent_kind == "claude":
             agent_input = fix_prompt
             cmd = [
                 agent,
@@ -388,7 +421,7 @@ def run_fix_header_agent(
             else:
                 cmd.extend(["--session-id", claude_session_id])
             retry_target_desc = f"session {claude_session_id}"
-        elif is_codex_agent:
+        elif agent_kind == "codex":
             agent_input = fix_prompt
             if is_retry:
                 cmd = [
@@ -422,8 +455,17 @@ def run_fix_header_agent(
                 ]
             retry_target_desc = "the latest codex session (--last)"
         else:
-            print(f"    Error: Unknown agent type '{agent}'. Agent name must contain 'claude' or 'codex'.")
-            return False
+            cmd = [agent, "run", "--format", "json"]
+            if is_retry and opencode_session_id:
+                cmd.extend(["--session", opencode_session_id])
+            elif is_retry:
+                cmd.append("--continue")
+            cmd.extend(["--agent", "vtable-fixer", fix_prompt])
+            retry_target_desc = (
+                f"OpenCode session {opencode_session_id}"
+                if opencode_session_id
+                else "the latest OpenCode session (--continue)"
+            )
 
         retry_tag = "[RETRY] " if is_retry else ""
         attempt_str = f"(attempt {attempt + 1}/{max_retries})" if max_retries > 1 else ""
@@ -439,12 +481,26 @@ def run_fix_header_agent(
                 run_kwargs["input"] = agent_input
                 run_kwargs["text"] = True
 
-            if debug:
+            if debug and agent_kind != "opencode":
                 result = subprocess.run(cmd, **run_kwargs)
             else:
                 run_kwargs["capture_output"] = True
                 run_kwargs.setdefault("text", True)
                 result = subprocess.run(cmd, **run_kwargs)
+
+            if agent_kind == "opencode" and opencode_session_id is None:
+                opencode_session_id = _extract_opencode_session_id(result.stdout)
+                if session_state is not None:
+                    session_state["opencode_session_id"] = opencode_session_id
+            if agent_kind == "opencode":
+                retry_target_desc = (
+                    f"OpenCode session {opencode_session_id}"
+                    if opencode_session_id
+                    else "the latest OpenCode session (--continue)"
+                )
+                if debug:
+                    print(result.stdout, end="")
+                    print(result.stderr, end="", file=sys.stderr)
 
             if result.returncode == 0:
                 return True
@@ -493,6 +549,7 @@ def run_fix_header_with_verification(
     """
     max_verify = max(1, args.maxverify)
     session_id = str(uuid.uuid4())
+    session_state: dict[str, str | None] = {}
     current_diff_reports = list(diff_reports)
 
     for verify_attempt in range(max_verify):
@@ -523,6 +580,7 @@ def run_fix_header_with_verification(
             claude_allowed_tools=claude_allowed_tools,
             claude_permission_mode=claude_permission_mode,
             claude_extra_args=claude_extra_args,
+            session_state=session_state,
         )
 
         if not agent_success:

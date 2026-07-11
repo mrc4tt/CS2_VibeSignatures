@@ -2,25 +2,25 @@
 """
 IDA Binary Analysis Script for CS2_VibeSignatures
 
-Analyzes CS2 binary files using IDA Pro MCP and Claude/Codex agents.
+Analyzes CS2 binary files using IDA Pro MCP and Claude, Codex, or OpenCode agents.
 Sequentially processes modules and symbols defined in config.yaml.
 
 Usage:
-    python ida_analyze_bin.py -gamever=14134 [-platform=windows,linux] [-agent=codex]
+    python ida_analyze_bin.py -gamever=14134 [-platform=windows,linux] [-agent=claude/codex/opencode]
 
     -gamever: Game version subdirectory name (required)
     -oldgamever: Old game version for signature reuse (default: gamever - 1)
     -configyaml: Path to config.yaml file (default: config.yaml)
     -bindir: Directory containing downloaded binaries (default: bin)
     -platform: Platforms to analyze, comma-separated (default: windows,linux)
-    -agent: Agent to use for analysis: claude or codex (default: claude)
+    -agent: Agent to use for analysis: claude, codex, or opencode (default: claude)
     -ida_args: Additional arguments for idalib-mcp (optional)
     -debug: Enable debug output
 
 Requirements:
     uv sync
     uv (for running idalib-mcp)
-    claude CLI or codex CLI
+    claude CLI, codex CLI, or opencode CLI
 
 Output:
     bin/14134/engine/CServerSideClient_IsHearingClient.linux.yaml
@@ -1066,7 +1066,9 @@ def _parse_optional_llm_effort(raw_value, parser):
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Analyze CS2 binary files using IDA Pro MCP and Claude/Codex agents")
+    parser = argparse.ArgumentParser(
+        description="Analyze CS2 binary files using IDA Pro MCP and Claude, Codex, or OpenCode agents"
+    )
     parser.add_argument(
         "-configyaml", default=DEFAULT_CONFIG_FILE, help=f"Path to config.yaml file (default: {DEFAULT_CONFIG_FILE})"
     )
@@ -1089,7 +1091,10 @@ def parse_args():
     parser.add_argument(
         "-agent",
         default=os.environ.get("CS2VIBE_AGENT", DEFAULT_AGENT),
-        help=f"Agent executable to use for analysis, e.g., claude, claude.cmd, codex, codex.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var)",
+        help=(
+            "Agent executable to use for analysis, e.g., claude, claude.cmd, codex, "
+            f"codex.cmd, opencode, opencode.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var)"
+        ),
     )
     parser.add_argument(
         "-modules",
