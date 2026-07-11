@@ -2220,6 +2220,8 @@ def run_skill(skill_name, agent="claude", debug=False, expected_yaml_paths=None,
                 "sig-finder",
                 "--allowedTools",
                 "mcp__ida-pro-mcp__*",
+                "--disallowedTools",
+                "mcp__ida-pro-mcp__open_file",
                 "--settings",
                 '{"alwaysThinkingEnabled": false}',
             ]

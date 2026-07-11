@@ -2874,6 +2874,33 @@ class TestRunSkillCodexPromptTransport(unittest.TestCase):
         self.assertIn("agent stdout line\n", fake_stdout.getvalue())
         self.assertIn("agent stderr line\n", fake_stderr.getvalue())
 
+    @patch("ida_analyze_bin.os.path.exists", return_value=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    def test_run_skill_disallows_claude_from_opening_another_ida_file(
+        self,
+        mock_popen,
+        _mock_exists,
+    ) -> None:
+        preflight_process = _FakePopen(
+            stdout_chunks=["ida-pro-mcp: http://127.0.0.1:13337/mcp (HTTP) - Failed\n"],
+            stderr_chunks=[],
+            returncode=0,
+        )
+        agent_process = _FakePopen(stdout_chunks=["done\n"], stderr_chunks=[], returncode=0)
+        mock_popen.side_effect = [preflight_process, agent_process]
+
+        result = ida_analyze_bin.run_skill(
+            skill_name="find-IGameSystem_vtable",
+            agent="claude",
+            debug=False,
+            max_retries=1,
+        )
+
+        self.assertTrue(result)
+        agent_cmd = mock_popen.call_args_list[1].args[0]
+        disallowed_index = agent_cmd.index("--disallowedTools")
+        self.assertEqual("mcp__ida-pro-mcp__open_file", agent_cmd[disallowed_index + 1])
+
     @patch.object(Path, "read_text", return_value="sig finder prompt")
     @patch("ida_analyze_bin.os.path.exists", return_value=True)
     @patch("ida_analyze_bin.subprocess.Popen")
