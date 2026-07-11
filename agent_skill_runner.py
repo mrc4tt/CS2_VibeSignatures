@@ -25,6 +25,31 @@ class AgentCommand:
     retry_target_desc: str
 
 
+def _detect_agent_kind(agent: str) -> str | None:
+    agent_lower = agent.lower()
+    if "claude" in agent_lower:
+        return "claude"
+    if "codex" in agent_lower:
+        return "codex"
+    if "opencode" in agent_lower:
+        return "opencode"
+    return None
+
+
+def _extract_opencode_session_id(output: str) -> str | None:
+    for line in (output or "").splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, dict):
+            continue
+        session_id = event.get("sessionID")
+        if isinstance(session_id, str) and session_id:
+            return session_id
+    return None
+
+
 def _output_contains_error_marker(*texts: str) -> bool:
     merged_output = "\n".join(text for text in texts if text)
     return bool(ERROR_MARKER_RE.search(merged_output))
@@ -205,6 +230,28 @@ def _build_codex_command(agent: str, skill_name: str, developer_instructions: st
     return AgentCommand(args, f"Run SKILL: .claude/skills/{skill_name}/SKILL.md", "the latest codex session (--last)")
 
 
+def _build_opencode_command(
+    agent: str,
+    skill_name: str,
+    is_retry: bool,
+    session_id: str | None,
+) -> AgentCommand:
+    args = [agent, "run", "--format", "json"]
+    if is_retry and session_id:
+        args.extend(["--session", session_id])
+    elif is_retry:
+        args.append("--continue")
+    args.extend(
+        [
+            "--agent",
+            "sig-finder",
+            f"Run SKILL: .claude/skills/{skill_name}/SKILL.md",
+        ]
+    )
+    retry_target = f"OpenCode session {session_id}" if session_id else "the latest OpenCode session (--continue)"
+    return AgentCommand(args, None, retry_target)
+
+
 def _display_command(args: list[str]) -> list[str]:
     display_args = args
     for index, arg in enumerate(args[:-1]):
@@ -222,10 +269,19 @@ def _missing_expected_outputs(expected_yaml_paths) -> list[str]:
 
 
 def _build_agent_command(
-    *, agent: str, agent_kind: str, skill_name: str, session_id: str, developer_instructions: str | None, is_retry: bool
+    *,
+    agent: str,
+    agent_kind: str,
+    skill_name: str,
+    session_id: str,
+    opencode_session_id: str | None,
+    developer_instructions: str | None,
+    is_retry: bool,
 ) -> AgentCommand:
     if agent_kind == "claude":
         return _build_claude_command(agent, skill_name, session_id, is_retry)
+    if agent_kind == "opencode":
+        return _build_opencode_command(agent, skill_name, is_retry, opencode_session_id)
     if developer_instructions is None:
         raise ValueError("Codex developer instructions are required")
     return _build_codex_command(agent, skill_name, developer_instructions, is_retry)
@@ -276,12 +332,14 @@ def _run_skill_attempts(
     expected_yaml_paths,
     max_retries: int,
 ) -> bool:
+    opencode_session_id = None
     for attempt in range(max_retries):
         command = _build_agent_command(
             agent=agent,
             agent_kind=agent_kind,
             skill_name=skill_name,
             session_id=session_id,
+            opencode_session_id=opencode_session_id,
             developer_instructions=developer_instructions,
             is_retry=attempt > 0,
         )
@@ -290,6 +348,8 @@ def _run_skill_attempts(
             result = _run_process_with_stream_capture(
                 command.args, agent_input=command.input_text, debug=debug, timeout=SKILL_TIMEOUT
             )
+            if agent_kind == "opencode" and opencode_session_id is None:
+                opencode_session_id = _extract_opencode_session_id(result.stdout)
             reason = _result_failure_reason(result, expected_yaml_paths)
             if reason is None:
                 return True
@@ -311,10 +371,9 @@ def _run_skill_attempts(
 
 def run_skill(skill_name, agent="claude", debug=False, expected_yaml_paths=None, max_retries=3) -> bool:
     """Execute a skill with its configured agent and retry support."""
-    agent_lower = agent.lower()
-    agent_kind = "claude" if "claude" in agent_lower else "codex" if "codex" in agent_lower else None
+    agent_kind = _detect_agent_kind(agent)
     if agent_kind is None:
-        print(f"    Error: Unknown agent type '{agent}'. Agent name must contain 'claude' or 'codex'.")
+        print(f"    Error: Unknown agent type '{agent}'. Agent name must contain 'claude', 'codex', or 'opencode'.")
         return False
 
     skill_md_path = os.path.join(".claude", "skills", skill_name, "SKILL.md")

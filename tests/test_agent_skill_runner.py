@@ -68,6 +68,129 @@ class TestOpenCodeSigFinderAgent(unittest.TestCase):
         self.assertIn("DO NOT verify or check the existence of output yaml", agent_text)
 
 
+class TestOpenCodeCommandConstruction(unittest.TestCase):
+    def setUp(self) -> None:
+        agent_skill_runner._MCP_PREFLIGHT_DONE = False
+        agent_skill_runner._MCP_PREFLIGHT_FAILED = False
+
+    def test_detect_agent_kind_accepts_opencode_executable_names(self) -> None:
+        self.assertEqual("opencode", agent_skill_runner._detect_agent_kind("opencode"))
+        self.assertEqual("opencode", agent_skill_runner._detect_agent_kind("opencode.cmd"))
+        self.assertEqual("opencode", agent_skill_runner._detect_agent_kind(r"C:\tools\opencode.cmd"))
+        self.assertEqual("claude", agent_skill_runner._detect_agent_kind("claude.cmd"))
+        self.assertEqual("codex", agent_skill_runner._detect_agent_kind("codex.cmd"))
+        self.assertIsNone(agent_skill_runner._detect_agent_kind("unknown-agent"))
+
+    def test_extract_opencode_session_id_uses_first_valid_event(self) -> None:
+        output = "\n".join(
+            [
+                "not json",
+                '{"type":"step_start","sessionID":"ses_first"}',
+                '{"type":"text","sessionID":"ses_second"}',
+            ]
+        )
+
+        self.assertEqual("ses_first", agent_skill_runner._extract_opencode_session_id(output))
+
+    def test_extract_opencode_session_id_ignores_invalid_values(self) -> None:
+        output = "\n".join(
+            [
+                "[]",
+                '{"type":"text","sessionID":""}',
+                '{"type":"error","sessionID":42}',
+            ]
+        )
+
+        self.assertIsNone(agent_skill_runner._extract_opencode_session_id(output))
+
+    @patch("agent_skill_runner.os.path.exists", return_value=True)
+    @patch("agent_skill_runner._run_process_with_stream_capture")
+    def test_run_skill_retries_opencode_with_reported_session_id(
+        self,
+        mock_run_process,
+        _mock_exists,
+    ) -> None:
+        mock_run_process.side_effect = [
+            subprocess.CompletedProcess(
+                ["opencode", "mcp", "list"], 0, "ida-pro-mcp failed\n", ""
+            ),
+            subprocess.CompletedProcess(
+                ["opencode", "run"],
+                1,
+                '{"type":"step_start","sessionID":"ses_exact"}\n',
+                "first failure",
+            ),
+            subprocess.CompletedProcess(
+                ["opencode", "run"],
+                0,
+                '{"type":"text","sessionID":"ses_exact"}\n',
+                "",
+            ),
+        ]
+
+        result = agent_skill_runner.run_skill(
+            "find-IGameSystem_vtable",
+            agent="opencode",
+            max_retries=2,
+        )
+
+        self.assertTrue(result)
+        prompt = "Run SKILL: .claude/skills/find-IGameSystem_vtable/SKILL.md"
+        self.assertEqual(
+            ["opencode", "run", "--format", "json", "--agent", "sig-finder", prompt],
+            mock_run_process.call_args_list[1].args[0],
+        )
+        self.assertEqual(
+            [
+                "opencode",
+                "run",
+                "--format",
+                "json",
+                "--session",
+                "ses_exact",
+                "--agent",
+                "sig-finder",
+                prompt,
+            ],
+            mock_run_process.call_args_list[2].args[0],
+        )
+        self.assertIsNone(mock_run_process.call_args_list[1].kwargs["agent_input"])
+        self.assertIsNone(mock_run_process.call_args_list[2].kwargs["agent_input"])
+
+    @patch("agent_skill_runner.os.path.exists", return_value=True)
+    @patch("agent_skill_runner._run_process_with_stream_capture")
+    def test_run_skill_falls_back_to_continue_without_session_id(
+        self,
+        mock_run_process,
+        _mock_exists,
+    ) -> None:
+        mock_run_process.side_effect = [
+            subprocess.CompletedProcess(
+                ["opencode.cmd", "mcp", "list"], 0, "ida-pro-mcp failed\n", ""
+            ),
+            subprocess.CompletedProcess(
+                ["opencode.cmd", "run"], 1, "", "failed before first event"
+            ),
+            subprocess.CompletedProcess(
+                ["opencode.cmd", "run"],
+                0,
+                '{"type":"text","sessionID":"ses_late"}\n',
+                "",
+            ),
+        ]
+
+        result = agent_skill_runner.run_skill(
+            "find-IGameSystem_vtable",
+            agent="opencode.cmd",
+            max_retries=2,
+        )
+
+        self.assertTrue(result)
+        retry_args = mock_run_process.call_args_list[2].args[0]
+        self.assertIn("--continue", retry_args)
+        self.assertNotIn("--session", retry_args)
+
+
 class TestRunSkillOutputDetection(unittest.TestCase):
     def setUp(self) -> None:
         agent_skill_runner._MCP_PREFLIGHT_DONE = False
