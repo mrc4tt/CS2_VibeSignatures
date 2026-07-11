@@ -7,6 +7,49 @@ from unittest.mock import MagicMock, patch
 import agent_runner
 
 
+class TestAgentPermissionArgs(unittest.TestCase):
+    def test_returns_full_auto_permission_args_for_each_agent_kind(self) -> None:
+        expected_args = {
+            "claude": ["--permission-mode", "auto"],
+            "codex": ["--approval-mode", "full-auto"],
+            "opencode": ["--auto"],
+        }
+
+        for agent_kind, permission_args in expected_args.items():
+            with self.subTest(agent_kind=agent_kind):
+                self.assertEqual(permission_args, agent_runner._agent_permission_args(agent_kind))
+
+    def test_explicit_claude_permission_mode_overrides_auto_default(self) -> None:
+        self.assertEqual(
+            ["--permission-mode", "acceptEdits"],
+            agent_runner._agent_permission_args("claude", claude_permission_mode="acceptEdits"),
+        )
+
+    def test_skill_commands_enable_full_auto_permissions(self) -> None:
+        expected_args = {
+            "claude": ["--permission-mode", "auto"],
+            "codex": ["--approval-mode", "full-auto"],
+            "opencode": ["--auto"],
+        }
+
+        for agent_kind, permission_args in expected_args.items():
+            with self.subTest(agent_kind=agent_kind):
+                command = agent_runner._build_agent_command(
+                    agent=agent_kind,
+                    agent_kind=agent_kind,
+                    skill_name="find-test",
+                    session_id="session-id",
+                    opencode_session_id=None,
+                    developer_instructions='developer_instructions="test"',
+                    is_retry=False,
+                )
+                permission_index = command.args.index(permission_args[0])
+                self.assertEqual(
+                    permission_args,
+                    command.args[permission_index : permission_index + len(permission_args)],
+                )
+
+
 class _FakePipe:
     def __init__(self, chunks: list[str]) -> None:
         self._chunks = list(chunks)
@@ -135,7 +178,7 @@ class TestOpenCodeCommandConstruction(unittest.TestCase):
         self.assertTrue(result)
         prompt = "Run SKILL: .claude/skills/find-IGameSystem_vtable/SKILL.md"
         self.assertEqual(
-            ["opencode", "run", "--format", "json", "--agent", "sig-finder", prompt],
+            ["opencode", "run", "--format", "json", "--auto", "--agent", "sig-finder", prompt],
             mock_run_process.call_args_list[1].args[0],
         )
         self.assertEqual(
@@ -144,6 +187,7 @@ class TestOpenCodeCommandConstruction(unittest.TestCase):
                 "run",
                 "--format",
                 "json",
+                "--auto",
                 "--session",
                 "ses_exact",
                 "--agent",

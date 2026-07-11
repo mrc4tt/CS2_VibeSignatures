@@ -208,6 +208,36 @@ class TestCompareRecordLayoutWithYaml(unittest.TestCase):
 
 
 class TestRunFixHeaderAgent(unittest.TestCase):
+    def test_header_fix_commands_enable_full_auto_permissions(self) -> None:
+        common_args = {
+            "fix_prompt": "fix it",
+            "developer_instructions": 'developer_instructions="test"',
+            "claude_session_id": "session-id",
+            "opencode_session_id": None,
+            "is_retry": False,
+            "claude_allowed_tools": "",
+            "claude_permission_mode": "",
+            "claude_extra_args": "",
+        }
+        expected_args = {
+            "claude": ["--permission-mode", "auto"],
+            "codex": ["--approval-mode", "full-auto"],
+            "opencode": ["--auto"],
+        }
+
+        for agent_kind, permission_args in expected_args.items():
+            with self.subTest(agent_kind=agent_kind):
+                command = agent_runner._build_header_fix_command(
+                    agent=agent_kind,
+                    agent_kind=agent_kind,
+                    **common_args,
+                )
+                permission_index = command.args.index(permission_args[0])
+                self.assertEqual(
+                    permission_args,
+                    command.args[permission_index : permission_index + len(permission_args)],
+                )
+
     def test_opencode_vtable_fixer_preserves_header_only_constraints(self) -> None:
         agent_path = Path(".opencode/agents/vtable-fixer.md")
 
@@ -243,7 +273,16 @@ class TestRunFixHeaderAgent(unittest.TestCase):
 
         self.assertTrue(result)
         self.assertEqual(
-            ["opencode", "run", "--format", "json", "--agent", "vtable-fixer", "fix the vtable diff"],
+            [
+                "opencode",
+                "run",
+                "--format",
+                "json",
+                "--auto",
+                "--agent",
+                "vtable-fixer",
+                "fix the vtable diff",
+            ],
             mock_run.call_args_list[0].args[0],
         )
         self.assertEqual(
@@ -252,6 +291,7 @@ class TestRunFixHeaderAgent(unittest.TestCase):
                 "run",
                 "--format",
                 "json",
+                "--auto",
                 "--session",
                 "ses_header",
                 "--agent",

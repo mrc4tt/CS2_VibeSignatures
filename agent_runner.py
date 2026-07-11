@@ -223,25 +223,40 @@ def _split_cli_args(raw_args: str) -> list[str]:
         return text.split()
 
 
-def _build_claude_command(agent: str, skill_name: str, session_id: str, is_retry: bool) -> AgentCommand:
-    args = [
-        agent,
-        "-p",
-        f"/{skill_name}",
-        "--agent",
-        "sig-finder",
-        "--allowedTools",
-        "mcp__ida-pro-mcp__*",
-        "--disallowedTools",
-        "mcp__ida-pro-mcp__open_file",
-        "--settings",
-        '{"alwaysThinkingEnabled": false}',
-    ]
+def _agent_permission_args(agent_kind: str, *, claude_permission_mode: str = "") -> list[str]:
+    if agent_kind == "opencode":
+        return ["--auto"]
+    if agent_kind == "codex":
+        return ["--approval-mode", "full-auto"]
+    permission_mode = str(claude_permission_mode or "").strip() or "auto"
+    return ["--permission-mode", permission_mode]
+
+
+def _build_claude_base_args(
+    *,
+    agent: str,
+    prompt_arg: str,
+    agent_profile: str,
+    session_id: str,
+    is_retry: bool,
+    allowed_tools: str = "",
+    disallowed_tools: str = "",
+    permission_mode: str = "",
+    extra_args: str = "",
+) -> list[str]:
+    args = [agent, "-p", prompt_arg, "--agent", agent_profile]
+    if allowed_tools := str(allowed_tools or "").strip():
+        args.extend(["--allowedTools", allowed_tools])
+    if disallowed_tools := str(disallowed_tools or "").strip():
+        args.extend(["--disallowedTools", disallowed_tools])
+    args.extend(["--settings", '{"alwaysThinkingEnabled": false}'])
+    args.extend(_agent_permission_args("claude", claude_permission_mode=permission_mode))
+    args.extend(_split_cli_args(extra_args))
     args.extend(["--resume" if is_retry else "--session-id", session_id])
-    return AgentCommand(args, None, f"session {session_id}")
+    return args
 
 
-def _build_codex_command(agent: str, skill_name: str, developer_instructions: str, is_retry: bool) -> AgentCommand:
+def _build_codex_base_args(agent: str, developer_instructions: str, is_retry: bool) -> list[str]:
     args = [
         agent,
         "-c",
@@ -252,10 +267,45 @@ def _build_codex_command(agent: str, skill_name: str, developer_instructions: st
         "model_reasoning_summary=none",
         "-c",
         "model_verbosity=low",
-        "exec",
     ]
+    args.extend(_agent_permission_args("codex"))
+    args.append("exec")
     if is_retry:
         args.extend(["resume", "--last"])
+    return args
+
+
+def _build_opencode_base_args(
+    agent: str,
+    agent_profile: str,
+    is_retry: bool,
+    session_id: str | None,
+) -> list[str]:
+    args = [agent, "run", "--format", "json"]
+    args.extend(_agent_permission_args("opencode"))
+    if is_retry and session_id:
+        args.extend(["--session", session_id])
+    elif is_retry:
+        args.append("--continue")
+    args.extend(["--agent", agent_profile])
+    return args
+
+
+def _build_claude_command(agent: str, skill_name: str, session_id: str, is_retry: bool) -> AgentCommand:
+    args = _build_claude_base_args(
+        agent=agent,
+        prompt_arg=f"/{skill_name}",
+        agent_profile="sig-finder",
+        session_id=session_id,
+        is_retry=is_retry,
+        allowed_tools="mcp__ida-pro-mcp__*",
+        disallowed_tools="mcp__ida-pro-mcp__open_file",
+    )
+    return AgentCommand(args, None, f"session {session_id}")
+
+
+def _build_codex_command(agent: str, skill_name: str, developer_instructions: str, is_retry: bool) -> AgentCommand:
+    args = _build_codex_base_args(agent, developer_instructions, is_retry)
     args.append("-")
     return AgentCommand(args, f"Run SKILL: .claude/skills/{skill_name}/SKILL.md", "the latest codex session (--last)")
 
@@ -266,18 +316,8 @@ def _build_opencode_command(
     is_retry: bool,
     session_id: str | None,
 ) -> AgentCommand:
-    args = [agent, "run", "--format", "json"]
-    if is_retry and session_id:
-        args.extend(["--session", session_id])
-    elif is_retry:
-        args.append("--continue")
-    args.extend(
-        [
-            "--agent",
-            "sig-finder",
-            f"Run SKILL: .claude/skills/{skill_name}/SKILL.md",
-        ]
-    )
+    args = _build_opencode_base_args(agent, "sig-finder", is_retry, session_id)
+    args.append(f"Run SKILL: .claude/skills/{skill_name}/SKILL.md")
     retry_target = f"OpenCode session {session_id}" if session_id else "the latest OpenCode session (--continue)"
     return AgentCommand(args, None, retry_target)
 
@@ -443,39 +483,25 @@ def _build_header_fix_command(
     claude_extra_args: str,
 ) -> AgentCommand:
     if agent_kind == "claude":
-        args = [agent, "-p", "-", "--agent", "vtable-fixer", "--settings", '{"alwaysThinkingEnabled": false}']
-        if allowed_tools := str(claude_allowed_tools or "").strip():
-            args.extend(["--allowedTools", allowed_tools])
-        if permission_mode := str(claude_permission_mode or "").strip():
-            args.extend(["--permission-mode", permission_mode])
-        args.extend(_split_cli_args(claude_extra_args))
-        args.extend(["--resume" if is_retry else "--session-id", claude_session_id])
+        args = _build_claude_base_args(
+            agent=agent,
+            prompt_arg="-",
+            agent_profile="vtable-fixer",
+            session_id=claude_session_id,
+            is_retry=is_retry,
+            allowed_tools=claude_allowed_tools,
+            permission_mode=claude_permission_mode,
+            extra_args=claude_extra_args,
+        )
         return AgentCommand(args, fix_prompt, f"session {claude_session_id}")
     if agent_kind == "codex":
         if developer_instructions is None:
             raise ValueError("Codex developer instructions are required")
-        args = [
-            agent,
-            "-c",
-            developer_instructions,
-            "-c",
-            "model_reasoning_effort=high",
-            "-c",
-            "model_reasoning_summary=none",
-            "-c",
-            "model_verbosity=low",
-            "exec",
-        ]
-        if is_retry:
-            args.extend(["resume", "--last"])
+        args = _build_codex_base_args(agent, developer_instructions, is_retry)
         args.append("-")
         return AgentCommand(args, fix_prompt, "the latest codex session (--last)")
-    args = [agent, "run", "--format", "json"]
-    if is_retry and opencode_session_id:
-        args.extend(["--session", opencode_session_id])
-    elif is_retry:
-        args.append("--continue")
-    args.extend(["--agent", "vtable-fixer", fix_prompt])
+    args = _build_opencode_base_args(agent, "vtable-fixer", is_retry, opencode_session_id)
+    args.append(fix_prompt)
     return AgentCommand(args, None, _opencode_retry_target(opencode_session_id))
 
 
