@@ -5183,6 +5183,92 @@ found_call:
         self.assertIn("0x1A3F916", correction_prompt)
         self.assertIn("complete YAML", correction_prompt)
 
+    async def test_call_llm_decompile_retries_vfunc_returned_as_funcptr(self) -> None:
+        hallucinated_response = """
+found_funcptr:
+  - insn_va: '0x2120CE7'
+    insn_disasm: lea     rax, CEntitySystem_OnRemoveEntity
+    funcptr_name: CEntitySystem_OnRemoveEntity
+""".strip()
+        corrected_response = """
+found_vcall:
+  - insn_va: '0x2120CC2'
+    insn_disasm: mov     rcx, [rdx+88h]
+    vfunc_offset: '0x88'
+    func_name: CEntitySystem_OnRemoveEntity
+""".strip()
+        disasm_code = (
+            ".text:0000000002120CC2                 mov     rcx, [rdx+88h]\n"
+            ".text:0000000002120CE7                 lea     rax, CEntitySystem_OnRemoveEntity"
+        )
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[hallucinated_response, corrected_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["CEntitySystem_OnRemoveEntity"],
+                expected_result_sections={"CEntitySystem_OnRemoveEntity": "found_vcall"},
+                disasm_code=disasm_code,
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual("0x2120CC2", parsed["found_vcall"][0]["insn_va"])
+        self.assertEqual(2, mock_call_llm_text.call_count)
+        correction_prompt = mock_call_llm_text.call_args_list[1].kwargs["messages"][3]["content"]
+        self.assertIn("found_funcptr[0]", correction_prompt)
+        self.assertIn("requires `found_vcall`", correction_prompt)
+        self.assertIn("instruction containing the `vfunc_offset` displacement", correction_prompt)
+        self.assertIn("lea rax, CEntitySystem_OnRemoveEntity", correction_prompt)
+
+    async def test_call_llm_decompile_retries_vcall_without_offset_instruction(self) -> None:
+        hallucinated_response = """
+found_vcall:
+  - insn_va: '0x2120CE7'
+    insn_disasm: lea     rax, CEntitySystem_OnRemoveEntity
+    vfunc_offset: '0x88'
+    func_name: CEntitySystem_OnRemoveEntity
+""".strip()
+        corrected_response = """
+found_vcall:
+  - insn_va: '0x2120CC2'
+    insn_disasm: mov     rcx, [rdx+88h]
+    vfunc_offset: '0x88'
+    func_name: CEntitySystem_OnRemoveEntity
+""".strip()
+        disasm_code = (
+            ".text:0000000002120CC2                 mov     rcx, [rdx+88h]\n"
+            ".text:0000000002120CE7                 lea     rax, CEntitySystem_OnRemoveEntity"
+        )
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[hallucinated_response, corrected_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["CEntitySystem_OnRemoveEntity"],
+                expected_result_sections={"CEntitySystem_OnRemoveEntity": "found_vcall"},
+                disasm_code=disasm_code,
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual("0x2120CC2", parsed["found_vcall"][0]["insn_va"])
+        self.assertEqual(2, mock_call_llm_text.call_count)
+        correction_prompt = mock_call_llm_text.call_args_list[1].kwargs["messages"][3]["content"]
+        self.assertIn("found_vcall[0]", correction_prompt)
+        self.assertIn("vfunc_offset '0x88'", correction_prompt)
+        self.assertIn("does not contain that displacement", correction_prompt)
+
     async def test_call_llm_decompile_reports_all_result_section_mismatches(self) -> None:
         hallucinated_response = """
 found_vcall:
@@ -7955,6 +8041,10 @@ found_struct_offset: []
         self.assertEqual(
             [func_name],
             mock_call_llm_decompile.call_args.kwargs["symbol_name_list"],
+        )
+        self.assertEqual(
+            {func_name: "found_vcall"},
+            mock_call_llm_decompile.call_args.kwargs["expected_result_sections"],
         )
         self.assertEqual(4, mock_call_llm_decompile.call_args.kwargs["max_retries"])
         self.assertEqual(

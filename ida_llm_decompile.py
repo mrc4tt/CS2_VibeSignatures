@@ -35,8 +35,17 @@ _LLM_INSTRUCTION_RESULT_SECTIONS = (
     "found_gv",
     "found_struct_offset",
 )
+_LLM_RESULT_SYMBOL_KEYS = {
+    "found_vcall": "func_name",
+    "found_call": "func_name",
+    "found_funcptr": "funcptr_name",
+    "found_gv": "gv_name",
+}
 _DISASM_ADDRESS_LINE_RE = re.compile(
     r"^\s*(?:[^:\s]+:)?([0-9A-Fa-f]{4,16})\s+(.+?)\s*$"
+)
+_DISASM_MEMORY_DISPLACEMENT_RE = re.compile(
+    r"(?:^|[+-])\s*(0x[0-9A-Fa-f]+|[0-9A-Fa-f]+[hH]|\d+)(?=\s*(?:[+-]|$))"
 )
 
 
@@ -510,6 +519,7 @@ def _validate_llm_instruction_pairs(parsed_result, disasm_index):
             continue
         issues.append(
             {
+                "issue_type": "instruction_mismatch",
                 "section_name": section_name,
                 "entry_index": entry_index,
                 "insn_va": insn_va_text,
@@ -519,6 +529,95 @@ def _validate_llm_instruction_pairs(parsed_result, disasm_index):
             }
         )
     return issues
+
+
+def _normalize_expected_result_sections(expected_result_sections):
+    if not isinstance(expected_result_sections, dict):
+        return {}
+    normalized = {}
+    for symbol_name, sections in expected_result_sections.items():
+        symbol_name = str(symbol_name or "").strip()
+        if isinstance(sections, str):
+            sections = [sections]
+        if not symbol_name or not isinstance(sections, (tuple, list, set)):
+            continue
+        valid_sections = {
+            str(section or "").strip()
+            for section in sections
+            if str(section or "").strip() in _LLM_INSTRUCTION_RESULT_SECTIONS
+        }
+        if valid_sections:
+            normalized[symbol_name] = valid_sections
+    return normalized
+
+
+def _validate_llm_result_sections(parsed_result, expected_result_sections):
+    issues = []
+    for section_name, entry_index, entry in _iter_llm_instruction_entries(parsed_result):
+        symbol_key = _LLM_RESULT_SYMBOL_KEYS.get(section_name)
+        symbol_name = str(entry.get(symbol_key, "") if symbol_key else "").strip()
+        expected_sections = expected_result_sections.get(symbol_name, set())
+        if not expected_sections or section_name in expected_sections:
+            continue
+        issues.append(
+            {
+                "issue_type": "result_section_mismatch",
+                "section_name": section_name,
+                "entry_index": entry_index,
+                "symbol_name": symbol_name,
+                "reported_disasm": _normalize_disasm_whitespace(entry.get("insn_disasm")),
+                "expected_sections": sorted(expected_sections),
+            }
+        )
+    return issues
+
+
+def _extract_memory_displacements(disasm):
+    displacements = set()
+    for memory_operand in re.findall(r"\[([^\]]+)\]", str(disasm or "")):
+        for match in _DISASM_MEMORY_DISPLACEMENT_RE.finditer(memory_operand):
+            value = _parse_llm_int_value(match.group(1))
+            if value is not None:
+                displacements.add(value)
+    return displacements
+
+
+def _instruction_contains_vfunc_offset(disasm, vfunc_offset):
+    if vfunc_offset is None or vfunc_offset < 0:
+        return False
+    displacements = _extract_memory_displacements(disasm)
+    if vfunc_offset in displacements:
+        return True
+    return vfunc_offset == 0 and "[" in str(disasm or "") and not displacements
+
+
+def _validate_llm_vcall_offsets(parsed_result):
+    issues = []
+    for entry_index, entry in enumerate(parsed_result.get("found_vcall", [])):
+        vfunc_offset_text = str(entry.get("vfunc_offset", "")).strip()
+        reported_disasm = _normalize_disasm_whitespace(entry.get("insn_disasm"))
+        vfunc_offset = _parse_llm_int_value(vfunc_offset_text)
+        if _instruction_contains_vfunc_offset(reported_disasm, vfunc_offset):
+            continue
+        issues.append(
+            {
+                "issue_type": "vcall_offset_mismatch",
+                "section_name": "found_vcall",
+                "entry_index": entry_index,
+                "insn_va": str(entry.get("insn_va", "")).strip(),
+                "reported_disasm": reported_disasm,
+                "vfunc_offset": vfunc_offset_text,
+            }
+        )
+    return issues
+
+
+def _validate_llm_decompile_result(parsed_result, disasm_index, expected_result_sections):
+    return (
+        _validate_llm_instruction_pairs(parsed_result, disasm_index)
+        + _validate_llm_result_sections(parsed_result, expected_result_sections)
+        + _validate_llm_vcall_offsets(parsed_result)
+    )
 
 
 def _format_llm_instruction_issue(issue):
@@ -536,13 +635,50 @@ def _format_llm_instruction_issue(issue):
     return text
 
 
-def _build_llm_instruction_correction_prompt(validation_issues):
-    issue_text = "\n".join(_format_llm_instruction_issue(issue) for issue in validation_issues)
+def _format_llm_result_section_issue(issue):
+    location = f"{issue['section_name']}[{issue['entry_index']}]"
+    expected_text = " or ".join(f"`{section}`" for section in issue["expected_sections"])
     return (
-        "Your previous YAML output contains inconsistent insn_va and insn_disasm pairs.\n"
+        f"- {location}: symbol {issue['symbol_name']!r} was returned in `{issue['section_name']}` with "
+        f"`{issue['reported_disasm']}`, but it requires {expected_text}."
+    )
+
+
+def _format_llm_vcall_offset_issue(issue):
+    location = f"{issue['section_name']}[{issue['entry_index']}]"
+    return (
+        f"- {location}: insn_va {issue['insn_va']!r} reports `{issue['reported_disasm']}` with "
+        f"vfunc_offset {issue['vfunc_offset']!r}, but that instruction does not contain that displacement."
+    )
+
+
+def _format_llm_validation_issue(issue):
+    if issue["issue_type"] == "result_section_mismatch":
+        return _format_llm_result_section_issue(issue)
+    if issue["issue_type"] == "vcall_offset_mismatch":
+        return _format_llm_vcall_offset_issue(issue)
+    return _format_llm_instruction_issue(issue)
+
+
+def _build_llm_instruction_correction_prompt(validation_issues):
+    issue_text = "\n".join(_format_llm_validation_issue(issue) for issue in validation_issues)
+    has_vcall_issue = any(
+        issue["issue_type"] == "vcall_offset_mismatch"
+        or "found_vcall" in issue.get("expected_sections", [])
+        for issue in validation_issues
+    )
+    vcall_guidance = ""
+    if has_vcall_issue:
+        vcall_guidance = (
+            "\nFor `found_vcall`, `insn_va` and `insn_disasm` must identify the instruction containing the "
+            "`vfunc_offset` displacement. Do not use a `lea` instruction that merely loads the function pointer "
+            "target.\n"
+        )
+    return (
+        "Your previous YAML output contains invalid references.\n"
         "Each insn_va must identify the exact target instruction written in insn_disasm; only whitespace "
         "differences are allowed.\n\n"
-        f"Mismatches:\n{issue_text}\n\n"
+        f"Mismatches:\n{issue_text}\n{vcall_guidance}\n"
         "Re-check every entry and return the complete YAML output for all requested symbols. "
         "Do not return a patch, partial YAML, explanation, or any text outside the complete YAML."
     )
@@ -563,6 +699,7 @@ async def _call_llm_decompile_with_validation(
     request_kwargs,
     conversation_messages,
     disasm_index,
+    expected_result_sections,
     symbol_name_text,
     retry_settings,
     debug,
@@ -594,7 +731,11 @@ async def _call_llm_decompile_with_validation(
         parsed_result = parse_llm_decompile_response(content)
         if debug:
             _debug_print_json(f"llm_decompile parsed response for {symbol_name_text}", parsed_result, debug=True)
-        validation_issues = _validate_llm_instruction_pairs(parsed_result, disasm_index)
+        validation_issues = _validate_llm_decompile_result(
+            parsed_result,
+            disasm_index,
+            expected_result_sections,
+        )
         if not validation_issues:
             return parsed_result
         if debug:
@@ -871,6 +1012,7 @@ async def call_llm_decompile(
     client=None,
     model=None,
     symbol_name_list=None,
+    expected_result_sections=None,
     disasm_code="",
     target_disasm_codes=None,
     procedure="",
@@ -1019,11 +1161,13 @@ async def call_llm_decompile(
     )
     max_delay = _normalize_llm_retry_delay(retry_max_delay, default=8.0)
     disasm_index = _build_target_disasm_index(target_disasm_codes, disasm_code=disasm_code)
+    normalized_expected_sections = _normalize_expected_result_sections(expected_result_sections)
     return await _call_llm_decompile_with_validation(
         transport=transport,
         request_kwargs=request_kwargs,
         conversation_messages=conversation_messages,
         disasm_index=disasm_index,
+        expected_result_sections=normalized_expected_sections,
         symbol_name_text=symbol_name_text,
         retry_settings=(max_attempts, delay, backoff_factor, max_delay),
         debug=debug,

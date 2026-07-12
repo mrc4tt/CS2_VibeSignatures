@@ -2309,6 +2309,7 @@ async def call_llm_decompile(
     client=None,
     model=None,
     symbol_name_list=None,
+    expected_result_sections=None,
     disasm_code="",
     target_disasm_codes=None,
     procedure="",
@@ -2334,6 +2335,7 @@ async def call_llm_decompile(
         client=client,
         model=model,
         symbol_name_list=symbol_name_list,
+        expected_result_sections=expected_result_sections,
         disasm_code=disasm_code,
         target_disasm_codes=target_disasm_codes,
         procedure=procedure,
@@ -2357,6 +2359,16 @@ async def call_llm_decompile(
         call_llm_text_func=call_llm_text,
         normalize_temperature_func=normalize_optional_temperature,
     )
+
+
+def _build_expected_llm_result_sections(symbol_names, desired_fields_map):
+    expected_sections = {}
+    for symbol_name in symbol_names:
+        desired_spec = desired_fields_map.get(symbol_name) or {}
+        desired_fields = set(desired_spec.get("desired_output_fields", []))
+        if "vfunc_offset" in desired_fields:
+            expected_sections[symbol_name] = "found_vcall"
+    return expected_sections
 
 
 async def preprocess_vtable_via_mcp(
@@ -7925,9 +7937,13 @@ async def preprocess_common_skill(
                 llm_target_details,
             )
             primary_target_detail = llm_target_details[0]
+            expected_result_sections = _build_expected_llm_result_sections(
+                llm_symbol_name_list, desired_fields_map
+            )
             return await call_llm_decompile(
                 model=llm_request["model"],
                 symbol_name_list=llm_symbol_name_list,
+                expected_result_sections=expected_result_sections,
                 disasm_code=primary_target_detail.get("disasm_code", ""),
                 target_disasm_codes=[
                     target_detail.get("disasm_code", "") for target_detail in llm_target_details
