@@ -5180,12 +5180,6 @@ modules:
       - name: find-CNetworkTransmitComponent_StateChanged
         expected_output:
           - CNetworkTransmitComponent_StateChanged.{platform}.yaml
-      - name: find-CBaseEntity_SetStateChanged
-        expected_output:
-          - CBaseEntity_SetStateChanged.{platform}.yaml
-        expected_input:
-          - CBaseEntity_vtable.{platform}.yaml
-          - CNetworkTransmitComponent_StateChanged.{platform}.yaml
       - name: find-CBaseEntity_NetworkStateChangedLog
         expected_output:
           - CBaseEntity_NetworkStateChangedLog.{platform}.yaml
@@ -5219,7 +5213,7 @@ modules:
         expected_output:
           - CBaseEntity_m_NetworkTransmitComponent.{platform}.yaml
         expected_input:
-          - CBaseEntity_SetStateChanged.{platform}.yaml
+          - CBaseEntity_NetworkStateChanged.{platform}.yaml
       - name: find-CNetworkTransmitComponent_m_nStateFlags
         expected_output:
           - CNetworkTransmitComponent_m_nStateFlags.{platform}.yaml
@@ -8151,11 +8145,6 @@ modules:
         category: vfunc
         alias:
           - CEntitySystem::PostDataUpdate
-      - name: CBaseEntity_SetStateChanged
-        category: vfunc
-        alias:
-          - CBaseEntity::SetStateChanged
-          - SetStateChanged
       - name: CBaseEntity_NetworkStateChangedLog
         category: vfunc
         alias:

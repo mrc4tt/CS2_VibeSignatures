@@ -701,7 +701,7 @@ disasm_code: |-
   .text:0000000000B18272                 mov     rax, [rbx]
   .text:0000000000B18275                 cmp     qword ptr [rax-18h], 80h
   .text:0000000000B1827D                 jnz     loc_B18410
-  .text:0000000000B18283                 lea     r14, CBaseEntity_SetStateChanged
+  .text:0000000000B18283                 lea     r14, CBaseEntity_NetworkStateChanged
   .text:0000000000B1828A                 xor     r12d, r12d
   .text:0000000000B1828D                 jmp     short loc_B182DE
   .text:0000000000B18290                 cmp     [rbp+var_1F4], 3FFFFFFFh
@@ -1524,7 +1524,7 @@ procedure: |-
                         LODWORD(v87) = v87 + 1;
                         *v88 = 2713;
                         v63 = *(void *(__fastcall **)(__int64, __int64 *))(*(_QWORD *)v49 + 232LL);
-                        if ( (char *)v63 == (char *)CBaseEntity_SetStateChanged )
+                        if ( (char *)v63 == (char *)CBaseEntity_NetworkStateChanged )
                         {
                           v20 = (unsigned int)v86;
                           if ( (_DWORD)v86 )

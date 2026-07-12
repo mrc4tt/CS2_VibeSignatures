@@ -12,7 +12,7 @@ LLM_DECOMPILE = [
     (
         "CBaseEntity_m_NetworkTransmitComponent",
         "prompt/call_llm_decompile.md",
-        "references/server/CBaseEntity_SetStateChanged.{platform}.yaml",
+        "references/server/CBaseEntity_NetworkStateChanged.{platform}.yaml",
     ),
 ]
 

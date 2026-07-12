@@ -1,4 +1,4 @@
-func_name: CBaseEntity_SetStateChanged
+func_name: CBaseEntity_NetworkStateChanged
 func_va: '0x180189ba0'
 disasm_code: |-
   .text:0000000180189BA0                 mov     rax, rsp
@@ -74,7 +74,7 @@ disasm_code: |-
   .text:0000000180189CE0                 pop     rsi
   .text:0000000180189CE1                 retn
 procedure: |-
-  void *__fastcall CBaseEntity_SetStateChanged(__int64 a1, __int64 a2)
+  void *__fastcall CBaseEntity_NetworkStateChanged(__int64 a1, __int64 a2)
   {
     __int64 v4; // rax
     int v5; // ebx

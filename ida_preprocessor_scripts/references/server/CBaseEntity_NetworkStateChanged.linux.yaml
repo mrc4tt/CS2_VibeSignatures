@@ -1,4 +1,4 @@
-func_name: CBaseEntity_SetStateChanged
+func_name: CBaseEntity_NetworkStateChanged
 func_va: '0x9b95b0'
 disasm_code: |-
   .text:00000000009B95B0                 push    rbp
@@ -39,7 +39,7 @@ disasm_code: |-
   .text:00000000009B9646                 call    CNetworkTransmitComponent_StateChanged
   .text:00000000009B964B                 jmp     short loc_9B95E8
 procedure: |-
-  void *__fastcall CBaseEntity_SetStateChanged(__int64 a1, _DWORD *a2, __int64 a3, __int64 a4, int a5, int a6)
+  void *__fastcall CBaseEntity_NetworkStateChanged(__int64 a1, _DWORD *a2, __int64 a3, __int64 a4, int a5, int a6)
   {
     __int64 v7; // rdi
     __int64 v8; // rax
