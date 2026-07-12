@@ -5896,17 +5896,15 @@ modules:
         expected_input:
           - CGameSceneNode_UpdateEntityForHierarchyChange.{platform}.yaml
           - CEntitySystem_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CPointTeleportAPI_TeleportEntityInternal
-      #  expected_output:
-      #    - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CBaseEntity_Teleport
-      #  expected_output:
-      #    - CBaseEntity_Teleport.{platform}.yaml
-      #  expected_input:
-      #    - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
-      #    - CBaseEntity_vtable.{platform}.yaml
+      - name: find-CPointTeleportAPI_TeleportEntityInternal
+        expected_output:
+          - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
+      - name: find-CBaseEntity_Teleport
+        expected_output:
+          - CBaseEntity_Teleport.{platform}.yaml
+        expected_input:
+          - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
+          - CBaseEntity_vtable.{platform}.yaml
       - name: find-CPointTeleport_Activate
         expected_output:
           - CPointTeleport_Activate.{platform}.yaml
@@ -5930,13 +5928,12 @@ modules:
           - CEntityInstance_m_pKeyValues.{platform}.yaml
         expected_input:
           - CEntityInstance_UpdateOnRemove.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CBaseEntity_CollisionRulesChanged
-      #  expected_output:
-      #    - CBaseEntity_CollisionRulesChanged.{platform}.yaml
-      #  expected_input:
-      #    - PhysEnableEntityCollisions.{platform}.yaml
-      #    - CBaseEntity_vtable.{platform}.yaml
+      - name: find-CBaseEntity_CollisionRulesChanged
+        expected_output:
+          - CBaseEntity_CollisionRulesChanged.{platform}.yaml
+        expected_input:
+          - PhysEnableEntityCollisions.{platform}.yaml
+          - CBaseEntity_vtable.{platform}.yaml
       - name: find-CGameSceneNode_PostSpawnKeyValues
         expected_output:
           - CGameSceneNode_PostSpawnKeyValues.{platform}.yaml
@@ -6444,23 +6441,15 @@ modules:
       - name: find-CPhysicsEntitySolver_vtable
         expected_output:
           - CPhysicsEntitySolver_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CPhysicsEntitySolver_PhysEnableEntityCollisions
-      #  platform: windows
-      #  expected_output:
-      #    - CPhysicsEntitySolver_PhysEnableEntityCollisions.{platform}.yaml
-      #  expected_input:
-      #    - CPhysicsEntitySolver_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-PhysEnableEntityCollisions-windows
-      #  platform: windows
-      #  expected_output:
-      #    - PhysEnableEntityCollisions.{platform}.yaml
-      #  expected_input:
-      #    - CPhysicsEntitySolver_PhysEnableEntityCollisions.{platform}.yaml
-      - name: find-PhysEnableEntityCollisions-linux
-        platform: linux
+      - name: find-PhysEnableEntityCollisions
         expected_output:
+          - PhysEnableEntityCollisions.{platform}.yaml
+      - name: find-CPhysicsEntitySolver_PhysEnableEntityCollisions
+        platform: windows
+        expected_output:
+          - CPhysicsEntitySolver_PhysEnableEntityCollisions.{platform}.yaml
+        expected_input:
+          - CPhysicsEntitySolver_vtable.{platform}.yaml
           - PhysEnableEntityCollisions.{platform}.yaml
       - name: find-CLoopModeGame_vtable
         expected_output:

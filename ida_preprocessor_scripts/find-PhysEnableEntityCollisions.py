@@ -16,7 +16,7 @@ FUNC_XREFS = [
         "xref_gvs": [],
         "xref_signatures": [],
         "xref_funcs": [],
-        "exclude_funcs": ["CPhysicsEntitySolver_PhysEnableEntityCollisions"],
+        "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],
         "exclude_signatures": [],

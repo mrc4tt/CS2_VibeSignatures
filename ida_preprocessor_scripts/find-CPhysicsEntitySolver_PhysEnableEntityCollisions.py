@@ -10,12 +10,10 @@ TARGET_FUNCTION_NAMES = [
 FUNC_XREFS = [
     {
         "func_name": "CPhysicsEntitySolver_PhysEnableEntityCollisions",
-        "xref_strings": [
-            "PhysEnableEntityCollisions called on entities in two different scene worlds (%s - %u vs %s - %u)"
-        ],
+        "xref_strings": [],
         "xref_gvs": [],
         "xref_signatures": [],
-        "xref_funcs": [],
+        "xref_funcs": ["PhysEnableEntityCollisions"],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],
