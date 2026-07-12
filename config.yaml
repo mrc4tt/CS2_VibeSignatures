@@ -5938,6 +5938,8 @@ modules:
       - name: find-CBaseEntity_SpawnRadius
         expected_output:
           - CBaseEntity_SpawnRadius.{platform}.yaml
+        expected_input:
+          - CBaseEntity_Spawn.{platform}.yaml
       - name: find-CBaseEntity_DrawDebugTextOverlays
         expected_output:
           - CBaseEntity_DrawDebugTextOverlays.{platform}.yaml
