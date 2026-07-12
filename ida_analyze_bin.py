@@ -78,6 +78,7 @@ from ida_vcall_finder import (
 load_dotenv()
 
 DEFAULT_CONFIG_FILE = "config.yaml"
+DEFAULT_DOWNLOAD_FILE = "download.yaml"
 DEFAULT_BIN_DIR = "bin"
 DEFAULT_PLATFORM = "windows,linux"
 DEFAULT_MODULES = "*"
@@ -990,6 +991,50 @@ def resolve_oldgamever(gamever, bin_dir):
     return None
 
 
+def _is_major_update_gamever(gamever, download_path=DEFAULT_DOWNLOAD_FILE):
+    """
+    Check whether `gamever` is flagged as a major update in download.yaml.
+
+    A major update means cross-version signature reuse is unreliable, so
+    oldgamever auto-resolution should be skipped for that version.
+
+    Args:
+        gamever: Target game version string (matched against downloads[].tag)
+        download_path: Path to download.yaml; resolved relative to this script
+            when not absolute
+
+    Returns:
+        True only when the matching download entry sets a truthy `major_update`.
+        Returns False when gamever is empty, the file is missing/unreadable, or
+        the version is not flagged, preserving the default auto-resolve behavior.
+    """
+    if not gamever:
+        return False
+
+    path = Path(download_path)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent / path
+
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+    except Exception:
+        return False
+
+    downloads = data.get("downloads")
+    if not isinstance(downloads, list):
+        return False
+
+    target = str(gamever).strip()
+    for entry in downloads:
+        if not isinstance(entry, dict):
+            continue
+        if str(entry.get("tag", "")).strip() == target:
+            return bool(entry.get("major_update", False))
+
+    return False
+
+
 def parse_vcall_finder_filter(raw_value):
     """
     Parse vcall finder selector into normalized filter structure.
@@ -1154,7 +1199,8 @@ def parse_args():
     parser.add_argument(
         "-oldgamever",
         default=None,
-        help="Old game version for signature reuse (default: gamever - 1). Set to 'none' to disable.",
+        help="Old game version for signature reuse (default: gamever - 1, "
+        "auto-disabled when gamever is a major_update in download.yaml). Set to 'none' to disable.",
     )
 
     args = parser.parse_args()
@@ -1180,7 +1226,13 @@ def parse_args():
 
     # Resolve oldgamever
     if args.oldgamever is None:
-        args.oldgamever = resolve_oldgamever(args.gamever, args.bindir)
+        # Auto-resolve only when this gamever is NOT a major update. Major
+        # updates break cross-version signature reuse, so leave oldgamever
+        # disabled unless it was explicitly provided.
+        if _is_major_update_gamever(args.gamever):
+            args.oldgamever = None
+        else:
+            args.oldgamever = resolve_oldgamever(args.gamever, args.bindir)
     elif args.oldgamever.lower() == "none":
         args.oldgamever = None
 

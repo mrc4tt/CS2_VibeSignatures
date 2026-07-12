@@ -11,6 +11,7 @@
 ## Involved Files & Symbols
 - `ida_analyze_bin.py` - `parse_args`
 - `ida_analyze_bin.py` - `resolve_oldgamever`
+- `ida_analyze_bin.py` - `_is_major_update_gamever`
 - `ida_analyze_bin.py` - `parse_vcall_finder_filter`
 - `ida_analyze_bin.py` - `start_idalib_mcp`
 - `ida_analyze_bin.py` - `process_binary`
@@ -54,20 +55,20 @@ Key implementation points:
 - Skill-level `max_retries` in `process_binary` can override global `-maxretry`.
 - After preprocessing succeeds, `expected_output` is still checked on disk; missing output is counted as failure.
 - `-platform`, `-modules`, and `-vcall_finder` are first accepted as strings and then normalized into derived fields inside `parse_args()`.
-- If `-oldgamever` is not explicitly provided, `resolve_oldgamever()` searches `bin/<version>` for the nearest available older version.
+- If `-oldgamever` is not explicitly provided, auto-resolution is gated by `_is_major_update_gamever()`: it reads `download.yaml` (resolved relative to the script, matching `_resolve_config_path`) and, when the `downloads[]` entry whose `tag` matches `gamever` sets a truthy `major_update`, leaves `oldgamever` disabled (`None`); otherwise `resolve_oldgamever()` searches `bin/<version>` for the nearest available older version. The gate is fail-safe (empty gamever, missing/unreadable `download.yaml`, malformed `downloads`, or unknown tag all fall back to auto-resolution) and only applies to the `args.oldgamever is None` auto path — an explicit `-oldgamever <value>`/`none` is always honored.
 - `-llm_temperature`, `-llm_fake_as`, and `-llm_effort` are passed through dedicated validation helpers after parsing; `fake_as` only allows `codex`, and `effort` only allows a fixed enum set.
 - `-rename` does not affect argument parsing, but it triggers the rename/comment post-processing branch over existing YAML files inside `process_binary()`.
 
 ## Dependencies
 - Python libraries: `pyyaml`, `httpx`, `mcp` Python SDK
 - External tools: `uv`, `idalib-mcp`, `claude` CLI, or `codex` CLI
-- Runtime inputs: `config.yaml`, binaries under `bin/<gamever>/...`, and optional old-version YAML artifacts
+- Runtime inputs: `config.yaml`, `download.yaml` (consulted for the `major_update` oldgamever gate), binaries under `bin/<gamever>/...`, and optional old-version YAML artifacts
 
 ## Notes
 - `-platform` only accepts `windows` and `linux`, and supports comma-separated values; invalid values immediately raise `parser.error(...)`.
 - `-modules=*` means no module filtering; otherwise it is split by commas into `module_filter`.
 - `-vcall_finder` accepts `*` or a comma-separated object list; empty strings, empty object names, and mixing `*` with explicit names all raise errors.
-- `-oldgamever=none` explicitly disables old-version reuse; if omitted, the script auto-detects the nearest older version by directory existence, including suffixed versions such as `14141a`.
+- `-oldgamever=none` explicitly disables old-version reuse; if omitted, the script auto-detects the nearest older version by directory existence, including suffixed versions such as `14141a` — unless `gamever` is flagged `major_update: true` in `download.yaml`, in which case auto-resolution is skipped and old-version reuse stays disabled.
 - `-ida_args` is ultimately forwarded to `idalib-mcp` via `str.split()`, which is not robust for arguments containing spaces or complex quoting.
 - The main command examples in `README.md` cover most commonly used parameters, but the source code additionally exposes `-bindir`, `-ida_args`, and `-rename`.
 
@@ -89,7 +90,7 @@ Key implementation points:
 - `-debug`: enable debug output.
 - `-rename`: run rename/comment post-processing over existing expected-output YAML files.
 - `-maxretry`: maximum retry count for skill execution; defaults to `3`; later per-skill configuration can override this global value.
-- `-oldgamever`: old version number; auto-detected by default; pass `none` to disable old-version reuse.
+- `-oldgamever`: old version number; auto-detected by default (auto-detection is skipped when `gamever` is a `major_update` in `download.yaml`); pass `none` to disable old-version reuse.
 
 ## Environment Variables
 - `CS2VIBE_GAMEVER`: environment-variable fallback for `-gamever`; if unset, `-gamever` must be passed explicitly.

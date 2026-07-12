@@ -844,6 +844,73 @@ modules:
         self.assertEqual([], modules[0]["skills"][0]["expected_output_linux"])
 
 
+class TestIsMajorUpdateGamever(unittest.TestCase):
+    _DOWNLOAD_YAML = """
+downloads:
+  - tag: "14167"
+    name: 1.41.6.7
+    manifests:
+      "2347771": "8344780363095656278"
+  - tag: "14168"
+    name: 1.41.6.8
+    manifests:
+      "2347771": "1966178532936074640"
+    major_update: true
+  - tag: "14169"
+    name: 1.41.6.9
+    manifests:
+      "2347771": "1966178532936074641"
+    major_update: false
+""".strip() + "\n"
+
+    def _write_download_yaml(self, temp_dir):
+        download_path = Path(temp_dir) / "download.yaml"
+        download_path.write_text(self._DOWNLOAD_YAML, encoding="utf-8")
+        return download_path
+
+    def test_flags_major_update_version(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            download_path = self._write_download_yaml(temp_dir)
+            self.assertTrue(
+                ida_analyze_bin._is_major_update_gamever("14168", str(download_path))
+            )
+
+    def test_ignores_unflagged_version(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            download_path = self._write_download_yaml(temp_dir)
+            self.assertFalse(
+                ida_analyze_bin._is_major_update_gamever("14167", str(download_path))
+            )
+
+    def test_ignores_explicit_false_flag(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            download_path = self._write_download_yaml(temp_dir)
+            self.assertFalse(
+                ida_analyze_bin._is_major_update_gamever("14169", str(download_path))
+            )
+
+    def test_returns_false_for_unknown_tag(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            download_path = self._write_download_yaml(temp_dir)
+            self.assertFalse(
+                ida_analyze_bin._is_major_update_gamever("99999", str(download_path))
+            )
+
+    def test_returns_false_for_missing_file(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            missing_path = Path(temp_dir) / "does_not_exist.yaml"
+            self.assertFalse(
+                ida_analyze_bin._is_major_update_gamever("14168", str(missing_path))
+            )
+
+    def test_returns_false_for_empty_gamever(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            download_path = self._write_download_yaml(temp_dir)
+            self.assertFalse(
+                ida_analyze_bin._is_major_update_gamever("", str(download_path))
+            )
+
+
 class TestSkillOrdering(unittest.TestCase):
     def test_topological_sort_skills_keeps_ilooptype_after_deactivateloop(
         self,
