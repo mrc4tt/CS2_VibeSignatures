@@ -41,7 +41,7 @@ disasm_code: |-
   .text:000000018038FE80                 mov     edx, 0FFFFFFFFh
   .text:000000018038FE85                 lea     rcx, [rbx+3F8h]
   .text:000000018038FE8C                 mov     r8d, 0FFFFFFFFh
-  .text:000000018038FE92                 call    sub_18038E440
+  .text:000000018038FE92                 call    CFlashbangProjectile_Spawn_NetworkStateChangedNotify; de-inlined NetworkStateChanged notify helper (holds the CBaseEntity::NetworkStateChanged vtable call)
   .text:000000018038FE97                 mov     dword ptr [rbx+3F8h], 3EE66666h
   .text:000000018038FEA1                 mov     rdx, rsi
   .text:000000018038FEA4                 mov     rcx, rbx
@@ -65,7 +65,7 @@ procedure: |-
     sub_180C14AA0(a1, 0.2);
     if ( *(float *)(a1 + 1016) != 0.44999999 )
     {
-      sub_18038E440(a1 + 1016, -1, -1);
+      CFlashbangProjectile_Spawn_NetworkStateChangedNotify(a1 + 1016, -1, -1);// de-inlined NetworkStateChanged notify helper (holds the CBaseEntity::NetworkStateChanged vtable call)
       *(_DWORD *)(a1 + 1016) = 1055286886;
     }
     return sub_180917500(a1, a2);
