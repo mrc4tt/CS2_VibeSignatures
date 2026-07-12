@@ -447,7 +447,7 @@ After all creation steps are complete, run the full preprocessor test to validat
 Because the output is very long, redirect it to a temp file and then read just the summary:
 
 ```bash
-uv run ida_analyze_bin.py -oldgamever none -debug > /tmp/ida_test_output.txt 2>&1; tail -10 /tmp/ida_test_output.txt
+uv run ida_analyze_bin.py -debug > /tmp/ida_test_output.txt 2>&1; tail -10 /tmp/ida_test_output.txt
 ```
 
 Check the **Summary** at the end of the output:

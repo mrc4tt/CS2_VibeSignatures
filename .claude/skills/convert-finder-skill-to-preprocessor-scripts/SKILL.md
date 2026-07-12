@@ -902,10 +902,10 @@ but also in `disassembly`:
 **IMPORTANT — When the predecessor is a NEW function (no existing output YAMLs):** If the predecessor function is brand new (discovered by another new script you're creating in the same conversion), its output YAMLs don't exist yet and `generate_reference_yaml.py` cannot resolve its address. You must use a **multi-phase workflow**:
 
 1. **Phase 1:** Create ALL scripts (vtable, xref_string, LLM_DECOMPILE) and update config.yaml
-2. **Phase 2:** Run `uv run ida_analyze_bin.py -oldgamever none -debug` — the vtable and xref_string scripts will succeed and populate the NEW predecessor's output YAMLs. The LLM_DECOMPILE script's target may be skipped if old output YAMLs with valid `func_sig` still exist.
+2. **Phase 2:** Run `uv run ida_analyze_bin.py -debug` — the vtable and xref_string scripts will succeed and populate the NEW predecessor's output YAMLs. The LLM_DECOMPILE script's target may be skipped if old output YAMLs with valid `func_sig` still exist.
 3. **Phase 3:** Now that the predecessor has output YAMLs, run `generate_reference_yaml.py` to create reference YAMLs, then annotate them.
 4. **Phase 4:** Delete the old target output YAMLs (so the LLM_DECOMPILE path is actually exercised)
-5. **Phase 5:** Run `uv run ida_analyze_bin.py -oldgamever none -debug` again — this time the LLM_DECOMPILE path runs and the full pipeline is validated.
+5. **Phase 5:** Run `uv run ida_analyze_bin.py -debug` again — this time the LLM_DECOMPILE path runs and the full pipeline is validated.
 
 **IMPORTANT — Run `generate_reference_yaml.py` sequentially, NOT in parallel.** All invocations share the same IDA MCP connection. Running them in parallel will cause connection conflicts and failures. Run one command at a time, waiting for each to complete before starting the next.
 
@@ -975,7 +975,7 @@ After all conversion steps are complete, run the full preprocessor test to valid
 Because the output is very long, redirect it to a temp file and then read just the summary:
 
 ```bash
-uv run ida_analyze_bin.py -oldgamever none -debug > /tmp/ida_test_output.txt 2>&1; tail -10 /tmp/ida_test_output.txt
+uv run ida_analyze_bin.py -debug > /tmp/ida_test_output.txt 2>&1; tail -10 /tmp/ida_test_output.txt
 ```
 
 Check the **Summary** at the end of the output:
@@ -1041,7 +1041,7 @@ Before finishing, verify:
 - [ ] Old SKILL.md and its directory are deleted
 - [ ] Existing output YAMLs under `bin/*/` are deleted for all target functions (AFTER reference YAML generation)
 - [ ] Entry removed from `docs/claude_skills_stats.yaml` for all converted symbols
-- [ ] `uv run ida_analyze_bin.py -oldgamever none -debug` passes with 0 failures
+- [ ] `uv run ida_analyze_bin.py -debug` passes with 0 failures
 - [ ] All conversion changes committed to git (on `dev` branch, NOT `main`)
 
 ## Real-World Examples
