@@ -6594,10 +6594,13 @@ modules:
           - CLoopModeGame_SetGameSystemState.{platform}.yaml
         expected_input_linux:
           - CLoopModeGame_Shutdown.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CLoopModeGame_ShutdownServer
-      #  expected_output:
-      #    - CLoopModeGame_ShutdownServer.{platform}.yaml
+      - name: find-CLoopModeGame_ShutdownServer
+        expected_output:
+          - CLoopModeGame_ShutdownServer.{platform}.yaml
+        expected_input:
+          # exclude_gvs anchor: OnLoopDeactivate references g_pToolFramework2,
+          # LoopShutdown does not -> disambiguates the inlined-ShutdownServer collision.
+          - g_pToolFramework2.{platform}.yaml
       #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
       #- name: find-CLoopModeGame_OnLoopDeactivate
       #  expected_output:

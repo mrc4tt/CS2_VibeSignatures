@@ -19,7 +19,12 @@ FUNC_XREFS = [
         "xref_funcs": [],
         "exclude_funcs": [],
         "exclude_strings": [],
-        "exclude_gvs": [],
+        # ShutdownServer is inlined into BOTH CLoopModeGame_LoopShutdown and
+        # CLoopModeGame_OnLoopDeactivate, so the "server_shutdown"/"reason" string
+        # intersection yields two candidates. Only OnLoopDeactivate references
+        # g_pToolFramework2 (LoopShutdown does not), so excluding it leaves the
+        # single desired candidate (CLoopModeGame_LoopShutdown, 0x180bdad20).
+        "exclude_gvs": ["g_pToolFramework2"],
         "exclude_signatures": [],
     },
 ]
