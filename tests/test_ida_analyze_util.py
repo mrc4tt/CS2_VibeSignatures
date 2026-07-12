@@ -10098,7 +10098,7 @@ found_struct_offset: []
 
         self.assertIsNone(result)
 
-    async def test_preprocess_common_skill_skips_found_call_when_vfunc_sig_required(
+    async def test_preprocess_common_skill_prefers_found_vcall_when_vfunc_offset_required(
         self,
     ) -> None:
         func_name = "CBaseEntity_GetHammerUniqueId"
@@ -10125,7 +10125,13 @@ found_struct_offset: []
                     "func_name": func_name,
                 }
             ],
-            "found_funcptr": [],
+            "found_funcptr": [
+                {
+                    "insn_va": "0x180666600",
+                    "insn_disasm": "lea     rdx, CBaseEntity_GetHammerUniqueId",
+                    "funcptr_name": func_name,
+                }
+            ],
             "found_gv": [],
             "found_struct_offset": [],
         }
@@ -10193,6 +10199,17 @@ found_struct_offset: []
                 ) as mock_resolve_direct_call_target,
                 patch.object(
                     ida_analyze_util,
+                    "_resolve_devirtualized_vfunc_funcptr_via_mcp",
+                    AsyncMock(
+                        return_value={
+                            "func_va": "0x1809b8db0",
+                            "vfunc_offset": "0x370",
+                            "vcall_inst_va": "0x180666610",
+                        }
+                    ),
+                ) as mock_resolve_devirtualized_funcptr,
+                patch.object(
+                    ida_analyze_util,
                     "_preprocess_direct_func_sig_via_mcp",
                     AsyncMock(side_effect=_fake_preprocess_direct_func_sig_via_mcp),
                 ) as mock_preprocess_direct_func_sig_via_mcp,
@@ -10228,8 +10245,6 @@ found_struct_offset: []
                             [
                                 "func_name",
                                 "func_va",
-                                "vfunc_sig",
-                                "vfunc_sig_max_match:10",
                                 "vtable_name",
                                 "vfunc_offset",
                                 "vfunc_index",
@@ -10252,16 +10267,18 @@ found_struct_offset: []
 
         self.assertTrue(result)
         mock_resolve_direct_call_target.assert_not_awaited()
+        mock_resolve_devirtualized_funcptr.assert_not_awaited()
         mock_preprocess_direct_func_sig_via_mcp.assert_awaited_once()
         preprocess_kwargs = mock_preprocess_direct_func_sig_via_mcp.await_args.kwargs
         self.assertEqual("0x18016742cf", preprocess_kwargs["direct_vcall_inst_va"])
         self.assertEqual("0x370", preprocess_kwargs["direct_vfunc_offset"])
         self.assertNotIn("direct_func_va", preprocess_kwargs)
+        self.assertFalse(preprocess_kwargs["require_vfunc_sig"])
         mock_write_func_yaml.assert_called_once()
         written_payload = mock_write_func_yaml.call_args.args[1]
         self.assertEqual(func_name, written_payload["func_name"])
-        self.assertEqual("FF 90 70 03 00 00", written_payload["vfunc_sig"])
-        self.assertEqual(10, written_payload["vfunc_sig_max_match"])
+        self.assertNotIn("vfunc_sig", written_payload)
+        self.assertNotIn("vfunc_sig_max_match", written_payload)
         self.assertEqual("CBaseEntity", written_payload["vtable_name"])
 
     async def test_preprocess_common_skill_generates_vfunc_sig_from_vcall_even_when_vtable_available(

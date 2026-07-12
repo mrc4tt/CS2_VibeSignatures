@@ -7961,7 +7961,8 @@ async def preprocess_common_skill(
         desired_fields = desired_field_spec["desired_output_fields"]
         generation_options = desired_field_spec["generation_options"]
         desired_fields_set = set(desired_fields)
-        can_use_direct_func_fallback = "vfunc_sig" not in desired_fields_set
+        expects_vfunc = "vfunc_offset" in desired_fields_set
+        can_use_direct_func_fallback = not expects_vfunc
 
         if func_name not in fast_path_attempted:
             fast_path_results[func_name] = await _try_preprocess_func_without_llm(
@@ -8071,7 +8072,40 @@ async def preprocess_common_skill(
             vtable_class = None
             if func_data is None and func_name in vtable_relations_map:
                 vtable_class = vtable_relations_map[func_name]
-            if func_data is None and vtable_class is not None and "vfunc_sig" in desired_fields_set:
+            if func_data is None and vtable_class is not None:
+                for entry in llm_result.get("found_vcall", []):
+                    if entry.get("func_name") != func_name:
+                        continue
+                    direct_vcall_kwargs = {
+                        "session": session,
+                        "new_path": target_output,
+                        "image_base": image_base,
+                        "platform": platform,
+                        "func_name": func_name,
+                        "direct_vtable_class": vtable_class,
+                        "direct_vfunc_offset": entry.get("vfunc_offset"),
+                        "direct_vcall_inst_va": entry.get("insn_va"),
+                        "require_func_sig": "func_sig" in desired_fields_set,
+                        "require_vfunc_sig": "vfunc_sig" in desired_fields_set,
+                        "vfunc_sig_max_match": generation_options.get("vfunc_sig_max_match", 1),
+                        "allow_func_sig_across_function_boundary": generation_options.get(
+                            "func_sig_allow_across_function_boundary",
+                            False,
+                        ),
+                        "normalized_mangled_class_names": normalized_mangled_class_names,
+                        "debug": debug,
+                    }
+                    if generation_options.get(
+                        "vfunc_sig_allow_across_function_boundary",
+                        False,
+                    ):
+                        direct_vcall_kwargs["allow_vfunc_sig_across_function_boundary"] = True
+                    func_data = await _preprocess_direct_func_sig_via_mcp(
+                        **direct_vcall_kwargs,
+                    )
+                    if func_data is not None:
+                        break
+            if func_data is None and vtable_class is not None and expects_vfunc:
                 for entry in llm_result.get("found_funcptr", []):
                     if entry.get("funcptr_name") != func_name:
                         continue
@@ -8098,7 +8132,7 @@ async def preprocess_common_skill(
                         "direct_vfunc_offset": devirtualized["vfunc_offset"],
                         "direct_vcall_inst_va": devirtualized["vcall_inst_va"],
                         "require_func_sig": "func_sig" in desired_fields_set,
-                        "require_vfunc_sig": True,
+                        "require_vfunc_sig": "vfunc_sig" in desired_fields_set,
                         "vfunc_sig_max_match": generation_options.get("vfunc_sig_max_match", 1),
                         "allow_func_sig_across_function_boundary": generation_options.get(
                             "func_sig_allow_across_function_boundary",
@@ -8117,40 +8151,6 @@ async def preprocess_common_skill(
                     )
                     if func_data is not None:
                         break
-            for entry in llm_result.get("found_vcall", []):
-                if vtable_class is None:
-                    break
-                if entry.get("func_name") != func_name:
-                    continue
-                direct_vcall_kwargs = {
-                    "session": session,
-                    "new_path": target_output,
-                    "image_base": image_base,
-                    "platform": platform,
-                    "func_name": func_name,
-                    "direct_vtable_class": vtable_class,
-                    "direct_vfunc_offset": entry.get("vfunc_offset"),
-                    "direct_vcall_inst_va": entry.get("insn_va"),
-                    "require_func_sig": "func_sig" in desired_fields_set,
-                    "require_vfunc_sig": "vfunc_sig" in desired_fields_set,
-                    "vfunc_sig_max_match": generation_options.get("vfunc_sig_max_match", 1),
-                    "allow_func_sig_across_function_boundary": generation_options.get(
-                        "func_sig_allow_across_function_boundary",
-                        False,
-                    ),
-                    "normalized_mangled_class_names": normalized_mangled_class_names,
-                    "debug": debug,
-                }
-                if generation_options.get(
-                    "vfunc_sig_allow_across_function_boundary",
-                    False,
-                ):
-                    direct_vcall_kwargs["allow_vfunc_sig_across_function_boundary"] = True
-                func_data = await _preprocess_direct_func_sig_via_mcp(
-                    **direct_vcall_kwargs,
-                )
-                if func_data is not None:
-                    break
             if func_data is None:
                 fallback_vtable_name = None
                 if func_name in vtable_relations_map:
