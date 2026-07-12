@@ -413,12 +413,12 @@ Failure (from `ida_analyze_bin.py -debug`):
 Diagnosis: direct cascade from quarantining `find-ShowHudHint` above. Not an independent bug; re-enable once that
 skill gets an authored fallback SKILL.md.
 
-## find-CBaseEntity_IsPlayerPawn-AND-CBaseEntity_IsPlayerController  (module: server, platform: windows) — CASCADE (2nd order)
+## find-UTIL_GetPlayerControllerForEntity-decompiles  (module: server, platform: windows) — CASCADE (2nd order)
 
 Failure (from `ida_analyze_bin.py -debug`):
 
-    Start skill: find-CBaseEntity_IsPlayerPawn-AND-CBaseEntity_IsPlayerController
-    Failed: find-CBaseEntity_IsPlayerPawn-AND-CBaseEntity_IsPlayerController (missing expected_input: UTIL_GetPlayerControllerForEntity.windows.yaml)
+    Start skill: find-UTIL_GetPlayerControllerForEntity-decompiles
+    Failed: find-UTIL_GetPlayerControllerForEntity-decompiles (missing expected_input: UTIL_GetPlayerControllerForEntity.windows.yaml)
 
 Diagnosis: second-order cascade — depends on `find-UTIL_GetPlayerControllerForEntity`'s output, itself a cascade
 of `find-ShowHudHint`. Not an independent bug; re-enable once the root producer skill is fixed.

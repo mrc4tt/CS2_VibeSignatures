@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CBaseEntity_IsPlayerPawn-AND-CBaseEntity_IsPlayerController skill."""
+"""Preprocess script for find-UTIL_GetPlayerControllerForEntity-decompiles skill."""
 
 from ida_analyze_util import preprocess_common_skill
 

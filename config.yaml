@@ -5826,20 +5826,18 @@ modules:
           - CBaseEntity_SetGroundEntity.{platform}.yaml
         expected_input:
           - CTriggerPush_Touch.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-UTIL_GetPlayerControllerForEntity
-      #  expected_output:
-      #    - UTIL_GetPlayerControllerForEntity.{platform}.yaml
-      #  expected_input:
-      #    - ShowHudHint.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CBaseEntity_IsPlayerPawn-AND-CBaseEntity_IsPlayerController
-      #  expected_output:
-      #    - CBaseEntity_IsPlayerPawn.{platform}.yaml
-      #    - CBaseEntity_IsPlayerController.{platform}.yaml
-      #  expected_input:
-      #    - UTIL_GetPlayerControllerForEntity.{platform}.yaml
-      #    - CBaseEntity_vtable.{platform}.yaml
+      - name: find-UTIL_GetPlayerControllerForEntity
+        expected_output:
+          - UTIL_GetPlayerControllerForEntity.{platform}.yaml
+        expected_input:
+          - ShowHudHint.{platform}.yaml
+      - name: find-UTIL_GetPlayerControllerForEntity-decompiles
+        expected_output:
+          - CBaseEntity_IsPlayerPawn.{platform}.yaml
+          - CBaseEntity_IsPlayerController.{platform}.yaml
+        expected_input:
+          - UTIL_GetPlayerControllerForEntity.{platform}.yaml
+          - CBaseEntity_vtable.{platform}.yaml
       - name: find-CBaseEntity_GetHammerUniqueId
         expected_output:
           - CBaseEntity_GetHammerUniqueId.{platform}.yaml
