@@ -18,6 +18,7 @@ Usage:
     -agent_model: Optional model override; OpenCode requires provider/model format
     -ida_args: Additional arguments for idalib-mcp (optional)
     -debug: Enable debug output
+    -skip_error: Continue analysis after skill or preprocessor failures
 
 Requirements:
     uv sync
@@ -1189,6 +1190,11 @@ def parse_args():
     parser.add_argument("-ida_args", default="", help="Additional arguments for idalib-mcp (optional)")
     parser.add_argument("-debug", action="store_true", help="Enable debug output")
     parser.add_argument(
+        "-skip_error",
+        action="store_true",
+        help="Continue analysis after skill or preprocessor failures",
+    )
+    parser.add_argument(
         "-rename",
         action="store_true",
         help="Run post_process rename/comment pass for existing expected output YAML files",
@@ -2103,6 +2109,7 @@ def process_binary(
     llm_fake_as=None,
     rename=False,
     agent_model=DEFAULT_AGENT_MODEL,
+    skip_error=False,
 ):
     """
     Process a single binary file.
@@ -2120,6 +2127,7 @@ def process_binary(
         max_retries: Default maximum number of retry attempts for skill execution
         old_binary_dir: Directory containing old version YAML files for signature reuse
         rename: Run module/platform post_process over valid expected output YAML mappings
+        skip_error: Continue processing later skills after skill or preprocessor failures
 
     Returns:
         Tuple of (success_count, fail_count, skip_count)
@@ -2414,6 +2422,9 @@ def process_binary(
                     fail_count += 1
                     missing_names = [os.path.basename(p) for p in missing_required_outputs]
                     print(f"  Pre-processed but missing expected_output: {skill_name} ({', '.join(missing_names)})")
+                    if skip_error:
+                        print("  Continuing after preprocess output validation failure (-skip_error)")
+                        continue
                     print("  Aborting remaining skills after preprocess output validation failure")
                     abort_binary_processing = True
                     break
@@ -2472,6 +2483,9 @@ def process_binary(
             else:
                 fail_count += 1
                 print("    Failed")
+                if skip_error:
+                    print("  Continuing after fallback skill failure (-skip_error)")
+                    continue
                 print("  Aborting remaining skills after fallback skill failure")
                 abort_binary_processing = True
                 break
@@ -2615,6 +2629,7 @@ def main():
     agent_model = getattr(args, "agent_model", DEFAULT_AGENT_MODEL)
     ida_args = args.ida_args
     debug = args.debug
+    skip_error = getattr(args, "skip_error", False)
 
     # Validate config file exists
     if not os.path.exists(config_path):
@@ -2633,6 +2648,8 @@ def main():
         print(f"IDA args: {ida_args}")
     if debug:
         print("Debug mode: enabled")
+    if skip_error:
+        print("Skip error mode: enabled")
 
     # Parse config
     print("\nParsing config...")
@@ -2728,14 +2745,17 @@ def main():
                 llm_fake_as=args.llm_fake_as,
                 rename=args.rename,
                 agent_model=agent_model,
+                skip_error=skip_error,
             )
             total_success += success
             total_fail += fail
             total_skip += skip
-            if fail > 0:
+            if fail > 0 and not skip_error:
                 abort_processing = True
                 print("  Aborting remaining modules after binary processing failure")
                 break
+            if fail > 0:
+                print("  Continuing after binary processing failure (-skip_error)")
 
         if abort_processing:
             break

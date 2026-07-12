@@ -2074,6 +2074,122 @@ class TestProcessBinary(unittest.TestCase):
         self.assertEqual(1, mock_preprocess.call_count)
         self.assertEqual(1, mock_run_skill.call_count)
 
+    def test_process_binary_continues_after_fallback_skill_failure_when_skip_error_enabled(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_dir = Path(temp_dir) / "bin" / "14141" / "engine"
+            binary_dir.mkdir(parents=True, exist_ok=True)
+            binary_path = str(binary_dir / "libengine2.so")
+            fake_process = object()
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=fake_process),
+                patch.object(
+                    ida_analyze_bin,
+                    "ensure_mcp_available",
+                    return_value=(fake_process, True),
+                ),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_validate_expected_input_artifacts_via_mcp",
+                    return_value=[],
+                ),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_preprocess_single_skill_via_mcp",
+                    return_value="no_script",
+                ) as mock_preprocess,
+                patch.object(
+                    ida_analyze_bin,
+                    "run_skill",
+                    side_effect=[False, True],
+                ) as mock_run_skill,
+                patch.object(ida_analyze_bin, "quit_ida_gracefully", return_value=None),
+            ):
+                success, fail, skip = ida_analyze_bin.process_binary(
+                    binary_path=binary_path,
+                    skills=[
+                        {
+                            "name": "a_fallback_fails",
+                            "expected_output": ["A.{platform}.yaml"],
+                            "expected_input": [],
+                        },
+                        {
+                            "name": "b_should_run",
+                            "expected_output": ["B.{platform}.yaml"],
+                            "expected_input": [],
+                        },
+                    ],
+                    old_binary_dir=None,
+                    platform="windows",
+                    agent="codex",
+                    max_retries=1,
+                    debug=True,
+                    host="127.0.0.1",
+                    port=39091,
+                    ida_args=None,
+                    skip_error=True,
+                )
+
+        self.assertEqual((1, 1, 0), (success, fail, skip))
+        self.assertEqual(2, mock_preprocess.call_count)
+        self.assertEqual(2, mock_run_skill.call_count)
+
+    def test_process_binary_continues_after_preprocess_output_failure_when_skip_error_enabled(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_dir = Path(temp_dir) / "bin" / "14141" / "engine"
+            binary_dir.mkdir(parents=True, exist_ok=True)
+            binary_path = str(binary_dir / "libengine2.so")
+            fake_process = object()
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=fake_process),
+                patch.object(
+                    ida_analyze_bin,
+                    "ensure_mcp_available",
+                    return_value=(fake_process, True),
+                ),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_validate_expected_input_artifacts_via_mcp",
+                    return_value=[],
+                ),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_preprocess_single_skill_via_mcp",
+                    side_effect=["success", "absent_ok"],
+                ) as mock_preprocess,
+                patch.object(ida_analyze_bin, "run_skill") as mock_run_skill,
+                patch.object(ida_analyze_bin, "quit_ida_gracefully", return_value=None),
+            ):
+                success, fail, skip = ida_analyze_bin.process_binary(
+                    binary_path=binary_path,
+                    skills=[
+                        {
+                            "name": "a_preprocess_output_fails",
+                            "expected_output": ["A.{platform}.yaml"],
+                            "expected_input": [],
+                        },
+                        {
+                            "name": "b_should_run",
+                            "expected_output": ["B.{platform}.yaml"],
+                            "expected_input": [],
+                        },
+                    ],
+                    old_binary_dir=None,
+                    platform="windows",
+                    agent="codex",
+                    max_retries=1,
+                    debug=True,
+                    host="127.0.0.1",
+                    port=39091,
+                    ida_args=None,
+                    skip_error=True,
+                )
+
+        self.assertEqual((0, 1, 1), (success, fail, skip))
+        self.assertEqual(2, mock_preprocess.call_count)
+        mock_run_skill.assert_not_called()
+
     def test_process_binary_skips_optional_only_skill_when_no_preprocess_script_and_no_output(
         self,
     ) -> None:
@@ -3161,6 +3277,16 @@ class TestInspectFuncVaPyEvalSelfHeal(unittest.IsolatedAsyncioTestCase):
 )
 class TestParseArgsLlmOptions(unittest.TestCase):
     @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_accepts_skip_error(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            ["ida_analyze_bin.py", "-gamever", "14141", "-skip_error"],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertTrue(args.skip_error)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
     def test_parse_args_accepts_agent_model(self, _mock_resolve_oldgamever) -> None:
         with patch(
             "sys.argv",
@@ -3774,6 +3900,67 @@ class TestMainLlmWiring(unittest.TestCase):
         self.assertEqual(1, exit_context.exception.code)
         self.assertEqual(1, mock_process.call_count)
         mock_aggregate.assert_not_called()
+
+    @patch.object(ida_analyze_bin, "parse_config")
+    @patch("ida_analyze_bin.os.path.exists", return_value=True)
+    @patch.object(ida_analyze_bin, "parse_args")
+    def test_main_continues_after_process_binary_failure_when_skip_error_enabled(
+        self,
+        mock_parse_args,
+        _mock_exists,
+        mock_parse_config,
+    ) -> None:
+        mock_parse_args.return_value = SimpleNamespace(
+            configyaml="config.yaml",
+            bindir="bin",
+            gamever="14141",
+            oldgamever=None,
+            platforms=["windows"],
+            module_filter=None,
+            modules="*",
+            agent="codex",
+            ida_args="",
+            debug=False,
+            maxretry=3,
+            vcall_finder_filter={"all": True},
+            llm_model="gpt-4.1-mini",
+            llm_apikey=None,
+            llm_baseurl=None,
+            llm_temperature=None,
+            llm_effort="high",
+            llm_fake_as="codex",
+            rename=False,
+            skip_error=True,
+        )
+        mock_parse_config.return_value = [
+            {
+                "name": "engine",
+                "skills": [{"name": "find-first", "expected_output": [], "expected_input": []}],
+                "vcall_finder_objects": ["g_pFirst"],
+                "path_windows": "game/bin/win64/engine2.dll",
+            },
+            {
+                "name": "server",
+                "skills": [{"name": "find-second", "expected_output": [], "expected_input": []}],
+                "vcall_finder_objects": ["g_pSecond"],
+                "path_windows": "game/bin/win64/server.dll",
+            },
+        ]
+
+        with (
+            patch.object(ida_analyze_bin, "process_binary", return_value=(0, 1, 0)) as mock_process,
+            patch.object(
+                ida_analyze_bin,
+                "aggregate_vcall_results_for_object",
+                return_value={"status": "success", "processed": 1, "failed": 0},
+            ) as mock_aggregate,
+            self.assertRaises(SystemExit) as exit_context,
+        ):
+            ida_analyze_bin.main()
+
+        self.assertEqual(1, exit_context.exception.code)
+        self.assertEqual(2, mock_process.call_count)
+        self.assertEqual(2, mock_aggregate.call_count)
 
 
 class TestMainPostProcessWiring(unittest.TestCase):
