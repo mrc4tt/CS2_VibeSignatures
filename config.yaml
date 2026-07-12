@@ -9331,25 +9331,25 @@ modules:
       - name: CEntitySystem_m_pNetworkFieldChangedEventQueue
         category: structmember
         struct: CEntitySystem
-        member: m_Symbols
+        member: m_pNetworkFieldChangedEventQueue
         alias:
           - CEntitySystem::m_pNetworkFieldChangedEventQueue
       - name: CEntitySystem_m_pNetworkFieldScratchData
         category: structmember
         struct: CEntitySystem
-        member: m_Symbols
+        member: m_pNetworkFieldScratchData
         alias:
           - CEntitySystem::m_pNetworkFieldScratchData
       - name: CEntitySystem_m_pFieldChangeLimitSpew
         category: structmember
         struct: CEntitySystem
-        member: m_Symbols
+        member: m_pFieldChangeLimitSpew
         alias:
           - CEntitySystem::m_pFieldChangeLimitSpew
       - name: CEntitySystem_m_ComponentUnserializerInfoAllocator
         category: structmember
         struct: CEntitySystem
-        member: m_Symbols
+        member: m_ComponentUnserializerInfoAllocator
         alias:
           - CEntitySystem::m_ComponentUnserializerInfoAllocator
       - name: CEntitySystem_m_EntityMaterialAttributes
