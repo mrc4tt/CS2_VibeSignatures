@@ -91,7 +91,7 @@ disasm_code: |-
   .text:0000000180BB269F                 mov     r8, rdi
   .text:0000000180BB26A2                 mov     edx, ebx
   .text:0000000180BB26A4                 mov     rcx, r14
-  .text:0000000180BB26A7                 call    sub_180B83A80
+  .text:0000000180BB26A7                 call    CGameEntitySystem_CheckGlobalState
   .text:0000000180BB26AC                 movsxd  rax, ebx
   .text:0000000180BB26AF                 inc     rsi
   .text:0000000180BB26B2                 lea     rcx, [rax+rax*2]
@@ -197,7 +197,7 @@ procedure: |-
         }
         if ( (int)v14 > 0 )
           CBodyGameSystem_SpawnDependencyIsland(g_pBodyGameSystem, 1, (unsigned int)v14, a3);
-        sub_180B83A80(a1, (unsigned int)v14, a3);
+        CGameEntitySystem_CheckGlobalState(a1, (unsigned int)v14, a3);
         result = (int)v14;
         ++v3;
         a3 += 24LL * (int)v14;

@@ -101,7 +101,7 @@ disasm_code: |-
   .text:00000000016A4F28                 mov     rdx, rbx
   .text:00000000016A4F2B                 mov     esi, r15d
   .text:00000000016A4F2E                 mov     rdi, r13
-  .text:00000000016A4F31                 call    sub_16A49B0
+  .text:00000000016A4F31                 call    CGameEntitySystem_CheckGlobalState
   .text:00000000016A4F36                 movsxd  r8, r15d
   .text:00000000016A4F39                 add     r12, 4
   .text:00000000016A4F3D                 lea     rax, [r8+r8*2]
@@ -220,7 +220,7 @@ procedure: |-
           if ( v14 > 0 )
             CBodyGameSystem_SpawnDependencyIsland(g_pBodyGameSystem, 1, (unsigned int)v14, v5);
         }
-        sub_16A49B0(a1, (unsigned int)v14, v5);
+        CGameEntitySystem_CheckGlobalState(a1, (unsigned int)v14, v5);
         ++v13;
         result = 3LL * v14;
         v5 += 24LL * v14;
