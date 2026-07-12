@@ -5103,7 +5103,7 @@ found_struct_offset: []
                 client=object(),
                 model="gpt-4.1-mini",
                 symbol_name_list=["ILoopMode_OnLoopActivate"],
-                disasm_code="call    [rax+68h]",
+                disasm_code=".text:0000000180777700                 call\t[rax+68h]",
                 procedure="(*v1->lpVtbl->OnLoopActivate)(v1);",
             )
 
@@ -5127,6 +5127,268 @@ found_struct_offset: []
         mock_call_llm_text.assert_called_once()
         self.assertEqual("gpt-4.1-mini", mock_call_llm_text.call_args.kwargs["model"])
         self.assertNotIn("temperature", mock_call_llm_text.call_args.kwargs)
+
+    async def test_call_llm_decompile_retries_hallucinated_instruction_pair_with_full_context(
+        self,
+    ) -> None:
+        hallucinated_response = """
+found_call:
+  - insn_va: '0x1A3F90F'
+    insn_disasm: call    CBaseAnimGraph_GetAnimationController
+    func_name: CBaseAnimGraph_GetAnimationController
+""".strip()
+        corrected_response = """
+found_call:
+  - insn_va: '0x1A3F916'
+    insn_disasm: call    CBaseAnimGraph_GetAnimationController
+    func_name: CBaseAnimGraph_GetAnimationController
+""".strip()
+        disasm_code = (
+            ".text:0000000001A3F90F                 mov     byte ptr [rbx+83Dh], 0\n"
+            ".text:0000000001A3F916                 call    CBaseAnimGraph_GetAnimationController"
+        )
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[hallucinated_response, corrected_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["CBaseAnimGraph_GetAnimationController"],
+                disasm_code=disasm_code,
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual("0x1A3F916", parsed["found_call"][0]["insn_va"])
+        self.assertEqual(2, mock_call_llm_text.call_count)
+        retry_messages = mock_call_llm_text.call_args_list[1].kwargs["messages"]
+        self.assertEqual(["system", "user", "assistant", "user"], [item["role"] for item in retry_messages])
+        self.assertEqual(hallucinated_response, retry_messages[2]["content"])
+        first_cache_key = mock_call_llm_text.call_args_list[0].kwargs["prompt_cache_key"]
+        retry_cache_key = mock_call_llm_text.call_args_list[1].kwargs["prompt_cache_key"]
+        self.assertTrue(first_cache_key)
+        self.assertEqual(first_cache_key, retry_cache_key)
+        initial_messages = mock_call_llm_text.call_args_list[0].kwargs["messages"]
+        self.assertEqual(initial_messages[0]["id"], retry_messages[0]["id"])
+        self.assertEqual(initial_messages[1]["id"], retry_messages[1]["id"])
+        self.assertTrue(all(item["id"].startswith("msg_") for item in retry_messages))
+        correction_prompt = retry_messages[3]["content"]
+        self.assertIn("found_call[0]", correction_prompt)
+        self.assertIn("0x1A3F90F", correction_prompt)
+        self.assertIn("mov byte ptr [rbx+83Dh], 0", correction_prompt)
+        self.assertIn("0x1A3F916", correction_prompt)
+        self.assertIn("complete YAML", correction_prompt)
+
+    async def test_call_llm_decompile_reports_all_result_section_mismatches(self) -> None:
+        hallucinated_response = """
+found_vcall:
+  - insn_va: '0x1000'
+    insn_disasm: call    [rax+68h]
+    vfunc_offset: '0x68'
+    func_name: TargetVcall
+found_call:
+  - insn_va: bad-address
+    insn_disasm: call    TargetCall
+    func_name: TargetCall
+found_funcptr:
+  - insn_va: '0x1000'
+    insn_disasm: lea     rdx, TargetFuncPtr
+    funcptr_name: TargetFuncPtr
+found_gv:
+  - insn_va: '0x1000'
+    insn_disasm: mov     rcx, cs:TargetGlobal
+    gv_name: TargetGlobal
+found_struct_offset:
+  - insn_va: '0x1000'
+    insn_disasm: mov     rcx, [r14+58h]
+    offset: '0x58'
+    size: '8'
+    struct_name: TargetStruct
+    member_name: member
+""".strip()
+        empty_response = """
+found_vcall: []
+found_call: []
+found_funcptr: []
+found_gv: []
+found_struct_offset: []
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[hallucinated_response, empty_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["Target"],
+                disasm_code=".text:0000000000001000                 nop",
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual(ida_analyze_util._empty_llm_decompile_result(), parsed)
+        correction_prompt = mock_call_llm_text.call_args_list[1].kwargs["messages"][3]["content"]
+        for section_name in (
+            "found_vcall[0]",
+            "found_call[0]",
+            "found_funcptr[0]",
+            "found_gv[0]",
+            "found_struct_offset[0]",
+        ):
+            self.assertIn(section_name, correction_prompt)
+
+    async def test_call_llm_decompile_validates_all_target_disassembly_blocks(self) -> None:
+        response_text = """
+found_call:
+  - insn_va: '0x2000'
+    insn_disasm: call    TargetCall
+    func_name: TargetCall
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            return_value=response_text,
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall"],
+                disasm_code=".text:0000000000001000                 nop",
+                target_disasm_codes=[
+                    ".text:0000000000001000                 nop",
+                    ".text:0000000000002000                 call    TargetCall",
+                ],
+                max_retries=1,
+            )
+
+        self.assertEqual("0x2000", parsed["found_call"][0]["insn_va"])
+        mock_call_llm_text.assert_called_once()
+
+    async def test_call_llm_decompile_returns_empty_after_hallucination_retry_exhaustion(self) -> None:
+        hallucinated_response = """
+found_call:
+  - insn_va: '0x1000'
+    insn_disasm: call    TargetCall
+    func_name: TargetCall
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            return_value=hallucinated_response,
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall"],
+                disasm_code=".text:0000000000001000                 nop",
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual(ida_analyze_util._empty_llm_decompile_result(), parsed)
+        self.assertEqual(2, mock_call_llm_text.call_count)
+
+    async def test_call_llm_decompile_reuses_added_correction_message_ids(self) -> None:
+        hallucinated_response = """
+found_call:
+  - insn_va: '0x1000'
+    insn_disasm: call    TargetCall
+    func_name: TargetCall
+""".strip()
+        corrected_response = """
+found_call:
+  - insn_va: '0x1005'
+    insn_disasm: call    TargetCall
+    func_name: TargetCall
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[hallucinated_response, hallucinated_response, corrected_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall"],
+                disasm_code=(
+                    ".text:0000000000001000                 nop\n"
+                    ".text:0000000000001005                 call    TargetCall"
+                ),
+                max_retries=3,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual("0x1005", parsed["found_call"][0]["insn_va"])
+        second_messages = mock_call_llm_text.call_args_list[1].kwargs["messages"]
+        third_messages = mock_call_llm_text.call_args_list[2].kwargs["messages"]
+        self.assertEqual(
+            [message["id"] for message in second_messages],
+            [message["id"] for message in third_messages[: len(second_messages)]],
+        )
+
+    async def test_call_llm_decompile_shares_retry_budget_between_transport_and_hallucination(self) -> None:
+        hallucinated_response = """
+found_call:
+  - insn_va: '0x1000'
+    insn_disasm: call    TargetCall
+    func_name: TargetCall
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[RuntimeError("HTTP 503 service unavailable"), hallucinated_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall"],
+                disasm_code=".text:0000000000001000                 nop",
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual(ida_analyze_util._empty_llm_decompile_result(), parsed)
+        self.assertEqual(2, mock_call_llm_text.call_count)
+
+    async def test_call_llm_decompile_rejects_nonempty_result_without_address_index(self) -> None:
+        response_text = """
+found_call:
+  - insn_va: '0x1000'
+    insn_disasm: call    TargetCall
+    func_name: TargetCall
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            return_value=response_text,
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall"],
+                disasm_code="call    TargetCall",
+                max_retries=1,
+            )
+
+        self.assertEqual(ida_analyze_util._empty_llm_decompile_result(), parsed)
+        mock_call_llm_text.assert_called_once()
 
     async def test_call_llm_decompile_omits_comments_from_target_blocks(
         self,
@@ -5317,7 +5579,7 @@ found_struct_offset: []
                 client=object(),
                 model="gpt-5.4",
                 symbol_name_list=["ILoopMode_OnLoopActivate"],
-                disasm_code="call    [rax+68h]",
+                disasm_code=".text:0000000180777700                 call    [rax+68h]",
                 procedure="(*v1->lpVtbl->OnLoopActivate)(v1);",
                 max_retries=2,
                 retry_initial_delay=0,
@@ -7681,6 +7943,10 @@ found_struct_offset: []
         self.assertEqual(
             target_detail_payload["disasm_code"],
             mock_call_llm_decompile.call_args.kwargs["disasm_code"],
+        )
+        self.assertEqual(
+            [target_detail_payload["disasm_code"]],
+            mock_call_llm_decompile.call_args.kwargs["target_disasm_codes"],
         )
         self.assertEqual(
             target_detail_payload["procedure"],

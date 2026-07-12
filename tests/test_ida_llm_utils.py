@@ -173,6 +173,24 @@ class TestCallLlmText(unittest.TestCase):
             reasoning_effort="medium",
         )
 
+    def test_call_llm_text_strips_internal_message_ids_for_chat_completions(self) -> None:
+        response = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content="done"))]
+        )
+        create = MagicMock(return_value=response)
+        client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+
+        ida_llm_utils.call_llm_text(
+            client,
+            model="gpt-5.4",
+            messages=[{"id": "msg_stable", "role": "user", "content": "hello"}],
+        )
+
+        self.assertEqual(
+            [{"role": "user", "content": "hello"}],
+            create.call_args.kwargs["messages"],
+        )
+
     @patch("ida_llm_utils.create_openai_client")
     def test_call_llm_text_creates_request_client_when_missing(
         self,
@@ -218,6 +236,7 @@ class _CodexHandler(BaseHTTPRequestHandler):
     last_path = None
     last_headers = None
     last_json_body = None
+    json_bodies = []
 
     def do_POST(self) -> None:  # noqa: N802
         content_length = int(self.headers.get("Content-Length", "0"))
@@ -226,6 +245,7 @@ class _CodexHandler(BaseHTTPRequestHandler):
         type(self).last_path = self.path
         type(self).last_headers = {k.lower(): v for k, v in self.headers.items()}
         type(self).last_json_body = json.loads(body)
+        type(self).json_bodies.append(type(self).last_json_body)
 
         self.send_response(200)
         self.send_header("Content-Type", type(self).content_type)
@@ -254,6 +274,7 @@ class TestCallLlmTextCodexHttp(unittest.TestCase):
         _CodexHandler.last_path = None
         _CodexHandler.last_headers = None
         _CodexHandler.last_json_body = None
+        _CodexHandler.json_bodies = []
 
         self._server = HTTPServer(("127.0.0.1", 0), _CodexHandler)
         self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
@@ -314,6 +335,36 @@ class TestCallLlmTextCodexHttp(unittest.TestCase):
         self.assertEqual(
             [{"type": "input_text", "text": "Hello"}],
             user_input["content"],
+        )
+
+    def test_call_llm_text_codex_preserves_message_ids_across_retries(self) -> None:
+        messages = [
+            {"id": "msg_initial", "role": "user", "content": "Initial prompt"},
+            {"id": "msg_bad_output", "role": "assistant", "content": "bad YAML"},
+            {"id": "msg_correction", "role": "user", "content": "Return corrected YAML"},
+        ]
+
+        for _ in range(2):
+            ida_llm_utils.call_llm_text(
+                None,
+                model="gpt-5.4",
+                messages=messages,
+                api_key="test-api-key",
+                base_url=self._base_url,
+                fake_as="codex",
+                prompt_cache_key="stable-cache-key",
+            )
+
+        first_input = _CodexHandler.json_bodies[0]["input"]
+        second_input = _CodexHandler.json_bodies[1]["input"]
+        first_ids = [item.get("id") for item in first_input if item.get("type") == "message"]
+        second_ids = [item.get("id") for item in second_input if item.get("type") == "message"]
+        self.assertEqual(first_ids, second_ids)
+        self.assertEqual(["msg_initial", "msg_bad_output", "msg_correction"], first_ids[-3:])
+        self.assertEqual(["user", "assistant", "user"], [item["role"] for item in first_input[-3:]])
+        self.assertEqual(
+            ["stable-cache-key", "stable-cache-key"],
+            [body["prompt_cache_key"] for body in _CodexHandler.json_bodies],
         )
 
     def test_call_llm_text_rejects_non_sse_content_type(self) -> None:

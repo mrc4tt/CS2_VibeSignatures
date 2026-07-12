@@ -30,20 +30,20 @@ except Exception:
 import ida_llm_decompile as _ida_llm_decompile
 from ida_llm_decompile import (
     _build_llm_decompile_request_cache_key,
-    _debug_print_json,
-    _debug_print_multiline,
-    _derive_module_name,
+    _debug_print_json,  # noqa: F401
+    _debug_print_multiline,  # noqa: F401
+    _derive_module_name,  # noqa: F401
     _empty_llm_decompile_result,
-    _extract_llm_error_status_code,
-    _is_transient_llm_error,
-    _normalize_llm_entries,
-    _normalize_llm_retry_attempts,
-    _normalize_llm_retry_delay,
-    _normalize_llm_struct_offset_entries,
-    _parse_yaml_mapping,
+    _extract_llm_error_status_code,  # noqa: F401
+    _is_transient_llm_error,  # noqa: F401
+    _normalize_llm_entries,  # noqa: F401
+    _normalize_llm_retry_attempts,  # noqa: F401
+    _normalize_llm_retry_delay,  # noqa: F401
+    _normalize_llm_struct_offset_entries,  # noqa: F401
+    _parse_yaml_mapping,  # noqa: F401
     _render_llm_decompile_blocks,
-    _resolve_llm_decompile_template_value,
-    parse_llm_decompile_response,
+    _resolve_llm_decompile_template_value,  # noqa: F401
+    parse_llm_decompile_response,  # noqa: F401
 )
 
 
@@ -2310,6 +2310,7 @@ async def call_llm_decompile(
     model=None,
     symbol_name_list=None,
     disasm_code="",
+    target_disasm_codes=None,
     procedure="",
     disasm_for_reference="",
     procedure_for_reference="",
@@ -2334,6 +2335,7 @@ async def call_llm_decompile(
         model=model,
         symbol_name_list=symbol_name_list,
         disasm_code=disasm_code,
+        target_disasm_codes=target_disasm_codes,
         procedure=procedure,
         disasm_for_reference=disasm_for_reference,
         procedure_for_reference=procedure_for_reference,
@@ -7927,6 +7929,9 @@ async def preprocess_common_skill(
                 model=llm_request["model"],
                 symbol_name_list=llm_symbol_name_list,
                 disasm_code=primary_target_detail.get("disasm_code", ""),
+                target_disasm_codes=[
+                    target_detail.get("disasm_code", "") for target_detail in llm_target_details
+                ],
                 procedure=primary_target_detail.get("procedure", ""),
                 disasm_for_reference=llm_request["disasm_for_reference"],
                 procedure_for_reference=llm_request["procedure_for_reference"],

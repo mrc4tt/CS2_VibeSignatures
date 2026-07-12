@@ -7,6 +7,7 @@ import asyncio
 import json
 import os
 import re
+import uuid
 from pathlib import Path
 
 try:
@@ -27,6 +28,16 @@ except Exception:
 
 
 _UNSET = object()
+_LLM_INSTRUCTION_RESULT_SECTIONS = (
+    "found_vcall",
+    "found_call",
+    "found_funcptr",
+    "found_gv",
+    "found_struct_offset",
+)
+_DISASM_ADDRESS_LINE_RE = re.compile(
+    r"^\s*(?:[^:\s]+:)?([0-9A-Fa-f]{4,16})\s+(.+?)\s*$"
+)
 
 
 def _absolute_path_preserve_spelling(path):
@@ -441,6 +452,163 @@ def parse_llm_decompile_response(response_text):
     }
 
 
+def _normalize_disasm_whitespace(value):
+    return re.sub(r"\s+", " ", str(value or "")).strip()
+
+
+def _new_llm_message(role, content):
+    return {
+        "id": f"msg_{uuid.uuid4()}",
+        "role": str(role),
+        "content": str(content or ""),
+    }
+
+
+def _normalize_target_disasm_codes(target_disasm_codes, disasm_code):
+    if target_disasm_codes is None:
+        return [str(disasm_code or "")]
+    if isinstance(target_disasm_codes, str):
+        return [target_disasm_codes]
+    if not isinstance(target_disasm_codes, (tuple, list)):
+        return []
+    return [str(item or "") for item in target_disasm_codes]
+
+
+def _build_target_disasm_index(target_disasm_codes, disasm_code=""):
+    instructions_by_va = {}
+    addresses_by_instruction = {}
+    for code in _normalize_target_disasm_codes(target_disasm_codes, disasm_code):
+        for line in _strip_disasm_comments(code).splitlines():
+            match = _DISASM_ADDRESS_LINE_RE.match(line)
+            if match is None:
+                continue
+            instruction = _normalize_disasm_whitespace(match.group(2))
+            if not instruction or instruction.startswith(";"):
+                continue
+            insn_va = int(match.group(1), 16)
+            instructions_by_va.setdefault(insn_va, set()).add(instruction)
+            addresses_by_instruction.setdefault(instruction, set()).add(insn_va)
+    return instructions_by_va, addresses_by_instruction
+
+
+def _iter_llm_instruction_entries(parsed_result):
+    for section_name in _LLM_INSTRUCTION_RESULT_SECTIONS:
+        entries = parsed_result.get(section_name, [])
+        for entry_index, entry in enumerate(entries):
+            yield section_name, entry_index, entry
+
+
+def _validate_llm_instruction_pairs(parsed_result, disasm_index):
+    instructions_by_va, addresses_by_instruction = disasm_index
+    issues = []
+    for section_name, entry_index, entry in _iter_llm_instruction_entries(parsed_result):
+        insn_va_text = str(entry.get("insn_va", "")).strip()
+        reported_disasm = _normalize_disasm_whitespace(entry.get("insn_disasm"))
+        insn_va = _parse_llm_int_value(insn_va_text)
+        actual_disasms = instructions_by_va.get(insn_va, set()) if insn_va is not None else set()
+        if reported_disasm in actual_disasms:
+            continue
+        issues.append(
+            {
+                "section_name": section_name,
+                "entry_index": entry_index,
+                "insn_va": insn_va_text,
+                "reported_disasm": reported_disasm,
+                "actual_disasms": sorted(actual_disasms),
+                "candidate_vas": sorted(addresses_by_instruction.get(reported_disasm, set())),
+            }
+        )
+    return issues
+
+
+def _format_llm_instruction_issue(issue):
+    location = f"{issue['section_name']}[{issue['entry_index']}]"
+    actual_disasms = issue["actual_disasms"]
+    actual_text = " | ".join(actual_disasms) if actual_disasms else "<no instruction found>"
+    text = (
+        f"- {location}: insn_va {issue['insn_va']!r} reports "
+        f"`{issue['reported_disasm']}`, but the target instruction at that VA is `{actual_text}`."
+    )
+    candidate_vas = issue["candidate_vas"]
+    if candidate_vas:
+        candidate_text = ", ".join(f"0x{insn_va:X}" for insn_va in candidate_vas)
+        text += f" The reported instruction appears at: {candidate_text}."
+    return text
+
+
+def _build_llm_instruction_correction_prompt(validation_issues):
+    issue_text = "\n".join(_format_llm_instruction_issue(issue) for issue in validation_issues)
+    return (
+        "Your previous YAML output contains inconsistent insn_va and insn_disasm pairs.\n"
+        "Each insn_va must identify the exact target instruction written in insn_disasm; only whitespace "
+        "differences are allowed.\n\n"
+        f"Mismatches:\n{issue_text}\n\n"
+        "Re-check every entry and return the complete YAML output for all requested symbols. "
+        "Do not return a patch, partial YAML, explanation, or any text outside the complete YAML."
+    )
+
+
+def _append_llm_instruction_correction(conversation_messages, content, validation_issues):
+    conversation_messages.extend(
+        [
+            _new_llm_message("assistant", content),
+            _new_llm_message("user", _build_llm_instruction_correction_prompt(validation_issues)),
+        ]
+    )
+
+
+async def _call_llm_decompile_with_validation(
+    *,
+    transport,
+    request_kwargs,
+    conversation_messages,
+    disasm_index,
+    symbol_name_text,
+    retry_settings,
+    debug,
+):
+    max_attempts, retry_delay, retry_backoff_factor, retry_max_delay = retry_settings
+    for attempt_index in range(max_attempts):
+        attempt_kwargs = dict(request_kwargs)
+        attempt_kwargs["messages"] = list(conversation_messages)
+        try:
+            content = transport(**attempt_kwargs)
+        except Exception as exc:
+            is_last_attempt = attempt_index >= max_attempts - 1
+            if not _is_transient_llm_error(exc) or is_last_attempt:
+                if debug:
+                    print(f"    Preprocess: llm_decompile call failed for {symbol_name_text}: {exc}")
+                return _empty_llm_decompile_result()
+            if debug:
+                print(
+                    f"    Preprocess: llm_decompile transient failure for {symbol_name_text} on attempt "
+                    f"{attempt_index + 1}/{max_attempts}: {exc}; retrying in {retry_delay:.2f}s"
+                )
+            if retry_delay > 0:
+                await asyncio.sleep(retry_delay)
+            retry_delay = min(retry_delay * retry_backoff_factor, retry_max_delay)
+            continue
+
+        if debug:
+            _debug_print_multiline(f"llm_decompile raw response for {symbol_name_text}", content, debug=True)
+        parsed_result = parse_llm_decompile_response(content)
+        if debug:
+            _debug_print_json(f"llm_decompile parsed response for {symbol_name_text}", parsed_result, debug=True)
+        validation_issues = _validate_llm_instruction_pairs(parsed_result, disasm_index)
+        if not validation_issues:
+            return parsed_result
+        if debug:
+            _debug_print_json(
+                f"llm_decompile instruction mismatches for {symbol_name_text}", validation_issues, debug=True
+            )
+        if attempt_index >= max_attempts - 1:
+            if debug:
+                print(f"    Preprocess: llm_decompile hallucination retry exhausted for {symbol_name_text}")
+            return _empty_llm_decompile_result()
+        _append_llm_instruction_correction(conversation_messages, content, validation_issues)
+    return _empty_llm_decompile_result()
+
+
 def _prepare_llm_decompile_request(
     func_name,
     llm_decompile_specs_map,
@@ -704,6 +872,7 @@ async def call_llm_decompile(
     model=None,
     symbol_name_list=None,
     disasm_code="",
+    target_disasm_codes=None,
     procedure="",
     disasm_for_reference="",
     procedure_for_reference="",
@@ -807,13 +976,14 @@ async def call_llm_decompile(
             prompt,
             debug=True,
         )
+    conversation_messages = [
+        _new_llm_message("system", system_prompt),
+        _new_llm_message("user", prompt),
+    ]
     request_kwargs = {
         "model": str(model).strip(),
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt},
-        ],
         "debug": debug,
+        "prompt_cache_key": str(uuid.uuid4()),
     }
     if client is not None:
         request_kwargs["client"] = client
@@ -848,40 +1018,13 @@ async def call_llm_decompile(
         minimum=1.0,
     )
     max_delay = _normalize_llm_retry_delay(retry_max_delay, default=8.0)
-
-    content = None
-    for attempt_index in range(max_attempts):
-        try:
-            content = transport(**request_kwargs)
-            break
-        except Exception as exc:
-            is_last_attempt = attempt_index >= max_attempts - 1
-            should_retry = _is_transient_llm_error(exc) and not is_last_attempt
-            if not should_retry:
-                if debug:
-                    print(f"    Preprocess: llm_decompile call failed for {symbol_name_text}: {exc}")
-                return _empty_llm_decompile_result()
-            if debug:
-                print(
-                    f"    Preprocess: llm_decompile transient failure for "
-                    f"{symbol_name_text} on attempt "
-                    f"{attempt_index + 1}/{max_attempts}: {exc}; "
-                    f"retrying in {delay:.2f}s"
-                )
-            if delay > 0:
-                await asyncio.sleep(delay)
-            delay = min(delay * backoff_factor, max_delay)
-    if debug:
-        _debug_print_multiline(
-            f"llm_decompile raw response for {symbol_name_text}",
-            content,
-            debug=True,
-        )
-    parsed_result = parse_llm_decompile_response(content)
-    if debug:
-        _debug_print_json(
-            f"llm_decompile parsed response for {symbol_name_text}",
-            parsed_result,
-            debug=True,
-        )
-    return parsed_result
+    disasm_index = _build_target_disasm_index(target_disasm_codes, disasm_code=disasm_code)
+    return await _call_llm_decompile_with_validation(
+        transport=transport,
+        request_kwargs=request_kwargs,
+        conversation_messages=conversation_messages,
+        disasm_index=disasm_index,
+        symbol_name_text=symbol_name_text,
+        retry_settings=(max_attempts, delay, backoff_factor, max_delay),
+        debug=debug,
+    )

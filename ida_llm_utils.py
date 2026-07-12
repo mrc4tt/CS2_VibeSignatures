@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import time
 import uuid
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -122,20 +121,40 @@ def _extract_text_from_message_content(content) -> str:
     return str(content or "").strip()
 
 
-def _build_responses_input(messages) -> list[dict[str, str]]:
-    merged_user_parts: list[str] = []
+def _build_responses_input(messages) -> list[dict[str, Any]]:
+    input_items: list[dict[str, Any]] = []
     for message in messages:
         if not isinstance(message, Mapping):
             continue
         role = str(message.get("role", "")).strip().lower()
-        if role != "user":
+        if role not in {"user", "assistant"}:
             continue
         text = _extract_text_from_message_content(message.get("content"))
-        if text:
-            merged_user_parts.append(text)
-    if not merged_user_parts:
+        if not text:
+            continue
+        message_id = str(message.get("id", "")).strip() or f"msg_{uuid.uuid4()}"
+        content_type = "input_text" if role == "user" else "output_text"
+        input_items.append(
+            {
+                "type": "message",
+                "id": message_id,
+                "role": role,
+                "content": [{"type": content_type, "text": text}],
+            }
+        )
+    if not any(item["role"] == "user" for item in input_items):
         raise ValueError("messages must include at least one user message")
-    return [{"role": "user", "content": "\n\n".join(merged_user_parts)}]
+    return input_items
+
+
+def _build_chat_completion_messages(messages):
+    normalized_messages = []
+    for message in messages:
+        if isinstance(message, Mapping):
+            normalized_messages.append({key: value for key, value in message.items() if key != "id"})
+        else:
+            normalized_messages.append(message)
+    return normalized_messages
 
 
 def _extract_text_from_response_payload(payload) -> str:
@@ -218,13 +237,10 @@ def _load_codex_faker_template() -> dict[str, Any]:
 
 def _fill_codex_template(node, *, model, user_prompt, cache_key) -> Any:
     if isinstance(node, dict):
-        filled: dict[str, Any] = {}
-        for key, value in node.items():
-            if key == "id" and isinstance(value, str) and value.startswith("msg_"):
-                filled[key] = f"msg_{uuid.uuid4()}"
-            else:
-                filled[key] = _fill_codex_template(value, model=model, user_prompt=user_prompt, cache_key=cache_key)
-        return filled
+        return {
+            key: _fill_codex_template(value, model=model, user_prompt=user_prompt, cache_key=cache_key)
+            for key, value in node.items()
+        }
     if isinstance(node, list):
         return [_fill_codex_template(item, model=model, user_prompt=user_prompt, cache_key=cache_key) for item in node]
     if isinstance(node, str):
@@ -246,6 +262,7 @@ def _call_llm_text_via_codex_http(
     base_url,
     effort=None,
     temperature=None,
+    prompt_cache_key=None,
 ):
     normalized_api_key = require_nonempty_text(api_key, "api_key")
     normalized_base_url = require_nonempty_text(base_url, "base_url")
@@ -256,14 +273,18 @@ def _call_llm_text_via_codex_http(
         raise ValueError("base_url must include host")
 
     normalized_effort = normalize_optional_effort(effort)
-    merged_user_prompt = _build_responses_input(messages)[0]["content"]
-    cache_key = str(uuid.uuid4())
+    conversation_input = _build_responses_input(messages)
+    cache_key = str(prompt_cache_key or "").strip() or str(uuid.uuid4())
     body = _fill_codex_template(
         _load_codex_faker_template(),
         model=normalized_model,
-        user_prompt=merged_user_prompt,
+        user_prompt="",
         cache_key=cache_key,
     )
+    template_input = body.get("input")
+    if not isinstance(template_input, list) or not template_input:
+        raise RuntimeError("codex request template input must be a non-empty list")
+    template_input[-1:] = conversation_input
     reasoning = body.get("reasoning")
     if isinstance(reasoning, dict):
         reasoning["effort"] = normalized_effort
@@ -273,7 +294,6 @@ def _call_llm_text_via_codex_http(
     if normalized_temperature is not None:
         body["temperature"] = normalized_temperature
 
-    turn_started_at_unix_ms = time.time_ns() // 1_000_000
     # turn_metadata = (
     #     '{"installation_id":"cbf5a482-7bda-4aaf-92a0-cecf9f02c96b",'
     #     f'"session_id":"{cache_key}",'
@@ -358,6 +378,7 @@ def call_llm_text(
     api_key=None,
     base_url=None,
     fake_as=None,
+    prompt_cache_key=None,
     debug=False,
 ) -> str:
     normalized_effort = normalize_optional_effort(effort)
@@ -369,6 +390,7 @@ def call_llm_text(
             base_url=base_url,
             effort=normalized_effort,
             temperature=temperature,
+            prompt_cache_key=prompt_cache_key,
         )
 
     if client is None:
@@ -380,7 +402,7 @@ def call_llm_text(
 
     request_kwargs = {
         "model": require_nonempty_text(model, "model"),
-        "messages": messages,
+        "messages": _build_chat_completion_messages(messages),
         "reasoning_effort": normalized_effort,
     }
     normalized_temperature = normalize_optional_temperature(temperature)
