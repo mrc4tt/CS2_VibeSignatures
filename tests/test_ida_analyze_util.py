@@ -9882,31 +9882,28 @@ found_struct_offset: []
         mock_preprocess_direct_func_sig_via_mcp.assert_not_awaited()
         mock_write_func_yaml.assert_not_called()
 
-    async def test_preprocess_common_skill_skips_found_funcptr_when_vfunc_sig_required(
+    async def test_preprocess_common_skill_recovers_devirtualized_vfunc_from_found_funcptr(
         self,
     ) -> None:
-        func_name = "CBaseEntity_GetHammerUniqueId"
-        output_path = f"/tmp/{func_name}.windows.yaml"
+        func_name = "CEntitySystem_OnSetDormant"
+        output_path = f"/tmp/{func_name}.linux.yaml"
         target_detail_payload = {
-            "func_name": "CBaseEntity_Spawn",
-            "func_va": "0x180555500",
-            "disasm_code": "lea     rdx, sub_15BC910\ncall    qword ptr [rax+370h]",
-            "procedure": "v40 = sub_15BC910; return this->vfptr[110](this);",
+            "func_name": "CEntitySystem_SetInPVS",
+            "func_va": "0x211A000",
+            "disasm_code": (
+                "mov     r9, [rdx+0B8h]\n"
+                "lea     rdx, CEntitySystem_OnSetDormant\n"
+                "cmp     r9, rdx"
+            ),
+            "procedure": "v30 = *(__int64 (__fastcall **)())(*(_QWORD *)a1 + 184LL);",
         }
         normalized_payload = {
-            "found_vcall": [
-                {
-                    "insn_va": "0x18016742cf",
-                    "insn_disasm": "call    qword ptr [rax+370h]",
-                    "vfunc_offset": "0x370",
-                    "func_name": func_name,
-                }
-            ],
+            "found_vcall": [],
             "found_call": [],
             "found_funcptr": [
                 {
-                    "insn_va": "0x180666600",
-                    "insn_disasm": "lea     rdx, sub_15BC910",
+                    "insn_va": "0x211AD6A",
+                    "insn_disasm": "lea     rdx, CEntitySystem_OnSetDormant",
                     "funcptr_name": func_name,
                 }
             ],
@@ -9918,11 +9915,10 @@ found_struct_offset: []
             if kwargs.get("direct_vcall_inst_va"):
                 return {
                     "func_name": kwargs["func_name"],
-                    "func_va": "0x1809b8db0",
-                    "vfunc_sig": "FF 90 70 03 00 00",
-                    "vfunc_sig_max_match": 10,
-                    "vfunc_offset": "0x370",
-                    "vfunc_index": 110,
+                    "func_va": "0x1e59af0",
+                    "vfunc_sig": "4C 8B 8A B8 00 00 00",
+                    "vfunc_offset": "0xb8",
+                    "vfunc_index": 23,
                 }
             if kwargs.get("direct_func_va"):
                 return {
@@ -9972,9 +9968,20 @@ found_struct_offset: []
                 patch.object(
                     ida_analyze_util,
                     "_resolve_direct_funcptr_target_via_mcp",
-                    AsyncMock(return_value="0x180123450"),
+                    AsyncMock(return_value="0x1e59af0"),
                     create=True,
                 ) as mock_resolve_direct_funcptr_target,
+                patch.object(
+                    ida_analyze_util,
+                    "preprocess_vtable_via_mcp",
+                    AsyncMock(return_value={"vtable_entries": {23: "0x1e59af0"}}),
+                ),
+                patch.object(
+                    ida_analyze_util,
+                    "_find_devirtualized_vcall_inst_via_mcp",
+                    AsyncMock(return_value="0x211AD63"),
+                    create=True,
+                ) as mock_find_devirtualized_vcall_inst,
                 patch.object(
                     ida_analyze_util,
                     "_preprocess_direct_func_sig_via_mcp",
@@ -10002,10 +10009,10 @@ found_struct_offset: []
                     expected_outputs=[output_path],
                     old_yaml_map={},
                     new_binary_dir="/tmp",
-                    platform="windows",
-                    image_base=0x180000000,
+                    platform="linux",
+                    image_base=0,
                     func_names=[func_name],
-                    func_vtable_relations=[(func_name, "CBaseEntity")],
+                    func_vtable_relations=[(func_name, "CEntitySystem")],
                     generate_yaml_desired_fields=[
                         (
                             func_name,
@@ -10013,7 +10020,6 @@ found_struct_offset: []
                                 "func_name",
                                 "func_va",
                                 "vfunc_sig",
-                                "vfunc_sig_max_match:10",
                                 "vtable_name",
                                 "vfunc_offset",
                                 "vfunc_index",
@@ -10035,18 +10041,62 @@ found_struct_offset: []
                 )
 
         self.assertTrue(result)
-        mock_resolve_direct_funcptr_target.assert_not_awaited()
+        mock_resolve_direct_funcptr_target.assert_awaited_once_with(
+            "session",
+            "0x211AD6A",
+            debug=True,
+        )
+        mock_find_devirtualized_vcall_inst.assert_awaited_once_with(
+            "session",
+            "0x211AD6A",
+            "0xb8",
+            debug=True,
+        )
         mock_preprocess_direct_func_sig_via_mcp.assert_awaited_once()
         preprocess_kwargs = mock_preprocess_direct_func_sig_via_mcp.await_args.kwargs
-        self.assertEqual("0x18016742cf", preprocess_kwargs["direct_vcall_inst_va"])
-        self.assertEqual("0x370", preprocess_kwargs["direct_vfunc_offset"])
-        self.assertNotIn("direct_func_va", preprocess_kwargs)
+        self.assertEqual("0x211AD63", preprocess_kwargs["direct_vcall_inst_va"])
+        self.assertEqual("0xb8", preprocess_kwargs["direct_vfunc_offset"])
+        self.assertEqual("0x1e59af0", preprocess_kwargs["direct_func_va"])
         mock_write_func_yaml.assert_called_once()
         written_payload = mock_write_func_yaml.call_args.args[1]
         self.assertEqual(func_name, written_payload["func_name"])
-        self.assertEqual("FF 90 70 03 00 00", written_payload["vfunc_sig"])
-        self.assertEqual(10, written_payload["vfunc_sig_max_match"])
-        self.assertEqual("CBaseEntity", written_payload["vtable_name"])
+        self.assertEqual("4C 8B 8A B8 00 00 00", written_payload["vfunc_sig"])
+        self.assertEqual("CEntitySystem", written_payload["vtable_name"])
+
+    async def test_find_devirtualized_vcall_inst_uses_nearest_slot_access(self) -> None:
+        session = AsyncMock()
+        session.call_tool.return_value = _py_eval_payload({"inst_va": "0x211ad63"})
+
+        result = await ida_analyze_util._find_devirtualized_vcall_inst_via_mcp(
+            session,
+            "0x211AD6A",
+            "0xB8",
+            debug=True,
+        )
+
+        self.assertEqual("0x211ad63", result)
+        session.call_tool.assert_awaited_once()
+        call_kwargs = session.call_tool.await_args.kwargs
+        self.assertEqual("py_eval", call_kwargs["name"])
+        py_code = call_kwargs["arguments"]["code"]
+        self.assertIn("anchor_inst = 34712938", py_code)
+        self.assertIn("target_offset = 184", py_code)
+        self.assertIn("abs(ea - anchor_inst)", py_code)
+
+    def test_find_unique_vtable_func_index_rejects_duplicate_slots(self) -> None:
+        vtable_data = {
+            "vtable_entries": {
+                22: "0x1e59af0",
+                23: "0x1e59af0",
+            }
+        }
+
+        result = ida_analyze_util._find_unique_vtable_func_index(
+            vtable_data,
+            "0x1e59af0",
+        )
+
+        self.assertIsNone(result)
 
     async def test_preprocess_common_skill_skips_found_call_when_vfunc_sig_required(
         self,

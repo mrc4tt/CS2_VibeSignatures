@@ -1947,6 +1947,160 @@ async def _resolve_direct_funcptr_target_via_mcp(session, insn_va, debug=False):
     return resolved_matches[0]
 
 
+_DEVIRTUALIZED_VCALL_INST_PY_EVAL = """import ida_bytes, ida_funcs, ida_gdl, idaapi, idautils, idc, json
+anchor_inst = ANCHOR_INST_PLACEHOLDER
+target_offset = TARGET_OFFSET_PLACEHOLDER
+func = ida_funcs.get_func(anchor_inst)
+block = None
+if func:
+    for candidate in ida_gdl.FlowChart(func):
+        if candidate.start_ea <= anchor_inst < candidate.end_ea:
+            block = candidate
+            break
+matches = []
+if block:
+    for ea in idautils.Heads(block.start_ea, block.end_ea):
+        if ea == anchor_inst or abs(ea - anchor_inst) > 64:
+            continue
+        if not ida_bytes.is_code(ida_bytes.get_full_flags(ea)):
+            continue
+        mnem = (idc.print_insn_mnem(ea) or '').lower()
+        if mnem not in ('mov', 'cmp', 'call', 'jmp'):
+            continue
+        insn = idautils.DecodeInstruction(ea)
+        if not insn:
+            continue
+        for op in insn.ops:
+            if int(op.type) == int(idaapi.o_displ) and int(op.addr) == target_offset:
+                matches.append((abs(ea - anchor_inst), ea))
+                break
+matches.sort()
+best = [ea for distance, ea in matches if distance == matches[0][0]] if matches else []
+result = json.dumps({'inst_va': hex(best[0])} if len(best) == 1 else None)
+"""
+
+
+async def _find_devirtualized_vcall_inst_via_mcp(
+    session,
+    anchor_insn_va,
+    vfunc_offset,
+    debug=False,
+):
+    try:
+        anchor_inst = _parse_int_value(anchor_insn_va)
+        target_offset = _parse_int_value(vfunc_offset)
+    except Exception:
+        return None
+
+    py_code = _DEVIRTUALIZED_VCALL_INST_PY_EVAL.replace(
+        "ANCHOR_INST_PLACEHOLDER",
+        str(anchor_inst),
+    ).replace("TARGET_OFFSET_PLACEHOLDER", str(target_offset))
+    try:
+        eval_result = await session.call_tool(name="py_eval", arguments={"code": py_code})
+    except Exception as exc:
+        if debug:
+            print(f"    Preprocess: py_eval error while locating devirtualized vcall: {exc}")
+        return None
+
+    payload = _parse_py_eval_json_result(
+        eval_result,
+        debug=debug,
+        context="llm_decompile devirtualized vcall lookup",
+    )
+    if not isinstance(payload, dict):
+        return None
+    try:
+        return hex(_parse_int_value(payload.get("inst_va")))
+    except Exception:
+        return None
+
+
+async def _load_relation_vtable_data_via_mcp(
+    session,
+    vtable_class,
+    image_base,
+    new_binary_dir,
+    platform,
+    normalized_mangled_class_names,
+    debug=False,
+):
+    if _is_vtable_artifact_stem(vtable_class):
+        vtable_path = _build_vtable_yaml_path(new_binary_dir, vtable_class, platform)
+        return _read_yaml_file(vtable_path)
+    return await preprocess_vtable_via_mcp(
+        session=session,
+        class_name=vtable_class,
+        image_base=image_base,
+        platform=platform,
+        debug=debug,
+        symbol_aliases=_get_mangled_class_aliases(
+            normalized_mangled_class_names,
+            vtable_class,
+        ),
+    )
+
+
+def _find_unique_vtable_func_index(vtable_data, func_va):
+    if not isinstance(vtable_data, dict):
+        return None
+    target_va = _parse_int_value(func_va)
+    matching_indexes = []
+    for index, entry_va in vtable_data.get("vtable_entries", {}).items():
+        try:
+            if _parse_int_value(entry_va) == target_va:
+                matching_indexes.append(int(index))
+        except Exception:
+            continue
+    return matching_indexes[0] if len(matching_indexes) == 1 else None
+
+
+async def _resolve_devirtualized_vfunc_funcptr_via_mcp(
+    session,
+    insn_va,
+    vtable_class,
+    image_base,
+    new_binary_dir,
+    platform,
+    normalized_mangled_class_names,
+    debug=False,
+):
+    func_va = await _resolve_direct_funcptr_target_via_mcp(session, insn_va, debug=debug)
+    if func_va is None:
+        return None
+
+    vtable_data = await _load_relation_vtable_data_via_mcp(
+        session,
+        vtable_class,
+        image_base,
+        new_binary_dir,
+        platform,
+        normalized_mangled_class_names,
+        debug=debug,
+    )
+    vfunc_index = _find_unique_vtable_func_index(vtable_data, func_va)
+    if vfunc_index is None:
+        if debug:
+            print(f"    Preprocess: {func_va} is not unique in {vtable_class} vtable")
+        return None
+
+    target_va = _parse_int_value(func_va)
+    vfunc_offset = hex(vfunc_index * 8)
+    vcall_inst_va = await _find_devirtualized_vcall_inst_via_mcp(
+        session,
+        insn_va,
+        vfunc_offset,
+        debug=debug,
+    )
+    if vcall_inst_va is None:
+        return None
+    return {
+        "func_va": hex(target_va),
+        "vfunc_offset": vfunc_offset,
+        "vcall_inst_va": vcall_inst_va,
+    }
+
+
 async def _resolve_direct_gv_target_via_mcp(session, insn_va, debug=False):
     try:
         insn_va_int = _parse_int_value(insn_va)
@@ -7917,6 +8071,52 @@ async def preprocess_common_skill(
             vtable_class = None
             if func_data is None and func_name in vtable_relations_map:
                 vtable_class = vtable_relations_map[func_name]
+            if func_data is None and vtable_class is not None and "vfunc_sig" in desired_fields_set:
+                for entry in llm_result.get("found_funcptr", []):
+                    if entry.get("funcptr_name") != func_name:
+                        continue
+                    devirtualized = await _resolve_devirtualized_vfunc_funcptr_via_mcp(
+                        session=session,
+                        insn_va=entry.get("insn_va"),
+                        vtable_class=vtable_class,
+                        image_base=image_base,
+                        new_binary_dir=new_binary_dir,
+                        platform=platform,
+                        normalized_mangled_class_names=normalized_mangled_class_names,
+                        debug=debug,
+                    )
+                    if devirtualized is None:
+                        continue
+                    direct_vcall_kwargs = {
+                        "session": session,
+                        "new_path": target_output,
+                        "image_base": image_base,
+                        "platform": platform,
+                        "func_name": func_name,
+                        "direct_func_va": devirtualized["func_va"],
+                        "direct_vtable_class": vtable_class,
+                        "direct_vfunc_offset": devirtualized["vfunc_offset"],
+                        "direct_vcall_inst_va": devirtualized["vcall_inst_va"],
+                        "require_func_sig": "func_sig" in desired_fields_set,
+                        "require_vfunc_sig": True,
+                        "vfunc_sig_max_match": generation_options.get("vfunc_sig_max_match", 1),
+                        "allow_func_sig_across_function_boundary": generation_options.get(
+                            "func_sig_allow_across_function_boundary",
+                            False,
+                        ),
+                        "normalized_mangled_class_names": normalized_mangled_class_names,
+                        "debug": debug,
+                    }
+                    if generation_options.get(
+                        "vfunc_sig_allow_across_function_boundary",
+                        False,
+                    ):
+                        direct_vcall_kwargs["allow_vfunc_sig_across_function_boundary"] = True
+                    func_data = await _preprocess_direct_func_sig_via_mcp(
+                        **direct_vcall_kwargs,
+                    )
+                    if func_data is not None:
+                        break
             for entry in llm_result.get("found_vcall", []):
                 if vtable_class is None:
                     break
