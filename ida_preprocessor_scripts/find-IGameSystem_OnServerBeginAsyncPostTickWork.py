@@ -6,7 +6,16 @@ from ida_preprocessor_scripts._igamesystem_dispatch_common import (
 )
 
 SOURCE_YAML_STEM = "CLoopModeGame_OnServerBeginAsyncPostTickWork"
+# 14168 inserted a new begin-side GameSystem event, OnServerPreBeginAsyncPostTickWork,
+# at vtable idx 41 -- pushing the original OnServerBeginAsyncPostTickWork to idx 42
+# (the same insertion shifted End Pre/Post 42/43 -> 43/44). The source now dispatches
+# both events; MULTI_ORDER="index" maps the lower-indexed slot (Pre) to the first
+# target, mirroring find-IGameSystem_OnServerPreEndAsyncPostTickWork-AND-...
 TARGET_SPECS = [
+    {
+        "target_name": "IGameSystem_OnServerPreBeginAsyncPostTickWork",
+        "rename_to": "GameSystem_OnServerPreBeginAsyncPostTickWork",
+    },
     {
         "target_name": "IGameSystem_OnServerBeginAsyncPostTickWork",
         "rename_to": "GameSystem_OnServerBeginAsyncPostTickWork",
@@ -14,7 +23,7 @@ TARGET_SPECS = [
 ]
 VIA_INTERNAL_WRAPPER = False
 INTERNAL_RENAME_TO = None
-MULTI_ORDER = "scan"
+MULTI_ORDER = "index"
 
 
 async def preprocess_skill(

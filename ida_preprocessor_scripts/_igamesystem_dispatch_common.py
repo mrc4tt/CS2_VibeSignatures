@@ -33,6 +33,34 @@ def _parse_int(value):
     return int(value)
 
 
+def _dedup_entries_by_offset(entries):
+    """Collapse dispatch entries that repeat the same ``vfunc_offset``.
+
+    14168 began routing each event's dispatch-index resolution through a
+    helper (e.g. ``sub_1719D00(&guard, imm, 0)``) that reuses the exact
+    ``mov esi, imm`` + ``call`` shape as the real ``IGameSystem_DispatchCall``,
+    so a single dispatched event can surface more than once on Linux. Distinct
+    events always map to distinct vtable offsets, so keeping the first
+    occurrence per offset is safe and leaves already-unique scans untouched.
+    """
+    seen = set()
+    deduped = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            deduped.append(entry)
+            continue
+        try:
+            key = _parse_int(entry.get("vfunc_offset"))
+        except Exception:
+            deduped.append(entry)
+            continue
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(entry)
+    return deduped
+
+
 async def _rename_func_best_effort(session, func_va, func_name, debug=False):
     """Best-effort function rename in IDA; never raises."""
     if not func_va or not func_name:
@@ -85,14 +113,97 @@ def _build_dispatch_py_eval(source_func_va, via_internal_wrapper, platform):
 
     Linux uses ``mov esi/rsi, imm`` (odd immediate > 1) followed by ``call``
     where ``imm - 1`` equals the vfunc byte-offset.
+
+    De-inline fallback (Windows): when the source function yields no entries,
+    the per-event ``IGameSystem`` dispatcher may have been split out into
+    separate callee functions (observed in 14168: ``CLoopModeGame_On*`` no
+    longer inlines the dispatcher). Each de-inlined dispatcher still contains
+    the ``mov rax, gs:58h`` TLS access used by the lazy dispatch-index guard,
+    so callees carrying that marker are scanned in call order and their
+    entries aggregated.
     """
     wrapper_flag = 1 if via_internal_wrapper else 0
     is_windows = 1 if platform == "windows" else 0
     return (
-        "import idaapi, idautils, idc, json\n"
+        "import idaapi, idautils, idc, ida_bytes, json\n"
         f"func_addr = {source_func_va}\n"
         f"use_wrapper = {wrapper_flag}\n"
         f"is_windows = {is_windows}\n"
+        # `mov rax, gs:58h` marks a de-inlined GameSystem dispatcher (Windows).
+        "DISPATCH_MARKER = bytes((0x65, 0x48, 0x8B, 0x04, 0x25, 0x58, 0x00, 0x00, 0x00))\n"
+        "\n"
+        "def _has_dispatch_marker(gef):\n"
+        "    if not gef:\n"
+        "        return False\n"
+        "    blob = ida_bytes.get_bytes(gef.start_ea, gef.end_ea - gef.start_ea)\n"
+        "    return bool(blob) and DISPATCH_MARKER in blob\n"
+        "\n"
+        "def _ordered_callees(gef):\n"
+        "    ordered = []\n"
+        "    seen = set()\n"
+        "    for head in idautils.Heads(gef.start_ea, gef.end_ea):\n"
+        "        if idc.print_insn_mnem(head) in ('call', 'jmp'):\n"
+        "            callee = idc.get_operand_value(head, 0)\n"
+        "            sub = idaapi.get_func(callee)\n"
+        "            if sub and sub.start_ea == callee and callee != gef.start_ea and callee not in seen:\n"
+        "                seen.add(callee)\n"
+        "                ordered.append(callee)\n"
+        "    return ordered\n"
+        "\n"
+        "def _scan_entries(gef):\n"
+        "    found = []\n"
+        "    if not gef:\n"
+        "        return found\n"
+        "    if is_windows:\n"
+        "        lea_targets = []\n"
+        "        for head in idautils.Heads(gef.start_ea, gef.end_ea):\n"
+        "            if idc.print_insn_mnem(head) == 'lea' and idc.print_operand(head, 0) == 'rdx':\n"
+        "                target = idc.get_operand_value(head, 1)\n"
+        "                if idaapi.get_func(target):\n"
+        "                    lea_targets.append(target)\n"
+        "        for t in lea_targets:\n"
+        "            cb = idaapi.get_func(t)\n"
+        "            if not cb:\n"
+        "                continue\n"
+        "            for head in idautils.Heads(cb.start_ea, cb.end_ea):\n"
+        "                mnem = idc.print_insn_mnem(head)\n"
+        "                if mnem in ('call', 'jmp'):\n"
+        "                    insn = idaapi.insn_t()\n"
+        "                    if idaapi.decode_insn(insn, head):\n"
+        "                        op = insn.ops[0]\n"
+        "                        if op.type == idaapi.o_displ and op.addr >= 0 and (op.addr % 8) == 0:\n"
+        "                            found.append({\n"
+        "                                'game_event_addr': hex(t),\n"
+        "                                'vfunc_offset': op.addr,\n"
+        "                                'vfunc_index': op.addr // 8,\n"
+        "                            })\n"
+        "                            break\n"
+        "    else:\n"
+        "        last_esi_imm = None\n"
+        "        for head in idautils.Heads(gef.start_ea, gef.end_ea):\n"
+        "            mnem = idc.print_insn_mnem(head)\n"
+        "            if mnem == 'mov':\n"
+        "                op0 = idc.print_operand(head, 0)\n"
+        "                if op0 in ('esi', 'rsi'):\n"
+        "                    insn = idaapi.insn_t()\n"
+        "                    if idaapi.decode_insn(insn, head):\n"
+        "                        op = insn.ops[1]\n"
+        "                        if op.type == idaapi.o_imm and (op.value & 1) != 0 and op.value > 1:\n"
+        "                            last_esi_imm = op.value\n"
+        "            elif mnem == 'call' and last_esi_imm is not None:\n"
+        "                vfunc_off = last_esi_imm - 1\n"
+        "                if vfunc_off >= 0 and (vfunc_off % 8) == 0:\n"
+        "                    found.append({\n"
+        "                        'vfunc_offset': vfunc_off,\n"
+        "                        'vfunc_index': vfunc_off // 8,\n"
+        "                    })\n"
+        "                last_esi_imm = None\n"
+        "    return found\n"
+        "\n"
+        # Bridge exec_locals into exec_globals so the helpers above resolve
+        # imports/constants under py_eval's dual-namespace model.
+        "globals().update(locals())\n"
+        "\n"
         "if not idaapi.get_func(func_addr):\n"
         "    idaapi.add_func(func_addr)\n"
         "func = idaapi.get_func(func_addr)\n"
@@ -116,57 +227,21 @@ def _build_dispatch_py_eval(source_func_va, via_internal_wrapper, platform):
         "            search_func = None\n"
         "\n"
         "    if search_func:\n"
-        "        entries = []\n"
-        "        if is_windows:\n"
-        "            lea_targets = []\n"
-        "            for head in idautils.Heads(search_func.start_ea, search_func.end_ea):\n"
-        "                if idc.print_insn_mnem(head) == 'lea' and idc.print_operand(head, 0) == 'rdx':\n"
-        "                    target = idc.get_operand_value(head, 1)\n"
-        "                    if idaapi.get_func(target):\n"
-        "                        lea_targets.append(target)\n"
-        "\n"
-        "            for t in lea_targets:\n"
-        "                gef = idaapi.get_func(t)\n"
-        "                if not gef:\n"
-        "                    continue\n"
-        "                for head in idautils.Heads(gef.start_ea, gef.end_ea):\n"
-        "                    mnem = idc.print_insn_mnem(head)\n"
-        "                    if mnem in ('call', 'jmp'):\n"
-        "                        insn = idaapi.insn_t()\n"
-        "                        if idaapi.decode_insn(insn, head):\n"
-        "                            op = insn.ops[0]\n"
-        "                            if op.type == idaapi.o_displ and op.addr >= 0 and (op.addr % 8) == 0:\n"
-        "                                entries.append({\n"
-        "                                    'game_event_addr': hex(t),\n"
-        "                                    'vfunc_offset': op.addr,\n"
-        "                                    'vfunc_index': op.addr // 8,\n"
-        "                                })\n"
-        "                                break\n"
-        "\n"
-        "        else:\n"
-        "            last_esi_imm = None\n"
-        "            for head in idautils.Heads(search_func.start_ea, search_func.end_ea):\n"
-        "                mnem = idc.print_insn_mnem(head)\n"
-        "                if mnem == 'mov':\n"
-        "                    op0 = idc.print_operand(head, 0)\n"
-        "                    if op0 in ('esi', 'rsi'):\n"
-        "                        insn = idaapi.insn_t()\n"
-        "                        if idaapi.decode_insn(insn, head):\n"
-        "                            op = insn.ops[1]\n"
-        "                            if op.type == idaapi.o_imm and (op.value & 1) != 0 and op.value > 1:\n"
-        "                                last_esi_imm = op.value\n"
-        "                elif mnem == 'call' and last_esi_imm is not None:\n"
-        "                    vfunc_off = last_esi_imm - 1\n"
-        "                    if vfunc_off >= 0 and (vfunc_off % 8) == 0:\n"
-        "                        entries.append({\n"
-        "                            'vfunc_offset': vfunc_off,\n"
-        "                            'vfunc_index': vfunc_off // 8,\n"
-        "                        })\n"
-        "                    last_esi_imm = None\n"
-        "\n"
+        "        entries = _scan_entries(search_func)\n"
+        "        deinlined = []\n"
+        "        if not entries:\n"
+        "            for callee in _ordered_callees(search_func):\n"
+        "                sub = idaapi.get_func(callee)\n"
+        "                if _has_dispatch_marker(sub):\n"
+        "                    sub_entries = _scan_entries(sub)\n"
+        "                    if sub_entries:\n"
+        "                        deinlined.append(hex(callee))\n"
+        "                        entries.extend(sub_entries)\n"
         "        result_obj = {'entries': entries}\n"
         "        if internal_addr is not None:\n"
         "            result_obj['internal_addr'] = hex(internal_addr)\n"
+        "        if deinlined:\n"
+        "            result_obj['deinlined_dispatchers'] = deinlined\n"
         "\n"
         "result = json.dumps(result_obj)\n"
     )
@@ -381,12 +456,27 @@ async def preprocess_igamesystem_dispatch_skill(
         return False
 
     entries = parsed.get("entries")
-    if not isinstance(entries, list) or len(entries) != expected_dispatch_count:
+    if not isinstance(entries, list):
         if debug:
             print(
                 f"    Preprocess: invalid entry count from {source_yaml_stem}, "
-                f"expected {expected_dispatch_count}, got "
-                f"{len(entries) if isinstance(entries, list) else 'N/A'}"
+                f"expected {expected_dispatch_count}, got N/A"
+            )
+        return False
+
+    deinlined_dispatchers = parsed.get("deinlined_dispatchers")
+    if debug and deinlined_dispatchers:
+        print(
+            f"    Preprocess: {source_yaml_stem} dispatch de-inlined into "
+            f"{deinlined_dispatchers}"
+        )
+
+    entries = _dedup_entries_by_offset(entries)
+    if len(entries) != expected_dispatch_count:
+        if debug:
+            print(
+                f"    Preprocess: invalid entry count from {source_yaml_stem}, "
+                f"expected {expected_dispatch_count}, got {len(entries)}"
             )
         return False
 

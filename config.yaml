@@ -6519,13 +6519,13 @@ modules:
         expected_input:
           - CLoopModeGame_OnServerPostAdvanceTick.{platform}.yaml
           - IGameSystem_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-IGameSystem_OnServerBeginAsyncPostTickWork
-      #  expected_output:
-      #    - IGameSystem_OnServerBeginAsyncPostTickWork.{platform}.yaml
-      #  expected_input:
-      #    - CLoopModeGame_OnServerBeginAsyncPostTickWork.{platform}.yaml
-      #    - IGameSystem_vtable.{platform}.yaml
+      - name: find-IGameSystem_OnServerBeginAsyncPostTickWork
+        expected_output:
+          - IGameSystem_OnServerPreBeginAsyncPostTickWork.{platform}.yaml
+          - IGameSystem_OnServerBeginAsyncPostTickWork.{platform}.yaml
+        expected_input:
+          - CLoopModeGame_OnServerBeginAsyncPostTickWork.{platform}.yaml
+          - IGameSystem_vtable.{platform}.yaml
       - name: find-IGameSystem_OnServerPreEndAsyncPostTickWork-AND-IGameSystem_OnServerPostEndAsyncPostTickWork
         expected_output:
           - IGameSystem_OnServerPreEndAsyncPostTickWork.{platform}.yaml
@@ -8871,6 +8871,10 @@ modules:
         category: vfunc
         alias:
           - IGameSystem::ServerPostAdvanceTick
+      - name: IGameSystem_OnServerPreBeginAsyncPostTickWork
+        category: vfunc
+        alias:
+          - IGameSystem::OnServerPreBeginAsyncPostTickWork
       - name: IGameSystem_OnServerBeginAsyncPostTickWork
         category: vfunc
         alias:
