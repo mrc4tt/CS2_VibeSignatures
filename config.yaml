@@ -6217,24 +6217,23 @@ modules:
       - name: find-CEntitySystem_Init
         expected_output:
           - CEntitySystem_Init.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CEntitySystem_Init-decompiles
-      #  expected_output:
-      #    - INetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
-      #    - IFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
-      #    - CEntitySystem_m_sEntSystemName.{platform}.yaml
-      #    - CEntitySystem_m_eNetworkSerializationMode.{platform}.yaml
-      #    - CEntitySystem_m_Symbols.{platform}.yaml
-      #    - CEntitySystem_m_pNetworkFieldChangedEventQueue.{platform}.yaml
-      #    - CEntitySystem_m_pNetworkFieldScratchData.{platform}.yaml
-      #    - CEntitySystem_m_pFieldChangeLimitSpew.{platform}.yaml
-      #    - CEntitySystem_m_ComponentUnserializerInfoAllocator.{platform}.yaml
-      #  expected_output_linux:
-      #    - CEntitySystem_ProcessEntityRegistration.{platform}.yaml
-      #  expected_output_windows:
-      #    - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
-      #  expected_input:
-      #    - CEntitySystem_Init.{platform}.yaml
+      - name: find-CEntitySystem_Init-decompiles
+        expected_output:
+          - INetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
+          - IFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
+          - CEntitySystem_m_sEntSystemName.{platform}.yaml
+          - CEntitySystem_m_eNetworkSerializationMode.{platform}.yaml
+          - CEntitySystem_m_Symbols.{platform}.yaml
+          - CEntitySystem_m_pNetworkFieldChangedEventQueue.{platform}.yaml
+          - CEntitySystem_m_pNetworkFieldScratchData.{platform}.yaml
+          - CEntitySystem_m_pFieldChangeLimitSpew.{platform}.yaml
+          - CEntitySystem_m_ComponentUnserializerInfoAllocator.{platform}.yaml
+        expected_output_linux:
+          - CEntitySystem_ProcessEntityRegistration.{platform}.yaml
+        expected_output_windows:
+          - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
+        expected_input:
+          - CEntitySystem_Init.{platform}.yaml
       - name: find-CEntitySystem_PostCreateEntitySystem
         expected_output:
           - CEntitySystem_PostCreateEntitySystem.{platform}.yaml
@@ -9349,7 +9348,7 @@ modules:
       - name: CEntitySystem_m_ComponentUnserializerInfoAllocator
         category: structmember
         struct: CEntitySystem
-        member: m_ComponentUnserializerInfoAllocator
+        member: m_Symbols
         alias:
           - CEntitySystem::m_ComponentUnserializerInfoAllocator
       - name: CEntitySystem_m_EntityMaterialAttributes
