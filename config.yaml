@@ -5868,7 +5868,7 @@ modules:
           - CBaseAnimGraph_GetAnimationController.{platform}.yaml
         expected_input:
           - CScriptedSequence_SynchronizeSequence.{platform}.yaml
-      - name: find-CBaseAnimGraph_m_skeletonInstance-AND-CGameSceneNode_GetSkeletonInstance-AND-CSkeletonInstance_m_animationController
+      - name: find-CBaseAnimGraph_GetAnimationController-decompiles
         expected_output:
           - CBaseAnimGraph_m_skeletonInstance.{platform}.yaml
           - CGameSceneNode_GetSkeletonInstance.{platform}.yaml

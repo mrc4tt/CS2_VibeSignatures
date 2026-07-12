@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CBaseAnimGraph_m_skeletonInstance-AND-CGameSceneNode_GetSkeletonInstance-AND-CSkeletonInstance_m_animationController skill."""
+"""Preprocess script for find-CBaseAnimGraph_GetAnimationController-decompiles skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
