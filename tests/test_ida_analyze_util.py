@@ -1590,6 +1590,49 @@ class TestGenerateYamlDesiredFieldsContract(unittest.IsolatedAsyncioTestCase):
             result,
         )
 
+    async def test_normalize_generate_yaml_desired_fields_parses_resolve_jmp_thunk(
+        self,
+    ) -> None:
+        result = ida_analyze_util._normalize_generate_yaml_desired_fields(
+            [
+                (
+                    "UTIL_GetPlayerControllerForEntity",
+                    [
+                        "func_name",
+                        "func_sig",
+                        "func_sig_resolve_jmp_thunk:true",
+                    ],
+                )
+            ],
+            debug=True,
+        )
+
+        self.assertEqual(
+            {
+                "UTIL_GetPlayerControllerForEntity": {
+                    "desired_output_fields": [
+                        "func_name",
+                        "func_sig",
+                        "func_sig_resolve_jmp_thunk",
+                    ],
+                    "generation_options": {
+                        "func_sig_resolve_jmp_thunk": True,
+                    },
+                    "optional_fields": set(),
+                }
+            },
+            result,
+        )
+
+    async def test_normalize_generate_yaml_desired_fields_rejects_bare_resolve_jmp_thunk(
+        self,
+    ) -> None:
+        result = ida_analyze_util._normalize_generate_yaml_desired_fields(
+            [("Foo", ["func_name", "func_sig_resolve_jmp_thunk"])],
+            debug=True,
+        )
+        self.assertIsNone(result)
+
     async def test_normalize_generate_yaml_desired_fields_rejects_bare_signature_boundary_flags(
         self,
     ) -> None:
@@ -2526,6 +2569,59 @@ class TestIdaStringEnumerationSupport(unittest.TestCase):
         self.assertIn("for item in strings:", code)
         self.assertIn("    if text in result_map:", code)
         self.assertIn("        result_map[text].append(ea)", code)
+
+
+class TestResolveJmpThunkTargetViaMcp(unittest.IsolatedAsyncioTestCase):
+    async def test_follows_jmp_thunk_to_real_target(self) -> None:
+        session = AsyncMock()
+        session.call_tool.return_value = _py_eval_payload({"func_va": "0x180002000"})
+
+        result = await ida_analyze_util._resolve_jmp_thunk_target_via_mcp(
+            session,
+            "0x180001000",
+            debug=True,
+        )
+
+        self.assertEqual("0x180002000", result)
+        session.call_tool.assert_awaited_once()
+        self.assertEqual("py_eval", session.call_tool.await_args.kwargs["name"])
+        py_code = session.call_tool.await_args.kwargs["arguments"]["code"]
+        self.assertIn(f"start_ea = {0x180001000}", py_code)
+        self.assertIn("print_insn_mnem", py_code)
+        self.assertIn("ida_ua.o_near", py_code)
+
+    async def test_returns_input_when_not_a_thunk(self) -> None:
+        session = AsyncMock()
+        session.call_tool.return_value = _py_eval_payload({"func_va": "0x180001000"})
+
+        result = await ida_analyze_util._resolve_jmp_thunk_target_via_mcp(
+            session,
+            "0x180001000",
+        )
+
+        self.assertEqual("0x180001000", result)
+
+    async def test_rejects_invalid_input_without_py_eval(self) -> None:
+        session = AsyncMock()
+
+        result = await ida_analyze_util._resolve_jmp_thunk_target_via_mcp(
+            session,
+            "not-a-number",
+        )
+
+        self.assertIsNone(result)
+        session.call_tool.assert_not_awaited()
+
+    async def test_returns_none_on_non_dict_payload(self) -> None:
+        session = AsyncMock()
+        session.call_tool.return_value = _py_eval_payload(["not-a-dict"])
+
+        result = await ida_analyze_util._resolve_jmp_thunk_target_via_mcp(
+            session,
+            "0x180001000",
+        )
+
+        self.assertIsNone(result)
 
 
 class TestFuncXrefsSignatureSupport(unittest.IsolatedAsyncioTestCase):
@@ -9837,6 +9933,181 @@ found_struct_offset: []
         written_payload = mock_write_func_yaml.call_args.args[1]
         self.assertEqual(func_name, written_payload["func_name"])
         self.assertEqual("0x180123450", written_payload["func_va"])
+
+    async def test_preprocess_common_skill_direct_call_fallback_follows_jmp_thunk(
+        self,
+    ) -> None:
+        func_name = "UTIL_GetPlayerControllerForEntity"
+        output_path = f"/tmp/{func_name}.windows.yaml"
+        target_detail_payload = {
+            "func_name": "ClientPrintToController",
+            "func_va": "0x180555500",
+            "disasm_code": "call    j_UTIL_GetPlayerControllerForEntity",
+            "procedure": "v11 = j_UTIL_GetPlayerControllerForEntity(a1);",
+        }
+        normalized_payload = {
+            "found_vcall": [],
+            "found_call": [
+                {
+                    "insn_va": "0x180777700",
+                    "insn_disasm": "call    j_UTIL_GetPlayerControllerForEntity",
+                    "func_name": func_name,
+                }
+            ],
+            "found_gv": [],
+            "found_struct_offset": [],
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            preprocessor_dir = Path(temp_dir) / "ida_preprocessor_scripts"
+            session = AsyncMock()
+            (preprocessor_dir / "prompt").mkdir(parents=True, exist_ok=True)
+            (preprocessor_dir / "prompt" / "call_llm_decompile.md").write_text(
+                "{symbol_name_list}",
+                encoding="utf-8",
+            )
+            _write_yaml(
+                preprocessor_dir / "references" / "reference.yaml",
+                {
+                    "func_name": target_detail_payload["func_name"],
+                    "disasm_code": target_detail_payload["disasm_code"],
+                    "procedure": target_detail_payload["procedure"],
+                },
+            )
+
+            async def _session_call_tool(*, name, arguments):
+                self.assertEqual("py_eval", name)
+                code = arguments["code"]
+                if "candidate_names =" in code:
+                    return _py_eval_payload(
+                        [
+                            {
+                                "name": target_detail_payload["func_name"],
+                                "func_va": target_detail_payload["func_va"],
+                            }
+                        ]
+                    )
+                if _is_function_detail_file_export_py_eval(code):
+                    return _function_detail_file_export_payload(
+                        code,
+                        target_detail_payload,
+                    )
+                raise AssertionError(f"unexpected py_eval code: {code}")
+
+            session.call_tool.side_effect = _session_call_tool
+
+            with (
+                patch.object(
+                    ida_analyze_util,
+                    "_get_preprocessor_scripts_dir",
+                    return_value=preprocessor_dir,
+                ),
+                patch.object(
+                    ida_analyze_util,
+                    "create_openai_client",
+                    return_value=object(),
+                    create=True,
+                ),
+                patch.object(
+                    ida_analyze_util,
+                    "preprocess_func_sig_via_mcp",
+                    AsyncMock(return_value=None),
+                ),
+                patch.object(
+                    ida_analyze_util,
+                    "_resolve_direct_call_target_via_mcp",
+                    AsyncMock(return_value="0x180123450"),
+                ) as mock_resolve_direct_call_target,
+                patch.object(
+                    ida_analyze_util,
+                    "_resolve_jmp_thunk_target_via_mcp",
+                    AsyncMock(return_value="0x180123999"),
+                ) as mock_resolve_jmp_thunk_target,
+                patch.object(
+                    ida_analyze_util,
+                    "_get_func_basic_info_via_mcp",
+                    AsyncMock(
+                        return_value={
+                            "func_va": "0x180123999",
+                            "func_rva": "0x123999",
+                            "func_size": "0x40",
+                        }
+                    ),
+                ),
+                patch.object(
+                    ida_analyze_util,
+                    "preprocess_gen_func_sig_via_mcp",
+                    AsyncMock(return_value={"func_sig": "40 53"}),
+                ),
+                patch.object(
+                    ida_analyze_util,
+                    "call_llm_decompile",
+                    create=True,
+                    new_callable=AsyncMock,
+                    return_value=normalized_payload,
+                ) as mock_call_llm_decompile,
+                patch.object(
+                    ida_analyze_util,
+                    "write_func_yaml",
+                ) as mock_write_func_yaml,
+                patch.object(
+                    ida_analyze_util,
+                    "_rename_func_in_ida",
+                    AsyncMock(return_value=None),
+                ),
+            ):
+                result = await ida_analyze_util.preprocess_common_skill(
+                    session=session,
+                    expected_outputs=[output_path],
+                    old_yaml_map={},
+                    new_binary_dir="/tmp",
+                    platform="windows",
+                    image_base=0x180000000,
+                    func_names=[func_name],
+                    generate_yaml_desired_fields=[
+                        (
+                            func_name,
+                            [
+                                "func_name",
+                                "func_va",
+                                "func_sig",
+                                "func_sig_resolve_jmp_thunk:true",
+                            ],
+                        )
+                    ],
+                    llm_decompile_specs=[
+                        (
+                            func_name,
+                            "prompt/call_llm_decompile.md",
+                            "references/reference.yaml",
+                        )
+                    ],
+                    llm_config={
+                        "model": "gpt-4.1-mini",
+                        "api_key": "test-api-key",
+                    },
+                    debug=True,
+                )
+
+        self.assertTrue(result)
+        mock_call_llm_decompile.assert_awaited_once()
+        mock_resolve_direct_call_target.assert_awaited_once_with(
+            session,
+            "0x180777700",
+            debug=True,
+        )
+        # The direct call target is the `j_` thunk; the resolver must follow the
+        # E9 jmp to the real function before func_sig generation.
+        mock_resolve_jmp_thunk_target.assert_awaited_once_with(
+            session,
+            "0x180123450",
+            debug=True,
+        )
+        mock_write_func_yaml.assert_called_once()
+        written_payload = mock_write_func_yaml.call_args.args[1]
+        self.assertEqual(func_name, written_payload["func_name"])
+        self.assertEqual("0x180123999", written_payload["func_va"])
+        self.assertIs(True, written_payload["func_sig_resolve_jmp_thunk"])
         self.assertNotIn("vtable_name", written_payload)
 
     async def test_preprocess_common_skill_uses_found_funcptr_to_generate_func_yaml(

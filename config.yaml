@@ -5830,7 +5830,7 @@ modules:
         expected_output:
           - UTIL_GetPlayerControllerForEntity.{platform}.yaml
         expected_input:
-          - ShowHudHint.{platform}.yaml
+          - ClientPrintToController.{platform}.yaml
       - name: find-UTIL_GetPlayerControllerForEntity-decompiles
         expected_output:
           - CBaseEntity_IsPlayerPawn.{platform}.yaml

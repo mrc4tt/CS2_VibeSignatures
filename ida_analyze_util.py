@@ -495,6 +495,7 @@ def _normalize_generate_yaml_desired_fields(generate_yaml_desired_fields, debug=
         "func_sig_allow_across_function_boundary",
         "vfunc_sig_allow_across_function_boundary",
         "offset_sig_allow_across_function_boundary",
+        "func_sig_resolve_jmp_thunk",
     )
 
     normalized = {}
@@ -795,6 +796,7 @@ FUNC_YAML_ORDER = [
     "func_size",
     "func_sig",
     "func_sig_allow_across_function_boundary",
+    "func_sig_resolve_jmp_thunk",
     "vtable_name",
     "vfunc_offset",
     "vfunc_index",
@@ -1877,6 +1879,83 @@ async def _resolve_direct_call_target_via_mcp(session, insn_va, debug=False):
         return None
 
     return resolved_matches[0]
+
+
+async def _resolve_jmp_thunk_target_via_mcp(session, func_va, debug=False):
+    """Follow an ``E9``/near ``jmp`` thunk to its real target function.
+
+    When ``llm_decompile`` resolves a direct call target to a compiler-emitted
+    jump thunk (e.g. ``call j_UTIL_GetPlayerControllerForEntity``), the thunk
+    body is a single relative ``jmp`` into the real function. Anchoring
+    ``func_sig`` on the 5-byte thunk is useless, so this helper walks the
+    ``jmp`` chain and returns the real function head instead.
+
+    Returns the resolved function VA as a hex string (unchanged when ``func_va``
+    is not a jmp thunk), or ``None`` on error. Chained thunks are followed up to
+    a small depth; the target of every hop must itself be a function head.
+    """
+    try:
+        func_va_int = _parse_int_value(func_va)
+    except Exception:
+        return None
+
+    py_code = (
+        "import ida_funcs, ida_ua, idautils, json\n"
+        f"start_ea = {func_va_int}\n"
+        "cur = start_ea\n"
+        "resolved = start_ea\n"
+        "visited = set()\n"
+        "for _ in range(8):\n"
+        "    if cur in visited:\n"
+        "        break\n"
+        "    visited.add(cur)\n"
+        "    func = ida_funcs.get_func(cur)\n"
+        "    if func is None or int(func.start_ea) != cur:\n"
+        "        break\n"
+        "    insn = ida_ua.insn_t()\n"
+        "    if ida_ua.decode_insn(insn, cur) <= 0:\n"
+        "        break\n"
+        "    mnem = (ida_ua.print_insn_mnem(cur) or '').strip().lower()\n"
+        "    if mnem != 'jmp' or insn.ops[0].type != ida_ua.o_near:\n"
+        "        break\n"
+        "    target_ea = int(insn.ops[0].addr)\n"
+        "    target_func = ida_funcs.get_func(target_ea)\n"
+        "    if target_func is None or int(target_func.start_ea) != target_ea:\n"
+        "        break\n"
+        "    resolved = target_ea\n"
+        "    cur = target_ea\n"
+        "result = json.dumps({'func_va': hex(resolved)})\n"
+    )
+
+    try:
+        eval_result = await session.call_tool(
+            name="py_eval",
+            arguments={"code": py_code},
+        )
+    except Exception as exc:
+        if debug:
+            print(f"    Preprocess: py_eval error while resolving jmp thunk target: {exc}")
+        return None
+
+    match_payload = _parse_py_eval_json_result(
+        eval_result,
+        debug=debug,
+        context="llm_decompile jmp thunk target lookup",
+    )
+    if not isinstance(match_payload, dict):
+        return None
+
+    resolved_va = str(match_payload.get("func_va", "")).strip()
+    if not resolved_va:
+        return None
+    try:
+        int(resolved_va, 0)
+    except (TypeError, ValueError):
+        return None
+
+    if debug and resolved_va.lower() != hex(func_va_int).lower():
+        print(f"    Preprocess: resolved jmp thunk {hex(func_va_int)} -> {resolved_va}")
+    return resolved_va
 
 
 async def _resolve_direct_funcptr_target_via_mcp(session, insn_va, debug=False):
@@ -8045,6 +8124,14 @@ async def preprocess_common_skill(
                     )
                     if direct_func_va is None:
                         continue
+                    if generation_options.get("func_sig_resolve_jmp_thunk"):
+                        direct_func_va = await _resolve_jmp_thunk_target_via_mcp(
+                            session,
+                            direct_func_va,
+                            debug=debug,
+                        )
+                        if direct_func_va is None:
+                            continue
                     func_data = await _preprocess_direct_func_sig_via_mcp(
                         session=session,
                         new_path=target_output,
@@ -8289,6 +8376,8 @@ async def preprocess_common_skill(
             func_data["func_sig_allow_across_function_boundary"] = True
         if generation_options.get("vfunc_sig_allow_across_function_boundary"):
             func_data["vfunc_sig_allow_across_function_boundary"] = True
+        if generation_options.get("func_sig_resolve_jmp_thunk"):
+            func_data["func_sig_resolve_jmp_thunk"] = True
 
         payload = _assemble_symbol_payload(
             func_name,
