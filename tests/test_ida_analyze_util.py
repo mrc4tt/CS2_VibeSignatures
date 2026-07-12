@@ -9890,11 +9890,7 @@ found_struct_offset: []
         target_detail_payload = {
             "func_name": "CEntitySystem_SetInPVS",
             "func_va": "0x211A000",
-            "disasm_code": (
-                "mov     r9, [rdx+0B8h]\n"
-                "lea     rdx, CEntitySystem_OnSetDormant\n"
-                "cmp     r9, rdx"
-            ),
+            "disasm_code": ("mov     r9, [rdx+0B8h]\nlea     rdx, CEntitySystem_OnSetDormant\ncmp     r9, rdx"),
             "procedure": "v30 = *(__int64 (__fastcall **)())(*(_QWORD *)a1 + 184LL);",
         }
         normalized_payload = {

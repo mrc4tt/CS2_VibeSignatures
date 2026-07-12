@@ -285,8 +285,7 @@ class TestCallLlmTextCodexHttp(unittest.TestCase):
         self.assertEqual("text/event-stream", _CodexHandler.last_headers["accept"])
         self.assertEqual("codex-tui", _CodexHandler.last_headers["originator"])
         self.assertEqual(
-            "codex-tui/0.144.1 (Windows 10.0.26200; x86_64) "
-            "WindowsTerminal (codex-tui; 0.144.1)",
+            "codex-tui/0.144.1 (Windows 10.0.26200; x86_64) WindowsTerminal (codex-tui; 0.144.1)",
             _CodexHandler.last_headers["user-agent"],
         )
         self.assertEqual("high", _CodexHandler.last_json_body["reasoning"]["effort"])

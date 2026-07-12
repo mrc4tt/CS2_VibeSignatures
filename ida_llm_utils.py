@@ -197,9 +197,7 @@ def _load_codex_faker_template() -> dict[str, Any]:
     try:
         raw = _CODEX_FAKER_TEMPLATE_PATH.read_text(encoding="utf-8")
     except OSError as exc:
-        raise RuntimeError(
-            f"failed to read codex request template at {_CODEX_FAKER_TEMPLATE_PATH}: {exc}"
-        ) from exc
+        raise RuntimeError(f"failed to read codex request template at {_CODEX_FAKER_TEMPLATE_PATH}: {exc}") from exc
     for placeholder in (
         _CODEX_TEMPLATE_MODEL_PLACEHOLDER,
         _CODEX_TEMPLATE_USER_PROMPT_PLACEHOLDER,
@@ -212,9 +210,7 @@ def _load_codex_faker_template() -> dict[str, Any]:
     try:
         template = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise RuntimeError(
-            f"codex request template {_CODEX_FAKER_TEMPLATE_PATH} is not valid JSON: {exc}"
-        ) from exc
+        raise RuntimeError(f"codex request template {_CODEX_FAKER_TEMPLATE_PATH} is not valid JSON: {exc}") from exc
     if not isinstance(template, dict):
         raise RuntimeError(f"codex request template {_CODEX_FAKER_TEMPLATE_PATH} must be a JSON object")
     return template
@@ -227,15 +223,10 @@ def _fill_codex_template(node, *, model, user_prompt, cache_key) -> Any:
             if key == "id" and isinstance(value, str) and value.startswith("msg_"):
                 filled[key] = f"msg_{uuid.uuid4()}"
             else:
-                filled[key] = _fill_codex_template(
-                    value, model=model, user_prompt=user_prompt, cache_key=cache_key
-                )
+                filled[key] = _fill_codex_template(value, model=model, user_prompt=user_prompt, cache_key=cache_key)
         return filled
     if isinstance(node, list):
-        return [
-            _fill_codex_template(item, model=model, user_prompt=user_prompt, cache_key=cache_key)
-            for item in node
-        ]
+        return [_fill_codex_template(item, model=model, user_prompt=user_prompt, cache_key=cache_key) for item in node]
     if isinstance(node, str):
         if node == _CODEX_TEMPLATE_MODEL_PLACEHOLDER:
             return model
@@ -301,15 +292,15 @@ def _call_llm_text_via_codex_http(
         "Authorization": f"Bearer {normalized_api_key}",
         "Content-Type": "application/json",
         "Accept": "text/event-stream",
-        #"Accept-Encoding": "identity",
+        # "Accept-Encoding": "identity",
         "User-Agent": CODEX_CLI_USER_AGENT,
         "Originator": CODEX_CLI_ORIGINATOR,
         "X-Client-Request-Id": cache_key,
         "Session-Id": cache_key,
-        "X-Codex-Window-Id": cache_key+":0",
+        "X-Codex-Window-Id": cache_key + ":0",
         "X-Openai-Internal-Codex-Responses-Lite": "true",
         "X-Codex-Beta-Features": "remote_compaction_v2",
-        #"X-Codex-Turn-Metadata": turn_metadata,
+        # "X-Codex-Turn-Metadata": turn_metadata,
         "Eagleeye-Traceid": "3daa4d2a17836997998816195e",
         "Host": host,
     }
