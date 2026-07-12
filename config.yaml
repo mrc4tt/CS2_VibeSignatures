@@ -9973,14 +9973,44 @@ modules:
           - CLoopTypeBase_GetClientServerMode.{platform}.yaml
         expected_input:
           - CEngineServiceMgr_GetActiveLoopClientServerMode.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CLoopTypeBase_GetImplType-AND-ILoopModeFactory_GetLoopModeType-AND-ILoopModeFactory_Shutdown
-      #  expected_output:
-      #    - CLoopTypeBase_GetImplType.{platform}.yaml
-      #    - ILoopModeFactory_GetLoopModeType.{platform}.yaml
-      #    - ILoopModeFactory_Shutdown.{platform}.yaml
-      #  expected_input:
-      #    - CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml
+      # De-inline/inline fallback chain for CEngineServiceMgr::UnregisterLoopMode's loop-mode
+      # vcalls (CLoopTypeBase::GetImplType, ILoopModeFactory::GetLoopModeType/Shutdown).
+      # On Linux 14168 the ILoopModeFactory helper is de-inlined into UnregisterLoopModeFactory
+      # so GetLoopModeType/Shutdown leave the parent body; on Windows (and Linux <= 14167) the
+      # parent inlines everything. See find-CEngineServiceMgr_UnregisterLoopMode-{noinline,inlined}.
+      - name: find-UnregisterLoopModeFactory
+        platform: linux
+        optional_output:
+          - UnregisterLoopModeFactory.{platform}.yaml
+        expected_input:
+          - CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml
+        skip_if_exists:
+          - CLoopTypeBase_GetImplType.{platform}.yaml
+          - ILoopModeFactory_GetLoopModeType.{platform}.yaml
+          - ILoopModeFactory_Shutdown.{platform}.yaml
+      - name: find-CEngineServiceMgr_UnregisterLoopMode-noinline
+        platform: linux
+        optional_output:
+          - CLoopTypeBase_GetImplType.{platform}.yaml
+          - ILoopModeFactory_GetLoopModeType.{platform}.yaml
+          - ILoopModeFactory_Shutdown.{platform}.yaml
+        expected_input:
+          - CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml
+        prerequisite:
+          - find-UnregisterLoopModeFactory
+      - name: find-CEngineServiceMgr_UnregisterLoopMode-inlined
+        expected_output:
+          - CLoopTypeBase_GetImplType.{platform}.yaml
+          - ILoopModeFactory_GetLoopModeType.{platform}.yaml
+          - ILoopModeFactory_Shutdown.{platform}.yaml
+        expected_input:
+          - CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml
+        skip_if_exists:
+          - CLoopTypeBase_GetImplType.{platform}.yaml
+          - ILoopModeFactory_GetLoopModeType.{platform}.yaml
+          - ILoopModeFactory_Shutdown.{platform}.yaml
+        prerequisite:
+          - find-CEngineServiceMgr_UnregisterLoopMode-noinline
       - name: find-CNetSupportImpl_vtable
         expected_output:
           - CNetSupportImpl_vtable.{platform}.yaml

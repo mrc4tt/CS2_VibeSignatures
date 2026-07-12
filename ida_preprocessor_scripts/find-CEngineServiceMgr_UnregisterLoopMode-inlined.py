@@ -1,5 +1,22 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CLoopTypeBase_GetImplType-AND-ILoopModeFactory_GetLoopModeType-AND-ILoopModeFactory_Shutdown skill."""
+"""Preprocess script for find-CEngineServiceMgr_UnregisterLoopMode-inlined skill (deinline-fix chain, link 3/3).
+
+Collects the ``CLoopTypeBase::GetImplType`` (+0x50 Linux / +0x48 Windows),
+``ILoopModeFactory::GetLoopModeType`` (+0x20) and ``ILoopModeFactory::Shutdown`` (+0x8)
+vcalls by decompiling ``CEngineServiceMgr::UnregisterLoopMode`` directly.
+
+This is the inlined link of an inline/noinline decompile fallback pair (formerly the sole
+``find-CLoopTypeBase_GetImplType-AND-ILoopModeFactory_GetLoopModeType-AND-ILoopModeFactory_Shutdown``
+skill).  It applies whenever the ``UnregisterLoopModeFactory`` helper is inlined into the
+parent so all three vcalls live in the parent body -- i.e. Windows (all builds) and older
+Linux builds (<= 14167).  It is the fallback for
+``find-CEngineServiceMgr_UnregisterLoopMode-noinline`` (which handles the de-inlined Linux
+layout) and is skipped whenever the three vcall outputs already exist (i.e. the -noinline
+path already produced them on de-inlined Linux).
+
+GENERATE_YAML_DESIRED_FIELDS are kept identical to the -noinline link so the three symbols'
+output shape does not depend on which path wins.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
@@ -11,6 +28,7 @@ TARGET_FUNCTION_NAMES = [
 
 LLM_DECOMPILE = [
     # (symbol_name, path_to_prompt, path_to_reference)
+    # All three vcalls live inside the fully inlined CEngineServiceMgr_UnregisterLoopMode body.
     (
         "CLoopTypeBase_GetImplType",
         "prompt/call_llm_decompile.md",
@@ -82,7 +100,7 @@ async def preprocess_skill(
     llm_config=None,
     debug=False,
 ):
-    """Reuse previous gamever func_sig to locate target function(s) and write YAML."""
+    """Collect the loop-mode vcalls for the inlined UnregisterLoopMode layout via LLM decompile."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,

@@ -1,0 +1,93 @@
+func_name: UnregisterLoopModeFactory
+func_va: '0x37c5c0'
+disasm_code: |-
+  .text:000000000037C5C0                 mov     rax, [rsi]
+  .text:000000000037C5C3                 push    rbp
+  .text:000000000037C5C4                 mov     rbp, rsp
+  .text:000000000037C5C7                 push    r12
+  .text:000000000037C5C9                 mov     r12, rdi
+  .text:000000000037C5CC                 mov     rdi, rsi
+  .text:000000000037C5CF                 push    rbx
+  .text:000000000037C5D0                 mov     rbx, rsi
+  .text:000000000037C5D3                 call    qword ptr [rax+20h]  ; 20h = ILoopModeFactory_GetLoopModeType
+  .text:000000000037C5D6                 xor     edx, edx
+  .text:000000000037C5D8                 cmp     eax, 2
+  .text:000000000037C5DB                 jz      short loc_37C650
+  .text:000000000037C5DD                 cmp     eax, 3
+  .text:000000000037C5E0                 jz      short loc_37C620
+  .text:000000000037C5E2                 cmp     eax, 1
+  .text:000000000037C5E5                 jnz     short loc_37C618
+  .text:000000000037C5E7                 cmp     qword ptr [r12+90h], 0
+  .text:000000000037C5F0                 jz      short loc_37C618
+  .text:000000000037C5F2                 mov     qword ptr [r12+90h], 0
+  .text:000000000037C5FE                 mov     rdi, rbx
+  .text:000000000037C601                 mov     qword ptr [r12+0A0h], 0
+  .text:000000000037C60D                 mov     rax, [rbx]
+  .text:000000000037C610                 call    qword ptr [rax+8]  ; 8h = ILoopModeFactory_Shutdown
+  .text:000000000037C613                 mov     edx, 1
+  .text:000000000037C618                 pop     rbx
+  .text:000000000037C619                 mov     eax, edx
+  .text:000000000037C61B                 pop     r12
+  .text:000000000037C61D                 pop     rbp
+  .text:000000000037C61E                 retn
+  .text:000000000037C620                 cmp     qword ptr [r12+0C0h], 0
+  .text:000000000037C629                 jz      short loc_37C618
+  .text:000000000037C62B                 mov     qword ptr [r12+0C0h], 0
+  .text:000000000037C637                 mov     rdi, rbx
+  .text:000000000037C63A                 mov     qword ptr [r12+0D0h], 0
+  .text:000000000037C646                 mov     rax, [rbx]
+  .text:000000000037C649                 call    qword ptr [rax+8]  ; 8h = ILoopModeFactory_Shutdown
+  .text:000000000037C64C                 jmp     short loc_37C67C
+  .text:000000000037C650                 cmp     qword ptr [r12+0A8h], 0
+  .text:000000000037C659                 jz      short loc_37C618
+  .text:000000000037C65B                 mov     qword ptr [r12+0A8h], 0
+  .text:000000000037C667                 mov     rdi, rbx
+  .text:000000000037C66A                 mov     qword ptr [r12+0B8h], 0
+  .text:000000000037C676                 mov     rax, [rbx]
+  .text:000000000037C679                 call    qword ptr [rax+8]  ; 8h = ILoopModeFactory_Shutdown
+  .text:000000000037C67C                 mov     edx, 1
+  .text:000000000037C681                 pop     rbx
+  .text:000000000037C682                 mov     eax, edx
+  .text:000000000037C684                 pop     r12
+  .text:000000000037C686                 pop     rbp
+  .text:000000000037C687                 retn
+procedure: |-
+  __int64 __fastcall ILoopModeFactory_Unregister(_QWORD *a1, __int64 a2)
+  {
+    int v2; // eax
+    unsigned int v3; // edx
+
+    v2 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)a2 + 32LL))(a2); // 32LL = 0x20 = ILoopModeFactory_GetLoopModeType
+    v3 = 0;
+    if ( v2 == 2 )
+    {
+      if ( a1[21] )
+      {
+        a1[21] = 0;
+        a1[23] = 0;
+        (*(void (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a2 + 8LL))(a2, a2, 0); // 8LL = 0x8 = ILoopModeFactory_Shutdown
+        return 1;
+      }
+      return v3;
+    }
+    if ( v2 != 3 )
+    {
+      if ( v2 == 1 )
+      {
+        if ( a1[18] )
+        {
+          a1[18] = 0;
+          a1[20] = 0;
+          (*(void (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a2 + 8LL))(a2, a2, 0); // 8LL = 0x8 = ILoopModeFactory_Shutdown
+          return 1;
+        }
+      }
+      return v3;
+    }
+    if ( !a1[24] )
+      return v3;
+    a1[24] = 0;
+    a1[26] = 0;
+    (*(void (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)a2 + 8LL))(a2, a2, 0);
+    return 1;
+  }
