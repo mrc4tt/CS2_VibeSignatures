@@ -6601,26 +6601,23 @@ modules:
           # exclude_gvs anchor: OnLoopDeactivate references g_pToolFramework2,
           # LoopShutdown does not -> disambiguates the inlined-ShutdownServer collision.
           - g_pToolFramework2.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CLoopModeGame_OnLoopDeactivate
-      #  expected_output:
-      #    - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
-      #  expected_input:
-      #    - CLoopModeGame_ShutdownServer.{platform}.yaml
-      #    - CLoopModeGame_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CEntitySystem_ClearEntityDatabase
-      #  expected_output:
-      #    - CEntitySystem_ClearEntityDatabase.{platform}.yaml
-      #  expected_input:
-      #    - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
-      #    - CEntitySystem_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-ILoopMode_OnLoopDeactivate
-      #  expected_output:
-      #    - ILoopMode_OnLoopDeactivate.{platform}.yaml
-      #  expected_input:
-      #    - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
+      - name: find-CLoopModeGame_OnLoopDeactivate
+        expected_output:
+          - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
+        expected_input:
+          - g_pToolFramework2.{platform}.yaml
+          - CLoopModeGame_vtable.{platform}.yaml
+      - name: find-CEntitySystem_ClearEntityDatabase
+        expected_output:
+          - CEntitySystem_ClearEntityDatabase.{platform}.yaml
+        expected_input:
+          - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
+          - CEntitySystem_vtable.{platform}.yaml
+      - name: find-ILoopMode_OnLoopDeactivate
+        expected_output:
+          - ILoopMode_OnLoopDeactivate.{platform}.yaml
+        expected_input:
+          - CLoopModeGame_OnLoopDeactivate.{platform}.yaml
       - name: find-CPlayerCommandQueue_vtable
         expected_output:
           - CPlayerCommandQueue_vtable.{platform}.yaml
