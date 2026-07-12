@@ -5257,13 +5257,12 @@ modules:
         expected_input:
           - CBasePlayerPawn_DropActivePlayerWeapon.{platform}.yaml
           - CCSPlayer_ItemServices_vtable.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CCSPlayer_WeaponServices_DropWeapon
-      #  expected_output:
-      #    - CCSPlayer_WeaponServices_DropWeapon.{platform}.yaml
-      #  expected_input:
-      #    - CCSPlayer_ItemServices_DropActivePlayerWeapon.{platform}.yaml
-      #    - CCSPlayer_WeaponServices_vtable.{platform}.yaml
+      - name: find-CCSPlayer_WeaponServices_DropWeapon
+        expected_output:
+          - CCSPlayer_WeaponServices_DropWeapon.{platform}.yaml
+        expected_input:
+          - CCSPlayer_ItemServices_DropActivePlayerWeapon.{platform}.yaml
+          - CCSPlayer_WeaponServices_vtable.{platform}.yaml
       - name: find-CCSPlayer_WeaponServices_SelectItem
         expected_output:
           - CCSPlayer_WeaponServices_SelectItem.{platform}.yaml
@@ -5759,20 +5758,18 @@ modules:
         expected_input:
           - CEntitySystem_vtable.{platform}.yaml
           - CGameEntitySystem_Spawn.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CBodyGameSystem_SpawnDependencyIsland-AND-CGameEntitySystem_CheckGlobalState
-      #  expected_output:
-      #    - CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml
-      #    - CGameEntitySystem_CheckGlobalState.{platform}.yaml
-      #  expected_input:
-      #    - CGameEntitySystem_Spawn.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CGameSceneNode_PreInstanceSpawn
-      #  expected_output:
-      #    - CGameSceneNode_PreInstanceSpawn.{platform}.yaml
-      #  expected_input:
-      #    - CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml
-      #    - CGameSceneNode_vtable.{platform}.yaml
+      - name: find-CGameEntitySystem_Spawn-decompiles
+        expected_output:
+          - CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml
+          - CGameEntitySystem_CheckGlobalState.{platform}.yaml
+        expected_input:
+          - CGameEntitySystem_Spawn.{platform}.yaml
+      - name: find-CGameSceneNode_PreInstanceSpawn
+        expected_output:
+          - CGameSceneNode_PreInstanceSpawn.{platform}.yaml
+        expected_input:
+          - CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml
+          - CGameSceneNode_vtable.{platform}.yaml
       - name: find-IGameSystem_OnBuildGameSessionManifest
         expected_output:
           - IGameSystem_OnBuildGameSessionManifest.{platform}.yaml

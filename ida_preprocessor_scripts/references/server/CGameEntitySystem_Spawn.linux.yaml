@@ -1,0 +1,231 @@
+func_name: CGameEntitySystem_Spawn
+func_va: '0x16a4dc0'
+disasm_code: |-
+  .text:00000000016A4DC0                 push    rbp
+  .text:00000000016A4DC1                 mov     r8d, esi
+  .text:00000000016A4DC4                 mov     rbp, rsp
+  .text:00000000016A4DC7                 push    r15
+  .text:00000000016A4DC9                 push    r14
+  .text:00000000016A4DCB                 push    r13
+  .text:00000000016A4DCD                 push    r12
+  .text:00000000016A4DCF                 push    rbx
+  .text:00000000016A4DD0                 mov     rbx, rdx
+  .text:00000000016A4DD3                 sub     rsp, 58h
+  .text:00000000016A4DD7                 test    esi, esi
+  .text:00000000016A4DD9                 jle     loc_16A4F5E
+  .text:00000000016A4DDF                 lea     rax, [rdx+16h]
+  .text:00000000016A4DE3                 movsxd  rdx, esi
+  .text:00000000016A4DE6                 mov     r13, rdi
+  .text:00000000016A4DE9                 lea     rdx, [rdx+rdx*2]
+  .text:00000000016A4DED                 xor     r15d, r15d
+  .text:00000000016A4DF0                 lea     rsi, [rax+rdx*8]
+  .text:00000000016A4DF4                 mov     edx, 0FFFFFFFFh
+  .text:00000000016A4DF9                 jmp     short loc_16A4E22
+  .text:00000000016A4E00                 movsxd  rcx, r15d
+  .text:00000000016A4E03                 add     r15d, 1
+  .text:00000000016A4E07                 mov     [rbp+rcx*4+var_70], 1
+  .text:00000000016A4E0F                 cmp     r15d, 10h
+  .text:00000000016A4E13                 jg      loc_16A4F7B
+  .text:00000000016A4E19                 add     rax, 18h
+  .text:00000000016A4E1D                 cmp     rsi, rax
+  .text:00000000016A4E20                 jz      short loc_16A4E40
+  .text:00000000016A4E22                 mov     ecx, edx
+  .text:00000000016A4E24                 movzx   edx, byte ptr [rax]
+  .text:00000000016A4E27                 cmp     edx, ecx
+  .text:00000000016A4E29                 jnz     short loc_16A4E00
+  .text:00000000016A4E2B                 lea     ecx, [r15-1]
+  .text:00000000016A4E2F                 add     rax, 18h
+  .text:00000000016A4E33                 movsxd  rcx, ecx
+  .text:00000000016A4E36                 add     [rbp+rcx*4+var_70], 1
+  .text:00000000016A4E3B                 cmp     rsi, rax
+  .text:00000000016A4E3E                 jnz     short loc_16A4E22
+  .text:00000000016A4E40                 lea     r14, g_pBodyGameSystem
+  .text:00000000016A4E47                 mov     rdx, rbx
+  .text:00000000016A4E4A                 mov     esi, r8d
+  .text:00000000016A4E4D                 mov     rdi, [r14]
+  .text:00000000016A4E50                 call    CBodyGameSystem_Spawn
+  .text:00000000016A4E55                 test    r15d, r15d
+  .text:00000000016A4E58                 jz      loc_16A4F4F
+  .text:00000000016A4E5E                 lea     r12, [rbp+var_70]
+  .text:00000000016A4E62                 movsxd  r15, r15d
+  .text:00000000016A4E65                 lea     rax, [r12+r15*4]
+  .text:00000000016A4E69                 mov     [rbp+var_78], rax
+  .text:00000000016A4E6D                 nop     dword ptr [rax]
+  .text:00000000016A4E70                 mov     r15d, [r12]
+  .text:00000000016A4E74                 xor     esi, esi
+  .text:00000000016A4E76                 mov     rcx, rbx
+  .text:00000000016A4E79                 mov     rdi, [r14]
+  .text:00000000016A4E7C                 mov     edx, r15d
+  .text:00000000016A4E7F                 call    CBodyGameSystem_SpawnDependencyIsland
+  .text:00000000016A4E84                 mov     rdx, rbx
+  .text:00000000016A4E87                 mov     esi, r15d
+  .text:00000000016A4E8A                 mov     rdi, r13
+  .text:00000000016A4E8D                 call    CEntitySystem_Spawn
+  .text:00000000016A4E92                 mov     edx, r15d
+  .text:00000000016A4E95                 sub     edx, 1
+  .text:00000000016A4E98                 js      loc_16A4F28
+  .text:00000000016A4E9E                 movsxd  rax, r15d
+  .text:00000000016A4EA1                 lea     rax, [rax+rax*2]
+  .text:00000000016A4EA5                 lea     rax, [rbx+rax*8-18h]
+  .text:00000000016A4EAA                 jmp     short loc_16A4ECC
+  .text:00000000016A4EC0                 sub     edx, 1
+  .text:00000000016A4EC3                 sub     rax, 18h
+  .text:00000000016A4EC7                 cmp     edx, 0FFFFFFFFh
+  .text:00000000016A4ECA                 jz      short loc_16A4F10
+  .text:00000000016A4ECC                 mov     rcx, [rax]
+  .text:00000000016A4ECF                 cmp     qword ptr [rcx], 0
+  .text:00000000016A4ED3                 jnz     short loc_16A4EC0
+  .text:00000000016A4ED5                 lea     ecx, [r15-1]
+  .text:00000000016A4ED9                 cmp     ecx, edx
+  .text:00000000016A4EDB                 jz      short loc_16A4EF8
+  .text:00000000016A4EDD                 movsxd  r8, r15d
+  .text:00000000016A4EE0                 lea     rsi, [r8+r8*2]
+  .text:00000000016A4EE4                 lea     rsi, [rbx+rsi*8]
+  .text:00000000016A4EE8                 movdqu  xmm0, xmmword ptr [rsi-18h]
+  .text:00000000016A4EED                 movups  xmmword ptr [rax], xmm0
+  .text:00000000016A4EF0                 mov     rsi, [rsi-8]
+  .text:00000000016A4EF4                 mov     [rax+10h], rsi
+  .text:00000000016A4EF8                 sub     edx, 1
+  .text:00000000016A4EFB                 mov     r15d, ecx
+  .text:00000000016A4EFE                 sub     rax, 18h
+  .text:00000000016A4F02                 cmp     edx, 0FFFFFFFFh
+  .text:00000000016A4F05                 jnz     short loc_16A4ECC
+  .text:00000000016A4F07                 nop     word ptr [rax+rax+00000000h]
+  .text:00000000016A4F10                 test    r15d, r15d
+  .text:00000000016A4F13                 jle     short loc_16A4F28
+  .text:00000000016A4F15                 mov     rdi, [r14]
+  .text:00000000016A4F18                 mov     rcx, rbx
+  .text:00000000016A4F1B                 mov     edx, r15d
+  .text:00000000016A4F1E                 mov     esi, 1
+  .text:00000000016A4F23                 call    CBodyGameSystem_SpawnDependencyIsland
+  .text:00000000016A4F28                 mov     rdx, rbx
+  .text:00000000016A4F2B                 mov     esi, r15d
+  .text:00000000016A4F2E                 mov     rdi, r13
+  .text:00000000016A4F31                 call    sub_16A49B0
+  .text:00000000016A4F36                 movsxd  r8, r15d
+  .text:00000000016A4F39                 add     r12, 4
+  .text:00000000016A4F3D                 lea     rax, [r8+r8*2]
+  .text:00000000016A4F41                 lea     rbx, [rbx+rax*8]
+  .text:00000000016A4F45                 cmp     [rbp+var_78], r12
+  .text:00000000016A4F49                 jnz     loc_16A4E70
+  .text:00000000016A4F4F                 add     rsp, 58h
+  .text:00000000016A4F53                 pop     rbx
+  .text:00000000016A4F54                 pop     r12
+  .text:00000000016A4F56                 pop     r13
+  .text:00000000016A4F58                 pop     r14
+  .text:00000000016A4F5A                 pop     r15
+  .text:00000000016A4F5C                 pop     rbp
+  .text:00000000016A4F5D                 retn
+  .text:00000000016A4F5E                 lea     rax, g_pBodyGameSystem
+  .text:00000000016A4F65                 mov     rdi, [rax]
+  .text:00000000016A4F68                 add     rsp, 58h
+  .text:00000000016A4F6C                 pop     rbx
+  .text:00000000016A4F6D                 pop     r12
+  .text:00000000016A4F6F                 pop     r13
+  .text:00000000016A4F71                 pop     r14
+  .text:00000000016A4F73                 pop     r15
+  .text:00000000016A4F75                 pop     rbp
+  .text:00000000016A4F76                 jmp     CBodyGameSystem_Spawn
+  .text:00000000016A4F7B                 lea     rdi, aMemoryTrashInS; "Memory trash in SortEntities.. overran "...
+  .text:00000000016A4F82                 xor     eax, eax
+  .text:00000000016A4F84                 call    _Plat_FatalError
+procedure: |-
+  __int64 __fastcall CGameEntitySystem_Spawn(__int64 a1, __int64 a2, __int64 a3, __int64 a4)
+  {
+    __int64 v4; // r8
+    __int64 v5; // rbx
+    unsigned __int8 *v6; // rax
+    int v7; // r15d
+    __int64 v8; // rsi
+    int v9; // edx
+    __int64 v10; // rcx
+    int v11; // ecx
+    __int64 result; // rax
+    int *v13; // r12
+    int v14; // r15d
+    int v15; // edx
+    __int64 v16; // rax
+    __int64 v17; // rsi
+    int *v18; // [rsp+8h] [rbp-78h]
+    _DWORD v19[28]; // [rsp+10h] [rbp-70h] BYREF
+
+    v4 = (unsigned int)a2;
+    v5 = a3;
+    if ( (int)a2 <= 0 )
+      return CBodyGameSystem_Spawn(g_pBodyGameSystem, a2, a3, a4, (unsigned int)a2);
+    v6 = (unsigned __int8 *)(a3 + 22);
+    v7 = 0;
+    v8 = a3 + 22 + 24LL * (int)a2;
+    v9 = -1;
+    do
+    {
+      while ( 1 )
+      {
+        v11 = v9;
+        v9 = *v6;
+        if ( v9 != v11 )
+          break;
+        v6 += 24;
+        v10 = v7 - 1;
+        ++v19[v10];
+        if ( (unsigned __int8 *)v8 == v6 )
+          goto LABEL_7;
+      }
+      v10 = v7++;
+      v19[v10] = 1;
+      if ( v7 > 16 )
+      {
+        Plat_FatalError("Memory trash in SortEntities.. overran the number of entity islands supported!\n");
+        JUMPOUT(0x16A4F89);
+      }
+      v6 += 24;
+    }
+    while ( (unsigned __int8 *)v8 != v6 );
+  LABEL_7:
+    result = CBodyGameSystem_Spawn(g_pBodyGameSystem, (unsigned int)v4, v5, v10, v4);
+    if ( v7 )
+    {
+      v13 = v19;
+      v18 = &v19[v7];
+      do
+      {
+        v14 = *v13;
+        CBodyGameSystem_SpawnDependencyIsland(g_pBodyGameSystem, 0, (unsigned int)*v13, v5);
+        CEntitySystem_Spawn(a1, (unsigned int)v14, v5);
+        v15 = v14 - 1;
+        if ( v14 - 1 >= 0 )
+        {
+          v16 = v5 + 24LL * v14 - 24;
+          do
+          {
+            while ( **(_QWORD **)v16 )
+            {
+              --v15;
+              v16 -= 24;
+              if ( v15 == -1 )
+                goto LABEL_16;
+            }
+            if ( v14 - 1 != v15 )
+            {
+              v17 = v5 + 24LL * v14;
+              *(__m128i *)v16 = _mm_loadu_si128((const __m128i *)(v17 - 24));
+              *(_QWORD *)(v16 + 16) = *(_QWORD *)(v17 - 8);
+            }
+            --v15;
+            --v14;
+            v16 -= 24;
+          }
+          while ( v15 != -1 );
+  LABEL_16:
+          if ( v14 > 0 )
+            CBodyGameSystem_SpawnDependencyIsland(g_pBodyGameSystem, 1, (unsigned int)v14, v5);
+        }
+        sub_16A49B0(a1, (unsigned int)v14, v5);
+        ++v13;
+        result = 3LL * v14;
+        v5 += 24LL * v14;
+      }
+      while ( v18 != v13 );
+    }
+    return result;
+  }

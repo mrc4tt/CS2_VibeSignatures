@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CBodyGameSystem_SpawnDependencyIsland-AND-CGameEntitySystem_CheckGlobalState skill."""
+"""Preprocess script for find-CGameEntitySystem_Spawn-decompiles skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
