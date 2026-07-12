@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEntitySystem_m_nSuppressDormancyChangeCount-AND-CEntitySystem_m_nExecuteQueuedCreationDepth-AND-CEntitySystem_ExecuteQueuedSetInPVS skill."""
+"""Preprocess script for find-CEntitySystem_ForceSetInPVSCallsIntoQueue-decompiles skill."""
 
 from ida_analyze_util import preprocess_common_skill
 

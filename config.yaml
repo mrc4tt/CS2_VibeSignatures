@@ -6758,7 +6758,7 @@ modules:
           - CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml
         expected_input:
           - CEntitySaveRestoreBlockHandler_PreRestore.{platform}.yaml
-      - name: find-CEntitySystem_m_nSuppressDormancyChangeCount-AND-CEntitySystem_m_nExecuteQueuedCreationDepth-AND-CEntitySystem_ExecuteQueuedSetInPVS
+      - name: find-CEntitySystem_ForceSetInPVSCallsIntoQueue-decompiles
         expected_output:
           - CEntitySystem_m_nSuppressDormancyChangeCount.{platform}.yaml
           - CEntitySystem_m_nExecuteQueuedCreationDepth.{platform}.yaml
