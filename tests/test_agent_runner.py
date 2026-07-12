@@ -55,7 +55,15 @@ class TestSkillRunnerProjectPromptConfiguration(unittest.TestCase):
         opencode_config = json.loads(config_paths[2].read_text(encoding="utf-8"))
 
         self.assertEqual([".claude/CLAUDE.md"], claude_settings["claudeMdExcludes"])
-        self.assertEqual(["mcp__ida-pro-mcp__*"], claude_settings["permissions"]["allow"])
+        self.assertEqual(
+            [
+                "Read(ida_preprocessor_scripts)",
+                "Read(hl2sdk)",
+                "Read(bin)",
+                "mcp__ida-pro-mcp__*",
+            ],
+            claude_settings["permissions"]["allow"],
+        )
         self.assertEqual(
             ["mcp__ida-pro-mcp__open_file"],
             claude_settings["permissions"]["deny"],
