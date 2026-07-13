@@ -174,9 +174,7 @@ class TestCallLlmText(unittest.TestCase):
         )
 
     def test_call_llm_text_strips_internal_message_ids_for_chat_completions(self) -> None:
-        response = SimpleNamespace(
-            choices=[SimpleNamespace(message=SimpleNamespace(content="done"))]
-        )
+        response = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="done"))])
         create = MagicMock(return_value=response)
         client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
 

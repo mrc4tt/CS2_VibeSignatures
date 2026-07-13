@@ -41,12 +41,8 @@ _LLM_RESULT_SYMBOL_KEYS = {
     "found_funcptr": "funcptr_name",
     "found_gv": "gv_name",
 }
-_DISASM_ADDRESS_LINE_RE = re.compile(
-    r"^\s*(?:[^:\s]+:)?([0-9A-Fa-f]{4,16})\s+(.+?)\s*$"
-)
-_DISASM_MEMORY_DISPLACEMENT_RE = re.compile(
-    r"(?:^|[+-])\s*(0x[0-9A-Fa-f]+|[0-9A-Fa-f]+[hH]|\d+)(?=\s*(?:[+-]|$))"
-)
+_DISASM_ADDRESS_LINE_RE = re.compile(r"^\s*(?:[^:\s]+:)?([0-9A-Fa-f]{4,16})\s+(.+?)\s*$")
+_DISASM_MEMORY_DISPLACEMENT_RE = re.compile(r"(?:^|[+-])\s*(0x[0-9A-Fa-f]+|[0-9A-Fa-f]+[hH]|\d+)(?=\s*(?:[+-]|$))")
 
 
 def _absolute_path_preserve_spelling(path):
@@ -663,8 +659,7 @@ def _format_llm_validation_issue(issue):
 def _build_llm_instruction_correction_prompt(validation_issues):
     issue_text = "\n".join(_format_llm_validation_issue(issue) for issue in validation_issues)
     has_vcall_issue = any(
-        issue["issue_type"] == "vcall_offset_mismatch"
-        or "found_vcall" in issue.get("expected_sections", [])
+        issue["issue_type"] == "vcall_offset_mismatch" or "found_vcall" in issue.get("expected_sections", [])
         for issue in validation_issues
     )
     vcall_guidance = ""

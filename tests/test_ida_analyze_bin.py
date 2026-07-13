@@ -845,7 +845,8 @@ modules:
 
 
 class TestIsMajorUpdateGamever(unittest.TestCase):
-    _DOWNLOAD_YAML = """
+    _DOWNLOAD_YAML = (
+        """
 downloads:
   - tag: "14167"
     name: 1.41.6.7
@@ -861,7 +862,9 @@ downloads:
     manifests:
       "2347771": "1966178532936074641"
     major_update: false
-""".strip() + "\n"
+""".strip()
+        + "\n"
+    )
 
     def _write_download_yaml(self, temp_dir):
         download_path = Path(temp_dir) / "download.yaml"
@@ -871,44 +874,32 @@ downloads:
     def test_flags_major_update_version(self) -> None:
         with TemporaryDirectory() as temp_dir:
             download_path = self._write_download_yaml(temp_dir)
-            self.assertTrue(
-                ida_analyze_bin._is_major_update_gamever("14168", str(download_path))
-            )
+            self.assertTrue(ida_analyze_bin._is_major_update_gamever("14168", str(download_path)))
 
     def test_ignores_unflagged_version(self) -> None:
         with TemporaryDirectory() as temp_dir:
             download_path = self._write_download_yaml(temp_dir)
-            self.assertFalse(
-                ida_analyze_bin._is_major_update_gamever("14167", str(download_path))
-            )
+            self.assertFalse(ida_analyze_bin._is_major_update_gamever("14167", str(download_path)))
 
     def test_ignores_explicit_false_flag(self) -> None:
         with TemporaryDirectory() as temp_dir:
             download_path = self._write_download_yaml(temp_dir)
-            self.assertFalse(
-                ida_analyze_bin._is_major_update_gamever("14169", str(download_path))
-            )
+            self.assertFalse(ida_analyze_bin._is_major_update_gamever("14169", str(download_path)))
 
     def test_returns_false_for_unknown_tag(self) -> None:
         with TemporaryDirectory() as temp_dir:
             download_path = self._write_download_yaml(temp_dir)
-            self.assertFalse(
-                ida_analyze_bin._is_major_update_gamever("99999", str(download_path))
-            )
+            self.assertFalse(ida_analyze_bin._is_major_update_gamever("99999", str(download_path)))
 
     def test_returns_false_for_missing_file(self) -> None:
         with TemporaryDirectory() as temp_dir:
             missing_path = Path(temp_dir) / "does_not_exist.yaml"
-            self.assertFalse(
-                ida_analyze_bin._is_major_update_gamever("14168", str(missing_path))
-            )
+            self.assertFalse(ida_analyze_bin._is_major_update_gamever("14168", str(missing_path)))
 
     def test_returns_false_for_empty_gamever(self) -> None:
         with TemporaryDirectory() as temp_dir:
             download_path = self._write_download_yaml(temp_dir)
-            self.assertFalse(
-                ida_analyze_bin._is_major_update_gamever("", str(download_path))
-            )
+            self.assertFalse(ida_analyze_bin._is_major_update_gamever("", str(download_path)))
 
 
 class TestSkillOrdering(unittest.TestCase):

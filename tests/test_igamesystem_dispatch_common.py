@@ -67,7 +67,7 @@ def _run_dispatch_py_eval(
 
     marker = bytes((0x65, 0x48, 0x8B, 0x04, 0x25, 0x58, 0x00, 0x00, 0x00))
     ida_bytes = types.ModuleType("ida_bytes")
-    ida_bytes.get_bytes = lambda start, size: (marker if start in marker_addrs else b"\x90" * max(size, 0))
+    ida_bytes.get_bytes = lambda start, size: marker if start in marker_addrs else b"\x90" * max(size, 0)
 
     fake_modules = {
         "idaapi": idaapi,

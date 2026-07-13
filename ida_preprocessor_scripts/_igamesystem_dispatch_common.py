@@ -466,10 +466,7 @@ async def preprocess_igamesystem_dispatch_skill(
 
     deinlined_dispatchers = parsed.get("deinlined_dispatchers")
     if debug and deinlined_dispatchers:
-        print(
-            f"    Preprocess: {source_yaml_stem} dispatch de-inlined into "
-            f"{deinlined_dispatchers}"
-        )
+        print(f"    Preprocess: {source_yaml_stem} dispatch de-inlined into {deinlined_dispatchers}")
 
     entries = _dedup_entries_by_offset(entries)
     if len(entries) != expected_dispatch_count:

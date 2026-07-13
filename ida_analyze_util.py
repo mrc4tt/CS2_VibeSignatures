@@ -8048,17 +8048,13 @@ async def preprocess_common_skill(
                 llm_target_details,
             )
             primary_target_detail = llm_target_details[0]
-            expected_result_sections = _build_expected_llm_result_sections(
-                llm_symbol_name_list, desired_fields_map
-            )
+            expected_result_sections = _build_expected_llm_result_sections(llm_symbol_name_list, desired_fields_map)
             return await call_llm_decompile(
                 model=llm_request["model"],
                 symbol_name_list=llm_symbol_name_list,
                 expected_result_sections=expected_result_sections,
                 disasm_code=primary_target_detail.get("disasm_code", ""),
-                target_disasm_codes=[
-                    target_detail.get("disasm_code", "") for target_detail in llm_target_details
-                ],
+                target_disasm_codes=[target_detail.get("disasm_code", "") for target_detail in llm_target_details],
                 procedure=primary_target_detail.get("procedure", ""),
                 disasm_for_reference=llm_request["disasm_for_reference"],
                 procedure_for_reference=llm_request["procedure_for_reference"],
