@@ -11,7 +11,7 @@ modules:
         expected_output:
           - SDL_QuitMouse.{platform}.yaml
         platform: windows
-      - name: find-SDL_GetMouse-AND-SDL_mouse_initialized-windows  # by LLM_DECOMPILE SDL_PreInitMouse
+      - name: find-SDL_PreInitMouse-decompiles  # by LLM_DECOMPILE SDL_PreInitMouse
         expected_input:
           - SDL_PreInitMouse.{platform}.yaml
         expected_output:
@@ -21,14 +21,14 @@ modules:
           - SDL_Mouse_cursor_visible.{platform}.yaml  # 128h bool cursor_visible;
           - SDL_MouseWarpEmulationChanged.{platform}.yaml  # func
         platform: windows
-      - name: find-SDL_SetRelativeMouseMode-AND-SDL_Mouse_warp_emulation_active-windows  # by LLM_DECOMPILE SDL_MouseWarpEmulationChanged
+      - name: find-SDL_MouseWarpEmulationChanged-decompiles  # by LLM_DECOMPILE SDL_MouseWarpEmulationChanged
         expected_input:
           - SDL_MouseWarpEmulationChanged.{platform}.yaml
         expected_output:
           - SDL_SetRelativeMouseMode.{platform}.yaml  # func
           - SDL_Mouse_warp_emulation_active.{platform}.yaml  # C6h     bool warp_emulation_active;
         platform: windows
-      - name: find-SDL_Mouse_relative_mode-AND-SDL_Mouse_SetRelativeMouseMode-AND-SDL_PerformWarpMouseInWindow-windows  # by LLM_DECOMPILE SDL_SetRelativeMouseMode
+      - name: find-SDL_SetRelativeMouseMode-decompiles  # by LLM_DECOMPILE SDL_SetRelativeMouseMode
         expected_input:
           - SDL_SetRelativeMouseMode.{platform}.yaml
         expected_output:
@@ -36,7 +36,7 @@ modules:
           - SDL_Mouse_SetRelativeMouseMode.{platform}.yaml  # 40h     bool (*SetRelativeMouseMode)(bool enabled);
           - SDL_PerformWarpMouseInWindow.{platform}.yaml  # func
         platform: windows
-      - name: find-SDL_Mouse_focus-AND-SDL_Mouse_last_x-AND-SDL_Mouse_last_y-windows  # by LLM_DECOMPILE SDL_PerformWarpMouseInWindow
+      - name: find-SDL_PerformWarpMouseInWindow-decompiles  # by LLM_DECOMPILE SDL_PerformWarpMouseInWindow
         expected_input:
           - SDL_PerformWarpMouseInWindow.{platform}.yaml
         expected_output:
@@ -204,7 +204,7 @@ modules:
           - CNetworkMessages_RegisterNetworkFieldChangeCallbackInternal.{platform}.yaml
         expected_input:
           - CNetworkMessages_vtable.{platform}.yaml
-      - name: find-CNetworkMessages_AllowAdditionalMessageRegistration-AND-CNetworkMessages_IsAdditionalMessageRegistrationAllowed
+      - name: find-CNetworkMessages_vtable-decompiles
         expected_output:
           - CNetworkMessages_AllowAdditionalMessageRegistration.{platform}.yaml
           - CNetworkMessages_IsAdditionalMessageRegistrationAllowed.{platform}.yaml
@@ -234,7 +234,7 @@ modules:
       - name: find-CNetChan_ParseMessagesDemoInternal
         expected_output:
           - CNetChan_ParseMessagesDemoInternal.{platform}.yaml
-      - name: find-CNetChan_ParseNetMessageShowFilter-AND-g_pLoggingChannel
+      - name: find-CNetChan_ParseMessagesDemoInternal-decompiles
         expected_output:
           - CNetChan_ParseNetMessageShowFilter.{platform}.yaml
           - g_pLoggingChannel.{platform}.yaml
@@ -263,7 +263,7 @@ modules:
       - name: find-CNetworkSystem_SendNetworkStats
         expected_output:
           - CNetworkSystem_SendNetworkStats.{platform}.yaml
-      - name: find-INetworkMessages_GetNetworkGroupCount-AND-INetworkMessages_GetNetworkGroupName-AND-INetworkMessages_GetNetworkGroupColor
+      - name: find-CNetworkSystem_SendNetworkStats-decompiles
         expected_output:
           - INetworkMessages_GetNetworkGroupCount.{platform}.yaml
           - INetworkMessages_GetNetworkGroupName.{platform}.yaml
@@ -767,7 +767,7 @@ modules:
           - CDemoRecorder_ParseMessage.{platform}.yaml
         expected_input:
           - CDemoRecorder_vtable.{platform}.yaml
-      - name: find-INetworkMessages_SerializeAbstract-AND-INetworkMessages_GetNetMessageInfo
+      - name: find-CDemoRecorder_ParseMessage-decompiles
         expected_output:
           - INetworkMessages_SerializeAbstract.{platform}.yaml
           - INetworkMessages_GetNetMessageInfo.{platform}.yaml
@@ -3037,7 +3037,7 @@ modules:
           - CLoopModeGame_SetGameSystemState.{platform}.yaml
         expected_input_linux:
           - CLoopModeGame_Shutdown.{platform}.yaml
-      - name: find-IGameSystem_AddByName-AND-IGameSystem_Add
+      - name: find-CLoopModeGame_ReceivedServerInfo-decompiles
         expected_output:
           - IGameSystem_AddByName.{platform}.yaml
           - IGameSystem_Add.{platform}.yaml
@@ -3049,7 +3049,7 @@ modules:
       - name: find-IGameSystem_InitAllSystems
         expected_output:
           - IGameSystem_InitAllSystems.{platform}.yaml
-      - name: find-IGameSystemFactory_PostInit-AND-IGameSystemFactory_GetStaticGameSystem
+      - name: find-IGameSystem_PostInit-decompiles
         expected_output:
           - IGameSystemFactory_PostInit.{platform}.yaml
           - IGameSystemFactory_GetStaticGameSystem.{platform}.yaml
@@ -3058,7 +3058,7 @@ modules:
       - name: find-IGameSystem_LoopInitAllSystems
         expected_output:
           - IGameSystem_LoopInitAllSystems.{platform}.yaml
-      - name: find-IGameSystemFactory_ShouldAutoAdd-AND-IGameSystemFactory_CreateGameSystem-AND-IGameSystemFactory_IsReallocating-AND-IGameSystem_SetName-AND-IGameSystemFactory_GetPriority
+      - name: find-IGameSystem_LoopInitAllSystems-decompiles
         expected_output:
           - IGameSystemFactory_ShouldAutoAdd.{platform}.yaml
           - IGameSystemFactory_CreateGameSystem.{platform}.yaml
@@ -3067,7 +3067,7 @@ modules:
           - IGameSystemFactory_GetPriority.{platform}.yaml
         expected_input:
           - IGameSystem_LoopInitAllSystems.{platform}.yaml
-      - name: find-IGameSystem_DestroyAllGameSystems-AND-IGameSystem_LoopDestroyAllSystems-AND-IGameSystem_LoopPreShutdownAllSystems
+      - name: find-CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown-decompiles
         expected_output:
           - IGameSystem_DestroyAllGameSystems.{platform}.yaml
           - IGameSystem_LoopDestroyAllSystems.{platform}.yaml
@@ -3094,7 +3094,7 @@ modules:
         expected_input:
           - CLoopModeGame_OnClientPauseSimulate.{platform}.yaml
           - IGameSystem_vtable.{platform}.yaml
-      - name: find-IGameSystem_OnClientPreUpdate-AND-IGameSystem_OnClientPostUpdate
+      - name: find-CLoopModeGame_OnClientSimulate-decompiles
         expected_output:
           - IGameSystem_OnClientPreUpdate.{platform}.yaml
           - IGameSystem_OnClientPostUpdate.{platform}.yaml
@@ -3149,7 +3149,7 @@ modules:
         expected_input:
           - CLoopModeGame_OnClientPostOutput.{platform}.yaml
           - IGameSystem_vtable.{platform}.yaml
-      - name: find-IGameSystem_OnClientPreRender-AND-IGameSystem_OnClientPreRenderAlt
+      - name: find-CLoopModeGame_OnClientPreOutput-decompiles
         expected_output:
           - IGameSystem_OnClientPreRender.{platform}.yaml
           - IGameSystem_OnClientPreRenderAlt.{platform}.yaml
@@ -3182,7 +3182,7 @@ modules:
       - name: find-CSteamworksGameStats_OnReceivedSessionID
         expected_output:
           - CSteamworksGameStats_OnReceivedSessionID.{platform}.yaml
-      - name: find-IGameSystem_GetName-AND-IGameSystemFactory_DestroyGameSystem
+      - name: find-IGameSystem_DestroyAllGameSystems-decompiles
         expected_output:
           - IGameSystem_GetName.{platform}.yaml
           - IGameSystemFactory_DestroyGameSystem.{platform}.yaml
@@ -3240,7 +3240,7 @@ modules:
         expected_input:
           - CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.{platform}.yaml
           - ../client/IGameSystemFactory_DestroyGameSystem.{platform}.yaml
-      - name: find-IGameSystem_SetGameSystemGlobalPtrs-AND-IGameSystem_vdtor
+      - name: find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem-decompiles
         expected_output:
           - IGameSystem_SetGameSystemGlobalPtrs.{platform}.yaml
           - IGameSystem_vdtor.{platform}.yaml
@@ -3346,7 +3346,7 @@ modules:
           - SendViolationReport.{platform}.yaml
         expected_input:
           - CUserMessage_ExtraUserData_vtable.{platform}.yaml
-      - name: find-IVEngineClient2_GetNetworkClient-AND-INetworkClient_GetLocalAddress-AND-INetworkClientService_IsConnected-AND-INetworkClientService_SendNetMessage
+      - name: find-SendViolationReport-decompiles
         platform: windows
         expected_output:
           - IVEngineClient2_GetNetworkClient.{platform}.yaml
@@ -4405,7 +4405,7 @@ modules:
         expected_input:
           - CBasePlayerPawn_vtable.{platform}.yaml
           - CBaseEntity_OnTakeDamage.{platform}.yaml
-      - name: find-CBasePlayerPawn_OnTakeDamage_Alive-AND-Dying-AND-Dead
+      - name: find-CBasePlayerPawn_OnTakeDamage-decompiles
         expected_output:
           - CBasePlayerPawn_OnTakeDamage_Alive.{platform}.yaml
           - CBasePlayerPawn_OnTakeDamage_Dying.{platform}.yaml
@@ -4444,13 +4444,13 @@ modules:
           - CEntitySystem_QueueDestroyEntity.{platform}.yaml
         expected_input:
           - SV_Kill_SmokeGrenade_CommandHandler.{platform}.yaml
-      - name: find-CEntitySystem_ExecuteQueuedDeletion-AND-CEntitySystem_m_nExecuteQueuedDeletionDepth
+      - name: find-CEntitySystem_QueueDestroyEntity-AND-CEntitySystem_ExecuteQueuedDeletion-decompiles
         expected_output:
           - CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml
           - CEntitySystem_m_nExecuteQueuedDeletionDepth.{platform}.yaml
         expected_input:
           - CEntitySystem_QueueDestroyEntity.{platform}.yaml
-      - name: find-CBaseModelEntity_SetModel-AND-CBaseEntity_SetGravityScale
+      - name: find-CFlashbangProjectile_Spawn-decompiles
         expected_output:
           - CBaseModelEntity_SetModel.{platform}.yaml
           - CBaseEntity_SetGravityScale.{platform}.yaml
@@ -4641,7 +4641,7 @@ modules:
           - CSource2GameClients_OnClientConnected.{platform}.yaml
         expected_input:
           - CSource2GameClients_vtable.{platform}.yaml
-      - name: find-CBasePlayerController_SetPawn-AND-CBasePlayerController_GetPawn
+      - name: find-CSource2GameClients_ClientDisconnect-decompiles
         expected_output:
           - CBasePlayerController_SetPawn.{platform}.yaml
           - CBasePlayerController_GetPawn.{platform}.yaml
@@ -4667,7 +4667,7 @@ modules:
       - name: find-ParticleTestStart_CommandHandler
         expected_output:
           - ParticleTestStart_CommandHandler.{platform}.yaml
-      - name: find-g_pGameRules-AND-CGameRules_FindPickerEntity
+      - name: find-FireTarget_CommandHandler-decompiles
         expected_output:
           - g_pGameRules.{platform}.yaml
           - CGameRules_FindPickerEntity.{platform}.yaml
@@ -4713,7 +4713,7 @@ modules:
           - CEntityIdentity_SetEntityName.{platform}.yaml
         expected_input:
           - ScriptBinding_Entity_SetEntityName.{platform}.yaml
-      - name: find-CEntitySystem_RemoveEntityFromNameMap-AND-CEntitySystem_AddEntityToNameMap
+      - name: find-CEntityIdentity_SetEntityName-decompiles
         expected_output:
           - CEntitySystem_RemoveEntityFromNameMap.{platform}.yaml
           - CEntitySystem_AddEntityToNameMap.{platform}.yaml
@@ -4741,7 +4741,7 @@ modules:
       - name: find-CCSPlayer_ItemServices_GiveDefaultItems
         expected_output:
           - CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml
-      - name: find-CCSPlayer_ItemServices_GiveNamedItem-AND-CCSPlayer_WeaponServices_Weapon_GetSlot-AND-CBasePlayerPawn_RemovePlayerItem
+      - name: find-CCSPlayer_ItemServices_GiveDefaultItems-decompiles
         expected_output:
           - CCSPlayer_ItemServices_GiveNamedItem.{platform}.yaml
           - CCSPlayer_WeaponServices_Weapon_GetSlot.{platform}.yaml
@@ -4754,7 +4754,7 @@ modules:
           - CCSPlayer_WeaponServices_PickupItem.{platform}.yaml
         expected_input:
           - CCSPlayer_WeaponServices_vtable.{platform}.yaml
-      - name: find-CCSPlayer_WeaponServices_EquipWeapon-AND-CCSPlayer_WeaponServices_CanUse
+      - name: find-CCSPlayer_WeaponServices_PickupItem-decompiles
         expected_output:
           - CCSPlayer_WeaponServices_EquipWeapon.{platform}.yaml
           - CCSPlayer_WeaponServices_CanUse.{platform}.yaml
@@ -4769,7 +4769,7 @@ modules:
       - name: find-CCSPlayerController_GetThinkFunction
         expected_output:
           - CCSPlayerController_GetThinkFunction.{platform}.yaml
-      - name: find-CCSPlayerController_PlayerForceTeamThink-AND-CCSPlayerController_ResetForceTeamThink-AND-CCSPlayerController_ResourceDataThink-AND-CCSPlayerController_InventoryUpdateThink-windows
+      - name: find-CCSPlayerController_GetThinkFunction-decompiles
         expected_output:
           - CCSPlayerController_PlayerForceTeamThink.{platform}.yaml
           - CCSPlayerController_ResetForceTeamThink.{platform}.yaml
@@ -4825,7 +4825,7 @@ modules:
       - name: find-CCSPlayerPawn_ProcessSuicideAsKillReward
         expected_output:
           - CCSPlayerPawn_ProcessSuicideAsKillReward.{platform}.yaml
-      - name: find-ClientPrint-AND-UTIL_ClientPrintFilter
+      - name: find-CCSPlayerPawn_ProcessSuicideAsKillReward-decompiles
         expected_output:
           - ClientPrint.{platform}.yaml
           - UTIL_ClientPrintFilter.{platform}.yaml
@@ -4907,7 +4907,7 @@ modules:
         expected_input:
           - CSource2Server_vtable.{platform}.yaml
           - ../engine/IAppSystem_Shutdown.{platform}.yaml
-      - name: find-CGameEventManager_Shutdown-AND-CLoopModeRegistry_UnregisterLoopModes-AND-CEngineServiceRegistry_UnregisterEngineServices
+      - name: find-CSource2Server_Shutdown-decompiles
         expected_output:
           - CGameEventManager_Shutdown.{platform}.yaml
           - CLoopModeRegistry_UnregisterLoopModes.{platform}.yaml
@@ -4946,14 +4946,14 @@ modules:
         expected_input:
           - CSource2Server_PreWorldUpdate.{platform}.yaml
           - IGameSystem_vtable.{platform}.yaml
-      - name: find-IGameSystem_OnServerPreEntityThink-AND-IGameSystem_OnServerPostEntityThink
+      - name: find-CSource2Server_GameFrame-decompiles
         expected_output:
           - IGameSystem_OnServerPreEntityThink.{platform}.yaml
           - IGameSystem_OnServerPostEntityThink.{platform}.yaml
         expected_input:
           - CSource2Server_GameFrame.{platform}.yaml
           - IGameSystem_vtable.{platform}.yaml
-      - name: find-CGameEventManager_Init-AND-gameeventmanager
+      - name: find-CSource2Server_Init-decompiles
         expected_output:
           - CGameEventManager_Init.{platform}.yaml
           - gameeventmanager.{platform}.yaml
@@ -5064,7 +5064,7 @@ modules:
       #- name: find-CEntitySystem_AddComponentFieldUnserializer
       #  expected_output:
       #    - CEntitySystem_AddComponentFieldUnserializer.{platform}.yaml
-      - name: find-CEntitySystem_m_entClassesByCPPClassname-AND-CEntitySystem_m_entClassesByClassname
+      - name: find-CEntitySystem_RegisterEntityClass-decompiles
         expected_output:
           - CEntitySystem_m_entClassesByCPPClassname.{platform}.yaml
           - CEntitySystem_m_entClassesByClassname.{platform}.yaml
@@ -5081,7 +5081,7 @@ modules:
           - CEntitySystem_AddEntityToEntityDataBase.{platform}.yaml
         expected_input:
           - CEntitySystem_CreateEntity.{platform}.yaml
-      - name: find-CEntitySystem_OnAddEntity-AND-CEntityInstance_AddedToEntityDatabase
+      - name: find-CEntitySystem_AddEntityToEntityDataBase-decompiles
         expected_output:
           - CEntitySystem_OnAddEntity.{platform}.yaml
           - CEntityInstance_AddedToEntityDatabase.{platform}.yaml
@@ -5095,7 +5095,7 @@ modules:
         expected_input:
           - CEntitySystem_OnAddEntity.{platform}.yaml
           - CGameEntitySystem_vtable.{platform}.yaml
-      - name: find-CGameEntitySystem_m_iNetworkedEntCount-AND-CGameEntitySystem_m_iNonNetworkedSavedEntCount-AND-CGameEntitySystem_m_entityListeners
+      - name: find-CGameEntitySystem_OnAddEntity-decompiles
         expected_output:
           - CGameEntitySystem_m_iNetworkedEntCount.{platform}.yaml
           - CGameEntitySystem_m_iNonNetworkedSavedEntCount.{platform}.yaml
@@ -5128,19 +5128,19 @@ modules:
       - name: find-CEntitySystem_DoConstructEntity
         expected_output:
           - CEntitySystem_DoConstructEntity.{platform}.yaml
-      - name: find-CEntityInstance_Disconnect-AND-CEntityComponentHelperT_Free
+      - name: find-CEntitySystem_DestroyEntity-decompiles
         expected_output:
           - CEntityInstance_Disconnect.{platform}.yaml
           - CEntityComponentHelperT_Free.{platform}.yaml
         expected_input:
           - CEntitySystem_DestroyEntity.{platform}.yaml
-      - name: find-UTIL_CreateEntityByName-AND-CBaseEntity_DispatchSpawn
+      - name: find-GiveNamedItem-decompiles
         expected_output:
           - UTIL_CreateEntityByName.{platform}.yaml
           - CBaseEntity_DispatchSpawn.{platform}.yaml
         expected_input:
           - GiveNamedItem.{platform}.yaml
-      - name: find-CEntitySystem_QueueSpawnEntity-AND-CEntitySystem_ExecuteQueuedCreation
+      - name: find-CBaseEntity_DispatchSpawn-decompiles
         expected_output:
           - CEntitySystem_QueueSpawnEntity.{platform}.yaml
           - CEntitySystem_ExecuteQueuedCreation.{platform}.yaml
@@ -5164,13 +5164,13 @@ modules:
         expected_input:
           - CEntitySystem_SortEntities.{platform}.yaml
           - CGameEntitySystem_vtable.{platform}.yaml
-      - name: find-CEntitySystem_ExecuteQueuedActivates-AND-CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates
+      - name: find-CEntitySystem_ExecuteQueuedCreation-decompiles
         expected_output:
           - CEntitySystem_ExecuteQueuedActivates.{platform}.yaml
           - CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates.{platform}.yaml
         expected_input:
           - CEntitySystem_ExecuteQueuedCreation.{platform}.yaml
-      - name: find-CEntitySystem_Activate-AND-CEntitySystem_PostDataUpdate
+      - name: find-CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates-decompiles
         expected_output:
           - CEntitySystem_Activate.{platform}.yaml
           - CEntitySystem_PostDataUpdate.{platform}.yaml
@@ -5299,7 +5299,7 @@ modules:
           - CMultiplayRules_ClientDisconnected.{platform}.yaml
         expected_input:
           - CMultiplayRules_vtable.{platform}.yaml
-      - name: find-UTIL_PlayerSlotToPlayerController-AND-FireTargets-AND-CCSPlayer_ItemServices_RemoveWeapons
+      - name: find-CMultiplayRules_ClientDisconnected-decompiles
         expected_output:
           - UTIL_PlayerSlotToPlayerController.{platform}.yaml
           - FireTargets.{platform}.yaml
@@ -5319,7 +5319,7 @@ modules:
         expected_input:
           - CBaseEntity_Activate.{platform}.yaml
           - CPhysExplosion_vtable.{platform}.yaml
-      - name: find-CPhysExplosion_Explode-AND-UTIL_Remove
+      - name: find-CPhysExplosion_Activate-decompiles
         expected_output:
           - CPhysExplosion_Explode.{platform}.yaml
           - UTIL_Remove.{platform}.yaml
@@ -5328,7 +5328,7 @@ modules:
       - name: find-Host_Say
         expected_output:
           - Host_Say.{platform}.yaml
-      - name: find-UTIL_SayTextFilter-AND-UTIL_SayTextFilter2
+      - name: find-Host_Say-decompiles
         expected_output:
           - UTIL_SayTextFilter.{platform}.yaml
           - UTIL_SayTextFilter2.{platform}.yaml
@@ -5428,13 +5428,13 @@ modules:
       - name: find-IGameSystem_PostInit
         expected_output:
           - IGameSystem_PostInit.{platform}.yaml
-      - name: find-IGameSystemFactory_PostInit-AND-IGameSystemFactory_GetStaticGameSystem
+      - name: find-IGameSystem_PostInit-decompiles
         expected_output:
           - IGameSystemFactory_PostInit.{platform}.yaml
           - IGameSystemFactory_GetStaticGameSystem.{platform}.yaml
         expected_input:
           - IGameSystem_PostInit.{platform}.yaml
-      - name: find-IGameSystem_LoopPostInitAllSystems_pEventDispatcher-AND-IGameSystem_LoopDestroyAllSystems_s_GameSystems
+      - name: find-IGameSystem_LoopDestroyAllSystems-decompiles
         expected_output:
           - IGameSystem_LoopPostInitAllSystems_pEventDispatcher.{platform}.yaml
           - IGameSystem_LoopDestroyAllSystems_s_GameSystems.{platform}.yaml
@@ -5504,7 +5504,7 @@ modules:
       - name: find-EntInfo_CommandHandler
         expected_output:
           - EntInfo_CommandHandler.{platform}.yaml
-      - name: find-CEntitySystem_DestroyEntityImmediate-AND-ClientPrintToController
+      - name: find-EntInfo_CommandHandler-decompiles
         expected_output:
           - CEntitySystem_DestroyEntityImmediate.{platform}.yaml
           - ClientPrintToController.{platform}.yaml
@@ -5560,7 +5560,7 @@ modules:
           - HideState_OnUpdate.{platform}.yaml
         expected_input:
           - HideState_vtable.{platform}.yaml
-      - name: find-CCSBot_Attack-AND-CCSBot_MoveTo-AND-CCSBot_InhibitLookAround-AND-CCSBot_SetDisposition-AND-CCSBot_Idle-AND-CCSBot_ComputePath
+      - name: find-HideState_OnUpdate-decompiles
         expected_output:
           - CCSBot_Attack.{platform}.yaml
           - CCSBot_MoveTo.{platform}.yaml
@@ -5570,7 +5570,7 @@ modules:
           - CCSBot_ComputePath.{platform}.yaml
         expected_input:
           - HideState_OnUpdate.{platform}.yaml
-      - name: find-CBaseEntity_IsAlive-AND-CBaseEntity_GetEyePosition
+      - name: find-CCSBot_Upkeep-decompiles
         expected_output:
           - CBaseEntity_IsAlive.{platform}.yaml
           - CBaseEntity_GetEyePosition.{platform}.yaml
@@ -5688,7 +5688,7 @@ modules:
           - CEntityIOOutput_FireOutputInternal.{platform}.yaml
         expected_input:
           - CEntFireOutputAutoCompletionFunctor_FireOutput.{platform}.yaml
-      - name: find-CEntitySystem_AddEntityIOEvent-AND-CEntitySystem_AddEntityIOEvent2
+      - name: find-CMomentaryRotButton_Use-decompiles
         expected_output:
           - CEntitySystem_AddEntityIOEvent.{platform}.yaml
           - CEntitySystem_AddEntityIOEvent2.{platform}.yaml
@@ -5792,7 +5792,7 @@ modules:
       - name: find-CPhysicsGameSystem_ProcessContactEvents
         expected_output:
           - CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml
-      - name: find-IVPhys2World_GetTouchingList-AND-CBaseEntity_PhysicsDispatchStartTouch-AND-CBaseEntity_PhysicsNotifyOtherOfEndTouch-AND-CBaseEntity_PhysicsDispatchTouch
+      - name: find-CPhysicsGameSystem_ProcessContactEvents-decompiles
         expected_output:
           - IVPhys2World_GetTouchingList.{platform}.yaml
           - CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml
@@ -5800,7 +5800,7 @@ modules:
           - CBaseEntity_PhysicsDispatchTouch.{platform}.yaml
         expected_input:
           - CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml
-      - name: find-CBaseEntity_StartTouch-AND-CBaseEntity_Touch-AND-CBaseEntity_EndTouch
+      - name: find-CBaseEntity_PhysicsDispatchStartTouch-AND-CBaseEntity_PhysicsNotifyOtherOfEndTouch-decompiles
         expected_output:
           - CBaseEntity_StartTouch.{platform}.yaml
           - CBaseEntity_Touch.{platform}.yaml
@@ -5843,7 +5843,7 @@ modules:
           - CBaseEntity_GetHammerUniqueId.{platform}.yaml
         expected_input:
           - CBaseEntity_Spawn.{platform}.yaml
-      - name: find-CBaseTrigger_StartTouch-AND-CBaseTrigger_EndTouch
+      - name: find-CBaseTrigger_vtable-decompiles
         expected_output:
           - CBaseTrigger_StartTouch.{platform}.yaml
           - CBaseTrigger_EndTouch.{platform}.yaml
@@ -5916,13 +5916,13 @@ modules:
         expected_input:
           - CPointTeleport_Activate.{platform}.yaml
           - CBaseEntity_vtable.{platform}.yaml
-      - name: find-CEntityInstance_m_pEntity-AND-CEntityInstance_m_hPrivateScope
+      - name: find-CEntityInstance_ValidatePrivateScriptScope-decompiles
         expected_output:
           - CEntityInstance_m_pEntity.{platform}.yaml
           - CEntityInstance_m_hPrivateScope.{platform}.yaml
         expected_input:
           - CEntityInstance_ValidatePrivateScriptScope.{platform}.yaml
-      - name: find-CEntityInstance_m_CScriptComponent-AND-CEntityInstance_m_pKeyValues
+      - name: find-CEntityInstance_UpdateOnRemove-decompiles
         expected_output:
           - CEntityInstance_m_CScriptComponent.{platform}.yaml
           - CEntityInstance_m_pKeyValues.{platform}.yaml
@@ -5954,7 +5954,7 @@ modules:
           - CBaseEntity_ReloadPrivateScripts.{platform}.yaml
         expected_input:
           - CBaseEntity_vtable.{platform}.yaml
-      - name: find-CEntityInstance_PostDataUpdatePreserve-AND-CEntityInstance_PostDataUpdateDelta
+      - name: find-CEntitySystem_PostDataUpdate-decompiles
         expected_output:
           - CEntityInstance_PostDataUpdatePreserve.{platform}.yaml
           - CEntityInstance_PostDataUpdateDelta.{platform}.yaml
@@ -5971,7 +5971,7 @@ modules:
       - name: find-CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup
         expected_output:
           - CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml
-      - name: find-g_pGameTypes-AND-IGameTypes_CreateWorkshopMapGroup
+      - name: find-CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup-decompiles
         expected_output:
           - g_pGameTypes.{platform}.yaml
           - IGameTypes_CreateWorkshopMapGroup.{platform}.yaml
@@ -6146,7 +6146,7 @@ modules:
       - name: find-CGamePlayerEquip_InputTriggerForActivatedPlayer
         expected_output:
           - CGamePlayerEquip_InputTriggerForActivatedPlayer.{platform}.yaml
-      - name: find-DispatchParticleEffect-AND-UTIL_PlayerSlotToPlayerPawn
+      - name: find-ParticleTestStart_CommandHandler-decompiles
         expected_output:
           - DispatchParticleEffect.{platform}.yaml
           - UTIL_PlayerSlotToPlayerPawn.{platform}.yaml
@@ -6432,7 +6432,7 @@ modules:
           - CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount.{platform}.yaml
         expected_input:
           - CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats.{platform}.yaml
-      - name: find-EntityInstanceAddChangeAccessorPath-AND-EntityInstanceAssignChangeAccessorPathIds
+      - name: find-CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount-AND-CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats-decompiles
         expected_output:
           - EntityInstanceAddChangeAccessorPath.{platform}.yaml
           - EntityInstanceAssignChangeAccessorPathIds.{platform}.yaml
@@ -6546,7 +6546,7 @@ modules:
         expected_input:
           - CLoopModeGame_OnServerBeginAsyncPostTickWork.{platform}.yaml
           - IGameSystem_vtable.{platform}.yaml
-      - name: find-IGameSystem_OnServerPreEndAsyncPostTickWork-AND-IGameSystem_OnServerPostEndAsyncPostTickWork
+      - name: find-CLoopModeGame_OnServerEndAsyncPostTickWork-decompiles
         expected_output:
           - IGameSystem_OnServerPreEndAsyncPostTickWork.{platform}.yaml
           - IGameSystem_OnServerPostEndAsyncPostTickWork.{platform}.yaml
@@ -6585,7 +6585,7 @@ modules:
       - name: find-CLoopModeGame_SetGameSystemState
         expected_output:
           - CLoopModeGame_SetGameSystemState.{platform}.yaml
-      - name: find-IGameSystem_DestroyAllGameSystems-AND-IGameSystem_LoopDestroyAllSystems-AND-IGameSystem_LoopPreShutdownAllSystems
+      - name: find-CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown-decompiles
         expected_output:
           - IGameSystem_DestroyAllGameSystems.{platform}.yaml
           - IGameSystem_LoopDestroyAllSystems.{platform}.yaml
@@ -6699,7 +6699,7 @@ modules:
         expected_input:
           - CEntitySaveRestoreBlockHandler_DoRestoreEntity.{platform}.yaml
           - CEntityInstance_vtable.{platform}.yaml
-      - name: find-CEntitySaveRestoreBlockHandler_SaveInitEntities-AND-CEntityInstance_OnSave
+      - name: find-CEntitySaveRestoreBlockHandler_PreSave-decompiles
         expected_output:
           - CEntitySaveRestoreBlockHandler_SaveInitEntities.{platform}.yaml
           - CEntityInstance_OnSave.{platform}.yaml
@@ -6712,7 +6712,7 @@ modules:
         expected_input:
           - CEntitySaveRestoreBlockHandler_SaveInitEntities.{platform}.yaml
           - CEntityInstance_vtable.{platform}.yaml
-      - name: find-CEntityInstance_ObjectCaps-AND-CEntityInstance_Save
+      - name: find-CEntitySaveRestoreBlockHandler_SaveInternal-decompiles
         expected_output:
           - CEntityInstance_ObjectCaps.{platform}.yaml
           - CEntityInstance_Save.{platform}.yaml
@@ -10237,7 +10237,7 @@ modules:
         expected_input:
           - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
           - ../engine/ILoopModeFactory_Shutdown.{platform}.yaml
-      - name: find-IEngineServiceMgr_GetEventDispatcher-AND-IGameSystem_ShutdownAllSystems
+      - name: find-CLoopModeFactory_CLoopModeGame_Shutdown-decompiles
         expected_output:
           - IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
           - IGameSystem_ShutdownAllSystems.{platform}.yaml
@@ -10258,7 +10258,7 @@ modules:
         expected_input:
           - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
           - ../engine/ILoopModeFactory_Shutdown.{platform}.yaml
-      - name: find-IEngineServiceMgr_GetEventDispatcher-AND-IGameSystem_ShutdownAllSystems
+      - name: find-CLoopModeFactory_CLoopModeGame_Shutdown-decompiles
         expected_output:
           - IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
           - IGameSystem_ShutdownAllSystems.{platform}.yaml
@@ -10289,7 +10289,7 @@ modules:
         expected_input:
           - CFlattenedSerializers_vtable.{platform}.yaml
           - ../server/IFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
-      - name: find-INetworkMessages_GetFieldChangeCallbackOrderCount-AND-INetworkMessages_GetFieldChangeCallbackPriorities
+      - name: find-CFlattenedSerializers_CreateFieldChangedEventQueue-decompiles
         expected_output:
           - INetworkMessages_GetFieldChangeCallbackOrderCount.{platform}.yaml
           - INetworkMessages_GetFieldChangeCallbackPriorities.{platform}.yaml

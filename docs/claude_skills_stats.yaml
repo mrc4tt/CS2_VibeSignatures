@@ -32,12 +32,12 @@ items:
     owner_func_name: CCSPlayer_MovementServices_FullWalkMove
     owner_module: server
   - symbol_name: CNetworkMessages_AllowAdditionalMessageRegistration
-    skill_name: find-CNetworkMessages_AllowAdditionalMessageRegistration-AND-CNetworkMessages_IsAdditionalMessageRegistrationAllowed
+    skill_name: find-CNetworkMessages_vtable-decompiles
     classicy: misc
     owner_func_name:
     owner_module: networksystem
   - symbol_name: CNetworkMessages_IsAdditionalMessageRegistrationAllowed
-    skill_name: find-CNetworkMessages_AllowAdditionalMessageRegistration-AND-CNetworkMessages_IsAdditionalMessageRegistrationAllowed
+    skill_name: find-CNetworkMessages_vtable-decompiles
     classicy: misc
     owner_func_name:
     owner_module: networksystem
