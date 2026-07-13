@@ -102,6 +102,12 @@ uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
   在 Scheduler 重启后恢复 pending entry，并在 Analyzer heartbeat 仍有效时避免重复启动。队列只接受经过校验的结构化
   字段，不执行 Redis payload 中的任意 shell 命令。
 
+* 可使用 `uv run uvicorn process_api:app --host 127.0.0.1 --port 8000` 启动只读进度 API。主要接口包括
+  `/api/v1/runs`、`/api/v1/runs/{run_id}/snapshot`、`/tasks`、`/events` 和 `/stream`。页面应先读取 snapshot，
+  再以 `snapshot_event_id` 作为 `after` 建立 SSE；断线后可通过 `Last-Event-ID` 恢复。服务默认仅监听本机且不内置认证，
+  对外部署时应置于认证反向代理之后。跨域来源可通过 `CS2VIBE_API_CORS_ORIGINS` 配置，SSE block 和 batch 分别使用
+  `CS2VIBE_SSE_BLOCK_MS`、`CS2VIBE_SSE_BATCH_SIZE` 调整；`/healthz` 和 `/readyz` 分别用于存活与 Redis 就绪检查。
+
 #### vcall_finder 相关
 
 * `-vcall_finder=g_pNetworkMessages` 会在模块级 `vcall_finder` 配置中筛选同名对象；`-vcall_finder=*` 会处理 `config.yaml` 中已声明的全部对象。

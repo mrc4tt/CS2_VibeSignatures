@@ -1092,9 +1092,19 @@ Lua、Streams、Consumer Group 等关键行为不能只依赖与真实 Redis 行
 
 ### Phase 5：FastAPI 读模型和 SSE
 
-- 实现 `process_status_reader_redis.py`。
-- 实现历史查询、快照、graph、Skill 详情和 SSE。
-- 增加 API 集成测试。
+状态：已完成（2026-07-13）。
+
+- 新增异步、只读的 `RedisProcessStatusReader`，复用统一 Key Builder，但不依赖 Redis 写模型或 Scheduler。
+- 新增 FastAPI app factory、显式 Pydantic response schemas、Redis readiness 和进程 liveness 接口。
+- 历史 Run 使用时间倒序的 `offset + limit` 分页，并支持 effective status 和 gamever 过滤。
+- 统一使用 `/tasks` 表达 Job、Skill、VCall target 和 Post-process 状态；详情路由使用 `{task_id:path}` 保留斜杠 ID。
+- 新增 `/snapshot`，先捕获 `snapshot_event_id` 再读取 meta、graph 和 task data，保证后续增量允许重复但不会遗漏。
+- queued Run 在 Reporter 初始化前返回 `graph: null`；单独请求 graph 时返回结构化 `graph_not_ready`。
+- API 根据 heartbeat 派生 running Run 的 stale 展示状态，不修改 Redis 中保存的原始状态。
+- REST events 使用排他 `after` 游标；SSE 支持 query、`Last-Event-ID`、Redis Stream ID、heartbeat comment 和批量 XREAD。
+- Stream 游标被 trimming 淘汰时，REST 返回 `cursor_expired`，SSE 发送 reset event 并要求客户端重新加载 snapshot。
+- 默认绑定本机、不内置认证；支持显式 CORS allowlist，响应使用字段 allowlist 隐藏 Redis 和 Scheduler 内部信息。
+- 新增真实 Redis Reader 集成测试和 FastAPI REST/SSE 测试，覆盖分页、stale、快照续读、斜杠 ID、resume/reset 和错误映射。
 
 ### Phase 6：Web 可视化
 

@@ -103,6 +103,13 @@ If DepotDownloader needs authentication, add the same `-username`, `-password`, 
   FIFO order, recovers pending entries after Scheduler restarts, and will not relaunch a recovered Run while its Analyzer
   heartbeat is still alive. Queue payloads are validated fields rather than executable shell commands.
 
+* Start the read-only progress API with `uv run uvicorn process_api:app --host 127.0.0.1 --port 8000`. The primary routes
+  are `/api/v1/runs`, `/api/v1/runs/{run_id}/snapshot`, `/tasks`, `/events`, and `/stream`. Clients should load a snapshot
+  first, then open SSE with its `snapshot_event_id` as `after`; reconnects can resume through `Last-Event-ID`. The service
+  binds to localhost by default and has no built-in authentication, so external deployments should place it behind an
+  authenticated reverse proxy. Configure browser origins with `CS2VIBE_API_CORS_ORIGINS`, tune SSE through
+  `CS2VIBE_SSE_BLOCK_MS` and `CS2VIBE_SSE_BATCH_SIZE`, and use `/healthz` and `/readyz` for liveness and Redis readiness.
+
 #### vcall_finder related
 
 * `-vcall_finder=g_pNetworkMessages` filters by an object declared in the module-level `vcall_finder` config; `-vcall_finder=*` processes every declared object from `config.yaml`.

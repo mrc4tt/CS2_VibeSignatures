@@ -5,6 +5,7 @@ description = "CS2 signature and offset generation utilities."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "fastapi>=0.139.0",
     "httpx",
     "mcp",
     "openai",
@@ -13,6 +14,7 @@ dependencies = [
     "redis",
     "requests",
     "ruamel.yaml>=0.19.1",
+    "uvicorn>=0.41.0",
     "vdf",
 ]
 
