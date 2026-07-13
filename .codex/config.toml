@@ -4,3 +4,43 @@ project_doc_fallback_filenames = ["CLAUDE.md"]
 # Always ask for approval mode
 approval_policy = "never"
 sandbox_mode    = "workspace-write"
+
+[[skills.config]]
+path = ".claude/skills/fix-cppheaders"
+enabled = true
+
+[[skills.config]]
+path = ".claude/skills/generate-reference-yaml"
+enabled = true
+
+[[skills.config]]
+path = ".claude/skills/recreate-tag-from-main"
+enabled = true
+
+[[skills.config]]
+path = ".claude/skills/rename-preprocessor-scripts"
+enabled = true
+
+[[skills.config]]
+path = ".claude/skills/run-validation-until-no-failure"
+enabled = true
+
+[[skills.config]]
+path = ".claude/skills/dump-vtables"
+enabled = true
+
+[[skills.config]]
+path = ".claude/skills/create-preprocessor-scripts"
+enabled = true
+
+[[skills.config]]
+path = ".claude/skills/create-cpp-tests"
+enabled = true
+
+[[skills.config]]
+path = ".claude/skills/convert-finder-skill-to-preprocessor-scripts"
+enabled = true
+
+[[skills.config]]
+path = ".claude/skills/cleanup-workspace"
+enabled = true
