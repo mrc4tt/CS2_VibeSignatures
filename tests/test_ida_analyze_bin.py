@@ -1594,6 +1594,47 @@ class TestProcessBinary(unittest.TestCase):
         self.assertEqual((1, 0, 1), (success, fail, skip))
         mock_run_skill.assert_not_called()
 
+    def test_process_binary_skips_preprocessor_and_runs_agent_skill_when_skil_pp_enabled(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_dir = Path(temp_dir) / "bin" / "14141" / "engine"
+            binary_dir.mkdir(parents=True, exist_ok=True)
+            binary_path = str(binary_dir / "libengine2.so")
+            fake_process = object()
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=fake_process),
+                patch.object(ida_analyze_bin, "ensure_mcp_available", return_value=(fake_process, True)),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_validate_expected_input_artifacts_via_mcp",
+                    return_value=[],
+                ),
+                patch.object(ida_analyze_bin, "_run_preprocess_single_skill_via_mcp") as mock_preprocess,
+                patch.object(ida_analyze_bin, "run_skill", return_value=True) as mock_run_skill,
+                patch.object(ida_analyze_bin, "quit_ida_gracefully", return_value=None),
+            ):
+                success, fail, skip = ida_analyze_bin.process_binary(
+                    binary_path=binary_path,
+                    skills=[
+                        {
+                            "name": "find-direct-agent-skill",
+                            "expected_output": ["DirectAgentSkill.{platform}.yaml"],
+                            "expected_input": [],
+                        }
+                    ],
+                    agent="codex",
+                    host="127.0.0.1",
+                    port=13337,
+                    ida_args="",
+                    platform="windows",
+                    max_retries=1,
+                    skil_pp=True,
+                )
+
+        self.assertEqual((1, 0, 0), (success, fail, skip))
+        mock_preprocess.assert_not_called()
+        mock_run_skill.assert_called_once()
+
     def test_process_binary_skips_when_all_skip_if_exists_artifacts_exist_before_ida_start(
         self,
     ) -> None:
@@ -3278,6 +3319,16 @@ class TestParseArgsLlmOptions(unittest.TestCase):
         self.assertTrue(args.skip_error)
 
     @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_accepts_skil_pp(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            ["ida_analyze_bin.py", "-gamever", "14141", "-skil_pp"],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertTrue(args.skil_pp)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
     def test_parse_args_accepts_agent_model(self, _mock_resolve_oldgamever) -> None:
         with patch(
             "sys.argv",
@@ -3990,6 +4041,7 @@ class TestMainPostProcessWiring(unittest.TestCase):
             llm_effort="high",
             llm_fake_as="codex",
             rename=True,
+            skil_pp=True,
         )
         mock_parse_config.return_value = [
             {
@@ -4010,6 +4062,7 @@ class TestMainPostProcessWiring(unittest.TestCase):
             ida_analyze_bin.main()
 
         self.assertTrue(captured["kwargs"]["rename"])
+        self.assertTrue(captured["kwargs"]["skil_pp"])
 
 
 if __name__ == "__main__":

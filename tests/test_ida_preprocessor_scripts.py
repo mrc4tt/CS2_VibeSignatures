@@ -29,10 +29,7 @@ I_GET_LOGGING_CHANNEL_WINDOWS_SCRIPT_PATH = Path(
 I_GET_LOGGING_CHANNEL_LINUX_SCRIPT_PATH = Path(
     "ida_preprocessor_scripts/find-INetworkMessages_GetLoggingChannel-linux.py"
 )
-NETWORK_GROUP_STATS_SCRIPT_PATH = Path(
-    "ida_preprocessor_scripts/"
-    "find-CNetworkSystem_SendNetworkStats-decompiles.py"
-)
+NETWORK_GROUP_STATS_SCRIPT_PATH = Path("ida_preprocessor_scripts/find-CNetworkSystem_SendNetworkStats-decompiles.py")
 REALLOCATING_FACTORY_SCRIPT_PATH = Path(
     "ida_preprocessor_scripts/find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.py"
 )
