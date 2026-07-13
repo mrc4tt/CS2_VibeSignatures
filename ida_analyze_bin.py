@@ -6,14 +6,15 @@ Analyzes CS2 binary files using IDA Pro MCP and Claude, Codex, or OpenCode agent
 Sequentially processes modules and symbols defined in config.yaml.
 
 Usage:
-    python ida_analyze_bin.py -gamever=14134 [-platform=windows,linux] [-agent=claude/codex/opencode]
-        [-agent_model=MODEL]
+    python ida_analyze_bin.py -gamever=14134 [-platform=windows,linux] [-skill=SKILL]
+        [-agent=claude/codex/opencode] [-agent_model=MODEL]
 
     -gamever: Game version subdirectory name (required)
     -oldgamever: Old game version for signature reuse (default: gamever - 1)
     -configyaml: Path to config.yaml file (default: config.yaml)
     -bindir: Directory containing downloaded binaries (default: bin)
     -platform: Platforms to analyze, comma-separated (default: windows,linux)
+    -skill: Exact skill name to run; all other skills are skipped
     -agent: Agent to use for analysis: claude, codex, or opencode (default: claude)
     -agent_model: Optional model override; OpenCode requires provider/model format
     -ida_args: Additional arguments for idalib-mcp (optional)
@@ -1156,6 +1157,11 @@ def parse_args():
         help=f"Modules to analyze, comma-separated (default: {DEFAULT_MODULES} for all). E.g., server,engine",
     )
     parser.add_argument(
+        "-skill",
+        default=None,
+        help="Exact skill name to run; all other skills are skipped",
+    )
+    parser.add_argument(
         "-vcall_finder", default=None, help="vcall_finder object selector: '*' for all, or comma-separated object names"
     )
     parser.add_argument(
@@ -1229,6 +1235,11 @@ def parse_args():
         args.module_filter = None  # None means all modules
     else:
         args.module_filter = [m.strip() for m in args.modules.split(",") if m.strip()]
+
+    if args.skill is not None:
+        args.skill = args.skill.strip()
+        if not args.skill:
+            parser.error("-skill cannot be empty")
 
     # Parse vcall_finder selector
     try:
@@ -1422,6 +1433,44 @@ def resolve_module_vcall_targets(module, selector):
 
     selected_names = selector.get("names", set())
     return [name for name in declared_objects if name and name in selected_names]
+
+
+def _select_skills_by_name(skills, selected_skill_name):
+    """Return only skills whose name exactly matches the requested name."""
+    if selected_skill_name is None:
+        return skills
+
+    normalized_name = str(selected_skill_name).strip()
+    return [skill for skill in skills if skill.get("name") == normalized_name]
+
+
+def _select_modules_by_skill(modules, selected_skill_name, module_filter=None):
+    """Filter modules to exact skill matches within the active module filter."""
+    if selected_skill_name is None:
+        return modules
+
+    selected_modules = []
+    available_skill_names = []
+    for module in modules:
+        module_name = module.get("name")
+        if module_filter is not None and module_name not in module_filter:
+            continue
+
+        module_skills = module.get("skills", [])
+        available_skill_names.extend(skill.get("name") for skill in module_skills if skill.get("name"))
+        selected_skills = _select_skills_by_name(module_skills, selected_skill_name)
+        if not selected_skills:
+            continue
+
+        selected_module = dict(module)
+        selected_module["skills"] = selected_skills
+        selected_modules.append(selected_module)
+
+    if selected_modules:
+        return selected_modules
+
+    available_label = ", ".join(sorted(set(available_skill_names))) or "(none)"
+    raise ValueError(f"Skill '{selected_skill_name}' not found; available skills: {available_label}")
 
 
 def topological_sort_skills(skills):
@@ -2643,6 +2692,7 @@ def main():
     debug = args.debug
     skip_error = getattr(args, "skip_error", False)
     skil_pp = getattr(args, "skil_pp", False)
+    selected_skill_name = getattr(args, "skill", None)
 
     # Validate config file exists
     if not os.path.exists(config_path):
@@ -2656,6 +2706,8 @@ def main():
     print(f"Old game version: {oldgamever or '(disabled)'}")
     print(f"Platforms: {', '.join(platforms)}")
     print(f"Modules filter: {args.modules}")
+    if selected_skill_name:
+        print(f"Skill filter: {selected_skill_name}")
     print(f"Agent: {agent}")
     if ida_args:
         print(f"IDA args: {ida_args}")
@@ -2674,6 +2726,12 @@ def main():
     if not modules:
         print("No modules found in config.")
         sys.exit(0)
+
+    try:
+        modules = _select_modules_by_skill(modules, selected_skill_name, module_filter)
+    except ValueError as exc:
+        print(f"Error: {exc}")
+        sys.exit(1)
 
     # Process each module
     total_success = 0

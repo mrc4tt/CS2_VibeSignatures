@@ -990,6 +990,35 @@ class TestConfigSkillDependencyGraph(unittest.TestCase):
         self.assertEqual([], gaps)
 
 
+class TestSkillSelection(unittest.TestCase):
+    def test_select_skills_by_name_uses_exact_match(self) -> None:
+        skills = [{"name": "find-target"}, {"name": "find-target-extra"}]
+
+        selected = ida_analyze_bin._select_skills_by_name(skills, "find-target")
+
+        self.assertEqual([{"name": "find-target"}], selected)
+
+    def test_select_modules_by_skill_keeps_all_exact_matches(self) -> None:
+        modules = [
+            {"name": "client", "skills": [{"name": "find-target"}, {"name": "find-client-only"}]},
+            {"name": "server", "skills": [{"name": "find-target"}, {"name": "find-server-only"}]},
+        ]
+
+        selected = ida_analyze_bin._select_modules_by_skill(modules, "find-target")
+
+        self.assertEqual(["client", "server"], [module["name"] for module in selected])
+        self.assertEqual([[{"name": "find-target"}], [{"name": "find-target"}]], [m["skills"] for m in selected])
+
+    def test_select_modules_by_skill_respects_module_filter(self) -> None:
+        modules = [
+            {"name": "client", "skills": [{"name": "find-client-only"}]},
+            {"name": "server", "skills": [{"name": "find-server-only"}]},
+        ]
+
+        with self.assertRaisesRegex(ValueError, "find-client-only"):
+            ida_analyze_bin._select_modules_by_skill(modules, "missing", ["client"])
+
+
 class TestPostProcessActionCollection(unittest.TestCase):
     def test_collect_post_process_yaml_mappings_skips_missing_invalid_and_duplicates(
         self,
@@ -3329,6 +3358,27 @@ class TestParseArgsLlmOptions(unittest.TestCase):
         self.assertTrue(args.skil_pp)
 
     @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_accepts_and_strips_skill(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            ["ida_analyze_bin.py", "-gamever", "14141", "-skill", "  find-target  "],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertEqual("find-target", args.skill)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_rejects_empty_skill(self, _mock_resolve_oldgamever) -> None:
+        with (
+            patch(
+                "sys.argv",
+                ["ida_analyze_bin.py", "-gamever", "14141", "-skill", "   "],
+            ),
+            self.assertRaises(SystemExit),
+        ):
+            ida_analyze_bin.parse_args()
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
     def test_parse_args_accepts_agent_model(self, _mock_resolve_oldgamever) -> None:
         with patch(
             "sys.argv",
@@ -4063,6 +4113,65 @@ class TestMainPostProcessWiring(unittest.TestCase):
 
         self.assertTrue(captured["kwargs"]["rename"])
         self.assertTrue(captured["kwargs"]["skil_pp"])
+
+
+class TestMainSkillFilterWiring(unittest.TestCase):
+    @patch.object(ida_analyze_bin, "process_binary", return_value=(1, 0, 0))
+    @patch.object(ida_analyze_bin, "parse_config")
+    @patch("ida_analyze_bin.os.path.exists", return_value=True)
+    @patch.object(ida_analyze_bin, "parse_args")
+    def test_main_runs_only_exact_skill_matches(
+        self,
+        mock_parse_args,
+        _mock_exists,
+        mock_parse_config,
+        mock_process_binary,
+    ) -> None:
+        mock_parse_args.return_value = SimpleNamespace(
+            configyaml="config.yaml",
+            bindir="bin",
+            gamever="14141",
+            oldgamever=None,
+            platforms=["windows"],
+            module_filter=None,
+            modules="*",
+            skill="find-target",
+            agent="codex",
+            agent_model="gpt-5.4",
+            ida_args="",
+            debug=False,
+            skip_error=False,
+            skil_pp=False,
+            maxretry=3,
+            vcall_finder_filter=None,
+            llm_model="gpt-4o",
+            llm_apikey=None,
+            llm_baseurl=None,
+            llm_temperature=None,
+            llm_effort="medium",
+            llm_fake_as=None,
+            rename=False,
+        )
+        mock_parse_config.return_value = [
+            {
+                "name": "client",
+                "skills": [{"name": "find-other"}],
+                "vcall_finder_objects": [],
+                "path_windows": "game/bin/win64/client.dll",
+            },
+            {
+                "name": "server",
+                "skills": [{"name": "find-target"}, {"name": "find-other"}],
+                "vcall_finder_objects": [],
+                "path_windows": "game/bin/win64/server.dll",
+            },
+        ]
+
+        ida_analyze_bin.main()
+
+        mock_process_binary.assert_called_once()
+        selected_skills = mock_process_binary.call_args.args[1]
+        self.assertEqual(["find-target"], [skill["name"] for skill in selected_skills])
 
 
 if __name__ == "__main__":
