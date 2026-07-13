@@ -6271,57 +6271,51 @@ modules:
       - name: find-CSource2EntitySystem_StaticInit
         expected_output:
           - CSource2EntitySystem_StaticInit.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CSource2EntitySystem_StaticInit-decompiles
-      #  expected_output:
-      #    - IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml
-      #    - g_pGameResourceService.{platform}.yaml
-      #    - g_pGameEntitySystem.{platform}.yaml
-      #    - CEntitySystem_m_entityIONotifiers.{platform}.yaml
-      #    - CGameEntitySystem_m_pEntity2SaveRestore.{platform}.yaml
-      #    - CEntitySystem_EnableAutoDeletionExecution.{platform}.yaml
-      #    - CEntitySystem_InstallPostSpawnCallback.{platform}.yaml
-      #    - CEntitySystem_InstallCreationWrapperCallbacks.{platform}.yaml
-      #  expected_output_linux:
-      #    - CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses.{platform}.yaml
-      #  expected_output_windows:
-      #    - CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml
-      #    - CGameEntitySystem_m_pEntity2Networkables.{platform}.yaml
-      #  expected_input:
-      #    - CSource2EntitySystem_StaticInit.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CGameEntitySystem_m_spawnGroupEntityFilters-windows
-      #  expected_output:
-      #    - CGameEntitySystem_m_spawnGroupEntityFilters.{platform}.yaml
-      #  expected_input:
-      #    - CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml
-      #  platform: windows
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CGameEntitySystem_m_pEntity2Networkables-linux
-      #  expected_output:
-      #    - CGameEntitySystem_m_pEntity2Networkables.{platform}.yaml
-      #  expected_input:
-      #    - CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses.{platform}.yaml
-      #  platform: linux
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CEntitySystem_m_EntityMaterialAttributes-linux
-      #  expected_output:
-      #    - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
-      #  expected_input:
-      #    - CEntitySystem_ProcessEntityRegistration.{platform}.yaml
-      #  platform: linux
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CEntitySystem_m_DataDescKeyUnserializers
-      #  expected_output:
-      #    - CEntitySystem_m_DataDescKeyUnserializers.{platform}.yaml
-      #  expected_input:
-      #    - CEntitySystem_InstallCreationWrapperCallbacks.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CEntitySystem_m_EntityPostSpawnCallback
-      #  expected_output:
-      #    - CEntitySystem_m_EntityPostSpawnCallback.{platform}.yaml
-      #  expected_input:
-      #    - CEntitySystem_InstallPostSpawnCallback.{platform}.yaml
+      - name: find-CSource2EntitySystem_StaticInit-decompiles
+        expected_output:
+          - IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml
+          - g_pGameResourceService.{platform}.yaml
+          - g_pGameEntitySystem.{platform}.yaml
+          - CEntitySystem_m_entityIONotifiers.{platform}.yaml
+          - CGameEntitySystem_m_pEntity2SaveRestore.{platform}.yaml
+          - CEntitySystem_EnableAutoDeletionExecution.{platform}.yaml
+          - CEntitySystem_InstallPostSpawnCallback.{platform}.yaml
+          - CEntitySystem_InstallCreationWrapperCallbacks.{platform}.yaml
+        expected_output_linux:
+          - CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses.{platform}.yaml
+        expected_output_windows:
+          - CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml
+          - CGameEntitySystem_m_pEntity2Networkables.{platform}.yaml
+        expected_input:
+          - CSource2EntitySystem_StaticInit.{platform}.yaml
+      - name: find-CGameEntitySystem_m_spawnGroupEntityFilters-windows
+        expected_output:
+          - CGameEntitySystem_m_spawnGroupEntityFilters.{platform}.yaml
+        expected_input:
+          - CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml
+        platform: windows
+      - name: find-CGameEntitySystem_m_pEntity2Networkables-linux
+        expected_output:
+          - CGameEntitySystem_m_pEntity2Networkables.{platform}.yaml
+        expected_input:
+          - CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses.{platform}.yaml
+        platform: linux
+      - name: find-CEntitySystem_m_EntityMaterialAttributes-linux
+        expected_output:
+          - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
+        expected_input:
+          - CEntitySystem_ProcessEntityRegistration.{platform}.yaml
+        platform: linux
+      - name: find-CEntitySystem_m_DataDescKeyUnserializers
+        expected_output:
+          - CEntitySystem_m_DataDescKeyUnserializers.{platform}.yaml
+        expected_input:
+          - CEntitySystem_InstallCreationWrapperCallbacks.{platform}.yaml
+      - name: find-CEntitySystem_m_EntityPostSpawnCallback
+        expected_output:
+          - CEntitySystem_m_EntityPostSpawnCallback.{platform}.yaml
+        expected_input:
+          - CEntitySystem_InstallPostSpawnCallback.{platform}.yaml
       - name: find-INetworkMessages_RegisterSchemaTypeOverride
         expected_output:
           - INetworkMessages_RegisterSchemaTypeOverride.{platform}.yaml
