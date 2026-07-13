@@ -1058,11 +1058,15 @@ Lua、Streams、Consumer Group 等关键行为不能只依赖与真实 Redis 行
 
 ### Phase 1：Graph 和领域模型
 
+状态：已完成（2026-07-13）。
+
 - 提取 `build_skill_graph()`。
 - 定义 ExecutionPlan、ID 和状态模型。
 - 保持现有拓扑排序测试兼容。
 
 ### Phase 2：Reporter 抽象接入
+
+状态：已完成（2026-07-13）。
 
 - 新增 `process_reporter.py`。
 - 新增 `NullProcessReporter` 和 factory。
