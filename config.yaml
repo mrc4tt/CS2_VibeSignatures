@@ -5515,16 +5515,12 @@ modules:
           - CEntitySystem_OnRemoveEntityFromDatabase.{platform}.yaml
           - CEntitySystem_DoDestructEntity.{platform}.yaml
           - CEntitySystem_UpdateOnRemove.{platform}.yaml
-        expected_input:
-          - CEntitySystem_DestroyEntityImmediate.{platform}.yaml
-          - CEntitySystem_vtable.{platform}.yaml
-      - name: find-CEntitySystem_m_nSuppressDestroyImmediateCount-AND-CEntitySystem_m_nSuppressAutoDeletionExecutionCount-AND-CEntitySystem_m_bEnableAutoDeletionExecution
-        expected_output:
           - CEntitySystem_m_nSuppressDestroyImmediateCount.{platform}.yaml
           - CEntitySystem_m_nSuppressAutoDeletionExecutionCount.{platform}.yaml
           - CEntitySystem_m_bEnableAutoDeletionExecution.{platform}.yaml
         expected_input:
           - CEntitySystem_DestroyEntityImmediate.{platform}.yaml
+          - CEntitySystem_vtable.{platform}.yaml
       - name: find-CEntitySystem_OnRemoveEntity
         expected_output:
           - CEntitySystem_OnRemoveEntity.{platform}.yaml
