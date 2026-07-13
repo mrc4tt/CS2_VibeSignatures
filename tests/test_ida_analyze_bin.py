@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import ida_analyze_bin
 from ida_mcp_session import McpDatabaseBinding, McpDatabaseSelectionError, McpToolCallError
+from process_reporter import EdgeType, PlanNodeType
 
 
 def _tool_result(payload):
@@ -701,6 +702,19 @@ class TestResolveArtifactPathIntegration(unittest.TestCase):
 
 
 class TestParseConfig(unittest.TestCase):
+    def test_parse_config_records_stable_stage_indexes(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.yaml"
+            config_path.write_text(
+                "modules:\n  - name: engine\n  - name: client\n  - name: engine\n",
+                encoding="utf-8",
+            )
+
+            modules = ida_analyze_bin.parse_config(str(config_path))
+
+        self.assertEqual([0, 1, 2], [module["stage_index"] for module in modules])
+        self.assertEqual(["engine", "client", "engine"], [module["name"] for module in modules])
+
     def test_parse_config_reads_skip_if_exists(self) -> None:
         with TemporaryDirectory() as temp_dir:
             config_path = Path(temp_dir) / "config.yaml"
@@ -903,6 +917,84 @@ downloads:
 
 
 class TestSkillOrdering(unittest.TestCase):
+    def test_build_skill_graph_matches_topological_sort_order(self) -> None:
+        skills = [
+            {"name": "consumer", "expected_input": ["Shared.{platform}.yaml"]},
+            {"name": "producer", "expected_output": ["Shared.{platform}.yaml"]},
+            {"name": "independent"},
+        ]
+
+        graph = ida_analyze_bin.build_skill_graph(skills)
+
+        self.assertEqual(ida_analyze_bin.topological_sort_skills(skills), graph.order)
+
+    def test_build_skill_graph_preserves_multiple_artifact_parents(self) -> None:
+        skills = [
+            {"name": "producer-a", "expected_output": ["A.{platform}.yaml"]},
+            {"name": "producer-b", "expected_output": ["B.{platform}.yaml"]},
+            {
+                "name": "consumer",
+                "expected_input": ["A.{platform}.yaml", "B.{platform}.yaml"],
+            },
+        ]
+
+        graph = ida_analyze_bin.build_skill_graph(skills)
+
+        artifact_edges = {
+            (edge.source, edge.target, edge.artifact) for edge in graph.edges if edge.edge_type == EdgeType.ARTIFACT
+        }
+        self.assertEqual(
+            {
+                ("producer-a", "consumer", "A.{platform}.yaml"),
+                ("producer-b", "consumer", "B.{platform}.yaml"),
+            },
+            artifact_edges,
+        )
+        self.assertEqual(1, graph.layers["consumer"])
+
+    def test_build_skill_graph_includes_platform_specific_dependencies(self) -> None:
+        skills = [
+            {"name": "windows-producer", "expected_output_windows": ["Windows.windows.yaml"]},
+            {"name": "linux-producer", "expected_output_linux": ["Linux.linux.yaml"]},
+            {
+                "name": "consumer",
+                "expected_input_windows": ["Windows.windows.yaml"],
+                "expected_input_linux": ["Linux.linux.yaml"],
+            },
+        ]
+
+        graph = ida_analyze_bin.build_skill_graph(skills)
+
+        self.assertEqual(
+            {("windows-producer", "consumer"), ("linux-producer", "consumer")},
+            {(edge.source, edge.target) for edge in graph.edges if edge.edge_type == EdgeType.ARTIFACT},
+        )
+
+    def test_build_skill_graph_keeps_prerequisite_edge_type(self) -> None:
+        graph = ida_analyze_bin.build_skill_graph(
+            [
+                {"name": "producer"},
+                {"name": "consumer", "prerequisite": ["producer"]},
+            ]
+        )
+
+        self.assertIn(
+            ("producer", "consumer", EdgeType.PREREQUISITE),
+            {(edge.source, edge.target, edge.edge_type) for edge in graph.edges},
+        )
+
+    def test_build_skill_graph_records_cycles_and_fallback_order(self) -> None:
+        skills = [
+            {"name": "second", "prerequisite": ["first"]},
+            {"name": "first", "prerequisite": ["second"]},
+        ]
+
+        graph = ida_analyze_bin.build_skill_graph(skills)
+
+        self.assertEqual(["second", "first"], graph.order)
+        self.assertEqual([["first", "second"]], graph.cycles)
+        self.assertEqual(1, len(graph.warnings))
+
     def test_topological_sort_skills_keeps_ilooptype_after_deactivateloop(
         self,
     ) -> None:
@@ -948,6 +1040,121 @@ class TestSkillOrdering(unittest.TestCase):
         ordered = ida_analyze_bin.topological_sort_skills(skills)
 
         self.assertEqual(["consumer", "optional_producer"], ordered)
+
+
+class TestExecutionPlan(unittest.TestCase):
+    def test_duplicate_module_names_get_distinct_stable_stage_ids(self) -> None:
+        modules = [
+            {
+                "stage_index": 5,
+                "name": "engine",
+                "path_windows": "game/bin/win64/engine2.dll",
+                "skills": [{"name": "producer", "expected_output": ["Shared.{platform}.yaml"]}],
+            },
+            {
+                "stage_index": 8,
+                "name": "engine",
+                "path_windows": "game/bin/win64/engine2.dll",
+                "skills": [{"name": "consumer", "expected_input": ["Shared.{platform}.yaml"]}],
+            },
+        ]
+
+        plan = ida_analyze_bin.build_execution_plan(
+            modules,
+            platforms=["windows"],
+            bin_dir="bin",
+            gamever="14141",
+        )
+
+        self.assertEqual(
+            ["stage-0005-engine", "stage-0008-engine"],
+            [stage.id for stage in plan.stages],
+        )
+        self.assertEqual(
+            ["stage-0005-engine-windows", "stage-0008-engine-windows"],
+            [job.id for job in plan.jobs],
+        )
+
+    def test_cross_stage_artifact_edges_use_resolved_full_paths(self) -> None:
+        modules = [
+            {
+                "stage_index": 1,
+                "name": "client",
+                "path_windows": "game/csgo/bin/win64/client.dll",
+                "skills": [{"name": "producer", "expected_output": ["Shared.{platform}.yaml"]}],
+            },
+            {
+                "stage_index": 2,
+                "name": "server",
+                "path_windows": "game/csgo/bin/win64/server.dll",
+                "skills": [
+                    {
+                        "name": "consumer",
+                        "expected_input": ["../client/Shared.{platform}.yaml"],
+                    }
+                ],
+            },
+        ]
+
+        plan = ida_analyze_bin.build_execution_plan(
+            modules,
+            platforms=["windows"],
+            bin_dir="bin",
+            gamever="14141",
+        )
+
+        edge = next(edge for edge in plan.edges if edge.edge_type == EdgeType.CROSS_STAGE_ARTIFACT)
+        self.assertEqual("stage-0001-client-windows/producer", edge.source)
+        self.assertEqual("stage-0002-server-windows/consumer", edge.target)
+        self.assertTrue(edge.artifact.endswith("client\\Shared.windows.yaml"))
+
+    def test_execution_plan_contains_skill_vcall_and_post_process_nodes(self) -> None:
+        modules = [
+            {
+                "name": "engine",
+                "path_windows": "game/bin/win64/engine2.dll",
+                "skills": [{"name": "find-target"}],
+                "vcall_finder_objects": ["g_pTarget"],
+            }
+        ]
+
+        plan = ida_analyze_bin.build_execution_plan(
+            modules,
+            platforms=["windows"],
+            bin_dir="bin",
+            gamever="14141",
+            vcall_finder_selector={"all": True},
+            include_post_process=True,
+        )
+
+        self.assertEqual(
+            [PlanNodeType.SKILL, PlanNodeType.VCALL_TARGET, PlanNodeType.POST_PROCESS],
+            [node.node_type for node in plan.nodes],
+        )
+        self.assertEqual(
+            [
+                "stage-0000-engine-windows/find-target",
+                "stage-0000-engine-windows/vcall/g_pTarget",
+                "stage-0000-engine-windows/post-process",
+            ],
+            [node.id for node in plan.nodes],
+        )
+
+    def test_execution_plan_omits_disabled_post_process_node(self) -> None:
+        plan = ida_analyze_bin.build_execution_plan(
+            [
+                {
+                    "name": "engine",
+                    "path_windows": "game/bin/win64/engine2.dll",
+                    "skills": [{"name": "find-target"}],
+                }
+            ],
+            platforms=["windows"],
+            bin_dir="bin",
+            gamever="14141",
+        )
+
+        self.assertEqual([PlanNodeType.SKILL], [node.node_type for node in plan.nodes])
 
 
 class TestConfigSkillDependencyGraph(unittest.TestCase):

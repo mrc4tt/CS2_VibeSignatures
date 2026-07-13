@@ -77,6 +77,22 @@ from ida_vcall_finder import (
     aggregate_vcall_results_for_object,
     export_object_xref_details_via_mcp,
 )
+from process_reporter import (
+    EdgeType,
+    ExecutionEdge,
+    ExecutionJob,
+    ExecutionNode,
+    ExecutionPlan,
+    ExecutionStage,
+    PlanNodeType,
+    SkillEdge,
+    SkillGraph,
+    build_job_id,
+    build_post_process_task_id,
+    build_stage_id,
+    build_task_id,
+    build_vcall_task_id,
+)
 
 load_dotenv()
 
@@ -1342,7 +1358,7 @@ def parse_config(config_path):
         config = yaml.safe_load(f)
 
     modules = []
-    for module in config.get("modules", []):
+    for stage_index, module in enumerate(config.get("modules", [])):
         name = module.get("name")
         if not name:
             print("  Warning: Skipping module without name")
@@ -1386,6 +1402,7 @@ def parse_config(config_path):
 
         modules.append(
             {
+                "stage_index": stage_index,
                 "name": name,
                 "path_windows": module.get("path_windows"),
                 "path_linux": module.get("path_linux"),
@@ -1473,96 +1490,460 @@ def _select_modules_by_skill(modules, selected_skill_name, module_filter=None):
     raise ValueError(f"Skill '{selected_skill_name}' not found; available skills: {available_label}")
 
 
-def topological_sort_skills(skills):
-    """
-    Perform topological sort on skills by building dependencies from
-    expected_input and expected_output relations.
+def _skill_artifact_paths(skill, base_key, platform=None):
+    paths = list(skill.get(base_key, []) or [])
+    if platform is None:
+        paths.extend(skill.get(f"{base_key}_windows", []) or [])
+        paths.extend(skill.get(f"{base_key}_linux", []) or [])
+    else:
+        paths.extend(skill.get(f"{base_key}_{platform}", []) or [])
+    return [path for path in paths if path]
 
-    Args:
-        skills: List of skill dicts with 'name', 'expected_input', and
-            'expected_output' keys. Legacy 'prerequisite' is accepted as fallback.
 
-    Returns:
-        List of skill names in topologically sorted order (dependencies first)
-    """
-    skill_names = {skill["name"] for skill in skills}
+def _normalized_artifact_keys(path):
+    normalized_path = os.path.normcase(os.path.normpath(path))
+    normalized_name = os.path.normcase(os.path.normpath(os.path.basename(path)))
+    return normalized_path, normalized_name
 
-    def normalize_artifact_path(path):
-        """Normalize artifact path for matching expected input/output."""
-        return os.path.normcase(os.path.normpath(path))
 
-    # output_path -> producer skill names
-    producers_by_output = {}
+def _build_artifact_producers(skills, platform=None):
+    producers = {}
     for skill in skills:
         producer_name = skill["name"]
-        all_outputs = list(skill.get("expected_output", []) or [])
-        all_outputs += list(skill.get("expected_output_windows", []) or [])
-        all_outputs += list(skill.get("expected_output_linux", []) or [])
-        for output_path in all_outputs:
-            if not output_path:
-                continue
-            normalized_output = normalize_artifact_path(output_path)
-            output_name = normalize_artifact_path(os.path.basename(output_path))
-            producers_by_output.setdefault(normalized_output, set()).add(producer_name)
-            producers_by_output.setdefault(output_name, set()).add(producer_name)
+        for output_path in _skill_artifact_paths(skill, "expected_output", platform):
+            for key in _normalized_artifact_keys(output_path):
+                producers.setdefault(key, set()).add(producer_name)
+    return producers
 
-    # Infer dependencies from expected_input files (including platform-specific).
-    # If a skill consumes an artifact produced by another skill, it depends on it.
+
+def _build_skill_dependencies(skills, platform=None):
+    skill_names = {skill["name"] for skill in skills}
+    producers = _build_artifact_producers(skills, platform)
     dependencies = {name: set() for name in skill_names}
+    edges = []
+    edge_keys = set()
     for skill in skills:
-        consumer_name = skill["name"]
-        all_inputs = list(skill.get("expected_input", []) or [])
-        all_inputs += list(skill.get("expected_input_windows", []) or [])
-        all_inputs += list(skill.get("expected_input_linux", []) or [])
-        for input_path in all_inputs:
-            if not input_path:
-                continue
+        consumer = skill["name"]
+        for input_path in _skill_artifact_paths(skill, "expected_input", platform):
+            path_key, name_key = _normalized_artifact_keys(input_path)
+            inferred = set(producers.get(path_key, set()))
+            if not inferred:
+                inferred.update(producers.get(name_key, set()))
+            inferred.discard(consumer)
+            for producer in sorted(inferred):
+                dependencies[consumer].add(producer)
+                edge_key = (producer, consumer, EdgeType.ARTIFACT, input_path)
+                if edge_key not in edge_keys:
+                    edges.append(SkillEdge(producer, consumer, EdgeType.ARTIFACT, input_path))
+                    edge_keys.add(edge_key)
+        for prerequisite in skill.get("prerequisite", []) or []:
+            if prerequisite in skill_names and prerequisite != consumer:
+                dependencies[consumer].add(prerequisite)
+                edge_key = (prerequisite, consumer, EdgeType.PREREQUISITE, None)
+                if edge_key not in edge_keys:
+                    edges.append(SkillEdge(prerequisite, consumer, EdgeType.PREREQUISITE))
+                    edge_keys.add(edge_key)
+    return dependencies, edges
 
-            normalized_input = normalize_artifact_path(input_path)
-            input_name = normalize_artifact_path(os.path.basename(input_path))
 
-            inferred_prereqs = set(producers_by_output.get(normalized_input, set()))
-            if not inferred_prereqs:
-                inferred_prereqs.update(producers_by_output.get(input_name, set()))
-            inferred_prereqs.discard(consumer_name)
-            dependencies[consumer_name].update(inferred_prereqs)
+def _topological_order_with_fallback(dependencies, skills):
+    in_degree = {name: len(prerequisites) for name, prerequisites in dependencies.items()}
+    dependents = {name: [] for name in dependencies}
+    for consumer, prerequisites in dependencies.items():
+        for prerequisite in prerequisites:
+            dependents[prerequisite].append(consumer)
 
-        # Backward compatibility: retain explicit prerequisite links if configured.
-        for prereq in skill.get("prerequisite", []) or []:
-            if prereq in skill_names and prereq != consumer_name:
-                dependencies[consumer_name].add(prereq)
-
-    # Build in-degree count and adjacency list
-    in_degree = {name: len(dependencies[name]) for name in skill_names}
-    dependents = {name: [] for name in skill_names}  # prereq -> list of dependent skills
-    for consumer_name, prereqs in dependencies.items():
-        for prereq in prereqs:
-            dependents[prereq].append(consumer_name)
-
-    # Kahn's algorithm for topological sort
-    queue = sorted(name for name in skill_names if in_degree[name] == 0)
-
-    sorted_names = []
+    queue = sorted(name for name, degree in in_degree.items() if degree == 0)
+    order = []
     while queue:
         current = queue.pop(0)
-        sorted_names.append(current)
-
+        order.append(current)
         for dependent in sorted(dependents[current]):
             in_degree[dependent] -= 1
             if in_degree[dependent] == 0:
                 queue.append(dependent)
         queue.sort()
 
-    # Check for cycles
-    if len(sorted_names) != len(skill_names):
-        remaining = skill_names - set(sorted_names)
-        print(f"  Warning: Circular dependency detected among skills: {remaining}")
-        # Append remaining skills in original order as fallback
-        for skill in skills:
-            if skill["name"] not in sorted_names:
-                sorted_names.append(skill["name"])
+    blocked = set(dependencies) - set(order)
+    for skill in skills:
+        if skill["name"] in blocked and skill["name"] not in order:
+            order.append(skill["name"])
+    return order, blocked
 
-    return sorted_names
+
+def _find_dependency_cycles(dependencies):
+    index = 0
+    indexes = {}
+    lowlinks = {}
+    stack = []
+    on_stack = set()
+    cycles = []
+
+    def visit(node):
+        nonlocal index
+        indexes[node] = index
+        lowlinks[node] = index
+        index += 1
+        stack.append(node)
+        on_stack.add(node)
+        for dependency in sorted(dependencies[node]):
+            if dependency not in indexes:
+                visit(dependency)
+                lowlinks[node] = min(lowlinks[node], lowlinks[dependency])
+            elif dependency in on_stack:
+                lowlinks[node] = min(lowlinks[node], indexes[dependency])
+        if lowlinks[node] != indexes[node]:
+            return
+        component = []
+        while stack:
+            member = stack.pop()
+            on_stack.remove(member)
+            component.append(member)
+            if member == node:
+                break
+        if len(component) > 1:
+            cycles.append(sorted(component))
+
+    for node in sorted(dependencies):
+        if node not in indexes:
+            visit(node)
+    return sorted(cycles)
+
+
+def _calculate_skill_layers(dependencies, cycles):
+    cycle_components = {member: frozenset(cycle) for cycle in cycles for member in cycle}
+    components = {cycle_components.get(node, frozenset([node])) for node in dependencies}
+    component_dependencies = {component: set() for component in components}
+    for node, prerequisites in dependencies.items():
+        component = cycle_components.get(node, frozenset([node]))
+        for prerequisite in prerequisites:
+            dependency_component = cycle_components.get(prerequisite, frozenset([prerequisite]))
+            if dependency_component != component:
+                component_dependencies[component].add(dependency_component)
+
+    component_layers = {}
+
+    def resolve_layer(component):
+        if component not in component_layers:
+            dependency_layers = [resolve_layer(item) for item in component_dependencies[component]]
+            component_layers[component] = 1 + max(dependency_layers) if dependency_layers else 0
+        return component_layers[component]
+
+    return {node: resolve_layer(cycle_components.get(node, frozenset([node]))) for node in dependencies}
+
+
+def _build_skill_graph(skills, platform=None):
+    dependencies, edges = _build_skill_dependencies(skills, platform)
+    order, blocked = _topological_order_with_fallback(dependencies, skills)
+    cycles = _find_dependency_cycles(dependencies)
+    warnings = []
+    if blocked:
+        warnings.append(f"Circular dependency detected among skills: {sorted(blocked)}")
+    return SkillGraph(
+        nodes={skill["name"]: dict(skill) for skill in skills},
+        edges=edges,
+        order=order,
+        layers=_calculate_skill_layers(dependencies, cycles),
+        cycles=cycles,
+        warnings=warnings,
+    )
+
+
+def build_skill_graph(skills):
+    """Build the complete skill DAG without changing legacy ordering semantics."""
+    return _build_skill_graph(skills)
+
+
+def topological_sort_skills(skills):
+    """Return dependency-first skill names, retaining legacy cycle fallback."""
+    graph = build_skill_graph(skills)
+    for warning in graph.warnings:
+        print(f"  Warning: {warning}")
+    return graph.order
+
+
+def _skill_runs_on_platform(skill, platform):
+    configured_platform = skill.get("platform")
+    return configured_platform is None or configured_platform == platform
+
+
+def _build_execution_skill_nodes(*, stage, job, skills, order_graph, platform_graph):
+    skill_map = {skill["name"]: skill for skill in skills}
+    nodes = []
+    for order, skill_name in enumerate(order_graph.order):
+        skill = skill_map[skill_name]
+        nodes.append(
+            ExecutionNode(
+                id=build_task_id(job.id, skill_name),
+                job_id=job.id,
+                stage_id=stage.id,
+                name=skill_name,
+                node_type=PlanNodeType.SKILL,
+                order=order,
+                layer=platform_graph.layers.get(skill_name, 0),
+                data=dict(skill),
+            )
+        )
+    return nodes
+
+
+def _append_execution_auxiliary_nodes(
+    nodes,
+    *,
+    module,
+    stage,
+    job,
+    vcall_finder_selector,
+    include_post_process,
+):
+    next_order = len(nodes)
+    next_layer = max((node.layer for node in nodes), default=-1) + 1
+    for target_name in resolve_module_vcall_targets(module, vcall_finder_selector):
+        nodes.append(
+            ExecutionNode(
+                id=build_vcall_task_id(job.id, target_name),
+                job_id=job.id,
+                stage_id=stage.id,
+                name=target_name,
+                node_type=PlanNodeType.VCALL_TARGET,
+                order=next_order,
+                layer=next_layer,
+            )
+        )
+        next_order += 1
+    if include_post_process and module.get("skills"):
+        nodes.append(
+            ExecutionNode(
+                id=build_post_process_task_id(job.id),
+                job_id=job.id,
+                stage_id=stage.id,
+                name="post-process",
+                node_type=PlanNodeType.POST_PROCESS,
+                order=next_order,
+                layer=next_layer + 1,
+            )
+        )
+    return nodes
+
+
+def _build_execution_job_edges(job, platform_graph, nodes):
+    edges = [
+        ExecutionEdge(
+            source=build_task_id(job.id, edge.source),
+            target=build_task_id(job.id, edge.target),
+            edge_type=edge.edge_type,
+            artifact=edge.artifact,
+        )
+        for edge in platform_graph.edges
+    ]
+    edges.extend(
+        ExecutionEdge(source=source.id, target=target.id, edge_type=EdgeType.STAGE_ORDER)
+        for source, target in zip(nodes, nodes[1:])
+    )
+    return edges
+
+
+def _build_execution_job_nodes(
+    module,
+    *,
+    stage,
+    job,
+    platform,
+    vcall_finder_selector,
+    include_post_process,
+):
+    skills = module.get("skills", []) or []
+    order_graph = build_skill_graph(skills)
+    active_skills = [skill for skill in skills if _skill_runs_on_platform(skill, platform)]
+    platform_graph = _build_skill_graph(active_skills, platform)
+    nodes = _build_execution_skill_nodes(
+        stage=stage,
+        job=job,
+        skills=skills,
+        order_graph=order_graph,
+        platform_graph=platform_graph,
+    )
+    nodes = _append_execution_auxiliary_nodes(
+        nodes,
+        module=module,
+        stage=stage,
+        job=job,
+        vcall_finder_selector=vcall_finder_selector,
+        include_post_process=include_post_process,
+    )
+    edges = _build_execution_job_edges(job, platform_graph, nodes)
+    warnings = [f"{job.id}: {warning}" for warning in order_graph.warnings]
+    return nodes, edges, warnings, active_skills
+
+
+def _resolve_execution_artifacts(job, active_skills, platform):
+    binary_dir = os.path.dirname(job.binary_path) if job.binary_path else None
+    producers = []
+    consumers = []
+    warnings = []
+    if binary_dir is None:
+        return producers, consumers, warnings
+
+    for skill in active_skills:
+        node_id = build_task_id(job.id, skill["name"])
+        path_groups = (
+            ("expected_output", producers),
+            ("expected_input", consumers),
+        )
+        for base_key, records in path_groups:
+            for artifact_path in _skill_artifact_paths(skill, base_key, platform):
+                try:
+                    resolved_path = resolve_artifact_path(binary_dir, artifact_path, platform)
+                except ValueError as exc:
+                    warnings.append(f"{node_id}: {exc}")
+                    continue
+                records.append(
+                    {
+                        "key": os.path.normcase(os.path.normpath(resolved_path)),
+                        "artifact": resolved_path,
+                        "job_id": job.id,
+                        "stage_id": job.stage_id,
+                        "stage_index": job.stage_index,
+                        "node_id": node_id,
+                    }
+                )
+    return producers, consumers, warnings
+
+
+def _build_cross_stage_artifact_edges(producers, consumers, job_positions):
+    producers_by_path = {}
+    for producer in producers:
+        producers_by_path.setdefault(producer["key"], []).append(producer)
+
+    edges = []
+    warnings = []
+    seen_edges = set()
+    for consumer in consumers:
+        for producer in producers_by_path.get(consumer["key"], []):
+            if producer["stage_id"] == consumer["stage_id"]:
+                continue
+            edge_key = (producer["node_id"], consumer["node_id"], consumer["key"])
+            if edge_key in seen_edges:
+                continue
+            seen_edges.add(edge_key)
+            edges.append(
+                ExecutionEdge(
+                    source=producer["node_id"],
+                    target=consumer["node_id"],
+                    edge_type=EdgeType.CROSS_STAGE_ARTIFACT,
+                    artifact=consumer["artifact"],
+                )
+            )
+            if job_positions[producer["job_id"]] > job_positions[consumer["job_id"]]:
+                warnings.append(
+                    "Cross-stage artifact dependency conflicts with execution order: "
+                    f"{producer['node_id']} -> {consumer['node_id']}"
+                )
+    return edges, warnings
+
+
+def _build_execution_job_plan(
+    module,
+    *,
+    stage,
+    platform,
+    bin_dir,
+    gamever,
+    vcall_finder_selector,
+    include_post_process,
+):
+    module_path = module.get(f"path_{platform}")
+    binary_path = get_binary_path(bin_dir, gamever, module["name"], module_path) if module_path else None
+    job = ExecutionJob(
+        id=build_job_id(stage.id, platform),
+        stage_id=stage.id,
+        stage_index=stage.stage_index,
+        module_name=module["name"],
+        platform=platform,
+        binary_path=binary_path,
+    )
+    nodes, edges, warnings, active_skills = _build_execution_job_nodes(
+        module,
+        stage=stage,
+        job=job,
+        platform=platform,
+        vcall_finder_selector=vcall_finder_selector,
+        include_post_process=include_post_process,
+    )
+    producers, consumers, artifact_warnings = _resolve_execution_artifacts(job, active_skills, platform)
+    warnings.extend(artifact_warnings)
+    return job, nodes, edges, warnings, producers, consumers
+
+
+def _build_execution_control_edges(stages, jobs):
+    edges = [
+        ExecutionEdge(source=source.id, target=target.id, edge_type=EdgeType.STAGE_ORDER)
+        for source, target in zip(stages, stages[1:])
+    ]
+    edges.extend(
+        ExecutionEdge(source=source.id, target=target.id, edge_type=EdgeType.STAGE_ORDER)
+        for source, target in zip(jobs, jobs[1:])
+    )
+    return edges
+
+
+def _build_execution_stage(module, fallback_index):
+    stage_index = module.get("stage_index", fallback_index)
+    return ExecutionStage(
+        id=build_stage_id(stage_index, module["name"]),
+        stage_index=stage_index,
+        module_name=module["name"],
+    )
+
+
+def build_execution_plan(
+    modules,
+    *,
+    platforms,
+    bin_dir,
+    gamever,
+    vcall_finder_selector=None,
+    include_post_process=False,
+):
+    """Build the immutable task hierarchy and dependency graph before execution."""
+    stages = []
+    jobs = []
+    nodes = []
+    edges = []
+    warnings = []
+    artifact_producers = []
+    artifact_consumers = []
+
+    for fallback_index, module in enumerate(modules):
+        stage = _build_execution_stage(module, fallback_index)
+        stages.append(stage)
+        for platform in platforms:
+            job, job_nodes, job_edges, job_warnings, producers, consumers = _build_execution_job_plan(
+                module,
+                stage=stage,
+                platform=platform,
+                bin_dir=bin_dir,
+                gamever=gamever,
+                vcall_finder_selector=vcall_finder_selector,
+                include_post_process=include_post_process,
+            )
+            jobs.append(job)
+            nodes.extend(job_nodes)
+            edges.extend(job_edges)
+            warnings.extend(job_warnings)
+            artifact_producers.extend(producers)
+            artifact_consumers.extend(consumers)
+
+    edges.extend(_build_execution_control_edges(stages, jobs))
+    job_positions = {job.id: position for position, job in enumerate(jobs)}
+    cross_edges, cross_warnings = _build_cross_stage_artifact_edges(
+        artifact_producers,
+        artifact_consumers,
+        job_positions,
+    )
+    edges.extend(cross_edges)
+    warnings.extend(cross_warnings)
+    return ExecutionPlan(stages=stages, jobs=jobs, nodes=nodes, edges=edges, warnings=warnings)
 
 
 def should_start_binary_processing(
