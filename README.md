@@ -98,6 +98,11 @@ If DepotDownloader needs authentication, add the same `-username`, `-password`, 
   heartbeat. Temporary Redis failures do not change the Analyzer result; the latest local snapshots are replayed after
   reconnection.
 
+* Queue Analyzer runs with `uv run python process_scheduler_cli.py submit --gamever 14141 --agent codex`, then start the
+  single-concurrency worker with `uv run python process_scheduler_cli.py run`. The Redis Stream consumer group preserves
+  FIFO order, recovers pending entries after Scheduler restarts, and will not relaunch a recovered Run while its Analyzer
+  heartbeat is still alive. Queue payloads are validated fields rather than executable shell commands.
+
 #### vcall_finder related
 
 * `-vcall_finder=g_pNetworkMessages` filters by an object declared in the module-level `vcall_finder` config; `-vcall_finder=*` processes every declared object from `config.yaml`.

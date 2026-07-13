@@ -97,6 +97,11 @@ uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
   `-redis_prefix=...` 参数。Reporter 会写入不可变 ExecutionPlan、Run/Job/Skill 最新快照、事件 Stream、原子汇总计数
   与带 TTL 的 heartbeat。Redis 暂时不可用不会改变 Analyzer 结果，恢复连接后会重放最新本地快照。
 
+* 可使用 `uv run python process_scheduler_cli.py submit --gamever 14141 --agent codex` 提交任务，再通过
+  `uv run python process_scheduler_cli.py run` 启动单并发 Scheduler。Redis Stream Consumer Group 会保持 FIFO 顺序、
+  在 Scheduler 重启后恢复 pending entry，并在 Analyzer heartbeat 仍有效时避免重复启动。队列只接受经过校验的结构化
+  字段，不执行 Redis payload 中的任意 shell 命令。
+
 #### vcall_finder 相关
 
 * `-vcall_finder=g_pNetworkMessages` 会在模块级 `vcall_finder` 配置中筛选同名对象；`-vcall_finder=*` 会处理 `config.yaml` 中已声明的全部对象。

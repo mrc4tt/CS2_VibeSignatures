@@ -1084,6 +1084,8 @@ Lua、Streams、Consumer Group 等关键行为不能只依赖与真实 Redis 行
 
 ### Phase 4：Scheduler
 
+状态：已完成（2026-07-13）。
+
 - 实现 Redis Stream Run Queue。
 - 实现单并发 Scheduler 和 pending recovery。
 - 保留手工 CLI 运行方式。

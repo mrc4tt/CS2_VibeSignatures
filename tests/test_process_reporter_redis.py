@@ -68,6 +68,7 @@ class TestRedisKeyBuilder(unittest.TestCase):
         keys = RedisKeyBuilder(" :cs2vibe:test: ")
 
         self.assertEqual("cs2vibe:test:runs", keys.runs)
+        self.assertEqual("cs2vibe:test:run-queue", keys.run_queue)
         self.assertEqual("cs2vibe:test:run:run-1:events", keys.events("run-1"))
         with self.assertRaises(ValueError):
             RedisKeyBuilder("::")

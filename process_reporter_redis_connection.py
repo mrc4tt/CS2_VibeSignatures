@@ -42,6 +42,10 @@ class RedisKeyBuilder:
     def running(self) -> str:
         return f"{self.prefix}:running"
 
+    @property
+    def run_queue(self) -> str:
+        return f"{self.prefix}:run-queue"
+
     def run_meta(self, run_id: str) -> str:
         return f"{self.prefix}:run:{run_id}:meta"
 

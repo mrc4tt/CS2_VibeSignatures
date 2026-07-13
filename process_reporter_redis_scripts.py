@@ -177,3 +177,114 @@ redis.call(
 redis.call('SREM', KEYS[2], ARGV[4])
 return 1
 """
+
+
+SUBMIT_RUN_LUA = r"""
+if redis.call('HEXISTS', KEYS[3], 'status') == 1 then
+    return {0, 'run_exists'}
+end
+
+local run_id = ARGV[1]
+local created_at = ARGV[2]
+local score = tonumber(ARGV[3])
+local payload = cjson.decode(ARGV[4])
+local maxlen = tonumber(ARGV[5])
+local entry_id = redis.call(
+    'XADD', KEYS[1], '*',
+    'run_id', run_id,
+    'gamever', payload.gamever,
+    'platforms', payload.platforms,
+    'modules', payload.modules,
+    'skill_filter', payload.skill_filter,
+    'agent', payload.agent,
+    'created_at', created_at
+)
+
+redis.call('ZADD', KEYS[2], 'NX', score, run_id)
+redis.call(
+    'HSET', KEYS[3],
+    'status', 'queued',
+    'gamever', payload.gamever,
+    'agent', payload.agent,
+    'created_at', created_at,
+    'updated_at', created_at,
+    'queue_entry_id', entry_id,
+    'total', 0,
+    'pending', 0,
+    'running', 0,
+    'succeeded', 0,
+    'failed', 0,
+    'skipped', 0,
+    'aborted', 0,
+    'run_revision', 0
+)
+local event_id = redis.call(
+    'XADD', KEYS[4], 'MAXLEN', '~', maxlen, '*',
+    'type', 'run.queued',
+    'run_id', run_id,
+    'status', 'queued',
+    'occurred_at', created_at,
+    'revision', '0',
+    'data', ARGV[4]
+)
+redis.call('HSET', KEYS[3], 'last_event_id', event_id)
+return {1, entry_id, event_id}
+"""
+
+
+SCHEDULER_RUN_TRANSITION_LUA = r"""
+local old_status = redis.call('HGET', KEYS[1], 'status')
+local new_status = ARGV[2]
+if not old_status then
+    return {-2, 'missing_run'}
+end
+if old_status == 'succeeded' or old_status == 'failed' or old_status == 'aborted' then
+    return {0, old_status}
+end
+
+local allowed = {
+    queued = {starting=true, failed=true, aborted=true},
+    starting = {succeeded=true, failed=true, aborted=true},
+    running = {succeeded=true, failed=true, aborted=true},
+    stale = {succeeded=true, failed=true, aborted=true}
+}
+if old_status ~= new_status and not (allowed[old_status] and allowed[old_status][new_status]) then
+    return {-1, 'invalid_transition'}
+end
+
+redis.call(
+    'HSET', KEYS[1],
+    'status', new_status,
+    'updated_at', ARGV[3],
+    'scheduler_consumer', ARGV[4],
+    'queue_entry_id', ARGV[5]
+)
+if new_status == 'starting' then
+    redis.call('HSETNX', KEYS[1], 'scheduler_started_at', ARGV[3])
+elseif new_status == 'succeeded' or new_status == 'failed' or new_status == 'aborted' then
+    redis.call(
+        'HSET', KEYS[1],
+        'finished_at', ARGV[3],
+        'scheduler_exit_code', ARGV[6],
+        'error_summary', ARGV[7]
+    )
+    redis.call('SREM', KEYS[2], ARGV[1])
+end
+
+local event_id = redis.call(
+    'XADD', KEYS[3], 'MAXLEN', '~', tonumber(ARGV[8]), '*',
+    'type', 'run.status_changed',
+    'status', new_status,
+    'occurred_at', ARGV[3],
+    'revision', redis.call('HGET', KEYS[1], 'run_revision') or '0',
+    'data', cjson.encode({
+        status=new_status,
+        scheduler_consumer=ARGV[4],
+        queue_entry_id=ARGV[5],
+        exit_code=ARGV[6],
+        error=ARGV[7]
+    })
+)
+redis.call('HSET', KEYS[1], 'last_event_id', event_id)
+return {1, event_id}
+"""
