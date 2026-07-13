@@ -10230,107 +10230,95 @@ modules:
   - name: client  # Execute Shutdown-dependent client skills after engine2.dll generates ILoopModeFactory_Shutdown
     path_windows: game/csgo/bin/win64/client.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libclient.so
-    skills: []
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CLoopModeFactory_CLoopModeGame_Shutdown
-      #  expected_output:
-      #    - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
-      #  expected_input:
-      #    - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
-      #    - ../engine/ILoopModeFactory_Shutdown.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-IEngineServiceMgr_GetEventDispatcher-AND-IGameSystem_ShutdownAllSystems
-      #  expected_output:
-      #    - IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
-      #    - IGameSystem_ShutdownAllSystems.{platform}.yaml
-      #  expected_input:
-      #    - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-IGameSystemFactory_Shutdown
-      #  expected_output:
-      #    - IGameSystemFactory_Shutdown.{platform}.yaml
-      #  expected_input:
-      #    - IGameSystem_ShutdownAllSystems.{platform}.yaml
+    skills:
+      - name: find-CLoopModeFactory_CLoopModeGame_Shutdown
+        expected_output:
+          - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
+        expected_input:
+          - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
+          - ../engine/ILoopModeFactory_Shutdown.{platform}.yaml
+      - name: find-IEngineServiceMgr_GetEventDispatcher-AND-IGameSystem_ShutdownAllSystems
+        expected_output:
+          - IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
+          - IGameSystem_ShutdownAllSystems.{platform}.yaml
+        expected_input:
+          - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
+      - name: find-IGameSystemFactory_Shutdown
+        expected_output:
+          - IGameSystemFactory_Shutdown.{platform}.yaml
+        expected_input:
+          - IGameSystem_ShutdownAllSystems.{platform}.yaml
   - name: server  # Execute Shutdown-dependent server skills after engine2.dll generates ILoopModeFactory_Shutdown
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
-    skills: []
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CLoopModeFactory_CLoopModeGame_Shutdown
-      #  expected_output:
-      #    - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
-      #  expected_input:
-      #    - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
-      #    - ../engine/ILoopModeFactory_Shutdown.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-IEngineServiceMgr_GetEventDispatcher-AND-IGameSystem_ShutdownAllSystems
-      #  expected_output:
-      #    - IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
-      #    - IGameSystem_ShutdownAllSystems.{platform}.yaml
-      #  expected_input:
-      #    - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-IGameSystemFactory_Shutdown
-      #  expected_output:
-      #    - IGameSystemFactory_Shutdown.{platform}.yaml
-      #  expected_input:
-      #    - IGameSystem_ShutdownAllSystems.{platform}.yaml
+    skills:
+      - name: find-CLoopModeFactory_CLoopModeGame_Shutdown
+        expected_output:
+          - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
+        expected_input:
+          - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
+          - ../engine/ILoopModeFactory_Shutdown.{platform}.yaml
+      - name: find-IEngineServiceMgr_GetEventDispatcher-AND-IGameSystem_ShutdownAllSystems
+        expected_output:
+          - IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
+          - IGameSystem_ShutdownAllSystems.{platform}.yaml
+        expected_input:
+          - CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml
+      - name: find-IGameSystemFactory_Shutdown
+        expected_output:
+          - IGameSystemFactory_Shutdown.{platform}.yaml
+        expected_input:
+          - IGameSystem_ShutdownAllSystems.{platform}.yaml
   - name: engine  # Execute GetEventDispatcher after late client IEngineServiceMgr output
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
-    skills: []
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CEngineServiceMgr_GetEventDispatcher
-      #  expected_output:
-      #    - CEngineServiceMgr_GetEventDispatcher.{platform}.yaml
-      #  expected_input:
-      #    - CEngineServiceMgr_vtable.{platform}.yaml
-      #    - ../client/IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
+    skills:
+      - name: find-CEngineServiceMgr_GetEventDispatcher
+        expected_output:
+          - CEngineServiceMgr_GetEventDispatcher.{platform}.yaml
+        expected_input:
+          - CEngineServiceMgr_vtable.{platform}.yaml
+          - ../client/IEngineServiceMgr_GetEventDispatcher.{platform}.yaml
   - name: networksystem  # Execute skills for networksystem.dll again after server.dll
     path_windows: game/bin/win64/networksystem.dll
     path_linux: game/bin/linuxsteamrt64/libnetworksystem.so
     skills:
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CFlattenedSerializers_CreateFieldChangedEventQueue
-      #  expected_output:
-      #    - CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
-      #  expected_input:
-      #    - CFlattenedSerializers_vtable.{platform}.yaml
-      #    - ../server/IFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-INetworkMessages_GetFieldChangeCallbackOrderCount-AND-INetworkMessages_GetFieldChangeCallbackPriorities
-      #  expected_output:
-      #    - INetworkMessages_GetFieldChangeCallbackOrderCount.{platform}.yaml
-      #    - INetworkMessages_GetFieldChangeCallbackPriorities.{platform}.yaml
-      #  expected_input:
-      #    - CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
+      - name: find-CFlattenedSerializers_CreateFieldChangedEventQueue
+        expected_output:
+          - CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
+        expected_input:
+          - CFlattenedSerializers_vtable.{platform}.yaml
+          - ../server/IFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
+      - name: find-INetworkMessages_GetFieldChangeCallbackOrderCount-AND-INetworkMessages_GetFieldChangeCallbackPriorities
+        expected_output:
+          - INetworkMessages_GetFieldChangeCallbackOrderCount.{platform}.yaml
+          - INetworkMessages_GetFieldChangeCallbackPriorities.{platform}.yaml
+        expected_input:
+          - CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
       - name: find-CNetworkMessages_SetIsForServer
         expected_output:
           - CNetworkMessages_SetIsForServer.{platform}.yaml
         expected_input:
           - CNetworkMessages_vtable.{platform}.yaml
           - ../engine/INetworkMessages_SetIsForServer.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CNetworkMessages_GetIsForServer
-      #  expected_output:
-      #    - CNetworkMessages_GetIsForServer.{platform}.yaml
-      #  expected_input:
-      #    - CNetworkMessages_vtable.{platform}.yaml
-      #    - CNetworkMessages_SetIsForServer.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CNetworkMessages_SetNetworkSerializationContextData
-      #  expected_output:
-      #    - CNetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
-      #  expected_input:
-      #    - CNetworkMessages_vtable.{platform}.yaml
-      #    - ../server/INetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
-      #  Awaiting fix, failure reason has been written into "docs/validation_failure-2026-07-10.md"
-      #- name: find-CNetworkMessages_GetNetworkSerializationContextData
-      #  expected_output:
-      #    - CNetworkMessages_GetNetworkSerializationContextData.{platform}.yaml
-      #  expected_input:
-      #    - CNetworkMessages_vtable.{platform}.yaml
-      #    - CNetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
+      - name: find-CNetworkMessages_GetIsForServer
+        expected_output:
+          - CNetworkMessages_GetIsForServer.{platform}.yaml
+        expected_input:
+          - CNetworkMessages_vtable.{platform}.yaml
+          - CNetworkMessages_SetIsForServer.{platform}.yaml
+      - name: find-CNetworkMessages_SetNetworkSerializationContextData
+        expected_output:
+          - CNetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
+        expected_input:
+          - CNetworkMessages_vtable.{platform}.yaml
+          - ../server/INetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
+      - name: find-CNetworkMessages_GetNetworkSerializationContextData
+        expected_output:
+          - CNetworkMessages_GetNetworkSerializationContextData.{platform}.yaml
+        expected_input:
+          - CNetworkMessages_vtable.{platform}.yaml
+          - CNetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
       - name: find-CNetworkMessages_FindNetworkGroup
         expected_output:
           - CNetworkMessages_FindNetworkGroup.{platform}.yaml
