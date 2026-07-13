@@ -109,6 +109,10 @@ If DepotDownloader needs authentication, add the same `-username`, `-password`, 
   binds to localhost by default and has no built-in authentication, so external deployments should place it behind an
   authenticated reverse proxy. Configure browser origins with `CS2VIBE_API_CORS_ORIGINS`, tune SSE through
   `CS2VIBE_SSE_BLOCK_MS` and `CS2VIBE_SSE_BATCH_SIZE`, and use `/healthz` and `/readyz` for liveness and Redis readiness.
+  The React dashboard in `pages/` is built with `npm ci && npm run build`. For a public Pages origin that connects to
+  FastAPI on the same browser machine, set the exact origin in `CS2VIBE_API_CORS_ORIGINS` and opt into private-network
+  preflight responses with `CS2VIBE_API_ALLOW_PRIVATE_NETWORK=true`. A Pages CDN cannot reach another machine's
+  localhost, and wildcard origins are rejected when private-network access is enabled.
 
 #### vcall_finder related
 

@@ -1,42 +1,58 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.app-layout { min-height: 100vh; background: transparent; }
+.app-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-inline: clamp(16px, 4vw, 48px); border-bottom: 1px solid var(--panel-border); background: rgba(8, 13, 24, 0.88); backdrop-filter: blur(16px); }
+.app-brand { display: flex; align-items: center; gap: 10px; color: #f8fafc; font-size: 17px; }
+.api-summary { min-width: 0; }
+.api-summary .ant-typography { max-width: 380px; }
+.app-content { width: min(1600px, 100%); margin: 0 auto; padding: 28px clamp(16px, 4vw, 48px) 60px; }
+.full-width { width: 100%; }
+.page-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.page-title-row .ant-typography { margin: 0; }
+.filter-row { width: 100%; }
+.table-card .ant-card-body { padding: 0; }
+.load-more { padding: 18px; text-align: center; border-top: 1px solid var(--panel-border); }
+.connection-wrap { min-height: calc(100vh - 160px); display: grid; place-items: center; }
+.connection-card { width: min(680px, 100%); border-color: rgba(59, 130, 246, 0.3); background: linear-gradient(145deg, rgba(17, 24, 39, 0.96), rgba(11, 18, 32, 0.96)); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35); }
+.settings-help { margin-top: 20px; }
+.page-spinner { min-height: 60vh; display: grid; place-items: center; }
+.run-header-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: center; }
+.run-header-grid .ant-typography { margin-block: 10px 4px; overflow-wrap: anywhere; }
+.run-progress { display: flex; align-items: center; gap: 18px; max-width: 620px; }
+.run-error { margin-top: 18px; }
+.view-card .ant-card-body { padding-top: 8px; }
+.graph-canvas { position: relative; width: 100%; height: min(68vh, 760px); min-height: 520px; overflow: hidden; border: 1px solid var(--panel-border); border-radius: 10px; background: #0b1220; }
+.graph-loading { position: absolute; top: 16px; right: 16px; z-index: 8; }
+.flow-node-label { display: flex; flex-direction: column; gap: 4px; text-align: left; overflow: hidden; }
+.flow-node-label strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #f8fafc; }
+.flow-node-label span { color: #a8b4c7; font-size: 12px; }
+.flow-node-label small { color: #60a5fa; font-size: 11px; }
+.react-flow__node { border-radius: 9px; }
+.flow-node-running { animation: flow-running 2.2s ease-in-out infinite; }
+.react-flow__controls, .react-flow__minimap { overflow: hidden; border: 1px solid var(--panel-border); border-radius: 8px; background: #111827; }
+.react-flow__controls-button { color: #dbeafe; background: #111827; border-bottom-color: var(--panel-border); }
+.json-block, .warning-block { max-height: 260px; margin: 0; padding: 12px; overflow: auto; border: 1px solid var(--panel-border); border-radius: 8px; color: #cbd5e1; background: #080d18; font: 12px/1.55 "Cascadia Code", Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.status-running { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.55); animation: status-pulse 2s infinite; }
+
+@keyframes status-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+@keyframes flow-running {
+  50% { filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.72)); }
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+@media (max-width: 900px) {
+  .app-header { height: auto; min-height: 64px; flex-wrap: wrap; padding-block: 10px; line-height: 1.4; }
+  .api-summary .ant-typography { display: none; }
+  .app-content { padding-top: 20px; }
+  .run-header-grid { grid-template-columns: 1fr; }
+  .run-progress { flex-wrap: wrap; }
+  .graph-canvas { min-height: 460px; }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+@media (max-width: 600px) {
+  .app-brand .ant-typography { display: none; }
+  .page-title-row { align-items: stretch; flex-direction: column; }
+  .filter-row > * { width: 100% !important; }
 }

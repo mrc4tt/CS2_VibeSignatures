@@ -1108,10 +1108,15 @@ Lua、Streams、Consumer Group 等关键行为不能只依赖与真实 Redis 行
 
 ### Phase 6：Web 可视化
 
-- 默认提供可折叠思维导图。
-- 提供真实 DAG 和列表视图。
-- 接入 SSE 实时节点状态更新。
-- 增加搜索、过滤、自动展开和节点详情。
+状态：已完成（2026-07-13）。
+
+- 在 `pages/` 的 React 19、TypeScript 和 Vite 模板上实现简体中文深色只读看板，并保留 ESA Pages SPA fallback。
+- 增加历史 Run 列表、Run Snapshot 详情、后端进度汇总、stale/error 展示和运行时 FastAPI 地址配置。
+- 使用 React Flow 和 ELK.js 提供可折叠思维导图及真实 DAG；保留多父依赖、跨 Stage artifact 边和可选执行顺序边。
+- 增加虚拟滚动任务列表、搜索、status/phase/type/stage/job 过滤、当前节点自动展开和任务详情 Drawer。
+- 按 Snapshot 游标建立 SSE，使用 task revision 去重，支持手动退避重连、reset 后重载以及非终态 Run meta 定时刷新。
+- FastAPI 增加显式 opt-in 的 Private Network Access 预检响应，要求精确 CORS Origin 且不改变现有 API schema。
+- 增加 URL、分页、revision、SSE、图投影、500 节点布局、组件、SPA fallback 和 PNA 自动化测试。
 
 ### Phase 7：恢复、保留与运行验证
 

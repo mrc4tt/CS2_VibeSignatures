@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, Header, HTTPException, Path, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
+from starlette.datastructures import Headers, MutableHeaders
 
 from process_api_schemas import (
     EventPageResponse,
@@ -37,6 +38,43 @@ RUN_ID_PATTERN = r"^[A-Za-z0-9_.:-]{1,160}$"
 STREAM_ID_PATTERN = re.compile(r"^\d+-\d+$")
 RunId = Annotated[str, Path(pattern=RUN_ID_PATTERN)]
 router = APIRouter(prefix="/api/v1")
+
+
+class PrivateNetworkAccessMiddleware:
+    """Allow opted-in browser private-network preflights for trusted origins."""
+
+    def __init__(self, app, allowed_origins):
+        self.app = app
+        self.allowed_origins = frozenset(origin for origin in allowed_origins if origin != "*")
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or not self._allows(scope):
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_private_network(message):
+            if message["type"] == "http.response.start":
+                headers = MutableHeaders(scope=message)
+                headers["Access-Control-Allow-Private-Network"] = "true"
+                _append_vary(headers, "Access-Control-Request-Private-Network")
+            await send(message)
+
+        await self.app(scope, receive, send_with_private_network)
+
+    def _allows(self, scope) -> bool:
+        headers = Headers(scope=scope)
+        return (
+            scope.get("method") == "OPTIONS"
+            and headers.get("origin") in self.allowed_origins
+            and headers.get("access-control-request-private-network", "").lower() == "true"
+        )
+
+
+def _append_vary(headers: MutableHeaders, value: str) -> None:
+    existing = [item.strip() for item in headers.get("Vary", "").split(",") if item.strip()]
+    if value.lower() not in {item.lower() for item in existing}:
+        existing.append(value)
+    headers["Vary"] = ", ".join(existing)
 
 
 def _reader(request: Request):
@@ -231,7 +269,26 @@ def _positive_environment(name: str, default: int) -> int:
     return value
 
 
-def create_app(reader=None, *, cors_origins=None, sse_block_ms=None, sse_batch_size=None) -> FastAPI:
+def _boolean_environment(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    normalized = raw.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise ValueError(f"{name} must be a boolean")
+
+
+def create_app(
+    reader=None,
+    *,
+    cors_origins=None,
+    sse_block_ms=None,
+    sse_batch_size=None,
+    allow_private_network=None,
+) -> FastAPI:
     owns_reader = reader is None
     status_reader = reader or RedisProcessStatusReader(
         os.environ.get("CS2VIBE_REDIS_URL", DEFAULT_REDIS_URL),
@@ -253,6 +310,15 @@ def create_app(reader=None, *, cors_origins=None, sse_block_ms=None, sse_batch_s
         application.add_middleware(
             CORSMiddleware, allow_origins=origins, allow_methods=["GET"], allow_headers=["Last-Event-ID"]
         )
+    private_network = (
+        _boolean_environment("CS2VIBE_API_ALLOW_PRIVATE_NETWORK")
+        if allow_private_network is None
+        else allow_private_network
+    )
+    if private_network and "*" in origins:
+        raise ValueError("CS2VIBE_API_CORS_ORIGINS cannot contain '*' when private network access is enabled")
+    if private_network and origins:
+        application.add_middleware(PrivateNetworkAccessMiddleware, allowed_origins=origins)
     application.add_exception_handler(RedisStatusReaderUnavailable, _unavailable_handler)
     application.add_exception_handler(RedisStatusDataError, _data_error_handler)
     application.add_api_route("/healthz", lambda: {"status": "ok"}, response_model=HealthResponse)

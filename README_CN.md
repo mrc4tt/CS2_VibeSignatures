@@ -107,6 +107,9 @@ uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
   再以 `snapshot_event_id` 作为 `after` 建立 SSE；断线后可通过 `Last-Event-ID` 恢复。服务默认仅监听本机且不内置认证，
   对外部署时应置于认证反向代理之后。跨域来源可通过 `CS2VIBE_API_CORS_ORIGINS` 配置，SSE block 和 batch 分别使用
   `CS2VIBE_SSE_BLOCK_MS`、`CS2VIBE_SSE_BATCH_SIZE` 调整；`/healthz` 和 `/readyz` 分别用于存活与 Redis 就绪检查。
+  `pages/` 中的 React 看板可通过 `npm ci && npm run build` 构建。公网 Pages 页面连接浏览器同机 FastAPI 时，需将
+  Pages 的精确 Origin 加入 `CS2VIBE_API_CORS_ORIGINS`，并设置 `CS2VIBE_API_ALLOW_PRIVATE_NETWORK=true` 响应浏览器
+  私有网络预检。Pages CDN 无法访问另一台机器的 localhost；启用私有网络访问时也禁止使用通配 Origin。
 
 #### vcall_finder 相关
 

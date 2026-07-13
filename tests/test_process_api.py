@@ -205,6 +205,43 @@ class TestProcessApi(unittest.TestCase):
         self.assertIn("SnapshotResponse", schemas)
         self.assertNotIn("config_path", schemas["RunView"].get("properties", {}))
 
+    def test_private_network_preflight_requires_opt_in_and_allowed_origin(self) -> None:
+        headers = {
+            "Origin": "https://status.example.com",
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Private-Network": "true",
+        }
+        disabled = TestClient(
+            create_app(
+                self.reader,
+                cors_origins=["https://status.example.com"],
+                allow_private_network=False,
+            )
+        )
+        self.assertNotIn(
+            "access-control-allow-private-network",
+            disabled.options("/api/v1/runs", headers=headers).headers,
+        )
+
+        enabled = TestClient(
+            create_app(
+                self.reader,
+                cors_origins=["https://status.example.com"],
+                allow_private_network=True,
+            )
+        )
+        response = enabled.options("/api/v1/runs", headers=headers)
+        self.assertEqual("true", response.headers["access-control-allow-private-network"])
+        self.assertIn("Access-Control-Request-Private-Network", response.headers["vary"])
+
+        rejected = enabled.options(
+            "/api/v1/runs",
+            headers={**headers, "Origin": "https://untrusted.example.com"},
+        )
+        self.assertNotIn("access-control-allow-private-network", rejected.headers)
+        with self.assertRaisesRegex(ValueError, "cannot contain"):
+            create_app(self.reader, cors_origins=["*"], allow_private_network=True)
+
 
 class TestSseCancellation(unittest.IsolatedAsyncioTestCase):
     async def test_stream_does_not_swallow_cancellation(self) -> None:

@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { App as AntApp, ConfigProvider, theme } from 'antd'
+import zhCN from 'antd/locale/zh_CN'
+import { BrowserRouter } from 'react-router-dom'
+import { ApiProvider } from './app/ApiProvider'
+import { AppShell } from './app/AppShell'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, staleTime: 1000, refetchOnWindowFocus: false },
+  },
+})
 
+export default function App() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <ConfigProvider
+      locale={zhCN}
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: { colorPrimary: '#3b82f6', borderRadius: 8, colorBgBase: '#080d18' },
+      }}
+    >
+      <AntApp>
+        <QueryClientProvider client={queryClient}>
+          <ApiProvider>
+            <BrowserRouter>
+              <AppShell />
+            </BrowserRouter>
+          </ApiProvider>
+        </QueryClientProvider>
+      </AntApp>
+    </ConfigProvider>
   )
 }
-
-export default App
