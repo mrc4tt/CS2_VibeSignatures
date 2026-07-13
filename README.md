@@ -91,6 +91,13 @@ If DepotDownloader needs authentication, add the same `-username`, `-password`, 
 
 * when `-rename` specified, run rename/comment post-processing over existing expected-output YAML files.
 
+* Redis process reporting is optional. Set `CS2VIBE_PROCESS_REPORTER=redis` and
+  `CS2VIBE_REDIS_URL=redis://127.0.0.1:6379/0`, or pass the equivalent
+  `-process_reporter=redis`, `-redis_url=...`, and optional `-redis_prefix=...` flags. The Reporter publishes the
+  immutable execution graph, current Run/Job/Skill snapshots, an event Stream, atomic summary counters, and a TTL
+  heartbeat. Temporary Redis failures do not change the Analyzer result; the latest local snapshots are replayed after
+  reconnection.
+
 #### vcall_finder related
 
 * `-vcall_finder=g_pNetworkMessages` filters by an object declared in the module-level `vcall_finder` config; `-vcall_finder=*` processes every declared object from `config.yaml`.

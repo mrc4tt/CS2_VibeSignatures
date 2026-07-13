@@ -31,10 +31,15 @@ def create_process_reporter(args) -> ProcessReporter:
         from process_reporter_redis import RedisProcessReporter
     except ImportError as exc:
         raise ProcessReporterConfigurationError(
-            "Redis process reporter is not available; implement/install the Phase 3 Redis backend first"
+            "Redis process reporter is not available; install the project Redis dependencies"
         ) from exc
 
     return RedisProcessReporter(
         redis_url=_configured_value(args, "redis_url", "CS2VIBE_REDIS_URL", DEFAULT_REDIS_URL),
         prefix=_configured_value(args, "redis_prefix", "CS2VIBE_REDIS_PREFIX", DEFAULT_REDIS_PREFIX),
+        run_metadata={
+            "gamever": getattr(args, "gamever", None),
+            "agent": getattr(args, "agent", None),
+            "config_path": getattr(args, "configyaml", None),
+        },
     )

@@ -17,9 +17,27 @@ class TestProcessReporterFactory(unittest.TestCase):
         with self.assertRaisesRegex(ProcessReporterConfigurationError, "Unsupported"):
             create_process_reporter(SimpleNamespace(process_reporter="unknown"))
 
-    def test_redis_backend_is_lazy_and_reports_missing_phase_three_module(self) -> None:
-        with self.assertRaisesRegex(ProcessReporterConfigurationError, "Phase 3"):
-            create_process_reporter(SimpleNamespace(process_reporter="redis"))
+    @patch("process_reporter_redis.RedisProcessReporter")
+    def test_redis_backend_receives_connection_settings_and_safe_metadata(self, reporter_type) -> None:
+        reporter_type.return_value = object()
+        args = SimpleNamespace(
+            process_reporter="redis",
+            redis_url="redis://example:6379/2",
+            redis_prefix="test:prefix",
+            gamever="14141",
+            agent="codex",
+            configyaml="custom.yaml",
+            llm_apikey="secret",
+        )
+
+        reporter = create_process_reporter(args)
+
+        self.assertIs(reporter_type.return_value, reporter)
+        reporter_type.assert_called_once_with(
+            redis_url="redis://example:6379/2",
+            prefix="test:prefix",
+            run_metadata={"gamever": "14141", "agent": "codex", "config_path": "custom.yaml"},
+        )
 
 
 if __name__ == "__main__":

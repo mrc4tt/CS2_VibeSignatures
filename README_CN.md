@@ -92,6 +92,11 @@ uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
 
 * 当指定了 `-rename` 时, 会根据已有的YAML里的信息来自动重命名所有已知的函数
 
+* Redis 进度上报为可选功能。可设置 `CS2VIBE_PROCESS_REPORTER=redis` 与
+  `CS2VIBE_REDIS_URL=redis://127.0.0.1:6379/0`，或使用等价的 `-process_reporter=redis`、`-redis_url=...` 和可选的
+  `-redis_prefix=...` 参数。Reporter 会写入不可变 ExecutionPlan、Run/Job/Skill 最新快照、事件 Stream、原子汇总计数
+  与带 TTL 的 heartbeat。Redis 暂时不可用不会改变 Analyzer 结果，恢复连接后会重放最新本地快照。
+
 #### vcall_finder 相关
 
 * `-vcall_finder=g_pNetworkMessages` 会在模块级 `vcall_finder` 配置中筛选同名对象；`-vcall_finder=*` 会处理 `config.yaml` 中已声明的全部对象。

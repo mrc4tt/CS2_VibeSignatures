@@ -965,6 +965,9 @@ Redis 不保存完整 stdout/stderr。可保存：
 process_reporter.py
 process_reporter_factory.py
 process_reporter_redis.py
+process_reporter_redis_connection.py
+process_reporter_redis_scripts.py
+process_reporter_redis_state.py
 process_status_reader_redis.py
 process_scheduler_redis.py
 ```
@@ -1068,6 +1071,8 @@ Lua、Streams、Consumer Group 等关键行为不能只依赖与真实 Redis 行
 - 使用 Fake Reporter 完成定向测试。
 
 ### Phase 3：Redis 写模型
+
+状态：已完成（2026-07-13）。
 
 - 实现 Key Builder、RedisProcessReporter 和 Lua transition。
 - 实现 heartbeat、revision、reconnect 和 resync。
