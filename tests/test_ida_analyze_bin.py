@@ -11,7 +11,15 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import ida_analyze_bin
 from ida_mcp_session import McpDatabaseBinding, McpDatabaseSelectionError, McpToolCallError
-from process_reporter import EdgeType, PlanNodeType
+from process_reporter import (
+    EdgeType,
+    PlanNodeType,
+    ProcessEventType,
+    ProcessPhase,
+    ProcessReason,
+    RunStatus,
+    TaskStatus,
+)
 
 
 def _tool_result(payload):
@@ -3099,6 +3107,162 @@ class TestProcessBinary(unittest.TestCase):
         self.assertEqual((0, 1, 1), (success, fail, skip))
 
 
+class TestProcessBinaryReporting(unittest.TestCase):
+    def _build_reporting(self, binary_root, skills):
+        module = {
+            "stage_index": 0,
+            "name": "engine",
+            "path_windows": "game/bin/win64/engine2.dll",
+            "skills": skills,
+        }
+        plan = ida_analyze_bin.build_execution_plan(
+            [module],
+            platforms=["windows"],
+            bin_dir=str(binary_root),
+            gamever="14141",
+        )
+        reporter = MagicMock()
+        reporting = ida_analyze_bin.AnalysisReporting(reporter, "run-1", plan)
+        return reporter, reporting, plan.jobs[0].id
+
+    def test_reports_existing_output_as_skipped(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_root = Path(temp_dir) / "bin"
+            binary_dir = binary_root / "14141" / "engine"
+            binary_dir.mkdir(parents=True)
+            binary_path = str(binary_dir / "engine2.dll")
+            (binary_dir / "Existing.windows.yaml").write_text("func_name: Existing\n", encoding="utf-8")
+            skills = [{"name": "existing", "expected_output": ["Existing.{platform}.yaml"], "expected_input": []}]
+            reporter, reporting, job_id = self._build_reporting(binary_root, skills)
+
+            with patch.object(ida_analyze_bin, "start_idalib_mcp") as mock_start:
+                counts = ida_analyze_bin.process_binary(
+                    binary_path,
+                    skills,
+                    "codex",
+                    "127.0.0.1",
+                    13337,
+                    "",
+                    "windows",
+                    reporting=reporting,
+                    job_id=job_id,
+                )
+
+        task_id = f"{job_id}/existing"
+        events = [report_call.args[0] for report_call in reporter.emit.call_args_list]
+        skipped_event = next(event for event in events if event.task_id == task_id)
+        self.assertEqual((0, 0, 1), counts)
+        self.assertEqual(TaskStatus.SKIPPED, skipped_event.status)
+        self.assertEqual(ProcessReason.EXISTING_OUTPUTS, skipped_event.reason)
+        mock_start.assert_not_called()
+
+    def test_reports_failed_skill_progress_and_aborts_remaining_skill(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_root = Path(temp_dir) / "bin"
+            binary_dir = binary_root / "14141" / "engine"
+            binary_dir.mkdir(parents=True)
+            binary_path = str(binary_dir / "engine2.dll")
+            skills = [
+                {"name": "first", "expected_output": ["First.{platform}.yaml"], "expected_input": []},
+                {"name": "second", "expected_output": ["Second.{platform}.yaml"], "expected_input": []},
+            ]
+            reporter, reporting, job_id = self._build_reporting(binary_root, skills)
+
+            def fail_agent(*_args, progress_callback=None, **_kwargs):
+                progress_callback(event="attempt_started", attempt=1, max_attempts=1)
+                return False
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=object()),
+                patch.object(
+                    ida_analyze_bin, "ensure_mcp_available", side_effect=lambda process, *_a, **_k: (process, True)
+                ),
+                patch.object(ida_analyze_bin, "verify_opened_binary_via_mcp", return_value=True),
+                patch.object(ida_analyze_bin, "_run_validate_expected_input_artifacts_via_mcp", return_value=[]),
+                patch.object(ida_analyze_bin, "_run_preprocess_single_skill_via_mcp", return_value="no_script"),
+                patch.object(ida_analyze_bin, "run_skill", side_effect=fail_agent),
+                patch.object(ida_analyze_bin, "quit_ida_gracefully"),
+            ):
+                counts = ida_analyze_bin.process_binary(
+                    binary_path,
+                    skills,
+                    "codex",
+                    "127.0.0.1",
+                    13337,
+                    "",
+                    "windows",
+                    max_retries=1,
+                    reporting=reporting,
+                    job_id=job_id,
+                )
+
+        events = [report_call.args[0] for report_call in reporter.emit.call_args_list]
+        first_id = f"{job_id}/first"
+        second_id = f"{job_id}/second"
+        self.assertEqual((0, 1, 0), counts)
+        self.assertTrue(
+            any(event.event_type == ProcessEventType.SKILL_PROGRESS and event.task_id == first_id for event in events)
+        )
+        self.assertTrue(
+            any(
+                event.task_id == first_id
+                and event.status == TaskStatus.FAILED
+                and event.reason == ProcessReason.AGENT_FAILED
+                for event in events
+            )
+        )
+        self.assertTrue(
+            any(
+                event.task_id == second_id
+                and event.status == TaskStatus.ABORTED
+                and event.reason == ProcessReason.UPSTREAM_ABORTED
+                for event in events
+            )
+        )
+
+    def test_reports_missing_input_as_failed(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_root = Path(temp_dir) / "bin"
+            binary_dir = binary_root / "14141" / "engine"
+            binary_dir.mkdir(parents=True)
+            binary_path = str(binary_dir / "engine2.dll")
+            skills = [
+                {
+                    "name": "consumer",
+                    "expected_output": ["Consumer.{platform}.yaml"],
+                    "expected_input": ["Missing.{platform}.yaml"],
+                }
+            ]
+            reporter, reporting, job_id = self._build_reporting(binary_root, skills)
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=object()),
+                patch.object(
+                    ida_analyze_bin, "ensure_mcp_available", side_effect=lambda process, *_a, **_k: (process, True)
+                ),
+                patch.object(ida_analyze_bin, "verify_opened_binary_via_mcp", return_value=True),
+                patch.object(ida_analyze_bin, "quit_ida_gracefully"),
+            ):
+                counts = ida_analyze_bin.process_binary(
+                    binary_path,
+                    skills,
+                    "codex",
+                    "127.0.0.1",
+                    13337,
+                    "",
+                    "windows",
+                    reporting=reporting,
+                    job_id=job_id,
+                )
+
+        task_id = f"{job_id}/consumer"
+        events = [report_call.args[0] for report_call in reporter.emit.call_args_list]
+        failed_event = next(event for event in events if event.task_id == task_id and event.status == TaskStatus.FAILED)
+        self.assertEqual((0, 1, 0), counts)
+        self.assertEqual(ProcessReason.MISSING_INPUT, failed_event.reason)
+        self.assertIn(ProcessPhase.VALIDATING_INPUTS, [event.phase for event in events if event.task_id == task_id])
+
+
 class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
     def setUp(self) -> None:
         stop_patcher = patch.object(ida_analyze_bin, "stop_idalib_mcp_process")
@@ -3563,6 +3727,31 @@ class TestParseArgsLlmOptions(unittest.TestCase):
             args = ida_analyze_bin.parse_args()
 
         self.assertTrue(args.skip_pp)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_accepts_process_reporter_configuration(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            [
+                "ida_analyze_bin.py",
+                "-gamever",
+                "14141",
+                "-process_reporter",
+                "redis",
+                "-redis_url",
+                "redis://example:6379/2",
+                "-redis_prefix",
+                "test:analysis",
+                "-run_id",
+                "scheduler-run",
+            ],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertEqual("redis", args.process_reporter)
+        self.assertEqual("redis://example:6379/2", args.redis_url)
+        self.assertEqual("test:analysis", args.redis_prefix)
+        self.assertEqual("scheduler-run", args.run_id)
 
     @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
     def test_parse_args_accepts_and_strips_skill(self, _mock_resolve_oldgamever) -> None:
@@ -4033,6 +4222,77 @@ class TestProcessBinaryLlmWiring(unittest.TestCase):
         )
 
         self.assertEqual(4, mock_preprocess.await_args.kwargs["llm_max_retries"])
+
+
+class TestMainReporterLifecycle(unittest.TestCase):
+    @patch.object(ida_analyze_bin, "parse_config")
+    @patch("ida_analyze_bin.os.path.exists", return_value=True)
+    @patch.object(ida_analyze_bin, "parse_args")
+    def test_main_finalizes_flushes_and_closes_reporter_after_exception(
+        self,
+        mock_parse_args,
+        _mock_exists,
+        mock_parse_config,
+    ) -> None:
+        mock_parse_args.return_value = SimpleNamespace(
+            configyaml="config.yaml",
+            bindir="bin",
+            gamever="14141",
+            oldgamever=None,
+            platforms=["windows"],
+            module_filter=None,
+            modules="*",
+            skill=None,
+            agent="codex",
+            agent_model="",
+            ida_args="",
+            debug=False,
+            skip_error=False,
+            skip_pp=False,
+            maxretry=1,
+            vcall_finder_filter=None,
+            llm_model="gpt-4o",
+            llm_apikey=None,
+            llm_baseurl=None,
+            llm_temperature=None,
+            llm_effort="medium",
+            llm_fake_as=None,
+            rename=False,
+            run_id="scheduler-run",
+        )
+        mock_parse_config.return_value = [
+            {
+                "stage_index": 3,
+                "name": "engine",
+                "skills": [{"name": "find-target", "expected_output": [], "expected_input": []}],
+                "vcall_finder_objects": [],
+                "path_windows": "game/bin/win64/engine2.dll",
+            }
+        ]
+        reporter = MagicMock()
+        reporter.initialize_run.return_value = "scheduler-run"
+        call_order = []
+        reporter.initialize_run.side_effect = lambda *_args, **_kwargs: (
+            call_order.append("initialize") or "scheduler-run"
+        )
+
+        def fail_processing(*_args, **_kwargs):
+            call_order.append("process")
+            raise RuntimeError("analysis crashed")
+
+        with (
+            patch.object(ida_analyze_bin, "create_process_reporter", return_value=reporter),
+            patch.object(ida_analyze_bin, "process_binary", side_effect=fail_processing),
+            self.assertRaisesRegex(RuntimeError, "analysis crashed"),
+        ):
+            ida_analyze_bin.main()
+
+        self.assertEqual(["initialize", "process"], call_order)
+        initialized_plan = reporter.initialize_run.call_args.args[0]
+        self.assertEqual("stage-0003-engine-windows/find-target", initialized_plan["nodes"][0]["id"])
+        self.assertEqual(RunStatus.FAILED, reporter.finalize_run.call_args.args[1])
+        reporter.flush.assert_called_once()
+        reporter.close.assert_called_once()
 
 
 class TestMainLlmWiring(unittest.TestCase):

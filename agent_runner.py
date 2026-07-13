@@ -414,6 +414,23 @@ def _retry_if_available(attempt: int, max_retries: int, retry_target_desc: str) 
         print(f"    Retrying with {retry_target_desc}...")
 
 
+def _notify_progress(progress_callback, event: str, **payload) -> None:
+    if progress_callback is None:
+        return
+    try:
+        progress_callback(event=event, **payload)
+    except Exception as error:
+        print(f"    Warning: Skill progress callback failed: {error}")
+
+
+def _failure_progress_payload(reason, result) -> dict:
+    if reason == "returncode":
+        return {"reason": "returncode", "returncode": result.returncode}
+    if isinstance(reason, tuple):
+        return {"reason": reason[0], "error": reason[1]}
+    return {"reason": "missing_expected_output", "missing_outputs": list(reason)}
+
+
 def _result_failure_reason(result, expected_yaml_paths):
     if result.returncode != 0:
         return "returncode"
@@ -453,10 +470,18 @@ def _run_skill_attempts(
     expected_yaml_paths,
     max_retries: int,
     agent_model: str,
+    progress_callback=None,
 ) -> bool:
     opencode_session_id = None
     process_env = _agent_process_env(agent_kind)
     for attempt in range(max_retries):
+        attempt_number = attempt + 1
+        _notify_progress(
+            progress_callback,
+            "attempt_started",
+            attempt=attempt_number,
+            max_attempts=max_retries,
+        )
         command = _build_agent_command(
             agent=agent,
             agent_kind=agent_kind,
@@ -480,22 +505,76 @@ def _run_skill_attempts(
                 opencode_session_id = _extract_opencode_session_id(result.stdout)
             reason = _result_failure_reason(result, expected_yaml_paths)
             if reason is None:
+                _notify_progress(
+                    progress_callback,
+                    "succeeded",
+                    attempt=attempt_number,
+                    max_attempts=max_retries,
+                )
                 return True
             _report_result_failure(reason, result, debug)
+            failure_payload = _failure_progress_payload(reason, result)
             if isinstance(reason, tuple) and reason[0] == "cybersecurity_block":
+                _notify_progress(
+                    progress_callback,
+                    "failed",
+                    attempt=attempt_number,
+                    max_attempts=max_retries,
+                    **failure_payload,
+                )
                 return False
+            _notify_progress(
+                progress_callback,
+                "attempt_failed",
+                attempt=attempt_number,
+                max_attempts=max_retries,
+                will_retry=attempt < max_retries - 1,
+                **failure_payload,
+            )
             _retry_if_available(attempt, max_retries, command.retry_target_desc)
         except subprocess.TimeoutExpired:
             print(f"    Error: Skill execution timeout ({SKILL_TIMEOUT} seconds)")
+            _notify_progress(
+                progress_callback,
+                "attempt_failed",
+                attempt=attempt_number,
+                max_attempts=max_retries,
+                reason="timeout",
+                timeout_seconds=SKILL_TIMEOUT,
+                will_retry=attempt < max_retries - 1,
+            )
             _retry_if_available(attempt, max_retries, command.retry_target_desc)
         except FileNotFoundError:
             print(f"    Error: Agent '{agent}' not found. Please ensure it is installed and in PATH.")
+            _notify_progress(
+                progress_callback,
+                "failed",
+                attempt=attempt_number,
+                max_attempts=max_retries,
+                reason="agent_not_found",
+            )
             return False
         except Exception as error:
             print(f"    Error executing skill: {error}")
+            _notify_progress(
+                progress_callback,
+                "attempt_failed",
+                attempt=attempt_number,
+                max_attempts=max_retries,
+                reason="execution_error",
+                error=str(error),
+                will_retry=attempt < max_retries - 1,
+            )
             _retry_if_available(attempt, max_retries, command.retry_target_desc)
 
     print(f"    Failed after {max_retries} attempts")
+    _notify_progress(
+        progress_callback,
+        "failed",
+        attempt=max_retries,
+        max_attempts=max_retries,
+        reason="retries_exhausted",
+    )
     return False
 
 
@@ -506,28 +585,34 @@ def run_skill(
     expected_yaml_paths=None,
     max_retries=3,
     agent_model=DEFAULT_AGENT_MODEL,
+    progress_callback=None,
 ) -> bool:
     """Execute a skill with its configured agent and retry support."""
     agent_kind = _detect_agent_kind(agent)
     if agent_kind is None:
         print(f"    Error: Unknown agent type '{agent}'. Agent name must contain 'claude', 'codex', or 'opencode'.")
+        _notify_progress(progress_callback, "failed", reason="unknown_agent")
         return False
     try:
         _agent_model_args(agent_kind, agent_model)
     except ValueError as error:
         print(f"    Error: {error}")
+        _notify_progress(progress_callback, "failed", reason="invalid_agent_model", error=str(error))
         return False
 
     skill_md_path = os.path.join(".claude", "skills", skill_name, "SKILL.md")
     print(f"    Falling back to: {skill_md_path}")
     if not os.path.exists(skill_md_path):
         print(f"    Error: Skill file not found: {skill_md_path}")
+        _notify_progress(progress_callback, "failed", reason="skill_file_missing", path=skill_md_path)
         return False
     if not _ensure_agent_mcp_preflight(agent, debug=debug):
+        _notify_progress(progress_callback, "failed", reason="mcp_unavailable")
         return False
 
     developer_instructions = _load_codex_developer_instructions() if agent_kind == "codex" else None
     if agent_kind == "codex" and developer_instructions is None:
+        _notify_progress(progress_callback, "failed", reason="developer_instructions_unavailable")
         return False
     return _run_skill_attempts(
         skill_name=skill_name,
@@ -539,4 +624,5 @@ def run_skill(
         expected_yaml_paths=expected_yaml_paths,
         max_retries=max_retries,
         agent_model=agent_model,
+        progress_callback=progress_callback,
     )

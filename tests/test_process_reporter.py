@@ -1,6 +1,7 @@
 import unittest
 
 from process_reporter import (
+    BestEffortProcessReporter,
     EdgeType,
     ExecutionEdge,
     ExecutionJob,
@@ -8,9 +9,12 @@ from process_reporter import (
     ExecutionPlan,
     ExecutionStage,
     PlanNodeType,
+    ProcessEvent,
+    ProcessEventType,
     ProcessPhase,
     ProcessReason,
     RunStatus,
+    NullProcessReporter,
     TaskStatus,
     build_job_id,
     build_stage_id,
@@ -21,6 +25,50 @@ from process_reporter import (
 
 
 class TestProcessReporterDomain(unittest.TestCase):
+    def test_null_reporter_preserves_supplied_run_id_and_generates_one(self) -> None:
+        reporter = NullProcessReporter()
+
+        self.assertEqual("scheduler-run", reporter.initialize_run({}, run_id="scheduler-run"))
+        generated_run_id = reporter.initialize_run({})
+
+        self.assertEqual(26, len(generated_run_id))
+        self.assertTrue(generated_run_id.isalnum())
+
+    def test_process_event_serializes_enums_and_payload(self) -> None:
+        event = ProcessEvent(
+            run_id="run-1",
+            event_type=ProcessEventType.TASK_STATUS_CHANGED,
+            task_id="stage-0000-engine-windows/find-target",
+            status=TaskStatus.FAILED,
+            phase=ProcessPhase.FINISHED,
+            reason=ProcessReason.MISSING_INPUT,
+            payload={"attempt": 2},
+        )
+
+        payload = event.to_dict()
+
+        self.assertEqual("task.status_changed", payload["event_type"])
+        self.assertEqual("failed", payload["status"])
+        self.assertEqual("finished", payload["phase"])
+        self.assertEqual("missing_input", payload["reason"])
+
+    def test_best_effort_reporter_swallows_backend_errors(self) -> None:
+        class FailingReporter(NullProcessReporter):
+            def initialize_run(self, plan, run_id=None):
+                raise RuntimeError("offline")
+
+            def emit(self, event):
+                raise RuntimeError("offline")
+
+        warnings = []
+        reporter = BestEffortProcessReporter(FailingReporter(), warning_callback=warnings.append)
+
+        run_id = reporter.initialize_run({}, run_id="fallback-run")
+        reporter.emit(ProcessEvent(run_id=run_id, event_type=ProcessEventType.HEARTBEAT))
+
+        self.assertEqual("fallback-run", run_id)
+        self.assertEqual(2, len(warnings))
+
     def test_builds_stable_execution_identifiers(self) -> None:
         stage_id = build_stage_id(8, "engine")
         job_id = build_job_id(stage_id, "windows")
@@ -43,6 +91,7 @@ class TestProcessReporterDomain(unittest.TestCase):
     def test_status_transitions_are_idempotent_and_terminal(self) -> None:
         self.assertTrue(is_valid_task_transition(TaskStatus.PENDING, TaskStatus.RUNNING))
         self.assertTrue(is_valid_task_transition(TaskStatus.RUNNING, TaskStatus.SUCCEEDED))
+        self.assertTrue(is_valid_task_transition(TaskStatus.RUNNING, TaskStatus.SKIPPED))
         self.assertTrue(is_valid_task_transition(TaskStatus.SUCCEEDED, TaskStatus.SUCCEEDED))
         self.assertFalse(is_valid_task_transition(TaskStatus.SUCCEEDED, TaskStatus.RUNNING))
         self.assertTrue(is_valid_run_transition(RunStatus.RUNNING, RunStatus.STALE))

@@ -1,8 +1,11 @@
-"""Pure domain models shared by process reporter implementations."""
+"""Domain models and backend abstraction for process reporting."""
 
+import secrets
+import time
 from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
+from typing import Any, Callable, Protocol
 
 
 class RunStatus(str, Enum):
@@ -145,6 +148,102 @@ class ExecutionPlan:
         return _serialize(asdict(self))
 
 
+@dataclass(frozen=True)
+class ProcessEvent:
+    run_id: str
+    event_type: ProcessEventType
+    task_id: str | None = None
+    status: RunStatus | TaskStatus | None = None
+    phase: ProcessPhase | None = None
+    reason: ProcessReason | str | None = None
+    message: str | None = None
+    error: str | None = None
+    payload: dict[str, Any] = field(default_factory=dict)
+    occurred_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+    def to_dict(self) -> dict[str, Any]:
+        return _serialize(asdict(self))
+
+
+class ProcessReporter(Protocol):
+    def initialize_run(self, plan: dict[str, Any], run_id: str | None = None) -> str: ...
+
+    def emit(self, event: ProcessEvent) -> None: ...
+
+    def heartbeat(self, run_id: str) -> None: ...
+
+    def finalize_run(self, run_id: str, status: RunStatus, summary: dict[str, int]) -> None: ...
+
+    def flush(self) -> None: ...
+
+    def close(self) -> None: ...
+
+
+class ProcessReporterError(RuntimeError):
+    """Base error raised by process reporter implementations."""
+
+
+class ProcessReporterConfigurationError(ProcessReporterError):
+    """Raised when the configured reporter backend cannot be constructed."""
+
+
+class NullProcessReporter:
+    """Default reporter that preserves the existing local CLI behavior."""
+
+    def initialize_run(self, plan: dict[str, Any], run_id: str | None = None) -> str:
+        del plan
+        return run_id or generate_run_id()
+
+    def emit(self, event: ProcessEvent) -> None:
+        del event
+
+    def heartbeat(self, run_id: str) -> None:
+        del run_id
+
+    def finalize_run(self, run_id: str, status: RunStatus, summary: dict[str, int]) -> None:
+        del run_id, status, summary
+
+    def flush(self) -> None:
+        pass
+
+    def close(self) -> None:
+        pass
+
+
+class BestEffortProcessReporter:
+    """Prevent observability failures from changing Analyzer results."""
+
+    def __init__(self, delegate: ProcessReporter, warning_callback: Callable[[str], None] = print):
+        self._delegate = delegate
+        self._warning_callback = warning_callback
+
+    def _call(self, method_name: str, *args):
+        try:
+            return getattr(self._delegate, method_name)(*args)
+        except Exception as exc:
+            self._warning_callback(f"Warning: Process reporter {method_name} failed: {exc}")
+            return None
+
+    def initialize_run(self, plan: dict[str, Any], run_id: str | None = None) -> str:
+        initialized_run_id = self._call("initialize_run", plan, run_id)
+        return initialized_run_id or run_id or generate_run_id()
+
+    def emit(self, event: ProcessEvent) -> None:
+        self._call("emit", event)
+
+    def heartbeat(self, run_id: str) -> None:
+        self._call("heartbeat", run_id)
+
+    def finalize_run(self, run_id: str, status: RunStatus, summary: dict[str, int]) -> None:
+        self._call("finalize_run", run_id, status, summary)
+
+    def flush(self) -> None:
+        self._call("flush")
+
+    def close(self) -> None:
+        self._call("close")
+
+
 def _serialize(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
@@ -153,6 +252,19 @@ def _serialize(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [_serialize(item) for item in value]
     return value
+
+
+_CROCKFORD_BASE32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+
+
+def generate_run_id() -> str:
+    """Generate a dependency-free ULID-compatible run identifier."""
+    value = (int(time.time() * 1000) << 80) | secrets.randbits(80)
+    encoded = []
+    for _ in range(26):
+        value, remainder = divmod(value, 32)
+        encoded.append(_CROCKFORD_BASE32[remainder])
+    return "".join(reversed(encoded))
 
 
 def _validate_id_part(value: object, label: str) -> str:
@@ -195,6 +307,7 @@ _TASK_TRANSITIONS = {
     TaskStatus.RUNNING: {
         TaskStatus.SUCCEEDED,
         TaskStatus.FAILED,
+        TaskStatus.SKIPPED,
         TaskStatus.ABORTED,
     },
 }

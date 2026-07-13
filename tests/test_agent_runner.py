@@ -469,6 +469,138 @@ class TestRunSkillCodexPromptTransport(unittest.TestCase):
         self.assertEqual(agent_runner.SKILL_TIMEOUT, first_call.kwargs["timeout"])
         self.assertEqual(agent_runner.SKILL_TIMEOUT, second_call.kwargs["timeout"])
 
+    @patch.object(Path, "read_text", return_value="sig finder prompt")
+    @patch("agent_runner.os.path.exists", return_value=True)
+    @patch("agent_runner._run_process_with_stream_capture")
+    def test_run_skill_reports_attempt_retry_and_success_progress(
+        self,
+        mock_run_process,
+        _mock_exists,
+        _mock_read_text,
+    ) -> None:
+        mock_run_process.side_effect = [
+            subprocess.CompletedProcess(
+                args=["codex", "mcp", "list"],
+                returncode=0,
+                stdout="ida-pro-mcp  http://127.0.0.1:13337/mcp  enabled\n",
+                stderr="",
+            ),
+            subprocess.CompletedProcess(args=["codex"], returncode=1, stdout="", stderr="failed"),
+            subprocess.CompletedProcess(args=["codex"], returncode=0, stdout="", stderr=""),
+        ]
+        progress = []
+
+        result = agent_runner.run_skill(
+            skill_name="find-IGameSystem_vtable",
+            agent="codex",
+            max_retries=2,
+            progress_callback=lambda **event: progress.append(event),
+        )
+
+        self.assertTrue(result)
+        self.assertEqual(
+            ["attempt_started", "attempt_failed", "attempt_started", "succeeded"],
+            [event["event"] for event in progress],
+        )
+        self.assertEqual(1, progress[1]["attempt"])
+        self.assertTrue(progress[1]["will_retry"])
+        self.assertEqual(2, progress[-1]["attempt"])
+
+    @patch.object(Path, "read_text", return_value="sig finder prompt")
+    @patch("agent_runner.os.path.exists", return_value=True)
+    @patch("agent_runner._run_process_with_stream_capture")
+    def test_run_skill_reports_timeout_without_changing_retry_result(
+        self,
+        mock_run_process,
+        _mock_exists,
+        _mock_read_text,
+    ) -> None:
+        mock_run_process.side_effect = [
+            subprocess.CompletedProcess(
+                args=["codex", "mcp", "list"],
+                returncode=0,
+                stdout="ida-pro-mcp  http://127.0.0.1:13337/mcp  enabled\n",
+                stderr="",
+            ),
+            subprocess.TimeoutExpired(cmd="codex", timeout=agent_runner.SKILL_TIMEOUT),
+        ]
+        progress = []
+
+        result = agent_runner.run_skill(
+            skill_name="find-IGameSystem_vtable",
+            agent="codex",
+            max_retries=1,
+            progress_callback=lambda **event: progress.append(event),
+        )
+
+        self.assertFalse(result)
+        timeout_event = next(event for event in progress if event.get("reason") == "timeout")
+        self.assertEqual("attempt_failed", timeout_event["event"])
+        self.assertEqual(agent_runner.SKILL_TIMEOUT, timeout_event["timeout_seconds"])
+
+    @patch.object(Path, "read_text", return_value="sig finder prompt")
+    @patch("agent_runner.os.path.exists", side_effect=lambda path: not str(path).endswith("missing.yaml"))
+    @patch("agent_runner._run_process_with_stream_capture")
+    def test_run_skill_reports_missing_expected_output(
+        self,
+        mock_run_process,
+        _mock_exists,
+        _mock_read_text,
+    ) -> None:
+        mock_run_process.side_effect = [
+            subprocess.CompletedProcess(
+                args=["codex", "mcp", "list"],
+                returncode=0,
+                stdout="ida-pro-mcp  http://127.0.0.1:13337/mcp  enabled\n",
+                stderr="",
+            ),
+            subprocess.CompletedProcess(args=["codex"], returncode=0, stdout="", stderr=""),
+        ]
+        progress = []
+
+        result = agent_runner.run_skill(
+            skill_name="find-IGameSystem_vtable",
+            agent="codex",
+            expected_yaml_paths=["missing.yaml"],
+            max_retries=1,
+            progress_callback=lambda **event: progress.append(event),
+        )
+
+        self.assertFalse(result)
+        failure = next(event for event in progress if event.get("reason") == "missing_expected_output")
+        self.assertEqual(["missing.yaml"], failure["missing_outputs"])
+
+    @patch.object(Path, "read_text", return_value="sig finder prompt")
+    @patch("agent_runner.os.path.exists", return_value=True)
+    @patch("agent_runner._run_process_with_stream_capture")
+    def test_progress_callback_failure_does_not_change_skill_success(
+        self,
+        mock_run_process,
+        _mock_exists,
+        _mock_read_text,
+    ) -> None:
+        mock_run_process.side_effect = [
+            subprocess.CompletedProcess(
+                args=["codex", "mcp", "list"],
+                returncode=0,
+                stdout="ida-pro-mcp  http://127.0.0.1:13337/mcp  enabled\n",
+                stderr="",
+            ),
+            subprocess.CompletedProcess(args=["codex"], returncode=0, stdout="", stderr=""),
+        ]
+
+        def failing_callback(**_event):
+            raise RuntimeError("reporter offline")
+
+        result = agent_runner.run_skill(
+            skill_name="find-IGameSystem_vtable",
+            agent="codex",
+            max_retries=1,
+            progress_callback=failing_callback,
+        )
+
+        self.assertTrue(result)
+
     @patch("agent_runner.os.path.exists", return_value=True)
     @patch("agent_runner.subprocess.Popen")
     def test_run_skill_debug_true_forwards_stdout_and_stderr(
