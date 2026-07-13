@@ -122,11 +122,24 @@ target kinds that actually occur. The output filename MUST equal the finder's sk
 - `uv run python -m unittest discover -s tests -b` (guard; a pure-doc addition should not affect tests).
 - Re-read the generated SKILL.md against the inventory: is every output listed, platform-gated, and mapped to a
   sig-gen + writer skill with correct params?
+- Run the fallback itself in the real IDA/MCP environment, bypassing both old-version reuse and preprocessing:
 
-Be honest about the validation boundary: when the preprocessor currently **succeeds** (e.g. on the latest
-build) the fallback does not trigger in a normal `ida_analyze_bin.py` run, and exercising it directly needs the
-**ida-pro-mcp GUI** path with the binary open (not idalib) plus a forced preprocessor failure. Correctness
-therefore rests on the ground-truth cross-check, not an end-to-end run. Say so in your report.
+  ```bash
+  uv run ida_analyze_bin.py -gamever <gamever> -oldgamever none -modules=<module> -debug -skip_pp -skill=<skill_name>
+  ```
+
+  The selected game version must contain the module binary and every configured `expected_input`. Ensure at
+  least one expected output for each tested platform is absent; if all outputs already exist, use a disposable
+  game-version copy or temporarily back up the target outputs outside the binary directory and restore them
+  afterward. A run that says all outputs already exist and skips the skill is **not** a valid Agent-Skill-only
+  test.
+- Require the log to show `Agent Skill only mode: enabled (-skip_pp)`, `Skipping preprocess: <skill_name>
+  (-skip_pp)`, and `Starting agent skill: <skill_name>`, followed by `Success` and summary `Failed: 0`. Verify
+  that every expected YAML for the tested platform was produced and parses as a non-empty mapping.
+
+Do not report the fallback as complete unless this end-to-end Agent-Skill-only test passes. If the real IDA/MCP
+environment is unavailable, report the validation as blocked rather than substituting a preprocessor run or a
+ground-truth-only review.
 
 ### Step 6 — Commit
 
@@ -267,7 +280,10 @@ Written beside the binary, one per symbol: `<symbol>.windows.yaml` / `<symbol>.l
       `func_addr=None`/`func_sig=None` + `vfunc_sig`).
 - [ ] Failure handling + output-filename sections present.
 - [ ] `format_repo_files.py --check` clean; `unittest discover -s tests -b` passes.
-- [ ] Values cross-checked against `bin/` ground truth; validation-boundary caveat stated in the report.
+- [ ] Values cross-checked against `bin/` ground truth.
+- [ ] Real Agent-Skill-only test passed with `uv run ida_analyze_bin.py -gamever <gamever> -oldgamever none
+      -modules=<module> -debug -skip_pp -skill=<skill_name>`; the log proves preprocessing was skipped, the
+      Agent Skill actually started, all expected YAMLs were produced, and the summary reports `Failed: 0`.
 - [ ] New SKILL.md staged explicitly and committed on `dev`; memory pointer recorded.
 
 ## Worked example — `find-CEntitySystem_Init-decompiles`

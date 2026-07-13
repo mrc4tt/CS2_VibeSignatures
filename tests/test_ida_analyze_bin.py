@@ -1623,7 +1623,7 @@ class TestProcessBinary(unittest.TestCase):
         self.assertEqual((1, 0, 1), (success, fail, skip))
         mock_run_skill.assert_not_called()
 
-    def test_process_binary_skips_preprocessor_and_runs_agent_skill_when_skil_pp_enabled(self) -> None:
+    def test_process_binary_skips_preprocessor_and_runs_agent_skill_when_skip_pp_enabled(self) -> None:
         with TemporaryDirectory() as temp_dir:
             binary_dir = Path(temp_dir) / "bin" / "14141" / "engine"
             binary_dir.mkdir(parents=True, exist_ok=True)
@@ -1657,7 +1657,7 @@ class TestProcessBinary(unittest.TestCase):
                     ida_args="",
                     platform="windows",
                     max_retries=1,
-                    skil_pp=True,
+                    skip_pp=True,
                 )
 
         self.assertEqual((1, 0, 0), (success, fail, skip))
@@ -3348,14 +3348,14 @@ class TestParseArgsLlmOptions(unittest.TestCase):
         self.assertTrue(args.skip_error)
 
     @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
-    def test_parse_args_accepts_skil_pp(self, _mock_resolve_oldgamever) -> None:
+    def test_parse_args_accepts_skip_pp(self, _mock_resolve_oldgamever) -> None:
         with patch(
             "sys.argv",
-            ["ida_analyze_bin.py", "-gamever", "14141", "-skil_pp"],
+            ["ida_analyze_bin.py", "-gamever", "14141", "-skip_pp"],
         ):
             args = ida_analyze_bin.parse_args()
 
-        self.assertTrue(args.skil_pp)
+        self.assertTrue(args.skip_pp)
 
     @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
     def test_parse_args_accepts_and_strips_skill(self, _mock_resolve_oldgamever) -> None:
@@ -4091,7 +4091,7 @@ class TestMainPostProcessWiring(unittest.TestCase):
             llm_effort="high",
             llm_fake_as="codex",
             rename=True,
-            skil_pp=True,
+            skip_pp=True,
         )
         mock_parse_config.return_value = [
             {
@@ -4112,7 +4112,7 @@ class TestMainPostProcessWiring(unittest.TestCase):
             ida_analyze_bin.main()
 
         self.assertTrue(captured["kwargs"]["rename"])
-        self.assertTrue(captured["kwargs"]["skil_pp"])
+        self.assertTrue(captured["kwargs"]["skip_pp"])
 
 
 class TestMainSkillFilterWiring(unittest.TestCase):
@@ -4141,7 +4141,7 @@ class TestMainSkillFilterWiring(unittest.TestCase):
             ida_args="",
             debug=False,
             skip_error=False,
-            skil_pp=False,
+            skip_pp=False,
             maxretry=3,
             vcall_finder_filter=None,
             llm_model="gpt-4o",

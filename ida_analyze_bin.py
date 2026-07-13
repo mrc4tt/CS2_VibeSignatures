@@ -20,7 +20,7 @@ Usage:
     -ida_args: Additional arguments for idalib-mcp (optional)
     -debug: Enable debug output
     -skip_error: Continue analysis after skill or preprocessor failures
-    -skil_pp: Skip preprocessing scripts and run Agent Skills directly
+    -skip_pp: Skip preprocessing scripts and run Agent Skills directly
 
 Requirements:
     uv sync
@@ -1202,7 +1202,7 @@ def parse_args():
         help="Continue analysis after skill or preprocessor failures",
     )
     parser.add_argument(
-        "-skil_pp",
+        "-skip_pp",
         action="store_true",
         help="Skip preprocessing scripts and run Agent Skills directly",
     )
@@ -2165,7 +2165,7 @@ def process_binary(
     rename=False,
     agent_model=DEFAULT_AGENT_MODEL,
     skip_error=False,
-    skil_pp=False,
+    skip_pp=False,
 ):
     """
     Process a single binary file.
@@ -2184,7 +2184,7 @@ def process_binary(
         old_binary_dir: Directory containing old version YAML files for signature reuse
         rename: Run module/platform post_process over valid expected output YAML mappings
         skip_error: Continue processing later skills after skill or preprocessor failures
-        skil_pp: Skip preprocessing scripts and run Agent Skills directly
+        skip_pp: Skip preprocessing scripts and run Agent Skills directly
 
     Returns:
         Tuple of (success_count, fail_count, skip_count)
@@ -2431,8 +2431,8 @@ def process_binary(
                 break
 
             preprocess_status = PREPROCESS_STATUS_NO_SCRIPT
-            if skil_pp:
-                print(f"    Skipping preprocess: {skill_name} (-skil_pp)")
+            if skip_pp:
+                print(f"    Skipping preprocess: {skill_name} (-skip_pp)")
             else:
                 # Try preprocessing first. Some preprocessors can run without old YAMLs.
                 old_yaml_map = None
@@ -2508,7 +2508,7 @@ def process_binary(
                 skip_count += 1
                 continue
 
-            if not required_outputs and optional_outputs and not skil_pp:
+            if not required_outputs and optional_outputs and not skip_pp:
                 skip_count += 1
                 print(f"  Skipping skill: {skill_name} (optional outputs not generated)")
                 continue
@@ -2691,7 +2691,7 @@ def main():
     ida_args = args.ida_args
     debug = args.debug
     skip_error = getattr(args, "skip_error", False)
-    skil_pp = getattr(args, "skil_pp", False)
+    skip_pp = getattr(args, "skip_pp", False)
     selected_skill_name = getattr(args, "skill", None)
 
     # Validate config file exists
@@ -2715,8 +2715,8 @@ def main():
         print("Debug mode: enabled")
     if skip_error:
         print("Skip error mode: enabled")
-    if skil_pp:
-        print("Agent Skill only mode: enabled (-skil_pp)")
+    if skip_pp:
+        print("Agent Skill only mode: enabled (-skip_pp)")
 
     # Parse config
     print("\nParsing config...")
@@ -2819,7 +2819,7 @@ def main():
                 rename=args.rename,
                 agent_model=agent_model,
                 skip_error=skip_error,
-                skil_pp=skil_pp,
+                skip_pp=skip_pp,
             )
             total_success += success
             total_fail += fail
