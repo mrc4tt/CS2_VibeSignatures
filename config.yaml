@@ -6217,6 +6217,27 @@ modules:
       - name: find-CEntitySystem_Init
         expected_output:
           - CEntitySystem_Init.{platform}.yaml
+      # Windows 14168 de-inlined CEntitySystem_InitEntityMaterialAttributes out of
+      # CEntitySystem_Init. This optional fallback pair (windows-only) locates the
+      # de-inlined function and decompiles it for CEntitySystem::m_EntityMaterialAttributes.
+      # On an inlined build both soft-skip and find-CEntitySystem_Init-decompiles below
+      # resolves the member inline instead (see its prerequisite/expected_output_windows).
+      - name: find-CEntitySystem_InitEntityMaterialAttributes
+        optional_output:
+          - CEntitySystem_InitEntityMaterialAttributes.{platform}.yaml
+        expected_input:
+          - CEntitySystem_Init.{platform}.yaml
+        skip_if_exists:
+          - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
+        platform: windows
+      - name: find-CEntitySystem_m_EntityMaterialAttributes
+        optional_output:
+          - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
+        skip_if_exists:
+          - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
+        prerequisite:
+          - find-CEntitySystem_InitEntityMaterialAttributes
+        platform: windows
       - name: find-CEntitySystem_Init-decompiles
         expected_output:
           - INetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
@@ -6234,6 +6255,12 @@ modules:
           - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
         expected_input:
           - CEntitySystem_Init.{platform}.yaml
+        # Run after the windows de-inline fallback pair so that when it already produced
+        # CEntitySystem_m_EntityMaterialAttributes.windows.yaml, that target is skipped
+        # here (preprocess_common_skill skips already-generated targets) and this skill
+        # only resolves the members still inlined in CEntitySystem_Init.
+        prerequisite:
+          - find-CEntitySystem_m_EntityMaterialAttributes
       - name: find-CEntitySystem_PostCreateEntitySystem
         expected_output:
           - CEntitySystem_PostCreateEntitySystem.{platform}.yaml

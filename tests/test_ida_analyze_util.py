@@ -12216,5 +12216,123 @@ class TestPreprocessFuncSigViaMcpVfuncSigMaxMatch(unittest.IsolatedAsyncioTestCa
         self.assertTrue(mock_gen_sig.await_args.kwargs["allow_across_function_boundary"])
 
 
+class TestAlreadyGeneratedTargetSkip(unittest.IsolatedAsyncioTestCase):
+    """preprocess_common_skill must skip targets whose valid output YAML already exists.
+
+    This lets a multi-target decompile skill (e.g. find-CEntitySystem_Init-decompiles)
+    keep a symbol as a fallback target while tolerating a de-inlined build where an
+    earlier fallback skill already wrote that symbol's YAML.
+    """
+
+    async def test_skips_struct_member_target_with_existing_valid_output(self) -> None:
+        existing_name = "CEntitySystem_m_EntityMaterialAttributes"
+        fresh_name = "CEntitySystem_m_sEntSystemName"
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            # A prior fallback skill already produced a valid, non-empty YAML.
+            _write_yaml(
+                tmp_path / f"{existing_name}.windows.yaml",
+                {
+                    "struct_name": "CEntitySystem",
+                    "member_name": "m_EntityMaterialAttributes",
+                    "offset": "0x2070",
+                },
+            )
+            struct_mock = AsyncMock(
+                return_value={
+                    "struct_name": "CEntitySystem",
+                    "member_name": "m_sEntSystemName",
+                    "offset": "0x8",
+                    "offset_sig": "AA BB",
+                    "offset_sig_disp": 0,
+                }
+            )
+            with (
+                patch.object(
+                    ida_analyze_util,
+                    "preprocess_struct_offset_sig_via_mcp",
+                    struct_mock,
+                ),
+                patch.object(
+                    ida_analyze_util,
+                    "write_struct_offset_yaml",
+                ) as mock_write,
+            ):
+                result = await ida_analyze_util.preprocess_common_skill(
+                    session="session",
+                    expected_outputs=[
+                        str(tmp_path / f"{existing_name}.windows.yaml"),
+                        str(tmp_path / f"{fresh_name}.windows.yaml"),
+                    ],
+                    old_yaml_map={},
+                    new_binary_dir=str(tmp_path),
+                    platform="windows",
+                    image_base=0x180000000,
+                    struct_member_names=[existing_name, fresh_name],
+                    generate_yaml_desired_fields=[
+                        (existing_name, ["struct_name", "member_name", "offset"]),
+                        (
+                            fresh_name,
+                            [
+                                "struct_name",
+                                "member_name",
+                                "offset",
+                                "offset_sig",
+                                "offset_sig_disp",
+                            ],
+                        ),
+                    ],
+                    debug=True,
+                )
+
+        self.assertTrue(result)
+        # The already-satisfied target is skipped; only the fresh one is resolved.
+        struct_mock.assert_awaited_once()
+        mock_write.assert_called_once()
+        self.assertTrue(str(mock_write.call_args.args[0]).endswith(f"{fresh_name}.windows.yaml"))
+
+    async def test_processes_struct_member_target_with_empty_existing_output(self) -> None:
+        name = "CEntitySystem_m_EntityMaterialAttributes"
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            # An empty file is not a valid payload -> the target must still be resolved.
+            (tmp_path / f"{name}.windows.yaml").write_text("", encoding="utf-8")
+            struct_mock = AsyncMock(
+                return_value={
+                    "struct_name": "CEntitySystem",
+                    "member_name": "m_EntityMaterialAttributes",
+                    "offset": "0x2070",
+                }
+            )
+            with (
+                patch.object(
+                    ida_analyze_util,
+                    "preprocess_struct_offset_sig_via_mcp",
+                    struct_mock,
+                ),
+                patch.object(
+                    ida_analyze_util,
+                    "write_struct_offset_yaml",
+                ) as mock_write,
+            ):
+                result = await ida_analyze_util.preprocess_common_skill(
+                    session="session",
+                    expected_outputs=[str(tmp_path / f"{name}.windows.yaml")],
+                    old_yaml_map={},
+                    new_binary_dir=str(tmp_path),
+                    platform="windows",
+                    image_base=0x180000000,
+                    struct_member_names=[name],
+                    generate_yaml_desired_fields=[
+                        (name, ["struct_name", "member_name", "offset"]),
+                    ],
+                    debug=True,
+                )
+
+        self.assertTrue(result)
+        struct_mock.assert_awaited_once()
+        mock_write.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main()

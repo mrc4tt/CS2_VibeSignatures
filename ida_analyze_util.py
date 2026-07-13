@@ -7837,6 +7837,38 @@ async def preprocess_common_skill(
             print(f"    Preprocess: expected outputs missing for {', '.join(missing)}")
         return False
 
+    # Skip any target whose valid output YAML already exists in new_binary_dir.
+    # Another skill earlier in the same run (e.g. a de-inline fallback pair) may
+    # have already produced it; without this a multi-target decompile skill would
+    # re-resolve -- and potentially hard-fail on -- a symbol that is already on
+    # disk. Concretely this lets find-CEntitySystem_Init-decompiles keep
+    # CEntitySystem_m_EntityMaterialAttributes as its inlined fallback target
+    # while tolerating the de-inlined build where the fallback pair wrote it first.
+    def _target_output_already_satisfied(target_output):
+        if not target_output or not os.path.exists(target_output):
+            return False
+        try:
+            with open(target_output, "r", encoding="utf-8") as handle:
+                existing_payload = yaml.safe_load(handle)
+        except Exception:
+            return False
+        return isinstance(existing_payload, dict) and bool(existing_payload)
+
+    def _drop_satisfied_targets(names, matched_outputs, kind_label):
+        remaining = []
+        for name in names:
+            if _target_output_already_satisfied(matched_outputs.get(name)):
+                if debug:
+                    print(f"    Preprocess: skipping {kind_label} target {name} (valid output already exists)")
+                continue
+            remaining.append(name)
+        return remaining
+
+    all_func_names = _drop_satisfied_targets(all_func_names, matched_func_outputs, "func")
+    gv_names = _drop_satisfied_targets(gv_names, matched_gv_outputs, "gv")
+    patch_names = _drop_satisfied_targets(patch_names, matched_patch_outputs, "patch")
+    struct_member_names = _drop_satisfied_targets(struct_member_names, matched_struct_outputs, "struct-member")
+
     llm_request_cache = {}
     llm_result_by_symbol_name = {}
     fast_path_attempted = {}
