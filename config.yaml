@@ -1262,6 +1262,11 @@ modules:
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
           - CNetworkGameServer_GetFreeClient.{platform}.yaml
+      - name: find-CNetworkGameServerBase_GetPlayerNetworkIDString
+        expected_output:
+          - CNetworkGameServerBase_GetPlayerNetworkIDString.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_vtable.{platform}.yaml
       - name: find-CServerSideClientBase_Connect
         expected_output:
           - CServerSideClientBase_Connect.{platform}.yaml
@@ -1838,6 +1843,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::GetPlayerInfo
+      - name: CNetworkGameServerBase_GetPlayerNetworkIDString
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::GetPlayerNetworkIDString
       - name: CNetworkGameServerBase_StartHLTVMaster
         category: func
         alias:
@@ -10177,19 +10186,13 @@ modules:
           - g_pNavGameTest.{platform}.yaml
         expected_input:
           - g_pInterfaceGlobals.{platform}.yaml
-      # Placed in the late engine pass because it depends on g_pSource2GameClients,
-      # which is only produced for engine2.dll here (via find-g_pInterfaceGlobals_ppGlobal).
-      # The script also excludes CNetworkGameServerBase_ConnectClient (an extra xref
-      # collider on Linux) via exclude_funcs; it is produced in the primary engine pass and
-      # listed in expected_input below (only its func_va is consumed for the xref exclude).
+      # Resolve the CNetworkGameServer override from the base vfunc's inherited slot.
       - name: find-CNetworkGameServer_GetPlayerNetworkIDString
         expected_output:
           - CNetworkGameServer_GetPlayerNetworkIDString.{platform}.yaml
         expected_input:
-          - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
           - CNetworkGameServer_vtable.{platform}.yaml
-          - g_pSource2GameClients.{platform}.yaml
-          - CNetworkGameServerBase_ConnectClient.{platform}.yaml
+          - CNetworkGameServerBase_GetPlayerNetworkIDString.{platform}.yaml
       # Inline/noinline fallback chain for CEngineServer::GetPlayerNetworkIDString (moved
       # here from the primary engine pass). On Linux 14168 CNetworkGameServer::
       # GetPlayerNetworkIDString de-inlined out of the CEngineServer vfunc, which now just

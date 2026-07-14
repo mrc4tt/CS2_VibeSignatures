@@ -1,28 +1,45 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CNetworkGameServer_GetPlayerNetworkIDString skill."""
+"""Preprocess script for find-CNetworkGameServerBase_GetPlayerNetworkIDString skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
-INHERIT_VFUNCS = [
-    # (target_func_name, inherit_vtable_class, base_vfunc_name, generate_func_sig)
+TARGET_FUNCTION_NAMES = [
+    "CNetworkGameServerBase_GetPlayerNetworkIDString",
+]
+
+FUNC_XREFS = [
+    {
+        "func_name": "CNetworkGameServerBase_GetPlayerNetworkIDString",
+        "xref_strings": [
+            "FULLMATCH:GetPlayerNetworkIDString",
+        ],
+        "xref_gvs": [],
+        "xref_signatures": [],
+        "xref_funcs": [],
+        "exclude_funcs": [],
+        "exclude_strings": [],
+        "exclude_gvs": [],
+        "exclude_signatures": [],
+    },
+]
+
+FUNC_VTABLE_RELATIONS = [
+    # (func_name, vtable_class)
     (
-        "CNetworkGameServer_GetPlayerNetworkIDString",
-        "CNetworkGameServer",
         "CNetworkGameServerBase_GetPlayerNetworkIDString",
-        True,
+        "CNetworkGameServerBase_vtable",
     ),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CNetworkGameServer_GetPlayerNetworkIDString",
+        "CNetworkGameServerBase_GetPlayerNetworkIDString",
         [
             "func_name",
             "func_va",
             "func_rva",
             "func_size",
-            "func_sig",
             "vtable_name",
             "vfunc_offset",
             "vfunc_index",
@@ -41,9 +58,7 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Resolve the vfunc by inheriting CNetworkGameServerBase's vtable slot."""
-    _ = skill_name
-
+    """Locate the short vfunc by its exact string reference and vtable membership."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -51,7 +66,9 @@ async def preprocess_skill(
         new_binary_dir=new_binary_dir,
         platform=platform,
         image_base=image_base,
-        inherit_vfuncs=INHERIT_VFUNCS,
+        func_names=TARGET_FUNCTION_NAMES,
+        func_xrefs=FUNC_XREFS,
+        func_vtable_relations=FUNC_VTABLE_RELATIONS,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )
