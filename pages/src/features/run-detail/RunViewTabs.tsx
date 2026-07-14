@@ -1,4 +1,4 @@
-import { Card, Space, Spin, Switch, Tabs, Tag } from 'antd'
+import { Card, Space, Spin, Switch, Tabs, Typography } from 'antd'
 import { lazy, Suspense } from 'react'
 import type { TaskView } from '../../api/types'
 import type { GraphFilters, VisualGraph } from '../../graph/model'
@@ -15,7 +15,6 @@ interface Props {
   filters: GraphFilters
   selectedTask?: string
   showStageOrder: boolean
-  automaticDagScope: boolean
   onView(view: string): void
   onSelect(id: string): void
   onToggleExpand(id: string): void
@@ -28,14 +27,17 @@ function graphFallback() {
 
 function MindMapTab({ props }: { props: Props }) {
   return (
-    <Suspense fallback={graphFallback()}>
-      <GraphCanvas
-        graph={props.mindMap}
-        selectedId={props.selectedTask}
-        onSelect={props.onSelect}
-        onToggleExpand={(id) => props.mindMap.expandable.has(id) && props.onToggleExpand(id)}
-      />
-    </Suspense>
+    <Space orientation="vertical" className="full-width">
+      <Typography.Text type="secondary">默认展开全部 Skill 子代；双击有后代的节点可折叠或重新展开分支。</Typography.Text>
+      <Suspense fallback={graphFallback()}>
+        <GraphCanvas
+          graph={props.mindMap}
+          selectedId={props.selectedTask}
+          onSelect={props.onSelect}
+          onToggleExpand={(id) => props.mindMap.expandable.has(id) && props.onToggleExpand(id)}
+        />
+      </Suspense>
+    </Space>
   )
 }
 
@@ -44,7 +46,6 @@ function DagTab({ props }: { props: Props }) {
     <Space orientation="vertical" className="full-width">
       <Space>
         <Switch checked={props.showStageOrder} onChange={props.onShowStageOrder} />显示执行顺序边
-        {props.automaticDagScope && <Tag>默认当前 Job</Tag>}
       </Space>
       <Suspense fallback={graphFallback()}>
         <GraphCanvas graph={props.dag} selectedId={props.selectedTask} onSelect={props.onSelect} />

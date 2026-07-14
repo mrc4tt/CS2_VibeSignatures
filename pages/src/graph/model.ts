@@ -64,6 +64,16 @@ function displayParents(graph: ExecutionPlanView): Record<string, string> {
   )
 }
 
+export function defaultMindMapExpansion(graph: ExecutionPlanView): Set<string> {
+  const parents = displayParents(graph)
+  const nodesWithChildren = new Set(Object.values(parents))
+  return new Set(
+    graph.nodes
+      .filter((node) => nodesWithChildren.has(node.id))
+      .map((node) => node.id),
+  )
+}
+
 function hierarchyParents(run: RunView, graph: ExecutionPlanView): Record<string, string> {
   const runNodeId = `run:${run.run_id}`
   const parents: Record<string, string> = {}

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { ProcessPhase, TaskStatus } from '../../api/types'
 import { StatusTag } from '../../components/StatusTag'
-import { buildDag, buildMindMap, type GraphFilters } from '../../graph/model'
+import { buildDag, buildMindMap, defaultMindMapExpansion, type GraphFilters } from '../../graph/model'
 import type { ExecutionPlanView, TaskView } from '../../api/types'
 import { useRunLiveStore } from './liveStore'
 import { RunFilterBar } from './RunFilterBar'
@@ -93,7 +93,7 @@ function RunDetailContent(props: DetailContentProps) {
         <>
           {props.graph.warnings.length > 0 && <Alert type="warning" showIcon icon={<WarningOutlined />} message="ExecutionPlan 警告" description={<pre className="warning-block">{JSON.stringify(props.graph.warnings, null, 2)}</pre>} />}
           <Card><RunFilterBar graph={props.graph} filters={props.filters} onChange={props.onFilters} /></Card>
-          {props.mindMap && props.dag && <RunViewTabs view={props.view} mindMap={props.mindMap} dag={props.dag} tasks={props.tasks} filters={props.filters} selectedTask={props.selectedTask} showStageOrder={props.showStageOrder} automaticDagScope={!props.filters.jobId && !props.filters.stageId} onView={(key) => props.onParam('view', key)} onSelect={props.onSelect} onToggleExpand={props.onToggle} onShowStageOrder={props.onShowStageOrder} />}
+          {props.mindMap && props.dag && <RunViewTabs view={props.view} mindMap={props.mindMap} dag={props.dag} tasks={props.tasks} filters={props.filters} selectedTask={props.selectedTask} showStageOrder={props.showStageOrder} onView={(key) => props.onParam('view', key)} onSelect={props.onSelect} onToggleExpand={props.onToggle} onShowStageOrder={props.onShowStageOrder} />}
           <TaskDrawer runId={props.runId} taskId={props.selectedTask} graph={props.graph} onClose={() => props.onParam('task')} onNavigate={props.onSelect} />
         </>
       )}
@@ -104,7 +104,7 @@ function RunDetailContent(props: DetailContentProps) {
 export function RunDetailPage() {
   const { runId = '' } = useParams()
   const [params, setParams] = useSearchParams()
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [mindMapExpansion, setMindMapExpansion] = useState<{ runId: string; nodes: Set<string> } | null>(null)
   const [showStageOrder, setShowStageOrder] = useState(false)
   const { snapshotQuery } = useRunLive(runId)
   const run = useRunLiveStore((state) => state.run)
@@ -112,15 +112,15 @@ export function RunDetailPage() {
   const tasksById = useRunLiveStore((state) => state.tasksById)
   const filters = filtersFromParams(params)
   const tasks = useMemo(() => Object.values(tasksById), [tasksById])
+  const expanded = useMemo(
+    () => mindMapExpansion?.runId === runId ? mindMapExpansion.nodes : graph ? defaultMindMapExpansion(graph) : new Set<string>(),
+    [graph, mindMapExpansion, runId],
+  )
   const defaultView: ViewMode = window.innerWidth < 900 ? 'list' : 'mindmap'
   const view = (params.get('view') || defaultView) as ViewMode
   const selectedTask = params.get('task') || undefined
-  const dagFilters = useMemo(() => {
-    if (!graph || !run || filters.jobId || filters.stageId) return filters
-    return { ...filters, jobId: run.current_job_id || graph.jobs[0]?.id || 'all' }
-  }, [filters, graph, run])
   const mindMap = useMemo(() => run && graph ? buildMindMap(run, graph, tasks, filters, expanded) : null, [expanded, filters, graph, run, tasks])
-  const dag = useMemo(() => graph ? buildDag(graph, tasks, dagFilters, showStageOrder) : null, [dagFilters, graph, showStageOrder, tasks])
+  const dag = useMemo(() => graph ? buildDag(graph, tasks, filters, showStageOrder) : null, [filters, graph, showStageOrder, tasks])
 
   function updateParam(key: string, value?: string) {
     const next = new URLSearchParams(params)
@@ -134,11 +134,12 @@ export function RunDetailPage() {
   }
 
   function toggleExpanded(id: string) {
-    setExpanded((current) => {
-      const next = new Set(current)
+    setMindMapExpansion((current) => {
+      const currentNodes = current?.runId === runId ? current.nodes : expanded
+      const next = new Set(currentNodes)
       if (next.has(id)) next.delete(id)
       else next.add(id)
-      return next
+      return { runId, nodes: next }
     })
   }
 
