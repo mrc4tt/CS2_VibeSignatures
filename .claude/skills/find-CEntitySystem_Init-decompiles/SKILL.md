@@ -25,6 +25,21 @@ de-inlined out of `CEntitySystem_Init` into a helper the reference does not know
 
 Your job is to produce the missing output YAMLs regardless of that inline/de-inline boundary.
 
+## Realworld Function References
+
+Read the platform-relevant real-world YAMLs before searching in IDA. They provide concrete disassembly,
+decompiler output, semantic anchors, and both sides of the known inline/de-inline boundary. Treat their
+addresses and offsets as reference-build values only; verify every result against the current binary.
+
+- Windows inline baseline: `ida_preprocessor_scripts/references/server/CEntitySystem_Init.windows.yaml`
+- Linux baseline: `ida_preprocessor_scripts/references/server/CEntitySystem_Init.linux.yaml`
+- Windows de-inlined `CEntitySystem_Init` variant:
+  `ida_preprocessor_scripts/references/server/CEntitySystem_Init-noinline.windows.yaml`
+- Windows de-inlined material helper:
+  `ida_preprocessor_scripts/references/server/CEntitySystem_InitEntityMaterialAttributes.windows.yaml`
+- Linux registration helper:
+  `ida_preprocessor_scripts/references/server/CEntitySystem_ProcessEntityRegistration.linux.yaml`
+
 ## Background — what CEntitySystem_Init does
 
 `CEntitySystem_Init(this, const char *name, int a3, int mode, char a5)` is a long constructor-style routine.

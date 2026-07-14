@@ -65,7 +65,8 @@ For target finder `find-XXXX` in module `<module>` (`server`, `engine`, `network
 3. **Reference YAMLs** `ida_preprocessor_scripts/references/<module>/<predecessor>.{platform}.yaml` — the
    `disasm_code` + `procedure` carry the annotations `; 0xNN = Class::member` and
    `; 0xNN = Class::vfunc` / `// NNNN = 0xNN = …` at each access/call site. **These annotations are the semantic
-   fingerprints** you translate into the fallback's anchors.
+   fingerprints** you translate into the fallback's anchors. Also collect any real-world helper or alternate
+   inline/de-inline reference YAML that materially helps locate the targets.
 4. **Ground-truth output YAMLs** `bin/<gamever>/<module>/<target>.{platform}.yaml` — the **authoritative**
    offsets, vfunc indices, and signature styles the finder currently produces. Mine these for the reference
    values in the inventory table. `<gamever>` comes from `.env` (`CS2VIBE_GAMEVER`); `bin/` is gitignored, so
@@ -114,6 +115,13 @@ For each target, read its access/call site in the reference `disasm_code` + `pro
 Create `.claude/skills/find-XXXX/SKILL.md` from the template below. Fill every placeholder; keep only the
 target kinds that actually occur. The output filename MUST equal the finder's skill name so
 `agent_runner.run_skill` finds it.
+
+The generated fallback MUST contain `## Realworld Function References` near the top, before the background.
+List one exact repo-relative YAML path per bullet for every platform-relevant predecessor and useful
+inline/de-inline helper or variant. Spell out `.windows.yaml` and `.linux.yaml` paths separately; do not use
+`{platform}` shorthand in this section, because the agent must be able to open each reference directly. State
+that addresses and offsets are reference-build values that still require verification against the current
+binary.
 
 ### Step 5 — Validate
 
@@ -170,6 +178,18 @@ disable-model-invocation: true
 Recover every symbol the find-XXXX preprocessor produces, in CS2 `<binary.dll>` / `<libbinary.so>`, using IDA
 Pro MCP tools. This is the Agent fallback: it runs only when the preprocessor returned failure — which almost
 always means a target's access pattern **moved** across the inline/de-inline boundary.
+
+## Realworld Function References
+
+Read the platform-relevant real-world YAMLs before searching in IDA. Treat their addresses and offsets as
+reference-build values only; verify every result against the current binary.
+
+- `ida_preprocessor_scripts/references/<module>/<predecessor>.windows.yaml`
+- `ida_preprocessor_scripts/references/<module>/<predecessor>.linux.yaml`
+- `ida_preprocessor_scripts/references/<module>/<relevant-helper-or-variant>.windows.yaml`
+- `ida_preprocessor_scripts/references/<module>/<relevant-helper-or-variant>.linux.yaml`
+
+Spell out each existing path literally and drop non-applicable placeholders or platforms.
 
 ## Background — <PREDECESSOR> and what it wires up
 
@@ -274,6 +294,8 @@ Written beside the binary, one per symbol: `<symbol>.windows.yaml` / `<symbol>.l
       output YAMLs.
 - [ ] Output inventory lists **every** symbol with kind + platform + predecessor + reference value.
 - [ ] Fallback SKILL.md filename equals the finder's skill name.
+- [ ] `## Realworld Function References` lists exact, directly openable repo-relative YAML paths for each
+      relevant platform and inline/de-inline helper or variant; it contains no `{platform}` shorthand.
 - [ ] SKILL.md is self-contained: enumerates all outputs, gates by platform, has the Step-0 skip-existing step.
 - [ ] Each target has a semantic anchor and the follow-the-callee instruction; decoys are called out.
 - [ ] Each kind is mapped to the correct sig-gen + writer skill with correct params (indirect vcalls use
@@ -303,6 +325,6 @@ The canonical output of this workflow lives at
   `CEntitySystem_ProcessEntityRegistration`, and Windows-only `m_EntityMaterialAttributes` (@0x2070) — each
   anchored by a fingerprint (the `"string_t_table"` call, the `CUtlScratchMemoryPool::Init(_, 0x400, …)` call,
   the FNV material-hash loop, …) and recoverable whether inlined or de-inlined.
-- It demonstrates every section of the template: the inventory table, Step-0 skip, follow-the-callee, the
-  indirect-vcall shape, the `0xBBC`-vs-`0xBDA` decoy note, and the offset-is-must-have caveat for the
-  field-change trio.
+- It demonstrates every section of the template: directly openable real-world function references, the
+  inventory table, Step-0 skip, follow-the-callee, the indirect-vcall shape, the `0xBBC`-vs-`0xBDA` decoy note,
+  and the offset-is-must-have caveat for the field-change trio.
