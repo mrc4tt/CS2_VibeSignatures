@@ -17,6 +17,7 @@ class TestFixCppHeadersSkill(unittest.TestCase):
         self.assertEqual("fix-cppheaders", frontmatter["name"])
         self.assertIn("Use when", frontmatter["description"])
         self.assertIn("uv run run_cpp_tests.py", content)
+        self.assertIn("-snapshot <snapshot>", content)
         self.assertIn("config.yaml", content)
         self.assertIn("headers", content)
         self.assertIn("hl2sdk_cs2", content)

@@ -182,30 +182,63 @@ jobs:
             throw "ida_analyze_bin.py failed with exit code $LASTEXITCODE"
           }
 
+      - name: Build candidate snapshot
+        shell: pwsh
+        run: |
+          $candidateRoot = Join-Path $env:RUNNER_TEMP "gamesymbol-candidates\build-${{ github.run_id }}-${{ github.run_attempt }}"
+          New-Item -ItemType Directory -Path $candidateRoot -Force | Out-Null
+          $candidate = Join-Path $candidateRoot "$env:GAMEVER.yaml"
+          $session = Join-Path $candidateRoot "$env:GAMEVER.session.json"
+          "CANDIDATE_ROOT=$candidateRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "ACTUAL_CANDIDATE_SNAPSHOT=$candidate" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CANDIDATE_SESSION=$session" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          uv run gamesymbol_candidate.py build `
+            -gamever "$env:GAMEVER" `
+            -bindir bin `
+            -configyaml config.yaml `
+            -output "$candidate" `
+            -session "$session"
+          if ($LASTEXITCODE -ne 0) {
+            throw "candidate build failed with exit code $LASTEXITCODE"
+          }
+
       - name: Update gamedata
         shell: pwsh
         run: |
-          uv run update_gamedata.py -gamever "$env:GAMEVER" -debug -download_latest
+          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before gamedata" }
+          uv run update_gamedata.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -debug -download_latest
+          if ($LASTEXITCODE -ne 0) { throw "update_gamedata.py failed with exit code $LASTEXITCODE" }
+          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after gamedata" }
+          uv run gamesymbol_candidate.py mark -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" -step gamedata
+          if ($LASTEXITCODE -ne 0) { throw "failed to mark gamedata validation" }
 
       - name: Run C++ tests
         shell: pwsh
         run: |
-          $args = @('-gamever', $env:GAMEVER, '-debug')
+          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before C++ tests" }
+          $args = @('-gamever', $env:GAMEVER, '-snapshot', $env:ACTUAL_CANDIDATE_SNAPSHOT, '-debug')
           uv run run_cpp_tests.py @args
           if ($LASTEXITCODE -ne 0) {
             throw "run_cpp_tests.py failed with exit code $LASTEXITCODE"
           }
+          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after C++ tests" }
+          uv run gamesymbol_candidate.py mark -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" -step cpp_tests
+          if ($LASTEXITCODE -ne 0) { throw "failed to mark C++ validation" }
 
-      - name: Pack validated game-symbol snapshot
+      - name: Publish validated candidate snapshot
         shell: pwsh
         run: |
-          uv run gamesymbol_snapshot.py pack `
-            -gamever "$env:GAMEVER" `
-            -bindir bin `
-            -configyaml config.yaml `
+          uv run gamesymbol_candidate.py publish `
+            -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" `
+            -session "$env:CANDIDATE_SESSION" `
             -snapshot "gamesymbols/$env:GAMEVER.yaml"
           if ($LASTEXITCODE -ne 0) {
-            throw "gamesymbol snapshot pack failed with exit code $LASTEXITCODE"
+            throw "candidate publication failed with exit code $LASTEXITCODE"
           }
 
       - name: Persist validated bin cache
@@ -364,4 +397,12 @@ jobs:
                     ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
                 }
             }
+          }
+
+      - name: Clean candidate session
+        if: always()
+        shell: pwsh
+        run: |
+          if (-not [string]::IsNullOrWhiteSpace($env:CANDIDATE_ROOT) -and (Test-Path -LiteralPath $env:CANDIDATE_ROOT)) {
+            Remove-Item -LiteralPath $env:CANDIDATE_ROOT -Recurse -Force
           }

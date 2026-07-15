@@ -1,7 +1,7 @@
 ---
 name: post-change-validation
 description: |
-  Run the repository's C++ post-change validation gate with run_cpp_tests.py before snapshot packing and commit.
+  Run the repository's C++ post-change validation gate against an immutable candidate snapshot before publication.
   Use when a project workflow explicitly requests final C++ validation after formatting and gamedata updates.
   Any failed, skipped, or non-runnable validation stops the calling task and must be reported to the user.
 disable-model-invocation: true
@@ -9,17 +9,26 @@ disable-model-invocation: true
 
 # Post-Change Validation
 
-Run `run_cpp_tests.py` as a hard pre-commit gate. This skill validates only; never edit files, repair failures,
-pack a snapshot, stage changes, or commit.
+Run `run_cpp_tests.py` as a hard pre-commit gate. This skill never edits tracked files or candidate bytes, repairs
+failures, publishes a snapshot, stages changes, or commits. It may only advance the untracked candidate session after
+successful validation.
 
 ## Inputs
 
 - `gamever` — use the caller-provided value. If omitted, read `CS2VIBE_GAMEVER` from `.env`.
+- `candidate` — required candidate snapshot path produced by `/post-change-update phase=before-validation`.
+- `session` — required session manifest path paired with that candidate.
 
 If no non-empty game version is available, stop immediately:
 
 ```text
 <skill_error>post-change-validation cannot run: gamever was not provided and .env has no CS2VIBE_GAMEVER.</skill_error>
+```
+
+If either candidate path is absent, stop without falling back to `bin` or the tracked snapshot:
+
+```text
+<skill_error>post-change-validation cannot run: candidate and session are required.</skill_error>
 ```
 
 ## Method
@@ -31,7 +40,8 @@ Use the resolved game version explicitly:
 ```bash
 LOG_FILE="/tmp/post-change-validation-${GAMEVER}.log"
 set -o pipefail
-uv run run_cpp_tests.py -gamever "$GAMEVER" -debug 2>&1 | tee "$LOG_FILE"
+uv run gamesymbol_candidate.py guard -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION"
+uv run run_cpp_tests.py -gamever "$GAMEVER" -snapshot "$CANDIDATE" -debug 2>&1 | tee "$LOG_FILE"
 STATUS=${PIPESTATUS[0]}
 ```
 
@@ -72,5 +82,12 @@ Then **STOP the entire calling task**. Do not attempt a fix or retry, do not inv
 
 ### Step 4 — Report success
 
-When the gate passes, report the game version and the zero-valued failure counters. The caller may then invoke
-`/post-change-update phase=after-validation` for the same game version.
+When the gate passes, guard the candidate again and record the successful C++ step:
+
+```bash
+uv run gamesymbol_candidate.py guard -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION"
+uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION" -step cpp_tests
+```
+
+Report the game version, candidate SHA-256, and zero-valued failure counters. The caller may then invoke
+`/post-change-update phase=after-validation` with the same game version, candidate, and session.

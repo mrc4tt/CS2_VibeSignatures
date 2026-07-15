@@ -31,21 +31,24 @@ Repair `hl2sdk_cs2` declarations from compiler-versus-YAML layout differences. T
 ## Workflow
 
 1. Determine the game version from the user's request. If omitted, read `CS2VIBE_GAMEVER` from `.env`.
-2. Run the complete comparison with debug details:
+2. Resolve the immutable symbol snapshot. Use a caller-provided actual candidate when available; otherwise use the
+   published historical snapshot at `gamesymbols/<gamever>.yaml`. Never read reference YAML directly from `bin`.
+3. Run the complete comparison with debug details:
 
    ```powershell
-   uv run run_cpp_tests.py -gamever <gamever> -debug
+   uv run run_cpp_tests.py -gamever <gamever> -snapshot <snapshot> -debug
    ```
 
-3. For each test reporting layout differences, find its `cpp_tests` entry in `config.yaml` and read its `symbol`,
+4. For each test reporting layout differences, find its `cpp_tests` entry in `config.yaml` and read its `symbol`,
    `headers`, target, aliases, and reference modules.
-4. Read the configured headers and the complete diff sections:
+5. Read the configured headers and the complete diff sections:
    - `Current vtable entries` versus `YAML reference vtable entries`
    - `Current record members` versus `YAML reference struct members`
-5. Make the smallest declaration-only edit that aligns the header with the reference. Typical edits are reordering,
+6. Make the smallest declaration-only edit that aligns the header with the reference. Typical edits are reordering,
    adding, or removing virtual declarations; correcting inheritance; and adjusting record members or padding.
-6. Re-run the same command. If differences remain, use the new output rather than the previous diff and repeat.
-7. Finish only when the command exits successfully with zero compile failures, invalid items, and layout differences.
+7. Re-run the same command with the same snapshot. If differences remain, use the new output rather than the previous
+   diff and repeat.
+8. Finish only when the command exits successfully with zero compile failures, invalid items, and layout differences.
 
 ## Failure Handling
 

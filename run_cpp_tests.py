@@ -31,10 +31,10 @@ from cpp_tests_util import (
     map_target_triple_to_platform,
     pointer_size_from_target_triple,
 )
+from gamesymbol_store import SymbolStore, SymbolStoreError, open_snapshot_store
 
 
 DEFAULT_CONFIG_FILE = "config.yaml"
-DEFAULT_BIN_DIR = "bin"
 DEFAULT_CLANG = "clang++"
 DEFAULT_CPP_STD = "c++20"
 
@@ -47,15 +47,11 @@ def parse_args():
         default=DEFAULT_CONFIG_FILE,
         help=f"Path to config.yaml file (default: {DEFAULT_CONFIG_FILE})",
     )
-    parser.add_argument(
-        "-bindir",
-        default=DEFAULT_BIN_DIR,
-        help=f"Directory containing YAML outputs (default: {DEFAULT_BIN_DIR})",
-    )
+    parser.add_argument("-snapshot", required=True, help="Canonical candidate or published game-symbol snapshot")
     parser.add_argument(
         "-gamever",
         required=True,
-        help="Game version subdirectory name under bin (required)",
+        help="Game version recorded by the snapshot (required)",
     )
     parser.add_argument(
         "-clang",
@@ -265,7 +261,7 @@ def compile_and_compare(
     test_item: Dict[str, Any],
     args: argparse.Namespace,
     config_dir: Path,
-    bindir: Path,
+    symbol_store: SymbolStore,
 ) -> Dict[str, Any]:
     """Compile a C++ test file and compare vtable layout against YAML references.
 
@@ -372,8 +368,7 @@ def compile_and_compare(
                         compare_compiler_vtable_with_yaml(
                             class_name=symbol,
                             compiler_output=compile_output,
-                            bindir=bindir,
-                            gamever=args.gamever,
+                            symbol_store=symbol_store,
                             platform=platform,
                             reference_modules=reference_modules,
                             merge_reference_modules=merge_reference_modules,
@@ -387,8 +382,7 @@ def compile_and_compare(
                             compare_compiler_vtable_with_yaml(
                                 class_name=symbol,
                                 compiler_output=compile_output,
-                                bindir=bindir,
-                                gamever=args.gamever,
+                                symbol_store=symbol_store,
                                 platform=platform,
                                 reference_modules=[module_name],
                                 merge_reference_modules=False,
@@ -401,8 +395,7 @@ def compile_and_compare(
                     compare_compiler_record_layout_with_yaml(
                         struct_name=symbol,
                         compiler_output=compile_output,
-                        bindir=bindir,
-                        gamever=args.gamever,
+                        symbol_store=symbol_store,
                         platform=platform,
                         reference_modules=reference_modules,
                     )
@@ -423,7 +416,7 @@ def run_one_test(
     test_item: Dict[str, Any],
     args: argparse.Namespace,
     config_dir: Path,
-    bindir: Path,
+    symbol_store: SymbolStore,
 ) -> Dict[str, Any]:
     """Compile and (optionally) compare one cpp test item."""
     test_name = str(test_item.get("name", "unnamed_test"))
@@ -431,7 +424,7 @@ def run_one_test(
         test_item=test_item,
         args=args,
         config_dir=config_dir,
-        bindir=bindir,
+        symbol_store=symbol_store,
     )
     result["name"] = test_name
     return result
@@ -441,7 +434,21 @@ def main():
     args = parse_args()
     config_path = Path(args.configyaml).resolve()
     config_dir = config_path.parent
-    bindir = Path(args.bindir).resolve()
+    try:
+        symbol_store = open_snapshot_store(
+            snapshot_path=args.snapshot,
+            config_path=config_path,
+            expected_game_version=args.gamever,
+        )
+    except SymbolStoreError as exc:
+        print(f"Error: {exc}")
+        return 2
+
+    print("Symbol source: snapshot")
+    print(f"Candidate SHA-256: {symbol_store.candidate_sha256}")
+    print(f"Game version: {symbol_store.game_version}")
+    print(f"File count: {symbol_store.file_count}")
+    print(f"Config digest: {symbol_store.config_sha256}")
 
     cpp_tests = parse_config(config_path)
     if not cpp_tests:
@@ -508,7 +515,7 @@ def main():
             test_item=test_item,
             args=args,
             config_dir=config_dir,
-            bindir=bindir,
+            symbol_store=symbol_store,
         )
 
         if result["status"] == "invalid":

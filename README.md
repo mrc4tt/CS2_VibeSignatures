@@ -179,13 +179,13 @@ uv run generate_reference_yaml.py -gamever 14141 -module engine -platform window
 ### 3. Convert yaml(s) to gamedata json / txt
 
 ```bash
-uv run update_gamedata.py -gamever 14141 [-debug]
+uv run update_gamedata.py -gamever 14168 -snapshot gamesymbols/14168.yaml [-debug]
 ```
 
 ### 4. Run cpp tests and check if cpp headers mismatch from yaml(s)
 
 ```bash
-uv run run_cpp_tests.py -gamever 14141 [-debug]
+uv run run_cpp_tests.py -gamever 14168 -snapshot gamesymbols/14168.yaml [-debug]
 ```
 
 Use the project-level `fix-cppheaders` SKILL to repair reported `hl2sdk_cs2` header differences. The SKILL runs
@@ -197,10 +197,19 @@ Per-symbol YAML remains ignored under `bin/<GAMEVER>/<module>/`. The Git-tracked
 `gamesymbols/<GAMEVER>.yaml`, whose file set is derived from the required and optional YAML outputs declared by
 `config.yaml`.
 
-After analysis, gamedata generation, and C++ validation have all succeeded, publish the snapshot once:
+After a successful top-level analysis transaction, build one candidate immediately. Both downstream consumers read
+that same immutable candidate; publication copies its original bytes only after both validations succeed:
 
 ```bash
-uv run gamesymbol_snapshot.py pack -gamever 14168
+CANDIDATE_DIR="$(mktemp -d)"
+CANDIDATE_SNAPSHOT="$CANDIDATE_DIR/14168.yaml"
+CANDIDATE_SESSION="$CANDIDATE_DIR/14168.session.json"
+uv run gamesymbol_candidate.py build -gamever 14168 -bindir bin -configyaml config.yaml -output "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION"
+uv run update_gamedata.py -gamever 14168 -snapshot "$CANDIDATE_SNAPSHOT"
+uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step gamedata
+uv run run_cpp_tests.py -gamever 14168 -snapshot "$CANDIDATE_SNAPSHOT"
+uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step cpp_tests
+uv run gamesymbol_candidate.py publish -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -snapshot gamesymbols/14168.yaml
 ```
 
 Restore a clean analysis baseline or verify the current workspace without modifying the tracked snapshot:
@@ -212,13 +221,14 @@ uv run gamesymbol_snapshot.py verify -gamever 14168
 ```
 
 Default restore creates missing YAML and refuses to overwrite semantically different files. `-replace` removes only
-YAML under `bin/<GAMEVER>/`, preserves binaries and IDA databases, then rebuilds the snapshot contents. `pack` and
-`verify` reject missing required outputs and undeclared YAML; `verify` also enforces canonical bytes and both required
-round trips.
+YAML under `bin/<GAMEVER>/`, preserves binaries and IDA databases, then rebuilds the snapshot contents. Candidate
+`build` and low-level/bootstrap `pack` reject missing required outputs and undeclared YAML. `verify` enforces canonical
+bytes and both required round trips.
 
 Pull requests that can affect analysis output must commit the matching `gamesymbols/<GAMEVER>.yaml` update. PR CI
-restores the base snapshot, invalidates producers affected by snapshot/config/source changes, runs the analyzer, and
-compares the actual result with the PR head snapshot. The PR workflow never rewrites the tracked snapshot.
+restores the base snapshot, invalidates producers affected by snapshot/config/source changes, runs the analyzer,
+strict-packs an actual candidate, and compares it with the PR head snapshot. The head snapshot is expected-only; both
+downstream consumers use the actual candidate, and the ordinary PR workflow never publishes or rewrites tracked bytes.
 
 ### Currently supported gamedata
 
@@ -439,13 +449,25 @@ uv run ida_analyze_bin.py -gamever %CS2_GAMEVER% -agent="claude.cmd" -platform %
 ```
 
 ```bash
-@echo Update gamedata with generated yamls
+@echo Build the immutable candidate immediately after analysis
 
-uv run update_gamedata.py -gamever %CS2_GAMEVER% -debug
+set CANDIDATE_ID=%RANDOM%
+set CANDIDATE_SNAPSHOT=%TEMP%\gamesymbol-%CS2_GAMEVER%-%CANDIDATE_ID%.yaml
+set CANDIDATE_SESSION=%TEMP%\gamesymbol-%CS2_GAMEVER%-%CANDIDATE_ID%.session.json
+uv run gamesymbol_candidate.py build -gamever %CS2_GAMEVER% -bindir bin -configyaml config.yaml -output %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION%
+```
+
+```bash
+@echo Update gamedata from the candidate snapshot
+
+uv run update_gamedata.py -gamever %CS2_GAMEVER% -snapshot %CANDIDATE_SNAPSHOT% -debug
+uv run gamesymbol_candidate.py mark -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -step gamedata
 ```
 
 ```bash
 @echo Find mismatches in CS2SDK headers
 
-uv run run_cpp_tests.py -gamever %CS2_GAMEVER% -debug
+uv run run_cpp_tests.py -gamever %CS2_GAMEVER% -snapshot %CANDIDATE_SNAPSHOT% -debug
+uv run gamesymbol_candidate.py mark -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -step cpp_tests
+uv run gamesymbol_candidate.py publish -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -snapshot gamesymbols/%CS2_GAMEVER%.yaml
 ```

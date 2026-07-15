@@ -391,40 +391,87 @@ jobs:
         run: |
           Set-Location $env:WORKSPACE
           uv run ida_analyze_bin.py -gamever "$env:GAMEVER" -debug
+          if ($LASTEXITCODE -ne 0) {
+            throw "ida_analyze_bin.py failed with exit code $LASTEXITCODE"
+          }
 
-      - name: Verify PR head game-symbol snapshot
+      - name: Build actual candidate snapshot
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
-          uv run gamesymbol_snapshot.py verify `
+          $candidateRoot = Join-Path $env:RUNNER_TEMP "gamesymbol-candidates\pr-$env:PR_NUMBER-${{ github.run_id }}-${{ github.run_attempt }}"
+          New-Item -ItemType Directory -Path $candidateRoot -Force | Out-Null
+          $candidate = Join-Path $candidateRoot "$env:GAMEVER.yaml"
+          $session = Join-Path $candidateRoot "$env:GAMEVER.session.json"
+          "CANDIDATE_ROOT=$candidateRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "ACTUAL_CANDIDATE_SNAPSHOT=$candidate" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CANDIDATE_SESSION=$session" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          uv run gamesymbol_candidate.py build `
             -gamever "$env:GAMEVER" `
             -bindir bin `
             -configyaml config.yaml `
-            -snapshot "gamesymbols/$env:GAMEVER.yaml"
+            -output "$candidate" `
+            -session "$session"
           if ($LASTEXITCODE -ne 0) {
-            throw "PR head snapshot verification failed with exit code $LASTEXITCODE"
+            throw "candidate build failed with exit code $LASTEXITCODE"
+          }
+
+      - name: Compare actual candidate with PR head snapshot
+        shell: pwsh
+        run: |
+          Set-Location $env:WORKSPACE
+          uv run gamesymbol_candidate.py compare `
+            -gamever "$env:GAMEVER" `
+            -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" `
+            -expected "gamesymbols/$env:GAMEVER.yaml" `
+            -configyaml config.yaml `
+            -session "$env:CANDIDATE_SESSION"
+          if ($LASTEXITCODE -ne 0) {
+            throw "candidate/head comparison failed with exit code $LASTEXITCODE"
           }
 
       - name: Update gamedata
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
-          uv run update_gamedata.py -gamever "$env:GAMEVER" -debug -download_latest
+          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before gamedata" }
+          uv run update_gamedata.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -debug -download_latest
+          if ($LASTEXITCODE -ne 0) { throw "update_gamedata.py failed with exit code $LASTEXITCODE" }
+          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after gamedata" }
+          uv run gamesymbol_candidate.py mark -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" -step gamedata
+          if ($LASTEXITCODE -ne 0) { throw "failed to mark gamedata validation" }
 
       - name: Run C++ tests
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
-          uv run run_cpp_tests.py -gamever "$env:GAMEVER" -debug
+          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before C++ tests" }
+          uv run run_cpp_tests.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -debug
           if ($LASTEXITCODE -ne 0) {
             throw "run_cpp_tests.py failed with exit code $LASTEXITCODE"
           }
+          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after C++ tests" }
+          uv run gamesymbol_candidate.py mark -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" -step cpp_tests
+          if ($LASTEXITCODE -ne 0) { throw "failed to mark C++ validation" }
 
       - name: Mark snapshot validation success
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
           "validated" | Out-File -LiteralPath ".snapshot-validation-success" -Encoding ascii
+
+      - name: Clean candidate session
+        if: always()
+        shell: pwsh
+        run: |
+          if (-not [string]::IsNullOrWhiteSpace($env:CANDIDATE_ROOT) -and (Test-Path -LiteralPath $env:CANDIDATE_ROOT)) {
+            Remove-Item -LiteralPath $env:CANDIDATE_ROOT -Recurse -Force
+          }
 
   finalize-pr-workspace:
     if: >-
@@ -437,9 +484,6 @@ jobs:
         startsWith(github.event.pull_request.title, 'chore(download): Update manifest for '))
     environment: win64
     runs-on: [self-hosted, windows, x64]
-    env:
-      PERSISTED_WORKSPACE: ${{ secrets.PERSISTED_WORKSPACE }}
-
     steps:
       - name: Finalize PR workspace
         shell: pwsh
@@ -486,82 +530,7 @@ jobs:
             throw "Refusing to remove PR workspace because it is a reparse point: $prWorkspace"
           }
 
-          if ($prWasMerged -eq "true") {
-            if ([string]::IsNullOrWhiteSpace($env:PERSISTED_WORKSPACE)) {
-              throw "PERSISTED_WORKSPACE secret is not configured for the win64 environment."
-            }
-
-            Set-Location $prWorkspace
-            $validationMarker = Join-Path $prWorkspace ".snapshot-validation-success"
-            if (-not (Test-Path -LiteralPath $validationMarker -PathType Leaf)) {
-              throw "Merged PR workspace is missing the full-validation marker: $validationMarker"
-            }
-
-            $gamever = uv run python -c "import yaml; d=yaml.safe_load(open('download.yaml', encoding='utf-8')); print(d['downloads'][-1]['tag'])"
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to read latest game version from PR download.yaml."
-            }
-
-            $gamever = $gamever.Trim()
-            if ([string]::IsNullOrWhiteSpace($gamever)) {
-              throw "Latest game version from PR download.yaml is empty."
-            }
-
-            $sourceBinGamever = [IO.Path]::GetFullPath((Join-Path $prWorkspace "bin\$gamever"))
-            $sourceRootWithSeparator = $prWorkspace.TrimEnd('\') + '\'
-            if (-not $sourceBinGamever.StartsWith($sourceRootWithSeparator, [StringComparison]::OrdinalIgnoreCase)) {
-              throw "Resolved PR bin source is outside PR workspace: $sourceBinGamever"
-            }
-
-            if (-not (Test-Path -LiteralPath $sourceBinGamever -PathType Container)) {
-              throw "PR bin source for GAMEVER=$gamever does not exist: $sourceBinGamever"
-            }
-
-            $persistedRoot = [IO.Path]::GetFullPath($env:PERSISTED_WORKSPACE)
-            $persistedBinRoot = [IO.Path]::GetFullPath((Join-Path $persistedRoot "bin"))
-            $targetBinGamever = [IO.Path]::GetFullPath((Join-Path $persistedBinRoot $gamever))
-            $persistedRootWithSeparator = $persistedRoot.TrimEnd('\') + '\'
-            $persistedBinRootWithSeparator = $persistedBinRoot.TrimEnd('\') + '\'
-
-            if (-not $persistedBinRoot.StartsWith($persistedRootWithSeparator, [StringComparison]::OrdinalIgnoreCase)) {
-              throw "Resolved persisted bin root is outside PERSISTED_WORKSPACE: $persistedBinRoot"
-            }
-
-            if ((Split-Path -Leaf $targetBinGamever) -ne $gamever) {
-              throw "Resolved persisted bin target leaf mismatch: $targetBinGamever"
-            }
-
-            if (-not $targetBinGamever.StartsWith($persistedBinRootWithSeparator, [StringComparison]::OrdinalIgnoreCase)) {
-              throw "Resolved persisted bin target is outside persisted bin root: $targetBinGamever"
-            }
-
-            New-Item -ItemType Directory -Path $targetBinGamever -Force | Out-Null
-
-            Get-ChildItem -LiteralPath $targetBinGamever -Recurse -File -Filter "*.yaml" -ErrorAction SilentlyContinue |
-              ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
-
-            $robocopyArgs = @(
-              $sourceBinGamever
-              $targetBinGamever
-              "*.yaml"
-              "/S"
-              "/COPY:DAT"
-              "/DCOPY:DAT"
-              "/R:2"
-              "/W:5"
-            )
-
-            robocopy @robocopyArgs
-            $robocopyExitCode = $LASTEXITCODE
-            if ($robocopyExitCode -ge 8) {
-              throw "Failed to copy PR bin/$gamever YAML files into persisted workspace; robocopy exit code $robocopyExitCode"
-            }
-
-            Write-Host "Copied PR bin/$gamever YAML files into persisted workspace; robocopy exit code $robocopyExitCode"
-            $global:LASTEXITCODE = 0
-          } else {
-            Write-Host "PR was closed without merge; skipping persisted YAML copy."
-          }
+          Write-Host "PR closed (merged=$prWasMerged); candidate validation never writes persisted YAML."
 
           Set-Location $workspaceRoot
 

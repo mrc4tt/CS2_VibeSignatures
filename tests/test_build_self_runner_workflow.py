@@ -11,13 +11,26 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("Workspace bin must be a real directory", self.workflow)
         self.assertIn("Copied persisted bin/$env:GAMEVER into build workspace", self.workflow)
 
-    def test_snapshot_is_packed_after_full_validation(self) -> None:
+    def test_candidate_is_built_before_validation_and_published_before_persist(self) -> None:
+        analyze = self.workflow.index("uv run ida_analyze_bin.py")
+        candidate = self.workflow.index("gamesymbol_candidate.py build")
+        gamedata = self.workflow.index("uv run update_gamedata.py")
         cpp_tests = self.workflow.index("uv run run_cpp_tests.py")
-        pack = self.workflow.index("gamesymbol_snapshot.py pack")
+        publish = self.workflow.index("gamesymbol_candidate.py publish")
         persist = self.workflow.index("Persist validated bin cache")
 
-        self.assertLess(cpp_tests, pack)
-        self.assertLess(pack, persist)
+        self.assertLess(analyze, candidate)
+        self.assertLess(candidate, gamedata)
+        self.assertLess(gamedata, cpp_tests)
+        self.assertLess(cpp_tests, publish)
+        self.assertLess(publish, persist)
+        self.assertNotIn("gamesymbol_snapshot.py pack", self.workflow)
+
+    def test_both_consumers_use_the_same_candidate_without_bindir_fallback(self) -> None:
+        self.assertIn('-snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT"', self.workflow)
+        self.assertIn("'-snapshot', $env:ACTUAL_CANDIDATE_SNAPSHOT", self.workflow)
+        self.assertNotIn('update_gamedata.py -gamever "$env:GAMEVER" -bindir', self.workflow)
+        self.assertNotIn("run_cpp_tests.py @args -bindir", self.workflow)
 
     def test_build_creates_follow_up_snapshot_pr_and_archives_snapshot(self) -> None:
         self.assertIn("pull-requests: write", self.workflow)

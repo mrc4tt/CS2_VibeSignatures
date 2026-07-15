@@ -5,7 +5,7 @@
 On one self-hosted Windows runner, the C++ test step fails while compiling `cpp_tests/igamesystem.cpp`:
 
 ```powershell
-uv run run_cpp_tests.py -gamever "$env:GAMEVER" -debug
+uv run run_cpp_tests.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -debug
 ```
 
 The same repository state does not reproduce locally. The failure occurs inside the MSVC STL headers rather than in repository source code.
@@ -100,7 +100,7 @@ Two environment-dependent factors explain the runner-only reproduction:
 `.github/workflows/build-on-self-runner.yml` invokes:
 
 ```powershell
-uv run run_cpp_tests.py -gamever "$env:GAMEVER" -debug
+uv run run_cpp_tests.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -debug
 ```
 
 and `run_cpp_tests.py` defaults to plain `clang++`.

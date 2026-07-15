@@ -1,4 +1,5 @@
 import argparse
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -6,11 +7,17 @@ from unittest.mock import patch
 
 import cpp_tests_util
 import run_cpp_tests
+from gamesymbol_snapshot_lib.operations import pack_snapshot
+from tests.gamesymbol_snapshot_test_support import module, skill, write_config
+from gamesymbol_store import DirectorySymbolStore, SnapshotSymbolStore
 
 
 class TestParseArgsLegacyFixHeader(unittest.TestCase):
     def test_rejects_removed_fixheader_option(self) -> None:
-        with patch("sys.argv", ["run_cpp_tests.py", "-gamever", "14141", "-fixheader"]):
+        with patch(
+            "sys.argv",
+            ["run_cpp_tests.py", "-gamever", "14141", "-snapshot", "candidate.yaml", "-fixheader"],
+        ):
             with self.assertRaises(SystemExit):
                 run_cpp_tests.parse_args()
 
@@ -132,8 +139,50 @@ class TestCompareVtableWithYaml(unittest.TestCase):
             report = cpp_tests_util.compare_compiler_vtable_with_yaml(
                 class_name="CDerived",
                 compiler_output=compiler_output,
-                bindir=Path(temp_dir),
-                gamever="14167",
+                symbol_store=DirectorySymbolStore(temp_dir, "14167"),
+                platform="windows",
+                reference_modules=["server"],
+                pointer_size=8,
+            )
+
+        self.assertEqual([], report["differences"])
+
+    def test_snapshot_compare_is_independent_from_directory_yaml(self) -> None:
+        compiler_output = "VFTable indices for 'ITest' (1 entry).\n   0 | void ITest::First() [pure]\n"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            config = root / "config.yaml"
+            bindir = root / "bin"
+            gamever = "14167"
+            write_config(
+                config,
+                [
+                    module(
+                        "server",
+                        [skill("find", ["ITest_vtable.{platform}.yaml", "ITest_First.{platform}.yaml"])],
+                        linux=False,
+                    )
+                ],
+            )
+            module_dir = bindir / gamever / "server"
+            module_dir.mkdir(parents=True)
+            (module_dir / "ITest_vtable.windows.yaml").write_text(
+                "vtable_size: '0x8'\nvtable_numvfunc: 1\n",
+                encoding="utf-8",
+            )
+            (module_dir / "ITest_First.windows.yaml").write_text(
+                "func_name: ITest_First\nvfunc_index: 0\n",
+                encoding="utf-8",
+            )
+            snapshot = root / "candidate.yaml"
+            pack_snapshot(gamever, bindir, config, snapshot)
+            store = SnapshotSymbolStore.open(snapshot, expected_game_version=gamever, config_path=config)
+            shutil.rmtree(bindir / gamever)
+
+            report = cpp_tests_util.compare_compiler_vtable_with_yaml(
+                class_name="ITest",
+                compiler_output=compiler_output,
+                symbol_store=store,
                 platform="windows",
                 reference_modules=["server"],
                 pointer_size=8,
@@ -196,8 +245,7 @@ class TestCompareRecordLayoutWithYaml(unittest.TestCase):
             report = cpp_tests_util.compare_compiler_record_layout_with_yaml(
                 struct_name="SDL_Mouse",
                 compiler_output=compiler_output,
-                bindir=Path(temp_dir),
-                gamever="14158",
+                symbol_store=DirectorySymbolStore(temp_dir, "14158"),
                 platform="windows",
                 reference_modules=["SDL3"],
             )
@@ -213,6 +261,7 @@ class TestCompareRecordLayoutWithYaml(unittest.TestCase):
 
 
 class TestMainExitStatus(unittest.TestCase):
+    @patch.object(run_cpp_tests, "open_snapshot_store")
     @patch.object(run_cpp_tests, "run_one_test")
     @patch.object(run_cpp_tests, "probe_target_support")
     @patch.object(run_cpp_tests, "get_default_target_triple")
@@ -225,10 +274,11 @@ class TestMainExitStatus(unittest.TestCase):
         mock_get_default_target_triple,
         mock_probe_target_support,
         mock_run_one_test,
+        mock_open_snapshot_store,
     ) -> None:
         mock_parse_args.return_value = argparse.Namespace(
             configyaml="config.yaml",
-            bindir="bin",
+            snapshot="candidate.yaml",
             gamever="14132",
             clang="clang++",
             std="c++20",
@@ -244,6 +294,10 @@ class TestMainExitStatus(unittest.TestCase):
         ]
         mock_get_default_target_triple.return_value = "x86_64-pc-windows-msvc"
         mock_probe_target_support.return_value = {"supported": True, "output": ""}
+        mock_open_snapshot_store.return_value.candidate_sha256 = "sha256:test"
+        mock_open_snapshot_store.return_value.game_version = "14132"
+        mock_open_snapshot_store.return_value.file_count = 1
+        mock_open_snapshot_store.return_value.config_sha256 = "sha256:config"
         compare_reports = [
             (
                 "record layout",

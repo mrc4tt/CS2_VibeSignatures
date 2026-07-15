@@ -168,13 +168,13 @@ uv run generate_reference_yaml.py -gamever 14141 -module engine -platform window
 ### 3. 将 yaml(s) 转换为 gamedata json / txt
 
 ```bash
-uv run update_gamedata.py -gamever 14141 [-debug]
+uv run update_gamedata.py -gamever 14168 -snapshot gamesymbols/14168.yaml [-debug]
 ```
 
 ### 4. 运行 C++ 测试并检查 cpp headers 是否与 yaml(s) 匹配
 
 ```bash
-uv run run_cpp_tests.py -gamever 14141 [-debug]
+uv run run_cpp_tests.py -gamever 14168 -snapshot gamesymbols/14168.yaml [-debug]
 ```
 
 需要修复报告的 `hl2sdk_cs2` header 差异时，使用项目级 `fix-cppheaders` SKILL。该 SKILL 会自行调用
@@ -186,10 +186,19 @@ uv run run_cpp_tests.py -gamever 14141 [-debug]
 lockfile 为 `gamesymbols/<GAMEVER>.yaml`，其正式文件集合由 `config.yaml` 声明的 required / optional YAML
 输出推导。
 
-analysis、gamedata 更新和 C++ validation 全部成功后，只发布一次 snapshot：
+top-level analysis transaction 成功后立即 strict pack 一次 candidate。两个 downstream consumer 只读取同一个
+immutable candidate；全部 validation 成功后，publication 只复制 candidate 原始字节：
 
 ```bash
-uv run gamesymbol_snapshot.py pack -gamever 14168
+CANDIDATE_DIR="$(mktemp -d)"
+CANDIDATE_SNAPSHOT="$CANDIDATE_DIR/14168.yaml"
+CANDIDATE_SESSION="$CANDIDATE_DIR/14168.session.json"
+uv run gamesymbol_candidate.py build -gamever 14168 -bindir bin -configyaml config.yaml -output "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION"
+uv run update_gamedata.py -gamever 14168 -snapshot "$CANDIDATE_SNAPSHOT"
+uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step gamedata
+uv run run_cpp_tests.py -gamever 14168 -snapshot "$CANDIDATE_SNAPSHOT"
+uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step cpp_tests
+uv run gamesymbol_candidate.py publish -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -snapshot gamesymbols/14168.yaml
 ```
 
 可使用以下命令恢复确定性分析基线，或只读验证当前 workspace：
@@ -201,12 +210,13 @@ uv run gamesymbol_snapshot.py verify -gamever 14168
 ```
 
 默认 restore 只创建缺失 YAML，并拒绝覆盖语义不同的文件。`-replace` 只删除 `bin/<GAMEVER>/` 下的 YAML，
-保留二进制与 IDA database，再重建 snapshot 内容。`pack` 和 `verify` 会拒绝缺失 required output 与
-undeclared YAML；`verify` 还会强制检查 canonical bytes 和两类 round-trip。
+保留二进制与 IDA database，再重建 snapshot 内容。candidate `build` 与 low-level/bootstrap `pack` 会拒绝
+缺失 required output 与 undeclared YAML；`verify` 还会强制检查 canonical bytes 和两类 round-trip。
 
 可能影响分析输出的 PR 必须同时提交对应的 `gamesymbols/<GAMEVER>.yaml` 更新。PR CI 会恢复 base snapshot，
-按 snapshot / config / source 变化 invalidates producer，运行 analyzer，再将实际结果与 PR head snapshot
-比较；普通 PR workflow 不会自动改写 tracked snapshot。
+按 snapshot / config / source 变化 invalidates producer，运行 analyzer，strict-pack actual candidate，再与 PR
+head snapshot 比较。head snapshot 只表示 expected result；两个 downstream consumer 都读取 actual candidate，
+普通 PR workflow 不会 publish 或改写 tracked snapshot。
 
 ### 当前支持的 gamedata
 
@@ -429,13 +439,25 @@ uv run ida_analyze_bin.py -gamever %CS2_GAMEVER% -agent="claude.cmd" -platform %
 ```
 
 ```bash
-@echo Update gamedata with generated yamls
+@echo Build the immutable candidate immediately after analysis
 
-uv run update_gamedata.py -gamever %CS2_GAMEVER% -debug
+set CANDIDATE_ID=%RANDOM%
+set CANDIDATE_SNAPSHOT=%TEMP%\gamesymbol-%CS2_GAMEVER%-%CANDIDATE_ID%.yaml
+set CANDIDATE_SESSION=%TEMP%\gamesymbol-%CS2_GAMEVER%-%CANDIDATE_ID%.session.json
+uv run gamesymbol_candidate.py build -gamever %CS2_GAMEVER% -bindir bin -configyaml config.yaml -output %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION%
+```
+
+```bash
+@echo Update gamedata from the candidate snapshot
+
+uv run update_gamedata.py -gamever %CS2_GAMEVER% -snapshot %CANDIDATE_SNAPSHOT% -debug
+uv run gamesymbol_candidate.py mark -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -step gamedata
 ```
 
 ```bash
 @echo Find mismatches in CS2SDK headers
 
-uv run run_cpp_tests.py -gamever %CS2_GAMEVER% -debug
+uv run run_cpp_tests.py -gamever %CS2_GAMEVER% -snapshot %CANDIDATE_SNAPSHOT% -debug
+uv run gamesymbol_candidate.py mark -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -step cpp_tests
+uv run gamesymbol_candidate.py publish -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -snapshot gamesymbols/%CS2_GAMEVER%.yaml
 ```

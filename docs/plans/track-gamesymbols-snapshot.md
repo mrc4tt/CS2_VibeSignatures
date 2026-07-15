@@ -4,14 +4,17 @@
 
 本文记录 `gamesymbols/<GAMEVER>.yaml` 的已确认设计及实施计划。
 
+后续计划 `candidate-snapshot-as-symbol-store.md` 已将本计划的阶段性 downstream source 与 publication timing
+升级为 candidate-first 架构。本文保留前置设计依据；下文标注 superseded 的条款以该后续计划和当前实现为准。
+
 ### Implementation Progress (2026-07-15)
 
 已完成：
 
 - deterministic `pack` / `restore` / `verify` CLI、formal output collector、canonical schema 与强制 round-trip。
 - snapshot/config/source-aware PR invalidation、完整 artifact dependency closure 与 fail-safe broad rebuild。
-- PR workflow 的 base snapshot trust boundary、head snapshot verify、真实 workspace `bin` 与验证成功后的 cache 回写门禁。
-- build workflow 的真实 workspace `bin`、完整 validation 后单次 pack、cache 回写与 follow-up snapshot PR。
+- PR workflow 的 base/head/actual trust boundary、analysis 后 actual candidate strict pack，以及 snapshot-only downstream。
+- build workflow 的 candidate-first validation、原字节 publish、publish 后 cache 回写与 follow-up snapshot PR。
 - formatter exclusion、README / README_CN 使用说明，以及 snapshot / invalidation / workflow tests。
 
 Bootstrap 状态：已删除历史遗留的 undeclared ignored 文件
@@ -30,7 +33,8 @@ canonical comparison、snapshot round-trip、actual-bin round-trip 和 strict `v
 - `verify` 必须执行 round-trip，证明 snapshot 可以无损恢复并重新打包为相同 canonical 内容。
 - 普通 PR 必须提交对应 game version 的 snapshot 更新。CI 从 base snapshot 构造确定性分析起点，重建受影响输出，并验证实际结果与 PR 中的 head snapshot 一致。
 - PR 中的 head snapshot 是待验证结果，不能作为本次分析的输入，否则会形成自证循环。
-- 正式 snapshot 只允许在完整 analysis、gamedata 更新和 C++ validation 全部成功后发布或提交。
+- analysis 成功后立即 strict pack candidate；正式 snapshot 只允许在 gamedata 与 C++ validation 全部成功后，
+  原字节 publish 该 candidate。
 
 ## Background
 
@@ -67,7 +71,7 @@ Downstream generated state:
 ## Goals
 
 - 让每个 game version 的正式分析结果成为可审查、可恢复、可验证的 Git 状态。
-- 保留当前 `bin/<GAMEVER>/<module>/*.yaml` 路径，避免修改 analyzer、gamedata 和 C++ tests 的核心消费接口。
+- 保留 analyzer 的 `bin/<GAMEVER>/<module>/*.yaml` mutable workspace；downstream consumer 统一迁移到 Symbol Store。
 - 避免把数千个小 YAML 文件提交到 Git。
 - 从 `config.yaml` 推导 snapshot 文件集合，排除 stale、调试或未声明 YAML。
 - 保证 snapshot 输出确定，不受文件遍历顺序、Windows 路径分隔符、生成时间或本机路径影响。
@@ -83,7 +87,8 @@ Downstream generated state:
 
 - 不将 DLL、SO、IDB 或其他 `bin/` 内容提交到 Git。
 - 不改变现有 per-symbol YAML schema。
-- 不把 snapshot 直接作为 `update_gamedata.py` 或 `run_cpp_tests.py` 的输入；它们继续读取恢复后的 `bin/`。
+- ~~不把 snapshot 直接作为 downstream 输入。~~ 已被后续计划 supersede：两个 production consumer 的唯一 symbol
+  source 是 actual candidate `SnapshotSymbolStore`。
 - 不要求恢复后的单个 YAML 与原文件逐空格、逐引号相同；要求解析后的 YAML 数据和重新生成的 canonical snapshot 一致。
 - 不在 CI 中自动修改普通用户 PR 的 tracked snapshot。snapshot 不一致时应失败并要求提交者更新。
 - 不使用 snapshot 替代真实二进制分析。
@@ -466,13 +471,16 @@ modify analysis code/config
 run analysis for affected game version
         |
         v
-run update_gamedata
+strict pack candidate exactly once
         |
         v
-run C++ validation
+update_gamedata from candidate
         |
         v
-pack gamesymbols/<GAMEVER>.yaml once
+run C++ validation from candidate
+        |
+        v
+publish the same candidate bytes
         |
         v
 commit code + snapshot in the same PR
@@ -694,29 +702,30 @@ analysis 完成后，CI 对 head snapshot 执行 strict verify。
 
 CI 只输出 mismatch，不自动运行 `pack` 覆盖用户提交。
 
-## Full Validation And Publication Timing
+## Full Validation And Publication Timing (Superseded)
 
-“完整 validation 成功后只生成一次”指 canonical snapshot publication 的时机：
+本节原有的 validation 后 pack 时序已被 candidate-first transaction boundary supersede。当前时序为：
 
 ```text
 Analyze all selected binaries successfully
         |
         v
-Update all downstream gamedata successfully
+Strict pack immutable candidate exactly once
         |
         v
-Run C++ tests successfully
+Update all downstream gamedata from candidate
         |
         v
-Pack canonical gamesymbols/<GAMEVER>.yaml once
+Run C++ tests from the same candidate
         |
         v
-Commit/open PR/publish artifact
+Publish the same raw candidate bytes
 ```
 
-普通开发 PR 中，开发者本地按该顺序生成 snapshot；PR CI 只在内存中重建 candidate 并验证，不改写 tracked 文件。
+普通开发 PR 中，开发者本地按该顺序生成并发布 expected snapshot；PR CI 在 runner temp 重建 actual candidate，
+与 head expected snapshot 比较后驱动 downstream，不 publish tracked 文件。
 
-正式 build workflow 若需要为新 game version 创建 snapshot，也必须把 pack step 放在 `update_gamedata.py` 和 `run_cpp_tests.py` 成功之后。
+正式 build workflow 在 analysis 后立即 build candidate，并且只在两个 consumer 成功后执行 byte-preserving publish。
 
 不应在每个 skill、module 或 platform 完成后重写 snapshot：
 
@@ -927,7 +936,7 @@ bin/<GAMEVER>/**/*.yaml
 - 修改 PR workspace 准备逻辑，保留 binaries/IDBs 但清除 YAML。
 - 从 `HEAD^1` 恢复 base snapshot。
 - 初期可先基于 snapshot/config delta 做 invalidation。
-- analysis 后 strict verify head snapshot。
+- analysis 后 strict pack actual candidate，再与 head snapshot compare。
 
 ### Step 4: Source-Aware Invalidation
 
@@ -938,7 +947,7 @@ bin/<GAMEVER>/**/*.yaml
 
 ### Step 5: New Version Automation
 
-- build workflow 完整 validation 后 pack 一次。
+- build workflow analysis 后 pack candidate 一次，完整 validation 后原字节 publish。
 - 自动创建 follow-up snapshot PR。
 - 后续再决定是否把 analysis 前移，使 tag commit 包含 snapshot。
 
@@ -960,7 +969,7 @@ bin/<GAMEVER>/**/*.yaml
 - 删除 workspace 当前 game version 下的 YAML 不会删除或改写 `PERSISTED_WORKSPACE/bin` 中的文件。
 - 上游 artifact 变化会传递 invalidation 到下游 consumers。
 - 普通 PR CI 不自动改写 tracked snapshot。
-- 正式 snapshot 只在完整 validation 成功后生成一次。
+- analysis transaction 只 strict pack 一次 candidate，正式 snapshot 只在完整 validation 成功后原字节 publish。
 
 ## Final Architecture
 
@@ -973,17 +982,27 @@ config.yaml + preprocessors + Agent SKILLs + references
                          v
           bin/<GAMEVER>/**/*.yaml (ignored)
                          |
-            +------------+-------------+
-            |                          |
-            v                          v
-gamesymbols/<GAMEVER>.yaml       update_gamedata / C++ tests
-       (Git tracked)                    |
-            |                           v
-            |                         dist/**
-            |
-            +--> restore deterministic analysis baseline
-            +--> PR expected-result lockfile
-            +--> cross-version reproducibility
+                         v
+              strict pack candidate
+                         |
+             +-----------+-----------+
+             |                       |
+             v                       v
+      update_gamedata             C++ tests
+             |                       |
+             +-----------+-----------+
+                         |
+                         v
+               full validation success
+                         |
+                         v
+       gamesymbols/<GAMEVER>.yaml (same bytes)
+                         |
+          +--------------+----------------+
+          |              |                |
+          v              v                v
+   restore baseline  PR expected     reproducibility
 ```
 
-该设计将 `gamesymbols/<GAMEVER>.yaml` 定义为可审查、可恢复、可验证的 analysis lockfile，同时保留当前 `bin/` 路径和 analyzer 消费方式，避免提交数千个小文件，并使 PR self-runner 的分析结果不再依赖不透明的持久缓存状态。
+该设计将 `bin` 限定为 analyzer mutable workspace，将 candidate 定义为唯一 downstream Symbol Store，并将
+`gamesymbols/<GAMEVER>.yaml` 定义为 validation-approved candidate 原始字节形成的 analysis lockfile。

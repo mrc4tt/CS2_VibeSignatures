@@ -62,7 +62,7 @@ def build_actual_document(contract) -> dict:
     )
 
 
-def _validate_snapshot_contract(document: dict, contract) -> None:
+def validate_snapshot_contract(document: dict, contract) -> None:
     if document["config_sha256"] != contract.config_sha256:
         raise SnapshotMismatchError(
             f"snapshot config digest mismatch: snapshot={document['config_sha256']} actual={contract.config_sha256}"
@@ -86,7 +86,7 @@ def load_snapshot_for_contract(snapshot_path, contract, require_canonical=True):
     except OSError as exc:
         raise SnapshotMismatchError(f"unable to read snapshot {snapshot_path}: {exc}") from exc
     document = parse_snapshot_bytes(raw, contract.game_version)
-    _validate_snapshot_contract(document, contract)
+    validate_snapshot_contract(document, contract)
     canonical = canonical_snapshot_bytes(document)
     if require_canonical and raw != canonical:
         raise SnapshotMismatchError(f"snapshot is not canonical: {snapshot_path}")
@@ -114,7 +114,7 @@ def pack_snapshot(game_version, bindir="bin", config_path="config.yaml", snapsho
     document = build_actual_document(contract)
     data = canonical_snapshot_bytes(document)
     reparsed = parse_snapshot_bytes(data, str(game_version))
-    _validate_snapshot_contract(reparsed, contract)
+    validate_snapshot_contract(reparsed, contract)
     if canonical_snapshot_bytes(reparsed) != data:
         raise SnapshotSchemaError("generated snapshot failed canonical self-check")
     _atomic_write(snapshot_path, data)
