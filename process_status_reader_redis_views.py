@@ -77,9 +77,7 @@ def event_view(run_id: str, event_id: str, fields: dict[str, str]) -> dict[str, 
 def _task_descriptors(graph: dict[str, Any] | None):
     descriptors = {}
     ordered_ids = []
-    stage_descriptions = {
-        stage["id"]: _optional(stage.get("description")) for stage in (graph or {}).get("stages", [])
-    }
+    stage_descriptions = {stage["id"]: _optional(stage.get("description")) for stage in (graph or {}).get("stages", [])}
     for job in (graph or {}).get("jobs", []):
         task_id = job["id"]
         descriptors[task_id] = {

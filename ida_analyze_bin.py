@@ -1482,9 +1482,7 @@ def _optional_config_description(value, owner):
     if value is None:
         return None
     if not isinstance(value, str):
-        raise ValueError(
-            f"Invalid description for {owner}: expected string or null, got {type(value).__name__}"
-        )
+        raise ValueError(f"Invalid description for {owner}: expected string or null, got {type(value).__name__}")
     description = value.strip()
     return description or None
 
