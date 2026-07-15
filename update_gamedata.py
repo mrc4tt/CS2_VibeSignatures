@@ -27,6 +27,7 @@ import copy
 import importlib.util
 import os
 import sys
+from urllib.parse import urlparse
 
 from gamesymbol_store import SymbolStore, SymbolStoreError, open_snapshot_store
 
@@ -41,6 +42,16 @@ try:
     import httpx
 except ImportError:
     httpx = None
+
+# Load .env so GITHUB_TOKEN (for the private fork gamedata source) and other settings are
+# picked up without a manual export. Matches the load_dotenv() pattern used elsewhere in the
+# repo. Guarded so a missing python-dotenv never breaks the plain (no-download) path.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
 
 
 # Default values
@@ -572,8 +583,22 @@ def download_latest_gamedata(modules, dist_dir):
             for url, relative_path in sources:
                 abs_path = os.path.join(dist_dir, subdir, relative_path)
 
+                # Attach a PAT ONLY for GitHub hosts (needed for private forks e.g.
+                # mrc4tt/CounterStrikeSharp via the contents API). The token is read from the
+                # environment, never hardcoded, and never sent to non-github download sources.
+                headers = {}
+                host = (urlparse(url).hostname or "").lower()
+                if host in ("api.github.com", "raw.githubusercontent.com"):
+                    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+                    if token:
+                        headers["Authorization"] = f"Bearer {token}"
+                    if host == "api.github.com":
+                        # Return the raw file bytes instead of the base64 JSON envelope.
+                        headers["Accept"] = "application/vnd.github.raw"
+                        headers["X-GitHub-Api-Version"] = "2022-11-28"
+
                 try:
-                    response = client.get(url)
+                    response = client.get(url, headers=headers)
                     response.raise_for_status()
 
                     os.makedirs(os.path.dirname(abs_path), exist_ok=True)

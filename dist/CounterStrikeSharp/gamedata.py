@@ -21,9 +21,14 @@ MODULE_ENABLED = True
 GAMEDATA_PATH = "config/addons/counterstrikesharp/gamedata/gamedata.json"
 
 # Upstream download sources: (raw_url, relative_dest_path)
+# Fork source: mrc4tt/CounterStrikeSharp (private). The GitHub contents API returns the raw
+# file when requested with Accept: application/vnd.github.raw, and works for private repos with
+# a PAT. download_latest_gamedata() attaches Authorization: Bearer $GITHUB_TOKEN for github hosts
+# only (the token is never hardcoded and never sent to non-github sources). Upstream reference:
+# https://raw.githubusercontent.com/roflmuffin/CounterStrikeSharp/main/configs/addons/counterstrikesharp/gamedata/gamedata.json
 DOWNLOAD_SOURCES = [
     (
-        "https://raw.githubusercontent.com/roflmuffin/CounterStrikeSharp/main/configs/addons/counterstrikesharp/gamedata/gamedata.json",
+        "https://api.github.com/repos/mrc4tt/CounterStrikeSharp/contents/configs/addons/counterstrikesharp/gamedata/gamedata.json?ref=main",
         GAMEDATA_PATH,
     ),
 ]
