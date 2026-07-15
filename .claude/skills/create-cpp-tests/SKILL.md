@@ -138,24 +138,43 @@ Notes:
 - `reference_modules` comments should document the YAML file naming pattern
 - If no `alias_symbols`, the reference YAML files use the `symbol` name directly
 
-### Step 6: Test compilation
+### Step 6: Run post-change gates
 
-Run the test to verify it compiles:
+Run the repository update and validation skills in this exact order:
+
+1. **ALWAYS** Use SKILL `/post-change-update` with `phase=before-validation` and
+   `gamever=<gamever>` from `.env` -> `CS2VIBE_GAMEVER`.
+2. **ALWAYS** Use SKILL `/post-change-validation` with the same `gamever`.
+3. Only after validation succeeds, **ALWAYS** Use SKILL `/post-change-update` with
+   `phase=after-validation` and the same `gamever`.
+
+`/post-change-validation` runs `run_cpp_tests.py` and requires real runnable tests. Expected success includes
+compilation plus a clean vtable/record-layout comparison.
+
+If validation reports a compile, configuration, layout, or environment failure, **STOP the entire task** and
+report its reason. Do not edit the test, retry validation, pack the snapshot, or commit during that task.
+
+### Step 7: Commit
+
+Never commit directly to `main`; switch to or create `dev` first. Review `git status --short`, then explicitly
+stage only the new test, its config entry, changed tracked gamedata, and the snapshot:
 
 ```bash
-uv run run_cpp_tests.py -gamever {latest_gamever} -debug
+git add cpp_tests/{interface_lowercase}.cpp config.yaml
+git add <changed-dist-gamedata-files> gamesymbols/<gamever>.yaml
+git commit -m "test(cpp-tests): add {InterfaceName} layout validation" -m "Co-Authored-By: Codex (GPT-5.x)"
 ```
 
-Look at the output for the new test entry. Expected results:
-- **[PASS]**: compilation succeeded, vtable comparison ran
-- **[FAIL] compile failed**: fix the compilation error (usually a missing type or blocked include)
+Never use `git add -A` and never enter this step unless all three post-change gate calls succeeded.
 
-### Step 7: Fix compilation errors (if any)
+## Checklist
 
-Common fixes:
-- **Unknown type**: Add the appropriate `#include` before the interface header
-- **Missing definition from heavy include**: Add `#define HEADER_GUARD_H` before the include to block it, then forward-declare or stub the minimum types needed
-- Iterate: fix, re-run test, repeat until `[PASS]`
+- [ ] New cpp test follows the platform/RESTRICT preamble and calls a virtual method
+- [ ] `config.yaml` entry contains the correct symbol, aliases, header, and reference modules
+- [ ] `/post-change-update phase=before-validation` succeeds for the selected game version
+- [ ] `/post-change-validation` succeeds for the same game version
+- [ ] `/post-change-update phase=after-validation` packs `gamesymbols/<gamever>.yaml`
+- [ ] All task-related files are explicitly staged and committed on `dev`
 
 ## Reference: Existing Examples
 

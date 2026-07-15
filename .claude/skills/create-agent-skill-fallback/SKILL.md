@@ -125,8 +125,6 @@ binary.
 
 ### Step 5 — Validate
 
-- `uv run python format_repo_files.py --check` (markdown is not reformatted, but this confirms nothing else
-  broke).
 - `uv run python -m unittest discover -s tests -b` (guard; a pure-doc addition should not affect tests).
 - Re-read the generated SKILL.md against the inventory: is every output listed, platform-gated, and mapped to a
   sig-gen + writer skill with correct params?
@@ -149,10 +147,28 @@ Do not report the fallback as complete unless this end-to-end Agent-Skill-only t
 environment is unavailable, report the validation as blocked rather than substituting a preprocessor run or a
 ground-truth-only review.
 
-### Step 6 — Commit
+### Step 6 — Run post-change gates
 
-Stage the new SKILL.md **explicitly** (never `git add -A`). If on `main`, branch to `dev` first. Commit with a
-message naming the finder. Then record a one-line memory pointer per the repo workflow.
+After the end-to-end fallback test has produced and verified its YAMLs, run these skills in order:
+
+1. **ALWAYS** Use SKILL `/post-change-update` with `phase=before-validation` and the tested `gamever`.
+2. **ALWAYS** Use SKILL `/post-change-validation` with the same `gamever`.
+3. Only after validation succeeds, **ALWAYS** Use SKILL `/post-change-update` with
+   `phase=after-validation` and the same `gamever`.
+
+These calls replace direct formatting, gamedata update, C++ validation, and snapshot-pack commands. If any gate
+fails, stop the entire task and do not commit.
+
+### Step 7 — Commit
+
+If on `main`, branch to `dev` first. Review `git status --short`, then stage the new SKILL.md, changed tracked
+gamedata files, and `gamesymbols/<gamever>.yaml` **explicitly**; never use `git add -A`. Commit with:
+
+```bash
+git commit -m "feat(fallback): add find-XXXX skill" -m "Co-Authored-By: Codex (GPT-5.x)"
+```
+
+Then record a one-line memory pointer per the repo workflow.
 
 ---
 
@@ -301,12 +317,15 @@ Written beside the binary, one per symbol: `<symbol>.windows.yaml` / `<symbol>.l
 - [ ] Each kind is mapped to the correct sig-gen + writer skill with correct params (indirect vcalls use
       `func_addr=None`/`func_sig=None` + `vfunc_sig`).
 - [ ] Failure handling + output-filename sections present.
-- [ ] `format_repo_files.py --check` clean; `unittest discover -s tests -b` passes.
+- [ ] `unittest discover -s tests -b` passes.
 - [ ] Values cross-checked against `bin/` ground truth.
 - [ ] Real Agent-Skill-only test passed with `uv run ida_analyze_bin.py -gamever <gamever> -oldgamever none
       -modules=<module> -debug -skip_pp -skill=<skill_name>`; the log proves preprocessing was skipped, the
       Agent Skill actually started, all expected YAMLs were produced, and the summary reports `Failed: 0`.
-- [ ] New SKILL.md staged explicitly and committed on `dev`; memory pointer recorded.
+- [ ] `/post-change-update phase=before-validation` succeeds for the tested game version.
+- [ ] `/post-change-validation` succeeds for the same game version.
+- [ ] `/post-change-update phase=after-validation` packs `gamesymbols/<gamever>.yaml`.
+- [ ] New SKILL.md, gamedata, and snapshot staged explicitly and committed on `dev`; memory pointer recorded.
 
 ## Worked example — `find-CEntitySystem_Init-decompiles`
 

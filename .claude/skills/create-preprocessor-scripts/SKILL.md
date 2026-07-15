@@ -461,25 +461,21 @@ This step is mandatory -- do not report completion without running and passing t
 
 ---
 
-## Step 6: Verify Formatting and Regression Tests
+## Step 6: Run Post-Change Gates
 
-Before committing, verify code formatting for tracked Python/YAML files and run the regression test suite.
+Before committing, run the repository update and validation skills in the exact order below. Every gate is
+mandatory.
 
-### 6a. Formatting
+### 6a. Format and update gamedata
 
-Check formatting for all tracked Python/YAML files:
+**ALWAYS** Use SKILL `/post-change-update` with:
 
-```bash
-uv run python format_repo_files.py --check
-```
+- `phase=before-validation`
+- `gamever=<gamever>` from `.env` -> `CS2VIBE_GAMEVER`
 
-If the check reports files that need formatting, apply it:
+This replaces direct `format_repo_files.py` and `update_gamedata.py` commands in this workflow.
 
-```bash
-uv run python format_repo_files.py
-```
-
-### 6b. Regression Tests
+### 6b. Regression tests
 
 Run the non-MCP unittest suite:
 
@@ -491,9 +487,24 @@ This intentionally excludes the IDA MCP adapter and smoke modules (`test_ida_mcp
 `test_smoke_ida_mcp_2`) to keep preprocessor work fast. Run those modules separately when changing
 MCP routing or lifecycle code.
 
-**Keep 0 selected unittest failures before committing.** If any test fails, investigate and fix it before proceeding to the commit step.
+**Keep 0 selected unittest failures before committing.** If any test fails, investigate and fix it before
+proceeding to the final validation gate.
 
-This step is mandatory -- do not commit until formatting passes (`--check` is clean) and the selected unittest suite reports 0 failures.
+### 6c. Validate C++ layouts
+
+**ALWAYS** Use SKILL `/post-change-validation` with the same `gamever`.
+
+If it fails or cannot run tests, it will report the reason and stop the entire task. Do not fix or retry inside
+this workflow, do not pack the snapshot, and do not commit.
+
+### 6d. Pack the gamesymbol snapshot
+
+Only after `/post-change-validation` succeeds, **ALWAYS** Use SKILL `/post-change-update` with:
+
+- `phase=after-validation`
+- the same `gamever`
+
+This step is mandatory. A missing or failed `gamesymbol_snapshot.py pack` blocks the commit.
 
 ---
 
@@ -511,17 +522,21 @@ git branch --show-current
 git checkout dev 2>/dev/null || git checkout -b dev
 ```
 
-Then commit:
+Review `git status --short`, explicitly stage only task-related files, and include tracked gamedata and snapshot
+changes produced by the post-change gates. Never use `git add -A`:
 
 ```bash
 git add ida_preprocessor_scripts/find-{SKILL_NAME}.py config.yaml
-git commit -m "Add find-{SKILL_NAME} preprocessor script"
+git add <generated-reference-yamls> <changed-dist-gamedata-files> gamesymbols/<gamever>.yaml
+git commit -m "feat(preprocessor): add find-{SKILL_NAME}" -m "Co-Authored-By: Codex (GPT-5.x)"
 ```
 
-Include all files changed:
+Include all task-related files changed:
 - The new preprocessor script
 - config.yaml changes
 - Any reference YAMLs generated (for Patterns C/D/E)
+- Any tracked gamedata updated by `/post-change-update`
+- `gamesymbols/<gamever>.yaml`
 
 ---
 
@@ -536,8 +551,10 @@ Before finishing, verify:
 - [ ] config.yaml `symbols` section has entries for all targets (no duplicates)
 - [ ] Pattern-specific checks pass (see the Checklist section in the chosen pattern reference file)
 - [ ] `uv run ida_analyze_bin.py -debug` passes with 0 failures
-- [ ] `uv run python format_repo_files.py --check` reports no formatting issues (run `uv run python format_repo_files.py` to fix)
+- [ ] `/post-change-update phase=before-validation` succeeds for the selected game version
 - [ ] Non-MCP unittest command above passes with 0 failures
+- [ ] `/post-change-validation` runs C++ tests and succeeds for the same game version
+- [ ] `/post-change-update phase=after-validation` packs `gamesymbols/<gamever>.yaml`
 - [ ] All changes committed to git (on `dev` branch, NOT `main`)
 
 ## Real-World Examples
