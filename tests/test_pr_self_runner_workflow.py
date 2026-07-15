@@ -38,7 +38,7 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         output_filter = (
             "!(github.event.pull_request.user.login == 'github-actions[bot]' &&\n"
             "        startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&\n"
-            "        startsWith(github.event.pull_request.title, 'chore(gamesymbols): add '))"
+            "        startsWith(github.event.pull_request.title, 'chore(gamesymbols): publish '))"
         )
 
         self.assertEqual(2, workflow.count(output_filter))

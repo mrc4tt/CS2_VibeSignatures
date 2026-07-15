@@ -1,121 +1,62 @@
-# build-on-self-runner
+# staged release workflow
 
 ## Overview
-`.github/workflows/build-on-self-runner.yml` 是正式版本构建与发布流水线：在受信任的 Windows self-hosted runner 上准备指定 CS2 版本的二进制，执行 IDA 分析，生成并验证候选 game-symbol snapshot，随后持久化缓存、创建包含 snapshot 与生成 gamedata 的后续 PR、打包并发布 Release。
+
+正式 release 生命周期已拆成 build、review、promotion 三个阶段。`.github/workflows/build-on-self-runner.yml`
+只生成并验证 pending output；generated-output PR 的 merge 是 accepted bin、版本 tag 与 GitHub Release 的唯一晋升门。
 
 ## Responsibilities
-- 响应 tag push 或 `repository_dispatch: build-on-self-runner`，解析并校验 `TAG` / `GAMEVER`。
-- 复用 `PERSISTED_WORKSPACE` 中的 depot 和二进制缓存，缺失时下载对应 depot 并复制目标二进制。
-- 根据 `download.yaml` 的 `major_update` 标记决定是否禁用旧版本 signature 复用，然后运行二进制分析。
-- 构建单一候选 snapshot，让 gamedata 更新和 C++ 测试消费同一个不可变候选，并通过 session guard/mark 记录验证状态。
-- 将通过验证的候选发布为 `gamesymbols/<GAMEVER>.yaml`，持久化已验证的二进制缓存。
-- canonical snapshot 或 `dist/` 下生成的 gamedata 变化时，将两者合并到同一个后续 PR；该 Bot `gamesymbols/<GAMEVER>` PR 会被 `pr-self-runner` 显式跳过。随后生成 `gamedata-<GAMEVER>.7z`、`gamebin-<GAMEVER>.7z` 和 GitHub Release。
-- 无论成功或失败，清理候选 session 和持久化目录中的临时 IDA 数据库文件。
 
-## Involved Files & Symbols
-- `.github/workflows/build-on-self-runner.yml` - workflow `Build On Self Runner` / job `build`
-- `download.yaml` - `downloads[].tag` / `major_update` / depot manifests
-- `config.yaml` - 二进制模块、symbol skill 与 C++ 测试配置
-- `download_depot.py` - 按 tag 下载 depot manifests
-- `copy_depot_bin.py` - `-checkonly` 缓存检查与 depot 二进制复制
-- `ida_analyze_bin.py` - 二进制分析与 signature 生成
-- `gamesymbol_candidate.py` - `build` / `guard` / `mark` / `publish`
-- `update_gamedata.py` - 从候选 snapshot 更新下游 gamedata
-- `dist/` - tracked 的各下游框架 gamedata；生成变化随 snapshot 一并进入后续 PR
-- `run_cpp_tests.py` - 从候选 snapshot 执行 C++ 编译与布局验证
-- `gamesymbols/<GAMEVER>.yaml` - 通过验证后发布的 canonical snapshot
-- `tests/test_build_self_runner_workflow.py` - 工作区、候选顺序、snapshot/gamedata 输出 PR 与归档约束测试
-- `tests/test_pr_self_runner_workflow.py` - 两个 workflow 的 C++ 测试失败传播约束
+- `build-on-self-runner.yml`：接收 `repository_dispatch` 或 machine-oriented `workflow_dispatch`，从完整
+  `SOURCE_SHA` checkout；运行正常 analyzer producer scheduling、candidate/gamedata/C++ 全量验证；写 tracked
+  release manifest；stage bin/private manifest；创建 immutable output PR 后停止。
+- `validate-generated-output-pr.yml`：轻量验证 Bot、same-repository、branch、允许路径、base/source SHA 与 tracked hash。
+- `promote-release-after-output-merge.yml`：只处理可信且已 merge 的 output PR；复核 merge parents、PR index、private
+  manifest、tracked output 与 staged bin；归档后事务式晋升 bin；执行 new/republish tag 规则；上传并回读验证 Release assets。
+- `release_workflow.py` / `release_workflow_lib/`：canonical JSON、inventory/hash、path containment、reparse-point 防护、
+  READY/index identity、transactional swap、recovery marker 与 CLI。
 
 ## Architecture
-大致流程：
 
-1. 由 tag push 或 repository dispatch 触发；仅允许 `HLND2T/CS2_VibeSignatures` 与 `hzqst/CS2_VibeSignatures`。
-2. tag push 使用 `github.ref_name`，dispatch 使用 `client_payload.tag`；校验 `PERSISTED_WORKSPACE` 后设置 `TAG`、`GAMEVER`、`WORKSPACE`。
-3. checkout 目标 ref、完整历史与 submodules，并执行仓库格式检查。
-4. 将工作区 `cs2_depot` 链接到持久化 depot；工作区 `bin` 必须是真实目录。若持久化 `bin/<GAMEVER>` 已存在，先复制进本次工作区。
-5. 用 `copy_depot_bin.py -checkonly` 检查所有预期二进制。缓存完整则跳过下载；缺失则运行 `download_depot.py` 和正常复制模式。
-6. 查询 `download.yaml`：`major_update: true` 时为分析命令追加 `-oldgamever none`，强制新建 signatures；否则允许复用旧版本结果。
-7. IDA 分析完成后，在 `RUNNER_TEMP` 中构建候选 snapshot 与 session。
-8. 对同一候选依次执行 gamedata 更新和 C++ 测试；每个阶段前后都 guard，成功后分别 mark `gamedata` 与 `cpp_tests`。
-9. publish 将已验证候选写入 `gamesymbols/<GAMEVER>.yaml`；之后才把工作区二进制复制回持久化缓存。
-10. canonical snapshot 或 `dist/` 下生成的 gamedata 若发生变化，则在 `gamesymbols/<GAMEVER>` 分支把两者合并提交并 force-with-lease 推送，按需创建后续 PR；`pr-self-runner` 通过 Bot 身份、分支前缀和标题前缀显式跳过此类 PR。
-11. 生成 gamedata 与纯 gamebin 两类 7z 包，并以当前 tag 创建 GitHub Release。
-12. `always()` 清理持久化缓存中的临时 IDA DB 文件以及候选 session 目录。
+1. 自动新版本由 bump PR merge workflow dispatch `{gamever, source_sha, mode=new, source_pull_request}`；不提前打 tag。
+2. 手动 republish 由显式调用的 `.claude/skills/trigger-release-build/` 解析 `origin/main` immutable SHA 后 dispatch。
+3. build preflight 在 GitHub-hosted runner 校验 allowlist、完整 SHA、default-branch reachability、`download.yaml` membership、
+   tag/Release mode guards 与重复 output PR，再占用 Windows self-hosted runner。
+4. republish 从 accepted manifest 的前一 `source_sha` 恢复 snapshot，并复用 source-aware affected-output invalidation；
+   `-oldgamever none` 仅用于 `major_update: true`。
+5. validated candidate 发布到工作树后，`stage-build` 创建 tracked manifest 和 pending bin；output commit 后绑定 PR head SHA、
+   写 READY，PR 创建后写 `pr-index/<PR>.json`。
+6. output branch 为 `gamesymbols/<GAMEVER>/build-<RUN_ID>-<RUN_ATTEMPT>`，从不 force-push。
+7. promotion 要求 merge commit first parent 等于 `SOURCE_SHA`、second parent 等于 indexed PR head；默认分支若前进则拒绝。
+   PR check 和 promotion 都从 PR base 单独 checkout trusted helper，避免执行待校验 merge 中可能被替换的授权代码。
+8. accepted bin 先复制到 sibling incoming 并复核 inventory，再在 per-version lock 下 swap；旧目录保留到 Release assets
+   上传并下载 hash 校验成功，最后写 `PROMOTION_COMPLETE` 并删除 backup/index。
 
-```mermaid
-flowchart TD
-A["Tag push or repository_dispatch"]
-B{"Repository is allowed?"}
-C["Resolve TAG and GAMEVER; validate PERSISTED_WORKSPACE"]
-D["Checkout target ref, history, and submodules"]
-E["Check repository formatting"]
-F["Link persistent cs2_depot; copy cached bin/<GAMEVER> into real workspace bin"]
-G["Run copy_depot_bin.py -checkonly"]
-H{"All expected binaries are ready?"}
-I["Download depot manifests and copy binaries"]
-J{"download.yaml marks major_update?"}
-K["Analyze with -oldgamever none"]
-L["Analyze with old-signature reuse"]
-M["Build candidate snapshot and session"]
-N["Guard candidate; update gamedata; mark gamedata"]
-O["Guard candidate; run C++ tests; mark cpp_tests"]
-P["Publish canonical gamesymbols/<GAMEVER>.yaml"]
-Q["Persist validated bin cache"]
-R{"Canonical snapshot or generated gamedata changed?"}
-S["Commit snapshot and dist/ gamedata; push gamesymbols/<GAMEVER>; create or reuse Bot PR skipped by pr-self-runner"]
-T["Create gamedata and gamebin archives"]
-U["Create GitHub Release"]
-V["Always clean temporary IDA DB files and candidate session"]
-W["Job is skipped"]
+## Identity And Storage
 
-A --> B
-B -->|Yes| C
-B -->|No| W
-C --> D
-D --> E
-E --> F
-F --> G
-G --> H
-H -->|No| I
-H -->|Yes| J
-I --> J
-J -->|Yes| K
-J -->|No| L
-K --> M
-L --> M
-M --> N
-N --> O
-O --> P
-P --> Q
-Q --> R
-R -->|Yes| S
-R -->|No| T
-S --> T
-T --> U
-U --> V
-```
+- `GAMEVER`：`download.yaml` 中的版本（支持数字和单字母后缀）。
+- `SOURCE_SHA`：generator/config/skill/test 的 immutable default-branch commit。
+- `OUTPUT_MERGE_SHA`：接受 snapshot、`dist/` 和 tracked manifest 的 output PR merge commit。
+- `RELEASE_TAG`：通常等于 `GAMEVER`；new 创建在 `OUTPUT_MERGE_SHA`，republish 永不移动已有 tag。
+- pending：`PERSISTED_WORKSPACE/release-staging/<GAMEVER>/<BUILD_ID>`。
+- accepted：`PERSISTED_WORKSPACE/bin/<GAMEVER>`。
+- canonical tracked output：`gamesymbols/<GAMEVER>.yaml`、`dist/`、`release-manifests/<GAMEVER>.json`。
 
-## Dependencies
-- GitHub Actions `win64` environment，以及标签为 `self-hosted`, `windows`, `x64` 的 runner。
-- Secrets：`PERSISTED_WORKSPACE`、Steam 凭证，以及 `CS2VIBE_AGENT` / LLM 配置。
-- GitHub Actions / CLI：`actions/checkout@v4`、`softprops/action-gh-release@v1`、`gh`、`git`。
-- Windows 工具：PowerShell、`robocopy`、`mklink`、7-Zip。
-- 分析与验证工具链：`uv`、Python、DepotDownloader、IDA / idalib-mcp、LLM agent、Clang/C++。
-- 配置与缓存：`download.yaml`、`config.yaml`、`PERSISTED_WORKSPACE/cs2_depot`、`PERSISTED_WORKSPACE/bin/<GAMEVER>`。
-- 相关 Serena memory：`mem:download_depot`、`mem:copy_depot_bin`、`mem:ida_analyze_bin`、`mem:update_gamedata`、`mem:run_cpp_tests`。
+## Failure Signals And Recovery
 
-## Notes
-- workflow 拥有 `contents: write` 与 `pull-requests: write`；这是发布 Release、推送包含 snapshot/gamedata 的分支和创建 PR 所必需的。
-- 工作区 `cs2_depot` 可以是指向持久化目录的 link，但工作区 `bin` 明确要求为真实目录，避免分析过程直接污染共享缓存。
-- 持久化已验证 bin 前会删除目标内的 `*.yaml`，canonical symbol 数据只由 `gamesymbols/<GAMEVER>.yaml` 表示，而不是持久化 bin 内的中间 YAML。
-- gamedata 与 C++ 测试必须读取同一个 `ACTUAL_CANDIDATE_SNAPSHOT`，不能回退到 `bin` 中的可变 YAML；publish 发生在两个验证阶段之后。
-- `copy_depot_bin.py -checkonly` 的退出码契约为：0 表示完整、1 表示缺失、其他值视为错误。
-- snapshot 与 tracked `dist/` gamedata 都无变化时才不会创建后续 PR；任一变化都会触发同一个 PR。已有同 head 分支的 open PR 时不会重复创建。自动输出 PR 使用 `gamesymbols/` 分支和 `chore(gamesymbols): add ` 标题，匹配 `pr-self-runner` 的显式 Bot 排除条件。
-- `git push --force-with-lease` 会更新按版本复用的 validated-output 分支，因此该分支不是永久追加历史。
-- release payload 分为两类：gamedata 包排除 DLL/SO 与 IDA 临时文件，gamebin 包只包含 DLL/SO 且排除 YAML。
-- 清理步骤使用 `always()`；但只有前置步骤成功时才会执行归档、Release 与 snapshot/gamedata PR 创建。
+- output PR 未 merge：cleanup 只能通过 matching PR index 删除 pending staging，不能访问 accepted bin。
+- archive/tag/upload 失败：READY、private manifest、staged bin 和 promoted backup 保留，promotion 可重跑。
+- existing target 已等于 staged inventory：`promote-bin` 作为幂等重试成功返回，不重复 swap。
+- Release assets 使用 `--clobber`，随后下载每个 asset 并比较 SHA-256；未验证成功前不写 completion marker。
+
+## Verification
+
+- `tests/test_release_workflow.py`：manifest/hash/path/reparse/index/cleanup/swap/idempotency/tag guards/stale merge。
+- `tests/test_build_self_runner_workflow.py`：trigger/checkout/order/no-premerge-publication/promotion/tag/bump/lightweight check。
+- `tests/test_trigger_release_build.py`：repository/auth/version/tag/Release/duplicate/dispatch/run URL。
+- 完成门：全仓 unittest、formatter、Ruff、YAML parse、actionlint 与 CLI non-publishing smoke。
 
 ## Callers
-- GitHub tag push：`push.tags: ["*"]`
-- GitHub repository dispatch：`repository_dispatch.types: [build-on-self-runner]`，tag 来自 `client_payload.tag`
+
+- `repository_dispatch.types: [build-on-self-runner]`
+- `workflow_dispatch(gamever, source_sha, mode)`，通常仅由 trigger SKILL 调用

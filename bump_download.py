@@ -16,8 +16,6 @@ from ruamel.yaml.error import YAMLError
 from ruamel.yaml.scalarstring import DoubleQuotedScalarString
 
 from depot_util import (
-    DEFAULT_DEPOTDOWNLOADER_ATTEMPTS,
-    DEFAULT_DEPOTDOWNLOADER_RETRY_DELAY_SECONDS,
     append_auth_args,
     run_command,
 )
@@ -193,7 +191,7 @@ class BumpPlan:
     tag: str
     patch_version: str
     manifests: dict[str, str]
-    repair_tag: bool = False
+    dispatch_build: bool = False
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "manifests", dict(self.manifests))
@@ -263,7 +261,7 @@ def write_github_output(
     output_path: Path | None,
     updated: bool,
     tag: str | None,
-    repair_tag: bool = False,
+    dispatch_build: bool = False,
 ) -> None:
     """Write GitHub Actions step outputs when requested."""
     if output_path is None:
@@ -271,8 +269,8 @@ def write_github_output(
     lines = [f"updated={'true' if updated else 'false'}"]
     if updated and tag:
         lines.append(f"tag={tag}")
-    if repair_tag:
-        lines.append("repair_tag=true")
+    if dispatch_build:
+        lines.append("dispatch_build=true")
     with output_path.open("a", encoding="utf-8") as handle:
         handle.write("\n".join(lines) + "\n")
 
@@ -327,27 +325,12 @@ def ensure_clean_worktree() -> None:
         raise BumpError("Working tree has uncommitted changes")
 
 
-def create_commit_and_tag(config_path: Path, tag: str, patch_version: str) -> None:
+def create_commit(config_path: Path, patch_version: str) -> None:
     subprocess.run(["git", "add", str(config_path)], check=True)
     subprocess.run(
         ["git", "commit", "-m", f"chore(download): 更新 {patch_version} 下载清单"],
         check=True,
     )
-    subprocess.run(["git", "tag", tag], check=True)
-
-
-def create_repair_tag(tag: str) -> None:
-    if not local_tag_exists(tag):
-        subprocess.run(["git", "tag", tag], check=True)
-
-
-def ensure_local_tag_matches_head(tag: str) -> None:
-    if not local_tag_exists(tag):
-        return
-    tag_commit = git_output(["git", "rev-list", "-n", "1", tag])
-    head_commit = git_output(["git", "rev-parse", "HEAD"])
-    if tag_commit != head_commit:
-        raise BumpError(f"Local tag {tag} does not point to HEAD")
 
 
 def _default_branch_entries(downloads: list[dict[str, Any]], patch_version: str) -> list[dict[str, Any]]:
@@ -411,12 +394,12 @@ def plan_download_entry(
     )
 
 
-def plan_tag_repair(
+def plan_missing_release_build(
     downloads: list[dict[str, Any]],
     patch_version: str,
     manifests: dict[str, str],
 ) -> BumpPlan | None:
-    """Return a repair plan when config has the entry but remote tag is missing."""
+    """Dispatch a new-version build when config is accepted but its release tag is absent."""
     no_update_plan = plan_download_entry(downloads, patch_version, manifests)
     if no_update_plan.updated:
         return None
@@ -427,7 +410,7 @@ def plan_tag_repair(
         tag=no_update_plan.tag,
         patch_version=patch_version,
         manifests=manifests,
-        repair_tag=True,
+        dispatch_build=True,
     )
 
 
@@ -472,30 +455,27 @@ def run(args: argparse.Namespace) -> int:
         return 0
 
     if not plan.updated:
-        repair_plan = plan_tag_repair(downloads, patch_version, manifests)
-        if repair_plan is None:
+        dispatch_plan = plan_missing_release_build(downloads, patch_version, manifests)
+        if dispatch_plan is None:
             print(f"No update for {patch_version}: {manifests}")
             write_github_output(output_path, updated=False, tag=None)
             return 0
-        plan = repair_plan
+        plan = dispatch_plan
 
-    ensure_clean_worktree()
-    if plan.repair_tag:
-        ensure_local_tag_matches_head(plan.tag)
-        create_repair_tag(plan.tag)
-    else:
+    if not plan.dispatch_build:
+        ensure_clean_worktree()
         if local_tag_exists(plan.tag) or remote_tag_exists(plan.tag):
             raise BumpError(f"Tag already exists: {plan.tag}")
         append_download_entry(downloads, plan)
         save_config(config_path, data)
-        create_commit_and_tag(config_path, plan.tag, plan.patch_version)
+        create_commit(config_path, plan.patch_version)
     write_github_output(
         output_path,
         updated=True,
         tag=plan.tag,
-        repair_tag=plan.repair_tag,
+        dispatch_build=plan.dispatch_build,
     )
-    print(f"Prepared bump tag {plan.tag} for {patch_version}")
+    print(f"Prepared release build request {plan.tag} for {patch_version}")
     return 0
 
 

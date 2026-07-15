@@ -105,7 +105,7 @@ jobs:
         run: uv run bump_download.py -config download.yaml -depotdir cs2_depot -username "$env:STEAM_USERNAME" -password "$env:STEAM_PASSWORD" -remember-password -github-output "$env:GITHUB_OUTPUT"
 
       - name: Push bump branch
-        if: steps.bump.outputs.updated == 'true' && steps.bump.outputs.repair_tag != 'true' && steps.duplicate.outputs.skip_pr != 'true'
+        if: steps.bump.outputs.updated == 'true' && steps.bump.outputs.dispatch_build != 'true' && steps.duplicate.outputs.skip_pr != 'true'
         id: branch
         shell: pwsh
         run: |
@@ -123,7 +123,7 @@ jobs:
           "branch=$branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Create or update bump pull request
-        if: steps.bump.outputs.updated == 'true' && steps.bump.outputs.repair_tag != 'true' && steps.duplicate.outputs.skip_pr != 'true'
+        if: steps.bump.outputs.updated == 'true' && steps.bump.outputs.dispatch_build != 'true' && steps.duplicate.outputs.skip_pr != 'true'
         uses: actions/github-script@v7
         env:
           BUMP_TAG: ${{ steps.bump.outputs.tag }}
@@ -186,7 +186,7 @@ jobs:
               body: [
                 `Automated download bump for tag \`${tag}\`.`,
                 '',
-                'After this PR is merged, the post-merge workflow will create the tag and dispatch `build-on-self-runner`.',
+                'After this PR is merged, the post-merge workflow will dispatch `build-on-self-runner` from the merge SHA.',
                 '',
                 `<!-- bump-download-tag: ${tag} -->`,
               ].join('\n'),
@@ -194,8 +194,8 @@ jobs:
 
             core.notice(`Created bump pull request: ${pull.html_url}`);
 
-      - name: Push repaired tag and dispatch build
-        if: steps.bump.outputs.updated == 'true' && steps.bump.outputs.repair_tag == 'true'
+      - name: Dispatch build for an accepted config entry without a release tag
+        if: steps.bump.outputs.updated == 'true' && steps.bump.outputs.dispatch_build == 'true'
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -205,7 +205,7 @@ jobs:
             throw "steps.bump.outputs.tag is empty."
           }
 
-          $headSha = git rev-parse HEAD
+          $headSha = git rev-parse origin/main
           if ($LASTEXITCODE -ne 0) {
             throw "Failed to resolve HEAD."
           }
@@ -215,26 +215,16 @@ jobs:
             throw "Failed to query remote tag $tag."
           }
 
-          if ([string]::IsNullOrWhiteSpace($existingTag)) {
-            git push origin "refs/tags/$tag"
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to push repaired tag $tag."
-            }
-          } else {
-            $existingSha = ($existingTag -split "\s+")[0]
-            if ($existingSha -ne $headSha) {
-              throw "Remote tag $tag already exists at $existingSha, expected $headSha."
-            }
-
-            Write-Host "Remote tag $tag already points to $headSha."
+          if (-not [string]::IsNullOrWhiteSpace($existingTag)) {
+            throw "Tag $tag appeared before output promotion; refusing unsafe dispatch."
           }
 
           $payload = @{
             event_type = "build-on-self-runner"
             client_payload = @{
-              tag = $tag
-              merge_sha = $headSha
-              repair_tag = $true
+              gamever = $tag
+              source_sha = $headSha.Trim()
+              mode = "new"
             }
           } | ConvertTo-Json -Depth 5
 
@@ -251,4 +241,4 @@ jobs:
             -ContentType "application/json" `
             -Body $payload
 
-          Write-Host "Dispatched build-on-self-runner for repaired tag $tag."
+          Write-Host "Dispatched mode=new build-on-self-runner for accepted config entry $tag."
