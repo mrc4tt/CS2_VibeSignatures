@@ -49,6 +49,10 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("canonical game-symbol snapshot and generated gamedata", self.workflow)
         self.assertIn("gh pr create", self.workflow)
 
+    def test_gamebin_archive_excludes_virtual_environment(self) -> None:
+        gamebin_archive = self.workflow.split("$gamebinArchiveArgs = @(", 1)[1].split("& 7z @gamebinArchiveArgs", 1)[0]
+        self.assertIn('"-xr!.venv"', gamebin_archive)
+
 
 if __name__ == "__main__":
     unittest.main()

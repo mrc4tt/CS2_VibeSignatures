@@ -348,6 +348,7 @@ jobs:
             "-i!*.dll"
             "-i!*.so"
             "-x!*.yaml"
+            "-xr!.venv"
           )
           & 7z @gamebinArchiveArgs
           if ($LASTEXITCODE -ne 0) {
