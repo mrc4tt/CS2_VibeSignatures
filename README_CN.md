@@ -42,7 +42,7 @@ uv run python format_repo_files.py
 uv run python format_repo_files.py --check
 ```
 
-格式化脚本只处理 `git ls-files --cached -- '*.py' '*.yaml'` 返回的文件，因此会跳过已被 ignore 的文件和未跟踪的临时文件。`ida_preprocessor_scripts/references/` 下的 YAML 也会被跳过，因为这些文件由脚本自动生成。
+格式化脚本只处理 `git ls-files --cached -- '*.py' '*.yaml'` 返回的文件，因此会跳过已被 ignore 的文件和未跟踪的临时文件。`ida_preprocessor_scripts/references/` 下的生成 YAML 与 `gamesymbols/` 下的 canonical lockfile 也会被跳过，由各自生成器保证 byte-stable 格式。
 
 ## 整体工作流
 
@@ -179,6 +179,34 @@ uv run run_cpp_tests.py -gamever 14141 [-debug]
 
 需要修复报告的 `hl2sdk_cs2` header 差异时，使用项目级 `fix-cppheaders` SKILL。该 SKILL 会自行调用
 `run_cpp_tests.py` 获取最新 layout diff，并在修改后重复验证。
+
+### 5. 发布、恢复与验证 game-symbol snapshot
+
+单个 symbol YAML 继续作为 ignored 文件保存在 `bin/<GAMEVER>/<module>/`。Git 跟踪的 canonical analysis
+lockfile 为 `gamesymbols/<GAMEVER>.yaml`，其正式文件集合由 `config.yaml` 声明的 required / optional YAML
+输出推导。
+
+analysis、gamedata 更新和 C++ validation 全部成功后，只发布一次 snapshot：
+
+```bash
+uv run gamesymbol_snapshot.py pack -gamever 14168
+```
+
+可使用以下命令恢复确定性分析基线，或只读验证当前 workspace：
+
+```bash
+uv run gamesymbol_snapshot.py restore -gamever 14168
+uv run gamesymbol_snapshot.py restore -gamever 14168 -replace
+uv run gamesymbol_snapshot.py verify -gamever 14168
+```
+
+默认 restore 只创建缺失 YAML，并拒绝覆盖语义不同的文件。`-replace` 只删除 `bin/<GAMEVER>/` 下的 YAML，
+保留二进制与 IDA database，再重建 snapshot 内容。`pack` 和 `verify` 会拒绝缺失 required output 与
+undeclared YAML；`verify` 还会强制检查 canonical bytes 和两类 round-trip。
+
+可能影响分析输出的 PR 必须同时提交对应的 `gamesymbols/<GAMEVER>.yaml` 更新。PR CI 会恢复 base snapshot，
+按 snapshot / config / source 变化 invalidates producer，运行 analyzer，再将实际结果与 PR head snapshot
+比较；普通 PR workflow 不会自动改写 tracked snapshot。
 
 ### 当前支持的 gamedata
 

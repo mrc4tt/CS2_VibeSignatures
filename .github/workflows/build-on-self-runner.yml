@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   build:
@@ -59,31 +60,52 @@ jobs:
         run: |
           uv run python format_repo_files.py --check
 
-      - name: Create persisted workspace links
-        shell: cmd
+      - name: Prepare persisted depot link and real bin copy
+        shell: pwsh
         run: |
-          @echo off
-          if "%PERSISTED_WORKSPACE%"=="" (
-            echo PERSISTED_WORKSPACE is not configured.
-            exit /b 1
-          )
+          $depotTarget = [IO.Path]::GetFullPath((Join-Path $env:PERSISTED_WORKSPACE "cs2_depot"))
+          $depotLink = [IO.Path]::GetFullPath((Join-Path $env:WORKSPACE "cs2_depot"))
+          New-Item -ItemType Directory -Path $depotTarget -Force | Out-Null
 
-          if not exist "%PERSISTED_WORKSPACE%\cs2_depot" mkdir "%PERSISTED_WORKSPACE%\cs2_depot"
-          if not exist "%PERSISTED_WORKSPACE%\bin" mkdir "%PERSISTED_WORKSPACE%\bin"
+          if (Test-Path -LiteralPath $depotLink) {
+            $item = Get-Item -LiteralPath $depotLink -Force
+            if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+              throw "cs2_depot exists but is not a directory junction or symlink."
+            }
+            if ([IO.Path]::GetFullPath([string]$item.Target) -ne $depotTarget) {
+              throw "cs2_depot link target mismatch: $($item.Target)"
+            }
+          } else {
+            cmd /c mklink /d "$depotLink" "$depotTarget"
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to create cs2_depot link."
+            }
+          }
 
-          if exist "%WORKSPACE%\cs2_depot" (
-            pwsh -NoProfile -Command "$item = Get-Item -LiteralPath '%WORKSPACE%\cs2_depot' -Force; if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { Write-Error 'cs2_depot exists but is not a directory junction or symlink.'; exit 1 }; $target = [string]$item.Target; if ($target -ne '%PERSISTED_WORKSPACE%\cs2_depot') { Write-Error ('cs2_depot link target mismatch: ' + $target); exit 1 }"
-            if errorlevel 1 exit /b 1
-          ) else (
-            mklink /d "%WORKSPACE%\cs2_depot" "%PERSISTED_WORKSPACE%\cs2_depot"
-          )
+          $workspaceBin = [IO.Path]::GetFullPath((Join-Path $env:WORKSPACE "bin"))
+          if (Test-Path -LiteralPath $workspaceBin) {
+            $binItem = Get-Item -LiteralPath $workspaceBin -Force
+            if ($binItem.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+              throw "Workspace bin must be a real directory, not a link: $workspaceBin"
+            }
+          } else {
+            New-Item -ItemType Directory -Path $workspaceBin -Force | Out-Null
+          }
 
-          if exist "%WORKSPACE%\bin" (
-            pwsh -NoProfile -Command "$item = Get-Item -LiteralPath '%WORKSPACE%\bin' -Force; if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { Write-Error 'bin exists but is not a directory junction or symlink.'; exit 1 }; $target = [string]$item.Target; if ($target -ne '%PERSISTED_WORKSPACE%\bin') { Write-Error ('bin link target mismatch: ' + $target); exit 1 }"
-            if errorlevel 1 exit /b 1
-          ) else (
-            mklink /d "%WORKSPACE%\bin" "%PERSISTED_WORKSPACE%\bin"
-          )
+          $workspaceGamever = Join-Path $workspaceBin $env:GAMEVER
+          New-Item -ItemType Directory -Path $workspaceGamever -Force | Out-Null
+          $persistedGamever = Join-Path $env:PERSISTED_WORKSPACE "bin\$env:GAMEVER"
+          if (Test-Path -LiteralPath $persistedGamever -PathType Container) {
+            robocopy $persistedGamever $workspaceGamever /E /COPY:DAT /DCOPY:DAT /R:2 /W:5
+            $robocopyExitCode = $LASTEXITCODE
+            if ($robocopyExitCode -ge 8) {
+              throw "Failed to copy persisted bin/$env:GAMEVER; robocopy exit code $robocopyExitCode"
+            }
+            Write-Host "Copied persisted bin/$env:GAMEVER into build workspace; robocopy exit code $robocopyExitCode"
+            $global:LASTEXITCODE = 0
+          } else {
+            Write-Host "No persisted bin/$env:GAMEVER exists; starting from an empty real workspace directory."
+          }
 
       - name: Check cached binaries
         id: check_cached_binaries
@@ -174,6 +196,85 @@ jobs:
             throw "run_cpp_tests.py failed with exit code $LASTEXITCODE"
           }
 
+      - name: Pack validated game-symbol snapshot
+        shell: pwsh
+        run: |
+          uv run gamesymbol_snapshot.py pack `
+            -gamever "$env:GAMEVER" `
+            -bindir bin `
+            -configyaml config.yaml `
+            -snapshot "gamesymbols/$env:GAMEVER.yaml"
+          if ($LASTEXITCODE -ne 0) {
+            throw "gamesymbol snapshot pack failed with exit code $LASTEXITCODE"
+          }
+
+      - name: Persist validated bin cache
+        shell: pwsh
+        run: |
+          $source = [IO.Path]::GetFullPath((Join-Path $env:WORKSPACE "bin\$env:GAMEVER"))
+          $workspaceRoot = [IO.Path]::GetFullPath($env:WORKSPACE)
+          if (-not $source.StartsWith($workspaceRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
+            throw "Validated bin source is outside the build workspace: $source"
+          }
+          $sourceItem = Get-Item -LiteralPath $source -Force
+          if ($sourceItem.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            throw "Validated bin source must not be a reparse point: $source"
+          }
+
+          $persistedRoot = [IO.Path]::GetFullPath($env:PERSISTED_WORKSPACE)
+          $target = [IO.Path]::GetFullPath((Join-Path $persistedRoot "bin\$env:GAMEVER"))
+          if (-not $target.StartsWith($persistedRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
+            throw "Persisted bin target is outside PERSISTED_WORKSPACE: $target"
+          }
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          Get-ChildItem -LiteralPath $target -Recurse -File -Filter "*.yaml" -ErrorAction SilentlyContinue |
+            ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
+
+          robocopy $source $target /E /COPY:DAT /DCOPY:DAT /R:2 /W:5
+          $robocopyExitCode = $LASTEXITCODE
+          if ($robocopyExitCode -ge 8) {
+            throw "Failed to persist validated bin/$env:GAMEVER; robocopy exit code $robocopyExitCode"
+          }
+          Write-Host "Persisted validated bin/$env:GAMEVER; robocopy exit code $robocopyExitCode"
+          $global:LASTEXITCODE = 0
+
+      - name: Create follow-up game-symbol snapshot PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $snapshot = "gamesymbols/$env:GAMEVER.yaml"
+          git add -- "$snapshot"
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Tracked snapshot already matches the validated result; no follow-up PR is needed."
+            exit 0
+          }
+
+          $branch = "gamesymbols/$env:GAMEVER"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to create snapshot branch $branch" }
+          git add -- "$snapshot"
+          git commit -m "chore(gamesymbols): add $env:GAMEVER snapshot" `
+            -m "Co-Authored-By: Codex (GPT-5.x)"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to commit $snapshot" }
+          git push --force-with-lease origin "$branch"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to push snapshot branch $branch" }
+
+          $existingPr = gh pr list --head "$branch" --state open --json number --jq '.[0].number'
+          if ([string]::IsNullOrWhiteSpace($existingPr)) {
+            gh pr create `
+              --base "${{ github.event.repository.default_branch }}" `
+              --head "$branch" `
+              --title "chore(gamesymbols): add $env:GAMEVER snapshot" `
+              --body "Adds the canonical game-symbol snapshot produced after full analysis, gamedata, and C++ validation."
+            if ($LASTEXITCODE -ne 0) { throw "Failed to create follow-up snapshot PR" }
+          } else {
+            Write-Host "Snapshot PR #$existingPr is already open."
+          }
+
       - name: Archive release payload
         shell: pwsh
         working-directory: ${{ github.workspace }}
@@ -182,6 +283,7 @@ jobs:
             "a"
             "gamedata-$($env:GAMEVER).7z"
             "bin\$($env:GAMEVER)"
+            "gamesymbols/$env:GAMEVER.yaml"
             "dist"
             "hl2sdk_cs2"
             "-r"

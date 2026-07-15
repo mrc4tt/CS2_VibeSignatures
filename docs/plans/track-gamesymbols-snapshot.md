@@ -4,6 +4,21 @@
 
 本文记录 `gamesymbols/<GAMEVER>.yaml` 的已确认设计及实施计划。
 
+### Implementation Progress (2026-07-15)
+
+已完成：
+
+- deterministic `pack` / `restore` / `verify` CLI、formal output collector、canonical schema 与强制 round-trip。
+- snapshot/config/source-aware PR invalidation、完整 artifact dependency closure 与 fail-safe broad rebuild。
+- PR workflow 的 base snapshot trust boundary、head snapshot verify、真实 workspace `bin` 与验证成功后的 cache 回写门禁。
+- build workflow 的真实 workspace `bin`、完整 validation 后单次 pack、cache 回写与 follow-up snapshot PR。
+- formatter exclusion、README / README_CN 使用说明，以及 snapshot / invalidation / workflow tests。
+
+Bootstrap 状态：已删除历史遗留的 undeclared ignored 文件
+`bin/14168/server/CBaseEntity_SetStateChanged.windows.yaml`。`14168` 的 2887 个 required YAML 全部存在，
+22 个 optional YAML 被收集；正式 `gamesymbols/14168.yaml` 已生成，共包含 2909 个 payload，并已通过
+canonical comparison、snapshot round-trip、actual-bin round-trip 和 strict `verify`。
+
 核心结论：
 
 - `bin/<GAMEVER>/**/*.yaml` 继续作为 ignored 本地工作区文件，不直接提交到 Git。
@@ -902,10 +917,10 @@ bin/<GAMEVER>/**/*.yaml
 
 ### Step 2: Bootstrap Baseline
 
-- 对当前完整且已验证的 game version 运行 `pack`。
-- 清理或声明现有 undeclared YAML。
-- 提交第一个 `gamesymbols/<GAMEVER>.yaml`。
-- 修改 formatter 跳过 snapshot。
+- [x] 对当前完整且已验证的 game version `14168` 运行 `pack`。
+- [x] 清理现有 undeclared YAML。
+- [x] 生成第一个 `gamesymbols/14168.yaml`。
+- [x] 修改 formatter 跳过 snapshot。
 
 ### Step 3: PR Deterministic Base
 
