@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CNetworkGameServerBase_GetPlayerInfo skill.
+"""Preprocess script for find-CNetworkGameServerBase_UserInfoChanged skill.
 
-Resolves ``CNetworkGameServerBase_GetPlayerInfo`` (a vfunc of
+Resolves ``CNetworkGameServerBase_UserInfoChanged`` (a vfunc of
 ``CNetworkGameServerBase_vtable``) from the exact ``"userinfo"`` string reference.
 The ``CNetworkGameServerBase_vtable`` intersection collapses the multiple
 ``"userinfo"`` string references down to the single vtable member.
@@ -10,12 +10,12 @@ The ``CNetworkGameServerBase_vtable`` intersection collapses the multiple
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CNetworkGameServerBase_GetPlayerInfo",
+    "CNetworkGameServerBase_UserInfoChanged",
 ]
 
 FUNC_XREFS = [
     {
-        "func_name": "CNetworkGameServerBase_GetPlayerInfo",
+        "func_name": "CNetworkGameServerBase_UserInfoChanged",
         "xref_strings": [
             "FULLMATCH:userinfo",
         ],
@@ -35,16 +35,16 @@ FUNC_XREFS = [
     },
 ]
 
-# CNetworkGameServerBase_GetPlayerInfo is a vfunc of CNetworkGameServerBase
+# CNetworkGameServerBase_UserInfoChanged is a vfunc of CNetworkGameServerBase
 FUNC_VTABLE_RELATIONS = [
     # (func_name, vtable_class)
-    ("CNetworkGameServerBase_GetPlayerInfo", "CNetworkGameServerBase_vtable"),
+    ("CNetworkGameServerBase_UserInfoChanged", "CNetworkGameServerBase_vtable"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CNetworkGameServerBase_GetPlayerInfo",
+        "CNetworkGameServerBase_UserInfoChanged",
         [
             "func_name",
             "func_va",

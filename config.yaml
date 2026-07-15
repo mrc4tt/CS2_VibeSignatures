@@ -1256,9 +1256,9 @@ modules:
         expected_input:
           - CNetworkGameServerBase_CreateFakeClient.{platform}.yaml
           - CEngineServer_vtable.{platform}.yaml
-      - name: find-CNetworkGameServerBase_GetPlayerInfo
+      - name: find-CNetworkGameServerBase_UserInfoChanged
         expected_output:
-          - CNetworkGameServerBase_GetPlayerInfo.{platform}.yaml
+          - CNetworkGameServerBase_UserInfoChanged.{platform}.yaml
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
           - CNetworkGameServer_GetFreeClient.{platform}.yaml
@@ -1281,7 +1281,7 @@ modules:
         optional_output:
           - GetPlayerInfo.{platform}.yaml
         expected_input:
-          - CNetworkGameServerBase_GetPlayerInfo.{platform}.yaml
+          - CNetworkGameServerBase_UserInfoChanged.{platform}.yaml
           - CServerSideClientBase_Connect.{platform}.yaml
           - CServerSideClientBase_GetPlayerInfo.{platform}.yaml
         skip_if_exists:
@@ -1845,10 +1845,10 @@ modules:
         category: func
         alias:
           - CNetworkGameServerBase::CreateFakeClient
-      - name: CNetworkGameServerBase_GetPlayerInfo
+      - name: CNetworkGameServerBase_UserInfoChanged
         category: vfunc
         alias:
-          - CNetworkGameServerBase::GetPlayerInfo
+          - CNetworkGameServerBase::UserInfoChanged
       - name: CNetworkGameServerBase_GetPlayerNetworkIDString
         category: vfunc
         alias:

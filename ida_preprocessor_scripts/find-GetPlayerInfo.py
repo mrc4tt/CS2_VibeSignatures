@@ -3,7 +3,7 @@
 
 Resolves the standalone ``GetPlayerInfo`` helper from the exact ``"userinfo"`` string
 reference.  Several sibling functions reference ``"userinfo"`` too, so the three vtable
-members that share it (``CNetworkGameServerBase_GetPlayerInfo``,
+members that share it (``CNetworkGameServerBase_UserInfoChanged``,
 ``CServerSideClientBase_Connect``, ``CServerSideClientBase_GetPlayerInfo``) are excluded
 by ``exclude_funcs`` and the demo/query recorders are excluded by ``exclude_strings``.
 
@@ -29,7 +29,7 @@ FUNC_XREFS = [
         "xref_signatures": [],
         "xref_funcs": [],
         "exclude_funcs": [
-            "CNetworkGameServerBase_GetPlayerInfo",
+            "CNetworkGameServerBase_UserInfoChanged",
             "CServerSideClientBase_Connect",
             "CServerSideClientBase_GetPlayerInfo",
         ],

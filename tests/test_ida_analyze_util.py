@@ -3577,7 +3577,7 @@ class TestFuncXrefsSignatureSupport(unittest.IsolatedAsyncioTestCase):
         ):
             result = await ida_analyze_util.preprocess_func_xrefs_via_mcp(
                 session="session",
-                func_name="CNetworkGameServerBase_GetPlayerInfo",
+                func_name="CNetworkGameServerBase_UserInfoChanged",
                 xref_strings=["FULLMATCH:userinfo"],
                 xref_gvs=[],
                 xref_signatures=[],
