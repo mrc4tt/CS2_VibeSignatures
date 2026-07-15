@@ -160,7 +160,7 @@ result = json.dumps([hex(ea) for ea in sorted(func_starts)])
     except Exception:
         return set()
 
-
+{%
 async def _get_func_basic_info_via_mcp(session, func_va, image_base, debug=False):
     py_code = f'''
 import idaapi, json
@@ -176,6 +176,7 @@ if func and func.start_ea == target_ea:
 else:
     result = json.dumps(None)
 '''
+%}
 
     eval_result = await session.call_tool(
         name="py_eval",
