@@ -597,4 +597,3 @@ git commit -m "docs(agent): document OpenCode runner support" -m "Co-Authored-By
 - Existing Claude/Codex tests pass unchanged.
 - Ruff, runner tests, and caller regression tests pass.
 - CLI help and both README files document OpenCode support.
-

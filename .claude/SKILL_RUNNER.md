@@ -6,7 +6,7 @@
 
 - When there is an unrecoverable error (for example: bad configuration, missing requirements), Report to user with `<skill_error>ERROR REASON</skill_error>`.
 
-For example: 
+For example:
 
 `<skill_error>Missing requirement "ida-pro-mcp".</skill_error>`
 
