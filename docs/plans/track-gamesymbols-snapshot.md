@@ -512,8 +512,8 @@ PR checkout 当前使用 merge ref，因此 base 通常为 `HEAD^1`。
 1. Checkout PR merge ref。
 2. 从 `HEAD^1` 提取 base `config.yaml`。
 3. 从 `HEAD^1` 提取 `gamesymbols/<GAMEVER>.yaml`。
-4. 保留 persisted workspace 提供的 DLL、SO 和 IDB。
-5. 删除 PR workspace 当前 game version 下的所有 YAML。
+4. 将 persisted workspace 提供的当前版本 `bin/<GAMEVER>` 复制到 workspace 内的真实目录，保留 DLL、SO 和 IDB；`bin` 不得是 junction 或 symlink。
+5. 确认目标路径位于当前 workspace 且不是 reparse point 后，删除当前 game version 下的所有 YAML。
 6. 使用 base config 和 base snapshot 执行 `restore -replace`。
 7. 比较 base config/snapshot 与 head config/snapshot，并读取 PR changed files。
 8. 计算需要 invalidation 的 producers 和传递依赖闭包。
@@ -553,11 +553,15 @@ update gamedata + C++ validation
 
 当前 PR workflow 会复制 persisted `bin/<GAMEVER>`。迁移后：
 
+- `.github/workflows/build-on-self-runner.yml` 也必须停止把 workspace `bin` 通过 `mklink` 映射到 `PERSISTED_WORKSPACE/bin`，改为像 PR workflow 一样复制所需的 `bin/<GAMEVER>` 到 workspace 的真实目录；`cs2_depot` 可以继续使用 persisted link。
+- 新 game version 尚无 persisted `bin/<GAMEVER>` 时，build workflow 应创建空的 workspace 版本目录，再由 depot copy 和 analyzer 填充。
 - 可以继续复制二进制和 IDB。
-- 复制过来的 YAML 必须在恢复 base snapshot 前删除。
+- 复制过来的 YAML 必须在恢复 base snapshot 前删除，而且删除动作只能作用于 workspace 副本。
 - persisted YAML 不能决定 analyzer 是否 skip。
+- 任何 YAML 清理或 snapshot restore 前都必须拒绝 linked/reparse-point `bin`，并验证目标路径仍位于当前 workspace。
 - PR validation 成功并合并后，可以把已验证的实际 YAML 回写 persisted workspace。
 - 回写只能发生在 snapshot verification 和完整 validation 成功之后。
+- build workflow 如需保留现有缓存语义，只能在完整 validation 成功后显式回写需要持久化的 binaries、IDB 和 YAML；失败或取消不得改写 persisted `bin`。
 
 ## Invalidation Design
 
@@ -803,6 +807,9 @@ bin/<GAMEVER>/**/*.yaml
   - invalidate affected outputs。
   - analysis 后 verify head snapshot。
 - Modify: `.github/workflows/build-on-self-runner.yml`
+  - 保留 persisted `cs2_depot` link，但移除 workspace `bin` 到 `PERSISTED_WORKSPACE/bin` 的 `mklink`。
+  - 复制 persisted `bin/<GAMEVER>` 到 workspace 的真实目录，并允许新版本从空目录开始。
+  - 完整 validation 成功后再显式回写需要保留的缓存，避免 workspace YAML 清理直接修改 persisted workspace。
   - 新版本完整 validation 后生成一次 snapshot。
   - 第一阶段可创建 follow-up snapshot PR。
 - Modify: `format_repo_files.py`
@@ -880,6 +887,8 @@ bin/<GAMEVER>/**/*.yaml
 - snapshot verify 在 gamedata/C++ validation 之前或紧接 analysis 之后运行。
 - snapshot mismatch 使 workflow 失败。
 - ordinary PR workflow 不修改 tracked snapshot。
+- PR/build workflow 的 workspace `bin` 是真实目录；清理 workspace YAML 不会修改 persisted `bin`。
+- build workflow 失败或取消时不回写 workspace `bin` 到 persisted workspace。
 - build workflow 只在完整 validation 成功后生成新版本 snapshot。
 
 ## Rollout Plan
@@ -933,6 +942,7 @@ bin/<GAMEVER>/**/*.yaml
 - 普通 PR 错误更新 snapshot 时失败。
 - 修改 finder 但忘记更新 snapshot 时，CI 会重新运行对应 producer，并在实际输出变化时失败。
 - persisted runner YAML 无法让未执行的 finder 获得假阳性。
+- 删除 workspace 当前 game version 下的 YAML 不会删除或改写 `PERSISTED_WORKSPACE/bin` 中的文件。
 - 上游 artifact 变化会传递 invalidation 到下游 consumers。
 - 普通 PR CI 不自动改写 tracked snapshot。
 - 正式 snapshot 只在完整 validation 成功后生成一次。
