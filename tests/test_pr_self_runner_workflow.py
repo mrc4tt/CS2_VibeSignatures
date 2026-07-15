@@ -33,6 +33,16 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
             workflow,
         )
 
+    def test_skips_automated_gamesymbol_snapshot_pull_requests(self) -> None:
+        workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
+        snapshot_filter = (
+            "!(github.event.pull_request.user.login == 'github-actions[bot]' &&\n"
+            "        startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&\n"
+            "        startsWith(github.event.pull_request.title, 'chore(gamesymbols): add '))"
+        )
+
+        self.assertEqual(2, workflow.count(snapshot_filter))
+
     def test_cpp_test_steps_fail_on_run_cpp_tests_nonzero_exit(self) -> None:
         for workflow_path in (
             ".github/workflows/pr-self-runner.yml",

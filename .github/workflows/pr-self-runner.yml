@@ -20,7 +20,10 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       !(github.event.pull_request.user.login == 'github-actions[bot]' &&
         startsWith(github.event.pull_request.head.ref, 'bump-download/') &&
-        startsWith(github.event.pull_request.title, 'chore(download): Update manifest for '))
+        startsWith(github.event.pull_request.title, 'chore(download): Update manifest for ')) &&
+      !(github.event.pull_request.user.login == 'github-actions[bot]' &&
+        startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&
+        startsWith(github.event.pull_request.title, 'chore(gamesymbols): add '))
     environment: win64
     runs-on: [self-hosted, windows, x64]
     env:
@@ -481,7 +484,10 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       !(github.event.pull_request.user.login == 'github-actions[bot]' &&
         startsWith(github.event.pull_request.head.ref, 'bump-download/') &&
-        startsWith(github.event.pull_request.title, 'chore(download): Update manifest for '))
+        startsWith(github.event.pull_request.title, 'chore(download): Update manifest for ')) &&
+      !(github.event.pull_request.user.login == 'github-actions[bot]' &&
+        startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&
+        startsWith(github.event.pull_request.title, 'chore(gamesymbols): add '))
     environment: win64
     runs-on: [self-hosted, windows, x64]
     steps:

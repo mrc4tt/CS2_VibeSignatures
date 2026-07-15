@@ -11,6 +11,10 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("Workspace bin must be a real directory", self.workflow)
         self.assertIn("Copied persisted bin/$env:GAMEVER into build workspace", self.workflow)
 
+    def test_major_update_explicitly_disables_old_signature_reuse(self) -> None:
+        self.assertIn("$analyzeArgs += @('-oldgamever', 'none')", self.workflow)
+        self.assertNotIn("$analyzeArgs += @('-oldgamever', '0')", self.workflow)
+
     def test_candidate_is_built_before_validation_and_published_before_persist(self) -> None:
         analyze = self.workflow.index("uv run ida_analyze_bin.py")
         candidate = self.workflow.index("gamesymbol_candidate.py build")

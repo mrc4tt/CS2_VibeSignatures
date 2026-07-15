@@ -171,7 +171,7 @@ jobs:
           $analyzeArgs = @('-gamever', $env:GAMEVER)
           if ($majorUpdate -eq 'true') {
             Write-Host "GAMEVER=$env:GAMEVER has major_update=true in download.yaml; forcing fresh signatures."
-            $analyzeArgs += @('-oldgamever', '0')
+            $analyzeArgs += @('-oldgamever', 'none')
           } else {
             Write-Host "GAMEVER=$env:GAMEVER does not have major_update=true in download.yaml; reusing old signatures."
           }
