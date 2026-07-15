@@ -19,7 +19,7 @@
 		{
 			"library": "engine",
 			"windows": "40 53 48 83 EC ? 48 8B D9 3B 51",
-			"linux": "55 48 89 E5 41 56 41 55 41 54 53 48 89 FB 39 77"
+			"linux": "55 48 89 E5 41 55 41 54 53 48 89 FB 48 83 EC ? 39 77"
 		},
 		// idk a good way to find this again, i just brute forced the vtable. offset is 136 on CTriggerPush
 		"TriggerPush_Touch":
@@ -39,8 +39,8 @@
 		"ServerMovementUnlock":
 		{
 			"library": "server",
-			"windows": "0F 86 B0 ? ? ? 0F 57 C0 0F 2E C2",
-			"linux": "0F 87 ? ? ? ? F3 0F 10 35 ? ? ? ? F3 0F 11 B5"
+			"windows": "0F 86 AF ? ? ? 0F 57 C0 0F 2E C2",
+			"linux": "0F 87 ? ? ? ? F3 0F 10 25 ? ? ? ? F3 0F 11 A5 ? ? ? ? 48 89 DE"
 		},
 		// String: "CCSPlayerPawnBase::SwitchTeam", just keep in mind this is actually CCSPlayerController::SwitchTeam
 		"CCSPlayerController_SwitchTeam":
@@ -55,13 +55,6 @@
 			"library": "server",
 			"windows": "C8 42 EB ? 4C 8B 77 ? 4D 39 66",
 			"linux": "C8 42 41 C7 85 ? ? ? ? ? ? ? ? 41 C7 85 ? ? ? ? ? ? ? ? E9"
-		},
-		// Called right after "Removed %s(%s)\n"
-		"UTIL_Remove":
-		{
-			"library": "server",
-			"windows": "48 85 C9 74 ? 48 8B D1 48 8B 0D ? ? ? ?",
-			"linux": "48 89 FE 48 85 FF"
 		},
 		// "SetPosition" is passed to this
 		"CEntitySystem_AddEntityIOEvent":
@@ -165,7 +158,7 @@
 		{
 			"library": "server",
 			"windows": "40 55 56 41 56 48 83 EC ? 48 8B F1 BA ? ? ? ? 8B 0D ? ? ? ? FF 15 ? ? ? ? 4C 8D 35 ? ? ? ? 84 C0 74 ? 8B 0D ? ? ? ? 4C 8D 0D ? ? ? ? 4C 8D 05 ? ? ? ? 4C 89 74 24 ? BA ? ? ? ? FF 15 ? ? ? ? 48 89 9C 24 ? ? ? ? 48 89 BC 24 ? ? ? ? E8 ? ? ? ? 48 8B D0 48 8D 4C 24 ? 48 8B E8 E8 ? ? ? ? E8 ? ? ? ? 48 85 C0 75 ? 48 8D 15 ? ? ? ? E9 ? ? ? ? 48 8D 94 24 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 8B 5E ? 48 83 EB ? 48 8B CB E8 ? ? ? ? 83 F8 ? 0F 85 ? ? ? ? 48 8B 0B 48 8B 41 ? 0F B7 40 ? 3D ? ? ? ? 74 ? 05 ? ? ? ? 3D ? ? ? ? 76 ? 33 D2 48 8B CB E8 ? ? ? ? EB ? 48 8B 41 ? 48 8D 0D ? ? ? ? 48 3B C1 0F 85 ? ? ? ? 48 8B 0B 48 8B 41 ? 0F B7 40 ? 3D ? ? ? ? 74 ? 05 ? ? ? ? 3D ? ? ? ? 76 ? BA ? ? ? ? 48 8B CB E8 ? ? ? ? EB ? 48 8B 41 ? 48 85 C0 0F 84 ? ? ? ? 33 DB 83 38 ? 75 ? 8B 48 ? 83 F9 ? 74 ? 4C 8B 05 ? ? ? ? 4D 85 C0 74 ? 83 F9 ? 74 ? 8B C1 25 ? ? ? ? 8B D0 48 C1 E8 ? 4D 8B 0C C0 4D 85 C9 74 ? 81 E2 ? ? ? ? 48 6B C2 ? 49 03 C1 74 ? 39 48 ? 48 0F 45 C3 EB ? 48 8B C3 48 85 C0 74 ? 48 8B 08 EB ? 48 8B CB 4C 8D 0D ? ? ? ? 89 5C 24 ? 4C 8D 05 ? ? ? ? 33 D2 E8 ? ? ? ? 48 8B F8 48 85 C0 75 ? 48 8D 15 ? ? ? ? E9 ? ? ? ? 83 7E ? ? 7D ? 8B 0D ? ? ? ? BA ? ? ? ? FF 15 ? ? ? ? 84 C0 0F 84 ? ? ? ? 8B 0D",
-			"linux": "55 BE ? ? ? ? 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 4C 8D 3D ? ? ? ? 41 8B 3F E8 ? ? ? ? 84 C0 0F 85 ? ? ? ? E8 ? ? ? ? 4C 8D 6D ? 4C 89 EF 48 89 C6 49 89 C4 E8 ? ? ? ? E8 ? ? ? ? 48 89 C7 48 85 C0 0F 84 ? ? ? ? E8 ? ? ? ? 49 89 C6 48 8B 43 ? 48 8D 78 ? E8 ? ? ? ? 48 85 C0 0F 84 ? ? ? ? 83 38 ? 0F 85 ? ? ? ? 8B 48 ? 83 F9 ? 0F 84 ? ? ? ? 48 8B 35 ? ? ? ? 48 85 F6 0F 84 ? ? ? ? 83 F9 ? 0F 84 ? ? ? ? 0F B7 40 ? 48 89 C2 48 C1 EA ? 83 E2 ? 48 8B 14 D6 48 85 D2 0F 84 ? ? ? ? 25 ? ? ? ? 48 6B C0 ? 48 01 D0 3B 48 ? 0F 85 ? ? ? ? 48 8B 38 48 85 FF 0F 84 ? ? ? ? 48 8D 15"
+			"linux": "55 BE ? ? ? ? 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 4C 8D 3D ? ? ? ? 41 8B 3F E8 ? ? ? ? 84 C0 0F 85 ? ? ? ? E8 ? ? ? ? 4C 8D 6D ? 4C 89 EF 48 89 C6 49 89 C4 E8 ? ? ? ? E8 ? ? ? ? 48 89 C7 48 85 C0 0F 84 ? ? ? ? E8 ? ? ? ? 49 89 C6 48 8B 43 ? 48 8D 78 ? E8 ? ? ? ? 48 85 C0 0F 84 ? ? ? ? 83 38 ? 0F 85 ? ? ? ? 8B 48 ? 83 F9 ? 0F 84 ? ? ? ? 48 8B 35 ? ? ? ? 48 85 F6 0F 84 ? ? ? ? 83 F9 ? 0F 84 ? ? ? ? 0F B7 40 ? 48 89 C2 48 C1 EA ? 83 E2 ? 48 8B 14 D6 48 85 D2 0F 84 ? ? ? ? 25 ? ? ? ? 48 6B C0 ? 48 01 D0 3B 48 ? 0F 85 ? ? ? ? 48 8B 38 48 85 FF 0F 84 ? ? ? ? 48 8D 15 ? ? ? ? 31 C9 48 8D 35 ? ? ? ? E8 ? ? ? ? 48 85 C0 74 ? 8B 7B ? 85 FF 0F 8E ? ? ? ? 48 8B 73 ? 48 8D 5D"
 		},
 		// Called by CS_Script_SetModel
 		// This has two identical functions, but because we're detouring for cs_script, we must go beyond function boundaries for a unique signature
@@ -175,6 +168,7 @@
 			"windows": "40 53 48 83 EC ? 48 8B D9 4C 8B C2 48 8B 0D E5 48 ? ?",
 			"linux": "55 48 89 E5 53 48 89 FB 48 83 EC ? 48 8D 05 FD ? ? ? 48 8B 38"
 		},
+		// "TerminateRound"
 		"CGameRules_TerminateRound":
 		{
 			"library": "server",
@@ -184,7 +178,7 @@
 		"CCSPlayer_WeaponServices_CanUse":
 		{
 			"library": "server",
-			"windows": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 54 41 55 41 56 41 57 48 83 EC ? 48 8B 01 48 8B FA",
+			"windows": "48 89 5C 24 ? 48 89 6C 24 ? 56 57 41 54 41 56 41 57 48 83 EC ? 48 8B 01 48 8B FA",
 			"linux": "55 48 8D 15 ? ? ? ? 48 89 E5 41 55 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 07 48 8B 80"
 		},
 		"CCSPlayer_WeaponServices_EquipWeapon":
@@ -219,7 +213,7 @@
 		{
 			"library": "server",
 			"windows": "0F 84 ? ? ? ? 80 B8 ? ? ? ? 00 0F 84 ? ? ? ? 80 3D ? ? ? ? 00 74 15",
-			"linux": "0F 84 ? ? ? ? 44 0F B6 B0 ? ? ? ? 45 84 F6 0F 84"
+			"linux": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ? 45 84 FF 0F 84"
 		},
 		// next to "soundname", in windows it's the last referenced sub while in linux it's right after
 		// this is a vscript binding though so it may be removed in the future?
@@ -258,14 +252,6 @@
 			"windows": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 41 0F B6 F0",
 			"linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 89 D3 48 81 EC ? ? ? ? 40 38 B7 ? 05 00 00"
 		},
-		// Use CBaseEntity::Use offset
-		// This signature points directly to the instruction to patch
-		"CPhysBox_Use":
-		{
-			"library": "server",
-			"windows": "48 89 5C 24 ? 57 48 83 EC ? 48 8B FA 48 8B D9 E8 ? ? ? ? 80 BB ? 08 00 00 ?",
-			"linux": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 83 EC 10 E8 7A 98 E2 ?"
-		},
 		"CTakeDamageInfo":
 		{
 			"library": "server",
@@ -296,7 +282,7 @@
 		{
 			"library": "engine",
 			"windows": "48 89 54 24 ? 53 56 57 41 56 48 83 EC",
-			"linux": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 49 89 F4 53 48 81 EC ? ? ? ? 41 C6 01"
+			"linux": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 83 EC ? 8B 87"
 		},
 		// The only function with "weapon_shield" and does fminf with 260.0 earlier
 		"CCSPlayerPawn_GetMaxSpeed":
@@ -357,8 +343,8 @@
 		"CCSGameRules__sm_mapGcBanInformation":
 		{
 			"library": "server",
-			"windows": "48 8D 0D ? ? ? ? 48 89 45 ? 0F 11 45",
-			"linux": "48 8D 0D ? ? ? ? 48 63 51 ? 83 FA ? 0F 84 ? ? ? ? F7 41 ? ? ? ? ? 74"
+			"windows": "48 8D 0D ? ? ? ? 0F 11 44 24 ? 0F 11 44 24 ? E8",
+			"linux": "48 8D 35 ? ? ? ? 89 C2 48 63 46"
 		},
 		// Called right before "%d spawn groups:\n"
 		"GetSpawnGroups":
@@ -386,7 +372,7 @@
 		{
 			"library": "server",
 			"windows": "75 ? 48 8B 03 48 8B CB FF 90 ? ? ? ? 84 C0 74 ? 48 8D 05",
-			"linux": "75 ? 48 8B 03 48 8D 15 ? ? ? ? 48 8B 80 ? ? ? ? 48 39 D0 75 ? 48 83 C4"
+			"linux": "75 ? 48 8B 03 48 89 DF FF 90 ? ? ? ? 84 C0 74 ? 48 8D 05"
 		},
 		// "Going to intermission...\n"
 		"CCSGameRules_GoToIntermission":
@@ -394,6 +380,13 @@
 			"library": "server",
 			"windows": "48 89 5C 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 4C 8B E9",
 			"linux": "55 31 C0 48 89 E5 41 57 41 56 41 55 49 89 FD 41 54 48 8D 3D ? ? ? ?"
+		},
+		// Called in return by function with "Usage:  setang_exact pitch yaw <roll optional> <prediction sync ticks optional>" string
+		"CBasePlayerPawn_SnapViewAngles":
+		{
+			"library": "server",
+			"windows": "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B DA 48 8B F1 48 8D 55",
+			"linux": "55 48 89 E5 41 57 49 89 FF 48 89 F7 41 56 41 55 41 54 53 48 81 EC ? ? ? ? E8"
 		}
 	},
 	"Offsets":
@@ -537,7 +530,7 @@
 	{
 		"ServerMovementUnlock":
 		{
-			"windows": "E9 B1 00 00 00 90",
+			"windows": "E9 B0 00 00 00 90",
 			"linux": "90 90 90 90 90 90"
 		},
 		"FixWaterFloorJump":
@@ -550,15 +543,6 @@
 		{
 			"windows": "E9 2C 00 00 00 90",
 			"linux": "E9 12 00 00 00 90"
-		},
-		// Make func_physbox pass itself as the caller in OnPlayerUse
-		// pCaller = inputdata->pCaller ->  pCaller = this
-		// Windows:  mov r8, [rbx+8]  	->  mov r8, rdi
-		// Linux: 	 mov rdx, [r12+8] 	->  mov rdx, rbx
-		"CPhysBox_Use":
-		{
-			"windows": "49 89 F8 90",
-			"linux": "48 89 DA 90 90"
 		},
 		// jnz -> jmp
 		"SetSchemaHammerUniqueId":
