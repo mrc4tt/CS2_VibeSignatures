@@ -10358,9 +10358,9 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/public/mathlib
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
@@ -10385,6 +10385,7 @@ cpp_tests:
       - hl2sdk_cs2/public
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
@@ -10433,6 +10434,7 @@ cpp_tests:
       - hl2sdk_cs2/public
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
@@ -10458,6 +10460,7 @@ cpp_tests:
       - hl2sdk_cs2/public
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
@@ -10482,6 +10485,7 @@ cpp_tests:
       - hl2sdk_cs2/public
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
@@ -10507,6 +10511,7 @@ cpp_tests:
       - hl2sdk_cs2/public
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
@@ -10532,6 +10537,7 @@ cpp_tests:
       - hl2sdk_cs2/public
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
@@ -10556,9 +10562,9 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/public/mathlib
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
@@ -10603,6 +10609,7 @@ cpp_tests:
       - hl2sdk_cs2/public
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
@@ -10626,6 +10633,7 @@ cpp_tests:
       - hl2sdk_cs2/public
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
