@@ -1,7 +1,7 @@
 # build-on-self-runner
 
 ## Overview
-`.github/workflows/build-on-self-runner.yml` 是正式版本构建与发布流水线：在受信任的 Windows self-hosted runner 上准备指定 CS2 版本的二进制，执行 IDA 分析，生成并验证候选 game-symbol snapshot，随后持久化缓存、创建 snapshot PR、打包并发布 Release。
+`.github/workflows/build-on-self-runner.yml` 是正式版本构建与发布流水线：在受信任的 Windows self-hosted runner 上准备指定 CS2 版本的二进制，执行 IDA 分析，生成并验证候选 game-symbol snapshot，随后持久化缓存、创建包含 snapshot 与生成 gamedata 的后续 PR、打包并发布 Release。
 
 ## Responsibilities
 - 响应 tag push 或 `repository_dispatch: build-on-self-runner`，解析并校验 `TAG` / `GAMEVER`。
@@ -9,7 +9,7 @@
 - 根据 `download.yaml` 的 `major_update` 标记决定是否禁用旧版本 signature 复用，然后运行二进制分析。
 - 构建单一候选 snapshot，让 gamedata 更新和 C++ 测试消费同一个不可变候选，并通过 session guard/mark 记录验证状态。
 - 将通过验证的候选发布为 `gamesymbols/<GAMEVER>.yaml`，持久化已验证的二进制缓存。
-- snapshot 变化时创建或复用后续 PR；该 Bot `gamesymbols/<GAMEVER>` PR 会被 `pr-self-runner` 显式跳过。随后生成 `gamedata-<GAMEVER>.7z`、`gamebin-<GAMEVER>.7z` 和 GitHub Release。
+- canonical snapshot 或 `dist/` 下生成的 gamedata 变化时，将两者合并到同一个后续 PR；该 Bot `gamesymbols/<GAMEVER>` PR 会被 `pr-self-runner` 显式跳过。随后生成 `gamedata-<GAMEVER>.7z`、`gamebin-<GAMEVER>.7z` 和 GitHub Release。
 - 无论成功或失败，清理候选 session 和持久化目录中的临时 IDA 数据库文件。
 
 ## Involved Files & Symbols
@@ -21,9 +21,10 @@
 - `ida_analyze_bin.py` - 二进制分析与 signature 生成
 - `gamesymbol_candidate.py` - `build` / `guard` / `mark` / `publish`
 - `update_gamedata.py` - 从候选 snapshot 更新下游 gamedata
+- `dist/` - tracked 的各下游框架 gamedata；生成变化随 snapshot 一并进入后续 PR
 - `run_cpp_tests.py` - 从候选 snapshot 执行 C++ 编译与布局验证
 - `gamesymbols/<GAMEVER>.yaml` - 通过验证后发布的 canonical snapshot
-- `tests/test_build_self_runner_workflow.py` - 工作区、候选顺序、snapshot PR 与归档约束测试
+- `tests/test_build_self_runner_workflow.py` - 工作区、候选顺序、snapshot/gamedata 输出 PR 与归档约束测试
 - `tests/test_pr_self_runner_workflow.py` - 两个 workflow 的 C++ 测试失败传播约束
 
 ## Architecture
@@ -38,7 +39,7 @@
 7. IDA 分析完成后，在 `RUNNER_TEMP` 中构建候选 snapshot 与 session。
 8. 对同一候选依次执行 gamedata 更新和 C++ 测试；每个阶段前后都 guard，成功后分别 mark `gamedata` 与 `cpp_tests`。
 9. publish 将已验证候选写入 `gamesymbols/<GAMEVER>.yaml`；之后才把工作区二进制复制回持久化缓存。
-10. canonical snapshot 若发生变化，则在 `gamesymbols/<GAMEVER>` 分支提交并 force-with-lease 推送，按需创建后续 PR；`pr-self-runner` 通过 Bot 身份、分支前缀和标题前缀显式跳过此类 PR。
+10. canonical snapshot 或 `dist/` 下生成的 gamedata 若发生变化，则在 `gamesymbols/<GAMEVER>` 分支把两者合并提交并 force-with-lease 推送，按需创建后续 PR；`pr-self-runner` 通过 Bot 身份、分支前缀和标题前缀显式跳过此类 PR。
 11. 生成 gamedata 与纯 gamebin 两类 7z 包，并以当前 tag 创建 GitHub Release。
 12. `always()` 清理持久化缓存中的临时 IDA DB 文件以及候选 session 目录。
 
@@ -61,8 +62,8 @@ N["Guard candidate; update gamedata; mark gamedata"]
 O["Guard candidate; run C++ tests; mark cpp_tests"]
 P["Publish canonical gamesymbols/<GAMEVER>.yaml"]
 Q["Persist validated bin cache"]
-R{"Canonical snapshot changed?"}
-S["Commit and push gamesymbols/<GAMEVER>; create or reuse Bot PR skipped by pr-self-runner"]
+R{"Canonical snapshot or generated gamedata changed?"}
+S["Commit snapshot and dist/ gamedata; push gamesymbols/<GAMEVER>; create or reuse Bot PR skipped by pr-self-runner"]
 T["Create gamedata and gamebin archives"]
 U["Create GitHub Release"]
 V["Always clean temporary IDA DB files and candidate session"]
@@ -105,15 +106,15 @@ U --> V
 - 相关 Serena memory：`mem:download_depot`、`mem:copy_depot_bin`、`mem:ida_analyze_bin`、`mem:update_gamedata`、`mem:run_cpp_tests`。
 
 ## Notes
-- workflow 拥有 `contents: write` 与 `pull-requests: write`；这是发布 Release、推送 snapshot 分支和创建 PR 所必需的。
+- workflow 拥有 `contents: write` 与 `pull-requests: write`；这是发布 Release、推送包含 snapshot/gamedata 的分支和创建 PR 所必需的。
 - 工作区 `cs2_depot` 可以是指向持久化目录的 link，但工作区 `bin` 明确要求为真实目录，避免分析过程直接污染共享缓存。
 - 持久化已验证 bin 前会删除目标内的 `*.yaml`，canonical symbol 数据只由 `gamesymbols/<GAMEVER>.yaml` 表示，而不是持久化 bin 内的中间 YAML。
 - gamedata 与 C++ 测试必须读取同一个 `ACTUAL_CANDIDATE_SNAPSHOT`，不能回退到 `bin` 中的可变 YAML；publish 发生在两个验证阶段之后。
 - `copy_depot_bin.py -checkonly` 的退出码契约为：0 表示完整、1 表示缺失、其他值视为错误。
-- snapshot 无变化时不会创建后续 PR；已有同 head 分支的 open PR 时也不会重复创建。自动 snapshot PR 使用 `gamesymbols/` 分支和 `chore(gamesymbols): add ` 标题，匹配 `pr-self-runner` 的显式 Bot 排除条件。
-- `git push --force-with-lease` 会更新按版本复用的 snapshot 分支，因此该分支不是永久追加历史。
+- snapshot 与 tracked `dist/` gamedata 都无变化时才不会创建后续 PR；任一变化都会触发同一个 PR。已有同 head 分支的 open PR 时不会重复创建。自动输出 PR 使用 `gamesymbols/` 分支和 `chore(gamesymbols): add ` 标题，匹配 `pr-self-runner` 的显式 Bot 排除条件。
+- `git push --force-with-lease` 会更新按版本复用的 validated-output 分支，因此该分支不是永久追加历史。
 - release payload 分为两类：gamedata 包排除 DLL/SO 与 IDA 临时文件，gamebin 包只包含 DLL/SO 且排除 YAML。
-- 清理步骤使用 `always()`；但只有前置步骤成功时才会执行归档、Release 与 snapshot PR 创建。
+- 清理步骤使用 `always()`；但只有前置步骤成功时才会执行归档、Release 与 snapshot/gamedata PR 创建。
 
 ## Callers
 - GitHub tag push：`push.tags: ["*"]`

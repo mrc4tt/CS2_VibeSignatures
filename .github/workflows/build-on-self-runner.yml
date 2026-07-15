@@ -271,16 +271,16 @@ jobs:
           Write-Host "Persisted validated bin/$env:GAMEVER; robocopy exit code $robocopyExitCode"
           $global:LASTEXITCODE = 0
 
-      - name: Create follow-up game-symbol snapshot PR
+      - name: Create follow-up validated snapshot and gamedata PR
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
           $snapshot = "gamesymbols/$env:GAMEVER.yaml"
-          git add -- "$snapshot"
+          git add -- "$snapshot" dist
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 0) {
-            Write-Host "Tracked snapshot already matches the validated result; no follow-up PR is needed."
+            Write-Host "No snapshot or generated gamedata changes were found; no follow-up PR is needed."
             exit 0
           }
 
@@ -289,23 +289,23 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$branch"
           if ($LASTEXITCODE -ne 0) { throw "Failed to create snapshot branch $branch" }
-          git add -- "$snapshot"
-          git commit -m "chore(gamesymbols): add $env:GAMEVER snapshot" `
+          git add -- "$snapshot" dist
+          git commit -m "chore(gamesymbols): add $env:GAMEVER snapshot and refresh gamedata" `
             -m "Co-Authored-By: Codex (GPT-5.x)"
-          if ($LASTEXITCODE -ne 0) { throw "Failed to commit $snapshot" }
+          if ($LASTEXITCODE -ne 0) { throw "Failed to commit validated snapshot and gamedata" }
           git push --force-with-lease origin "$branch"
-          if ($LASTEXITCODE -ne 0) { throw "Failed to push snapshot branch $branch" }
+          if ($LASTEXITCODE -ne 0) { throw "Failed to push validated output branch $branch" }
 
           $existingPr = gh pr list --head "$branch" --state open --json number --jq '.[0].number'
           if ([string]::IsNullOrWhiteSpace($existingPr)) {
             gh pr create `
               --base "${{ github.event.repository.default_branch }}" `
               --head "$branch" `
-              --title "chore(gamesymbols): add $env:GAMEVER snapshot" `
-              --body "Adds the canonical game-symbol snapshot produced after full analysis, gamedata, and C++ validation."
-            if ($LASTEXITCODE -ne 0) { throw "Failed to create follow-up snapshot PR" }
+              --title "chore(gamesymbols): add $env:GAMEVER snapshot and refresh gamedata" `
+              --body "Adds the canonical game-symbol snapshot and generated gamedata produced from the same candidate after full analysis, gamedata, and C++ validation."
+            if ($LASTEXITCODE -ne 0) { throw "Failed to create follow-up validated output PR" }
           } else {
-            Write-Host "Snapshot PR #$existingPr is already open."
+            Write-Host "Validated output PR #$existingPr is already open."
           }
 
       - name: Archive release payload

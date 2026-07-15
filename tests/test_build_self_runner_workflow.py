@@ -36,10 +36,17 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertNotIn('update_gamedata.py -gamever "$env:GAMEVER" -bindir', self.workflow)
         self.assertNotIn("run_cpp_tests.py @args -bindir", self.workflow)
 
-    def test_build_creates_follow_up_snapshot_pr_and_archives_snapshot(self) -> None:
+    def test_build_creates_follow_up_pr_for_snapshot_and_gamedata(self) -> None:
         self.assertIn("pull-requests: write", self.workflow)
         self.assertIn("gamesymbols/$env:GAMEVER.yaml", self.workflow)
         self.assertIn("gamesymbols/$env:GAMEVER", self.workflow)
+        self.assertEqual(2, self.workflow.count('git add -- "$snapshot" dist'))
+        self.assertIn("snapshot or generated gamedata", self.workflow)
+        self.assertIn(
+            '--title "chore(gamesymbols): add $env:GAMEVER snapshot and refresh gamedata"',
+            self.workflow,
+        )
+        self.assertIn("canonical game-symbol snapshot and generated gamedata", self.workflow)
         self.assertIn("gh pr create", self.workflow)
 
 

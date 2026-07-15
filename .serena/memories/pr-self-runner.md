@@ -5,7 +5,7 @@
 
 ## Responsibilities
 - 监听 PR 打开、更新、重新打开、转为 ready 和关闭事件，并按 PR 编号串行化/取消过期运行。
-- 只验证受信任仓库中的同仓库 PR，拒绝 fork PR，并跳过特定的自动 `bump-download` manifest PR 与 build workflow 创建的 `gamesymbols/<GAMEVER>` snapshot PR。
+- 只验证受信任仓库中的同仓库 PR，拒绝 fork PR，并跳过特定的自动 `bump-download` manifest PR 与 build workflow 创建的 `gamesymbols/<GAMEVER>` snapshot/gamedata 输出 PR。
 - 为每个 PR 创建独立工作区，检出 `refs/pull/<PR>/merge`，验证合并结果而非单独 head commit。
 - 从持久化缓存复制目标版本二进制，并从 merge commit 的第一父提交提取确定性 base config/snapshot。
 - 同版本变更时只失效受影响的输出；新版本或 bootstrap 场景按边界恢复旧 snapshot 或清空当前版本 YAML。
@@ -33,7 +33,7 @@
 大致流程：
 
 1. workflow 监听 `opened`、`synchronize`、`reopened`、`ready_for_review`、`closed`；同一 repository + PR number 只保留最新运行。
-2. 非 closed 事件进入 `validate`。条件要求仓库在白名单、PR head 来自当前仓库，并排除两类 GitHub Actions bot PR：`bump-download/*` + `chore(download): Update manifest for `，以及 `gamesymbols/*` + `chore(gamesymbols): add `。相同排除条件也应用于 closed 事件的 `finalize-pr-workspace`。
+2. 非 closed 事件进入 `validate`。条件要求仓库在白名单、PR head 来自当前仓库，并排除两类 GitHub Actions bot PR：`bump-download/*` + `chore(download): Update manifest for `，以及 build workflow 创建、同时包含 validated snapshot 与生成 gamedata 的 `gamesymbols/*` + `chore(gamesymbols): add ` 输出 PR。相同排除条件也应用于 closed 事件的 `finalize-pr-workspace`。
 3. 在 `RUNNER_WORKSPACE/CS2_VibeSignatures-pr-<PR>` 创建隔离目录；每次验证先删除旧目录，再初始化 Git 仓库、抓取并 detached checkout `refs/pull/<PR>/merge`，同时初始化 submodules。
 4. 执行格式检查，并从 PR merge 结果的 `download.yaml` 最后一项读取 `GAMEVER`。
 5. 将 `cs2_depot` 链接到持久化 depot；要求 `PERSISTED_WORKSPACE/bin/<GAMEVER>` 已存在，按 `.stignore` 排除规则复制到真实的 PR 工作区 `bin`。本 workflow 不负责下载缺失二进制。
@@ -111,7 +111,7 @@ U --> V
 
 ## Notes
 - concurrency group 为 `pr-self-runner-<repository>-<PR number>`，且 `cancel-in-progress: true`；同一 PR 的旧验证会被新提交取消。
-- fork PR 被跳过，因为流程需要受保护 secrets 和 self-hosted runner；特定 bot `bump-download/*` manifest PR，以及 build workflow 创建的 `gamesymbols/*` snapshot PR，都会被 `validate` 与 `finalize-pr-workspace` 显式跳过。过滤器同时校验 Bot 身份、head 分支前缀和标题前缀，避免误伤普通人工 PR。
+- fork PR 被跳过，因为流程需要受保护 secrets 和 self-hosted runner；特定 bot `bump-download/*` manifest PR，以及 build workflow 创建的 `gamesymbols/*` snapshot/gamedata 输出 PR，都会被 `validate` 与 `finalize-pr-workspace` 显式跳过。过滤器同时校验 Bot 身份、head 分支前缀和标题前缀，避免误伤普通人工 PR。
 - workflow 验证的是 GitHub 合成的 merge commit；`HEAD^1` 被当作 base parent，当前 `HEAD` 是合并结果。
 - PR 流程不会下载 depot；如果持久化 `bin/<GAMEVER>` 不存在，验证直接失败。因此正式 build/cache 准备是新版本 PR 验证的外部前置条件。
 - `.stignore` 解析只接受扁平文件名或目录名；注释、空行和否定规则被忽略，包含嵌套路径的 pattern 会被拒绝。
