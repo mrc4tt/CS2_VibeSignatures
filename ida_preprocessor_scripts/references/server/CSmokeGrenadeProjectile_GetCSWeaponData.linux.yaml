@@ -1,0 +1,68 @@
+func_name: CSmokeGrenadeProjectile_GetCSWeaponData
+func_va: '0x1401f60'
+disasm_code: |-
+  .text:0000000001401F60                 push    rbp
+  .text:0000000001401F61                 mov     rbp, rsp
+  .text:0000000001401F64                 push    r12
+  .text:0000000001401F66                 push    rbx
+  .text:0000000001401F67                 sub     rsp, 110h
+  .text:0000000001401F6E                 test    rdi, rdi
+  .text:0000000001401F71                 jz      short loc_1401FF0
+  .text:0000000001401F73                 movzx   edx, word ptr [rdi+10h]
+  .text:0000000001401F77                 lea     r12, [rbp+var_120]
+  .text:0000000001401F7E                 xor     eax, eax
+  .text:0000000001401F80                 lea     rsi, aD_1; "%d"
+  .text:0000000001401F87                 mov     rdi, r12
+  .text:0000000001401F8A                 call    sub_A19A30
+  .text:0000000001401F8F                 lea     rsi, [rbp+var_118]
+  .text:0000000001401F96                 test    [rbp+var_119], 40h
+  .text:0000000001401F9D                 jnz     short loc_1401FB2
+  .text:0000000001401F9F                 lea     rsi, haystack
+  .text:0000000001401FA6                 test    dword ptr [rbp-11Ch], 3FFFFFFFh
+  .text:0000000001401FB0                 jnz     short loc_1401FE0
+  .text:0000000001401FB2                 mov     edi, 1
+  .text:0000000001401FB7                 call    GetCSWeaponDataFromKey
+  .text:0000000001401FBC                 ; this
+  .text:0000000001401FBC                 mov     rdi, r12; this
+  .text:0000000001401FBF                 ; int
+  .text:0000000001401FBF                 xor     esi, esi; int
+  .text:0000000001401FC1                 mov     rbx, rax
+  .text:0000000001401FC4                 call    __ZN13CBufferString5PurgeEi; CBufferString::Purge(int)
+  .text:0000000001401FC9                 add     rsp, 110h
+  .text:0000000001401FD0                 mov     rax, rbx
+  .text:0000000001401FD3                 pop     rbx
+  .text:0000000001401FD4                 pop     r12
+  .text:0000000001401FD6                 pop     rbp
+  .text:0000000001401FD7                 retn
+  .text:0000000001401FE0                 mov     rsi, [rbp+var_118]
+  .text:0000000001401FE7                 jmp     short loc_1401FB2
+  .text:0000000001401FF0                 add     rsp, 110h
+  .text:0000000001401FF7                 xor     ebx, ebx
+  .text:0000000001401FF9                 mov     rax, rbx
+  .text:0000000001401FFC                 pop     rbx
+  .text:0000000001401FFD                 pop     r12
+  .text:0000000001401FFF                 pop     rbp
+  .text:0000000001402000                 retn
+procedure: |-
+  __int64 __fastcall CSmokeGrenadeProjectile_GetCSWeaponData(__int64 a1, __int64 a2, __int64 a3, int a4, int a5, int a6)
+  {
+    char *v6; // rsi
+    __int64 v7; // rbx
+    _BYTE v9[4]; // [rsp+0h] [rbp-120h] BYREF
+    int v10; // [rsp+4h] [rbp-11Ch]
+    char *v11; // [rsp+8h] [rbp-118h] BYREF
+
+    if ( !a1 )
+      return 0;
+    sub_A19A30((unsigned int)v9, (unsigned int)"%d", *(unsigned __int16 *)(a1 + 16), a4, a5, a6);
+    v6 = (char *)&v11;
+    if ( (v10 & 0x40000000) == 0 )
+    {
+      v6 = &haystack;
+      if ( (v10 & 0x3FFFFFFF) != 0 )
+        v6 = v11;
+    }
+    v7 = GetCSWeaponDataFromKey(1, v6);
+    CBufferString::Purge((CBufferString *)v9, 0);
+    return v7;
+  }

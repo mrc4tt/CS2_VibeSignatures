@@ -4,13 +4,9 @@ Run C++ tests declared in config.yaml and compare clang vtable dumps with YAML r
 """
 
 import argparse
-import json
-import shlex
-import os
 import subprocess
 import sys
 import tempfile
-import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Sequence
 
@@ -28,26 +24,19 @@ from cpp_tests_util import (
     format_compiler_vtable_entries,
     format_record_compare_differences,
     format_record_compare_report,
-    format_record_differences_for_agent,
     format_reference_record_members,
     format_reference_vtable_entries,
     format_vtable_compare_differences,
     format_vtable_compare_report,
-    format_vtable_differences_for_agent,
     map_target_triple_to_platform,
     pointer_size_from_target_triple,
 )
+from gamesymbol_store import SymbolStore, SymbolStoreError, open_snapshot_store
 
 
 DEFAULT_CONFIG_FILE = "config.yaml"
-DEFAULT_BIN_DIR = "bin"
 DEFAULT_CLANG = "clang++"
 DEFAULT_CPP_STD = "c++20"
-DEFAULT_AGENT = "claude"
-DEFAULT_MAX_RETRY = 3
-DEFAULT_MAX_VERIFY = 3
-SKILL_TIMEOUT = 600
-VTABLE_FIXER_AGENT_FILE = Path(".claude/agents/vtable-fixer.md")
 
 
 def parse_args():
@@ -58,15 +47,11 @@ def parse_args():
         default=DEFAULT_CONFIG_FILE,
         help=f"Path to config.yaml file (default: {DEFAULT_CONFIG_FILE})",
     )
-    parser.add_argument(
-        "-bindir",
-        default=DEFAULT_BIN_DIR,
-        help=f"Directory containing YAML outputs (default: {DEFAULT_BIN_DIR})",
-    )
+    parser.add_argument("-snapshot", required=True, help="Canonical candidate or published game-symbol snapshot")
     parser.add_argument(
         "-gamever",
         required=True,
-        help="Game version subdirectory name under bin (required)",
+        help="Game version recorded by the snapshot (required)",
     )
     parser.add_argument(
         "-clang",
@@ -83,43 +68,6 @@ def parse_args():
         action="store_true",
         help="Enable debug output",
     )
-    parser.add_argument(
-        "-fixheader",
-        action="store_true",
-        help="When vtable differences are found, invoke agent to fix configured C++ headers",
-    )
-    parser.add_argument(
-        "-agent",
-        default=os.environ.get("CS2VIBE_AGENT", DEFAULT_AGENT),
-        help=f"Agent executable to use for analysis, e.g., claude, claude.cmd, codex, codex.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var)",
-    )
-    parser.add_argument(
-        "-maxretry",
-        type=int,
-        default=DEFAULT_MAX_RETRY,
-        help=f"Maximum retry attempts for header-fix agent runs (default: {DEFAULT_MAX_RETRY})",
-    )
-    parser.add_argument(
-        "-maxverify",
-        type=int,
-        default=DEFAULT_MAX_VERIFY,
-        help=f"Maximum verify-and-retry cycles after agent fix (default: {DEFAULT_MAX_VERIFY})",
-    )
-    parser.add_argument(
-        "-claude_allowed_tools",
-        default="",
-        help="Pass-through value for Claude '--allowedTools' during -fixheader runs",
-    )
-    parser.add_argument(
-        "-claude_permission_mode",
-        default="",
-        help="Pass-through value for Claude '--permission-mode' during -fixheader runs",
-    )
-    parser.add_argument(
-        "-claude_extra_args",
-        default="",
-        help="Additional raw CLI arguments appended to Claude command during -fixheader runs",
-    )
     return parser.parse_args()
 
 
@@ -132,12 +80,6 @@ def _to_list(value: Any) -> List[str]:
         text = value.strip()
         return [text] if text else []
     return [str(value).strip()]
-
-
-def _to_text(value: Any) -> str:
-    if value is None:
-        return ""
-    return str(value).strip()
 
 
 def _to_bool(value: Any, default: bool = False) -> bool:
@@ -159,23 +101,6 @@ def _to_bool(value: Any, default: bool = False) -> bool:
             return False
         raise ValueError(f"Invalid boolean value: {value!r}")
     raise ValueError(f"Invalid boolean value: {value!r}")
-
-
-def _choose_override(item_value: Any, fallback: str) -> str:
-    override = _to_text(item_value)
-    if override:
-        return override
-    return fallback
-
-
-def _split_cli_args(raw_args: str) -> List[str]:
-    text = _to_text(raw_args)
-    if not text:
-        return []
-    try:
-        return shlex.split(text, posix=False)
-    except ValueError:
-        return text.split()
 
 
 def _normalize_option(option_text: str) -> str:
@@ -236,336 +161,6 @@ def parse_config(config_path: Path) -> List[Dict[str, Any]]:
         sys.exit(1)
 
     return cpp_tests
-
-
-def _strip_optional_frontmatter(markdown_text: str) -> str:
-    """Remove optional YAML frontmatter from an agent markdown file."""
-    content = markdown_text.strip()
-    if not content.startswith("---"):
-        return content
-    lines = content.splitlines()
-    frontmatter_end = None
-    for idx, line in enumerate(lines[1:], start=1):
-        if line.strip() == "---":
-            frontmatter_end = idx
-            break
-    if frontmatter_end is None:
-        return content
-    return "\n".join(lines[frontmatter_end + 1 :]).strip()
-
-
-def _load_codex_developer_instructions(agent_md_path: Path) -> str:
-    """Load and normalize Codex developer_instructions from agent markdown."""
-    try:
-        raw = agent_md_path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        print(f"Error: Codex agent prompt file not found: {agent_md_path}")
-        return ""
-    except OSError as exc:
-        print(f"Error: Failed to read Codex agent prompt file {agent_md_path}: {exc}")
-        return ""
-
-    prompt = _strip_optional_frontmatter(raw)
-    if not prompt:
-        print(f"Error: Codex agent prompt is empty in {agent_md_path}")
-        return ""
-    return f"developer_instructions={json.dumps(prompt)}"
-
-
-def _resolve_header_paths(test_item: Dict[str, Any], config_dir: Path) -> List[Path]:
-    """Resolve configured header paths to absolute paths."""
-    headers = _to_list(test_item.get("headers"))
-    resolved: List[Path] = []
-    for header in headers:
-        path = Path(header)
-        if not path.is_absolute():
-            path = (config_dir / path).resolve()
-        resolved.append(path)
-    return resolved
-
-
-def _build_fix_prompt(
-    *,
-    symbol: str,
-    header_paths: Sequence[Path],
-    diff_reports: Sequence[Dict[str, Any]],
-) -> str:
-    """Build English prompt for fixing C++ headers based on layout differences."""
-    lines: List[str] = []
-    lines.append(
-        f"Please update the C++ header declarations for interface/class/struct '{symbol}' according to the YAML reference layout entries."
-    )
-    lines.append("Follow the existing code style, formatting, and naming conventions in the header.")
-    lines.append("Do not make unrelated edits.")
-    lines.append("")
-    lines.append("Header file paths to edit:")
-    for path in header_paths:
-        lines.append(f"- {path.as_posix()}")
-    lines.append("")
-    lines.append("VTable Information:")
-    for report in diff_reports:
-        # reference modules are unrelated and should not be populated in prompt.
-        # module_name = report.get("reference_module")
-        # if not module_name:
-        #    requested = report.get("requested_modules", [])
-        #    module_name = ", ".join(requested) if requested else "unknown"
-        # lines.append(f"Reference module: {module_name}")
-        if report.get("comparison_kind") == "record_layout":
-            lines.append("  Current record members in c++ header:")
-            for entry_line in format_compiler_record_members(report):
-                lines.append(f"    {entry_line}")
-            lines.append("  YAML reference struct members:")
-            for entry_line in format_reference_record_members(report):
-                lines.append(f"    {entry_line}")
-            lines.append("  Record Layout Differences:")
-            for diff_line in format_record_differences_for_agent(report):
-                lines.append(f"    {diff_line}")
-        else:
-            lines.append("  Current vtable entries in c++ header:")
-            for entry_line in format_compiler_vtable_entries(report):
-                lines.append(f"    {entry_line}")
-            lines.append("  YAML reference vtable entries:")
-            for entry_line in format_reference_vtable_entries(report):
-                lines.append(f"    {entry_line}")
-            lines.append("  VTable Differences:")
-            for diff_line in format_vtable_differences_for_agent(report):
-                lines.append(f"    {diff_line}")
-    lines.append("")
-    lines.append(
-        "Apply the header updates now and keep the resulting declarations consistent with the latest reference layout."
-    )
-    return "\n".join(lines)
-
-
-def run_fix_header_agent(
-    *,
-    fix_prompt: str,
-    agent: str,
-    debug: bool,
-    max_retries: int,
-    session_id: str = "",
-    is_continuation: bool = False,
-    claude_allowed_tools: str = "",
-    claude_permission_mode: str = "",
-    claude_extra_args: str = "",
-) -> bool:
-    """Invoke claude/codex agent to apply header fixes."""
-    max_retries = max(1, int(max_retries))
-    claude_session_id = session_id if session_id else str(uuid.uuid4())
-
-    codex_developer_instructions = None
-    if "codex" in agent.lower():
-        codex_developer_instructions = _load_codex_developer_instructions(VTABLE_FIXER_AGENT_FILE)
-        if not codex_developer_instructions:
-            return False
-
-    for attempt in range(max_retries):
-        is_retry = (attempt > 0) or is_continuation
-        is_claude_agent = "claude" in agent.lower()
-        is_codex_agent = "codex" in agent.lower()
-        agent_input = None
-
-        if is_claude_agent:
-            agent_input = fix_prompt
-            cmd = [
-                agent,
-                "-p",
-                "-",
-                "--agent",
-                "vtable-fixer",
-                "--settings",
-                '{"alwaysThinkingEnabled": false}',
-            ]
-            if _to_text(claude_allowed_tools):
-                cmd.extend(["--allowedTools", _to_text(claude_allowed_tools)])
-            if _to_text(claude_permission_mode):
-                cmd.extend(["--permission-mode", _to_text(claude_permission_mode)])
-            extra_args = _split_cli_args(claude_extra_args)
-            if extra_args:
-                cmd.extend(extra_args)
-            if is_retry:
-                cmd.extend(["--resume", claude_session_id])
-            else:
-                cmd.extend(["--session-id", claude_session_id])
-            retry_target_desc = f"session {claude_session_id}"
-        elif is_codex_agent:
-            agent_input = fix_prompt
-            if is_retry:
-                cmd = [
-                    agent,
-                    "-c",
-                    codex_developer_instructions,
-                    "-c",
-                    "model_reasoning_effort=high",
-                    "-c",
-                    "model_reasoning_summary=none",
-                    "-c",
-                    "model_verbosity=low",
-                    "exec",
-                    "resume",
-                    "--last",
-                    "-",
-                ]
-            else:
-                cmd = [
-                    agent,
-                    "-c",
-                    codex_developer_instructions,
-                    "-c",
-                    "model_reasoning_effort=high",
-                    "-c",
-                    "model_reasoning_summary=none",
-                    "-c",
-                    "model_verbosity=low",
-                    "exec",
-                    "-",
-                ]
-            retry_target_desc = "the latest codex session (--last)"
-        else:
-            print(f"    Error: Unknown agent type '{agent}'. Agent name must contain 'claude' or 'codex'.")
-            return False
-
-        retry_tag = "[RETRY] " if is_retry else ""
-        attempt_str = f"(attempt {attempt + 1}/{max_retries})" if max_retries > 1 else ""
-        prompt_transport = " via stdin" if agent_input is not None else ""
-        print(f"    {retry_tag}Running {attempt_str}: {agent} <vtable-fixer-prompt{prompt_transport}>")
-
-        try:
-            run_kwargs = {
-                "timeout": SKILL_TIMEOUT,
-                "check": False,
-            }
-            if agent_input is not None:
-                run_kwargs["input"] = agent_input
-                run_kwargs["text"] = True
-
-            if debug:
-                result = subprocess.run(cmd, **run_kwargs)
-            else:
-                run_kwargs["capture_output"] = True
-                run_kwargs.setdefault("text", True)
-                result = subprocess.run(cmd, **run_kwargs)
-
-            if result.returncode == 0:
-                return True
-
-            print(f"    Agent failed with return code: {result.returncode}")
-            if not debug and result.stderr:
-                print(f"    stderr: {result.stderr[:500]}")
-            if attempt < max_retries - 1:
-                print(f"    Retrying with {retry_target_desc}...")
-        except subprocess.TimeoutExpired:
-            print(f"    Error: Agent execution timeout ({SKILL_TIMEOUT} seconds)")
-            if attempt < max_retries - 1:
-                print(f"    Retrying with {retry_target_desc}...")
-        except FileNotFoundError:
-            print(f"    Error: Agent '{agent}' not found. Please ensure it is installed and in PATH.")
-            return False
-        except Exception as exc:
-            print(f"    Error executing fix-header agent: {exc}")
-            if attempt < max_retries - 1:
-                print(f"    Retrying with {retry_target_desc}...")
-
-    print(f"    Failed after {max_retries} attempts")
-    return False
-
-
-def run_fix_header_with_verification(
-    *,
-    symbol: str,
-    header_paths: List[Path],
-    diff_reports: List[Dict[str, Any]],
-    test_item: Dict[str, Any],
-    args: argparse.Namespace,
-    config_dir: Path,
-    bindir: Path,
-    claude_allowed_tools: str,
-    claude_permission_mode: str,
-    claude_extra_args: str,
-    debug: bool,
-) -> bool:
-    """Run fix-header agent, then verify by recompiling.
-
-    If layout diffs persist after the agent edits, re-run the agent with the
-    updated diffs.  Repeats up to ``args.maxverify`` cycles.
-
-    Returns True when all diffs are resolved, False otherwise.
-    """
-    max_verify = max(1, args.maxverify)
-    session_id = str(uuid.uuid4())
-    current_diff_reports = list(diff_reports)
-
-    for verify_attempt in range(max_verify):
-        is_continuation = verify_attempt > 0
-
-        fix_prompt = _build_fix_prompt(
-            symbol=symbol,
-            header_paths=header_paths,
-            diff_reports=current_diff_reports,
-        )
-
-        if debug:
-            print(fix_prompt)
-
-        if max_verify > 1:
-            print(
-                f"  [INFO] Verify cycle {verify_attempt + 1}/{max_verify}: "
-                f"invoking agent '{args.agent}' to fix headers..."
-            )
-
-        agent_success = run_fix_header_agent(
-            fix_prompt=fix_prompt,
-            agent=args.agent,
-            debug=debug,
-            max_retries=args.maxretry,
-            session_id=session_id,
-            is_continuation=is_continuation,
-            claude_allowed_tools=claude_allowed_tools,
-            claude_permission_mode=claude_permission_mode,
-            claude_extra_args=claude_extra_args,
-        )
-
-        if not agent_success:
-            print(f"  [FAIL] Agent failed during verify cycle {verify_attempt + 1}.")
-            return False
-
-        # Agent claimed success -- verify by recompiling
-        print("  [INFO] Agent completed; re-compiling to verify fix...")
-        recompile_result = compile_and_compare(
-            test_item=test_item,
-            args=args,
-            config_dir=config_dir,
-            bindir=bindir,
-        )
-
-        if recompile_result["status"] == "compile_failed":
-            print("  [FAIL] Re-compilation failed after agent edit.")
-            if recompile_result.get("output"):
-                print(recompile_result["output"])
-            return False
-
-        if recompile_result["status"] == "invalid":
-            print(f"  [FAIL] Invalid test item during verification: {recompile_result.get('message', '')}")
-            return False
-
-        new_compare_reports = recompile_result.get("compare_reports") or []
-        new_reports_with_diff = [r for r in new_compare_reports if r.get("differences")]
-
-        if not new_reports_with_diff:
-            print("  [PASS] Verification succeeded -- all layout differences resolved.")
-            return True
-
-        remaining_diffs = sum(len(r.get("differences", [])) for r in new_reports_with_diff)
-        print(f"  [INFO] {remaining_diffs} layout difference(s) remain after agent edit.")
-        if debug:
-            for report in new_reports_with_diff:
-                for diff in report.get("differences", []):
-                    print(f"    - {diff['message']}")
-
-        current_diff_reports = new_reports_with_diff
-
-    print(f"  [FAIL] Layout differences persist after {max_verify} verify-and-retry cycle(s).")
-    return False
 
 
 def get_default_target_triple(clang: str) -> str:
@@ -666,7 +261,7 @@ def compile_and_compare(
     test_item: Dict[str, Any],
     args: argparse.Namespace,
     config_dir: Path,
-    bindir: Path,
+    symbol_store: SymbolStore,
 ) -> Dict[str, Any]:
     """Compile a C++ test file and compare vtable layout against YAML references.
 
@@ -773,8 +368,7 @@ def compile_and_compare(
                         compare_compiler_vtable_with_yaml(
                             class_name=symbol,
                             compiler_output=compile_output,
-                            bindir=bindir,
-                            gamever=args.gamever,
+                            symbol_store=symbol_store,
                             platform=platform,
                             reference_modules=reference_modules,
                             merge_reference_modules=merge_reference_modules,
@@ -788,8 +382,7 @@ def compile_and_compare(
                             compare_compiler_vtable_with_yaml(
                                 class_name=symbol,
                                 compiler_output=compile_output,
-                                bindir=bindir,
-                                gamever=args.gamever,
+                                symbol_store=symbol_store,
                                 platform=platform,
                                 reference_modules=[module_name],
                                 merge_reference_modules=False,
@@ -802,8 +395,7 @@ def compile_and_compare(
                     compare_compiler_record_layout_with_yaml(
                         struct_name=symbol,
                         compiler_output=compile_output,
-                        bindir=bindir,
-                        gamever=args.gamever,
+                        symbol_store=symbol_store,
                         platform=platform,
                         reference_modules=reference_modules,
                     )
@@ -824,7 +416,7 @@ def run_one_test(
     test_item: Dict[str, Any],
     args: argparse.Namespace,
     config_dir: Path,
-    bindir: Path,
+    symbol_store: SymbolStore,
 ) -> Dict[str, Any]:
     """Compile and (optionally) compare one cpp test item."""
     test_name = str(test_item.get("name", "unnamed_test"))
@@ -832,7 +424,7 @@ def run_one_test(
         test_item=test_item,
         args=args,
         config_dir=config_dir,
-        bindir=bindir,
+        symbol_store=symbol_store,
     )
     result["name"] = test_name
     return result
@@ -842,7 +434,21 @@ def main():
     args = parse_args()
     config_path = Path(args.configyaml).resolve()
     config_dir = config_path.parent
-    bindir = Path(args.bindir).resolve()
+    try:
+        symbol_store = open_snapshot_store(
+            snapshot_path=args.snapshot,
+            config_path=config_path,
+            expected_game_version=args.gamever,
+        )
+    except SymbolStoreError as exc:
+        print(f"Error: {exc}")
+        return 2
+
+    print("Symbol source: snapshot")
+    print(f"Candidate SHA-256: {symbol_store.candidate_sha256}")
+    print(f"Game version: {symbol_store.game_version}")
+    print(f"File count: {symbol_store.file_count}")
+    print(f"Config digest: {symbol_store.config_sha256}")
 
     cpp_tests = parse_config(config_path)
     if not cpp_tests:
@@ -900,19 +506,16 @@ def main():
     vtable_compare_diff_count = 0
     record_compare_run_count = 0
     record_compare_diff_count = 0
-    header_fix_run_count = 0
-    header_fix_fail_count = 0
 
     for test_item in runnable_tests:
         test_name = str(test_item.get("name", "unnamed_test"))
-        symbol = str(test_item.get("symbol", "")).strip()
         print(f"[RUN ] {test_name}")
 
         result = run_one_test(
             test_item=test_item,
             args=args,
             config_dir=config_dir,
-            bindir=bindir,
+            symbol_store=symbol_store,
         )
 
         if result["status"] == "invalid":
@@ -935,7 +538,6 @@ def main():
 
         compare_reports = result.get("compare_reports")
         if compare_reports:
-            reports_with_diff: List[Dict[str, Any]] = []
             for compare_report in compare_reports:
                 compare_run_count += 1
                 is_record = compare_report.get("comparison_kind") == "record_layout"
@@ -953,7 +555,6 @@ def main():
                         record_compare_diff_count += 1
                     else:
                         vtable_compare_diff_count += 1
-                    reports_with_diff.append(compare_report)
                 if args.debug:
                     if is_record:
                         compiler_debug_lines = format_compiler_record_members(compare_report)
@@ -976,40 +577,6 @@ def main():
                     for diff_line in diff_lines:
                         print(f"  {diff_line}")
 
-            if args.fixheader and reports_with_diff:
-                header_paths = _resolve_header_paths(test_item, config_dir)
-                if not header_paths:
-                    header_fix_fail_count += 1
-                    print(f"  [FAIL] fixheader requested but no headers configured for test '{test_name}'.")
-                else:
-                    claude_allowed_tools = _choose_override(
-                        test_item.get("claude_allowed_tools"),
-                        args.claude_allowed_tools,
-                    )
-                    claude_permission_mode = _choose_override(
-                        test_item.get("claude_permission_mode"),
-                        args.claude_permission_mode,
-                    )
-                    claude_extra_args = _choose_override(
-                        test_item.get("claude_extra_args"),
-                        args.claude_extra_args,
-                    )
-                    print(f"  [INFO] Layout differences detected; invoking agent '{args.agent}' to fix headers...")
-                    header_fix_run_count += 1
-                    if not run_fix_header_with_verification(
-                        symbol=symbol,
-                        header_paths=header_paths,
-                        diff_reports=reports_with_diff,
-                        test_item=test_item,
-                        args=args,
-                        config_dir=config_dir,
-                        bindir=bindir,
-                        claude_allowed_tools=claude_allowed_tools,
-                        claude_permission_mode=claude_permission_mode,
-                        claude_extra_args=claude_extra_args,
-                        debug=args.debug,
-                    ):
-                        header_fix_fail_count += 1
         elif args.debug and result.get("output"):
             print("  (Compiler output)")
             print(result["output"])
@@ -1023,14 +590,10 @@ def main():
     print(f"VTable compares with differences: {vtable_compare_diff_count}")
     print(f"Record layout compares run: {record_compare_run_count}")
     print(f"Record layout compares with differences: {record_compare_diff_count}")
-    if args.fixheader:
-        print(f"Header fix agent runs: {header_fix_run_count}")
-        print(f"Header fix agent failures: {header_fix_fail_count}")
-
     if compare_diff_count > 0:
         print("[FAIL] Layout compare differences are treated as test failures.")
 
-    if compile_failed_count > 0 or invalid_count > 0 or compare_diff_count > 0 or header_fix_fail_count > 0:
+    if compile_failed_count > 0 or invalid_count > 0 or compare_diff_count > 0:
         return 1
     return 0
 

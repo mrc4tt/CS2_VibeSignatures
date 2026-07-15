@@ -10,30 +10,25 @@ TARGET_FUNCTION_NAMES = [
 FUNC_XREFS = [
     {
         "func_name": "CNetworkGameServerBase_GetPlayerNetworkIDString",
-        "xref_strings": [],
+        "xref_strings": [
+            "FULLMATCH:GetPlayerNetworkIDString",
+        ],
         "xref_gvs": [],
         "xref_signatures": [],
-        "xref_funcs": [
-            "CServerSideClientBase_GetNetworkIDString",
-        ],
-        # CNetworkGameServerBase_RemoveClientFromGame and
-        # CNetworkGameServerBase_ConnectClient also call
-        # CServerSideClientBase_GetNetworkIDString and live in CNetworkGameServer_vtable,
-        # so they collide with the target in the xref intersection.
-        #   - ConnectClient (an extra collider on Linux) is dropped via exclude_funcs.
-        #   - RemoveClientFromGame references g_pSource2GameClients (which the target does
-        #     not), so it is dropped via exclude_gvs (gv_va auto-loaded from
-        #     g_pSource2GameClients.{platform}.yaml).
-        "exclude_funcs": ["CNetworkGameServerBase_ConnectClient"],
+        "xref_funcs": [],
+        "exclude_funcs": [],
         "exclude_strings": [],
-        "exclude_gvs": ["g_pSource2GameClients"],
+        "exclude_gvs": [],
         "exclude_signatures": [],
     },
 ]
 
 FUNC_VTABLE_RELATIONS = [
     # (func_name, vtable_class)
-    ("CNetworkGameServerBase_GetPlayerNetworkIDString", "CNetworkGameServer_vtable"),
+    (
+        "CNetworkGameServerBase_GetPlayerNetworkIDString",
+        "CNetworkGameServerBase_vtable",
+    ),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
@@ -45,7 +40,6 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_va",
             "func_rva",
             "func_size",
-            "func_sig",
             "vtable_name",
             "vfunc_offset",
             "vfunc_index",
@@ -64,7 +58,7 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Reuse previous gamever func_sig to locate target function(s) and write YAML."""
+    """Locate the short vfunc by its exact string reference and vtable membership."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,

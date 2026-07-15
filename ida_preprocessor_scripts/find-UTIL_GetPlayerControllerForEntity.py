@@ -12,7 +12,7 @@ LLM_DECOMPILE = [
     (
         "UTIL_GetPlayerControllerForEntity",
         "prompt/call_llm_decompile.md",
-        "references/server/ShowHudHint.{platform}.yaml",
+        "references/server/ClientPrintToController.{platform}.yaml",
     ),
 ]
 
@@ -26,6 +26,10 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_va",
             "func_rva",
             "func_size",
+            # ClientPrintToController calls the target through the compiler
+            # jump thunk `j_UTIL_GetPlayerControllerForEntity`; follow the E9
+            # jmp so func_sig anchors the real function body, not the thunk.
+            "func_sig_resolve_jmp_thunk:true",
         ],
     ),
 ]

@@ -11,10 +11,12 @@
 ```yaml
 modules:
   - name: <module_name>
+    description: <display-only module description>  # optional
     path_windows: <source_bin_relative_path_for_windows>
     path_linux: <source_bin_relative_path_for_linux>
     skills:
       - name: <skill_name>
+        description: <display-only skill description>  # optional
         expected_output:
           - <artifact_name.{platform}.yaml>
         expected_input:            # optional
@@ -55,6 +57,7 @@ cpp_tests:
 
 ### `modules[]`
 - `name` (string): Canonical module key (also output subdirectory name under `bin/{gamever}/`).
+- `description` (string, optional): Human-readable module annotation sent through the ProcessReporter execution plan and shown in the Web UI. It does not affect analysis behavior.
 - `path_windows` (string): Windows binary path (source-style path). Used to derive file name and download URL; local binary path resolves to `bin/{gamever}/{module}/{filename}`.
 - `path_linux` (string): Linux binary path with the same semantics as `path_windows`.
 - `skills` (list): Ordered-by-dependency skill definitions for `ida_analyze_bin.py`.
@@ -62,6 +65,7 @@ cpp_tests:
 
 ### `modules[].skills[]`
 - `name` (string): Skill identifier (e.g. `find-...`). Used as the executable skill key (mapped to `/.<skill>` style invocation and project skill assets).
+- `description` (string, optional): Human-readable skill annotation sent through the ProcessReporter execution plan and shown in the Web UI. It is metadata only and is ignored by dependency ordering and analysis execution.
 - `expected_output` (list[string]): Output YAML artifacts expected from this skill. Supports `{platform}` placeholder expansion at runtime.
   - Used to skip already completed skills.
   - Used to verify that a run actually produced required files.
@@ -99,7 +103,7 @@ cpp_tests:
 - `name` (string, optional): Human-readable test label; defaults to `unnamed_test` if omitted.
 - `symbol` (string, required): Class/symbol key used for report labeling and vtable comparison target.
 - `cpp` (string, required): C++ source path (resolved relative to config directory when not absolute).
-- `headers` (list[string], optional): Header paths used by `--fixheader` workflow.
+- `headers` (list[string], optional): Allowed `hl2sdk_cs2` edit targets for the `fix-cppheaders` SKILL.
 - `target` (string, required): Clang target triple.
 - `include_directories` (list[string], optional): Added as `-I` include flags.
 - `defines` (list[string], optional): Added as `-D` preprocessor defines.

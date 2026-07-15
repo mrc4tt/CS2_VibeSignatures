@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Preprocess script for find-CEntityIdentity_AcceptInputInternal skill.
 
-CEntityIdentity_AcceptInputInternal only exists on Linux; on Windows it is
-inlined into CEntityIdentity_AcceptInput. Discovered via LLM_DECOMPILE on
-CEntityIdentity_AcceptInput, which tail-jumps to AcceptInputInternal after
-the early-exit hierarchy lookup.
+Platform-independent: located via xref strings that are only present in the
+function body regardless of whether the compiler keeps AcceptInputInternal as
+a separate tail-called function (e.g. Linux 14167) or fully inlines it into
+CEntityIdentity_AcceptInput (e.g. both platforms since 14168). In the inlined
+case this resolves to the same func_va as CEntityIdentity_AcceptInput, which
+is fine since only find-CEntityInstance_ScriptAcceptInput depends on it.
 """
 
 from ida_analyze_util import preprocess_common_skill
@@ -13,13 +15,22 @@ TARGET_FUNCTION_NAMES = [
     "CEntityIdentity_AcceptInputInternal",
 ]
 
-LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntityIdentity_AcceptInputInternal",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntityIdentity_AcceptInput.{platform}.yaml",
-    ),
+FUNC_XREFS = [
+    {
+        "func_name": "CEntityIdentity_AcceptInputInternal",
+        "xref_strings": [
+            "FULLMATCH:Input",
+            "FULLMATCH:activator",
+            "FULLMATCH:value",
+        ],
+        "xref_gvs": [],
+        "xref_signatures": [],
+        "xref_funcs": [],
+        "exclude_funcs": [],
+        "exclude_strings": [],
+        "exclude_gvs": [],
+        "exclude_signatures": [],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
@@ -45,10 +56,9 @@ async def preprocess_skill(
     new_binary_dir,
     platform,
     image_base,
-    llm_config=None,
     debug=False,
 ):
-    """Reuse previous gamever func_sig to locate target function(s) and write YAML."""
+    """Locate CEntityIdentity_AcceptInputInternal via unique xref strings and write YAML."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -57,8 +67,7 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         func_names=TARGET_FUNCTION_NAMES,
-        llm_decompile_specs=LLM_DECOMPILE,
-        llm_config=llm_config,
+        func_xrefs=FUNC_XREFS,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )

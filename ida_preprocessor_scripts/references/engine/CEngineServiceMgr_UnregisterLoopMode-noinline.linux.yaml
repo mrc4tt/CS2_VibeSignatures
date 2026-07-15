@@ -1,0 +1,95 @@
+func_name: CEngineServiceMgr_UnregisterLoopMode
+func_va: '0x364900'
+disasm_code: |-
+  .text:0000000000364900                 push    rbp
+  .text:0000000000364901                 mov     rbp, rsp
+  .text:0000000000364904                 push    r15
+  .text:0000000000364906                 push    r14
+  .text:0000000000364908                 push    r13
+  .text:000000000036490A                 mov     r13, rdx
+  .text:000000000036490D                 mov     rdx, rsi
+  .text:0000000000364910                 push    r12
+  .text:0000000000364912                 push    rbx
+  .text:0000000000364913                 mov     rbx, rdi
+  .text:0000000000364916                 lea     rax, [rbx+48h]
+  .text:000000000036491A                 sub     rsp, 18h
+  .text:000000000036491E                 lea     rdi, [rbp+var_32]
+  .text:0000000000364922                 mov     rsi, rax
+  .text:0000000000364925                 call    __ZNK15CUtlSymbolTable4FindEPKc
+  .text:000000000036492A                 movzx   r12d, [rbp+var_32]
+  .text:000000000036492F                 cmp     r12w, 0FFFFh
+  .text:0000000000364934                 jz      short loc_364985
+  .text:0000000000364936                 mov     rax, [rbx+38h]
+  .text:000000000036493A                 lea     r14, ds:0[r12*8]
+  .text:0000000000364942                 mov     r15, [rax+r12*8]
+  .text:0000000000364946                 mov     rax, [r15]
+  .text:0000000000364949                 mov     rdi, r15
+  .text:000000000036494C                 call    qword ptr [rax+50h]  ; 50h = CLoopTypeBase_GetImplType
+  .text:000000000036494F                 cmp     eax, 1
+  .text:0000000000364952                 jz      short loc_364998
+  .text:0000000000364954                 mov     rax, [rbx+38h]
+  .text:0000000000364958                 mov     rdi, [rax+r12*8]
+  .text:000000000036495C                 mov     rax, [rdi]
+  .text:000000000036495F                 call    qword ptr [rax+20h]
+  .text:0000000000364962                 mov     rax, [rbx+38h]
+  .text:0000000000364966                 add     rax, r14
+  .text:0000000000364969                 mov     rdi, [rax]
+  .text:000000000036496C                 test    rdi, rdi
+  .text:000000000036496F                 jz      short loc_36497E
+  .text:0000000000364971                 mov     rax, [rdi]
+  .text:0000000000364974                 call    qword ptr [rax+10h]
+  .text:0000000000364977                 mov     rax, [rbx+38h]
+  .text:000000000036497B                 add     rax, r14
+  .text:000000000036497E                 mov     qword ptr [rax], 0
+  .text:0000000000364985                 add     rsp, 18h
+  .text:0000000000364989                 pop     rbx
+  .text:000000000036498A                 pop     r12
+  .text:000000000036498C                 pop     r13
+  .text:000000000036498E                 pop     r14
+  .text:0000000000364990                 pop     r15
+  .text:0000000000364992                 pop     rbp
+  .text:0000000000364993                 retn
+  .text:0000000000364998                 add     rsp, 18h
+  .text:000000000036499C                 mov     rsi, r13
+  .text:000000000036499F                 mov     rdi, r15
+  .text:00000000003649A2                 pop     rbx
+  .text:00000000003649A3                 pop     r12
+  .text:00000000003649A5                 pop     r13
+  .text:00000000003649A7                 pop     r14
+  .text:00000000003649A9                 pop     r15
+  .text:00000000003649AB                 pop     rbp
+  .text:00000000003649AC                 jmp     UnregisterLoopModeFactory
+procedure: |-
+  _QWORD *__fastcall CEngineServiceMgr_UnregisterLoopMode(__int64 a1, __int64 a2, __int64 a3)
+  {
+    _QWORD *result;
+    __int64 v6;
+    __int64 v7;
+    __int64 v8;
+    __int64 v9;
+    unsigned __int16 v10[25];
+    result = (_QWORD *)CUtlSymbolTable::Find(v10, a1 + 72, a2);
+    v6 = v10[0];
+    if ( v10[0] != 0xFFFF )
+    {
+      v7 = 8LL * v10[0];
+      v8 = *(_QWORD *)(*(_QWORD *)(a1 + 56) + v7);
+      if ( (*(unsigned int (__fastcall **)(__int64))(*(_QWORD *)v8 + 80LL))(v8) == 1 ) // 80LL = 0x50 = CLoopTypeBase_GetImplType
+      {
+        return (_QWORD *)UnregisterLoopModeFactory(v8, a3);
+      }
+      else
+      {
+        v9 = *(_QWORD *)(*(_QWORD *)(a1 + 56) + 8 * v6);
+        (*(void (__fastcall **)(__int64))(*(_QWORD *)v9 + 32LL))(v9);
+        result = (_QWORD *)(v7 + *(_QWORD *)(a1 + 56));
+        if ( *result )
+        {
+          (*(void (__fastcall **)(_QWORD))(*(_QWORD *)*result + 16LL))(*result);
+          result = (_QWORD *)(v7 + *(_QWORD *)(a1 + 56));
+        }
+        *result = 0;
+      }
+    }
+    return result;
+  }

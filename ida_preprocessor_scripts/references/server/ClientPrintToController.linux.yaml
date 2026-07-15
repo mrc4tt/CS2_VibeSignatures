@@ -1,0 +1,76 @@
+func_name: ClientPrintToController
+func_va: '0x178e3c0'
+disasm_code: |-
+  .text:000000000178E3C0                 push    rbp
+  .text:000000000178E3C1                 mov     rbp, rsp
+  .text:000000000178E3C4                 push    r15
+  .text:000000000178E3C6                 push    r14
+  .text:000000000178E3C8                 push    r13
+  .text:000000000178E3CA                 push    r12
+  .text:000000000178E3CC                 push    rbx
+  .text:000000000178E3CD                 sub     rsp, 38h
+  .text:000000000178E3D1                 mov     [rbp+var_60], r8
+  .text:000000000178E3D5                 mov     [rbp+var_58], r9
+  .text:000000000178E3D9                 test    rdi, rdi
+  .text:000000000178E3DC                 jz      short loc_178E446
+  .text:000000000178E3DE                 lea     r12, [rbp+var_50]
+  .text:000000000178E3E2                 mov     rbx, rdi
+  .text:000000000178E3E5                 mov     r14, rdx
+  .text:000000000178E3E8                 mov     rdi, r12
+  .text:000000000178E3EB                 mov     r15, rcx
+  .text:000000000178E3EE                 mov     r13d, esi
+  .text:000000000178E3F1                 call    sub_1761840
+  .text:000000000178E3F6                 lea     rax, off_2371758
+  .text:000000000178E3FD                 mov     rdi, rbx
+  .text:000000000178E400                 mov     [rbp+var_50], rax
+  .text:000000000178E404                 call    UTIL_GetPlayerControllerForEntity ; direct call target -> UTIL_GetPlayerControllerForEntity (was sub_1784FA0; func_sig_resolve_jmp_thunk follows the jmp if it is a thunk)
+  .text:000000000178E409                 mov     rdi, r12
+  .text:000000000178E40C                 mov     rsi, rax
+  .text:000000000178E40F                 call    sub_1761940
+  .text:000000000178E414                 mov     rdi, r12
+  .text:000000000178E417                 call    sub_1761900
+  .text:000000000178E41C                 mov     rdi, r12
+  .text:000000000178E41F                 call    sub_1762240
+  .text:000000000178E424                 sub     rsp, 8
+  .text:000000000178E428                 mov     rdx, r14
+  .text:000000000178E42B                 mov     rcx, r15
+  .text:000000000178E42E                 push    [rbp+arg_0]
+  .text:000000000178E431                 mov     esi, r13d
+  .text:000000000178E434                 mov     rdi, r12
+  .text:000000000178E437                 mov     r9, [rbp+var_58]
+  .text:000000000178E43B                 mov     r8, [rbp+var_60]
+  .text:000000000178E43F                 call    UTIL_ClientPrintFilter
+  .text:000000000178E444                 pop     rax
+  .text:000000000178E445                 pop     rdx
+  .text:000000000178E446                 lea     rsp, [rbp-28h]
+  .text:000000000178E44A                 pop     rbx
+  .text:000000000178E44B                 pop     r12
+  .text:000000000178E44D                 pop     r13
+  .text:000000000178E44F                 pop     r14
+  .text:000000000178E451                 pop     r15
+  .text:000000000178E453                 pop     rbp
+  .text:000000000178E454                 retn
+procedure: |-
+  void __fastcall ClientPrintToController(
+          __int64 a1,
+          int a2,
+          const char *a3,
+          const char *a4,
+          const char *a5,
+          const char *a6,
+          char *a7)
+  {
+    __int64 v9; // rax
+    _QWORD v12[10]; // [rsp+10h] [rbp-50h] BYREF
+
+    if ( a1 )
+    {
+      sub_1761840(v12);
+      v12[0] = off_2371758;
+      v9 = UTIL_GetPlayerControllerForEntity(a1); // direct call target -> UTIL_GetPlayerControllerForEntity (was sub_1784FA0; func_sig_resolve_jmp_thunk follows the jmp if it is a thunk)
+      sub_1761940(v12, v9);
+      sub_1761900(v12);
+      sub_1762240(v12);
+      UTIL_ClientPrintFilter((__int64)v12, a2, a3, a4, a5, a6, a7);
+    }
+  }

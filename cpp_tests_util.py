@@ -7,10 +7,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
-try:
-    import yaml
-except ImportError:
-    yaml = None
+from gamesymbol_store import SymbolStore
 
 
 VFTABLE_HEADER_RE = re.compile(r"^\s*(?:VFTable|VTable) indices for '([^']+)' \((\d+) (?:entry|entries)\)\.\s*$")
@@ -531,17 +528,13 @@ def _append_reference_conflict(
 
 
 def load_merged_reference_vtable_data(
-    bindir: Path,
-    gamever: str,
+    symbol_store: SymbolStore,
     class_name: str,
     platform: str,
     reference_modules: Sequence[str],
     alias_class_names: Sequence[str] = (),
 ) -> Optional[Dict[str, Any]]:
     """Load and merge reference YAML info for a class from all modules."""
-    if yaml is None:
-        raise RuntimeError("PyYAML is required to read reference YAML files")
-
     class_names_to_try = [class_name] + [n for n in alias_class_names if n]
     merged: Dict[str, Any] = {
         "mode": "merged",
@@ -559,26 +552,17 @@ def load_merged_reference_vtable_data(
     primary_class_hit = False
 
     for module in reference_modules:
-        module_dir = bindir / gamever / module
-        if not module_dir.is_dir():
-            continue
-
         module_hit = False
         for effective_class_name in class_names_to_try:
             pattern = f"{effective_class_name}_*.{platform}.yaml"
-            files = sorted(module_dir.glob(pattern))
-            if not files:
+            entries = symbol_store.glob_module(module, pattern)
+            if not entries:
                 continue
 
-            for path in files:
-                try:
-                    with path.open("r", encoding="utf-8") as f:
-                        payload = yaml.safe_load(f) or {}
-                except Exception:
-                    continue
-
-                if not isinstance(payload, dict):
-                    continue
+            for entry in entries:
+                payload = entry.payload
+                path = entry.path
+                file_stem = Path(entry.filename).stem
 
                 parsed_size = _parse_int_maybe(payload.get("vtable_size"))
                 parsed_numvfunc = _parse_int_maybe(payload.get("vtable_numvfunc"))
@@ -590,7 +574,7 @@ def load_merged_reference_vtable_data(
                     continue
 
                 module_hit = True
-                merged["files"].append(str(path))
+                merged["files"].append(path)
                 if effective_class_name == class_name:
                     primary_class_hit = True
                 elif alias_candidate is None:
@@ -599,7 +583,7 @@ def load_merged_reference_vtable_data(
                 if parsed_size is not None:
                     size_source = {
                         "module": module,
-                        "path": str(path),
+                        "path": path,
                         "value": parsed_size,
                     }
                     current_size = merged.get("vtable_size")
@@ -627,7 +611,7 @@ def load_merged_reference_vtable_data(
                 if parsed_numvfunc is not None:
                     numvfunc_source = {
                         "module": module,
-                        "path": str(path),
+                        "path": path,
                         "value": parsed_numvfunc,
                     }
                     current_numvfunc = merged.get("vtable_numvfunc")
@@ -657,12 +641,12 @@ def load_merged_reference_vtable_data(
                 func_name = payload.get("func_name")
                 source = {
                     "module": module,
-                    "path": str(path),
-                    "func_name": (str(func_name) if func_name is not None else path.stem),
+                    "path": path,
+                    "func_name": (str(func_name) if func_name is not None else file_stem),
                     "member_name": _normalize_reference_member_name(
                         class_name=effective_class_name,
                         func_name=str(func_name) if func_name is not None else None,
-                        file_stem=path.stem,
+                        file_stem=file_stem,
                     ),
                 }
 
@@ -710,8 +694,7 @@ def load_merged_reference_vtable_data(
 
 
 def load_reference_vtable_data(
-    bindir: Path,
-    gamever: str,
+    symbol_store: SymbolStore,
     class_name: str,
     platform: str,
     reference_modules: Sequence[str],
@@ -724,20 +707,13 @@ def load_reference_vtable_data(
     When alias_class_names is provided, they are tried in order if the
     primary class_name yields no results within a given module.
     """
-    if yaml is None:
-        raise RuntimeError("PyYAML is required to read reference YAML files")
-
     class_names_to_try = [class_name] + [n for n in alias_class_names if n]
 
     for module in reference_modules:
-        module_dir = bindir / gamever / module
-        if not module_dir.is_dir():
-            continue
-
         for effective_class_name in class_names_to_try:
             pattern = f"{effective_class_name}_*.{platform}.yaml"
-            files = sorted(module_dir.glob(pattern))
-            if not files:
+            entries = symbol_store.glob_module(module, pattern)
+            if not entries:
                 continue
 
             vtable_size: Optional[int] = None
@@ -746,17 +722,11 @@ def load_reference_vtable_data(
             reference_functions: Dict[int, Dict[str, str]] = {}
             matched_files: List[str] = []
 
-            for path in files:
-                try:
-                    with path.open("r", encoding="utf-8") as f:
-                        payload = yaml.safe_load(f) or {}
-                except Exception:
-                    continue
-
-                if not isinstance(payload, dict):
-                    continue
-
-                matched_files.append(str(path))
+            for entry in entries:
+                payload = entry.payload
+                path = entry.path
+                file_stem = Path(entry.filename).stem
+                matched_files.append(path)
 
                 if "vtable_size" in payload:
                     parsed_size = _parse_int_maybe(payload.get("vtable_size"))
@@ -775,12 +745,12 @@ def load_reference_vtable_data(
                 member_name = _normalize_reference_member_name(
                     class_name=effective_class_name,
                     func_name=str(func_name) if func_name is not None else None,
-                    file_stem=path.stem,
+                    file_stem=file_stem,
                 )
                 reference_functions[parsed_index] = {
-                    "func_name": str(func_name) if func_name is not None else path.stem,
+                    "func_name": str(func_name) if func_name is not None else file_stem,
                     "member_name": member_name,
-                    "path": str(path),
+                    "path": path,
                 }
 
             if vtable_size is not None or reference_functions:
@@ -800,16 +770,12 @@ def load_reference_vtable_data(
 
 
 def load_merged_reference_structmember_data(
-    bindir: Path,
-    gamever: str,
+    symbol_store: SymbolStore,
     struct_name: str,
     platform: str,
     reference_modules: Sequence[str],
 ) -> Optional[Dict[str, Any]]:
     """Load and merge YAML structmember offsets for a struct from all modules."""
-    if yaml is None:
-        raise RuntimeError("PyYAML is required to read reference YAML files")
-
     merged: Dict[str, Any] = {
         "mode": "merged",
         "modules": [],
@@ -819,20 +785,11 @@ def load_merged_reference_structmember_data(
     }
 
     for module in reference_modules:
-        module_dir = bindir / gamever / module
-        if not module_dir.is_dir():
-            continue
-
         module_hit = False
-        for path in sorted(module_dir.glob(f"{struct_name}_*.{platform}.yaml")):
-            try:
-                with path.open("r", encoding="utf-8") as f:
-                    payload = yaml.safe_load(f) or {}
-            except Exception:
-                continue
-
-            if not isinstance(payload, dict):
-                continue
+        for entry in symbol_store.glob_module(module, f"{struct_name}_*.{platform}.yaml"):
+            payload = entry.payload
+            path = entry.path
+            file_stem = Path(entry.filename).stem
             if str(payload.get("struct_name", "")).strip() != struct_name:
                 continue
 
@@ -841,17 +798,17 @@ def load_merged_reference_structmember_data(
                 continue
 
             member_name = str(
-                payload.get("member_name") or _normalize_reference_member_name(struct_name, None, path.stem)
+                payload.get("member_name") or _normalize_reference_member_name(struct_name, None, file_stem)
             ).strip()
             if not member_name:
                 continue
 
             module_hit = True
-            merged["files"].append(str(path))
+            merged["files"].append(path)
             parsed_size = _parse_int_maybe(payload.get("size"))
             source = {
                 "module": module,
-                "path": str(path),
+                "path": path,
                 "member_name": member_name,
                 "offset": parsed_offset,
                 "size": parsed_size,
@@ -863,7 +820,7 @@ def load_merged_reference_structmember_data(
                     "member_name": member_name,
                     "offset": parsed_offset,
                     "size": parsed_size,
-                    "path": str(path),
+                    "path": path,
                     "module": module,
                     "sources": [source],
                 }
@@ -894,8 +851,7 @@ def compare_compiler_record_layout_with_yaml(
     *,
     struct_name: str,
     compiler_output: str,
-    bindir: Path,
-    gamever: str,
+    symbol_store: SymbolStore,
     platform: str,
     reference_modules: Sequence[str],
 ) -> Dict[str, Any]:
@@ -903,8 +859,7 @@ def compare_compiler_record_layout_with_yaml(
     parsed_layouts = parse_record_layouts(compiler_output)
     compiler_record = parsed_layouts.get(struct_name)
     reference = load_merged_reference_structmember_data(
-        bindir=bindir,
-        gamever=gamever,
+        symbol_store=symbol_store,
         struct_name=struct_name,
         platform=platform,
         reference_modules=reference_modules,
@@ -1009,8 +964,7 @@ def compare_compiler_vtable_with_yaml(
     *,
     class_name: str,
     compiler_output: str,
-    bindir: Path,
-    gamever: str,
+    symbol_store: SymbolStore,
     platform: str,
     reference_modules: Sequence[str],
     pointer_size: int,
@@ -1026,8 +980,7 @@ def compare_compiler_vtable_with_yaml(
     compiler_section = parsed_layouts.get(class_name)
     if merge_reference_modules:
         reference = load_merged_reference_vtable_data(
-            bindir=bindir,
-            gamever=gamever,
+            symbol_store=symbol_store,
             class_name=class_name,
             platform=platform,
             reference_modules=reference_modules,
@@ -1035,8 +988,7 @@ def compare_compiler_vtable_with_yaml(
         )
     else:
         reference = load_reference_vtable_data(
-            bindir=bindir,
-            gamever=gamever,
+            symbol_store=symbol_store,
             class_name=class_name,
             platform=platform,
             reference_modules=reference_modules,

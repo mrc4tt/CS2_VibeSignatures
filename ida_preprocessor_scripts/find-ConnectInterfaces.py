@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Preprocess script for find-ConnectInterfaces skill."""
 
+from copy import deepcopy
+from pathlib import Path
+
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
@@ -49,6 +52,11 @@ async def preprocess_skill(
     debug=False,
 ):
     """Reuse previous gamever func_sig to locate target function(s) and write YAML."""
+    func_xrefs = deepcopy(FUNC_XREFS)
+    module_name = Path(new_binary_dir).name.casefold() if new_binary_dir else ""
+    if module_name != "engine":
+        func_xrefs[0]["exclude_funcs"] = []
+
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -57,7 +65,7 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         func_names=TARGET_FUNCTION_NAMES,
-        func_xrefs=FUNC_XREFS,
+        func_xrefs=func_xrefs,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )

@@ -4,7 +4,7 @@
         "linux": 80
     },
     "CBasePlayerPawn::CommitSuicide": {
-        "windows": 390,
+        "windows": 384,
         "linux": 384
     },
     "CCSPlayerController::ChangeTeam": {
@@ -19,20 +19,16 @@
         "linux": 162
     },
     "CCSPlayerController::Respawn": {
-        "windows": 273,
-        "linux": 275
+        "windows": 270,
+        "linux": 272
     },
     "CBaseEntity::CollisionRulesChanged": {
         "windows": 186,
         "linux": 185
     },
     "CGameSceneNode::GetSkeletonInstance": {
-        "windows": 9,
+        "windows": 12,
         "linux": 14
-    },
-    "GetHammerUniqueID": {
-        "windows": 111,
-        "linux": 110
     },
     "CEntityResourceManifest::AddResource": {
         "windows": 2,
@@ -62,36 +58,36 @@
         "linux": 27
     },
     "CGameRules::GoToIntermission": {
-        "windows": 128,
-        "linux": 129
+        "windows": 130,
+        "linux": 131
     },
     "CCSPlayer_ItemServices::DropActiveItem": {
-        "windows": 22,
-        "linux": 23
+        "windows": 26,
+        "linux": 27
     },
     "CCSPlayer_ItemServices::RemoveWeapons": {
-        "windows": 24,
-        "linux": 28
-    },
-    "CCSPlayer_ItemServices::GiveNamedItem": {
-        "windows": 20,
-        "linux": 24
-    },
-    "CCSPlayer_WeaponServices::CanUse": {
-        "windows": 24,
-        "linux": 28
-    },
-    "CCSPlayer_WeaponServices::DropWeapon": {
-        "windows": 25,
-        "linux": 26
-    },
-    "CCSPlayer_WeaponServices::SelectWeapon": {
         "windows": 27,
         "linux": 28
     },
+    "CCSPlayer_ItemServices::GiveNamedItem": {
+        "windows": 23,
+        "linux": 24
+    },
+    "CCSPlayer_WeaponServices::CanUse": {
+        "windows": 27,
+        "linux": 28
+    },
+    "CCSPlayer_WeaponServices::DropWeapon": {
+        "windows": 28,
+        "linux": 29
+    },
+    "CCSPlayer_WeaponServices::SelectWeapon": {
+        "windows": 30,
+        "linux": 31
+    },
     "CPlayer_MovementServices::RunCommand": {
-        "windows": 22,
-        "linux": 23
+        "windows": 25,
+        "linux": 26
     },
     /* From sdk */
     "ICvar::FindConCommand": {
@@ -128,8 +124,8 @@
         "linux": 27
     },
     "IVEngineServer2::SetClientListening": {
-        "windows": 92,
-        "linux": 92
+        "windows": 91,
+        "linux": 91
     },
     "IServerGameClients::ClientCommand": {
         "windows": 17,
@@ -199,8 +195,8 @@
         "linux": 33
     },
     "CNetworkGameServer::m_Clients": {
-        "windows": 592,
-        "linux": 592
+        "windows": 584,
+        "linux": 584
     },
     "INetChannelInfo::GetName": {
         "windows": 0,

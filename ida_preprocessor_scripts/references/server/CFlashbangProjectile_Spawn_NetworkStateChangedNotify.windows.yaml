@@ -1,0 +1,144 @@
+func_name: CFlashbangProjectile_Spawn_NetworkStateChangedNotify
+func_va: '0x18038b7d0'
+disasm_code: |-
+  .text:000000018038B7D0                 mov     [rsp-8+arg_0], rbx
+  .text:000000018038B7D5                 mov     [rsp-8+arg_8], rsi
+  .text:000000018038B7DA                 mov     [rsp-8+arg_10], rdi
+  .text:000000018038B7DF                 push    rbp
+  .text:000000018038B7E0                 mov     rbp, rsp
+  .text:000000018038B7E3                 sub     rsp, 60h
+  .text:000000018038B7E7                 xor     esi, esi
+  .text:000000018038B7E9                 mov     [rbp+var_C], edx
+  .text:000000018038B7EC                 lea     rdi, [rcx-3F8h]
+  .text:000000018038B7F3                 mov     [rbp+var_8], r8d
+  .text:000000018038B7F7                 xorps   xmm0, xmm0
+  .text:000000018038B7FA                 mov     [rbp+var_30], rsi
+  .text:000000018038B7FE                 xor     edx, edx
+  .text:000000018038B800                 mov     [rbp+var_28], rsi
+  .text:000000018038B804                 xor     ecx, ecx
+  .text:000000018038B806                 mov     [rbp+var_38], esi
+  .text:000000018038B809                 mov     r8d, 1
+  .text:000000018038B80F                 movdqa  [rbp+var_20], xmm0
+  .text:000000018038B814                 mov     r9d, 4
+  .text:000000018038B81A                 mov     [rbp+var_4], si
+  .text:000000018038B81E                 mov     [rbp+var_40], 1
+  .text:000000018038B825                 mov     [rbp+var_10], 0FFFFFFFFh
+  .text:000000018038B82C                 call    cs:UtlVectorMemory_CalcNewAllocationCount
+  .text:000000018038B832                 mov     ebx, eax
+  .text:000000018038B834                 cmp     eax, 1
+  .text:000000018038B837                 jge     short loc_18038B84F
+  .text:000000018038B839                 nop     dword ptr [rax+00000000h]
+  .text:000000018038B840                 lea     eax, [rbx+1]
+  .text:000000018038B843                 cdq
+  .text:000000018038B844                 sub     eax, edx
+  .text:000000018038B846                 sar     eax, 1
+  .text:000000018038B848                 mov     ebx, eax
+  .text:000000018038B84A                 cmp     eax, 1
+  .text:000000018038B84D                 jl      short loc_18038B840
+  .text:000000018038B84F                 movsxd  r9, dword ptr [rbp+var_28]
+  .text:000000018038B853                 mov     rcx, [rbp+var_30]
+  .text:000000018038B857                 shl     r9, 2
+  .text:000000018038B85B                 test    dword ptr [rbp+var_28+4], 0C0000000h
+  .text:000000018038B862                 mov     r8d, ebx
+  .text:000000018038B865                 setz    dl
+  .text:000000018038B868                 shl     r8, 2
+  .text:000000018038B86C                 call    cs:UtlVectorMemory_Alloc
+  .text:000000018038B872                 mov     edx, dword ptr [rbp+var_28+4]
+  .text:000000018038B875                 mov     [rbp+var_30], rax
+  .text:000000018038B879                 test    edx, 0C0000000h
+  .text:000000018038B87F                 jz      short loc_18038B88A
+  .text:000000018038B881                 and     edx, 3FFFFFFFh
+  .text:000000018038B887                 mov     dword ptr [rbp+var_28+4], edx
+  .text:000000018038B88A                 inc     [rbp+var_38]
+  .text:000000018038B88D                 lea     rdx, [rbp+var_40]
+  .text:000000018038B891                 mov     dword ptr [rbp+var_28], ebx
+  .text:000000018038B894                 mov     rcx, rdi
+  .text:000000018038B897                 mov     dword ptr [rax], 3F8h
+  .text:000000018038B89D                 mov     rax, [rdi]
+  .text:000000018038B8A0                 call    qword ptr [rax+0E0h]; 0E0h = CBaseEntity_NetworkStateChanged
+  .text:000000018038B8A6                 mov     eax, dword ptr [rbp+var_28+4]
+  .text:000000018038B8A9                 mov     rdx, [rbp+var_30]
+  .text:000000018038B8AD                 mov     [rbp+var_38], esi
+  .text:000000018038B8B0                 test    eax, 0C0000000h
+  .text:000000018038B8B5                 jnz     short loc_18038B8F5
+  .text:000000018038B8B7                 test    rdx, rdx
+  .text:000000018038B8BA                 jz      short loc_18038B8D6
+  .text:000000018038B8BC                 mov     rax, cs:g_pMemAlloc
+  .text:000000018038B8C3                 mov     rcx, [rax]
+  .text:000000018038B8C6                 mov     rax, [rcx]
+  .text:000000018038B8C9                 call    qword ptr [rax+18h]
+  .text:000000018038B8CC                 mov     eax, dword ptr [rbp+var_28+4]
+  .text:000000018038B8CF                 mov     rdx, rsi
+  .text:000000018038B8D2                 mov     [rbp+var_30], rdx
+  .text:000000018038B8D6                 mov     dword ptr [rbp+var_28], esi
+  .text:000000018038B8D9                 test    eax, 0C0000000h
+  .text:000000018038B8DE                 jnz     short loc_18038B8F5
+  .text:000000018038B8E0                 test    rdx, rdx
+  .text:000000018038B8E3                 jz      short loc_18038B8F5
+  .text:000000018038B8E5                 mov     rax, cs:g_pMemAlloc
+  .text:000000018038B8EC                 mov     rcx, [rax]
+  .text:000000018038B8EF                 mov     rax, [rcx]
+  .text:000000018038B8F2                 call    qword ptr [rax+18h]
+  .text:000000018038B8F5                 mov     rbx, [rsp+60h+arg_0]
+  .text:000000018038B8FA                 mov     rsi, [rsp+60h+arg_8]
+  .text:000000018038B8FF                 mov     rdi, [rsp+60h+arg_10]
+  .text:000000018038B907                 add     rsp, 60h
+  .text:000000018038B90B                 pop     rbp
+  .text:000000018038B90C                 retn
+procedure: |-
+  __int64 __fastcall sub_18038B7D0(__int64 a1, int a2, int a3)
+  {
+    __int64 v3; // rdi
+    __int64 v4; // rdx
+    int i; // ebx
+    __int64 result; // rax
+    _DWORD *v7; // rdx
+    int v8; // [rsp+20h] [rbp-40h] BYREF
+    int v9; // [rsp+28h] [rbp-38h]
+    _DWORD *v10; // [rsp+30h] [rbp-30h]
+    __int64 v11; // [rsp+38h] [rbp-28h]
+    __int128 v12; // [rsp+40h] [rbp-20h]
+    int v13; // [rsp+50h] [rbp-10h]
+    int v14; // [rsp+54h] [rbp-Ch]
+    int v15; // [rsp+58h] [rbp-8h]
+    __int16 v16; // [rsp+5Ch] [rbp-4h]
+
+    v14 = a2;
+    v3 = a1 - 1016;
+    v15 = a3;
+    v10 = nullptr;
+    v11 = 0;
+    v9 = 0;
+    v12 = 0;
+    v16 = 0;
+    v8 = 1;
+    v13 = -1;
+    for ( i = UtlVectorMemory_CalcNewAllocationCount(0, 0, 1, 4); i < 1; i = (i + 1) / 2 )
+      v4 = (unsigned int)((i + 1) >> 31);
+    LOBYTE(v4) = (v11 & 0xC000000000000000uLL) == 0;
+    v10 = (_DWORD *)UtlVectorMemory_Alloc(v10, v4, 4LL * (unsigned int)i, 4LL * (int)v11);
+    ++v9;
+    LODWORD(v11) = i;
+    *v10 = 1016;
+    (*(void (__fastcall **)(__int64, int *))(*(_QWORD *)v3 + 224LL))(v3, &v8);// 224LL = 0xE0 = CBaseEntity_NetworkStateChanged
+    result = HIDWORD(v11);
+    v7 = v10;
+    v9 = 0;
+    if ( (v11 & 0xC000000000000000uLL) == 0 )
+    {
+      if ( v10 )
+      {
+        (*(void (__fastcall **)(_QWORD, _DWORD *))(*g_pMemAlloc + 24LL))(g_pMemAlloc, v10);
+        result = HIDWORD(v11);
+        v7 = nullptr;
+        v10 = nullptr;
+      }
+      LODWORD(v11) = 0;
+      if ( (result & 0xC0000000) == 0 )
+      {
+        if ( v7 )
+          return (*(__int64 (__fastcall **)(_QWORD))(*g_pMemAlloc + 24LL))(g_pMemAlloc);
+      }
+    }
+    return result;
+  }

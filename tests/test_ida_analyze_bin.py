@@ -1,17 +1,34 @@
 import io
 import json
 import posixpath
+import subprocess
 import unittest
+from contextlib import asynccontextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import ida_analyze_bin
+from ida_mcp_session import McpDatabaseBinding, McpDatabaseSelectionError, McpToolCallError
+from process_reporter import (
+    EdgeType,
+    PlanNodeType,
+    ProcessEventType,
+    ProcessPhase,
+    ProcessReason,
+    RunStatus,
+    TaskStatus,
+)
 
 
 def _tool_result(payload):
     return SimpleNamespace(content=[SimpleNamespace(text=json.dumps(payload))])
+
+
+@asynccontextmanager
+async def _async_context(value):
+    yield value
 
 
 def _expand_platform_paths(paths, platform):
@@ -61,26 +78,116 @@ def _find_module_skill_dependency_gaps(modules, platform):
 
 
 class TestQuitIdaGracefully(unittest.IsolatedAsyncioTestCase):
-    async def test_quit_ida_gracefully_async_quits_and_waits_for_process(self) -> None:
+    async def test_quit_ida_gracefully_async_stops_only_supplied_process(self) -> None:
         process = MagicMock()
         process.poll.return_value = None
-        process.wait.return_value = 0
 
-        with patch.object(
-            ida_analyze_bin,
-            "quit_ida_via_mcp",
-            AsyncMock(return_value=True),
-        ) as quit_ida_via_mcp:
+        with (
+            patch.object(
+                ida_analyze_bin,
+                "quit_ida_via_mcp",
+                AsyncMock(return_value=True),
+            ) as quit_ida_via_mcp,
+            patch.object(ida_analyze_bin, "stop_idalib_mcp_process") as stop_process,
+        ):
             await ida_analyze_bin.quit_ida_gracefully_async(
                 process,
                 "127.0.0.1",
                 13337,
+                expected_binary="server.dll",
                 debug=False,
             )
 
-        quit_ida_via_mcp.assert_awaited_once_with("127.0.0.1", 13337)
-        process.wait.assert_called_once_with(timeout=10)
-        process.kill.assert_not_called()
+        quit_ida_via_mcp.assert_awaited_once_with(
+            "127.0.0.1",
+            13337,
+            expected_binary="server.dll",
+            auto_started=True,
+        )
+        stop_process.assert_called_once_with(process, debug=False)
+
+    async def test_quit_owned_auto_started_worker(self) -> None:
+        session = MagicMock()
+        session.binding = McpDatabaseBinding(True, "server-db", "server.dll", "worker", True, True)
+        session.call_tool = AsyncMock()
+
+        with patch.object(
+            ida_analyze_bin,
+            "open_ida_mcp_session",
+            return_value=_async_context(session),
+        ):
+            result = await ida_analyze_bin.quit_ida_via_mcp(
+                "127.0.0.1",
+                13337,
+                expected_binary="server.dll",
+                auto_started=True,
+            )
+
+        self.assertTrue(result)
+        session.call_tool.assert_awaited_once_with("py_eval", {"code": "import idc; idc.qexit(0)"})
+
+    async def test_worker_disconnect_after_qexit_is_successful_cleanup(self) -> None:
+        session = MagicMock()
+        session.binding = McpDatabaseBinding(True, "server-db", "server.dll", "worker", True, True)
+        session.call_tool = AsyncMock(
+            side_effect=McpToolCallError("MCP tool py_eval failed: [WinError 10054] 远程主机强迫关闭了一个现有的连接。")
+        )
+
+        with patch.object(
+            ida_analyze_bin,
+            "open_ida_mcp_session",
+            return_value=_async_context(session),
+        ):
+            result = await ida_analyze_bin.quit_ida_via_mcp(
+                "127.0.0.1",
+                13337,
+                expected_binary="server.dll",
+                auto_started=True,
+            )
+
+        self.assertTrue(result)
+
+    async def test_does_not_quit_unowned_gui_or_attach_existing_worker(self) -> None:
+        bindings = (
+            McpDatabaseBinding(True, "server-db", "server.dll", "worker", False, True),
+            McpDatabaseBinding(True, "server-db", "server.dll", "gui", True, True),
+            McpDatabaseBinding(True, "server-db", "server.dll", "worker", True, False),
+        )
+
+        for binding in bindings:
+            with self.subTest(binding=binding):
+                session = MagicMock()
+                session.binding = binding
+                session.call_tool = AsyncMock()
+                with patch.object(
+                    ida_analyze_bin,
+                    "open_ida_mcp_session",
+                    return_value=_async_context(session),
+                ):
+                    result = await ida_analyze_bin.quit_ida_via_mcp(
+                        "127.0.0.1",
+                        13337,
+                        expected_binary="server.dll",
+                        auto_started=binding.auto_started,
+                    )
+
+                self.assertFalse(result)
+                session.call_tool.assert_not_awaited()
+
+    async def test_database_selection_failure_skips_qexit(self) -> None:
+        with patch.object(
+            ida_analyze_bin,
+            "open_ida_mcp_session",
+            side_effect=McpDatabaseSelectionError("multiple active MCP databases"),
+        ):
+            result = await ida_analyze_bin.quit_ida_via_mcp(
+                "127.0.0.1",
+                13337,
+                expected_binary="server.dll",
+                auto_started=True,
+            )
+
+        self.assertFalse(result)
 
     async def test_quit_ida_gracefully_rejects_running_loop(self) -> None:
         process = MagicMock()
@@ -94,6 +201,7 @@ class TestQuitIdaGracefully(unittest.IsolatedAsyncioTestCase):
                 process,
                 "127.0.0.1",
                 13337,
+                expected_binary="server.dll",
                 debug=False,
             )
 
@@ -112,6 +220,7 @@ class TestQuitIdaGracefullySyncWrapper(unittest.TestCase):
                 process,
                 "127.0.0.1",
                 13337,
+                expected_binary="server.dll",
                 debug=True,
             )
 
@@ -119,11 +228,95 @@ class TestQuitIdaGracefullySyncWrapper(unittest.TestCase):
             process,
             "127.0.0.1",
             13337,
+            expected_binary="server.dll",
             debug=True,
         )
 
 
+class TestStopIdalibMcpProcess(unittest.TestCase):
+    def test_terminates_owned_process_without_contacting_mcp(self) -> None:
+        process = MagicMock()
+        process.poll.return_value = None
+
+        ida_analyze_bin.stop_idalib_mcp_process(process, debug=False)
+
+        process.terminate.assert_called_once_with()
+        process.wait.assert_called_once_with(timeout=10)
+        process.kill.assert_not_called()
+
+    def test_kills_owned_process_when_terminate_times_out(self) -> None:
+        process = MagicMock()
+        process.poll.return_value = None
+        process.wait.side_effect = [subprocess.TimeoutExpired("idalib-mcp", 10), 0]
+
+        ida_analyze_bin.stop_idalib_mcp_process(process, debug=False)
+
+        process.terminate.assert_called_once_with()
+        process.kill.assert_called_once_with()
+        self.assertEqual([call(timeout=10), call(timeout=5)], process.wait.call_args_list)
+
+
 class TestSurveyBinaryViaSession(unittest.IsolatedAsyncioTestCase):
+    async def test_survey_binary_via_mcp_binds_expected_binary(self) -> None:
+        session = MagicMock()
+        session.call_tool = AsyncMock(
+            side_effect=[
+                _tool_result({"metadata": {"path": "server.dll"}}),
+                _tool_result({"result": json.dumps({"metadata": {"path": "server.dll.i64"}})}),
+            ]
+        )
+
+        with patch.object(
+            ida_analyze_bin,
+            "open_ida_mcp_session",
+            return_value=_async_context(session),
+        ) as open_session:
+            result = await ida_analyze_bin.survey_binary_via_mcp(
+                "127.0.0.1",
+                13337,
+                expected_binary=r"D:\repo\server.dll",
+            )
+
+        self.assertEqual("server.dll.i64", result["metadata"]["path"])
+        open_session.assert_called_once_with(
+            "127.0.0.1",
+            13337,
+            expected_binary=r"D:\repo\server.dll",
+        )
+
+    async def test_checks_supervisor_and_worker_health_separately(self) -> None:
+        session = MagicMock()
+        session.call_tool = AsyncMock(return_value=_tool_result({"result": "1"}))
+
+        with (
+            patch.object(
+                ida_analyze_bin,
+                "check_ida_mcp_supervisor_health",
+                new=AsyncMock(return_value=True),
+            ) as supervisor_health,
+            patch.object(
+                ida_analyze_bin,
+                "open_ida_mcp_session",
+                return_value=_async_context(session),
+            ) as open_session,
+        ):
+            self.assertTrue(await ida_analyze_bin.check_mcp_supervisor_health("127.0.0.1", 13337))
+            self.assertTrue(
+                await ida_analyze_bin.check_mcp_worker_health(
+                    "127.0.0.1",
+                    13337,
+                    r"D:\repo\server.dll",
+                )
+            )
+
+        supervisor_health.assert_awaited_once_with("127.0.0.1", 13337)
+        open_session.assert_called_once_with(
+            "127.0.0.1",
+            13337,
+            expected_binary=r"D:\repo\server.dll",
+        )
+        session.call_tool.assert_awaited_once_with(name="py_eval", arguments={"code": "1"})
+
     async def test_survey_binary_via_session_falls_back_to_current_idb_path(self) -> None:
         session = MagicMock()
         session.call_tool = AsyncMock(
@@ -201,7 +394,138 @@ class TestSurveyBinaryViaSession(unittest.IsolatedAsyncioTestCase):
         )
 
 
+class TestMcpEntrypointRouting(unittest.IsolatedAsyncioTestCase):
+    async def test_analysis_entrypoints_bind_expected_binary(self) -> None:
+        expected_binary = r"D:\repo\server.dll"
+        session = MagicMock()
+
+        with (
+            patch.object(
+                ida_analyze_bin,
+                "open_ida_mcp_session",
+                side_effect=lambda *_args, **_kwargs: _async_context(session),
+            ) as open_session,
+            patch.object(
+                ida_analyze_bin,
+                "validate_expected_input_artifacts_via_session",
+                new=AsyncMock(return_value=[]),
+            ),
+            patch.object(
+                ida_analyze_bin,
+                "post_process_expected_outputs_via_session",
+                new=AsyncMock(return_value=True),
+            ),
+            patch.object(
+                ida_analyze_bin,
+                "export_object_xref_details_via_mcp",
+                new=AsyncMock(return_value={"status": "success"}),
+            ),
+        ):
+            validated = await ida_analyze_bin.validate_expected_input_artifacts_via_mcp(
+                expected_inputs=["fixture.yaml"],
+                expected_binary=expected_binary,
+            )
+            post_processed = await ida_analyze_bin.post_process_expected_outputs_via_mcp(
+                yaml_items=[("fixture.yaml", {})],
+                expected_binary=expected_binary,
+            )
+            vcall_result = await ida_analyze_bin.preprocess_single_vcall_object_via_mcp(
+                host="127.0.0.1",
+                port=13337,
+                output_root="vcall",
+                gamever="14168",
+                module_name="server",
+                platform="windows",
+                object_name="g_pExample",
+                expected_binary=expected_binary,
+            )
+
+        self.assertEqual([], validated)
+        self.assertTrue(post_processed)
+        self.assertEqual({"status": "success"}, vcall_result)
+        self.assertEqual(
+            [
+                call("127.0.0.1", 13337, expected_binary=expected_binary),
+                call("127.0.0.1", 13337, expected_binary=expected_binary),
+                call("127.0.0.1", 13337, expected_binary=expected_binary),
+            ],
+            open_session.call_args_list,
+        )
+
+
 class TestOpenedBinaryIdentityValidation(unittest.TestCase):
+    def test_verification_does_not_retry_mcp_tool_error(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_path = Path(temp_dir) / "server.dll"
+            binary_path.write_bytes(b"fixture")
+
+            with (
+                patch.object(
+                    ida_analyze_bin,
+                    "survey_binary_via_mcp",
+                    new=AsyncMock(side_effect=McpToolCallError("survey_binary: database is required")),
+                ) as survey,
+                patch.object(ida_analyze_bin.time, "sleep") as sleep,
+                patch("sys.stdout", new_callable=io.StringIO) as stdout,
+            ):
+                verified = ida_analyze_bin.verify_opened_binary_via_mcp(str(binary_path), "windows")
+
+        self.assertFalse(verified)
+        self.assertEqual(1, survey.await_count)
+        sleep.assert_not_called()
+        self.assertIn("database is required", stdout.getvalue())
+
+    def test_verification_retries_when_survey_metadata_is_not_ready(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_path = Path(temp_dir) / "server.dll"
+            binary_path.write_bytes(b"server-binary")
+            ready_survey = {"metadata": {"path": str(binary_path)}}
+
+            with (
+                patch.object(
+                    ida_analyze_bin,
+                    "survey_binary_via_mcp",
+                    new=AsyncMock(side_effect=[None, ready_survey]),
+                ) as survey_binary,
+                patch.object(ida_analyze_bin.time, "sleep") as sleep,
+            ):
+                verified = ida_analyze_bin.verify_opened_binary_via_mcp(
+                    str(binary_path),
+                    "windows",
+                    verify_timeout=1.0,
+                    retry_interval=0.01,
+                )
+
+        self.assertTrue(verified)
+        self.assertEqual(2, survey_binary.await_count)
+        sleep.assert_called_once_with(0.01)
+
+    def test_verification_does_not_retry_a_definite_path_mismatch(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_path = Path(temp_dir) / "server.dll"
+            binary_path.write_bytes(b"server-binary")
+            wrong_survey = {"metadata": {"path": str(Path(temp_dir) / "engine2.dll")}}
+
+            with (
+                patch.object(
+                    ida_analyze_bin,
+                    "survey_binary_via_mcp",
+                    new=AsyncMock(return_value=wrong_survey),
+                ) as survey_binary,
+                patch.object(ida_analyze_bin.time, "sleep") as sleep,
+                patch("sys.stdout", new_callable=io.StringIO),
+            ):
+                verified = ida_analyze_bin.verify_opened_binary_via_mcp(
+                    str(binary_path),
+                    "windows",
+                    verify_timeout=1.0,
+                    retry_interval=0.01,
+                )
+
+        self.assertFalse(verified)
+        self.assertEqual(1, survey_binary.await_count)
+        sleep.assert_not_called()
+
     def test_accepts_ida_database_suffix_for_expected_binary_path(self) -> None:
         with TemporaryDirectory() as temp_dir:
             binary_path = Path(temp_dir) / "bin" / "14141" / "server" / "libserver.so"
@@ -386,6 +710,64 @@ class TestResolveArtifactPathIntegration(unittest.TestCase):
 
 
 class TestParseConfig(unittest.TestCase):
+    def test_parse_config_reads_optional_module_and_skill_descriptions(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.yaml"
+            config_path.write_text(
+                """
+modules:
+  - name: engine
+    description: |
+      Engine analysis stage.
+      Runs before client.
+    skills:
+      - name: find-target
+        description: "  Locate the target function.  "
+      - name: find-empty
+        description: "   "
+      - name: find-null
+        description: null
+""".strip()
+                + "\n",
+                encoding="utf-8",
+            )
+
+            modules = ida_analyze_bin.parse_config(str(config_path))
+
+        self.assertEqual("Engine analysis stage.\nRuns before client.", modules[0]["description"])
+        self.assertEqual("Locate the target function.", modules[0]["skills"][0]["description"])
+        self.assertIsNone(modules[0]["skills"][1]["description"])
+        self.assertIsNone(modules[0]["skills"][2]["description"])
+
+    def test_parse_config_rejects_non_string_descriptions_with_context(self) -> None:
+        cases = (
+            ("description: 42", "module 'engine'"),
+            ("skills:\n      - name: find-target\n        description: [invalid]", "skill 'find-target'"),
+        )
+        for fragment, context in cases:
+            with self.subTest(context=context), TemporaryDirectory() as temp_dir:
+                config_path = Path(temp_dir) / "config.yaml"
+                config_path.write_text(
+                    f"modules:\n  - name: engine\n    {fragment}\n",
+                    encoding="utf-8",
+                )
+
+                with self.assertRaisesRegex(ValueError, rf"Invalid description for {context}"):
+                    ida_analyze_bin.parse_config(str(config_path))
+
+    def test_parse_config_records_stable_stage_indexes(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.yaml"
+            config_path.write_text(
+                "modules:\n  - name: engine\n  - name: client\n  - name: engine\n",
+                encoding="utf-8",
+            )
+
+            modules = ida_analyze_bin.parse_config(str(config_path))
+
+        self.assertEqual([0, 1, 2], [module["stage_index"] for module in modules])
+        self.assertEqual(["engine", "client", "engine"], [module["name"] for module in modules])
+
     def test_parse_config_reads_skip_if_exists(self) -> None:
         with TemporaryDirectory() as temp_dir:
             config_path = Path(temp_dir) / "config.yaml"
@@ -529,7 +911,143 @@ modules:
         self.assertEqual([], modules[0]["skills"][0]["expected_output_linux"])
 
 
+class TestIsMajorUpdateGamever(unittest.TestCase):
+    _DOWNLOAD_YAML = (
+        """
+downloads:
+  - tag: "14167"
+    name: 1.41.6.7
+    manifests:
+      "2347771": "8344780363095656278"
+  - tag: "14168"
+    name: 1.41.6.8
+    manifests:
+      "2347771": "1966178532936074640"
+    major_update: true
+  - tag: "14169"
+    name: 1.41.6.9
+    manifests:
+      "2347771": "1966178532936074641"
+    major_update: false
+""".strip()
+        + "\n"
+    )
+
+    def _write_download_yaml(self, temp_dir):
+        download_path = Path(temp_dir) / "download.yaml"
+        download_path.write_text(self._DOWNLOAD_YAML, encoding="utf-8")
+        return download_path
+
+    def test_flags_major_update_version(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            download_path = self._write_download_yaml(temp_dir)
+            self.assertTrue(ida_analyze_bin._is_major_update_gamever("14168", str(download_path)))
+
+    def test_ignores_unflagged_version(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            download_path = self._write_download_yaml(temp_dir)
+            self.assertFalse(ida_analyze_bin._is_major_update_gamever("14167", str(download_path)))
+
+    def test_ignores_explicit_false_flag(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            download_path = self._write_download_yaml(temp_dir)
+            self.assertFalse(ida_analyze_bin._is_major_update_gamever("14169", str(download_path)))
+
+    def test_returns_false_for_unknown_tag(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            download_path = self._write_download_yaml(temp_dir)
+            self.assertFalse(ida_analyze_bin._is_major_update_gamever("99999", str(download_path)))
+
+    def test_returns_false_for_missing_file(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            missing_path = Path(temp_dir) / "does_not_exist.yaml"
+            self.assertFalse(ida_analyze_bin._is_major_update_gamever("14168", str(missing_path)))
+
+    def test_returns_false_for_empty_gamever(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            download_path = self._write_download_yaml(temp_dir)
+            self.assertFalse(ida_analyze_bin._is_major_update_gamever("", str(download_path)))
+
+
 class TestSkillOrdering(unittest.TestCase):
+    def test_build_skill_graph_matches_topological_sort_order(self) -> None:
+        skills = [
+            {"name": "consumer", "expected_input": ["Shared.{platform}.yaml"]},
+            {"name": "producer", "expected_output": ["Shared.{platform}.yaml"]},
+            {"name": "independent"},
+        ]
+
+        graph = ida_analyze_bin.build_skill_graph(skills)
+
+        self.assertEqual(ida_analyze_bin.topological_sort_skills(skills), graph.order)
+
+    def test_build_skill_graph_preserves_multiple_artifact_parents(self) -> None:
+        skills = [
+            {"name": "producer-a", "expected_output": ["A.{platform}.yaml"]},
+            {"name": "producer-b", "expected_output": ["B.{platform}.yaml"]},
+            {
+                "name": "consumer",
+                "expected_input": ["A.{platform}.yaml", "B.{platform}.yaml"],
+            },
+        ]
+
+        graph = ida_analyze_bin.build_skill_graph(skills)
+
+        artifact_edges = {
+            (edge.source, edge.target, edge.artifact) for edge in graph.edges if edge.edge_type == EdgeType.ARTIFACT
+        }
+        self.assertEqual(
+            {
+                ("producer-a", "consumer", "A.{platform}.yaml"),
+                ("producer-b", "consumer", "B.{platform}.yaml"),
+            },
+            artifact_edges,
+        )
+        self.assertEqual(1, graph.layers["consumer"])
+
+    def test_build_skill_graph_includes_platform_specific_dependencies(self) -> None:
+        skills = [
+            {"name": "windows-producer", "expected_output_windows": ["Windows.windows.yaml"]},
+            {"name": "linux-producer", "expected_output_linux": ["Linux.linux.yaml"]},
+            {
+                "name": "consumer",
+                "expected_input_windows": ["Windows.windows.yaml"],
+                "expected_input_linux": ["Linux.linux.yaml"],
+            },
+        ]
+
+        graph = ida_analyze_bin.build_skill_graph(skills)
+
+        self.assertEqual(
+            {("windows-producer", "consumer"), ("linux-producer", "consumer")},
+            {(edge.source, edge.target) for edge in graph.edges if edge.edge_type == EdgeType.ARTIFACT},
+        )
+
+    def test_build_skill_graph_keeps_prerequisite_edge_type(self) -> None:
+        graph = ida_analyze_bin.build_skill_graph(
+            [
+                {"name": "producer"},
+                {"name": "consumer", "prerequisite": ["producer"]},
+            ]
+        )
+
+        self.assertIn(
+            ("producer", "consumer", EdgeType.PREREQUISITE),
+            {(edge.source, edge.target, edge.edge_type) for edge in graph.edges},
+        )
+
+    def test_build_skill_graph_records_cycles_and_fallback_order(self) -> None:
+        skills = [
+            {"name": "second", "prerequisite": ["first"]},
+            {"name": "first", "prerequisite": ["second"]},
+        ]
+
+        graph = ida_analyze_bin.build_skill_graph(skills)
+
+        self.assertEqual(["second", "first"], graph.order)
+        self.assertEqual([["first", "second"]], graph.cycles)
+        self.assertEqual(1, len(graph.warnings))
+
     def test_topological_sort_skills_keeps_ilooptype_after_deactivateloop(
         self,
     ) -> None:
@@ -577,6 +1095,159 @@ class TestSkillOrdering(unittest.TestCase):
         self.assertEqual(["consumer", "optional_producer"], ordered)
 
 
+class TestExecutionPlan(unittest.TestCase):
+    def test_execution_plan_carries_descriptions_without_changing_dependencies(self) -> None:
+        base_module = {
+            "stage_index": 2,
+            "name": "engine",
+            "path_windows": "game/bin/win64/engine2.dll",
+            "skills": [
+                {"name": "producer", "expected_output": ["Shared.{platform}.yaml"]},
+                {"name": "consumer", "expected_input": ["Shared.{platform}.yaml"]},
+            ],
+        }
+        described_module = {
+            **base_module,
+            "description": "Engine stage",
+            "skills": [
+                {**base_module["skills"][0], "description": "Produces the shared artifact"},
+                {**base_module["skills"][1], "description": "Consumes the shared artifact"},
+            ],
+        }
+
+        plain = ida_analyze_bin.build_execution_plan(
+            [base_module], platforms=["windows"], bin_dir="bin", gamever="14141"
+        )
+        described = ida_analyze_bin.build_execution_plan(
+            [described_module], platforms=["windows"], bin_dir="bin", gamever="14141"
+        )
+
+        self.assertEqual("Engine stage", described.stages[0].description)
+        self.assertEqual(
+            ["Produces the shared artifact", "Consumes the shared artifact"],
+            [node.description for node in described.nodes],
+        )
+        self.assertNotIn("description", described.nodes[0].data)
+        self.assertEqual(
+            [(edge.source, edge.target, edge.edge_type) for edge in plain.edges],
+            [(edge.source, edge.target, edge.edge_type) for edge in described.edges],
+        )
+        self.assertEqual([node.name for node in plain.nodes], [node.name for node in described.nodes])
+
+    def test_duplicate_module_names_get_distinct_stable_stage_ids(self) -> None:
+        modules = [
+            {
+                "stage_index": 5,
+                "name": "engine",
+                "path_windows": "game/bin/win64/engine2.dll",
+                "skills": [{"name": "producer", "expected_output": ["Shared.{platform}.yaml"]}],
+            },
+            {
+                "stage_index": 8,
+                "name": "engine",
+                "path_windows": "game/bin/win64/engine2.dll",
+                "skills": [{"name": "consumer", "expected_input": ["Shared.{platform}.yaml"]}],
+            },
+        ]
+
+        plan = ida_analyze_bin.build_execution_plan(
+            modules,
+            platforms=["windows"],
+            bin_dir="bin",
+            gamever="14141",
+        )
+
+        self.assertEqual(
+            ["stage-0005-engine", "stage-0008-engine"],
+            [stage.id for stage in plan.stages],
+        )
+        self.assertEqual(
+            ["stage-0005-engine-windows", "stage-0008-engine-windows"],
+            [job.id for job in plan.jobs],
+        )
+
+    def test_cross_stage_artifact_edges_use_resolved_full_paths(self) -> None:
+        modules = [
+            {
+                "stage_index": 1,
+                "name": "client",
+                "path_windows": "game/csgo/bin/win64/client.dll",
+                "skills": [{"name": "producer", "expected_output": ["Shared.{platform}.yaml"]}],
+            },
+            {
+                "stage_index": 2,
+                "name": "server",
+                "path_windows": "game/csgo/bin/win64/server.dll",
+                "skills": [
+                    {
+                        "name": "consumer",
+                        "expected_input": ["../client/Shared.{platform}.yaml"],
+                    }
+                ],
+            },
+        ]
+
+        plan = ida_analyze_bin.build_execution_plan(
+            modules,
+            platforms=["windows"],
+            bin_dir="bin",
+            gamever="14141",
+        )
+
+        edge = next(edge for edge in plan.edges if edge.edge_type == EdgeType.CROSS_STAGE_ARTIFACT)
+        self.assertEqual("stage-0001-client-windows/producer", edge.source)
+        self.assertEqual("stage-0002-server-windows/consumer", edge.target)
+        self.assertTrue(edge.artifact.endswith("client\\Shared.windows.yaml"))
+
+    def test_execution_plan_contains_skill_vcall_and_post_process_nodes(self) -> None:
+        modules = [
+            {
+                "name": "engine",
+                "path_windows": "game/bin/win64/engine2.dll",
+                "skills": [{"name": "find-target"}],
+                "vcall_finder_objects": ["g_pTarget"],
+            }
+        ]
+
+        plan = ida_analyze_bin.build_execution_plan(
+            modules,
+            platforms=["windows"],
+            bin_dir="bin",
+            gamever="14141",
+            vcall_finder_selector={"all": True},
+            include_post_process=True,
+        )
+
+        self.assertEqual(
+            [PlanNodeType.SKILL, PlanNodeType.VCALL_TARGET, PlanNodeType.POST_PROCESS],
+            [node.node_type for node in plan.nodes],
+        )
+        self.assertEqual(
+            [
+                "stage-0000-engine-windows/find-target",
+                "stage-0000-engine-windows/vcall/g_pTarget",
+                "stage-0000-engine-windows/post-process",
+            ],
+            [node.id for node in plan.nodes],
+        )
+
+    def test_execution_plan_omits_disabled_post_process_node(self) -> None:
+        plan = ida_analyze_bin.build_execution_plan(
+            [
+                {
+                    "name": "engine",
+                    "path_windows": "game/bin/win64/engine2.dll",
+                    "skills": [{"name": "find-target"}],
+                }
+            ],
+            platforms=["windows"],
+            bin_dir="bin",
+            gamever="14141",
+        )
+
+        self.assertEqual([PlanNodeType.SKILL], [node.node_type for node in plan.nodes])
+
+
 class TestConfigSkillDependencyGraph(unittest.TestCase):
     def test_finds_expected_input_produced_by_later_module(self) -> None:
         modules = [
@@ -615,6 +1286,35 @@ class TestConfigSkillDependencyGraph(unittest.TestCase):
             gaps.extend(_find_module_skill_dependency_gaps(modules, platform))
 
         self.assertEqual([], gaps)
+
+
+class TestSkillSelection(unittest.TestCase):
+    def test_select_skills_by_name_uses_exact_match(self) -> None:
+        skills = [{"name": "find-target"}, {"name": "find-target-extra"}]
+
+        selected = ida_analyze_bin._select_skills_by_name(skills, "find-target")
+
+        self.assertEqual([{"name": "find-target"}], selected)
+
+    def test_select_modules_by_skill_keeps_all_exact_matches(self) -> None:
+        modules = [
+            {"name": "client", "skills": [{"name": "find-target"}, {"name": "find-client-only"}]},
+            {"name": "server", "skills": [{"name": "find-target"}, {"name": "find-server-only"}]},
+        ]
+
+        selected = ida_analyze_bin._select_modules_by_skill(modules, "find-target")
+
+        self.assertEqual(["client", "server"], [module["name"] for module in selected])
+        self.assertEqual([[{"name": "find-target"}], [{"name": "find-target"}]], [m["skills"] for m in selected])
+
+    def test_select_modules_by_skill_respects_module_filter(self) -> None:
+        modules = [
+            {"name": "client", "skills": [{"name": "find-client-only"}]},
+            {"name": "server", "skills": [{"name": "find-server-only"}]},
+        ]
+
+        with self.assertRaisesRegex(ValueError, "find-client-only"):
+            ida_analyze_bin._select_modules_by_skill(modules, "missing", ["client"])
 
 
 class TestPostProcessActionCollection(unittest.TestCase):
@@ -1090,9 +1790,40 @@ class TestStartIdalibMcp(unittest.TestCase):
 
         self.assertIs(fake_process, process)
         mock_popen.assert_called_once()
-        _args, kwargs = mock_popen.call_args
+        args, kwargs = mock_popen.call_args
+        self.assertEqual(
+            [
+                "idalib-mcp",
+                "--unsafe",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "13337",
+                "bin/14160/client/client.dll",
+            ],
+            args[0],
+        )
         self.assertEqual(ida_analyze_bin.subprocess.DEVNULL, kwargs["stdout"])
         self.assertEqual(ida_analyze_bin.subprocess.DEVNULL, kwargs["stderr"])
+
+    @patch.object(ida_analyze_bin, "is_port_in_use", return_value=True, create=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    @patch.object(ida_analyze_bin, "wait_for_port", return_value=True)
+    def test_start_idalib_mcp_refuses_an_in_use_port(
+        self,
+        _mock_wait_for_port,
+        mock_popen,
+        _is_port_in_use,
+    ) -> None:
+        process = ida_analyze_bin.start_idalib_mcp(
+            "bin/14160/client/client.dll",
+            host="127.0.0.1",
+            port=13337,
+            debug=False,
+        )
+
+        self.assertIsNone(process)
+        mock_popen.assert_not_called()
 
 
 class TestProcessBinary(unittest.TestCase):
@@ -1189,6 +1920,47 @@ class TestProcessBinary(unittest.TestCase):
 
         self.assertEqual((1, 0, 1), (success, fail, skip))
         mock_run_skill.assert_not_called()
+
+    def test_process_binary_skips_preprocessor_and_runs_agent_skill_when_skip_pp_enabled(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_dir = Path(temp_dir) / "bin" / "14141" / "engine"
+            binary_dir.mkdir(parents=True, exist_ok=True)
+            binary_path = str(binary_dir / "libengine2.so")
+            fake_process = object()
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=fake_process),
+                patch.object(ida_analyze_bin, "ensure_mcp_available", return_value=(fake_process, True)),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_validate_expected_input_artifacts_via_mcp",
+                    return_value=[],
+                ),
+                patch.object(ida_analyze_bin, "_run_preprocess_single_skill_via_mcp") as mock_preprocess,
+                patch.object(ida_analyze_bin, "run_skill", return_value=True) as mock_run_skill,
+                patch.object(ida_analyze_bin, "quit_ida_gracefully", return_value=None),
+            ):
+                success, fail, skip = ida_analyze_bin.process_binary(
+                    binary_path=binary_path,
+                    skills=[
+                        {
+                            "name": "find-direct-agent-skill",
+                            "expected_output": ["DirectAgentSkill.{platform}.yaml"],
+                            "expected_input": [],
+                        }
+                    ],
+                    agent="codex",
+                    host="127.0.0.1",
+                    port=13337,
+                    ida_args="",
+                    platform="windows",
+                    max_retries=1,
+                    skip_pp=True,
+                )
+
+        self.assertEqual((1, 0, 0), (success, fail, skip))
+        mock_preprocess.assert_not_called()
+        mock_run_skill.assert_called_once()
 
     def test_process_binary_skips_when_all_skip_if_exists_artifacts_exist_before_ida_start(
         self,
@@ -1661,6 +2433,122 @@ class TestProcessBinary(unittest.TestCase):
         self.assertEqual(1, mock_preprocess.call_count)
         self.assertEqual(1, mock_run_skill.call_count)
 
+    def test_process_binary_continues_after_fallback_skill_failure_when_skip_error_enabled(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_dir = Path(temp_dir) / "bin" / "14141" / "engine"
+            binary_dir.mkdir(parents=True, exist_ok=True)
+            binary_path = str(binary_dir / "libengine2.so")
+            fake_process = object()
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=fake_process),
+                patch.object(
+                    ida_analyze_bin,
+                    "ensure_mcp_available",
+                    return_value=(fake_process, True),
+                ),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_validate_expected_input_artifacts_via_mcp",
+                    return_value=[],
+                ),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_preprocess_single_skill_via_mcp",
+                    return_value="no_script",
+                ) as mock_preprocess,
+                patch.object(
+                    ida_analyze_bin,
+                    "run_skill",
+                    side_effect=[False, True],
+                ) as mock_run_skill,
+                patch.object(ida_analyze_bin, "quit_ida_gracefully", return_value=None),
+            ):
+                success, fail, skip = ida_analyze_bin.process_binary(
+                    binary_path=binary_path,
+                    skills=[
+                        {
+                            "name": "a_fallback_fails",
+                            "expected_output": ["A.{platform}.yaml"],
+                            "expected_input": [],
+                        },
+                        {
+                            "name": "b_should_run",
+                            "expected_output": ["B.{platform}.yaml"],
+                            "expected_input": [],
+                        },
+                    ],
+                    old_binary_dir=None,
+                    platform="windows",
+                    agent="codex",
+                    max_retries=1,
+                    debug=True,
+                    host="127.0.0.1",
+                    port=39091,
+                    ida_args=None,
+                    skip_error=True,
+                )
+
+        self.assertEqual((1, 1, 0), (success, fail, skip))
+        self.assertEqual(2, mock_preprocess.call_count)
+        self.assertEqual(2, mock_run_skill.call_count)
+
+    def test_process_binary_continues_after_preprocess_output_failure_when_skip_error_enabled(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_dir = Path(temp_dir) / "bin" / "14141" / "engine"
+            binary_dir.mkdir(parents=True, exist_ok=True)
+            binary_path = str(binary_dir / "libengine2.so")
+            fake_process = object()
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=fake_process),
+                patch.object(
+                    ida_analyze_bin,
+                    "ensure_mcp_available",
+                    return_value=(fake_process, True),
+                ),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_validate_expected_input_artifacts_via_mcp",
+                    return_value=[],
+                ),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_preprocess_single_skill_via_mcp",
+                    side_effect=["success", "absent_ok"],
+                ) as mock_preprocess,
+                patch.object(ida_analyze_bin, "run_skill") as mock_run_skill,
+                patch.object(ida_analyze_bin, "quit_ida_gracefully", return_value=None),
+            ):
+                success, fail, skip = ida_analyze_bin.process_binary(
+                    binary_path=binary_path,
+                    skills=[
+                        {
+                            "name": "a_preprocess_output_fails",
+                            "expected_output": ["A.{platform}.yaml"],
+                            "expected_input": [],
+                        },
+                        {
+                            "name": "b_should_run",
+                            "expected_output": ["B.{platform}.yaml"],
+                            "expected_input": [],
+                        },
+                    ],
+                    old_binary_dir=None,
+                    platform="windows",
+                    agent="codex",
+                    max_retries=1,
+                    debug=True,
+                    host="127.0.0.1",
+                    port=39091,
+                    ida_args=None,
+                    skip_error=True,
+                )
+
+        self.assertEqual((0, 1, 1), (success, fail, skip))
+        self.assertEqual(2, mock_preprocess.call_count)
+        mock_run_skill.assert_not_called()
+
     def test_process_binary_skips_optional_only_skill_when_no_preprocess_script_and_no_output(
         self,
     ) -> None:
@@ -1959,7 +2847,13 @@ class TestProcessBinary(unittest.TestCase):
 
         self.assertEqual((0, 1, 0), (success, fail, skip))
         mock_run_skill.assert_not_called()
-        mock_quit_ida.assert_called_once_with(fake_process, "127.0.0.1", 13337, debug=False)
+        mock_quit_ida.assert_called_once_with(
+            fake_process,
+            "127.0.0.1",
+            13337,
+            expected_binary=binary_path,
+            debug=False,
+        )
 
     def test_process_binary_preserves_prefilter_failures_when_mcp_startup_fails(self) -> None:
         binary_path = str(Path("/tmp/bin/14141/networksystem/networksystem.dll"))
@@ -2038,7 +2932,13 @@ class TestProcessBinary(unittest.TestCase):
         mock_preprocess.assert_not_called()
         mock_run_skill.assert_not_called()
         self.assertIn("invalid expected_input artifact", stdout.getvalue())
-        mock_quit_ida.assert_called_once_with(fake_process, "127.0.0.1", 13337, debug=False)
+        mock_quit_ida.assert_called_once_with(
+            fake_process,
+            "127.0.0.1",
+            13337,
+            expected_binary=binary_path,
+            debug=False,
+        )
 
     def test_process_binary_does_not_start_ida_for_post_process_when_rename_is_false(
         self,
@@ -2141,7 +3041,13 @@ class TestProcessBinary(unittest.TestCase):
         self.assertEqual((0, 0, 1), (success, fail, skip))
         mock_start_ida.assert_called_once_with(binary_path, "127.0.0.1", 13337, "", False)
         mock_post_process.assert_called_once()
-        mock_quit_ida.assert_called_once_with(fake_process, "127.0.0.1", 13337, debug=False)
+        mock_quit_ida.assert_called_once_with(
+            fake_process,
+            "127.0.0.1",
+            13337,
+            expected_binary=binary_path,
+            debug=False,
+        )
 
     def test_process_binary_counts_post_process_failure_once(
         self,
@@ -2284,7 +3190,168 @@ class TestProcessBinary(unittest.TestCase):
         self.assertEqual((0, 1, 1), (success, fail, skip))
 
 
+class TestProcessBinaryReporting(unittest.TestCase):
+    def _build_reporting(self, binary_root, skills):
+        module = {
+            "stage_index": 0,
+            "name": "engine",
+            "path_windows": "game/bin/win64/engine2.dll",
+            "skills": skills,
+        }
+        plan = ida_analyze_bin.build_execution_plan(
+            [module],
+            platforms=["windows"],
+            bin_dir=str(binary_root),
+            gamever="14141",
+        )
+        reporter = MagicMock()
+        reporting = ida_analyze_bin.AnalysisReporting(reporter, "run-1", plan)
+        return reporter, reporting, plan.jobs[0].id
+
+    def test_reports_existing_output_as_skipped(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_root = Path(temp_dir) / "bin"
+            binary_dir = binary_root / "14141" / "engine"
+            binary_dir.mkdir(parents=True)
+            binary_path = str(binary_dir / "engine2.dll")
+            (binary_dir / "Existing.windows.yaml").write_text("func_name: Existing\n", encoding="utf-8")
+            skills = [{"name": "existing", "expected_output": ["Existing.{platform}.yaml"], "expected_input": []}]
+            reporter, reporting, job_id = self._build_reporting(binary_root, skills)
+
+            with patch.object(ida_analyze_bin, "start_idalib_mcp") as mock_start:
+                counts = ida_analyze_bin.process_binary(
+                    binary_path,
+                    skills,
+                    "codex",
+                    "127.0.0.1",
+                    13337,
+                    "",
+                    "windows",
+                    reporting=reporting,
+                    job_id=job_id,
+                )
+
+        task_id = f"{job_id}/existing"
+        events = [report_call.args[0] for report_call in reporter.emit.call_args_list]
+        skipped_event = next(event for event in events if event.task_id == task_id)
+        self.assertEqual((0, 0, 1), counts)
+        self.assertEqual(TaskStatus.SKIPPED, skipped_event.status)
+        self.assertEqual(ProcessReason.EXISTING_OUTPUTS, skipped_event.reason)
+        mock_start.assert_not_called()
+
+    def test_reports_failed_skill_progress_and_aborts_remaining_skill(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_root = Path(temp_dir) / "bin"
+            binary_dir = binary_root / "14141" / "engine"
+            binary_dir.mkdir(parents=True)
+            binary_path = str(binary_dir / "engine2.dll")
+            skills = [
+                {"name": "first", "expected_output": ["First.{platform}.yaml"], "expected_input": []},
+                {"name": "second", "expected_output": ["Second.{platform}.yaml"], "expected_input": []},
+            ]
+            reporter, reporting, job_id = self._build_reporting(binary_root, skills)
+
+            def fail_agent(*_args, progress_callback=None, **_kwargs):
+                progress_callback(event="attempt_started", attempt=1, max_attempts=1)
+                return False
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=object()),
+                patch.object(
+                    ida_analyze_bin, "ensure_mcp_available", side_effect=lambda process, *_a, **_k: (process, True)
+                ),
+                patch.object(ida_analyze_bin, "verify_opened_binary_via_mcp", return_value=True),
+                patch.object(ida_analyze_bin, "_run_validate_expected_input_artifacts_via_mcp", return_value=[]),
+                patch.object(ida_analyze_bin, "_run_preprocess_single_skill_via_mcp", return_value="no_script"),
+                patch.object(ida_analyze_bin, "run_skill", side_effect=fail_agent),
+                patch.object(ida_analyze_bin, "quit_ida_gracefully"),
+            ):
+                counts = ida_analyze_bin.process_binary(
+                    binary_path,
+                    skills,
+                    "codex",
+                    "127.0.0.1",
+                    13337,
+                    "",
+                    "windows",
+                    max_retries=1,
+                    reporting=reporting,
+                    job_id=job_id,
+                )
+
+        events = [report_call.args[0] for report_call in reporter.emit.call_args_list]
+        first_id = f"{job_id}/first"
+        second_id = f"{job_id}/second"
+        self.assertEqual((0, 1, 0), counts)
+        self.assertTrue(
+            any(event.event_type == ProcessEventType.SKILL_PROGRESS and event.task_id == first_id for event in events)
+        )
+        self.assertTrue(
+            any(
+                event.task_id == first_id
+                and event.status == TaskStatus.FAILED
+                and event.reason == ProcessReason.AGENT_FAILED
+                for event in events
+            )
+        )
+        self.assertTrue(
+            any(
+                event.task_id == second_id
+                and event.status == TaskStatus.ABORTED
+                and event.reason == ProcessReason.UPSTREAM_ABORTED
+                for event in events
+            )
+        )
+
+    def test_reports_missing_input_as_failed(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_root = Path(temp_dir) / "bin"
+            binary_dir = binary_root / "14141" / "engine"
+            binary_dir.mkdir(parents=True)
+            binary_path = str(binary_dir / "engine2.dll")
+            skills = [
+                {
+                    "name": "consumer",
+                    "expected_output": ["Consumer.{platform}.yaml"],
+                    "expected_input": ["Missing.{platform}.yaml"],
+                }
+            ]
+            reporter, reporting, job_id = self._build_reporting(binary_root, skills)
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=object()),
+                patch.object(
+                    ida_analyze_bin, "ensure_mcp_available", side_effect=lambda process, *_a, **_k: (process, True)
+                ),
+                patch.object(ida_analyze_bin, "verify_opened_binary_via_mcp", return_value=True),
+                patch.object(ida_analyze_bin, "quit_ida_gracefully"),
+            ):
+                counts = ida_analyze_bin.process_binary(
+                    binary_path,
+                    skills,
+                    "codex",
+                    "127.0.0.1",
+                    13337,
+                    "",
+                    "windows",
+                    reporting=reporting,
+                    job_id=job_id,
+                )
+
+        task_id = f"{job_id}/consumer"
+        events = [report_call.args[0] for report_call in reporter.emit.call_args_list]
+        failed_event = next(event for event in events if event.task_id == task_id and event.status == TaskStatus.FAILED)
+        self.assertEqual((0, 1, 0), counts)
+        self.assertEqual(ProcessReason.MISSING_INPUT, failed_event.reason)
+        self.assertIn(ProcessPhase.VALIDATING_INPUTS, [event.phase for event in events if event.task_id == task_id])
+
+
 class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
+    def setUp(self) -> None:
+        stop_patcher = patch.object(ida_analyze_bin, "stop_idalib_mcp_process")
+        self.mock_stop_ida = stop_patcher.start()
+        self.addCleanup(stop_patcher.stop)
+
     def test_process_binary_aborts_before_preprocess_when_opened_binary_mismatches(self) -> None:
         fake_process = object()
 
@@ -2328,6 +3395,7 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
         mock_preprocess.assert_not_called()
         mock_run_skill.assert_not_called()
         mock_quit_ida.assert_not_called()
+        self.mock_stop_ida.assert_called_once_with(fake_process, debug=False)
 
     def test_process_binary_aborts_before_skill_mcp_work_when_recheck_mismatches(self) -> None:
         fake_process = object()
@@ -2714,458 +3782,6 @@ class TestInspectFuncVaPyEvalSelfHeal(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(payload["is_function_start"])
 
 
-class _FakePipe:
-    def __init__(self, chunks: list[str]) -> None:
-        self._chunks = list(chunks)
-
-    def readline(self) -> str:
-        return self._chunks.pop(0) if self._chunks else ""
-
-    def close(self) -> None:
-        return None
-
-
-class _FakeStdin:
-    def __init__(self) -> None:
-        self.writes: list[str] = []
-        self.closed = False
-
-    def write(self, data: str) -> int:
-        self.writes.append(data)
-        return len(data)
-
-    def flush(self) -> None:
-        return None
-
-    def close(self) -> None:
-        self.closed = True
-
-
-class _FakePopen:
-    def __init__(
-        self,
-        *,
-        stdout_chunks: list[str] | None = None,
-        stderr_chunks: list[str] | None = None,
-        returncode: int = 0,
-    ) -> None:
-        self.stdout = _FakePipe(stdout_chunks or [])
-        self.stderr = _FakePipe(stderr_chunks or [])
-        self.stdin = _FakeStdin()
-        self.returncode = returncode
-        self.killed = False
-
-    def wait(self, timeout: int | None = None) -> int:
-        return self.returncode
-
-    def kill(self) -> None:
-        self.killed = True
-
-
-class TestRunSkillOutputDetection(unittest.TestCase):
-    def setUp(self) -> None:
-        ida_analyze_bin._MCP_PREFLIGHT_DONE = False
-        ida_analyze_bin._MCP_PREFLIGHT_FAILED = False
-
-    def test_output_contains_error_marker_only_matches_standalone_tokens(self) -> None:
-        self.assertTrue(ida_analyze_bin._output_contains_error_marker("Error"))
-        self.assertTrue(ida_analyze_bin._output_contains_error_marker("prefix [ERROR] suffix"))
-        self.assertTrue(ida_analyze_bin._output_contains_error_marker("before **ERROR** after"))
-        self.assertTrue(ida_analyze_bin._output_contains_error_marker("line one\nerror\nline three"))
-
-        self.assertFalse(ida_analyze_bin._output_contains_error_marker("myErrorCode"))
-        self.assertFalse(ida_analyze_bin._output_contains_error_marker("error123"))
-        self.assertFalse(ida_analyze_bin._output_contains_error_marker("XerrorY"))
-        self.assertFalse(ida_analyze_bin._output_contains_error_marker("all good"))
-
-
-class TestRunSkillCodexPromptTransport(unittest.TestCase):
-    def setUp(self) -> None:
-        ida_analyze_bin._MCP_PREFLIGHT_DONE = False
-        ida_analyze_bin._MCP_PREFLIGHT_FAILED = False
-
-    @patch.object(Path, "read_text", return_value="sig finder prompt")
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin._run_process_with_stream_capture")
-    def test_run_skill_passes_codex_prompt_via_stdin_on_retry(
-        self,
-        mock_run_process,
-        _mock_exists,
-        _mock_read_text,
-    ) -> None:
-        mock_run_process.side_effect = [
-            ida_analyze_bin.subprocess.CompletedProcess(
-                args=["codex", "mcp", "list"],
-                returncode=1,
-                stdout="Name\nida-pro-mcp  http://127.0.0.1:13337/mcp  enabled\n",
-                stderr="",
-            ),
-            ida_analyze_bin.subprocess.CompletedProcess(
-                args=["codex"],
-                returncode=1,
-                stdout="",
-                stderr="first failure",
-            ),
-            ida_analyze_bin.subprocess.CompletedProcess(
-                args=["codex"],
-                returncode=0,
-                stdout="",
-                stderr="",
-            ),
-        ]
-
-        result = ida_analyze_bin.run_skill(
-            skill_name="find-IGameSystem_vtable",
-            agent="codex",
-            debug=False,
-            max_retries=2,
-        )
-
-        self.assertTrue(result)
-        self.assertEqual(3, mock_run_process.call_count)
-
-        preflight_call = mock_run_process.call_args_list[0]
-        first_call = mock_run_process.call_args_list[1]
-        second_call = mock_run_process.call_args_list[2]
-
-        self.assertEqual(["codex", "mcp", "list"], preflight_call.args[0])
-        self.assertEqual(["exec", "-"], first_call.args[0][-2:])
-        self.assertEqual(["exec", "resume", "--last", "-"], second_call.args[0][-4:])
-        expected_prompt = "Run SKILL: .claude/skills/find-IGameSystem_vtable/SKILL.md"
-        self.assertEqual(expected_prompt, first_call.kwargs["agent_input"])
-        self.assertEqual(expected_prompt, second_call.kwargs["agent_input"])
-        self.assertFalse(first_call.kwargs["debug"])
-        self.assertFalse(second_call.kwargs["debug"])
-        self.assertEqual(ida_analyze_bin.SKILL_TIMEOUT, first_call.kwargs["timeout"])
-        self.assertEqual(ida_analyze_bin.SKILL_TIMEOUT, second_call.kwargs["timeout"])
-
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin.subprocess.Popen")
-    def test_run_skill_debug_true_forwards_stdout_and_stderr(
-        self,
-        mock_popen,
-        _mock_exists,
-    ) -> None:
-        preflight_process = _FakePopen(
-            stdout_chunks=["ida-pro-mcp: http://127.0.0.1:13337/mcp (HTTP) - Failed\n"],
-            stderr_chunks=[],
-            returncode=0,
-        )
-        agent_process = _FakePopen(
-            stdout_chunks=["agent stdout line\n"],
-            stderr_chunks=["agent stderr line\n"],
-            returncode=0,
-        )
-        mock_popen.side_effect = [preflight_process, agent_process]
-
-        with (
-            patch("sys.stdout", new_callable=io.StringIO) as fake_stdout,
-            patch("sys.stderr", new_callable=io.StringIO) as fake_stderr,
-        ):
-            result = ida_analyze_bin.run_skill(
-                skill_name="find-IGameSystem_vtable",
-                agent="claude",
-                debug=True,
-                max_retries=1,
-            )
-
-        self.assertTrue(result)
-        self.assertEqual(["claude", "mcp", "list"], mock_popen.call_args_list[0].args[0])
-        self.assertIn("agent stdout line\n", fake_stdout.getvalue())
-        self.assertIn("agent stderr line\n", fake_stderr.getvalue())
-
-    @patch.object(Path, "read_text", return_value="sig finder prompt")
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin.subprocess.Popen")
-    def test_run_skill_retries_when_output_contains_error_marker(
-        self,
-        mock_popen,
-        _mock_exists,
-        _mock_read_text,
-    ) -> None:
-        preflight_process = _FakePopen(
-            stdout_chunks=["ida-pro-mcp  http://127.0.0.1:13337/mcp  enabled\n"],
-            stderr_chunks=[],
-            returncode=0,
-        )
-        first_process = _FakePopen(
-            stdout_chunks=["starting\n", "[ERROR] lookup failed\n"],
-            stderr_chunks=[],
-            returncode=0,
-        )
-        second_process = _FakePopen(
-            stdout_chunks=["done\n"],
-            stderr_chunks=[],
-            returncode=0,
-        )
-        mock_popen.side_effect = [preflight_process, first_process, second_process]
-
-        with (
-            patch("sys.stdout", new_callable=io.StringIO) as fake_stdout,
-            patch("sys.stderr", new_callable=io.StringIO) as fake_stderr,
-        ):
-            result = ida_analyze_bin.run_skill(
-                skill_name="find-IGameSystem_vtable",
-                agent="codex",
-                debug=False,
-                max_retries=2,
-            )
-
-        self.assertTrue(result)
-        self.assertEqual(3, mock_popen.call_count)
-        self.assertEqual(["codex", "mcp", "list"], mock_popen.call_args_list[0].args[0])
-        self.assertNotIn("[ERROR] lookup failed\n", fake_stdout.getvalue())
-        self.assertEqual("", fake_stderr.getvalue())
-        expected_prompt = "Run SKILL: .claude/skills/find-IGameSystem_vtable/SKILL.md"
-        self.assertEqual(expected_prompt, "".join(first_process.stdin.writes))
-        self.assertEqual(expected_prompt, "".join(second_process.stdin.writes))
-
-
-class TestRunSkillMcpListPreflight(unittest.TestCase):
-    def setUp(self) -> None:
-        ida_analyze_bin._MCP_PREFLIGHT_DONE = False
-        ida_analyze_bin._MCP_PREFLIGHT_FAILED = False
-
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin.subprocess.Popen")
-    def test_claude_mcp_list_accepts_failed_connection_when_server_is_listed(
-        self,
-        mock_popen,
-        _mock_exists,
-    ) -> None:
-        preflight_process = _FakePopen(
-            stdout_chunks=["ida-pro-mcp: http://127.0.0.1:13337/mcp (HTTP) - Failed to connect\n"],
-            stderr_chunks=[],
-            returncode=0,
-        )
-        agent_process = _FakePopen(stdout_chunks=["done\n"], stderr_chunks=[], returncode=0)
-        mock_popen.side_effect = [preflight_process, agent_process]
-
-        result = ida_analyze_bin.run_skill(
-            skill_name="find-IGameSystem_vtable",
-            agent="claude",
-            debug=False,
-            max_retries=1,
-        )
-
-        self.assertTrue(result)
-        self.assertEqual(["claude", "mcp", "list"], mock_popen.call_args_list[0].args[0])
-        self.assertEqual(2, mock_popen.call_count)
-
-    @patch.object(Path, "read_text", return_value="sig finder prompt")
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin._run_process_with_stream_capture")
-    def test_codex_mcp_list_accepts_table_row_when_server_is_listed(
-        self,
-        mock_run_process,
-        _mock_exists,
-        _mock_read_text,
-    ) -> None:
-        mock_run_process.side_effect = [
-            ida_analyze_bin.subprocess.CompletedProcess(
-                args=["codex", "mcp", "list"],
-                returncode=0,
-                stdout=(
-                    "Name         Url                         Status\n"
-                    "ida-pro-mcp  http://127.0.0.1:13337/mcp  enabled\n"
-                ),
-                stderr="",
-            ),
-            ida_analyze_bin.subprocess.CompletedProcess(
-                args=["codex"],
-                returncode=0,
-                stdout="",
-                stderr="",
-            ),
-        ]
-
-        result = ida_analyze_bin.run_skill(
-            skill_name="find-IGameSystem_vtable",
-            agent="codex",
-            debug=False,
-            max_retries=1,
-        )
-
-        self.assertTrue(result)
-        self.assertEqual(["codex", "mcp", "list"], mock_run_process.call_args_list[0].args[0])
-        self.assertEqual(2, mock_run_process.call_count)
-
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin.subprocess.Popen")
-    def test_missing_ida_pro_mcp_blocks_agent_start(
-        self,
-        mock_popen,
-        _mock_exists,
-    ) -> None:
-        preflight_process = _FakePopen(
-            stdout_chunks=["serena: http://127.0.0.1:9131/mcp (HTTP) - Connected\n"],
-            stderr_chunks=[],
-            returncode=0,
-        )
-        mock_popen.return_value = preflight_process
-
-        with patch("sys.stdout", new_callable=io.StringIO) as fake_stdout:
-            result = ida_analyze_bin.run_skill(
-                skill_name="find-IGameSystem_vtable",
-                agent="claude",
-                debug=False,
-                max_retries=1,
-            )
-
-        self.assertFalse(result)
-        self.assertEqual(1, mock_popen.call_count)
-        self.assertEqual(["claude", "mcp", "list"], mock_popen.call_args.args[0])
-        self.assertIn("Required MCP server 'ida-pro-mcp' is not listed", fake_stdout.getvalue())
-
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin.subprocess.Popen")
-    def test_mcp_list_timeout_blocks_agent_start(
-        self,
-        mock_popen,
-        _mock_exists,
-    ) -> None:
-        timeout_process = _FakePopen(stdout_chunks=[], stderr_chunks=[], returncode=0)
-        timeout_process.wait = MagicMock(
-            side_effect=ida_analyze_bin.subprocess.TimeoutExpired(
-                ["claude", "mcp", "list"],
-                30,
-            )
-        )
-        mock_popen.return_value = timeout_process
-
-        with patch("sys.stdout", new_callable=io.StringIO) as fake_stdout:
-            result = ida_analyze_bin.run_skill(
-                skill_name="find-IGameSystem_vtable",
-                agent="claude",
-                debug=False,
-                max_retries=1,
-            )
-
-        self.assertFalse(result)
-        self.assertEqual(1, mock_popen.call_count)
-        self.assertIn("MCP list preflight timeout", fake_stdout.getvalue())
-        self.assertTrue(timeout_process.killed)
-
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin.subprocess.Popen", side_effect=FileNotFoundError)
-    def test_mcp_list_missing_agent_blocks_agent_start(
-        self,
-        mock_popen,
-        _mock_exists,
-    ) -> None:
-        with patch("sys.stdout", new_callable=io.StringIO) as fake_stdout:
-            result = ida_analyze_bin.run_skill(
-                skill_name="find-IGameSystem_vtable",
-                agent="claude",
-                debug=False,
-                max_retries=1,
-            )
-
-        self.assertFalse(result)
-        self.assertEqual(1, mock_popen.call_count)
-        self.assertIn(
-            "Agent 'claude' not found while running MCP list preflight",
-            fake_stdout.getvalue(),
-        )
-
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin.subprocess.Popen")
-    def test_empty_mcp_list_output_blocks_agent_start(
-        self,
-        mock_popen,
-        _mock_exists,
-    ) -> None:
-        mock_popen.return_value = _FakePopen(stdout_chunks=[], stderr_chunks=[], returncode=0)
-
-        with patch("sys.stdout", new_callable=io.StringIO) as fake_stdout:
-            result = ida_analyze_bin.run_skill(
-                skill_name="find-IGameSystem_vtable",
-                agent="claude",
-                debug=False,
-                max_retries=1,
-            )
-
-        self.assertFalse(result)
-        self.assertEqual(1, mock_popen.call_count)
-        self.assertIn("Required MCP server 'ida-pro-mcp' is not listed", fake_stdout.getvalue())
-
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin.subprocess.Popen")
-    def test_preflight_runs_only_once_for_multiple_skills(
-        self,
-        mock_popen,
-        _mock_exists,
-    ) -> None:
-        preflight_process = _FakePopen(
-            stdout_chunks=["ida-pro-mcp: http://127.0.0.1:13337/mcp (HTTP) - Failed\n"],
-            stderr_chunks=[],
-            returncode=0,
-        )
-        first_agent = _FakePopen(stdout_chunks=["first\n"], stderr_chunks=[], returncode=0)
-        second_agent = _FakePopen(stdout_chunks=["second\n"], stderr_chunks=[], returncode=0)
-        mock_popen.side_effect = [preflight_process, first_agent, second_agent]
-
-        first_result = ida_analyze_bin.run_skill(
-            skill_name="find-IGameSystem_vtable",
-            agent="claude",
-            debug=False,
-            max_retries=1,
-        )
-        second_result = ida_analyze_bin.run_skill(
-            skill_name="find-CBaseEntity_vtable",
-            agent="claude",
-            debug=False,
-            max_retries=1,
-        )
-
-        self.assertTrue(first_result)
-        self.assertTrue(second_result)
-        commands = [call_args.args[0] for call_args in mock_popen.call_args_list]
-        self.assertEqual(1, commands.count(["claude", "mcp", "list"]))
-        self.assertEqual(3, mock_popen.call_count)
-
-    @patch("ida_analyze_bin.os.path.exists", return_value=True)
-    @patch("ida_analyze_bin.subprocess.Popen")
-    def test_failed_preflight_is_not_retried_for_later_skills(
-        self,
-        mock_popen,
-        _mock_exists,
-    ) -> None:
-        mock_popen.return_value = _FakePopen(
-            stdout_chunks=["serena: http://127.0.0.1:9131/mcp (HTTP) - Connected\n"],
-            stderr_chunks=[],
-            returncode=0,
-        )
-
-        with patch("sys.stdout", new_callable=io.StringIO) as fake_stdout:
-            first_result = ida_analyze_bin.run_skill(
-                skill_name="find-IGameSystem_vtable",
-                agent="claude",
-                debug=False,
-                max_retries=1,
-            )
-            second_result = ida_analyze_bin.run_skill(
-                skill_name="find-CBaseEntity_vtable",
-                agent="claude",
-                debug=False,
-                max_retries=1,
-            )
-
-        self.assertFalse(first_result)
-        self.assertFalse(second_result)
-        self.assertEqual(1, mock_popen.call_count)
-        self.assertIn("MCP preflight previously failed", fake_stdout.getvalue())
-
-    def test_mcp_list_server_matching_requires_list_item_name(self) -> None:
-        self.assertTrue(
-            ida_analyze_bin._mcp_list_contains_server("ida-pro-mcp: http://127.0.0.1:13337/mcp (HTTP) - Failed\n")
-        )
-        self.assertTrue(ida_analyze_bin._mcp_list_contains_server("ida-pro-mcp  http://127.0.0.1:13337/mcp  enabled\n"))
-        self.assertFalse(
-            ida_analyze_bin._mcp_list_contains_server("not-ida-pro-mcp: http://127.0.0.1:13337/mcp (HTTP) - Failed\n")
-        )
-
-
 @patch.dict(
     "os.environ",
     {
@@ -3175,6 +3791,92 @@ class TestRunSkillMcpListPreflight(unittest.TestCase):
     clear=False,
 )
 class TestParseArgsLlmOptions(unittest.TestCase):
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_accepts_skip_error(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            ["ida_analyze_bin.py", "-gamever", "14141", "-skip_error"],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertTrue(args.skip_error)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_accepts_skip_pp(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            ["ida_analyze_bin.py", "-gamever", "14141", "-skip_pp"],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertTrue(args.skip_pp)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_accepts_process_reporter_configuration(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            [
+                "ida_analyze_bin.py",
+                "-gamever",
+                "14141",
+                "-process_reporter",
+                "redis",
+                "-redis_url",
+                "redis://example:6379/2",
+                "-redis_prefix",
+                "test:analysis",
+                "-run_id",
+                "scheduler-run",
+            ],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertEqual("redis", args.process_reporter)
+        self.assertEqual("redis://example:6379/2", args.redis_url)
+        self.assertEqual("test:analysis", args.redis_prefix)
+        self.assertEqual("scheduler-run", args.run_id)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_accepts_and_strips_skill(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            ["ida_analyze_bin.py", "-gamever", "14141", "-skill", "  find-target  "],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertEqual("find-target", args.skill)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_rejects_empty_skill(self, _mock_resolve_oldgamever) -> None:
+        with (
+            patch(
+                "sys.argv",
+                ["ida_analyze_bin.py", "-gamever", "14141", "-skill", "   "],
+            ),
+            self.assertRaises(SystemExit),
+        ):
+            ida_analyze_bin.parse_args()
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_accepts_agent_model(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            ["ida_analyze_bin.py", "-gamever", "14141", "-agent_model", "gpt-5.4"],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertEqual("gpt-5.4", args.agent_model)
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
+    def test_parse_args_uses_agent_model_environment_default(self, _mock_resolve_oldgamever) -> None:
+        with (
+            patch.dict("os.environ", {"CS2VIBE_AGENT_MODEL": "openai/gpt-5.4"}, clear=False),
+            patch("sys.argv", ["ida_analyze_bin.py", "-gamever", "14141"]),
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertEqual("openai/gpt-5.4", args.agent_model)
+
     @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
     def test_parse_args_accepts_llm_options(
         self,
@@ -3605,6 +4307,77 @@ class TestProcessBinaryLlmWiring(unittest.TestCase):
         self.assertEqual(4, mock_preprocess.await_args.kwargs["llm_max_retries"])
 
 
+class TestMainReporterLifecycle(unittest.TestCase):
+    @patch.object(ida_analyze_bin, "parse_config")
+    @patch("ida_analyze_bin.os.path.exists", return_value=True)
+    @patch.object(ida_analyze_bin, "parse_args")
+    def test_main_finalizes_flushes_and_closes_reporter_after_exception(
+        self,
+        mock_parse_args,
+        _mock_exists,
+        mock_parse_config,
+    ) -> None:
+        mock_parse_args.return_value = SimpleNamespace(
+            configyaml="config.yaml",
+            bindir="bin",
+            gamever="14141",
+            oldgamever=None,
+            platforms=["windows"],
+            module_filter=None,
+            modules="*",
+            skill=None,
+            agent="codex",
+            agent_model="",
+            ida_args="",
+            debug=False,
+            skip_error=False,
+            skip_pp=False,
+            maxretry=1,
+            vcall_finder_filter=None,
+            llm_model="gpt-4o",
+            llm_apikey=None,
+            llm_baseurl=None,
+            llm_temperature=None,
+            llm_effort="medium",
+            llm_fake_as=None,
+            rename=False,
+            run_id="scheduler-run",
+        )
+        mock_parse_config.return_value = [
+            {
+                "stage_index": 3,
+                "name": "engine",
+                "skills": [{"name": "find-target", "expected_output": [], "expected_input": []}],
+                "vcall_finder_objects": [],
+                "path_windows": "game/bin/win64/engine2.dll",
+            }
+        ]
+        reporter = MagicMock()
+        reporter.initialize_run.return_value = "scheduler-run"
+        call_order = []
+        reporter.initialize_run.side_effect = lambda *_args, **_kwargs: (
+            call_order.append("initialize") or "scheduler-run"
+        )
+
+        def fail_processing(*_args, **_kwargs):
+            call_order.append("process")
+            raise RuntimeError("analysis crashed")
+
+        with (
+            patch.object(ida_analyze_bin, "create_process_reporter", return_value=reporter),
+            patch.object(ida_analyze_bin, "process_binary", side_effect=fail_processing),
+            self.assertRaisesRegex(RuntimeError, "analysis crashed"),
+        ):
+            ida_analyze_bin.main()
+
+        self.assertEqual(["initialize", "process"], call_order)
+        initialized_plan = reporter.initialize_run.call_args.args[0]
+        self.assertEqual("stage-0003-engine-windows/find-target", initialized_plan["nodes"][0]["id"])
+        self.assertEqual(RunStatus.FAILED, reporter.finalize_run.call_args.args[1])
+        reporter.flush.assert_called_once()
+        reporter.close.assert_called_once()
+
+
 class TestMainLlmWiring(unittest.TestCase):
     @patch.object(ida_analyze_bin, "process_binary", return_value=(0, 0, 0))
     @patch.object(ida_analyze_bin, "parse_config")
@@ -3770,6 +4543,67 @@ class TestMainLlmWiring(unittest.TestCase):
         self.assertEqual(1, mock_process.call_count)
         mock_aggregate.assert_not_called()
 
+    @patch.object(ida_analyze_bin, "parse_config")
+    @patch("ida_analyze_bin.os.path.exists", return_value=True)
+    @patch.object(ida_analyze_bin, "parse_args")
+    def test_main_continues_after_process_binary_failure_when_skip_error_enabled(
+        self,
+        mock_parse_args,
+        _mock_exists,
+        mock_parse_config,
+    ) -> None:
+        mock_parse_args.return_value = SimpleNamespace(
+            configyaml="config.yaml",
+            bindir="bin",
+            gamever="14141",
+            oldgamever=None,
+            platforms=["windows"],
+            module_filter=None,
+            modules="*",
+            agent="codex",
+            ida_args="",
+            debug=False,
+            maxretry=3,
+            vcall_finder_filter={"all": True},
+            llm_model="gpt-4.1-mini",
+            llm_apikey=None,
+            llm_baseurl=None,
+            llm_temperature=None,
+            llm_effort="high",
+            llm_fake_as="codex",
+            rename=False,
+            skip_error=True,
+        )
+        mock_parse_config.return_value = [
+            {
+                "name": "engine",
+                "skills": [{"name": "find-first", "expected_output": [], "expected_input": []}],
+                "vcall_finder_objects": ["g_pFirst"],
+                "path_windows": "game/bin/win64/engine2.dll",
+            },
+            {
+                "name": "server",
+                "skills": [{"name": "find-second", "expected_output": [], "expected_input": []}],
+                "vcall_finder_objects": ["g_pSecond"],
+                "path_windows": "game/bin/win64/server.dll",
+            },
+        ]
+
+        with (
+            patch.object(ida_analyze_bin, "process_binary", return_value=(0, 1, 0)) as mock_process,
+            patch.object(
+                ida_analyze_bin,
+                "aggregate_vcall_results_for_object",
+                return_value={"status": "success", "processed": 1, "failed": 0},
+            ) as mock_aggregate,
+            self.assertRaises(SystemExit) as exit_context,
+        ):
+            ida_analyze_bin.main()
+
+        self.assertEqual(1, exit_context.exception.code)
+        self.assertEqual(2, mock_process.call_count)
+        self.assertEqual(2, mock_aggregate.call_count)
+
 
 class TestMainPostProcessWiring(unittest.TestCase):
     @patch.object(ida_analyze_bin, "parse_config")
@@ -3807,6 +4641,7 @@ class TestMainPostProcessWiring(unittest.TestCase):
             llm_effort="high",
             llm_fake_as="codex",
             rename=True,
+            skip_pp=True,
         )
         mock_parse_config.return_value = [
             {
@@ -3827,6 +4662,66 @@ class TestMainPostProcessWiring(unittest.TestCase):
             ida_analyze_bin.main()
 
         self.assertTrue(captured["kwargs"]["rename"])
+        self.assertTrue(captured["kwargs"]["skip_pp"])
+
+
+class TestMainSkillFilterWiring(unittest.TestCase):
+    @patch.object(ida_analyze_bin, "process_binary", return_value=(1, 0, 0))
+    @patch.object(ida_analyze_bin, "parse_config")
+    @patch("ida_analyze_bin.os.path.exists", return_value=True)
+    @patch.object(ida_analyze_bin, "parse_args")
+    def test_main_runs_only_exact_skill_matches(
+        self,
+        mock_parse_args,
+        _mock_exists,
+        mock_parse_config,
+        mock_process_binary,
+    ) -> None:
+        mock_parse_args.return_value = SimpleNamespace(
+            configyaml="config.yaml",
+            bindir="bin",
+            gamever="14141",
+            oldgamever=None,
+            platforms=["windows"],
+            module_filter=None,
+            modules="*",
+            skill="find-target",
+            agent="codex",
+            agent_model="gpt-5.4",
+            ida_args="",
+            debug=False,
+            skip_error=False,
+            skip_pp=False,
+            maxretry=3,
+            vcall_finder_filter=None,
+            llm_model="gpt-4o",
+            llm_apikey=None,
+            llm_baseurl=None,
+            llm_temperature=None,
+            llm_effort="medium",
+            llm_fake_as=None,
+            rename=False,
+        )
+        mock_parse_config.return_value = [
+            {
+                "name": "client",
+                "skills": [{"name": "find-other"}],
+                "vcall_finder_objects": [],
+                "path_windows": "game/bin/win64/client.dll",
+            },
+            {
+                "name": "server",
+                "skills": [{"name": "find-target"}, {"name": "find-other"}],
+                "vcall_finder_objects": [],
+                "path_windows": "game/bin/win64/server.dll",
+            },
+        ]
+
+        ida_analyze_bin.main()
+
+        mock_process_binary.assert_called_once()
+        selected_skills = mock_process_binary.call_args.args[1]
+        self.assertEqual(["find-target"], [skill["name"] for skill in selected_skills])
 
 
 if __name__ == "__main__":

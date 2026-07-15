@@ -10,14 +10,14 @@ TARGET_FUNCTION_NAMES = [
 FUNC_XREFS = [
     {
         "func_name": "CLog_Print",
-        "xref_strings": ["L %02i/%02i/%04i - %02i:%02i:%02i: %s"],
+        "xref_strings": ["CLog::Print: string too long (>1024 bytes)."],
         "xref_gvs": [],
         "xref_signatures": [],
         "xref_funcs": [],
         "exclude_funcs": [],
-        "exclude_strings": [],
+        "exclude_strings": ['%s: "%s" %s "%s" by "%s"'],
         "exclude_gvs": [],
-        "exclude_signatures": [],
+        "exclude_signatures": ["30 00 00 00"],
     },
 ]
 

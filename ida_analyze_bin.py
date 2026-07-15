@@ -2,25 +2,30 @@
 """
 IDA Binary Analysis Script for CS2_VibeSignatures
 
-Analyzes CS2 binary files using IDA Pro MCP and Claude/Codex agents.
+Analyzes CS2 binary files using IDA Pro MCP and Claude, Codex, or OpenCode agents.
 Sequentially processes modules and symbols defined in config.yaml.
 
 Usage:
-    python ida_analyze_bin.py -gamever=14134 [-platform=windows,linux] [-agent=codex]
+    python ida_analyze_bin.py -gamever=14134 [-platform=windows,linux] [-skill=SKILL]
+        [-agent=claude/codex/opencode] [-agent_model=MODEL]
 
     -gamever: Game version subdirectory name (required)
     -oldgamever: Old game version for signature reuse (default: gamever - 1)
     -configyaml: Path to config.yaml file (default: config.yaml)
     -bindir: Directory containing downloaded binaries (default: bin)
     -platform: Platforms to analyze, comma-separated (default: windows,linux)
-    -agent: Agent to use for analysis: claude or codex (default: claude)
+    -skill: Exact skill name to run; all other skills are skipped
+    -agent: Agent to use for analysis: claude, codex, or opencode (default: claude)
+    -agent_model: Optional model override; OpenCode requires provider/model format
     -ida_args: Additional arguments for idalib-mcp (optional)
     -debug: Enable debug output
+    -skip_error: Continue analysis after skill or preprocessor failures
+    -skip_pp: Skip preprocessing scripts and run Agent Skills directly
 
 Requirements:
     uv sync
     uv (for running idalib-mcp)
-    claude CLI or codex CLI
+    claude CLI, codex CLI, or opencode CLI
 
 Output:
     bin/14134/engine/CServerSideClient_IsHearingClient.linux.yaml
@@ -39,9 +44,7 @@ import signal
 import socket
 import subprocess
 import sys
-import threading
 import time
-import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -51,12 +54,11 @@ from dotenv import load_dotenv
 # already succeeded — silence just that logger.
 logging.getLogger("mcp.client.streamable_http").setLevel(logging.ERROR)
 
+from agent_runner import DEFAULT_AGENT_MODEL, run_skill
+
 try:
     import yaml
     import asyncio
-    import httpx
-    from mcp import ClientSession
-    from mcp.client.streamable_http import streamable_http_client
     from mcp.types import TextContent
 except ImportError as e:
     print(f"Error: Missing required dependency: {e.name}")
@@ -70,14 +72,51 @@ from ida_skill_preprocessor import (
     PREPROCESS_STATUS_SUCCESS,
     preprocess_single_skill_via_mcp,
 )
+from ida_mcp_session import (
+    McpConnectionError,
+    McpContractError,
+    McpDatabaseSelectionError,
+    McpToolCallError,
+    check_ida_mcp_supervisor_health,
+    normalize_binary_identity_path,
+    open_ida_mcp_session,
+)
 from ida_vcall_finder import (
     aggregate_vcall_results_for_object,
     export_object_xref_details_via_mcp,
 )
+from process_reporter import (
+    BestEffortProcessReporter,
+    EdgeType,
+    ExecutionEdge,
+    ExecutionJob,
+    ExecutionNode,
+    ExecutionPlan,
+    ExecutionStage,
+    PlanNodeType,
+    ProcessEvent,
+    ProcessEventType,
+    ProcessPhase,
+    ProcessReason,
+    ProcessReporter,
+    ProcessReporterConfigurationError,
+    RunStatus,
+    SkillEdge,
+    SkillGraph,
+    TaskStatus,
+    build_job_id,
+    build_post_process_task_id,
+    build_stage_id,
+    build_task_id,
+    build_vcall_task_id,
+    is_valid_task_transition,
+)
+from process_reporter_factory import create_process_reporter
 
 load_dotenv()
 
 DEFAULT_CONFIG_FILE = "config.yaml"
+DEFAULT_DOWNLOAD_FILE = "download.yaml"
 DEFAULT_BIN_DIR = "bin"
 DEFAULT_PLATFORM = "windows,linux"
 DEFAULT_MODULES = "*"
@@ -87,20 +126,114 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 13337
 POST_PROCESS_FUNC_RENAME_BATCH_SIZE = 50
 MCP_STARTUP_TIMEOUT = 1200  # seconds to wait for MCP server
-SKILL_TIMEOUT = 1200  # 10 minutes per skill
-VERIFY_SURVEY_TIMEOUT = 300  # seconds to wait for the opened binary's async analysis before failing
-VERIFY_SURVEY_POLL_INTERVAL = 3  # seconds between survey_binary polls while the worker warms up
-MCP_LIST_TIMEOUT = 30
-ERROR_MARKER_RE = re.compile(
-    r"(?<![A-Za-z0-9])error(?![A-Za-z0-9])",
-    re.IGNORECASE,
-)
-_MCP_PREFLIGHT_DONE = False
-_MCP_PREFLIGHT_FAILED = False
+QEXIT_CONNECTION_RESET_MARKER = "[WinError 10054]"
+OPENED_BINARY_VERIFY_TIMEOUT = 60.0
+OPENED_BINARY_VERIFY_RETRY_INTERVAL = 2.0
 _ARTIFACT_SYMBOL_CATEGORY_CACHE = {}
 _BINARY_HASH_CACHE = {}
-_IDA_DATABASE_SUFFIXES = (".i64", ".idb")
 _PE_STYLE_BASE_ADDRESS = 0x180000000
+
+
+class AnalysisReporting:
+    """Track local lifecycle state while forwarding events to a reporter backend."""
+
+    def __init__(self, reporter: ProcessReporter, run_id: str, plan: ExecutionPlan):
+        self.reporter = (
+            reporter if isinstance(reporter, BestEffortProcessReporter) else BestEffortProcessReporter(reporter)
+        )
+        self.run_id = run_id
+        self._node_ids = {node.id for node in plan.nodes}
+        self._nodes_by_job = {job.id: [] for job in plan.jobs}
+        for node in plan.nodes:
+            self._nodes_by_job[node.job_id].append(node.id)
+        self._states = {task_id: TaskStatus.PENDING for task_id in self._node_ids}
+        self._states.update({job.id: TaskStatus.PENDING for job in plan.jobs})
+
+    def emit_run_status(self, status: RunStatus, *, message: str | None = None) -> None:
+        self.reporter.emit(
+            ProcessEvent(
+                run_id=self.run_id,
+                event_type=ProcessEventType.RUN_STATUS_CHANGED,
+                status=status,
+                message=message,
+            )
+        )
+
+    def emit_task_status(
+        self,
+        task_id: str,
+        status: TaskStatus,
+        phase: ProcessPhase,
+        *,
+        reason: ProcessReason | None = None,
+        message: str | None = None,
+        error: str | None = None,
+        payload: dict | None = None,
+    ) -> None:
+        current = self._states.get(task_id, TaskStatus.PENDING)
+        terminal_statuses = {
+            TaskStatus.SUCCEEDED,
+            TaskStatus.FAILED,
+            TaskStatus.SKIPPED,
+            TaskStatus.ABORTED,
+        }
+        if current in terminal_statuses:
+            return
+        if not is_valid_task_transition(current, status):
+            return
+        self.reporter.emit(
+            ProcessEvent(
+                run_id=self.run_id,
+                event_type=ProcessEventType.TASK_STATUS_CHANGED,
+                task_id=task_id,
+                status=status,
+                phase=phase,
+                reason=reason,
+                message=message,
+                error=error,
+                payload=payload or {},
+            )
+        )
+        self._states[task_id] = status
+
+    def emit_agent_progress(self, task_id: str, **progress) -> None:
+        self.reporter.emit(
+            ProcessEvent(
+                run_id=self.run_id,
+                event_type=ProcessEventType.SKILL_PROGRESS,
+                task_id=task_id,
+                status=TaskStatus.RUNNING,
+                phase=ProcessPhase.AGENT_FALLBACK,
+                payload=progress,
+            )
+        )
+
+    def abort_job_tasks(self, job_id: str, reason: ProcessReason, message: str) -> None:
+        self.finish_job_tasks(job_id, TaskStatus.ABORTED, reason, message)
+
+    def finish_job_tasks(
+        self,
+        job_id: str,
+        status: TaskStatus,
+        reason: ProcessReason,
+        message: str,
+    ) -> None:
+        self.finish_tasks(self._nodes_by_job.get(job_id, []), status, reason, message)
+
+    def finish_tasks(self, task_ids, status: TaskStatus, reason: ProcessReason, message: str) -> None:
+        for task_id in task_ids:
+            self.emit_task_status(task_id, status, ProcessPhase.FINISHED, reason=reason, message=message)
+
+    def abort_pending(self, reason: ProcessReason, message: str) -> None:
+        for task_id in list(self._states):
+            self.emit_task_status(task_id, TaskStatus.ABORTED, ProcessPhase.FINISHED, reason=reason, message=message)
+
+    def summary(self) -> dict[str, int]:
+        counts = {status.value: 0 for status in TaskStatus}
+        for task_id in self._node_ids:
+            counts[self._states[task_id].value] += 1
+        counts["total"] = len(self._node_ids)
+        return counts
 
 
 def _absolute_path_preserve_spelling(path):
@@ -124,71 +257,6 @@ SURVEY_CURRENT_IDB_PATH_PY_EVAL = (
     "        pass\n"
     "result = json.dumps({'metadata': {'path': path}})\n"
 )
-
-
-def _output_contains_error_marker(*texts: str) -> bool:
-    merged_output = "\n".join(text for text in texts if text)
-    return bool(ERROR_MARKER_RE.search(merged_output))
-
-
-def _mcp_list_contains_server(output, server_name="ida-pro-mcp"):
-    if not output:
-        return False
-    pattern = re.compile(rf"(?m)^\s*(?:[-*]\s*)?{re.escape(server_name)}(?:\s|:|$)")
-    return bool(pattern.search(output))
-
-
-def _format_mcp_list_output(output, limit=1200):
-    text = (output or "").strip()
-    if not text:
-        return "<empty>"
-    if len(text) > limit:
-        text = text[:limit] + "... <truncated>"
-    return "\n".join(f"      {line}" for line in text.splitlines())
-
-
-def _ensure_agent_mcp_preflight(agent, debug=False, server_name="ida-pro-mcp"):
-    global _MCP_PREFLIGHT_DONE, _MCP_PREFLIGHT_FAILED
-
-    if _MCP_PREFLIGHT_DONE:
-        return True
-    if _MCP_PREFLIGHT_FAILED:
-        print("    Error: MCP preflight previously failed; refusing to start agent.")
-        return False
-
-    cmd = [agent, "mcp", "list"]
-    print(f"    Checking MCP server list: {' '.join(cmd)}")
-
-    try:
-        result = _run_process_with_stream_capture(
-            cmd,
-            debug=debug,
-            timeout=MCP_LIST_TIMEOUT,
-        )
-    except subprocess.TimeoutExpired:
-        _MCP_PREFLIGHT_FAILED = True
-        print(f"    Error: MCP list preflight timeout ({MCP_LIST_TIMEOUT} seconds): {' '.join(cmd)}")
-        return False
-    except FileNotFoundError:
-        _MCP_PREFLIGHT_FAILED = True
-        print(f"    Error: Agent '{agent}' not found while running MCP list preflight.")
-        return False
-    except Exception as e:
-        _MCP_PREFLIGHT_FAILED = True
-        print(f"    Error executing MCP list preflight: {e}")
-        return False
-
-    output = "\n".join(text for text in (result.stdout, result.stderr) if text)
-    if _mcp_list_contains_server(output, server_name):
-        _MCP_PREFLIGHT_DONE = True
-        return True
-
-    _MCP_PREFLIGHT_FAILED = True
-    print(f"    Error: Required MCP server '{server_name}' is not listed by '{agent} mcp list'.")
-    if result.returncode != 0:
-        print(f"    mcp list return code: {result.returncode}")
-    print(f"    mcp list output:\n{_format_mcp_list_output(output)}")
-    return False
 
 
 def _parse_tool_json_content(result):
@@ -467,6 +535,8 @@ async def _survey_current_idb_path_via_py_eval(session):
             name="py_eval",
             arguments={"code": SURVEY_CURRENT_IDB_PATH_PY_EVAL},
         )
+    except (McpConnectionError, McpContractError, McpDatabaseSelectionError, McpToolCallError):
+        raise
     except Exception:
         return None
     return _parse_py_eval_result_json(result)
@@ -479,6 +549,8 @@ async def survey_binary_via_session(session, detail_level="minimal"):
             name="survey_binary",
             arguments={"detail_level": detail_level},
         )
+    except (McpConnectionError, McpContractError, McpDatabaseSelectionError, McpToolCallError):
+        raise
     except Exception:
         pass
     else:
@@ -491,34 +563,30 @@ async def survey_binary_via_session(session, detail_level="minimal"):
     return parsed
 
 
-async def check_mcp_health(host=DEFAULT_HOST, port=DEFAULT_PORT):
-    """
-    Verify MCP server is alive and responsive via a lightweight py_eval call.
+async def check_mcp_supervisor_health(host=DEFAULT_HOST, port=DEFAULT_PORT):
+    return await check_ida_mcp_supervisor_health(host, port)
 
-    Args:
-        host: MCP server host
-        port: MCP server port
-    Returns:
-        True if the server responded successfully, False otherwise
-    """
-    server_url = f"http://{host}:{port}/mcp"
 
+async def check_mcp_worker_health(host, port, expected_binary):
     try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(10.0, read=15.0),
-            trust_env=False,
-        ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    await session.call_tool(name="py_eval", arguments={"code": "1"})
-                    return True
+        async with open_ida_mcp_session(host, port, expected_binary=expected_binary) as session:
+            await session.call_tool(name="py_eval", arguments={"code": "1"})
+            return True
     except Exception:
         return False
 
 
-async def survey_binary_via_mcp(host=DEFAULT_HOST, port=DEFAULT_PORT, detail_level="minimal"):
+async def check_mcp_health(host=DEFAULT_HOST, port=DEFAULT_PORT):
+    return await check_mcp_supervisor_health(host, port)
+
+
+async def survey_binary_via_mcp(
+    host=DEFAULT_HOST,
+    port=DEFAULT_PORT,
+    detail_level="minimal",
+    expected_binary=None,
+    explicit_database=None,
+):
     """
     Retrieve a compact overview of the binary currently loaded in IDA.
 
@@ -569,47 +637,13 @@ async def survey_binary_via_mcp(host=DEFAULT_HOST, port=DEFAULT_PORT, detail_lev
             "_note": "Binary has 15504 functions; xref analysis was limited to the first 10000 for performance."
         }
     """
-    server_url = f"http://{host}:{port}/mcp"
-
-    try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(10.0, read=30.0),
-            trust_env=False,
-        ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    return await survey_binary_via_session(session, detail_level=detail_level)
-    except Exception:
-        return None
-
-
-def _strip_ida_database_suffix(path):
-    normalized = str(path)
-    lowered = normalized.lower()
-    for suffix in _IDA_DATABASE_SUFFIXES:
-        if lowered.endswith(suffix):
-            return normalized[: -len(suffix)]
-    return normalized
-
-
-def _normalize_binary_identity_path(path):
-    if not isinstance(path, str) or not path.strip():
-        return ""
-
-    value = _strip_ida_database_suffix(path.strip()).replace("\\", "/")
-    mnt_match = re.match(r"^/mnt/([A-Za-z])/(.*)$", value)
-    if mnt_match:
-        value = f"{mnt_match.group(1)}:/{mnt_match.group(2)}"
-
-    has_windows_drive = bool(re.match(r"^[A-Za-z]:/", value))
-    if not has_windows_drive and not value.startswith("/"):
-        value = _absolute_path_preserve_spelling(value).replace("\\", "/")
-    else:
-        value = os.path.normpath(value).replace("\\", "/")
-
-    return value.rstrip("/").lower()
+    session_kwargs = {}
+    if expected_binary is not None:
+        session_kwargs["expected_binary"] = expected_binary
+    if explicit_database is not None:
+        session_kwargs["explicit_database"] = explicit_database
+    async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+        return await survey_binary_via_session(session, detail_level=detail_level)
 
 
 def _hash_file(path):
@@ -685,8 +719,8 @@ def validate_opened_binary_identity(binary_path, platform, survey_payload):
         return not reasons, reasons
 
     opened_path = metadata.get("path")
-    expected_path = _normalize_binary_identity_path(_absolute_path_preserve_spelling(binary_path))
-    normalized_opened_path = _normalize_binary_identity_path(opened_path) if isinstance(opened_path, str) else ""
+    expected_path = normalize_binary_identity_path(_absolute_path_preserve_spelling(binary_path))
+    normalized_opened_path = normalize_binary_identity_path(opened_path) if isinstance(opened_path, str) else ""
     if not normalized_opened_path:
         reasons.append("path mismatch: opened metadata path is missing")
     elif normalized_opened_path != expected_path:
@@ -695,40 +729,43 @@ def validate_opened_binary_identity(binary_path, platform, survey_payload):
     return not reasons, reasons
 
 
-def verify_opened_binary_via_mcp(binary_path, platform, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=False):
-    # idalib-mcp 2.0.0 binds the HTTP port from the supervisor immediately but
-    # analyzes the database asynchronously in a worker, so survey_binary can
-    # return no metadata for the first several seconds. Poll until the survey
-    # yields identity metadata (or the deadline passes) instead of failing on the
-    # first empty response.
-    survey = None
-    ok = False
-    reasons = ["survey_binary returned no metadata"]
-    deadline = time.time() + VERIFY_SURVEY_TIMEOUT
-    attempt = 0
+def verify_opened_binary_via_mcp(
+    binary_path,
+    platform,
+    host=DEFAULT_HOST,
+    port=DEFAULT_PORT,
+    debug=False,
+    verify_timeout=OPENED_BINARY_VERIFY_TIMEOUT,
+    retry_interval=OPENED_BINARY_VERIFY_RETRY_INTERVAL,
+):
+    deadline = time.monotonic() + max(0.0, verify_timeout)
     while True:
-        attempt += 1
         try:
-            survey = asyncio.run(survey_binary_via_mcp(host=host, port=port, detail_level="minimal"))
-        except Exception as exc:
-            survey = None
-            if debug:
-                print(f"  Opened binary survey failed (attempt {attempt}): {exc}")
-
+            survey = asyncio.run(
+                survey_binary_via_mcp(
+                    host=host,
+                    port=port,
+                    detail_level="minimal",
+                    expected_binary=binary_path,
+                )
+            )
+        except (McpConnectionError, McpContractError, McpDatabaseSelectionError, McpToolCallError) as exc:
+            print("  Failed: opened binary verification failed")
+            print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
+            print(f"    Reason: {exc}")
+            return False
         ok, reasons = validate_opened_binary_identity(binary_path, platform, survey)
         if ok:
             return True
-
-        has_metadata = (
-            isinstance(survey, dict)
-            and isinstance(survey.get("metadata"), dict)
-            and any(survey["metadata"].get(k) for k in ("sha256", "md5", "path"))
+        retryable = reasons in (
+            ["survey_binary returned no metadata"],
+            ["path mismatch: opened metadata path is missing"],
         )
-        if has_metadata or time.time() >= deadline:
+        if not retryable or time.monotonic() >= deadline:
             break
         if debug:
-            print(f"  Waiting for opened binary analysis (attempt {attempt})...")
-        time.sleep(VERIFY_SURVEY_POLL_INTERVAL)
+            print("  Opened binary metadata is not ready; retrying verification...")
+        time.sleep(retry_interval)
 
     metadata = survey.get("metadata") if isinstance(survey, dict) else {}
     opened_path = metadata.get("path") if isinstance(metadata, dict) else None
@@ -757,31 +794,29 @@ async def validate_expected_input_artifacts_via_mcp(
     expected_inputs=None,
     platform="",
     binary_dir=None,
+    expected_binary=None,
+    explicit_database=None,
     debug=False,
     config_path=DEFAULT_CONFIG_FILE,
 ):
     if not expected_inputs:
         return []
 
-    server_url = f"http://{host}:{port}/mcp"
-
     try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(10.0, read=30.0),
-            trust_env=False,
-        ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    return await validate_expected_input_artifacts_via_session(
-                        session,
-                        expected_inputs=expected_inputs,
-                        platform=platform,
-                        binary_dir=binary_dir,
-                        debug=debug,
-                        config_path=config_path,
-                    )
+        session_kwargs = {}
+        if expected_binary is not None:
+            session_kwargs["expected_binary"] = expected_binary
+        if explicit_database is not None:
+            session_kwargs["explicit_database"] = explicit_database
+        async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+            return await validate_expected_input_artifacts_via_session(
+                session,
+                expected_inputs=expected_inputs,
+                platform=platform,
+                binary_dir=binary_dir,
+                debug=debug,
+                config_path=config_path,
+            )
     except Exception:
         if debug:
             print("  Warning: expected_input artifact validation via MCP failed")
@@ -795,6 +830,8 @@ def _run_validate_expected_input_artifacts_via_mcp(
     expected_inputs,
     platform,
     binary_dir=None,
+    expected_binary=None,
+    explicit_database=None,
     debug=False,
     config_path=DEFAULT_CONFIG_FILE,
 ):
@@ -805,6 +842,8 @@ def _run_validate_expected_input_artifacts_via_mcp(
             expected_inputs=expected_inputs,
             platform=platform,
             binary_dir=binary_dir,
+            expected_binary=expected_binary,
+            explicit_database=explicit_database,
             debug=debug,
             config_path=config_path,
         )
@@ -816,6 +855,8 @@ def _run_post_process_expected_outputs_via_mcp(
     host,
     port,
     yaml_items,
+    expected_binary=None,
+    explicit_database=None,
     debug=False,
 ):
     """Run post_process for collected expected output YAML mappings."""
@@ -826,6 +867,8 @@ def _run_post_process_expected_outputs_via_mcp(
             host=host,
             port=port,
             yaml_items=yaml_items,
+            expected_binary=expected_binary,
+            explicit_database=explicit_database,
             debug=debug,
         )
     )
@@ -835,6 +878,8 @@ async def post_process_expected_outputs_via_mcp(
     host=DEFAULT_HOST,
     port=DEFAULT_PORT,
     yaml_items=None,
+    expected_binary=None,
+    explicit_database=None,
     debug=False,
 ):
     """Connect to IDA MCP and execute post_process actions."""
@@ -842,26 +887,18 @@ async def post_process_expected_outputs_via_mcp(
     if not yaml_items:
         return True
 
-    server_url = f"http://{host}:{port}/mcp"
-
     try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(10.0, read=120.0),
-            trust_env=False,
-        ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (
-                read_stream,
-                write_stream,
-                _,
-            ):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    return await post_process_expected_outputs_via_session(
-                        session,
-                        yaml_items,
-                        debug=debug,
-                    )
+        session_kwargs = {}
+        if expected_binary is not None:
+            session_kwargs["expected_binary"] = expected_binary
+        if explicit_database is not None:
+            session_kwargs["explicit_database"] = explicit_database
+        async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+            return await post_process_expected_outputs_via_session(
+                session,
+                yaml_items,
+                debug=debug,
+            )
     except Exception as exc:
         if debug:
             print(f"  Post-process: MCP connection failed: {exc}")
@@ -876,28 +913,26 @@ async def preprocess_single_vcall_object_via_mcp(
     module_name,
     platform,
     object_name,
+    expected_binary=None,
+    explicit_database=None,
     debug=False,
 ):
     """Export xref detail YAMLs for a single vcall_finder object via MCP."""
-    server_url = f"http://{host}:{port}/mcp"
-
-    async with httpx.AsyncClient(
-        follow_redirects=True,
-        timeout=httpx.Timeout(30.0, read=300.0),
-        trust_env=False,
-    ) as http_client:
-        async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
-            async with ClientSession(read_stream, write_stream) as session:
-                await session.initialize()
-                return await export_object_xref_details_via_mcp(
-                    session,
-                    output_root=output_root,
-                    gamever=gamever,
-                    module_name=module_name,
-                    platform=platform,
-                    object_name=object_name,
-                    debug=debug,
-                )
+    session_kwargs = {}
+    if expected_binary is not None:
+        session_kwargs["expected_binary"] = expected_binary
+    if explicit_database is not None:
+        session_kwargs["explicit_database"] = explicit_database
+    async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+        return await export_object_xref_details_via_mcp(
+            session,
+            output_root=output_root,
+            gamever=gamever,
+            module_name=module_name,
+            platform=platform,
+            object_name=object_name,
+            debug=debug,
+        )
 
 
 def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
@@ -927,11 +962,11 @@ def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
 
     # Step 2: if process appears alive, do a real MCP health check
     if process is not None:
-        healthy = asyncio.run(check_mcp_health(host, port))
+        healthy = asyncio.run(check_mcp_worker_health(host, port, binary_path))
         if healthy:
             return process, True
         print("  MCP health check failed, restarting idalib-mcp...")
-        quit_ida_gracefully(process, host, port, debug=debug)
+        quit_ida_gracefully(process, host, port, expected_binary=binary_path, debug=debug)
         process = None
 
     # Step 3: restart idalib-mcp
@@ -942,123 +977,55 @@ def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
     return new_process, True
 
 
-async def quit_ida_via_mcp(host=DEFAULT_HOST, port=DEFAULT_PORT):
-    """
-    Gracefully quit IDA using MCP py_eval tool with idc.qexit(0).
-
-    Args:
-        host: MCP server host
-        port: MCP server port
-    Returns:
-        True if successful, False otherwise
-    """
-    server_url = f"http://{host}:{port}/mcp"
-
+async def quit_ida_via_mcp(host, port, *, expected_binary, auto_started):
+    """Quit only the worker owned by this auto-started flow."""
     try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(30.0, read=300.0),
-            trust_env=False,  # Bypass system proxy to avoid 502
-        ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
-                    await session.call_tool(name="py_eval", arguments={"code": "import idc; idc.qexit(0)"})
-                    return True
+        async with open_ida_mcp_session(
+            host,
+            port,
+            expected_binary=expected_binary,
+            auto_started=auto_started,
+        ) as session:
+            if not session.binding.should_auto_quit:
+                return False
+            try:
+                await session.call_tool("py_eval", {"code": "import idc; idc.qexit(0)"})
+            except McpToolCallError as exc:
+                if QEXIT_CONNECTION_RESET_MARKER not in str(exc):
+                    return False
+            return True
     except Exception:
         return False
 
 
-def _kill_pid(pid):
-    """SIGKILL a single pid, ignoring races. Requires `import signal`."""
-    try:
-        os.kill(pid, signal.SIGKILL)
-    except Exception:
-        pass
+async def quit_ida_gracefully_async(process, host, port, *, expected_binary, debug=False):
+    """Close an owned worker when safe, then stop the supplied supervisor."""
+    if process is None:
+        return
+    if process.poll() is not None:
+        return
 
-
-def _reap_idalib_servers(port):
-    """Kill the idalib-mcp supervisor bound to `port` plus any idalib workers.
-
-    idalib-mcp 2.0.0 detaches its supervisor/worker into their own session, so
-    killing the `uv run` wrapper's process group does not reach them and the
-    supervisor keeps holding the port. Match the actual processes by cmdline:
-    the supervisor carries `idalib-mcp ... --port <port>`, the workers run
-    `-m ida_pro_mcp.idalib_server`. Only this pipeline runs these, so reaping
-    every idalib worker at teardown is safe.
-    """
-    port_token = "--port %d" % port
-    self_pid = os.getpid()
-    for entry in os.listdir("/proc"):
-        if not entry.isdigit():
-            continue
-        pid = int(entry)
-        if pid == self_pid:
-            continue
-        try:
-            with open("/proc/%s/cmdline" % entry, "rb") as f:
-                cmd = f.read().replace(b"\x00", b" ").decode("utf-8", "replace")
-        except (IOError, OSError):
-            continue
-        if ("idalib-mcp" in cmd and port_token in cmd) or "ida_pro_mcp.idalib_server" in cmd:
-            _kill_pid(pid)
-
-
-def _terminate_process_group(process, port=None):
-    """Force-kill the idalib-mcp server tree (uv wrapper + detached supervisor/workers)."""
-    if process is not None:
-        _kill_pid(process.pid)
-        try:
-            process.kill()
-        except Exception:
-            pass
-    if port is not None:
-        _reap_idalib_servers(port)
-
-
-async def quit_ida_gracefully_async(process, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=False):
-    """
-    Attempt to quit IDA gracefully via MCP, then force-reap the detached server.
-
-    Args:
-        process: subprocess.Popen object
-        host: MCP server host
-        port: MCP server port
-    """
     if debug:
         print("  Quitting IDA gracefully via MCP...")
 
-    # Best-effort graceful qexit while the uv wrapper is still alive.
-    if process is not None and process.poll() is None:
-        try:
-            await asyncio.wait_for(quit_ida_via_mcp(host, port), timeout=5)
-        except Exception:
-            pass
-        try:
-            await asyncio.to_thread(process.wait, timeout=3)
-        except subprocess.TimeoutExpired:
-            if debug:
-                print("  Warning: IDA did not exit after qexit, forcing kill...")
+    try:
+        await asyncio.wait_for(
+            quit_ida_via_mcp(
+                host,
+                port,
+                expected_binary=expected_binary,
+                auto_started=True,
+            ),
+            timeout=5,
+        )
+    except Exception:
+        pass
 
-    # Always force-reap: the 2.0.0 supervisor detaches into its own session and
-    # survives both qexit (worker-only) and killing the uv wrapper.
-    _terminate_process_group(process, port)
-    if process is not None and process.poll() is None:
-        try:
-            await asyncio.to_thread(process.wait, timeout=5)
-        except Exception:
-            pass
+    await asyncio.to_thread(stop_idalib_mcp_process, process, debug=debug)
 
 
-def quit_ida_gracefully(process, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=False):
-    """
-    Synchronous wrapper around quit_ida_gracefully_async.
-
-    Args:
-        process: subprocess.Popen object
-        host: MCP server host
-        port: MCP server port
-    """
+def quit_ida_gracefully(process, host, port, *, expected_binary, debug=False):
+    """Run targeted worker cleanup and stop the supplied supervisor."""
     if process is None:
         return
 
@@ -1068,12 +1035,40 @@ def quit_ida_gracefully(process, host=DEFAULT_HOST, port=DEFAULT_PORT, debug=Fal
     try:
         asyncio.get_running_loop()
     except RuntimeError:
-        asyncio.run(quit_ida_gracefully_async(process, host, port, debug=debug))
+        asyncio.run(
+            quit_ida_gracefully_async(
+                process,
+                host,
+                port,
+                expected_binary=expected_binary,
+                debug=debug,
+            )
+        )
         return
 
     raise RuntimeError(
         "quit_ida_gracefully() cannot run inside an active event loop; use await quit_ida_gracefully_async() instead"
     )
+
+
+def stop_idalib_mcp_process(process, debug=False):
+    """Stop only the subprocess started by this runner, without using the MCP port."""
+    if process is None or process.poll() is not None:
+        return
+    if debug:
+        print("  Stopping the current idalib-mcp process...")
+    try:
+        process.terminate()
+        process.wait(timeout=10)
+        return
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    if process.poll() is None:
+        try:
+            process.kill()
+            process.wait(timeout=5)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
 
 
 def resolve_oldgamever(gamever, bin_dir):
@@ -1134,6 +1129,50 @@ def resolve_oldgamever(gamever, bin_dir):
             return candidate
 
     return None
+
+
+def _is_major_update_gamever(gamever, download_path=DEFAULT_DOWNLOAD_FILE):
+    """
+    Check whether `gamever` is flagged as a major update in download.yaml.
+
+    A major update means cross-version signature reuse is unreliable, so
+    oldgamever auto-resolution should be skipped for that version.
+
+    Args:
+        gamever: Target game version string (matched against downloads[].tag)
+        download_path: Path to download.yaml; resolved relative to this script
+            when not absolute
+
+    Returns:
+        True only when the matching download entry sets a truthy `major_update`.
+        Returns False when gamever is empty, the file is missing/unreadable, or
+        the version is not flagged, preserving the default auto-resolve behavior.
+    """
+    if not gamever:
+        return False
+
+    path = Path(download_path)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent / path
+
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+    except Exception:
+        return False
+
+    downloads = data.get("downloads")
+    if not isinstance(downloads, list):
+        return False
+
+    target = str(gamever).strip()
+    for entry in downloads:
+        if not isinstance(entry, dict):
+            continue
+        if str(entry.get("tag", "")).strip() == target:
+            return bool(entry.get("major_update", False))
+
+    return False
 
 
 def parse_vcall_finder_filter(raw_value):
@@ -1214,7 +1253,9 @@ def _parse_optional_llm_effort(raw_value, parser):
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Analyze CS2 binary files using IDA Pro MCP and Claude/Codex agents")
+    parser = argparse.ArgumentParser(
+        description="Analyze CS2 binary files using IDA Pro MCP and Claude, Codex, or OpenCode agents"
+    )
     parser.add_argument(
         "-configyaml", default=DEFAULT_CONFIG_FILE, help=f"Path to config.yaml file (default: {DEFAULT_CONFIG_FILE})"
     )
@@ -1237,12 +1278,25 @@ def parse_args():
     parser.add_argument(
         "-agent",
         default=os.environ.get("CS2VIBE_AGENT", DEFAULT_AGENT),
-        help=f"Agent executable to use for analysis, e.g., claude, claude.cmd, codex, codex.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var)",
+        help=(
+            "Agent executable to use for analysis, e.g., claude, claude.cmd, codex, "
+            f"codex.cmd, opencode, opencode.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var)"
+        ),
+    )
+    parser.add_argument(
+        "-agent_model",
+        default=os.environ.get("CS2VIBE_AGENT_MODEL", DEFAULT_AGENT_MODEL),
+        help="Custom model for the selected agent (default: agent default, or set CS2VIBE_AGENT_MODEL env var)",
     )
     parser.add_argument(
         "-modules",
         default=DEFAULT_MODULES,
         help=f"Modules to analyze, comma-separated (default: {DEFAULT_MODULES} for all). E.g., server,engine",
+    )
+    parser.add_argument(
+        "-skill",
+        default=None,
+        help="Exact skill name to run; all other skills are skipped",
     )
     parser.add_argument(
         "-vcall_finder", default=None, help="vcall_finder object selector: '*' for all, or comma-separated object names"
@@ -1280,9 +1334,40 @@ def parse_args():
     parser.add_argument("-ida_args", default="", help="Additional arguments for idalib-mcp (optional)")
     parser.add_argument("-debug", action="store_true", help="Enable debug output")
     parser.add_argument(
+        "-skip_error",
+        action="store_true",
+        help="Continue analysis after skill or preprocessor failures",
+    )
+    parser.add_argument(
+        "-skip_pp",
+        action="store_true",
+        help="Skip preprocessing scripts and run Agent Skills directly",
+    )
+    parser.add_argument(
         "-rename",
         action="store_true",
         help="Run post_process rename/comment pass for existing expected output YAML files",
+    )
+    parser.add_argument(
+        "-process_reporter",
+        choices=("none", "redis"),
+        default=os.environ.get("CS2VIBE_PROCESS_REPORTER", "none"),
+        help="Process reporter backend (default: none, or set CS2VIBE_PROCESS_REPORTER)",
+    )
+    parser.add_argument(
+        "-redis_url",
+        default=os.environ.get("CS2VIBE_REDIS_URL", "redis://127.0.0.1:6379/0"),
+        help="Redis URL for the process reporter (or set CS2VIBE_REDIS_URL)",
+    )
+    parser.add_argument(
+        "-redis_prefix",
+        default=os.environ.get("CS2VIBE_REDIS_PREFIX", "cs2vibe:analysis:v1"),
+        help="Redis key prefix for the process reporter (or set CS2VIBE_REDIS_PREFIX)",
+    )
+    parser.add_argument(
+        "-run_id",
+        default=os.environ.get("CS2VIBE_RUN_ID"),
+        help="Existing scheduler-created run ID (or set CS2VIBE_RUN_ID)",
     )
     parser.add_argument(
         "-maxretry", type=int, default=3, help="Maximum number of retry attempts for skill execution (default: 3)"
@@ -1290,7 +1375,8 @@ def parse_args():
     parser.add_argument(
         "-oldgamever",
         default=None,
-        help="Old game version for signature reuse (default: gamever - 1). Set to 'none' to disable.",
+        help="Old game version for signature reuse (default: gamever - 1, "
+        "auto-disabled when gamever is a major_update in download.yaml). Set to 'none' to disable.",
     )
 
     args = parser.parse_args()
@@ -1308,6 +1394,11 @@ def parse_args():
     else:
         args.module_filter = [m.strip() for m in args.modules.split(",") if m.strip()]
 
+    if args.skill is not None:
+        args.skill = args.skill.strip()
+        if not args.skill:
+            parser.error("-skill cannot be empty")
+
     # Parse vcall_finder selector
     try:
         args.vcall_finder_filter = parse_vcall_finder_filter(args.vcall_finder)
@@ -1316,7 +1407,13 @@ def parse_args():
 
     # Resolve oldgamever
     if args.oldgamever is None:
-        args.oldgamever = resolve_oldgamever(args.gamever, args.bindir)
+        # Auto-resolve only when this gamever is NOT a major update. Major
+        # updates break cross-version signature reuse, so leave oldgamever
+        # disabled unless it was explicitly provided.
+        if _is_major_update_gamever(args.gamever):
+            args.oldgamever = None
+        else:
+            args.oldgamever = resolve_oldgamever(args.gamever, args.bindir)
     elif args.oldgamever.lower() == "none":
         args.oldgamever = None
 
@@ -1347,6 +1444,8 @@ def _run_preprocess_single_skill_via_mcp(
     llm_effort,
     llm_fake_as,
     llm_max_retries=None,
+    expected_binary=None,
+    explicit_database=None,
 ):
     preprocess_kwargs = {
         "host": host,
@@ -1356,6 +1455,8 @@ def _run_preprocess_single_skill_via_mcp(
         "old_yaml_map": old_yaml_map,
         "new_binary_dir": new_binary_dir,
         "platform": platform,
+        "expected_binary": expected_binary,
+        "explicit_database": explicit_database,
         "debug": debug,
         "llm_model": llm_model,
         "llm_apikey": llm_apikey,
@@ -1369,20 +1470,6 @@ def _run_preprocess_single_skill_via_mcp(
     try:
         return asyncio.run(preprocess_single_skill_via_mcp(**preprocess_kwargs))
     except TypeError as exc:
-        signature = inspect.signature(preprocess_single_skill_via_mcp)
-        if any(
-            name in signature.parameters
-            for name in (
-                "llm_model",
-                "llm_apikey",
-                "llm_baseurl",
-                "llm_temperature",
-                "llm_effort",
-                "llm_fake_as",
-                "llm_max_retries",
-            )
-        ):
-            raise
         if "unexpected keyword argument" not in str(exc):
             raise
 
@@ -1394,7 +1481,57 @@ def _run_preprocess_single_skill_via_mcp(
         fallback_kwargs.pop("llm_effort", None)
         fallback_kwargs.pop("llm_fake_as", None)
         fallback_kwargs.pop("llm_max_retries", None)
+        fallback_kwargs.pop("expected_binary", None)
+        fallback_kwargs.pop("explicit_database", None)
         return asyncio.run(preprocess_single_skill_via_mcp(**fallback_kwargs))
+
+
+def _optional_config_description(value, owner):
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError(f"Invalid description for {owner}: expected string or null, got {type(value).__name__}")
+    description = value.strip()
+    return description or None
+
+
+def _parse_config_skill(skill, module_name):
+    skill_name = skill.get("name")
+    if not skill_name:
+        return None
+    return {
+        "name": skill_name,
+        "description": _optional_config_description(
+            skill.get("description"), f"skill '{skill_name}' in module '{module_name}'"
+        ),
+        "expected_output": skill.get("expected_output", []) or [],
+        "expected_output_windows": skill.get("expected_output_windows", []) or [],
+        "expected_output_linux": skill.get("expected_output_linux", []) or [],
+        "optional_output": skill.get("optional_output", []) or [],
+        "expected_input": skill.get("expected_input", []),
+        "expected_input_windows": skill.get("expected_input_windows", []) or [],
+        "expected_input_linux": skill.get("expected_input_linux", []) or [],
+        "skip_if_exists": skill.get("skip_if_exists", []) or [],
+        "prerequisite": skill.get("prerequisite", []) or [],
+        "max_retries": skill.get("max_retries"),
+        "platform": skill.get("platform"),
+    }
+
+
+def _parse_module_vcall_finder(module, module_name):
+    objects = module.get("vcall_finder")
+    objects = [] if objects is None else objects
+    if not isinstance(objects, list):
+        raise ValueError(
+            f"Invalid vcall_finder for module '{module_name}': expected list, got {type(objects).__name__}"
+        )
+    for object_name in objects:
+        if not isinstance(object_name, str):
+            raise ValueError(
+                f"Invalid vcall_finder entry for module '{module_name}': "
+                f"expected string, got {type(object_name).__name__}"
+            )
+    return objects
 
 
 def parse_config(config_path):
@@ -1408,54 +1545,27 @@ def parse_config(config_path):
         List of module dictionaries containing name, paths, and skills
     """
     with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+        config = yaml.safe_load(f) or {}
 
     modules = []
-    for module in config.get("modules", []):
+    for stage_index, module in enumerate(config.get("modules", [])):
         name = module.get("name")
         if not name:
             print("  Warning: Skipping module without name")
             continue
 
-        skills = []
-        for skill in module.get("skills", []):
-            skill_name = skill.get("name")
-            if skill_name:
-                skills.append(
-                    {
-                        "name": skill_name,
-                        "expected_output": skill.get("expected_output", []) or [],
-                        "expected_output_windows": skill.get("expected_output_windows", []) or [],
-                        "expected_output_linux": skill.get("expected_output_linux", []) or [],
-                        "optional_output": skill.get("optional_output", []) or [],
-                        "expected_input": skill.get("expected_input", []),
-                        "expected_input_windows": skill.get("expected_input_windows", []) or [],
-                        "expected_input_linux": skill.get("expected_input_linux", []) or [],
-                        "skip_if_exists": skill.get("skip_if_exists", []) or [],
-                        "prerequisite": skill.get("prerequisite", []) or [],
-                        "max_retries": skill.get("max_retries"),  # None means use default
-                        "platform": skill.get("platform"),  # None means all platforms
-                    }
-                )
-
-        if "vcall_finder" not in module or module.get("vcall_finder") is None:
-            raw_vcall_finder_objects = []
-        else:
-            raw_vcall_finder_objects = module.get("vcall_finder")
-        if not isinstance(raw_vcall_finder_objects, list):
-            raise ValueError(
-                f"Invalid vcall_finder for module '{name}': expected list, got {type(raw_vcall_finder_objects).__name__}"
-            )
-
-        for object_name in raw_vcall_finder_objects:
-            if not isinstance(object_name, str):
-                raise ValueError(
-                    f"Invalid vcall_finder entry for module '{name}': expected string, got {type(object_name).__name__}"
-                )
+        skills = [
+            parsed
+            for skill in module.get("skills", []) or []
+            if (parsed := _parse_config_skill(skill, name)) is not None
+        ]
+        raw_vcall_finder_objects = _parse_module_vcall_finder(module, name)
 
         modules.append(
             {
+                "stage_index": stage_index,
                 "name": name,
+                "description": _optional_config_description(module.get("description"), f"module '{name}'"),
                 "path_windows": module.get("path_windows"),
                 "path_linux": module.get("path_linux"),
                 "vcall_finder_objects": raw_vcall_finder_objects,
@@ -1504,96 +1614,500 @@ def resolve_module_vcall_targets(module, selector):
     return [name for name in declared_objects if name and name in selected_names]
 
 
-def topological_sort_skills(skills):
-    """
-    Perform topological sort on skills by building dependencies from
-    expected_input and expected_output relations.
+def _select_skills_by_name(skills, selected_skill_name):
+    """Return only skills whose name exactly matches the requested name."""
+    if selected_skill_name is None:
+        return skills
 
-    Args:
-        skills: List of skill dicts with 'name', 'expected_input', and
-            'expected_output' keys. Legacy 'prerequisite' is accepted as fallback.
+    normalized_name = str(selected_skill_name).strip()
+    return [skill for skill in skills if skill.get("name") == normalized_name]
 
-    Returns:
-        List of skill names in topologically sorted order (dependencies first)
-    """
-    skill_names = {skill["name"] for skill in skills}
 
-    def normalize_artifact_path(path):
-        """Normalize artifact path for matching expected input/output."""
-        return os.path.normcase(os.path.normpath(path))
+def _select_modules_by_skill(modules, selected_skill_name, module_filter=None):
+    """Filter modules to exact skill matches within the active module filter."""
+    if selected_skill_name is None:
+        return modules
 
-    # output_path -> producer skill names
-    producers_by_output = {}
+    selected_modules = []
+    available_skill_names = []
+    for module in modules:
+        module_name = module.get("name")
+        if module_filter is not None and module_name not in module_filter:
+            continue
+
+        module_skills = module.get("skills", [])
+        available_skill_names.extend(skill.get("name") for skill in module_skills if skill.get("name"))
+        selected_skills = _select_skills_by_name(module_skills, selected_skill_name)
+        if not selected_skills:
+            continue
+
+        selected_module = dict(module)
+        selected_module["skills"] = selected_skills
+        selected_modules.append(selected_module)
+
+    if selected_modules:
+        return selected_modules
+
+    available_label = ", ".join(sorted(set(available_skill_names))) or "(none)"
+    raise ValueError(f"Skill '{selected_skill_name}' not found; available skills: {available_label}")
+
+
+def _skill_artifact_paths(skill, base_key, platform=None):
+    paths = list(skill.get(base_key, []) or [])
+    if platform is None:
+        paths.extend(skill.get(f"{base_key}_windows", []) or [])
+        paths.extend(skill.get(f"{base_key}_linux", []) or [])
+    else:
+        paths.extend(skill.get(f"{base_key}_{platform}", []) or [])
+    return [path for path in paths if path]
+
+
+def _normalized_artifact_keys(path):
+    normalized_path = os.path.normcase(os.path.normpath(path))
+    normalized_name = os.path.normcase(os.path.normpath(os.path.basename(path)))
+    return normalized_path, normalized_name
+
+
+def _build_artifact_producers(skills, platform=None):
+    producers = {}
     for skill in skills:
         producer_name = skill["name"]
-        all_outputs = list(skill.get("expected_output", []) or [])
-        all_outputs += list(skill.get("expected_output_windows", []) or [])
-        all_outputs += list(skill.get("expected_output_linux", []) or [])
-        for output_path in all_outputs:
-            if not output_path:
-                continue
-            normalized_output = normalize_artifact_path(output_path)
-            output_name = normalize_artifact_path(os.path.basename(output_path))
-            producers_by_output.setdefault(normalized_output, set()).add(producer_name)
-            producers_by_output.setdefault(output_name, set()).add(producer_name)
+        for output_path in _skill_artifact_paths(skill, "expected_output", platform):
+            for key in _normalized_artifact_keys(output_path):
+                producers.setdefault(key, set()).add(producer_name)
+    return producers
 
-    # Infer dependencies from expected_input files (including platform-specific).
-    # If a skill consumes an artifact produced by another skill, it depends on it.
+
+def _build_skill_dependencies(skills, platform=None):
+    skill_names = {skill["name"] for skill in skills}
+    producers = _build_artifact_producers(skills, platform)
     dependencies = {name: set() for name in skill_names}
+    edges = []
+    edge_keys = set()
     for skill in skills:
-        consumer_name = skill["name"]
-        all_inputs = list(skill.get("expected_input", []) or [])
-        all_inputs += list(skill.get("expected_input_windows", []) or [])
-        all_inputs += list(skill.get("expected_input_linux", []) or [])
-        for input_path in all_inputs:
-            if not input_path:
-                continue
+        consumer = skill["name"]
+        for input_path in _skill_artifact_paths(skill, "expected_input", platform):
+            path_key, name_key = _normalized_artifact_keys(input_path)
+            inferred = set(producers.get(path_key, set()))
+            if not inferred:
+                inferred.update(producers.get(name_key, set()))
+            inferred.discard(consumer)
+            for producer in sorted(inferred):
+                dependencies[consumer].add(producer)
+                edge_key = (producer, consumer, EdgeType.ARTIFACT, input_path)
+                if edge_key not in edge_keys:
+                    edges.append(SkillEdge(producer, consumer, EdgeType.ARTIFACT, input_path))
+                    edge_keys.add(edge_key)
+        for prerequisite in skill.get("prerequisite", []) or []:
+            if prerequisite in skill_names and prerequisite != consumer:
+                dependencies[consumer].add(prerequisite)
+                edge_key = (prerequisite, consumer, EdgeType.PREREQUISITE, None)
+                if edge_key not in edge_keys:
+                    edges.append(SkillEdge(prerequisite, consumer, EdgeType.PREREQUISITE))
+                    edge_keys.add(edge_key)
+    return dependencies, edges
 
-            normalized_input = normalize_artifact_path(input_path)
-            input_name = normalize_artifact_path(os.path.basename(input_path))
 
-            inferred_prereqs = set(producers_by_output.get(normalized_input, set()))
-            if not inferred_prereqs:
-                inferred_prereqs.update(producers_by_output.get(input_name, set()))
-            inferred_prereqs.discard(consumer_name)
-            dependencies[consumer_name].update(inferred_prereqs)
+def _topological_order_with_fallback(dependencies, skills):
+    in_degree = {name: len(prerequisites) for name, prerequisites in dependencies.items()}
+    dependents = {name: [] for name in dependencies}
+    for consumer, prerequisites in dependencies.items():
+        for prerequisite in prerequisites:
+            dependents[prerequisite].append(consumer)
 
-        # Backward compatibility: retain explicit prerequisite links if configured.
-        for prereq in skill.get("prerequisite", []) or []:
-            if prereq in skill_names and prereq != consumer_name:
-                dependencies[consumer_name].add(prereq)
-
-    # Build in-degree count and adjacency list
-    in_degree = {name: len(dependencies[name]) for name in skill_names}
-    dependents = {name: [] for name in skill_names}  # prereq -> list of dependent skills
-    for consumer_name, prereqs in dependencies.items():
-        for prereq in prereqs:
-            dependents[prereq].append(consumer_name)
-
-    # Kahn's algorithm for topological sort
-    queue = sorted(name for name in skill_names if in_degree[name] == 0)
-
-    sorted_names = []
+    queue = sorted(name for name, degree in in_degree.items() if degree == 0)
+    order = []
     while queue:
         current = queue.pop(0)
-        sorted_names.append(current)
-
+        order.append(current)
         for dependent in sorted(dependents[current]):
             in_degree[dependent] -= 1
             if in_degree[dependent] == 0:
                 queue.append(dependent)
         queue.sort()
 
-    # Check for cycles
-    if len(sorted_names) != len(skill_names):
-        remaining = skill_names - set(sorted_names)
-        print(f"  Warning: Circular dependency detected among skills: {remaining}")
-        # Append remaining skills in original order as fallback
-        for skill in skills:
-            if skill["name"] not in sorted_names:
-                sorted_names.append(skill["name"])
+    blocked = set(dependencies) - set(order)
+    for skill in skills:
+        if skill["name"] in blocked and skill["name"] not in order:
+            order.append(skill["name"])
+    return order, blocked
 
-    return sorted_names
+
+def _find_dependency_cycles(dependencies):
+    index = 0
+    indexes = {}
+    lowlinks = {}
+    stack = []
+    on_stack = set()
+    cycles = []
+
+    def visit(node):
+        nonlocal index
+        indexes[node] = index
+        lowlinks[node] = index
+        index += 1
+        stack.append(node)
+        on_stack.add(node)
+        for dependency in sorted(dependencies[node]):
+            if dependency not in indexes:
+                visit(dependency)
+                lowlinks[node] = min(lowlinks[node], lowlinks[dependency])
+            elif dependency in on_stack:
+                lowlinks[node] = min(lowlinks[node], indexes[dependency])
+        if lowlinks[node] != indexes[node]:
+            return
+        component = []
+        while stack:
+            member = stack.pop()
+            on_stack.remove(member)
+            component.append(member)
+            if member == node:
+                break
+        if len(component) > 1:
+            cycles.append(sorted(component))
+
+    for node in sorted(dependencies):
+        if node not in indexes:
+            visit(node)
+    return sorted(cycles)
+
+
+def _calculate_skill_layers(dependencies, cycles):
+    cycle_components = {member: frozenset(cycle) for cycle in cycles for member in cycle}
+    components = {cycle_components.get(node, frozenset([node])) for node in dependencies}
+    component_dependencies = {component: set() for component in components}
+    for node, prerequisites in dependencies.items():
+        component = cycle_components.get(node, frozenset([node]))
+        for prerequisite in prerequisites:
+            dependency_component = cycle_components.get(prerequisite, frozenset([prerequisite]))
+            if dependency_component != component:
+                component_dependencies[component].add(dependency_component)
+
+    component_layers = {}
+
+    def resolve_layer(component):
+        if component not in component_layers:
+            dependency_layers = [resolve_layer(item) for item in component_dependencies[component]]
+            component_layers[component] = 1 + max(dependency_layers) if dependency_layers else 0
+        return component_layers[component]
+
+    return {node: resolve_layer(cycle_components.get(node, frozenset([node]))) for node in dependencies}
+
+
+def _build_skill_graph(skills, platform=None):
+    dependencies, edges = _build_skill_dependencies(skills, platform)
+    order, blocked = _topological_order_with_fallback(dependencies, skills)
+    cycles = _find_dependency_cycles(dependencies)
+    warnings = []
+    if blocked:
+        warnings.append(f"Circular dependency detected among skills: {sorted(blocked)}")
+    return SkillGraph(
+        nodes={skill["name"]: dict(skill) for skill in skills},
+        edges=edges,
+        order=order,
+        layers=_calculate_skill_layers(dependencies, cycles),
+        cycles=cycles,
+        warnings=warnings,
+    )
+
+
+def build_skill_graph(skills):
+    """Build the complete skill DAG without changing legacy ordering semantics."""
+    return _build_skill_graph(skills)
+
+
+def topological_sort_skills(skills):
+    """Return dependency-first skill names, retaining legacy cycle fallback."""
+    graph = build_skill_graph(skills)
+    for warning in graph.warnings:
+        print(f"  Warning: {warning}")
+    return graph.order
+
+
+def _skill_runs_on_platform(skill, platform):
+    configured_platform = skill.get("platform")
+    return configured_platform is None or configured_platform == platform
+
+
+def _build_execution_skill_nodes(*, stage, job, skills, order_graph, platform_graph):
+    skill_map = {skill["name"]: skill for skill in skills}
+    nodes = []
+    for order, skill_name in enumerate(order_graph.order):
+        skill = skill_map[skill_name]
+        nodes.append(
+            ExecutionNode(
+                id=build_task_id(job.id, skill_name),
+                job_id=job.id,
+                stage_id=stage.id,
+                name=skill_name,
+                node_type=PlanNodeType.SKILL,
+                order=order,
+                layer=platform_graph.layers.get(skill_name, 0),
+                description=skill.get("description"),
+                data={key: value for key, value in skill.items() if key != "description"},
+            )
+        )
+    return nodes
+
+
+def _append_execution_auxiliary_nodes(
+    nodes,
+    *,
+    module,
+    stage,
+    job,
+    vcall_finder_selector,
+    include_post_process,
+):
+    next_order = len(nodes)
+    next_layer = max((node.layer for node in nodes), default=-1) + 1
+    for target_name in resolve_module_vcall_targets(module, vcall_finder_selector):
+        nodes.append(
+            ExecutionNode(
+                id=build_vcall_task_id(job.id, target_name),
+                job_id=job.id,
+                stage_id=stage.id,
+                name=target_name,
+                node_type=PlanNodeType.VCALL_TARGET,
+                order=next_order,
+                layer=next_layer,
+            )
+        )
+        next_order += 1
+    if include_post_process and module.get("skills"):
+        nodes.append(
+            ExecutionNode(
+                id=build_post_process_task_id(job.id),
+                job_id=job.id,
+                stage_id=stage.id,
+                name="post-process",
+                node_type=PlanNodeType.POST_PROCESS,
+                order=next_order,
+                layer=next_layer + 1,
+            )
+        )
+    return nodes
+
+
+def _build_execution_job_edges(job, platform_graph, nodes):
+    edges = [
+        ExecutionEdge(
+            source=build_task_id(job.id, edge.source),
+            target=build_task_id(job.id, edge.target),
+            edge_type=edge.edge_type,
+            artifact=edge.artifact,
+        )
+        for edge in platform_graph.edges
+    ]
+    edges.extend(
+        ExecutionEdge(source=source.id, target=target.id, edge_type=EdgeType.STAGE_ORDER)
+        for source, target in zip(nodes, nodes[1:])
+    )
+    return edges
+
+
+def _build_execution_job_nodes(
+    module,
+    *,
+    stage,
+    job,
+    platform,
+    vcall_finder_selector,
+    include_post_process,
+):
+    skills = module.get("skills", []) or []
+    order_graph = build_skill_graph(skills)
+    active_skills = [skill for skill in skills if _skill_runs_on_platform(skill, platform)]
+    platform_graph = _build_skill_graph(active_skills, platform)
+    nodes = _build_execution_skill_nodes(
+        stage=stage,
+        job=job,
+        skills=skills,
+        order_graph=order_graph,
+        platform_graph=platform_graph,
+    )
+    nodes = _append_execution_auxiliary_nodes(
+        nodes,
+        module=module,
+        stage=stage,
+        job=job,
+        vcall_finder_selector=vcall_finder_selector,
+        include_post_process=include_post_process,
+    )
+    edges = _build_execution_job_edges(job, platform_graph, nodes)
+    warnings = [f"{job.id}: {warning}" for warning in order_graph.warnings]
+    return nodes, edges, warnings, active_skills
+
+
+def _resolve_execution_artifacts(job, active_skills, platform):
+    binary_dir = os.path.dirname(job.binary_path) if job.binary_path else None
+    producers = []
+    consumers = []
+    warnings = []
+    if binary_dir is None:
+        return producers, consumers, warnings
+
+    for skill in active_skills:
+        node_id = build_task_id(job.id, skill["name"])
+        path_groups = (
+            ("expected_output", producers),
+            ("expected_input", consumers),
+        )
+        for base_key, records in path_groups:
+            for artifact_path in _skill_artifact_paths(skill, base_key, platform):
+                try:
+                    resolved_path = resolve_artifact_path(binary_dir, artifact_path, platform)
+                except ValueError as exc:
+                    warnings.append(f"{node_id}: {exc}")
+                    continue
+                records.append(
+                    {
+                        "key": os.path.normcase(os.path.normpath(resolved_path)),
+                        "artifact": resolved_path,
+                        "job_id": job.id,
+                        "stage_id": job.stage_id,
+                        "stage_index": job.stage_index,
+                        "node_id": node_id,
+                    }
+                )
+    return producers, consumers, warnings
+
+
+def _build_cross_stage_artifact_edges(producers, consumers, job_positions):
+    producers_by_path = {}
+    for producer in producers:
+        producers_by_path.setdefault(producer["key"], []).append(producer)
+
+    edges = []
+    warnings = []
+    seen_edges = set()
+    for consumer in consumers:
+        for producer in producers_by_path.get(consumer["key"], []):
+            if producer["stage_id"] == consumer["stage_id"]:
+                continue
+            edge_key = (producer["node_id"], consumer["node_id"], consumer["key"])
+            if edge_key in seen_edges:
+                continue
+            seen_edges.add(edge_key)
+            edges.append(
+                ExecutionEdge(
+                    source=producer["node_id"],
+                    target=consumer["node_id"],
+                    edge_type=EdgeType.CROSS_STAGE_ARTIFACT,
+                    artifact=consumer["artifact"],
+                )
+            )
+            if job_positions[producer["job_id"]] > job_positions[consumer["job_id"]]:
+                warnings.append(
+                    "Cross-stage artifact dependency conflicts with execution order: "
+                    f"{producer['node_id']} -> {consumer['node_id']}"
+                )
+    return edges, warnings
+
+
+def _build_execution_job_plan(
+    module,
+    *,
+    stage,
+    platform,
+    bin_dir,
+    gamever,
+    vcall_finder_selector,
+    include_post_process,
+):
+    module_path = module.get(f"path_{platform}")
+    binary_path = get_binary_path(bin_dir, gamever, module["name"], module_path) if module_path else None
+    job = ExecutionJob(
+        id=build_job_id(stage.id, platform),
+        stage_id=stage.id,
+        stage_index=stage.stage_index,
+        module_name=module["name"],
+        platform=platform,
+        binary_path=binary_path,
+    )
+    nodes, edges, warnings, active_skills = _build_execution_job_nodes(
+        module,
+        stage=stage,
+        job=job,
+        platform=platform,
+        vcall_finder_selector=vcall_finder_selector,
+        include_post_process=include_post_process,
+    )
+    producers, consumers, artifact_warnings = _resolve_execution_artifacts(job, active_skills, platform)
+    warnings.extend(artifact_warnings)
+    return job, nodes, edges, warnings, producers, consumers
+
+
+def _build_execution_control_edges(stages, jobs):
+    edges = [
+        ExecutionEdge(source=source.id, target=target.id, edge_type=EdgeType.STAGE_ORDER)
+        for source, target in zip(stages, stages[1:])
+    ]
+    edges.extend(
+        ExecutionEdge(source=source.id, target=target.id, edge_type=EdgeType.STAGE_ORDER)
+        for source, target in zip(jobs, jobs[1:])
+    )
+    return edges
+
+
+def _build_execution_stage(module, fallback_index):
+    stage_index = module.get("stage_index", fallback_index)
+    return ExecutionStage(
+        id=build_stage_id(stage_index, module["name"]),
+        stage_index=stage_index,
+        module_name=module["name"],
+        description=module.get("description"),
+    )
+
+
+def build_execution_plan(
+    modules,
+    *,
+    platforms,
+    bin_dir,
+    gamever,
+    vcall_finder_selector=None,
+    include_post_process=False,
+):
+    """Build the immutable task hierarchy and dependency graph before execution."""
+    stages = []
+    jobs = []
+    nodes = []
+    edges = []
+    warnings = []
+    artifact_producers = []
+    artifact_consumers = []
+
+    for fallback_index, module in enumerate(modules):
+        stage = _build_execution_stage(module, fallback_index)
+        stages.append(stage)
+        for platform in platforms:
+            job, job_nodes, job_edges, job_warnings, producers, consumers = _build_execution_job_plan(
+                module,
+                stage=stage,
+                platform=platform,
+                bin_dir=bin_dir,
+                gamever=gamever,
+                vcall_finder_selector=vcall_finder_selector,
+                include_post_process=include_post_process,
+            )
+            jobs.append(job)
+            nodes.extend(job_nodes)
+            edges.extend(job_edges)
+            warnings.extend(job_warnings)
+            artifact_producers.extend(producers)
+            artifact_consumers.extend(consumers)
+
+    edges.extend(_build_execution_control_edges(stages, jobs))
+    job_positions = {job.id: position for position, job in enumerate(jobs)}
+    cross_edges, cross_warnings = _build_cross_stage_artifact_edges(
+        artifact_producers,
+        artifact_consumers,
+        job_positions,
+    )
+    edges.extend(cross_edges)
+    warnings.extend(cross_warnings)
+    return ExecutionPlan(stages=stages, jobs=jobs, nodes=nodes, edges=edges, warnings=warnings)
 
 
 def should_start_binary_processing(
@@ -2108,7 +2622,23 @@ def wait_for_port(host, port, timeout=60):
     return False
 
 
-def start_idalib_mcp(binary_path, host=DEFAULT_HOST, port=DEFAULT_PORT, ida_args="", debug=False):
+def is_port_in_use(host, port):
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+def start_idalib_mcp(
+    binary_path,
+    host=DEFAULT_HOST,
+    port=DEFAULT_PORT,
+    ida_args="",
+    debug=False,
+    stdout=None,
+    stderr=None,
+):
     """
     Start idalib-mcp as a background process.
 
@@ -2122,7 +2652,11 @@ def start_idalib_mcp(binary_path, host=DEFAULT_HOST, port=DEFAULT_PORT, ida_args
     Returns:
         subprocess.Popen object if successful, None if failed
     """
-    cmd = ["uv", "run", "idalib-mcp", "--unsafe", "--host", host, "--port", str(port)]
+    if is_port_in_use(host, port):
+        print(f"  Error: MCP port {host}:{port} is already in use")
+        return None
+
+    cmd = ["idalib-mcp", "--unsafe", "--host", host, "--port", str(port)]
 
     if ida_args:
         cmd.extend(ida_args.split())
@@ -2132,10 +2666,8 @@ def start_idalib_mcp(binary_path, host=DEFAULT_HOST, port=DEFAULT_PORT, ida_args
     print(f"  Starting idalib-mcp: {' '.join(cmd)}")
 
     try:
-        # start_new_session=True puts idalib-mcp in its own process group so
-        # _terminate_process_group can reap the whole tree.
-        if debug:
-            process = subprocess.Popen(cmd, start_new_session=True)
+        if debug or stdout is not None or stderr is not None:
+            process = subprocess.Popen(cmd, stdout=stdout, stderr=stderr)
         else:
             process = subprocess.Popen(
                 cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True
@@ -2148,7 +2680,7 @@ def start_idalib_mcp(binary_path, host=DEFAULT_HOST, port=DEFAULT_PORT, ida_args
             _terminate_process_group(process, port)
             return None
 
-        print("  MCP server is ready")
+        print("  MCP server port is ready")
         return process
 
     except Exception as e:
@@ -2156,260 +2688,45 @@ def start_idalib_mcp(binary_path, host=DEFAULT_HOST, port=DEFAULT_PORT, ida_args
         return None
 
 
-def _drain_text_stream(stream, chunks, forward_stream=None):
-    try:
-        for chunk in iter(stream.readline, ""):
-            chunks.append(chunk)
-            if forward_stream is not None:
-                forward_stream.write(chunk)
-                forward_stream.flush()
-    finally:
-        try:
-            stream.close()
-        except Exception:
-            pass
+def _report_skill_status(reporting, job_id, skill_name, status, phase, **details):
+    if reporting is None or job_id is None:
+        return
+    reporting.emit_task_status(build_task_id(job_id, skill_name), status, phase, **details)
 
 
-def _run_process_with_stream_capture(cmd, *, agent_input=None, debug=False, timeout=SKILL_TIMEOUT):
-    process = subprocess.Popen(
-        cmd,
-        stdin=subprocess.PIPE if agent_input is not None else None,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-
-    if agent_input is not None and process.stdin is not None:
-        process.stdin.write(agent_input)
-        process.stdin.flush()
-        process.stdin.close()
-
-    stdout_chunks = []
-    stderr_chunks = []
-    stdout_thread = threading.Thread(
-        target=_drain_text_stream,
-        args=(process.stdout, stdout_chunks, sys.stdout if debug else None),
-    )
-    stderr_thread = threading.Thread(
-        target=_drain_text_stream,
-        args=(process.stderr, stderr_chunks, sys.stderr if debug else None),
-    )
-    stdout_thread.start()
-    stderr_thread.start()
-
-    try:
-        process.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        try:
-            process.wait(timeout=1)
-        except Exception:
-            pass
-        stdout_thread.join(timeout=1)
-        stderr_thread.join(timeout=1)
-        raise
-
-    stdout_thread.join()
-    stderr_thread.join()
-    return subprocess.CompletedProcess(
-        args=cmd,
-        returncode=process.returncode,
-        stdout="".join(stdout_chunks),
-        stderr="".join(stderr_chunks),
-    )
+def _report_vcall_status(reporting, job_id, object_name, status, phase, **details):
+    if reporting is None or job_id is None:
+        return
+    reporting.emit_task_status(build_vcall_task_id(job_id, object_name), status, phase, **details)
 
 
-def run_skill(skill_name, agent="claude", debug=False, expected_yaml_paths=None, max_retries=3):
-    """
-    Execute a skill using the specified agent with retry support.
+def _report_post_process_status(reporting, job_id, status, phase, **details):
+    if reporting is None or job_id is None:
+        return
+    reporting.emit_task_status(build_post_process_task_id(job_id), status, phase, **details)
 
-    Args:
-        skill_name: Name of the skill (e.g., "find-CServerSideClient_IsHearingClient")
-        agent: Agent type ("claude" or "codex")
-        debug: Enable debug output
-        expected_yaml_paths: List of paths to expected yaml output files. If provided,
-                            the skill is considered failed if any file is not generated.
-        max_retries: Maximum number of retry attempts (default: 3)
 
-    Returns:
-        True if successful, False otherwise
-    """
-    claude_session_id = str(uuid.uuid4())
-    codex_developer_instructions = None
-    agent_lower = agent.lower()
-    is_claude_agent = "claude" in agent_lower
-    is_codex_agent = "codex" in agent_lower
+def _abort_binary_reporting(reporting, job_id, reason, message):
+    if reporting is not None and job_id is not None:
+        reporting.abort_job_tasks(job_id, reason, message)
 
-    if not is_claude_agent and not is_codex_agent:
-        print(f"    Error: Unknown agent type '{agent}'. Agent name must contain 'claude' or 'codex'.")
-        return False
 
-    # Verify SKILL.md exists before launching agent
-    skill_md_path = os.path.join(".claude", "skills", skill_name, "SKILL.md")
-    print(f"    Falling back to: {skill_md_path}")
-    if not os.path.exists(skill_md_path):
-        print(f"    Error: Skill file not found: {skill_md_path}")
-        return False
+def _abort_vcall_reporting(reporting, job_id, object_names, reason, message):
+    if reporting is None or job_id is None:
+        return
+    task_ids = [build_vcall_task_id(job_id, object_name) for object_name in object_names]
+    reporting.finish_tasks(task_ids, TaskStatus.ABORTED, reason, message)
 
-    if not _ensure_agent_mcp_preflight(agent, debug=debug):
-        return False
 
-    if is_codex_agent:
-        system_prompt_path = Path(".claude/agents/sig-finder.md")
-        try:
-            system_prompt_raw = system_prompt_path.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            print(f"    Error: Codex system prompt file not found: {system_prompt_path}")
-            return False
-        except OSError as e:
-            print(f"    Error: Failed to read Codex system prompt from {system_prompt_path}: {e}")
-            return False
+def _build_agent_progress_callback(reporting, job_id, skill_name):
+    if reporting is None or job_id is None:
+        return None
+    task_id = build_task_id(job_id, skill_name)
 
-        codex_system_prompt = system_prompt_raw.strip()
+    def report_progress(**progress):
+        reporting.emit_agent_progress(task_id, **progress)
 
-        # Remove optional YAML frontmatter so only the prompt instructions are passed.
-        if codex_system_prompt.startswith("---"):
-            lines = codex_system_prompt.splitlines()
-            frontmatter_end = None
-            for idx, line in enumerate(lines[1:], start=1):
-                if line.strip() == "---":
-                    frontmatter_end = idx
-                    break
-            if frontmatter_end is not None:
-                codex_system_prompt = "\n".join(lines[frontmatter_end + 1 :]).strip()
-
-        if not codex_system_prompt:
-            print(f"    Error: Codex system prompt is empty in {system_prompt_path}")
-            return False
-
-        codex_developer_instructions = f"developer_instructions={json.dumps(codex_system_prompt)}"
-
-    for attempt in range(max_retries):
-        is_retry = attempt > 0
-        agent_input = None
-
-        if is_claude_agent:
-            cmd = [
-                agent,
-                "-p",
-                f"/{skill_name}",
-                "--agent",
-                "sig-finder",
-                "--allowedTools",
-                "mcp__ida-pro-mcp__*",
-                "--settings",
-                '{"alwaysThinkingEnabled": false}',
-            ]
-            # Add session management flags
-            if is_retry:
-                cmd.extend(["--resume", claude_session_id])
-            else:
-                cmd.extend(["--session-id", claude_session_id])
-            retry_target_desc = f"session {claude_session_id}"
-        elif is_codex_agent:
-            skill_path = f".claude/skills/{skill_name}/SKILL.md"
-            skill_prompt = f"Run SKILL: {skill_path}"
-            agent_input = skill_prompt
-            if is_retry:
-                cmd = [
-                    agent,
-                    "-c",
-                    codex_developer_instructions,
-                    "-c",
-                    "model_reasoning_effort=high",
-                    "-c",
-                    "model_reasoning_summary=none",
-                    "-c",
-                    "model_verbosity=low",
-                    "exec",
-                    "resume",
-                    "--last",
-                    "-",
-                ]
-            else:
-                cmd = [
-                    agent,
-                    "-c",
-                    codex_developer_instructions,
-                    "-c",
-                    "model_reasoning_effort=high",
-                    "-c",
-                    "model_reasoning_summary=none",
-                    "-c",
-                    "model_verbosity=low",
-                    "exec",
-                    "-",
-                ]
-            retry_target_desc = "the latest codex session (--last)"
-
-        attempt_str = f"(attempt {attempt + 1}/{max_retries})" if max_retries > 1 else ""
-        retry_str = "[RETRY] " if is_retry else ""
-
-        display_cmd = cmd
-        if "--system" in cmd:
-            system_arg_index = cmd.index("--system") + 1
-            if system_arg_index < len(cmd):
-                display_cmd = cmd.copy()
-                display_cmd[system_arg_index] = "<sig-finder-system-prompt>"
-
-        for idx, arg in enumerate(cmd[:-1]):
-            if arg == "-c" and cmd[idx + 1].startswith("developer_instructions="):
-                if display_cmd is cmd:
-                    display_cmd = cmd.copy()
-                display_cmd[idx + 1] = "developer_instructions=<sig-finder-system-prompt>"
-
-        prompt_transport = " <prompt via stdin>" if agent_input is not None else ""
-        print(f"    {retry_str}Running {attempt_str}: {' '.join(display_cmd)}{prompt_transport}")
-
-        try:
-            result = _run_process_with_stream_capture(
-                cmd,
-                agent_input=agent_input,
-                debug=debug,
-                timeout=SKILL_TIMEOUT,
-            )
-
-            if result.returncode != 0:
-                print(f"    Skill failed with return code: {result.returncode}")
-                if not debug and result.stderr:
-                    print(f"    stderr: {result.stderr[:500]}")
-                if attempt < max_retries - 1:
-                    print(f"    Retrying with {retry_target_desc}...")
-                continue
-
-            if _output_contains_error_marker(result.stdout, result.stderr):
-                print("    Error: Skill output contains error marker")
-                if attempt < max_retries - 1:
-                    print(f"    Retrying with {retry_target_desc}...")
-                continue
-
-            # Verify all yaml files were generated if expected_yaml_paths is provided
-            if expected_yaml_paths is not None:
-                missing_files = [p for p in expected_yaml_paths if not os.path.exists(p)]
-                if missing_files:
-                    print(f"    Error: Expected yaml files not generated: {missing_files}")
-                    if attempt < max_retries - 1:
-                        print(f"    Retrying with {retry_target_desc}...")
-                    continue
-
-            return True
-
-        except subprocess.TimeoutExpired:
-            print(f"    Error: Skill execution timeout ({SKILL_TIMEOUT} seconds)")
-            if attempt < max_retries - 1:
-                print(f"    Retrying with {retry_target_desc}...")
-            continue
-        except FileNotFoundError:
-            print(f"    Error: Agent '{agent}' not found. Please ensure it is installed and in PATH.")
-            return False
-        except Exception as e:
-            print(f"    Error executing skill: {e}")
-            if attempt < max_retries - 1:
-                print(f"    Retrying with {retry_target_desc}...")
-            continue
-
-    print(f"    Failed after {max_retries} attempts")
-    return False
+    return report_progress
 
 
 def process_binary(
@@ -2434,6 +2751,11 @@ def process_binary(
     llm_effort="medium",
     llm_fake_as=None,
     rename=False,
+    agent_model=DEFAULT_AGENT_MODEL,
+    skip_error=False,
+    skip_pp=False,
+    reporting=None,
+    job_id=None,
 ):
     """
     Process a single binary file.
@@ -2451,6 +2773,8 @@ def process_binary(
         max_retries: Default maximum number of retry attempts for skill execution
         old_binary_dir: Directory containing old version YAML files for signature reuse
         rename: Run module/platform post_process over valid expected output YAML mappings
+        skip_error: Continue processing later skills after skill or preprocessor failures
+        skip_pp: Skip preprocessing scripts and run Agent Skills directly
 
     Returns:
         Tuple of (success_count, fail_count, skip_count)
@@ -2477,6 +2801,14 @@ def process_binary(
         if skill_platform and skill_platform != platform:
             print(f"  Skipping skill: {skill_name} (platform '{skill_platform}' != '{platform}')")
             skip_count += 1
+            _report_skill_status(
+                reporting,
+                job_id,
+                skill_name,
+                TaskStatus.SKIPPED,
+                ProcessPhase.FINISHED,
+                reason=ProcessReason.PLATFORM_MISMATCH,
+            )
             continue
         try:
             required_outputs, optional_outputs, preprocess_outputs = expand_skill_output_paths(
@@ -2487,11 +2819,29 @@ def process_binary(
         except ValueError as e:
             fail_count += 1
             print(f"  Failed: {skill_name} ({e})")
+            _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.PREFLIGHT)
+            _report_skill_status(
+                reporting,
+                job_id,
+                skill_name,
+                TaskStatus.FAILED,
+                ProcessPhase.FINISHED,
+                reason=ProcessReason.INVALID_INPUT,
+                error=str(e),
+            )
             continue
         # Check if configured output files already make the skill unnecessary.
         if should_skip_skill_for_existing_outputs(required_outputs, optional_outputs):
             print(f"  Skipping skill: {skill_name} (all outputs exist)")
             skip_count += 1
+            _report_skill_status(
+                reporting,
+                job_id,
+                skill_name,
+                TaskStatus.SKIPPED,
+                ProcessPhase.FINISHED,
+                reason=ProcessReason.EXISTING_OUTPUTS,
+            )
         else:
             try:
                 skip_for_existing_artifacts, _skip_paths = should_skip_skill_for_existing_artifacts(
@@ -2502,10 +2852,28 @@ def process_binary(
             except ValueError as e:
                 fail_count += 1
                 print(f"  Failed: {skill_name} ({e})")
+                _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.PREFLIGHT)
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.INVALID_INPUT,
+                    error=str(e),
+                )
                 continue
             if skip_for_existing_artifacts:
                 print(f"  Skipping skill: {skill_name} (all skip_if_exists artifacts exist)")
                 skip_count += 1
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.SKIPPED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.SKIP_IF_EXISTS,
+                )
             else:
                 # Use skill-specific max_retries if provided, otherwise use default
                 skill_max_retries = skill.get("max_retries") or max_retries
@@ -2523,6 +2891,7 @@ def process_binary(
     startup_post_process_yaml_items = []
     startup_post_process_failed = False
     if rename:
+        _report_post_process_status(reporting, job_id, TaskStatus.RUNNING, ProcessPhase.PREFLIGHT)
         try:
             startup_post_process_yaml_items = _collect_post_process_yaml_mappings(
                 binary_dir,
@@ -2534,6 +2903,14 @@ def process_binary(
         except Exception as exc:
             startup_post_process_failed = True
             fail_count += 1
+            _report_post_process_status(
+                reporting,
+                job_id,
+                TaskStatus.FAILED,
+                ProcessPhase.FINISHED,
+                reason=ProcessReason.UNKNOWN_ERROR,
+                error=str(exc),
+            )
             if debug:
                 print(f"  Post-process preflight collection failed: {exc}")
 
@@ -2545,6 +2922,14 @@ def process_binary(
         if startup_post_process_failed:
             print("  Post-process preflight failed before IDA startup")
         else:
+            if rename:
+                _report_post_process_status(
+                    reporting,
+                    job_id,
+                    TaskStatus.SKIPPED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
+                )
             print(
                 "  All skills already have yaml files and no vcall_finder/post_process targets remain, skipping IDA startup"
             )
@@ -2560,6 +2945,12 @@ def process_binary(
             f"has this database open. Close it and retry."
         )
         post_process_failure = 1 if startup_post_process_yaml_items else 0
+        _abort_binary_reporting(
+            reporting,
+            job_id,
+            ProcessReason.MCP_UNAVAILABLE,
+            "IDB lock file prevented IDA startup",
+        )
         return (
             success_count,
             fail_count + len(skills_to_process) + len(vcall_targets) + post_process_failure,
@@ -2570,13 +2961,21 @@ def process_binary(
     process = start_idalib_mcp(binary_path, host, port, ida_args, debug)
     if process is None:
         post_process_failure = 1 if startup_post_process_yaml_items else 0
+        _abort_binary_reporting(
+            reporting,
+            job_id,
+            ProcessReason.MCP_UNAVAILABLE,
+            "Unable to start the IDA MCP process",
+        )
         return (
             success_count,
             fail_count + len(skills_to_process) + len(vcall_targets) + post_process_failure,
             skip_count,
         )
 
-    skip_graceful_quit = False
+    if reporting is not None and job_id is not None:
+        reporting.emit_task_status(job_id, TaskStatus.RUNNING, ProcessPhase.VALIDATING_BINARY)
+    force_local_process_stop = False
     try:
         if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
             pending_count = _pending_binary_work_count(
@@ -2585,9 +2984,15 @@ def process_binary(
                 post_process_yaml_items=startup_post_process_yaml_items,
             )
             fail_count += pending_count
-            skip_graceful_quit = True
+            force_local_process_stop = True
             print(
                 f"  Aborting current binary after opened binary verification failure ({pending_count} pending work item(s))"
+            )
+            _abort_binary_reporting(
+                reporting,
+                job_id,
+                ProcessReason.BINARY_VERIFICATION_FAILED,
+                "Opened binary verification failed",
             )
             return success_count, fail_count, skip_count
 
@@ -2603,6 +3008,14 @@ def process_binary(
             if should_skip_skill_for_existing_outputs(required_outputs, optional_outputs):
                 print(f"  Skipping skill: {skill_name} (all outputs exist)")
                 skip_count += 1
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.SKIPPED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.EXISTING_OUTPUTS,
+                )
                 continue
 
             skill = skill_map[skill_name]
@@ -2615,11 +3028,32 @@ def process_binary(
             except ValueError as e:
                 fail_count += 1
                 print(f"  Failed: {skill_name} ({e})")
+                _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.PREFLIGHT)
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.INVALID_INPUT,
+                    error=str(e),
+                )
                 continue
             if skip_for_existing_artifacts:
                 print(f"  Skipping skill: {skill_name} (all skip_if_exists artifacts exist)")
                 skip_count += 1
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.SKIPPED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.SKIP_IF_EXISTS,
+                )
                 continue
+
+            print(f"  Start skill: {skill_name}")
+            _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.WAITING_FOR_MCP)
 
             # Ensure MCP connection is alive before running the skill
             process, mcp_ok = ensure_mcp_available(process, binary_path, host, port, ida_args, debug)
@@ -2627,6 +3061,12 @@ def process_binary(
                 remaining = len(skills_to_process) - skill_index
                 fail_count += remaining
                 print(f"  Failed to restore MCP connection, aborting remaining {remaining} skill(s)")
+                _abort_binary_reporting(
+                    reporting,
+                    job_id,
+                    ProcessReason.MCP_UNAVAILABLE,
+                    "MCP connection could not be restored",
+                )
                 abort_binary_processing = True
                 break
             if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
@@ -2637,15 +3077,22 @@ def process_binary(
                     post_process_yaml_items=startup_post_process_yaml_items,
                 )
                 fail_count += remaining
-                skip_graceful_quit = True
+                force_local_process_stop = True
                 print(
                     "  Aborting current binary after opened binary verification failure "
                     f"({remaining} pending work item(s))"
+                )
+                _abort_binary_reporting(
+                    reporting,
+                    job_id,
+                    ProcessReason.BINARY_VERIFICATION_FAILED,
+                    "Opened binary verification failed",
                 )
                 abort_binary_processing = True
                 break
 
             # Check if all expected_input files are available before running the skill
+            _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.VALIDATING_INPUTS)
             platform_input_key = f"expected_input_{platform}"
             combined_input = list(skill.get("expected_input", []) or [])
             combined_input += list(skill.get(platform_input_key, []) or [])
@@ -2654,12 +3101,30 @@ def process_binary(
             except ValueError as e:
                 fail_count += 1
                 print(f"  Failed: {skill_name} ({e})")
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.INVALID_INPUT,
+                    error=str(e),
+                )
                 continue
             missing_inputs = [p for p in expected_inputs if not os.path.exists(p)]
             if missing_inputs:
                 fail_count += 1
                 missing_names = [os.path.basename(p) for p in missing_inputs]
                 print(f"  Failed: {skill_name} (missing expected_input: {', '.join(missing_names)})")
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.MISSING_INPUT,
+                    payload={"missing_inputs": missing_inputs},
+                )
                 continue
             invalid_expected_inputs = _run_validate_expected_input_artifacts_via_mcp(
                 host=host,
@@ -2667,6 +3132,7 @@ def process_binary(
                 expected_inputs=expected_inputs,
                 platform=platform,
                 binary_dir=binary_dir,
+                expected_binary=binary_path,
                 debug=debug,
             )
             if invalid_expected_inputs:
@@ -2676,6 +3142,15 @@ def process_binary(
                     f"  Failed: {skill_name} (invalid expected_input {invalid_label}: "
                     f"{' | '.join(invalid_expected_inputs)})"
                 )
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.INVALID_INPUT,
+                    payload={"invalid_inputs": invalid_expected_inputs},
+                )
                 continue
             if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
                 remaining = _pending_binary_work_count(
@@ -2685,45 +3160,57 @@ def process_binary(
                     post_process_yaml_items=startup_post_process_yaml_items,
                 )
                 fail_count += remaining
-                skip_graceful_quit = True
+                force_local_process_stop = True
                 print(
                     "  Aborting current binary after opened binary verification failure "
                     f"({remaining} pending work item(s))"
                 )
+                _abort_binary_reporting(
+                    reporting,
+                    job_id,
+                    ProcessReason.BINARY_VERIFICATION_FAILED,
+                    "Opened binary verification failed",
+                )
                 abort_binary_processing = True
                 break
 
-            # Try preprocessing first. Some preprocessors can run without old YAMLs.
-            old_yaml_map = None
-            if old_binary_dir:
-                old_yaml_map = {}
-                for new_path in preprocess_outputs:
-                    filename = os.path.basename(new_path)
-                    old_path = os.path.join(old_binary_dir, filename)
-                    old_yaml_map[new_path] = old_path
+            preprocess_status = PREPROCESS_STATUS_NO_SCRIPT
+            _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.PREPROCESSING)
+            if skip_pp:
+                print(f"    Skipping preprocess: {skill_name} (-skip_pp)")
+            else:
+                # Try preprocessing first. Some preprocessors can run without old YAMLs.
+                old_yaml_map = None
+                if old_binary_dir:
+                    old_yaml_map = {}
+                    for new_path in preprocess_outputs:
+                        filename = os.path.basename(new_path)
+                        old_path = os.path.join(old_binary_dir, filename)
+                        old_yaml_map[new_path] = old_path
 
-            try:
-                preprocess_status = _run_preprocess_single_skill_via_mcp(
-                    host=host,
-                    port=port,
-                    skill_name=skill_name,
-                    expected_outputs=preprocess_outputs,
-                    old_yaml_map=old_yaml_map,
-                    new_binary_dir=binary_dir,
-                    platform=platform,
-                    debug=debug,
-                    llm_model=llm_model,
-                    llm_apikey=llm_apikey,
-                    llm_baseurl=llm_baseurl,
-                    llm_temperature=llm_temperature,
-                    llm_effort=llm_effort,
-                    llm_fake_as=llm_fake_as,
-                    llm_max_retries=skill_max_retries,
-                )
-            except Exception as e:
-                if debug:
-                    print(f"  Pre-processing error for {skill_name}: {e}")
-                preprocess_status = PREPROCESS_STATUS_FAILED
+                try:
+                    preprocess_status = _run_preprocess_single_skill_via_mcp(
+                        host=host,
+                        port=port,
+                        skill_name=skill_name,
+                        expected_outputs=preprocess_outputs,
+                        old_yaml_map=old_yaml_map,
+                        new_binary_dir=binary_dir,
+                        platform=platform,
+                        expected_binary=binary_path,
+                        debug=debug,
+                        llm_model=llm_model,
+                        llm_apikey=llm_apikey,
+                        llm_baseurl=llm_baseurl,
+                        llm_temperature=llm_temperature,
+                        llm_effort=llm_effort,
+                        llm_fake_as=llm_fake_as,
+                        llm_max_retries=skill_max_retries,
+                    )
+                except Exception as e:
+                    if debug:
+                        print(f"  Pre-processing error for {skill_name}: {e}")
+                    preprocess_status = PREPROCESS_STATUS_FAILED
 
             if preprocess_status is True or preprocess_status == PREPROCESS_STATUS_SUCCESS:
                 preprocess_status = PREPROCESS_STATUS_SUCCESS
@@ -2735,36 +3222,95 @@ def process_binary(
                 preprocess_status = PREPROCESS_STATUS_FAILED
 
             if preprocess_status == PREPROCESS_STATUS_SUCCESS:
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.RUNNING,
+                    ProcessPhase.VALIDATING_OUTPUTS,
+                )
                 missing_required_outputs = [p for p in required_outputs if not os.path.exists(p)]
                 optional_output_generated = any(os.path.exists(p) for p in optional_outputs)
                 if missing_required_outputs:
                     fail_count += 1
                     missing_names = [os.path.basename(p) for p in missing_required_outputs]
                     print(f"  Pre-processed but missing expected_output: {skill_name} ({', '.join(missing_names)})")
-                    # Skip and continue instead of aborting; failure still counted.
-                    continue
+                    _report_skill_status(
+                        reporting,
+                        job_id,
+                        skill_name,
+                        TaskStatus.FAILED,
+                        ProcessPhase.FINISHED,
+                        reason=ProcessReason.PREPROCESS_FAILED,
+                        payload={"missing_outputs": missing_required_outputs},
+                    )
+                    if skip_error:
+                        print("  Continuing after preprocess output validation failure (-skip_error)")
+                        continue
+                    print("  Aborting remaining skills after preprocess output validation failure")
+                    abort_binary_processing = True
+                    break
                 elif not required_outputs and optional_outputs and not optional_output_generated:
                     skip_count += 1
                     print(f"  Skipping skill: {skill_name} (optional outputs not generated)")
+                    _report_skill_status(
+                        reporting,
+                        job_id,
+                        skill_name,
+                        TaskStatus.SKIPPED,
+                        ProcessPhase.FINISHED,
+                        reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
+                    )
                 else:
                     success_count += 1
                     print(f"  Pre-processed: {skill_name} OK")
+                    _report_skill_status(
+                        reporting,
+                        job_id,
+                        skill_name,
+                        TaskStatus.SUCCEEDED,
+                        ProcessPhase.FINISHED,
+                    )
                 continue
             if preprocess_status == PREPROCESS_STATUS_ABSENT_OK:
                 skip_count += 1
                 print(f"  Skipping skill: {skill_name} (preprocess reported absent_ok)")
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.SKIPPED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.PREPROCESS_ABSENT,
+                )
                 continue
             if preprocess_status == PREPROCESS_STATUS_FAILED:
-                print(f"  Preprocess failed: {skill_name}; falling back to AGENT SKILL")
+                print(f"    Preprocess failed: {skill_name}; falling back to AGENT SKILL")
 
             if should_skip_skill_for_existing_outputs(required_outputs, optional_outputs):
                 print(f"  Skipping skill: {skill_name} (all outputs exist)")
                 skip_count += 1
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.SKIPPED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.EXISTING_OUTPUTS,
+                )
                 continue
 
-            if not required_outputs and optional_outputs:
+            if not required_outputs and optional_outputs and not skip_pp:
                 skip_count += 1
                 print(f"  Skipping skill: {skill_name} (optional outputs not generated)")
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.SKIPPED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
+                )
                 continue
 
             if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
@@ -2775,15 +3321,23 @@ def process_binary(
                     post_process_yaml_items=startup_post_process_yaml_items,
                 )
                 fail_count += remaining
-                skip_graceful_quit = True
+                force_local_process_stop = True
                 print(
                     "  Aborting current binary after opened binary verification failure "
                     f"({remaining} pending work item(s))"
                 )
+                _abort_binary_reporting(
+                    reporting,
+                    job_id,
+                    ProcessReason.BINARY_VERIFICATION_FAILED,
+                    "Opened binary verification failed",
+                )
                 abort_binary_processing = True
                 break
 
-            print(f"  Processing skill: {skill_name}")
+            print(f"    Starting agent skill: {skill_name}")
+            _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.AGENT_FALLBACK)
+            progress_callback = _build_agent_progress_callback(reporting, job_id, skill_name)
 
             if run_skill(
                 skill_name,
@@ -2791,25 +3345,65 @@ def process_binary(
                 debug,
                 expected_yaml_paths=required_outputs,
                 max_retries=skill_max_retries,
+                agent_model=agent_model,
+                progress_callback=progress_callback,
             ):
                 success_count += 1
                 print("    Success")
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.SUCCEEDED,
+                    ProcessPhase.FINISHED,
+                )
             else:
                 fail_count += 1
                 print("    Failed")
-                # Skip this skill and keep going instead of aborting the binary/run;
-                # one unresolved skill should not block the rest. Counted in summary.
-                continue
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.AGENT_FAILED,
+                )
+                if skip_error:
+                    print("  Continuing after fallback skill failure (-skip_error)")
+                    continue
+                print("  Aborting remaining skills after fallback skill failure")
+                abort_binary_processing = True
+                break
 
         if abort_binary_processing:
+            _abort_binary_reporting(
+                reporting,
+                job_id,
+                ProcessReason.UPSTREAM_ABORTED,
+                "Remaining binary tasks were aborted after a skill failure",
+            )
             return success_count, fail_count, skip_count
 
         for object_index, object_name in enumerate(vcall_targets):
+            _report_vcall_status(
+                reporting,
+                job_id,
+                object_name,
+                TaskStatus.RUNNING,
+                ProcessPhase.WAITING_FOR_MCP,
+            )
             process, mcp_ok = ensure_mcp_available(process, binary_path, host, port, ida_args, debug)
             if not mcp_ok:
                 remaining = len(vcall_targets) - object_index
                 fail_count += remaining
                 print(f"  Failed to restore MCP connection, aborting remaining {remaining} vcall_finder target(s)")
+                _abort_vcall_reporting(
+                    reporting,
+                    job_id,
+                    vcall_targets[object_index:],
+                    ProcessReason.MCP_UNAVAILABLE,
+                    "MCP connection could not be restored",
+                )
                 break
             if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
                 remaining = _pending_binary_work_count(
@@ -2818,15 +3412,28 @@ def process_binary(
                     post_process_yaml_items=startup_post_process_yaml_items,
                 )
                 fail_count += remaining
-                skip_graceful_quit = True
+                force_local_process_stop = True
                 print(
                     "  Aborting current binary after opened binary verification failure "
                     f"({remaining} pending work item(s))"
+                )
+                _abort_binary_reporting(
+                    reporting,
+                    job_id,
+                    ProcessReason.BINARY_VERIFICATION_FAILED,
+                    "Opened binary verification failed",
                 )
                 abort_binary_processing = True
                 break
 
             print(f"  Processing vcall_finder: {object_name}")
+            _report_vcall_status(
+                reporting,
+                job_id,
+                object_name,
+                TaskStatus.RUNNING,
+                ProcessPhase.VCALL_EXPORT,
+            )
             try:
                 export_stats = asyncio.run(
                     preprocess_single_vcall_object_via_mcp(
@@ -2837,21 +3444,56 @@ def process_binary(
                         module_name=module_name,
                         platform=platform,
                         object_name=object_name,
+                        expected_binary=binary_path,
                         debug=debug,
                     )
                 )
             except Exception as exc:
                 fail_count += 1
                 print(f"    Failed to export vcall_finder for {object_name}: {exc}")
+                _report_vcall_status(
+                    reporting,
+                    job_id,
+                    object_name,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.UNKNOWN_ERROR,
+                    error=str(exc),
+                )
                 continue
 
             object_status = export_stats["status"]
             if object_status == "success":
                 success_count += 1
+                _report_vcall_status(
+                    reporting,
+                    job_id,
+                    object_name,
+                    TaskStatus.SUCCEEDED,
+                    ProcessPhase.FINISHED,
+                )
             elif object_status == "failed":
                 fail_count += 1
+                _report_vcall_status(
+                    reporting,
+                    job_id,
+                    object_name,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.UNKNOWN_ERROR,
+                    payload=export_stats,
+                )
             else:
                 skip_count += 1
+                _report_vcall_status(
+                    reporting,
+                    job_id,
+                    object_name,
+                    TaskStatus.SKIPPED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
+                    payload=export_stats,
+                )
 
             exported_functions = export_stats["exported_functions"]
             failed_functions = export_stats["failed_functions"]
@@ -2866,6 +3508,12 @@ def process_binary(
                 )
 
         if abort_binary_processing:
+            _abort_binary_reporting(
+                reporting,
+                job_id,
+                ProcessReason.UPSTREAM_ABORTED,
+                "Remaining binary tasks were aborted after binary verification failure",
+            )
             return success_count, fail_count, skip_count
 
         post_process_yaml_items = []
@@ -2882,27 +3530,56 @@ def process_binary(
             except Exception as exc:
                 post_process_collection_failed = True
                 fail_count += 1
+                _report_post_process_status(
+                    reporting,
+                    job_id,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.UNKNOWN_ERROR,
+                    error=str(exc),
+                )
                 if debug:
                     print(f"  Post-process final collection failed: {exc}")
 
         if rename and post_process_collection_failed:
             print("  Post-process failed during YAML recollection")
         elif rename and post_process_yaml_items:
+            _report_post_process_status(
+                reporting,
+                job_id,
+                TaskStatus.RUNNING,
+                ProcessPhase.POSTPROCESSING,
+            )
             process, mcp_ok = ensure_mcp_available(process, binary_path, host, port, ida_args, debug)
             if not mcp_ok:
                 fail_count += 1
                 print("  Failed to restore MCP connection, skipping post_process")
+                _report_post_process_status(
+                    reporting,
+                    job_id,
+                    TaskStatus.ABORTED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.MCP_UNAVAILABLE,
+                )
             else:
                 if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
                     fail_count += 1
-                    skip_graceful_quit = True
+                    force_local_process_stop = True
                     print("  Aborting current binary after opened binary verification failure (1 pending work item(s))")
+                    _report_post_process_status(
+                        reporting,
+                        job_id,
+                        TaskStatus.ABORTED,
+                        ProcessPhase.FINISHED,
+                        reason=ProcessReason.BINARY_VERIFICATION_FAILED,
+                    )
                     return success_count, fail_count, skip_count
                 try:
                     post_process_ok = _run_post_process_expected_outputs_via_mcp(
                         host=host,
                         port=port,
                         yaml_items=post_process_yaml_items,
+                        expected_binary=binary_path,
                         debug=debug,
                     )
                 except Exception as exc:
@@ -2912,101 +3589,293 @@ def process_binary(
                 if not post_process_ok:
                     fail_count += 1
                     print("  Post-process failed")
+                    _report_post_process_status(
+                        reporting,
+                        job_id,
+                        TaskStatus.FAILED,
+                        ProcessPhase.FINISHED,
+                        reason=ProcessReason.UNKNOWN_ERROR,
+                    )
+                else:
+                    _report_post_process_status(
+                        reporting,
+                        job_id,
+                        TaskStatus.SUCCEEDED,
+                        ProcessPhase.FINISHED,
+                    )
+        elif rename and not startup_post_process_failed:
+            _report_post_process_status(
+                reporting,
+                job_id,
+                TaskStatus.SKIPPED,
+                ProcessPhase.FINISHED,
+                reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
+            )
 
     finally:
-        # Gracefully quit IDA via MCP to avoid breaking IDB
-        if skip_graceful_quit:
-            # Skip the graceful qexit (binary never verified) but still reap the
-            # detached supervisor/workers so they don't hold the port / leave a lock.
-            print("  Skipping graceful IDA shutdown after verification failure; reaping server")
-            _terminate_process_group(process, port)
+        # Avoid sending qexit to an unverified MCP endpoint; stop only our process.
+        if force_local_process_stop:
+            print("  Stopping current idalib-mcp after opened binary verification failure")
+            stop_idalib_mcp_process(process, debug=debug)
         else:
-            quit_ida_gracefully(process, host, port, debug=debug)
+            quit_ida_gracefully(process, host, port, expected_binary=binary_path, debug=debug)
 
     return success_count, fail_count, skip_count
 
 
-def _preflight_cleanup(bin_dir, gamever, port=DEFAULT_PORT):
-    """Reap stale idalib-mcp servers and purge orphaned IDB lock files.
+def _print_main_configuration(args):
+    print(f"Config file: {args.configyaml}")
+    print(f"Binary directory: {args.bindir}")
+    print(f"Game version: {args.gamever}")
+    print(f"Old game version: {args.oldgamever or '(disabled)'}")
+    print(f"Platforms: {', '.join(args.platforms)}")
+    print(f"Modules filter: {args.modules}")
+    if getattr(args, "skill", None):
+        print(f"Skill filter: {args.skill}")
+    print(f"Agent: {args.agent}")
+    if args.ida_args:
+        print(f"IDA args: {args.ida_args}")
+    if args.debug:
+        print("Debug mode: enabled")
+    if getattr(args, "skip_error", False):
+        print("Skip error mode: enabled")
+    if getattr(args, "skip_pp", False):
+        print("Agent Skill only mode: enabled (-skip_pp)")
 
-    An interrupted/aborted prior run can leave a detached idalib-mcp supervisor
-    holding the port plus an uncompacted IDA database
-    (.id0/.id1/.id2/.nam/.til) that trips "IDB lock file detected". The pipeline
-    starts its own server per module, so any idalib-mcp already on the port at
-    startup is stale and safe to reap.
-    """
-    _reap_idalib_servers(port)
-    lock_suffixes = (".id0", ".id1", ".id2", ".nam", ".til")
-    base = os.path.join(bin_dir, str(gamever))
-    removed = 0
-    if os.path.isdir(base):
-        for root, _dirs, files in os.walk(base):
-            for fn in files:
-                if fn.endswith(lock_suffixes):
-                    try:
-                        os.remove(os.path.join(root, fn))
-                        removed += 1
-                    except OSError:
-                        pass
-    if removed:
-        print(f"Preflight: removed {removed} stale IDA database lock file(s) under {base}")
+
+def _select_execution_modules(modules, args):
+    selected = _select_modules_by_skill(modules, getattr(args, "skill", None), args.module_filter)
+    if args.module_filter is not None:
+        selected = [module for module in selected if module["name"] in args.module_filter]
+    selected = [
+        module
+        for module in selected
+        if module["skills"] or resolve_module_vcall_targets(module, args.vcall_finder_filter)
+    ]
+    for fallback_index, module in enumerate(selected):
+        module.setdefault("stage_index", fallback_index)
+    return selected
+
+
+def _resolve_old_binary_dir(args, module_name, module_path):
+    if not args.oldgamever:
+        return None
+    old_binary_path = get_binary_path(args.bindir, args.oldgamever, module_name, module_path)
+    candidate_dir = os.path.dirname(old_binary_path)
+    if os.path.isdir(candidate_dir):
+        return candidate_dir
+    if args.debug:
+        print(f"  Old version directory not found: {candidate_dir}")
+    return None
+
+
+def _invoke_process_binary(args, module, platform, binary_path, old_binary_dir, vcall_targets, reporting, job_id):
+    return process_binary(
+        binary_path,
+        module["skills"],
+        args.agent,
+        DEFAULT_HOST,
+        DEFAULT_PORT,
+        args.ida_args,
+        platform,
+        args.debug,
+        max_retries=args.maxretry,
+        old_binary_dir=old_binary_dir,
+        gamever=args.gamever,
+        module_name=module["name"],
+        vcall_targets=vcall_targets,
+        llm_model=args.llm_model,
+        llm_apikey=args.llm_apikey,
+        llm_baseurl=args.llm_baseurl,
+        llm_temperature=args.llm_temperature,
+        llm_effort=args.llm_effort,
+        llm_fake_as=args.llm_fake_as,
+        rename=args.rename,
+        agent_model=getattr(args, "agent_model", DEFAULT_AGENT_MODEL),
+        skip_error=getattr(args, "skip_error", False),
+        skip_pp=getattr(args, "skip_pp", False),
+        reporting=reporting,
+        job_id=job_id,
+    )
+
+
+def _skip_platform_job(reporting, job_id, status, reason, message, task_status=TaskStatus.SKIPPED):
+    reporting.emit_task_status(job_id, status, ProcessPhase.FINISHED, reason=reason, message=message)
+    reporting.finish_job_tasks(job_id, task_status, reason, message)
+
+
+def _process_platform(args, module, platform, vcall_targets, reporting):
+    job_id = build_job_id(build_stage_id(module.get("stage_index", 0), module["name"]), platform)
+    module_path = module.get(f"path_{platform}")
+    work_count = len(module["skills"]) + len(vcall_targets)
+    if not module_path:
+        print(f"\n  Platform {platform}: No path defined, skipping")
+        _skip_platform_job(reporting, job_id, TaskStatus.SKIPPED, ProcessReason.PLATFORM_MISMATCH, "No binary path")
+        return 0, 0, work_count
+
+    binary_path = get_binary_path(args.bindir, args.gamever, module["name"], module_path)
+    print(f"\n  Platform: {platform}")
+    print(f"  Binary: {binary_path}")
+    if not os.path.exists(binary_path):
+        print(f"  Error: Binary file not found: {binary_path}")
+        print("  Hint: Run download_bin.py first to download binaries")
+        _skip_platform_job(
+            reporting,
+            job_id,
+            TaskStatus.SKIPPED,
+            ProcessReason.MISSING_BINARY,
+            "Binary not found",
+            task_status=TaskStatus.ABORTED,
+        )
+        return 0, 0, work_count
+
+    reporting.emit_task_status(job_id, TaskStatus.RUNNING, ProcessPhase.WAITING_FOR_MCP)
+    old_binary_dir = _resolve_old_binary_dir(args, module["name"], module_path)
+    counts = _invoke_process_binary(
+        args, module, platform, binary_path, old_binary_dir, vcall_targets, reporting, job_id
+    )
+    job_status = TaskStatus.FAILED if counts[1] else TaskStatus.SUCCEEDED
+    reporting.emit_task_status(job_id, job_status, ProcessPhase.FINISHED)
+    return counts
+
+
+def _print_module_header(module, vcall_targets):
+    print(f"\n{'=' * 60}")
+    print(f"Module: {module['name']}")
+    print(f"Skills: {len(module['skills'])}")
+    if vcall_targets:
+        print(f"VCall targets: {len(vcall_targets)}")
+    print(f"{'=' * 60}")
+
+
+def _aggregate_vcall_object(args, object_name):
+    aggregate_kwargs = {
+        "base_dir": "vcall_finder",
+        "gamever": args.gamever,
+        "object_name": object_name,
+        "model": args.llm_model,
+        "api_key": args.llm_apikey,
+        "base_url": args.llm_baseurl,
+        "temperature": args.llm_temperature,
+        "debug": args.debug,
+    }
+    aggregate_signature = inspect.signature(aggregate_vcall_results_for_object)
+    if "effort" in aggregate_signature.parameters:
+        aggregate_kwargs["effort"] = args.llm_effort
+    if "fake_as" in aggregate_signature.parameters:
+        aggregate_kwargs["fake_as"] = args.llm_fake_as
+    return aggregate_vcall_results_for_object(**aggregate_kwargs)
+
+
+def _run_vcall_aggregation(args, object_names):
+    counts = [0, 0, 0]
+    if not args.vcall_finder_filter or not object_names:
+        return counts
+    print("\nRunning vcall_finder LLM aggregation")
+    for object_name in sorted(object_names):
+        print(f"  Aggregating vcall_finder: {object_name}")
+        try:
+            stats = _aggregate_vcall_object(args, object_name)
+            status_index = {"success": 0, "failed": 1}.get(stats["status"], 2)
+            counts[status_index] += 1
+            if args.debug or stats["failed"]:
+                print(
+                    "    vcall_finder aggregation summary: "
+                    f"status={stats['status']}, processed={stats['processed']}, failed={stats['failed']}"
+                )
+        except Exception as exc:
+            counts[1] += 1
+            print(f"  Failed to aggregate {object_name}: {exc}")
+    return counts
+
+
+def _execute_analysis(args, modules, reporting):
+    totals = [0, 0, 0]
+    all_vcall_objects = set()
+    abort_processing = False
+    for module in modules:
+        vcall_targets = resolve_module_vcall_targets(module, args.vcall_finder_filter)
+        all_vcall_objects.update(vcall_targets)
+        _print_module_header(module, vcall_targets)
+        for platform in args.platforms:
+            counts = _process_platform(args, module, platform, vcall_targets, reporting)
+            totals = [total + count for total, count in zip(totals, counts)]
+            if counts[1] and not getattr(args, "skip_error", False):
+                abort_processing = True
+                print("  Aborting remaining modules after binary processing failure")
+                break
+            if counts[1]:
+                print("  Continuing after binary processing failure (-skip_error)")
+        if abort_processing:
+            break
+    if not abort_processing:
+        aggregate_counts = _run_vcall_aggregation(args, all_vcall_objects)
+        totals = [total + count for total, count in zip(totals, aggregate_counts)]
+    return totals, abort_processing
+
+
+def _print_summary(totals):
+    print(f"\n{'=' * 60}")
+    print("Summary")
+    print(f"{'=' * 60}")
+    print(f"  Successful: {totals[0]}")
+    print(f"  Failed: {totals[1]}")
+    print(f"  Skipped: {totals[2]}")
 
 
 def main():
     """Main entry point."""
     args = parse_args()
-
-    config_path = args.configyaml
-    bin_dir = args.bindir
-    gamever = args.gamever
-    oldgamever = args.oldgamever
-    platforms = args.platforms
-    module_filter = args.module_filter
-    agent = args.agent
-    ida_args = args.ida_args
-    debug = args.debug
-
-    # Validate config file exists
-    if not os.path.exists(config_path):
-        print(f"Error: Config file not found: {config_path}")
+    if not os.path.exists(args.configyaml):
+        print(f"Error: Config file not found: {args.configyaml}")
         sys.exit(1)
+    _print_main_configuration(args)
 
-    # Clean up stale idalib-mcp servers / IDB locks left by an interrupted run
-    _preflight_cleanup(bin_dir, gamever)
-
-    # Print configuration
-    print(f"Config file: {config_path}")
-    print(f"Binary directory: {bin_dir}")
-    print(f"Game version: {gamever}")
-    print(f"Old game version: {oldgamever or '(disabled)'}")
-    print(f"Platforms: {', '.join(platforms)}")
-    print(f"Modules filter: {args.modules}")
-    print(f"Agent: {agent}")
-    if ida_args:
-        print(f"IDA args: {ida_args}")
-    if debug:
-        print("Debug mode: enabled")
-
-    # Parse config
     print("\nParsing config...")
-    modules = parse_config(config_path)
+    modules = parse_config(args.configyaml)
     print(f"Found {len(modules)} modules")
-
     if not modules:
         print("No modules found in config.")
         sys.exit(0)
+    try:
+        modules = _select_execution_modules(modules, args)
+    except ValueError as exc:
+        print(f"Error: {exc}")
+        sys.exit(1)
 
-    # Process each module
-    total_success = 0
-    total_fail = 0
-    total_skip = 0
-    all_vcall_objects = set()
-    abort_processing = False
+    plan = build_execution_plan(
+        modules,
+        platforms=args.platforms,
+        bin_dir=args.bindir,
+        gamever=args.gamever,
+        vcall_finder_selector=args.vcall_finder_filter,
+        include_post_process=args.rename,
+    )
+    try:
+        reporter = BestEffortProcessReporter(create_process_reporter(args))
+    except ProcessReporterConfigurationError as exc:
+        print(f"Error: {exc}")
+        sys.exit(1)
+    run_id = reporter.initialize_run(plan.to_dict(), run_id=getattr(args, "run_id", None))
+    reporting = AnalysisReporting(reporter, run_id, plan)
 
-    for module in modules:
-        module_name = module["name"]
-        skills = module["skills"]
-        vcall_targets = resolve_module_vcall_targets(module, args.vcall_finder_filter)
+    try:
+        reporting.emit_run_status(RunStatus.RUNNING)
+        reporter.heartbeat(run_id)
+        totals, aborted = _execute_analysis(args, modules, reporting)
+        abort_message = "Run aborted after an upstream failure" if aborted else "Task was not executed before run end"
+        reporting.abort_pending(ProcessReason.UPSTREAM_ABORTED, abort_message)
+        final_status = RunStatus.FAILED if totals[1] else RunStatus.SUCCEEDED
+        reporting.emit_run_status(final_status)
+        reporter.finalize_run(run_id, final_status, reporting.summary())
+    except BaseException:
+        reporting.abort_pending(ProcessReason.UNKNOWN_ERROR, "Run terminated by an unexpected exception")
+        reporting.emit_run_status(RunStatus.FAILED)
+        reporter.finalize_run(run_id, RunStatus.FAILED, reporting.summary())
+        raise
+    finally:
+        reporter.flush()
+        reporter.close()
 
         # Filter modules if specified
         if module_filter is not None and module_name not in module_filter:
@@ -3141,6 +4010,8 @@ def main():
     print(f"  Skipped: {total_skip}")
 
     if total_fail > 0:
+    _print_summary(totals)
+    if totals[1] > 0:
         sys.exit(1)
 
 

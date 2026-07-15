@@ -83,7 +83,7 @@ disasm_code: |-
   .text:000000000138F1A8                 mov     rdi, [rbx+38h]
   .text:000000000138F1AC                 jmp     loc_138F0CE
 procedure: |-
-  __int64 __fastcall sub_138F080(__int64 a1, __int64 a2, __int64 a3, unsigned __int8 a4, __m128 a5)
+  __int64 __fastcall CCSPlayer_ItemServices_DropActivePlayerWeapon(__int64 a1, __int64 a2, __int64 a3, unsigned __int8 a4, __m128 a5)
   {
     __int64 v6; // rax
     __int64 v7; // r14

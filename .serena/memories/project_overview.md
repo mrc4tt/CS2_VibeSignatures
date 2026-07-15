@@ -28,11 +28,13 @@ End-to-end workflow:
 3. Analyze binaries and generate per-symbol YAML from `config.yaml`:
    - `uv run ida_analyze_bin.py -gamever <ver> ...`
    - The analyzer can reuse prior-version YAML first, before invoking Agent SKILLs, to avoid unnecessary token usage.
-4. Convert YAML outputs into downstream gamedata artifacts:
-   - `uv run update_gamedata.py -gamever <ver>`
-5. Run C++ tests and optionally repair header mismatches:
-   - `uv run run_cpp_tests.py -gamever <ver> [-fixheader]`
-   - `-fixheader` triggers an agent-assisted header-fix workflow.
+4. Strict-pack the complete analysis workspace into one immutable candidate snapshot.
+5. Convert candidate symbols into downstream gamedata artifacts:
+   - `uv run update_gamedata.py -gamever <ver> -snapshot <candidate.yaml>`
+6. Run C++ layout tests against the same candidate:
+   - `uv run run_cpp_tests.py -gamever <ver> -snapshot <candidate.yaml> [-debug]`
+7. Publish the validated candidate bytes to `gamesymbols/<ver>.yaml` without repacking.
+   - Invoke the project-level `fix-cppheaders` SKILL when `hl2sdk_cs2` headers need repair.
 
 Analysis and automation model:
 - The repository prefers deterministic preprocessors over LLM-based decompile helpers, and prefers LLM-based preprocessors over generic Agent SKILL fallback.
@@ -46,12 +48,15 @@ Key repository components:
 - `copy_depot_bin.py`: copies validated target binaries into `bin/<gamever>/...` and supports check-only validation.
 - `ida_analyze_bin.py`: the main orchestration entry for MCP calls, preprocessors, SKILL execution, and YAML generation.
 - `generate_reference_yaml.py`: builds reference YAML used by `LLM_DECOMPILE` preprocessors.
-- `update_gamedata.py`: converts generated YAML into project-specific gamedata outputs.
-- `run_cpp_tests.py`: validates generated headers against YAML and can launch agent-assisted header fixes.
+- `gamesymbol_store.py`: validates and exposes immutable candidate or published snapshot payloads to consumers.
+- `gamesymbol_candidate.py`: builds, guards, compares, marks, and publishes candidate sessions.
+- `update_gamedata.py`: converts candidate snapshot symbols into project-specific gamedata outputs.
+- `run_cpp_tests.py`: validates generated headers against the same snapshot used by gamedata.
 - `config.yaml`: declares modules, symbols, and processing configuration.
 - `ida_preprocessor_scripts/`: deterministic or LLM-assisted symbol-finding preprocessors and reference YAML files.
 - `vcall_finder/`: cached per-function analysis artifacts and aggregated vcall outputs.
-- `bin/`: versioned binaries and generated YAML artifacts.
+- `bin/`: mutable analyzer workspace; never a downstream symbol source after candidate creation.
+- `gamesymbols/`: tracked canonical published snapshots.
 - `dist/`: emitted gamedata for supported downstream projects.
 
 Supported downstream outputs:
