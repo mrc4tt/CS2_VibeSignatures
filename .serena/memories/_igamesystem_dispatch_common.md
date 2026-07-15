@@ -76,6 +76,38 @@ Mapping now relies on deterministic index ordering plus strict entry-count asser
   - `dispatch_rank=0`
   - `EXPECTED_DISPATCH_COUNT=2`
 
+## De-inline fallback + dedup (14168)
+
+`_build_dispatch_py_eval` and the collect step were hardened for two 14168 codegen changes seen in the `CLoopModeGame_OnServer*AsyncPostTickWork` family:
+
+- **De-inline fallback (Windows).** When the source-function scan yields **0**
+  entries, the per-event dispatcher was split into separate callee functions
+  (e.g. `sub_180BCAA30`/`sub_180BCA960`). The script then walks the source's
+  direct callees **in call order** and scans those carrying the
+  `mov rax, gs:58h` marker (`65 48 8B 04 25 58 00 00 00`), aggregating their
+  entries. Result JSON gains `deinlined_dispatchers` (list of hex VAs) for
+  debug. Trigger is "0 source entries" (Linux stays inlined → never fires;
+  the gs:58h marker is Windows-only).
+- **Dedup by `vfunc_offset` (Linux).** 14168 routes index resolution through a
+  helper (e.g. `sub_1719D00(&guard, imm, 0)`) that reuses the same
+  `mov esi, imm; call` shape as `IGameSystem_DispatchCall`, so one event can
+  surface multiple times. `_dedup_entries_by_offset` (in
+  `preprocess_igamesystem_dispatch_skill`, before the count check) keeps the
+  first occurrence per offset. Safe/no-op for already-unique scans.
+- The generated py_eval now defines helper functions, so it MUST include the
+  `globals().update(locals())` bridge (see `mem:py_eval`).
+
+`find-IGameSystem_OnServerBeginAsyncPostTickWork` became a 2-target producer
+(`MULTI_ORDER="index"`, mirroring the End `-AND-` sibling) because 14168
+inserted a NEW event `OnServerPreBeginAsyncPostTickWork` at vtable idx 41,
+pushing the real `OnServerBeginAsyncPostTickWork` down to idx 42 (the same
+insertion shifted End Pre/Post 42/43 -> 43/44). Index-order maps
+target[0]=Pre (idx 41), target[1]=Begin (idx 42) -- do NOT assume the old
+index maps to the same event across a gamever. The skill file keeps its
+original (non-`-AND-`) name but declares both outputs. Validated end-to-end
+on 14168 windows+linux (Pre==IGameSystem_vtable[41], Begin==[42]). Tests:
+`tests/test_igamesystem_dispatch_common.py`.
+
 ## Files Involved
 - `ida_preprocessor_scripts/_igamesystem_dispatch_common.py`
 - `ida_preprocessor_scripts/find-IGameSystem_OnPreSpawnGroupLoad.py`

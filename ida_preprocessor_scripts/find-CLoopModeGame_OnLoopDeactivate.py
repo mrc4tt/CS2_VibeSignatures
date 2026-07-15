@@ -11,13 +11,9 @@ FUNC_XREFS_WINDOWS = [
     {
         "func_name": "CLoopModeGame_OnLoopDeactivate",
         "xref_strings": [],
-        "xref_gvs": [],
-        "xref_signatures": [
-            "BA 37 00 00 00",
-        ],
-        "xref_funcs": [
-            "CLoopModeGame_ShutdownServer",
-        ],
+        "xref_gvs": ["g_pToolFramework2"],
+        "xref_signatures": ["45 33 C0 B2 01"],
+        "xref_funcs": [],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],
@@ -29,13 +25,9 @@ FUNC_XREFS_LINUX = [
     {
         "func_name": "CLoopModeGame_OnLoopDeactivate",
         "xref_strings": [],
-        "xref_gvs": [],
-        "xref_signatures": [
-            "BE 37 00 00 00",
-        ],
-        "xref_funcs": [
-            "CLoopModeGame_ShutdownServer",
-        ],
+        "xref_gvs": ["g_pToolFramework2"],
+        "xref_signatures": ["31 D2 BE 01 00 00 00 FF 90"],
+        "xref_funcs": [],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],

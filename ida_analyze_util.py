@@ -30,20 +30,20 @@ except Exception:
 import ida_llm_decompile as _ida_llm_decompile
 from ida_llm_decompile import (
     _build_llm_decompile_request_cache_key,
-    _debug_print_json,
-    _debug_print_multiline,
-    _derive_module_name,
+    _debug_print_json,  # noqa: F401
+    _debug_print_multiline,  # noqa: F401
+    _derive_module_name,  # noqa: F401
     _empty_llm_decompile_result,
-    _extract_llm_error_status_code,
-    _is_transient_llm_error,
-    _normalize_llm_entries,
-    _normalize_llm_retry_attempts,
-    _normalize_llm_retry_delay,
-    _normalize_llm_struct_offset_entries,
-    _parse_yaml_mapping,
+    _extract_llm_error_status_code,  # noqa: F401
+    _is_transient_llm_error,  # noqa: F401
+    _normalize_llm_entries,  # noqa: F401
+    _normalize_llm_retry_attempts,  # noqa: F401
+    _normalize_llm_retry_delay,  # noqa: F401
+    _normalize_llm_struct_offset_entries,  # noqa: F401
+    _parse_yaml_mapping,  # noqa: F401
     _render_llm_decompile_blocks,
-    _resolve_llm_decompile_template_value,
-    parse_llm_decompile_response,
+    _resolve_llm_decompile_template_value,  # noqa: F401
+    parse_llm_decompile_response,  # noqa: F401
 )
 
 
@@ -495,6 +495,7 @@ def _normalize_generate_yaml_desired_fields(generate_yaml_desired_fields, debug=
         "func_sig_allow_across_function_boundary",
         "vfunc_sig_allow_across_function_boundary",
         "offset_sig_allow_across_function_boundary",
+        "func_sig_resolve_jmp_thunk",
     )
 
     normalized = {}
@@ -795,6 +796,7 @@ FUNC_YAML_ORDER = [
     "func_size",
     "func_sig",
     "func_sig_allow_across_function_boundary",
+    "func_sig_resolve_jmp_thunk",
     "vtable_name",
     "vfunc_offset",
     "vfunc_index",
@@ -1021,7 +1023,7 @@ def _build_struct_member_symbol_name(struct_name, member_name):
     member_name_text = str(member_name or "").strip()
     if not struct_name_text or not member_name_text:
         return None
-    return f"{struct_name_text}_{member_name_text}"
+    return f"{struct_name_text}_{member_name_text}".replace(".", "_")
 
 
 def _load_struct_member_metadata_from_yaml(old_path):
@@ -1879,6 +1881,83 @@ async def _resolve_direct_call_target_via_mcp(session, insn_va, debug=False):
     return resolved_matches[0]
 
 
+async def _resolve_jmp_thunk_target_via_mcp(session, func_va, debug=False):
+    """Follow an ``E9``/near ``jmp`` thunk to its real target function.
+
+    When ``llm_decompile`` resolves a direct call target to a compiler-emitted
+    jump thunk (e.g. ``call j_UTIL_GetPlayerControllerForEntity``), the thunk
+    body is a single relative ``jmp`` into the real function. Anchoring
+    ``func_sig`` on the 5-byte thunk is useless, so this helper walks the
+    ``jmp`` chain and returns the real function head instead.
+
+    Returns the resolved function VA as a hex string (unchanged when ``func_va``
+    is not a jmp thunk), or ``None`` on error. Chained thunks are followed up to
+    a small depth; the target of every hop must itself be a function head.
+    """
+    try:
+        func_va_int = _parse_int_value(func_va)
+    except Exception:
+        return None
+
+    py_code = (
+        "import ida_funcs, ida_ua, idautils, json\n"
+        f"start_ea = {func_va_int}\n"
+        "cur = start_ea\n"
+        "resolved = start_ea\n"
+        "visited = set()\n"
+        "for _ in range(8):\n"
+        "    if cur in visited:\n"
+        "        break\n"
+        "    visited.add(cur)\n"
+        "    func = ida_funcs.get_func(cur)\n"
+        "    if func is None or int(func.start_ea) != cur:\n"
+        "        break\n"
+        "    insn = ida_ua.insn_t()\n"
+        "    if ida_ua.decode_insn(insn, cur) <= 0:\n"
+        "        break\n"
+        "    mnem = (ida_ua.print_insn_mnem(cur) or '').strip().lower()\n"
+        "    if mnem != 'jmp' or insn.ops[0].type != ida_ua.o_near:\n"
+        "        break\n"
+        "    target_ea = int(insn.ops[0].addr)\n"
+        "    target_func = ida_funcs.get_func(target_ea)\n"
+        "    if target_func is None or int(target_func.start_ea) != target_ea:\n"
+        "        break\n"
+        "    resolved = target_ea\n"
+        "    cur = target_ea\n"
+        "result = json.dumps({'func_va': hex(resolved)})\n"
+    )
+
+    try:
+        eval_result = await session.call_tool(
+            name="py_eval",
+            arguments={"code": py_code},
+        )
+    except Exception as exc:
+        if debug:
+            print(f"    Preprocess: py_eval error while resolving jmp thunk target: {exc}")
+        return None
+
+    match_payload = _parse_py_eval_json_result(
+        eval_result,
+        debug=debug,
+        context="llm_decompile jmp thunk target lookup",
+    )
+    if not isinstance(match_payload, dict):
+        return None
+
+    resolved_va = str(match_payload.get("func_va", "")).strip()
+    if not resolved_va:
+        return None
+    try:
+        int(resolved_va, 0)
+    except (TypeError, ValueError):
+        return None
+
+    if debug and resolved_va.lower() != hex(func_va_int).lower():
+        print(f"    Preprocess: resolved jmp thunk {hex(func_va_int)} -> {resolved_va}")
+    return resolved_va
+
+
 async def _resolve_direct_funcptr_target_via_mcp(session, insn_va, debug=False):
     try:
         insn_va_int = _parse_int_value(insn_va)
@@ -1945,6 +2024,160 @@ async def _resolve_direct_funcptr_target_via_mcp(session, insn_va, debug=False):
         return None
 
     return resolved_matches[0]
+
+
+_DEVIRTUALIZED_VCALL_INST_PY_EVAL = """import ida_bytes, ida_funcs, ida_gdl, idaapi, idautils, idc, json
+anchor_inst = ANCHOR_INST_PLACEHOLDER
+target_offset = TARGET_OFFSET_PLACEHOLDER
+func = ida_funcs.get_func(anchor_inst)
+block = None
+if func:
+    for candidate in ida_gdl.FlowChart(func):
+        if candidate.start_ea <= anchor_inst < candidate.end_ea:
+            block = candidate
+            break
+matches = []
+if block:
+    for ea in idautils.Heads(block.start_ea, block.end_ea):
+        if ea == anchor_inst or abs(ea - anchor_inst) > 64:
+            continue
+        if not ida_bytes.is_code(ida_bytes.get_full_flags(ea)):
+            continue
+        mnem = (idc.print_insn_mnem(ea) or '').lower()
+        if mnem not in ('mov', 'cmp', 'call', 'jmp'):
+            continue
+        insn = idautils.DecodeInstruction(ea)
+        if not insn:
+            continue
+        for op in insn.ops:
+            if int(op.type) == int(idaapi.o_displ) and int(op.addr) == target_offset:
+                matches.append((abs(ea - anchor_inst), ea))
+                break
+matches.sort()
+best = [ea for distance, ea in matches if distance == matches[0][0]] if matches else []
+result = json.dumps({'inst_va': hex(best[0])} if len(best) == 1 else None)
+"""
+
+
+async def _find_devirtualized_vcall_inst_via_mcp(
+    session,
+    anchor_insn_va,
+    vfunc_offset,
+    debug=False,
+):
+    try:
+        anchor_inst = _parse_int_value(anchor_insn_va)
+        target_offset = _parse_int_value(vfunc_offset)
+    except Exception:
+        return None
+
+    py_code = _DEVIRTUALIZED_VCALL_INST_PY_EVAL.replace(
+        "ANCHOR_INST_PLACEHOLDER",
+        str(anchor_inst),
+    ).replace("TARGET_OFFSET_PLACEHOLDER", str(target_offset))
+    try:
+        eval_result = await session.call_tool(name="py_eval", arguments={"code": py_code})
+    except Exception as exc:
+        if debug:
+            print(f"    Preprocess: py_eval error while locating devirtualized vcall: {exc}")
+        return None
+
+    payload = _parse_py_eval_json_result(
+        eval_result,
+        debug=debug,
+        context="llm_decompile devirtualized vcall lookup",
+    )
+    if not isinstance(payload, dict):
+        return None
+    try:
+        return hex(_parse_int_value(payload.get("inst_va")))
+    except Exception:
+        return None
+
+
+async def _load_relation_vtable_data_via_mcp(
+    session,
+    vtable_class,
+    image_base,
+    new_binary_dir,
+    platform,
+    normalized_mangled_class_names,
+    debug=False,
+):
+    if _is_vtable_artifact_stem(vtable_class):
+        vtable_path = _build_vtable_yaml_path(new_binary_dir, vtable_class, platform)
+        return _read_yaml_file(vtable_path)
+    return await preprocess_vtable_via_mcp(
+        session=session,
+        class_name=vtable_class,
+        image_base=image_base,
+        platform=platform,
+        debug=debug,
+        symbol_aliases=_get_mangled_class_aliases(
+            normalized_mangled_class_names,
+            vtable_class,
+        ),
+    )
+
+
+def _find_unique_vtable_func_index(vtable_data, func_va):
+    if not isinstance(vtable_data, dict):
+        return None
+    target_va = _parse_int_value(func_va)
+    matching_indexes = []
+    for index, entry_va in vtable_data.get("vtable_entries", {}).items():
+        try:
+            if _parse_int_value(entry_va) == target_va:
+                matching_indexes.append(int(index))
+        except Exception:
+            continue
+    return matching_indexes[0] if len(matching_indexes) == 1 else None
+
+
+async def _resolve_devirtualized_vfunc_funcptr_via_mcp(
+    session,
+    insn_va,
+    vtable_class,
+    image_base,
+    new_binary_dir,
+    platform,
+    normalized_mangled_class_names,
+    debug=False,
+):
+    func_va = await _resolve_direct_funcptr_target_via_mcp(session, insn_va, debug=debug)
+    if func_va is None:
+        return None
+
+    vtable_data = await _load_relation_vtable_data_via_mcp(
+        session,
+        vtable_class,
+        image_base,
+        new_binary_dir,
+        platform,
+        normalized_mangled_class_names,
+        debug=debug,
+    )
+    vfunc_index = _find_unique_vtable_func_index(vtable_data, func_va)
+    if vfunc_index is None:
+        if debug:
+            print(f"    Preprocess: {func_va} is not unique in {vtable_class} vtable")
+        return None
+
+    target_va = _parse_int_value(func_va)
+    vfunc_offset = hex(vfunc_index * 8)
+    vcall_inst_va = await _find_devirtualized_vcall_inst_via_mcp(
+        session,
+        insn_va,
+        vfunc_offset,
+        debug=debug,
+    )
+    if vcall_inst_va is None:
+        return None
+    return {
+        "func_va": hex(target_va),
+        "vfunc_offset": vfunc_offset,
+        "vcall_inst_va": vcall_inst_va,
+    }
 
 
 async def _resolve_direct_gv_target_via_mcp(session, insn_va, debug=False):
@@ -2155,7 +2388,9 @@ async def call_llm_decompile(
     client=None,
     model=None,
     symbol_name_list=None,
+    expected_result_sections=None,
     disasm_code="",
+    target_disasm_codes=None,
     procedure="",
     disasm_for_reference="",
     procedure_for_reference="",
@@ -2179,7 +2414,9 @@ async def call_llm_decompile(
         client=client,
         model=model,
         symbol_name_list=symbol_name_list,
+        expected_result_sections=expected_result_sections,
         disasm_code=disasm_code,
+        target_disasm_codes=target_disasm_codes,
         procedure=procedure,
         disasm_for_reference=disasm_for_reference,
         procedure_for_reference=procedure_for_reference,
@@ -2201,6 +2438,16 @@ async def call_llm_decompile(
         call_llm_text_func=call_llm_text,
         normalize_temperature_func=normalize_optional_temperature,
     )
+
+
+def _build_expected_llm_result_sections(symbol_names, desired_fields_map):
+    expected_sections = {}
+    for symbol_name in symbol_names:
+        desired_spec = desired_fields_map.get(symbol_name) or {}
+        desired_fields = set(desired_spec.get("desired_output_fields", []))
+        if "vfunc_offset" in desired_fields:
+            expected_sections[symbol_name] = "found_vcall"
+    return expected_sections
 
 
 async def preprocess_vtable_via_mcp(
@@ -5104,6 +5351,7 @@ def _load_symbol_addr_from_current_yaml(
 
 
 UNDEFINED_FUNC_RECOVERY_BACKTRACK_LIMIT = 0x200
+UNDEFINED_FUNC_RECOVERY_MAX_SOURCE_DEPTH = 4
 
 
 def _parse_int_set_from_py_eval(eval_data, debug=False):
@@ -5178,6 +5426,7 @@ async def _probe_func_start_or_entry_candidate(session, code_addr, debug=False):
         f"code_addr = {code_addr_int}\n"
         f"backtrack_limit = {UNDEFINED_FUNC_RECOVERY_BACKTRACK_LIMIT:#x}\n"
         "result_obj = {'status': 'no_entry'}\n"
+        "unresolved_ref_sources = set()\n"
         "func = idaapi.get_func(code_addr)\n"
         "if func:\n"
         "    result_obj = {'status': 'resolved', 'func_start': hex(func.start_ea)}\n"
@@ -5198,17 +5447,19 @@ async def _probe_func_start_or_entry_candidate(session, code_addr, debug=False):
         "        if not ida_bytes.is_code(flags):\n"
         "            continue\n"
         "        for xref in idautils.XrefsTo(probe_ea, 0):\n"
-        "            ref_func = idaapi.get_func(xref.frm)\n"
-        "            if not ref_func:\n"
-        "                continue\n"
         "            mnem = idc.print_insn_mnem(xref.frm).lower()\n"
         "            if mnem not in ('call', 'jmp', 'lea'):\n"
         "                continue\n"
         "            operand_targets = [\n"
         "                idc.get_operand_value(xref.frm, idx) for idx in range(3)\n"
         "            ]\n"
-        "            if probe_ea in operand_targets:\n"
-        "                candidates.add(probe_ea)\n"
+        "            if probe_ea not in operand_targets:\n"
+        "                continue\n"
+        "            ref_func = idaapi.get_func(xref.frm)\n"
+        "            if not ref_func:\n"
+        "                unresolved_ref_sources.add(xref.frm)\n"
+        "                continue\n"
+        "            candidates.add(probe_ea)\n"
         "    if result_obj.get('status') == 'no_entry':\n"
         "        if len(candidates) == 1:\n"
         "            result_obj = {\n"
@@ -5220,6 +5471,10 @@ async def _probe_func_start_or_entry_candidate(session, code_addr, debug=False):
         "                'status': 'multiple_entries',\n"
         "                'entries': [hex(ea) for ea in sorted(candidates)],\n"
         "            }\n"
+        "    if unresolved_ref_sources:\n"
+        "        result_obj['unresolved_ref_sources'] = [\n"
+        "            hex(ea) for ea in sorted(unresolved_ref_sources)\n"
+        "        ]\n"
         "result = json.dumps(result_obj)\n"
     )
     try:
@@ -5275,38 +5530,8 @@ async def _read_covering_func_start_via_mcp(session, code_addr, debug=False):
         return None
 
 
-async def _normalize_func_start_for_code_addr(session, code_addr, debug=False):
-    """Resolve the function start for a code address, recovering undefined funcs."""
-    try:
-        code_addr_int = _parse_int_value(code_addr)
-    except Exception:
-        return None
-
-    probe = await _probe_func_start_or_entry_candidate(
-        session=session,
-        code_addr=code_addr_int,
-        debug=debug,
-    )
-    if not probe:
-        return None
-
-    status = probe.get("status")
-    if status == "resolved":
-        try:
-            return _parse_int_value(probe.get("func_start"))
-        except Exception:
-            return None
-
-    if status != "needs_define":
-        if debug:
-            print(f"    Preprocess: undefined func recovery skipped: {status or 'unknown'}")
-        return None
-
-    try:
-        entry = _parse_int_value(probe.get("entry"))
-    except Exception:
-        return None
-
+async def _define_func_start_for_code_addr(session, entry, code_addr, *, debug=False):
+    """Define one entry and verify that it covers code_addr."""
     try:
         await session.call_tool(
             name="define_func",
@@ -5319,12 +5544,119 @@ async def _normalize_func_start_for_code_addr(session, code_addr, debug=False):
 
     func_start = await _read_covering_func_start_via_mcp(
         session=session,
-        code_addr=code_addr_int,
+        code_addr=code_addr,
         debug=debug,
     )
     if func_start is None and debug:
-        print(f"    Preprocess: recovered function does not cover {hex(code_addr_int)}")
+        print(f"    Preprocess: recovered function does not cover {hex(code_addr)}")
     return func_start
+
+
+async def _resolve_func_start_probe(session, probe, code_addr, *, debug=False):
+    """Resolve terminal probe states, or report that source recovery is needed."""
+    status = probe.get("status")
+    if status == "resolved":
+        try:
+            return True, _parse_int_value(probe.get("func_start"))
+        except Exception:
+            return True, None
+    if status != "needs_define":
+        return False, None
+    try:
+        entry = _parse_int_value(probe.get("entry"))
+    except Exception:
+        return True, None
+    func_start = await _define_func_start_for_code_addr(
+        session=session,
+        entry=entry,
+        code_addr=code_addr,
+        debug=debug,
+    )
+    return True, func_start
+
+
+async def _recover_probe_reference_source(
+    session,
+    probe,
+    *,
+    recovery_seen,
+    recovery_depth,
+    debug=False,
+):
+    """Recover one undefined function containing a valid entry reference."""
+    if recovery_depth >= UNDEFINED_FUNC_RECOVERY_MAX_SOURCE_DEPTH:
+        return False
+    sources = set()
+    for source in probe.get("unresolved_ref_sources", []):
+        try:
+            sources.add(_parse_int_value(source))
+        except Exception:
+            continue
+    for source in sorted(sources):
+        if source in recovery_seen:
+            continue
+        func_start = await _normalize_func_start_for_code_addr(
+            session=session,
+            code_addr=source,
+            debug=debug,
+            _recovery_seen=recovery_seen,
+            _recovery_depth=recovery_depth + 1,
+        )
+        if func_start is not None:
+            return True
+    return False
+
+
+async def _normalize_func_start_for_code_addr(
+    session,
+    code_addr,
+    debug=False,
+    *,
+    _recovery_seen=None,
+    _recovery_depth=0,
+):
+    """Resolve the function start for a code address, recovering undefined funcs."""
+    try:
+        code_addr_int = _parse_int_value(code_addr)
+    except Exception:
+        return None
+
+    recovery_seen = set() if _recovery_seen is None else _recovery_seen
+    if code_addr_int in recovery_seen:
+        return None
+    recovery_seen.add(code_addr_int)
+
+    probe = await _probe_func_start_or_entry_candidate(
+        session=session,
+        code_addr=code_addr_int,
+        debug=debug,
+    )
+    while probe:
+        handled, func_start = await _resolve_func_start_probe(
+            session=session,
+            probe=probe,
+            code_addr=code_addr_int,
+            debug=debug,
+        )
+        if handled:
+            return func_start
+        recovered_source = await _recover_probe_reference_source(
+            session=session,
+            probe=probe,
+            recovery_seen=recovery_seen,
+            recovery_depth=_recovery_depth,
+            debug=debug,
+        )
+        if not recovered_source:
+            if debug:
+                print(f"    Preprocess: undefined func recovery skipped: {probe.get('status') or 'unknown'}")
+            return None
+        probe = await _probe_func_start_or_entry_candidate(
+            session=session,
+            code_addr=code_addr_int,
+            debug=debug,
+        )
+    return None
 
 
 async def _normalize_func_starts_for_code_addrs(session, code_addrs, debug=False):
@@ -6485,6 +6817,7 @@ async def preprocess_func_xrefs_via_mcp(
     xref_floats=None,
     exclude_floats=None,
     inline_alias=None,
+    exclude_callees=None,
 ):
     """
     Resolve target function by intersecting candidate sets collected from
@@ -6513,7 +6846,12 @@ async def preprocess_func_xrefs_via_mcp(
             print(f"    Preprocess: no explicit xref candidate sources configured for {func_name}")
         return None
 
-    dep_func_names = list(xref_funcs or []) + list(exclude_funcs or []) + ([inline_alias] if inline_alias else [])
+    dep_func_names = (
+        list(xref_funcs or [])
+        + list(exclude_funcs or [])
+        + list(exclude_callees or [])
+        + ([inline_alias] if inline_alias else [])
+    )
     dep_gv_names = [
         gv_name
         for gv_name in list(xref_gvs or []) + list(exclude_gvs or [])
@@ -6767,6 +7105,37 @@ async def preprocess_func_xrefs_via_mcp(
     if excluded_gv_func_addrs:
         common_funcs -= excluded_gv_func_addrs
 
+    # exclude_callees: drop candidates that CALL the named function(s). This is the
+    # inverse of xref_funcs (which keeps callers of the named function); use it when
+    # the collider is distinguished only by a callee the target does not have, and the
+    # collider itself is unnamed so exclude_funcs cannot address it.
+    excluded_callee_caller_addrs = set()
+    for excluded_callee_name in exclude_callees or []:
+        excluded_callee_va = _load_symbol_addr_from_current_yaml(
+            new_binary_dir,
+            platform,
+            excluded_callee_name,
+            "func_va",
+            debug=debug,
+            debug_label="exclude_callee",
+        )
+        if excluded_callee_va is None:
+            return None
+
+        addr_set = await _collect_xref_func_starts_for_ea(
+            session=session,
+            target_ea=excluded_callee_va,
+            debug=debug,
+        )
+        if addr_set is None:
+            if debug:
+                print(f"    Preprocess: failed to collect exclude callee xref: {excluded_callee_name}")
+            return None
+        excluded_callee_caller_addrs |= set(addr_set)
+
+    if excluded_callee_caller_addrs:
+        common_funcs -= excluded_callee_caller_addrs
+
     for excluded_signature in exclude_signatures or []:
         if not common_funcs:
             break
@@ -6926,6 +7295,7 @@ async def _try_preprocess_func_without_llm(
             exclude_gvs=xref_spec["exclude_gvs"],
             exclude_signatures=xref_spec["exclude_signatures"],
             exclude_floats=xref_spec["exclude_floats"],
+            exclude_callees=xref_spec["exclude_callees"],
             new_binary_dir=new_binary_dir,
             platform=platform,
             image_base=image_base,
@@ -6953,6 +7323,7 @@ def _can_probe_future_func_fast_path(
     dependency_symbol_names = (
         list(xref_spec.get("xref_funcs") or [])
         + list(xref_spec.get("exclude_funcs") or [])
+        + list(xref_spec.get("exclude_callees") or [])
         + ([inline_alias] if inline_alias else [])
         + [gv_name for gv_name in (xref_spec.get("xref_gvs") or []) if not _is_explicit_address_literal(gv_name)]
         + [gv_name for gv_name in (xref_spec.get("exclude_gvs") or []) if not _is_explicit_address_literal(gv_name)]
@@ -7044,7 +7415,10 @@ async def preprocess_common_skill(
       ``inline_alias``) and optional post-intersection scalar readonly
       float/double filters (``xref_floats``)
       and exclusions (``exclude_funcs``, ``exclude_strings``,
-      ``exclude_gvs``, ``exclude_signatures``, ``exclude_floats``).
+      ``exclude_gvs``, ``exclude_signatures``, ``exclude_floats``,
+      ``exclude_callees``). ``exclude_callees`` drops candidates that CALL the
+      named function(s) -- the inverse of ``xref_funcs`` -- for cases where the
+      collider is unnamed and separated only by a callee the target lacks.
       ``xref_floats``/``exclude_floats`` do not count as positive xref
       candidate sources. ``xref_gvs``/``exclude_gvs``
       entries may be YAML symbol names or explicit ``0x...`` addresses.
@@ -7080,7 +7454,7 @@ async def preprocess_common_skill(
             (may be empty/None). Supported keys are func_name,
             xref_strings/xref_gvs/xref_signatures/xref_funcs,
             inline_alias, xref_floats, exclude_funcs/exclude_strings/
-            exclude_gvs/exclude_signatures/exclude_floats.
+            exclude_gvs/exclude_signatures/exclude_floats/exclude_callees.
         func_vtable_relations: List of (func_name, vtable_class) tuples for
             enriching function YAML with vtable metadata; the vtable value may
             be a canonical class name or a vtable artifact stem
@@ -7136,6 +7510,7 @@ async def preprocess_common_skill(
         "exclude_gvs",
         "exclude_signatures",
         "exclude_floats",
+        "exclude_callees",
     }
     func_xrefs_list_keys = (
         "xref_strings",
@@ -7148,6 +7523,7 @@ async def preprocess_common_skill(
         "exclude_gvs",
         "exclude_signatures",
         "exclude_floats",
+        "exclude_callees",
     )
     func_xrefs_map = {}
     for spec in func_xrefs:
@@ -7461,6 +7837,38 @@ async def preprocess_common_skill(
             print(f"    Preprocess: expected outputs missing for {', '.join(missing)}")
         return False
 
+    # Skip any target whose valid output YAML already exists in new_binary_dir.
+    # Another skill earlier in the same run (e.g. a de-inline fallback pair) may
+    # have already produced it; without this a multi-target decompile skill would
+    # re-resolve -- and potentially hard-fail on -- a symbol that is already on
+    # disk. Concretely this lets find-CEntitySystem_Init-decompiles keep
+    # CEntitySystem_m_EntityMaterialAttributes as its inlined fallback target
+    # while tolerating the de-inlined build where the fallback pair wrote it first.
+    def _target_output_already_satisfied(target_output):
+        if not target_output or not os.path.exists(target_output):
+            return False
+        try:
+            with open(target_output, "r", encoding="utf-8") as handle:
+                existing_payload = yaml.safe_load(handle)
+        except Exception:
+            return False
+        return isinstance(existing_payload, dict) and bool(existing_payload)
+
+    def _drop_satisfied_targets(names, matched_outputs, kind_label):
+        remaining = []
+        for name in names:
+            if _target_output_already_satisfied(matched_outputs.get(name)):
+                if debug:
+                    print(f"    Preprocess: skipping {kind_label} target {name} (valid output already exists)")
+                continue
+            remaining.append(name)
+        return remaining
+
+    all_func_names = _drop_satisfied_targets(all_func_names, matched_func_outputs, "func")
+    gv_names = _drop_satisfied_targets(gv_names, matched_gv_outputs, "gv")
+    patch_names = _drop_satisfied_targets(patch_names, matched_patch_outputs, "patch")
+    struct_member_names = _drop_satisfied_targets(struct_member_names, matched_struct_outputs, "struct-member")
+
     llm_request_cache = {}
     llm_result_by_symbol_name = {}
     fast_path_attempted = {}
@@ -7640,10 +8048,13 @@ async def preprocess_common_skill(
                 llm_target_details,
             )
             primary_target_detail = llm_target_details[0]
+            expected_result_sections = _build_expected_llm_result_sections(llm_symbol_name_list, desired_fields_map)
             return await call_llm_decompile(
                 model=llm_request["model"],
                 symbol_name_list=llm_symbol_name_list,
+                expected_result_sections=expected_result_sections,
                 disasm_code=primary_target_detail.get("disasm_code", ""),
+                target_disasm_codes=[target_detail.get("disasm_code", "") for target_detail in llm_target_details],
                 procedure=primary_target_detail.get("procedure", ""),
                 disasm_for_reference=llm_request["disasm_for_reference"],
                 procedure_for_reference=llm_request["procedure_for_reference"],
@@ -7678,7 +8089,8 @@ async def preprocess_common_skill(
         desired_fields = desired_field_spec["desired_output_fields"]
         generation_options = desired_field_spec["generation_options"]
         desired_fields_set = set(desired_fields)
-        can_use_direct_func_fallback = "vfunc_sig" not in desired_fields_set
+        expects_vfunc = "vfunc_offset" in desired_fields_set
+        can_use_direct_func_fallback = not expects_vfunc
 
         if func_name not in fast_path_attempted:
             fast_path_results[func_name] = await _try_preprocess_func_without_llm(
@@ -7740,6 +8152,14 @@ async def preprocess_common_skill(
                     )
                     if direct_func_va is None:
                         continue
+                    if generation_options.get("func_sig_resolve_jmp_thunk"):
+                        direct_func_va = await _resolve_jmp_thunk_target_via_mcp(
+                            session,
+                            direct_func_va,
+                            debug=debug,
+                        )
+                        if direct_func_va is None:
+                            continue
                     func_data = await _preprocess_direct_func_sig_via_mcp(
                         session=session,
                         new_path=target_output,
@@ -7788,40 +8208,85 @@ async def preprocess_common_skill(
             vtable_class = None
             if func_data is None and func_name in vtable_relations_map:
                 vtable_class = vtable_relations_map[func_name]
-            for entry in llm_result.get("found_vcall", []):
-                if vtable_class is None:
-                    break
-                if entry.get("func_name") != func_name:
-                    continue
-                direct_vcall_kwargs = {
-                    "session": session,
-                    "new_path": target_output,
-                    "image_base": image_base,
-                    "platform": platform,
-                    "func_name": func_name,
-                    "direct_vtable_class": vtable_class,
-                    "direct_vfunc_offset": entry.get("vfunc_offset"),
-                    "direct_vcall_inst_va": entry.get("insn_va"),
-                    "require_func_sig": "func_sig" in desired_fields_set,
-                    "require_vfunc_sig": "vfunc_sig" in desired_fields_set,
-                    "vfunc_sig_max_match": generation_options.get("vfunc_sig_max_match", 1),
-                    "allow_func_sig_across_function_boundary": generation_options.get(
-                        "func_sig_allow_across_function_boundary",
+            if func_data is None and vtable_class is not None:
+                for entry in llm_result.get("found_vcall", []):
+                    if entry.get("func_name") != func_name:
+                        continue
+                    direct_vcall_kwargs = {
+                        "session": session,
+                        "new_path": target_output,
+                        "image_base": image_base,
+                        "platform": platform,
+                        "func_name": func_name,
+                        "direct_vtable_class": vtable_class,
+                        "direct_vfunc_offset": entry.get("vfunc_offset"),
+                        "direct_vcall_inst_va": entry.get("insn_va"),
+                        "require_func_sig": "func_sig" in desired_fields_set,
+                        "require_vfunc_sig": "vfunc_sig" in desired_fields_set,
+                        "vfunc_sig_max_match": generation_options.get("vfunc_sig_max_match", 1),
+                        "allow_func_sig_across_function_boundary": generation_options.get(
+                            "func_sig_allow_across_function_boundary",
+                            False,
+                        ),
+                        "normalized_mangled_class_names": normalized_mangled_class_names,
+                        "debug": debug,
+                    }
+                    if generation_options.get(
+                        "vfunc_sig_allow_across_function_boundary",
                         False,
-                    ),
-                    "normalized_mangled_class_names": normalized_mangled_class_names,
-                    "debug": debug,
-                }
-                if generation_options.get(
-                    "vfunc_sig_allow_across_function_boundary",
-                    False,
-                ):
-                    direct_vcall_kwargs["allow_vfunc_sig_across_function_boundary"] = True
-                func_data = await _preprocess_direct_func_sig_via_mcp(
-                    **direct_vcall_kwargs,
-                )
-                if func_data is not None:
-                    break
+                    ):
+                        direct_vcall_kwargs["allow_vfunc_sig_across_function_boundary"] = True
+                    func_data = await _preprocess_direct_func_sig_via_mcp(
+                        **direct_vcall_kwargs,
+                    )
+                    if func_data is not None:
+                        break
+            if func_data is None and vtable_class is not None and expects_vfunc:
+                for entry in llm_result.get("found_funcptr", []):
+                    if entry.get("funcptr_name") != func_name:
+                        continue
+                    devirtualized = await _resolve_devirtualized_vfunc_funcptr_via_mcp(
+                        session=session,
+                        insn_va=entry.get("insn_va"),
+                        vtable_class=vtable_class,
+                        image_base=image_base,
+                        new_binary_dir=new_binary_dir,
+                        platform=platform,
+                        normalized_mangled_class_names=normalized_mangled_class_names,
+                        debug=debug,
+                    )
+                    if devirtualized is None:
+                        continue
+                    direct_vcall_kwargs = {
+                        "session": session,
+                        "new_path": target_output,
+                        "image_base": image_base,
+                        "platform": platform,
+                        "func_name": func_name,
+                        "direct_func_va": devirtualized["func_va"],
+                        "direct_vtable_class": vtable_class,
+                        "direct_vfunc_offset": devirtualized["vfunc_offset"],
+                        "direct_vcall_inst_va": devirtualized["vcall_inst_va"],
+                        "require_func_sig": "func_sig" in desired_fields_set,
+                        "require_vfunc_sig": "vfunc_sig" in desired_fields_set,
+                        "vfunc_sig_max_match": generation_options.get("vfunc_sig_max_match", 1),
+                        "allow_func_sig_across_function_boundary": generation_options.get(
+                            "func_sig_allow_across_function_boundary",
+                            False,
+                        ),
+                        "normalized_mangled_class_names": normalized_mangled_class_names,
+                        "debug": debug,
+                    }
+                    if generation_options.get(
+                        "vfunc_sig_allow_across_function_boundary",
+                        False,
+                    ):
+                        direct_vcall_kwargs["allow_vfunc_sig_across_function_boundary"] = True
+                    func_data = await _preprocess_direct_func_sig_via_mcp(
+                        **direct_vcall_kwargs,
+                    )
+                    if func_data is not None:
+                        break
             if func_data is None:
                 fallback_vtable_name = None
                 if func_name in vtable_relations_map:
@@ -7939,6 +8404,8 @@ async def preprocess_common_skill(
             func_data["func_sig_allow_across_function_boundary"] = True
         if generation_options.get("vfunc_sig_allow_across_function_boundary"):
             func_data["vfunc_sig_allow_across_function_boundary"] = True
+        if generation_options.get("func_sig_resolve_jmp_thunk"):
+            func_data["func_sig_resolve_jmp_thunk"] = True
 
         payload = _assemble_symbol_payload(
             func_name,

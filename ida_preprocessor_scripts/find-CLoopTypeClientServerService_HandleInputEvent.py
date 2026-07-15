@@ -26,7 +26,7 @@ FUNC_XREFS_LINUX = [
         "func_name": "CLoopTypeClientServerService_HandleInputEvent",
         "xref_strings": [],
         "xref_gvs": [],
-        "xref_signatures": ["48 8B ?? FF 60 ??"],
+        "xref_signatures": ["48 8B BF ?? 00 00 00"],
         "xref_funcs": [],
         "exclude_funcs": [],
         "exclude_strings": [],

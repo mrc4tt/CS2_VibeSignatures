@@ -270,8 +270,8 @@ disasm_code: |-
   .text:00000001811F86DB                 test    rcx, rcx
   .text:00000001811F86DE                 jz      short loc_1811F8724
   .text:00000001811F86E0                 mov     rax, [rcx]
-  .text:00000001811F86E3                 ; 0x1EC8 = 7880LL = CEntitySystem::m_EntityMaterialAttributes
-  .text:00000001811F86E3                 lea     r9, [rsi+1EC8h]; 0x1EC8 = 7880LL = CEntitySystem::m_EntityMaterialAttributes
+  .text:00000001811F86E3                 ; 0x1EC8 = 7880LL = CEntitySystem::m_Symbols
+  .text:00000001811F86E3                 lea     r9, [rsi+1EC8h]; 0x1EC8 = 7880LL = CEntitySystem::m_Symbols
   .text:00000001811F86EA                 ; 0xBBC = 3004LL = CEntitySystem::m_eNetworkSerializationMode
   .text:00000001811F86EA                 mov     r8d, [rsi+0BBCh]; 0xBBC = 3004LL = CEntitySystem::m_eNetworkSerializationMode
   .text:00000001811F86F1                 lea     rdx, aStringTTable; "string_t_table"
@@ -371,8 +371,8 @@ disasm_code: |-
   .text:00000001811F8887                 mov     rbx, cs:qword_1820B9518
   .text:00000001811F888E                 test    rbx, rbx
   .text:00000001811F8891                 jz      loc_1811F8977
-  .text:00000001811F8897                 ; 0x2070 = 8304LL = CEntitySystem::m_Symbols
-  .text:00000001811F8897                 lea     rbp, [rsi+2070h]; 0x2070 = 8304LL = CEntitySystem::m_Symbols
+  .text:00000001811F8897                 ; 0x2070 = 8304LL = CEntitySystem::m_EntityMaterialAttributes
+  .text:00000001811F8897                 lea     rbp, [rsi+2070h]; 0x2070 = 8304LL = CEntitySystem::m_EntityMaterialAttributes
   .text:00000001811F889E                 xchg    ax, ax
   .text:00000001811F88A0                 call    qword ptr [rbx]
   .text:00000001811F88A2                 lea     rdx, byte_1815A2980
@@ -743,6 +743,8 @@ procedure: |-
         }
       }
       result = sub_1812254F0();
+
+      // CEntitySystem_EntityMaterialAttributes that inline-optimized into CEntitySystem_Init
       v46 = qword_1820B9518;
       if ( qword_1820B9518 )
       {

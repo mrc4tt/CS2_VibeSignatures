@@ -3,16 +3,22 @@
 from __future__ import annotations
 
 import json
+import uuid
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 import httpx
 from openai import OpenAI
 
-CODEX_CLI_USER_AGENT = "codex_cli_rs/0.80.0 (Windows 15.7.2; x86_64) Terminal"
-CODEX_CLI_ORIGINATOR = "codex_cli_rs"
+CODEX_CLI_USER_AGENT = "codex-tui/0.144.1 (Windows 10.0.26200; x86_64) WindowsTerminal (codex-tui; 0.144.1)"
+CODEX_CLI_ORIGINATOR = "codex-tui"
 _ALLOWED_LLM_EFFORTS = {"none", "minimal", "low", "medium", "high", "xhigh"}
+_CODEX_FAKER_TEMPLATE_PATH = Path(__file__).resolve().parent / "codex_faker.json"
+_CODEX_TEMPLATE_MODEL_PLACEHOLDER = "<TEMPLATE_MODEL_NAME>"
+_CODEX_TEMPLATE_USER_PROMPT_PLACEHOLDER = "<TEMPLATE_USER_PROMPT>"
+_CODEX_TEMPLATE_CACHE_KEY_PLACEHOLDER = "<TEMPLATE_PROMPT_CACHE_KEY>"
 
 
 def require_nonempty_text(value: Any, name: str) -> str:
@@ -115,20 +121,40 @@ def _extract_text_from_message_content(content) -> str:
     return str(content or "").strip()
 
 
-def _build_responses_input(messages) -> list[dict[str, str]]:
-    merged_user_parts: list[str] = []
+def _build_responses_input(messages) -> list[dict[str, Any]]:
+    input_items: list[dict[str, Any]] = []
     for message in messages:
         if not isinstance(message, Mapping):
             continue
         role = str(message.get("role", "")).strip().lower()
-        if role != "user":
+        if role not in {"user", "assistant"}:
             continue
         text = _extract_text_from_message_content(message.get("content"))
-        if text:
-            merged_user_parts.append(text)
-    if not merged_user_parts:
+        if not text:
+            continue
+        message_id = str(message.get("id", "")).strip() or f"msg_{uuid.uuid4()}"
+        content_type = "input_text" if role == "user" else "output_text"
+        input_items.append(
+            {
+                "type": "message",
+                "id": message_id,
+                "role": role,
+                "content": [{"type": content_type, "text": text}],
+            }
+        )
+    if not any(item["role"] == "user" for item in input_items):
         raise ValueError("messages must include at least one user message")
-    return [{"role": "user", "content": "\n\n".join(merged_user_parts)}]
+    return input_items
+
+
+def _build_chat_completion_messages(messages):
+    normalized_messages = []
+    for message in messages:
+        if isinstance(message, Mapping):
+            normalized_messages.append({key: value for key, value in message.items() if key != "id"})
+        else:
+            normalized_messages.append(message)
+    return normalized_messages
 
 
 def _extract_text_from_response_payload(payload) -> str:
@@ -186,6 +212,48 @@ def _extract_error_message_from_payload(payload) -> str:
     return str(payload)
 
 
+def _load_codex_faker_template() -> dict[str, Any]:
+    try:
+        raw = _CODEX_FAKER_TEMPLATE_PATH.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise RuntimeError(f"failed to read codex request template at {_CODEX_FAKER_TEMPLATE_PATH}: {exc}") from exc
+    for placeholder in (
+        _CODEX_TEMPLATE_MODEL_PLACEHOLDER,
+        _CODEX_TEMPLATE_USER_PROMPT_PLACEHOLDER,
+        _CODEX_TEMPLATE_CACHE_KEY_PLACEHOLDER,
+    ):
+        if placeholder not in raw:
+            raise RuntimeError(
+                f"codex request template {_CODEX_FAKER_TEMPLATE_PATH} is missing placeholder {placeholder}"
+            )
+    try:
+        template = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"codex request template {_CODEX_FAKER_TEMPLATE_PATH} is not valid JSON: {exc}") from exc
+    if not isinstance(template, dict):
+        raise RuntimeError(f"codex request template {_CODEX_FAKER_TEMPLATE_PATH} must be a JSON object")
+    return template
+
+
+def _fill_codex_template(node, *, model, user_prompt, cache_key) -> Any:
+    if isinstance(node, dict):
+        return {
+            key: _fill_codex_template(value, model=model, user_prompt=user_prompt, cache_key=cache_key)
+            for key, value in node.items()
+        }
+    if isinstance(node, list):
+        return [_fill_codex_template(item, model=model, user_prompt=user_prompt, cache_key=cache_key) for item in node]
+    if isinstance(node, str):
+        if node == _CODEX_TEMPLATE_MODEL_PLACEHOLDER:
+            return model
+        if node == _CODEX_TEMPLATE_USER_PROMPT_PLACEHOLDER:
+            return user_prompt
+        if _CODEX_TEMPLATE_CACHE_KEY_PLACEHOLDER in node:
+            return node.replace(_CODEX_TEMPLATE_CACHE_KEY_PLACEHOLDER, cache_key)
+        return node
+    return node
+
+
 def _call_llm_text_via_codex_http(
     *,
     model,
@@ -194,6 +262,7 @@ def _call_llm_text_via_codex_http(
     base_url,
     effort=None,
     temperature=None,
+    prompt_cache_key=None,
 ):
     normalized_api_key = require_nonempty_text(api_key, "api_key")
     normalized_base_url = require_nonempty_text(base_url, "base_url")
@@ -204,23 +273,55 @@ def _call_llm_text_via_codex_http(
         raise ValueError("base_url must include host")
 
     normalized_effort = normalize_optional_effort(effort)
-    body = {
-        "input": _build_responses_input(messages),
-        "model": normalized_model,
-        "reasoning": {"effort": normalized_effort},
-        "stream": True,
-    }
+    conversation_input = _build_responses_input(messages)
+    cache_key = str(prompt_cache_key or "").strip() or str(uuid.uuid4())
+    body = _fill_codex_template(
+        _load_codex_faker_template(),
+        model=normalized_model,
+        user_prompt="",
+        cache_key=cache_key,
+    )
+    template_input = body.get("input")
+    if not isinstance(template_input, list) or not template_input:
+        raise RuntimeError("codex request template input must be a non-empty list")
+    template_input[-1:] = conversation_input
+    reasoning = body.get("reasoning")
+    if isinstance(reasoning, dict):
+        reasoning["effort"] = normalized_effort
+    else:
+        body["reasoning"] = {"effort": normalized_effort}
     normalized_temperature = normalize_optional_temperature(temperature)
     if normalized_temperature is not None:
         body["temperature"] = normalized_temperature
+
+    # turn_metadata = (
+    #     '{"installation_id":"cbf5a482-7bda-4aaf-92a0-cecf9f02c96b",'
+    #     f'"session_id":"{cache_key}",'
+    #     f'"thread_id":"{cache_key}",'
+    #     '"turn_id":"019f4cca-77be-7e43-951d-c1c03921035f",'
+    #     f'"window_id":"{cache_key}:0",'
+    #     '"request_kind":"turn",'
+    #     '"thread_source":"user",'
+    #     '"sandbox":"windows_elevated",'
+    #     '"workspaces":{"\\\\CS2_VibeSignatures"},'
+    #     f'"turn_started_at_unix_ms":{turn_started_at_unix_ms}'
+    #     "}"
+    # )
 
     headers = {
         "Authorization": f"Bearer {normalized_api_key}",
         "Content-Type": "application/json",
         "Accept": "text/event-stream",
-        "Accept-Encoding": "identity",
+        # "Accept-Encoding": "identity",
         "User-Agent": CODEX_CLI_USER_AGENT,
         "Originator": CODEX_CLI_ORIGINATOR,
+        "X-Client-Request-Id": cache_key,
+        "Session-Id": cache_key,
+        "X-Codex-Window-Id": cache_key + ":0",
+        "X-Openai-Internal-Codex-Responses-Lite": "true",
+        "X-Codex-Beta-Features": "remote_compaction_v2",
+        # "X-Codex-Turn-Metadata": turn_metadata,
+        "Eagleeye-Traceid": "3daa4d2a17836997998816195e",
         "Host": host,
     }
     endpoint = normalized_base_url.rstrip("/") + "/responses"
@@ -277,6 +378,7 @@ def call_llm_text(
     api_key=None,
     base_url=None,
     fake_as=None,
+    prompt_cache_key=None,
     debug=False,
 ) -> str:
     normalized_effort = normalize_optional_effort(effort)
@@ -288,6 +390,7 @@ def call_llm_text(
             base_url=base_url,
             effort=normalized_effort,
             temperature=temperature,
+            prompt_cache_key=prompt_cache_key,
         )
 
     if client is None:
@@ -299,7 +402,7 @@ def call_llm_text(
 
     request_kwargs = {
         "model": require_nonempty_text(model, "model"),
-        "messages": messages,
+        "messages": _build_chat_completion_messages(messages),
         "reasoning_effort": normalized_effort,
     }
     normalized_temperature = normalize_optional_temperature(temperature)

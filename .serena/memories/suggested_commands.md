@@ -55,17 +55,20 @@ Reference path convention:
 Convert generated YAML into downstream gamedata:
 
 ```bash
-uv run update_gamedata.py -gamever <gamever> [-debug]
+uv run gamesymbol_candidate.py build -gamever <gamever> -bindir bin -configyaml config.yaml -output <candidate.yaml> -session <candidate.session.json>
+uv run update_gamedata.py -gamever <gamever> -snapshot <candidate.yaml> [-debug]
 ```
 
-Run C++ validation and optionally repair header mismatches:
+Run C++ layout validation:
 
 ```bash
-uv run run_cpp_tests.py -gamever <gamever> [-debug] [-fixheader] [-agent claude|codex|"claude.cmd"|"codex.cmd"]
+uv run run_cpp_tests.py -gamever <gamever> -snapshot <candidate.yaml> [-debug]
 ```
 
 Notes:
-- `-fixheader` launches an agent-assisted header-fix workflow.
+- After analysis, downstream consumers must use the same immutable candidate snapshot; they never fall back to `bin`.
+- Historical replay may use `gamesymbols/<gamever>.yaml` directly instead of building a new candidate.
+- Invoke the project-level `fix-cppheaders` SKILL to repair `hl2sdk_cs2` header differences.
 
 Useful Claude Code prompts for creating preprocessors:
 

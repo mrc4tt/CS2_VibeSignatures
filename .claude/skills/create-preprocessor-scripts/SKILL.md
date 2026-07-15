@@ -80,6 +80,7 @@ From the user's input, determine:
    - Target is an `IGameSystem` vfunc visible as the callback argument to `IGameSystem_DispatchCall(...)` in a known predecessor's decompile -> **Pattern J**
    - Target is an `IGameSystem` abstract vfunc (slot-only output: `func_name, vtable_name, vfunc_offset, vfunc_index`; no `func_sig`) dispatched by a known `IGameSystem_Loop*AllSystems` function that iterates all game systems via vtable; the dispatcher's output YAML (`func_va`) is already available -> **Pattern K**
    - Target is an **abstract/interface vfunc** dispatched by a thin thunk/caller whose body has exactly one register-indirect vtable call (`jmp/call qword ptr [reg+disp]`), and no `func_sig`/`vfunc_sig` is feasible (a `jmp [reg+disp8]` for offset `<= 0x7F` is only 3 bytes and cannot be signed uniquely) -> **Pattern L** (slot-only output: `func_name, vtable_name, vfunc_offset, vfunc_index`; a downstream Pattern F standard override consumes the `vfunc_index`)
+   - Target `X` was found by a single Pattern A/B finder, but a helper that used to be inlined into `X` **de-inlined** on some build (the anchor string/call left `X`, so `X.{platform}.yaml` stopped being produced and the fail-fast run aborts the module) -> **Pattern M** (split into a helper + `X-noinline` + `X-inlined` fallback chain)
 
 2. **Do xref strings differ between Windows and Linux?** If yes, use platform-specific `FUNC_XREFS_WINDOWS` / `FUNC_XREFS_LINUX` variant.
 
@@ -108,6 +109,7 @@ Read the reference for your chosen pattern:
 - [Pattern I -- Interface vfunc offset via thunk walk](references/pattern-I.md)
 - [Pattern J -- IGameSystem vfunc via dispatch scan](references/pattern-J.md)
 - [Pattern L -- Interface vfunc slot via indirect vcall scan (reusable)](references/pattern-L.md)
+- [Pattern M -- Inline/noinline fallback chain (de-inlined helper)](references/pattern-M.md)
 
 ### Cross-Cutting Notes
 
@@ -424,9 +426,9 @@ The `(structmember, struct=StructName, member=member_name)` tag is **required** 
 **IMPORTANT -- When the predecessor is a NEW function (no existing output YAMLs):** If the predecessor function is brand new (discovered by another new script you're creating at the same time), its output YAMLs don't exist yet and `generate_reference_yaml.py` cannot resolve its address. You must use a **multi-phase workflow**:
 
 1. **Phase 1:** Create ALL scripts (vtable, xref_string, LLM_DECOMPILE) and update config.yaml
-2. **Phase 2:** Run `uv run ida_analyze_bin.py -debug` -- the vtable and xref_string scripts will succeed and populate the NEW predecessor's output YAMLs. The LLM_DECOMPILE script will fail (no reference YAML yet) or be skipped.
+2. **Phase 2:** Run `uv run ida_analyze_bin.py -debug -oldgamever none` -- the vtable and xref_string scripts will succeed and populate the NEW predecessor's output YAMLs. The LLM_DECOMPILE script will fail (no reference YAML yet) or be skipped.
 3. **Phase 3:** Now that the predecessor has output YAMLs, run `generate_reference_yaml.py` to create reference YAMLs, then annotate them.
-4. **Phase 4:** Run `uv run ida_analyze_bin.py -debug` again -- this time the LLM_DECOMPILE path runs and the full pipeline is validated.
+4. **Phase 4:** Run `uv run ida_analyze_bin.py -debug -oldgamever none` again -- this time the LLM_DECOMPILE path runs and the full pipeline is validated.
 
 **IMPORTANT -- When the reference YAML already existed:** `generate_reference_yaml.py` regenerates the file from scratch and silently overwrites any hand-written annotation comments. After running it, check the diff for each regenerated file:
 
@@ -459,35 +461,50 @@ This step is mandatory -- do not report completion without running and passing t
 
 ---
 
-## Step 6: Verify Formatting and Regression Tests
+## Step 6: Run Post-Change Gates
 
-Before committing, verify code formatting for tracked Python/YAML files and run the regression test suite.
+Before committing, run the repository update and validation skills in the exact order below. Every gate is
+mandatory.
 
-### 6a. Formatting
+### 6a. Format and update gamedata
 
-Check formatting for all tracked Python/YAML files:
+**ALWAYS** Use SKILL `/post-change-update` with:
 
-```bash
-uv run python format_repo_files.py --check
-```
+- `phase=before-validation`
+- `gamever=<gamever>` from `.env` -> `CS2VIBE_GAMEVER`
 
-If the check reports files that need formatting, apply it:
+This replaces direct `format_repo_files.py` and `update_gamedata.py` commands in this workflow.
 
-```bash
-uv run python format_repo_files.py
-```
+### 6b. Regression tests
 
-### 6b. Regression Tests
-
-Run the unittest suite:
+Run the non-MCP unittest suite:
 
 ```bash
-uv run python -m unittest discover -s tests -b
+uv run python -c "from pathlib import Path; import sys, unittest; excluded={'test_ida_mcp_session', 'test_smoke_ida_mcp_2'}; modules=[f'tests.{path.stem}' for path in Path('tests').glob('test_*.py') if path.stem not in excluded]; result=unittest.TextTestRunner(buffer=True).run(unittest.defaultTestLoader.loadTestsFromNames(modules)); sys.exit(not result.wasSuccessful())"
 ```
 
-**Keep 0 unittest failures before committing.** If any test fails, investigate and fix it before proceeding to the commit step.
+This intentionally excludes the IDA MCP adapter and smoke modules (`test_ida_mcp_session`,
+`test_smoke_ida_mcp_2`) to keep preprocessor work fast. Run those modules separately when changing
+MCP routing or lifecycle code.
 
-This step is mandatory -- do not commit until formatting passes (`--check` is clean) and the unittest suite reports 0 failures.
+**Keep 0 selected unittest failures before committing.** If any test fails, investigate and fix it before
+proceeding to the final validation gate.
+
+### 6c. Validate C++ layouts
+
+**ALWAYS** Use SKILL `/post-change-validation` with the same `gamever`.
+
+If it fails or cannot run tests, it will report the reason and stop the entire task. Do not fix or retry inside
+this workflow, do not pack the snapshot, and do not commit.
+
+### 6d. Pack the gamesymbol snapshot
+
+Only after `/post-change-validation` succeeds, **ALWAYS** Use SKILL `/post-change-update` with:
+
+- `phase=after-validation`
+- the same `gamever`
+
+This step is mandatory. A missing or failed `gamesymbol_snapshot.py pack` blocks the commit.
 
 ---
 
@@ -505,17 +522,21 @@ git branch --show-current
 git checkout dev 2>/dev/null || git checkout -b dev
 ```
 
-Then commit:
+Review `git status --short`, explicitly stage only task-related files, and include tracked gamedata and snapshot
+changes produced by the post-change gates. Never use `git add -A`:
 
 ```bash
 git add ida_preprocessor_scripts/find-{SKILL_NAME}.py config.yaml
-git commit -m "Add find-{SKILL_NAME} preprocessor script"
+git add <generated-reference-yamls> <changed-dist-gamedata-files> gamesymbols/<gamever>.yaml
+git commit -m "feat(preprocessor): add find-{SKILL_NAME}" -m "Co-Authored-By: Codex (GPT-5.x)"
 ```
 
-Include all files changed:
+Include all task-related files changed:
 - The new preprocessor script
 - config.yaml changes
 - Any reference YAMLs generated (for Patterns C/D/E)
+- Any tracked gamedata updated by `/post-change-update`
+- `gamesymbols/<gamever>.yaml`
 
 ---
 
@@ -530,8 +551,10 @@ Before finishing, verify:
 - [ ] config.yaml `symbols` section has entries for all targets (no duplicates)
 - [ ] Pattern-specific checks pass (see the Checklist section in the chosen pattern reference file)
 - [ ] `uv run ida_analyze_bin.py -debug` passes with 0 failures
-- [ ] `uv run python format_repo_files.py --check` reports no formatting issues (run `uv run python format_repo_files.py` to fix)
-- [ ] `uv run python -m unittest discover -s tests -b` passes with 0 failures
+- [ ] `/post-change-update phase=before-validation` succeeds for the selected game version
+- [ ] Non-MCP unittest command above passes with 0 failures
+- [ ] `/post-change-validation` runs C++ tests and succeeds for the same game version
+- [ ] `/post-change-update phase=after-validation` packs `gamesymbols/<gamever>.yaml`
 - [ ] All changes committed to git (on `dev` branch, NOT `main`)
 
 ## Real-World Examples
@@ -1038,3 +1061,27 @@ async def preprocess_skill(session, skill_name, expected_outputs, old_yaml_map,
 ```
 
 **Key insight -- `expected_input` for `xref_funcs`:** The `xref_funcs` lookup resolves the callee by its IDA name. The callee is only renamed when its output YAML is written. Always list the callee's YAML in `expected_input` to guarantee it runs (and gets renamed in IDA) before this script executes. Without this ordering, the name lookup silently finds nothing and the skill fails.
+
+---
+
+### Example: De-inlined helper via inline/noinline fallback chain (Pattern M)
+
+**User says:** `find-CNetworkGameServer_DirectUpdate` stopped producing
+`CNetworkGameServer_DirectUpdate.linux.yaml` at 14168 -- `CNetworkStringTableContainer::DirectUpdate`
+(which owns the VProf string the finder anchors on) de-inlined out of the vfunc on Linux, so the
+string left the vtable member and the string-cap-vtable intersection went empty (then the fail-fast
+run aborted the rest of engine/linux).
+
+**Result:** the single finder is replaced by a 3-skill chain:
+- `find-CNetworkStringTableContainer_DirectUpdate` -- helper; `xref_strings` on the string;
+  `optional_output` + `skip_if_exists`; left unregistered as a gamedata symbol.
+- `find-CNetworkGameServer_DirectUpdate-noinline` -- `xref_funcs: ["CNetworkStringTableContainer_DirectUpdate"]`
+  + `CNetworkGameServer_vtable`; `optional_output` + `prerequisite` the helper.
+- `find-CNetworkGameServer_DirectUpdate-inlined` -- the renamed original (`xref_strings` + vtable);
+  `expected_output` + `skip_if_exists` + `prerequisite` the -noinline.
+
+`func_sig` kept on both target paths (the de-inlined body is substantial). Validated 14167 (inlined)
++ 14168 (Linux de-inlined) x win/linux -> vtable index 59 / offset 0x1d8, `Failed 0`.
+
+**Full recipe (templates, config.yaml chain, func_sig keep/drop rule, validation, inverted-topology
+variant):** see [Pattern M](references/pattern-M.md).

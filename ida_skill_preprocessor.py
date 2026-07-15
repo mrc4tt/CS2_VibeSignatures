@@ -13,13 +13,7 @@ import re
 from pathlib import Path
 
 from ida_analyze_util import parse_mcp_result
-
-try:
-    import httpx
-    from mcp import ClientSession
-    from mcp.client.streamable_http import streamable_http_client
-except ImportError:
-    pass
+from ida_mcp_session import open_ida_mcp_session
 
 
 _SCRIPT_DIR = Path(__file__).resolve().parent / "ida_preprocessor_scripts"
@@ -101,6 +95,8 @@ async def preprocess_single_skill_via_mcp(
     old_yaml_map,
     new_binary_dir,
     platform,
+    expected_binary=None,
+    explicit_database=None,
     llm_model=None,
     llm_apikey=None,
     llm_baseurl=None,
@@ -148,60 +144,52 @@ async def preprocess_single_skill_via_mcp(
     if preprocess_func is None:
         return PREPROCESS_STATUS_FAILED
 
-    server_url = f"http://{host}:{port}/mcp"
-
     try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=httpx.Timeout(30.0, read=300.0),
-            trust_env=False,  # Bypass system proxy to avoid 502
-        ) as http_client:
-            async with streamable_http_client(server_url, http_client=http_client) as (read_stream, write_stream, _):
-                async with ClientSession(read_stream, write_stream) as session:
-                    await session.initialize()
+        session_kwargs = {}
+        if expected_binary is not None:
+            session_kwargs["expected_binary"] = expected_binary
+        if explicit_database is not None:
+            session_kwargs["explicit_database"] = explicit_database
+        async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+            ib_result = await session.call_tool(name="py_eval", arguments={"code": "hex(idaapi.get_imagebase())"})
+            ib_data = parse_mcp_result(ib_result)
+            if isinstance(ib_data, dict):
+                image_base = int(ib_data.get("result", "0x0"), 16)
+            else:
+                image_base = int(str(ib_data), 16) if ib_data else 0
 
-                    # Get image_base once for the script.
-                    ib_result = await session.call_tool(
-                        name="py_eval", arguments={"code": "hex(idaapi.get_imagebase())"}
-                    )
-                    ib_data = parse_mcp_result(ib_result)
-                    if isinstance(ib_data, dict):
-                        image_base = int(ib_data.get("result", "0x0"), 16)
-                    else:
-                        image_base = int(str(ib_data), 16) if ib_data else 0
+            try:
+                llm_config = {
+                    "model": llm_model,
+                    "api_key": llm_apikey,
+                    "base_url": llm_baseurl,
+                    "temperature": llm_temperature,
+                    "effort": llm_effort,
+                    "fake_as": llm_fake_as,
+                }
+                if llm_max_retries is not None:
+                    llm_config["max_retries"] = llm_max_retries
+                preprocess_kwargs = {
+                    "session": session,
+                    "skill_name": skill_name,
+                    "expected_outputs": expected_outputs,
+                    "old_yaml_map": old_yaml_map,
+                    "new_binary_dir": new_binary_dir,
+                    "platform": platform,
+                    "image_base": image_base,
+                    "debug": debug,
+                }
+                if "llm_config" in inspect.signature(preprocess_func).parameters:
+                    preprocess_kwargs["llm_config"] = llm_config
 
-                    try:
-                        llm_config = {
-                            "model": llm_model,
-                            "api_key": llm_apikey,
-                            "base_url": llm_baseurl,
-                            "temperature": llm_temperature,
-                            "effort": llm_effort,
-                            "fake_as": llm_fake_as,
-                        }
-                        if llm_max_retries is not None:
-                            llm_config["max_retries"] = llm_max_retries
-                        preprocess_kwargs = {
-                            "session": session,
-                            "skill_name": skill_name,
-                            "expected_outputs": expected_outputs,
-                            "old_yaml_map": old_yaml_map,
-                            "new_binary_dir": new_binary_dir,
-                            "platform": platform,
-                            "image_base": image_base,
-                            "debug": debug,
-                        }
-                        if "llm_config" in inspect.signature(preprocess_func).parameters:
-                            preprocess_kwargs["llm_config"] = llm_config
-
-                        result = preprocess_func(**preprocess_kwargs)
-                        if inspect.isawaitable(result):
-                            result = await result
-                        return _normalize_preprocess_status(result)
-                    except Exception as e:
-                        if debug:
-                            print(f"    Preprocess: script execution failed for {skill_name}: {e}")
-                        return PREPROCESS_STATUS_FAILED
+                result = preprocess_func(**preprocess_kwargs)
+                if inspect.isawaitable(result):
+                    result = await result
+                return _normalize_preprocess_status(result)
+            except Exception as e:
+                if debug:
+                    print(f"    Preprocess: script execution failed for {skill_name}: {e}")
+                return PREPROCESS_STATUS_FAILED
 
     except Exception as e:
         if debug:

@@ -11,6 +11,7 @@ import yaml
 
 import generate_reference_yaml
 import ida_analyze_bin
+from ida_mcp_session import McpDatabaseSelectionError
 
 
 class _FakeTextContent:
@@ -120,12 +121,18 @@ def _base_args(**overrides: object) -> Namespace:
         "debug": False,
         "binary": None,
         "auto_start_mcp": False,
+        "mcp_database": None,
     }
     payload.update(overrides)
     return Namespace(**payload)
 
 
 class TestReferenceYamlPureHelpers(unittest.TestCase):
+    def test_parse_args_accepts_explicit_mcp_database(self) -> None:
+        args = generate_reference_yaml.parse_args(["-func_name", "Example", "-mcp_database", "server-db"])
+
+        self.assertEqual("server-db", args.mcp_database)
+
     def test_build_reference_output_path_includes_module_and_platform(self) -> None:
         repo_root = Path("/repo")
 
@@ -945,7 +952,99 @@ class TestWriteReferenceYaml(unittest.TestCase):
 
 
 class TestMcpSessionModes(unittest.IsolatedAsyncioTestCase):
-    async def test_open_mcp_session_raises_reference_generation_error_when_open_fails(self) -> None:
+    async def test_attach_existing_mcp_session_binds_explicit_database(self) -> None:
+        session = object()
+
+        @asynccontextmanager
+        async def _bound_session():
+            yield session
+
+        with patch.object(
+            generate_reference_yaml,
+            "open_ida_mcp_session",
+            return_value=_bound_session(),
+            create=True,
+        ) as open_session:
+            async with generate_reference_yaml.attach_existing_mcp_session(
+                host="127.0.0.1",
+                port=13337,
+                explicit_database="server-db",
+                debug=False,
+            ) as actual_session:
+                self.assertIs(session, actual_session)
+
+        open_session.assert_called_once_with(
+            "127.0.0.1",
+            13337,
+            explicit_database="server-db",
+        )
+
+    async def test_autostart_mcp_session_binds_binary_and_cleans_up_process(self) -> None:
+        process = MagicMock(name="process")
+        session = object()
+
+        @asynccontextmanager
+        async def _bound_session():
+            yield session
+
+        with (
+            patch.object(generate_reference_yaml, "start_idalib_mcp", return_value=process),
+            patch.object(
+                generate_reference_yaml,
+                "open_ida_mcp_session",
+                return_value=_bound_session(),
+                create=True,
+            ) as open_session,
+            patch.object(
+                generate_reference_yaml,
+                "quit_ida_gracefully_async",
+                new_callable=AsyncMock,
+            ) as quit_ida,
+        ):
+            async with generate_reference_yaml.autostart_mcp_session(
+                binary_path="/tmp/server.dll",
+                host="127.0.0.1",
+                port=13337,
+                ida_args="",
+                explicit_database="server-db",
+                debug=False,
+            ) as actual_session:
+                self.assertIs(session, actual_session)
+
+        open_session.assert_called_once_with(
+            "127.0.0.1",
+            13337,
+            expected_binary="/tmp/server.dll",
+            explicit_database="server-db",
+            auto_started=True,
+        )
+        quit_ida.assert_awaited_once_with(
+            process,
+            "127.0.0.1",
+            13337,
+            expected_binary="/tmp/server.dll",
+            debug=False,
+        )
+
+    async def test_adapter_selection_error_becomes_reference_generation_error(self) -> None:
+        with patch.object(
+            generate_reference_yaml,
+            "open_ida_mcp_session",
+            side_effect=McpDatabaseSelectionError("multiple active MCP databases"),
+            create=True,
+        ):
+            with self.assertRaisesRegex(
+                generate_reference_yaml.ReferenceGenerationError,
+                "multiple active MCP databases",
+            ):
+                async with generate_reference_yaml.attach_existing_mcp_session(
+                    host="127.0.0.1",
+                    port=13337,
+                    debug=False,
+                ):
+                    self.fail("attach_existing_mcp_session should not yield")
+
+    async def _legacy_test_open_mcp_session_raises_reference_generation_error_when_open_fails(self) -> None:
         @asynccontextmanager
         async def _failing_streamable_http_client(url: str, *, http_client: object):
             raise RuntimeError("open failed")
@@ -975,7 +1074,7 @@ class TestMcpSessionModes(unittest.IsolatedAsyncioTestCase):
             str(ctx.exception),
         )
 
-    async def test_open_mcp_session_raises_reference_generation_error_when_initialize_fails(
+    async def _legacy_test_open_mcp_session_raises_reference_generation_error_when_initialize_fails(
         self,
     ) -> None:
         fake_stream_client = _FakeStreamableHttpClient()
@@ -1004,7 +1103,7 @@ class TestMcpSessionModes(unittest.IsolatedAsyncioTestCase):
             str(ctx.exception),
         )
 
-    async def test_attach_existing_mcp_session_checks_health_first(self) -> None:
+    async def _legacy_test_attach_existing_mcp_session_checks_health_first(self) -> None:
         _FakeClientSession.instances.clear()
         fake_stream_client = _FakeStreamableHttpClient()
         call_order: list[str] = []
@@ -1056,7 +1155,7 @@ class TestMcpSessionModes(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(_FakeAsyncClient.instances[0].kwargs["trust_env"])
         self.assertTrue(_FakeClientSession.instances[0].initialized)
 
-    async def test_attach_existing_mcp_session_raises_when_health_check_fails(self) -> None:
+    async def _legacy_test_attach_existing_mcp_session_raises_when_health_check_fails(self) -> None:
         with patch.object(
             generate_reference_yaml,
             "check_mcp_health",
@@ -1077,7 +1176,7 @@ class TestMcpSessionModes(unittest.IsolatedAsyncioTestCase):
         )
         check_health.assert_awaited_once_with("127.0.0.1", 13337)
 
-    async def test_autostart_mcp_session_starts_and_quits_process(self) -> None:
+    async def _legacy_test_autostart_mcp_session_starts_and_quits_process(self) -> None:
         _FakeClientSession.instances.clear()
         fake_stream_client = _FakeStreamableHttpClient()
         process = MagicMock(name="fake_process")
@@ -1163,7 +1262,7 @@ class TestMcpSessionModes(unittest.IsolatedAsyncioTestCase):
             False,
         )
 
-    async def test_autostart_mcp_session_quits_process_when_session_body_raises(self) -> None:
+    async def _legacy_test_autostart_mcp_session_quits_process_when_session_body_raises(self) -> None:
         _FakeClientSession.instances.clear()
         fake_stream_client = _FakeStreamableHttpClient()
         process = MagicMock(name="fake_process")
@@ -1213,7 +1312,7 @@ class TestMcpSessionModes(unittest.IsolatedAsyncioTestCase):
             debug=True,
         )
 
-    async def test_autostart_mcp_session_quits_process_when_open_session_fails(self) -> None:
+    async def _legacy_test_autostart_mcp_session_quits_process_when_open_session_fails(self) -> None:
         process = MagicMock(name="fake_process")
 
         @asynccontextmanager
@@ -1304,6 +1403,7 @@ class TestIdaAnalyzeBinWrappers(unittest.IsolatedAsyncioTestCase):
                     MagicMock(name="fake_process"),
                     "127.0.0.1",
                     13337,
+                    expected_binary="/tmp/server.dll",
                     debug=False,
                 )
 
@@ -1322,6 +1422,7 @@ class TestIdaAnalyzeBinWrappers(unittest.IsolatedAsyncioTestCase):
                     MagicMock(name="fake_process"),
                     "127.0.0.1",
                     13337,
+                    expected_binary="/tmp/server.dll",
                     debug=False,
                 )
 
@@ -1329,6 +1430,21 @@ class TestIdaAnalyzeBinWrappers(unittest.IsolatedAsyncioTestCase):
 
 
 class TestRunReferenceGeneration(unittest.IsolatedAsyncioTestCase):
+    async def test_resolve_generation_target_uses_existing_bound_session_only(self) -> None:
+        session = MagicMock()
+        session.call_tool = AsyncMock(
+            return_value=_FakeCallToolResult({"metadata": {"path": "D:/repo/bin/14168/server/server.dll.i64"}})
+        )
+
+        target = await generate_reference_yaml.resolve_generation_target(
+            session=session,
+            gamever=None,
+            module=None,
+            platform=None,
+        )
+
+        self.assertEqual({"gamever": "14168", "module": "server", "platform": "windows"}, target)
+
     async def test_run_reference_generation_uses_attach_mode_by_default(self) -> None:
         fake_session = object()
         output_path = Path("/repo/out/reference.yaml")

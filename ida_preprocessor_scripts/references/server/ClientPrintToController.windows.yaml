@@ -1,0 +1,259 @@
+func_name: ClientPrintToController
+func_va: '0x180c25dd0'
+disasm_code: |-
+  .text:0000000180C25DD0                 test    rcx, rcx
+  .text:0000000180C25DD3                 jz      locret_180C26009
+  .text:0000000180C25DD9                 mov     [rsp-8+arg_8], rbx
+  .text:0000000180C25DDE                 mov     [rsp-8+arg_10], rsi
+  .text:0000000180C25DE3                 mov     [rsp-8+arg_18], rdi
+  .text:0000000180C25DE8                 push    rbp
+  .text:0000000180C25DE9                 push    r14
+  .text:0000000180C25DEB                 push    r15
+  .text:0000000180C25DED                 lea     rbp, [rsp-2Fh]
+  .text:0000000180C25DF2                 sub     rsp, 0E0h
+  .text:0000000180C25DF9                 mov     rbx, rcx
+  .text:0000000180C25DFC                 mov     rdi, r9
+  .text:0000000180C25DFF                 lea     rcx, [rbp+3Fh+var_B0]
+  .text:0000000180C25E03                 mov     rsi, r8
+  .text:0000000180C25E06                 mov     r14d, edx
+  .text:0000000180C25E09                 xor     r15d, r15d
+  .text:0000000180C25E0C                 call    CRecipientFilter_ctor
+  .text:0000000180C25E11                 lea     rax, ??_7CSingleUserRecipientFilter@@6B@; const CSingleUserRecipientFilter::`vftable'
+  .text:0000000180C25E18                 mov     rcx, rbx
+  .text:0000000180C25E1B                 mov     [rbp+3Fh+var_B0], rax
+  .text:0000000180C25E1F                 call    j_UTIL_GetPlayerControllerForEntity ; jmp thunk -> UTIL_GetPlayerControllerForEntity (report the real name UTIL_GetPlayerControllerForEntity, drop the leading j_)
+  .text:0000000180C25E24                 mov     rdx, rax
+  .text:0000000180C25E27                 lea     rcx, [rbp+3Fh+var_B0]
+  .text:0000000180C25E2B                 call    sub_180C04FE0
+  .text:0000000180C25E30                 lea     rcx, [rbp+3Fh+var_B0]
+  .text:0000000180C25E34                 call    sub_180C0AA20
+  .text:0000000180C25E39                 lea     rcx, [rbp+3Fh+var_B0]
+  .text:0000000180C25E3D                 call    sub_180C0CB30
+  .text:0000000180C25E42                 lea     rax, [rbp+3Fh+var_B0]
+  .text:0000000180C25E46                 mov     [rbp+3Fh+var_78], r15d
+  .text:0000000180C25E4A                 mov     [rbp+3Fh+var_90], rax
+  .text:0000000180C25E4E                 lea     rcx, [rbp+3Fh+var_58]
+  .text:0000000180C25E52                 lea     rax, ??_7CNetMessage@@6B@; const CNetMessage::`vftable'
+  .text:0000000180C25E59                 mov     [rbp+3Fh+var_74], 0FFh
+  .text:0000000180C25E5D                 xorps   xmm0, xmm0
+  .text:0000000180C25E60                 mov     [rbp+3Fh+var_88], rax
+  .text:0000000180C25E64                 mov     rbx, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C25E6B                 movsd   [rbp+3Fh+var_80], xmm0
+  .text:0000000180C25E70                 xor     r8d, r8d
+  .text:0000000180C25E73                 mov     [rbp+3Fh+var_70], rbx
+  .text:0000000180C25E77                 xor     edx, edx
+  .text:0000000180C25E79                 mov     [rbp+3Fh+var_68], 0BF800000h
+  .text:0000000180C25E80                 mov     [rbp+3Fh+var_60], rbx
+  .text:0000000180C25E84                 call    sub_1808495C0
+  .text:0000000180C25E89                 or      [rbp+3Fh+var_48], 1
+  .text:0000000180C25E8D                 lea     rax, ??_7CUserMessageTextMsg_t@@6B@; const CUserMessageTextMsg_t::`vftable'
+  .text:0000000180C25E94                 mov     [rbp+3Fh+var_88], rax
+  .text:0000000180C25E98                 lea     rcx, [rbp+3Fh+var_40]
+  .text:0000000180C25E9C                 lea     rax, ??_7CUserMessageTextMsg_t@@6B@_0; const CUserMessageTextMsg_t::`vftable'
+  .text:0000000180C25EA3                 mov     [rbp+3Fh+var_20], r15d
+  .text:0000000180C25EA7                 mov     [rbp+3Fh+var_58], rax
+  .text:0000000180C25EAB                 mov     [rbp+3Fh+var_28], r14d
+  .text:0000000180C25EAF                 call    sub_180FDDB50
+  .text:0000000180C25EB4                 mov     r8, rbx
+  .text:0000000180C25EB7                 inc     r8
+  .text:0000000180C25EBA                 cmp     [rsi+r8], r15b
+  .text:0000000180C25EBE                 jnz     short loc_180C25EB7
+  .text:0000000180C25EC0                 mov     rdx, rsi
+  .text:0000000180C25EC3                 mov     rcx, rax
+  .text:0000000180C25EC6                 call    sub_1801BBD70
+  .text:0000000180C25ECB                 test    rdi, rdi
+  .text:0000000180C25ECE                 jz      short loc_180C25EF4
+  .text:0000000180C25ED0                 lea     rcx, [rbp+3Fh+var_40]
+  .text:0000000180C25ED4                 call    sub_180FDDB50
+  .text:0000000180C25ED9                 mov     r8, rbx
+  .text:0000000180C25EDC                 nop     dword ptr [rax+00h]
+  .text:0000000180C25EE0                 inc     r8
+  .text:0000000180C25EE3                 cmp     [rdi+r8], r15b
+  .text:0000000180C25EE7                 jnz     short loc_180C25EE0
+  .text:0000000180C25EE9                 mov     rdx, rdi
+  .text:0000000180C25EEC                 mov     rcx, rax
+  .text:0000000180C25EEF                 call    sub_1801BBD70
+  .text:0000000180C25EF4                 mov     rdi, [rbp+3Fh+arg_20]
+  .text:0000000180C25EF8                 test    rdi, rdi
+  .text:0000000180C25EFB                 jz      short loc_180C25F24
+  .text:0000000180C25EFD                 lea     rcx, [rbp+3Fh+var_40]
+  .text:0000000180C25F01                 call    sub_180FDDB50
+  .text:0000000180C25F06                 mov     r8, rbx
+  .text:0000000180C25F09                 nop     dword ptr [rax+00000000h]
+  .text:0000000180C25F10                 inc     r8
+  .text:0000000180C25F13                 cmp     [rdi+r8], r15b
+  .text:0000000180C25F17                 jnz     short loc_180C25F10
+  .text:0000000180C25F19                 mov     rdx, rdi
+  .text:0000000180C25F1C                 mov     rcx, rax
+  .text:0000000180C25F1F                 call    sub_1801BBD70
+  .text:0000000180C25F24                 mov     rdi, [rbp+3Fh+arg_28]
+  .text:0000000180C25F28                 test    rdi, rdi
+  .text:0000000180C25F2B                 jz      short loc_180C25F54
+  .text:0000000180C25F2D                 lea     rcx, [rbp+3Fh+var_40]
+  .text:0000000180C25F31                 call    sub_180FDDB50
+  .text:0000000180C25F36                 mov     r8, rbx
+  .text:0000000180C25F39                 nop     dword ptr [rax+00000000h]
+  .text:0000000180C25F40                 inc     r8
+  .text:0000000180C25F43                 cmp     [rdi+r8], r15b
+  .text:0000000180C25F47                 jnz     short loc_180C25F40
+  .text:0000000180C25F49                 mov     rdx, rdi
+  .text:0000000180C25F4C                 mov     rcx, rax
+  .text:0000000180C25F4F                 call    sub_1801BBD70
+  .text:0000000180C25F54                 mov     rdi, [rbp+3Fh+arg_30]
+  .text:0000000180C25F58                 test    rdi, rdi
+  .text:0000000180C25F5B                 jz      short loc_180C25F7D
+  .text:0000000180C25F5D                 lea     rcx, [rbp+3Fh+var_40]
+  .text:0000000180C25F61                 call    sub_180FDDB50
+  .text:0000000180C25F66                 inc     rbx
+  .text:0000000180C25F69                 cmp     [rdi+rbx], r15b
+  .text:0000000180C25F6D                 jnz     short loc_180C25F66
+  .text:0000000180C25F6F                 mov     r8, rbx
+  .text:0000000180C25F72                 mov     rdx, rdi
+  .text:0000000180C25F75                 mov     rcx, rax
+  .text:0000000180C25F78                 call    sub_1801BBD70
+  .text:0000000180C25F7D                 mov     r15, cs:qword_181FDFC88
+  .text:0000000180C25F84                 mov     rcx, cs:g_pNetworkMessages
+  .text:0000000180C25F8B                 mov     rdi, cs:qword_181FCA2F0
+  .text:0000000180C25F92                 mov     rsi, [rbp+3Fh+var_90]
+  .text:0000000180C25F96                 mov     rdx, rdi
+  .text:0000000180C25F99                 mov     rax, [r15]
+  .text:0000000180C25F9C                 mov     ebx, [rbp+3Fh+var_20]
+  .text:0000000180C25F9F                 mov     r14, [rax+78h]
+  .text:0000000180C25FA3                 mov     rax, [rcx]
+  .text:0000000180C25FA6                 call    qword ptr [rax+60h]
+  .text:0000000180C25FA9                 lea     rax, [rbp+3Fh+var_88]
+  .text:0000000180C25FAD                 mov     [rsp+0F0h+var_C0], 68h ; 'h'
+  .text:0000000180C25FB6                 mov     [rsp+0F0h+var_C8], rax
+  .text:0000000180C25FBB                 mov     r9, rsi
+  .text:0000000180C25FBE                 xor     r8d, r8d
+  .text:0000000180C25FC1                 mov     [rsp+0F0h+var_D0], rdi
+  .text:0000000180C25FC6                 mov     edx, ebx
+  .text:0000000180C25FC8                 mov     rcx, r15
+  .text:0000000180C25FCB                 call    r14
+  .text:0000000180C25FCE                 lea     rax, ??_7?$CNetMessagePB@$0HM@VCUserMessageTextMsg@@$0N@$00$00@@6B@; const CNetMessagePB<124,CUserMessageTextMsg,13,1,1>::`vftable'
+  .text:0000000180C25FD5                 mov     [rbp+3Fh+var_88], rax
+  .text:0000000180C25FD9                 lea     rcx, [rbp+3Fh+var_58]
+  .text:0000000180C25FDD                 lea     rax, ??_7?$CNetMessagePB@$0HM@VCUserMessageTextMsg@@$0N@$00$00@@6B@_0; const CNetMessagePB<124,CUserMessageTextMsg,13,1,1>::`vftable'
+  .text:0000000180C25FE4                 mov     [rbp+3Fh+var_58], rax
+  .text:0000000180C25FE8                 call    sub_18084DD50
+  .text:0000000180C25FED                 lea     r11, [rsp+0F0h+var_10]
+  .text:0000000180C25FF5                 mov     rbx, [r11+28h]
+  .text:0000000180C25FF9                 mov     rsi, [r11+30h]
+  .text:0000000180C25FFD                 mov     rdi, [r11+38h]
+  .text:0000000180C26001                 mov     rsp, r11
+  .text:0000000180C26004                 pop     r15
+  .text:0000000180C26006                 pop     r14
+  .text:0000000180C26008                 pop     rbp
+  .text:0000000180C26009                 retn
+procedure: |-
+  void __fastcall ClientPrintToController(__int64 a1, int a2, __int64 a3, __int64 a4, __int64 a5, __int64 a6, __int64 a7)
+  {
+    __int64 v11; // rax
+    __int64 v12; // rbx
+    __int64 v13; // rax
+    __int64 v14; // r8
+    __int64 v15; // rax
+    __int64 v16; // r8
+    __int64 v17; // rax
+    __int64 v18; // r8
+    __int64 v19; // rax
+    __int64 v20; // r8
+    __int64 v21; // rax
+    __int64 v22; // r15
+    __int64 v23; // rdi
+    _QWORD *v24; // rsi
+    unsigned int v25; // ebx
+    void (__fastcall *v26)(__int64, _QWORD, _QWORD, _QWORD *, __int64, _QWORD *, __int64); // r14
+    _QWORD v27[4]; // [rsp+40h] [rbp-71h] BYREF
+    _QWORD *v28; // [rsp+60h] [rbp-51h]
+    _QWORD v29[2]; // [rsp+68h] [rbp-49h] BYREF
+    int v30; // [rsp+78h] [rbp-39h]
+    char v31; // [rsp+7Ch] [rbp-35h]
+    __int64 v32; // [rsp+80h] [rbp-31h]
+    int v33; // [rsp+88h] [rbp-29h]
+    __int64 v34; // [rsp+90h] [rbp-21h]
+    _QWORD v35[2]; // [rsp+98h] [rbp-19h] BYREF
+    int v36; // [rsp+A8h] [rbp-9h]
+    _BYTE v37[24]; // [rsp+B0h] [rbp-1h] BYREF
+    int v38; // [rsp+C8h] [rbp+17h]
+    unsigned int v39; // [rsp+D0h] [rbp+1Fh]
+
+    if ( a1 )
+    {
+      CRecipientFilter_ctor(v27);
+      v27[0] = &CSingleUserRecipientFilter::`vftable';
+      v11 = j_UTIL_GetPlayerControllerForEntity(a1); // jmp thunk -> UTIL_GetPlayerControllerForEntity (report the real name UTIL_GetPlayerControllerForEntity, drop the leading j_)
+      sub_180C04FE0(v27, v11);
+      sub_180C0AA20(v27);
+      sub_180C0CB30(v27);
+      v30 = 0;
+      v28 = v27;
+      v31 = -1;
+      v29[0] = &CNetMessage::`vftable';
+      v12 = -1;
+      v29[1] = 0;
+      v32 = -1;
+      v33 = -1082130432;
+      v34 = -1;
+      sub_1808495C0(v35, 0, 0);
+      v36 |= 1u;
+      v29[0] = &CUserMessageTextMsg_t::`vftable';
+      v39 = 0;
+      v35[0] = &CUserMessageTextMsg_t::`vftable';
+      v38 = a2;
+      v13 = sub_180FDDB50(v37);
+      v14 = -1;
+      do
+        ++v14;
+      while ( *(_BYTE *)(a3 + v14) );
+      sub_1801BBD70(v13, a3);
+      if ( a4 )
+      {
+        v15 = sub_180FDDB50(v37);
+        v16 = -1;
+        do
+          ++v16;
+        while ( *(_BYTE *)(a4 + v16) );
+        sub_1801BBD70(v15, a4);
+      }
+      if ( a5 )
+      {
+        v17 = sub_180FDDB50(v37);
+        v18 = -1;
+        do
+          ++v18;
+        while ( *(_BYTE *)(a5 + v18) );
+        sub_1801BBD70(v17, a5);
+      }
+      if ( a6 )
+      {
+        v19 = sub_180FDDB50(v37);
+        v20 = -1;
+        do
+          ++v20;
+        while ( *(_BYTE *)(a6 + v20) );
+        sub_1801BBD70(v19, a6);
+      }
+      if ( a7 )
+      {
+        v21 = sub_180FDDB50(v37);
+        do
+          ++v12;
+        while ( *(_BYTE *)(a7 + v12) );
+        sub_1801BBD70(v21, a7);
+      }
+      v22 = qword_181FDFC88;
+      v23 = qword_181FCA2F0;
+      v24 = v28;
+      v25 = v39;
+      v26 = *(void (__fastcall **)(__int64, _QWORD, _QWORD, _QWORD *, __int64, _QWORD *, __int64))(*(_QWORD *)qword_181FDFC88
+                                                                                                 + 120LL);
+      (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)g_pNetworkMessages + 96LL))(
+        g_pNetworkMessages,
+        qword_181FCA2F0);
+      v26(v22, v25, 0, v24, v23, v29, 104);
+      v29[0] = &CNetMessagePB<124,CUserMessageTextMsg,13,1,1>::`vftable';
+      v35[0] = &CNetMessagePB<124,CUserMessageTextMsg,13,1,1>::`vftable';
+      sub_18084DD50(v35);
+    }
+  }

@@ -42,7 +42,7 @@ uv run python format_repo_files.py
 uv run python format_repo_files.py --check
 ```
 
-格式化脚本只处理 `git ls-files --cached -- '*.py' '*.yaml'` 返回的文件，因此会跳过已被 ignore 的文件和未跟踪的临时文件。`ida_preprocessor_scripts/references/` 下的 YAML 也会被跳过，因为这些文件由脚本自动生成。
+格式化脚本只处理 `git ls-files --cached -- '*.py' '*.yaml'` 返回的文件，因此会跳过已被 ignore 的文件和未跟踪的临时文件。`ida_preprocessor_scripts/references/` 下的生成 YAML 与 `gamesymbols/` 下的 canonical lockfile 也会被跳过，由各自生成器保证 byte-stable 格式。
 
 ## 整体工作流
 
@@ -69,12 +69,14 @@ uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
 ### 2. 为 `config.yaml` 的符号生成对应的 signatures
 
  ```bash
- uv run ida_analyze_bin.py -gamever=14146 [-oldgamever=14145] [-configyaml=path/to/config.yaml] [-modules=server] [-platform=windows] [-agent=claude/codex/"claude.cmd"/"codex.cmd"] [-maxretry=3] [-vcall_finder=g_pNetworkMessages|*] [-llm_model=gpt-4o] [-llm_apikey=your-key] [-llm_baseurl=https://api.example.com/v1] [-llm_temperature=0.2] [-llm_effort=medium] [-llm_fake_as=codex] [-debug]
+ uv run ida_analyze_bin.py -gamever=14146 [-oldgamever=14145] [-configyaml=path/to/config.yaml] [-modules=server] [-platform=windows] [-agent=claude/codex/opencode/"claude.cmd"/"codex.cmd"/"opencode.cmd"] [-maxretry=3] [-vcall_finder=g_pNetworkMessages|*] [-llm_model=gpt-4o] [-llm_apikey=your-key] [-llm_baseurl=https://api.example.com/v1] [-llm_temperature=0.2] [-llm_effort=medium] [-llm_fake_as=codex] [-debug]
  ```
 
 * 在真正运行 Agent SKILL(s) 前，会先通过 mcp call 直接使用 `bin/{previous_gamever}/{module}/{symbol}.{platform}.yaml` 中的旧 signature 查找当前版本游戏二进制中的符号。不会消耗 token。
 
 * `-agent="claude.cmd"` 用于Windows上使用npm安装的claude cli
+
+* `-agent="opencode.cmd"` 用于 Windows 上通过 npm 安装的 OpenCode CLI。OpenCode 会自动加载 `.opencode/agents/sig-finder.md`，并以非交互模式运行 skill。
 
 * 共享 LLM CLI 参数：
   - `-llm_apikey`：启用基于 LLM 的流程时必需，包括 `vcall_finder` 聚合与 `LLM_DECOMPILE`
@@ -89,6 +91,25 @@ uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
 * 推荐实务中优先使用：纯程序化的预处理脚本 > 基于 LLM_DECOMPILE 的自动化反编译 > `SKILL.md`
 
 * 当指定了 `-rename` 时, 会根据已有的YAML里的信息来自动重命名所有已知的函数
+
+* Redis 进度上报为可选功能。可设置 `CS2VIBE_PROCESS_REPORTER=redis` 与
+  `CS2VIBE_REDIS_URL=redis://127.0.0.1:6379/0`，或使用等价的 `-process_reporter=redis`、`-redis_url=...` 和可选的
+  `-redis_prefix=...` 参数。Reporter 会写入不可变 ExecutionPlan、Run/Job/Skill 最新快照、事件 Stream、原子汇总计数
+  与带 TTL 的 heartbeat。Redis 暂时不可用不会改变 Analyzer 结果，恢复连接后会重放最新本地快照。
+
+* 可使用 `uv run python process_scheduler_cli.py submit --gamever 14141 --agent codex` 提交任务，再通过
+  `uv run python process_scheduler_cli.py run` 启动单并发 Scheduler。Redis Stream Consumer Group 会保持 FIFO 顺序、
+  在 Scheduler 重启后恢复 pending entry，并在 Analyzer heartbeat 仍有效时避免重复启动。队列只接受经过校验的结构化
+  字段，不执行 Redis payload 中的任意 shell 命令。
+
+* 可使用 `uv run uvicorn process_api:app --host 127.0.0.1 --port 8000` 启动只读进度 API。主要接口包括
+  `/api/v1/runs`、`/api/v1/runs/{run_id}/snapshot`、`/tasks`、`/events` 和 `/stream`。页面应先读取 snapshot，
+  再以 `snapshot_event_id` 作为 `after` 建立 SSE；断线后可通过 `Last-Event-ID` 恢复。服务默认仅监听本机且不内置认证，
+  对外部署时应置于认证反向代理之后。跨域来源可通过 `CS2VIBE_API_CORS_ORIGINS` 配置，SSE block 和 batch 分别使用
+  `CS2VIBE_SSE_BLOCK_MS`、`CS2VIBE_SSE_BATCH_SIZE` 调整；`/healthz` 和 `/readyz` 分别用于存活与 Redis 就绪检查。
+  `pages/` 中的 React 看板可通过 `npm ci && npm run build` 构建。公网 Pages 页面连接浏览器同机 FastAPI 时，需将
+  Pages 的精确 Origin 加入 `CS2VIBE_API_CORS_ORIGINS`，并设置 `CS2VIBE_API_ALLOW_PRIVATE_NETWORK=true` 响应浏览器
+  私有网络预检。Pages CDN 无法访问另一台机器的 localhost；启用私有网络访问时也禁止使用通配 Origin。
 
 #### vcall_finder 相关
 
@@ -147,16 +168,55 @@ uv run generate_reference_yaml.py -gamever 14141 -module engine -platform window
 ### 3. 将 yaml(s) 转换为 gamedata json / txt
 
 ```bash
-uv run update_gamedata.py -gamever 14141 [-debug]
+uv run update_gamedata.py -gamever 14168 -snapshot gamesymbols/14168.yaml [-debug]
 ```
 
 ### 4. 运行 C++ 测试并检查 cpp headers 是否与 yaml(s) 匹配
 
 ```bash
-uv run run_cpp_tests.py -gamever 14141 [-debug] [-fixheader] [-agent=claude/codex/"claude.cmd"/"codex.cmd"] 
+uv run run_cpp_tests.py -gamever 14168 -snapshot gamesymbols/14168.yaml [-debug]
 ```
 
-* 使用 `-fixheader` 时，会启动一个 agent 来修复 cpp headers 中的不匹配项（会消耗少量token）
+需要修复报告的 `hl2sdk_cs2` header 差异时，使用项目级 `fix-cppheaders` SKILL。该 SKILL 会自行调用
+`run_cpp_tests.py` 获取最新 layout diff，并在修改后重复验证。
+
+### 5. 发布、恢复与验证 game-symbol snapshot
+
+单个 symbol YAML 继续作为 ignored 文件保存在 `bin/<GAMEVER>/<module>/`。Git 跟踪的 canonical analysis
+lockfile 为 `gamesymbols/<GAMEVER>.yaml`，其正式文件集合由 `config.yaml` 声明的 required / optional YAML
+输出推导。
+
+top-level analysis transaction 成功后立即 strict pack 一次 candidate。两个 downstream consumer 只读取同一个
+immutable candidate；全部 validation 成功后，publication 只复制 candidate 原始字节：
+
+```bash
+CANDIDATE_DIR="$(mktemp -d)"
+CANDIDATE_SNAPSHOT="$CANDIDATE_DIR/14168.yaml"
+CANDIDATE_SESSION="$CANDIDATE_DIR/14168.session.json"
+uv run gamesymbol_candidate.py build -gamever 14168 -bindir bin -configyaml config.yaml -output "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION"
+uv run update_gamedata.py -gamever 14168 -snapshot "$CANDIDATE_SNAPSHOT"
+uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step gamedata
+uv run run_cpp_tests.py -gamever 14168 -snapshot "$CANDIDATE_SNAPSHOT"
+uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step cpp_tests
+uv run gamesymbol_candidate.py publish -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -snapshot gamesymbols/14168.yaml
+```
+
+可使用以下命令恢复确定性分析基线，或只读验证当前 workspace：
+
+```bash
+uv run gamesymbol_snapshot.py restore -gamever 14168
+uv run gamesymbol_snapshot.py restore -gamever 14168 -replace
+uv run gamesymbol_snapshot.py verify -gamever 14168
+```
+
+默认 restore 只创建缺失 YAML，并拒绝覆盖语义不同的文件。`-replace` 只删除 `bin/<GAMEVER>/` 下的 YAML，
+保留二进制与 IDA database，再重建 snapshot 内容。candidate `build` 与 low-level/bootstrap `pack` 会拒绝
+缺失 required output 与 undeclared YAML；`verify` 还会强制检查 canonical bytes 和两类 round-trip。
+
+可能影响分析输出的 PR 必须同时提交对应的 `gamesymbols/<GAMEVER>.yaml` 更新。PR CI 会恢复 base snapshot，
+按 snapshot / config / source 变化 invalidates producer，运行 analyzer，strict-pack actual candidate，再与 PR
+head snapshot 比较。head snapshot 只表示 expected result；两个 downstream consumer 都读取 actual candidate，
+普通 PR workflow 不会 publish 或改写 tracked snapshot。
 
 ### 当前支持的 gamedata
 
@@ -379,13 +439,25 @@ uv run ida_analyze_bin.py -gamever %CS2_GAMEVER% -agent="claude.cmd" -platform %
 ```
 
 ```bash
-@echo Update gamedata with generated yamls
+@echo Build the immutable candidate immediately after analysis
 
-uv run update_gamedata.py -gamever %CS2_GAMEVER% -debug
+set CANDIDATE_ID=%RANDOM%
+set CANDIDATE_SNAPSHOT=%TEMP%\gamesymbol-%CS2_GAMEVER%-%CANDIDATE_ID%.yaml
+set CANDIDATE_SESSION=%TEMP%\gamesymbol-%CS2_GAMEVER%-%CANDIDATE_ID%.session.json
+uv run gamesymbol_candidate.py build -gamever %CS2_GAMEVER% -bindir bin -configyaml config.yaml -output %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION%
 ```
 
 ```bash
-@echo Find mismatches in CS2SDK headers and fix them
+@echo Update gamedata from the candidate snapshot
 
-uv run run_cpp_tests.py -gamever %CS2_GAMEVER% -debug -fixheader -agent="claude.cmd"
+uv run update_gamedata.py -gamever %CS2_GAMEVER% -snapshot %CANDIDATE_SNAPSHOT% -debug
+uv run gamesymbol_candidate.py mark -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -step gamedata
+```
+
+```bash
+@echo Find mismatches in CS2SDK headers
+
+uv run run_cpp_tests.py -gamever %CS2_GAMEVER% -snapshot %CANDIDATE_SNAPSHOT% -debug
+uv run gamesymbol_candidate.py mark -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -step cpp_tests
+uv run gamesymbol_candidate.py publish -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -snapshot gamesymbols/%CS2_GAMEVER%.yaml
 ```

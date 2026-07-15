@@ -1,0 +1,217 @@
+import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+from gamesymbol_snapshot_lib.config import load_contract
+from gamesymbol_snapshot_lib.pr_validation import build_invalidation_plan
+from tests.gamesymbol_snapshot_test_support import module, skill, write_config
+
+
+def snapshot(files):
+    return {"files": files}
+
+
+class TestInvalidationPlan(unittest.TestCase):
+    def _contracts(self, root: Path, modules, head_modules=None):
+        base_config = root / "base.yaml"
+        head_config = root / "head.yaml"
+        write_config(base_config, modules)
+        write_config(head_config, head_modules or modules)
+        return (
+            load_contract(base_config, "1", root / "bin"),
+            load_contract(head_config, "1", root / "bin"),
+        )
+
+    def test_snapshot_change_invalidates_whole_owner_and_downstream_closure(self) -> None:
+        modules = [
+            module(
+                "server",
+                [
+                    skill("find-producer", ["A.{platform}.yaml", "B.{platform}.yaml"]),
+                    skill("find-consumer", ["C.{platform}.yaml"], expected_input=["A.{platform}.yaml"]),
+                ],
+                linux=False,
+            )
+        ]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            base, head = self._contracts(root, modules)
+            plan = build_invalidation_plan(
+                base,
+                head,
+                snapshot({"server/A.windows.yaml": {"value": 1}}),
+                snapshot({"server/A.windows.yaml": {"value": 2}}),
+                [],
+                root,
+            )
+
+        self.assertEqual(
+            {
+                "server/A.windows.yaml",
+                "server/B.windows.yaml",
+                "server/C.windows.yaml",
+            },
+            plan.paths,
+        )
+
+    def test_preprocessor_change_invalidates_matching_skill_when_snapshot_is_unchanged(self) -> None:
+        modules = [module("server", [skill("find-target", ["Target.{platform}.yaml"])], linux=False)]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            base, head = self._contracts(root, modules)
+            plan = build_invalidation_plan(
+                base,
+                head,
+                snapshot({"server/Target.windows.yaml": {"value": 1}}),
+                snapshot({"server/Target.windows.yaml": {"value": 1}}),
+                ["ida_preprocessor_scripts/find-target.py"],
+                root,
+            )
+
+        self.assertEqual({"server/Target.windows.yaml"}, plan.paths)
+
+    def test_config_change_and_deleted_output_remove_base_and_head_paths(self) -> None:
+        base_modules = [module("server", [skill("find-target", ["Old.{platform}.yaml"])], linux=False)]
+        head_modules = [module("server", [skill("find-target", ["New.{platform}.yaml"])], linux=False)]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            base, head = self._contracts(root, base_modules, head_modules)
+            plan = build_invalidation_plan(
+                base,
+                head,
+                snapshot({"server/Old.windows.yaml": {"value": 1}}),
+                snapshot({"server/New.windows.yaml": {"value": 1}}),
+                ["config.yaml"],
+                root,
+            )
+
+        self.assertEqual({"server/Old.windows.yaml", "server/New.windows.yaml"}, plan.paths)
+
+    def test_same_basename_in_other_module_is_not_invalidated(self) -> None:
+        modules = [
+            module("engine", [skill("find-engine", ["Same.{platform}.yaml"])], linux=False),
+            module("server", [skill("find-server", ["Same.{platform}.yaml"])], linux=False),
+        ]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            base, head = self._contracts(root, modules)
+            plan = build_invalidation_plan(
+                base,
+                head,
+                snapshot(
+                    {
+                        "engine/Same.windows.yaml": {"value": 1},
+                        "server/Same.windows.yaml": {"value": 1},
+                    }
+                ),
+                snapshot(
+                    {
+                        "engine/Same.windows.yaml": {"value": 2},
+                        "server/Same.windows.yaml": {"value": 1},
+                    }
+                ),
+                [],
+                root,
+            )
+
+        self.assertEqual({"engine/Same.windows.yaml"}, plan.paths)
+
+    def test_shared_helper_change_invalidates_transitive_importers(self) -> None:
+        modules = [module("server", [skill("find-target", ["Target.{platform}.yaml"])], linux=False)]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            scripts = root / "ida_preprocessor_scripts"
+            scripts.mkdir()
+            (scripts / "_helper.py").write_text("VALUE = 1\n", encoding="utf-8")
+            (scripts / "find-target.py").write_text(
+                "from ida_preprocessor_scripts._helper import VALUE\n", encoding="utf-8"
+            )
+            base, head = self._contracts(root, modules)
+            plan = build_invalidation_plan(
+                base,
+                head,
+                snapshot({"server/Target.windows.yaml": {"value": 1}}),
+                snapshot({"server/Target.windows.yaml": {"value": 1}}),
+                ["ida_preprocessor_scripts/_helper.py"],
+                root,
+            )
+
+        self.assertEqual({"server/Target.windows.yaml"}, plan.paths)
+
+    def test_reference_change_invalidates_source_consumer(self) -> None:
+        modules = [module("server", [skill("find-target", ["Target.{platform}.yaml"])], linux=False)]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            scripts = root / "ida_preprocessor_scripts"
+            scripts.mkdir()
+            (scripts / "find-target.py").write_text(
+                'REFERENCE = "references/server/Input.{platform}.yaml"\n', encoding="utf-8"
+            )
+            base, head = self._contracts(root, modules)
+            plan = build_invalidation_plan(
+                base,
+                head,
+                snapshot({"server/Target.windows.yaml": {"value": 1}}),
+                snapshot({"server/Target.windows.yaml": {"value": 1}}),
+                ["ida_preprocessor_scripts/references/server/Input.windows.yaml"],
+                root,
+            )
+
+        self.assertEqual({"server/Target.windows.yaml"}, plan.paths)
+
+    def test_unknown_analysis_source_uses_broad_rebuild(self) -> None:
+        modules = [
+            module(
+                "server",
+                [skill("find-a", ["A.{platform}.yaml"]), skill("find-b", ["B.{platform}.yaml"])],
+                linux=False,
+            )
+        ]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "ida_preprocessor_scripts").mkdir()
+            base, head = self._contracts(root, modules)
+            unchanged = {
+                "server/A.windows.yaml": {"value": 1},
+                "server/B.windows.yaml": {"value": 1},
+            }
+            plan = build_invalidation_plan(
+                base,
+                head,
+                snapshot(unchanged),
+                snapshot(unchanged),
+                ["ida_preprocessor_scripts/_unknown.py"],
+                root,
+            )
+
+        self.assertEqual(set(unchanged), plan.paths)
+
+    def test_agent_prompt_change_uses_broad_rebuild(self) -> None:
+        modules = [
+            module(
+                "server",
+                [skill("find-a", ["A.{platform}.yaml"]), skill("find-b", ["B.{platform}.yaml"])],
+                linux=False,
+            )
+        ]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            base, head = self._contracts(root, modules)
+            unchanged = {
+                "server/A.windows.yaml": {"value": 1},
+                "server/B.windows.yaml": {"value": 1},
+            }
+            plan = build_invalidation_plan(
+                base,
+                head,
+                snapshot(unchanged),
+                snapshot(unchanged),
+                [".claude/agents/sig-finder.md"],
+                root,
+            )
+
+        self.assertEqual(set(unchanged), plan.paths)
+
+
+if __name__ == "__main__":
+    unittest.main()

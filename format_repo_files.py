@@ -10,6 +10,7 @@ from pathlib import Path
 
 MAX_WINDOWS_COMMAND_CHARS = 30000
 GENERATED_REFERENCE_YAML_PREFIX = "ida_preprocessor_scripts/references/"
+GAMESYMBOL_SNAPSHOT_PREFIX = "gamesymbols/"
 ALWAYS_CHECK_PY_GLOB = "ida_preprocessor_scripts/*.py"
 
 
@@ -80,7 +81,7 @@ def run_command_chunks(command_prefix: Sequence[str], paths: Sequence[str]) -> i
 
 def should_format_yaml(path: str) -> bool:
     normalized_path = path.replace("\\", "/")
-    return not normalized_path.startswith(GENERATED_REFERENCE_YAML_PREFIX)
+    return not normalized_path.startswith((GENERATED_REFERENCE_YAML_PREFIX, GAMESYMBOL_SNAPSHOT_PREFIX))
 
 
 def main(argv: Sequence[str] | None = None) -> int:

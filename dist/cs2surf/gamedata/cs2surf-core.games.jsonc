@@ -5,8 +5,8 @@
 			"linux": 80
 		},
 		"CBaseEntity::GetHammerUniqueId": {
-			"windows": 112,
-			"linux": 111
+			"windows": 113,
+			"linux": 112
 		},
 		// 11 functions after one with "CBasePlayerPawn::PhysicsSimulate"
 		"IsEntityPawn": {
@@ -31,8 +31,8 @@
 		// return (*(*v9 + 2832LL))(v9, v27, 0LL);
 		// 2832 (354 * 8) is the offset
 		"CommitSuicide": {
-			"windows": 390,
-			"linux": 390
+			"windows": 384,
+			"linux": 384
 		},
 		"ControllerRespawn": {
 			"windows": 272,

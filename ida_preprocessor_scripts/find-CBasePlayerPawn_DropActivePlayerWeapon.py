@@ -12,7 +12,7 @@ LLM_DECOMPILE = [
     (
         "CBasePlayerPawn_DropActivePlayerWeapon",
         "prompt/call_llm_decompile.md",
-        "references/server/CBaseCombatCharacter_OnKilled.{platform}.yaml",
+        "references/server/CBasePlayerPawn_Event_Killed.{platform}.yaml",
     ),
 ]
 

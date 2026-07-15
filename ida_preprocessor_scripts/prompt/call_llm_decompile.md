@@ -35,6 +35,10 @@ found_call: # This is for direct call to non-virtual regular function.
     insn_disasm: call    sub_180555500
     func_name: CLoopModeGame_SetGameSystemState   # This must be the true function name we asked to collect, not the sub_XXXXXXXX
 
+  - insn_va: '0x180888888'
+    insn_disasm: call    j_UTIL_GetPlayerControllerForEntity
+    func_name: UTIL_GetPlayerControllerForEntity  # When the call target is a jump thunk named j_XXXX (IDA's `j_` prefix marks a one-line `jmp` thunk), report the REAL function name XXXX (strip the leading `j_`), NOT j_XXXX. The thunk and its jump destination are the same logical function.
+
 found_funcptr: # This is for non-virtual regular function pointer.
 
   - insn_va: '0x180666600'                # Must load/reference the function pointer target address
