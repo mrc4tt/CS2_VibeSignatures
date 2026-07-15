@@ -44,6 +44,7 @@ def _task(task_id="stage-0000-engine-windows/vcall/target"):
         "task_id": task_id,
         "task_type": "vcall_target",
         "name": "target",
+        "description": "Export the target vcall",
         "stage_id": "stage-0000-engine",
         "job_id": "stage-0000-engine-windows",
         "status": "running",
@@ -146,6 +147,7 @@ class TestProcessApi(unittest.TestCase):
         response = self.client.get(f"/api/v1/runs/run-1/tasks/{self.reader.task['task_id']}")
         self.assertEqual(200, response.status_code)
         self.assertEqual(self.reader.task["task_id"], response.json()["task_id"])
+        self.assertEqual("Export the target vcall", response.json()["description"])
 
     def test_not_found_graph_not_ready_and_readiness_failure(self) -> None:
         self.assertEqual(404, self.client.get("/api/v1/runs/missing").status_code)

@@ -102,6 +102,7 @@ class ExecutionStage:
     id: str
     stage_index: int
     module_name: str
+    description: str | None = None
 
 
 @dataclass(frozen=True)
@@ -123,6 +124,7 @@ class ExecutionNode:
     node_type: PlanNodeType
     order: int
     layer: int
+    description: str | None = None
     data: dict[str, Any] = field(default_factory=dict)
 
 

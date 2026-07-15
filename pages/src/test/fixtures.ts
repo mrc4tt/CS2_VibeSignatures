@@ -38,6 +38,7 @@ export function makeTask(overrides: Partial<TaskView> = {}): TaskView {
     task_id: 'stage-0000-engine-windows/find-target',
     task_type: 'skill',
     name: 'find-target',
+    description: 'Locate the target function',
     stage_id: 'stage-0000-engine',
     job_id: 'stage-0000-engine-windows',
     status: 'running',
@@ -63,7 +64,7 @@ export function makeSnapshot(): SnapshotResponse {
     run: makeRun(),
     graph: {
       schema_version: 1,
-      stages: [{ id: 'stage-0000-engine', stage_index: 0, module_name: 'engine' }],
+      stages: [{ id: 'stage-0000-engine', stage_index: 0, module_name: 'engine', description: 'Engine analysis stage' }],
       jobs: [
         {
           id: 'stage-0000-engine-windows',
@@ -83,6 +84,7 @@ export function makeSnapshot(): SnapshotResponse {
           node_type: 'skill',
           order: 0,
           layer: 0,
+          description: task.description,
           data: { expected_output: ['target.yaml'] },
         },
       ],

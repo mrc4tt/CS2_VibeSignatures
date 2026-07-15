@@ -20,6 +20,8 @@ export interface VisualNode {
   id: string
   label: string
   subtitle: string
+  description?: string | null
+  layoutOrder?: number
   kind: string
   status: string
   descendantCount: number
@@ -102,9 +104,13 @@ function pathToRoot(id: string, parents: Record<string, string>): string[] {
   return path
 }
 
+function includesQuery(query: string, ...values: Array<string | null | undefined>): boolean {
+  return values.some((value) => value?.toLowerCase().includes(query))
+}
+
 function taskMatches(node: ExecutionNodeView, task: TaskView | undefined, filters: GraphFilters): boolean {
   const query = filters.query.trim().toLowerCase()
-  if (query && !`${node.name} ${node.id}`.toLowerCase().includes(query)) return false
+  if (query && !includesQuery(query, node.name, node.id, node.description, task?.description)) return false
   if (filters.status && task?.status !== filters.status) return false
   if (filters.phase && filters.phase !== 'all' && task?.phase !== filters.phase) return false
   if (filters.taskType && filters.taskType !== 'all' && node.node_type !== filters.taskType) return false
@@ -139,6 +145,22 @@ function matchingPaths(
   graph.nodes.forEach((node) => {
     if (taskMatches(node, tasks[node.id], filters)) pathToRoot(node.id, parents).forEach((id) => visible.add(id))
   })
+  const query = filters.query.trim().toLowerCase()
+  const hierarchyOnlyQuery = query && !filters.status && !filters.phase && !filters.taskType
+  if (!hierarchyOnlyQuery) return visible
+  graph.stages.forEach((stage) => {
+    if (filters.stageId && filters.stageId !== 'all' && filters.stageId !== stage.id) return
+    if (includesQuery(query, stage.id, stage.module_name, stage.description)) {
+      pathToRoot(stage.id, parents).forEach((id) => visible.add(id))
+    }
+  })
+  graph.jobs.forEach((job) => {
+    if (filters.stageId && filters.stageId !== 'all' && filters.stageId !== job.stage_id) return
+    if (filters.jobId && filters.jobId !== 'all' && filters.jobId !== job.id) return
+    if (includesQuery(query, job.id, job.module_name, job.platform, tasks[job.id]?.description)) {
+      pathToRoot(job.id, parents).forEach((id) => visible.add(id))
+    }
+  })
   return visible
 }
 
@@ -160,13 +182,13 @@ function visualNodes(
   const result: VisualNode[] = [{ id: runId, label: run.run_id, subtitle: 'Run', kind: 'run', status: run.effective_status, descendantCount: descendantCount(runId, children) }]
   graph.stages.filter((item) => visible.has(item.id)).forEach((stage) => {
     const jobStatuses = graph.jobs.filter((job) => job.stage_id === stage.id).map((job) => tasks[job.id]?.status || 'pending')
-    result.push({ id: stage.id, label: stage.module_name, subtitle: `Stage ${stage.stage_index}`, kind: 'stage', status: aggregateStatus(jobStatuses), descendantCount: descendantCount(stage.id, children) })
+    result.push({ id: stage.id, label: stage.module_name, subtitle: `Stage ${stage.stage_index}`, description: stage.description, layoutOrder: stage.stage_index, kind: 'stage', status: aggregateStatus(jobStatuses), descendantCount: descendantCount(stage.id, children) })
   })
   graph.jobs.filter((item) => visible.has(item.id)).forEach((job) => {
     result.push({ id: job.id, label: `${job.module_name} · ${job.platform}`, subtitle: 'Binary Job', kind: 'job', status: tasks[job.id]?.status || 'pending', descendantCount: descendantCount(job.id, children) })
   })
   graph.nodes.filter((item) => visible.has(item.id)).forEach((node) => {
-    result.push({ id: node.id, label: node.name, subtitle: node.node_type, kind: node.node_type, status: tasks[node.id]?.status || 'pending', descendantCount: descendantCount(node.id, children) })
+    result.push({ id: node.id, label: node.name, subtitle: node.node_type, description: node.description, kind: node.node_type, status: tasks[node.id]?.status || 'pending', descendantCount: descendantCount(node.id, children) })
   })
   return result
 }
@@ -209,7 +231,7 @@ export function buildDag(
 ): VisualGraph {
   const tasks = byTaskId(taskList)
   const included = new Set(graph.nodes.filter((node) => taskMatches(node, tasks[node.id], filters)).map((node) => node.id))
-  const nodes = graph.nodes.filter((node) => included.has(node.id)).map((node) => ({ id: node.id, label: node.name, subtitle: node.node_type, kind: node.node_type, status: tasks[node.id]?.status || 'pending', descendantCount: 0 }))
+  const nodes = graph.nodes.filter((node) => included.has(node.id)).map((node) => ({ id: node.id, label: node.name, subtitle: node.node_type, description: node.description, kind: node.node_type, status: tasks[node.id]?.status || 'pending', descendantCount: 0 }))
   const edges = graph.edges.filter((edge) => included.has(edge.source) && included.has(edge.target) && (showStageOrder || edge.edge_type !== 'stage_order')).map((edge, index) => ({ id: `dag:${index}:${edge.source}:${edge.target}`, source: edge.source, target: edge.target, edgeType: edge.edge_type, secondary: false, layout: true }))
   return { nodes, edges, parentById: {}, expandable: new Set() }
 }

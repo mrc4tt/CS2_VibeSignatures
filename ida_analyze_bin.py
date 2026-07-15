@@ -1478,6 +1478,56 @@ def _run_preprocess_single_skill_via_mcp(
         return asyncio.run(preprocess_single_skill_via_mcp(**fallback_kwargs))
 
 
+def _optional_config_description(value, owner):
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError(
+            f"Invalid description for {owner}: expected string or null, got {type(value).__name__}"
+        )
+    description = value.strip()
+    return description or None
+
+
+def _parse_config_skill(skill, module_name):
+    skill_name = skill.get("name")
+    if not skill_name:
+        return None
+    return {
+        "name": skill_name,
+        "description": _optional_config_description(
+            skill.get("description"), f"skill '{skill_name}' in module '{module_name}'"
+        ),
+        "expected_output": skill.get("expected_output", []) or [],
+        "expected_output_windows": skill.get("expected_output_windows", []) or [],
+        "expected_output_linux": skill.get("expected_output_linux", []) or [],
+        "optional_output": skill.get("optional_output", []) or [],
+        "expected_input": skill.get("expected_input", []),
+        "expected_input_windows": skill.get("expected_input_windows", []) or [],
+        "expected_input_linux": skill.get("expected_input_linux", []) or [],
+        "skip_if_exists": skill.get("skip_if_exists", []) or [],
+        "prerequisite": skill.get("prerequisite", []) or [],
+        "max_retries": skill.get("max_retries"),
+        "platform": skill.get("platform"),
+    }
+
+
+def _parse_module_vcall_finder(module, module_name):
+    objects = module.get("vcall_finder")
+    objects = [] if objects is None else objects
+    if not isinstance(objects, list):
+        raise ValueError(
+            f"Invalid vcall_finder for module '{module_name}': expected list, got {type(objects).__name__}"
+        )
+    for object_name in objects:
+        if not isinstance(object_name, str):
+            raise ValueError(
+                f"Invalid vcall_finder entry for module '{module_name}': "
+                f"expected string, got {type(object_name).__name__}"
+            )
+    return objects
+
+
 def parse_config(config_path):
     """
     Parse config.yaml and extract module information.
@@ -1489,7 +1539,7 @@ def parse_config(config_path):
         List of module dictionaries containing name, paths, and skills
     """
     with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+        config = yaml.safe_load(f) or {}
 
     modules = []
     for stage_index, module in enumerate(config.get("modules", [])):
@@ -1498,46 +1548,18 @@ def parse_config(config_path):
             print("  Warning: Skipping module without name")
             continue
 
-        skills = []
-        for skill in module.get("skills", []):
-            skill_name = skill.get("name")
-            if skill_name:
-                skills.append(
-                    {
-                        "name": skill_name,
-                        "expected_output": skill.get("expected_output", []) or [],
-                        "expected_output_windows": skill.get("expected_output_windows", []) or [],
-                        "expected_output_linux": skill.get("expected_output_linux", []) or [],
-                        "optional_output": skill.get("optional_output", []) or [],
-                        "expected_input": skill.get("expected_input", []),
-                        "expected_input_windows": skill.get("expected_input_windows", []) or [],
-                        "expected_input_linux": skill.get("expected_input_linux", []) or [],
-                        "skip_if_exists": skill.get("skip_if_exists", []) or [],
-                        "prerequisite": skill.get("prerequisite", []) or [],
-                        "max_retries": skill.get("max_retries"),  # None means use default
-                        "platform": skill.get("platform"),  # None means all platforms
-                    }
-                )
-
-        if "vcall_finder" not in module or module.get("vcall_finder") is None:
-            raw_vcall_finder_objects = []
-        else:
-            raw_vcall_finder_objects = module.get("vcall_finder")
-        if not isinstance(raw_vcall_finder_objects, list):
-            raise ValueError(
-                f"Invalid vcall_finder for module '{name}': expected list, got {type(raw_vcall_finder_objects).__name__}"
-            )
-
-        for object_name in raw_vcall_finder_objects:
-            if not isinstance(object_name, str):
-                raise ValueError(
-                    f"Invalid vcall_finder entry for module '{name}': expected string, got {type(object_name).__name__}"
-                )
+        skills = [
+            parsed
+            for skill in module.get("skills", []) or []
+            if (parsed := _parse_config_skill(skill, name)) is not None
+        ]
+        raw_vcall_finder_objects = _parse_module_vcall_finder(module, name)
 
         modules.append(
             {
                 "stage_index": stage_index,
                 "name": name,
+                "description": _optional_config_description(module.get("description"), f"module '{name}'"),
                 "path_windows": module.get("path_windows"),
                 "path_linux": module.get("path_linux"),
                 "vcall_finder_objects": raw_vcall_finder_objects,
@@ -1815,7 +1837,8 @@ def _build_execution_skill_nodes(*, stage, job, skills, order_graph, platform_gr
                 node_type=PlanNodeType.SKILL,
                 order=order,
                 layer=platform_graph.layers.get(skill_name, 0),
-                data=dict(skill),
+                description=skill.get("description"),
+                data={key: value for key, value in skill.items() if key != "description"},
             )
         )
     return nodes
@@ -2027,6 +2050,7 @@ def _build_execution_stage(module, fallback_index):
         id=build_stage_id(stage_index, module["name"]),
         stage_index=stage_index,
         module_name=module["name"],
+        description=module.get("description"),
     )
 
 

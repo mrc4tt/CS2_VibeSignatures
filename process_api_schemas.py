@@ -48,6 +48,7 @@ class ExecutionStageView(ApiModel):
     id: str
     stage_index: int
     module_name: str
+    description: str | None = None
 
 
 class ExecutionJobView(ApiModel):
@@ -67,6 +68,7 @@ class ExecutionNodeView(ApiModel):
     node_type: str
     order: int
     layer: int
+    description: str | None = None
     data: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -90,6 +92,7 @@ class TaskView(ApiModel):
     task_id: str
     task_type: str
     name: str
+    description: str | None = None
     stage_id: str | None = None
     job_id: str | None = None
     status: TaskStatus

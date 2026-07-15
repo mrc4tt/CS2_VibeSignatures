@@ -77,11 +77,15 @@ def event_view(run_id: str, event_id: str, fields: dict[str, str]) -> dict[str, 
 def _task_descriptors(graph: dict[str, Any] | None):
     descriptors = {}
     ordered_ids = []
+    stage_descriptions = {
+        stage["id"]: _optional(stage.get("description")) for stage in (graph or {}).get("stages", [])
+    }
     for job in (graph or {}).get("jobs", []):
         task_id = job["id"]
         descriptors[task_id] = {
             "task_type": "job",
             "name": task_id,
+            "description": stage_descriptions.get(job.get("stage_id")),
             "stage_id": job.get("stage_id"),
             "job_id": task_id,
         }
@@ -91,6 +95,7 @@ def _task_descriptors(graph: dict[str, Any] | None):
         descriptors[task_id] = {
             "task_type": node.get("node_type", "skill"),
             "name": node.get("name", task_id),
+            "description": _optional(node.get("description")),
             "stage_id": node.get("stage_id"),
             "job_id": node.get("job_id"),
         }
@@ -109,6 +114,7 @@ def _task_view(task_id: str, raw: str, descriptor: dict[str, Any]) -> dict[str, 
         "task_id": task_id,
         "task_type": descriptor.get("task_type", data.get("task_type", "skill")),
         "name": descriptor.get("name", task_id),
+        "description": descriptor.get("description"),
         "stage_id": descriptor.get("stage_id"),
         "job_id": descriptor.get("job_id"),
         "status": status,

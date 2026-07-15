@@ -52,11 +52,45 @@ describe('graph projections', () => {
     expect(result.parentById[grandchildId]).toBe(childId)
   })
 
+  it('carries stage indexes into the mindmap layout order', () => {
+    const snapshot = makeSnapshot()
+    const graph = snapshot.graph!
+    graph.stages[0].stage_index = 7
+
+    const result = buildMindMap(snapshot.run, graph, snapshot.tasks, { query: '' }, defaultMindMapExpansion(graph))
+
+    expect(result.nodes.find((node) => node.id === graph.stages[0].id)?.layoutOrder).toBe(7)
+  })
+
   it('excludes stage order unless explicitly enabled in DAG mode', () => {
     const snapshot = makeSnapshot()
     const graph = snapshot.graph!
     graph.edges.push({ source: graph.nodes[0].id, target: graph.nodes[0].id, edge_type: 'stage_order', artifact: null })
     expect(buildDag(graph, snapshot.tasks, { query: '', jobId: 'all' }, false).edges).toHaveLength(0)
     expect(buildDag(graph, snapshot.tasks, { query: '', jobId: 'all' }, true).edges).toHaveLength(1)
+  })
+
+  it('carries descriptions into graph nodes and searches module and skill descriptions', () => {
+    const snapshot = makeSnapshot()
+    const graph = snapshot.graph!
+    const skill = graph.nodes[0]
+    graph.stages[0].description = 'Analyzes the engine binary before client stages'
+    skill.description = 'Finds the hidden target through string references'
+    snapshot.tasks[0].description = skill.description
+
+    const mindMap = buildMindMap(
+      snapshot.run,
+      graph,
+      snapshot.tasks,
+      { query: 'before client stages' },
+      defaultMindMapExpansion(graph),
+    )
+    const dag = buildDag(graph, snapshot.tasks, { query: 'string references' }, false)
+
+    expect(mindMap.nodes.find((node) => node.id === graph.stages[0].id)?.description).toBe(
+      graph.stages[0].description,
+    )
+    expect(dag.nodes).toHaveLength(1)
+    expect(dag.nodes[0].description).toBe(skill.description)
   })
 })

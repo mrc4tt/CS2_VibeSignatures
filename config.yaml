@@ -3,10 +3,11 @@ modules:
     path_windows: game/bin/win64/SDL3.dll
     path_linux: game/bin/linuxsteamrt64/libSDL3.so.0
     skills:
-      - name: find-SDL_PreInitMouse-windows # xref_signatures "B0 01 48 83 C4 ??" + xref_strings "FULLMATCH:SDL_MOUSE_DOUBLE_CLICK_TIME"
+      - name: find-SDL_PreInitMouse-windows
         expected_output:
           - SDL_PreInitMouse.{platform}.yaml
         platform: windows
+        description: find SDL_PreInitMouse on SDL3.dll via xref_signatures "B0 01 48 83 C4 ??" + xref_strings "FULLMATCH:SDL_MOUSE_DOUBLE_CLICK_TIME"
       - name: find-SDL_QuitMouse-windows # exclude_signatures "B0 01 48 83 C4 ??" + xref_strings "FULLMATCH:SDL_MOUSE_DOUBLE_CLICK_TIME"
         expected_output:
           - SDL_QuitMouse.{platform}.yaml

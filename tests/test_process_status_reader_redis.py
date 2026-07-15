@@ -19,7 +19,14 @@ def _sample_plan():
     vcall_id = f"{job_id}/vcall/g_pNetworkMessages"
     return {
         "schema_version": 1,
-        "stages": [{"id": stage_id, "stage_index": 0, "module_name": "engine"}],
+        "stages": [
+            {
+                "id": stage_id,
+                "stage_index": 0,
+                "module_name": "engine",
+                "description": "Engine analysis stage",
+            }
+        ],
         "jobs": [
             {
                 "id": job_id,
@@ -39,6 +46,7 @@ def _sample_plan():
                 "node_type": "skill",
                 "order": 0,
                 "layer": 0,
+                "description": "Locate find-a",
                 "data": {},
             },
             {
@@ -168,6 +176,9 @@ class TestRedisProcessStatusReader(unittest.IsolatedAsyncioTestCase):
 
         snapshot = await self.reader.get_snapshot("run-detail")
         self.assertEqual([job_id, skill_id, vcall_id], [task["task_id"] for task in snapshot["tasks"]])
+        self.assertEqual("Engine analysis stage", snapshot["tasks"][0]["description"])
+        self.assertEqual("Locate find-a", snapshot["tasks"][1]["description"])
+        self.assertIsNone(snapshot["tasks"][2]["description"])
         self.assertEqual(snapshot["run"]["last_event_id"], snapshot["snapshot_event_id"])
 
         reporter.emit(
@@ -187,6 +198,16 @@ class TestRedisProcessStatusReader(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([], detail["dependents"])
         page = await self.reader.list_tasks("run-detail", task_type="vcall_target", offset=0, limit=10)
         self.assertEqual([vcall_id], [task["task_id"] for task in page["items"]])
+
+    async def test_legacy_graph_without_descriptions_returns_null_task_descriptions(self) -> None:
+        plan = _sample_plan()
+        plan["stages"][0].pop("description")
+        plan["nodes"][0].pop("description")
+        self._create_reporter(plan, run_id="legacy-description")
+
+        snapshot = await self.reader.get_snapshot("legacy-description")
+
+        self.assertTrue(all(task["description"] is None for task in snapshot["tasks"]))
 
     async def test_queued_snapshot_and_stream_bounds(self) -> None:
         self._seed_run("queued", 1, "queued")

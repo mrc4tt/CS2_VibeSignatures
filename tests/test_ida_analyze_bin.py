@@ -710,6 +710,51 @@ class TestResolveArtifactPathIntegration(unittest.TestCase):
 
 
 class TestParseConfig(unittest.TestCase):
+    def test_parse_config_reads_optional_module_and_skill_descriptions(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.yaml"
+            config_path.write_text(
+                """
+modules:
+  - name: engine
+    description: |
+      Engine analysis stage.
+      Runs before client.
+    skills:
+      - name: find-target
+        description: "  Locate the target function.  "
+      - name: find-empty
+        description: "   "
+      - name: find-null
+        description: null
+""".strip()
+                + "\n",
+                encoding="utf-8",
+            )
+
+            modules = ida_analyze_bin.parse_config(str(config_path))
+
+        self.assertEqual("Engine analysis stage.\nRuns before client.", modules[0]["description"])
+        self.assertEqual("Locate the target function.", modules[0]["skills"][0]["description"])
+        self.assertIsNone(modules[0]["skills"][1]["description"])
+        self.assertIsNone(modules[0]["skills"][2]["description"])
+
+    def test_parse_config_rejects_non_string_descriptions_with_context(self) -> None:
+        cases = (
+            ("description: 42", "module 'engine'"),
+            ("skills:\n      - name: find-target\n        description: [invalid]", "skill 'find-target'"),
+        )
+        for fragment, context in cases:
+            with self.subTest(context=context), TemporaryDirectory() as temp_dir:
+                config_path = Path(temp_dir) / "config.yaml"
+                config_path.write_text(
+                    f"modules:\n  - name: engine\n    {fragment}\n",
+                    encoding="utf-8",
+                )
+
+                with self.assertRaisesRegex(ValueError, rf"Invalid description for {context}"):
+                    ida_analyze_bin.parse_config(str(config_path))
+
     def test_parse_config_records_stable_stage_indexes(self) -> None:
         with TemporaryDirectory() as temp_dir:
             config_path = Path(temp_dir) / "config.yaml"
@@ -1051,6 +1096,44 @@ class TestSkillOrdering(unittest.TestCase):
 
 
 class TestExecutionPlan(unittest.TestCase):
+    def test_execution_plan_carries_descriptions_without_changing_dependencies(self) -> None:
+        base_module = {
+            "stage_index": 2,
+            "name": "engine",
+            "path_windows": "game/bin/win64/engine2.dll",
+            "skills": [
+                {"name": "producer", "expected_output": ["Shared.{platform}.yaml"]},
+                {"name": "consumer", "expected_input": ["Shared.{platform}.yaml"]},
+            ],
+        }
+        described_module = {
+            **base_module,
+            "description": "Engine stage",
+            "skills": [
+                {**base_module["skills"][0], "description": "Produces the shared artifact"},
+                {**base_module["skills"][1], "description": "Consumes the shared artifact"},
+            ],
+        }
+
+        plain = ida_analyze_bin.build_execution_plan(
+            [base_module], platforms=["windows"], bin_dir="bin", gamever="14141"
+        )
+        described = ida_analyze_bin.build_execution_plan(
+            [described_module], platforms=["windows"], bin_dir="bin", gamever="14141"
+        )
+
+        self.assertEqual("Engine stage", described.stages[0].description)
+        self.assertEqual(
+            ["Produces the shared artifact", "Consumes the shared artifact"],
+            [node.description for node in described.nodes],
+        )
+        self.assertNotIn("description", described.nodes[0].data)
+        self.assertEqual(
+            [(edge.source, edge.target, edge.edge_type) for edge in plain.edges],
+            [(edge.source, edge.target, edge.edge_type) for edge in described.edges],
+        )
+        self.assertEqual([node.name for node in plain.nodes], [node.name for node in described.nodes])
+
     def test_duplicate_module_names_get_distinct_stable_stage_ids(self) -> None:
         modules = [
             {

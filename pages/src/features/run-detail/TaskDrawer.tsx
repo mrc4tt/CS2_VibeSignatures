@@ -46,6 +46,7 @@ export function TaskDrawer({ runId, taskId, graph, onClose, onNavigate }: Props)
         <Space orientation="vertical" size="large" className="full-width">
           <Descriptions column={1} size="small" bordered>
             <Descriptions.Item label="名称">{query.data.name}</Descriptions.Item>
+            <Descriptions.Item label="描述"><Typography.Paragraph className="task-description">{query.data.description || '—'}</Typography.Paragraph></Descriptions.Item>
             <Descriptions.Item label="Task ID"><Typography.Text copyable>{query.data.task_id}</Typography.Text></Descriptions.Item>
             <Descriptions.Item label="类型">{query.data.task_type}</Descriptions.Item>
             <Descriptions.Item label="状态"><StatusTag status={query.data.status} /></Descriptions.Item>

@@ -71,6 +71,7 @@ export interface ExecutionStageView {
   id: string
   stage_index: number
   module_name: string
+  description: string | null
 }
 
 export interface ExecutionJobView {
@@ -90,6 +91,7 @@ export interface ExecutionNodeView {
   node_type: string
   order: number
   layer: number
+  description: string | null
   data: Record<string, unknown>
 }
 
@@ -113,6 +115,7 @@ export interface TaskView {
   task_id: string
   task_type: TaskType
   name: string
+  description: string | null
   stage_id: string | null
   job_id: string | null
   status: TaskStatus

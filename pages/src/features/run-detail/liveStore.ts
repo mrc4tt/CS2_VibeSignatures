@@ -36,6 +36,7 @@ function mergedTask(current: TaskView, event: EventView): TaskView {
     ...patch,
     task_id: current.task_id,
     name: current.name,
+    description: current.description,
     stage_id: current.stage_id,
     job_id: current.job_id,
     revision: event.revision,

@@ -30,6 +30,7 @@ function nodeLabel(node: VisualNode) {
     <div className="flow-node-label">
       <strong title={node.id}>{node.label}</strong>
       <span>{node.subtitle} · {statusLabel(node.status)}</span>
+      {node.description && <p className="flow-node-description" title={node.description}>{node.description}</p>}
       {node.descendantCount > 0 && <small>{node.descendantCount} 个后代</small>}
     </div>
   )
@@ -43,7 +44,7 @@ function flowNode(node: VisualNode, position: NodePosition | undefined, selected
     data: { label: nodeLabel(node) },
     selected: node.id === selectedId,
     className: node.status === 'running' ? 'flow-node-running' : undefined,
-    style: { border: `2px solid ${color}`, borderColor: color, background: '#111827', color: '#f8fafc', width: 220, minHeight: 76, opacity: selectedId && !related.has(node.id) ? 0.3 : 1, boxShadow: node.id === selectedId ? `0 0 0 3px ${color}66` : undefined },
+    style: { border: `2px solid ${color}`, borderColor: color, background: '#111827', color: '#f8fafc', width: 220, minHeight: node.description ? 112 : 76, opacity: selectedId && !related.has(node.id) ? 0.3 : 1, boxShadow: node.id === selectedId ? `0 0 0 3px ${color}66` : undefined },
   }
 }
 

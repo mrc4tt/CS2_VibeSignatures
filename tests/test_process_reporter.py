@@ -99,7 +99,12 @@ class TestProcessReporterDomain(unittest.TestCase):
         self.assertFalse(is_valid_run_transition(RunStatus.FAILED, RunStatus.RUNNING))
 
     def test_execution_plan_serializes_to_api_shape(self) -> None:
-        stage = ExecutionStage(id="stage-0000-engine", stage_index=0, module_name="engine")
+        stage = ExecutionStage(
+            id="stage-0000-engine",
+            stage_index=0,
+            module_name="engine",
+            description="Engine analysis stage",
+        )
         job = ExecutionJob(
             id="stage-0000-engine-windows",
             stage_id=stage.id,
@@ -116,6 +121,7 @@ class TestProcessReporterDomain(unittest.TestCase):
             node_type=PlanNodeType.SKILL,
             order=0,
             layer=0,
+            description="Locate the target function",
             data={"status": TaskStatus.PENDING, "phase": ProcessPhase.PREFLIGHT},
         )
         plan = ExecutionPlan(
@@ -135,7 +141,9 @@ class TestProcessReporterDomain(unittest.TestCase):
         payload = plan.to_dict()
 
         self.assertEqual(1, payload["schema_version"])
+        self.assertEqual("Engine analysis stage", payload["stages"][0]["description"])
         self.assertEqual("skill", payload["nodes"][0]["node_type"])
+        self.assertEqual("Locate the target function", payload["nodes"][0]["description"])
         self.assertEqual("pending", payload["nodes"][0]["data"]["status"])
         self.assertEqual("preflight", payload["nodes"][0]["data"]["phase"])
         self.assertEqual("stage_order", payload["edges"][0]["edge_type"])
