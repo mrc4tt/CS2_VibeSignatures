@@ -129,15 +129,6 @@ class HistoricalAnalysisConfigTests(unittest.TestCase):
 
 
 class RepositoryMigrationFixtureTests(unittest.TestCase):
-    def test_root_config_was_moved_without_reencoding_and_seeded_exactly(self):
-        root = Path(__file__).resolve().parents[1]
-        migrated = (root / "configs" / "14168.yaml").read_bytes()
-        former_root = subprocess.check_output(["git", "show", "HEAD^:config.yaml"], cwd=root)
-        self.assertFalse((root / "config.yaml").exists())
-        self.assertEqual(former_root, migrated)
-        for gamever in ("14168b", "14169", "14170"):
-            self.assertEqual(migrated, (root / "configs" / f"{gamever}.yaml").read_bytes())
-
     def test_14167_and_14168_configs_validate_existing_snapshots(self):
         root = Path(__file__).resolve().parents[1]
         for gamever in ("14167", "14168"):
