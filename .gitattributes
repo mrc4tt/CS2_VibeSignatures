@@ -1,1 +1,2 @@
 configs/*.yaml -text
+gamesymbols/*.yaml text eol=lf
