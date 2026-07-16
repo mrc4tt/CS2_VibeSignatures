@@ -83,12 +83,10 @@ def select_version(requested: str, versions: list[str]) -> str:
     return requested
 
 
-def require_snapshot(root: Path, gamever: str) -> Path:
-    """Fail before downloading when the tracked snapshot is unavailable."""
+def find_snapshot(root: Path, gamever: str) -> Path | None:
+    """Return the tracked snapshot when this GAMEVER has one."""
     snapshot = root / "gamesymbols" / f"{gamever}.yaml"
-    if not snapshot.is_file():
-        raise InitGamebinError(f"required snapshot does not exist: gamesymbols/{gamever}.yaml")
-    return snapshot
+    return snapshot if snapshot.is_file() else None
 
 
 def check_binaries(root: Path, gamever: str) -> bool:
@@ -231,7 +229,7 @@ def restore_snapshot(root: Path, gamever: str, snapshot: Path) -> None:
 def prepare(root: Path, requested: str) -> dict:
     """Execute the complete preparation workflow and return a summary."""
     gamever = select_version(requested, load_versions(root / "download.yaml"))
-    snapshot = require_snapshot(root, gamever)
+    snapshot = find_snapshot(root, gamever)
     source = "existing local binaries"
     copied = skipped = 0
     if not check_binaries(root, gamever):
@@ -248,8 +246,15 @@ def prepare(root: Path, requested: str) -> dict:
                 source = "Steam depot fallback"
     if not check_binaries(root, gamever):
         raise InitGamebinError(f"configured binaries are still incomplete for GAMEVER {gamever}")
-    restore_snapshot(root, gamever, snapshot)
-    return {"gamever": gamever, "source": source, "copied": copied, "skipped": skipped}
+    if snapshot is not None:
+        restore_snapshot(root, gamever, snapshot)
+    return {
+        "gamever": gamever,
+        "source": source,
+        "copied": copied,
+        "skipped": skipped,
+        "snapshot_restored": snapshot is not None,
+    }
 
 
 def print_versions(versions: list[str]) -> None:
@@ -277,7 +282,10 @@ def main(argv=None) -> int:
             print(f"Selected GAMEVER: {result['gamever']}")
             print(f"Binary source: {result['source']}")
             print(f"Archive merge: {result['copied']} copied, {result['skipped']} skipped")
-            print("Symbol snapshot: restored and verified")
+            if result["snapshot_restored"]:
+                print("Symbol snapshot: restored and verified")
+            else:
+                print("Symbol snapshot: unavailable; binary-only initialization completed")
     except InitGamebinError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

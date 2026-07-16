@@ -1,4 +1,5 @@
 import importlib.util
+import io
 import os
 import subprocess
 import tempfile
@@ -130,13 +131,14 @@ class TestInitGamebin(unittest.TestCase):
         snapshot = root / "gamesymbols" / "14168.yaml"
         with (
             patch.object(init_gamebin, "load_versions", return_value=["14168"]),
-            patch.object(init_gamebin, "require_snapshot", return_value=snapshot),
+            patch.object(init_gamebin, "find_snapshot", return_value=snapshot),
             patch.object(init_gamebin, "check_binaries", side_effect=[True, True]),
             patch.object(init_gamebin, "download_release_asset") as download,
             patch.object(init_gamebin, "restore_snapshot") as restore,
         ):
             result = init_gamebin.prepare(root, "14168")
         self.assertEqual("existing local binaries", result["source"])
+        self.assertTrue(result["snapshot_restored"])
         download.assert_not_called()
         restore.assert_called_once_with(root, "14168", snapshot)
 
@@ -145,7 +147,7 @@ class TestInitGamebin(unittest.TestCase):
         snapshot = root / "gamesymbols" / "14168.yaml"
         with (
             patch.object(init_gamebin, "load_versions", return_value=["14168"]),
-            patch.object(init_gamebin, "require_snapshot", return_value=snapshot),
+            patch.object(init_gamebin, "find_snapshot", return_value=snapshot),
             patch.object(init_gamebin, "check_binaries", side_effect=[False, True]),
             patch.object(init_gamebin, "download_release_asset", return_value=False),
             patch.object(init_gamebin, "run_depot_fallback") as fallback,
@@ -153,21 +155,42 @@ class TestInitGamebin(unittest.TestCase):
         ):
             result = init_gamebin.prepare(root, "14168")
         self.assertEqual("Steam depot fallback", result["source"])
+        self.assertTrue(result["snapshot_restored"])
         fallback.assert_called_once_with(root, "14168")
         restore.assert_called_once_with(root, "14168", snapshot)
 
-    def test_prepare_stops_before_network_when_snapshot_is_missing(self) -> None:
+    def test_prepare_without_snapshot_initializes_binaries_and_skips_restore(self) -> None:
         root = Path("repo")
         with (
             patch.object(init_gamebin, "load_versions", return_value=["14169"]),
-            patch.object(init_gamebin, "require_snapshot", side_effect=init_gamebin.InitGamebinError("missing")),
-            patch.object(init_gamebin, "check_binaries") as check,
-            patch.object(init_gamebin, "download_release_asset") as download,
+            patch.object(init_gamebin, "find_snapshot", return_value=None),
+            patch.object(init_gamebin, "check_binaries", side_effect=[False, True]),
+            patch.object(init_gamebin, "download_release_asset", return_value=False),
+            patch.object(init_gamebin, "run_depot_fallback") as fallback,
+            patch.object(init_gamebin, "restore_snapshot") as restore,
         ):
-            with self.assertRaisesRegex(init_gamebin.InitGamebinError, "missing"):
-                init_gamebin.prepare(root, "14169")
-        check.assert_not_called()
-        download.assert_not_called()
+            result = init_gamebin.prepare(root, "14169")
+        self.assertEqual("Steam depot fallback", result["source"])
+        self.assertFalse(result["snapshot_restored"])
+        fallback.assert_called_once_with(root, "14169")
+        restore.assert_not_called()
+
+    def test_main_reports_binary_only_initialization_without_snapshot(self) -> None:
+        result = {
+            "gamever": "14169",
+            "source": "release archive",
+            "copied": 3,
+            "skipped": 0,
+            "snapshot_restored": False,
+        }
+        output = io.StringIO()
+        with (
+            patch.object(init_gamebin, "repository_root", return_value=Path("repo")),
+            patch.object(init_gamebin, "prepare", return_value=result),
+            patch("sys.stdout", output),
+        ):
+            self.assertEqual(0, init_gamebin.main(["prepare", "14169"]))
+        self.assertIn("Symbol snapshot: unavailable; binary-only initialization completed", output.getvalue())
 
     def test_restore_runs_without_replace_then_verifies(self) -> None:
         root = Path("repo")

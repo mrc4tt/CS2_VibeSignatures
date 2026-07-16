@@ -1,12 +1,12 @@
 ---
 name: init-gamebin
-description: Initialize this repository's local game binaries for an exact GAMEVER from download.yaml or its latest entry, restore tracked game-symbol YAML artifacts, and optionally rename known functions in IDA databases. Use only when explicitly asked to initialize or restore gamebin/bin state for a CS2 game version.
+description: Initialize this repository's local game binaries for an exact GAMEVER from download.yaml or its latest entry, restore tracked game-symbol YAML artifacts when available, and optionally rename known functions in IDA databases. Use only when explicitly asked to initialize or restore gamebin/bin state for a CS2 game version.
 ---
 
 # Initialize Game Binaries
 
 Use the bundled script as the only entry point for downloading, merging, depot fallback, and snapshot restoration. Never
-overwrite an existing file, substitute an unlisted version, or continue after a failed step.
+overwrite an existing file, substitute an unlisted version, generate a missing snapshot, or continue after a failed step.
 
 ## Select GAMEVER
 
@@ -20,7 +20,7 @@ overwrite an existing file, substitute an unlisted version, or continue after a 
    Tell the user which entry is latest and ask: `Which GAMEVER do you want to initialize?` / `需要初始化哪个GAMEVER?` Wait for an explicit version before continuing.
 3. Reject values absent from `download.yaml`; do not guess or silently use latest.
 
-## Prepare Binaries and YAML
+## Prepare Binaries and Symbol YAML
 
 Run from the owning repository root:
 
@@ -28,8 +28,10 @@ Run from the owning repository root:
 uv run python .claude/skills/init-gamebin/scripts/init_gamebin.py prepare <GAMEVER-or-latest>
 ```
 
-The script checks existing binaries, downloads and non-overwritingly merges `gamebin-<GAMEVER>.7z` when needed, uses
-the Steam depot fallback only for a missing Release asset, then restores and verifies `gamesymbols/<GAMEVER>.yaml`.
+The script checks existing binaries, downloads and non-overwritingly merges `gamebin-<GAMEVER>.7z` when needed, and uses
+the Steam depot fallback only for a missing Release asset. When `gamesymbols/<GAMEVER>.yaml` exists, it restores and
+verifies that snapshot. When it does not exist, preparation still succeeds as a binary-only bootstrap for a new version;
+the script does not create or verify symbols and reports `Symbol snapshot: unavailable; binary-only initialization completed`.
 
 If the command fails, stop immediately and report its exact error as:
 
