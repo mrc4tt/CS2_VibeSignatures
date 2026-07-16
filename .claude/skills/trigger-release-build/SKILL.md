@@ -1,6 +1,6 @@
 ---
 name: trigger-release-build
-description: Safely dispatch the repository release build from the immutable current origin/main SHA. Use only when explicitly asked to rebuild or republish a game version, including requests such as “重新发布 14170”, “使用当前 main 重建 14170 的 release”, or “触发最新游戏版本的 release build”.
+description: Safely dispatch a new release build or same-version republish from the immutable current origin/main SHA. Use only when explicitly asked to publish, rebuild, or republish a game version, including requests such as “发布 14170”, “重新发布 14170”, “使用当前 main 重建 14170 的 release”, or “触发最新游戏版本的 release build”.
 disable-model-invocation: true
 ---
 
@@ -18,9 +18,10 @@ command, accept a user-supplied SHA, move a tag, edit a Release, cancel work, or
    uv run python .claude/skills/trigger-release-build/scripts/trigger_release_build.py <GAMEVER-or-latest>
    ```
 
-3. Report the script's selected version, full `SOURCE_SHA`, commit subject, and Actions run URL.
+3. Report the script's selected version, selected mode, full `SOURCE_SHA`, commit subject, and Actions run URL.
 4. If the script refuses the operation, surface its exact safety reason and stop. Do not bypass repository, auth,
    version, tag/Release, duplicate-work, or `origin/main` checks.
 
-The script always dispatches `mode=republish` with full validation and affected-output invalidation fixed by the
-workflow. Any requested generator/config change must already be merged into `origin/main`.
+The script derives the mode from remote state: use `mode=new` only when both the tag and Release are absent, and use
+`mode=republish` only when both exist. Reject mixed states and do not accept a user-supplied mode. Any requested
+generator/config change must already be merged into `origin/main`.
