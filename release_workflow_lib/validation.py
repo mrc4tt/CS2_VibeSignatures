@@ -43,9 +43,9 @@ def validate_build_input(*, repository: str, gamever: str, source_sha: str, mode
         raise ReleaseWorkflowError("download.yaml at SOURCE_SHA is invalid") from exc
     if gamever not in {str(item.get("tag", "")) for item in downloads if isinstance(item, dict)}:
         raise ReleaseWorkflowError(f"GAMEVER {gamever} is absent from download.yaml at SOURCE_SHA")
-    tag_exists = subprocess.run(
-        ["git", "show-ref", "--verify", "--quiet", f"refs/tags/{gamever}"], check=False
-    ).returncode == 0
+    tag_exists = (
+        subprocess.run(["git", "show-ref", "--verify", "--quiet", f"refs/tags/{gamever}"], check=False).returncode == 0
+    )
     if mode == "new" and tag_exists:
         raise ReleaseWorkflowError(f"mode=new requires tag {gamever} to be absent")
     if mode == "republish" and not tag_exists:

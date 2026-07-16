@@ -188,5 +188,6 @@ class TestReleaseWorkflow(unittest.TestCase):
             self.assertEqual(first["accepted"], second["accepted"])
             self.assertEqual(first["backup"], second["backup"])
 
+
 if __name__ == "__main__":
     unittest.main()

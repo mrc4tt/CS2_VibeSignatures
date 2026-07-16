@@ -63,7 +63,9 @@ def _validate_stage_request(*, staging_root: Path, repository: str, output_branc
     return gamever, stage_dir
 
 
-def _pending_payload(*, tracked: dict, repository: str, output_branch: str, bin_files: list, tracked_files: list) -> dict:
+def _pending_payload(
+    *, tracked: dict, repository: str, output_branch: str, bin_files: list, tracked_files: list
+) -> dict:
     return {
         **tracked,
         "repository": repository,
