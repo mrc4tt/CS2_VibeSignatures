@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dispatch a same-version release rebuild from immutable origin/main."""
+"""Dispatch a new release or same-version rebuild from immutable origin/main."""
 
 import argparse
 import json
@@ -18,6 +18,7 @@ WORKFLOW = "build-on-self-runner.yml"
 RUN_LIST_LIMIT = "100"
 RUN_DISCOVERY_ATTEMPTS = 10
 RUN_DISCOVERY_DELAY_SECONDS = 2
+RELEASE_MODES = frozenset({"new", "republish"})
 
 
 class TriggerError(Exception):
@@ -101,17 +102,39 @@ def select_version(requested: str, versions: list[str]) -> str:
     return requested
 
 
-def require_existing_release(root: Path, repository: str, gamever: str) -> None:
+def remote_tag_exists(root: Path, gamever: str) -> bool:
     tag = run_command(
         ["git", "ls-remote", "--exit-code", "--tags", "origin", f"refs/tags/{gamever}"],
         root,
         allowed=(0, 2),
     )
-    if tag.returncode == 2 or not tag.stdout.strip():
-        raise TriggerError(f"republish requires existing tag {gamever}")
-    release = run_command(["gh", "release", "view", gamever, "--repo", repository], root, allowed=(0, 1))
-    if release.returncode != 0:
-        raise TriggerError(f"republish requires existing Release {gamever}")
+    return tag.returncode == 0 and bool(tag.stdout.strip())
+
+
+def github_release_exists(root: Path, repository: str, gamever: str) -> bool:
+    release = run_command(
+        ["gh", "api", f"repos/{repository}/releases/tags/{gamever}", "--silent"],
+        root,
+        allowed=(0, 1),
+    )
+    if release.returncode == 0:
+        return True
+    detail = (release.stderr or release.stdout).strip()
+    if "(HTTP 404)" in detail:
+        return False
+    raise TriggerError(f"failed to query Release {gamever}: {detail or 'exit code 1'}")
+
+
+def resolve_mode(root: Path, repository: str, gamever: str) -> str:
+    tag_exists = remote_tag_exists(root, gamever)
+    release_exists = github_release_exists(root, repository, gamever)
+    if not tag_exists and not release_exists:
+        return "new"
+    if tag_exists and release_exists:
+        return "republish"
+    if tag_exists:
+        raise TriggerError(f"inconsistent release state for {gamever}: tag exists but Release is absent")
+    raise TriggerError(f"inconsistent release state for {gamever}: Release exists but tag is absent")
 
 
 def parse_json_list(raw: str, label: str) -> list[dict]:
@@ -164,7 +187,9 @@ def require_main_unchanged(root: Path, source_sha: str) -> None:
         raise TriggerError("origin/main advanced while validating the rebuild request; run the skill again")
 
 
-def dispatch(root: Path, gamever: str, source_sha: str) -> None:
+def dispatch(root: Path, gamever: str, source_sha: str, mode: str) -> None:
+    if mode not in RELEASE_MODES:
+        raise TriggerError(f"invalid release mode: {mode}")
     run_command(
         [
             "gh",
@@ -178,7 +203,7 @@ def dispatch(root: Path, gamever: str, source_sha: str) -> None:
             "-f",
             f"source_sha={source_sha}",
             "-f",
-            "mode=republish",
+            f"mode={mode}",
         ],
         root,
     )
@@ -205,12 +230,12 @@ def execute(requested: str) -> dict:
     require_github_access(root, repository)
     source_sha, subject = resolve_source(root)
     gamever = select_version(requested, available_versions(root, source_sha))
-    require_existing_release(root, repository, gamever)
+    mode = resolve_mode(root, repository, gamever)
     known_ids = require_no_duplicate(root, gamever)
     require_main_unchanged(root, source_sha)
-    dispatch(root, gamever, source_sha)
+    dispatch(root, gamever, source_sha, mode)
     run_url = discover_run(root, known_ids, gamever=gamever, source_sha=source_sha)
-    return {"gamever": gamever, "source_sha": source_sha, "subject": subject, "run_url": run_url}
+    return {"gamever": gamever, "mode": mode, "source_sha": source_sha, "subject": subject, "run_url": run_url}
 
 
 def main(argv=None) -> int:
@@ -223,6 +248,7 @@ def main(argv=None) -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
     print(f"Selected GAMEVER: {result['gamever']}")
+    print(f"Mode: {result['mode']}")
     print(f"SOURCE_SHA: {result['source_sha']}")
     print(f"Commit: {result['subject']}")
     print(f"Actions run: {result['run_url']}")
