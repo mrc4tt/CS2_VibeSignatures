@@ -112,10 +112,7 @@ class TestReleaseWorkflow(unittest.TestCase):
         snapshot.write_bytes(canonical_snapshot_bytes(document))
         major_line = "    major_update: true\n" if major_update else ""
         (repo / "download.yaml").write_text(
-            "downloads:\n"
-            "  - tag: '14168'\n"
-            "  - tag: '14168b'\n"
-            f"{major_line}",
+            f"downloads:\n  - tag: '14168'\n  - tag: '14168b'\n{major_line}",
             encoding="utf-8",
         )
         return repo
