@@ -41,7 +41,7 @@ Do not attempt an alternate download, add `-replace`, edit `.env`, or proceed to
 
 ## Offer IDB Renaming
 
-After preparation succeeds, ask exactly: `需要将已知函数名同步/重命名到idb里?`
+After preparation succeeds, ask exactly: `Need to sync existing symbols to idb?` `需要将已知函数名同步/重命名到idb里?`
 
 - If the user declines, report the selected GAMEVER and finish.
 - If the user confirms, search `bin/<GAMEVER>/*/*.id0`. If any lock file exists, stop, list every path, and tell the
