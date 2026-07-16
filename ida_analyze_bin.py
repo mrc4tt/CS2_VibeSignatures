@@ -4056,8 +4056,6 @@ def main():
     print(f"  Skipped: {total_skip}")
 
     if total_fail > 0:
-    _print_summary(totals)
-    if totals[1] > 0:
         sys.exit(1)
 
 
