@@ -4,6 +4,7 @@ from pathlib import Path
 
 import yaml
 
+from analysis_config import AnalysisConfigError, analysis_config_repo_path, read_analysis_config_at_revision
 from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.operations import load_snapshot_for_contract, restore_snapshot
 from gamesymbol_snapshot_lib.paths import ensure_real_tree, iter_yaml_paths, path_from_key
@@ -43,6 +44,15 @@ def validate_build_input(*, repository: str, gamever: str, source_sha: str, mode
         raise ReleaseWorkflowError("download.yaml at SOURCE_SHA is invalid") from exc
     if gamever not in {str(item.get("tag", "")) for item in downloads if isinstance(item, dict)}:
         raise ReleaseWorkflowError(f"GAMEVER {gamever} is absent from download.yaml at SOURCE_SHA")
+    config_repo_path = analysis_config_repo_path(gamever)
+    try:
+        config_data = yaml.safe_load(git_output(["show", f"{source_sha}:{config_repo_path}"], text=False)) or {}
+    except (ReleaseWorkflowError, yaml.YAMLError, UnicodeError) as exc:
+        raise ReleaseWorkflowError(
+            f"analysis config {config_repo_path} is missing or unreadable at SOURCE_SHA"
+        ) from exc
+    if not isinstance(config_data, dict) or not isinstance(config_data.get("modules"), list):
+        raise ReleaseWorkflowError(f"analysis config configs/{gamever}.yaml must contain a modules list")
     tag_exists = (
         subprocess.run(["git", "show-ref", "--verify", "--quiet", f"refs/tags/{gamever}"], check=False).returncode == 0
     )
@@ -79,10 +89,36 @@ def invalidate_republish(*, repo_root: Path, gamever: str, source_sha: str, bind
         raise ReleaseWorkflowError("previous accepted SOURCE_SHA is not an ancestor of the rebuild SOURCE_SHA")
     snapshot = repo_root / "gamesymbols" / f"{gamever}.yaml"
     with tempfile.TemporaryDirectory(prefix="release-base-") as temp_dir:
-        base_config = Path(temp_dir) / "config.yaml"
-        base_config.write_bytes(git_output(["show", f"{base_sha}:config.yaml"], text=False))
+        base_config = Path(temp_dir) / "base.yaml"
+        head_config = Path(temp_dir) / "head.yaml"
+        try:
+            base_history = read_analysis_config_at_revision(
+                base_sha,
+                gamever,
+                allow_legacy_root=True,
+                repo_root=repo_root,
+            )
+            head_history = read_analysis_config_at_revision(
+                source_sha,
+                gamever,
+                allow_legacy_root=False,
+                repo_root=repo_root,
+            )
+        except AnalysisConfigError as exc:
+            raise ReleaseWorkflowError(str(exc)) from exc
+        base_config.write_bytes(base_history.data)
+        head_config.write_bytes(head_history.data)
         base_contract = load_contract(base_config, gamever, bindir)
-        head_contract = load_contract(repo_root / "config.yaml", gamever, bindir)
+        head_contract = load_contract(head_config, gamever, bindir)
+        if manifest.get("analysis_config_path") and manifest["analysis_config_path"] != base_history.repository_path:
+            raise ReleaseWorkflowError("accepted manifest analysis config path does not match SOURCE_SHA")
+        if manifest.get("analysis_config_sha256") and manifest["analysis_config_sha256"] != base_history.sha256:
+            raise ReleaseWorkflowError("accepted manifest analysis config hash does not match SOURCE_SHA")
+        if (
+            manifest.get("analysis_config_contract_sha256")
+            and manifest["analysis_config_contract_sha256"] != base_contract.config_sha256
+        ):
+            raise ReleaseWorkflowError("accepted manifest analysis config contract does not match snapshot")
         base_document, _raw = load_snapshot_for_contract(snapshot, base_contract)
         restore_snapshot(gamever, bindir, base_config, snapshot, replace=True)
         plan = build_invalidation_plan(

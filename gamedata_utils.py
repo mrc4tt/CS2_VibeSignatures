@@ -80,19 +80,19 @@ def normalize_func_name_colons_to_underscore(name, alias_to_name_map=None):
     """
     Convert function name from double-colon format to underscore format.
 
-    First looks up the name in the alias_to_name_map from config.yaml.
+    First looks up the name in the alias map from the selected analysis config.
     If not found, falls back to simple :: to _ replacement.
 
     Example: CCSPlayerController::ChangeTeam -> CCSPlayerController_ChangeTeam
 
     Args:
         name: Function name with double colons
-        alias_to_name_map: Optional mapping from aliases to names (from config.yaml)
+        alias_to_name_map: Optional mapping from aliases to names
 
     Returns:
         Function name with underscores
     """
-    # First try to find in config.yaml aliases
+    # First try aliases from the selected analysis config.
     if alias_to_name_map and name in alias_to_name_map:
         return alias_to_name_map[name]
 

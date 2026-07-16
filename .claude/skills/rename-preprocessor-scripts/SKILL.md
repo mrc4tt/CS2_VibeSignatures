@@ -2,7 +2,7 @@
 name: rename-preprocessor-scripts
 description: |
   Rename a symbol (function, vfunc, vtable, struct member, global variable) across all
-  preprocessor scripts, config.yaml entries, and existing YAML output files.
+  preprocessor scripts, configs/<GAMEVER>.yaml entries, and existing YAML output files.
   Use when a symbol's name changes (class rename, naming-convention fix, etc.), or when
   splitting a single finder into an inline/noinline fallback chain because a helper
   de-inlined and the target's YAML stopped being produced on some gamever/platform.
@@ -12,7 +12,10 @@ disable-model-invocation: true
 # Rename Preprocessor Scripts
 
 Rename a symbol from `OldName` to `NewName` across all files in the preprocessor pipeline:
-the Python script, `config.yaml`, and every per-gamever YAML output file under `bin/`.
+the Python script, `configs/<GAMEVER>.yaml`, and every per-gamever YAML output file under `bin/`.
+
+Resolve `GAMEVER` from the user's explicit request or `CS2VIBE_GAMEVER`; edit only
+`configs/$GAMEVER.yaml` and stop if it is missing.
 
 ## When to Use
 
@@ -54,14 +57,14 @@ Expected hits fall into these categories:
 | File type | Path pattern | What changes |
 |-----------|-------------|--------------|
 | Preprocessor script | `ida_preprocessor_scripts/find-OldName.py` | File renamed + content updated |
-| config.yaml | `config.yaml` | Skill name, `expected_output`, `skip_if_exists`, symbol `name` + `alias` |
+| configs/<GAMEVER>.yaml | `configs/<GAMEVER>.yaml` | Skill name, `expected_output`, `skip_if_exists`, symbol `name` + `alias` |
 | Output YAMLs | `bin/*/client\|engine/OldName.{platform}.yaml` | File renamed + `func_name` / `vtable_name` fields |
 | Reference YAMLs | `ida_preprocessor_scripts/references/**/*.yaml` | File renamed (if named after symbol) or comment strings updated |
 | Test files | `tests/*.py` | Fixture data, assertions, class/method names updated |
 
 Also check whether any **other** scripts list `OldName.{platform}.yaml` as an `expected_input`
 (i.e. downstream dependents). If found, those scripts' `INHERIT_VFUNCS` / `LLM_DECOMPILE` /
-`FUNC_XREFS` constants and their `config.yaml` `expected_input` entries must be updated too.
+`FUNC_XREFS` constants and their `configs/<GAMEVER>.yaml` `expected_input` entries must be updated too.
 
 ---
 
@@ -101,7 +104,7 @@ Only touch fields that are actually present in the script; skip inapplicable row
 
 ---
 
-## Step 4: Update config.yaml
+## Step 4: Update configs/<GAMEVER>.yaml
 
 Four locations may need editing. Use a single `sed` invocation with multiple `-e` flags to
 handle both the `_` symbol name and the `::` alias form in one pass:
@@ -110,7 +113,7 @@ handle both the `_` symbol name and the `::` alias form in one pass:
 sed -i \
   -e 's/OldName/NewName/g' \
   -e 's/OldClass::OldMethodSuffix/NewClass::NewMethodSuffix/g' \
-  config.yaml
+  configs/<GAMEVER>.yaml
 ```
 
 > The `alias` field uses `::` notation (`IGameSystemFactory::Allocate`), which a plain
@@ -237,7 +240,7 @@ Fix any hits manually: `("NewName", "OldClass")` → `("NewName", "NewClass")`.
 
 If any other preprocessor scripts reference `OldName` (e.g. in `INHERIT_VFUNCS` as the
 `base_vfunc_name`, or in `LLM_DECOMPILE` as a predecessor), update those references to
-`NewName` in their `.py` source and in their `config.yaml` `expected_input` entries.
+`NewName` in their `.py` source and in their `configs/<GAMEVER>.yaml` `expected_input` entries.
 
 > **`INHERIT_VFUNCS` `base_vfunc_name` gotcha:** the 3rd element of the tuple is a path like
 > `"../client/OldName"` (without `.yaml`). A grep on the full symbol name will find it, but
@@ -293,15 +296,15 @@ git commit -m "refactor(preprocessor): rename OldName to NewName" -m "Co-Authore
 
 - [ ] Old Python file removed / renamed via `git mv`
 - [ ] New Python file has all `OldName` / `OldClass` occurrences replaced
-- [ ] `config.yaml` skill `name` and `expected_output` updated
-- [ ] `config.yaml` symbol `name` and `alias` updated (alias uses `::` — needs separate sed expression)
-- [ ] `config.yaml` downstream `expected_input` entries updated (if any)
-- [ ] `config.yaml` `skip_if_exists` entries updated (if any)
+- [ ] `configs/<GAMEVER>.yaml` skill `name` and `expected_output` updated
+- [ ] `configs/<GAMEVER>.yaml` symbol `name` and `alias` updated (alias uses `::` — needs separate sed expression)
+- [ ] `configs/<GAMEVER>.yaml` downstream `expected_input` entries updated (if any)
+- [ ] `configs/<GAMEVER>.yaml` `skip_if_exists` entries updated (if any)
 - [ ] All `bin/*/OldName.*.yaml` files renamed to `NewName.*.yaml`
 - [ ] `func_name` (and `vtable_name`) fields inside output YAMLs updated
 - [ ] Reference YAMLs in `ida_preprocessor_scripts/references/` renamed and/or updated (if any)
 - [ ] Test files in `tests/` bulk-replaced; vtable class in assertions corrected (if any)
-- [ ] Downstream preprocessor script `.py` and `config.yaml` entries updated (if any)
+- [ ] Downstream preprocessor script `.py` and `configs/<GAMEVER>.yaml` entries updated (if any)
 - [ ] Final grep shows zero stale references
 - [ ] `/post-change-update phase=before-validation` succeeds for the selected game version
 - [ ] `/post-change-validation` succeeds for the same game version
@@ -318,7 +321,7 @@ git commit -m "refactor(preprocessor): rename OldName to NewName" -m "Co-Authore
 
 **Affected files found:**
 - `ida_preprocessor_scripts/find-ILoopType_EngineLoop.py`
-- `config.yaml` (skill entry, symbol entry)
+- `configs/<GAMEVER>.yaml` (skill entry, symbol entry)
 - `bin/14141c/engine/ILoopType_EngineLoop.{windows,linux}.yaml`
 - `bin/14150d/engine/ILoopType_EngineLoop.{windows,linux}.yaml`
 - `bin/14151/engine/ILoopType_EngineLoop.{windows,linux}.yaml`
@@ -333,8 +336,8 @@ No downstream dependents, no reference YAMLs, no test files hit.
    - Docstring: `find-ILoopType_EngineLoop` → `find-CLoopTypeBase_EngineLoop`
    - `INHERIT_VFUNCS`: `("ILoopType_EngineLoop", "ILoopType", ...)` → `("CLoopTypeBase_EngineLoop", "CLoopTypeBase", ...)`
    - `GENERATE_YAML_DESIRED_FIELDS` key: `"ILoopType_EngineLoop"` → `"CLoopTypeBase_EngineLoop"`
-3. `config.yaml` skill: `find-ILoopType_EngineLoop` / `ILoopType_EngineLoop.{platform}.yaml` → new names
-4. `config.yaml` symbol: `name: ILoopType_EngineLoop`, `alias: ILoopType::EngineLoop` → new names
+3. `configs/<GAMEVER>.yaml` skill: `find-ILoopType_EngineLoop` / `ILoopType_EngineLoop.{platform}.yaml` → new names
+4. `configs/<GAMEVER>.yaml` symbol: `name: ILoopType_EngineLoop`, `alias: ILoopType::EngineLoop` → new names
 5. `mv` all 8 YAML files; `sed -i` updated `func_name` and `vtable_name` in each
 
 ---
@@ -345,7 +348,7 @@ No downstream dependents, no reference YAMLs, no test files hit.
 
 **Affected files found:**
 - `ida_preprocessor_scripts/find-ILoopType_DeallocateLoopMode.py`
-- `config.yaml` (`skip_if_exists` in `find-CEngineServiceMgr_DeactivateLoop`, skill entry, symbol entry)
+- `configs/<GAMEVER>.yaml` (`skip_if_exists` in `find-CEngineServiceMgr_DeactivateLoop`, skill entry, symbol entry)
 - `bin/14141c/engine/ILoopType_DeallocateLoopMode.{windows,linux}.yaml` (and 3 more gamevers)
 - `ida_preprocessor_scripts/references/engine/CEngineServiceMgr_DeactivateLoop.{windows,linux}.yaml`
 - `tests/test_ida_analyze_bin.py`
@@ -357,7 +360,7 @@ No downstream dependents, no reference YAMLs, no test files hit.
 2. In the renamed script (bulk replace then fix vtable class):
    - All `ILoopType_DeallocateLoopMode` → `CLoopTypeBase_DeallocateLoopMode`
    - `FUNC_VTABLE_RELATIONS`: `("CLoopTypeBase_DeallocateLoopMode", "ILoopType")` → `(..., "CLoopTypeBase")`
-3. `config.yaml`: `skip_if_exists` entry + skill entry + symbol entry all updated
+3. `configs/<GAMEVER>.yaml`: `skip_if_exists` entry + skill entry + symbol entry all updated
 4. `mv` all 8 YAML files; `sed -i` updated `func_name` and `vtable_name` in each
 5. `sed -i` on both reference YAML files (comments in IDA disassembly snippets)
 6. `sed -i` bulk replace across both test files; then manually fixed `func_vtable_relations`
@@ -373,7 +376,7 @@ and `IGameSystemFactory_Deallocate` → `IGameSystemFactory_DestroyGameSystem`.
 **Affected files found (both symbols combined):**
 - `ida_preprocessor_scripts/find-IGameSystemFactory_Allocate-AND-IGameSystemFactory_DoesGameSystemReallocate-AND-IGameSystem_SetName.py`
 - `ida_preprocessor_scripts/find-IGameSystem_GetName-AND-IGameSystemFactory_Deallocate.py`
-- `config.yaml` (2 skill entries, 2 symbol entries, 1 downstream `expected_input`)
+- `configs/<GAMEVER>.yaml` (2 skill entries, 2 symbol entries, 1 downstream `expected_input`)
 - `bin/*/client/IGameSystemFactory_Allocate.{platform}.yaml` (34 files)
 - `bin/*/client/IGameSystemFactory_Deallocate.{platform}.yaml` (34 files)
 - `ida_preprocessor_scripts/references/client/IGameSystem_AddByName.{windows,linux}.yaml` (content only)
@@ -386,7 +389,7 @@ and `IGameSystemFactory_Deallocate` → `IGameSystemFactory_DestroyGameSystem`.
 
 - The Allocate script name is compound (`-AND-`): only `IGameSystemFactory_Allocate` changes in
   the filename, the rest stays.
-- `config.yaml` aliases are `IGameSystemFactory::Allocate` / `IGameSystemFactory::Deallocate` —
+- `configs/<GAMEVER>.yaml` aliases are `IGameSystemFactory::Allocate` / `IGameSystemFactory::Deallocate` —
   a plain `s/IGameSystemFactory_Allocate/...` sed will not touch them; need separate `-e` clauses:
   ```bash
   sed -i \
@@ -394,7 +397,7 @@ and `IGameSystemFactory_Deallocate` → `IGameSystemFactory_DestroyGameSystem`.
     -e 's/IGameSystemFactory::Allocate/IGameSystemFactory::CreateGameSystem/g' \
     -e 's/IGameSystemFactory_Deallocate/IGameSystemFactory_DestroyGameSystem/g' \
     -e 's/IGameSystemFactory::Deallocate/IGameSystemFactory::DestroyGameSystem/g' \
-    config.yaml
+    configs/<GAMEVER>.yaml
   ```
 - The downstream script's `INHERIT_VFUNCS` has `base_vfunc_name = "../client/IGameSystemFactory_Deallocate"` —
   a plain `s/IGameSystemFactory_Deallocate/IGameSystemFactory_DestroyGameSystem/g` on that file catches it.
@@ -415,7 +418,7 @@ finder plus a `find-X-noinline` finder are added around it (`optional_output` / 
 `skip_if_exists` wiring).
 
 The de-inline fix is fundamentally a script-*creation* pattern -- only the `-inlined` rename step
-belongs to this skill. The full recipe (script templates, the `config.yaml` chain, the `func_sig`
+belongs to this skill. The full recipe (script templates, the `configs/<GAMEVER>.yaml` chain, the `func_sig`
 keep/drop rule, validation on both inline states, the `CNetworkGameServer_DirectUpdate` worked
 example, and the inverted string-less-wrapper variant) lives in
 **[create-preprocessor-scripts Pattern M](../create-preprocessor-scripts/references/pattern-M.md)**.

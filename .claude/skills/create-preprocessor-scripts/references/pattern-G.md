@@ -74,7 +74,7 @@ async def preprocess_skill(
 - Uses `SEARCH_WINDOW_BEFORE_CALL` and `SEARCH_WINDOW_AFTER_XREF` (typically 96 bytes each) to control the scan window around xrefs
 - The `preprocess_skill` function ignores `old_yaml_map` (`_ = skill_name, old_yaml_map`)
 - Calls `preprocess_registerconcommand_skill()` with `command_name=`, `help_string=`, `rename_to=` instead of `func_xrefs=`
-- config.yaml category is `func`, no `expected_input` needed
+- configs/<GAMEVER>.yaml category is `func`, no `expected_input` needed
 - The handler function is always a regular function (not virtual), so no `FUNC_VTABLE_RELATIONS`
 
 ## Checklist
@@ -83,4 +83,4 @@ async def preprocess_skill(
 - [ ] `COMMAND_NAME` matches the exact console command string
 - [ ] `HELP_STRING` matches the exact help text registered with the command
 - [ ] Uses `preprocess_registerconcommand_skill` (NOT `preprocess_common_skill`)
-- [ ] config.yaml symbol category is `func`, no `expected_input` needed
+- [ ] configs/<GAMEVER>.yaml symbol category is `func`, no `expected_input` needed

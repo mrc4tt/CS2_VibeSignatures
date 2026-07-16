@@ -141,6 +141,19 @@ jobs:
             --staging-root "$env:PERSISTED_WORKSPACE\release-staging" `
             --gamever "$env:GAMEVER" --build-id "$env:BUILD_ID"
 
+      - name: Resolve immutable analysis config
+        shell: pwsh
+        run: |
+          $config = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE "configs\$env:GAMEVER.yaml"))
+          if (-not (Test-Path -LiteralPath $config -PathType Leaf)) {
+            throw "Missing analysis config for GAMEVER $env:GAMEVER`: $config"
+          }
+          $hash = (Get-FileHash -LiteralPath $config -Algorithm SHA256).Hash.ToLowerInvariant()
+          "ANALYSIS_CONFIG=$config" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "ANALYSIS_CONFIG_SHA256=$hash" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Analysis config: $config"
+          Write-Host "Analysis config SHA-256: $hash"
+
       - name: Check formatting and run repository unit tests
         shell: pwsh
         run: |
@@ -161,7 +174,7 @@ jobs:
         shell: pwsh
         run: |
           $PSNativeCommandUseErrorActionPreference = $false
-          uv run copy_depot_bin.py -gamever "$env:GAMEVER" -platform all-platform -checkonly
+          uv run copy_depot_bin.py -gamever "$env:GAMEVER" -platform all-platform -config "$env:ANALYSIS_CONFIG" -checkonly
           $code = $LASTEXITCODE
           if ($code -eq 0) { "ready=true" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append; exit 0 }
           if ($code -eq 1) { "ready=false" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append; exit 0 }
@@ -171,10 +184,10 @@ jobs:
         if: steps.cache.outputs.ready != 'true'
         shell: pwsh
         run: |
-          uv run download_depot.py -tag "$env:GAMEVER" -depotdir cs2_depot -config download.yaml `
+          uv run download_depot.py -tag "$env:GAMEVER" -depotdir cs2_depot -config download.yaml -configyaml "$env:ANALYSIS_CONFIG" `
             -username "$env:STEAM_USERNAME" -password "$env:STEAM_PASSWORD" -remember-password
           if ($LASTEXITCODE -ne 0) { throw "download_depot.py failed with exit code $LASTEXITCODE" }
-          uv run copy_depot_bin.py -gamever "$env:GAMEVER" -platform all-platform
+          uv run copy_depot_bin.py -gamever "$env:GAMEVER" -platform all-platform -config "$env:ANALYSIS_CONFIG"
           if ($LASTEXITCODE -ne 0) { throw "copy_depot_bin.py failed with exit code $LASTEXITCODE" }
 
       - name: Analyze binaries with normal producer scheduling
@@ -192,7 +205,7 @@ jobs:
           $majorResult = $script | uv run python - "$env:GAMEVER"
           if ($LASTEXITCODE -ne 0) { throw "Failed to resolve major_update for $env:GAMEVER." }
           $major = $majorResult.Trim()
-          $args = @('-gamever', $env:GAMEVER)
+          $args = @('-gamever', $env:GAMEVER, '-configyaml', $env:ANALYSIS_CONFIG)
           if ($major -eq 'true') { $args += @('-oldgamever', 'none') }
           $args += '-debug'
           uv run ida_analyze_bin.py @args
@@ -208,18 +221,18 @@ jobs:
           "CANDIDATE_ROOT=$root" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "ACTUAL_CANDIDATE_SNAPSHOT=$candidate" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "CANDIDATE_SESSION=$session" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
-          uv run gamesymbol_candidate.py build -gamever "$env:GAMEVER" -bindir bin -configyaml config.yaml `
+          uv run gamesymbol_candidate.py build -gamever "$env:GAMEVER" -bindir bin -configyaml "$env:ANALYSIS_CONFIG" `
             -output "$candidate" -session "$session"
           if ($LASTEXITCODE -ne 0) { throw "candidate build failed with exit code $LASTEXITCODE" }
           uv run gamesymbol_candidate.py guard -candidate "$candidate" -session "$session"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before gamedata" }
-          uv run update_gamedata.py -gamever "$env:GAMEVER" -snapshot "$candidate" -debug -download_latest
+          uv run update_gamedata.py -gamever "$env:GAMEVER" -snapshot "$candidate" -configyaml "$env:ANALYSIS_CONFIG" -debug -download_latest
           if ($LASTEXITCODE -ne 0) { throw "update_gamedata.py failed with exit code $LASTEXITCODE" }
           uv run gamesymbol_candidate.py guard -candidate "$candidate" -session "$session"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after gamedata" }
           uv run gamesymbol_candidate.py mark -candidate "$candidate" -session "$session" -step gamedata
           if ($LASTEXITCODE -ne 0) { throw "failed to mark gamedata validation" }
-          uv run run_cpp_tests.py -gamever "$env:GAMEVER" -snapshot "$candidate" -debug
+          uv run run_cpp_tests.py -gamever "$env:GAMEVER" -snapshot "$candidate" -configyaml "$env:ANALYSIS_CONFIG" -debug
           if ($LASTEXITCODE -ne 0) { throw "run_cpp_tests.py failed with exit code $LASTEXITCODE" }
           uv run gamesymbol_candidate.py guard -candidate "$candidate" -session "$session"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after C++ tests" }
@@ -238,6 +251,7 @@ jobs:
             --repository "${{ github.repository }}" --output-branch "$env:OUTPUT_BRANCH" `
             --gamever "$env:GAMEVER" --mode "$env:MODE" --build-id "$env:BUILD_ID" `
             --source-sha "$env:SOURCE_SHA" `
+            --analysis-config "$env:ANALYSIS_CONFIG" `
             --workflow-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
       - name: Create immutable generated-output branch and PR

@@ -13,7 +13,7 @@ holds the ``if (m_bShouldWritePerfStats) WritePerfStats()`` guard, so it is the 
 is optional and it is skipped whenever
 ``CLoopTypeClientServer_DeactivateLoop.{platform}.yaml`` already exists.
 
-The helper symbol is deliberately NOT registered in config.yaml: in the inlined case it
+The helper symbol is deliberately NOT registered in the active version config: in the inlined case it
 would resolve to the ``DeactivateLoop`` vfunc's own address, which would be a wrong
 gamedata entry.  The YAML is used only as an intermediate so the
 ``find-CLoopTypeClientServer_DeactivateLoop-noinline`` skill can key its xref_funcs lookup

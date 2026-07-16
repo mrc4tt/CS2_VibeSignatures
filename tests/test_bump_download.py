@@ -622,7 +622,7 @@ class TestBumpDownload(unittest.TestCase):
         "bump_download.discover_latest",
         return_value=("1.41.6.1", {"2347771": "11", "2347773": "22"}),
     )
-    def test_dry_run_existing_entry_does_not_check_git(
+    def test_dry_run_existing_entry_checks_release_tag_for_recovery(
         self,
         _discover,
         commit,
@@ -656,7 +656,7 @@ class TestBumpDownload(unittest.TestCase):
 
         commit.assert_not_called()
         local_tag_exists.assert_not_called()
-        remote_tag_exists.assert_not_called()
+        remote_tag_exists.assert_called_once_with("14161")
 
     @patch("bump_download.remote_tag_exists", return_value=False)
     def test_missing_release_build_when_entry_exists_but_remote_tag_missing(self, _remote) -> None:
@@ -897,6 +897,103 @@ class TestBumpDownload(unittest.TestCase):
 
             with self.assertRaises(bump_download.BumpError):
                 bump_download.load_config(config)
+
+    def test_versioned_config_plan_uses_immediate_previous_default_entry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            configs = Path(tmp) / "configs"
+            configs.mkdir()
+            (configs / "14168.yaml").write_bytes(b"# exact seed\r\nmodules: []\r\n")
+            downloads = [
+                {"tag": "14168", "name": "1.41.6.8", "manifests": {"2347771": "1", "2347773": "2"}},
+                {
+                    "tag": "14150b",
+                    "name": "1.41.5.0",
+                    "branch": "animgraph_2_beta",
+                    "manifests": {"2347771": "3", "2347773": "4"},
+                },
+            ]
+            plan = bump_download.plan_download_entry(
+                downloads,
+                "1.41.6.9",
+                {"2347771": "11", "2347773": "22"},
+                configs_dir=configs,
+            )
+            self.assertEqual("14168", plan.analysis_config_source_gamever)
+            self.assertEqual("configs/14169.yaml", plan.analysis_config_path)
+
+    @patch("bump_download.create_commit")
+    @patch("bump_download.remote_tag_exists", return_value=False)
+    @patch("bump_download.local_tag_exists", return_value=False)
+    @patch("bump_download.ensure_clean_worktree")
+    @patch(
+        "bump_download.discover_latest",
+        return_value=("1.41.6.1", {"2347771": "11", "2347773": "22"}),
+    )
+    def test_strict_run_copies_and_commits_download_and_version_config(
+        self,
+        _discover,
+        _clean,
+        _local_tag,
+        _remote_tag,
+        create_commit,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = root / "download.yaml"
+            configs = root / "configs"
+            output = root / "output.txt"
+            configs.mkdir()
+            seed = b"# preserve comments\r\nmodules: []\r\n"
+            (configs / "14160.yaml").write_bytes(seed)
+            config.write_text(
+                'downloads:\n  - tag: "14160"\n    name: 1.41.6.0\n    manifests:\n      "2347771": "1"\n      "2347773": "2"\n',
+                encoding="utf-8",
+            )
+            args = argparse.Namespace(
+                config=str(config),
+                configs_dir=str(configs),
+                depotdir=str(root / "depot"),
+                app="730",
+                os="all-platform",
+                username=None,
+                password=None,
+                remember_password=False,
+                github_output=str(output),
+                dry_run=False,
+            )
+            self.assertEqual(0, bump_download.run(args))
+            target = configs / "14161.yaml"
+            self.assertEqual(seed, target.read_bytes())
+            create_commit.assert_called_once_with([config, target], "1.41.6.1")
+            self.assertIn("analysis_config_source_gamever=14160", output.read_text(encoding="utf-8"))
+            self.assertIn("analysis_config_path=configs/14161.yaml", output.read_text(encoding="utf-8"))
+
+    @patch("bump_download.remote_tag_exists", return_value=False)
+    @patch("bump_download.discover_latest", return_value=("1.41.6.1", {"2347771": "11", "2347773": "22"}))
+    def test_recovery_dry_run_requires_existing_accepted_config(self, _discover, _remote_tag) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            configs = root / "configs"
+            configs.mkdir()
+            config = root / "download.yaml"
+            config.write_text(
+                'downloads:\n  - tag: "14161"\n    name: 1.41.6.1\n    manifests:\n      "2347771": "11"\n      "2347773": "22"\n',
+                encoding="utf-8",
+            )
+            args = argparse.Namespace(
+                config=str(config),
+                configs_dir=str(configs),
+                depotdir=str(root / "depot"),
+                app="730",
+                os="all-platform",
+                username=None,
+                password=None,
+                remember_password=False,
+                github_output=None,
+                dry_run=True,
+            )
+            with self.assertRaisesRegex(bump_download.BumpError, "Missing accepted analysis config"):
+                bump_download.run(args)
 
     def test_load_config_rejects_missing_downloads_list(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

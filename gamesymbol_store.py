@@ -9,6 +9,7 @@ from typing import Any, Protocol
 
 import yaml
 
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 from gamesymbol_snapshot_lib.codec import canonical_snapshot_bytes, canonical_yaml_bytes, parse_snapshot_bytes
 from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError, SnapshotMismatchError, SnapshotSchemaError
@@ -183,7 +184,7 @@ class _MemorySymbolStore:
 
 class SnapshotSymbolStore(_MemorySymbolStore):
     @classmethod
-    def open(cls, snapshot_path, *, expected_game_version: str, config_path="config.yaml"):
+    def open(cls, snapshot_path, *, expected_game_version: str, config_path=None):
         path = _ensure_plain_file(Path(snapshot_path))
         try:
             raw = path.read_bytes()
@@ -195,9 +196,10 @@ class SnapshotSymbolStore(_MemorySymbolStore):
                 f"snapshot game version {document['game_version']} does not match {expected_game_version}"
             )
         try:
+            config_path = resolve_analysis_config(expected_game_version, config_path)
             contract = load_contract(config_path, expected_game_version, "bin")
             validate_snapshot_contract(document, contract)
-        except (SnapshotConfigError, SnapshotMismatchError) as exc:
+        except (AnalysisConfigError, SnapshotConfigError, SnapshotMismatchError) as exc:
             raise SnapshotConfigMismatchError(str(exc)) from exc
         if raw != canonical_snapshot_bytes(document):
             raise SnapshotCanonicalError(f"snapshot is not canonical: {path}")

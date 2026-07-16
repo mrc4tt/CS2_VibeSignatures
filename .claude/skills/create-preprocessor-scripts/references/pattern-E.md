@@ -82,7 +82,7 @@ Multiple access sites for the same field all need the same annotation — the LL
 - Passes `struct_member_names=` instead of `func_names=` to `preprocess_common_skill`
 - YAML fields are struct-specific: `struct_name, member_name, offset, size, offset_sig, offset_sig_disp`
 - No `FUNC_VTABLE_RELATIONS`
-- config.yaml symbol category is `structmember` (not `func` or `vfunc`)
+- configs/<GAMEVER>.yaml symbol category is `structmember` (not `func` or `vfunc`)
 
 ## Checklist
 
@@ -91,6 +91,6 @@ Multiple access sites for the same field all need the same annotation — the LL
 - [ ] `preprocess_skill` signature includes `llm_config=None`
 - [ ] `preprocess_common_skill` call passes `struct_member_names=`, `llm_decompile_specs=`, and `llm_config=`
 - [ ] No `FUNC_VTABLE_RELATIONS` (struct member, not virtual function)
-- [ ] config.yaml symbol category is `structmember`
-- [ ] config.yaml `expected_input` includes the predecessor YAML
+- [ ] configs/<GAMEVER>.yaml symbol category is `structmember`
+- [ ] configs/<GAMEVER>.yaml `expected_input` includes the predecessor YAML
 - [ ] Reference YAMLs exist or generated for both platforms

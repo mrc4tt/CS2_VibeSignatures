@@ -6270,11 +6270,16 @@ found_struct_offset: []
                     target_func_name="BotAdd_CommandHandler",
                     new_binary_dir=str(module_dir),
                     platform="windows",
+                    alias_lookup={"BotAdd_CommandHandler": ("bot_add",)},
                     debug=True,
                 )
 
         self.assertEqual(expected_payload, result)
-        mock_find.assert_awaited_once()
+        mock_find.assert_awaited_once_with(
+            session,
+            ["BotAdd_CommandHandler", "bot_add"],
+            debug=True,
+        )
         mock_export.assert_awaited_once_with(
             session,
             "BotAdd_CommandHandler",

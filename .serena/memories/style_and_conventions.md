@@ -9,4 +9,4 @@ Python style:
 - UTF-8 encoding used when reading/writing text files.
 
 YAML config:
-- config.yaml organizes modules, platform-specific paths, and symbol metadata (category, alias, prerequisites).
+- configs/<GAMEVER>.yaml organizes modules, platform-specific paths, and symbol metadata (category, alias, prerequisites).

@@ -7,6 +7,8 @@ description: Initialize this repository's local game binaries for an exact GAMEV
 
 Use the bundled script as the only entry point for downloading, merging, depot fallback, and snapshot restoration. Never
 overwrite an existing file, substitute an unlisted version, generate a missing snapshot, or continue after a failed step.
+The bundled script requires the exact `configs/<GAMEVER>.yaml` and passes that same path through download,
+copy, snapshot restore, and snapshot verification.
 
 ## Select GAMEVER
 
@@ -53,7 +55,7 @@ Only when a symbol snapshot was restored successfully, ask exactly: `Need to syn
 - Otherwise run the following command without a timeout, wait for its real exit status, and do not poll unnecessarily:
 
   ```bash
-  uv run ida_analyze_bin.py -gamever <GAMEVER> -debug -rename >> /tmp/bump_idb_output.log 2>&1
+  uv run ida_analyze_bin.py -gamever <GAMEVER> -configyaml configs/<GAMEVER>.yaml -debug -rename >> /tmp/bump_idb_output.log 2>&1
   ```
 
 On success, report the summary from the final 20 log lines and the full log path. On failure, read the final 60 lines;

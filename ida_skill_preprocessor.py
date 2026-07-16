@@ -104,6 +104,7 @@ async def preprocess_single_skill_via_mcp(
     llm_effort=None,
     llm_fake_as=None,
     llm_max_retries=None,
+    symbol_aliases=None,
     debug=False,
 ):
     """
@@ -167,6 +168,8 @@ async def preprocess_single_skill_via_mcp(
                     "effort": llm_effort,
                     "fake_as": llm_fake_as,
                 }
+                if symbol_aliases:
+                    llm_config["symbol_aliases"] = symbol_aliases
                 if llm_max_retries is not None:
                     llm_config["max_retries"] = llm_max_retries
                 preprocess_kwargs = {

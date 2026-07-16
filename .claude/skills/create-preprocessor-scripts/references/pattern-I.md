@@ -205,7 +205,7 @@ async def preprocess_skill(
 - Has a "reuse previous gamever" fast path that reads `vfunc_offset` from `old_yaml_map` before falling back to the instruction walk
 - The `_PY_EVAL_TEMPLATE` uses a raw string (`r"""..."""`) to avoid f-string issues; `FUNC_VA_PLACEHOLDER` is replaced at runtime via `.replace()`
 - `op.addr` is masked with `& 0xFFFF_FFFF` to strip any sign-extension artifacts from IDA's 64-bit representation
-- config.yaml category is `vfunc`; `expected_input` is the thunk function's YAML (NOT `expected_input` for any vtable)
+- configs/<GAMEVER>.yaml category is `vfunc`; `expected_input` is the thunk function's YAML (NOT `expected_input` for any vtable)
 - No `llm_config` parameter in `preprocess_skill`
 
 ## When NOT to use Pattern I
@@ -221,5 +221,5 @@ async def preprocess_skill(
 - [ ] `_PY_EVAL_TEMPLATE` checks `mnem == "jmp"` (or `"call"` if the thunk uses `call` instead)
 - [ ] `_PY_EVAL_TEMPLATE` checks `op.type == idaapi.o_displ` and masks with `& 0xFFFF_FFFF`
 - [ ] `write_func_yaml` writes `func_name`, `vtable_name`, `vfunc_offset` (hex string), `vfunc_index` (int)
-- [ ] config.yaml `expected_input` includes the thunk function's YAML (NOT a vtable YAML)
+- [ ] configs/<GAMEVER>.yaml `expected_input` includes the thunk function's YAML (NOT a vtable YAML)
 - [ ] No `llm_config` parameter

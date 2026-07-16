@@ -116,7 +116,10 @@ def _source_changed_nodes(head_contract, changed_files: list[str], repo_root: Pa
     by_skill = _skill_nodes(head_contract)
     for raw_path in changed_files:
         path = raw_path.replace("\\", "/")
-        if path in CORE_ANALYSIS_FILES or path in BROAD_ANALYSIS_FILES:
+        if path == f"configs/{head_contract.game_version}.yaml":
+            nodes.update(head_contract.nodes)
+            reasons.append(f"active analysis config change: {path}")
+        elif path in CORE_ANALYSIS_FILES or path in BROAD_ANALYSIS_FILES:
             nodes.update(head_contract.nodes)
             reasons.append(f"core analysis change: {path}")
         elif path.startswith("ida_preprocessor_scripts/references/") and path.endswith(".yaml"):

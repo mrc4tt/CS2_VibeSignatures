@@ -19,7 +19,7 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
         tag_missing = subprocess.CompletedProcess([], 1)
         tag_present = subprocess.CompletedProcess([], 0)
         with (
-            patch("release_workflow_lib.validation.git_output", side_effect=["", download]),
+            patch("release_workflow_lib.validation.git_output", side_effect=["", download, b"modules: []\n"]),
             patch("release_workflow_lib.validation.subprocess.run", side_effect=[merge_ok, tag_present]),
         ):
             with self.assertRaisesRegex(ReleaseWorkflowError, "mode=new requires tag"):
@@ -31,7 +31,7 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                     default_ref="origin/main",
                 )
         with (
-            patch("release_workflow_lib.validation.git_output", side_effect=["", download]),
+            patch("release_workflow_lib.validation.git_output", side_effect=["", download, b"modules: []\n"]),
             patch("release_workflow_lib.validation.subprocess.run", side_effect=[merge_ok, tag_missing]),
         ):
             with self.assertRaisesRegex(ReleaseWorkflowError, "mode=republish requires tag"):

@@ -1,9 +1,11 @@
 import json
 import os
 import sys
+import tempfile
 import unittest
 import uuid
 from pathlib import Path
+from unittest.mock import patch
 
 from dotenv import load_dotenv
 from redis import Redis
@@ -50,6 +52,30 @@ class TestRunRequest(unittest.TestCase):
             RunRequest.create("14141", platforms="macos")
         with self.assertRaisesRegex(ValueError, "agent"):
             RunRequest.create("14141", agent="powershell.exe")
+
+
+class TestSchedulerConfigResolution(unittest.TestCase):
+    def test_default_config_is_resolved_per_request_and_override_is_absolute(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            configs = root / "configs"
+            configs.mkdir()
+            first = configs / "14168.yaml"
+            second = configs / "14169.yaml"
+            first.write_bytes(b"modules: []\n")
+            second.write_bytes(b"modules: []\n")
+            with patch("analysis_config.REPO_ROOT", root):
+                scheduler = RedisProcessScheduler(object(), analyzer_script=root / "analyzer.py")
+                first_command = scheduler.build_command(RunRequest.create("14168"))
+                second_command = scheduler.build_command(RunRequest.create("14169"))
+            self.assertIn(f"-configyaml={first.resolve()}", first_command)
+            self.assertIn(f"-configyaml={second.resolve()}", second_command)
+
+            override = root / "scratch.yaml"
+            override.write_bytes(b"modules: []\n")
+            scheduler = RedisProcessScheduler(object(), analyzer_script=root / "analyzer.py", config_path=str(override))
+            command = scheduler.build_command(RunRequest.create("14168"))
+            self.assertIn(f"-configyaml={override.resolve()}", command)
 
 
 class TestRedisProcessSchedulerIntegration(unittest.TestCase):

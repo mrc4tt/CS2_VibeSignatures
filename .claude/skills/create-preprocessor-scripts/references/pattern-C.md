@@ -92,5 +92,5 @@ async def preprocess_skill(
 - [ ] `FUNC_VTABLE_RELATIONS` lists correct vtable class for each target that has `vtable_name` or `vfunc_*` in its `GENERATE_YAML_DESIRED_FIELDS`
 - [ ] `preprocess_skill` signature includes `llm_config=None`
 - [ ] `preprocess_common_skill` call passes `func_names=`, `func_vtable_relations=`, `llm_decompile_specs=`, and `llm_config=`
-- [ ] config.yaml `expected_input` includes both the predecessor YAML and the vtable YAML
+- [ ] configs/<GAMEVER>.yaml `expected_input` includes both the predecessor YAML and the vtable YAML
 - [ ] Reference YAMLs exist or generated for both platforms

@@ -5,7 +5,7 @@
 
 ## Responsibilities
 - Parse CLI arguments and derive runtime fields: `platforms`, `module_filter`, `vcall_finder_filter`, `oldgamever`, `llm_temperature`, `llm_fake_as`, and `llm_effort`.
-- Read module and skill definitions from `config.yaml`, iterate binaries by module and platform, and run preprocessing, Agent fallback, and aggregated statistics.
+- Read module and skill definitions from `configs/<GAMEVER>.yaml`, iterate binaries by module and platform, and run preprocessing, Agent fallback, and aggregated statistics.
 - Start, keep alive, restart, and gracefully shut down `idalib-mcp`, and run `vcall_finder` aggregation and `-rename` post-processing when needed.
 
 ## Involved Files & Symbols
@@ -17,7 +17,7 @@
 - `ida_analyze_bin.py` - `process_binary`
 - `ida_analyze_bin.py` - `main`
 - `README.md` - `ida_analyze_bin.py` command examples, `-llm_*` parameter documentation, and IDA preprocessor environment variable notes
-- `config.yaml` - module and skill metadata input
+- `configs/<GAMEVER>.yaml` - module and skill metadata input
 - `ida_skill_preprocessor.py` - downstream preprocessing stage used by `process_binary`
 
 ## Architecture
@@ -62,7 +62,7 @@ Key implementation points:
 ## Dependencies
 - Python libraries: `pyyaml`, `httpx`, `mcp` Python SDK
 - External tools: `uv`, `idalib-mcp`, `claude` CLI, or `codex` CLI
-- Runtime inputs: `config.yaml`, `download.yaml` (consulted for the `major_update` oldgamever gate), binaries under `bin/<gamever>/...`, and optional old-version YAML artifacts
+- Runtime inputs: `configs/<GAMEVER>.yaml`, `download.yaml` (consulted for the `major_update` oldgamever gate), binaries under `bin/<gamever>/...`, and optional old-version YAML artifacts
 
 ## Notes
 - `-platform` only accepts `windows` and `linux`, and supports comma-separated values; invalid values immediately raise `parser.error(...)`.
@@ -73,7 +73,7 @@ Key implementation points:
 - The main command examples in `README.md` cover most commonly used parameters, but the source code additionally exposes `-bindir`, `-ida_args`, and `-rename`.
 
 ## CLI Arguments
-- `-configyaml`: path to the configuration file; defaults to `config.yaml`.
+- `-configyaml`: path to the configuration file; defaults to `configs/<GAMEVER>.yaml`.
 - `-bindir`: root directory for binaries; defaults to `bin`.
 - `-gamever`: target game version; required unless `CS2VIBE_GAMEVER` is set.
 - `-platform`: target platform list; defaults to `windows,linux`; parsed into `args.platforms`.

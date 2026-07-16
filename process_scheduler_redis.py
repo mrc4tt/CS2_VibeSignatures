@@ -14,6 +14,7 @@ from typing import Callable
 from redis import Redis
 from redis.exceptions import ResponseError
 
+from analysis_config import resolve_analysis_config
 from process_reporter import RunStatus, generate_run_id
 from process_reporter_redis_connection import RedisKeyBuilder
 from process_reporter_redis_scripts import SCHEDULER_RUN_TRANSITION_LUA, SUBMIT_RUN_LUA
@@ -220,7 +221,7 @@ class RedisProcessScheduler:
         *,
         analyzer_script: str | Path = "ida_analyze_bin.py",
         python_executable: str = sys.executable,
-        config_path: str = "config.yaml",
+        config_path: str | None = None,
         binary_dir: str = "bin",
         workdir: str | Path | None = None,
         popen_factory: Callable = subprocess.Popen,
@@ -245,10 +246,11 @@ class RedisProcessScheduler:
             self.run_once(poll_ms)
 
     def build_command(self, request: RunRequest) -> list[str]:
+        config_path = resolve_analysis_config(request.gamever, self.config_path)
         command = [
             self.python_executable,
             self.analyzer_script,
-            f"-configyaml={self.config_path}",
+            f"-configyaml={config_path}",
             f"-bindir={self.binary_dir}",
             f"-gamever={request.gamever}",
             f"-platform={request.platforms}",

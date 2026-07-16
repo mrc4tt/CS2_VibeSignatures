@@ -2,7 +2,7 @@
 name: create-preprocessor-scripts
 description: |
   Create a new find-XXXX preprocessor Python script from scratch (no existing SKILL.md),
-  add config.yaml skill and symbol entries. Covers xref-string-based and LLM_DECOMPILE-based
+  add configs/<GAMEVER>.yaml skill and symbol entries. Covers xref-string-based and LLM_DECOMPILE-based
   discovery patterns. Use when a GitHub issue or user instruction specifies a new function to find.
 disable-model-invocation: true
 ---
@@ -10,7 +10,10 @@ disable-model-invocation: true
 # Create Preprocessor Scripts from Scratch
 
 Create an `ida_preprocessor_scripts/find-XXXX.py` preprocessor script and add the corresponding
-`config.yaml` entries for a newly requested function, vtable, or struct member offset.
+`configs/<GAMEVER>.yaml` entries for a newly requested function, vtable, or struct member offset.
+
+Resolve `GAMEVER` from the user's explicit request or `CS2VIBE_GAMEVER`, set the edit target to
+`configs/$GAMEVER.yaml`, and stop if that exact file does not exist. Never edit another version as a fallback.
 
 ## When to Use
 
@@ -94,7 +97,7 @@ From the user's input, determine:
 
 Script location: `ida_preprocessor_scripts/find-{skill_name}.py`
 
-The filename MUST match the `name` field in `config.yaml` skill entry.
+The filename MUST match the `name` field in `configs/<GAMEVER>.yaml` skill entry.
 
 Read the reference for your chosen pattern:
 
@@ -196,7 +199,7 @@ async def preprocess_skill(
     )
 ```
 
-**config.yaml `expected_input`:** must include the vtable YAML so it is guaranteed to be resolved before this script runs.
+**configs/<GAMEVER>.yaml `expected_input`:** must include the vtable YAML so it is guaranteed to be resolved before this script runs.
 
 **Multiple xrefs / `exclude_signatures`:** If more than one function references the vtable (e.g. constructor + destructor), the intersection yields >1 result and the skill fails. Use `exclude_signatures` to exclude the unwanted function(s). If the ambiguity is platform-specific, make the exclusion conditional:
 
@@ -226,7 +229,7 @@ FUNC_XREFS = [
 ]
 ```
 
-**config.yaml `expected_input`:** include the callee's output YAML to guarantee it is renamed in IDA before this script runs (the name lookup requires the rename to have happened):
+**configs/<GAMEVER>.yaml `expected_input`:** include the callee's output YAML to guarantee it is renamed in IDA before this script runs (the name lookup requires the rename to have happened):
 
 ```yaml
         expected_input:
@@ -267,7 +270,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
 
 This applies even when:
 - The target is a **vfunc call-site offset** (e.g. `call [rax+128h]`) rather than an actual function body in a vtable
-- **No vtable YAML exists** for that class in config.yaml (no `expected_input` for the vtable needed)
+- **No vtable YAML exists** for that class in configs/<GAMEVER>.yaml (no `expected_input` for the vtable needed)
 - The script also finds **non-vfunc targets** (global variables, struct offsets) alongside the vfunc target
 
 The `vtable_name` from `FUNC_VTABLE_RELATIONS` is used as **metadata** written to the output YAML -- it does NOT require an actual vtable lookup. For example, `("IGameTypes_CreateWorkshopMapGroup", "IGameTypes")` provides the vtable class name `IGameTypes` even though no `IGameTypes_vtable.{platform}.yaml` exists.
@@ -301,7 +304,7 @@ Pure slot-only output (`func_name, vtable_name, vfunc_offset, vfunc_index` with 
 
 ---
 
-## Step 3: Update config.yaml
+## Step 3: Update configs/<GAMEVER>.yaml
 
 ### 3a. Skills Section
 
@@ -425,7 +428,7 @@ The `(structmember, struct=StructName, member=member_name)` tag is **required** 
 
 **IMPORTANT -- When the predecessor is a NEW function (no existing output YAMLs):** If the predecessor function is brand new (discovered by another new script you're creating at the same time), its output YAMLs don't exist yet and `generate_reference_yaml.py` cannot resolve its address. You must use a **multi-phase workflow**:
 
-1. **Phase 1:** Create ALL scripts (vtable, xref_string, LLM_DECOMPILE) and update config.yaml
+1. **Phase 1:** Create ALL scripts (vtable, xref_string, LLM_DECOMPILE) and update configs/<GAMEVER>.yaml
 2. **Phase 2:** Run `uv run ida_analyze_bin.py -debug -oldgamever none` -- the vtable and xref_string scripts will succeed and populate the NEW predecessor's output YAMLs. The LLM_DECOMPILE script will fail (no reference YAML yet) or be skipped.
 3. **Phase 3:** Now that the predecessor has output YAMLs, run `generate_reference_yaml.py` to create reference YAMLs, then annotate them.
 4. **Phase 4:** Run `uv run ida_analyze_bin.py -debug -oldgamever none` again -- this time the LLM_DECOMPILE path runs and the full pipeline is validated.
@@ -526,14 +529,14 @@ Review `git status --short`, explicitly stage only task-related files, and inclu
 changes produced by the post-change gates. Never use `git add -A`:
 
 ```bash
-git add ida_preprocessor_scripts/find-{SKILL_NAME}.py config.yaml
+git add ida_preprocessor_scripts/find-{SKILL_NAME}.py configs/<GAMEVER>.yaml
 git add <generated-reference-yamls> <changed-dist-gamedata-files> gamesymbols/<gamever>.yaml
 git commit -m "feat(preprocessor): add find-{SKILL_NAME}" -m "Co-Authored-By: Codex (GPT-5.x)"
 ```
 
 Include all task-related files changed:
 - The new preprocessor script
-- config.yaml changes
+- configs/<GAMEVER>.yaml changes
 - Any reference YAMLs generated (for Patterns C/D/E)
 - Any tracked gamedata updated by `/post-change-update`
 - `gamesymbols/<gamever>.yaml`
@@ -544,11 +547,11 @@ Include all task-related files changed:
 
 Before finishing, verify:
 
-- [ ] Preprocessor script file name matches the `name` field in config.yaml skill entry
+- [ ] Preprocessor script file name matches the `name` field in configs/<GAMEVER>.yaml skill entry
 - [ ] `GENERATE_YAML_DESIRED_FIELDS` uses correct field set for the pattern
-- [ ] config.yaml `expected_output` has one entry per target
-- [ ] config.yaml `expected_input` correctly chains dependencies
-- [ ] config.yaml `symbols` section has entries for all targets (no duplicates)
+- [ ] configs/<GAMEVER>.yaml `expected_output` has one entry per target
+- [ ] configs/<GAMEVER>.yaml `expected_input` correctly chains dependencies
+- [ ] configs/<GAMEVER>.yaml `symbols` section has entries for all targets (no duplicates)
 - [ ] Pattern-specific checks pass (see the Checklist section in the chosen pattern reference file)
 - [ ] `uv run ida_analyze_bin.py -debug` passes with 0 failures
 - [ ] `/post-change-update phase=before-validation` succeeds for the selected game version
@@ -567,8 +570,8 @@ Before finishing, verify:
 - `FUNC_XREFS` containing `"CT_Water.StepLeft"`
 - `GENERATE_YAML_DESIRED_FIELDS` with `func_name, func_sig, func_va, func_rva, func_size`
 - No `FUNC_VTABLE_RELATIONS`, no `LLM_DECOMPILE`
-- config.yaml skill entry with `expected_output: CPlayer_MovementServices_PlayWaterStepSound.{platform}.yaml`
-- config.yaml symbol entry with `category: func`, alias `CPlayer_MovementServices::PlayWaterStepSound`
+- configs/<GAMEVER>.yaml skill entry with `expected_output: CPlayer_MovementServices_PlayWaterStepSound.{platform}.yaml`
+- configs/<GAMEVER>.yaml symbol entry with `category: func`, alias `CPlayer_MovementServices::PlayWaterStepSound`
 
 ### Example: Virtual function via xref string (Pattern B)
 
@@ -578,7 +581,7 @@ Before finishing, verify:
 - Platform-specific `FUNC_XREFS_WINDOWS` / `FUNC_XREFS_LINUX`
 - `FUNC_VTABLE_RELATIONS`: `("CSource2GameEntities_CheckTransmit", "CSource2GameEntities")`
 - `GENERATE_YAML_DESIRED_FIELDS` with vtable fields
-- config.yaml `expected_input: CSource2GameEntities_vtable.{platform}.yaml`
+- configs/<GAMEVER>.yaml `expected_input: CSource2GameEntities_vtable.{platform}.yaml`
 
 ### Example: Multiple functions from same xref (Pattern A, multi-target)
 
@@ -588,8 +591,8 @@ Before finishing, verify:
 - Two entries in `TARGET_FUNCTION_NAMES`
 - Two entries in `FUNC_XREFS` (each with the same or different xref strings)
 - Two entries in `GENERATE_YAML_DESIRED_FIELDS`
-- config.yaml skill name: `find-FuncA-AND-FuncB`
-- config.yaml: two `expected_output` entries, two symbol entries
+- configs/<GAMEVER>.yaml skill name: `find-FuncA-AND-FuncB`
+- configs/<GAMEVER>.yaml: two `expected_output` entries, two symbol entries
 
 ### Example: Derived-class vfunc via INHERIT_VFUNCS (Pattern F)
 
@@ -599,8 +602,8 @@ Before finishing, verify:
 - `INHERIT_VFUNCS`: `("CBaseEntity_Precache", "CBaseEntity", "CEntityInstance_Precache", True)`
 - `GENERATE_YAML_DESIRED_FIELDS` with vtable fields
 - No FUNC_XREFS, no LLM_DECOMPILE, no FUNC_VTABLE_RELATIONS
-- config.yaml `expected_input`: `CBaseEntity_vtable.{platform}.yaml` + `CEntityInstance_Precache.{platform}.yaml`
-- config.yaml symbol: category `vfunc`, alias `CBaseEntity::Precache`
+- configs/<GAMEVER>.yaml `expected_input`: `CBaseEntity_vtable.{platform}.yaml` + `CEntityInstance_Precache.{platform}.yaml`
+- configs/<GAMEVER>.yaml symbol: category `vfunc`, alias `CBaseEntity::Precache`
 
 ### Example: Virtual function via xref string with FULLMATCH (Pattern B)
 
@@ -610,7 +613,7 @@ Before finishing, verify:
 - `FUNC_XREFS` containing `"FULLMATCH:Precache"` (exact match)
 - `FUNC_VTABLE_RELATIONS`: `("CEntityInstance_Precache", "CEntityInstance")`
 - `GENERATE_YAML_DESIRED_FIELDS` with vtable fields
-- config.yaml `expected_input`: `CEntityInstance_vtable.{platform}.yaml`
+- configs/<GAMEVER>.yaml `expected_input`: `CEntityInstance_vtable.{platform}.yaml`
 
 ### Example: vtable + xref-string vfunc + LLM_DECOMPILE regular function (vtable + Patterns B + D, multi-phase)
 
@@ -625,15 +628,15 @@ Before finishing, verify:
 2. `ida_preprocessor_scripts/find-CSource2GameClients_StartHLTVServer.py` (Pattern B):
    - `FUNC_XREFS` containing `"CSource2GameClients::StartHLTVServer: game event %s not found"`
    - `FUNC_VTABLE_RELATIONS`: `("CSource2GameClients_StartHLTVServer", "CSource2GameClients")`
-   - config.yaml `expected_input`: `CSource2GameClients_vtable.{platform}.yaml`
+   - configs/<GAMEVER>.yaml `expected_input`: `CSource2GameClients_vtable.{platform}.yaml`
 
 3. `ida_preprocessor_scripts/find-LegacyGameEventListener.py` (Pattern D):
    - `LLM_DECOMPILE` referencing `references/server/CSource2GameClients_StartHLTVServer.{platform}.yaml`
    - No `FUNC_VTABLE_RELATIONS` (regular function)
    - Reference YAMLs annotated: `sub_180B1AC80` / `sub_1516AB0` renamed to `LegacyGameEventListener` in both disasm and procedure
-   - config.yaml `expected_input`: `CSource2GameClients_StartHLTVServer.{platform}.yaml`
+   - configs/<GAMEVER>.yaml `expected_input`: `CSource2GameClients_StartHLTVServer.{platform}.yaml`
 
-**config.yaml dependency chain:**
+**configs/<GAMEVER>.yaml dependency chain:**
 ```yaml
       - name: find-CSource2GameClients_vtable
         expected_output:
@@ -669,8 +672,8 @@ Before finishing, verify:
 - `SEARCH_WINDOW_BEFORE_CALL = 96`, `SEARCH_WINDOW_AFTER_XREF = 96`
 - Uses `preprocess_registerconcommand_skill()` from `_registerconcommand.py`
 - `GENERATE_YAML_DESIRED_FIELDS` with `func_name, func_sig, func_va, func_rva, func_size`
-- config.yaml skill entry with no `expected_input`
-- config.yaml symbol entry with `category: func`, alias `CCSBotManager::BotKillCommand`
+- configs/<GAMEVER>.yaml skill entry with no `expected_input`
+- configs/<GAMEVER>.yaml symbol entry with `category: func`, alias `CCSBotManager::BotKillCommand`
 
 ### Example: ConCommand handler + LLM_DECOMPILE virtual function (Patterns G + C, multi-phase)
 
@@ -687,7 +690,7 @@ Before finishing, verify:
    - `FUNC_VTABLE_RELATIONS`: `("CBasePlayerPawn_CommitSuicide", "CBasePlayerPawn")`
    - Reference YAMLs annotated with `; 0xC80 = CBasePlayerPawn_CommitSuicide` in disasm and `// 3200LL = 0xC80 = CBasePlayerPawn_CommitSuicide` in procedure
 
-**config.yaml dependency chain:**
+**configs/<GAMEVER>.yaml dependency chain:**
 ```yaml
       - name: find-BotKill_CommandHandler
         expected_output:
@@ -726,9 +729,9 @@ Before finishing, verify:
    - **CRITICAL:** `FUNC_VTABLE_RELATIONS`: `("IGameTypes_CreateWorkshopMapGroup", "IGameTypes")` -- required because `GENERATE_YAML_DESIRED_FIELDS` includes `vtable_name` and `vfunc_sig`. Without this, fails with `"slot-only fallback missing vtable_name"`. Note: no `IGameTypes_vtable` YAML exists -- the vtable name is purely metadata.
    - `GENERATE_YAML_DESIRED_FIELDS` for IGameTypes_CreateWorkshopMapGroup: `func_name, vtable_name, vfunc_offset, vfunc_index, vfunc_sig`
    - `GENERATE_YAML_DESIRED_FIELDS` for g_pGameTypes: `gv_name, gv_va, gv_rva, gv_sig, gv_sig_va, gv_inst_offset, gv_inst_length, gv_inst_disp`
-   - config.yaml symbols: `g_pGameTypes` with `category: gv`, `IGameTypes_CreateWorkshopMapGroup` with `category: vfunc`
+   - configs/<GAMEVER>.yaml symbols: `g_pGameTypes` with `category: gv`, `IGameTypes_CreateWorkshopMapGroup` with `category: vfunc`
 
-**config.yaml dependency chain:**
+**configs/<GAMEVER>.yaml dependency chain:**
 ```yaml
       - name: find-CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup
         expected_output:
@@ -754,8 +757,8 @@ Before finishing, verify:
 - `WINDOWS_SYMBOL_ALIASES = ["??_7CLoopTypeClientServerService@@6B@_0"]`
 - `LINUX_EXPECTED_OFFSET_TO_TOP = -56`
 - Uses `preprocess_ordinal_vtable_via_mcp` with `ordinal=0`
-- config.yaml skill entry with no `expected_input`
-- config.yaml symbol entry with `category: vtable`
+- configs/<GAMEVER>.yaml skill entry with no `expected_input`
+- configs/<GAMEVER>.yaml symbol entry with `category: vtable`
 
 ### Example: Interface vfunc offset via thunk instruction walk (Pattern I)
 
@@ -774,7 +777,7 @@ No unique `func_sig` is feasible for the thunk (2-3 generic instructions). `func
 - Writes `func_name, vtable_name, vfunc_offset, vfunc_index` via `write_func_yaml`
 - "Reuse previous gamever" fast path reads `vfunc_offset` from `old_yaml_map[TARGET_FUNC_NAME]`
 
-**config.yaml:**
+**configs/<GAMEVER>.yaml:**
 ```yaml
       - name: find-ILoopMode_HandleInputEvent
         expected_output:
@@ -804,11 +807,11 @@ vfunc_index: 5
 - `INHERIT_VFUNCS`: `("ILoopMode_LoopInit", "ILoopMode", "CLoopModeGame_LoopInit", False)`
 - `GENERATE_YAML_DESIRED_FIELDS`: exactly `func_name, vtable_name, vfunc_offset, vfunc_index` -- triggers slot-only mode
 - No `FUNC_XREFS`, no `LLM_DECOMPILE`, no `FUNC_VTABLE_RELATIONS`
-- config.yaml `expected_input`: ONLY `CLoopModeGame_LoopInit.{platform}.yaml` -- **no** `ILoopMode_vtable.{platform}.yaml`
-- config.yaml symbol: `category: vfunc`, alias `ILoopMode::LoopInit`
-- Same single script file referenced in BOTH `client` and `server` module sections of config.yaml
+- configs/<GAMEVER>.yaml `expected_input`: ONLY `CLoopModeGame_LoopInit.{platform}.yaml` -- **no** `ILoopMode_vtable.{platform}.yaml`
+- configs/<GAMEVER>.yaml symbol: `category: vfunc`, alias `ILoopMode::LoopInit`
+- Same single script file referenced in BOTH `client` and `server` module sections of configs/<GAMEVER>.yaml
 
-**config.yaml entry (in both client and server sections):**
+**configs/<GAMEVER>.yaml entry (in both client and server sections):**
 ```yaml
       - name: find-ILoopMode_LoopInit
         expected_output:
@@ -854,7 +857,7 @@ Linux:   mov rdi, [rdi+150h] / test rdi, rdi / jz ... / mov rax, [rdi] / jmp qwo
    - Full fields: `func_name, func_va, func_rva, func_size, func_sig, vtable_name, vfunc_offset, vfunc_index`
    - Inherits slot 13 from the Pattern L base YAML, looks it up in `CNetworkGameServerBase_vtable`, resolves the real function body
 
-**config.yaml dependency chain (engine module):**
+**configs/<GAMEVER>.yaml dependency chain (engine module):**
 ```yaml
       - name: find-INetworkGameServer_ServerAdvanceTick
         expected_output:
@@ -869,7 +872,7 @@ Linux:   mov rdi, [rdi+150h] / test rdi, rdi / jz ... / mov rax, [rdi] / jmp qwo
           - INetworkGameServer_ServerAdvanceTick.{platform}.yaml
 ```
 
-config.yaml symbols: both `category: vfunc` (`INetworkGameServer::ServerAdvanceTick`, `CNetworkGameServerBase::ServerAdvanceTick`).
+configs/<GAMEVER>.yaml symbols: both `category: vfunc` (`INetworkGameServer::ServerAdvanceTick`, `CNetworkGameServerBase::ServerAdvanceTick`).
 
 **Pattern L output YAML (both platforms, identical offset/index):**
 ```yaml
@@ -899,7 +902,7 @@ IGameSystem_DispatchCall(v37, (__int64 (__fastcall *)(...))GameSystem_OnServerPo
 - `INTERNAL_RENAME_TO = None`
 - `MULTI_ORDER = "index"` -- two targets, two dispatches, use index order for stable mapping
 - No `EXPECTED_DISPATCH_COUNT` -- target count equals dispatch count (2 == 2), default is sufficient
-- config.yaml `expected_input`: `CSource2Server_GameFrame.{platform}.yaml` + `IGameSystem_vtable.{platform}.yaml`
+- configs/<GAMEVER>.yaml `expected_input`: `CSource2Server_GameFrame.{platform}.yaml` + `IGameSystem_vtable.{platform}.yaml`
 
 ```python
 SOURCE_YAML_STEM = "CSource2Server_GameFrame"
@@ -912,7 +915,7 @@ INTERNAL_RENAME_TO = None
 MULTI_ORDER = "index"
 ```
 
-**config.yaml:**
+**configs/<GAMEVER>.yaml:**
 ```yaml
       - name: find-IGameSystem_OnServerPreEntityThink-AND-IGameSystem_OnServerPostEntityThink
         expected_output:
@@ -970,7 +973,7 @@ async def preprocess_skill(session, skill_name, expected_outputs, old_yaml_map,
     )
 ```
 
-**config.yaml:**
+**configs/<GAMEVER>.yaml:**
 ```yaml
       - name: find-IGameSystem_OnGamePreShutdown
         expected_output:
@@ -979,7 +982,7 @@ async def preprocess_skill(session, skill_name, expected_outputs, old_yaml_map,
           - IGameSystem_LoopPreShutdownAllSystems.{platform}.yaml
 ```
 
-**config.yaml symbol entry:**
+**configs/<GAMEVER>.yaml symbol entry:**
 ```yaml
       - name: IGameSystem_OnGamePreShutdown
         category: vfunc
@@ -1023,7 +1026,7 @@ async def preprocess_skill(session, skill_name, expected_outputs, old_yaml_map,
    - `preprocess_skill` builds `func_xrefs` at runtime with `xref_gvs: [vtable_va]`
    - Linux had 2 xref candidates; added `exclude_signatures = ["66 83 ?? FF"] if platform == "linux" else []`
 
-**config.yaml:**
+**configs/<GAMEVER>.yaml:**
 ```yaml
       - name: find-CPlayerCommandQueue_vtable
         expected_output:
@@ -1036,7 +1039,7 @@ async def preprocess_skill(session, skill_name, expected_outputs, old_yaml_map,
           - CPlayerCommandQueue_vtable.{platform}.yaml
 ```
 
-**Key insight -- vtable VA is runtime-only:** The vtable VA changes with every binary update, so it cannot be hardcoded. The `_read_vtable_va()` helper reads it from the vtable YAML written earlier in the same `ida_analyze_bin.py` run. The vtable skill must appear first in config.yaml (via `expected_input`) so it executes before the ctor skill.
+**Key insight -- vtable VA is runtime-only:** The vtable VA changes with every binary update, so it cannot be hardcoded. The `_read_vtable_va()` helper reads it from the vtable YAML written earlier in the same `ida_analyze_bin.py` run. The vtable skill must appear first in configs/<GAMEVER>.yaml (via `expected_input`) so it executes before the ctor skill.
 
 **Key insight -- multiple xref candidates:** A vtable is typically written by the constructor AND sometimes by a destructor or copy constructor. If >1 function is found, the skill fails with `"xref intersection yielded N function(s) (need exactly 1)"`. Read the first few bytes of each candidate in IDA, pick the non-constructor, and add an `exclude_signatures` entry. Use a platform conditional if the ambiguity only appears on one platform.
 
@@ -1050,7 +1053,7 @@ async def preprocess_skill(session, skill_name, expected_outputs, old_yaml_map,
 - `FUNC_VTABLE_RELATIONS`: `("CCSPlayerController_Connect", "CCSPlayerController")`
 - `GENERATE_YAML_DESIRED_FIELDS` with `func_name, func_sig, func_va, func_rva, func_size, vtable_name, vfunc_offset, vfunc_index`
 
-**config.yaml:**
+**configs/<GAMEVER>.yaml:**
 ```yaml
       - name: find-CCSPlayerController_Connect
         expected_output:
@@ -1083,5 +1086,5 @@ run aborted the rest of engine/linux).
 `func_sig` kept on both target paths (the de-inlined body is substantial). Validated 14167 (inlined)
 + 14168 (Linux de-inlined) x win/linux -> vtable index 59 / offset 0x1d8, `Failed 0`.
 
-**Full recipe (templates, config.yaml chain, func_sig keep/drop rule, validation, inverted-topology
+**Full recipe (templates, configs/<GAMEVER>.yaml chain, func_sig keep/drop rule, validation, inverted-topology
 variant):** see [Pattern M](references/pattern-M.md).

@@ -30,7 +30,7 @@
 
 At request-build time, `_prepare_llm_decompile_request(...)` reads the prompt template, loads one or more reference YAML files, extracts their `func_name` values as current-binary target functions, and attaches normalized LLM transport settings. `_build_llm_decompile_request_cache_key(...)` groups compatible unresolved symbols by `(model, prompt_path, reference_yaml_paths, temperature)`, so one LLM response can be reused across multiple unresolved function/GV/struct targets that share the same request shape.
 
-Target detail resolution is MCP-driven. `_load_llm_decompile_target_detail_via_mcp(...)` first tries `new_binary_dir/<target>.<platform>.yaml` for `func_va`; if missing, it uses `config.yaml` aliases plus `_find_function_addr_by_names_via_mcp(...)` to recover a unique function address. `_export_function_detail_via_mcp(...)` then runs a generated `py_eval` script that exports:
+Target detail resolution is MCP-driven. `_load_llm_decompile_target_detail_via_mcp(...)` first tries `new_binary_dir/<target>.<platform>.yaml` for `func_va`; if missing, it uses `configs/<GAMEVER>.yaml` aliases plus `_find_function_addr_by_names_via_mcp(...)` to recover a unique function address. `_export_function_detail_via_mcp(...)` then runs a generated `py_eval` script that exports:
 - textual disassembly gathered across function chunks and control-flow heads
 - Hex-Rays pseudocode when available
 - `func_name` and `func_va`
@@ -63,7 +63,7 @@ flowchart TD
 - `ida_llm_utils.py` for OpenAI-compatible client creation, transport, temperature normalization, and effort normalization.
 - `ida_preprocessor_scripts/prompt/call_llm_decompile.md` for the user prompt template.
 - `ida_preprocessor_scripts/references/**/*.yaml` for reference disassembly/pseudocode payloads and target function names.
-- `config.yaml` for symbol aliases when current-version YAML cannot supply `func_va`.
+- `configs/<GAMEVER>.yaml` for symbol aliases when current-version YAML cannot supply `func_va`.
 - `py_eval` MCP access to IDA APIs, plus optional Hex-Rays availability for pseudocode export.
 - `PyYAML` for both reference-YAML loading and LLM response parsing.
 
