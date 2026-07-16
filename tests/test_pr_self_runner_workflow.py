@@ -160,12 +160,12 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         self.assertNotIn("$env:PR_GAMEVER", selector)
         self.assertIn('$sdkRemote = "https://github.com/HLND2T/hl2sdk.git"', selector)
         self.assertIn('ls-remote --heads $sdkRemote "refs/heads/$sdkRef"', selector)
-        self.assertIn('SDK_ABI_REF=pinned-submodule', selector)
-        self.assertIn('SDK_ABI_SHA=$pinnedSha', selector)
-        self.assertIn('No versioned SDK branch exists for $sdkRef', selector)
+        self.assertIn("SDK_ABI_REF=pinned-submodule", selector)
+        self.assertIn("SDK_ABI_SHA=$pinnedSha", selector)
+        self.assertIn("No versioned SDK branch exists for $sdkRef", selector)
         self.assertIn('fetch --no-tags $sdkRemote "refs/heads/$sdkRef"', selector)
-        self.assertIn('checkout --detach $remoteSha', selector)
-        self.assertIn('selected SHA=$selectedSha; pinned SHA=$pinnedSha', selector)
+        self.assertIn("checkout --detach $remoteSha", selector)
+        self.assertIn("selected SHA=$selectedSha; pinned SHA=$pinnedSha", selector)
 
     def test_cpp_validation_restores_pinned_sdk_even_after_failure(self) -> None:
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
@@ -178,7 +178,7 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("if: always()", restore)
         self.assertIn('if ($env:SDK_ABI_SWITCHED -ne "true")', restore)
         self.assertIn('checkout --detach "$env:SDK_PINNED_SHA"', restore)
-        self.assertIn('restored pinned SHA=$restoredSha', restore)
+        self.assertIn("restored pinned SHA=$restoredSha", restore)
 
 
 if __name__ == "__main__":

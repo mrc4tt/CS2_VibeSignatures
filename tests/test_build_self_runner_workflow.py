@@ -72,12 +72,12 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn('$sdkRef = "cs2-$env:GAMEVER"', selector)
         self.assertIn('$sdkRemote = "https://github.com/HLND2T/hl2sdk.git"', selector)
         self.assertIn('ls-remote --heads $sdkRemote "refs/heads/$sdkRef"', selector)
-        self.assertIn('SDK_ABI_REF=pinned-submodule', selector)
-        self.assertIn('SDK_ABI_SHA=$pinnedSha', selector)
-        self.assertIn('No versioned SDK branch exists for $sdkRef', selector)
+        self.assertIn("SDK_ABI_REF=pinned-submodule", selector)
+        self.assertIn("SDK_ABI_SHA=$pinnedSha", selector)
+        self.assertIn("No versioned SDK branch exists for $sdkRef", selector)
         self.assertIn('fetch --no-tags $sdkRemote "refs/heads/$sdkRef"', selector)
-        self.assertIn('checkout --detach $remoteSha', selector)
-        self.assertIn('selected SHA=$selectedSha; pinned SHA=$pinnedSha', selector)
+        self.assertIn("checkout --detach $remoteSha", selector)
+        self.assertIn("selected SHA=$selectedSha; pinned SHA=$pinnedSha", selector)
 
     def test_cpp_validation_always_restores_exact_pinned_sdk_sha(self) -> None:
         restore_start = self.workflow.index("- name: Restore pinned SDK revision")
@@ -87,7 +87,7 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("if: always()", restore)
         self.assertIn('if ($env:SDK_ABI_SWITCHED -ne "true")', restore)
         self.assertIn('checkout --detach "$env:SDK_PINNED_SHA"', restore)
-        self.assertIn('restored pinned SHA=$restoredSha', restore)
+        self.assertIn("restored pinned SHA=$restoredSha", restore)
 
     def test_build_passes_one_immutable_analysis_config_through_every_stage(self) -> None:
         self.assertIn("ANALYSIS_CONFIG=", self.workflow)
