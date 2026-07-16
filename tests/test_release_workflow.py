@@ -6,6 +6,7 @@ from unittest.mock import patch
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.hashing import (
     canonical_json_bytes,
+    contained_path,
     file_inventory,
     inventory_sha256,
     reject_reparse_points,
@@ -141,6 +142,18 @@ class TestReleaseWorkflow(unittest.TestCase):
             with patch("release_workflow_lib.hashing._is_reparse_point", return_value=True):
                 with self.assertRaisesRegex(ReleaseWorkflowError, "reparse points"):
                     reject_reparse_points(root)
+
+    def test_contained_path_preserves_lexical_root_spelling(self) -> None:
+        root = Path("root-alias").absolute()
+        target = root / "child"
+        resolved_root = Path("resolved-root").absolute()
+        resolved_target = resolved_root / "child"
+        resolved_paths = {root: resolved_root, target: resolved_target}
+
+        with patch.object(Path, "resolve", autospec=True, side_effect=lambda path, strict=False: resolved_paths[path]):
+            actual = contained_path(root, "child")
+
+        self.assertEqual(target, actual)
 
     def test_promote_bin_swaps_verified_directory_and_finalizes_backup(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

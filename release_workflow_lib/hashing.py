@@ -62,10 +62,12 @@ def normalized_relative_path(value: str) -> str:
 
 
 def contained_path(root: Path, *parts: str) -> Path:
-    root = Path(root).resolve(strict=False)
-    target = root.joinpath(*parts).resolve(strict=False)
+    root = Path(os.path.abspath(root))
+    target = Path(os.path.abspath(root.joinpath(*parts)))
+    resolved_root = root.resolve(strict=False)
+    resolved_target = target.resolve(strict=False)
     try:
-        target.relative_to(root)
+        resolved_target.relative_to(resolved_root)
     except ValueError as exc:
         raise ReleaseWorkflowError(f"path escapes root {root}: {target}") from exc
     return target
