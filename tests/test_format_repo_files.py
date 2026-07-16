@@ -35,7 +35,10 @@ class TestFormatRepoFiles(unittest.TestCase):
         module = self._load_module()
 
         with (
-            patch("format_repo_files.list_tracked_format_files", return_value=["a.py", "config.yaml"]),
+            patch(
+                "format_repo_files.list_tracked_format_files",
+                return_value=["format_repo_files.py", "configs/14168.yaml"],
+            ),
             patch("format_repo_files.list_unchecked_preprocessor_scripts", return_value=[]),
             patch("format_repo_files.run_command_chunks", return_value=0) as run_chunks,
         ):
@@ -43,15 +46,15 @@ class TestFormatRepoFiles(unittest.TestCase):
 
         run_chunks.assert_has_calls(
             [
-                call(["ruff", "format", "--check"], ["a.py"]),
-                call(["yamlfix", "--check"], ["config.yaml"]),
+                call(["ruff", "format", "--check"], ["format_repo_files.py"]),
+                call(["yamlfix", "--check"], ["configs/14168.yaml"]),
             ]
         )
 
     def test_yamlfix_skips_generated_reference_yaml(self) -> None:
         module = self._load_module()
         tracked_files = [
-            "config.yaml",
+            "configs/14168.yaml",
             "ida_preprocessor_scripts/references/server/generated.yaml",
             "ida_preprocessor_scripts\\references\\client\\generated.yaml",
             "gamesymbols/14168.yaml",
@@ -68,7 +71,7 @@ class TestFormatRepoFiles(unittest.TestCase):
         run_chunks.assert_has_calls(
             [
                 call(["ruff", "format", "--check"], []),
-                call(["yamlfix", "--check"], ["config.yaml"]),
+                call(["yamlfix", "--check"], ["configs/14168.yaml"]),
             ]
         )
 

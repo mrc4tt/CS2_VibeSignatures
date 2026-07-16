@@ -1279,7 +1279,7 @@ class TestConfigSkillDependencyGraph(unittest.TestCase):
         )
 
     def test_config_module_skills_have_no_expected_input_order_gaps(self) -> None:
-        modules = ida_analyze_bin.parse_config("config.yaml")
+        modules = ida_analyze_bin.parse_config("configs/14168.yaml")
 
         gaps = []
         for platform in ("windows", "linux"):
@@ -4318,7 +4318,7 @@ class TestMainReporterLifecycle(unittest.TestCase):
         mock_parse_config,
     ) -> None:
         mock_parse_args.return_value = SimpleNamespace(
-            configyaml="config.yaml",
+            configyaml="configs/14168.yaml",
             bindir="bin",
             gamever="14141",
             oldgamever=None,
@@ -4422,7 +4422,7 @@ class TestMainLlmWiring(unittest.TestCase):
             return {"status": "success", "processed": 1, "failed": 0}
 
         mock_parse_args.return_value = SimpleNamespace(
-            configyaml="config.yaml",
+            configyaml="configs/14168.yaml",
             bindir="bin",
             gamever="14141",
             oldgamever=None,
@@ -4485,7 +4485,7 @@ class TestMainLlmWiring(unittest.TestCase):
         mock_parse_config,
     ) -> None:
         mock_parse_args.return_value = SimpleNamespace(
-            configyaml="config.yaml",
+            configyaml="configs/14168.yaml",
             bindir="bin",
             gamever="14141",
             oldgamever=None,
@@ -4553,7 +4553,7 @@ class TestMainLlmWiring(unittest.TestCase):
         mock_parse_config,
     ) -> None:
         mock_parse_args.return_value = SimpleNamespace(
-            configyaml="config.yaml",
+            configyaml="configs/14168.yaml",
             bindir="bin",
             gamever="14141",
             oldgamever=None,
@@ -4622,7 +4622,7 @@ class TestMainPostProcessWiring(unittest.TestCase):
             return (0, 0, 0)
 
         mock_parse_args.return_value = SimpleNamespace(
-            configyaml="config.yaml",
+            configyaml="configs/14168.yaml",
             bindir="bin",
             gamever="14141",
             oldgamever=None,
@@ -4678,7 +4678,7 @@ class TestMainSkillFilterWiring(unittest.TestCase):
         mock_process_binary,
     ) -> None:
         mock_parse_args.return_value = SimpleNamespace(
-            configyaml="config.yaml",
+            configyaml="configs/14168.yaml",
             bindir="bin",
             gamever="14141",
             oldgamever=None,

@@ -17,7 +17,8 @@ SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 BUILD_ID_RE = re.compile(r"^[0-9]+-[0-9]+$")
 BRANCH_RE = re.compile(r"^gamesymbols/(?P<gamever>[0-9]{4,10}[a-z]?)/build-(?P<build_id>[0-9]+-[0-9]+)$")
 ALLOWED_REPOSITORIES = {"HLND2T/CS2_VibeSignatures", "hzqst/CS2_VibeSignatures"}
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+LEGACY_SCHEMA_VERSION = 1
 TRACKED_FIELDS = {
     "schema_version",
     "gamever",
@@ -29,6 +30,14 @@ TRACKED_FIELDS = {
     "bin_manifest_sha256",
     "tracked_output_manifest_sha256",
     "workflow_run_url",
+    "analysis_config_path",
+    "analysis_config_sha256",
+    "analysis_config_contract_sha256",
+}
+LEGACY_TRACKED_FIELDS = TRACKED_FIELDS - {
+    "analysis_config_path",
+    "analysis_config_sha256",
+    "analysis_config_contract_sha256",
 }
 
 
@@ -67,6 +76,9 @@ def build_tracked_manifest(
     bin_manifest_sha256: str,
     tracked_output_manifest_sha256: str,
     workflow_run_url: str,
+    analysis_config_path: str | None = None,
+    analysis_config_sha256: str | None = None,
+    analysis_config_contract_sha256: str | None = None,
 ) -> dict:
     require_gamever(gamever)
     require_mode(mode)
@@ -82,8 +94,21 @@ def build_tracked_manifest(
             raise ReleaseWorkflowError(f"invalid {label}")
     if not workflow_run_url.startswith("https://github.com/"):
         raise ReleaseWorkflowError("workflow_run_url must be a GitHub Actions URL")
-    return {
-        "schema_version": SCHEMA_VERSION,
+    legacy = analysis_config_path is None and analysis_config_sha256 is None and analysis_config_contract_sha256 is None
+    if not legacy:
+        if analysis_config_path != f"configs/{gamever}.yaml":
+            raise ReleaseWorkflowError("analysis_config_path must be the canonical versioned path")
+        if (
+            not analysis_config_sha256
+            or len(analysis_config_sha256) != HEX_SHA256_LENGTH
+            or any(char not in "0123456789abcdef" for char in analysis_config_sha256)
+        ):
+            raise ReleaseWorkflowError("invalid analysis_config_sha256")
+        contract_hex = str(analysis_config_contract_sha256 or "").removeprefix("sha256:")
+        if len(contract_hex) != HEX_SHA256_LENGTH or any(char not in "0123456789abcdef" for char in contract_hex):
+            raise ReleaseWorkflowError("invalid analysis_config_contract_sha256")
+    manifest = {
+        "schema_version": LEGACY_SCHEMA_VERSION if legacy else SCHEMA_VERSION,
         "gamever": gamever,
         "release_tag": gamever,
         "mode": mode,
@@ -94,10 +119,21 @@ def build_tracked_manifest(
         "tracked_output_manifest_sha256": tracked_output_manifest_sha256,
         "workflow_run_url": workflow_run_url,
     }
+    if not legacy:
+        manifest.update(
+            {
+                "analysis_config_path": analysis_config_path,
+                "analysis_config_sha256": analysis_config_sha256,
+                "analysis_config_contract_sha256": analysis_config_contract_sha256,
+            }
+        )
+    return manifest
 
 
 def validate_tracked_manifest(manifest: dict) -> dict:
-    if set(manifest) != TRACKED_FIELDS:
+    schema_version = manifest.get("schema_version")
+    fields = TRACKED_FIELDS if schema_version == SCHEMA_VERSION else LEGACY_TRACKED_FIELDS
+    if set(manifest) != fields:
         raise ReleaseWorkflowError("tracked release manifest has unexpected or missing fields")
     expected = build_tracked_manifest(
         gamever=manifest["gamever"],
@@ -108,8 +144,11 @@ def validate_tracked_manifest(manifest: dict) -> dict:
         bin_manifest_sha256=manifest["bin_manifest_sha256"],
         tracked_output_manifest_sha256=manifest["tracked_output_manifest_sha256"],
         workflow_run_url=manifest["workflow_run_url"],
+        analysis_config_path=manifest.get("analysis_config_path"),
+        analysis_config_sha256=manifest.get("analysis_config_sha256"),
+        analysis_config_contract_sha256=manifest.get("analysis_config_contract_sha256"),
     )
-    if manifest.get("schema_version") != SCHEMA_VERSION or manifest != expected:
+    if manifest != expected:
         raise ReleaseWorkflowError("tracked release manifest is not canonical")
     return manifest
 
@@ -158,6 +197,13 @@ def write_release_metadata(
         "tracked_output_manifest_sha256": manifest["tracked_output_manifest_sha256"],
         "assets": asset_records,
     }
+    for field in (
+        "analysis_config_path",
+        "analysis_config_sha256",
+        "analysis_config_contract_sha256",
+    ):
+        if field in manifest:
+            provenance[field] = manifest[field]
     output_dir = Path(output_dir)
     provenance_path = output_dir / f"release-provenance-{manifest['gamever']}.json"
     write_canonical_json(provenance_path, provenance)

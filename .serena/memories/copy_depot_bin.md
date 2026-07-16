@@ -1,11 +1,11 @@
 # copy_depot_bin
 
 ## Overview
-Copies CS2 binaries from a local Steam depot into the repository's versioned `bin/` layout based on module entries in `config.yaml`, so later analysis steps can work with locally extracted binaries instead of downloaded ones. It also supports `-checkonly` mode, which performs a read-only readiness scan of expected target binaries and lets CI skip depot download when the cache is already complete.
+Copies CS2 binaries from a local Steam depot into the repository's versioned `bin/` layout based on module entries in `configs/<GAMEVER>.yaml`, so later analysis steps can work with locally extracted binaries instead of downloaded ones. It also supports `-checkonly` mode, which performs a read-only readiness scan of expected target binaries and lets CI skip depot download when the cache is already complete.
 
 ## Responsibilities
 - Parse CLI arguments for game version, output directory, platform filter, depot root, config path, and `-checkonly` mode.
-- Read `config.yaml` and extract module metadata needed for either binary copying or readiness checking.
+- Read `configs/<GAMEVER>.yaml` and extract module metadata needed for either binary copying or readiness checking.
 - Normalize expected source/target entries through `iter_module_entries`, including `windows` / `linux` expansion and `all-platform` handling.
 - In copy mode, resolve source paths inside the local depot and copy binaries into `bin/<gamever>/<module>/<filename>` while creating parent directories as needed.
 - In check-only mode, inspect only the expected target files, summarize ready/missing counts, and return mode-specific exit codes for ready, missing, and configuration-error outcomes.
@@ -13,7 +13,7 @@ Copies CS2 binaries from a local Steam depot into the repository's versioned `bi
 
 ## Files Involved (no line numbers)
 - `copy_depot_bin.py`
-- `config.yaml`
+- `configs/<GAMEVER>.yaml`
 - `bin/<gamever>/<module>/<binary>`
 - `<depotdir>/<platform>/<configured module path>`
 - `<depotdir>/<configured module path>` when `-platform all-platform`
@@ -47,10 +47,10 @@ parse_args
 `iter_module_entries` is the shared path-planning layer for both modes, so check-only readiness stays aligned with the target layout that copy mode will actually populate. `check_module_targets` is read-only and never touches depot files; `process_module` remains the state-changing branch that reads the depot and writes into `bin/`.
 
 ## Dependencies
-- PyYAML (`yaml.safe_load`) for reading `config.yaml`
+- PyYAML (`yaml.safe_load`) for reading `configs/<GAMEVER>.yaml`
 - Python standard library: `argparse`, `os`, `shutil`, `sys`, `pathlib`
 - Local filesystem access for reading depot files and writing into `bin/`
-- `config.yaml` module fields: `name`, `path_windows`, `path_linux`
+- `configs/<GAMEVER>.yaml` module fields: `name`, `path_windows`, `path_linux`
 - Local depot layout rooted at `<depotdir>/<platform>/...`, or flat `<depotdir>/...` when `-platform all-platform`
 - CI workflow logic in `.github/workflows/build-on-self-runner.yml` that consumes the `-checkonly` exit-code contract
 

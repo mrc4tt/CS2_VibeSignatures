@@ -14,6 +14,7 @@ from typing import Any
 
 import yaml
 
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 from ida_analyze_util import (
     build_function_detail_export_py_eval,
     build_remote_text_export_py_eval,
@@ -107,6 +108,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "-gamever",
         default=os.environ.get("CS2VIBE_GAMEVER"),
         help="Game version (default: CS2VIBE_GAMEVER env var); when omitted, infer from binary path",
+    )
+    parser.add_argument(
+        "-configyaml",
+        default=None,
+        help="Analysis config path; defaults to configs/<GAMEVER>.yaml",
     )
     parser.add_argument(
         "-module",
@@ -233,15 +239,14 @@ def load_existing_func_va(
 
 
 def load_symbol_aliases(
-    repo_root: str | Path,
+    config_path: str | Path,
     module: str,
     func_name: str,
 ) -> list[str]:
-    config_path = Path(repo_root) / "config.yaml"
     config_map = load_yaml_mapping(config_path)
     modules = config_map.get("modules")
     if not isinstance(modules, list):
-        raise ReferenceGenerationError("config.yaml missing 'modules' list")
+        raise ReferenceGenerationError("analysis config missing 'modules' list")
 
     for module_entry in modules:
         if not isinstance(module_entry, Mapping):
@@ -283,9 +288,9 @@ def load_symbol_aliases(
                 raise ReferenceGenerationError(f"symbol '{func_name}' in module '{module}' has no usable alias values")
             return ordered_aliases
 
-        raise ReferenceGenerationError(f"symbol '{func_name}' not found in module '{module}' within config.yaml")
+        raise ReferenceGenerationError(f"symbol '{func_name}' not found in module '{module}' within {config_path}")
 
-    raise ReferenceGenerationError(f"module '{module}' not found in config.yaml")
+    raise ReferenceGenerationError(f"module '{module}' not found in {config_path}")
 
 
 def _parse_py_eval_json_result(
@@ -390,6 +395,7 @@ async def resolve_func_va(
     module: str,
     platform: str,
     func_name: str,
+    config_path: str | Path,
     debug: bool,
 ) -> str:
     existing_func_va = load_existing_func_va(
@@ -403,7 +409,7 @@ async def resolve_func_va(
         return existing_func_va
 
     candidate_names = load_symbol_aliases(
-        repo_root=repo_root,
+        config_path=config_path,
         module=module,
         func_name=func_name,
     )
@@ -781,6 +787,15 @@ async def run_reference_generation(
             module=args.module,
             platform=args.platform,
         )
+        try:
+            config_path = resolve_analysis_config(
+                resolved_target["gamever"],
+                getattr(args, "configyaml", None),
+                repo_root=resolved_repo_root,
+            )
+        except AnalysisConfigError as exc:
+            raise ReferenceGenerationError(str(exc)) from exc
+        print(f"Analysis config: {config_path}")
         func_va = await resolve_func_va(
             session,
             repo_root=resolved_repo_root,
@@ -788,6 +803,7 @@ async def run_reference_generation(
             module=resolved_target["module"],
             platform=resolved_target["platform"],
             func_name=args.func_name,
+            config_path=config_path,
             debug=args.debug,
         )
         output_path = build_reference_output_path(

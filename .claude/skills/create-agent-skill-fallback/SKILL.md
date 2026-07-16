@@ -59,7 +59,7 @@ For target finder `find-XXXX` in module `<module>` (`server`, `engine`, `network
      target is a struct member, an indirect-vcall vfunc, a real vfunc, a regular func, or a global var — see the
      kind table below).
    - any `FUNC_XREFS` (string/gv anchors) — extra fingerprints you can reuse.
-2. **`config.yaml` skill entry** — `expected_output` / `expected_output_windows` / `expected_output_linux`
+2. **`configs/<GAMEVER>.yaml` skill entry** — `expected_output` / `expected_output_windows` / `expected_output_linux`
    (authoritative output list per platform), `expected_input` (the predecessor YAML), `platform`,
    `prerequisite`.
 3. **Reference YAMLs** `ida_preprocessor_scripts/references/<module>/<predecessor>.{platform}.yaml` — the

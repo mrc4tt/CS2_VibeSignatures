@@ -25,6 +25,13 @@ If no non-empty game version is available, stop immediately:
 <skill_error>post-change-validation cannot run: gamever was not provided and .env has no CS2VIBE_GAMEVER.</skill_error>
 ```
 
+After resolving the game version, set `ANALYSIS_CONFIG="configs/$GAMEVER.yaml"`. If it is not a file, stop without
+falling back to another game version:
+
+```text
+<skill_error>post-change-validation cannot run: analysis config is missing for GAMEVER.</skill_error>
+```
+
 If either candidate path is absent, stop without falling back to `bin` or the tracked snapshot:
 
 ```text
@@ -41,7 +48,7 @@ Use the resolved game version explicitly:
 LOG_FILE="/tmp/post-change-validation-${GAMEVER}.log"
 set -o pipefail
 uv run gamesymbol_candidate.py guard -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION"
-uv run run_cpp_tests.py -gamever "$GAMEVER" -snapshot "$CANDIDATE" -debug 2>&1 | tee "$LOG_FILE"
+uv run run_cpp_tests.py -gamever "$GAMEVER" -configyaml "$ANALYSIS_CONFIG" -snapshot "$CANDIDATE" -debug 2>&1 | tee "$LOG_FILE"
 STATUS=${PIPESTATUS[0]}
 ```
 

@@ -54,6 +54,13 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertLess(publish, stage)
         self.assertLess(stage, output_pr)
 
+    def test_build_passes_one_immutable_analysis_config_through_every_stage(self) -> None:
+        self.assertIn("ANALYSIS_CONFIG=", self.workflow)
+        self.assertIn("ANALYSIS_CONFIG_SHA256=", self.workflow)
+        self.assertIn('-config "$env:ANALYSIS_CONFIG"', self.workflow)
+        self.assertIn('-configyaml "$env:ANALYSIS_CONFIG"', self.workflow)
+        self.assertIn('--analysis-config "$env:ANALYSIS_CONFIG"', self.workflow)
+
     def test_build_stops_after_pending_pr_without_publication(self) -> None:
         self.assertIn("release-manifests/$env:GAMEVER.json", self.workflow)
         self.assertIn("gamesymbols/$env:GAMEVER/build-$env:BUILD_ID", self.workflow)
@@ -91,6 +98,9 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("Uploaded asset hash mismatch", self.promotion)
         self.assertIn("Checkout trusted promotion tooling from merge base", self.promotion)
         self.assertIn(".release-tools/release_workflow.py verify-promotion", self.promotion)
+        self.assertIn('"configs\\$gamever.yaml"', self.promotion)
+        self.assertIn("analysis_config_sha256", self.promotion)
+        self.assertIn('git", "show", f"{sys.argv[1]}:configs/{sys.argv[3]}.yaml"', self.promotion)
 
     def test_bump_merge_dispatches_without_creating_tag(self) -> None:
         workflow = Path(".github/workflows/tag-bump-after-merge.yml").read_text(encoding="utf-8")
@@ -98,6 +108,7 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("source_sha = $sourceSha", workflow)
         self.assertIn('mode = "new"', workflow)
         self.assertIn("source_pull_request", workflow)
+        self.assertIn("contents/configs/$gamever.yaml?ref=$sourceSha", workflow)
         self.assertNotIn("git tag", workflow)
         self.assertNotIn("git push origin", workflow)
 
@@ -108,6 +119,14 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("source_sha = $headSha.Trim()", workflow)
         self.assertNotIn("Failed to push repaired tag", workflow)
         self.assertNotIn('git push origin "refs/tags/', workflow)
+        self.assertIn("configs/$tag.yaml", workflow)
+
+    def test_bump_workflow_carries_version_config_in_preview_and_pr_contract(self) -> None:
+        workflow = Path(".github/workflows/bump-download.yml").read_text(encoding="utf-8")
+        self.assertGreaterEqual(workflow.count("-configs-dir configs"), 2)
+        self.assertIn("analysis_config_source_gamever", workflow)
+        self.assertIn("analysis_config_path", workflow)
+        self.assertIn("exact initial copy", workflow)
 
     def test_generated_output_pr_has_a_lightweight_required_check(self) -> None:
         workflow = Path(".github/workflows/validate-generated-output-pr.yml").read_text(encoding="utf-8")

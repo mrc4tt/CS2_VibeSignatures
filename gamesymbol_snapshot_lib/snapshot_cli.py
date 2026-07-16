@@ -1,6 +1,7 @@
 import argparse
 import traceback
 
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError, SnapshotMismatchError
 from gamesymbol_snapshot_lib.operations import pack_snapshot, restore_snapshot, verify_snapshot
 
@@ -8,7 +9,11 @@ from gamesymbol_snapshot_lib.operations import pack_snapshot, restore_snapshot, 
 def _add_common_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-gamever", required=True, help="Game version to snapshot")
     parser.add_argument("-bindir", default="bin", help="Binary workspace root")
-    parser.add_argument("-configyaml", default="config.yaml", help="Analysis config path")
+    parser.add_argument(
+        "-configyaml",
+        default=None,
+        help="Analysis config path; defaults to configs/<GAMEVER>.yaml",
+    )
     parser.add_argument("-snapshot", help="Snapshot path; defaults to gamesymbols/<GAMEVER>.yaml")
     parser.add_argument("-debug", action="store_true", help="Print tracebacks on errors")
 
@@ -25,6 +30,8 @@ def parse_args(argv=None):
 
 
 def _run(args) -> None:
+    args.configyaml = str(resolve_analysis_config(args.gamever, args.configyaml))
+    print(f"Analysis config: {args.configyaml}")
     common = (args.gamever, args.bindir, args.configyaml, args.snapshot)
     if args.command == "pack":
         data = pack_snapshot(*common)
@@ -46,7 +53,7 @@ def main(argv=None) -> int:
         if args.debug:
             traceback.print_exc()
         return 1
-    except SnapshotConfigError as exc:
+    except (AnalysisConfigError, SnapshotConfigError) as exc:
         print(f"Error: {exc}")
         if args.debug:
             traceback.print_exc()

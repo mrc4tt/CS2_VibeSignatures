@@ -91,6 +91,7 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         cpp_tests = workflow.index("uv run run_cpp_tests.py")
 
         self.assertIn('$baseRef = "${{ github.event.pull_request.base.sha }}".Trim()', workflow)
+        self.assertIn('$versionedBaseConfig = "configs/$baseGamever.yaml"', workflow)
         self.assertIn('Export-GitBlob $baseSnapshotCommit "config.yaml"', workflow)
         self.assertIn('"PR_GAMEVER=$gamever"', workflow)
         self.assertIn('$sameVersionSnapshot = "gamesymbols/$env:PR_GAMEVER.yaml"', workflow)
@@ -98,6 +99,8 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn('"GAMEVER=$validationGamever"', workflow)
         self.assertIn('Export-GitBlob "HEAD" $headSnapshotRepoPath $headSnapshot', workflow)
         self.assertIn('"HEAD_SNAPSHOT=$headSnapshot"', workflow)
+        self.assertIn('"HEAD_CONFIG=$headConfig"', workflow)
+        self.assertIn('-headconfigyaml "$env:HEAD_CONFIG"', workflow)
         self.assertIn("bootstrap PR validation will rebuild $validationGamever", workflow)
         self.assertIn('-baseref "$env:BASE_REF"', workflow)
         self.assertIn('-headsnapshot "$env:HEAD_SNAPSHOT"', workflow)

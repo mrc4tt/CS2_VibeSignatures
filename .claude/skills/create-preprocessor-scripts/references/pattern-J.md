@@ -102,5 +102,5 @@ async def preprocess_skill(
 - [ ] `MULTI_ORDER = "index"` when finding multiple targets (for stable ordering across compiler reorderings)
 - [ ] `dispatch_rank` is set (and `EXPECTED_DISPATCH_COUNT` set to total) when selecting a subset of dispatches
 - [ ] No `FUNC_XREFS`, no `FUNC_VTABLE_RELATIONS`, no `LLM_DECOMPILE`, no `INHERIT_VFUNCS`
-- [ ] config.yaml `expected_input` includes both the predecessor YAML **and** `IGameSystem_vtable.{platform}.yaml`
-- [ ] config.yaml `symbols` entries use `category: vfunc`
+- [ ] configs/<GAMEVER>.yaml `expected_input` includes both the predecessor YAML **and** `IGameSystem_vtable.{platform}.yaml`
+- [ ] configs/<GAMEVER>.yaml `symbols` entries use `category: vfunc`

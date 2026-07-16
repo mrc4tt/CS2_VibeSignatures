@@ -3,7 +3,7 @@ name: run-validation-until-no-failure
 description: |
   Use when the user wants to run the IDA validation pipeline (`uv run ida_analyze_bin.py -debug`)
   repeatedly until it reports zero failures, recording each failing skill's reason and disabling it
-  in config.yaml so the run can proceed. Use after a game-version bump or a large batch of new skills
+  in configs/<GAMEVER>.yaml so the run can proceed. Use after a game-version bump or a large batch of new skills
   when several skills may fail and you want an automated triage-and-quarantine pass.
   Triggers: run validation until no failure, validate until green, get validation passing,
   disable failing skills, quarantine failing skills, loop ida_analyze_bin until no failures
@@ -14,11 +14,14 @@ disable-model-invocation: true
 
 Loop the analysis/validation pipeline until it reports **`Failed: 0`**. Each iteration: run
 `ida_analyze_bin.py -debug`; if a skill failed (the pipeline is fail-fast, so it's exactly one),
-record *why* in a dated doc and comment that skill out of `config.yaml`. Then run the unittest suite
+record *why* in a dated doc and comment that skill out of `configs/<GAMEVER>.yaml`. Then run the unittest suite
 before resuming validation. If the config dependency test reports consumers whose `expected_input`
 can no longer be produced, quarantine those dependent skills one at a time and re-run unittest until
 it passes. Environment / infrastructure failures are **not** skill bugs — STOP and surface those
 instead of quarantining a skill.
+
+Resolve `GAMEVER` from the user's explicit request or `CS2VIBE_GAMEVER`; use only
+`configs/$GAMEVER.yaml` for the validation run and all quarantine edits.
 
 ## When to Use
 
@@ -64,7 +67,7 @@ instead of quarantining a skill.
   quarantine more skills. Do not hide failures from any other test, exception, import error, or test
   infrastructure problem by commenting out config entries.
 - **Only** two kinds of edits are allowed: append to the dated failure doc, and comment (prefix `#`)
-  a validation-failing skill or dependency-broken descendant's block in `config.yaml`. Comment one
+  a validation-failing skill or dependency-broken descendant's block in `configs/<GAMEVER>.yaml`. Comment one
   skill block at a time, re-run the relevant gate, do not delete config entries, do not touch unrelated
   skills, and do not uncomment anything.
 
@@ -73,7 +76,7 @@ instead of quarantining a skill.
 ### Step 1 — Run validation; capture full log + summary
 
 ```bash
-uv run ida_analyze_bin.py -debug > /tmp/ida_validation_output.txt 2>&1; tail -15 /tmp/ida_validation_output.txt
+uv run ida_analyze_bin.py -gamever "$GAMEVER" -configyaml "configs/$GAMEVER.yaml" -debug > /tmp/ida_validation_output.txt 2>&1; tail -15 /tmp/ida_validation_output.txt
 ```
 
 The full log goes to `/tmp/ida_validation_output.txt`; `tail -15` is only for the pass/fail verdict.
@@ -133,7 +136,7 @@ Diagnosis: preprocessor could not locate ConnectInterfaces and no agent SKILL.md
 to. Needs a preprocessor fix or a find-ConnectInterfaces SKILL.md.
 ```
 
-### Step 5 — Comment the failing skill out of config.yaml
+### Step 5 — Comment the failing skill out of configs/<GAMEVER>.yaml
 
 Comment the skill's entire list-item block **under the correct module**, and add one `Awaiting fix`
 line above it that points at the dated doc. The rule: insert a `#` right after the 6-space base indent
@@ -170,7 +173,7 @@ in Step 3. Use the Edit tool with an `old_string` that includes the *preceding s
 (which differs per module) so the match is unique — a bare block match would silently hit the wrong
 module.
 
-### Step 6 — Run unittest after every config.yaml quarantine
+### Step 6 — Run unittest after every configs/<GAMEVER>.yaml quarantine
 
 Immediately after commenting out any skill block, run the non-MCP unittest suite:
 
@@ -182,7 +185,7 @@ The command excludes the IDA MCP adapter and smoke modules (`test_ida_mcp_sessio
 `test_smoke_ida_mcp_2`) because this loop does not modify MCP routing or lifecycle code. Run them
 separately whenever MCP code changes.
 
-- **All tests pass** → the active `config.yaml` dependency chain is intact; continue to Step 7.
+- **All tests pass** → the active `configs/<GAMEVER>.yaml` dependency chain is intact; continue to Step 7.
 - **Only**
   `TestConfigSkillDependencyGraph.test_config_module_skills_have_no_expected_input_order_gaps`
   fails → inspect its dependency-gap list. Each entry identifies a consumer whose `expected_input`
@@ -237,6 +240,6 @@ skipped (their outputs exist), so the next run reaches the next failure quickly.
   quarantine several dependency descendants, still one block per unittest iteration.
 - Never run the next IDA validation iteration until the non-MCP unittest command above passes with
   zero failures.
-- Purely additive to `config.yaml` (commenting only). Re-enabling a skill once it's fixed is a
+- Purely additive to `configs/<GAMEVER>.yaml` (commenting only). Re-enabling a skill once it's fixed is a
   separate manual step — the commented blocks plus the dated doc are the resulting to-do list.
 - This skill does not `git commit`; leave staging/committing to the user unless they ask.

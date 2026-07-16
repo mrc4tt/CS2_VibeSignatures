@@ -13,6 +13,7 @@ from pathlib import Path
 import requests
 import yaml
 
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 
 RELEASE_URL = "https://github.com/HLND2T/CS2_VibeSignatures/releases/download/{0}/gamebin-{0}.7z"
 GAMEVER_RE = re.compile(r"^[0-9]{4,10}[a-z]?$")
@@ -89,7 +90,7 @@ def find_snapshot(root: Path, gamever: str) -> Path | None:
     return snapshot if snapshot.is_file() else None
 
 
-def check_binaries(root: Path, gamever: str) -> bool:
+def check_binaries(root: Path, gamever: str, config_path: Path) -> bool:
     """Return whether all configured binary targets already exist."""
     command = [
         "uv",
@@ -100,6 +101,8 @@ def check_binaries(root: Path, gamever: str) -> bool:
         "-platform",
         "all-platform",
         "-checkonly",
+        "-config",
+        str(config_path),
     ]
     result = run_command(command, root, allowed=(0, 1, 2), label="copy_depot_bin.py -checkonly")
     if result.returncode == 2:
@@ -189,7 +192,7 @@ def merge_archive_bin(extract_root: Path, bin_root: Path, gamever: str) -> tuple
     return copied, skipped
 
 
-def depot_download_command(gamever: str) -> list[str]:
+def depot_download_command(gamever: str, config_path: Path) -> list[str]:
     """Build the workflow-compatible depot command without leaking credentials."""
     username = os.environ.get("STEAM_USERNAME")
     password = os.environ.get("STEAM_PASSWORD")
@@ -205,23 +208,45 @@ def depot_download_command(gamever: str) -> list[str]:
         "cs2_depot",
         "-config",
         "download.yaml",
+        "-configyaml",
+        str(config_path),
     ]
     if username and password:
         command.extend(["-username", username, "-password", password, "-remember-password"])
     return command
 
 
-def run_depot_fallback(root: Path, gamever: str) -> None:
+def run_depot_fallback(root: Path, gamever: str, config_path: Path) -> None:
     """Download declared manifests and copy only missing configured binaries."""
-    run_command(depot_download_command(gamever), root, label="download_depot.py")
-    command = ["uv", "run", "copy_depot_bin.py", "-gamever", gamever, "-platform", "all-platform"]
+    run_command(depot_download_command(gamever, config_path), root, label="download_depot.py")
+    command = [
+        "uv",
+        "run",
+        "copy_depot_bin.py",
+        "-gamever",
+        gamever,
+        "-platform",
+        "all-platform",
+        "-config",
+        str(config_path),
+    ]
     run_command(command, root, label="copy_depot_bin.py")
 
 
-def restore_snapshot(root: Path, gamever: str, snapshot: Path) -> None:
+def restore_snapshot(root: Path, gamever: str, snapshot: Path, config_path: Path) -> None:
     """Restore missing YAML without replacement, then verify the complete snapshot."""
     relative_snapshot = snapshot.relative_to(root).as_posix()
-    common = ["-gamever", gamever, "-bindir", "bin", "-snapshot", relative_snapshot, "-debug"]
+    common = [
+        "-gamever",
+        gamever,
+        "-bindir",
+        "bin",
+        "-configyaml",
+        str(config_path),
+        "-snapshot",
+        relative_snapshot,
+        "-debug",
+    ]
     run_command(["uv", "run", "gamesymbol_snapshot.py", "restore", *common], root, label="snapshot restore")
     run_command(["uv", "run", "gamesymbol_snapshot.py", "verify", *common], root, label="snapshot verify")
 
@@ -230,9 +255,14 @@ def prepare(root: Path, requested: str) -> dict:
     """Execute the complete preparation workflow and return a summary."""
     gamever = select_version(requested, load_versions(root / "download.yaml"))
     snapshot = find_snapshot(root, gamever)
+    try:
+        config_path = resolve_analysis_config(gamever, repo_root=root)
+    except AnalysisConfigError as exc:
+        snapshot_path = root / "gamesymbols" / f"{gamever}.yaml"
+        raise InitGamebinError(f"{exc}; matching snapshot path: {snapshot_path}") from exc
     source = "existing local binaries"
     copied = skipped = 0
-    if not check_binaries(root, gamever):
+    if not check_binaries(root, gamever, config_path):
         with tempfile.TemporaryDirectory(prefix=f"init-gamebin-{gamever}-") as temp_dir:
             temporary = Path(temp_dir)
             archive = temporary / f"gamebin-{gamever}.7z"
@@ -242,12 +272,12 @@ def prepare(root: Path, requested: str) -> dict:
                 copied, skipped = merge_archive_bin(extracted, root / "bin", gamever)
                 source = "release archive"
             else:
-                run_depot_fallback(root, gamever)
+                run_depot_fallback(root, gamever, config_path)
                 source = "Steam depot fallback"
-    if not check_binaries(root, gamever):
+    if not check_binaries(root, gamever, config_path):
         raise InitGamebinError(f"configured binaries are still incomplete for GAMEVER {gamever}")
     if snapshot is not None:
-        restore_snapshot(root, gamever, snapshot)
+        restore_snapshot(root, gamever, snapshot, config_path)
     return {
         "gamever": gamever,
         "source": source,

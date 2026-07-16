@@ -63,10 +63,10 @@ uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
 
 If DepotDownloader needs authentication, add the same `-username`, `-password`, and `-remember-password` flags used by the workflow.
 
-### 2. Find and generate signatures for all symbols declared in `config.yaml`
+### 2. Find and generate signatures for all symbols declared in `configs/<GAMEVER>.yaml`
 
  ```bash
- uv run ida_analyze_bin.py -gamever 14156 [-oldgamever=14155] [-configyaml=path/to/config.yaml] [-modules=server] [-skill=find-CBaseEntity_vtable] [-platform=windows] [-agent=claude/codex/opencode/"claude.cmd"/"codex.cmd"/"opencode.cmd"] [-maxretry=3] [-vcall_finder=g_pNetworkMessages|*] [-llm_model=gpt-4o] [-llm_apikey=your-key] [-llm_baseurl=https://api.example.com/v1] [-llm_temperature=0.2] [-llm_effort=medium] [-llm_fake_as=codex] [-rename] [-debug]
+ uv run ida_analyze_bin.py -gamever 14156 [-oldgamever=14155] [-configyaml=path/to/custom.yaml] [-modules=server] [-skill=find-CBaseEntity_vtable] [-platform=windows] [-agent=claude/codex/opencode/"claude.cmd"/"codex.cmd"/"opencode.cmd"] [-maxretry=3] [-vcall_finder=g_pNetworkMessages|*] [-llm_model=gpt-4o] [-llm_apikey=your-key] [-llm_baseurl=https://api.example.com/v1] [-llm_temperature=0.2] [-llm_effort=medium] [-llm_fake_as=codex] [-rename] [-debug]
  ```
 
 * Shared LLM CLI parameters:
@@ -116,7 +116,7 @@ If DepotDownloader needs authentication, add the same `-username`, `-password`, 
 
 #### vcall_finder related
 
-* `-vcall_finder=g_pNetworkMessages` filters by an object declared in the module-level `vcall_finder` config; `-vcall_finder=*` processes every declared object from `config.yaml`.
+* `-vcall_finder=g_pNetworkMessages` filters by an object declared in the module-level `vcall_finder` config; `-vcall_finder=*` processes every object declared in `configs/<GAMEVER>.yaml`.
 
 * When `-vcall_finder` is enabled, the script exports full disassembly and pseudocode for each referencing function into `vcall_finder/{gamever}/{object_name}/{module}/{platform}/`, then runs LLM aggregation after all module/platform IDA work finishes; if a detail YAML already has a top-level `found_vcall`, that function skips the LLM call and reuses the cached result directly.
 
@@ -149,7 +149,7 @@ Reference YAML path:
 
 Preparation steps:
 
-1. Confirm the target function already has a current-version YAML with `func_va`, or can be resolved in IDA by symbol name/alias from `config.yaml`.
+1. Confirm the target function already has a current-version YAML with `func_va`, or can be resolved in IDA by symbol name/alias from `configs/<GAMEVER>.yaml`.
 2. Run standalone CLI:
 
 ```bash
@@ -195,7 +195,7 @@ Use the project-level `fix-cppheaders` SKILL to repair reported `hl2sdk_cs2` hea
 
 Per-symbol YAML remains ignored under `bin/<GAMEVER>/<module>/`. The Git-tracked canonical analysis lockfile is
 `gamesymbols/<GAMEVER>.yaml`, whose file set is derived from the required and optional YAML outputs declared by
-`config.yaml`.
+`configs/<GAMEVER>.yaml`.
 
 After a successful top-level analysis transaction, build one candidate immediately. Both downstream consumers read
 that same immutable candidate; publication copies its original bytes only after both validations succeed:
@@ -204,10 +204,10 @@ that same immutable candidate; publication copies its original bytes only after 
 CANDIDATE_DIR="$(mktemp -d)"
 CANDIDATE_SNAPSHOT="$CANDIDATE_DIR/14168.yaml"
 CANDIDATE_SESSION="$CANDIDATE_DIR/14168.session.json"
-uv run gamesymbol_candidate.py build -gamever 14168 -bindir bin -configyaml config.yaml -output "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION"
-uv run update_gamedata.py -gamever 14168 -snapshot "$CANDIDATE_SNAPSHOT"
+uv run gamesymbol_candidate.py build -gamever 14168 -bindir bin -configyaml configs/14168.yaml -output "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION"
+uv run update_gamedata.py -gamever 14168 -configyaml configs/14168.yaml -snapshot "$CANDIDATE_SNAPSHOT"
 uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step gamedata
-uv run run_cpp_tests.py -gamever 14168 -snapshot "$CANDIDATE_SNAPSHOT"
+uv run run_cpp_tests.py -gamever 14168 -configyaml configs/14168.yaml -snapshot "$CANDIDATE_SNAPSHOT"
 uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step cpp_tests
 uv run gamesymbol_candidate.py publish -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -snapshot gamesymbols/14168.yaml
 ```
@@ -316,7 +316,7 @@ Claude Code:
 
 The function with this code snippet is `CItemDefuser_Spawn`
 
-#### 2. Create preprocessor script and update `config.yaml`
+#### 2. Create preprocessor script and update `configs/<GAMEVER>.yaml`
 
 Claude Code:
 
@@ -344,7 +344,7 @@ Claude Code:
  
   - Rename `qword_XXXXXX` previously found to `IGameSystem_InitAllSystems_pFirst` if it was not renamed yet.
 
-#### 2. Create preprocessor script and update `config.yaml`
+#### 2. Create preprocessor script and update `configs/<GAMEVER>.yaml`
 
 Claude Code:
 
@@ -368,7 +368,7 @@ Claude Code:
 
   - The xref should point to a function - this is `CGameResourceService_BuildResourceManifest`. rename it to `CGameResourceService_BuildResourceManifest` if not renamed yet.
 
-#### 2. Create preprocessor script and update `config.yaml`
+#### 2. Create preprocessor script and update `configs/<GAMEVER>.yaml`
 
 Claude Code:
 
@@ -420,9 +420,9 @@ Claude Code:
   * Short `jbe` (`76 rel8` — 2 bytes) → `EB rel8` (unconditional `jmp short`)
 ```
 
-#### 2. Create preprocessor script and update `config.yaml`
+#### 2. Create preprocessor script and update `configs/<GAMEVER>.yaml`
 
-Follow the steps in [`.claude/skills/create-preprocessor-scripts/SKILL.md`](.claude/skills/create-preprocessor-scripts/SKILL.md) to create the preprocessor script and update `config.yaml`.
+Follow [`.claude/skills/create-preprocessor-scripts/SKILL.md`](.claude/skills/create-preprocessor-scripts/SKILL.md) to create the preprocessor script and update the requested `configs/<GAMEVER>.yaml`.
 
 ## Troubleshooting
 
@@ -454,7 +454,7 @@ uv run ida_analyze_bin.py -gamever %CS2_GAMEVER% -agent="claude.cmd" -platform %
 set CANDIDATE_ID=%RANDOM%
 set CANDIDATE_SNAPSHOT=%TEMP%\gamesymbol-%CS2_GAMEVER%-%CANDIDATE_ID%.yaml
 set CANDIDATE_SESSION=%TEMP%\gamesymbol-%CS2_GAMEVER%-%CANDIDATE_ID%.session.json
-uv run gamesymbol_candidate.py build -gamever %CS2_GAMEVER% -bindir bin -configyaml config.yaml -output %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION%
+uv run gamesymbol_candidate.py build -gamever %CS2_GAMEVER% -bindir bin -configyaml configs/%CS2_GAMEVER%.yaml -output %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION%
 ```
 
 ```bash

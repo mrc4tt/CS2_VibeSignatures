@@ -20,10 +20,10 @@ Notes:
 - Use `-checkonly` in CI or preflight scripts when you only need to verify whether all expected binaries already exist under `bin/<gamever>/...`.
 - In `-checkonly` mode, the command returns `0` when all expected binaries are ready, `1` when any target is missing, and `2` for argument or configuration errors.
 
-Analyze binaries and generate symbol YAML from `config.yaml`:
+Analyze binaries and generate symbol YAML from `configs/<GAMEVER>.yaml`:
 
 ```bash
-uv run ida_analyze_bin.py -gamever <gamever> [-oldgamever <previous_gamever>] [-configyaml path/to/config.yaml] [-modules server] [-platform windows] [-agent claude|codex|"claude.cmd"|"codex.cmd"] [-maxretry 3] [-vcall_finder g_pNetworkMessages|*] [-llm_model gpt-5.4] [-llm_apikey <key>] [-llm_baseurl https://api.example.com/v1] [-llm_temperature 0.2] [-llm_effort medium] [-llm_fake_as codex] [-debug]
+uv run ida_analyze_bin.py -gamever <gamever> [-oldgamever <previous_gamever>] [-configyaml configs/<gamever>.yaml] [-modules server] [-platform windows] [-agent claude|codex|"claude.cmd"|"codex.cmd"] [-maxretry 3] [-vcall_finder g_pNetworkMessages|*] [-llm_model gpt-5.4] [-llm_apikey <key>] [-llm_baseurl https://api.example.com/v1] [-llm_temperature 0.2] [-llm_effort medium] [-llm_fake_as codex] [-debug]
 ```
 
 Notes:
@@ -55,7 +55,7 @@ Reference path convention:
 Convert generated YAML into downstream gamedata:
 
 ```bash
-uv run gamesymbol_candidate.py build -gamever <gamever> -bindir bin -configyaml config.yaml -output <candidate.yaml> -session <candidate.session.json>
+uv run gamesymbol_candidate.py build -gamever <gamever> -bindir bin -configyaml configs/<GAMEVER>.yaml -output <candidate.yaml> -session <candidate.session.json>
 uv run update_gamedata.py -gamever <gamever> -snapshot <candidate.yaml> [-debug]
 ```
 

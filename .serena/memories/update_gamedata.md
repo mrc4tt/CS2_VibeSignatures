@@ -4,7 +4,7 @@
 Generate and update gamedata (JSON/VDF/JSONC, etc.) for multiple plugins/frameworks from an immutable game-symbol snapshot.
 
 ## Responsibilities
-- Parse command-line arguments and read `config.yaml`.
+- Parse command-line arguments and read `configs/<GAMEVER>.yaml`.
 - Require `-snapshot`, open it through `SnapshotSymbolStore`, and validate game version, config digest, schema, and canonical bytes.
 - Query symbol payloads from the in-memory read-only store without a directory or `bin` fallback.
 - Build mappings from function names to library/category/alias.
@@ -13,7 +13,7 @@ Generate and update gamedata (JSON/VDF/JSONC, etc.) for multiple plugins/framewo
 
 ## Files Involved (no line numbers)
 - update_gamedata.py
-- config.yaml
+- configs/<GAMEVER>.yaml
 - gamesymbol_store.py
 - gamesymbols/<gamever>.yaml or an untracked actual candidate snapshot
 - CounterStrikeSharp/gamedata/gamedata.json
@@ -40,7 +40,7 @@ parse_args
 Format conversion is handled by `convert_sig_to_css` / `convert_sig_to_cs2fixes` / `convert_sig_to_swiftly`; names containing `::` are mapped through `normalize_func_name_colons_to_underscore` and `alias_to_name_map`. VDF output handles backslash escaping to satisfy target plugin format requirements.
 
 ## Dependencies
-- PyYAML (read `config.yaml` and YAML signatures)
+- PyYAML (read `configs/<GAMEVER>.yaml` and YAML signatures)
 - requests (unused)
 - vdf (parse/generate VDF)
 - JSON/JSONC read-write (builtin `json` + JSONC comment stripping)

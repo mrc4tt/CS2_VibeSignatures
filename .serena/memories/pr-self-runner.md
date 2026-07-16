@@ -18,7 +18,7 @@
 - `.github/workflows/pr-self-runner.yml` - job `validate`
 - `.github/workflows/pr-self-runner.yml` - job `finalize-pr-workspace`
 - `download.yaml` - 最后一项 `downloads[-1].tag` 决定 `GAMEVER`
-- `config.yaml` - PR head 分析配置
+- `configs/<GAMEVER>.yaml` - PR head 分析配置
 - `gamesymbols/<GAMEVER>.yaml` - PR head 的 expected canonical snapshot
 - `gamesymbol_snapshot.py` - `restore` 确定性 base snapshot
 - `gamesymbol_pr_validation.py` - `invalidate` 同版本受影响输出
@@ -37,7 +37,7 @@
 3. 在 `RUNNER_WORKSPACE/CS2_VibeSignatures-pr-<PR>` 创建隔离目录；每次验证先删除旧目录，再初始化 Git 仓库、抓取并 detached checkout `refs/pull/<PR>/merge`，同时初始化 submodules。
 4. 执行格式检查，并从 PR merge 结果的 `download.yaml` 最后一项读取 `GAMEVER`。
 5. 将 `cs2_depot` 链接到持久化 depot；要求 `PERSISTED_WORKSPACE/bin/<GAMEVER>` 已存在，按 `.stignore` 排除规则复制到真实的 PR 工作区 `bin`。本 workflow 不负责下载缺失二进制。
-6. 以 `HEAD^1` 作为 PR base parent，提取 base `config.yaml`。若 base 已有同版本 snapshot，则直接提取；否则寻找 base 中排序后的最后一个 tracked snapshot，并使用其发布 commit 对应的 config；若完全没有 snapshot，则进入 bootstrap。
+6. 以 `HEAD^1` 作为 PR base parent，提取 base `configs/<GAMEVER>.yaml`。若 base 已有同版本 snapshot，则直接提取；否则寻找 base 中排序后的最后一个 tracked snapshot，并使用其发布 commit 对应的 config；若完全没有 snapshot，则进入 bootstrap。
 7. 有 base snapshot 时先 `restore`。同版本场景运行 `invalidate`，依据 base/head config、snapshot 与 Git refs 只失效受影响结果；新版本场景保留旧版本结果供 signature 复用，但清空当前版本全部 YAML；bootstrap 场景直接从空的当前版本 YAML 开始重建。
 8. 运行 Python unit tests，再执行 IDA 分析。
 9. 在 `RUNNER_TEMP` 构建实际候选 snapshot，并与 PR head 的 `gamesymbols/<GAMEVER>.yaml` 比较；不一致即失败。
@@ -106,7 +106,7 @@ U --> V
 - Secrets：必须有 `PERSISTED_WORKSPACE`；IDA 分析使用 `CS2VIBE_AGENT` 与 LLM 配置。Steam secrets 虽配置在 env 中，但当前 PR 流程没有 depot 下载步骤。
 - 持久化资源：`PERSISTED_WORKSPACE/cs2_depot`、`PERSISTED_WORKSPACE/bin/<GAMEVER>`、`PERSISTED_WORKSPACE/bin/.stignore`。
 - 工具链：PowerShell、`git`、`robocopy`、`mklink`、`uv`、Python、IDA / idalib-mcp、LLM agent、Clang/C++。
-- 仓库数据：base/head `config.yaml`、`download.yaml`、base/head `gamesymbols/*.yaml`、submodules。
+- 仓库数据：base/head `configs/<GAMEVER>.yaml`、`download.yaml`、base/head `gamesymbols/*.yaml`、submodules。
 - 相关 Serena memory：`mem:ida_analyze_bin`、`mem:update_gamedata`、`mem:run_cpp_tests`。
 
 ## Notes

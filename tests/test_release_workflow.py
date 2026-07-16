@@ -1,8 +1,10 @@
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from gamesymbol_snapshot_lib.codec import build_snapshot_document, canonical_snapshot_bytes
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.hashing import (
     canonical_json_bytes,
@@ -34,10 +36,13 @@ class ReleaseFixture:
         self.staging = root / "persisted" / "release-staging"
         self.bin_source = self.repo / "bin" / self.gamever
         self.candidate = root / "candidate.yaml"
+        self.analysis_config = self.repo / "configs" / f"{self.gamever}.yaml"
         (self.repo / "gamesymbols").mkdir(parents=True)
+        self.analysis_config.parent.mkdir(parents=True)
         (self.repo / "dist" / "nested").mkdir(parents=True)
         self.bin_source.mkdir(parents=True)
-        snapshot = b"schema_version: 1\ngame_version: '14170'\nfiles: {}\n"
+        self.analysis_config.write_bytes(b"modules: []\n")
+        snapshot = canonical_snapshot_bytes(build_snapshot_document(self.gamever, f"sha256:{'a' * 64}", {}))
         (self.repo / "gamesymbols" / f"{self.gamever}.yaml").write_bytes(snapshot)
         self.candidate.write_bytes(snapshot)
         (self.repo / "dist" / "nested" / "gamedata.txt").write_text("gamedata\n", encoding="utf-8")
@@ -57,6 +62,7 @@ class ReleaseFixture:
             build_id=self.build_id,
             source_sha=self.source_sha,
             workflow_run_url="https://github.com/HLND2T/CS2_VibeSignatures/actions/runs/123456789",
+            analysis_config=self.analysis_config,
         )
 
     def finalize_and_index(self, pr_number: int = 42) -> Path:
@@ -87,6 +93,12 @@ class TestReleaseWorkflow(unittest.TestCase):
 
             self.assertEqual(fixture.source_sha, tracked["source_sha"])
             self.assertEqual(inventory_sha256(pending["bin_files"]), tracked["bin_manifest_sha256"])
+            self.assertEqual("configs/14170.yaml", tracked["analysis_config_path"])
+            self.assertEqual(
+                hashlib.sha256(fixture.analysis_config.read_bytes()).hexdigest(),
+                tracked["analysis_config_sha256"],
+            )
+            self.assertEqual("sha256:" + "a" * 64, tracked["analysis_config_contract_sha256"])
             self.assertEqual(canonical_json_bytes(tracked), tracked_path.read_bytes())
             self.assertNotIn("timestamp", tracked)
             self.assertNotIn(str(fixture.root), tracked_path.read_text(encoding="utf-8"))

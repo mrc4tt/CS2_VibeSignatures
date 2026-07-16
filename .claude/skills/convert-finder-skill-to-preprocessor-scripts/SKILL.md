@@ -1,7 +1,7 @@
 ---
 name: convert-finder-skill-to-preprocessor-scripts
 description: |
-  Convert an existing find-XXXX SKILL.md into a preprocessor Python script, updating config.yaml
+  Convert an existing find-XXXX SKILL.md into a preprocessor Python script, updating configs/<GAMEVER>.yaml
   and removing the old SKILL.md. Covers xref-string-based and LLM_DECOMPILE-based discovery patterns.
 disable-model-invocation: true
 ---
@@ -9,7 +9,7 @@ disable-model-invocation: true
 # Convert Finder SKILL.md to Preprocessor Script
 
 Port an existing `.claude/skills/find-XXXX/SKILL.md` into an `ida_preprocessor_scripts/find-XXXX.py`
-preprocessor script, update `config.yaml` entries, and delete the old SKILL.md.
+preprocessor script, update `configs/<GAMEVER>.yaml` entries, and delete the old SKILL.md.
 
 ## When to Use
 
@@ -67,7 +67,7 @@ If the SKILL.md discovers multiple functions using **different methods** or from
 - Within a single script run, FuncB's output YAML doesn't exist yet when FuncC's LLM_DECOMPILE tries to use FuncB as predecessor
 - The IDA name-lookup fallback also fails because the predecessor wasn't renamed in IDA yet
 
-**Rule of thumb:** If target X's LLM_DECOMPILE references target Y as predecessor, and Y is also discovered by LLM_DECOMPILE (not xref strings), then X and Y MUST be in different scripts with a config.yaml dependency chain.
+**Rule of thumb:** If target X's LLM_DECOMPILE references target Y as predecessor, and Y is also discovered by LLM_DECOMPILE (not xref strings), then X and Y MUST be in different scripts with a configs/<GAMEVER>.yaml dependency chain.
 
 Example split (what we did for CBaseEntity_TakeDamageOld):
 - Script 1: `find-CBaseEntity_TakeDamageOld.py` — finds TakeDamageOld via xref string (Pattern A)
@@ -78,7 +78,7 @@ Example split (what we did for CBaseEntity_TakeDamageOld):
 
 Script location: `ida_preprocessor_scripts/find-{skill_name}.py`
 
-The filename MUST match the `name` field in `config.yaml` skill entry.
+The filename MUST match the `name` field in `configs/<GAMEVER>.yaml` skill entry.
 
 ### Pattern A — Regular function via xref strings
 
@@ -468,7 +468,7 @@ async def preprocess_skill(
 - Passes `struct_member_names=` instead of `func_names=` to `preprocess_common_skill`
 - YAML fields are struct-specific: `struct_name, member_name, offset, size, offset_sig, offset_sig_disp`
 - No `FUNC_VTABLE_RELATIONS`
-- config.yaml symbol category is `structmember` (not `func` or `vfunc`)
+- configs/<GAMEVER>.yaml symbol category is `structmember` (not `func` or `vfunc`)
 
 ### Pattern F — Virtual function via INHERIT_VFUNCS
 
@@ -540,8 +540,8 @@ async def preprocess_skill(
 - No `TARGET_FUNCTION_NAMES`, `FUNC_XREFS`, `LLM_DECOMPILE`, or `FUNC_VTABLE_RELATIONS`
 - Uses `inherit_vfuncs=` parameter instead of `func_names=`
 - No `llm_config` parameter in `preprocess_skill`
-- config.yaml `expected_input` must include both the base vfunc YAML and the derived class vtable YAML
-- config.yaml symbol category is `vfunc`
+- configs/<GAMEVER>.yaml `expected_input` must include both the base vfunc YAML and the derived class vtable YAML
+- configs/<GAMEVER>.yaml symbol category is `vfunc`
 
 ### Pattern G — ConCommand handler function
 
@@ -618,7 +618,7 @@ async def preprocess_skill(
 - Uses `SEARCH_WINDOW_BEFORE_CALL` and `SEARCH_WINDOW_AFTER_XREF` (typically 96 bytes each) to control the scan window around xrefs
 - The `preprocess_skill` function ignores `old_yaml_map` (`_ = skill_name, old_yaml_map`)
 - Calls `preprocess_registerconcommand_skill()` with `command_name=`, `help_string=`, `rename_to=` instead of `func_xrefs=`
-- config.yaml category is `func`, no `expected_input` needed
+- configs/<GAMEVER>.yaml category is `func`, no `expected_input` needed
 - The handler function is always a regular function (not virtual), so no `FUNC_VTABLE_RELATIONS`
 
 **When to recognize this pattern in a SKILL.md:**
@@ -659,7 +659,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
 
 This applies even when:
 - The target is a **vfunc call-site offset** (e.g. `call [rax+128h]`) rather than an actual function body in a vtable
-- **No vtable YAML exists** for that class in config.yaml (no `expected_input` for the vtable needed)
+- **No vtable YAML exists** for that class in configs/<GAMEVER>.yaml (no `expected_input` for the vtable needed)
 - The script also finds **non-vfunc targets** (global variables, struct offsets) alongside the vfunc target
 
 The `vtable_name` from `FUNC_VTABLE_RELATIONS` is used as **metadata** written to the output YAML — it does NOT require an actual vtable lookup. For example, `("IGameTypes_CreateWorkshopMapGroup", "IGameTypes")` provides the vtable class name `IGameTypes` even though no `IGameTypes_vtable.{platform}.yaml` exists.
@@ -683,7 +683,7 @@ The `vtable_name` from `FUNC_VTABLE_RELATIONS` is used as **metadata** written t
 
 ---
 
-## Step 4: Update config.yaml
+## Step 4: Update configs/<GAMEVER>.yaml
 
 ### 4a. Skills Section
 
@@ -901,7 +901,7 @@ but also in `disassembly`:
 
 **IMPORTANT — When the predecessor is a NEW function (no existing output YAMLs):** If the predecessor function is brand new (discovered by another new script you're creating in the same conversion), its output YAMLs don't exist yet and `generate_reference_yaml.py` cannot resolve its address. You must use a **multi-phase workflow**:
 
-1. **Phase 1:** Create ALL scripts (vtable, xref_string, LLM_DECOMPILE) and update config.yaml
+1. **Phase 1:** Create ALL scripts (vtable, xref_string, LLM_DECOMPILE) and update configs/<GAMEVER>.yaml
 2. **Phase 2:** Run `uv run ida_analyze_bin.py -debug` — the vtable and xref_string scripts will succeed and populate the NEW predecessor's output YAMLs. The LLM_DECOMPILE script's target may be skipped if old output YAMLs with valid `func_sig` still exist.
 3. **Phase 3:** Now that the predecessor has output YAMLs, run `generate_reference_yaml.py` to create reference YAMLs, then annotate them.
 4. **Phase 4:** Delete the old target output YAMLs (so the LLM_DECOMPILE path is actually exercised)
@@ -917,7 +917,7 @@ Run the command once per platform (windows/linux) that needs a reference YAML. T
 
 ## Step 6: Delete the SKILL.md
 
-After the preprocessor script is created and config.yaml is updated:
+After the preprocessor script is created and configs/<GAMEVER>.yaml is updated:
 
 1. Delete the SKILL.md file: `.claude/skills/find-{SKILL_NAME}/SKILL.md`
 2. Delete the now-empty directory: `.claude/skills/find-{SKILL_NAME}/`
@@ -1006,14 +1006,14 @@ git checkout dev 2>/dev/null || git checkout -b dev
 Then commit:
 
 ```bash
-git add <preprocessor_script> <deleted_skill_md> <config.yaml if changed> docs/claude_skills_stats.yaml
+git add <preprocessor_script> <deleted_skill_md> <configs/<GAMEVER>.yaml if changed> docs/claude_skills_stats.yaml
 git commit -m "Convert find-{SKILL_NAME} SKILL.md to preprocessor script"
 ```
 
 Include all files changed during the conversion:
 - The new/updated preprocessor script
 - The deleted SKILL.md
-- Any config.yaml changes
+- Any configs/<GAMEVER>.yaml changes
 - The updated `docs/claude_skills_stats.yaml`
 
 Do NOT include unrelated changes (e.g. `.claude/settings.json` permission changes).
@@ -1024,7 +1024,7 @@ Do NOT include unrelated changes (e.g. `.claude/settings.json` permission change
 
 Before finishing, verify:
 
-- [ ] Preprocessor script file name matches the `name` field in config.yaml skill entry
+- [ ] Preprocessor script file name matches the `name` field in configs/<GAMEVER>.yaml skill entry
 - [ ] `TARGET_FUNCTION_NAMES` lists all functions the script should find
 - [ ] `FUNC_XREFS` xref strings match the debug strings from the original SKILL.md (Pattern A/B)
 - [ ] `LLM_DECOMPILE` reference path points to the correct predecessor function YAML (Patterns C/D)
@@ -1034,9 +1034,9 @@ Before finishing, verify:
 - [ ] LLM_DECOMPILE dependency chains are split into separate scripts (one per chain link), NOT combined in a single script
 - [ ] `preprocess_skill` signature includes `llm_config=None` if and only if LLM_DECOMPILE is used (NOT for Pattern F)
 - [ ] `preprocess_common_skill` call passes all relevant lists (`func_xrefs`, `func_vtable_relations`, `llm_decompile_specs`, `llm_config`, `inherit_vfuncs`)
-- [ ] config.yaml `expected_output` has one entry per target function
-- [ ] config.yaml `expected_input` correctly chains dependencies
-- [ ] config.yaml `symbols` section has entries for all target functions (no duplicates)
+- [ ] configs/<GAMEVER>.yaml `expected_output` has one entry per target function
+- [ ] configs/<GAMEVER>.yaml `expected_input` correctly chains dependencies
+- [ ] configs/<GAMEVER>.yaml `symbols` section has entries for all target functions (no duplicates)
 - [ ] Reference YAMLs exist or generated via `uv run generate_reference_yaml.py` (Patterns C/D) — **must be done BEFORE deleting output YAMLs**
 - [ ] Old SKILL.md and its directory are deleted
 - [ ] Existing output YAMLs under `bin/*/` are deleted for all target functions (AFTER reference YAML generation)
@@ -1089,7 +1089,7 @@ Before finishing, verify:
    - No `FUNC_VTABLE_RELATIONS` (it's a regular function, not virtual)
    - Reference YAMLs generated via `uv run generate_reference_yaml.py -func_name CCSGameRules_TerminateRound -auto_start_mcp -binary "bin/%CS2VIBE_GAMEVER%/server/server.dll" -debug`
 
-**config.yaml dependency chain:**
+**configs/<GAMEVER>.yaml dependency chain:**
 ```yaml
       - name: find-CCSGameRules_TerminateRound
         expected_output:
@@ -1121,7 +1121,7 @@ Before finishing, verify:
    - `GENERATE_YAML_DESIRED_FIELDS` with `struct_name, member_name, offset, size, offset_sig, offset_sig_disp`
    - Reference YAMLs annotated with `; 0x240 = CCheckTransmitInfo::m_nPlayerSlot` in disasm and `// 576 = 0x240 = CCheckTransmitInfo::m_nPlayerSlot` in procedure
 
-**config.yaml dependency chain:**
+**configs/<GAMEVER>.yaml dependency chain:**
 ```yaml
       - name: find-CSource2GameEntities_CheckTransmit
         expected_output:
@@ -1153,7 +1153,7 @@ Before finishing, verify:
    - `GENERATE_YAML_DESIRED_FIELDS` with vtable fields
    - No FUNC_XREFS, no LLM_DECOMPILE — inherits the vtable slot from CEntityInstance_Precache and looks it up in CBaseEntity's vtable
 
-**config.yaml dependency chain:**
+**configs/<GAMEVER>.yaml dependency chain:**
 ```yaml
       - name: find-CEntityInstance_Precache
         expected_output:
@@ -1193,7 +1193,7 @@ Before finishing, verify:
    - No `FUNC_VTABLE_RELATIONS` (it's a regular function, not virtual)
    - Reference YAMLs annotated with `LegacyGameEventListener` replacing `sub_180B1AC80` / `sub_1516AB0` in both disasm and procedure
 
-**config.yaml dependency chain:**
+**configs/<GAMEVER>.yaml dependency chain:**
 ```yaml
       - name: find-CSource2GameClients_vtable
         expected_output:
@@ -1231,7 +1231,7 @@ Before finishing, verify:
    - `HELP_STRING = "bot_kill <all> <t|ct> <type> <difficulty> <name> - Kills a specific bot, or all bots, matching the given criteria."`
    - `SEARCH_WINDOW_BEFORE_CALL = 96`, `SEARCH_WINDOW_AFTER_XREF = 96`
    - Uses `preprocess_registerconcommand_skill()` from `_registerconcommand.py`
-   - No dependencies — config.yaml has no `expected_input`
+   - No dependencies — configs/<GAMEVER>.yaml has no `expected_input`
 
 2. `ida_preprocessor_scripts/find-CBasePlayerPawn_CommitSuicide.py` (Pattern C):
    - `LLM_DECOMPILE` referencing `references/server/BotKill_CommandHandler.{platform}.yaml`
@@ -1239,7 +1239,7 @@ Before finishing, verify:
    - `GENERATE_YAML_DESIRED_FIELDS` with `func_name, vfunc_sig, vfunc_offset, vfunc_index, vtable_name`
    - Reference YAMLs annotated with `; 0xC80 = CBasePlayerPawn_CommitSuicide` in disasm and `// 3200LL = 0xC80 = CBasePlayerPawn_CommitSuicide` in procedure
 
-**config.yaml dependency chain:**
+**configs/<GAMEVER>.yaml dependency chain:**
 ```yaml
       - name: find-BotKill_CommandHandler
         expected_output:
@@ -1271,7 +1271,7 @@ Before finishing, verify:
    - `FUNC_XREFS` containing `"mapgroup workshop"`
    - `GENERATE_YAML_DESIRED_FIELDS` with `func_name, func_sig, func_va, func_rva, func_size`
    - No `FUNC_VTABLE_RELATIONS`, no `LLM_DECOMPILE` — pure xref-string discovery
-   - No dependencies — config.yaml has no `expected_input`
+   - No dependencies — configs/<GAMEVER>.yaml has no `expected_input`
 
 2. `ida_preprocessor_scripts/find-g_pGameTypes-AND-IGameTypes_CreateWorkshopMapGroup.py` (LLM_DECOMPILE):
    - `TARGET_FUNCTION_NAMES`: `["IGameTypes_CreateWorkshopMapGroup"]`
@@ -1282,7 +1282,7 @@ Before finishing, verify:
    - `GENERATE_YAML_DESIRED_FIELDS` for g_pGameTypes: `gv_name, gv_va, gv_rva, gv_sig, gv_sig_va, gv_inst_offset, gv_inst_length, gv_inst_disp`
    - Reference YAMLs annotated: `qword_XXXX` renamed to `g_pGameTypes` in both disasm and procedure; `call [rax+128h]` annotated with `; 0x128 = IGameTypes_CreateWorkshopMapGroup`; `296LL` annotated with `// 296LL = 0x128 = IGameTypes_CreateWorkshopMapGroup`
 
-**config.yaml dependency chain:**
+**configs/<GAMEVER>.yaml dependency chain:**
 ```yaml
       - name: find-CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup
         expected_output:

@@ -3,6 +3,7 @@
 import argparse
 import traceback
 
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 from gamesymbol_snapshot_lib.candidate import (
     CandidateContractError,
     CandidatePublicationError,
@@ -24,7 +25,7 @@ def parse_args(argv=None):
     build = commands.add_parser("build")
     build.add_argument("-gamever", required=True)
     build.add_argument("-bindir", default="bin")
-    build.add_argument("-configyaml", default="config.yaml")
+    build.add_argument("-configyaml", default=None, help="Analysis config path; defaults to configs/<GAMEVER>.yaml")
     build.add_argument("-output", required=True)
     build.add_argument("-session", required=True)
 
@@ -32,7 +33,7 @@ def parse_args(argv=None):
     compare.add_argument("-gamever", required=True)
     compare.add_argument("-candidate", required=True)
     compare.add_argument("-expected", required=True)
-    compare.add_argument("-configyaml", default="config.yaml")
+    compare.add_argument("-configyaml", default=None, help="Analysis config path; defaults to configs/<GAMEVER>.yaml")
     compare.add_argument("-session")
 
     for command in ("guard", "mark", "publish"):
@@ -56,6 +57,8 @@ def _print_info(info) -> None:
 
 def _run(args) -> None:
     if args.command == "build":
+        args.configyaml = str(resolve_analysis_config(args.gamever, args.configyaml))
+        print(f"Analysis config: {args.configyaml}")
         info = build_candidate_snapshot(
             game_version=args.gamever,
             bin_root=args.bindir,
@@ -66,6 +69,8 @@ def _run(args) -> None:
         print("Candidate snapshot ready:")
         _print_info(info)
     elif args.command == "compare":
+        args.configyaml = str(resolve_analysis_config(args.gamever, args.configyaml))
+        print(f"Analysis config: {args.configyaml}")
         diff = compare_snapshots(
             actual_path=args.candidate,
             expected_path=args.expected,
@@ -106,7 +111,7 @@ def main(argv=None) -> int:
         if args.debug:
             traceback.print_exc()
         return 1
-    except (CandidateContractError, SnapshotConfigError, SymbolStoreError) as exc:
+    except (AnalysisConfigError, CandidateContractError, SnapshotConfigError, SymbolStoreError) as exc:
         print(f"Error: {exc}")
         if args.debug:
             traceback.print_exc()

@@ -4,7 +4,7 @@ Prune PR-added expected_output YAMLs from the copied bin/ cache.
 
 Used by .github/workflows/pr-self-runner.yml right after the persisted
 bin/<gamever> YAML cache is copied into the PR workspace. It deletes the
-expected_output YAML artifacts that the PR *adds* to config.yaml (the set
+expected_output YAML artifacts that the PR *adds* to the active version config (the set
 difference of expected_output between the PR base and PR head), so
 ida_analyze_bin.py is forced to regenerate them (full validation) instead of
 skipping skills whose outputs already exist on disk.
@@ -15,10 +15,9 @@ Usage:
 
     -gamever: Game version subdirectory under bindir (required)
     -bindir: Root directory of copied binaries/YAML (default: bin)
-    -configyaml: Path to the head config.yaml (default: config.yaml)
-    -baseref: Git ref of the PR base; the base config is read via
-              `git show <ref>:<configyaml>` (configyaml must be repo-root-relative)
-    -baseconfigyaml: Path to the base config.yaml file (alternative to -baseref)
+    -configyaml: Path to the head analysis config (default: configs/<GAMEVER>.yaml)
+    -baseref: Git ref of the PR base; the versioned base config is read from that revision
+    -baseconfigyaml: Path to an explicit base config file (alternative to -baseref)
 
 Exactly one of -baseref / -baseconfigyaml must be provided.
 
@@ -30,9 +29,9 @@ from __future__ import annotations
 
 import argparse
 import os
-import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 try:
     import yaml
@@ -42,9 +41,9 @@ except ImportError as e:
     sys.exit(1)
 
 import ida_analyze_bin
+from analysis_config import AnalysisConfigError, read_analysis_config_at_revision, resolve_analysis_config
 
 DEFAULT_BIN_DIR = "bin"
-DEFAULT_CONFIG_FILE = "config.yaml"
 PLATFORMS = ("windows", "linux")
 ARG_ERROR_EXIT = 2
 
@@ -60,8 +59,8 @@ def parse_args(argv=None):
     )
     parser.add_argument(
         "-configyaml",
-        default=DEFAULT_CONFIG_FILE,
-        help=f"Path to the head config.yaml (default: {DEFAULT_CONFIG_FILE})",
+        default=None,
+        help="Path to the head analysis config; defaults to configs/<GAMEVER>.yaml",
     )
     parser.add_argument(
         "-baseref",
@@ -71,7 +70,7 @@ def parse_args(argv=None):
     parser.add_argument(
         "-baseconfigyaml",
         default=None,
-        help="Path to the base config.yaml file (alternative to -baseref)",
+        help="Path to an explicit base analysis config (alternative to -baseref)",
     )
     return parser.parse_args(argv)
 
@@ -128,22 +127,17 @@ def delete_paths(paths):
     return deleted, absent
 
 
-def load_base_modules(baseref, configyaml):
-    """Read the base config.yaml via `git show <baseref>:<configyaml>` and parse it."""
-    rev = f"{baseref}:{configyaml}"
-    result = subprocess.run(
-        ["git", "show", rev],
-        capture_output=True,
-        text=True,
-        check=False,
+def load_base_modules(baseref, gamever, repo_root=None):
+    """Read and parse the version config from a historical Git revision."""
+    historical = read_analysis_config_at_revision(
+        baseref,
+        gamever,
+        allow_legacy_root=True,
+        repo_root=Path(repo_root or Path(__file__).resolve().parent),
     )
-    if result.returncode != 0:
-        message = result.stderr.strip() or f"git show {rev} failed"
-        raise RuntimeError(message)
-
-    handle = tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False, encoding="utf-8")
+    handle = tempfile.NamedTemporaryFile("wb", suffix=".yaml", delete=False)
     try:
-        handle.write(result.stdout)
+        handle.write(historical.data)
         handle.close()
         return ida_analyze_bin.parse_config(handle.name)
     finally:
@@ -166,8 +160,10 @@ def main(argv=None):
         print("Error: provide exactly one of -baseref or -baseconfigyaml")
         return ARG_ERROR_EXIT
 
-    if not os.path.exists(args.configyaml):
-        print(f"Error: head config file not found: {args.configyaml}")
+    try:
+        args.configyaml = str(resolve_analysis_config(args.gamever, args.configyaml))
+    except AnalysisConfigError as exc:
+        print(f"Error: {exc}")
         return ARG_ERROR_EXIT
 
     print(f"Head config: {args.configyaml}")
@@ -188,9 +184,9 @@ def main(argv=None):
                 return ARG_ERROR_EXIT
             base_modules = ida_analyze_bin.parse_config(args.baseconfigyaml)
         else:
-            print(f"Base config: git show {args.baseref}:{args.configyaml}")
-            base_modules = load_base_modules(args.baseref, args.configyaml)
-    except (ValueError, yaml.YAMLError, RuntimeError) as exc:
+            print(f"Base config: historical Git revision {args.baseref}")
+            base_modules = load_base_modules(args.baseref, args.gamever)
+    except (AnalysisConfigError, ValueError, yaml.YAMLError, RuntimeError) as exc:
         print(f"Error: failed to load base config: {exc}")
         return 1
 

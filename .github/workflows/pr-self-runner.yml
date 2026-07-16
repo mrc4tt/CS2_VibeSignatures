@@ -172,7 +172,7 @@ jobs:
             throw "Pull request base commit is unavailable: $baseRef"
           }
 
-          $baseConfig = Join-Path $baseDir "config.yaml"
+           $baseConfig = Join-Path $baseDir "base-config.yaml"
           $trackedSnapshots = @(
             git ls-tree -r --name-only $baseRef -- gamesymbols |
               Where-Object { $_ -match '^gamesymbols/[^/]+\.yaml$' }
@@ -219,21 +219,32 @@ jobs:
             }
             $baseSnapshotCommit = $baseSnapshotCommit.Trim()
             $baseSnapshot = Join-Path $baseDir "$baseGamever.yaml"
-            Export-GitBlob $baseSnapshotCommit "config.yaml" $baseConfig
+             $versionedBaseConfig = "configs/$baseGamever.yaml"
+             git cat-file -e "$baseSnapshotCommit`:$versionedBaseConfig"
+             if ($LASTEXITCODE -eq 0) {
+               Export-GitBlob $baseSnapshotCommit $versionedBaseConfig $baseConfig
+             } else {
+               Export-GitBlob $baseSnapshotCommit "config.yaml" $baseConfig
+             }
             Export-GitBlob $baseRef $baseSnapshotRepoPath $baseSnapshot
             $hasBaseSnapshot = "true"
             $validationGamever = $baseGamever
           }
 
-          $headSnapshotRepoPath = "gamesymbols/$validationGamever.yaml"
-          $headSnapshot = Join-Path $baseDir "head-$validationGamever.yaml"
-          Export-GitBlob "HEAD" $headSnapshotRepoPath $headSnapshot
+           $headSnapshotRepoPath = "gamesymbols/$validationGamever.yaml"
+           $headSnapshot = Join-Path $baseDir "head-$validationGamever.yaml"
+           Export-GitBlob "HEAD" $headSnapshotRepoPath $headSnapshot
+           $headConfig = Join-Path $env:WORKSPACE "configs\$validationGamever.yaml"
+           if (-not (Test-Path -LiteralPath $headConfig -PathType Leaf)) {
+             throw "Missing head analysis config: $headConfig"
+           }
 
           "BASE_REF=$baseRef" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "BASE_CONFIG=$baseConfig" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "BASE_SNAPSHOT=$baseSnapshot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "BASE_GAMEVER=$baseGamever" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "HEAD_SNAPSHOT=$headSnapshot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+           "HEAD_SNAPSHOT=$headSnapshot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+           "HEAD_CONFIG=$headConfig" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "HAS_BASE_SNAPSHOT=$hasBaseSnapshot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "GAMEVER=$validationGamever" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           Write-Host "PR validation GAMEVER=$validationGamever (release GAMEVER=$env:PR_GAMEVER)"
@@ -386,7 +397,7 @@ jobs:
               -bindir bin `
               -baseconfigyaml "$env:BASE_CONFIG" `
               -basesnapshot "$env:BASE_SNAPSHOT" `
-              -headconfigyaml config.yaml `
+               -headconfigyaml "$env:HEAD_CONFIG" `
               -headsnapshot "$env:HEAD_SNAPSHOT" `
               -baseref "$env:BASE_REF" `
               -headref "HEAD"
@@ -419,7 +430,7 @@ jobs:
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
-          uv run ida_analyze_bin.py -gamever "$env:GAMEVER" -debug
+           uv run ida_analyze_bin.py -gamever "$env:GAMEVER" -configyaml "$env:HEAD_CONFIG" -debug
           if ($LASTEXITCODE -ne 0) {
             throw "ida_analyze_bin.py failed with exit code $LASTEXITCODE"
           }
@@ -439,7 +450,7 @@ jobs:
           uv run gamesymbol_candidate.py build `
             -gamever "$env:GAMEVER" `
             -bindir bin `
-            -configyaml config.yaml `
+             -configyaml "$env:HEAD_CONFIG" `
             -output "$candidate" `
             -session "$session"
           if ($LASTEXITCODE -ne 0) {
@@ -454,7 +465,7 @@ jobs:
             -gamever "$env:GAMEVER" `
             -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" `
             -expected "$env:HEAD_SNAPSHOT" `
-            -configyaml config.yaml `
+             -configyaml "$env:HEAD_CONFIG" `
             -session "$env:CANDIDATE_SESSION"
           if ($LASTEXITCODE -ne 0) {
             throw "candidate/head comparison failed with exit code $LASTEXITCODE"
@@ -466,7 +477,7 @@ jobs:
           Set-Location $env:WORKSPACE
           uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before gamedata" }
-          uv run update_gamedata.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -debug -download_latest
+           uv run update_gamedata.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -configyaml "$env:HEAD_CONFIG" -debug -download_latest
           if ($LASTEXITCODE -ne 0) { throw "update_gamedata.py failed with exit code $LASTEXITCODE" }
           uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after gamedata" }
@@ -479,7 +490,7 @@ jobs:
           Set-Location $env:WORKSPACE
           uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before C++ tests" }
-          uv run run_cpp_tests.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -debug
+           uv run run_cpp_tests.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -configyaml "$env:HEAD_CONFIG" -debug
           if ($LASTEXITCODE -ne 0) {
             throw "run_cpp_tests.py failed with exit code $LASTEXITCODE"
           }

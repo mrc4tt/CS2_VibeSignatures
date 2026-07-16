@@ -13,7 +13,7 @@
 ## Involved Files (no line numbers)
 - cpp_tests_util.py
 - run_cpp_tests.py
-- config.yaml
+- configs/<GAMEVER>.yaml
 - bin/<gamever>/<module>/<ClassName>_*.{platform}.yaml
 
 ## Architecture

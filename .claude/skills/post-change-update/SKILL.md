@@ -19,6 +19,7 @@ layouts and does not commit; callers must place `/post-change-validation` betwee
 - `candidate` and `session` — required for `after-validation`; use the paths returned by `before-validation`.
 
 Stop if the phase is missing or invalid. Stop if no non-empty game version can be resolved.
+Set `ANALYSIS_CONFIG="configs/$GAMEVER.yaml"` and stop if it is not a file.
 
 ## Safety Rules
 
@@ -40,7 +41,7 @@ uv run python format_repo_files.py --check
 CANDIDATE_ROOT="$(mktemp -d "/tmp/gamesymbol-candidate-${GAMEVER}-XXXXXX")"
 CANDIDATE="$CANDIDATE_ROOT/${GAMEVER}.yaml"
 CANDIDATE_SESSION="$CANDIDATE_ROOT/${GAMEVER}.session.json"
-uv run gamesymbol_candidate.py build -gamever "$GAMEVER" -bindir bin -configyaml config.yaml -output "$CANDIDATE" -session "$CANDIDATE_SESSION"
+uv run gamesymbol_candidate.py build -gamever "$GAMEVER" -bindir bin -configyaml "$ANALYSIS_CONFIG" -output "$CANDIDATE" -session "$CANDIDATE_SESSION"
 uv run gamesymbol_candidate.py guard -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION"
 uv run update_gamedata.py -gamever "$GAMEVER" -snapshot "$CANDIDATE" -debug
 uv run gamesymbol_candidate.py guard -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION"

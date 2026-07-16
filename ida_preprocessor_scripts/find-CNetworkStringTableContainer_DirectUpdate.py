@@ -9,7 +9,7 @@ is de-inlined (e.g. Linux 14168) the string lives inside the standalone
 ``CNetworkStringTableContainer_DirectUpdate`` body, so this skill resolves it directly.
 On builds where the helper is inlined into ``CNetworkGameServer_DirectUpdate`` the string
 lives inside that vfunc instead, so this skill resolves to the vfunc's own address; that
-is harmless because the helper symbol is deliberately NOT registered in config.yaml and
+is harmless because the helper symbol is deliberately NOT registered in the active version config and
 the YAML is used only as an intermediate for the
 ``find-CNetworkGameServer_DirectUpdate-noinline`` xref_funcs lookup (whose vtable-self
 fallback then re-selects the same vfunc).  The skill's output is optional and is skipped

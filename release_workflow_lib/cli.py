@@ -57,6 +57,7 @@ def _add_staging_parsers(commands) -> None:
     stage.add_argument("--build-id", required=True)
     stage.add_argument("--source-sha", required=True)
     stage.add_argument("--workflow-run-url", required=True)
+    stage.add_argument("--analysis-config", required=True)
 
     finalize = commands.add_parser("finalize-stage")
     finalize.add_argument("--repo-root", default=".")
@@ -182,6 +183,7 @@ def _run_staging(args) -> object:
             build_id=args.build_id,
             source_sha=args.source_sha,
             workflow_run_url=args.workflow_run_url,
+            analysis_config=args.analysis_config,
         )
     if args.command == "finalize-stage":
         return finalize_stage(

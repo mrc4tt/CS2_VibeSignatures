@@ -130,14 +130,38 @@ jobs:
         shell: pwsh
         run: |
           $gamever = "${{ steps.verify.outputs.gamever }}"
-          $gamedataArgs = @(
-            "a", "gamedata-$gamever.7z", "bin\$gamever", "gamesymbols/$gamever.yaml", "dist", "hl2sdk_cs2", "-r",
-            "-x!*.dll", "-x!*.so", "-x!*.i64", "-x!*.id0", "-x!*.id1", "-x!*.id2", "-x!*.nam", "-x!*.til",
-            "-x!.git", "-x!.git-blame-ignore-revs", "-x!.gitmodules", "-xr!__pycache__", "-xr!gamedata.py",
-            "-xr!config.yaml"
-          )
-          & 7z @gamedataArgs
-          if ($LASTEXITCODE -ne 0) { throw "Failed to create gamedata archive." }
+          $manifest = Get-Content -Raw "release-manifests\$gamever.json" | ConvertFrom-Json
+          $configPath = "configs\$gamever.yaml"
+          $configBackup = Join-Path $env:RUNNER_TEMP "current-config-$gamever.yaml"
+          $configHadBackup = Test-Path -LiteralPath $configPath -PathType Leaf
+          if ($configHadBackup) { Copy-Item -LiteralPath $configPath -Destination $configBackup -Force }
+          $sourceSha = [string]$manifest.source_sha
+          $expectedConfigHash = [string]$manifest.analysis_config_sha256
+          if ([string]::IsNullOrWhiteSpace($expectedConfigHash)) {
+            throw "Release manifest $gamever lacks analysis_config_sha256; refusing archive promotion."
+          }
+          try {
+            $extractScript = @'
+            import pathlib, subprocess, sys
+            pathlib.Path(sys.argv[2]).write_bytes(subprocess.check_output(["git", "show", f"{sys.argv[1]}:configs/{sys.argv[3]}.yaml"]))
+            '@
+            $extractScript | uv run python - "$sourceSha" "$configPath" "$gamever"
+            if ($LASTEXITCODE -ne 0) { throw "Failed to extract source analysis config from $sourceSha." }
+            $actualConfigHash = (Get-FileHash -LiteralPath $configPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($actualConfigHash -ne $expectedConfigHash.ToLowerInvariant()) {
+              throw "Source analysis config hash mismatch: expected $expectedConfigHash, actual $actualConfigHash"
+            }
+            $gamedataArgs = @(
+              "a", "gamedata-$gamever.7z", "configs\$gamever.yaml", "bin\$gamever", "gamesymbols/$gamever.yaml", "dist", "hl2sdk_cs2", "-r",
+              "-x!*.dll", "-x!*.so", "-x!*.i64", "-x!*.id0", "-x!*.id1", "-x!*.id2", "-x!*.nam", "-x!*.til",
+              "-x!.git", "-x!.git-blame-ignore-revs", "-x!.gitmodules", "-xr!__pycache__", "-xr!gamedata.py"
+            )
+            & 7z @gamedataArgs
+            if ($LASTEXITCODE -ne 0) { throw "Failed to create gamedata archive." }
+          } finally {
+            if ($configHadBackup) { Move-Item -LiteralPath $configBackup -Destination $configPath -Force }
+            elseif (Test-Path -LiteralPath $configPath) { Remove-Item -LiteralPath $configPath -Force }
+          }
           $gamebinArgs = @("a", "gamebin-$gamever.7z", "bin\$gamever", "-r", "-i!*.dll", "-i!*.so", "-x!*.yaml", "-xr!.venv")
           & 7z @gamebinArgs
           if ($LASTEXITCODE -ne 0) { throw "Failed to create gamebin archive." }

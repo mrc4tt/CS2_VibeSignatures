@@ -119,7 +119,7 @@ async def preprocess_indirect_vcall_target_skill(
 - `vtable_name` is passed as an argument (metadata) -- no vtable YAML lookup, no `FUNC_VTABLE_RELATIONS` needed
 - Output fields: exactly `func_name`, `vtable_name`, `vfunc_offset` (hex string), `vfunc_index` (int) -- slot-only, no `func_va`/`func_sig`/`vfunc_sig`
 - `preprocess_skill` ignores `old_yaml_map` and `image_base` (`_ = skill_name, old_yaml_map, image_base`); the scan is deterministic every run
-- config.yaml category is `vfunc`; `expected_input` is ONLY the source thunk's YAML (no vtable YAML)
+- configs/<GAMEVER>.yaml category is `vfunc`; `expected_input` is ONLY the source thunk's YAML (no vtable YAML)
 - A downstream `INHERIT_VFUNCS` (Pattern F, standard) override can consume this YAML's `vfunc_index` to resolve the concrete derived-class function
 
 ## Downstream chaining (typical)
@@ -163,6 +163,6 @@ vfunc_index: 13
 - [ ] `TARGET_FUNCTION_NAME` and `VTABLE_CLASS` are correct
 - [ ] `GENERATE_YAML_DESIRED_FIELDS` is a subset of `{func_name, vtable_name, vfunc_offset, vfunc_index}` (slot-only)
 - [ ] `preprocess_skill` ignores `old_yaml_map`/`image_base`; no `llm_config` parameter
-- [ ] config.yaml `expected_input` includes ONLY the source thunk's YAML (no vtable YAML)
-- [ ] config.yaml symbol category is `vfunc`
+- [ ] configs/<GAMEVER>.yaml `expected_input` includes ONLY the source thunk's YAML (no vtable YAML)
+- [ ] configs/<GAMEVER>.yaml symbol category is `vfunc`
 - [ ] Source function has exactly one register-indirect vtable call (else the scan fails by design)

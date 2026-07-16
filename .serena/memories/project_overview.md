@@ -25,7 +25,7 @@ End-to-end workflow:
 2. Copy target binaries into the workspace:
    - `uv run copy_depot_bin.py -gamever <ver> -platform <platform>`
    - `-checkonly` is used for CI or preflight validation of expected binary targets.
-3. Analyze binaries and generate per-symbol YAML from `config.yaml`:
+3. Analyze binaries and generate per-symbol YAML from `configs/<GAMEVER>.yaml`:
    - `uv run ida_analyze_bin.py -gamever <ver> ...`
    - The analyzer can reuse prior-version YAML first, before invoking Agent SKILLs, to avoid unnecessary token usage.
 4. Strict-pack the complete analysis workspace into one immutable candidate snapshot.
@@ -52,7 +52,7 @@ Key repository components:
 - `gamesymbol_candidate.py`: builds, guards, compares, marks, and publishes candidate sessions.
 - `update_gamedata.py`: converts candidate snapshot symbols into project-specific gamedata outputs.
 - `run_cpp_tests.py`: validates generated headers against the same snapshot used by gamedata.
-- `config.yaml`: declares modules, symbols, and processing configuration.
+- `configs/<GAMEVER>.yaml`: declares modules, symbols, and processing configuration.
 - `ida_preprocessor_scripts/`: deterministic or LLM-assisted symbol-finding preprocessors and reference YAML files.
 - `vcall_finder/`: cached per-function analysis artifacts and aggregated vcall outputs.
 - `bin/`: mutable analyzer workspace; never a downstream symbol source after candidate creation.
@@ -71,4 +71,4 @@ Supported downstream outputs:
 Contribution and extension direction:
 - The project explicitly welcomes new SKILL contributions through PRs.
 - README guidance covers SKILL creation flows for vtables, regular functions, and global variables.
-- Typical extension flow is: identify the symbol in IDA, create or update the relevant preprocessor/SKILL, register it in `config.yaml`, then feed the generated YAML into downstream gamedata and header validation steps.
+- Typical extension flow is: identify the symbol in IDA, create or update the relevant preprocessor/SKILL, register it in `configs/<GAMEVER>.yaml`, then feed the generated YAML into downstream gamedata and header validation steps.

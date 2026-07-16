@@ -40,7 +40,7 @@ def _build_parser() -> argparse.ArgumentParser:
     run.add_argument("--poll-ms", type=int, default=1_000)
     run.add_argument("--analyzer-script", default="ida_analyze_bin.py")
     run.add_argument("--python-executable", default=sys.executable)
-    run.add_argument("--config", default="config.yaml")
+    run.add_argument("--config", help="Explicit analysis-config override for every queued request")
     run.add_argument("--bindir", default="bin")
     run.add_argument("--workdir")
     run.add_argument("--once", action="store_true")

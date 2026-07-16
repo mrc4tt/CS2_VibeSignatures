@@ -2,7 +2,7 @@
 
 ## Overview
 
-`run_cpp_tests.py` is a deterministic C++ compile and layout-validation driver based on `config.yaml` and an immutable
+`run_cpp_tests.py` is a deterministic C++ compile and layout-validation driver based on `configs/<GAMEVER>.yaml` and an immutable
 game-symbol snapshot. It probes clang target support, runs compatible tests, compares compiler vtable or record layouts
 with snapshot references, prints detailed differences, and returns non-zero when validation fails.
 
@@ -27,7 +27,7 @@ with snapshot references, prints detailed differences, and returns non-zero when
 
 - `run_cpp_tests.py`
 - `cpp_tests_util.py`
-- `config.yaml`
+- `configs/<GAMEVER>.yaml`
 - `.claude/skills/fix-cppheaders/SKILL.md`
 - `gamesymbols/<gamever>.yaml` or an untracked actual candidate snapshot
 - `gamesymbol_store.py`

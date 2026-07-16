@@ -81,8 +81,8 @@ async def preprocess_skill(
 
 - Does NOT use `preprocess_common_skill` -- uses `preprocess_ordinal_vtable_via_mcp` from `_ordinal_vtable_common` plus `write_vtable_yaml` from `ida_analyze_util`
 - No `TARGET_FUNCTION_NAMES`, `FUNC_XREFS`, `LLM_DECOMPILE`, `FUNC_VTABLE_RELATIONS`, or `INHERIT_VFUNCS`
-- config.yaml category is `vtable`, no `expected_input` needed
-- Output stem is `{CLASS_NAME}_vtable2`, config.yaml symbol name matches
+- configs/<GAMEVER>.yaml category is `vtable`, no `expected_input` needed
+- Output stem is `{CLASS_NAME}_vtable2`, configs/<GAMEVER>.yaml symbol name matches
 - Windows uses `WINDOWS_SYMBOL_ALIASES` (mangled name with `@_0` suffix)
 - Linux uses `LINUX_EXPECTED_OFFSET_TO_TOP` (negative decimal offset-to-top value)
 - The `ordinal=0` parameter selects the first secondary vtable (use `ordinal=1` for a third vtable, etc.)
@@ -94,4 +94,4 @@ async def preprocess_skill(
 - [ ] `WINDOWS_SYMBOL_ALIASES` contains the correct mangled name (e.g. `??_7ClassName@@6B@_0`)
 - [ ] `LINUX_EXPECTED_OFFSET_TO_TOP` is the correct negative decimal value
 - [ ] Uses `preprocess_ordinal_vtable_via_mcp` + `write_vtable_yaml` (NOT `preprocess_common_skill`)
-- [ ] config.yaml symbol category is `vtable`, no `expected_input` needed
+- [ ] configs/<GAMEVER>.yaml symbol category is `vtable`, no `expected_input` needed

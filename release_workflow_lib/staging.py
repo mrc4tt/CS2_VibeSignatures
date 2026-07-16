@@ -26,6 +26,7 @@ from release_workflow_lib.manifests import (
     validate_tracked_manifest,
     verify_tracked_outputs,
 )
+from gamesymbol_snapshot_lib.codec import parse_snapshot_bytes
 
 
 def staging_directory(staging_root: Path, gamever: str, build_id: str) -> Path:
@@ -89,9 +90,16 @@ def _write_stage_manifests(
     build_id: str,
     source_sha: str,
     workflow_run_url: str,
+    analysis_config: Path,
 ) -> dict:
     bin_files = file_inventory(stage_bin)
     tracked_files = tracked_output_inventory(repo_root, gamever)
+    analysis_config = Path(analysis_config).resolve()
+    expected_config = (repo_root / "configs" / f"{gamever}.yaml").resolve()
+    if analysis_config != expected_config or not analysis_config.is_file():
+        raise ReleaseWorkflowError(f"analysis config must be {expected_config}")
+    analysis_config_sha256 = sha256_file(analysis_config)
+    candidate_document = parse_snapshot_bytes(Path(candidate).read_bytes(), str(gamever))
     tracked = build_tracked_manifest(
         gamever=gamever,
         mode=mode,
@@ -101,6 +109,9 @@ def _write_stage_manifests(
         bin_manifest_sha256=inventory_sha256(bin_files),
         tracked_output_manifest_sha256=inventory_sha256(tracked_files),
         workflow_run_url=workflow_run_url,
+        analysis_config_path=f"configs/{gamever}.yaml",
+        analysis_config_sha256=analysis_config_sha256,
+        analysis_config_contract_sha256=candidate_document["config_sha256"],
     )
     write_canonical_json(repo_root / "release-manifests" / f"{gamever}.json", tracked)
     pending = _pending_payload(
@@ -127,6 +138,7 @@ def stage_build(
     build_id: str,
     source_sha: str,
     workflow_run_url: str,
+    analysis_config: Path,
 ) -> dict:
     repo_root = Path(repo_root)
     staging_root = Path(staging_root)
@@ -154,6 +166,7 @@ def stage_build(
             build_id=build_id,
             source_sha=source_sha,
             workflow_run_url=workflow_run_url,
+            analysis_config=analysis_config,
         )
     except Exception:
         if stage_dir.exists():

@@ -92,9 +92,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
-    python_files = [path for path in tracked_files if path.endswith(".py")]
+    existing_files = [path for path in tracked_files if Path(path).is_file()]
+    python_files = [path for path in existing_files if path.endswith(".py")]
     python_files.extend(list_unchecked_preprocessor_scripts(tracked_files))
-    yaml_files = [path for path in tracked_files if path.endswith(".yaml") and should_format_yaml(path)]
+    yaml_files = [path for path in existing_files if path.endswith(".yaml") and should_format_yaml(path)]
 
     ruff_command = ["ruff", "format"]
     yamlfix_command = ["yamlfix"]
