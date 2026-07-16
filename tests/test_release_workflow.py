@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from gamesymbol_snapshot_lib.codec import build_snapshot_document, canonical_snapshot_bytes
+from gamesymbol_snapshot_lib.config import load_contract
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.hashing import (
     canonical_json_bytes,
@@ -22,6 +23,7 @@ from release_workflow_lib.staging import (
     stage_build,
     write_pr_index,
 )
+from release_workflow_lib.validation import prepare_oldgamever_baseline
 
 
 class ReleaseFixture:
@@ -84,6 +86,65 @@ class ReleaseFixture:
 
 
 class TestReleaseWorkflow(unittest.TestCase):
+    def _write_oldgamever_fixture(self, root: Path, *, major_update: bool = False) -> Path:
+        repo = root / "repo"
+        config = repo / "configs" / "14168.yaml"
+        snapshot = repo / "gamesymbols" / "14168.yaml"
+        config.parent.mkdir(parents=True)
+        snapshot.parent.mkdir(parents=True)
+        config.write_text(
+            "modules:\n"
+            "  - name: server\n"
+            "    path_windows: game/bin/win64/server.dll\n"
+            "    skills:\n"
+            "      - name: find-Test\n"
+            "        platform: windows\n"
+            "        expected_output:\n"
+            "          - Test.{platform}.yaml\n",
+            encoding="utf-8",
+        )
+        contract = load_contract(config, "14168", repo / "bin")
+        document = build_snapshot_document(
+            "14168",
+            contract.config_sha256,
+            {"server/Test.windows.yaml": {"func_name": "Test", "func_rva": "0x10"}},
+        )
+        snapshot.write_bytes(canonical_snapshot_bytes(document))
+        major_line = "    major_update: true\n" if major_update else ""
+        (repo / "download.yaml").write_text(
+            f"downloads:\n  - tag: '14168'\n  - tag: '14168b'\n{major_line}",
+            encoding="utf-8",
+        )
+        return repo
+
+    def test_non_major_build_restores_nearest_trusted_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = self._write_oldgamever_fixture(Path(tmp))
+
+            result = prepare_oldgamever_baseline(repo_root=repo, gamever="14168b", bindir="bin")
+
+            self.assertEqual("14168", result["oldgamever"])
+            restored = repo / "bin" / "14168" / "server" / "Test.windows.yaml"
+            self.assertEqual("func_name: Test\nfunc_rva: '0x10'\n", restored.read_text(encoding="utf-8"))
+
+    def test_major_update_explicitly_disables_oldgamever(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = self._write_oldgamever_fixture(Path(tmp), major_update=True)
+
+            result = prepare_oldgamever_baseline(repo_root=repo, gamever="14168b", bindir="bin")
+
+            self.assertEqual("none", result["oldgamever"])
+            self.assertFalse((repo / "bin" / "14168").exists())
+
+    def test_non_major_build_fails_without_trusted_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            repo.mkdir()
+            (repo / "download.yaml").write_text("downloads:\n  - tag: '14168b'\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(ReleaseWorkflowError, "no trusted old-version snapshot"):
+                prepare_oldgamever_baseline(repo_root=repo, gamever="14168b", bindir="bin")
+
     def test_stage_writes_canonical_tracked_and_private_manifests(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             fixture = ReleaseFixture(Path(tmp))

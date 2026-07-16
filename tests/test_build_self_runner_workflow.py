@@ -35,24 +35,59 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("if: env.MODE == 'republish'", self.workflow)
         self.assertNotIn("force every preprocessor", self.workflow.lower())
 
-    def test_major_update_is_the_only_workflow_reason_for_oldgamever_none(self) -> None:
-        self.assertIn("if ($major -eq 'true') { $args += @('-oldgamever', 'none') }", self.workflow)
-        self.assertEqual(1, self.workflow.count("'-oldgamever', 'none'"))
+    def test_build_restores_and_explicitly_passes_trusted_oldgamever(self) -> None:
+        prepare = self.workflow.index("release_workflow.py prepare-oldgamever")
+        analyze = self.workflow.index("uv run ida_analyze_bin.py")
+        self.assertLess(prepare, analyze)
+        self.assertIn("OLDGAMEVER: ${{ steps.oldgamever.outputs.oldgamever }}", self.workflow)
+        self.assertIn("$args += @('-oldgamever', $env:OLDGAMEVER)", self.workflow)
+        self.assertNotIn("resolve major_update", self.workflow)
 
     def test_candidate_validation_precedes_staging_and_output_pr(self) -> None:
         analyze = self.workflow.index("uv run ida_analyze_bin.py")
         candidate = self.workflow.index("gamesymbol_candidate.py build")
         gamedata = self.workflow.index("uv run update_gamedata.py")
+        sdk_select = self.workflow.index("- name: Select versioned SDK for C++ ABI validation")
         cpp_tests = self.workflow.index("uv run run_cpp_tests.py")
+        sdk_restore = self.workflow.index("- name: Restore pinned SDK revision")
         publish = self.workflow.index("gamesymbol_candidate.py publish")
         stage = self.workflow.index("release_workflow.py stage-build")
         output_pr = self.workflow.index("gh pr create")
         self.assertLess(analyze, candidate)
         self.assertLess(candidate, gamedata)
-        self.assertLess(gamedata, cpp_tests)
-        self.assertLess(cpp_tests, publish)
+        self.assertLess(gamedata, sdk_select)
+        self.assertLess(sdk_select, cpp_tests)
+        self.assertLess(cpp_tests, sdk_restore)
+        self.assertLess(sdk_restore, publish)
         self.assertLess(publish, stage)
         self.assertLess(stage, output_pr)
+
+    def test_cpp_validation_selects_versioned_sdk_with_pinned_fallback(self) -> None:
+        checkout = self.workflow.index("submodules: true")
+        selector_start = self.workflow.index("- name: Select versioned SDK for C++ ABI validation")
+        cpp_tests = self.workflow.index("uv run run_cpp_tests.py")
+        selector = self.workflow[selector_start:cpp_tests]
+
+        self.assertLess(checkout, selector_start)
+        self.assertIn('$sdkRef = "cs2-$env:GAMEVER"', selector)
+        self.assertIn('$sdkRemote = "https://github.com/HLND2T/hl2sdk.git"', selector)
+        self.assertIn('ls-remote --heads $sdkRemote "refs/heads/$sdkRef"', selector)
+        self.assertIn("SDK_ABI_REF=pinned-submodule", selector)
+        self.assertIn("SDK_ABI_SHA=$pinnedSha", selector)
+        self.assertIn("No versioned SDK branch exists for $sdkRef", selector)
+        self.assertIn('fetch --no-tags $sdkRemote "refs/heads/$sdkRef"', selector)
+        self.assertIn("checkout --detach $remoteSha", selector)
+        self.assertIn("selected SHA=$selectedSha; pinned SHA=$pinnedSha", selector)
+
+    def test_cpp_validation_always_restores_exact_pinned_sdk_sha(self) -> None:
+        restore_start = self.workflow.index("- name: Restore pinned SDK revision")
+        publish = self.workflow.index("- name: Publish fully validated immutable candidate")
+        restore = self.workflow[restore_start:publish]
+
+        self.assertIn("if: always()", restore)
+        self.assertIn('if ($env:SDK_ABI_SWITCHED -ne "true")', restore)
+        self.assertIn('checkout --detach "$env:SDK_PINNED_SHA"', restore)
+        self.assertIn("restored pinned SHA=$restoredSha", restore)
 
     def test_build_passes_one_immutable_analysis_config_through_every_stage(self) -> None:
         self.assertIn("ANALYSIS_CONFIG=", self.workflow)

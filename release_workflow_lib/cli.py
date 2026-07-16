@@ -21,7 +21,7 @@ from release_workflow_lib.staging import (
     stage_build,
     write_pr_index,
 )
-from release_workflow_lib.validation import invalidate_republish, validate_build_input
+from release_workflow_lib.validation import invalidate_republish, prepare_oldgamever_baseline, validate_build_input
 
 
 def _add_build_parsers(commands) -> None:
@@ -37,6 +37,12 @@ def _add_build_parsers(commands) -> None:
     invalidate.add_argument("--gamever", required=True)
     invalidate.add_argument("--source-sha", required=True)
     invalidate.add_argument("--bindir", default="bin")
+
+    oldgamever = commands.add_parser("prepare-oldgamever")
+    oldgamever.add_argument("--repo-root", default=".")
+    oldgamever.add_argument("--gamever", required=True)
+    oldgamever.add_argument("--bindir", default="bin")
+    oldgamever.add_argument("--github-output")
 
     pending = commands.add_parser("check-pending")
     pending.add_argument("--staging-root", required=True)
@@ -164,6 +170,14 @@ def _run_build(args) -> object:
             source_sha=args.source_sha,
             bindir=args.bindir,
         )
+    if args.command == "prepare-oldgamever":
+        result = prepare_oldgamever_baseline(
+            repo_root=args.repo_root,
+            gamever=args.gamever,
+            bindir=args.bindir,
+        )
+        write_github_output(args.github_output, {"oldgamever": result["oldgamever"]})
+        return result
     if args.command == "check-pending":
         return assert_no_other_ready_build(args.staging_root, args.gamever, args.build_id)
     return _UNHANDLED

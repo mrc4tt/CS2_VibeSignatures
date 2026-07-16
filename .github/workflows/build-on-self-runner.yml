@@ -169,6 +169,14 @@ jobs:
           uv run release_workflow.py invalidate-republish `
             --gamever "$env:GAMEVER" --source-sha "$env:SOURCE_SHA" --bindir bin
 
+      - name: Prepare trusted old-version signature baseline
+        id: oldgamever
+        shell: pwsh
+        run: |
+          uv run release_workflow.py prepare-oldgamever `
+            --gamever "$env:GAMEVER" --bindir bin --github-output "$env:GITHUB_OUTPUT"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to prepare old-version signature baseline." }
+
       - name: Check cached binaries
         id: cache
         shell: pwsh
@@ -192,26 +200,19 @@ jobs:
 
       - name: Analyze binaries with normal producer scheduling
         shell: pwsh
+        env:
+          OLDGAMEVER: ${{ steps.oldgamever.outputs.oldgamever }}
         run: |
-          $script = @'
-          import sys, yaml
-          with open("download.yaml", encoding="utf-8") as handle:
-              items = yaml.safe_load(handle).get("downloads", [])
-          item = next((x for x in items if str(x.get("tag", "")) == sys.argv[1]), None)
-          if item is None:
-              raise SystemExit("GAMEVER not found")
-          print("true" if item.get("major_update") is True else "false")
-          '@
-          $majorResult = $script | uv run python - "$env:GAMEVER"
-          if ($LASTEXITCODE -ne 0) { throw "Failed to resolve major_update for $env:GAMEVER." }
-          $major = $majorResult.Trim()
+          if ([string]::IsNullOrWhiteSpace($env:OLDGAMEVER)) {
+            throw "Old-version signature policy was not resolved."
+          }
           $args = @('-gamever', $env:GAMEVER, '-configyaml', $env:ANALYSIS_CONFIG)
-          if ($major -eq 'true') { $args += @('-oldgamever', 'none') }
+          $args += @('-oldgamever', $env:OLDGAMEVER)
           $args += '-debug'
           uv run ida_analyze_bin.py @args
           if ($LASTEXITCODE -ne 0) { throw "ida_analyze_bin.py failed with exit code $LASTEXITCODE" }
 
-      - name: Build and fully validate one immutable candidate
+      - name: Build one immutable candidate and validate gamedata
         shell: pwsh
         run: |
           $root = Join-Path $env:RUNNER_TEMP "release-candidates\$env:BUILD_ID"
@@ -232,13 +233,85 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after gamedata" }
           uv run gamesymbol_candidate.py mark -candidate "$candidate" -session "$session" -step gamedata
           if ($LASTEXITCODE -ne 0) { throw "failed to mark gamedata validation" }
-          uv run run_cpp_tests.py -gamever "$env:GAMEVER" -snapshot "$candidate" -configyaml "$env:ANALYSIS_CONFIG" -debug
+
+      - name: Select versioned SDK for C++ ABI validation
+        shell: pwsh
+        run: |
+          $sdkPath = Join-Path $env:GITHUB_WORKSPACE "hl2sdk_cs2"
+          $sdkRef = "cs2-$env:GAMEVER"
+          $sdkRemote = "https://github.com/HLND2T/hl2sdk.git"
+          $pinnedSha = (git -C $sdkPath rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $pinnedSha -notmatch '^[0-9a-fA-F]{40}$') {
+            throw "Unable to resolve the pinned hl2sdk_cs2 commit."
+          }
+          "SDK_PINNED_SHA=$pinnedSha" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+          $remoteBranch = git -C $sdkPath ls-remote --heads $sdkRemote "refs/heads/$sdkRef"
+          if ($LASTEXITCODE -ne 0) { throw "Unable to query $sdkRef from hl2sdk." }
+
+          if ([string]::IsNullOrWhiteSpace($remoteBranch)) {
+            "SDK_ABI_REF=pinned-submodule" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            "SDK_ABI_SHA=$pinnedSha" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            "SDK_ABI_SWITCHED=false" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            Write-Host "No versioned SDK branch exists for $sdkRef; retaining the pinned submodule revision."
+            Write-Host "C++ ABI SDK selection: GAMEVER=$env:GAMEVER; ref=pinned-submodule; selected SHA=$pinnedSha; pinned SHA=$pinnedSha"
+          } else {
+            $remoteSha = ($remoteBranch -split '\s+')[0]
+            if ($remoteSha -notmatch '^[0-9a-fA-F]{40}$') { throw "Invalid commit returned for $sdkRef." }
+            git -C $sdkPath fetch --no-tags $sdkRemote "refs/heads/$sdkRef"
+            if ($LASTEXITCODE -ne 0) { throw "Unable to fetch $sdkRef from hl2sdk." }
+            $fetchedSha = (git -C $sdkPath rev-parse FETCH_HEAD).Trim()
+            if ($LASTEXITCODE -ne 0 -or $fetchedSha -ne $remoteSha) {
+              throw "Fetched commit for $sdkRef does not match the queried remote commit."
+            }
+            "SDK_ABI_SWITCHED=true" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            git -C $sdkPath checkout --detach $remoteSha
+            if ($LASTEXITCODE -ne 0) { throw "Unable to checkout $sdkRef." }
+            $selectedSha = (git -C $sdkPath rev-parse HEAD).Trim()
+            if ($LASTEXITCODE -ne 0 -or $selectedSha -ne $remoteSha) {
+              throw "Selected SDK commit does not match $sdkRef."
+            }
+            "SDK_ABI_REF=$sdkRef" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            "SDK_ABI_SHA=$selectedSha" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            Write-Host "C++ ABI SDK selection: GAMEVER=$env:GAMEVER; ref=$sdkRef; selected SHA=$selectedSha; pinned SHA=$pinnedSha"
+          }
+
+      - name: Run C++ tests
+        shell: pwsh
+        run: |
+          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before C++ tests" }
+          uv run run_cpp_tests.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -configyaml "$env:ANALYSIS_CONFIG" -debug
           if ($LASTEXITCODE -ne 0) { throw "run_cpp_tests.py failed with exit code $LASTEXITCODE" }
-          uv run gamesymbol_candidate.py guard -candidate "$candidate" -session "$session"
+          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after C++ tests" }
-          uv run gamesymbol_candidate.py mark -candidate "$candidate" -session "$session" -step cpp_tests
+          uv run gamesymbol_candidate.py mark -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" -step cpp_tests
           if ($LASTEXITCODE -ne 0) { throw "failed to mark C++ validation" }
-          uv run gamesymbol_candidate.py publish -candidate "$candidate" -session "$session" `
+
+      - name: Restore pinned SDK revision
+        if: always()
+        shell: pwsh
+        run: |
+          if ($env:SDK_ABI_SWITCHED -ne "true") {
+            Write-Host "C++ ABI SDK restore: pinned submodule revision remained selected."
+            exit 0
+          }
+          if ($env:SDK_PINNED_SHA -notmatch '^[0-9a-fA-F]{40}$') {
+            throw "SDK_PINNED_SHA is unavailable or invalid."
+          }
+          $sdkPath = Join-Path $env:GITHUB_WORKSPACE "hl2sdk_cs2"
+          git -C $sdkPath checkout --detach "$env:SDK_PINNED_SHA"
+          if ($LASTEXITCODE -ne 0) { throw "Unable to restore pinned hl2sdk_cs2 commit." }
+          $restoredSha = (git -C $sdkPath rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $restoredSha -ne $env:SDK_PINNED_SHA) {
+            throw "Restored SDK commit does not match SDK_PINNED_SHA."
+          }
+          Write-Host "C++ ABI SDK restore: restored pinned SHA=$restoredSha"
+
+      - name: Publish fully validated immutable candidate
+        shell: pwsh
+        run: |
+          uv run gamesymbol_candidate.py publish -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" `
             -snapshot "gamesymbols/$env:GAMEVER.yaml"
           if ($LASTEXITCODE -ne 0) { throw "candidate publication failed with exit code $LASTEXITCODE" }
 

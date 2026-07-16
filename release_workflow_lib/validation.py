@@ -6,12 +6,14 @@ import yaml
 
 from analysis_config import AnalysisConfigError, analysis_config_repo_path, read_analysis_config_at_revision
 from gamesymbol_snapshot_lib.config import load_contract
+from gamesymbol_snapshot_lib.errors import SnapshotError
 from gamesymbol_snapshot_lib.operations import load_snapshot_for_contract, restore_snapshot
 from gamesymbol_snapshot_lib.paths import ensure_real_tree, iter_yaml_paths, path_from_key
 from gamesymbol_snapshot_lib.pr_validation import build_invalidation_plan
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.manifests import (
     ALLOWED_REPOSITORIES,
+    GAMEVER_RE,
     load_tracked_manifest,
     require_gamever,
     require_mode,
@@ -65,6 +67,66 @@ def validate_build_input(*, repository: str, gamever: str, source_sha: str, mode
 def _changed_files(base_sha: str, source_sha: str) -> list[str]:
     output = git_output(["diff", "--name-only", base_sha, source_sha, "--"])
     return [line for line in output.splitlines() if line]
+
+
+def _gamever_key(gamever: str) -> tuple[int, int]:
+    if not GAMEVER_RE.fullmatch(str(gamever)):
+        raise ReleaseWorkflowError(f"invalid GAMEVER: {gamever!r}")
+    suffix = gamever[-1] if gamever[-1].isalpha() else ""
+    base = gamever[:-1] if suffix else gamever
+    return int(base), ord(suffix) - ord("a") + 1 if suffix else 0
+
+
+def prepare_oldgamever_baseline(*, repo_root: str | Path, gamever: str, bindir: str | Path) -> dict:
+    repo_root = Path(repo_root).resolve()
+    gamever = require_gamever(gamever)
+    bindir = Path(bindir)
+    if not bindir.is_absolute():
+        bindir = repo_root / bindir
+
+    download_path = repo_root / "download.yaml"
+    try:
+        download = yaml.safe_load(download_path.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeError, yaml.YAMLError) as exc:
+        raise ReleaseWorkflowError(f"unable to read {download_path}: {exc}") from exc
+    if not isinstance(download, dict):
+        raise ReleaseWorkflowError("download.yaml top level must be a mapping")
+    downloads = download.get("downloads")
+    if not isinstance(downloads, list):
+        raise ReleaseWorkflowError("download.yaml must contain a downloads list")
+    item = next(
+        (entry for entry in downloads if isinstance(entry, dict) and str(entry.get("tag", "")) == gamever),
+        None,
+    )
+    if item is None:
+        raise ReleaseWorkflowError(f"GAMEVER not found in download.yaml: {gamever}")
+    if item.get("major_update") is True:
+        return {"oldgamever": "none", "snapshot": None, "config": None}
+
+    current_key = _gamever_key(gamever)
+    snapshot_root = repo_root / "gamesymbols"
+    candidates = []
+    if snapshot_root.is_dir():
+        for snapshot in snapshot_root.glob("*.yaml"):
+            candidate = snapshot.stem
+            if GAMEVER_RE.fullmatch(candidate) and _gamever_key(candidate) < current_key:
+                candidates.append((candidate, snapshot))
+    if not candidates:
+        raise ReleaseWorkflowError(f"no trusted old-version snapshot is available for non-major update {gamever}")
+
+    oldgamever, snapshot = max(candidates, key=lambda candidate: _gamever_key(candidate[0]))
+    config = repo_root / analysis_config_repo_path(oldgamever)
+    if not config.is_file():
+        raise ReleaseWorkflowError(f"old-version analysis config is missing: {config}")
+    try:
+        restore_snapshot(oldgamever, str(bindir), str(config), str(snapshot), replace=True)
+    except (SnapshotError, OSError, UnicodeError) as exc:
+        raise ReleaseWorkflowError(f"unable to restore trusted snapshot for {oldgamever}: {exc}") from exc
+    return {
+        "oldgamever": oldgamever,
+        "snapshot": str(snapshot),
+        "config": str(config),
+    }
 
 
 def invalidate_republish(*, repo_root: Path, gamever: str, source_sha: str, bindir: Path) -> int:

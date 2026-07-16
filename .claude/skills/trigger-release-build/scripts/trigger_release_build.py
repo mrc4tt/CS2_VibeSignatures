@@ -72,8 +72,8 @@ def require_github_access(root: Path, repository: str) -> None:
 
 
 def resolve_source(root: Path) -> tuple[str, str]:
-    run_command(["git", "fetch", "origin", "main:refs/remotes/origin/main", "--prune"], root)
-    source_sha = run_command(["git", "rev-parse", "origin/main"], root).stdout.strip().lower()
+    run_command(["git", "fetch", "--no-tags", "origin", "refs/heads/main"], root)
+    source_sha = run_command(["git", "rev-parse", "FETCH_HEAD"], root).stdout.strip().lower()
     if not SHA_RE.fullmatch(source_sha):
         raise TriggerError("origin/main did not resolve to a full commit SHA")
     subject = run_command(["git", "show", "-s", "--format=%s", source_sha], root).stdout.strip()
@@ -253,3 +253,7 @@ def main(argv=None) -> int:
     print(f"Commit: {result['subject']}")
     print(f"Actions run: {result['run_url']}")
     return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
