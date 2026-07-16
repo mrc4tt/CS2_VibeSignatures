@@ -77,9 +77,11 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
             workflow,
         )
 
-    def test_uses_base_snapshot_then_invalidates_before_analysis(self) -> None:
+    def test_uses_selected_base_gamever_for_entire_validation(self) -> None:
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
 
+        extract = workflow.index("- name: Extract deterministic base snapshot")
+        copy_bin = workflow.index("- name: Prepare persisted depot link and PR bin copy")
         restore = workflow.index("gamesymbol_snapshot.py restore")
         invalidate = workflow.index("gamesymbol_pr_validation.py invalidate")
         analyze = workflow.index("uv run ida_analyze_bin.py")
@@ -90,14 +92,24 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
 
         self.assertIn('$baseRef = "${{ github.event.pull_request.base.sha }}".Trim()', workflow)
         self.assertIn('Export-GitBlob $baseSnapshotCommit "config.yaml"', workflow)
-        self.assertIn("bootstrap PR validation will rebuild all current YAML", workflow)
+        self.assertIn('"PR_GAMEVER=$gamever"', workflow)
+        self.assertIn('$sameVersionSnapshot = "gamesymbols/$env:PR_GAMEVER.yaml"', workflow)
+        self.assertIn("$validationGamever = $baseGamever", workflow)
+        self.assertIn('"GAMEVER=$validationGamever"', workflow)
+        self.assertIn('Export-GitBlob "HEAD" $headSnapshotRepoPath $headSnapshot', workflow)
+        self.assertIn('"HEAD_SNAPSHOT=$headSnapshot"', workflow)
+        self.assertIn("bootstrap PR validation will rebuild $validationGamever", workflow)
         self.assertIn('-baseref "$env:BASE_REF"', workflow)
+        self.assertIn('-headsnapshot "$env:HEAD_SNAPSHOT"', workflow)
+        self.assertLess(extract, copy_bin)
         self.assertLess(restore, invalidate)
         self.assertLess(invalidate, analyze)
         self.assertLess(analyze, candidate)
         self.assertLess(candidate, compare)
         self.assertLess(compare, gamedata)
         self.assertLess(gamedata, cpp_tests)
+        self.assertNotIn("SAME_VERSION_BASE", workflow)
+        self.assertNotIn("$env:PR_GAMEVER", workflow[copy_bin:])
         self.assertNotIn("gamesymbol_snapshot.py verify", workflow)
         self.assertNotIn("prune_pr_expected_output_bin.py", workflow)
 
@@ -117,7 +129,7 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
 
         self.assertIn("ACTUAL_CANDIDATE_SNAPSHOT=$candidate", workflow)
-        self.assertIn('-expected "gamesymbols/$env:GAMEVER.yaml"', workflow)
+        self.assertIn('-expected "$env:HEAD_SNAPSHOT"', workflow)
         self.assertIn('-snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT"', workflow)
         self.assertNotIn("gamesymbol_candidate.py publish", workflow)
         self.assertNotIn('update_gamedata.py -gamever "$env:GAMEVER" -bindir', workflow)

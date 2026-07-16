@@ -42,6 +42,14 @@ the promotion gate for tag creation, persisted-bin promotion, and Release public
 - Do not require users to type `gh workflow run` or manually copy a commit SHA.
 - Do not redefine the analyzer's producer scheduling, skip behavior, or old-signature reuse semantics.
 
+### PR Self-Runner Boundary
+
+Ordinary PR validation does not build the newest version introduced by head `download.yaml`. It selects a trusted
+snapshot from `pull_request.base.sha` and uses that snapshot's version as `VALIDATION_GAMEVER` for bin copy, restore,
+invalidation, analysis, candidate comparison, gamedata, and C++ tests. The head `config.yaml`, preprocessors, Agent
+skills, references, and tests are therefore checked against the last accepted symbol baseline. Building and publishing
+the new `PR_GAMEVER` remains the responsibility of `build-on-self-runner.yml` after the source change is accepted.
+
 ## Authority Model
 
 The lifecycle has three states:
