@@ -35,9 +35,13 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("if: env.MODE == 'republish'", self.workflow)
         self.assertNotIn("force every preprocessor", self.workflow.lower())
 
-    def test_major_update_is_the_only_workflow_reason_for_oldgamever_none(self) -> None:
-        self.assertIn("if ($major -eq 'true') { $args += @('-oldgamever', 'none') }", self.workflow)
-        self.assertEqual(1, self.workflow.count("'-oldgamever', 'none'"))
+    def test_build_restores_and_explicitly_passes_trusted_oldgamever(self) -> None:
+        prepare = self.workflow.index("release_workflow.py prepare-oldgamever")
+        analyze = self.workflow.index("uv run ida_analyze_bin.py")
+        self.assertLess(prepare, analyze)
+        self.assertIn("OLDGAMEVER: ${{ steps.oldgamever.outputs.oldgamever }}", self.workflow)
+        self.assertIn("$args += @('-oldgamever', $env:OLDGAMEVER)", self.workflow)
+        self.assertNotIn("resolve major_update", self.workflow)
 
     def test_candidate_validation_precedes_staging_and_output_pr(self) -> None:
         analyze = self.workflow.index("uv run ida_analyze_bin.py")

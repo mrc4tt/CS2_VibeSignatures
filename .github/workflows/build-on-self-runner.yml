@@ -169,6 +169,14 @@ jobs:
           uv run release_workflow.py invalidate-republish `
             --gamever "$env:GAMEVER" --source-sha "$env:SOURCE_SHA" --bindir bin
 
+      - name: Prepare trusted old-version signature baseline
+        id: oldgamever
+        shell: pwsh
+        run: |
+          uv run release_workflow.py prepare-oldgamever `
+            --gamever "$env:GAMEVER" --bindir bin --github-output "$env:GITHUB_OUTPUT"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to prepare old-version signature baseline." }
+
       - name: Check cached binaries
         id: cache
         shell: pwsh
@@ -192,21 +200,14 @@ jobs:
 
       - name: Analyze binaries with normal producer scheduling
         shell: pwsh
+        env:
+          OLDGAMEVER: ${{ steps.oldgamever.outputs.oldgamever }}
         run: |
-          $script = @'
-          import sys, yaml
-          with open("download.yaml", encoding="utf-8") as handle:
-              items = yaml.safe_load(handle).get("downloads", [])
-          item = next((x for x in items if str(x.get("tag", "")) == sys.argv[1]), None)
-          if item is None:
-              raise SystemExit("GAMEVER not found")
-          print("true" if item.get("major_update") is True else "false")
-          '@
-          $majorResult = $script | uv run python - "$env:GAMEVER"
-          if ($LASTEXITCODE -ne 0) { throw "Failed to resolve major_update for $env:GAMEVER." }
-          $major = $majorResult.Trim()
+          if ([string]::IsNullOrWhiteSpace($env:OLDGAMEVER)) {
+            throw "Old-version signature policy was not resolved."
+          }
           $args = @('-gamever', $env:GAMEVER, '-configyaml', $env:ANALYSIS_CONFIG)
-          if ($major -eq 'true') { $args += @('-oldgamever', 'none') }
+          $args += @('-oldgamever', $env:OLDGAMEVER)
           $args += '-debug'
           uv run ida_analyze_bin.py @args
           if ($LASTEXITCODE -ne 0) { throw "ida_analyze_bin.py failed with exit code $LASTEXITCODE" }
