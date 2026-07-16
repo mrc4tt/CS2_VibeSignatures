@@ -17,10 +17,10 @@ except ImportError as exc:
     sys.exit(1)
 
 from depot_util import append_auth_args, run_command
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 
 
 DEFAULT_CONFIG_FILE = "download.yaml"
-DEFAULT_MODULES_CONFIG_FILE = "config.yaml"
 DEFAULT_DEPOT_DIR = "cs2_depot"
 DEFAULT_APP_ID = "730"
 DEFAULT_OS = "all-platform"
@@ -41,11 +41,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "-configyaml",
-        default=DEFAULT_MODULES_CONFIG_FILE,
-        help=(
-            f"Path to module config file used to build the DepotDownloader -filelist "
-            f"(default: {DEFAULT_MODULES_CONFIG_FILE})"
-        ),
+        default=None,
+        help="Analysis config used for the filelist; defaults to configs/<TAG>.yaml",
     )
     parser.add_argument(
         "-depotdir",
@@ -114,7 +111,7 @@ def find_download_entry(downloads: list[dict], tag: str) -> dict:
 
 
 def load_module_filelist(configyaml_path: str) -> list[str]:
-    """Collect sorted, de-duplicated path_windows/path_linux from config.yaml modules."""
+    """Collect sorted, de-duplicated module paths from the selected analysis config."""
     path = Path(configyaml_path)
     if not path.is_file():
         raise ConfigError(f"Modules config file not found: {configyaml_path}")
@@ -199,6 +196,7 @@ def main() -> int:
     args = parse_args()
 
     try:
+        args.configyaml = str(resolve_analysis_config(args.tag, args.configyaml))
         downloads = load_downloads(args.config)
         entry = find_download_entry(downloads, args.tag)
         manifests = entry["manifests"]
@@ -227,7 +225,7 @@ def main() -> int:
             password=args.password,
             remember_password=args.remember_password,
         )
-    except ConfigError as exc:
+    except (AnalysisConfigError, ConfigError) as exc:
         print(f"Error: {exc}")
         return 1
     except FileNotFoundError:

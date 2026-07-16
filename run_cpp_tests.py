@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Run C++ tests declared in config.yaml and compare clang vtable dumps with YAML references.
+Run C++ tests declared in the selected analysis config and compare clang layouts with YAML references.
 """
 
 import argparse
@@ -31,10 +31,10 @@ from cpp_tests_util import (
     map_target_triple_to_platform,
     pointer_size_from_target_triple,
 )
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 from gamesymbol_store import SymbolStore, SymbolStoreError, open_snapshot_store
 
 
-DEFAULT_CONFIG_FILE = "config.yaml"
 DEFAULT_CLANG = "clang++"
 DEFAULT_CPP_STD = "c++20"
 
@@ -44,8 +44,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Run configured C++ tests with clang++ and compare vtable metadata")
     parser.add_argument(
         "-configyaml",
-        default=DEFAULT_CONFIG_FILE,
-        help=f"Path to config.yaml file (default: {DEFAULT_CONFIG_FILE})",
+        default=None,
+        help="Analysis config path; defaults to configs/<GAMEVER>.yaml",
     )
     parser.add_argument("-snapshot", required=True, help="Canonical candidate or published game-symbol snapshot")
     parser.add_argument(
@@ -80,6 +80,19 @@ def _to_list(value: Any) -> List[str]:
         text = value.strip()
         return [text] if text else []
     return [str(value).strip()]
+
+
+def _resolve_source_path(value: str, source_root: Path) -> Path:
+    path = Path(value)
+    if path.is_absolute():
+        return path.resolve()
+    root = source_root.resolve()
+    resolved = (root / path).resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"relative source path escapes repository root: {value}") from exc
+    return resolved
 
 
 def _to_bool(value: Any, default: bool = False) -> bool:
@@ -144,7 +157,7 @@ def _collect_process_output(result: subprocess.CompletedProcess) -> str:
 
 
 def parse_config(config_path: Path) -> List[Dict[str, Any]]:
-    """Load and validate cpp_tests from config.yaml."""
+    """Load and validate cpp_tests from the selected analysis config."""
     try:
         with config_path.open("r", encoding="utf-8") as f:
             config = yaml.safe_load(f) or {}
@@ -157,7 +170,7 @@ def parse_config(config_path: Path) -> List[Dict[str, Any]]:
 
     cpp_tests = config.get("cpp_tests", [])
     if not isinstance(cpp_tests, list):
-        print("Error: 'cpp_tests' in config.yaml must be a list")
+        print("Error: 'cpp_tests' in the analysis config must be a list")
         sys.exit(1)
 
     return cpp_tests
@@ -279,9 +292,12 @@ def compile_and_compare(
             "message": "Missing required fields: symbol/cpp/target",
         }
 
-    cpp_file = Path(cpp_rel_path)
-    if not cpp_file.is_absolute():
-        cpp_file = (config_dir / cpp_file).resolve()
+    try:
+        cpp_file = _resolve_source_path(cpp_rel_path, config_dir)
+        for header in _to_list(test_item.get("headers")):
+            _resolve_source_path(header, config_dir)
+    except ValueError as exc:
+        return {"status": "invalid", "message": str(exc)}
 
     if not cpp_file.is_file():
         return {
@@ -290,11 +306,11 @@ def compile_and_compare(
         }
 
     include_directories: List[Path] = []
-    for include_rel in _to_list(test_item.get("include_directories")):
-        include_path = Path(include_rel)
-        if not include_path.is_absolute():
-            include_path = (config_dir / include_path).resolve()
-        include_directories.append(include_path)
+    try:
+        for include_rel in _to_list(test_item.get("include_directories")):
+            include_directories.append(_resolve_source_path(include_rel, config_dir))
+    except ValueError as exc:
+        return {"status": "invalid", "message": str(exc)}
 
     defines = _to_list(test_item.get("defines"))
 
@@ -432,8 +448,12 @@ def run_one_test(
 
 def main():
     args = parse_args()
-    config_path = Path(args.configyaml).resolve()
-    config_dir = config_path.parent
+    try:
+        config_path = resolve_analysis_config(args.gamever, args.configyaml)
+    except AnalysisConfigError as exc:
+        print(f"Error: {exc}")
+        return 2
+    source_root = Path(__file__).resolve().parent
     try:
         symbol_store = open_snapshot_store(
             snapshot_path=args.snapshot,
@@ -452,7 +472,7 @@ def main():
 
     cpp_tests = parse_config(config_path)
     if not cpp_tests:
-        print("No cpp_tests defined in config.yaml")
+        print(f"No cpp_tests defined in {config_path}")
         return 0
 
     print("=== clang++ target triple detection ===")
@@ -514,7 +534,7 @@ def main():
         result = run_one_test(
             test_item=test_item,
             args=args,
-            config_dir=config_dir,
+            config_dir=source_root,
             symbol_store=symbol_store,
         )
 

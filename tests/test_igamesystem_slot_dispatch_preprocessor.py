@@ -188,7 +188,7 @@ class TestGamePostInitSkill(unittest.IsolatedAsyncioTestCase):
 
 class TestGamePostInitConfig(unittest.TestCase):
     def test_config_registers_gamepostinit_skill_and_symbol(self) -> None:
-        config = yaml.safe_load(Path("config.yaml").read_text(encoding="utf-8"))
+        config = yaml.safe_load(Path("configs/14168.yaml").read_text(encoding="utf-8"))
         server_modules = [module for module in config["modules"] if module.get("name") == "server"]
         matching_modules = []
         for server_module in server_modules:

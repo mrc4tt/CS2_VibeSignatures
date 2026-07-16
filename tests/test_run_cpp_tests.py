@@ -277,7 +277,7 @@ class TestMainExitStatus(unittest.TestCase):
         mock_open_snapshot_store,
     ) -> None:
         mock_parse_args.return_value = argparse.Namespace(
-            configyaml="config.yaml",
+            configyaml="configs/14168.yaml",
             snapshot="candidate.yaml",
             gamever="14132",
             clang="clang++",
@@ -336,6 +336,18 @@ class TestMainExitStatus(unittest.TestCase):
                 }
 
                 self.assertEqual(1, run_cpp_tests.main())
+
+
+class TestSourcePathResolution(unittest.TestCase):
+    def test_relative_cpp_paths_use_repository_root_and_reject_escape(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            cpp = root / "cpp_tests" / "example.cpp"
+            cpp.parent.mkdir()
+            cpp.write_text("int main() {}\n", encoding="utf-8")
+            self.assertEqual(cpp.resolve(), run_cpp_tests._resolve_source_path("cpp_tests/example.cpp", root))
+            with self.assertRaisesRegex(ValueError, "escapes repository root"):
+                run_cpp_tests._resolve_source_path("../outside.cpp", root)
 
 
 if __name__ == "__main__":

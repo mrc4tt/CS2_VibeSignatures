@@ -112,6 +112,7 @@ def _make_fake_httpx() -> SimpleNamespace:
 def _base_args(**overrides: object) -> Namespace:
     payload = {
         "gamever": "14141",
+        "configyaml": str(Path(__file__).resolve()),
         "module": "engine",
         "platform": "windows",
         "func_name": "CNetworkMessages_FindNetworkGroup",
@@ -275,7 +276,7 @@ class TestReferenceYamlPureHelpers(unittest.TestCase):
             )
 
             aliases = generate_reference_yaml.load_symbol_aliases(
-                repo_root=repo_root,
+                config_path=config_path,
                 module="engine",
                 func_name="CNetworkMessages_FindNetworkGroup",
             )
@@ -307,7 +308,7 @@ class TestReferenceYamlPureHelpers(unittest.TestCase):
 
             with self.assertRaises(generate_reference_yaml.ReferenceGenerationError):
                 generate_reference_yaml.load_symbol_aliases(
-                    repo_root=repo_root,
+                    config_path=config_path,
                     module="engine",
                     func_name="CNetworkMessages_FindNetworkGroup",
                 )
@@ -318,7 +319,7 @@ class TestReferenceYamlPureHelpers(unittest.TestCase):
 
             with self.assertRaises(generate_reference_yaml.ReferenceGenerationError):
                 generate_reference_yaml.load_symbol_aliases(
-                    repo_root=repo_root,
+                    config_path=repo_root / "config.yaml",
                     module="engine",
                     func_name="CNetworkMessages_FindNetworkGroup",
                 )
@@ -326,7 +327,7 @@ class TestReferenceYamlPureHelpers(unittest.TestCase):
             _write_yaml(repo_root / "config.yaml", {"modules": {"name": "engine"}})
             with self.assertRaises(generate_reference_yaml.ReferenceGenerationError):
                 generate_reference_yaml.load_symbol_aliases(
-                    repo_root=repo_root,
+                    config_path=repo_root / "config.yaml",
                     module="engine",
                     func_name="CNetworkMessages_FindNetworkGroup",
                 )
@@ -348,7 +349,7 @@ class TestReferenceYamlPureHelpers(unittest.TestCase):
 
             with self.assertRaises(generate_reference_yaml.ReferenceGenerationError):
                 generate_reference_yaml.load_symbol_aliases(
-                    repo_root=repo_root,
+                    config_path=repo_root / "config.yaml",
                     module="engine",
                     func_name="CNetworkMessages_FindNetworkGroup",
                 )
@@ -473,6 +474,7 @@ class TestResolveFuncVa(unittest.IsolatedAsyncioTestCase):
                 module="engine",
                 platform="windows",
                 func_name="CNetworkMessages_FindNetworkGroup",
+                config_path=repo_root / "config.yaml",
                 debug=False,
             )
 
@@ -515,6 +517,7 @@ class TestResolveFuncVa(unittest.IsolatedAsyncioTestCase):
                 module="engine",
                 platform="windows",
                 func_name="CNetworkMessages_FindNetworkGroup",
+                config_path=repo_root / "config.yaml",
                 debug=False,
             )
 
@@ -565,6 +568,7 @@ class TestResolveFuncVa(unittest.IsolatedAsyncioTestCase):
                     module="engine",
                     platform="windows",
                     func_name="CNetworkMessages_FindNetworkGroup",
+                    config_path=repo_root / "config.yaml",
                     debug=False,
                 )
 
@@ -1523,6 +1527,7 @@ class TestRunReferenceGeneration(unittest.IsolatedAsyncioTestCase):
             module="engine",
             platform="windows",
             func_name="CNetworkMessages_FindNetworkGroup",
+            config_path=Path(__file__).resolve(),
             debug=False,
         )
         export_reference_yaml_via_mcp.assert_awaited_once_with(
@@ -1695,6 +1700,7 @@ class TestRunReferenceGeneration(unittest.IsolatedAsyncioTestCase):
             module="engine",
             platform="windows",
             func_name="CNetworkMessages_FindNetworkGroup",
+            config_path=Path(__file__).resolve(),
             debug=False,
         )
         build_reference_output_path.assert_called_once_with(

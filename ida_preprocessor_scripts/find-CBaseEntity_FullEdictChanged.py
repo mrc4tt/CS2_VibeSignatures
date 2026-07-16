@@ -2,7 +2,6 @@
 """Preprocess script for find-CBaseEntity_FullEdictChanged skill."""
 
 import os
-from pathlib import Path
 
 try:
     import yaml

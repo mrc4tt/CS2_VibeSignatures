@@ -4,6 +4,7 @@ from pathlib import Path
 
 import yaml
 
+from analysis_config import resolve_analysis_config
 from gamesymbol_snapshot_lib.codec import (
     build_snapshot_document,
     canonical_snapshot_bytes,
@@ -108,8 +109,9 @@ def _atomic_write(path: Path, data: bytes) -> None:
             temporary.unlink()
 
 
-def pack_snapshot(game_version, bindir="bin", config_path="config.yaml", snapshot_path=None) -> bytes:
+def pack_snapshot(game_version, bindir="bin", config_path=None, snapshot_path=None) -> bytes:
     snapshot_path = Path(snapshot_path or f"gamesymbols/{game_version}.yaml")
+    config_path = resolve_analysis_config(game_version, config_path)
     contract = load_contract(config_path, game_version, bindir)
     document = build_actual_document(contract)
     data = canonical_snapshot_bytes(document)
@@ -157,11 +159,12 @@ def _round_trip_document(document: dict, game_version: str, config_path) -> byte
 def restore_snapshot(
     game_version,
     bindir="bin",
-    config_path="config.yaml",
+    config_path=None,
     snapshot_path=None,
     replace=False,
 ) -> bytes:
     snapshot_path = Path(snapshot_path or f"gamesymbols/{game_version}.yaml")
+    config_path = resolve_analysis_config(game_version, config_path)
     contract = load_contract(config_path, game_version, bindir)
     document, raw = load_snapshot_for_contract(snapshot_path, contract, require_canonical=True)
     ensure_real_tree(Path(bindir), contract.game_root)
@@ -177,8 +180,9 @@ def restore_snapshot(
     return raw
 
 
-def verify_snapshot(game_version, bindir="bin", config_path="config.yaml", snapshot_path=None) -> bytes:
+def verify_snapshot(game_version, bindir="bin", config_path=None, snapshot_path=None) -> bytes:
     snapshot_path = Path(snapshot_path or f"gamesymbols/{game_version}.yaml")
+    config_path = resolve_analysis_config(game_version, config_path)
     contract = load_contract(config_path, game_version, bindir)
     document, raw = load_snapshot_for_contract(snapshot_path, contract, require_canonical=True)
     actual_document = build_actual_document(contract)

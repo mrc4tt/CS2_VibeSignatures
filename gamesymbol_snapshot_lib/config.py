@@ -31,7 +31,7 @@ def _load_raw_config(config_path: Path) -> dict:
     except (OSError, yaml.YAMLError) as exc:
         raise SnapshotConfigError(f"unable to read config {config_path}: {exc}") from exc
     if not isinstance(raw, dict) or not isinstance(raw.get("modules", []), list):
-        raise SnapshotConfigError("config.yaml must contain a modules list")
+        raise SnapshotConfigError("analysis config must contain a modules list")
     return raw
 
 

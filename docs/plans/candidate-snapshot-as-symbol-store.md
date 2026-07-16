@@ -1032,29 +1032,31 @@ PR trust boundary：
 推荐步骤：
 
 1. Checkout PR merge ref。
-2. 从 `HEAD^1` 提取 base config 和 base snapshot。
-3. 复制 persisted binaries/IDBs 到 workspace real `bin` directory。
-4. 删除 workspace 当前 game version 的 persisted YAML 副本。
-5. 使用 base config + base snapshot restore baseline。
-6. 根据 base/head snapshot、config 和 changed files 计算 invalidation closure。
-7. 删除 invalidated producer outputs 和 head 已删除 paths。
-8. 运行 Python unit tests。
-9. 运行 head analyzer code。
+2. 从 head `download.yaml` 读取 `PR_GAMEVER`，只用于优先选择同名 base snapshot。
+3. 从 `pull_request.base.sha` 的 snapshot 集合选择 base snapshot，并从该 snapshot 的发布 commit 提取匹配的 base config。
+4. 有 base snapshot 时令 `VALIDATION_GAMEVER=BASE_GAMEVER`；bootstrap 时才使用 `PR_GAMEVER`。
+5. 复制 persisted `bin/<VALIDATION_GAMEVER>` 到 workspace real `bin` directory。
+6. 使用 base config + base snapshot restore `bin/<VALIDATION_GAMEVER>` baseline。
+7. 从 `HEAD` 导出同版本 snapshot 原始 Git blob，根据 base/head snapshot、config 和 changed files 计算 invalidation closure。
+8. 删除 invalidated producer outputs 和 head 已删除 paths。
+9. 运行 Python unit tests 和 head analyzer code，二者都以 `VALIDATION_GAMEVER` 为目标。
 10. analyzer success 后立即 strict pack actual candidate 到 runner temp。
-11. 将 actual candidate 与 PR head snapshot 比较。
+11. 将 actual candidate 与 head `gamesymbols/<VALIDATION_GAMEVER>.yaml` 比较。
 12. mismatch 时输出 semantic diff 并失败；不运行 publish。
-13. `update_gamedata.py` 只读取 actual candidate。
-14. `run_cpp_tests.py` 只读取 actual candidate。
-15. 确认 candidate SHA-256 在所有步骤前后不变。
-16. 成功结束，不修改 tracked head snapshot。
+13. `update_gamedata.py` 和 `run_cpp_tests.py` 只读取 actual candidate。
+14. 确认 candidate SHA-256 在所有步骤前后不变。
+15. 成功结束，不修改 tracked head snapshot。
 
 流程图：
 
 ```text
-HEAD^1 snapshot + HEAD^1 config
+base.sha snapshot + base.sha config
               |
               v
-restore baseline into workspace bin
+select base snapshot version as VALIDATION_GAMEVER
+              |
+              v
+restore baseline into bin/<VALIDATION_GAMEVER>
               |
               v
 invalidate + run head analyzer

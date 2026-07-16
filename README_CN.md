@@ -66,10 +66,10 @@ uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
 如果 DepotDownloader 需要登录，可追加工作流中同样使用的 `-username`、`-password` 与 `-remember-password` 参数。
 
 
-### 2. 为 `config.yaml` 的符号生成对应的 signatures
+### 2. 为 `configs/<GAMEVER>.yaml` 的符号生成对应 signatures
 
  ```bash
- uv run ida_analyze_bin.py -gamever=14146 [-oldgamever=14145] [-configyaml=path/to/config.yaml] [-modules=server] [-platform=windows] [-agent=claude/codex/opencode/"claude.cmd"/"codex.cmd"/"opencode.cmd"] [-maxretry=3] [-vcall_finder=g_pNetworkMessages|*] [-llm_model=gpt-4o] [-llm_apikey=your-key] [-llm_baseurl=https://api.example.com/v1] [-llm_temperature=0.2] [-llm_effort=medium] [-llm_fake_as=codex] [-debug]
+ uv run ida_analyze_bin.py -gamever=14146 [-oldgamever=14145] [-configyaml=path/to/custom.yaml] [-modules=server] [-platform=windows] [-agent=claude/codex/opencode/"claude.cmd"/"codex.cmd"/"opencode.cmd"] [-maxretry=3] [-vcall_finder=g_pNetworkMessages|*] [-llm_model=gpt-4o] [-llm_apikey=your-key] [-llm_baseurl=https://api.example.com/v1] [-llm_temperature=0.2] [-llm_effort=medium] [-llm_fake_as=codex] [-debug]
  ```
 
 * 在真正运行 Agent SKILL(s) 前，会先通过 mcp call 直接使用 `bin/{previous_gamever}/{module}/{symbol}.{platform}.yaml` 中的旧 signature 查找当前版本游戏二进制中的符号。不会消耗 token。
@@ -113,7 +113,7 @@ uv run bump_download.py -config download.yaml -depotdir cs2_depot -dry-run
 
 #### vcall_finder 相关
 
-* `-vcall_finder=g_pNetworkMessages` 会在模块级 `vcall_finder` 配置中筛选同名对象；`-vcall_finder=*` 会处理 `config.yaml` 中已声明的全部对象。
+* `-vcall_finder=g_pNetworkMessages` 会在模块级 `vcall_finder` 配置中筛选同名对象；`-vcall_finder=*` 会处理 `configs/<GAMEVER>.yaml` 中声明的全部对象。
 
 * 当启用 `-vcall_finder` 时，脚本会在每个模块/平台完成 IDA 任务后导出对象引用函数的完整反汇编与伪代码到 `vcall_finder/{gamever}/{object_name}/{module}/{platform}/`，并在全部模块/平台结束后执行 LLM 聚合；若某个 detail YAML 已存在顶层 `found_vcall`，则会跳过该次 LLM 调用，直接复用缓存结果。
 
@@ -138,7 +138,7 @@ reference YAML 存放路径：
 
 准备步骤：
 
-1. 确认目标函数已有当前版本 YAML 且包含 `func_va`，或可通过 `config.yaml` 的 symbol name/alias 在 IDA 中定位。
+1. 确认目标函数已有当前版本 YAML 且包含 `func_va`，或可通过 `configs/<GAMEVER>.yaml` 的 symbol name/alias 在 IDA 中定位。
 2. 运行独立 CLI：
 
 ```bash
@@ -183,7 +183,7 @@ uv run run_cpp_tests.py -gamever 14168 -snapshot gamesymbols/14168.yaml [-debug]
 ### 5. 发布、恢复与验证 game-symbol snapshot
 
 单个 symbol YAML 继续作为 ignored 文件保存在 `bin/<GAMEVER>/<module>/`。Git 跟踪的 canonical analysis
-lockfile 为 `gamesymbols/<GAMEVER>.yaml`，其正式文件集合由 `config.yaml` 声明的 required / optional YAML
+lockfile 为 `gamesymbols/<GAMEVER>.yaml`，其正式文件集合由 `configs/<GAMEVER>.yaml` 声明的 required / optional YAML
 输出推导。
 
 top-level analysis transaction 成功后立即 strict pack 一次 candidate。两个 downstream consumer 只读取同一个
@@ -193,10 +193,10 @@ immutable candidate；全部 validation 成功后，publication 只复制 candid
 CANDIDATE_DIR="$(mktemp -d)"
 CANDIDATE_SNAPSHOT="$CANDIDATE_DIR/14168.yaml"
 CANDIDATE_SESSION="$CANDIDATE_DIR/14168.session.json"
-uv run gamesymbol_candidate.py build -gamever 14168 -bindir bin -configyaml config.yaml -output "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION"
-uv run update_gamedata.py -gamever 14168 -snapshot "$CANDIDATE_SNAPSHOT"
+uv run gamesymbol_candidate.py build -gamever 14168 -bindir bin -configyaml configs/14168.yaml -output "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION"
+uv run update_gamedata.py -gamever 14168 -configyaml configs/14168.yaml -snapshot "$CANDIDATE_SNAPSHOT"
 uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step gamedata
-uv run run_cpp_tests.py -gamever 14168 -snapshot "$CANDIDATE_SNAPSHOT"
+uv run run_cpp_tests.py -gamever 14168 -configyaml configs/14168.yaml -snapshot "$CANDIDATE_SNAPSHOT"
 uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step cpp_tests
 uv run gamesymbol_candidate.py publish -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -snapshot gamesymbols/14168.yaml
 ```
@@ -306,7 +306,7 @@ Claude Code:
 
 包含该代码片段的函数为： `CItemDefuser_Spawn`
 
-#### 2. 创建预处理脚本并更新 `config.yaml`
+#### 2. 创建预处理脚本并更新 `configs/<GAMEVER>.yaml`
 
 Claude Code:
 
@@ -334,7 +334,7 @@ Claude Code:
 
   - 如果还没改名，将前一步发现的 `qword_XXXXXX` 重命名为 `IGameSystem_InitAllSystems_pFirst`。
 
-#### 2. 创建预处理脚本并更新 `config.yaml`
+#### 2. 创建预处理脚本并更新 `configs/<GAMEVER>.yaml`
 
 Claude Code:
 
@@ -358,7 +358,7 @@ Claude Code:
 
   - xref 应指向一个函数——这就是 `CGameResourceService_BuildResourceManifest`。如果尚未改名，请将其重命名。
 
-#### 2. 创建预处理脚本并更新 `config.yaml`
+#### 2. 创建预处理脚本并更新 `configs/<GAMEVER>.yaml`
 
 Claude Code:
 
@@ -410,9 +410,9 @@ Claude Code:
   * Short `jbe` (`76 rel8`，2 字节) → `EB rel8`（无条件 `jmp short`）
 ```
 
-#### 2. 创建预处理脚本并更新 `config.yaml`
+#### 2. 创建预处理脚本并更新 `configs/<GAMEVER>.yaml`
 
-按照 [`.claude/skills/create-preprocessor-scripts/SKILL.md`](.claude/skills/create-preprocessor-scripts/SKILL.md) 中的步骤创建预处理脚本并更新 `config.yaml`。
+按照 [`.claude/skills/create-preprocessor-scripts/SKILL.md`](.claude/skills/create-preprocessor-scripts/SKILL.md) 创建预处理脚本，并更新指定的 `configs/<GAMEVER>.yaml`。
 
 ## 故障排查
 
@@ -444,7 +444,7 @@ uv run ida_analyze_bin.py -gamever %CS2_GAMEVER% -agent="claude.cmd" -platform %
 set CANDIDATE_ID=%RANDOM%
 set CANDIDATE_SNAPSHOT=%TEMP%\gamesymbol-%CS2_GAMEVER%-%CANDIDATE_ID%.yaml
 set CANDIDATE_SESSION=%TEMP%\gamesymbol-%CS2_GAMEVER%-%CANDIDATE_ID%.session.json
-uv run gamesymbol_candidate.py build -gamever %CS2_GAMEVER% -bindir bin -configyaml config.yaml -output %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION%
+uv run gamesymbol_candidate.py build -gamever %CS2_GAMEVER% -bindir bin -configyaml configs/%CS2_GAMEVER%.yaml -output %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION%
 ```
 
 ```bash

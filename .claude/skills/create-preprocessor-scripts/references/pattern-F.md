@@ -72,9 +72,9 @@ async def preprocess_skill(
 - No `TARGET_FUNCTION_NAMES`, `FUNC_XREFS`, `LLM_DECOMPILE`, or `FUNC_VTABLE_RELATIONS`
 - Uses `inherit_vfuncs=` parameter instead of `func_names=`
 - No `llm_config` parameter in `preprocess_skill`
-- Standard mode: config.yaml `expected_input` must include both the base vfunc YAML and the derived class vtable YAML
-- Slot-only mode: config.yaml `expected_input` needs ONLY the base vfunc YAML -- no vtable YAML for the interface class
-- config.yaml symbol category is `vfunc`
+- Standard mode: configs/<GAMEVER>.yaml `expected_input` must include both the base vfunc YAML and the derived class vtable YAML
+- Slot-only mode: configs/<GAMEVER>.yaml `expected_input` needs ONLY the base vfunc YAML -- no vtable YAML for the interface class
+- configs/<GAMEVER>.yaml symbol category is `vfunc`
 
 ---
 
@@ -162,7 +162,7 @@ vfunc_index: 5
 
 - [ ] `INHERIT_VFUNCS` lists correct `(target_func_name, inherit_vtable_class, base_vfunc_name, generate_func_sig)` tuples
 - [ ] For slot-only: `generate_func_sig=False` AND desired fields are exactly `{func_name, vtable_name, vfunc_offset, vfunc_index}` -- adding any extra field (e.g. `func_va`) will silently exit slot-only mode and require a vtable YAML
-- [ ] For standard: config.yaml `expected_input` includes both the derived-class vtable YAML and the base vfunc YAML
-- [ ] For slot-only: config.yaml `expected_input` includes ONLY the base vfunc YAML -- no vtable YAML for the interface class
+- [ ] For standard: configs/<GAMEVER>.yaml `expected_input` includes both the derived-class vtable YAML and the base vfunc YAML
+- [ ] For slot-only: configs/<GAMEVER>.yaml `expected_input` includes ONLY the base vfunc YAML -- no vtable YAML for the interface class
 - [ ] No `FUNC_XREFS`, `LLM_DECOMPILE`, `FUNC_VTABLE_RELATIONS`, or `llm_config` parameter
 - [ ] `preprocess_common_skill` call passes `inherit_vfuncs=`

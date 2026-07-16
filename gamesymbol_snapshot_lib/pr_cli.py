@@ -3,6 +3,7 @@ import subprocess
 import traceback
 from pathlib import Path
 
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError, SnapshotMismatchError
 from gamesymbol_snapshot_lib.operations import load_snapshot_for_contract
@@ -17,7 +18,11 @@ def parse_args(argv=None):
     parser.add_argument("-bindir", default="bin")
     parser.add_argument("-baseconfigyaml", required=True)
     parser.add_argument("-basesnapshot", required=True)
-    parser.add_argument("-headconfigyaml", default="config.yaml")
+    parser.add_argument(
+        "-headconfigyaml",
+        default=None,
+        help="Head analysis config; defaults to configs/<GAMEVER>.yaml",
+    )
     parser.add_argument("-headsnapshot")
     parser.add_argument("-baseref", default="HEAD^1")
     parser.add_argument("-headref", default="HEAD")
@@ -50,6 +55,8 @@ def _delete_paths(contract, paths: frozenset[str]) -> int:
 
 def _run(args) -> None:
     head_snapshot = args.headsnapshot or f"gamesymbols/{args.gamever}.yaml"
+    args.headconfigyaml = str(resolve_analysis_config(args.gamever, args.headconfigyaml))
+    print(f"Head analysis config: {args.headconfigyaml}")
     base_contract = load_contract(args.baseconfigyaml, args.gamever, args.bindir)
     head_contract = load_contract(args.headconfigyaml, args.gamever, args.bindir)
     base_document, _raw = load_snapshot_for_contract(args.basesnapshot, base_contract)
@@ -79,7 +86,7 @@ def main(argv=None) -> int:
         if args.debug:
             traceback.print_exc()
         return 1
-    except SnapshotConfigError as exc:
+    except (AnalysisConfigError, SnapshotConfigError) as exc:
         print(f"Error: {exc}")
         if args.debug:
             traceback.print_exc()

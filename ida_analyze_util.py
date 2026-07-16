@@ -1274,7 +1274,7 @@ async def _build_enriched_slot_only_vfunc_payload_via_mcp(
     return None
 
 
-def _load_symbol_lookup_candidates(symbol_name, debug=False):
+def _load_symbol_lookup_candidates(symbol_name, alias_lookup=None, debug=False):
     normalized_name = str(symbol_name or "").strip()
     if not normalized_name:
         return []
@@ -1291,39 +1291,9 @@ def _load_symbol_lookup_candidates(symbol_name, debug=False):
 
     _append_candidate(normalized_name)
 
-    config_path = Path(__file__).resolve().parent / "config.yaml"
-    if yaml is None or not config_path.is_file():
-        return candidates
-
-    try:
-        config_data = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
-    except Exception as exc:
-        if debug:
-            print(f"    Preprocess: failed to read config aliases for {normalized_name}: {exc}")
-        return candidates
-
-    modules = config_data.get("modules")
-    if not isinstance(modules, list):
-        return candidates
-
-    for module_entry in modules:
-        if not isinstance(module_entry, dict):
-            continue
-        symbols = module_entry.get("symbols")
-        if not isinstance(symbols, list):
-            continue
-        for symbol_entry in symbols:
-            if not isinstance(symbol_entry, dict):
-                continue
-            if str(symbol_entry.get("name", "")).strip() != normalized_name:
-                continue
-            _append_candidate(symbol_entry.get("name"))
-            raw_aliases = symbol_entry.get("alias")
-            if isinstance(raw_aliases, (list, tuple)):
-                for alias in raw_aliases:
-                    _append_candidate(alias)
-            elif raw_aliases is not None:
-                _append_candidate(raw_aliases)
+    if isinstance(alias_lookup, dict):
+        for alias in alias_lookup.get(normalized_name, ()):
+            _append_candidate(alias)
 
     if debug:
         print(
@@ -2284,6 +2254,7 @@ async def _load_llm_decompile_target_detail_via_mcp(
     target_func_name,
     new_binary_dir=None,
     platform=None,
+    alias_lookup=None,
     debug=False,
 ):
     normalized_target_name = str(target_func_name or "").strip()
@@ -2302,6 +2273,7 @@ async def _load_llm_decompile_target_detail_via_mcp(
     if func_va is None:
         candidate_names = _load_symbol_lookup_candidates(
             normalized_target_name,
+            alias_lookup=alias_lookup,
             debug=debug,
         )
         func_va = await _find_function_addr_by_names_via_mcp(
@@ -2337,6 +2309,7 @@ async def _load_llm_decompile_target_details_via_mcp(
     target_func_names,
     new_binary_dir=None,
     platform=None,
+    alias_lookup=None,
     debug=False,
 ):
     if isinstance(target_func_names, str):
@@ -2351,12 +2324,17 @@ async def _load_llm_decompile_target_details_via_mcp(
         target_func_name = str(target_func_name or "").strip()
         if not target_func_name:
             continue
+        target_kwargs = {
+            "new_binary_dir": new_binary_dir,
+            "platform": platform,
+            "debug": debug,
+        }
+        if alias_lookup is not None:
+            target_kwargs["alias_lookup"] = alias_lookup
         target_detail = await _load_llm_decompile_target_detail_via_mcp(
             session,
             target_func_name,
-            new_binary_dir=new_binary_dir,
-            platform=platform,
-            debug=debug,
+            **target_kwargs,
         )
         if target_detail is not None:
             target_items.append(target_detail)
@@ -8034,12 +8012,18 @@ async def preprocess_common_skill(
             if target_func_names is None:
                 target_func_name = str(llm_request.get("target_func_name", "") or "").strip()
                 target_func_names = [target_func_name] if target_func_name else []
+            target_kwargs = {
+                "new_binary_dir": new_binary_dir,
+                "platform": platform,
+                "debug": debug,
+            }
+            alias_lookup = (llm_config or {}).get("symbol_aliases")
+            if alias_lookup:
+                target_kwargs["alias_lookup"] = alias_lookup
             llm_target_details = await _load_llm_decompile_target_details_via_mcp(
                 session,
                 target_func_names,
-                new_binary_dir=new_binary_dir,
-                platform=platform,
-                debug=debug,
+                **target_kwargs,
             )
             if not llm_target_details:
                 return _empty_llm_decompile_result()

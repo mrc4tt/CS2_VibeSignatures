@@ -32,7 +32,10 @@ class TestSymbolStoreArchitecture(unittest.TestCase):
         self.assertIn('update_gamedata.py -gamever "$GAMEVER" -snapshot "$CANDIDATE"', update)
         self.assertIn("gamesymbol_candidate.py publish", update)
         self.assertNotIn("gamesymbol_snapshot.py pack", update)
-        self.assertIn('run_cpp_tests.py -gamever "$GAMEVER" -snapshot "$CANDIDATE"', validation)
+        self.assertIn(
+            'run_cpp_tests.py -gamever "$GAMEVER" -configyaml "$ANALYSIS_CONFIG" -snapshot "$CANDIDATE"',
+            validation,
+        )
         self.assertIn("gamesymbol_candidate.py mark", validation)
 
 

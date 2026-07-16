@@ -14,9 +14,12 @@ description: |
 Repair `hl2sdk_cs2` declarations from compiler-versus-YAML layout differences. Treat
 `run_cpp_tests.py` as the source of truth for both the initial diff and final verification.
 
+Resolve `GAMEVER` from the user's explicit request or `CS2VIBE_GAMEVER`; use only
+`configs/$GAMEVER.yaml` for test definitions and fail if it is missing.
+
 ## Constraints
 
-- Edit only header paths listed in the failing `config.yaml` `cpp_tests` entry.
+- Edit only header paths listed in the failing `configs/<GAMEVER>.yaml` `cpp_tests` entry.
 - Require every edited header to be under `hl2sdk_cs2/`.
 - Preserve existing names and style when the reference exposes only a slot or offset.
 - Keep compiler declarations for gaps in incomplete reference YAMLs unless surrounding index shifts prove removal.
@@ -36,10 +39,10 @@ Repair `hl2sdk_cs2` declarations from compiler-versus-YAML layout differences. T
 3. Run the complete comparison with debug details:
 
    ```powershell
-   uv run run_cpp_tests.py -gamever <gamever> -snapshot <snapshot> -debug
+   uv run run_cpp_tests.py -gamever <gamever> -configyaml configs/<gamever>.yaml -snapshot <snapshot> -debug
    ```
 
-4. For each test reporting layout differences, find its `cpp_tests` entry in `config.yaml` and read its `symbol`,
+4. For each test reporting layout differences, find its `cpp_tests` entry in `configs/<GAMEVER>.yaml` and read its `symbol`,
    `headers`, target, aliases, and reference modules.
 5. Read the configured headers and the complete diff sections:
    - `Current vtable entries` versus `YAML reference vtable entries`

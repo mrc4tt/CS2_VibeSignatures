@@ -2,7 +2,7 @@
 """
 Depot Binary Copy Script for CS2_VibeSignatures
 
-Copies CS2 binary files from a local Steam depot directory based on entries in config.yaml.
+Copies CS2 binary files from a local Steam depot directory based on the selected analysis config.
 
 Usage:
     python copy_depot_bin.py -gamever=<version> [-bindir=bin] [-platform=windows|linux|all-platform] [-depotdir=cs2_depot] [-checkonly]
@@ -30,10 +30,10 @@ except ImportError as e:
     print("Please install required dependencies with: uv sync")
     sys.exit(1)
 
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 
 DEFAULT_DEPOT_DIR = "cs2_depot"
 DEFAULT_BIN_DIR = "bin"
-DEFAULT_CONFIG_FILE = "config.yaml"
 CHECKONLY_MISSING_EXIT = 1
 CHECKONLY_ERROR_EXIT = 2
 
@@ -57,7 +57,9 @@ def parse_args():
         "-depotdir", default=DEFAULT_DEPOT_DIR, help=f"Local depot root directory (default: {DEFAULT_DEPOT_DIR})"
     )
     parser.add_argument(
-        "-config", default=DEFAULT_CONFIG_FILE, help=f"Path to config.yaml file (default: {DEFAULT_CONFIG_FILE})"
+        "-config",
+        default=None,
+        help="Analysis config path; defaults to configs/<GAMEVER>.yaml",
     )
     parser.add_argument(
         "-checkonly",
@@ -74,10 +76,10 @@ def parse_args():
 
 def parse_config(config_path):
     """
-    Parse the config.yaml file and extract module entries.
+    Parse the selected analysis config and extract module entries.
 
     Args:
-        config_path: Path to the config.yaml file
+        config_path: Path to the selected analysis config
 
     Returns:
         List of dictionaries containing module data
@@ -101,7 +103,7 @@ def parse_config(config_path):
         path_linux = module.get("path_linux")
 
         if not name:
-            print(f"  Warning: Skipping module without name")
+            print("  Warning: Skipping module without name")
             continue
 
         modules.append({"name": name, "path_windows": path_windows, "path_linux": path_linux})
@@ -262,16 +264,15 @@ def main():
     """Main entry point."""
     args = parse_args()
 
-    config_path = args.config
     bin_dir = args.bindir
     gamever = args.gamever
     platform_filter = args.platform
     depot_dir = args.depotdir
     error_exit = CHECKONLY_ERROR_EXIT if args.checkonly else 1
-
-    # Validate config file exists
-    if not os.path.exists(config_path):
-        print(f"Error: Config file not found: {config_path}")
+    try:
+        config_path = str(resolve_analysis_config(gamever, args.config))
+    except AnalysisConfigError as exc:
+        print(f"Error: {exc}")
         return error_exit
 
     # Validate depot directory exists

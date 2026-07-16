@@ -38,7 +38,7 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         output_filter = (
             "!(github.event.pull_request.user.login == 'github-actions[bot]' &&\n"
             "        startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&\n"
-            "        startsWith(github.event.pull_request.title, 'chore(gamesymbols): add '))"
+            "        startsWith(github.event.pull_request.title, 'chore(gamesymbols): publish '))"
         )
 
         self.assertEqual(2, workflow.count(output_filter))
@@ -77,9 +77,11 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
             workflow,
         )
 
-    def test_uses_base_snapshot_then_invalidates_before_analysis(self) -> None:
+    def test_uses_selected_base_gamever_for_entire_validation(self) -> None:
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
 
+        extract = workflow.index("- name: Extract deterministic base snapshot")
+        copy_bin = workflow.index("- name: Prepare persisted depot link and PR bin copy")
         restore = workflow.index("gamesymbol_snapshot.py restore")
         invalidate = workflow.index("gamesymbol_pr_validation.py invalidate")
         analyze = workflow.index("uv run ida_analyze_bin.py")
@@ -88,23 +90,49 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         gamedata = workflow.index("uv run update_gamedata.py")
         cpp_tests = workflow.index("uv run run_cpp_tests.py")
 
-        self.assertIn('Export-GitBlob "HEAD^1" "config.yaml"', workflow)
-        self.assertIn('Export-GitBlob "HEAD^1" $sameVersionSnapshot', workflow)
-        self.assertIn("bootstrap PR validation will rebuild all current YAML", workflow)
+        self.assertIn('$baseRef = "${{ github.event.pull_request.base.sha }}".Trim()', workflow)
+        self.assertIn('$versionedBaseConfig = "configs/$baseGamever.yaml"', workflow)
+        self.assertIn('Export-GitBlob $baseSnapshotCommit "config.yaml"', workflow)
+        self.assertIn('"PR_GAMEVER=$gamever"', workflow)
+        self.assertIn('$sameVersionSnapshot = "gamesymbols/$env:PR_GAMEVER.yaml"', workflow)
+        self.assertIn("$validationGamever = $baseGamever", workflow)
+        self.assertIn('"GAMEVER=$validationGamever"', workflow)
+        self.assertIn('Export-GitBlob "HEAD" $headSnapshotRepoPath $headSnapshot', workflow)
+        self.assertIn('"HEAD_SNAPSHOT=$headSnapshot"', workflow)
+        self.assertIn('"HEAD_CONFIG=$headConfig"', workflow)
+        self.assertIn('-headconfigyaml "$env:HEAD_CONFIG"', workflow)
+        self.assertIn("bootstrap PR validation will rebuild $validationGamever", workflow)
+        self.assertIn('-baseref "$env:BASE_REF"', workflow)
+        self.assertIn('-headsnapshot "$env:HEAD_SNAPSHOT"', workflow)
+        self.assertLess(extract, copy_bin)
         self.assertLess(restore, invalidate)
         self.assertLess(invalidate, analyze)
         self.assertLess(analyze, candidate)
         self.assertLess(candidate, compare)
         self.assertLess(compare, gamedata)
         self.assertLess(gamedata, cpp_tests)
+        self.assertNotIn("SAME_VERSION_BASE", workflow)
+        self.assertNotIn("$env:PR_GAMEVER", workflow[copy_bin:])
         self.assertNotIn("gamesymbol_snapshot.py verify", workflow)
         self.assertNotIn("prune_pr_expected_output_bin.py", workflow)
+
+    def test_base_ref_snapshot_selection_does_not_sort_by_filename(self) -> None:
+        workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
+
+        self.assertIn("$trackedSnapshots = @(\n", workflow)
+        self.assertIn("git ls-tree -r --name-only $baseRef -- gamesymbols", workflow)
+        self.assertIn("$trackedSnapshots -contains $sameVersionSnapshot", workflow)
+        self.assertIn("$baseSnapshotRepoPath = $trackedSnapshots[0]", workflow)
+        self.assertIn("git log -1 --format=%H --name-only $baseRef -- gamesymbols", workflow)
+        self.assertIn("$baseSnapshotRepoPath = $latestSnapshotPaths[0]", workflow)
+        self.assertNotIn("$trackedSnapshots[-1]", workflow)
+        self.assertNotIn("Sort-Object", workflow)
 
     def test_actual_candidate_is_the_only_downstream_symbol_source(self) -> None:
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
 
         self.assertIn("ACTUAL_CANDIDATE_SNAPSHOT=$candidate", workflow)
-        self.assertIn('-expected "gamesymbols/$env:GAMEVER.yaml"', workflow)
+        self.assertIn('-expected "$env:HEAD_SNAPSHOT"', workflow)
         self.assertIn('-snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT"', workflow)
         self.assertNotIn("gamesymbol_candidate.py publish", workflow)
         self.assertNotIn('update_gamedata.py -gamever "$env:GAMEVER" -bindir', workflow)
@@ -117,6 +145,40 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         marker = workflow.index(".snapshot-validation-success")
 
         self.assertLess(cpp_tests, marker)
+
+    def test_cpp_validation_selects_sdk_for_effective_gamever_only(self) -> None:
+        workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
+        submodule = workflow.index("git submodule update --init --recursive")
+        gamedata = workflow.index("uv run update_gamedata.py")
+        selector_start = workflow.index("- name: Select versioned SDK for C++ ABI validation")
+        cpp_tests = workflow.index("uv run run_cpp_tests.py")
+        selector = workflow[selector_start:cpp_tests]
+
+        self.assertLess(submodule, selector_start)
+        self.assertLess(gamedata, selector_start)
+        self.assertIn('$sdkRef = "cs2-$env:GAMEVER"', selector)
+        self.assertNotIn("$env:PR_GAMEVER", selector)
+        self.assertIn('$sdkRemote = "https://github.com/HLND2T/hl2sdk.git"', selector)
+        self.assertIn('ls-remote --heads $sdkRemote "refs/heads/$sdkRef"', selector)
+        self.assertIn("SDK_ABI_REF=pinned-submodule", selector)
+        self.assertIn("SDK_ABI_SHA=$pinnedSha", selector)
+        self.assertIn("No versioned SDK branch exists for $sdkRef", selector)
+        self.assertIn('fetch --no-tags $sdkRemote "refs/heads/$sdkRef"', selector)
+        self.assertIn("checkout --detach $remoteSha", selector)
+        self.assertIn("selected SHA=$selectedSha; pinned SHA=$pinnedSha", selector)
+
+    def test_cpp_validation_restores_pinned_sdk_even_after_failure(self) -> None:
+        workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
+        cpp_tests = workflow.index("uv run run_cpp_tests.py")
+        restore_start = workflow.index("- name: Restore pinned SDK revision")
+        success = workflow.index("- name: Mark snapshot validation success")
+        restore = workflow[restore_start:success]
+
+        self.assertLess(cpp_tests, restore_start)
+        self.assertIn("if: always()", restore)
+        self.assertIn('if ($env:SDK_ABI_SWITCHED -ne "true")', restore)
+        self.assertIn('checkout --detach "$env:SDK_PINNED_SHA"', restore)
+        self.assertIn("restored pinned SHA=$restoredSha", restore)
 
 
 if __name__ == "__main__":

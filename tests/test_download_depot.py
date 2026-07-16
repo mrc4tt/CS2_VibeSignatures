@@ -285,9 +285,9 @@ downloads:
 
     def test_main_returns_nonzero_when_depotdownloader_missing(self) -> None:
         fake_args = argparse.Namespace(
-            tag="alpha",
+            tag="14168",
             config="download.yaml",
-            configyaml="config.yaml",
+            configyaml=str(Path(__file__).resolve()),
             depotdir="cs2_depot",
             app="730",
             os="all-platform",
@@ -296,7 +296,7 @@ downloads:
             remember_password=False,
         )
         fake_entry = {
-            "tag": "alpha",
+            "tag": "14168",
             "manifests": {"2347771": "111"},
         }
 

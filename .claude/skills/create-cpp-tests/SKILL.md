@@ -2,16 +2,19 @@
 name: create-cpp-tests
 description: |
   Create a new cpp_tests entry for validating a C++ interface vtable layout against binary reference YAMLs.
-  Creates the .cpp test file in cpp_tests/ and appends a config.yaml entry under cpp_tests:.
+  Creates the .cpp test file in cpp_tests/ and appends a configs/<GAMEVER>.yaml entry under cpp_tests:.
   Use when a user asks to add vtable layout validation for a new hl2sdk_cs2 interface class.
 disable-model-invocation: true
 ---
 
 # Create cpp_tests for Interface Vtable Validation
 
-Create a `cpp_tests/<interface_lowercase>.cpp` test file and append a matching `config.yaml`
+Create a `cpp_tests/<interface_lowercase>.cpp` test file and append a matching `configs/<GAMEVER>.yaml`
 entry so that `run_cpp_tests.py` can compile the header with clang, dump the vtable layout,
 and compare it against reference YAML files from the binary analysis.
+
+Resolve `GAMEVER` from the user's explicit request or `CS2VIBE_GAMEVER`, set the edit target to
+`configs/$GAMEVER.yaml`, and stop if that exact file does not exist.
 
 ## When to Use
 
@@ -101,9 +104,9 @@ If the user didn't provide these, discover them:
 
 2. **reference_modules**: The subdirectories under `bin/{gamever}/` where vtable YAMLs exist (e.g., `client`, `server`, `engine`, `networksystem`).
 
-### Step 5: Append config.yaml entry
+### Step 5: Append configs/<GAMEVER>.yaml entry
 
-Append a new entry at the end of the `cpp_tests:` section in `config.yaml`:
+Append a new entry at the end of the `cpp_tests:` section in `configs/<GAMEVER>.yaml`:
 
 ```yaml
   - name: {InterfaceName}_MSVC
@@ -160,7 +163,7 @@ Never commit directly to `main`; switch to or create `dev` first. Review `git st
 stage only the new test, its config entry, changed tracked gamedata, and the snapshot:
 
 ```bash
-git add cpp_tests/{interface_lowercase}.cpp config.yaml
+git add cpp_tests/{interface_lowercase}.cpp configs/<GAMEVER>.yaml
 git add <changed-dist-gamedata-files> gamesymbols/<gamever>.yaml
 git commit -m "test(cpp-tests): add {InterfaceName} layout validation" -m "Co-Authored-By: Codex (GPT-5.x)"
 ```
@@ -170,7 +173,7 @@ Never use `git add -A` and never enter this step unless all three post-change ga
 ## Checklist
 
 - [ ] New cpp test follows the platform/RESTRICT preamble and calls a virtual method
-- [ ] `config.yaml` entry contains the correct symbol, aliases, header, and reference modules
+- [ ] `configs/<GAMEVER>.yaml` entry contains the correct symbol, aliases, header, and reference modules
 - [ ] `/post-change-update phase=before-validation` succeeds for the selected game version
 - [ ] `/post-change-validation` succeeds for the same game version
 - [ ] `/post-change-update phase=after-validation` packs `gamesymbols/<gamever>.yaml`

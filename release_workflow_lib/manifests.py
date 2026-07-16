@@ -1,0 +1,216 @@
+import re
+from pathlib import Path
+
+from release_workflow_lib.errors import ReleaseWorkflowError
+from release_workflow_lib.hashing import (
+    HEX_SHA256_LENGTH,
+    canonical_json_bytes,
+    inventory_sha256,
+    load_json_object,
+    sha256_file,
+    tracked_output_inventory,
+    write_canonical_json,
+)
+
+GAMEVER_RE = re.compile(r"^[0-9]{4,10}[a-z]?$")
+SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
+BUILD_ID_RE = re.compile(r"^[0-9]+-[0-9]+$")
+BRANCH_RE = re.compile(r"^gamesymbols/(?P<gamever>[0-9]{4,10}[a-z]?)/build-(?P<build_id>[0-9]+-[0-9]+)$")
+ALLOWED_REPOSITORIES = {"HLND2T/CS2_VibeSignatures", "hzqst/CS2_VibeSignatures"}
+SCHEMA_VERSION = 2
+LEGACY_SCHEMA_VERSION = 1
+TRACKED_FIELDS = {
+    "schema_version",
+    "gamever",
+    "release_tag",
+    "mode",
+    "build_id",
+    "source_sha",
+    "candidate_sha256",
+    "bin_manifest_sha256",
+    "tracked_output_manifest_sha256",
+    "workflow_run_url",
+    "analysis_config_path",
+    "analysis_config_sha256",
+    "analysis_config_contract_sha256",
+}
+LEGACY_TRACKED_FIELDS = TRACKED_FIELDS - {
+    "analysis_config_path",
+    "analysis_config_sha256",
+    "analysis_config_contract_sha256",
+}
+
+
+def require_gamever(value: str) -> str:
+    if not GAMEVER_RE.fullmatch(str(value)):
+        raise ReleaseWorkflowError(f"invalid GAMEVER: {value!r}")
+    return str(value)
+
+
+def require_sha(value: str, label: str = "SHA") -> str:
+    if not SHA_RE.fullmatch(str(value)):
+        raise ReleaseWorkflowError(f"{label} must be a full 40-hex commit SHA")
+    return str(value).lower()
+
+
+def require_mode(value: str) -> str:
+    if value not in {"new", "republish"}:
+        raise ReleaseWorkflowError(f"invalid release mode: {value!r}")
+    return value
+
+
+def parse_output_branch(branch: str) -> tuple[str, str]:
+    match = BRANCH_RE.fullmatch(branch)
+    if not match:
+        raise ReleaseWorkflowError(f"invalid generated-output branch: {branch!r}")
+    return match.group("gamever"), match.group("build_id")
+
+
+def build_tracked_manifest(
+    *,
+    gamever: str,
+    mode: str,
+    build_id: str,
+    source_sha: str,
+    candidate_sha256: str,
+    bin_manifest_sha256: str,
+    tracked_output_manifest_sha256: str,
+    workflow_run_url: str,
+    analysis_config_path: str | None = None,
+    analysis_config_sha256: str | None = None,
+    analysis_config_contract_sha256: str | None = None,
+) -> dict:
+    require_gamever(gamever)
+    require_mode(mode)
+    require_sha(source_sha, "SOURCE_SHA")
+    if not BUILD_ID_RE.fullmatch(build_id):
+        raise ReleaseWorkflowError(f"invalid BUILD_ID: {build_id!r}")
+    for label, value in (
+        ("candidate_sha256", candidate_sha256),
+        ("bin_manifest_sha256", bin_manifest_sha256),
+        ("tracked_output_manifest_sha256", tracked_output_manifest_sha256),
+    ):
+        if len(value) != HEX_SHA256_LENGTH or any(char not in "0123456789abcdef" for char in value):
+            raise ReleaseWorkflowError(f"invalid {label}")
+    if not workflow_run_url.startswith("https://github.com/"):
+        raise ReleaseWorkflowError("workflow_run_url must be a GitHub Actions URL")
+    legacy = analysis_config_path is None and analysis_config_sha256 is None and analysis_config_contract_sha256 is None
+    if not legacy:
+        if analysis_config_path != f"configs/{gamever}.yaml":
+            raise ReleaseWorkflowError("analysis_config_path must be the canonical versioned path")
+        if (
+            not analysis_config_sha256
+            or len(analysis_config_sha256) != HEX_SHA256_LENGTH
+            or any(char not in "0123456789abcdef" for char in analysis_config_sha256)
+        ):
+            raise ReleaseWorkflowError("invalid analysis_config_sha256")
+        contract_hex = str(analysis_config_contract_sha256 or "").removeprefix("sha256:")
+        if len(contract_hex) != HEX_SHA256_LENGTH or any(char not in "0123456789abcdef" for char in contract_hex):
+            raise ReleaseWorkflowError("invalid analysis_config_contract_sha256")
+    manifest = {
+        "schema_version": LEGACY_SCHEMA_VERSION if legacy else SCHEMA_VERSION,
+        "gamever": gamever,
+        "release_tag": gamever,
+        "mode": mode,
+        "build_id": build_id,
+        "source_sha": source_sha.lower(),
+        "candidate_sha256": candidate_sha256,
+        "bin_manifest_sha256": bin_manifest_sha256,
+        "tracked_output_manifest_sha256": tracked_output_manifest_sha256,
+        "workflow_run_url": workflow_run_url,
+    }
+    if not legacy:
+        manifest.update(
+            {
+                "analysis_config_path": analysis_config_path,
+                "analysis_config_sha256": analysis_config_sha256,
+                "analysis_config_contract_sha256": analysis_config_contract_sha256,
+            }
+        )
+    return manifest
+
+
+def validate_tracked_manifest(manifest: dict) -> dict:
+    schema_version = manifest.get("schema_version")
+    fields = TRACKED_FIELDS if schema_version == SCHEMA_VERSION else LEGACY_TRACKED_FIELDS
+    if set(manifest) != fields:
+        raise ReleaseWorkflowError("tracked release manifest has unexpected or missing fields")
+    expected = build_tracked_manifest(
+        gamever=manifest["gamever"],
+        mode=manifest["mode"],
+        build_id=manifest["build_id"],
+        source_sha=manifest["source_sha"],
+        candidate_sha256=manifest["candidate_sha256"],
+        bin_manifest_sha256=manifest["bin_manifest_sha256"],
+        tracked_output_manifest_sha256=manifest["tracked_output_manifest_sha256"],
+        workflow_run_url=manifest["workflow_run_url"],
+        analysis_config_path=manifest.get("analysis_config_path"),
+        analysis_config_sha256=manifest.get("analysis_config_sha256"),
+        analysis_config_contract_sha256=manifest.get("analysis_config_contract_sha256"),
+    )
+    if manifest != expected:
+        raise ReleaseWorkflowError("tracked release manifest is not canonical")
+    return manifest
+
+
+def load_tracked_manifest(path: Path) -> dict:
+    manifest = validate_tracked_manifest(load_json_object(path))
+    if Path(path).read_bytes() != canonical_json_bytes(manifest):
+        raise ReleaseWorkflowError(f"tracked release manifest is not canonically encoded: {path}")
+    return manifest
+
+
+def verify_tracked_outputs(repo_root: Path, manifest: dict) -> list[dict]:
+    inventory = tracked_output_inventory(repo_root, manifest["gamever"])
+    if inventory_sha256(inventory) != manifest["tracked_output_manifest_sha256"]:
+        raise ReleaseWorkflowError("tracked output manifest hash mismatch")
+    snapshot = Path(repo_root) / "gamesymbols" / f"{manifest['gamever']}.yaml"
+    if sha256_file(snapshot) != manifest["candidate_sha256"]:
+        raise ReleaseWorkflowError("published snapshot does not match candidate hash")
+    return inventory
+
+
+def write_release_metadata(
+    *,
+    output_dir: Path,
+    manifest: dict,
+    output_merge_sha: str,
+    tag_sha: str,
+    assets: list[Path],
+) -> tuple[Path, Path]:
+    output_merge_sha = require_sha(output_merge_sha, "OUTPUT_MERGE_SHA")
+    tag_sha = require_sha(tag_sha, "tag SHA")
+    asset_records = [
+        {"name": path.name, "size": path.stat().st_size, "sha256": sha256_file(path)} for path in sorted(assets)
+    ]
+    provenance = {
+        "schema_version": SCHEMA_VERSION,
+        "gamever": manifest["gamever"],
+        "release_tag": manifest["release_tag"],
+        "mode": manifest["mode"],
+        "build_id": manifest["build_id"],
+        "tag_sha": tag_sha,
+        "source_sha": manifest["source_sha"],
+        "output_merge_sha": output_merge_sha,
+        "candidate_sha256": manifest["candidate_sha256"],
+        "bin_manifest_sha256": manifest["bin_manifest_sha256"],
+        "tracked_output_manifest_sha256": manifest["tracked_output_manifest_sha256"],
+        "assets": asset_records,
+    }
+    for field in (
+        "analysis_config_path",
+        "analysis_config_sha256",
+        "analysis_config_contract_sha256",
+    ):
+        if field in manifest:
+            provenance[field] = manifest[field]
+    output_dir = Path(output_dir)
+    provenance_path = output_dir / f"release-provenance-{manifest['gamever']}.json"
+    write_canonical_json(provenance_path, provenance)
+    checksum_path = output_dir / f"SHA256SUMS-{manifest['gamever']}.txt"
+    checksum_assets = [*assets, provenance_path]
+    checksum_path.write_text(
+        "".join(f"{sha256_file(path)}  {path.name}\n" for path in sorted(checksum_assets)),
+        encoding="utf-8",
+    )
+    return provenance_path, checksum_path

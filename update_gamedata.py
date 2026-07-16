@@ -8,10 +8,10 @@ modules from dist/*/gamedata.py and applies optional per-module config
 overlays from dist/*/config.yaml.
 
 Usage:
-    python update_gamedata.py -gamever=<version> -snapshot=<candidate.yaml> [-configyaml=config.yaml] [-distdir=dist] [-platform=windows,linux] [-debug] [-download_latest]
+    python update_gamedata.py -gamever=<version> -snapshot=<candidate.yaml> [-configyaml=<path>] [-distdir=dist] [-platform=windows,linux] [-debug] [-download_latest]
 
     -gamever: Game version for YAML path (required)
-    -configyaml: Path to config.yaml file (default: config.yaml)
+    -configyaml: Analysis config path (default: configs/<GAMEVER>.yaml)
     -snapshot: Canonical candidate or published snapshot (required)
     -distdir: Directory containing gamedata modules (default: dist)
     -platform: Comma-separated platforms (default: windows,linux)
@@ -29,6 +29,7 @@ import os
 import sys
 from urllib.parse import urlparse
 
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 from gamesymbol_store import SymbolStore, SymbolStoreError, open_snapshot_store
 
 try:
@@ -55,7 +56,6 @@ except ImportError:
 
 
 # Default values
-DEFAULT_CONFIG_FILE = "config.yaml"
 DEFAULT_DIST_DIR = "dist"
 DEFAULT_PLATFORMS = "windows,linux"
 
@@ -78,7 +78,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Update gamedata files from YAML signatures")
     parser.add_argument("-gamever", required=True, help="Game version for YAML path (required)")
     parser.add_argument(
-        "-configyaml", default=DEFAULT_CONFIG_FILE, help=f"Path to config.yaml file (default: {DEFAULT_CONFIG_FILE})"
+        "-configyaml",
+        default=None,
+        help="Analysis config path; defaults to configs/<GAMEVER>.yaml",
     )
     parser.add_argument("-snapshot", required=True, help="Canonical candidate or published game-symbol snapshot")
     parser.add_argument(
@@ -103,10 +105,10 @@ def parse_args():
 
 def load_config(config_path):
     """
-    Load and parse config.yaml file.
+    Load and parse one YAML config file.
 
     Args:
-        config_path: Path to the config.yaml file
+        config_path: Path to the config file
 
     Returns:
         Dictionary containing config data
@@ -254,7 +256,7 @@ def build_function_library_map(config):
     Build a mapping from function names to library names.
 
     Args:
-        config: Parsed config.yaml data
+        config: Parsed analysis config data
 
     Returns:
         Dictionary mapping function names (and aliases) to library names
@@ -286,7 +288,7 @@ def build_alias_to_name_map(config):
     Build a mapping from aliases to function names.
 
     Args:
-        config: Parsed config.yaml data
+        config: Parsed analysis config data
 
     Returns:
         Dictionary mapping aliases to function names
@@ -463,7 +465,7 @@ def load_all_yaml_data(config, symbol_store: SymbolStore, platforms, *, debug=Fa
     Load all YAML signature data for the specified game version.
 
     Args:
-        config: Parsed config.yaml data
+        config: Parsed analysis config data
         symbol_store: Read-only symbol source
         platforms: List of platforms to load
         debug: If True, collect missing symbols info
@@ -656,12 +658,16 @@ def main():
     """Main entry point."""
     args = parse_args()
 
-    config_path = args.configyaml
     snapshot_path = args.snapshot
     dist_dir = args.distdir
     gamever = args.gamever
     platforms = [p.strip() for p in args.platform.split(",")]
     debug = args.debug
+    try:
+        config_path = str(resolve_analysis_config(gamever, args.configyaml))
+    except AnalysisConfigError as exc:
+        print(f"Error: {exc}")
+        return 2
 
     # Get script directory for resolving relative paths
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -669,11 +675,6 @@ def main():
     # Resolve dist_dir to absolute path
     if not os.path.isabs(dist_dir):
         dist_dir = os.path.join(script_dir, dist_dir)
-
-    # Validate config file exists
-    if not os.path.exists(config_path):
-        print(f"Error: Config file not found: {config_path}")
-        sys.exit(1)
 
     print(f"Config file: {config_path}")
     try:

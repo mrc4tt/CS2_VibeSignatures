@@ -1,22 +1,95 @@
 name: Build On Self Runner
+run-name: Release build ${{ inputs.gamever || github.event.client_payload.gamever }}
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_dispatch:
+    inputs:
+      gamever:
+        description: Game version from download.yaml
+        required: true
+        type: string
+      source_sha:
+        description: Full immutable commit SHA reachable from the default branch
+        required: true
+        type: string
+      mode:
+        description: Release lifecycle mode
+        required: true
+        type: choice
+        options: [new, republish]
   repository_dispatch:
     types: [build-on-self-runner]
 
 permissions:
+  actions: read
   contents: write
   pull-requests: write
 
+concurrency:
+  group: release-build-${{ github.repository }}-${{ inputs.gamever || github.event.client_payload.gamever }}
+  cancel-in-progress: false
+
 jobs:
-  build:
+  preflight:
     if: github.repository == 'HLND2T/CS2_VibeSignatures' || github.repository == 'hzqst/CS2_VibeSignatures'
+    runs-on: ubuntu-latest
+    outputs:
+      gamever: ${{ steps.resolve.outputs.gamever }}
+      source_sha: ${{ steps.resolve.outputs.source_sha }}
+      mode: ${{ steps.resolve.outputs.mode }}
+    steps:
+      - name: Checkout default branch for trust validation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Resolve and validate dispatch contract
+        id: resolve
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $gamever = "${{ inputs.gamever || github.event.client_payload.gamever }}"
+          $sourceSha = "${{ inputs.source_sha || github.event.client_payload.source_sha }}"
+          $mode = "${{ inputs.mode || github.event.client_payload.mode }}"
+          git fetch origin --tags --force "+refs/heads/*:refs/remotes/origin/*"
+          uv run release_workflow.py validate-build `
+            --repository "${{ github.repository }}" `
+            --gamever "$gamever" `
+            --source-sha "$sourceSha" `
+            --mode "$mode" `
+            --default-ref "origin/${{ github.event.repository.default_branch }}"
+
+          if ($mode -eq "republish") {
+            gh release view "$gamever" --repo "${{ github.repository }}" > $null
+            if ($LASTEXITCODE -ne 0) { throw "mode=republish requires Release $gamever to exist." }
+          } else {
+            gh release view "$gamever" --repo "${{ github.repository }}" *> $null
+            if ($LASTEXITCODE -eq 0) { throw "mode=new requires Release $gamever to be absent." }
+          }
+
+          $prefix = "gamesymbols/$gamever/build-"
+          $openJson = gh pr list --state open --limit 100 --json headRefName,url
+          if ($LASTEXITCODE -ne 0) { throw "Failed to query open generated-output PRs." }
+          $open = $openJson | ConvertFrom-Json
+          $duplicate = $open | Where-Object { $_.headRefName.StartsWith($prefix) } | Select-Object -First 1
+          if ($duplicate) { throw "An output PR already exists for $gamever`: $($duplicate.url)" }
+          "gamever=$gamever" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "source_sha=$sourceSha" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "mode=$mode" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+  build:
+    needs: preflight
     environment: win64
     runs-on: [self-hosted, windows, x64]
     env:
+      GAMEVER: ${{ needs.preflight.outputs.gamever }}
+      SOURCE_SHA: ${{ needs.preflight.outputs.source_sha }}
+      MODE: ${{ needs.preflight.outputs.mode }}
+      BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       CS2VIBE_AGENT: ${{ secrets.CS2VIBE_AGENT }}
       CS2VIBE_LLM_APIKEY: ${{ secrets.CS2VIBE_LLM_APIKEY }}
       CS2VIBE_LLM_BASEURL: ${{ secrets.CS2VIBE_LLM_BASEURL }}
@@ -26,383 +99,274 @@ jobs:
       STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
       STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
       PERSISTED_WORKSPACE: ${{ secrets.PERSISTED_WORKSPACE }}
-
     steps:
-      - name: Prepare variables and validate environment configuration
-        shell: pwsh
-        run: |
-          $tag = "${{ github.ref_name }}"
-          if ("${{ github.event_name }}" -eq "repository_dispatch") {
-            $tag = "${{ github.event.client_payload.tag }}"
-          }
-
-          if ([string]::IsNullOrWhiteSpace($tag)) {
-            throw "Unable to determine tag for ${{ github.event_name }} event."
-          }
-
-          if ([string]::IsNullOrWhiteSpace($env:PERSISTED_WORKSPACE)) {
-            throw "PERSISTED_WORKSPACE secret is not configured for the win64 environment."
-          }
-
-          "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "GAMEVER=$tag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "WORKSPACE=${{ github.workspace }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-      - name: Checkout repository
+      - name: Checkout exact generator source
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.tag || github.ref }}
+          ref: ${{ needs.preflight.outputs.source_sha }}
           fetch-depth: 0
           submodules: true
-
-      - name: Check formatting
-        shell: pwsh
-        run: |
-          uv run python format_repo_files.py --check
 
       - name: Prepare persisted depot link and real bin copy
         shell: pwsh
         run: |
+          if ([string]::IsNullOrWhiteSpace($env:PERSISTED_WORKSPACE)) { throw "PERSISTED_WORKSPACE is not configured." }
+          $workspace = [IO.Path]::GetFullPath("${{ github.workspace }}")
           $depotTarget = [IO.Path]::GetFullPath((Join-Path $env:PERSISTED_WORKSPACE "cs2_depot"))
-          $depotLink = [IO.Path]::GetFullPath((Join-Path $env:WORKSPACE "cs2_depot"))
+          $depotLink = Join-Path $workspace "cs2_depot"
           New-Item -ItemType Directory -Path $depotTarget -Force | Out-Null
-
           if (Test-Path -LiteralPath $depotLink) {
             $item = Get-Item -LiteralPath $depotLink -Force
-            if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
-              throw "cs2_depot exists but is not a directory junction or symlink."
-            }
-            if ([IO.Path]::GetFullPath([string]$item.Target) -ne $depotTarget) {
-              throw "cs2_depot link target mismatch: $($item.Target)"
-            }
+            if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "cs2_depot must be a link." }
           } else {
             cmd /c mklink /d "$depotLink" "$depotTarget"
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to create cs2_depot link."
-            }
+            if ($LASTEXITCODE -ne 0) { throw "Failed to create cs2_depot link." }
           }
-
-          $workspaceBin = [IO.Path]::GetFullPath((Join-Path $env:WORKSPACE "bin"))
-          if (Test-Path -LiteralPath $workspaceBin) {
-            $binItem = Get-Item -LiteralPath $workspaceBin -Force
-            if ($binItem.Attributes -band [IO.FileAttributes]::ReparsePoint) {
-              throw "Workspace bin must be a real directory, not a link: $workspaceBin"
-            }
-          } else {
-            New-Item -ItemType Directory -Path $workspaceBin -Force | Out-Null
+          $workspaceBin = Join-Path $workspace "bin"
+          New-Item -ItemType Directory -Path $workspaceBin -Force | Out-Null
+          if ((Get-Item $workspaceBin -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            throw "Workspace bin must be a real directory"
           }
-
           $workspaceGamever = Join-Path $workspaceBin $env:GAMEVER
           New-Item -ItemType Directory -Path $workspaceGamever -Force | Out-Null
           $persistedGamever = Join-Path $env:PERSISTED_WORKSPACE "bin\$env:GAMEVER"
           if (Test-Path -LiteralPath $persistedGamever -PathType Container) {
             robocopy $persistedGamever $workspaceGamever /E /COPY:DAT /DCOPY:DAT /R:2 /W:5
-            $robocopyExitCode = $LASTEXITCODE
-            if ($robocopyExitCode -ge 8) {
-              throw "Failed to copy persisted bin/$env:GAMEVER; robocopy exit code $robocopyExitCode"
-            }
-            Write-Host "Copied persisted bin/$env:GAMEVER into build workspace; robocopy exit code $robocopyExitCode"
+            if ($LASTEXITCODE -ge 8) { throw "Failed to copy persisted bin/$env:GAMEVER." }
             $global:LASTEXITCODE = 0
-          } else {
-            Write-Host "No persisted bin/$env:GAMEVER exists; starting from an empty real workspace directory."
+            Write-Host "Copied persisted bin/$env:GAMEVER into build workspace"
           }
+          "OUTPUT_BRANCH=gamesymbols/$env:GAMEVER/build-$env:BUILD_ID" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          uv run release_workflow.py check-pending `
+            --staging-root "$env:PERSISTED_WORKSPACE\release-staging" `
+            --gamever "$env:GAMEVER" --build-id "$env:BUILD_ID"
+
+      - name: Resolve immutable analysis config
+        shell: pwsh
+        run: |
+          $config = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE "configs\$env:GAMEVER.yaml"))
+          if (-not (Test-Path -LiteralPath $config -PathType Leaf)) {
+            throw "Missing analysis config for GAMEVER $env:GAMEVER`: $config"
+          }
+          $hash = (Get-FileHash -LiteralPath $config -Algorithm SHA256).Hash.ToLowerInvariant()
+          "ANALYSIS_CONFIG=$config" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "ANALYSIS_CONFIG_SHA256=$hash" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Analysis config: $config"
+          Write-Host "Analysis config SHA-256: $hash"
+
+      - name: Check formatting and run repository unit tests
+        shell: pwsh
+        run: |
+          uv run python format_repo_files.py --check
+          if ($LASTEXITCODE -ne 0) { throw "Repository formatting check failed." }
+          uv run python -m unittest discover -s tests -b
+          if ($LASTEXITCODE -ne 0) { throw "Repository unit tests failed." }
+
+      - name: Restore accepted same-version state and invalidate affected outputs
+        if: env.MODE == 'republish'
+        shell: pwsh
+        run: |
+          uv run release_workflow.py invalidate-republish `
+            --gamever "$env:GAMEVER" --source-sha "$env:SOURCE_SHA" --bindir bin
+
+      - name: Prepare trusted old-version signature baseline
+        id: oldgamever
+        shell: pwsh
+        run: |
+          uv run release_workflow.py prepare-oldgamever `
+            --gamever "$env:GAMEVER" --bindir bin --github-output "$env:GITHUB_OUTPUT"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to prepare old-version signature baseline." }
 
       - name: Check cached binaries
-        id: check_cached_binaries
+        id: cache
         shell: pwsh
         run: |
           $PSNativeCommandUseErrorActionPreference = $false
-          uv run copy_depot_bin.py -gamever "$env:GAMEVER" -platform all-platform -checkonly
-          $exitCode = $LASTEXITCODE
+          uv run copy_depot_bin.py -gamever "$env:GAMEVER" -platform all-platform -config "$env:ANALYSIS_CONFIG" -checkonly
+          $code = $LASTEXITCODE
+          if ($code -eq 0) { "ready=true" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append; exit 0 }
+          if ($code -eq 1) { "ready=false" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append; exit 0 }
+          throw "copy_depot_bin.py -checkonly failed with exit code $code"
 
-          if ($exitCode -eq 0) {
-            "bin_ready=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            Write-Host "All expected binaries already exist; skipping depot download."
-            exit 0
-          }
-
-          if ($exitCode -eq 1) {
-            "bin_ready=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            Write-Host "At least one expected binary is missing; depot download is required."
-            exit 0
-          }
-
-          throw "copy_depot_bin.py -checkonly failed with exit code $exitCode"
-
-      - name: Update CS2 depot
-        if: steps.check_cached_binaries.outputs.bin_ready != 'true'
+      - name: Download and copy missing depot binaries
+        if: steps.cache.outputs.ready != 'true'
         shell: pwsh
         run: |
-          $depotDir = Join-Path $env:GITHUB_WORKSPACE "cs2_depot"
-          uv run download_depot.py -tag "$env:TAG" -depotdir "$depotDir" -config download.yaml -username "$env:STEAM_USERNAME" -password "$env:STEAM_PASSWORD" -remember-password
+          uv run download_depot.py -tag "$env:GAMEVER" -depotdir cs2_depot -config download.yaml -configyaml "$env:ANALYSIS_CONFIG" `
+            -username "$env:STEAM_USERNAME" -password "$env:STEAM_PASSWORD" -remember-password
+          if ($LASTEXITCODE -ne 0) { throw "download_depot.py failed with exit code $LASTEXITCODE" }
+          uv run copy_depot_bin.py -gamever "$env:GAMEVER" -platform all-platform -config "$env:ANALYSIS_CONFIG"
+          if ($LASTEXITCODE -ne 0) { throw "copy_depot_bin.py failed with exit code $LASTEXITCODE" }
 
-      - name: Copy depot binaries
-        if: steps.check_cached_binaries.outputs.bin_ready != 'true'
+      - name: Analyze binaries with normal producer scheduling
+        shell: pwsh
+        env:
+          OLDGAMEVER: ${{ steps.oldgamever.outputs.oldgamever }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:OLDGAMEVER)) {
+            throw "Old-version signature policy was not resolved."
+          }
+          $args = @('-gamever', $env:GAMEVER, '-configyaml', $env:ANALYSIS_CONFIG)
+          $args += @('-oldgamever', $env:OLDGAMEVER)
+          $args += '-debug'
+          uv run ida_analyze_bin.py @args
+          if ($LASTEXITCODE -ne 0) { throw "ida_analyze_bin.py failed with exit code $LASTEXITCODE" }
+
+      - name: Build one immutable candidate and validate gamedata
         shell: pwsh
         run: |
-          uv run copy_depot_bin.py -gamever "$env:GAMEVER" -platform all-platform
-
-      - name: Analyze binaries
-        shell: pwsh
-        run: |
-          $majorUpdateScript = @'
-          import sys
-          import yaml
-
-          gamever = sys.argv[1]
-          with open("download.yaml", encoding="utf-8") as f:
-              downloads = yaml.safe_load(f).get("downloads", [])
-
-          for item in downloads:
-              if str(item.get("tag", "")).strip() == gamever:
-                  print("true" if item.get("major_update") is True else "false")
-                  break
-          else:
-              raise SystemExit(f"Failed to find game version {gamever} in download.yaml.")
-          '@
-
-          $majorUpdate = $majorUpdateScript | uv run python - "$env:GAMEVER"
-          if ($LASTEXITCODE -ne 0) {
-            throw "Failed to determine major update flag from download.yaml."
-          }
-
-          $majorUpdate = $majorUpdate.Trim()
-
-          $analyzeArgs = @('-gamever', $env:GAMEVER)
-          if ($majorUpdate -eq 'true') {
-            Write-Host "GAMEVER=$env:GAMEVER has major_update=true in download.yaml; forcing fresh signatures."
-            $analyzeArgs += @('-oldgamever', 'none')
-          } else {
-            Write-Host "GAMEVER=$env:GAMEVER does not have major_update=true in download.yaml; reusing old signatures."
-          }
-
-          $analyzeArgs += '-debug'
-          uv run ida_analyze_bin.py @analyzeArgs
-          if ($LASTEXITCODE -ne 0) {
-            throw "ida_analyze_bin.py failed with exit code $LASTEXITCODE"
-          }
-
-      - name: Build candidate snapshot
-        shell: pwsh
-        run: |
-          $candidateRoot = Join-Path $env:RUNNER_TEMP "gamesymbol-candidates\build-${{ github.run_id }}-${{ github.run_attempt }}"
-          New-Item -ItemType Directory -Path $candidateRoot -Force | Out-Null
-          $candidate = Join-Path $candidateRoot "$env:GAMEVER.yaml"
-          $session = Join-Path $candidateRoot "$env:GAMEVER.session.json"
-          "CANDIDATE_ROOT=$candidateRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "ACTUAL_CANDIDATE_SNAPSHOT=$candidate" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "CANDIDATE_SESSION=$session" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-          uv run gamesymbol_candidate.py build `
-            -gamever "$env:GAMEVER" `
-            -bindir bin `
-            -configyaml config.yaml `
-            -output "$candidate" `
-            -session "$session"
-          if ($LASTEXITCODE -ne 0) {
-            throw "candidate build failed with exit code $LASTEXITCODE"
-          }
-
-      - name: Update gamedata
-        shell: pwsh
-        run: |
-          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          $root = Join-Path $env:RUNNER_TEMP "release-candidates\$env:BUILD_ID"
+          New-Item -ItemType Directory -Path $root -Force | Out-Null
+          $candidate = Join-Path $root "$env:GAMEVER.yaml"
+          $session = Join-Path $root "$env:GAMEVER.session.json"
+          "CANDIDATE_ROOT=$root" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "ACTUAL_CANDIDATE_SNAPSHOT=$candidate" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CANDIDATE_SESSION=$session" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          uv run gamesymbol_candidate.py build -gamever "$env:GAMEVER" -bindir bin -configyaml "$env:ANALYSIS_CONFIG" `
+            -output "$candidate" -session "$session"
+          if ($LASTEXITCODE -ne 0) { throw "candidate build failed with exit code $LASTEXITCODE" }
+          uv run gamesymbol_candidate.py guard -candidate "$candidate" -session "$session"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before gamedata" }
-          uv run update_gamedata.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -debug -download_latest
+          uv run update_gamedata.py -gamever "$env:GAMEVER" -snapshot "$candidate" -configyaml "$env:ANALYSIS_CONFIG" -debug -download_latest
           if ($LASTEXITCODE -ne 0) { throw "update_gamedata.py failed with exit code $LASTEXITCODE" }
-          uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
+          uv run gamesymbol_candidate.py guard -candidate "$candidate" -session "$session"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after gamedata" }
-          uv run gamesymbol_candidate.py mark -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" -step gamedata
+          uv run gamesymbol_candidate.py mark -candidate "$candidate" -session "$session" -step gamedata
           if ($LASTEXITCODE -ne 0) { throw "failed to mark gamedata validation" }
+
+      - name: Select versioned SDK for C++ ABI validation
+        shell: pwsh
+        run: |
+          $sdkPath = Join-Path $env:GITHUB_WORKSPACE "hl2sdk_cs2"
+          $sdkRef = "cs2-$env:GAMEVER"
+          $sdkRemote = "https://github.com/HLND2T/hl2sdk.git"
+          $pinnedSha = (git -C $sdkPath rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $pinnedSha -notmatch '^[0-9a-fA-F]{40}$') {
+            throw "Unable to resolve the pinned hl2sdk_cs2 commit."
+          }
+          "SDK_PINNED_SHA=$pinnedSha" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+          $remoteBranch = git -C $sdkPath ls-remote --heads $sdkRemote "refs/heads/$sdkRef"
+          if ($LASTEXITCODE -ne 0) { throw "Unable to query $sdkRef from hl2sdk." }
+
+          if ([string]::IsNullOrWhiteSpace($remoteBranch)) {
+            "SDK_ABI_REF=pinned-submodule" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            "SDK_ABI_SHA=$pinnedSha" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            "SDK_ABI_SWITCHED=false" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            Write-Host "No versioned SDK branch exists for $sdkRef; retaining the pinned submodule revision."
+            Write-Host "C++ ABI SDK selection: GAMEVER=$env:GAMEVER; ref=pinned-submodule; selected SHA=$pinnedSha; pinned SHA=$pinnedSha"
+          } else {
+            $remoteSha = ($remoteBranch -split '\s+')[0]
+            if ($remoteSha -notmatch '^[0-9a-fA-F]{40}$') { throw "Invalid commit returned for $sdkRef." }
+            git -C $sdkPath fetch --no-tags $sdkRemote "refs/heads/$sdkRef"
+            if ($LASTEXITCODE -ne 0) { throw "Unable to fetch $sdkRef from hl2sdk." }
+            $fetchedSha = (git -C $sdkPath rev-parse FETCH_HEAD).Trim()
+            if ($LASTEXITCODE -ne 0 -or $fetchedSha -ne $remoteSha) {
+              throw "Fetched commit for $sdkRef does not match the queried remote commit."
+            }
+            "SDK_ABI_SWITCHED=true" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            git -C $sdkPath checkout --detach $remoteSha
+            if ($LASTEXITCODE -ne 0) { throw "Unable to checkout $sdkRef." }
+            $selectedSha = (git -C $sdkPath rev-parse HEAD).Trim()
+            if ($LASTEXITCODE -ne 0 -or $selectedSha -ne $remoteSha) {
+              throw "Selected SDK commit does not match $sdkRef."
+            }
+            "SDK_ABI_REF=$sdkRef" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            "SDK_ABI_SHA=$selectedSha" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+            Write-Host "C++ ABI SDK selection: GAMEVER=$env:GAMEVER; ref=$sdkRef; selected SHA=$selectedSha; pinned SHA=$pinnedSha"
+          }
 
       - name: Run C++ tests
         shell: pwsh
         run: |
           uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before C++ tests" }
-          $args = @('-gamever', $env:GAMEVER, '-snapshot', $env:ACTUAL_CANDIDATE_SNAPSHOT, '-debug')
-          uv run run_cpp_tests.py @args
-          if ($LASTEXITCODE -ne 0) {
-            throw "run_cpp_tests.py failed with exit code $LASTEXITCODE"
-          }
+          uv run run_cpp_tests.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -configyaml "$env:ANALYSIS_CONFIG" -debug
+          if ($LASTEXITCODE -ne 0) { throw "run_cpp_tests.py failed with exit code $LASTEXITCODE" }
           uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after C++ tests" }
           uv run gamesymbol_candidate.py mark -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" -step cpp_tests
           if ($LASTEXITCODE -ne 0) { throw "failed to mark C++ validation" }
 
-      - name: Publish validated candidate snapshot
+      - name: Restore pinned SDK revision
+        if: always()
         shell: pwsh
         run: |
-          uv run gamesymbol_candidate.py publish `
-            -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" `
-            -session "$env:CANDIDATE_SESSION" `
+          if ($env:SDK_ABI_SWITCHED -ne "true") {
+            Write-Host "C++ ABI SDK restore: pinned submodule revision remained selected."
+            exit 0
+          }
+          if ($env:SDK_PINNED_SHA -notmatch '^[0-9a-fA-F]{40}$') {
+            throw "SDK_PINNED_SHA is unavailable or invalid."
+          }
+          $sdkPath = Join-Path $env:GITHUB_WORKSPACE "hl2sdk_cs2"
+          git -C $sdkPath checkout --detach "$env:SDK_PINNED_SHA"
+          if ($LASTEXITCODE -ne 0) { throw "Unable to restore pinned hl2sdk_cs2 commit." }
+          $restoredSha = (git -C $sdkPath rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $restoredSha -ne $env:SDK_PINNED_SHA) {
+            throw "Restored SDK commit does not match SDK_PINNED_SHA."
+          }
+          Write-Host "C++ ABI SDK restore: restored pinned SHA=$restoredSha"
+
+      - name: Publish fully validated immutable candidate
+        shell: pwsh
+        run: |
+          uv run gamesymbol_candidate.py publish -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" `
             -snapshot "gamesymbols/$env:GAMEVER.yaml"
-          if ($LASTEXITCODE -ne 0) {
-            throw "candidate publication failed with exit code $LASTEXITCODE"
-          }
+          if ($LASTEXITCODE -ne 0) { throw "candidate publication failed with exit code $LASTEXITCODE" }
 
-      - name: Persist validated bin cache
+      - name: Stage validated pending state and tracked manifest
         shell: pwsh
         run: |
-          $source = [IO.Path]::GetFullPath((Join-Path $env:WORKSPACE "bin\$env:GAMEVER"))
-          $workspaceRoot = [IO.Path]::GetFullPath($env:WORKSPACE)
-          if (-not $source.StartsWith($workspaceRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
-            throw "Validated bin source is outside the build workspace: $source"
-          }
-          $sourceItem = Get-Item -LiteralPath $source -Force
-          if ($sourceItem.Attributes -band [IO.FileAttributes]::ReparsePoint) {
-            throw "Validated bin source must not be a reparse point: $source"
-          }
+          uv run release_workflow.py stage-build `
+            --staging-root "$env:PERSISTED_WORKSPACE\release-staging" `
+            --bin-source "bin\$env:GAMEVER" --candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" `
+            --repository "${{ github.repository }}" --output-branch "$env:OUTPUT_BRANCH" `
+            --gamever "$env:GAMEVER" --mode "$env:MODE" --build-id "$env:BUILD_ID" `
+            --source-sha "$env:SOURCE_SHA" `
+            --analysis-config "$env:ANALYSIS_CONFIG" `
+            --workflow-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-          $persistedRoot = [IO.Path]::GetFullPath($env:PERSISTED_WORKSPACE)
-          $target = [IO.Path]::GetFullPath((Join-Path $persistedRoot "bin\$env:GAMEVER"))
-          if (-not $target.StartsWith($persistedRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
-            throw "Persisted bin target is outside PERSISTED_WORKSPACE: $target"
-          }
-          New-Item -ItemType Directory -Path $target -Force | Out-Null
-          Get-ChildItem -LiteralPath $target -Recurse -File -Filter "*.yaml" -ErrorAction SilentlyContinue |
-            ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
-
-          robocopy $source $target /E /COPY:DAT /DCOPY:DAT /R:2 /W:5
-          $robocopyExitCode = $LASTEXITCODE
-          if ($robocopyExitCode -ge 8) {
-            throw "Failed to persist validated bin/$env:GAMEVER; robocopy exit code $robocopyExitCode"
-          }
-          Write-Host "Persisted validated bin/$env:GAMEVER; robocopy exit code $robocopyExitCode"
-          $global:LASTEXITCODE = 0
-
-      - name: Create follow-up validated snapshot and gamedata PR
+      - name: Create immutable generated-output branch and PR
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          $snapshot = "gamesymbols/$env:GAMEVER.yaml"
-          git add -- "$snapshot" dist
-          git diff --cached --quiet
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "No snapshot or generated gamedata changes were found; no follow-up PR is needed."
-            exit 0
-          }
-
-          $branch = "gamesymbols/$env:GAMEVER"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B "$branch"
-          if ($LASTEXITCODE -ne 0) { throw "Failed to create snapshot branch $branch" }
-          git add -- "$snapshot" dist
-          git commit -m "chore(gamesymbols): add $env:GAMEVER snapshot and refresh gamedata" `
+          git checkout -b "$env:OUTPUT_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to create immutable output branch." }
+          git add -- "gamesymbols/$env:GAMEVER.yaml" dist "release-manifests/$env:GAMEVER.json"
+          git commit -m "chore(gamesymbols): publish $env:GAMEVER build $env:BUILD_ID" `
             -m "Co-Authored-By: Codex (GPT-5.x)"
-          if ($LASTEXITCODE -ne 0) { throw "Failed to commit validated snapshot and gamedata" }
-          git push --force-with-lease origin "$branch"
-          if ($LASTEXITCODE -ne 0) { throw "Failed to push validated output branch $branch" }
+          if ($LASTEXITCODE -ne 0) { throw "Failed to commit generated release output." }
+          $headSha = (git rev-parse HEAD).Trim()
+          uv run release_workflow.py finalize-stage `
+            --staging-root "$env:PERSISTED_WORKSPACE\release-staging" --gamever "$env:GAMEVER" `
+            --build-id "$env:BUILD_ID" --pr-head-sha "$headSha"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to bind staged state to output commit." }
+          git push origin "HEAD:refs/heads/$env:OUTPUT_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to push immutable output branch." }
+          $prUrl = gh pr create --base "${{ github.event.repository.default_branch }}" --head "$env:OUTPUT_BRANCH" `
+            --title "chore(gamesymbols): publish $env:GAMEVER build $env:BUILD_ID" `
+            --body "Validated release output from immutable source $env:SOURCE_SHA. Merge is the promotion gate."
+          if ($LASTEXITCODE -ne 0) { throw "Failed to create generated-output PR." }
+          $prNumber = gh pr view $prUrl --json number --jq .number
+          if ($LASTEXITCODE -ne 0) { throw "Failed to resolve generated-output PR number." }
+          uv run release_workflow.py write-pr-index `
+            --staging-root "$env:PERSISTED_WORKSPACE\release-staging" --pr-number $prNumber `
+            --gamever "$env:GAMEVER" --build-id "$env:BUILD_ID" --pr-head-sha "$headSha"
+          Write-Host "Generated-output PR: $prUrl"
 
-          $existingPr = gh pr list --head "$branch" --state open --json number --jq '.[0].number'
-          if ([string]::IsNullOrWhiteSpace($existingPr)) {
-            gh pr create `
-              --base "${{ github.event.repository.default_branch }}" `
-              --head "$branch" `
-              --title "chore(gamesymbols): add $env:GAMEVER snapshot and refresh gamedata" `
-              --body "Adds the canonical game-symbol snapshot and generated gamedata produced from the same candidate after full analysis, gamedata, and C++ validation."
-            if ($LASTEXITCODE -ne 0) { throw "Failed to create follow-up validated output PR" }
-          } else {
-            Write-Host "Validated output PR #$existingPr is already open."
-          }
-
-      - name: Archive release payload
-        shell: pwsh
-        working-directory: ${{ github.workspace }}
-        run: |
-          $gamedataArchiveArgs = @(
-            "a"
-            "gamedata-$($env:GAMEVER).7z"
-            "bin\$($env:GAMEVER)"
-            "gamesymbols/$env:GAMEVER.yaml"
-            "dist"
-            "hl2sdk_cs2"
-            "-r"
-            "-x!*.dll"
-            "-x!*.so"
-            "-x!*.i64"
-            "-x!*.id0"
-            "-x!*.id1"
-            "-x!*.id2"
-            "-x!*.nam"
-            "-x!*.til"
-            "-x!.git"
-            "-x!.git-blame-ignore-revs"
-            "-x!.gitmodules"
-            "-xr!__pycache__"
-            "-xr!gamedata.py"
-            "-xr!config.yaml"
-          )
-          & 7z @gamedataArchiveArgs
-          if ($LASTEXITCODE -ne 0) {
-            throw "Failed to create gamedata-$($env:GAMEVER).7z; 7z exit code $LASTEXITCODE"
-          }
-
-          $gamebinArchiveArgs = @(
-            "a"
-            "gamebin-$($env:GAMEVER).7z"
-            "bin\$($env:GAMEVER)"
-            "-r"
-            "-i!*.dll"
-            "-i!*.so"
-            "-x!*.yaml"
-          )
-          & 7z @gamebinArchiveArgs
-          if ($LASTEXITCODE -ne 0) {
-            throw "Failed to create gamebin-$($env:GAMEVER).7z; 7z exit code $LASTEXITCODE"
-          }
-
-      - name: Create release
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'repository_dispatch'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.tag || github.ref_name }}
-          name: gamedata-${{ github.event_name == 'repository_dispatch' && github.event.client_payload.tag || github.ref_name }}
-          files: |
-            gamedata-${{ github.event_name == 'repository_dispatch' && github.event.client_payload.tag || github.ref_name }}.7z
-            gamebin-${{ github.event_name == 'repository_dispatch' && github.event.client_payload.tag || github.ref_name }}.7z
-
-      - name: Clean temporary IDA database files
+      - name: Clean incomplete staging and candidate session
         if: always()
         shell: pwsh
         run: |
-          if ([string]::IsNullOrWhiteSpace($env:PERSISTED_WORKSPACE)) {
-            Write-Host "PERSISTED_WORKSPACE is not configured; skipping temporary IDA database cleanup."
-            exit 0
+          if ($env:PERSISTED_WORKSPACE -and $env:GAMEVER -and $env:BUILD_ID) {
+            uv run release_workflow.py cleanup-incomplete `
+              --staging-root "$env:PERSISTED_WORKSPACE\release-staging" `
+              --gamever "$env:GAMEVER" --build-id "$env:BUILD_ID"
           }
-
-          if ([string]::IsNullOrWhiteSpace($env:GAMEVER)) {
-            Write-Host "GAMEVER is not configured; skipping temporary IDA database cleanup."
-            exit 0
-          }
-
-          $targetDirs = @(
-            (Join-Path $env:PERSISTED_WORKSPACE "bin\$($env:GAMEVER)")
-            (Join-Path $env:PERSISTED_WORKSPACE "bin\gamever\$($env:GAMEVER)")
-          )
-          $extensions = @("*.id0", "*.id1", "*.id2", "*.nam", "*.til")
-
-          foreach ($targetDir in $targetDirs) {
-            if (-not (Test-Path -LiteralPath $targetDir -PathType Container)) {
-              Write-Host "Temporary IDA database cleanup target does not exist: $targetDir"
-              continue
-            }
-
-            foreach ($extension in $extensions) {
-              Get-ChildItem -LiteralPath $targetDir -Directory |
-                ForEach-Object {
-                  Get-ChildItem -LiteralPath $_.FullName -Filter $extension -File -Force -ErrorAction SilentlyContinue |
-                    ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
-                }
-            }
-          }
-
-      - name: Clean candidate session
-        if: always()
-        shell: pwsh
-        run: |
-          if (-not [string]::IsNullOrWhiteSpace($env:CANDIDATE_ROOT) -and (Test-Path -LiteralPath $env:CANDIDATE_ROOT)) {
+          if ($env:CANDIDATE_ROOT -and (Test-Path -LiteralPath $env:CANDIDATE_ROOT)) {
             Remove-Item -LiteralPath $env:CANDIDATE_ROOT -Recurse -Force
           }

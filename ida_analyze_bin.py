@@ -3,7 +3,7 @@
 IDA Binary Analysis Script for CS2_VibeSignatures
 
 Analyzes CS2 binary files using IDA Pro MCP and Claude, Codex, or OpenCode agents.
-Sequentially processes modules and symbols defined in config.yaml.
+Sequentially processes modules and symbols defined in configs/<GAMEVER>.yaml.
 
 Usage:
     python ida_analyze_bin.py -gamever=14134 [-platform=windows,linux] [-skill=SKILL]
@@ -11,7 +11,7 @@ Usage:
 
     -gamever: Game version subdirectory name (required)
     -oldgamever: Old game version for signature reuse (default: gamever - 1)
-    -configyaml: Path to config.yaml file (default: config.yaml)
+    -configyaml: Analysis config path (default: configs/<GAMEVER>.yaml)
     -bindir: Directory containing downloaded binaries (default: bin)
     -platform: Platforms to analyze, comma-separated (default: windows,linux)
     -skill: Exact skill name to run; all other skills are skipped
@@ -55,6 +55,7 @@ from dotenv import load_dotenv
 logging.getLogger("mcp.client.streamable_http").setLevel(logging.ERROR)
 
 from agent_runner import DEFAULT_AGENT_MODEL, run_skill
+from analysis_config import AnalysisConfigError, resolve_analysis_config
 
 try:
     import yaml
@@ -115,7 +116,6 @@ from process_reporter_factory import create_process_reporter
 
 load_dotenv()
 
-DEFAULT_CONFIG_FILE = "config.yaml"
 DEFAULT_DOWNLOAD_FILE = "download.yaml"
 DEFAULT_BIN_DIR = "bin"
 DEFAULT_PLATFORM = "windows,linux"
@@ -273,14 +273,11 @@ def _parse_tool_json_content(result):
         return None
 
 
-def _resolve_config_path(config_path=DEFAULT_CONFIG_FILE):
-    path = Path(config_path)
-    if path.is_absolute():
-        return path
-    return Path(__file__).resolve().parent / path
+def _resolve_config_path(config_path):
+    return Path(config_path).expanduser().resolve()
 
 
-def _load_artifact_symbol_category_map(config_path=DEFAULT_CONFIG_FILE):
+def _load_artifact_symbol_category_map(config_path):
     resolved_config_path = _resolve_config_path(config_path)
     cache_key = os.fspath(resolved_config_path)
     cached = _ARTIFACT_SYMBOL_CATEGORY_CACHE.get(cache_key)
@@ -310,6 +307,29 @@ def _load_artifact_symbol_category_map(config_path=DEFAULT_CONFIG_FILE):
     return category_map
 
 
+def _load_symbol_alias_map(config_path):
+    resolved_config_path = _resolve_config_path(config_path)
+    try:
+        with resolved_config_path.open("r", encoding="utf-8") as handle:
+            config_data = yaml.safe_load(handle) or {}
+    except Exception:
+        return {}
+    aliases = {}
+    for module_entry in config_data.get("modules", []):
+        if not isinstance(module_entry, dict):
+            continue
+        for symbol_entry in module_entry.get("symbols", []):
+            if not isinstance(symbol_entry, dict):
+                continue
+            symbol_name = str(symbol_entry.get("name", "")).strip()
+            if not symbol_name:
+                continue
+            values = symbol_entry.get("alias")
+            raw_aliases = values if isinstance(values, (list, tuple)) else [values]
+            aliases[symbol_name] = tuple(alias for value in raw_aliases if (alias := str(value or "").strip()))
+    return aliases
+
+
 def _derive_artifact_symbol_name(artifact_path, platform):
     basename = os.path.basename(str(artifact_path or ""))
     platform_suffix = f".{platform}.yaml"
@@ -323,12 +343,14 @@ def _derive_artifact_symbol_name(artifact_path, platform):
 def _lookup_expected_input_artifact_category(
     artifact_path,
     platform,
-    config_path=DEFAULT_CONFIG_FILE,
+    config_path=None,
+    category_map=None,
 ):
     symbol_name = _derive_artifact_symbol_name(artifact_path, platform)
     if not symbol_name:
         return None
-    category_map = _load_artifact_symbol_category_map(config_path=config_path)
+    if category_map is None:
+        category_map = _load_artifact_symbol_category_map(config_path) if config_path else {}
     return category_map.get(symbol_name)
 
 
@@ -426,7 +448,8 @@ async def validate_expected_input_artifacts_via_session(
     platform,
     binary_dir=None,
     debug=False,
-    config_path=DEFAULT_CONFIG_FILE,
+    config_path=None,
+    category_map=None,
 ):
     invalid_artifacts = []
 
@@ -435,6 +458,7 @@ async def validate_expected_input_artifacts_via_session(
             artifact_path,
             platform,
             config_path=config_path,
+            category_map=category_map,
         )
         if category not in {"func", "vfunc"}:
             continue
@@ -797,7 +821,8 @@ async def validate_expected_input_artifacts_via_mcp(
     expected_binary=None,
     explicit_database=None,
     debug=False,
-    config_path=DEFAULT_CONFIG_FILE,
+    config_path=None,
+    category_map=None,
 ):
     if not expected_inputs:
         return []
@@ -816,6 +841,7 @@ async def validate_expected_input_artifacts_via_mcp(
                 binary_dir=binary_dir,
                 debug=debug,
                 config_path=config_path,
+                category_map=category_map,
             )
     except Exception:
         if debug:
@@ -833,7 +859,8 @@ def _run_validate_expected_input_artifacts_via_mcp(
     expected_binary=None,
     explicit_database=None,
     debug=False,
-    config_path=DEFAULT_CONFIG_FILE,
+    config_path=None,
+    category_map=None,
 ):
     return asyncio.run(
         validate_expected_input_artifacts_via_mcp(
@@ -846,6 +873,7 @@ def _run_validate_expected_input_artifacts_via_mcp(
             explicit_database=explicit_database,
             debug=debug,
             config_path=config_path,
+            category_map=category_map,
         )
     )
 
@@ -1257,7 +1285,9 @@ def parse_args():
         description="Analyze CS2 binary files using IDA Pro MCP and Claude, Codex, or OpenCode agents"
     )
     parser.add_argument(
-        "-configyaml", default=DEFAULT_CONFIG_FILE, help=f"Path to config.yaml file (default: {DEFAULT_CONFIG_FILE})"
+        "-configyaml",
+        default=None,
+        help="Analysis config path; defaults to configs/<GAMEVER>.yaml",
     )
     parser.add_argument(
         "-bindir",
@@ -1443,6 +1473,7 @@ def _run_preprocess_single_skill_via_mcp(
     llm_temperature,
     llm_effort,
     llm_fake_as,
+    symbol_aliases=None,
     llm_max_retries=None,
     expected_binary=None,
     explicit_database=None,
@@ -1465,6 +1496,7 @@ def _run_preprocess_single_skill_via_mcp(
         "llm_effort": llm_effort,
         "llm_fake_as": llm_fake_as,
         "llm_max_retries": llm_max_retries,
+        "symbol_aliases": symbol_aliases,
     }
 
     try:
@@ -1481,6 +1513,7 @@ def _run_preprocess_single_skill_via_mcp(
         fallback_kwargs.pop("llm_effort", None)
         fallback_kwargs.pop("llm_fake_as", None)
         fallback_kwargs.pop("llm_max_retries", None)
+        fallback_kwargs.pop("symbol_aliases", None)
         fallback_kwargs.pop("expected_binary", None)
         fallback_kwargs.pop("explicit_database", None)
         return asyncio.run(preprocess_single_skill_via_mcp(**fallback_kwargs))
@@ -1536,10 +1569,10 @@ def _parse_module_vcall_finder(module, module_name):
 
 def parse_config(config_path):
     """
-    Parse config.yaml and extract module information.
+    Parse an analysis config and extract module information.
 
     Args:
-        config_path: Path to config.yaml file
+        config_path: Path to the selected analysis config
 
     Returns:
         List of module dictionaries containing name, paths, and skills
@@ -2756,6 +2789,9 @@ def process_binary(
     skip_pp=False,
     reporting=None,
     job_id=None,
+    config_path=None,
+    category_map=None,
+    symbol_aliases=None,
 ):
     """
     Process a single binary file.
@@ -3134,6 +3170,8 @@ def process_binary(
                 binary_dir=binary_dir,
                 expected_binary=binary_path,
                 debug=debug,
+                config_path=config_path,
+                category_map=category_map,
             )
             if invalid_expected_inputs:
                 fail_count += 1
@@ -3206,6 +3244,7 @@ def process_binary(
                         llm_effort=llm_effort,
                         llm_fake_as=llm_fake_as,
                         llm_max_retries=skill_max_retries,
+                        symbol_aliases=symbol_aliases,
                     )
                 except Exception as e:
                     if debug:
@@ -3696,6 +3735,9 @@ def _invoke_process_binary(args, module, platform, binary_path, old_binary_dir, 
         skip_pp=getattr(args, "skip_pp", False),
         reporting=reporting,
         job_id=job_id,
+        config_path=args.configyaml,
+        category_map=args.artifact_category_map,
+        symbol_aliases=args.symbol_aliases,
     )
 
 
@@ -3826,9 +3868,13 @@ def _print_summary(totals):
 def main():
     """Main entry point."""
     args = parse_args()
-    if not os.path.exists(args.configyaml):
-        print(f"Error: Config file not found: {args.configyaml}")
+    try:
+        args.configyaml = str(resolve_analysis_config(args.gamever, args.configyaml))
+    except AnalysisConfigError as exc:
+        print(f"Error: {exc}")
         sys.exit(1)
+    args.artifact_category_map = _load_artifact_symbol_category_map(args.configyaml)
+    args.symbol_aliases = _load_symbol_alias_map(args.configyaml)
     _print_main_configuration(args)
 
     print("\nParsing config...")

@@ -18,7 +18,7 @@ class TestFixCppHeadersSkill(unittest.TestCase):
         self.assertIn("Use when", frontmatter["description"])
         self.assertIn("uv run run_cpp_tests.py", content)
         self.assertIn("-snapshot <snapshot>", content)
-        self.assertIn("config.yaml", content)
+        self.assertIn("configs/<GAMEVER>.yaml", content)
         self.assertIn("headers", content)
         self.assertIn("hl2sdk_cs2", content)
         self.assertNotIn("-fixheader", content)

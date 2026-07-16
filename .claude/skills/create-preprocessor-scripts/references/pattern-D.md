@@ -64,5 +64,5 @@ async def preprocess_skill(
 - [ ] `preprocess_skill` signature includes `llm_config=None`
 - [ ] `preprocess_common_skill` call passes `func_names=`, `llm_decompile_specs=`, and `llm_config=`
 - [ ] No `FUNC_VTABLE_RELATIONS` (regular function, not virtual)
-- [ ] config.yaml `expected_input` includes the predecessor YAML
+- [ ] configs/<GAMEVER>.yaml `expected_input` includes the predecessor YAML
 - [ ] Reference YAMLs exist or generated for both platforms

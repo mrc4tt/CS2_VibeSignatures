@@ -19,13 +19,13 @@ added around it. Reference chains in this repo: `CEngineServer_ChangeLevel`,
 
 ## The 3-skill chain
 
-| Skill | Role | Positive source | config.yaml fields |
+| Skill | Role | Positive source | configs/<GAMEVER>.yaml fields |
 |-------|------|-----------------|--------------------|
 | `find-{HELPER}` | resolve the de-inlined helper | `xref_strings` on the helper's own debug string (or `xref_funcs` on a stable callee) | `optional_output: {HELPER}` + `skip_if_exists: {TARGET}` -- **no** `expected_input` |
 | `find-{TARGET}-noinline` | resolve TARGET as the helper's caller | `xref_funcs: [{HELPER}]` (+ `FUNC_VTABLE_RELATIONS` if vfunc) | `optional_output: {TARGET}` + `expected_input: <vtable>` (if vfunc) + `prerequisite: [find-{HELPER}]` |
 | `find-{TARGET}-inlined` | the ORIGINAL finder, renamed | unchanged (the original `xref_strings`/`xref_funcs` anchor) | `expected_output: {TARGET}` + `expected_input: <vtable>` + `skip_if_exists: {TARGET}` + `prerequisite: [find-{TARGET}-noinline]` |
 
-Order the three config.yaml entries exactly as above (HELPER -> -noinline -> -inlined). The
+Order the three configs/<GAMEVER>.yaml entries exactly as above (HELPER -> -noinline -> -inlined). The
 vanilla chain is **cross-platform** -- no `platform:` field (the inverted variant is the
 exception).
 
@@ -109,7 +109,7 @@ The original finder, unchanged except for the `git mv` rename and docstring upda
 Pattern A/B `xref_strings`(+vtable) finder. Its `GENERATE_YAML_DESIRED_FIELDS` must match the
 `-noinline` skill's `func_sig` choice (see rules).
 
-## config.yaml chain
+## configs/<GAMEVER>.yaml chain
 
 ```yaml
       - name: find-{HELPER}
@@ -201,7 +201,7 @@ so the string left the vfunc and `CNetworkGameServer_DirectUpdate.linux.yaml` st
    `xref_funcs: ["CNetworkStringTableContainer_DirectUpdate"]` +
    `FUNC_VTABLE_RELATIONS: [("CNetworkGameServer_DirectUpdate", "CNetworkGameServer_vtable")]`;
    **kept** `func_sig` (substantial body).
-4. `config.yaml`: replaced the one skill entry with the 3-skill chain; left the
+4. `configs/<GAMEVER>.yaml`: replaced the one skill entry with the 3-skill chain; left the
    `CNetworkGameServer_DirectUpdate` symbol entry as-is; did NOT add a helper symbol.
 5. Validated 14167 (inlined) + 14168 (Linux de-inlined) x win/linux, `-oldgamever none`: all four
    -> vtable index 59 / offset 0x1d8, `Failed 0` (the 14168 Linux de-inlined body signs at 7 bytes
@@ -227,6 +227,6 @@ against the `PrintStats` chain before writing it.
 - [ ] `find-{TARGET}-inlined` config = `expected_output` + `skip_if_exists` + `prerequisite: [find-{TARGET}-noinline]`
 - [ ] `func_sig` kept/dropped consistently on both -noinline and -inlined per the rule above
 - [ ] `{HELPER}` NOT added as a gamedata `symbol`
-- [ ] config.yaml entries ordered HELPER -> -noinline -> -inlined
+- [ ] configs/<GAMEVER>.yaml entries ordered HELPER -> -noinline -> -inlined
 - [ ] Validated on an inlined AND a de-inlined gamever, both platforms, `-oldgamever none`, `Failed 0`
-- [ ] Scratch config deleted; only the 3 skill files + `config.yaml` committed
+- [ ] Scratch config deleted; only the 3 skill files + `configs/<GAMEVER>.yaml` committed
