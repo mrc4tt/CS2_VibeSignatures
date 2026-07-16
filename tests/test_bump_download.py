@@ -921,6 +921,19 @@ class TestBumpDownload(unittest.TestCase):
             self.assertEqual("14168", plan.analysis_config_source_gamever)
             self.assertEqual("configs/14169.yaml", plan.analysis_config_path)
 
+    def test_config_seed_paths_preserve_caller_path_spelling(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            configs = root / "nested" / ".." / "configs"
+            configs.mkdir(parents=True)
+            source = configs / "14160.yaml"
+            source.write_bytes(b"modules: []\n")
+
+            actual_source, actual_target = bump_download._config_seed_paths(configs, "14160", "14161")
+
+            self.assertEqual(source, actual_source)
+            self.assertEqual(configs / "14161.yaml", actual_target)
+
     @patch("bump_download.create_commit")
     @patch("bump_download.remote_tag_exists", return_value=False)
     @patch("bump_download.local_tag_exists", return_value=False)

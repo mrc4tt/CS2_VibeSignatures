@@ -364,14 +364,17 @@ def _previous_default_gamever(downloads: list[dict[str, Any]]) -> str:
 
 
 def _config_seed_paths(configs_dir: Path, source_gamever: str, target_gamever: str) -> tuple[Path, Path]:
-    root = Path(configs_dir).expanduser().resolve()
-    source = (root / f"{source_gamever}.yaml").resolve()
-    target = (root / f"{target_gamever}.yaml").resolve()
-    if source.parent != root or target.parent != root:
+    root = Path(configs_dir).expanduser()
+    source = root / f"{source_gamever}.yaml"
+    target = root / f"{target_gamever}.yaml"
+    resolved_root = root.resolve()
+    resolved_source = source.resolve()
+    resolved_target = target.resolve()
+    if resolved_source.parent != resolved_root or resolved_target.parent != resolved_root:
         raise BumpError("Analysis config paths must remain within configs-dir")
-    if not source.is_file():
+    if not resolved_source.is_file():
         raise BumpError(f"Missing predecessor analysis config: {source}")
-    if target.exists():
+    if resolved_target.exists():
         raise BumpError(f"Target analysis config already exists: {target}")
     return source, target
 
