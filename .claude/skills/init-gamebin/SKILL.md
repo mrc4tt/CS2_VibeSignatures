@@ -17,7 +17,7 @@ overwrite an existing file, substitute an unlisted version, or continue after a 
    uv run python .claude/skills/init-gamebin/scripts/init_gamebin.py versions
    ```
 
-   Tell the user which entry is latest and ask: `需要初始化哪个GAMEVER?` Wait for an explicit version before continuing.
+   Tell the user which entry is latest and ask: `Which GAMEVER do you want to initialize?` / `需要初始化哪个GAMEVER?` Wait for an explicit version before continuing.
 3. Reject values absent from `download.yaml`; do not guess or silently use latest.
 
 ## Prepare Binaries and YAML
@@ -41,7 +41,7 @@ Do not attempt an alternate download, add `-replace`, edit `.env`, or proceed to
 
 ## Offer IDB Renaming
 
-After preparation succeeds, ask exactly: `Need to sync existing symbols to idb?` `需要将已知函数名同步/重命名到idb里?`
+After preparation succeeds, ask exactly: `Need to sync existing symbols to idb?` / `需要将已知函数名同步/重命名到idb里?`
 
 - If the user declines, report the selected GAMEVER and finish.
 - If the user confirms, search `bin/<GAMEVER>/*/*.id0`. If any lock file exists, stop, list every path, and tell the
