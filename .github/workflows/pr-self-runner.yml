@@ -292,46 +292,69 @@ jobs:
             }
           }
 
-          $baseConfig = Join-Path $baseDir "config.yaml"
-          Export-GitBlob "HEAD^1" "config.yaml" $baseConfig
-
-          $sameVersionSnapshot = "gamesymbols/$env:GAMEVER.yaml"
-          git cat-file -e "HEAD^1:$sameVersionSnapshot" 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            $baseGamever = $env:GAMEVER
-            $baseSnapshot = Join-Path $baseDir "$baseGamever.yaml"
-            Export-GitBlob "HEAD^1" $sameVersionSnapshot $baseSnapshot
-            $sameVersionBase = "true"
-            $hasBaseSnapshot = "true"
-          } else {
-            $trackedSnapshots = git ls-tree -r --name-only HEAD^1 -- gamesymbols |
-              Where-Object { $_ -match '^gamesymbols/[^/]+\.yaml$' } |
-              Sort-Object
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to list tracked base game-symbol snapshots."
-            }
-            if ($trackedSnapshots.Count -eq 0) {
-              $baseGamever = ""
-              $baseSnapshot = ""
-              $sameVersionBase = "false"
-              $hasBaseSnapshot = "false"
-              Write-Host "No base snapshot exists yet; bootstrap PR validation will rebuild all current YAML."
-            } else {
-              $baseSnapshotRepoPath = $trackedSnapshots[-1]
-              $baseGamever = [IO.Path]::GetFileNameWithoutExtension($baseSnapshotRepoPath)
-              $baseSnapshotCommit = git log -1 --format=%H HEAD^1 -- "$baseSnapshotRepoPath"
-              if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($baseSnapshotCommit)) {
-                throw "Failed to locate the commit that published $baseSnapshotRepoPath."
-              }
-              $baseSnapshotCommit = $baseSnapshotCommit.Trim()
-              $baseSnapshot = Join-Path $baseDir "$baseGamever.yaml"
-              Export-GitBlob $baseSnapshotCommit "config.yaml" $baseConfig
-              Export-GitBlob "HEAD^1" $baseSnapshotRepoPath $baseSnapshot
-              $sameVersionBase = "false"
-              $hasBaseSnapshot = "true"
-            }
+          $baseRef = "${{ github.event.pull_request.base.sha }}".Trim()
+          if ($baseRef -notmatch '^[0-9a-fA-F]{40}$') {
+            throw "Invalid pull request base SHA: $baseRef"
+          }
+          git cat-file -e "$baseRef^{commit}"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Pull request base commit is unavailable: $baseRef"
           }
 
+          $baseConfig = Join-Path $baseDir "config.yaml"
+          $trackedSnapshots = @(
+            git ls-tree -r --name-only $baseRef -- gamesymbols |
+              Where-Object { $_ -match '^gamesymbols/[^/]+\.yaml$' }
+          )
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to list game-symbol snapshots from base commit $baseRef."
+          }
+
+          if ($trackedSnapshots.Count -eq 0) {
+            $baseGamever = ""
+            $baseSnapshot = ""
+            $sameVersionBase = "false"
+            $hasBaseSnapshot = "false"
+            Write-Host "Base commit $baseRef has no snapshot; bootstrap PR validation will rebuild all current YAML."
+          } else {
+            $sameVersionSnapshot = "gamesymbols/$env:GAMEVER.yaml"
+            if ($trackedSnapshots -contains $sameVersionSnapshot) {
+              $baseSnapshotRepoPath = $sameVersionSnapshot
+            } elseif ($trackedSnapshots.Count -eq 1) {
+              $baseSnapshotRepoPath = $trackedSnapshots[0]
+            } else {
+              $latestSnapshotChange = @(
+                git log -1 --format=%H --name-only $baseRef -- gamesymbols |
+                  Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+              )
+              if ($LASTEXITCODE -ne 0 -or $latestSnapshotChange.Count -lt 2) {
+                throw "Failed to locate the latest snapshot publication in base commit history."
+              }
+              $latestSnapshotPaths = @(
+                $latestSnapshotChange[1..($latestSnapshotChange.Count - 1)] |
+                  Where-Object { $trackedSnapshots -contains $_ }
+              )
+              if ($latestSnapshotPaths.Count -ne 1) {
+                $snapshotList = $latestSnapshotPaths -join ", "
+                throw "Latest base snapshot publication is ambiguous: $snapshotList"
+              }
+              $baseSnapshotRepoPath = $latestSnapshotPaths[0]
+            }
+
+            $baseGamever = [IO.Path]::GetFileNameWithoutExtension($baseSnapshotRepoPath)
+            $baseSnapshotCommit = git log -1 --format=%H $baseRef -- "$baseSnapshotRepoPath"
+            if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($baseSnapshotCommit)) {
+              throw "Failed to locate the commit that published $baseSnapshotRepoPath."
+            }
+            $baseSnapshotCommit = $baseSnapshotCommit.Trim()
+            $baseSnapshot = Join-Path $baseDir "$baseGamever.yaml"
+            Export-GitBlob $baseSnapshotCommit "config.yaml" $baseConfig
+            Export-GitBlob $baseRef $baseSnapshotRepoPath $baseSnapshot
+            $sameVersionBase = if ($baseGamever -eq $env:GAMEVER) { "true" } else { "false" }
+            $hasBaseSnapshot = "true"
+          }
+
+          "BASE_REF=$baseRef" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "BASE_CONFIG=$baseConfig" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "BASE_SNAPSHOT=$baseSnapshot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "BASE_GAMEVER=$baseGamever" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -362,7 +385,7 @@ jobs:
               -basesnapshot "$env:BASE_SNAPSHOT" `
               -headconfigyaml config.yaml `
               -headsnapshot "gamesymbols/$env:GAMEVER.yaml" `
-              -baseref "HEAD^1" `
+              -baseref "$env:BASE_REF" `
               -headref "HEAD"
             if ($LASTEXITCODE -ne 0) {
               throw "gamesymbol_pr_validation.py failed with exit code $LASTEXITCODE"

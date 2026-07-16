@@ -88,9 +88,10 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         gamedata = workflow.index("uv run update_gamedata.py")
         cpp_tests = workflow.index("uv run run_cpp_tests.py")
 
-        self.assertIn('Export-GitBlob "HEAD^1" "config.yaml"', workflow)
-        self.assertIn('Export-GitBlob "HEAD^1" $sameVersionSnapshot', workflow)
+        self.assertIn('$baseRef = "${{ github.event.pull_request.base.sha }}".Trim()', workflow)
+        self.assertIn('Export-GitBlob $baseSnapshotCommit "config.yaml"', workflow)
         self.assertIn("bootstrap PR validation will rebuild all current YAML", workflow)
+        self.assertIn('-baseref "$env:BASE_REF"', workflow)
         self.assertLess(restore, invalidate)
         self.assertLess(invalidate, analyze)
         self.assertLess(analyze, candidate)
@@ -99,6 +100,18 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         self.assertLess(gamedata, cpp_tests)
         self.assertNotIn("gamesymbol_snapshot.py verify", workflow)
         self.assertNotIn("prune_pr_expected_output_bin.py", workflow)
+
+    def test_base_ref_snapshot_selection_does_not_sort_by_filename(self) -> None:
+        workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
+
+        self.assertIn("$trackedSnapshots = @(\n", workflow)
+        self.assertIn("git ls-tree -r --name-only $baseRef -- gamesymbols", workflow)
+        self.assertIn("$trackedSnapshots -contains $sameVersionSnapshot", workflow)
+        self.assertIn("$baseSnapshotRepoPath = $trackedSnapshots[0]", workflow)
+        self.assertIn("git log -1 --format=%H --name-only $baseRef -- gamesymbols", workflow)
+        self.assertIn("$baseSnapshotRepoPath = $latestSnapshotPaths[0]", workflow)
+        self.assertNotIn("$trackedSnapshots[-1]", workflow)
+        self.assertNotIn("Sort-Object", workflow)
 
     def test_actual_candidate_is_the_only_downstream_symbol_source(self) -> None:
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")

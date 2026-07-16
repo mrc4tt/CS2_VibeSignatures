@@ -528,13 +528,14 @@ compare bin with the same PR snapshot
 
 ### Deterministic PR Flow
 
-PR checkout 当前使用 merge ref，因此 base 通常为 `HEAD^1`。
+PR checkout 使用 merge ref，但 base 必须固定为事件中的 `pull_request.base.sha`，不能依赖 merge commit 父提交顺序。
+base commit 中的 `gamesymbols/*.yaml` 为唯一可信选择来源：0 个表示 bootstrap；PR game version 已存在时使用同名 snapshot；仅有 1 个时直接使用；否则使用 base 历史中最近一次发布的 snapshot。不得按文件名排序或通过 `download.yaml` 推断。
 
 推荐步骤：
 
 1. Checkout PR merge ref。
-2. 从 `HEAD^1` 提取 base `config.yaml`。
-3. 从 `HEAD^1` 提取 `gamesymbols/<GAMEVER>.yaml`。
+2. 枚举 `pull_request.base.sha` 中的 `gamesymbols/*.yaml`，按上述规则选择 base snapshot。
+3. 从该 snapshot 最后发布的 commit 提取匹配的 base `config.yaml`，从 `base.sha` 提取 snapshot 原始字节。
 4. 将 persisted workspace 提供的当前版本 `bin/<GAMEVER>` 复制到 workspace 内的真实目录，保留 DLL、SO 和 IDB；`bin` 不得是 junction 或 symlink。
 5. 确认目标路径位于当前 workspace 且不是 reparse point 后，删除当前 game version 下的所有 YAML。
 6. 使用 base config 和 base snapshot 执行 `restore -replace`。
@@ -551,7 +552,7 @@ PR checkout 当前使用 merge ref，因此 base 通常为 `HEAD^1`。
 流程图：
 
 ```text
-HEAD^1 snapshot + HEAD^1 config
+base.sha snapshot + base.sha config
               |
               v
 restore deterministic base into bin/<GAMEVER>
@@ -905,7 +906,7 @@ bin/<GAMEVER>/**/*.yaml
 
 ### Workflow Tests
 
-- PR workflow 从 `HEAD^1` 读取 base snapshot，不恢复 head snapshot。
+- PR workflow 从 `pull_request.base.sha` 的 snapshot 集合选择 base snapshot，不恢复 head snapshot，也不按文件名排序。
 - persisted YAML 在分析前被清除。
 - analyzer 在 snapshot verify 之前运行。
 - snapshot verify 在 gamedata/C++ validation 之前或紧接 analysis 之后运行。
@@ -934,7 +935,7 @@ bin/<GAMEVER>/**/*.yaml
 ### Step 3: PR Deterministic Base
 
 - 修改 PR workspace 准备逻辑，保留 binaries/IDBs 但清除 YAML。
-- 从 `HEAD^1` 恢复 base snapshot。
+- 从 `pull_request.base.sha` 选择并恢复 base snapshot。
 - 初期可先基于 snapshot/config delta 做 invalidation。
 - analysis 后 strict pack actual candidate，再与 head snapshot compare。
 

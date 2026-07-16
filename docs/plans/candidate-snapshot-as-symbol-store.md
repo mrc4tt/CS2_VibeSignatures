@@ -1032,7 +1032,7 @@ PR trust boundary：
 推荐步骤：
 
 1. Checkout PR merge ref。
-2. 从 `HEAD^1` 提取 base config 和 base snapshot。
+2. 从 `pull_request.base.sha` 的 snapshot 集合选择 base snapshot，并从该 snapshot 的发布 commit 提取匹配的 base config。
 3. 复制 persisted binaries/IDBs 到 workspace real `bin` directory。
 4. 删除 workspace 当前 game version 的 persisted YAML 副本。
 5. 使用 base config + base snapshot restore baseline。
@@ -1051,7 +1051,7 @@ PR trust boundary：
 流程图：
 
 ```text
-HEAD^1 snapshot + HEAD^1 config
+base.sha snapshot + base.sha config
               |
               v
 restore baseline into workspace bin
