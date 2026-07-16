@@ -528,33 +528,42 @@ compare bin with the same PR snapshot
 
 ### Deterministic PR Flow
 
-PR checkout 当前使用 merge ref，因此 base 通常为 `HEAD^1`。
+PR checkout 使用 merge ref，但 base 必须固定为事件中的 `pull_request.base.sha`，不能依赖 merge commit 父提交顺序。
+base commit 中的 `gamesymbols/*.yaml` 为唯一可信选择来源：0 个表示 bootstrap；PR game version 已存在时使用同名 snapshot；仅有 1 个时直接使用；否则使用 base 历史中最近一次发布的 snapshot。不得按文件名排序或通过 `download.yaml` 推断。
+
+PR head `download.yaml` 的最新版本只用于优先选择同名 base snapshot，不是默认 validation target。只要选中了
+base snapshot，`VALIDATION_GAMEVER` 就固定为该 snapshot 的文件名版本；persisted bin copy、restore、
+invalidation、analyzer、candidate compare、gamedata 和 C++ tests 必须全部使用这个版本。这样 PR self-runner
+验证的是 head `config.yaml`、preprocessor、Agent skill 和相关源码改动能否在最后一个可信 base snapshot 上
+产生合规结果，而不是提前构建尚未被接受的新 game version。
 
 推荐步骤：
 
 1. Checkout PR merge ref。
-2. 从 `HEAD^1` 提取 base `config.yaml`。
-3. 从 `HEAD^1` 提取 `gamesymbols/<GAMEVER>.yaml`。
-4. 将 persisted workspace 提供的当前版本 `bin/<GAMEVER>` 复制到 workspace 内的真实目录，保留 DLL、SO 和 IDB；`bin` 不得是 junction 或 symlink。
-5. 确认目标路径位于当前 workspace 且不是 reparse point 后，删除当前 game version 下的所有 YAML。
-6. 使用 base config 和 base snapshot 执行 `restore -replace`。
-7. 比较 base config/snapshot 与 head config/snapshot，并读取 PR changed files。
-8. 计算需要 invalidation 的 producers 和传递依赖闭包。
-9. 删除所有 invalidated skills 的 required 和 optional outputs。
-10. 删除 head config 已移除的 base output paths。
+2. 从 head `download.yaml` 读取 `PR_GAMEVER`，仅作为 base snapshot 同名优先选择提示。
+3. 枚举 `pull_request.base.sha` 中的 `gamesymbols/*.yaml`，按上述规则选择 base snapshot。
+4. 从该 snapshot 最后发布的 commit 提取匹配的 base `config.yaml`，从 `base.sha` 提取 snapshot 原始字节。
+5. 有 base snapshot 时令 `VALIDATION_GAMEVER=BASE_GAMEVER`；bootstrap 时才使用 `PR_GAMEVER`。
+6. 将 persisted workspace 的 `bin/<VALIDATION_GAMEVER>` 复制到 workspace 内的真实目录，保留 DLL 和 SO；`bin` 不得是 junction 或 symlink。
+7. 使用 base config 和 base snapshot 对 `bin/<VALIDATION_GAMEVER>` 执行 `restore -replace`。
+8. 从 `HEAD` 导出同版本 snapshot 原始 Git blob，比较 base config/snapshot 与 head config/snapshot，并读取 PR changed files；不得使用可能被 checkout 行尾转换的工作区 snapshot 字节。
+9. 计算需要 invalidation 的 producers 和传递依赖闭包。
+10. 删除所有 invalidated skills 的 required 和 optional outputs，以及 head config 已移除的 base output paths。
 11. 运行 Python unit tests。
-12. 运行 `ida_analyze_bin.py`。
-13. 对实际 `bin` 执行只读 `verify`，与 PR head snapshot 比较。
-14. 运行 `update_gamedata.py`。
-15. 运行 `run_cpp_tests.py`。
+12. 对 `VALIDATION_GAMEVER` 运行 `ida_analyze_bin.py`。
+13. 构建 actual candidate，并与 head 中 `gamesymbols/<VALIDATION_GAMEVER>.yaml` 比较。
+14. 使用该 candidate 运行 `update_gamedata.py` 和 `run_cpp_tests.py`。
 
 流程图：
 
 ```text
-HEAD^1 snapshot + HEAD^1 config
+base.sha snapshot + base.sha config
               |
               v
-restore deterministic base into bin/<GAMEVER>
+select VALIDATION_GAMEVER from base snapshot
+              |
+              v
+restore deterministic base into bin/<VALIDATION_GAMEVER>
               |
               v
 invalidate snapshot/config/source-code affected outputs
@@ -758,8 +767,8 @@ build-on-self-runner runs analysis
 2. build-on-self-runner 完成新版本 analysis、gamedata 和 C++ tests。
 3. 成功后执行一次 `pack`，生成 `gamesymbols/<NEW_GAMEVER>.yaml`。
 4. bot 创建 `gamesymbols/<NEW_GAMEVER>` 分支和 follow-up PR。
-5. follow-up PR self-runner 删除当前版本 YAML，从最近一个 tracked old-version snapshot 开始做 old signature reuse，并完整重建新版本输出。
-6. CI 验证实际结果与新 snapshot 一致后合并。
+5. build workflow 自身完成新版本完整 candidate validation，并创建 generated-output PR。
+6. generated-output PR 由专用轻量校验处理；普通 PR self-runner 继续验证最后一个可信 base snapshot 版本。
 
 该阶段保持现有 tag/build 时序，breaking changes 最小，但 game version tag 指向的 commit 不包含对应 snapshot。
 
@@ -905,7 +914,7 @@ bin/<GAMEVER>/**/*.yaml
 
 ### Workflow Tests
 
-- PR workflow 从 `HEAD^1` 读取 base snapshot，不恢复 head snapshot。
+- PR workflow 从 `pull_request.base.sha` 的 snapshot 集合选择 base snapshot，不恢复 head snapshot，也不按文件名排序。
 - persisted YAML 在分析前被清除。
 - analyzer 在 snapshot verify 之前运行。
 - snapshot verify 在 gamedata/C++ validation 之前或紧接 analysis 之后运行。
@@ -934,7 +943,7 @@ bin/<GAMEVER>/**/*.yaml
 ### Step 3: PR Deterministic Base
 
 - 修改 PR workspace 准备逻辑，保留 binaries/IDBs 但清除 YAML。
-- 从 `HEAD^1` 恢复 base snapshot。
+- 从 `pull_request.base.sha` 选择并恢复 base snapshot。
 - 初期可先基于 snapshot/config delta 做 invalidation。
 - analysis 后 strict pack actual candidate，再与 head snapshot compare。
 

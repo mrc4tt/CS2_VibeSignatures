@@ -473,23 +473,22 @@ class TestBumpDownload(unittest.TestCase):
                 output.read_text(encoding="utf-8"),
             )
 
-            repair_output = Path(tmp) / "repair_out.txt"
+            dispatch_output = Path(tmp) / "dispatch_out.txt"
             bump_download.write_github_output(
-                repair_output,
+                dispatch_output,
                 updated=True,
                 tag="14161",
-                repair_tag=True,
+                dispatch_build=True,
             )
             self.assertEqual(
-                "updated=true\ntag=14161\nrepair_tag=true\n",
-                repair_output.read_text(encoding="utf-8"),
+                "updated=true\ntag=14161\ndispatch_build=true\n",
+                dispatch_output.read_text(encoding="utf-8"),
             )
 
     @patch("bump_download.subprocess.run")
-    def test_create_commit_and_tag_runs_expected_git_commands(self, mock_run) -> None:
-        bump_download.create_commit_and_tag(
+    def test_create_commit_does_not_create_a_release_tag(self, mock_run) -> None:
+        bump_download.create_commit(
             config_path=Path("download.yaml"),
-            tag="14161",
             patch_version="1.41.6.1",
         )
 
@@ -500,7 +499,6 @@ class TestBumpDownload(unittest.TestCase):
                     ["git", "commit", "-m", "chore(download): 更新 1.41.6.1 下载清单"],
                     check=True,
                 ),
-                call(["git", "tag", "14161"], check=True),
             ],
             mock_run.call_args_list,
         )
@@ -584,7 +582,7 @@ class TestBumpDownload(unittest.TestCase):
         with self.assertRaisesRegex(bump_download.BumpError, "fatal: unable to access origin"):
             bump_download.remote_tag_exists("14161")
 
-    @patch("bump_download.create_commit_and_tag")
+    @patch("bump_download.create_commit")
     @patch(
         "bump_download.discover_latest",
         return_value=("1.41.6.1", {"2347771": "11", "2347773": "22"}),
@@ -619,7 +617,7 @@ class TestBumpDownload(unittest.TestCase):
 
     @patch("bump_download.remote_tag_exists")
     @patch("bump_download.local_tag_exists")
-    @patch("bump_download.create_commit_and_tag")
+    @patch("bump_download.create_commit")
     @patch(
         "bump_download.discover_latest",
         return_value=("1.41.6.1", {"2347771": "11", "2347773": "22"}),
@@ -661,7 +659,7 @@ class TestBumpDownload(unittest.TestCase):
         remote_tag_exists.assert_not_called()
 
     @patch("bump_download.remote_tag_exists", return_value=False)
-    def test_tag_repair_when_entry_exists_but_remote_tag_missing(self, _remote) -> None:
+    def test_missing_release_build_when_entry_exists_but_remote_tag_missing(self, _remote) -> None:
         downloads = [
             {
                 "tag": "14161",
@@ -670,7 +668,7 @@ class TestBumpDownload(unittest.TestCase):
             }
         ]
 
-        plan = bump_download.plan_tag_repair(
+        plan = bump_download.plan_missing_release_build(
             downloads,
             patch_version="1.41.6.1",
             manifests={"2347771": "11", "2347773": "22"},
@@ -678,11 +676,11 @@ class TestBumpDownload(unittest.TestCase):
 
         self.assertIsNotNone(plan)
         self.assertTrue(plan.updated)
-        self.assertTrue(plan.repair_tag)
+        self.assertTrue(plan.dispatch_build)
         self.assertEqual("14161", plan.tag)
 
     @patch("bump_download.subprocess.run")
-    def test_tag_repair_raises_when_remote_check_fails(self, mock_run) -> None:
+    def test_missing_release_build_raises_when_remote_check_fails(self, mock_run) -> None:
         mock_run.return_value = bump_download.subprocess.CompletedProcess(
             ["git", "ls-remote"],
             128,
@@ -698,49 +696,13 @@ class TestBumpDownload(unittest.TestCase):
         ]
 
         with self.assertRaisesRegex(bump_download.BumpError, "fatal: unable to access origin"):
-            bump_download.plan_tag_repair(
+            bump_download.plan_missing_release_build(
                 downloads,
                 patch_version="1.41.6.1",
                 manifests={"2347771": "11", "2347773": "22"},
             )
 
-    @patch("bump_download.git_output", side_effect=["tag-sha", "head-sha"])
-    @patch("bump_download.local_tag_exists", return_value=True)
-    def test_ensure_local_tag_matches_head_raises_for_mismatched_tag(self, _local_tag_exists, _git_output) -> None:
-        with self.assertRaisesRegex(bump_download.BumpError, "Local tag 14161 does not point to HEAD"):
-            bump_download.ensure_local_tag_matches_head("14161")
-
-    @patch("bump_download.git_output", side_effect=["head-sha", "head-sha"])
-    @patch("bump_download.local_tag_exists", return_value=True)
-    def test_ensure_local_tag_matches_head_allows_matching_tag(self, local_tag_exists, git_output) -> None:
-        bump_download.ensure_local_tag_matches_head("14161")
-
-        local_tag_exists.assert_called_once_with("14161")
-        self.assertEqual(
-            [
-                call(["git", "rev-list", "-n", "1", "14161"]),
-                call(["git", "rev-parse", "HEAD"]),
-            ],
-            git_output.call_args_list,
-        )
-
-    @patch("bump_download.subprocess.run")
-    @patch("bump_download.local_tag_exists", return_value=True)
-    def test_create_repair_tag_skips_existing_local_tag(self, local_tag_exists, mock_run) -> None:
-        bump_download.create_repair_tag("14161")
-
-        local_tag_exists.assert_called_once_with("14161")
-        mock_run.assert_not_called()
-
-    @patch("bump_download.subprocess.run")
-    @patch("bump_download.local_tag_exists", return_value=False)
-    def test_create_repair_tag_creates_missing_local_tag(self, local_tag_exists, mock_run) -> None:
-        bump_download.create_repair_tag("14161")
-
-        local_tag_exists.assert_called_once_with("14161")
-        mock_run.assert_called_once_with(["git", "tag", "14161"], check=True)
-
-    @patch("bump_download.create_commit_and_tag")
+    @patch("bump_download.create_commit")
     @patch("bump_download.remote_tag_exists", return_value=False)
     @patch("bump_download.local_tag_exists", return_value=False)
     @patch("bump_download.ensure_clean_worktree")
@@ -748,13 +710,13 @@ class TestBumpDownload(unittest.TestCase):
         "bump_download.discover_latest",
         return_value=("1.41.6.1", {"2347771": "11", "2347773": "22"}),
     )
-    def test_run_new_entry_commits_tag_and_writes_output(
+    def test_run_new_entry_commits_config_without_creating_tag_and_writes_output(
         self,
         _discover,
         ensure_clean_worktree,
         local_tag_exists,
         remote_tag_exists,
-        create_commit_and_tag,
+        create_commit,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             config = Path(tmp) / "download.yaml"
@@ -787,14 +749,14 @@ class TestBumpDownload(unittest.TestCase):
         ensure_clean_worktree.assert_called_once_with()
         local_tag_exists.assert_called_once_with("14161")
         remote_tag_exists.assert_called_once_with("14161")
-        create_commit_and_tag.assert_called_once_with(config, "14161", "1.41.6.1")
+        create_commit.assert_called_once_with(config, "1.41.6.1")
         self.assertIn('tag: "14161"', text)
         self.assertIn("name: 1.41.6.1", text)
         self.assertIn('"2347771": "11"', text)
         self.assertIn('"2347773": "22"', text)
         self.assertEqual("updated=true\ntag=14161\n", output_text)
 
-    @patch("bump_download.create_commit_and_tag")
+    @patch("bump_download.create_commit")
     @patch("bump_download.ensure_clean_worktree")
     @patch("bump_download.remote_tag_exists", return_value=True)
     @patch(
@@ -806,7 +768,7 @@ class TestBumpDownload(unittest.TestCase):
         _discover,
         remote_tag_exists,
         ensure_clean_worktree,
-        create_commit_and_tag,
+        create_commit,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             config = Path(tmp) / "download.yaml"
@@ -838,26 +800,22 @@ class TestBumpDownload(unittest.TestCase):
 
         remote_tag_exists.assert_called_once_with("14161")
         ensure_clean_worktree.assert_not_called()
-        create_commit_and_tag.assert_not_called()
+        create_commit.assert_not_called()
         self.assertEqual("updated=false\n", output_text)
 
-    @patch("bump_download.create_commit_and_tag")
-    @patch("bump_download.create_repair_tag")
-    @patch("bump_download.ensure_local_tag_matches_head")
+    @patch("bump_download.create_commit")
     @patch("bump_download.ensure_clean_worktree")
     @patch("bump_download.remote_tag_exists", return_value=False)
     @patch(
         "bump_download.discover_latest",
         return_value=("1.41.6.1", {"2347771": "11", "2347773": "22"}),
     )
-    def test_run_repair_mode_creates_tag_and_writes_update(
+    def test_run_missing_release_mode_dispatches_without_local_mutation(
         self,
         _discover,
         remote_tag_exists,
         ensure_clean_worktree,
-        ensure_local_tag_matches_head,
-        create_repair_tag,
-        create_commit_and_tag,
+        create_commit,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             config = Path(tmp) / "download.yaml"
@@ -888,11 +846,9 @@ class TestBumpDownload(unittest.TestCase):
             output_text = output.read_text(encoding="utf-8")
 
         remote_tag_exists.assert_called_once_with("14161")
-        ensure_clean_worktree.assert_called_once_with()
-        ensure_local_tag_matches_head.assert_called_once_with("14161")
-        create_repair_tag.assert_called_once_with("14161")
-        create_commit_and_tag.assert_not_called()
-        self.assertEqual("updated=true\ntag=14161\nrepair_tag=true\n", output_text)
+        ensure_clean_worktree.assert_not_called()
+        create_commit.assert_not_called()
+        self.assertEqual("updated=true\ntag=14161\ndispatch_build=true\n", output_text)
 
     @patch("bump_download.parse_args", return_value=argparse.Namespace())
     def test_main_maps_known_errors_to_exit_codes(self, _parse_args) -> None:
