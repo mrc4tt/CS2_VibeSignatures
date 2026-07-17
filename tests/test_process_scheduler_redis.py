@@ -16,6 +16,9 @@ from process_reporter_redis import RedisProcessReporter
 from process_scheduler_redis import RedisProcessScheduler, RedisRunQueue, RunRequest
 
 
+TEST_GAMEVER = "14168"
+
+
 class FakePopenFactory:
     def __init__(self, exit_codes=None):
         self.exit_codes = exit_codes or {}
@@ -123,8 +126,8 @@ class TestRedisProcessSchedulerIntegration(unittest.TestCase):
 
     def test_submit_creates_fifo_stream_and_safe_queued_metadata(self) -> None:
         queue = self._queue()
-        first = RunRequest.create("100", run_id="run-first", agent="codex")
-        second = RunRequest.create("101", run_id="run-second", agent="claude")
+        first = RunRequest.create(TEST_GAMEVER, run_id="run-first", agent="codex")
+        second = RunRequest.create(TEST_GAMEVER, run_id="run-second", agent="claude")
 
         first_id = queue.submit(first)
         second_id = queue.submit(second)
@@ -132,7 +135,7 @@ class TestRedisProcessSchedulerIntegration(unittest.TestCase):
         self.assertLess(tuple(map(int, first_id.split("-"))), tuple(map(int, second_id.split("-"))))
         meta = self.redis.hgetall(queue.keys.run_meta(first.run_id))
         self.assertEqual("queued", meta["status"])
-        self.assertEqual("100", meta["gamever"])
+        self.assertEqual(TEST_GAMEVER, meta["gamever"])
         self.assertNotIn("redis_url", meta)
         self.assertEqual(
             [first.run_id, second.run_id], [fields["run_id"] for _, fields in self.redis.xrange(queue.keys.run_queue)]
@@ -140,7 +143,10 @@ class TestRedisProcessSchedulerIntegration(unittest.TestCase):
 
     def test_runs_in_fifo_order_with_single_active_process_and_acks(self) -> None:
         queue = self._queue()
-        requests = [RunRequest.create(str(gamever), run_id=f"run-{gamever}") for gamever in (100, 101)]
+        requests = [
+            RunRequest.create(TEST_GAMEVER, run_id="run-first"),
+            RunRequest.create(TEST_GAMEVER, run_id="run-second"),
+        ]
         for request in requests:
             queue.submit(request)
         popen = FakePopenFactory()
@@ -157,7 +163,7 @@ class TestRedisProcessSchedulerIntegration(unittest.TestCase):
 
     def test_failed_process_finalizes_run_and_acks(self) -> None:
         queue = self._queue()
-        request = RunRequest.create("100", run_id="run-failed")
+        request = RunRequest.create(TEST_GAMEVER, run_id="run-failed")
         queue.submit(request)
         scheduler = self._scheduler(queue, FakePopenFactory({request.run_id: 7}))
 
@@ -170,7 +176,7 @@ class TestRedisProcessSchedulerIntegration(unittest.TestCase):
 
     def test_pending_entry_is_claimed_and_executed_after_restart(self) -> None:
         original = self._queue(consumer="old-consumer")
-        request = RunRequest.create("100", run_id="run-recovered-queued")
+        request = RunRequest.create(TEST_GAMEVER, run_id="run-recovered-queued")
         original.submit(request)
         original.ensure_group()
         original.client.xreadgroup(original.group, original.consumer, {original.keys.run_queue: ">"}, count=1)
@@ -185,7 +191,7 @@ class TestRedisProcessSchedulerIntegration(unittest.TestCase):
 
     def test_reporter_attaches_to_scheduler_created_run(self) -> None:
         queue = self._queue()
-        request = RunRequest.create("100", run_id="run-attach")
+        request = RunRequest.create(TEST_GAMEVER, run_id="run-attach")
         queue.submit(request)
         entry = queue.next_entry(block_ms=1)
         queue.transition(entry, RunStatus.STARTING)
@@ -208,7 +214,7 @@ class TestRedisProcessSchedulerIntegration(unittest.TestCase):
 
     def test_live_heartbeat_prevents_duplicate_then_expiry_aborts(self) -> None:
         original = self._queue(consumer="old-consumer")
-        request = RunRequest.create("100", run_id="run-live")
+        request = RunRequest.create(TEST_GAMEVER, run_id="run-live")
         original.submit(request)
         original.ensure_group()
         response = original.client.xreadgroup(
@@ -237,7 +243,7 @@ class TestRedisProcessSchedulerIntegration(unittest.TestCase):
 
     def test_redis_connection_details_are_only_passed_via_environment(self) -> None:
         queue = self._queue()
-        request = RunRequest.create("100", run_id="run-command", skill_filter="find-A", agent="codex")
+        request = RunRequest.create(TEST_GAMEVER, run_id="run-command", skill_filter="find-A", agent="codex")
         scheduler = self._scheduler(queue, FakePopenFactory())
 
         command = scheduler.build_command(request)
@@ -250,7 +256,10 @@ class TestRedisProcessSchedulerIntegration(unittest.TestCase):
 
     def test_real_subprocess_smoke_runs_two_requests_strictly_in_sequence(self) -> None:
         queue = self._queue()
-        requests = [RunRequest.create(str(gamever), run_id=f"run-smoke-{gamever}") for gamever in (100, 101)]
+        requests = [
+            RunRequest.create(TEST_GAMEVER, run_id="run-smoke-first"),
+            RunRequest.create(TEST_GAMEVER, run_id="run-smoke-second"),
+        ]
         for request in requests:
             queue.submit(request)
         analyzer = Path(__file__).parent / "fixtures" / "process_scheduler_smoke_analyzer.py"

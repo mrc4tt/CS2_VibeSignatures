@@ -4,8 +4,9 @@ from tempfile import TemporaryDirectory
 
 import yaml
 
+from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotMismatchError, SnapshotSchemaError
-from gamesymbol_snapshot_lib.operations import pack_snapshot, restore_snapshot, verify_snapshot
+from gamesymbol_snapshot_lib.operations import build_actual_document, pack_snapshot, restore_snapshot, verify_snapshot
 from gamesymbol_snapshot_lib.snapshot_cli import main as snapshot_main
 from tests.gamesymbol_snapshot_test_support import module, skill, write_config, write_yaml
 
@@ -64,7 +65,7 @@ class TestPack(unittest.TestCase):
 
         self.assertIn("server/Optional.windows.yaml", data["files"])
 
-    def test_pack_rejects_missing_required_and_undeclared_without_overwriting(self) -> None:
+    def test_pack_rejects_missing_required_without_overwriting(self) -> None:
         with TemporaryDirectory() as temp_dir:
             workspace = SnapshotWorkspace(Path(temp_dir))
             workspace.snapshot.parent.mkdir(parents=True)
@@ -73,11 +74,27 @@ class TestPack(unittest.TestCase):
                 workspace.pack()
             self.assertEqual(b"existing\n", workspace.snapshot.read_bytes())
 
+    def test_pack_warns_and_ignores_undeclared_yaml(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = SnapshotWorkspace(Path(temp_dir))
             workspace.write_required()
             write_yaml(workspace.bindir / "14168/server/Stale.windows.yaml", {"stale": True})
-            with self.assertRaises(SnapshotMismatchError):
-                workspace.pack()
-            self.assertEqual(b"existing\n", workspace.snapshot.read_bytes())
+            with self.assertLogs("gamesymbol_snapshot_lib.operations", "WARNING") as logs:
+                data = yaml.safe_load(workspace.pack())
+
+        self.assertEqual(2, data["file_count"])
+        self.assertNotIn("server/Stale.windows.yaml", data["files"])
+        self.assertIn("WARNING: Ignoring undeclared symbol YAML:\n  server/Stale.windows.yaml", logs.output[0])
+
+    def test_strict_build_rejects_undeclared_yaml(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = SnapshotWorkspace(Path(temp_dir))
+            workspace.write_required()
+            write_yaml(workspace.bindir / "14168/server/Stale.windows.yaml", {"stale": True})
+            contract = load_contract(workspace.config, "14168", workspace.bindir)
+
+            with self.assertRaisesRegex(SnapshotMismatchError, "Undeclared symbol YAML"):
+                build_actual_document(contract, strict=True)
 
     def test_pack_rejects_top_level_non_mapping_yaml(self) -> None:
         with TemporaryDirectory() as temp_dir:
