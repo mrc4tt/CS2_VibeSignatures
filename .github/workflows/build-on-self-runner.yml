@@ -238,6 +238,9 @@ jobs:
         shell: pwsh
         run: |
           $sdkPath = Join-Path $env:GITHUB_WORKSPACE "hl2sdk_cs2"
+          $safeSdkPath = ([IO.Path]::GetFullPath($sdkPath) -replace '\\', '/')
+          git config --global --add safe.directory "$safeSdkPath"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to trust hl2sdk_cs2 Git directory." }
           $sdkRef = "cs2-$env:GAMEVER"
           $sdkRemote = "https://github.com/HLND2T/hl2sdk.git"
           $pinnedSha = (git -C $sdkPath rev-parse HEAD).Trim()
