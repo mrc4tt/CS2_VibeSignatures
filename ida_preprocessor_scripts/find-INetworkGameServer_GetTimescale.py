@@ -8,12 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "INetworkGameServer_GetTimescale",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CLoopTypeClientServer_AdvanceTime.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "INetworkGameServer_GetTimescale",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CLoopTypeClientServer_AdvanceTime.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 # INetworkGameServer is an abstract interface -- no vtable YAML needed; vtable_name is metadata only

@@ -8,11 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "IEngineServiceMgr_GetActiveLoopClientServerMode",
-        "prompt/call_llm_decompile.md",
-        "references/client/CPrediction_PostNetworkDataReceived.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IEngineServiceMgr_GetActiveLoopClientServerMode",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CPrediction_PostNetworkDataReceived.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

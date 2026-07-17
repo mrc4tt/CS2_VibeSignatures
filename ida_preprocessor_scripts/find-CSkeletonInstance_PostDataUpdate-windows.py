@@ -13,22 +13,30 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CModelState_SetupJointState",
-        "prompt/call_llm_decompile.md",
-        "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
-    ),
-    (
-        "CSkeletonInstance_m_modelState_m_hModel",
-        "prompt/call_llm_decompile.md",
-        "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
-    ),
-    (
-        "CSkeletonInstance_m_modelState",
-        "prompt/call_llm_decompile.md",
-        "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CModelState_SetupJointState",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CSkeletonInstance_m_modelState_m_hModel",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "CSkeletonInstance_m_modelState",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

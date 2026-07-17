@@ -35,11 +35,14 @@ async def preprocess_skill(
 ):
     """Reuse previous gamever offset_sig to locate struct member and write YAML."""
     llm_decompile = [
-        (
-            "CGameEntitySystem_m_spawnGroupEntityFilters",
-            "prompt/call_llm_decompile.md",
-            "references/{module_name}/CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml",
-        ),
+        {
+            "symbol_name": "CGameEntitySystem_m_spawnGroupEntityFilters",
+            "prompt_path": "prompt/call_llm_decompile.md",
+            "reference_yaml_paths": [
+                "references/{module_name}/CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml",
+            ],
+            "expected_result_sections": ["found_struct_offset"],
+        },
     ]
 
     return await preprocess_common_skill(

@@ -8,12 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntityKeyValues_Initialized",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntityKeyValues_LoadFromContext.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityKeyValues_Initialized",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntityKeyValues_LoadFromContext.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

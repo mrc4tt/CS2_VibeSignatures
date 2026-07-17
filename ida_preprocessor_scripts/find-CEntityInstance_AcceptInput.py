@@ -8,12 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntityInstance_AcceptInput",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSGameRules_TerminateRound.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityInstance_AcceptInput",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSGameRules_TerminateRound.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

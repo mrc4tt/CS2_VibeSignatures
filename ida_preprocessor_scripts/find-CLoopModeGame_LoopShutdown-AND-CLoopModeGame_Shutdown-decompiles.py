@@ -10,41 +10,57 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE_WINDOWS = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IGameSystem_DestroyAllGameSystems",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
-    ),
-    (
-        "IGameSystem_LoopDestroyAllSystems",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
-    ),
-    (
-        "IGameSystem_LoopPreShutdownAllSystems",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameSystem_DestroyAllGameSystems",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "IGameSystem_LoopDestroyAllSystems",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "IGameSystem_LoopPreShutdownAllSystems",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 LLM_DECOMPILE_LINUX = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IGameSystem_DestroyAllGameSystems",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
-    ),
-    (
-        "IGameSystem_LoopDestroyAllSystems",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
-    ),
-    (
-        "IGameSystem_LoopPreShutdownAllSystems",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameSystem_DestroyAllGameSystems",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "IGameSystem_LoopDestroyAllSystems",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "IGameSystem_LoopPreShutdownAllSystems",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

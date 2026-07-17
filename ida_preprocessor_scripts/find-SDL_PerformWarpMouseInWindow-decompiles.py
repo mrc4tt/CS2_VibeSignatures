@@ -15,37 +15,54 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "SDL_Mouse_focus",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
-    ),
-    (
-        "SDL_Mouse_last_x",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
-    ),
-    (
-        "SDL_Mouse_last_y",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
-    ),
-    (
-        "SDL_Mouse_has_position",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
-    ),
-    (
-        "SDL_Mouse_relative_mode_warp_motion",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
-    ),
-    (
-        "SDL_Mouse_WarpMouse",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "SDL_Mouse_focus",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "SDL_Mouse_last_x",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "SDL_Mouse_last_y",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "SDL_Mouse_has_position",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "SDL_Mouse_relative_mode_warp_motion",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "SDL_Mouse_WarpMouse",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

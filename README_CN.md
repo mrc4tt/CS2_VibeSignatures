@@ -161,8 +161,21 @@ uv run generate_reference_yaml.py -gamever 14141 -module engine -platform window
      - `ida_preprocessor_scripts/references/<module>/<func_name>.<platform>.yaml`
    - 若 `LLM_DECOMPILE` 使用相对路径，应写成：
      - `references/<module>/<func_name>.<platform>.yaml`
-   - tuple 示例：
-     - `("CNetworkMessages_FindNetworkGroup", "prompt/call_llm_decompile.md", "references/engine/CNetworkGameClient_RecordEntityBandwidth.windows.yaml")`
+   - 每个配置项必须显式声明允许的结果 section：
+
+     ```python
+     {
+         "symbol_name": "INetworkMessages_FindNetworkGroup",
+         "prompt_path": "prompt/call_llm_decompile.md",
+         "reference_yaml_paths": [
+             "references/engine/CNetworkGameClient_RecordEntityBandwidth.{platform}.yaml",
+         ],
+         "expected_result_sections": ["found_vcall"],
+     }
+     ```
+
+   - 合法 section 包括 `found_call`、`found_vcall`、`found_funcptr`、`found_gv` 和 `found_struct_offset`。
+   - 同一 symbol 需要多个 reference 时，应写入同一个 `reference_yaml_paths` 列表，不要声明多个重复 spec。
    - `LLM_DECOMPILE` 复用 `ida_analyze_bin.py` 的共享 `-llm_*` 参数：`-llm_model`、`-llm_apikey`、`-llm_baseurl`、`-llm_temperature`、`-llm_effort`、`-llm_fake_as`
 
 ### 3. 将 yaml(s) 转换为 gamedata json / txt

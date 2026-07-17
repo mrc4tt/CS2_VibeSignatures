@@ -10,30 +10,42 @@ TARGET_FUNCTION_NAMES = [
 
 # Windows: found in CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount
 LLM_DECOMPILE_WINDOWS = [
-    (
-        "EntityInstanceAddChangeAccessorPath",
-        "prompt/call_llm_decompile.md",
-        "references/server/CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount.{platform}.yaml",
-    ),
-    (
-        "EntityInstanceAssignChangeAccessorPathIds",
-        "prompt/call_llm_decompile.md",
-        "references/server/CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "EntityInstanceAddChangeAccessorPath",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "EntityInstanceAssignChangeAccessorPathIds",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 # Linux: found in CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats
 LLM_DECOMPILE_LINUX = [
-    (
-        "EntityInstanceAddChangeAccessorPath",
-        "prompt/call_llm_decompile.md",
-        "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats.{platform}.yaml",
-    ),
-    (
-        "EntityInstanceAssignChangeAccessorPathIds",
-        "prompt/call_llm_decompile.md",
-        "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "EntityInstanceAddChangeAccessorPath",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "EntityInstanceAssignChangeAccessorPathIds",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

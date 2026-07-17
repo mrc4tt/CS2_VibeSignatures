@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySaveRestoreBlockHandler_SaveInitEntities",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySaveRestoreBlockHandler_PreSave.{platform}.yaml",
-    ),
-    (
-        "CEntityInstance_OnSave",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySaveRestoreBlockHandler_PreSave.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySaveRestoreBlockHandler_SaveInitEntities",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySaveRestoreBlockHandler_PreSave.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CEntityInstance_OnSave",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySaveRestoreBlockHandler_PreSave.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

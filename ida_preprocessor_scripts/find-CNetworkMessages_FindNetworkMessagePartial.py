@@ -8,12 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CNetworkMessages_FindNetworkMessagePartial",
-        "prompt/call_llm_decompile.md",
-        "references/networksystem/CNetChan_ParseNetMessageShowFilter.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CNetworkMessages_FindNetworkMessagePartial",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/networksystem/CNetChan_ParseNetMessageShowFilter.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

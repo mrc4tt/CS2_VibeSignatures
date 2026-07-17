@@ -1300,11 +1300,14 @@ class TestFindINetworkMessagesSetIsForServer(unittest.IsolatedAsyncioTestCase):
         )
         mock_preprocess_common_skill = AsyncMock(return_value=True)
         expected_llm_decompile_specs = [
-            (
-                "INetworkMessages_SetIsForServer",
-                "prompt/call_llm_decompile.md",
-                "references/engine/CNetworkServerService_Init.{platform}.yaml",
-            )
+            {
+                "symbol_name": "INetworkMessages_SetIsForServer",
+                "prompt_path": "prompt/call_llm_decompile.md",
+                "reference_yaml_paths": [
+                    "references/engine/CNetworkServerService_Init.{platform}.yaml",
+                ],
+                "expected_result_sections": ["found_vcall"],
+            },
         ]
         expected_func_vtable_relations = [("INetworkMessages_SetIsForServer", "INetworkMessages")]
         expected_generate_yaml_desired_fields = [
@@ -1367,21 +1370,30 @@ class TestFindCNetworkMessagesGetNetworkGroupStats(unittest.IsolatedAsyncioTestC
         )
         mock_preprocess_common_skill = AsyncMock(return_value=True)
         expected_llm_decompile_specs = [
-            (
-                "INetworkMessages_GetNetworkGroupCount",
-                "prompt/call_llm_decompile.md",
-                "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
-            ),
-            (
-                "INetworkMessages_GetNetworkGroupName",
-                "prompt/call_llm_decompile.md",
-                "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
-            ),
-            (
-                "INetworkMessages_GetNetworkGroupColor",
-                "prompt/call_llm_decompile.md",
-                "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
-            ),
+            {
+                "symbol_name": "INetworkMessages_GetNetworkGroupCount",
+                "prompt_path": "prompt/call_llm_decompile.md",
+                "reference_yaml_paths": [
+                    "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
+                ],
+                "expected_result_sections": ["found_vcall"],
+            },
+            {
+                "symbol_name": "INetworkMessages_GetNetworkGroupName",
+                "prompt_path": "prompt/call_llm_decompile.md",
+                "reference_yaml_paths": [
+                    "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
+                ],
+                "expected_result_sections": ["found_vcall"],
+            },
+            {
+                "symbol_name": "INetworkMessages_GetNetworkGroupColor",
+                "prompt_path": "prompt/call_llm_decompile.md",
+                "reference_yaml_paths": [
+                    "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
+                ],
+                "expected_result_sections": ["found_vcall"],
+            },
         ]
         expected_func_vtable_relations = [
             ("INetworkMessages_GetNetworkGroupCount", "INetworkMessages"),
@@ -2374,11 +2386,14 @@ class TestFindINetworkMessagesFindNetworkGroup(unittest.IsolatedAsyncioTestCase)
         )
         mock_preprocess_common_skill = AsyncMock(return_value=True)
         expected_llm_decompile_specs = [
-            (
-                "INetworkMessages_FindNetworkGroup",
-                "prompt/call_llm_decompile.md",
-                "references/engine/CNetworkGameClient_RecordEntityBandwidth.{platform}.yaml",
-            )
+            {
+                "symbol_name": "INetworkMessages_FindNetworkGroup",
+                "prompt_path": "prompt/call_llm_decompile.md",
+                "reference_yaml_paths": [
+                    "references/engine/CNetworkGameClient_RecordEntityBandwidth.{platform}.yaml",
+                ],
+                "expected_result_sections": ["found_vcall"],
+            },
         ]
         expected_func_vtable_relations = [("INetworkMessages_FindNetworkGroup", "INetworkMessages")]
         expected_generate_yaml_desired_fields = [
@@ -2561,11 +2576,14 @@ class TestFindCBaseEntityCollisionRulesChanged(unittest.IsolatedAsyncioTestCase)
         )
         mock_preprocess_common_skill = AsyncMock(return_value=True)
         expected_llm_decompile_specs = [
-            (
-                "CBaseEntity_CollisionRulesChanged",
-                "prompt/call_llm_decompile.md",
-                "references/server/PhysEnableEntityCollisions.{platform}.yaml",
-            )
+            {
+                "symbol_name": "CBaseEntity_CollisionRulesChanged",
+                "prompt_path": "prompt/call_llm_decompile.md",
+                "reference_yaml_paths": [
+                    "references/server/PhysEnableEntityCollisions.{platform}.yaml",
+                ],
+                "expected_result_sections": ["found_vcall"],
+            },
         ]
         expected_func_vtable_relations = [("CBaseEntity_CollisionRulesChanged", "CBaseEntity")]
         expected_generate_yaml_desired_fields = [
@@ -2626,11 +2644,14 @@ class TestFindINetworkMessagesGetLoggingChannelWindows(unittest.IsolatedAsyncioT
         mock_preprocess_common_skill = AsyncMock(return_value=True)
         llm_config = {"model": "gpt-4.1-mini", "api_key": "test-api-key"}
         expected_llm_decompile_specs = [
-            (
-                "INetworkMessages_GetLoggingChannel",
-                "prompt/call_llm_decompile.md",
-                ("references/server/CNetworkUtlVectorEmbedded_TryLateResolve_m_vecRenderAttributes.{platform}.yaml"),
-            )
+            {
+                "symbol_name": "INetworkMessages_GetLoggingChannel",
+                "prompt_path": "prompt/call_llm_decompile.md",
+                "reference_yaml_paths": [
+                    "references/server/CNetworkUtlVectorEmbedded_TryLateResolve_m_vecRenderAttributes.{platform}.yaml",
+                ],
+                "expected_result_sections": ["found_vcall"],
+            },
         ]
         expected_func_vtable_relations = [("INetworkMessages_GetLoggingChannel", "INetworkMessages")]
         expected_generate_yaml_desired_fields = [
@@ -2692,15 +2713,14 @@ class TestFindINetworkMessagesGetLoggingChannelLinux(unittest.IsolatedAsyncioTes
         mock_preprocess_common_skill = AsyncMock(return_value=True)
         llm_config = {"model": "gpt-4.1-mini", "api_key": "test-api-key"}
         expected_llm_decompile_specs = [
-            (
-                "INetworkMessages_GetLoggingChannel",
-                "prompt/call_llm_decompile.md",
-                (
-                    "references/server/"
-                    "CNetworkUtlVectorEmbedded_NetworkStateChanged_m_vecRenderAttributes."
-                    "{platform}.yaml"
-                ),
-            )
+            {
+                "symbol_name": "INetworkMessages_GetLoggingChannel",
+                "prompt_path": "prompt/call_llm_decompile.md",
+                "reference_yaml_paths": [
+                    "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_vecRenderAttributes.{platform}.yaml",
+                ],
+                "expected_result_sections": ["found_vcall"],
+            },
         ]
         expected_func_vtable_relations = [("INetworkMessages_GetLoggingChannel", "INetworkMessages")]
         expected_generate_yaml_desired_fields = [
@@ -2972,7 +2992,7 @@ class TestFindCcsPlayerMovementServicesProcessMovement(unittest.IsolatedAsyncioT
 
 
 class TestFindILoopTypeDeallocateLoopMode(unittest.IsolatedAsyncioTestCase):
-    async def test_preprocess_skill_forwards_two_llm_specs_in_fixed_order(self) -> None:
+    async def test_preprocess_skill_forwards_multiple_reference_paths_in_fixed_order(self) -> None:
         module = _load_module(
             Path("ida_preprocessor_scripts/find-CLoopTypeBase_DeallocateLoopMode.py"),
             "find_CLoopTypeBase_DeallocateLoopMode",
@@ -2980,16 +3000,15 @@ class TestFindILoopTypeDeallocateLoopMode(unittest.IsolatedAsyncioTestCase):
         mock_preprocess_common_skill = AsyncMock(return_value=True)
         llm_config = {"model": "gpt-5.4", "fake_as": "codex"}
         expected_llm_decompile_specs = [
-            (
-                "CLoopTypeBase_DeallocateLoopMode",
-                "prompt/call_llm_decompile.md",
-                "references/engine/CEngineServiceMgr_DeactivateLoop.{platform}.yaml",
-            ),
-            (
-                "CLoopTypeBase_DeallocateLoopMode",
-                "prompt/call_llm_decompile.md",
-                "references/engine/CEngineServiceMgr__MainLoop.{platform}.yaml",
-            ),
+            {
+                "symbol_name": "CLoopTypeBase_DeallocateLoopMode",
+                "prompt_path": "prompt/call_llm_decompile.md",
+                "reference_yaml_paths": [
+                    "references/engine/CEngineServiceMgr_DeactivateLoop.{platform}.yaml",
+                    "references/engine/CEngineServiceMgr__MainLoop.{platform}.yaml",
+                ],
+                "expected_result_sections": ["found_vcall"],
+            },
         ]
 
         with patch.object(module, "preprocess_common_skill", mock_preprocess_common_skill):

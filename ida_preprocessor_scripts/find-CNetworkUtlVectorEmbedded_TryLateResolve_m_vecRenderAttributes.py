@@ -8,12 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CNetworkUtlVectorEmbedded_TryLateResolve_m_vecRenderAttributes",
-        "prompt/call_llm_decompile.md",
-        "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_vecRenderAttributes.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CNetworkUtlVectorEmbedded_TryLateResolve_m_vecRenderAttributes",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_vecRenderAttributes.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

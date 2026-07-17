@@ -8,12 +8,14 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CCheckTransmitInfo_m_nPlayerSlot",
-        "prompt/call_llm_decompile.md",
-        "references/server/CSource2GameEntities_CheckTransmit.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CCheckTransmitInfo_m_nPlayerSlot",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CSource2GameEntities_CheckTransmit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

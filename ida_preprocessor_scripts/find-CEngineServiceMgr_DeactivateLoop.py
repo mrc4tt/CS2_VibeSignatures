@@ -11,11 +11,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CEngineServiceMgr_DeactivateLoop",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CEngineServiceMgr__MainLoop.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEngineServiceMgr_DeactivateLoop",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CEngineServiceMgr__MainLoop.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

@@ -12,38 +12,46 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    # All five vfunc offsets found by decompiling IGameSystem_LoopInitAllSystems:
-    #   IGameSystemFactory_ShouldAutoAdd    = virtual call through IGameSystemFactory vtable, boolean gate before adding
-    #   IGameSystemFactory_CreateGameSystem = virtual call through IGameSystemFactory vtable (*v), allocates a new game system
-    #   IGameSystemFactory_IsReallocating   = virtual call through IGameSystemFactory vtable (*v), boolean check
-    #   IGameSystem_SetName                 = conditional virtual call through IGameSystem vtable (allocated instance)
-    #   IGameSystemFactory_GetPriority      = virtual call through IGameSystemFactory vtable, returns priority int
-    (
-        "IGameSystemFactory_ShouldAutoAdd",
-        "prompt/call_llm_decompile.md",
-        "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
-    ),
-    (
-        "IGameSystemFactory_CreateGameSystem",
-        "prompt/call_llm_decompile.md",
-        "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
-    ),
-    (
-        "IGameSystemFactory_IsReallocating",
-        "prompt/call_llm_decompile.md",
-        "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
-    ),
-    (
-        "IGameSystem_SetName",
-        "prompt/call_llm_decompile.md",
-        "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
-    ),
-    (
-        "IGameSystemFactory_GetPriority",
-        "prompt/call_llm_decompile.md",
-        "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameSystemFactory_ShouldAutoAdd",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "IGameSystemFactory_CreateGameSystem",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "IGameSystemFactory_IsReallocating",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "IGameSystem_SetName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "IGameSystemFactory_GetPriority",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

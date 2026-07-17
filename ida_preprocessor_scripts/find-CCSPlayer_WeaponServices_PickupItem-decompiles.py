@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CCSPlayer_WeaponServices_EquipWeapon",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayer_WeaponServices_PickupItem.{platform}.yaml",
-    ),
-    (
-        "CCSPlayer_WeaponServices_CanUse",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayer_WeaponServices_PickupItem.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CCSPlayer_WeaponServices_EquipWeapon",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayer_WeaponServices_PickupItem.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CCSPlayer_WeaponServices_CanUse",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayer_WeaponServices_PickupItem.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

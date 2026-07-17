@@ -8,11 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CLoopTypeBase_GetClientServerMode",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CEngineServiceMgr_GetActiveLoopClientServerMode.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CLoopTypeBase_GetClientServerMode",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CEngineServiceMgr_GetActiveLoopClientServerMode.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

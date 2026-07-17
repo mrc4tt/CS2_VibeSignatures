@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBaseModelEntity_SetModel",
-        "prompt/call_llm_decompile.md",
-        "references/server/CFlashbangProjectile_Spawn.{platform}.yaml",
-    ),
-    (
-        "CBaseEntity_SetGravityScale",
-        "prompt/call_llm_decompile.md",
-        "references/server/CFlashbangProjectile_Spawn.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBaseModelEntity_SetModel",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CFlashbangProjectile_Spawn.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CBaseEntity_SetGravityScale",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CFlashbangProjectile_Spawn.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

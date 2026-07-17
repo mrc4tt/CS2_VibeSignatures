@@ -8,12 +8,14 @@ TARGET_GLOBALVAR_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "g_CSGOInput",
-        "prompt/call_llm_decompile.md",
-        "references/client/ClientModeCSNormal_Update.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "g_CSGOInput",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/ClientModeCSNormal_Update.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

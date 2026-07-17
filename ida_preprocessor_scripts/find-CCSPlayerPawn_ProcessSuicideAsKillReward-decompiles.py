@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "ClientPrint",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayerPawn_ProcessSuicideAsKillReward.{platform}.yaml",
-    ),
-    (
-        "UTIL_ClientPrintFilter",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayerPawn_ProcessSuicideAsKillReward.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "ClientPrint",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayerPawn_ProcessSuicideAsKillReward.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "UTIL_ClientPrintFilter",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayerPawn_ProcessSuicideAsKillReward.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

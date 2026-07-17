@@ -19,52 +19,78 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_DestroyEntity",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
-    ),
-    (
-        "CConcreteEntityList_AllocEntity",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_ConstructEntity",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_GetSpawnGroupWorldId",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_FindClassByDesignName",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_EntityList",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_hActiveSpawnGroup",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
-    ),
-    (
-        "CEntityIdentity_FreeAttributes",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
-    ),
-    (
-        "CConcreteEntityList_FreeEntity",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_DestroyEntity",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CConcreteEntityList_AllocEntity",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CEntitySystem_ConstructEntity",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CEntitySystem_GetSpawnGroupWorldId",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CEntitySystem_FindClassByDesignName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CEntitySystem_m_EntityList",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "CEntitySystem_m_hActiveSpawnGroup",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "CEntityIdentity_FreeAttributes",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CConcreteEntityList_FreeEntity",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

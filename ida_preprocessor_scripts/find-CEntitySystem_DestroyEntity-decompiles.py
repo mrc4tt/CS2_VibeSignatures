@@ -9,16 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CEntityInstance_Disconnect",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_DestroyEntity.{platform}.yaml",
-    ),
-    (
-        "CEntityComponentHelperT_Free",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_DestroyEntity.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityInstance_Disconnect",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_DestroyEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CEntityComponentHelperT_Free",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_DestroyEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

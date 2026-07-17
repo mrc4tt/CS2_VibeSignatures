@@ -8,11 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CEntitySystem_ClearEntityDatabase",
-        "prompt/call_llm_decompile.md",
-        "references/server/CLoopModeGame_OnLoopDeactivate.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_ClearEntityDatabase",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CLoopModeGame_OnLoopDeactivate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

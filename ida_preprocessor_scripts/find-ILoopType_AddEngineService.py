@@ -8,11 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "ILoopType_AddEngineService",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CLoopTypeClientServer_LoopTypeInit.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "ILoopType_AddEngineService",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CLoopTypeClientServer_LoopTypeInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

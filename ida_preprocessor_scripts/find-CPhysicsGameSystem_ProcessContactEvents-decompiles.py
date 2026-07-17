@@ -11,27 +11,38 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IVPhys2World_GetTouchingList",
-        "prompt/call_llm_decompile.md",
-        "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
-    ),
-    (
-        "CBaseEntity_PhysicsDispatchStartTouch",
-        "prompt/call_llm_decompile.md",
-        "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
-    ),
-    (
-        "CBaseEntity_PhysicsNotifyOtherOfEndTouch",
-        "prompt/call_llm_decompile.md",
-        "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
-    ),
-    (
-        "CBaseEntity_PhysicsDispatchTouch",
-        "prompt/call_llm_decompile.md",
-        "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IVPhys2World_GetTouchingList",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CBaseEntity_PhysicsDispatchStartTouch",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CBaseEntity_PhysicsNotifyOtherOfEndTouch",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CBaseEntity_PhysicsDispatchTouch",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

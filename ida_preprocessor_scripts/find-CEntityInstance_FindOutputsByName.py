@@ -8,11 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CEntityInstance_FindOutputsByName",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntFireOutputAutoCompletionFunctor_FireOutput.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityInstance_FindOutputsByName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntFireOutputAutoCompletionFunctor_FireOutput.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

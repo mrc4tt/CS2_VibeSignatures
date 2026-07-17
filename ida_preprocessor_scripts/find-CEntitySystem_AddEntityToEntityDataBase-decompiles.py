@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_OnAddEntity",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_AddEntityToEntityDataBase.{platform}.yaml",
-    ),
-    (
-        "CEntityInstance_AddedToEntityDatabase",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_AddEntityToEntityDataBase.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_OnAddEntity",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_AddEntityToEntityDataBase.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CEntityInstance_AddedToEntityDatabase",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_AddEntityToEntityDataBase.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

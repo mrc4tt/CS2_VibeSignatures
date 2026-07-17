@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IGameSystem_GetName",
-        "prompt/call_llm_decompile.md",
-        "references/client/IGameSystem_DestroyAllGameSystems.{platform}.yaml",
-    ),
-    (
-        "IGameSystemFactory_DestroyGameSystem",
-        "prompt/call_llm_decompile.md",
-        "references/client/IGameSystem_DestroyAllGameSystems.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameSystem_GetName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/IGameSystem_DestroyAllGameSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "IGameSystemFactory_DestroyGameSystem",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/IGameSystem_DestroyAllGameSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

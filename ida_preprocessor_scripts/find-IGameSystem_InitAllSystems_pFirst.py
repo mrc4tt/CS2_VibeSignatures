@@ -8,12 +8,14 @@ TARGET_GLOBALVAR_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IGameSystem_InitAllSystems_pFirst",
-        "prompt/call_llm_decompile.md",
-        "references/server/IGameSystem_InitAllSystems.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameSystem_InitAllSystems_pFirst",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/IGameSystem_InitAllSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

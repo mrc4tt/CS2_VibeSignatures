@@ -13,36 +13,54 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CCSBot_Attack",
-        "prompt/call_llm_decompile.md",
-        "references/server/HideState_OnUpdate.{platform}.yaml",
-    ),
-    (
-        "CCSBot_MoveTo",
-        "prompt/call_llm_decompile.md",
-        "references/server/HideState_OnUpdate.{platform}.yaml",
-    ),
-    (
-        "CCSBot_InhibitLookAround",
-        "prompt/call_llm_decompile.md",
-        "references/server/HideState_OnUpdate.{platform}.yaml",
-    ),
-    (
-        "CCSBot_SetDisposition",
-        "prompt/call_llm_decompile.md",
-        "references/server/HideState_OnUpdate.{platform}.yaml",
-    ),
-    (
-        "CCSBot_Idle",
-        "prompt/call_llm_decompile.md",
-        "references/server/HideState_OnUpdate.{platform}.yaml",
-    ),
-    (
-        "CCSBot_ComputePath",
-        "prompt/call_llm_decompile.md",
-        "references/server/HideState_OnUpdate.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CCSBot_Attack",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/HideState_OnUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CCSBot_MoveTo",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/HideState_OnUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CCSBot_InhibitLookAround",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/HideState_OnUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CCSBot_SetDisposition",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/HideState_OnUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CCSBot_Idle",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/HideState_OnUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CCSBot_ComputePath",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/HideState_OnUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

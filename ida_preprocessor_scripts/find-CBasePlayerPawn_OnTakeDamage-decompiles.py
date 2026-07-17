@@ -10,22 +10,30 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBasePlayerPawn_OnTakeDamage_Alive",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
-    ),
-    (
-        "CBasePlayerPawn_OnTakeDamage_Dying",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
-    ),
-    (
-        "CBasePlayerPawn_OnTakeDamage_Dead",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBasePlayerPawn_OnTakeDamage_Alive",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CBasePlayerPawn_OnTakeDamage_Dying",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CBasePlayerPawn_OnTakeDamage_Dead",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

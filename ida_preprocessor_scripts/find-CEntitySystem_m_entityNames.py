@@ -8,12 +8,14 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_m_entityNames",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_AddEntityToNameMap.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_m_entityNames",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_AddEntityToNameMap.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

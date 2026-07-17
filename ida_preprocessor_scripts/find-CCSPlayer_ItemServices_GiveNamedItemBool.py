@@ -8,12 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CCSPlayer_ItemServices_GiveNamedItemBool",
-        "prompt/call_llm_decompile.md",
-        "references/server/GiveCommand.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CCSPlayer_ItemServices_GiveNamedItemBool",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/GiveCommand.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

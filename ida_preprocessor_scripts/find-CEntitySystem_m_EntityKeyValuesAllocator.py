@@ -8,11 +8,14 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CEntitySystem_m_EntityKeyValuesAllocator",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySpawner_CPlayerSprayDecal_Spawn.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_m_EntityKeyValuesAllocator",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySpawner_CPlayerSprayDecal_Spawn.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

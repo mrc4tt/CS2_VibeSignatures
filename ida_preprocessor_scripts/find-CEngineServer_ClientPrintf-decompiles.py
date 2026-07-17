@@ -17,17 +17,22 @@ FUNC_VTABLE_RELATIONS = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CServerSideClientBase_ClientPrintf",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CEngineServer_ClientPrintf.{platform}.yaml",
-    ),
-    (
-        "CNetworkGameServer_ClientList",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CEngineServer_ClientPrintf.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CServerSideClientBase_ClientPrintf",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CEngineServer_ClientPrintf.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CNetworkGameServer_ClientList",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CEngineServer_ClientPrintf.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

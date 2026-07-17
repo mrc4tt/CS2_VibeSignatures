@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CPhysExplosion_Explode",
-        "prompt/call_llm_decompile.md",
-        "references/server/CPhysExplosion_Activate.{platform}.yaml",
-    ),
-    (
-        "UTIL_Remove",
-        "prompt/call_llm_decompile.md",
-        "references/server/CPhysExplosion_Activate.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CPhysExplosion_Explode",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CPhysExplosion_Activate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "UTIL_Remove",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CPhysExplosion_Activate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

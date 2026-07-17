@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IEngineServiceMgr_GetEventDispatcher",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml",
-    ),
-    (
-        "IGameSystem_ShutdownAllSystems",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IEngineServiceMgr_GetEventDispatcher",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "IGameSystem_ShutdownAllSystems",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

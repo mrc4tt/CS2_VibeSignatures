@@ -8,21 +8,25 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE_WINDOWS = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "UTIL_ClientPrintAll",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayerPawnBase_CheckForIdle.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "UTIL_ClientPrintAll",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayerPawnBase_CheckForIdle.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 LLM_DECOMPILE_LINUX = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "UTIL_ClientPrintAll",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayerPawnBase_CheckForIdleInternal.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "UTIL_ClientPrintAll",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayerPawnBase_CheckForIdleInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

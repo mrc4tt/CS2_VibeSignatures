@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBodyGameSystem_SpawnDependencyIsland",
-        "prompt/call_llm_decompile.md",
-        "references/server/CGameEntitySystem_Spawn.{platform}.yaml",
-    ),
-    (
-        "CGameEntitySystem_CheckGlobalState",
-        "prompt/call_llm_decompile.md",
-        "references/server/CGameEntitySystem_Spawn.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBodyGameSystem_SpawnDependencyIsland",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CGameEntitySystem_Spawn.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CGameEntitySystem_CheckGlobalState",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CGameEntitySystem_Spawn.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

@@ -9,17 +9,22 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntityInstance_m_CScriptComponent",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntityInstance_UpdateOnRemove.{platform}.yaml",
-    ),
-    (
-        "CEntityInstance_m_pKeyValues",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntityInstance_UpdateOnRemove.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityInstance_m_CScriptComponent",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntityInstance_UpdateOnRemove.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "CEntityInstance_m_pKeyValues",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntityInstance_UpdateOnRemove.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

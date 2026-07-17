@@ -18,32 +18,46 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "SDL_GetMouse",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
-    ),
-    (
-        "SDL_mouse_initialized",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
-    ),
-    (
-        "SDL_Mouse_was_touch_mouse_events",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
-    ),
-    (
-        "SDL_Mouse_cursor_visible",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
-    ),
-    (
-        "SDL_MouseWarpEmulationChanged",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "SDL_GetMouse",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "SDL_mouse_initialized",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+    },
+    {
+        "symbol_name": "SDL_Mouse_was_touch_mouse_events",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "SDL_Mouse_cursor_visible",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "SDL_MouseWarpEmulationChanged",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

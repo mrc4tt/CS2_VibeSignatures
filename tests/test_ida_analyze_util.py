@@ -5042,32 +5042,26 @@ class TestFunctionDetailExportPyEvalBuilder(unittest.IsolatedAsyncioTestCase):
 
 
 class TestLlmDecompileSupport(unittest.IsolatedAsyncioTestCase):
-    def test_build_expected_llm_result_sections_includes_struct_members_and_vfuncs(self) -> None:
+    def test_build_expected_llm_result_sections_uses_explicit_spec_contract(self) -> None:
         struct_member_name = "SDL_Mouse_WarpMouse"
         vfunc_name = "CEntitySystem_OnRemoveEntity"
         regular_func_name = "SDL_PerformWarpMouseInWindow"
-        desired_fields_map = {
-            struct_member_name: {
-                "desired_output_fields": ["struct_name", "member_name", "offset", "size"],
-            },
-            vfunc_name: {
-                "desired_output_fields": ["func_name", "vfunc_offset"],
-            },
-            regular_func_name: {
-                "desired_output_fields": ["func_name", "func_va"],
-            },
+        specs_map = {
+            struct_member_name: {"expected_result_sections": ["found_struct_offset"]},
+            vfunc_name: {"expected_result_sections": ["found_vcall"]},
+            regular_func_name: {"expected_result_sections": ["found_call", "found_funcptr"]},
         }
 
         expected_sections = ida_analyze_util._build_expected_llm_result_sections(
             [struct_member_name, vfunc_name, regular_func_name],
-            desired_fields_map,
-            struct_member_names=[struct_member_name],
+            specs_map,
         )
 
         self.assertEqual(
             {
-                struct_member_name: "found_struct_offset",
-                vfunc_name: "found_vcall",
+                struct_member_name: ["found_struct_offset"],
+                vfunc_name: ["found_vcall"],
+                regular_func_name: ["found_call", "found_funcptr"],
             },
             expected_sections,
         )
@@ -6361,72 +6355,82 @@ found_struct_offset: []
     def test_is_transient_llm_error_rejects_client_configuration_error(self) -> None:
         self.assertFalse(ida_analyze_util._is_transient_llm_error(RuntimeError("invalid api key")))
 
-    def test_build_llm_decompile_specs_map_groups_duplicate_symbol_names(
-        self,
-    ) -> None:
+    def test_build_llm_decompile_specs_map_normalizes_explicit_dict_contract(self) -> None:
         specs_map = ida_analyze_util._build_llm_decompile_specs_map(
             [
-                (
-                    "ILoopMode_OnLoopActivate",
-                    "prompt/call_llm_decompile.md",
-                    "references/reference_a.yaml",
-                ),
-                (
-                    "CNetworkMessages_FindNetworkGroup",
-                    "prompt/call_llm_decompile.md",
-                    "references/reference_b.yaml",
-                ),
-                (
-                    "ILoopMode_OnLoopActivate",
-                    "prompt/call_llm_decompile.md",
-                    "references/reference_c.yaml",
-                ),
+                {
+                    "symbol_name": "ILoopMode_OnLoopActivate",
+                    "prompt_path": "prompt/call_llm_decompile.md",
+                    "reference_yaml_paths": ["references/reference_a.yaml", "references/reference_c.yaml"],
+                    "expected_result_sections": ["found_vcall"],
+                },
+                {
+                    "symbol_name": "CNetworkMessages_FindNetworkGroup",
+                    "prompt_path": "prompt/call_llm_decompile.md",
+                    "reference_yaml_paths": ["references/reference_b.yaml"],
+                    "expected_result_sections": ["found_call", "found_funcptr"],
+                },
             ],
             debug=True,
         )
 
         self.assertEqual(
             {
-                "ILoopMode_OnLoopActivate": [
-                    {
-                        "prompt_path": "prompt/call_llm_decompile.md",
-                        "reference_yaml_path": "references/reference_a.yaml",
-                    },
-                    {
-                        "prompt_path": "prompt/call_llm_decompile.md",
-                        "reference_yaml_path": "references/reference_c.yaml",
-                    },
-                ],
-                "CNetworkMessages_FindNetworkGroup": [
-                    {
-                        "prompt_path": "prompt/call_llm_decompile.md",
-                        "reference_yaml_path": "references/reference_b.yaml",
-                    }
-                ],
+                "ILoopMode_OnLoopActivate": {
+                    "symbol_name": "ILoopMode_OnLoopActivate",
+                    "prompt_path": "prompt/call_llm_decompile.md",
+                    "reference_yaml_paths": ["references/reference_a.yaml", "references/reference_c.yaml"],
+                    "expected_result_sections": ["found_vcall"],
+                },
+                "CNetworkMessages_FindNetworkGroup": {
+                    "symbol_name": "CNetworkMessages_FindNetworkGroup",
+                    "prompt_path": "prompt/call_llm_decompile.md",
+                    "reference_yaml_paths": ["references/reference_b.yaml"],
+                    "expected_result_sections": ["found_call", "found_funcptr"],
+                },
             },
             specs_map,
         )
 
-    def test_build_llm_decompile_specs_map_rejects_mixed_prompt_paths(
-        self,
-    ) -> None:
+    def test_build_llm_decompile_specs_map_rejects_legacy_tuple(self) -> None:
         specs_map = ida_analyze_util._build_llm_decompile_specs_map(
-            [
-                (
-                    "ILoopMode_OnLoopActivate",
-                    "prompt/call_llm_decompile.md",
-                    "references/reference_a.yaml",
-                ),
-                (
-                    "ILoopMode_OnLoopActivate",
-                    "prompt/other_llm_decompile.md",
-                    "references/reference_b.yaml",
-                ),
-            ],
+            [("ILoopMode_OnLoopActivate", "prompt/call_llm_decompile.md", "references/reference_a.yaml")],
             debug=True,
         )
 
         self.assertIsNone(specs_map)
+
+    def test_build_llm_decompile_specs_map_rejects_missing_or_unknown_schema_fields(self) -> None:
+        base_spec = {
+            "symbol_name": "ILoopMode_OnLoopActivate",
+            "prompt_path": "prompt/call_llm_decompile.md",
+            "reference_yaml_paths": ["references/reference_a.yaml"],
+            "expected_result_sections": ["found_vcall"],
+        }
+
+        for case_name, invalid_spec in {
+            "missing_sections": {key: value for key, value in base_spec.items() if key != "expected_result_sections"},
+            "unknown_key": {**base_spec, "schema": "found_vcall"},
+            "unknown_section": {**base_spec, "expected_result_sections": ["found_unknown"]},
+        }.items():
+            with self.subTest(case_name=case_name):
+                self.assertIsNone(ida_analyze_util._build_llm_decompile_specs_map([invalid_spec], debug=True))
+
+    def test_validate_llm_decompile_spec_compatibility_rejects_found_call_for_vfunc_sig(self) -> None:
+        func_name = "CEntitySystem_OnRemoveEntity"
+        result = ida_analyze_util._validate_llm_decompile_spec_compatibility(
+            {
+                func_name: {
+                    "expected_result_sections": ["found_call"],
+                }
+            },
+            {func_name: "func"},
+            {func_name: {"desired_output_fields": ["func_name", "vfunc_sig"]}},
+            {func_name: "CEntitySystem"},
+            debug=True,
+        )
+
+        self.assertFalse(result)
 
     async def test_prepare_llm_decompile_request_collects_multiple_references(
         self,
@@ -6472,16 +6476,15 @@ found_struct_offset: []
                 request = ida_analyze_util._prepare_llm_decompile_request(
                     "ILoopMode_OnLoopActivate",
                     {
-                        "ILoopMode_OnLoopActivate": [
-                            {
-                                "prompt_path": "prompt/call_llm_decompile.md",
-                                "reference_yaml_path": "references/reference_a.yaml",
-                            },
-                            {
-                                "prompt_path": "prompt/call_llm_decompile.md",
-                                "reference_yaml_path": "references/reference_b.yaml",
-                            },
-                        ]
+                        "ILoopMode_OnLoopActivate": {
+                            "symbol_name": "ILoopMode_OnLoopActivate",
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference_a.yaml",
+                                "references/reference_b.yaml",
+                            ],
+                            "expected_result_sections": ["found_vcall"],
+                        }
                     },
                     {
                         "model": "gpt-5.4",
@@ -6594,12 +6597,12 @@ found_struct_offset: []
                 request = ida_analyze_util._prepare_llm_decompile_request(
                     "TargetFunc",
                     {
-                        "TargetFunc": [
-                            {
-                                "prompt_path": "prompt/call_llm_decompile.md",
-                                "reference_yaml_path": ("references/server/Reference.{platform}.yaml"),
-                            }
-                        ]
+                        "TargetFunc": {
+                            "symbol_name": "TargetFunc",
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": ["references/server/Reference.{platform}.yaml"],
+                            "expected_result_sections": ["found_vcall"],
+                        }
                     },
                     {
                         "model": "gpt-5.4",
@@ -6654,8 +6657,10 @@ found_struct_offset: []
                     "ILoopMode_OnLoopActivate",
                     {
                         "ILoopMode_OnLoopActivate": {
+                            "symbol_name": "ILoopMode_OnLoopActivate",
                             "prompt_path": "prompt/call_llm_decompile.md",
-                            "reference_yaml_path": "references/reference.yaml",
+                            "reference_yaml_paths": ["references/reference.yaml"],
+                            "expected_result_sections": ["found_vcall"],
                         }
                     },
                     {
@@ -8236,11 +8241,14 @@ found_struct_offset: []
                     image_base=0x180000000,
                     struct_member_names=["CBaseAnimGraph_m_skeletonInstance"],
                     llm_decompile_specs=[
-                        (
-                            "CBaseAnimGraph_m_skeletonInstance",
-                            "prompt/call_llm_decompile.md",
-                            "references/server/CBaseAnimGraph_GetAnimationController.windows.yaml",
-                        )
+                        {
+                            "symbol_name": "CBaseAnimGraph_m_skeletonInstance",
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/server/CBaseAnimGraph_GetAnimationController.windows.yaml",
+                            ],
+                            "expected_result_sections": ["found_struct_offset"],
+                        },
                     ],
                     llm_config={"model": "gpt-5.4"},
                     generate_yaml_desired_fields=[
@@ -8582,11 +8590,14 @@ found_struct_offset: []
                         )
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        )
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_vcall"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -8635,7 +8646,7 @@ found_struct_offset: []
             mock_call_llm_decompile.call_args.kwargs["symbol_name_list"],
         )
         self.assertEqual(
-            {func_name: "found_vcall"},
+            {func_name: ["found_vcall"]},
             mock_call_llm_decompile.call_args.kwargs["expected_result_sections"],
         )
         self.assertEqual(4, mock_call_llm_decompile.call_args.kwargs["max_retries"])
@@ -8774,16 +8785,22 @@ found_struct_offset: []
                         (func_names[1], ["func_name", "func_va"]),
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_names[0],
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
-                        (
-                            func_names[1],
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
+                        {
+                            "symbol_name": func_names[0],
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
+                        {
+                            "symbol_name": func_names[1],
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -8918,16 +8935,22 @@ found_struct_offset: []
                         (fast_path_func_name, ["func_name", "func_va"]),
                     ],
                     llm_decompile_specs=[
-                        (
-                            unresolved_func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
-                        (
-                            fast_path_func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
+                        {
+                            "symbol_name": unresolved_func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
+                        {
+                            "symbol_name": fast_path_func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -9095,16 +9118,22 @@ found_struct_offset: []
                         (gv_name, ["gv_name", "gv_va"]),
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
-                        (
-                            gv_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
+                        {
+                            "symbol_name": gv_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_gv"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -9293,16 +9322,22 @@ found_struct_offset: []
                             ),
                         ],
                         llm_decompile_specs=[
-                            (
-                                func_name,
-                                "prompt/call_llm_decompile.md",
-                                "references/reference.yaml",
-                            ),
-                            (
-                                struct_member_name,
-                                "prompt/call_llm_decompile.md",
-                                "references/reference.yaml",
-                            ),
+                            {
+                                "symbol_name": func_name,
+                                "prompt_path": "prompt/call_llm_decompile.md",
+                                "reference_yaml_paths": [
+                                    "references/reference.yaml",
+                                ],
+                                "expected_result_sections": ["found_call"],
+                            },
+                            {
+                                "symbol_name": struct_member_name,
+                                "prompt_path": "prompt/call_llm_decompile.md",
+                                "reference_yaml_paths": [
+                                    "references/reference.yaml",
+                                ],
+                                "expected_result_sections": ["found_struct_offset"],
+                            },
                         ],
                         llm_config={
                             "model": "gpt-4.1-mini",
@@ -9321,7 +9356,10 @@ found_struct_offset: []
             mock_call_llm_decompile.call_args.kwargs["symbol_name_list"],
         )
         self.assertEqual(
-            {struct_member_name: "found_struct_offset"},
+            {
+                func_name: ["found_call"],
+                struct_member_name: ["found_struct_offset"],
+            },
             mock_call_llm_decompile.call_args.kwargs["expected_result_sections"],
         )
         mock_preprocess_direct_struct_offset_sig.assert_awaited_once_with(
@@ -9520,16 +9558,22 @@ found_struct_offset: []
                             ),
                         ],
                         llm_decompile_specs=[
-                            (
-                                func_name,
-                                "prompt/call_llm_decompile.md",
-                                "references/reference.yaml",
-                            ),
-                            (
-                                struct_member_name,
-                                "prompt/call_llm_decompile.md",
-                                "references/reference.yaml",
-                            ),
+                            {
+                                "symbol_name": func_name,
+                                "prompt_path": "prompt/call_llm_decompile.md",
+                                "reference_yaml_paths": [
+                                    "references/reference.yaml",
+                                ],
+                                "expected_result_sections": ["found_call"],
+                            },
+                            {
+                                "symbol_name": struct_member_name,
+                                "prompt_path": "prompt/call_llm_decompile.md",
+                                "reference_yaml_paths": [
+                                    "references/reference.yaml",
+                                ],
+                                "expected_result_sections": ["found_struct_offset"],
+                            },
                         ],
                         llm_config={
                             "model": "gpt-4.1-mini",
@@ -9725,16 +9769,22 @@ found_struct_offset: []
                         (second_func_name, ["func_name", "func_va"]),
                     ],
                     llm_decompile_specs=[
-                        (
-                            first_func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
-                        (
-                            second_func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
+                        {
+                            "symbol_name": first_func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
+                        {
+                            "symbol_name": second_func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -9912,16 +9962,22 @@ found_struct_offset: []
                         (second_func_name, ["func_name", "func_va"]),
                     ],
                     llm_decompile_specs=[
-                        (
-                            first_func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
-                        (
-                            second_func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
+                        {
+                            "symbol_name": first_func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
+                        {
+                            "symbol_name": second_func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -9999,11 +10055,14 @@ found_struct_offset: []
                         )
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/missing.yaml",
-                        )
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/missing.yaml",
+                            ],
+                            "expected_result_sections": ["found_vcall"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -10134,16 +10193,15 @@ found_struct_offset: []
                         (func_name, ["func_name", "func_va"]),
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/deactivate.yaml",
-                        ),
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/mainloop.yaml",
-                        ),
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/deactivate.yaml",
+                                "references/mainloop.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -10259,16 +10317,15 @@ found_struct_offset: []
                         (func_name, ["func_name", "func_va"]),
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/deactivate.yaml",
-                        ),
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/mainloop.yaml",
-                        ),
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/deactivate.yaml",
+                                "references/mainloop.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -10409,11 +10466,14 @@ found_struct_offset: []
                     func_names=[func_name],
                     generate_yaml_desired_fields=[(func_name, ["func_name", "func_va"])],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        )
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -10576,11 +10636,14 @@ found_struct_offset: []
                         )
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        )
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -10719,11 +10782,14 @@ found_struct_offset: []
                         (func_name, ["func_name", "func_va"]),
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_funcptr"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -10861,11 +10927,14 @@ found_struct_offset: []
                         (func_name, ["func_name", "func_va"]),
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call", "found_funcptr"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -10987,11 +11056,14 @@ found_struct_offset: []
                         (func_name, ["func_name", "func_va"]),
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_funcptr"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -11150,11 +11222,14 @@ found_struct_offset: []
                         )
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_funcptr"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -11220,6 +11295,121 @@ found_struct_offset: []
         )
 
         self.assertIsNone(result)
+
+    async def test_preprocess_common_skill_uses_found_call_then_reverse_looks_up_vfunc_slot(self) -> None:
+        func_name = "CNetworkMessages_FindNetworkMessagePartial"
+        output_path = f"/tmp/{func_name}.windows.yaml"
+        target_detail_payload = {
+            "func_name": "CNetChan_ParseNetMessageShowFilter",
+            "func_va": "0x1800BAB00",
+            "disasm_code": "call sub_1800D6BA0\ncall qword ptr [rdx+10h]",
+            "procedure": "message = FindNetworkMessagePartial(name); return message->GetId();",
+        }
+        normalized_payload = {
+            "found_vcall": [
+                {
+                    "insn_va": "0x1800BAB8A",
+                    "insn_disasm": "call qword ptr [rdx+10h]",
+                    "vfunc_offset": "0x10",
+                    "func_name": func_name,
+                }
+            ],
+            "found_call": [
+                {
+                    "insn_va": "0x1800BAB85",
+                    "insn_disasm": "call sub_1800D6BA0",
+                    "func_name": func_name,
+                }
+            ],
+            "found_funcptr": [],
+            "found_gv": [],
+            "found_struct_offset": [],
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            preprocessor_dir = Path(temp_dir) / "ida_preprocessor_scripts"
+            (preprocessor_dir / "prompt").mkdir(parents=True, exist_ok=True)
+            (preprocessor_dir / "prompt" / "call_llm_decompile.md").write_text("{symbol_name_list}", encoding="utf-8")
+            _write_yaml(preprocessor_dir / "references" / "reference.yaml", target_detail_payload)
+
+            with (
+                patch.object(ida_analyze_util, "_get_preprocessor_scripts_dir", return_value=preprocessor_dir),
+                patch.object(ida_analyze_util, "preprocess_func_sig_via_mcp", AsyncMock(return_value=None)),
+                patch.object(
+                    ida_analyze_util,
+                    "_load_llm_decompile_target_details_via_mcp",
+                    AsyncMock(return_value=[target_detail_payload]),
+                ),
+                patch.object(
+                    ida_analyze_util,
+                    "_resolve_direct_call_target_via_mcp",
+                    AsyncMock(return_value="0x1800D6BA0"),
+                ) as mock_resolve_direct_call,
+                patch.object(
+                    ida_analyze_util,
+                    "_preprocess_direct_func_sig_via_mcp",
+                    AsyncMock(
+                        return_value={
+                            "func_name": func_name,
+                            "func_va": "0x1800d6ba0",
+                        }
+                    ),
+                ) as mock_preprocess_direct_func,
+                patch.object(
+                    ida_analyze_util,
+                    "preprocess_vtable_via_mcp",
+                    AsyncMock(
+                        return_value={
+                            "vtable_entries": {
+                                2: "0x1800d6650",
+                                14: "0x1800d6ba0",
+                            }
+                        }
+                    ),
+                ),
+                patch.object(
+                    ida_analyze_util,
+                    "call_llm_decompile",
+                    new_callable=AsyncMock,
+                    return_value=normalized_payload,
+                ) as mock_call_llm_decompile,
+                patch.object(ida_analyze_util, "write_func_yaml") as mock_write_func_yaml,
+                patch.object(ida_analyze_util, "_rename_func_in_ida", AsyncMock(return_value=None)),
+            ):
+                result = await ida_analyze_util.preprocess_common_skill(
+                    session="session",
+                    expected_outputs=[output_path],
+                    old_yaml_map={},
+                    new_binary_dir="/tmp",
+                    platform="windows",
+                    image_base=0x180000000,
+                    func_names=[func_name],
+                    func_vtable_relations=[(func_name, "CNetworkMessages")],
+                    generate_yaml_desired_fields=[
+                        (func_name, ["func_name", "func_va", "vtable_name", "vfunc_offset", "vfunc_index"])
+                    ],
+                    llm_decompile_specs=[
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": ["references/reference.yaml"],
+                            "expected_result_sections": ["found_call"],
+                        }
+                    ],
+                    llm_config={"model": "gpt-4.1-mini", "api_key": "test-api-key"},
+                    debug=True,
+                )
+
+        self.assertTrue(result)
+        self.assertEqual(
+            {func_name: ["found_call"]},
+            mock_call_llm_decompile.call_args.kwargs["expected_result_sections"],
+        )
+        mock_resolve_direct_call.assert_awaited_once_with("session", "0x1800BAB85", debug=True)
+        self.assertEqual("0x1800D6BA0", mock_preprocess_direct_func.await_args.kwargs["direct_func_va"])
+        written_payload = mock_write_func_yaml.call_args.args[1]
+        self.assertEqual("0x70", written_payload["vfunc_offset"])
+        self.assertEqual(14, written_payload["vfunc_index"])
 
     async def test_preprocess_common_skill_prefers_found_vcall_when_vfunc_offset_required(
         self,
@@ -11375,11 +11565,14 @@ found_struct_offset: []
                         )
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        ),
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_vcall"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -11549,11 +11742,14 @@ found_struct_offset: []
                         )
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        )
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_vcall"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -11719,11 +11915,14 @@ found_struct_offset: []
                         )
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        )
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_vcall"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -11887,11 +12086,14 @@ found_struct_offset: []
                         )
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        )
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_vcall"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -12206,11 +12408,14 @@ found_struct_offset: []
                         )
                     ],
                     llm_decompile_specs=[
-                        (
-                            func_name,
-                            "prompt/call_llm_decompile.md",
-                            "references/reference.yaml",
-                        )
+                        {
+                            "symbol_name": func_name,
+                            "prompt_path": "prompt/call_llm_decompile.md",
+                            "reference_yaml_paths": [
+                                "references/reference.yaml",
+                            ],
+                            "expected_result_sections": ["found_call"],
+                        },
                     ],
                     llm_config={
                         "model": "gpt-4.1-mini",
@@ -12386,11 +12591,14 @@ found_struct_offset: []
                                 )
                             ],
                             llm_decompile_specs=[
-                                (
-                                    func_name,
-                                    "prompt/call_llm_decompile.md",
-                                    "references/reference.yaml",
-                                )
+                                {
+                                    "symbol_name": func_name,
+                                    "prompt_path": "prompt/call_llm_decompile.md",
+                                    "reference_yaml_paths": [
+                                        "references/reference.yaml",
+                                    ],
+                                    "expected_result_sections": ["found_vcall"],
+                                },
                             ],
                             llm_config={
                                 "model": "gpt-4.1-mini",

@@ -8,12 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CTriggerGravity_GravityTouch",
-        "prompt/call_llm_decompile.md",
-        "references/server/CTriggerGravity_GetTouchFunction.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CTriggerGravity_GravityTouch",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CTriggerGravity_GetTouchFunction.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_DestroyEntityImmediate",
-        "prompt/call_llm_decompile.md",
-        "references/server/EntInfo_CommandHandler.{platform}.yaml",
-    ),
-    (
-        "ClientPrintToController",
-        "prompt/call_llm_decompile.md",
-        "references/server/EntInfo_CommandHandler.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_DestroyEntityImmediate",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/EntInfo_CommandHandler.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "ClientPrintToController",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/EntInfo_CommandHandler.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

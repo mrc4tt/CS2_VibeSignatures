@@ -1058,48 +1058,116 @@ def _load_struct_member_metadata_from_yaml(old_path):
     return metadata
 
 
+_LLM_DECOMPILE_SPEC_KEYS = frozenset({"symbol_name", "prompt_path", "reference_yaml_paths", "expected_result_sections"})
+
+
+def _normalize_nonempty_string_list(values, *, field_name, symbol_name, valid_values=None, debug=False):
+    if not isinstance(values, (tuple, list, set)) or not values:
+        if debug:
+            print(f"    Preprocess: invalid llm_decompile {field_name} for {symbol_name}: {values!r}")
+        return None
+    normalized = []
+    for value in values:
+        if not isinstance(value, str) or not value or (valid_values is not None and value not in valid_values):
+            if debug:
+                print(f"    Preprocess: invalid llm_decompile {field_name} entry for {symbol_name}: {value!r}")
+            return None
+        if value not in normalized:
+            normalized.append(value)
+    return normalized
+
+
+def _normalize_llm_decompile_spec(spec, debug=False):
+    if not isinstance(spec, dict):
+        if debug:
+            print(f"    Preprocess: invalid llm_decompile spec: {spec}")
+        return None
+    spec_keys = set(spec)
+    missing_keys = sorted(_LLM_DECOMPILE_SPEC_KEYS - spec_keys)
+    unknown_keys = sorted(spec_keys - _LLM_DECOMPILE_SPEC_KEYS)
+    if missing_keys or unknown_keys:
+        if debug:
+            print(
+                "    Preprocess: invalid llm_decompile spec keys: "
+                f"missing={missing_keys}, unknown={unknown_keys}, spec={spec}"
+            )
+        return None
+    symbol_name = spec.get("symbol_name")
+    prompt_path = spec.get("prompt_path")
+    if not isinstance(symbol_name, str) or not symbol_name or not isinstance(prompt_path, str) or not prompt_path:
+        if debug:
+            print(f"    Preprocess: invalid llm_decompile identity: {spec}")
+        return None
+    references = _normalize_nonempty_string_list(
+        spec.get("reference_yaml_paths"), field_name="reference paths", symbol_name=symbol_name, debug=debug
+    )
+    sections = _normalize_nonempty_string_list(
+        spec.get("expected_result_sections"),
+        field_name="expected result sections",
+        symbol_name=symbol_name,
+        valid_values=set(_ida_llm_decompile.LLM_DECOMPILE_RESULT_SECTIONS),
+        debug=debug,
+    )
+    if references is None or sections is None:
+        return None
+    return {
+        "symbol_name": symbol_name,
+        "prompt_path": prompt_path,
+        "reference_yaml_paths": references,
+        "expected_result_sections": sections,
+    }
+
+
 def _build_llm_decompile_specs_map(llm_decompile_specs, debug=False):
     specs_map = {}
-    for spec in llm_decompile_specs or []:
-        if not isinstance(spec, (tuple, list)) or len(spec) != 3:
-            if debug:
-                print(f"    Preprocess: invalid llm_decompile spec: {spec}")
+    for raw_spec in llm_decompile_specs or []:
+        spec = _normalize_llm_decompile_spec(raw_spec, debug=debug)
+        if spec is None:
             return None
-
-        func_name, prompt_path, reference_yaml_path = spec
-        if not isinstance(func_name, str) or not func_name:
+        symbol_name = spec["symbol_name"]
+        if symbol_name in specs_map:
             if debug:
-                print(f"    Preprocess: invalid llm_decompile target: {func_name}")
+                print(f"    Preprocess: duplicate llm_decompile target: {symbol_name}")
             return None
-        if not isinstance(prompt_path, str) or not prompt_path:
-            if debug:
-                print(f"    Preprocess: invalid llm_decompile prompt path for {func_name}: {prompt_path!r}")
-            return None
-        if not isinstance(reference_yaml_path, str) or not reference_yaml_path:
-            if debug:
-                print(f"    Preprocess: invalid llm_decompile reference path for {func_name}: {reference_yaml_path!r}")
-            return None
-
-        llm_spec = {
-            "prompt_path": prompt_path,
-            "reference_yaml_path": reference_yaml_path,
-        }
-        existing_specs = specs_map.get(func_name)
-        if existing_specs is not None:
-            if existing_specs[0]["prompt_path"] != prompt_path:
-                if debug:
-                    print(
-                        "    Preprocess: mixed llm_decompile prompt paths for "
-                        f"{func_name}: {existing_specs[0]['prompt_path']!r} != "
-                        f"{prompt_path!r}"
-                    )
-                return None
-            existing_specs.append(llm_spec)
-            continue
-
-        specs_map[func_name] = [llm_spec]
-
+        specs_map[symbol_name] = spec
     return specs_map
+
+
+_LLM_RESULT_SECTIONS_BY_TARGET_KIND = {
+    "func": frozenset({"found_call", "found_vcall", "found_funcptr"}),
+    "gv": frozenset({"found_gv"}),
+    "struct_member": frozenset({"found_struct_offset"}),
+}
+
+
+def _validate_llm_decompile_spec_compatibility(
+    specs_map, target_kind_map, desired_fields_map, vtable_relations_map, debug=False
+):
+    for symbol_name, spec in specs_map.items():
+        target_kind = target_kind_map.get(symbol_name)
+        allowed_sections = _LLM_RESULT_SECTIONS_BY_TARGET_KIND.get(target_kind)
+        expected_sections = set(spec["expected_result_sections"])
+        if allowed_sections is None or not expected_sections <= allowed_sections:
+            if debug:
+                print(
+                    f"    Preprocess: incompatible llm_decompile sections for {symbol_name}: "
+                    f"target_kind={target_kind!r}, sections={sorted(expected_sections)}"
+                )
+            return False
+        desired_fields = set((desired_fields_map.get(symbol_name) or {}).get("desired_output_fields", []))
+        if "vfunc_sig" in desired_fields and not expected_sections <= {"found_vcall", "found_funcptr"}:
+            if debug:
+                print(
+                    f"    Preprocess: {symbol_name} requires vfunc_sig but accepts "
+                    f"incompatible sections: {sorted(expected_sections)}"
+                )
+            return False
+        needs_vtable = bool({"vtable_name", "vfunc_offset", "vfunc_index", "vfunc_sig"} & desired_fields)
+        if needs_vtable and symbol_name not in vtable_relations_map:
+            if debug:
+                print(f"    Preprocess: missing vtable relation for llm_decompile target {symbol_name}")
+            return False
+    return True
 
 
 def _extract_slot_only_vfunc_candidates_from_llm_result(
@@ -2418,17 +2486,13 @@ async def call_llm_decompile(
     )
 
 
-def _build_expected_llm_result_sections(symbol_names, desired_fields_map, *, struct_member_names=()):
-    struct_member_names = set(struct_member_names)
+def _build_expected_llm_result_sections(symbol_names, llm_decompile_specs_map):
     expected_sections = {}
     for symbol_name in symbol_names:
-        if symbol_name in struct_member_names:
-            expected_sections[symbol_name] = "found_struct_offset"
-            continue
-        desired_spec = desired_fields_map.get(symbol_name) or {}
-        desired_fields = set(desired_spec.get("desired_output_fields", []))
-        if "vfunc_offset" in desired_fields:
-            expected_sections[symbol_name] = "found_vcall"
+        llm_spec = (llm_decompile_specs_map or {}).get(symbol_name) or {}
+        section_names = llm_spec.get("expected_result_sections")
+        if section_names:
+            expected_sections[symbol_name] = list(section_names)
     return expected_sections
 
 
@@ -7443,8 +7507,9 @@ async def preprocess_common_skill(
             (may be empty/None).
         generate_yaml_desired_fields: Required desired output fields per
             symbol name.
-        llm_decompile_specs: Optional LLM decompile spec tuples of
-            (func_name, prompt_path, reference_yaml_path).
+        llm_decompile_specs: Optional LLM decompile dict specs. Each entry
+            requires symbol_name, prompt_path, reference_yaml_paths, and
+            expected_result_sections.
         llm_config: Optional LLM config dict for llm_decompile fallback.
         debug: Enable debug output.
 
@@ -7625,6 +7690,15 @@ async def preprocess_common_skill(
                 print(f"    Preprocess: invalid func_vtable_relations class: {vtable_class}")
             return False
         vtable_relations_map[func_name] = vtable_class
+
+    if not _validate_llm_decompile_spec_compatibility(
+        llm_decompile_specs_map,
+        target_kind_map,
+        desired_fields_map,
+        vtable_relations_map,
+        debug=debug,
+    ):
+        return False
 
     pending_func_renames = []
     pending_gv_renames = []
@@ -8038,8 +8112,7 @@ async def preprocess_common_skill(
             primary_target_detail = llm_target_details[0]
             expected_result_sections = _build_expected_llm_result_sections(
                 llm_symbol_name_list,
-                desired_fields_map,
-                struct_member_names=struct_member_names,
+                llm_decompile_specs_map,
             )
             return await call_llm_decompile(
                 model=llm_request["model"],
@@ -8082,7 +8155,11 @@ async def preprocess_common_skill(
         generation_options = desired_field_spec["generation_options"]
         desired_fields_set = set(desired_fields)
         expects_vfunc = "vfunc_offset" in desired_fields_set
-        can_use_direct_func_fallback = not expects_vfunc
+        llm_expected_sections = set((llm_decompile_specs_map.get(func_name) or {}).get("expected_result_sections", []))
+        can_use_found_call = "found_call" in llm_expected_sections
+        can_use_direct_funcptr = "found_funcptr" in llm_expected_sections and not expects_vfunc
+        can_use_found_vcall = "found_vcall" in llm_expected_sections
+        can_use_devirtualized_funcptr = "found_funcptr" in llm_expected_sections and expects_vfunc
 
         if func_name not in fast_path_attempted:
             fast_path_results[func_name] = await _try_preprocess_func_without_llm(
@@ -8133,7 +8210,7 @@ async def preprocess_common_skill(
                 )
                 for symbol_name in llm_symbol_name_list:
                     llm_result_by_symbol_name[symbol_name] = llm_result
-            if can_use_direct_func_fallback:
+            if can_use_found_call:
                 for entry in llm_result.get("found_call", []):
                     if entry.get("func_name") != func_name:
                         continue
@@ -8169,7 +8246,7 @@ async def preprocess_common_skill(
                     )
                     if func_data is not None:
                         break
-            if func_data is None and can_use_direct_func_fallback:
+            if func_data is None and can_use_direct_funcptr:
                 for entry in llm_result.get("found_funcptr", []):
                     if entry.get("funcptr_name") != func_name:
                         continue
@@ -8200,7 +8277,7 @@ async def preprocess_common_skill(
             vtable_class = None
             if func_data is None and func_name in vtable_relations_map:
                 vtable_class = vtable_relations_map[func_name]
-            if func_data is None and vtable_class is not None:
+            if func_data is None and vtable_class is not None and can_use_found_vcall:
                 for entry in llm_result.get("found_vcall", []):
                     if entry.get("func_name") != func_name:
                         continue
@@ -8233,7 +8310,7 @@ async def preprocess_common_skill(
                     )
                     if func_data is not None:
                         break
-            if func_data is None and vtable_class is not None and expects_vfunc:
+            if func_data is None and vtable_class is not None and can_use_devirtualized_funcptr:
                 for entry in llm_result.get("found_funcptr", []):
                     if entry.get("funcptr_name") != func_name:
                         continue

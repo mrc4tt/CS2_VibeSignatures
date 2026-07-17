@@ -27,7 +27,7 @@ found_vcall: # This is for indirect call to virtual function or virtual function
     vfunc_offset: '0x80'
     func_name: INetworkMessages_GetNetworkGroupCount # This must be the true function name we asked to collect, not the sub_XXXXXXXX
 
-found_call: # This is for direct call to non-virtual regular function.
+found_call: # This is for a direct call or direct tail jump to a non-virtual regular function.
 
   - insn_va: '0x180888800'
     insn_disasm: call    sub_180999900

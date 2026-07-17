@@ -8,12 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "GetCSWeaponDataFromKey",
-        "prompt/call_llm_decompile.md",
-        "references/server/CSmokeGrenadeProjectile_GetCSWeaponData.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "GetCSWeaponDataFromKey",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CSmokeGrenadeProjectile_GetCSWeaponData.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

@@ -8,12 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IEngineServiceMgr_UnregisterEngineService",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEngineServiceRegistry_UnregisterEngineServices.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IEngineServiceMgr_UnregisterEngineService",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEngineServiceRegistry_UnregisterEngineServices.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

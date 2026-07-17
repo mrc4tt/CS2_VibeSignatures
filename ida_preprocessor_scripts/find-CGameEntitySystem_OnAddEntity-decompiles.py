@@ -10,22 +10,30 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CGameEntitySystem_m_iNetworkedEntCount",
-        "prompt/call_llm_decompile.md",
-        "references/server/CGameEntitySystem_OnAddEntity.{platform}.yaml",
-    ),
-    (
-        "CGameEntitySystem_m_iNonNetworkedSavedEntCount",
-        "prompt/call_llm_decompile.md",
-        "references/server/CGameEntitySystem_OnAddEntity.{platform}.yaml",
-    ),
-    (
-        "CGameEntitySystem_m_entityListeners",
-        "prompt/call_llm_decompile.md",
-        "references/server/CGameEntitySystem_OnAddEntity.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CGameEntitySystem_m_iNetworkedEntCount",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CGameEntitySystem_OnAddEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "CGameEntitySystem_m_iNonNetworkedSavedEntCount",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CGameEntitySystem_OnAddEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "CGameEntitySystem_m_entityListeners",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CGameEntitySystem_OnAddEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

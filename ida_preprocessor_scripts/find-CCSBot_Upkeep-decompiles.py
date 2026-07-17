@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBaseEntity_IsAlive",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSBot_Upkeep.{platform}.yaml",
-    ),
-    (
-        "CBaseEntity_GetEyePosition",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSBot_Upkeep.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBaseEntity_IsAlive",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSBot_Upkeep.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CBaseEntity_GetEyePosition",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSBot_Upkeep.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

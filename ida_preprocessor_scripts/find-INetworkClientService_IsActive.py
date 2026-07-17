@@ -9,20 +9,26 @@ TARGET_FUNCTION_NAMES = [
 
 # Windows: found in CNetworkGameServerBase_ServerSimulate (the vfunc itself)
 LLM_DECOMPILE_WINDOWS = [
-    (
-        "INetworkClientService_IsActive",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkGameServerBase_ServerSimulate.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "INetworkClientService_IsActive",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkGameServerBase_ServerSimulate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 # Linux: found in CNetworkGameServerBase_ServerSimulateInternal (internal helper)
 LLM_DECOMPILE_LINUX = [
-    (
-        "INetworkClientService_IsActive",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkGameServerBase_ServerSimulateInternal.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "INetworkClientService_IsActive",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkGameServerBase_ServerSimulateInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

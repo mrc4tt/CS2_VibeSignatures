@@ -10,24 +10,30 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    # StartTouch and Touch are dispatched by CBaseEntity_PhysicsDispatchStartTouch
-    (
-        "CBaseEntity_StartTouch",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml",
-    ),
-    (
-        "CBaseEntity_Touch",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml",
-    ),
-    # EndTouch is dispatched by CBaseEntity_PhysicsNotifyOtherOfEndTouch
-    (
-        "CBaseEntity_EndTouch",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBaseEntity_PhysicsNotifyOtherOfEndTouch.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBaseEntity_StartTouch",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CBaseEntity_Touch",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CBaseEntity_EndTouch",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBaseEntity_PhysicsNotifyOtherOfEndTouch.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

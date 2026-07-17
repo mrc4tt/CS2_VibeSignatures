@@ -28,13 +28,14 @@ except Exception:
 
 
 _UNSET = object()
-_LLM_INSTRUCTION_RESULT_SECTIONS = (
+LLM_DECOMPILE_RESULT_SECTIONS = (
     "found_vcall",
     "found_call",
     "found_funcptr",
     "found_gv",
     "found_struct_offset",
 )
+_LLM_INSTRUCTION_RESULT_SECTIONS = LLM_DECOMPILE_RESULT_SECTIONS
 _LLM_RESULT_SYMBOL_KEYS = {
     "found_vcall": "func_name",
     "found_call": "func_name",
@@ -1265,35 +1266,31 @@ def _prepare_llm_decompile_request(
         default=8.0,
     )
 
-    if isinstance(llm_spec, dict):
-        llm_specs = [llm_spec]
-    elif isinstance(llm_spec, (tuple, list)) and llm_spec:
-        llm_specs = list(llm_spec)
-    else:
+    if not isinstance(llm_spec, dict):
         if debug:
             print(f"    Preprocess: invalid llm_decompile spec for {func_name}")
         return None
 
-    if not all(isinstance(spec, dict) for spec in llm_specs):
-        if debug:
-            print(f"    Preprocess: invalid llm_decompile spec for {func_name}")
-        return None
-
-    prompt_value = llm_specs[0].get("prompt_path")
+    prompt_value = llm_spec.get("prompt_path")
     if not isinstance(prompt_value, str) or not prompt_value:
         if debug:
             print(f"    Preprocess: invalid llm_decompile prompt path for {func_name}: {prompt_value!r}")
         return None
 
-    for current_spec in llm_specs[1:]:
-        current_prompt_value = current_spec.get("prompt_path")
-        if current_prompt_value != prompt_value:
-            if debug:
-                print(
-                    "    Preprocess: mixed llm_decompile prompt paths for "
-                    f"{func_name}: {prompt_value!r} != {current_prompt_value!r}"
-                )
-            return None
+    reference_values = llm_spec.get("reference_yaml_paths")
+    if not isinstance(reference_values, (tuple, list)) or not reference_values:
+        if debug:
+            print(f"    Preprocess: invalid llm_decompile reference paths for {func_name}: {reference_values!r}")
+        return None
+
+    expected_result_sections = llm_spec.get("expected_result_sections")
+    if not isinstance(expected_result_sections, (tuple, list)) or not expected_result_sections:
+        if debug:
+            print(
+                f"    Preprocess: invalid llm_decompile expected result sections for "
+                f"{func_name}: {expected_result_sections!r}"
+            )
+        return None
 
     scripts_dir = _get_preprocessor_scripts_dir(preprocessor_scripts_dir)
     prompt_path = Path(
@@ -1322,8 +1319,7 @@ def _prepare_llm_decompile_request(
     reference_items = []
     reference_yaml_paths = []
     target_func_names = []
-    for current_spec in llm_specs:
-        reference_value = current_spec.get("reference_yaml_path")
+    for reference_value in reference_values:
         if not isinstance(reference_value, str) or not reference_value:
             if debug:
                 print(f"    Preprocess: invalid llm_decompile reference path for {func_name}: {reference_value!r}")
@@ -1391,6 +1387,7 @@ def _prepare_llm_decompile_request(
         "reference_yaml_paths": reference_yaml_paths,
         "target_func_names": target_func_names,
         "reference_yaml_path": reference_yaml_path,
+        "expected_result_sections": list(expected_result_sections),
         "prompt_template": prompt_template,
         "target_func_name": target_func_name,
         "disasm_for_reference": str(reference_data.get("disasm_code", "") or ""),

@@ -8,12 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IGameSystemFactory_Shutdown",
-        "prompt/call_llm_decompile.md",
-        "references/client/IGameSystem_ShutdownAllSystems.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameSystemFactory_Shutdown",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/IGameSystem_ShutdownAllSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

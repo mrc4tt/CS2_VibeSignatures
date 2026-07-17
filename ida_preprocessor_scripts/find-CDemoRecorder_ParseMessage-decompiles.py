@@ -9,17 +9,22 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "INetworkMessages_SerializeAbstract",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CDemoRecorder_ParseMessage.{platform}.yaml",
-    ),
-    (
-        "INetworkMessages_GetNetMessageInfo",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CDemoRecorder_ParseMessage.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "INetworkMessages_SerializeAbstract",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CDemoRecorder_ParseMessage.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "INetworkMessages_GetNetMessageInfo",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CDemoRecorder_ParseMessage.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

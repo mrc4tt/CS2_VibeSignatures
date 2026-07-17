@@ -12,17 +12,22 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_ExecuteQueuedDeletion",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_QueueDestroyEntity.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_nExecuteQueuedDeletionDepth",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_ExecuteQueuedDeletion",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_QueueDestroyEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CEntitySystem_m_nExecuteQueuedDeletionDepth",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

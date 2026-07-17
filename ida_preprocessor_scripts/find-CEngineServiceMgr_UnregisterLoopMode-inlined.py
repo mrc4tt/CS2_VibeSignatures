@@ -27,23 +27,30 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    # All three vcalls live inside the fully inlined CEngineServiceMgr_UnregisterLoopMode body.
-    (
-        "CLoopTypeBase_GetImplType",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml",
-    ),
-    (
-        "ILoopModeFactory_GetLoopModeType",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml",
-    ),
-    (
-        "ILoopModeFactory_Shutdown",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CLoopTypeBase_GetImplType",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "ILoopModeFactory_GetLoopModeType",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "ILoopModeFactory_Shutdown",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

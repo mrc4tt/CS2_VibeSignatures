@@ -8,11 +8,14 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CEntitySystem_AddEntityToEntityDataBase",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_CreateEntity.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_AddEntityToEntityDataBase",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_CreateEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

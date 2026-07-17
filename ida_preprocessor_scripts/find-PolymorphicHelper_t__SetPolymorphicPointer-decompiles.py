@@ -10,21 +10,30 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CEntityInstance_AddChangeAccessorPathPolymorphic",
-        "prompt/call_llm_decompile.md",
-        "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
-    ),
-    (
-        "CEntityInstance_AssignChangeAccessorPathIdsPolymorphic",
-        "prompt/call_llm_decompile.md",
-        "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
-    ),
-    (
-        "CEntityInstance_GetChangeAccessorPathInfo_2",
-        "prompt/call_llm_decompile.md",
-        "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityInstance_AddChangeAccessorPathPolymorphic",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CEntityInstance_AssignChangeAccessorPathIdsPolymorphic",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "CEntityInstance_GetChangeAccessorPathInfo_2",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

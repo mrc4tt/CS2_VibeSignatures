@@ -33,68 +33,100 @@ TARGET_STRUCT_MEMBER_NAMES_WINDOWS = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IGameResourceService_SetEntityResourceManifestHandler",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
-    (
-        "g_pGameResourceService",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
-    (
-        "g_pGameEntitySystem",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_entityIONotifiers",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
-    (
-        "CGameEntitySystem_m_pEntity2SaveRestore",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_EnableAutoDeletionExecution",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_InstallPostSpawnCallback",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_InstallCreationWrapperCallbacks",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameResourceService_SetEntityResourceManifestHandler",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+    },
+    {
+        "symbol_name": "g_pGameResourceService",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+    },
+    {
+        "symbol_name": "g_pGameEntitySystem",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+    },
+    {
+        "symbol_name": "CEntitySystem_m_entityIONotifiers",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "CGameEntitySystem_m_pEntity2SaveRestore",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
+    {
+        "symbol_name": "CEntitySystem_EnableAutoDeletionExecution",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CEntitySystem_InstallPostSpawnCallback",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CEntitySystem_InstallCreationWrapperCallbacks",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 LLM_DECOMPILE_LINUX = [
-    (
-        "CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
 ]
 
 LLM_DECOMPILE_WINDOWS = [
-    (
-        "CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
-    (
-        "CGameEntitySystem_m_pEntity2Networkables",
-        "prompt/call_llm_decompile.md",
-        "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+    },
+    {
+        "symbol_name": "CGameEntitySystem_m_pEntity2Networkables",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [
