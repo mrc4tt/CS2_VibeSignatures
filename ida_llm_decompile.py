@@ -547,11 +547,22 @@ def _normalize_expected_result_sections(expected_result_sections):
     return normalized
 
 
+def _get_llm_result_symbol_name(section_name, entry):
+    if section_name == "found_struct_offset":
+        struct_name = str(entry.get("struct_name", "")).strip()
+        member_name = str(entry.get("member_name", "")).strip()
+        if not struct_name or not member_name:
+            return ""
+        return f"{struct_name}_{member_name}".replace(".", "_")
+
+    symbol_key = _LLM_RESULT_SYMBOL_KEYS.get(section_name)
+    return str(entry.get(symbol_key, "") if symbol_key else "").strip()
+
+
 def _validate_llm_result_sections(parsed_result, expected_result_sections):
     issues = []
     for section_name, entry_index, entry in _iter_llm_instruction_entries(parsed_result):
-        symbol_key = _LLM_RESULT_SYMBOL_KEYS.get(section_name)
-        symbol_name = str(entry.get(symbol_key, "") if symbol_key else "").strip()
+        symbol_name = _get_llm_result_symbol_name(section_name, entry)
         expected_sections = expected_result_sections.get(symbol_name, set())
         if not expected_sections or section_name in expected_sections:
             continue
@@ -669,14 +680,40 @@ def _build_llm_instruction_correction_prompt(validation_issues):
             "`vfunc_offset` displacement. Do not use a `lea` instruction that merely loads the function pointer "
             "target.\n"
         )
+    has_struct_offset_issue = any(
+        "found_struct_offset" in issue.get("expected_sections", []) for issue in validation_issues
+    )
+    struct_offset_guidance = ""
+    if has_struct_offset_issue:
+        struct_offset_guidance = (
+            "\nFor `found_struct_offset`, report the exact instruction that accesses the member and provide "
+            "`offset`, `size`, `struct_name`, and `member_name`. A function pointer loaded from a regular struct "
+            "field is still `found_struct_offset`, not `found_vcall`.\n"
+        )
     return (
         "Your previous YAML output contains invalid references.\n"
         "Each insn_va must identify the exact target instruction written in insn_disasm; only whitespace "
         "differences are allowed.\n\n"
-        f"Mismatches:\n{issue_text}\n{vcall_guidance}\n"
+        f"Mismatches:\n{issue_text}\n{vcall_guidance}{struct_offset_guidance}\n"
         "Re-check every entry and return the complete YAML output for all requested symbols. "
         "Do not return a patch, partial YAML, explanation, or any text outside the complete YAML."
     )
+
+
+def _build_llm_result_section_requirements(expected_result_sections):
+    if not expected_result_sections:
+        return ""
+    lines = ["Required result sections:"]
+    for symbol_name, section_names in expected_result_sections.items():
+        lines.append(f"- {symbol_name}: {' or '.join(sorted(section_names))}")
+    lines.extend(
+        [
+            "",
+            "Function-pointer fields stored inside a regular struct are `found_struct_offset`, not `found_vcall`. "
+            "Use `found_vcall` only for virtual dispatch/vtable slots.",
+        ]
+    )
+    return "\n".join(lines)
 
 
 def _append_llm_instruction_correction(conversation_messages, content, validation_issues):
@@ -1046,6 +1083,7 @@ async def call_llm_decompile(
         symbol_name_text = ", ".join(str(item).strip() for item in symbol_name_list if str(item).strip())
     else:
         symbol_name_text = str(symbol_name_list or "").strip()
+    normalized_expected_sections = _normalize_expected_result_sections(expected_result_sections)
 
     if reference_blocks is None or target_blocks is None:
         fallback_reference_blocks, fallback_target_blocks = _render_llm_decompile_blocks(
@@ -1097,6 +1135,9 @@ async def call_llm_decompile(
             f"Target functions:\n{target_blocks}\n\n"
             f'Please collect all references to "{symbol_name_text}" and output YAML.'
         )
+    section_requirements = _build_llm_result_section_requirements(normalized_expected_sections)
+    if section_requirements:
+        prompt = f"{prompt}\n\n{section_requirements}"
     system_prompt = "You are a reverse engineering expert."
     if debug:
         print(
@@ -1156,7 +1197,6 @@ async def call_llm_decompile(
     )
     max_delay = _normalize_llm_retry_delay(retry_max_delay, default=8.0)
     disasm_index = _build_target_disasm_index(target_disasm_codes, disasm_code=disasm_code)
-    normalized_expected_sections = _normalize_expected_result_sections(expected_result_sections)
     return await _call_llm_decompile_with_validation(
         transport=transport,
         request_kwargs=request_kwargs,

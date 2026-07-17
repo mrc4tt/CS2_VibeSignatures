@@ -2418,9 +2418,13 @@ async def call_llm_decompile(
     )
 
 
-def _build_expected_llm_result_sections(symbol_names, desired_fields_map):
+def _build_expected_llm_result_sections(symbol_names, desired_fields_map, *, struct_member_names=()):
+    struct_member_names = set(struct_member_names)
     expected_sections = {}
     for symbol_name in symbol_names:
+        if symbol_name in struct_member_names:
+            expected_sections[symbol_name] = "found_struct_offset"
+            continue
         desired_spec = desired_fields_map.get(symbol_name) or {}
         desired_fields = set(desired_spec.get("desired_output_fields", []))
         if "vfunc_offset" in desired_fields:
@@ -8032,7 +8036,11 @@ async def preprocess_common_skill(
                 llm_target_details,
             )
             primary_target_detail = llm_target_details[0]
-            expected_result_sections = _build_expected_llm_result_sections(llm_symbol_name_list, desired_fields_map)
+            expected_result_sections = _build_expected_llm_result_sections(
+                llm_symbol_name_list,
+                desired_fields_map,
+                struct_member_names=struct_member_names,
+            )
             return await call_llm_decompile(
                 model=llm_request["model"],
                 symbol_name_list=llm_symbol_name_list,

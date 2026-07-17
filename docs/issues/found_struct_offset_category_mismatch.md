@@ -2,11 +2,21 @@
 
 ## Status
 
-Confirmed. The root cause was observed in PR validation run
+Resolved on 2026-07-17. The root cause was observed in PR validation run
 <https://github.com/HLND2T/CS2_VibeSignatures/actions/runs/29576361945/job/87871597433>.
 
-This document describes the failure and the complete proposed fix. The fix is not
-implemented by this document.
+The fix now propagates authoritative struct-member result-section expectations,
+derives canonical symbol identities for `found_struct_offset`, and gives the LLM
+both initial and retry-time category guidance. Invalid category responses remain
+subject to the existing retry budget and fail-closed behavior.
+
+Local verification completed with:
+
+- `python -m unittest discover -s tests -b`: 899 tests passed.
+- `python format_repo_files.py --check`: all tracked Python and YAML files passed.
+
+The IDA/binary-backed PR self-runner remains the authoritative external integration
+check and should confirm the original SDL regeneration path on the next PR run.
 
 ## Summary
 

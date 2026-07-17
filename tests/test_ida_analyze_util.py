@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, call, patch
 import yaml
 
 import ida_analyze_util
+import ida_llm_decompile
 
 
 class _FakeTextContent:
@@ -5041,6 +5042,78 @@ class TestFunctionDetailExportPyEvalBuilder(unittest.IsolatedAsyncioTestCase):
 
 
 class TestLlmDecompileSupport(unittest.IsolatedAsyncioTestCase):
+    def test_build_expected_llm_result_sections_includes_struct_members_and_vfuncs(self) -> None:
+        struct_member_name = "SDL_Mouse_WarpMouse"
+        vfunc_name = "CEntitySystem_OnRemoveEntity"
+        regular_func_name = "SDL_PerformWarpMouseInWindow"
+        desired_fields_map = {
+            struct_member_name: {
+                "desired_output_fields": ["struct_name", "member_name", "offset", "size"],
+            },
+            vfunc_name: {
+                "desired_output_fields": ["func_name", "vfunc_offset"],
+            },
+            regular_func_name: {
+                "desired_output_fields": ["func_name", "func_va"],
+            },
+        }
+
+        expected_sections = ida_analyze_util._build_expected_llm_result_sections(
+            [struct_member_name, vfunc_name, regular_func_name],
+            desired_fields_map,
+            struct_member_names=[struct_member_name],
+        )
+
+        self.assertEqual(
+            {
+                struct_member_name: "found_struct_offset",
+                vfunc_name: "found_vcall",
+            },
+            expected_sections,
+        )
+
+    def test_get_llm_result_symbol_name_canonicalizes_struct_members(self) -> None:
+        entry = {
+            "struct_name": "SDL.Mouse",
+            "member_name": "Warp.Mouse",
+        }
+
+        symbol_name = ida_llm_decompile._get_llm_result_symbol_name("found_struct_offset", entry)
+
+        self.assertEqual("SDL_Mouse_Warp_Mouse", symbol_name)
+
+    def test_get_llm_result_symbol_name_rejects_incomplete_struct_members(self) -> None:
+        for entry in (
+            {"struct_name": "SDL_Mouse"},
+            {"member_name": "WarpMouse"},
+            {"struct_name": "", "member_name": "WarpMouse"},
+        ):
+            with self.subTest(entry=entry):
+                self.assertEqual(
+                    "",
+                    ida_llm_decompile._get_llm_result_symbol_name("found_struct_offset", entry),
+                )
+
+    def test_validate_llm_result_sections_uses_struct_member_canonical_name(self) -> None:
+        parsed_result = {
+            "found_struct_offset": [
+                {
+                    "insn_disasm": "mov     rdx, [rax+30h]",
+                    "struct_name": "SDL.Mouse",
+                    "member_name": "Warp.Mouse",
+                }
+            ]
+        }
+
+        issues = ida_llm_decompile._validate_llm_result_sections(
+            parsed_result,
+            {"SDL_Mouse_Warp_Mouse": {"found_call"}},
+        )
+
+        self.assertEqual(1, len(issues))
+        self.assertEqual("SDL_Mouse_Warp_Mouse", issues[0]["symbol_name"])
+        self.assertEqual(["found_call"], issues[0]["expected_sections"])
+
     def test_parse_llm_decompile_response_normalizes_found_funcptr(self) -> None:
         response_text = """
 ```yaml
@@ -5321,6 +5394,109 @@ found_vcall:
         self.assertIn("requires `found_vcall`", correction_prompt)
         self.assertIn("instruction containing the `vfunc_offset` displacement", correction_prompt)
         self.assertIn("lea rax, CEntitySystem_OnRemoveEntity", correction_prompt)
+
+    async def test_call_llm_decompile_retries_struct_member_returned_as_vcall(self) -> None:
+        hallucinated_response = """
+found_vcall:
+  - insn_va: '0x18007872A'
+    insn_disasm: mov     rdx, [rax+30h]
+    vfunc_offset: '0x30'
+    func_name: SDL_Mouse_WarpMouse
+""".strip()
+        corrected_response = """
+found_struct_offset:
+  - insn_va: '0x18007872A'
+    insn_disasm: mov     rdx, [rax+30h]
+    offset: '0x30'
+    size: 8
+    struct_name: SDL_Mouse
+    member_name: WarpMouse
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[hallucinated_response, corrected_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["SDL_Mouse_WarpMouse"],
+                expected_result_sections={"SDL_Mouse_WarpMouse": "found_struct_offset"},
+                disasm_code=".text:000000018007872A                 mov     rdx, [rax+30h]",
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual("0x30", parsed["found_struct_offset"][0]["offset"])
+        self.assertEqual(2, mock_call_llm_text.call_count)
+        initial_prompt = mock_call_llm_text.call_args_list[0].kwargs["messages"][1]["content"]
+        self.assertIn("Required result sections:", initial_prompt)
+        self.assertIn("- SDL_Mouse_WarpMouse: found_struct_offset", initial_prompt)
+        self.assertIn("regular struct", initial_prompt)
+        correction_prompt = mock_call_llm_text.call_args_list[1].kwargs["messages"][3]["content"]
+        self.assertIn("found_vcall[0]", correction_prompt)
+        self.assertIn("requires `found_struct_offset`", correction_prompt)
+        self.assertIn("function pointer loaded from a regular struct field", correction_prompt)
+
+    async def test_call_llm_decompile_accepts_struct_member_in_expected_section_without_retry(self) -> None:
+        response_text = """
+found_struct_offset:
+  - insn_va: '0x18007872A'
+    insn_disasm: mov     rdx, [rax+30h]
+    offset: '0x30'
+    size: 8
+    struct_name: SDL_Mouse
+    member_name: WarpMouse
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            return_value=response_text,
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["SDL_Mouse_WarpMouse"],
+                expected_result_sections={"SDL_Mouse_WarpMouse": "found_struct_offset"},
+                disasm_code=".text:000000018007872A                 mov     rdx, [rax+30h]",
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual("WarpMouse", parsed["found_struct_offset"][0]["member_name"])
+        mock_call_llm_text.assert_called_once()
+
+    async def test_call_llm_decompile_fails_closed_after_struct_category_retry_exhaustion(self) -> None:
+        hallucinated_response = """
+found_vcall:
+  - insn_va: '0x18007872A'
+    insn_disasm: mov     rdx, [rax+30h]
+    vfunc_offset: '0x30'
+    func_name: SDL_Mouse_WarpMouse
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[hallucinated_response, hallucinated_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["SDL_Mouse_WarpMouse"],
+                expected_result_sections={"SDL_Mouse_WarpMouse": "found_struct_offset"},
+                disasm_code=".text:000000018007872A                 mov     rdx, [rax+30h]",
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual(ida_analyze_util._empty_llm_decompile_result(), parsed)
+        self.assertEqual(2, mock_call_llm_text.call_count)
 
     async def test_call_llm_decompile_retries_vcall_without_offset_instruction(self) -> None:
         hallucinated_response = """
@@ -8828,6 +9004,10 @@ found_struct_offset: []
         self.assertEqual(
             [func_name, struct_member_name],
             mock_call_llm_decompile.call_args.kwargs["symbol_name_list"],
+        )
+        self.assertEqual(
+            {struct_member_name: "found_struct_offset"},
+            mock_call_llm_decompile.call_args.kwargs["expected_result_sections"],
         )
         mock_preprocess_direct_struct_offset_sig.assert_awaited_once_with(
             session="session",
