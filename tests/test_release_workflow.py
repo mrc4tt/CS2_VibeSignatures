@@ -1,4 +1,5 @@
 import hashlib
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -50,6 +51,12 @@ class ReleaseFixture:
         (self.repo / "dist" / "nested" / "gamedata.txt").write_text("gamedata\n", encoding="utf-8")
         (self.bin_source / "client.dll").write_bytes(b"dll")
         (self.bin_source / "client.yaml").write_text("value: 1\n", encoding="utf-8")
+        (self.repo / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
+        self.git("init", "--quiet")
+        self.git("add", "--", "gamesymbols", "dist")
+
+    def git(self, *arguments: str) -> None:
+        subprocess.run(["git", *arguments], cwd=self.repo, check=True, capture_output=True)
 
     def stage(self) -> dict:
         return stage_build(
@@ -191,6 +198,7 @@ class TestReleaseWorkflow(unittest.TestCase):
             fixture = ReleaseFixture(Path(tmp))
             fixture.stage()
             (fixture.repo / "dist" / "nested" / "gamedata.txt").write_text("tampered\n", encoding="utf-8")
+            fixture.git("add", "--", "dist/nested/gamedata.txt")
 
             with self.assertRaisesRegex(ReleaseWorkflowError, "tracked output manifest hash mismatch"):
                 finalize_stage(
@@ -200,6 +208,29 @@ class TestReleaseWorkflow(unittest.TestCase):
                     build_id=fixture.build_id,
                     pr_head_sha=fixture.head_sha,
                 )
+
+    def test_untracked_dist_cache_is_excluded_from_tracked_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            cache = fixture.repo / "dist" / "nested" / "__pycache__" / "gamedata.pyc"
+            cache.parent.mkdir(parents=True)
+            cache.write_bytes(b"cache")
+
+            pending = fixture.stage()
+            fixture.finalize_and_index()
+
+            self.assertNotIn(
+                cache.relative_to(fixture.repo).as_posix(), {item["path"] for item in pending["tracked_files"]}
+            )
+
+    def test_worktree_line_endings_do_not_change_index_inventory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            fixture.stage()
+            output = fixture.repo / "dist" / "nested" / "gamedata.txt"
+            output.write_bytes(b"gamedata\r\n")
+
+            fixture.finalize_and_index()
 
     def test_disallowed_generated_output_path_is_rejected(self) -> None:
         with self.assertRaisesRegex(ReleaseWorkflowError, "disallowed paths"):

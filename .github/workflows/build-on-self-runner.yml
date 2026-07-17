@@ -321,6 +321,12 @@ jobs:
       - name: Stage validated pending state and tracked manifest
         shell: pwsh
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$env:OUTPUT_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to create immutable output branch." }
+          git add -- "gamesymbols/$env:GAMEVER.yaml" dist
+          if ($LASTEXITCODE -ne 0) { throw "Failed to stage generated release output." }
           uv run release_workflow.py stage-build `
             --staging-root "$env:PERSISTED_WORKSPACE\release-staging" `
             --bin-source "bin\$env:GAMEVER" --candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" `
@@ -335,11 +341,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$env:OUTPUT_BRANCH"
-          if ($LASTEXITCODE -ne 0) { throw "Failed to create immutable output branch." }
-          git add -- "gamesymbols/$env:GAMEVER.yaml" dist "release-manifests/$env:GAMEVER.json"
+          git add -- "release-manifests/$env:GAMEVER.json"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to stage tracked release manifest." }
           git commit -m "chore(gamesymbols): publish $env:GAMEVER build $env:BUILD_ID" `
             -m "Co-Authored-By: Codex (GPT-5.x)"
           if ($LASTEXITCODE -ne 0) { throw "Failed to commit generated release output." }
