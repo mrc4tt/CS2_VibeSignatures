@@ -13,6 +13,9 @@ from pathlib import Path
 import requests
 import yaml
 
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(REPOSITORY_ROOT))
+
 from analysis_config import AnalysisConfigError, resolve_analysis_config
 
 RELEASE_URL = "https://github.com/HLND2T/CS2_VibeSignatures/releases/download/{0}/gamebin-{0}.7z"
