@@ -5246,6 +5246,318 @@ found_struct_offset:
             parsed["found_struct_offset"],
         )
 
+    def test_parse_llm_decompile_response_classifies_complete_canonical_empty(self) -> None:
+        response_text = """
+found_vcall: []
+found_call: []
+found_funcptr: []
+found_gv: []
+found_struct_offset: []
+""".strip()
+
+        outcome = ida_llm_decompile._parse_llm_decompile_response_with_issues(
+            response_text,
+            {"TargetCall"},
+        )
+
+        self.assertEqual("explicit_empty", outcome["schema_kind"])
+        self.assertEqual([], outcome["issues"])
+        self.assertFalse(outcome["compatibility_flattened"])
+
+    async def test_call_llm_decompile_retries_invalid_yaml_documents(self) -> None:
+        explicit_empty = """
+found_vcall: []
+found_call: []
+found_funcptr: []
+found_gv: []
+found_struct_offset: []
+""".strip()
+        invalid_documents = ("", "null", "{}", "- item", "found_call: [")
+
+        for invalid_document in invalid_documents:
+            with (
+                self.subTest(invalid_document=invalid_document),
+                patch.object(
+                    ida_analyze_util,
+                    "call_llm_text",
+                    side_effect=[invalid_document, explicit_empty],
+                    create=True,
+                ) as mock_call_llm_text,
+            ):
+                parsed = await ida_analyze_util.call_llm_decompile(
+                    client=object(),
+                    model="gpt-5.4",
+                    symbol_name_list=["TargetCall"],
+                    disasm_code=".text:0000000000001000                 nop",
+                    max_retries=2,
+                    retry_initial_delay=0,
+                )
+
+            self.assertEqual(ida_analyze_util._empty_llm_decompile_result(), parsed)
+            self.assertEqual(2, mock_call_llm_text.call_count)
+
+    async def test_call_llm_decompile_flattens_single_symbol_wrapped_response(self) -> None:
+        response_text = """
+TargetCall:
+  found_call:
+    - insn_va: '0x1000'
+      insn_disasm: call    TargetCall
+      func_name: TargetCall
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            return_value=response_text,
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall"],
+                disasm_code=".text:0000000000001000                 call    TargetCall",
+                max_retries=1,
+            )
+
+        self.assertEqual("TargetCall", parsed["found_call"][0]["func_name"])
+        mock_call_llm_text.assert_called_once()
+
+    async def test_call_llm_decompile_preserves_canonical_batched_response(self) -> None:
+        response_text = """
+found_call:
+  - insn_va: '0x1000'
+    insn_disasm: call    TargetCall
+    func_name: TargetCall
+found_gv:
+  - insn_va: '0x1010'
+    insn_disasm: mov     rcx, cs:TargetGlobal
+    gv_name: TargetGlobal
+""".strip()
+        disasm_code = (
+            ".text:0000000000001000                 call    TargetCall\n"
+            ".text:0000000000001010                 mov     rcx, cs:TargetGlobal"
+        )
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            return_value=response_text,
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall", "TargetGlobal"],
+                disasm_code=disasm_code,
+                max_retries=1,
+            )
+
+        self.assertEqual("TargetCall", parsed["found_call"][0]["func_name"])
+        self.assertEqual("TargetGlobal", parsed["found_gv"][0]["gv_name"])
+        mock_call_llm_text.assert_called_once()
+
+    async def test_call_llm_decompile_flattens_affected_sdl_batched_response(self) -> None:
+        response_text = """
+SDL_PerformWarpMouseInWindow:
+  found_call:
+    - insn_va: '0x180079B84'
+      insn_disasm: call    sub_1800786A0
+      func_name: SDL_PerformWarpMouseInWindow
+SDL_Mouse_relative_mode:
+  found_struct_offset:
+    - insn_va: '0x180079AEE'
+      insn_disasm: cmp     dil, [rsi+0C1h]
+      offset: '0xC1'
+      size: 1
+      struct_name: SDL_Mouse
+      member_name: relative_mode
+""".strip()
+        disasm_code = (
+            ".text:0000000180079AEE                 cmp     dil, [rsi+0C1h]\n"
+            ".text:0000000180079B84                 call    sub_1800786A0"
+        )
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            return_value=response_text,
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["SDL_PerformWarpMouseInWindow", "SDL_Mouse_relative_mode"],
+                expected_result_sections={"SDL_Mouse_relative_mode": "found_struct_offset"},
+                disasm_code=disasm_code,
+                max_retries=1,
+            )
+
+        self.assertEqual("SDL_PerformWarpMouseInWindow", parsed["found_call"][0]["func_name"])
+        self.assertEqual("relative_mode", parsed["found_struct_offset"][0]["member_name"])
+        mock_call_llm_text.assert_called_once()
+
+    async def test_call_llm_decompile_retries_schema_and_symbol_mismatches(self) -> None:
+        corrected_response = """
+found_vcall: []
+found_call: []
+found_funcptr: []
+found_gv: []
+found_struct_offset: []
+""".strip()
+        invalid_responses = {
+            "unknown_wrapper": "Unexpected:\n  found_call: []",
+            "identity_mismatch": (
+                "TargetCall:\n  found_call:\n    - insn_va: '0x1000'\n"
+                "      insn_disasm: call    OtherCall\n      func_name: OtherCall"
+            ),
+            "mixed_schema": "found_call: []\nTargetCall:\n  found_call: []",
+            "unknown_nested_key": "TargetCall:\n  found_unknown: []",
+            "invalid_section_type": "TargetCall:\n  found_call: {}",
+            "empty_wrapped_document": "TargetCall:\n  found_call: []",
+            "invalid_canonical_section_type": "found_call: {}",
+            "malformed_entry": "found_call:\n  - insn_va: '0x1000'",
+            "unexpected_canonical_symbol": (
+                "found_call:\n  - insn_va: '0x1000'\n    insn_disasm: call    OtherCall\n    func_name: OtherCall"
+            ),
+        }
+
+        for case_name, invalid_response in invalid_responses.items():
+            with (
+                self.subTest(case_name=case_name),
+                patch.object(
+                    ida_analyze_util,
+                    "call_llm_text",
+                    side_effect=[invalid_response, corrected_response],
+                    create=True,
+                ) as mock_call_llm_text,
+            ):
+                parsed = await ida_analyze_util.call_llm_decompile(
+                    client=object(),
+                    model="gpt-5.4",
+                    symbol_name_list=["TargetCall"],
+                    disasm_code=".text:0000000000001000                 call    OtherCall",
+                    max_retries=2,
+                    retry_initial_delay=0,
+                )
+
+            self.assertEqual(ida_analyze_util._empty_llm_decompile_result(), parsed)
+            self.assertEqual(2, mock_call_llm_text.call_count)
+
+    async def test_call_llm_decompile_schema_correction_accepts_canonical_retry(self) -> None:
+        invalid_response = "Unexpected:\n  found_call: []"
+        corrected_response = """
+found_call:
+  - insn_va: '0x1000'
+    insn_disasm: call    TargetCall
+    func_name: TargetCall
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[invalid_response, corrected_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall"],
+                disasm_code=".text:0000000000001000                 call    TargetCall",
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual("TargetCall", parsed["found_call"][0]["func_name"])
+        correction_prompt = mock_call_llm_text.call_args_list[1].kwargs["messages"][3]["content"]
+        self.assertIn("only permitted top-level keys", correction_prompt)
+        self.assertIn("Symbol names must never be top-level keys", correction_prompt)
+        self.assertIn("Unexpected", correction_prompt)
+        self.assertIn("found_vcall: []", correction_prompt)
+        self.assertIn("Canonical multi-symbol example", correction_prompt)
+
+    async def test_call_llm_decompile_repeated_schema_failures_fail_closed(self) -> None:
+        invalid_response = "Unexpected:\n  found_call: []"
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[invalid_response, invalid_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall"],
+                disasm_code=".text:0000000000001000                 nop",
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual(ida_analyze_util._empty_llm_decompile_result(), parsed)
+        self.assertEqual(2, mock_call_llm_text.call_count)
+
+    async def test_call_llm_decompile_debug_reports_symbol_wrapped_schema(self) -> None:
+        response_text = """
+TargetCall:
+  found_call:
+    - insn_va: '0x1000'
+      insn_disasm: call    TargetCall
+      func_name: TargetCall
+""".strip()
+
+        with (
+            patch.object(ida_analyze_util, "call_llm_text", return_value=response_text, create=True),
+            patch.object(ida_llm_decompile, "_debug_print_json") as mock_debug_print_json,
+        ):
+            await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall"],
+                disasm_code=".text:0000000000001000                 call    TargetCall",
+                max_retries=1,
+                debug=True,
+            )
+
+        schema_calls = [
+            call_args for call_args in mock_debug_print_json.call_args_list if "schema outcome" in call_args.args[0]
+        ]
+        self.assertEqual(1, len(schema_calls))
+        schema_payload = schema_calls[0].args[1]
+        self.assertEqual("symbol_wrapped", schema_payload["schema_kind"])
+        self.assertEqual(["TargetCall"], schema_payload["root_keys"])
+        self.assertTrue(schema_payload["compatibility_flattened"])
+
+    async def test_call_llm_decompile_prompt_requires_canonical_root_contract(self) -> None:
+        prompt_path = Path("ida_preprocessor_scripts/prompt/call_llm_decompile.md")
+        prompt_template = prompt_path.read_text(encoding="utf-8")
+        response_text = """
+found_vcall: []
+found_call: []
+found_funcptr: []
+found_gv: []
+found_struct_offset: []
+""".strip()
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            return_value=response_text,
+            create=True,
+        ) as mock_call_llm_text:
+            await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["TargetCall"],
+                disasm_code=".text:0000000000001000                 nop",
+                prompt_template=prompt_template,
+                max_retries=1,
+            )
+
+        prompt = mock_call_llm_text.call_args.kwargs["messages"][1]["content"]
+        self.assertIn("The only permitted top-level keys are", prompt)
+        self.assertIn("Never use a requested symbol name as a top-level key", prompt)
+        self.assertIn("Do not return blank YAML, null, or an empty mapping", prompt)
+
     async def test_call_llm_decompile_uses_shared_llm_helper_and_parses_yaml(
         self,
     ) -> None:
@@ -5755,6 +6067,7 @@ found_call:
 ```yaml
 found_vcall: []
 found_call: []
+found_funcptr: []
 found_gv: []
 found_struct_offset: []
 ```
@@ -5795,6 +6108,7 @@ found_struct_offset: []
 ```yaml
 found_vcall: []
 found_call: []
+found_funcptr: []
 found_gv: []
 found_struct_offset: []
 ```
@@ -5835,6 +6149,7 @@ found_struct_offset: []
 ```yaml
 found_vcall: []
 found_call: []
+found_funcptr: []
 found_gv: []
 found_struct_offset: []
 ```

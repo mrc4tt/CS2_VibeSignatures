@@ -2,7 +2,9 @@
 
 ## Status
 
-Open. Reproduced twice on 2026-07-17 in PR #577 validation run attempts.
+Resolved on 2026-07-17 by adding schema-aware parsing, strict symbol-wrapped compatibility flattening, requested-symbol validation, schema-specific correction retries, and focused regression tests.
+
+Follow-up audit: `ida_vcall_finder.py` has a similar but separate parser weakness tracked in [`ida_vcall_finder_unknown_yaml_schema.md`](ida_vcall_finder_unknown_yaml_schema.md).
 
 Affected run:
 
