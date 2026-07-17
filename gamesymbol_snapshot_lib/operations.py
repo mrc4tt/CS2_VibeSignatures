@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -20,6 +21,9 @@ from gamesymbol_snapshot_lib.paths import (
     iter_yaml_paths,
     path_from_key,
 )
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _load_yaml_mapping(path: Path) -> dict:
@@ -48,18 +52,20 @@ def collect_actual_files(contract, strict=True) -> dict[str, dict]:
         raise SnapshotMismatchError(f"Missing required symbol YAML:\n{lines}")
     actual_keys = _actual_yaml_keys(contract)
     undeclared = sorted(actual_keys - contract.formal_paths)
-    if strict and undeclared:
+    if undeclared:
         lines = "\n".join(f"  {path}" for path in undeclared)
-        raise SnapshotMismatchError(f"Undeclared symbol YAML:\n{lines}")
+        if strict:
+            raise SnapshotMismatchError(f"Undeclared symbol YAML:\n{lines}")
+        LOGGER.warning("WARNING: Ignoring undeclared symbol YAML:\n%s", lines)
     selected = sorted(contract.required_paths | (contract.optional_paths & actual_keys))
     return {path: _load_yaml_mapping(path_from_key(contract.game_root, path)) for path in selected}
 
 
-def build_actual_document(contract) -> dict:
+def build_actual_document(contract, *, strict: bool = False) -> dict:
     return build_snapshot_document(
         contract.game_version,
         contract.config_sha256,
-        collect_actual_files(contract, strict=True),
+        collect_actual_files(contract, strict=strict),
     )
 
 

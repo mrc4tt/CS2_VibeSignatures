@@ -164,8 +164,9 @@ def verify_tracked_outputs(repo_root: Path, manifest: dict) -> list[dict]:
     inventory = tracked_output_inventory(repo_root, manifest["gamever"])
     if inventory_sha256(inventory) != manifest["tracked_output_manifest_sha256"]:
         raise ReleaseWorkflowError("tracked output manifest hash mismatch")
-    snapshot = Path(repo_root) / "gamesymbols" / f"{manifest['gamever']}.yaml"
-    if sha256_file(snapshot) != manifest["candidate_sha256"]:
+    snapshot_path = f"gamesymbols/{manifest['gamever']}.yaml"
+    snapshot = next(item for item in inventory if item["path"] == snapshot_path)
+    if snapshot["sha256"] != manifest["candidate_sha256"]:
         raise ReleaseWorkflowError("published snapshot does not match candidate hash")
     return inventory
 

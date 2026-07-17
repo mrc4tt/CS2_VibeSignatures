@@ -2,12 +2,14 @@ import hashlib
 import json
 import os
 import stat
+import subprocess
 from pathlib import Path, PurePosixPath
 
 from release_workflow_lib.errors import ReleaseWorkflowError
 
 HEX_SHA256_LENGTH = 64
 READ_CHUNK_SIZE = 1024 * 1024
+REGULAR_GIT_MODES = {"100644", "100755"}
 
 
 def canonical_json_bytes(value: object) -> bytes:
@@ -131,18 +133,42 @@ def verify_inventory(root: Path, expected: list[dict]) -> str:
     return inventory_sha256(actual)
 
 
+def _git_bytes(repo_root: Path, arguments: list[str]) -> bytes:
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), *arguments],
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.decode(errors="replace").strip()
+        raise ReleaseWorkflowError(detail or f"git {' '.join(arguments)} failed")
+    return result.stdout
+
+
+def _git_index_inventory(repo_root: Path, pathspecs: list[str]) -> list[dict]:
+    raw_entries = _git_bytes(repo_root, ["ls-files", "--stage", "-z", "--", *pathspecs])
+    inventory = []
+    seen = set()
+    for record in raw_entries.split(b"\0"):
+        if not record:
+            continue
+        metadata, raw_path = record.split(b"\t", 1)
+        mode, object_id, stage = metadata.decode("ascii").split()
+        relative = normalized_relative_path(os.fsdecode(raw_path).replace("\\", "/"))
+        if stage != "0" or mode not in REGULAR_GIT_MODES or relative in seen:
+            raise ReleaseWorkflowError(f"tracked output has an unsupported Git index entry: {relative}")
+        blob = _git_bytes(repo_root, ["cat-file", "blob", object_id])
+        inventory.append({"path": relative, "size": len(blob), "sha256": sha256_bytes(blob)})
+        seen.add(relative)
+    return sorted(inventory, key=lambda item: item["path"])
+
+
 def tracked_output_inventory(repo_root: Path, gamever: str) -> list[dict]:
     repo_root = Path(repo_root)
-    paths = [repo_root / "gamesymbols" / f"{gamever}.yaml"]
-    dist = repo_root / "dist"
-    if dist.is_dir():
-        paths.extend(sorted(item for item in dist.rglob("*") if item.is_file()))
-    inventory = []
-    for path in paths:
-        if not path.is_file():
-            raise ReleaseWorkflowError(f"required tracked output is missing: {path}")
-        relative = normalized_relative_path(path.relative_to(repo_root).as_posix())
-        inventory.append({"path": relative, "size": path.stat().st_size, "sha256": sha256_file(path)})
+    snapshot = f"gamesymbols/{gamever}.yaml"
+    inventory = _git_index_inventory(repo_root, [snapshot, "dist"])
+    if snapshot not in {item["path"] for item in inventory}:
+        raise ReleaseWorkflowError(f"required tracked output is missing from the Git index: {snapshot}")
     return inventory
 
 

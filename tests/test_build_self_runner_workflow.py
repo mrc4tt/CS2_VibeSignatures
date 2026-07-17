@@ -51,7 +51,10 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         cpp_tests = self.workflow.index("uv run run_cpp_tests.py")
         sdk_restore = self.workflow.index("- name: Restore pinned SDK revision")
         publish = self.workflow.index("gamesymbol_candidate.py publish")
+        stage_outputs = self.workflow.index('git add -- "gamesymbols/$env:GAMEVER.yaml" dist')
         stage = self.workflow.index("release_workflow.py stage-build")
+        stage_manifest = self.workflow.index('git add -- "release-manifests/$env:GAMEVER.json"')
+        commit = self.workflow.index("git commit -m")
         output_pr = self.workflow.index("gh pr create")
         self.assertLess(analyze, candidate)
         self.assertLess(candidate, gamedata)
@@ -59,7 +62,10 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertLess(sdk_select, cpp_tests)
         self.assertLess(cpp_tests, sdk_restore)
         self.assertLess(sdk_restore, publish)
-        self.assertLess(publish, stage)
+        self.assertLess(publish, stage_outputs)
+        self.assertLess(stage_outputs, stage)
+        self.assertLess(stage, stage_manifest)
+        self.assertLess(stage_manifest, commit)
         self.assertLess(stage, output_pr)
 
     def test_cpp_validation_selects_versioned_sdk_with_pinned_fallback(self) -> None:
