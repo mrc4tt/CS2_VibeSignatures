@@ -1,5 +1,5 @@
 config_digest_version: 2
-config_sha256: sha256:742443506531886933883236cd132a1bddbe5dc9bc9c6953b499bfaa980727b7
+config_sha256: sha256:60925b04877f37c301970e51a467a925a6af63016da7edb431c3bf42005e3e8a
 file_count: 2904
 files:
   SDL3/SDL_GetMouse.windows.yaml:

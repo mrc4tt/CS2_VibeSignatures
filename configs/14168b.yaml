@@ -4733,6 +4733,8 @@ modules:
       - name: find-CEntityIdentity_AcceptInputInternal
         expected_output:
           - CEntityIdentity_AcceptInputInternal.{platform}.yaml
+        expected_input:
+          - CEntityIdentity_AcceptInput.{platform}.yaml
       - name: find-CEntityInstance_ScriptAcceptInput
         expected_output:
           - CEntityInstance_ScriptAcceptInput.{platform}.yaml

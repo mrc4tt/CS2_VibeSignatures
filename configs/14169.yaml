@@ -4733,6 +4733,8 @@ modules:
       - name: find-CEntityIdentity_AcceptInputInternal
         expected_output:
           - CEntityIdentity_AcceptInputInternal.{platform}.yaml
+        expected_input:
+          - CEntityIdentity_AcceptInput.{platform}.yaml
       - name: find-CEntityInstance_ScriptAcceptInput
         expected_output:
           - CEntityInstance_ScriptAcceptInput.{platform}.yaml
@@ -5930,6 +5932,8 @@ modules:
       - name: find-CPointTeleportAPI_TeleportEntityInternal
         expected_output:
           - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
+        expected_input:
+          - CPointTeleport_Activate.{platform}.yaml
       - name: find-CBaseEntity_Teleport
         expected_output:
           - CBaseEntity_Teleport.{platform}.yaml
