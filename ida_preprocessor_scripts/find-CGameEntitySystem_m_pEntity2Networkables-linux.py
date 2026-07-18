@@ -42,6 +42,7 @@ async def preprocess_skill(
                 "references/{module_name}/CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses.{platform}.yaml",
             ],
             "expected_result_sections": ["found_struct_offset"],
+            "dependencies": [],
         },
     ]
 

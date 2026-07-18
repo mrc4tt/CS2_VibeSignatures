@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CBtActionCoordinatedBuy_Update.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

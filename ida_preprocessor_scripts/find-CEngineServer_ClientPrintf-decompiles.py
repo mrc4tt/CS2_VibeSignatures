@@ -24,6 +24,7 @@ LLM_DECOMPILE = [
             "references/engine/CEngineServer_ClientPrintf.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CNetworkGameServer_ClientList",
@@ -32,6 +33,7 @@ LLM_DECOMPILE = [
             "references/engine/CEngineServer_ClientPrintf.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

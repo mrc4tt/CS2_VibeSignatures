@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_AddEntityToNameMap.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CGameEntitySystem_ctor.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

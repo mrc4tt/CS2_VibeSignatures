@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CTriggerGravity_GetTouchFunction.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
+        "dependencies": [],
     },
 ]
 

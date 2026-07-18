@@ -19,6 +19,7 @@ LLM_DECOMPILE = [
             "references/networksystem/CNetChan_ParseMessagesDemoInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "g_pLoggingChannel",
@@ -27,6 +28,7 @@ LLM_DECOMPILE = [
             "references/networksystem/CNetChan_ParseMessagesDemoInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
+        "dependencies": [],
     },
 ]
 

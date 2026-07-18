@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CTriggerPush_Touch.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

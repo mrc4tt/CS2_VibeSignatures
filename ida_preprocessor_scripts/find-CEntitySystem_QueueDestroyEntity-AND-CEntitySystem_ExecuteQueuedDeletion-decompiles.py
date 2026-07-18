@@ -19,6 +19,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_QueueDestroyEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_m_nExecuteQueuedDeletionDepth",
@@ -27,6 +28,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

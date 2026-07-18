@@ -16,6 +16,7 @@ LLM_DECOMPILE = [
             "references/networksystem/CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "INetworkMessages_GetFieldChangeCallbackPriorities",
@@ -24,6 +25,7 @@ LLM_DECOMPILE = [
             "references/networksystem/CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

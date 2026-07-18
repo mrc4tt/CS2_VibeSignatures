@@ -2615,6 +2615,10 @@ class TestProcessBinary(unittest.TestCase):
             ],
             mock_preprocess.call_args.kwargs["expected_outputs"],
         )
+        self.assertEqual(
+            [str(binary_dir / "CEngineServiceMgr__MainLoop.windows.yaml")],
+            mock_preprocess.call_args.kwargs["expected_inputs"],
+        )
         mock_run_skill.assert_not_called()
 
     def test_process_binary_counts_optional_only_skill_success_when_preprocess_writes_output(

@@ -39,6 +39,7 @@ LLM_DECOMPILE = [
             "references/engine/CEngineServiceMgr_UnregisterLoopMode-noinline.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "ILoopModeFactory_GetLoopModeType",
@@ -47,6 +48,7 @@ LLM_DECOMPILE = [
             "references/engine/UnregisterLoopModeFactory.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "ILoopModeFactory_Shutdown",
@@ -55,6 +57,7 @@ LLM_DECOMPILE = [
             "references/engine/UnregisterLoopModeFactory.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

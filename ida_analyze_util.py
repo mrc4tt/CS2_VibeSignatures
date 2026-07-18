@@ -1058,11 +1058,14 @@ def _load_struct_member_metadata_from_yaml(old_path):
     return metadata
 
 
-_LLM_DECOMPILE_SPEC_KEYS = frozenset({"symbol_name", "prompt_path", "reference_yaml_paths", "expected_result_sections"})
+_LLM_DECOMPILE_REQUIRED_SPEC_KEYS = frozenset(
+    {"symbol_name", "prompt_path", "reference_yaml_paths", "expected_result_sections", "dependencies"}
+)
+_LLM_DECOMPILE_SPEC_KEYS = _LLM_DECOMPILE_REQUIRED_SPEC_KEYS
 
 
-def _normalize_nonempty_string_list(values, *, field_name, symbol_name, valid_values=None, debug=False):
-    if not isinstance(values, (tuple, list, set)) or not values:
+def _normalize_string_list(values, *, field_name, symbol_name, valid_values=None, allow_empty=False, debug=False):
+    if not isinstance(values, (tuple, list, set)) or (not values and not allow_empty):
         if debug:
             print(f"    Preprocess: invalid llm_decompile {field_name} for {symbol_name}: {values!r}")
         return None
@@ -1083,7 +1086,7 @@ def _normalize_llm_decompile_spec(spec, debug=False):
             print(f"    Preprocess: invalid llm_decompile spec: {spec}")
         return None
     spec_keys = set(spec)
-    missing_keys = sorted(_LLM_DECOMPILE_SPEC_KEYS - spec_keys)
+    missing_keys = sorted(_LLM_DECOMPILE_REQUIRED_SPEC_KEYS - spec_keys)
     unknown_keys = sorted(spec_keys - _LLM_DECOMPILE_SPEC_KEYS)
     if missing_keys or unknown_keys:
         if debug:
@@ -1098,10 +1101,10 @@ def _normalize_llm_decompile_spec(spec, debug=False):
         if debug:
             print(f"    Preprocess: invalid llm_decompile identity: {spec}")
         return None
-    references = _normalize_nonempty_string_list(
+    references = _normalize_string_list(
         spec.get("reference_yaml_paths"), field_name="reference paths", symbol_name=symbol_name, debug=debug
     )
-    sections = _normalize_nonempty_string_list(
+    sections = _normalize_string_list(
         spec.get("expected_result_sections"),
         field_name="expected result sections",
         symbol_name=symbol_name,
@@ -1110,12 +1113,23 @@ def _normalize_llm_decompile_spec(spec, debug=False):
     )
     if references is None or sections is None:
         return None
-    return {
+    dependencies = _normalize_string_list(
+        spec.get("dependencies"),
+        field_name="dependencies",
+        symbol_name=symbol_name,
+        allow_empty=True,
+        debug=debug,
+    )
+    if dependencies is None:
+        return None
+    normalized = {
         "symbol_name": symbol_name,
         "prompt_path": prompt_path,
         "reference_yaml_paths": references,
         "expected_result_sections": sections,
+        "dependencies": dependencies,
     }
+    return normalized
 
 
 def _build_llm_decompile_specs_map(llm_decompile_specs, debug=False):
@@ -1131,6 +1145,50 @@ def _build_llm_decompile_specs_map(llm_decompile_specs, debug=False):
             return None
         specs_map[symbol_name] = spec
     return specs_map
+
+
+def _normalize_llm_dependency_path(path):
+    return os.path.normcase(os.path.normpath(os.path.abspath(os.fspath(path))))
+
+
+def _validate_llm_decompile_dependencies(
+    specs_map,
+    llm_config,
+    new_binary_dir,
+    platform,
+    debug=False,
+):
+    required = [
+        (symbol_name, dependency)
+        for symbol_name, spec in (specs_map or {}).items()
+        for dependency in spec.get("dependencies", [])
+    ]
+    if not required:
+        return True
+
+    expected_inputs = llm_config.get("_expected_inputs") if isinstance(llm_config, dict) else None
+    if not isinstance(expected_inputs, (tuple, list, set)):
+        if debug:
+            print("    Preprocess: expected_input context missing for llm_decompile dependencies")
+        return False
+
+    declared_paths = {_normalize_llm_dependency_path(path) for path in expected_inputs}
+    module_name = _derive_module_name(new_binary_dir)
+    missing = []
+    for symbol_name, dependency in required:
+        resolved = _resolve_llm_decompile_template_value(dependency, platform, module_name=module_name)
+        if not _is_remote_absolute_path(resolved):
+            if not new_binary_dir:
+                missing.append((symbol_name, resolved))
+                continue
+            resolved = os.path.join(os.fspath(new_binary_dir), resolved)
+        if _normalize_llm_dependency_path(resolved) not in declared_paths:
+            missing.append((symbol_name, resolved))
+
+    if missing and debug:
+        for symbol_name, path in missing:
+            print(f"    Preprocess: llm_decompile dependency missing from expected_input: {symbol_name} -> {path}")
+    return not missing
 
 
 _LLM_RESULT_SECTIONS_BY_TARGET_KIND = {
@@ -7508,8 +7566,9 @@ async def preprocess_common_skill(
         generate_yaml_desired_fields: Required desired output fields per
             symbol name.
         llm_decompile_specs: Optional LLM decompile dict specs. Each entry
-            requires symbol_name, prompt_path, reference_yaml_paths, and
-            expected_result_sections.
+            requires symbol_name, prompt_path, reference_yaml_paths,
+            expected_result_sections, and dependencies. Use an empty
+            dependencies list when the LLM step has no runtime YAML inputs.
         llm_config: Optional LLM config dict for llm_decompile fallback.
         debug: Enable debug output.
 
@@ -7542,6 +7601,14 @@ async def preprocess_common_skill(
         debug=debug,
     )
     if llm_decompile_specs_map is None:
+        return False
+    if not _validate_llm_decompile_dependencies(
+        llm_decompile_specs_map,
+        llm_config,
+        new_binary_dir,
+        platform,
+        debug=debug,
+    ):
         return False
 
     func_xrefs_allowed_keys = {

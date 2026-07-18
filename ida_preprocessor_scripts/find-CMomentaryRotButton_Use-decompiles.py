@@ -16,6 +16,7 @@ LLM_DECOMPILE = [
             "references/server/CMomentaryRotButton_Use.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_AddEntityIOEvent2",
@@ -24,6 +25,7 @@ LLM_DECOMPILE = [
             "references/server/CMomentaryRotButton_Use.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

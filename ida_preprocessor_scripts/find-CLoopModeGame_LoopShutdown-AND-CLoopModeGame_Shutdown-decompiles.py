@@ -17,6 +17,7 @@ LLM_DECOMPILE_WINDOWS = [
             "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IGameSystem_LoopDestroyAllSystems",
@@ -25,6 +26,7 @@ LLM_DECOMPILE_WINDOWS = [
             "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IGameSystem_LoopPreShutdownAllSystems",
@@ -33,6 +35,7 @@ LLM_DECOMPILE_WINDOWS = [
             "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 
@@ -44,6 +47,7 @@ LLM_DECOMPILE_LINUX = [
             "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IGameSystem_LoopDestroyAllSystems",
@@ -52,6 +56,7 @@ LLM_DECOMPILE_LINUX = [
             "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IGameSystem_LoopPreShutdownAllSystems",
@@ -60,6 +65,7 @@ LLM_DECOMPILE_LINUX = [
             "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

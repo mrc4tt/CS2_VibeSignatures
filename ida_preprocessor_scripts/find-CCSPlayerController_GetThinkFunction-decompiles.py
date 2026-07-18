@@ -22,6 +22,7 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CCSPlayerController_ResetForceTeamThink",
@@ -30,6 +31,7 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call", "found_funcptr"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CCSPlayerController_ResourceDataThink",
@@ -38,6 +40,7 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CCSPlayerController_InventoryUpdateThink",
@@ -46,6 +49,7 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
+        "dependencies": [],
     },
 ]
 

@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CNetworkUtlVectorEmbedded_TryLateResolve_m_vecRenderAttributes.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

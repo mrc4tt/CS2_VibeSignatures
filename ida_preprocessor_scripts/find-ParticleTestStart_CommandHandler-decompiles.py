@@ -16,6 +16,7 @@ LLM_DECOMPILE = [
             "references/server/ParticleTestStart_CommandHandler.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "UTIL_PlayerSlotToPlayerPawn",
@@ -24,6 +25,7 @@ LLM_DECOMPILE = [
             "references/server/ParticleTestStart_CommandHandler.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

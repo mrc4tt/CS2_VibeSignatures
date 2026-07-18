@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/engine/SetInfo_CommandHandler.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

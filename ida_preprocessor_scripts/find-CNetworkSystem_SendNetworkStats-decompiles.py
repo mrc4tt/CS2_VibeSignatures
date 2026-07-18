@@ -17,6 +17,7 @@ LLM_DECOMPILE = [
             "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "INetworkMessages_GetNetworkGroupName",
@@ -25,6 +26,7 @@ LLM_DECOMPILE = [
             "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "INetworkMessages_GetNetworkGroupColor",
@@ -33,6 +35,7 @@ LLM_DECOMPILE = [
             "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

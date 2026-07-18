@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CSmokeGrenadeProjectile_GetCSWeaponData.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

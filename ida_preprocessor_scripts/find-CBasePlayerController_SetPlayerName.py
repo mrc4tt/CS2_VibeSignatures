@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CGameRules_ClientSettingsChanged.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

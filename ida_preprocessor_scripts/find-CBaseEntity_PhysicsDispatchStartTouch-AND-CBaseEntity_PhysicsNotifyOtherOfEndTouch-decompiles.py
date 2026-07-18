@@ -17,6 +17,7 @@ LLM_DECOMPILE = [
             "references/server/CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CBaseEntity_Touch",
@@ -25,6 +26,7 @@ LLM_DECOMPILE = [
             "references/server/CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CBaseEntity_EndTouch",
@@ -33,6 +35,7 @@ LLM_DECOMPILE = [
             "references/server/CBaseEntity_PhysicsNotifyOtherOfEndTouch.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayer_WeaponServices_EquipWeapon.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

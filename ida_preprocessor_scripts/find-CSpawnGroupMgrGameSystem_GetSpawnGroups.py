@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CSpawnGroupMgrGameSystem_DumpSpawnGroups.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

@@ -19,6 +19,7 @@ LLM_DECOMPILE = [
             "references/server/CSource2Server_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "gameeventmanager",
@@ -27,6 +28,7 @@ LLM_DECOMPILE = [
             "references/server/CSource2Server_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
+        "dependencies": [],
     },
 ]
 

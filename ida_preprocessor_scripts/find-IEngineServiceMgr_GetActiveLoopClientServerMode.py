@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/client/CPrediction_PostNetworkDataReceived.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

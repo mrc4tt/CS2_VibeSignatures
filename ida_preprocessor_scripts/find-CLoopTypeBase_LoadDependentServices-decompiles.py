@@ -32,6 +32,7 @@ LLM_DECOMPILE = [
             "references/engine/CLoopTypeBase_LoadDependentServices.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IEngineService_GetName",
@@ -40,6 +41,7 @@ LLM_DECOMPILE = [
             "references/engine/CLoopTypeBase_LoadDependentServices.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

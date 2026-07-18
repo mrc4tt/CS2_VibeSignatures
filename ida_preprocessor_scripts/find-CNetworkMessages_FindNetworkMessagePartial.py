@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/networksystem/CNetChan_ParseNetMessageShowFilter.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

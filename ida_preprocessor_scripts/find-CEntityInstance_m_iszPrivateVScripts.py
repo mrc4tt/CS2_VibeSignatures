@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CBaseEntity_ReloadPrivateScripts.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

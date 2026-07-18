@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/client/CAM_Command_CommandHandler.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
+        "dependencies": [],
     },
 ]
 

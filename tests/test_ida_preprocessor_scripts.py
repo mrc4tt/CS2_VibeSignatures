@@ -1307,6 +1307,7 @@ class TestFindINetworkMessagesSetIsForServer(unittest.IsolatedAsyncioTestCase):
                     "references/engine/CNetworkServerService_Init.{platform}.yaml",
                 ],
                 "expected_result_sections": ["found_vcall"],
+                "dependencies": [],
             },
         ]
         expected_func_vtable_relations = [("INetworkMessages_SetIsForServer", "INetworkMessages")]
@@ -1377,6 +1378,7 @@ class TestFindCNetworkMessagesGetNetworkGroupStats(unittest.IsolatedAsyncioTestC
                     "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
                 ],
                 "expected_result_sections": ["found_vcall"],
+                "dependencies": [],
             },
             {
                 "symbol_name": "INetworkMessages_GetNetworkGroupName",
@@ -1385,6 +1387,7 @@ class TestFindCNetworkMessagesGetNetworkGroupStats(unittest.IsolatedAsyncioTestC
                     "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
                 ],
                 "expected_result_sections": ["found_vcall"],
+                "dependencies": [],
             },
             {
                 "symbol_name": "INetworkMessages_GetNetworkGroupColor",
@@ -1393,6 +1396,7 @@ class TestFindCNetworkMessagesGetNetworkGroupStats(unittest.IsolatedAsyncioTestC
                     "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
                 ],
                 "expected_result_sections": ["found_vcall"],
+                "dependencies": [],
             },
         ]
         expected_func_vtable_relations = [
@@ -1949,6 +1953,7 @@ class TestPreprocessSingleSkillViaMcp(unittest.IsolatedAsyncioTestCase):
                 port=13337,
                 skill_name="find-CNetworkMessages_FindNetworkGroup",
                 expected_outputs=["out.yaml"],
+                expected_inputs=[r"D:\repo\Input.windows.yaml"],
                 old_yaml_map={"out.yaml": "old.yaml"},
                 new_binary_dir="bin_dir",
                 platform="windows",
@@ -1967,6 +1972,7 @@ class TestPreprocessSingleSkillViaMcp(unittest.IsolatedAsyncioTestCase):
                 "temperature": None,
                 "effort": None,
                 "fake_as": None,
+                "_expected_inputs": [r"D:\repo\Input.windows.yaml"],
             },
             received["args"]["llm_config"],
         )
@@ -2393,6 +2399,7 @@ class TestFindINetworkMessagesFindNetworkGroup(unittest.IsolatedAsyncioTestCase)
                     "references/engine/CNetworkGameClient_RecordEntityBandwidth.{platform}.yaml",
                 ],
                 "expected_result_sections": ["found_vcall"],
+                "dependencies": [],
             },
         ]
         expected_func_vtable_relations = [("INetworkMessages_FindNetworkGroup", "INetworkMessages")]
@@ -2583,6 +2590,7 @@ class TestFindCBaseEntityCollisionRulesChanged(unittest.IsolatedAsyncioTestCase)
                     "references/server/PhysEnableEntityCollisions.{platform}.yaml",
                 ],
                 "expected_result_sections": ["found_vcall"],
+                "dependencies": [],
             },
         ]
         expected_func_vtable_relations = [("CBaseEntity_CollisionRulesChanged", "CBaseEntity")]
@@ -2651,6 +2659,7 @@ class TestFindINetworkMessagesGetLoggingChannelWindows(unittest.IsolatedAsyncioT
                     "references/server/CNetworkUtlVectorEmbedded_TryLateResolve_m_vecRenderAttributes.{platform}.yaml",
                 ],
                 "expected_result_sections": ["found_vcall"],
+                "dependencies": [],
             },
         ]
         expected_func_vtable_relations = [("INetworkMessages_GetLoggingChannel", "INetworkMessages")]
@@ -2720,6 +2729,7 @@ class TestFindINetworkMessagesGetLoggingChannelLinux(unittest.IsolatedAsyncioTes
                     "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_vecRenderAttributes.{platform}.yaml",
                 ],
                 "expected_result_sections": ["found_vcall"],
+                "dependencies": [],
             },
         ]
         expected_func_vtable_relations = [("INetworkMessages_GetLoggingChannel", "INetworkMessages")]
@@ -3008,6 +3018,7 @@ class TestFindILoopTypeDeallocateLoopMode(unittest.IsolatedAsyncioTestCase):
                     "references/engine/CEngineServiceMgr__MainLoop.{platform}.yaml",
                 ],
                 "expected_result_sections": ["found_vcall"],
+                "dependencies": [],
             },
         ]
 

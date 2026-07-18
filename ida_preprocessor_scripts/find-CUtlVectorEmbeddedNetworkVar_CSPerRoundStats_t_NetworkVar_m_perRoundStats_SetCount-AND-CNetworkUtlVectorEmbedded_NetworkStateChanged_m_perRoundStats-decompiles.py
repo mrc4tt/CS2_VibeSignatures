@@ -17,6 +17,7 @@ LLM_DECOMPILE_WINDOWS = [
             "references/server/CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "EntityInstanceAssignChangeAccessorPathIds",
@@ -25,6 +26,7 @@ LLM_DECOMPILE_WINDOWS = [
             "references/server/CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 
@@ -37,6 +39,7 @@ LLM_DECOMPILE_LINUX = [
             "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "EntityInstanceAssignChangeAccessorPathIds",
@@ -45,6 +48,7 @@ LLM_DECOMPILE_LINUX = [
             "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

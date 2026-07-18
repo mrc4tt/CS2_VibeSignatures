@@ -17,6 +17,7 @@ LLM_DECOMPILE = [
             "references/server/CSource2Server_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CLoopModeRegistry_UnregisterLoopModes",
@@ -25,6 +26,7 @@ LLM_DECOMPILE = [
             "references/server/CSource2Server_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEngineServiceRegistry_UnregisterEngineServices",
@@ -33,6 +35,7 @@ LLM_DECOMPILE = [
             "references/server/CSource2Server_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

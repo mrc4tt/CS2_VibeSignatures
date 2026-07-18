@@ -1455,6 +1455,7 @@ def _run_preprocess_single_skill_via_mcp(
     port,
     skill_name,
     expected_outputs,
+    expected_inputs=None,
     old_yaml_map,
     new_binary_dir,
     platform,
@@ -1475,6 +1476,7 @@ def _run_preprocess_single_skill_via_mcp(
         "port": port,
         "skill_name": skill_name,
         "expected_outputs": expected_outputs,
+        "expected_inputs": expected_inputs,
         "old_yaml_map": old_yaml_map,
         "new_binary_dir": new_binary_dir,
         "platform": platform,
@@ -1506,6 +1508,7 @@ def _run_preprocess_single_skill_via_mcp(
         fallback_kwargs.pop("llm_fake_as", None)
         fallback_kwargs.pop("llm_max_retries", None)
         fallback_kwargs.pop("symbol_aliases", None)
+        fallback_kwargs.pop("expected_inputs", None)
         fallback_kwargs.pop("expected_binary", None)
         fallback_kwargs.pop("explicit_database", None)
         return asyncio.run(preprocess_single_skill_via_mcp(**fallback_kwargs))
@@ -3222,6 +3225,7 @@ def process_binary(
                         port=port,
                         skill_name=skill_name,
                         expected_outputs=preprocess_outputs,
+                        expected_inputs=expected_inputs,
                         old_yaml_map=old_yaml_map,
                         new_binary_dir=binary_dir,
                         platform=platform,

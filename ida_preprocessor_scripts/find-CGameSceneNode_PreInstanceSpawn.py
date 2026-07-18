@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

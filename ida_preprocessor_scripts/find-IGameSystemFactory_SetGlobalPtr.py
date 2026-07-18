@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/client/CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

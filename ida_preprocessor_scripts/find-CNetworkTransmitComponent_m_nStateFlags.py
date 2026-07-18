@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CNetworkTransmitComponent_StateChanged.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

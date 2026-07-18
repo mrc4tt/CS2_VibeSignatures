@@ -28,6 +28,7 @@ LLM_DECOMPILE = [
             "references/server/CMultiplayRules_ctor.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IVEngineServer2_IsDedicatedServer",
@@ -36,6 +37,7 @@ LLM_DECOMPILE = [
             "references/server/CMultiplayRules_ctor.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

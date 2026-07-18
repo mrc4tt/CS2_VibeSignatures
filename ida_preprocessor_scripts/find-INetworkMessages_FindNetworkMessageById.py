@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/engine/CDemoRecorder_WriteSpawnGroups.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

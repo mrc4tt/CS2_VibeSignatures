@@ -28,6 +28,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_InitEntityMaterialAttributes.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

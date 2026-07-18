@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CEntityKeyValuesAllocator_GetTempBuffer.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

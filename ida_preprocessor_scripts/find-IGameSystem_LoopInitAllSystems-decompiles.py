@@ -19,6 +19,7 @@ LLM_DECOMPILE = [
             "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IGameSystemFactory_CreateGameSystem",
@@ -27,6 +28,7 @@ LLM_DECOMPILE = [
             "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IGameSystemFactory_IsReallocating",
@@ -35,6 +37,7 @@ LLM_DECOMPILE = [
             "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IGameSystem_SetName",
@@ -43,6 +46,7 @@ LLM_DECOMPILE = [
             "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IGameSystemFactory_GetPriority",
@@ -51,6 +55,7 @@ LLM_DECOMPILE = [
             "references/client/IGameSystem_LoopInitAllSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySpawner_CPlayerSprayDecal_Spawn.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

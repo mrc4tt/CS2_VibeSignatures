@@ -19,6 +19,7 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_MouseWarpEmulationChanged.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "SDL_Mouse_warp_emulation_active",
@@ -27,6 +28,7 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_MouseWarpEmulationChanged.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

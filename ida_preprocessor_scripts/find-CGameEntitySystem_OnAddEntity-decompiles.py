@@ -17,6 +17,7 @@ LLM_DECOMPILE = [
             "references/server/CGameEntitySystem_OnAddEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CGameEntitySystem_m_iNonNetworkedSavedEntCount",
@@ -25,6 +26,7 @@ LLM_DECOMPILE = [
             "references/server/CGameEntitySystem_OnAddEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CGameEntitySystem_m_entityListeners",
@@ -33,6 +35,7 @@ LLM_DECOMPILE = [
             "references/server/CGameEntitySystem_OnAddEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

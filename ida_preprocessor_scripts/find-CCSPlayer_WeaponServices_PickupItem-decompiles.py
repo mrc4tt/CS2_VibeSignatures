@@ -16,6 +16,7 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayer_WeaponServices_PickupItem.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CCSPlayer_WeaponServices_CanUse",
@@ -24,6 +25,7 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayer_WeaponServices_PickupItem.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

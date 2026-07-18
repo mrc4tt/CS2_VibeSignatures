@@ -24,6 +24,7 @@ LLM_DECOMPILE = [
             "references/server/CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "g_pGameTypes",
@@ -32,6 +33,7 @@ LLM_DECOMPILE = [
             "references/server/CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
+        "dependencies": [],
     },
 ]
 

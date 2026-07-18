@@ -26,6 +26,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CConcreteEntityList_AllocEntity",
@@ -34,6 +35,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_ConstructEntity",
@@ -42,6 +44,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_GetSpawnGroupWorldId",
@@ -50,6 +53,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_FindClassByDesignName",
@@ -58,6 +62,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_m_EntityList",
@@ -66,6 +71,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_m_hActiveSpawnGroup",
@@ -74,6 +80,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntityIdentity_FreeAttributes",
@@ -82,6 +89,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CConcreteEntityList_FreeEntity",
@@ -90,6 +98,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PrecacheEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

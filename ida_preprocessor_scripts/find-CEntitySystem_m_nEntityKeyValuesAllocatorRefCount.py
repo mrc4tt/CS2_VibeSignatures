@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CEntityKeyValues_Initialized.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

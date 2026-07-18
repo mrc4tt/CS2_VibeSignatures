@@ -17,6 +17,7 @@ LLM_DECOMPILE = [
             "references/server/CMultiplayRules_ClientDisconnected.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "FireTargets",
@@ -25,6 +26,7 @@ LLM_DECOMPILE = [
             "references/server/CMultiplayRules_ClientDisconnected.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CCSPlayer_ItemServices_RemoveWeapons",
@@ -33,6 +35,7 @@ LLM_DECOMPILE = [
             "references/server/CMultiplayRules_ClientDisconnected.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

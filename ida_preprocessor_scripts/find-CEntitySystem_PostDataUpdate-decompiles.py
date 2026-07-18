@@ -20,6 +20,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PostDataUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntityInstance_PostDataUpdateDelta",
@@ -28,6 +29,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PostDataUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_m_flChangeCallbackSpewThreshold",
@@ -36,6 +38,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_PostDataUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

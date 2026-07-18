@@ -17,6 +17,7 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CCSPlayer_WeaponServices_Weapon_GetSlot",
@@ -25,6 +26,7 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CBasePlayerPawn_RemovePlayerItem",
@@ -33,6 +35,7 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

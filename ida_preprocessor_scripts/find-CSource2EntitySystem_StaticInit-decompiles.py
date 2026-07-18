@@ -40,6 +40,7 @@ LLM_DECOMPILE = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "g_pGameResourceService",
@@ -48,6 +49,7 @@ LLM_DECOMPILE = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
+        "dependencies": [],
     },
     {
         "symbol_name": "g_pGameEntitySystem",
@@ -56,6 +58,7 @@ LLM_DECOMPILE = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_m_entityIONotifiers",
@@ -64,6 +67,7 @@ LLM_DECOMPILE = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CGameEntitySystem_m_pEntity2SaveRestore",
@@ -72,6 +76,7 @@ LLM_DECOMPILE = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_EnableAutoDeletionExecution",
@@ -80,6 +85,7 @@ LLM_DECOMPILE = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_InstallPostSpawnCallback",
@@ -88,6 +94,7 @@ LLM_DECOMPILE = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntitySystem_InstallCreationWrapperCallbacks",
@@ -96,6 +103,7 @@ LLM_DECOMPILE = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 
@@ -107,6 +115,7 @@ LLM_DECOMPILE_LINUX = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 
@@ -118,6 +127,7 @@ LLM_DECOMPILE_WINDOWS = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CGameEntitySystem_m_pEntity2Networkables",
@@ -126,6 +136,7 @@ LLM_DECOMPILE_WINDOWS = [
             "references/{module_name}/CSource2EntitySystem_StaticInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
 ]
 

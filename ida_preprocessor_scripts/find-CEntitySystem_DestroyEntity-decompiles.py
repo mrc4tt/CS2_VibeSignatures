@@ -16,6 +16,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_DestroyEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CEntityComponentHelperT_Free",
@@ -24,6 +25,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_DestroyEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

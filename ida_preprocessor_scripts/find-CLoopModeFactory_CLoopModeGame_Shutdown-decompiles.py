@@ -16,6 +16,7 @@ LLM_DECOMPILE = [
             "references/client/CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IGameSystem_ShutdownAllSystems",
@@ -24,6 +25,7 @@ LLM_DECOMPILE = [
             "references/client/CLoopModeFactory_CLoopModeGame_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

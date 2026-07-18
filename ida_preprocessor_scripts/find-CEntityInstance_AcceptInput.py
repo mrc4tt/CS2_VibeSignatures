@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CCSGameRules_TerminateRound.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

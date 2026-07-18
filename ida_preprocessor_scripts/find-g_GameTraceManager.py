@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/TraceFunc.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
+        "dependencies": [],
     },
 ]
 

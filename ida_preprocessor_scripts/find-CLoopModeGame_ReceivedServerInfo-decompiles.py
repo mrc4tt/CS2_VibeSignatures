@@ -16,6 +16,7 @@ LLM_DECOMPILE = [
             "references/client/CLoopModeGame_ReceivedServerInfo.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "IGameSystem_Add",
@@ -24,6 +25,7 @@ LLM_DECOMPILE = [
             "references/client/CLoopModeGame_ReceivedServerInfo.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

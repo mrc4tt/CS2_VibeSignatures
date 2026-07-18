@@ -18,6 +18,7 @@ LLM_DECOMPILE = [
             "references/client/SendViolationReport.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "INetworkClient_GetLocalAddress",
@@ -26,6 +27,7 @@ LLM_DECOMPILE = [
             "references/client/SendViolationReport.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "INetworkClientService_IsConnected",
@@ -34,6 +36,7 @@ LLM_DECOMPILE = [
             "references/client/SendViolationReport.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "INetworkClientService_SendNetMessage",
@@ -42,6 +45,7 @@ LLM_DECOMPILE = [
             "references/client/SendViolationReport.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

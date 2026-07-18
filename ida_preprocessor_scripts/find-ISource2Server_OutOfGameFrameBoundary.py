@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/engine/CLoopTypeSimple_FrameUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

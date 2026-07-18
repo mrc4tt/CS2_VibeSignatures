@@ -25,6 +25,7 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
     {
         "symbol_name": "SDL_mouse_initialized",
@@ -33,6 +34,7 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
+        "dependencies": [],
     },
     {
         "symbol_name": "SDL_Mouse_was_touch_mouse_events",
@@ -41,6 +43,7 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
     {
         "symbol_name": "SDL_Mouse_cursor_visible",
@@ -49,6 +52,7 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "dependencies": [],
     },
     {
         "symbol_name": "SDL_MouseWarpEmulationChanged",
@@ -57,6 +61,7 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PreInitMouse.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
+        "dependencies": [],
     },
 ]
 

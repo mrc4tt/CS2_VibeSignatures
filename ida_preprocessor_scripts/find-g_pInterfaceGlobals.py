@@ -45,6 +45,7 @@ async def preprocess_skill(
                 "references/{module_name}/ConnectInterfaces.{platform}.yaml",
             ],
             "expected_result_sections": ["found_gv"],
+            "dependencies": [],
         },
     ]
 

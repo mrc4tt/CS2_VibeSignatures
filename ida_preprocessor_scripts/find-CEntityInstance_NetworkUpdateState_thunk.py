@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CBaseModelEntity_SetRenderAttribute.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

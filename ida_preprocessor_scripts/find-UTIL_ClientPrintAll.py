@@ -15,6 +15,7 @@ LLM_DECOMPILE_WINDOWS = [
             "references/server/CCSPlayerPawnBase_CheckForIdle.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 
@@ -26,6 +27,7 @@ LLM_DECOMPILE_LINUX = [
             "references/server/CCSPlayerPawnBase_CheckForIdleInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
+        "dependencies": [],
     },
 ]
 

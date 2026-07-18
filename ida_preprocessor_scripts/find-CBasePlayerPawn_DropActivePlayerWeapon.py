@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CBasePlayerPawn_Event_Killed.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

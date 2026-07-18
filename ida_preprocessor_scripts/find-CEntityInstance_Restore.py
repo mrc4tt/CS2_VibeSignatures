@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CEntitySaveRestoreBlockHandler_DoRestoreEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

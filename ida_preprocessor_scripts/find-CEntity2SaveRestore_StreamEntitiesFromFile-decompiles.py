@@ -16,6 +16,7 @@ LLM_DECOMPILE = [
             "references/server/CEntity2SaveRestore_StreamEntitiesFromFile.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
     {
         "symbol_name": "CSaveRestoreBlockSet_PostRestore",
@@ -24,6 +25,7 @@ LLM_DECOMPILE = [
             "references/server/CEntity2SaveRestore_StreamEntitiesFromFile.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 

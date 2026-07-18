@@ -15,6 +15,7 @@ LLM_DECOMPILE = [
             "references/server/CGameSceneNode_UpdateEntityForHierarchyChange.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependencies": [],
     },
 ]
 
