@@ -5917,6 +5917,8 @@ modules:
       - name: find-CPointTeleportAPI_TeleportEntityInternal
         expected_output:
           - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
+        expected_input:
+          - CPointTeleport_Activate.{platform}.yaml
       - name: find-CBaseEntity_Teleport
         expected_output:
           - CBaseEntity_Teleport.{platform}.yaml
