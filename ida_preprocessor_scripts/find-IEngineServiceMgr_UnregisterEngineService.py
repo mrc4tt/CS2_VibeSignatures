@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEngineServiceRegistry_UnregisterEngineServices.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEngineServiceRegistry_UnregisterEngineServices.{platform}.yaml": "required",
+        },
     },
 ]
 

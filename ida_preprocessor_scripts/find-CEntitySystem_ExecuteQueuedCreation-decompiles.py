@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_ExecuteQueuedCreation.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_ExecuteQueuedCreation.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_ExecuteQueuedCreation.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_ExecuteQueuedCreation.{platform}.yaml": "required",
+        },
     },
 ]
 

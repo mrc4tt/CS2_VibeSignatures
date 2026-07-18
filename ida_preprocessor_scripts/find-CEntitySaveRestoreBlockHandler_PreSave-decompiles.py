@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySaveRestoreBlockHandler_PreSave.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySaveRestoreBlockHandler_PreSave.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntityInstance_OnSave",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySaveRestoreBlockHandler_PreSave.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySaveRestoreBlockHandler_PreSave.{platform}.yaml": "required",
+        },
     },
 ]
 

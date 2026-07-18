@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/engine/CGameResourceService_BuildResourceManifest.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CGameResourceService_BuildResourceManifest.{platform}.yaml": "required",
+        },
     },
 ]
 

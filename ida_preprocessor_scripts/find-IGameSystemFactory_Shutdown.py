@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/client/IGameSystem_ShutdownAllSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "IGameSystem_ShutdownAllSystems.{platform}.yaml": "required",
+        },
     },
 ]
 

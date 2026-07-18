@@ -64,19 +64,27 @@ class TestSnapshotContract(unittest.TestCase):
             first = root / "first.yaml"
             second = root / "second.yaml"
             third = root / "third.yaml"
+            fourth = root / "fourth.yaml"
             base = module("server", [skill("find-a", ["A.{platform}.yaml"], description="old")])
             changed_description = module("server", [skill("find-a", ["A.{platform}.yaml"], description="new")])
             changed_output = module("server", [skill("find-a", ["B.{platform}.yaml"])])
+            changed_optional_input = module(
+                "server",
+                [skill("find-a", ["A.{platform}.yaml"], optional_input=["Optional.{platform}.yaml"])],
+            )
             write_config(first, [base])
             write_config(second, [changed_description])
             write_config(third, [changed_output])
+            write_config(fourth, [changed_optional_input])
 
             first_digest = load_contract(first, "1", root / "bin").config_sha256
             second_digest = load_contract(second, "1", root / "bin").config_sha256
             third_digest = load_contract(third, "1", root / "bin").config_sha256
+            fourth_digest = load_contract(fourth, "1", root / "bin").config_sha256
 
         self.assertEqual(first_digest, second_digest)
         self.assertNotEqual(first_digest, third_digest)
+        self.assertNotEqual(first_digest, fourth_digest)
 
     def test_rejects_escape_and_case_insensitive_collision(self) -> None:
         cases = [

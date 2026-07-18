@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/ClientPrintToController.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "ClientPrintToController.{platform}.yaml": "required",
+        },
     },
 ]
 

@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_RegisterAccessor.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_RegisterAccessor.{platform}.yaml": "required",
+        },
     },
 ]
 

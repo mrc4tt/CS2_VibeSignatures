@@ -30,7 +30,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init-noinline.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
 ]
 

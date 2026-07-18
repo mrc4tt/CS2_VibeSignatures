@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/EntityInstanceAssignChangeAccessorPathIds.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "EntityInstanceAssignChangeAccessorPathIds.{platform}.yaml": "required",
+        },
     },
 ]
 

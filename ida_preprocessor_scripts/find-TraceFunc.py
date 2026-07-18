@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/FindUseEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "FindUseEntity.{platform}.yaml": "required",
+        },
     },
 ]
 

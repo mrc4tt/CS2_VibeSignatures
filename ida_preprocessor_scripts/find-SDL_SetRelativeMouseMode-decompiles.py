@@ -20,7 +20,9 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_SetRelativeMouseMode.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "SDL_SetRelativeMouseMode.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "SDL_Mouse_SetRelativeMouseMode",
@@ -29,7 +31,9 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_SetRelativeMouseMode.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "SDL_SetRelativeMouseMode.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "SDL_PerformWarpMouseInWindow",
@@ -38,7 +42,9 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_SetRelativeMouseMode.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "SDL_SetRelativeMouseMode.{platform}.yaml": "required",
+        },
     },
 ]
 

@@ -18,7 +18,9 @@ LLM_DECOMPILE = [
             "references/server/IGameSystem_LoopDestroyAllSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
-        "dependencies": [],
+        "dependency_policy": {
+            "IGameSystem_LoopDestroyAllSystems.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "IGameSystem_LoopDestroyAllSystems_s_GameSystems",
@@ -27,7 +29,9 @@ LLM_DECOMPILE = [
             "references/server/IGameSystem_LoopDestroyAllSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
-        "dependencies": [],
+        "dependency_policy": {
+            "IGameSystem_LoopDestroyAllSystems.{platform}.yaml": "required",
+        },
     },
 ]
 

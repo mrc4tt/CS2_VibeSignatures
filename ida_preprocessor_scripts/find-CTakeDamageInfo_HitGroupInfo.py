@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/TraceAttack.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "TraceAttack.{platform}.yaml": "required",
+        },
     },
 ]
 

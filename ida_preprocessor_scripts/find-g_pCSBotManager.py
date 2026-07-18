@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/BotAdd_CommandHandler.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
-        "dependencies": [],
+        "dependency_policy": {
+            "BotAdd_CommandHandler.{platform}.yaml": "required",
+        },
     },
 ]
 

@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CGameEntitySystem_Spawn.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CGameEntitySystem_Spawn.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CGameEntitySystem_CheckGlobalState",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CGameEntitySystem_Spawn.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CGameEntitySystem_Spawn.{platform}.yaml": "required",
+        },
     },
 ]
 

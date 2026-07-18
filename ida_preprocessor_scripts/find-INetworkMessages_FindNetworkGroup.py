@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkGameClient_RecordEntityBandwidth.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkGameClient_RecordEntityBandwidth.{platform}.yaml": "required",
+        },
     },
 ]
 

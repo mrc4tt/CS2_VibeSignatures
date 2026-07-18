@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/RegisterSchemaTypeOverride_CEntityHandle.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "RegisterSchemaTypeOverride_CEntityHandle.{platform}.yaml": "required",
+        },
     },
 ]
 

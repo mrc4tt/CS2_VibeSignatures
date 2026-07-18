@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CGameSceneNode_PostDataUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CGameSceneNode_PostDataUpdate.{platform}.yaml": "required",
+        },
     },
 ]
 

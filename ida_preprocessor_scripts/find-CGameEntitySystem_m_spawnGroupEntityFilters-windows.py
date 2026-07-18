@@ -42,7 +42,9 @@ async def preprocess_skill(
                 "references/{module_name}/CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml",
             ],
             "expected_result_sections": ["found_struct_offset"],
-            "dependencies": [],
+            "dependency_policy": {
+                "CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.{platform}.yaml": "required",
+            },
         },
     ]
 

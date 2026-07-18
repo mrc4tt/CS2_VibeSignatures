@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/engine/CEngineServiceMgr_GetActiveLoopClientServerMode.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEngineServiceMgr_GetActiveLoopClientServerMode.{platform}.yaml": "required",
+        },
     },
 ]
 

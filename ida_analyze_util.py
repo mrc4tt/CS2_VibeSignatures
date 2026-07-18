@@ -1059,9 +1059,16 @@ def _load_struct_member_metadata_from_yaml(old_path):
 
 
 _LLM_DECOMPILE_REQUIRED_SPEC_KEYS = frozenset(
-    {"symbol_name", "prompt_path", "reference_yaml_paths", "expected_result_sections", "dependencies"}
+    {
+        "symbol_name",
+        "prompt_path",
+        "reference_yaml_paths",
+        "expected_result_sections",
+        "dependency_policy",
+    }
 )
 _LLM_DECOMPILE_SPEC_KEYS = _LLM_DECOMPILE_REQUIRED_SPEC_KEYS
+_LLM_DECOMPILE_DEPENDENCY_POLICIES = frozenset({"required", "optional"})
 
 
 def _normalize_string_list(values, *, field_name, symbol_name, valid_values=None, allow_empty=False, debug=False):
@@ -1113,21 +1120,34 @@ def _normalize_llm_decompile_spec(spec, debug=False):
     )
     if references is None or sections is None:
         return None
-    dependencies = _normalize_string_list(
-        spec.get("dependencies"),
-        field_name="dependencies",
-        symbol_name=symbol_name,
-        allow_empty=True,
-        debug=debug,
-    )
-    if dependencies is None:
+    raw_policy = spec.get("dependency_policy")
+    if not isinstance(raw_policy, dict) or not raw_policy:
+        if debug:
+            print(f"    Preprocess: invalid llm_decompile dependency_policy for {symbol_name}: {raw_policy!r}")
         return None
+    dependency_policy = {}
+    for artifact_name, policy in raw_policy.items():
+        if (
+            not isinstance(artifact_name, str)
+            or not artifact_name
+            or "/" in artifact_name
+            or "\\" in artifact_name
+            or not isinstance(policy, str)
+            or policy not in _LLM_DECOMPILE_DEPENDENCY_POLICIES
+        ):
+            if debug:
+                print(
+                    "    Preprocess: invalid llm_decompile dependency_policy entry for "
+                    f"{symbol_name}: {artifact_name!r} -> {policy!r}"
+                )
+            return None
+        dependency_policy[artifact_name] = policy
     normalized = {
         "symbol_name": symbol_name,
         "prompt_path": prompt_path,
         "reference_yaml_paths": references,
         "expected_result_sections": sections,
-        "dependencies": dependencies,
+        "dependency_policy": dependency_policy,
     }
     return normalized
 
@@ -1147,48 +1167,155 @@ def _build_llm_decompile_specs_map(llm_decompile_specs, debug=False):
     return specs_map
 
 
-def _normalize_llm_dependency_path(path):
-    return os.path.normcase(os.path.normpath(os.path.abspath(os.fspath(path))))
+def _load_llm_reference_func_name(reference_value, platform, module_name, debug=False):
+    resolved = _resolve_llm_decompile_template_value(reference_value, platform, module_name=module_name)
+    reference_path = Path(resolved)
+    if not reference_path.is_absolute():
+        reference_path = _get_preprocessor_scripts_dir() / reference_path
+    reference_data = _read_yaml_file(reference_path)
+    if not isinstance(reference_data, dict):
+        if debug:
+            print(f"    Preprocess: invalid llm_decompile reference payload: {reference_path}")
+        return None
+    func_name = str(reference_data.get("func_name", "") or "").strip()
+    if not func_name and debug:
+        print(f"    Preprocess: llm_decompile reference func_name missing: {reference_path}")
+    return func_name or None
 
 
-def _validate_llm_decompile_dependencies(
+def _llm_artifact_basename(value):
+    return os.fspath(value).replace("\\", "/").rsplit("/", 1)[-1]
+
+
+def _index_llm_config_inputs(values, field_name, debug=False):
+    if not isinstance(values, (tuple, list, set)):
+        if debug:
+            print(f"    Preprocess: {field_name} context missing for llm_decompile dependency_policy")
+        return None
+    indexed = {}
+    for value in values:
+        try:
+            path = os.fspath(value)
+        except TypeError:
+            if debug:
+                print(f"    Preprocess: invalid {field_name} path for llm_decompile dependency_policy: {value!r}")
+            return None
+        basename = os.path.normcase(_llm_artifact_basename(path))
+        indexed.setdefault(basename, []).append(path)
+    return indexed
+
+
+def _validate_llm_config_input_indexes(expected_inputs, optional_inputs, debug=False):
+    valid = True
+    for field_name, indexed in (("expected_input", expected_inputs), ("optional_input", optional_inputs)):
+        for basename, paths in indexed.items():
+            if len(paths) <= 1:
+                continue
+            valid = False
+            if debug:
+                print(
+                    f"    Preprocess: ambiguous {field_name} basename for llm_decompile dependency_policy: "
+                    f"{basename} -> {paths}"
+                )
+
+    overlapping_inputs = sorted(set(expected_inputs) & set(optional_inputs))
+    if overlapping_inputs:
+        valid = False
+        if debug:
+            for basename in overlapping_inputs:
+                print(
+                    "    Preprocess: llm_decompile dependency_policy input overlap: "
+                    f"{basename} appears in expected_input and optional_input"
+                )
+    return valid
+
+
+def _validate_llm_decompile_dependency_policy(
     specs_map,
     llm_config,
     new_binary_dir,
     platform,
     debug=False,
 ):
-    required = [
-        (symbol_name, dependency)
-        for symbol_name, spec in (specs_map or {}).items()
-        for dependency in spec.get("dependencies", [])
-    ]
-    if not required:
+    if not specs_map:
         return True
 
-    expected_inputs = llm_config.get("_expected_inputs") if isinstance(llm_config, dict) else None
-    if not isinstance(expected_inputs, (tuple, list, set)):
+    if not isinstance(llm_config, dict):
         if debug:
-            print("    Preprocess: expected_input context missing for llm_decompile dependencies")
+            print("    Preprocess: config context missing for llm_decompile dependency_policy")
         return False
 
-    declared_paths = {_normalize_llm_dependency_path(path) for path in expected_inputs}
-    module_name = _derive_module_name(new_binary_dir)
-    missing = []
-    for symbol_name, dependency in required:
-        resolved = _resolve_llm_decompile_template_value(dependency, platform, module_name=module_name)
-        if not _is_remote_absolute_path(resolved):
-            if not new_binary_dir:
-                missing.append((symbol_name, resolved))
-                continue
-            resolved = os.path.join(os.fspath(new_binary_dir), resolved)
-        if _normalize_llm_dependency_path(resolved) not in declared_paths:
-            missing.append((symbol_name, resolved))
+    expected_inputs = _index_llm_config_inputs(llm_config.get("_expected_inputs"), "expected_input", debug=debug)
+    optional_inputs = _index_llm_config_inputs(llm_config.get("_optional_inputs"), "optional_input", debug=debug)
+    if expected_inputs is None or optional_inputs is None:
+        return False
 
-    if missing and debug:
-        for symbol_name, path in missing:
-            print(f"    Preprocess: llm_decompile dependency missing from expected_input: {symbol_name} -> {path}")
-    return not missing
+    valid = _validate_llm_config_input_indexes(expected_inputs, optional_inputs, debug=debug)
+
+    module_name = _derive_module_name(new_binary_dir)
+    platform_suffix = f".{platform}.yaml"
+    for symbol_name, spec in specs_map.items():
+        inferred_artifacts = set()
+        for reference_value in spec.get("reference_yaml_paths", []):
+            func_name = _load_llm_reference_func_name(reference_value, platform, module_name, debug=debug)
+            if func_name is None:
+                valid = False
+                continue
+            inferred_artifacts.add(os.path.normcase(f"{func_name}{platform_suffix}"))
+
+        resolved_policy = {}
+        for artifact_template, policy in spec.get("dependency_policy", {}).items():
+            artifact_name = _resolve_llm_decompile_template_value(
+                artifact_template,
+                platform,
+                module_name=module_name,
+            )
+            artifact_basename = _llm_artifact_basename(artifact_name)
+            artifact_key = os.path.normcase(artifact_basename)
+            if not artifact_basename.endswith(platform_suffix):
+                valid = False
+                if debug:
+                    print(
+                        "    Preprocess: llm_decompile dependency_policy platform mismatch: "
+                        f"{symbol_name} -> {artifact_template!r} for platform {platform}"
+                    )
+            if artifact_key in resolved_policy:
+                valid = False
+                if debug:
+                    print(
+                        "    Preprocess: duplicate resolved llm_decompile dependency_policy artifact: "
+                        f"{symbol_name} -> {artifact_basename}"
+                    )
+            resolved_policy[artifact_key] = policy
+
+        policy_artifacts = set(resolved_policy)
+        if inferred_artifacts != policy_artifacts:
+            valid = False
+            if debug:
+                missing_policy = sorted(inferred_artifacts - policy_artifacts)
+                extra_policy = sorted(policy_artifacts - inferred_artifacts)
+                print(
+                    "    Preprocess: llm_decompile dependency_policy/reference mismatch: "
+                    f"symbol={symbol_name}, missing_policy={missing_policy}, extra_policy={extra_policy}, "
+                    f"policy={spec.get('dependency_policy')}"
+                )
+
+        for artifact_key, policy in resolved_policy.items():
+            expected_field = "expected_input" if policy == "required" else "optional_input"
+            declared = expected_inputs if policy == "required" else optional_inputs
+            other = optional_inputs if policy == "required" else expected_inputs
+            matches = declared.get(artifact_key, [])
+            if len(matches) != 1 or artifact_key in other:
+                valid = False
+                if debug:
+                    artifact_name = _llm_artifact_basename(matches[0]) if matches else artifact_key
+                    print(
+                        "    Preprocess: llm_decompile dependency_policy config mismatch: "
+                        f"symbol={symbol_name}, artifact={artifact_name}, policy={policy}, "
+                        f"required_config_field={expected_field}, matches={matches}"
+                    )
+
+    return valid
 
 
 _LLM_RESULT_SECTIONS_BY_TARGET_KIND = {
@@ -7566,9 +7693,9 @@ async def preprocess_common_skill(
         generate_yaml_desired_fields: Required desired output fields per
             symbol name.
         llm_decompile_specs: Optional LLM decompile dict specs. Each entry
-            requires symbol_name, prompt_path, reference_yaml_paths,
-            expected_result_sections, and dependencies. Use an empty
-            dependencies list when the LLM step has no runtime YAML inputs.
+            requires symbol_name, prompt_path, reference_yaml_paths, and
+            expected_result_sections plus a non-empty dependency_policy that
+            classifies every reference artifact as required or optional.
         llm_config: Optional LLM config dict for llm_decompile fallback.
         debug: Enable debug output.
 
@@ -7602,7 +7729,7 @@ async def preprocess_common_skill(
     )
     if llm_decompile_specs_map is None:
         return False
-    if not _validate_llm_decompile_dependencies(
+    if not _validate_llm_decompile_dependency_policy(
         llm_decompile_specs_map,
         llm_config,
         new_binary_dir,

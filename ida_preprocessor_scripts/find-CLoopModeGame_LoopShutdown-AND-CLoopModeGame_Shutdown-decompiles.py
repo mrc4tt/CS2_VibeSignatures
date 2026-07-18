@@ -17,7 +17,9 @@ LLM_DECOMPILE_WINDOWS = [
             "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CLoopModeGame_LoopShutdown.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "IGameSystem_LoopDestroyAllSystems",
@@ -26,7 +28,9 @@ LLM_DECOMPILE_WINDOWS = [
             "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CLoopModeGame_LoopShutdown.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "IGameSystem_LoopPreShutdownAllSystems",
@@ -35,7 +39,9 @@ LLM_DECOMPILE_WINDOWS = [
             "references/client/CLoopModeGame_LoopShutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CLoopModeGame_LoopShutdown.{platform}.yaml": "required",
+        },
     },
 ]
 
@@ -47,7 +53,9 @@ LLM_DECOMPILE_LINUX = [
             "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CLoopModeGame_Shutdown.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "IGameSystem_LoopDestroyAllSystems",
@@ -56,7 +64,9 @@ LLM_DECOMPILE_LINUX = [
             "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CLoopModeGame_Shutdown.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "IGameSystem_LoopPreShutdownAllSystems",
@@ -65,7 +75,9 @@ LLM_DECOMPILE_LINUX = [
             "references/client/CLoopModeGame_Shutdown.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CLoopModeGame_Shutdown.{platform}.yaml": "required",
+        },
     },
 ]
 

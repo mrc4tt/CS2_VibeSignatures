@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CLoopModeRegistry_UnregisterLoopModes.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CLoopModeRegistry_UnregisterLoopModes.{platform}.yaml": "required",
+        },
     },
 ]
 

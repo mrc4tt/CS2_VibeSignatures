@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_CreateEntitySystem.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_CreateEntitySystem.{platform}.yaml": "required",
+        },
     },
 ]
 

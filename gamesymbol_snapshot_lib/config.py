@@ -20,6 +20,9 @@ SKILL_FIELDS = (
     "expected_input",
     "expected_input_windows",
     "expected_input_linux",
+    "optional_input",
+    "optional_input_windows",
+    "optional_input_linux",
     "prerequisite",
     "skip_if_exists",
 )
@@ -105,6 +108,8 @@ def _make_node(module: dict, skill: dict, skill_index: int, platform: str, game_
     optional_keys = frozenset(canonical_key(game_root, path) for path in optional if path.endswith(".yaml"))
     input_paths = list(skill.get("expected_input", []) or [])
     input_paths += list(skill.get(f"expected_input_{platform}", []) or [])
+    input_paths += list(skill.get("optional_input", []) or [])
+    input_paths += list(skill.get(f"optional_input_{platform}", []) or [])
     inputs = _resolved_keys(binary_dir, input_paths, platform, game_root)
     node_id = f"{module['stage_index']}:{skill_index}:{module['name']}:{platform}:{skill['name']}"
     fingerprint_data = {

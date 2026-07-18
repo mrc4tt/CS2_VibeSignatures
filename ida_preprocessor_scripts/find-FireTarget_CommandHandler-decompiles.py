@@ -19,7 +19,9 @@ LLM_DECOMPILE = [
             "references/server/FireTarget_CommandHandler.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "FireTarget_CommandHandler.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "g_pGameRules",
@@ -28,7 +30,9 @@ LLM_DECOMPILE = [
             "references/server/FireTarget_CommandHandler.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
-        "dependencies": [],
+        "dependency_policy": {
+            "FireTarget_CommandHandler.{platform}.yaml": "required",
+        },
     },
 ]
 

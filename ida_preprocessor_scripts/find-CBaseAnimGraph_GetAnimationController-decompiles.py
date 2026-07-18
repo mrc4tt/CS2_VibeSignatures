@@ -20,7 +20,9 @@ LLM_DECOMPILE = [
             "references/server/CBaseAnimGraph_GetAnimationController.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CBaseAnimGraph_GetAnimationController.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CGameSceneNode_GetSkeletonInstance",
@@ -29,7 +31,9 @@ LLM_DECOMPILE = [
             "references/server/CBaseAnimGraph_GetAnimationController.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CBaseAnimGraph_GetAnimationController.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CSkeletonInstance_m_animationController",
@@ -38,7 +42,9 @@ LLM_DECOMPILE = [
             "references/server/CBaseAnimGraph_GetAnimationController.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CBaseAnimGraph_GetAnimationController.{platform}.yaml": "required",
+        },
     },
 ]
 

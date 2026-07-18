@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CPlayer_MovementServices_PlayWaterStepSound.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CPlayer_MovementServices_PlayWaterStepSound.{platform}.yaml": "required",
+        },
     },
 ]
 

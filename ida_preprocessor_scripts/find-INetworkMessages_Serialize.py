@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkGameClient_SendMovePacket.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkGameClient_SendMovePacket.{platform}.yaml": "required",
+        },
     },
 ]
 

@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CCSGameRules_BeginRound.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CCSGameRules_BeginRound.{platform}.yaml": "required",
+        },
     },
 ]
 

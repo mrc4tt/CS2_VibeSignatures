@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_SetInPVS.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_SetInPVS.{platform}.yaml": "required",
+        },
     },
 ]
 

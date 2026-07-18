@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkGameServerBase_ConnectClient.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkGameServerBase_ConnectClient.{platform}.yaml": "required",
+        },
     },
 ]
 

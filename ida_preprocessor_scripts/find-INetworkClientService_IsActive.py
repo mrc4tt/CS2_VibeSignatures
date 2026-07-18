@@ -16,7 +16,9 @@ LLM_DECOMPILE_WINDOWS = [
             "references/engine/CNetworkGameServerBase_ServerSimulate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkGameServerBase_ServerSimulate.{platform}.yaml": "required",
+        },
     },
 ]
 
@@ -29,7 +31,9 @@ LLM_DECOMPILE_LINUX = [
             "references/engine/CNetworkGameServerBase_ServerSimulateInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkGameServerBase_ServerSimulateInternal.{platform}.yaml": "required",
+        },
     },
 ]
 

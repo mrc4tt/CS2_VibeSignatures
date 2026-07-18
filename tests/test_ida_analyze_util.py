@@ -5042,6 +5042,15 @@ class TestFunctionDetailExportPyEvalBuilder(unittest.IsolatedAsyncioTestCase):
 
 
 class TestLlmDecompileSupport(unittest.IsolatedAsyncioTestCase):
+    def setUp(self) -> None:
+        policy_patcher = patch.object(
+            ida_analyze_util,
+            "_validate_llm_decompile_dependency_policy",
+            return_value=True,
+        )
+        policy_patcher.start()
+        self.addCleanup(policy_patcher.stop)
+
     def test_build_expected_llm_result_sections_uses_explicit_spec_contract(self) -> None:
         struct_member_name = "SDL_Mouse_WarpMouse"
         vfunc_name = "CEntitySystem_OnRemoveEntity"
@@ -5049,15 +5058,12 @@ class TestLlmDecompileSupport(unittest.IsolatedAsyncioTestCase):
         specs_map = {
             struct_member_name: {
                 "expected_result_sections": ["found_struct_offset"],
-                "dependencies": [],
             },
             vfunc_name: {
                 "expected_result_sections": ["found_vcall"],
-                "dependencies": [],
             },
             regular_func_name: {
                 "expected_result_sections": ["found_call", "found_funcptr"],
-                "dependencies": [],
             },
         }
 
@@ -6364,7 +6370,7 @@ found_struct_offset: []
     def test_is_transient_llm_error_rejects_client_configuration_error(self) -> None:
         self.assertFalse(ida_analyze_util._is_transient_llm_error(RuntimeError("invalid api key")))
 
-    def test_build_llm_decompile_specs_map_normalizes_explicit_dict_contract(self) -> None:
+    def test_build_llm_decompile_specs_map_normalizes_dependency_policy(self) -> None:
         specs_map = ida_analyze_util._build_llm_decompile_specs_map(
             [
                 {
@@ -6372,14 +6378,19 @@ found_struct_offset: []
                     "prompt_path": "prompt/call_llm_decompile.md",
                     "reference_yaml_paths": ["references/reference_a.yaml", "references/reference_c.yaml"],
                     "expected_result_sections": ["found_vcall"],
-                    "dependencies": ["ILoopMode_LoopActivate.{platform}.yaml"],
+                    "dependency_policy": {
+                        "reference_a.{platform}.yaml": "required",
+                        "reference_c.{platform}.yaml": "optional",
+                    },
                 },
                 {
                     "symbol_name": "CNetworkMessages_FindNetworkGroup",
                     "prompt_path": "prompt/call_llm_decompile.md",
                     "reference_yaml_paths": ["references/reference_b.yaml"],
                     "expected_result_sections": ["found_call", "found_funcptr"],
-                    "dependencies": [],
+                    "dependency_policy": {
+                        "reference_b.{platform}.yaml": "required",
+                    },
                 },
             ],
             debug=True,
@@ -6392,14 +6403,19 @@ found_struct_offset: []
                     "prompt_path": "prompt/call_llm_decompile.md",
                     "reference_yaml_paths": ["references/reference_a.yaml", "references/reference_c.yaml"],
                     "expected_result_sections": ["found_vcall"],
-                    "dependencies": ["ILoopMode_LoopActivate.{platform}.yaml"],
+                    "dependency_policy": {
+                        "reference_a.{platform}.yaml": "required",
+                        "reference_c.{platform}.yaml": "optional",
+                    },
                 },
                 "CNetworkMessages_FindNetworkGroup": {
                     "symbol_name": "CNetworkMessages_FindNetworkGroup",
                     "prompt_path": "prompt/call_llm_decompile.md",
                     "reference_yaml_paths": ["references/reference_b.yaml"],
                     "expected_result_sections": ["found_call", "found_funcptr"],
-                    "dependencies": [],
+                    "dependency_policy": {
+                        "reference_b.{platform}.yaml": "required",
+                    },
                 },
             },
             specs_map,
@@ -6419,15 +6435,19 @@ found_struct_offset: []
             "prompt_path": "prompt/call_llm_decompile.md",
             "reference_yaml_paths": ["references/reference_a.yaml"],
             "expected_result_sections": ["found_vcall"],
-            "dependencies": [],
+            "dependency_policy": {
+                "reference_a.{platform}.yaml": "required",
+            },
         }
 
         for case_name, invalid_spec in {
+            "missing_policy": {key: value for key, value in base_spec.items() if key != "dependency_policy"},
             "missing_sections": {key: value for key, value in base_spec.items() if key != "expected_result_sections"},
-            "missing_dependencies": {key: value for key, value in base_spec.items() if key != "dependencies"},
             "unknown_key": {**base_spec, "schema": "found_vcall"},
             "unknown_section": {**base_spec, "expected_result_sections": ["found_unknown"]},
-            "invalid_dependencies": {**base_spec, "dependencies": "not-a-list"},
+            "empty_policy": {**base_spec, "dependency_policy": {}},
+            "invalid_policy": {**base_spec, "dependency_policy": {"reference_a.{platform}.yaml": "runtime"}},
+            "legacy_dependencies": {**base_spec, "dependencies": []},
         }.items():
             with self.subTest(case_name=case_name):
                 self.assertIsNone(ida_analyze_util._build_llm_decompile_specs_map([invalid_spec], debug=True))
@@ -6438,7 +6458,6 @@ found_struct_offset: []
             {
                 func_name: {
                     "expected_result_sections": ["found_call"],
-                    "dependencies": [],
                 }
             },
             {func_name: "func"},
@@ -6501,7 +6520,10 @@ found_struct_offset: []
                                 "references/reference_b.yaml",
                             ],
                             "expected_result_sections": ["found_vcall"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference_a.{platform}.yaml": "required",
+                                "reference_b.{platform}.yaml": "required",
+                            },
                         }
                     },
                     {
@@ -6620,7 +6642,9 @@ found_struct_offset: []
                             "prompt_path": "prompt/call_llm_decompile.md",
                             "reference_yaml_paths": ["references/server/Reference.{platform}.yaml"],
                             "expected_result_sections": ["found_vcall"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "Reference.{platform}.yaml": "required",
+                            },
                         }
                     },
                     {
@@ -6680,7 +6704,9 @@ found_struct_offset: []
                             "prompt_path": "prompt/call_llm_decompile.md",
                             "reference_yaml_paths": ["references/reference.yaml"],
                             "expected_result_sections": ["found_vcall"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         }
                     },
                     {
@@ -8268,7 +8294,9 @@ found_struct_offset: []
                                 "references/server/CBaseAnimGraph_GetAnimationController.windows.yaml",
                             ],
                             "expected_result_sections": ["found_struct_offset"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "CBaseAnimGraph_GetAnimationController.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={"model": "gpt-5.4"},
@@ -8618,7 +8646,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_vcall"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -8814,7 +8844,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                         {
                             "symbol_name": func_names[1],
@@ -8823,7 +8855,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -8966,7 +9000,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                         {
                             "symbol_name": fast_path_func_name,
@@ -8975,7 +9011,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -9151,7 +9189,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                         {
                             "symbol_name": gv_name,
@@ -9160,7 +9200,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_gv"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -9357,7 +9399,9 @@ found_struct_offset: []
                                     "references/reference.yaml",
                                 ],
                                 "expected_result_sections": ["found_call"],
-                                "dependencies": [],
+                                "dependency_policy": {
+                                    "reference.{platform}.yaml": "required",
+                                },
                             },
                             {
                                 "symbol_name": struct_member_name,
@@ -9366,7 +9410,9 @@ found_struct_offset: []
                                     "references/reference.yaml",
                                 ],
                                 "expected_result_sections": ["found_struct_offset"],
-                                "dependencies": [],
+                                "dependency_policy": {
+                                    "reference.{platform}.yaml": "required",
+                                },
                             },
                         ],
                         llm_config={
@@ -9595,7 +9641,9 @@ found_struct_offset: []
                                     "references/reference.yaml",
                                 ],
                                 "expected_result_sections": ["found_call"],
-                                "dependencies": [],
+                                "dependency_policy": {
+                                    "reference.{platform}.yaml": "required",
+                                },
                             },
                             {
                                 "symbol_name": struct_member_name,
@@ -9604,7 +9652,9 @@ found_struct_offset: []
                                     "references/reference.yaml",
                                 ],
                                 "expected_result_sections": ["found_struct_offset"],
-                                "dependencies": [],
+                                "dependency_policy": {
+                                    "reference.{platform}.yaml": "required",
+                                },
                             },
                         ],
                         llm_config={
@@ -9808,7 +9858,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                         {
                             "symbol_name": second_func_name,
@@ -9817,7 +9869,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -10003,7 +10057,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                         {
                             "symbol_name": second_func_name,
@@ -10012,7 +10068,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -10098,7 +10156,9 @@ found_struct_offset: []
                                 "references/missing.yaml",
                             ],
                             "expected_result_sections": ["found_vcall"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "missing.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -10238,7 +10298,10 @@ found_struct_offset: []
                                 "references/mainloop.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "deactivate.{platform}.yaml": "required",
+                                "mainloop.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -10363,7 +10426,10 @@ found_struct_offset: []
                                 "references/mainloop.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "deactivate.{platform}.yaml": "required",
+                                "mainloop.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -10512,7 +10578,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -10683,7 +10751,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -10830,7 +10900,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_funcptr"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -10976,7 +11048,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call", "found_funcptr"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -11106,7 +11180,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_funcptr"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -11273,7 +11349,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_funcptr"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -11439,7 +11517,9 @@ found_struct_offset: []
                             "prompt_path": "prompt/call_llm_decompile.md",
                             "reference_yaml_paths": ["references/reference.yaml"],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         }
                     ],
                     llm_config={"model": "gpt-4.1-mini", "api_key": "test-api-key"},
@@ -11618,7 +11698,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_vcall"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -11796,7 +11878,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_vcall"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -11970,7 +12054,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_vcall"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -12142,7 +12228,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_vcall"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -12465,7 +12553,9 @@ found_struct_offset: []
                                 "references/reference.yaml",
                             ],
                             "expected_result_sections": ["found_call"],
-                            "dependencies": [],
+                            "dependency_policy": {
+                                "reference.{platform}.yaml": "required",
+                            },
                         },
                     ],
                     llm_config={
@@ -12649,7 +12739,9 @@ found_struct_offset: []
                                         "references/reference.yaml",
                                     ],
                                     "expected_result_sections": ["found_vcall"],
-                                    "dependencies": [],
+                                    "dependency_policy": {
+                                        "reference.{platform}.yaml": "required",
+                                    },
                                 },
                             ],
                             llm_config={

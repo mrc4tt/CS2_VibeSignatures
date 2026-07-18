@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkUtlVectorEmbedded_NetworkStateChanged_m_perRoundStats.{platform}.yaml": "required",
+        },
     },
 ]
 

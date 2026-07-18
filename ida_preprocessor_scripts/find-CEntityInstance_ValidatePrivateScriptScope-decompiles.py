@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CEntityInstance_ValidatePrivateScriptScope.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntityInstance_ValidatePrivateScriptScope.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntityInstance_m_hPrivateScope",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CEntityInstance_ValidatePrivateScriptScope.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntityInstance_ValidatePrivateScriptScope.{platform}.yaml": "required",
+        },
     },
 ]
 

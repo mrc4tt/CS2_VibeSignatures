@@ -17,7 +17,9 @@ LLM_DECOMPILE = [
             "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CBasePlayerPawn_OnTakeDamage.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CBasePlayerPawn_OnTakeDamage_Dying",
@@ -26,7 +28,9 @@ LLM_DECOMPILE = [
             "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CBasePlayerPawn_OnTakeDamage.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CBasePlayerPawn_OnTakeDamage_Dead",
@@ -35,7 +39,9 @@ LLM_DECOMPILE = [
             "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CBasePlayerPawn_OnTakeDamage.{platform}.yaml": "required",
+        },
     },
 ]
 

@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CBaseEntity_DispatchSpawn.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CBaseEntity_DispatchSpawn.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_ExecuteQueuedCreation",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CBaseEntity_DispatchSpawn.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CBaseEntity_DispatchSpawn.{platform}.yaml": "required",
+        },
     },
 ]
 

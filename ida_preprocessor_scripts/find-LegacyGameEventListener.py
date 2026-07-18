@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CSource2GameClients_StartHLTVServer.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CSource2GameClients_StartHLTVServer.{platform}.yaml": "required",
+        },
     },
 ]
 

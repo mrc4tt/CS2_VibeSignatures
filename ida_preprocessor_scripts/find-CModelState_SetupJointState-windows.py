@@ -19,7 +19,9 @@ LLM_DECOMPILE = [
             "references/client/CModelState_SetupJointState.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CModelState_SetupJointState.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CModelState_m_nBoneCount",
@@ -28,7 +30,9 @@ LLM_DECOMPILE = [
             "references/client/CModelState_SetupJointState.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CModelState_SetupJointState.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CModelState_m_nAttachmentCount",
@@ -37,7 +41,9 @@ LLM_DECOMPILE = [
             "references/client/CModelState_SetupJointState.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CModelState_SetupJointState.{platform}.yaml": "required",
+        },
     },
 ]
 

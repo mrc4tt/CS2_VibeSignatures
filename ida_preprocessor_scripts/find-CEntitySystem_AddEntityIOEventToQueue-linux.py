@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_AddEntityIOEventBuildStruct.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_AddEntityIOEventBuildStruct.{platform}.yaml": "required",
+        },
     },
 ]
 

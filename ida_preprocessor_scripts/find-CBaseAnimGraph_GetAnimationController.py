@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CScriptedSequence_SynchronizeSequence.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CScriptedSequence_SynchronizeSequence.{platform}.yaml": "required",
+        },
     },
 ]
 

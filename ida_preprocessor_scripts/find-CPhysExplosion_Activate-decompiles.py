@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CPhysExplosion_Activate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CPhysExplosion_Activate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "UTIL_Remove",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CPhysExplosion_Activate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CPhysExplosion_Activate.{platform}.yaml": "required",
+        },
     },
 ]
 

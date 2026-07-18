@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEntitySystem_QueueDestroyEntity-AND-CEntitySystem_ExecuteQueuedDeletion-decompiles skill."""
+"""Preprocess the CEntitySystem_ExecuteQueuedDeletion skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
     "CEntitySystem_ExecuteQueuedDeletion",
-]
-
-TARGET_STRUCT_MEMBER_NAMES = [
-    "CEntitySystem_m_nExecuteQueuedDeletionDepth",
 ]
 
 LLM_DECOMPILE = [
@@ -19,21 +15,13 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_QueueDestroyEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
-    },
-    {
-        "symbol_name": "CEntitySystem_m_nExecuteQueuedDeletionDepth",
-        "prompt_path": "prompt/call_llm_decompile.md",
-        "reference_yaml_paths": [
-            "references/server/CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml",
-        ],
-        "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_QueueDestroyEntity.{platform}.yaml": "required",
+        },
     },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
-    # (symbol_name, generate_yaml_fields)
     (
         "CEntitySystem_ExecuteQueuedDeletion",
         [
@@ -42,17 +30,6 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_va",
             "func_rva",
             "func_size",
-        ],
-    ),
-    (
-        "CEntitySystem_m_nExecuteQueuedDeletionDepth",
-        [
-            "struct_name",
-            "member_name",
-            "offset",
-            "size",
-            "offset_sig",
-            "offset_sig_disp",
         ],
     ),
 ]
@@ -69,7 +46,7 @@ async def preprocess_skill(
     llm_config=None,
     debug=False,
 ):
-    """Reuse previous gamever func_sig to locate target function and write YAML."""
+    """Locate ExecuteQueuedDeletion from QueueDestroyEntity."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -78,7 +55,6 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         func_names=TARGET_FUNCTION_NAMES,
-        struct_member_names=TARGET_STRUCT_MEMBER_NAMES,
         llm_decompile_specs=LLM_DECOMPILE,
         llm_config=llm_config,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,

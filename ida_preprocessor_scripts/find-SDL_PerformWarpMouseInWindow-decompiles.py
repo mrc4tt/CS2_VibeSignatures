@@ -22,7 +22,9 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "SDL_PerformWarpMouseInWindow.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "SDL_Mouse_last_x",
@@ -31,7 +33,9 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "SDL_PerformWarpMouseInWindow.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "SDL_Mouse_last_y",
@@ -40,7 +44,9 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "SDL_PerformWarpMouseInWindow.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "SDL_Mouse_has_position",
@@ -49,7 +55,9 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "SDL_PerformWarpMouseInWindow.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "SDL_Mouse_relative_mode_warp_motion",
@@ -58,7 +66,9 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "SDL_PerformWarpMouseInWindow.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "SDL_Mouse_WarpMouse",
@@ -67,7 +77,9 @@ LLM_DECOMPILE = [
             "references/SDL3/SDL_PerformWarpMouseInWindow.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "SDL_PerformWarpMouseInWindow.{platform}.yaml": "required",
+        },
     },
 ]
 

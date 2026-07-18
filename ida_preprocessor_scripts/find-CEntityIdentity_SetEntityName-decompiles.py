@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CEntityIdentity_SetEntityName.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntityIdentity_SetEntityName.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_AddEntityToNameMap",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CEntityIdentity_SetEntityName.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntityIdentity_SetEntityName.{platform}.yaml": "required",
+        },
     },
 ]
 

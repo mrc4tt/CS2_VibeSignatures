@@ -23,7 +23,9 @@ LLM_DECOMPILE = [
             "references/server/CFlashbangProjectile_Spawn_NetworkStateChangedNotify.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CFlashbangProjectile_Spawn_NetworkStateChangedNotify.{platform}.yaml": "optional",
+        },
     },
 ]
 

@@ -24,7 +24,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CNetworkServerService_OnServerPollNetworking",
@@ -33,7 +35,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CNetworkServerService_OnServerProcessNetworking",
@@ -42,7 +46,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CNetworkServerService_OnServerBeginSimulate",
@@ -51,7 +57,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CNetworkServerService_OnServerEndSimulate",
@@ -60,7 +68,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CNetworkServerService_OnServerPostSimulate",
@@ -69,7 +79,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CNetworkServerService_OnServerPostAdvanceTick",
@@ -78,7 +90,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CNetworkServerService_OnFrameBoundary",
@@ -87,7 +101,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CNetworkServerService_OnClientPollNetworking",
@@ -96,7 +112,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CNetworkServerService_OnSimpleLoopFrameUpdate",
@@ -105,7 +123,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_funcptr"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
     },
 ]
 

@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_RegisterEntityClass.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_RegisterEntityClass.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_entClassesByClassname",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_RegisterEntityClass.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_RegisterEntityClass.{platform}.yaml": "required",
+        },
     },
 ]
 

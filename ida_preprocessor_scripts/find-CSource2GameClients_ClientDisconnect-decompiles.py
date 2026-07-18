@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CSource2GameClients_ClientDisconnect.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CSource2GameClients_ClientDisconnect.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CBasePlayerController_GetPawn",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CSource2GameClients_ClientDisconnect.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CSource2GameClients_ClientDisconnect.{platform}.yaml": "required",
+        },
     },
 ]
 

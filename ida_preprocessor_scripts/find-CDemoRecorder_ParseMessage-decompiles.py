@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/engine/CDemoRecorder_ParseMessage.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CDemoRecorder_ParseMessage.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "INetworkMessages_GetNetMessageInfo",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/engine/CDemoRecorder_ParseMessage.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CDemoRecorder_ParseMessage.{platform}.yaml": "required",
+        },
     },
 ]
 

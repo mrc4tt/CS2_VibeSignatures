@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CCSBot_Upkeep.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CCSBot_Upkeep.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CBaseEntity_GetEyePosition",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CCSBot_Upkeep.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CCSBot_Upkeep.{platform}.yaml": "required",
+        },
     },
 ]
 

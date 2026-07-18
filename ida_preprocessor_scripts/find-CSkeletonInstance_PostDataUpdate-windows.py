@@ -20,7 +20,9 @@ LLM_DECOMPILE = [
             "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CSkeletonInstance_PostDataUpdate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CSkeletonInstance_m_modelState_m_hModel",
@@ -29,7 +31,9 @@ LLM_DECOMPILE = [
             "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CSkeletonInstance_PostDataUpdate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CSkeletonInstance_m_modelState",
@@ -38,7 +42,9 @@ LLM_DECOMPILE = [
             "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CSkeletonInstance_PostDataUpdate.{platform}.yaml": "required",
+        },
     },
 ]
 

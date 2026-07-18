@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEntFireOutputAutoCompletionFunctor_FireOutput.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntFireOutputAutoCompletionFunctor_FireOutput.{platform}.yaml": "required",
+        },
     },
 ]
 

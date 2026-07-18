@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_HelperExecuteQueuedSpawn.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_HelperExecuteQueuedSpawn.{platform}.yaml": "required",
+        },
     },
 ]
 

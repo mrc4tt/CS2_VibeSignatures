@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/IGameSystem_PostInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "IGameSystem_PostInit.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "IGameSystemFactory_GetStaticGameSystem",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/IGameSystem_PostInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "IGameSystem_PostInit.{platform}.yaml": "required",
+        },
     },
 ]
 

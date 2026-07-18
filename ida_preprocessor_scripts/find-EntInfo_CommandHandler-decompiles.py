@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/EntInfo_CommandHandler.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "EntInfo_CommandHandler.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "ClientPrintToController",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/EntInfo_CommandHandler.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "EntInfo_CommandHandler.{platform}.yaml": "required",
+        },
     },
 ]
 

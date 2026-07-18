@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/IGameSystem_InitAllSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
-        "dependencies": [],
+        "dependency_policy": {
+            "IGameSystem_InitAllSystems.{platform}.yaml": "required",
+        },
     },
 ]
 

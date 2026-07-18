@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CCSBotManager_AddBot.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CCSBotManager_AddBot.{platform}.yaml": "required",
+        },
     },
 ]
 

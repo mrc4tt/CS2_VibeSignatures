@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CBaseEntity_Spawn.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CBaseEntity_Spawn.{platform}.yaml": "required",
+        },
     },
 ]
 

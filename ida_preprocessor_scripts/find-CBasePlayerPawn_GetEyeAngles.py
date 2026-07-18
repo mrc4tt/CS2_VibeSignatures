@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CBasePlayerPawn_EyeVectors.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CBasePlayerPawn_EyeVectors.{platform}.yaml": "required",
+        },
     },
 ]
 

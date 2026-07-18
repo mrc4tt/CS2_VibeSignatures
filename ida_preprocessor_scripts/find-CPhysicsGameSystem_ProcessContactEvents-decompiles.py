@@ -18,7 +18,9 @@ LLM_DECOMPILE = [
             "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CBaseEntity_PhysicsDispatchStartTouch",
@@ -27,7 +29,9 @@ LLM_DECOMPILE = [
             "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CBaseEntity_PhysicsNotifyOtherOfEndTouch",
@@ -36,7 +40,9 @@ LLM_DECOMPILE = [
             "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CBaseEntity_PhysicsDispatchTouch",
@@ -45,7 +51,9 @@ LLM_DECOMPILE = [
             "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml": "required",
+        },
     },
 ]
 

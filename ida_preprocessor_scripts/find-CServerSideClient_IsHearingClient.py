@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkGameServerBase_SendPeerList.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkGameServerBase_SendPeerList.{platform}.yaml": "required",
+        },
     },
 ]
 

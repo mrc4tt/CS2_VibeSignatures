@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEntityKeyValues_LoadFromContext.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntityKeyValues_LoadFromContext.{platform}.yaml": "required",
+        },
     },
 ]
 

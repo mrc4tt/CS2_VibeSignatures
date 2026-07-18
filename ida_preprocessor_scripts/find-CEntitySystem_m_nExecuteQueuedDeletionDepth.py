@@ -1,30 +1,29 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CCheckTransmitInfo_m_nPlayerSlot skill."""
+"""Preprocess the CEntitySystem_m_nExecuteQueuedDeletionDepth skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_STRUCT_MEMBER_NAMES = [
-    "CCheckTransmitInfo_m_nPlayerSlot",
+    "CEntitySystem_m_nExecuteQueuedDeletionDepth",
 ]
 
 LLM_DECOMPILE = [
     {
-        "symbol_name": "CCheckTransmitInfo_m_nPlayerSlot",
+        "symbol_name": "CEntitySystem_m_nExecuteQueuedDeletionDepth",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
-            "references/server/CSource2GameEntities_CheckTransmit.{platform}.yaml",
+            "references/server/CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
         "dependency_policy": {
-            "CSource2GameEntities_CheckTransmit.{platform}.yaml": "required",
+            "CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml": "required",
         },
     },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
-    # (symbol_name, generate_yaml_fields)
     (
-        "CCheckTransmitInfo_m_nPlayerSlot",
+        "CEntitySystem_m_nExecuteQueuedDeletionDepth",
         [
             "struct_name",
             "member_name",
@@ -48,7 +47,7 @@ async def preprocess_skill(
     llm_config=None,
     debug=False,
 ):
-    """Reuse previous gamever offset_sig to locate target struct offset and write YAML."""
+    """Locate the deletion-depth member from ExecuteQueuedDeletion."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,

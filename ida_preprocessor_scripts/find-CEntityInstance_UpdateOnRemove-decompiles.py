@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CEntityInstance_UpdateOnRemove.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntityInstance_UpdateOnRemove.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntityInstance_m_pKeyValues",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CEntityInstance_UpdateOnRemove.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntityInstance_UpdateOnRemove.{platform}.yaml": "required",
+        },
     },
 ]
 

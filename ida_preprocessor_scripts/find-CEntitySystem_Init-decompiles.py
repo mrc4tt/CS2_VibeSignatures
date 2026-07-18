@@ -34,7 +34,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "IFlattenedSerializers_CreateFieldChangedEventQueue",
@@ -43,7 +45,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_sEntSystemName",
@@ -52,7 +56,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_eNetworkSerializationMode",
@@ -61,7 +67,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_Symbols",
@@ -70,7 +78,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_pNetworkFieldChangedEventQueue",
@@ -79,7 +89,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_pNetworkFieldScratchData",
@@ -88,7 +100,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_pFieldChangeLimitSpew",
@@ -97,7 +111,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_ComponentUnserializerInfoAllocator",
@@ -106,7 +122,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
 ]
 
@@ -231,7 +249,9 @@ LLM_DECOMPILE_LINUX = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
 ]
 
@@ -243,7 +263,9 @@ LLM_DECOMPILE_WINDOWS = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
     },
 ]
 

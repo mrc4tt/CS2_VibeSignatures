@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/client/IGameSystem_DestroyAllGameSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "IGameSystem_DestroyAllGameSystems.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "IGameSystemFactory_DestroyGameSystem",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/client/IGameSystem_DestroyAllGameSystems.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "IGameSystem_DestroyAllGameSystems.{platform}.yaml": "required",
+        },
     },
 ]
 

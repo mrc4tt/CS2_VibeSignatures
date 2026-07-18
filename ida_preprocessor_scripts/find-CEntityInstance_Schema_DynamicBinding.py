@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CGameMoney_OnMoneySpent.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CGameMoney_OnMoneySpent.{platform}.yaml": "required",
+        },
     },
 ]
 

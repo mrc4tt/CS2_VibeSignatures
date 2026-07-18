@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CCSBotManager_BotPlaceCommand.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CCSBotManager_BotPlaceCommand.{platform}.yaml": "required",
+        },
     },
 ]
 

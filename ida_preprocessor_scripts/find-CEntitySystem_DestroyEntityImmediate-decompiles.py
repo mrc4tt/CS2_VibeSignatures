@@ -28,7 +28,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_DoDestructEntity",
@@ -37,7 +39,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_UpdateOnRemove",
@@ -46,7 +50,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_nSuppressDestroyImmediateCount",
@@ -55,7 +61,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_nSuppressAutoDeletionExecutionCount",
@@ -64,7 +72,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_bEnableAutoDeletionExecution",
@@ -73,7 +83,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
     },
 ]
 

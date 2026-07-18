@@ -16,7 +16,10 @@ LLM_DECOMPILE = [
             "references/engine/CEngineServiceMgr__MainLoop.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEngineServiceMgr_DeactivateLoop.{platform}.yaml": "optional",
+            "CEngineServiceMgr__MainLoop.{platform}.yaml": "required",
+        },
     },
 ]
 

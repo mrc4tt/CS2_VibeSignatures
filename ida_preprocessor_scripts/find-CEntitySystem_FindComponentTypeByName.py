@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CNetworkSerializerBindingBuildFilter_GetFieldPriority.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkSerializerBindingBuildFilter_GetFieldPriority.{platform}.yaml": "required",
+        },
     },
 ]
 

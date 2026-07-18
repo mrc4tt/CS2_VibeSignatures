@@ -15,9 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [
-            "CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml",
-        ],
+        "dependency_policy": {
+            "CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml": "required",
+        },
     },
 ]
 

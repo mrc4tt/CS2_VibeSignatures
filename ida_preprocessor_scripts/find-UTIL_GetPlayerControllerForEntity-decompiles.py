@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/UTIL_GetPlayerControllerForEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "UTIL_GetPlayerControllerForEntity.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CBaseEntity_IsPlayerController",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/UTIL_GetPlayerControllerForEntity.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "UTIL_GetPlayerControllerForEntity.{platform}.yaml": "required",
+        },
     },
 ]
 

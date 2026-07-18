@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/engine/CLoopTypeClientServer_LoopTypeInit.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CLoopTypeClientServer_LoopTypeInit.{platform}.yaml": "required",
+        },
     },
 ]
 

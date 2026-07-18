@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEntityInstance_AcceptInput.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntityInstance_AcceptInput.{platform}.yaml": "required",
+        },
     },
 ]
 

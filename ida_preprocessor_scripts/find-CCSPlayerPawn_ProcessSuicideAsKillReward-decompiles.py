@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayerPawn_ProcessSuicideAsKillReward.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CCSPlayerPawn_ProcessSuicideAsKillReward.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "UTIL_ClientPrintFilter",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayerPawn_ProcessSuicideAsKillReward.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CCSPlayerPawn_ProcessSuicideAsKillReward.{platform}.yaml": "required",
+        },
     },
 ]
 

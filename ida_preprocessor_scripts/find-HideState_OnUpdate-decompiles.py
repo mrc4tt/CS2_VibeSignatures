@@ -20,7 +20,9 @@ LLM_DECOMPILE = [
             "references/server/HideState_OnUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "HideState_OnUpdate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CCSBot_MoveTo",
@@ -29,7 +31,9 @@ LLM_DECOMPILE = [
             "references/server/HideState_OnUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "HideState_OnUpdate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CCSBot_InhibitLookAround",
@@ -38,7 +42,9 @@ LLM_DECOMPILE = [
             "references/server/HideState_OnUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "HideState_OnUpdate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CCSBot_SetDisposition",
@@ -47,7 +53,9 @@ LLM_DECOMPILE = [
             "references/server/HideState_OnUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "HideState_OnUpdate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CCSBot_Idle",
@@ -56,7 +64,9 @@ LLM_DECOMPILE = [
             "references/server/HideState_OnUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "HideState_OnUpdate.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CCSBot_ComputePath",
@@ -65,7 +75,9 @@ LLM_DECOMPILE = [
             "references/server/HideState_OnUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "HideState_OnUpdate.{platform}.yaml": "required",
+        },
     },
 ]
 

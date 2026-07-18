@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/UTIL_PrecacheOther.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "UTIL_PrecacheOther.{platform}.yaml": "required",
+        },
     },
 ]
 

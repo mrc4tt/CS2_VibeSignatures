@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CCSGameRules_PlayerSpawn.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CCSGameRules_PlayerSpawn.{platform}.yaml": "required",
+        },
     },
 ]
 

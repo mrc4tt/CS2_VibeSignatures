@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/ScriptBinding_Entity_SetEntityName.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "ScriptBinding_Entity_SetEntityName.{platform}.yaml": "required",
+        },
     },
 ]
 

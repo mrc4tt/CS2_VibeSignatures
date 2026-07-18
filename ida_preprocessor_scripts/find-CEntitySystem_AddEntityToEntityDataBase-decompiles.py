@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_AddEntityToEntityDataBase.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_AddEntityToEntityDataBase.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntityInstance_AddedToEntityDatabase",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_AddEntityToEntityDataBase.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_AddEntityToEntityDataBase.{platform}.yaml": "required",
+        },
     },
 ]
 

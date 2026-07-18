@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEnvEntityIgniter_Precache.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEnvEntityIgniter_Precache.{platform}.yaml": "required",
+        },
     },
 ]
 

@@ -96,6 +96,7 @@ async def preprocess_single_skill_via_mcp(
     new_binary_dir,
     platform,
     expected_inputs=None,
+    optional_inputs=None,
     expected_binary=None,
     explicit_database=None,
     llm_model=None,
@@ -121,6 +122,7 @@ async def preprocess_single_skill_via_mcp(
         skill_name: name of the skill to preprocess
         expected_outputs: list of expected output YAML paths
         expected_inputs: resolved expected input YAML paths declared by the skill
+        optional_inputs: resolved optional input YAML paths declared by the skill
         old_yaml_map: dict mapping new_yaml_path -> old_yaml_path
         new_binary_dir: directory for new version YAML outputs
         platform: "windows" or "linux"
@@ -174,8 +176,8 @@ async def preprocess_single_skill_via_mcp(
                     llm_config["symbol_aliases"] = symbol_aliases
                 if llm_max_retries is not None:
                     llm_config["max_retries"] = llm_max_retries
-                if expected_inputs is not None:
-                    llm_config["_expected_inputs"] = list(expected_inputs)
+                llm_config["_expected_inputs"] = list(expected_inputs or [])
+                llm_config["_optional_inputs"] = list(optional_inputs or [])
                 preprocess_kwargs = {
                     "session": session,
                     "skill_name": skill_name,

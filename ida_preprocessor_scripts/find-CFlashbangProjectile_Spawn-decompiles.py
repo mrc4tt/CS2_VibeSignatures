@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CFlashbangProjectile_Spawn.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CFlashbangProjectile_Spawn.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CBaseEntity_SetGravityScale",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CFlashbangProjectile_Spawn.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CFlashbangProjectile_Spawn.{platform}.yaml": "required",
+        },
     },
 ]
 

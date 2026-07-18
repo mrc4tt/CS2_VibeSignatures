@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/GiveNamedItem.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "GiveNamedItem.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CBaseEntity_DispatchSpawn",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/GiveNamedItem.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "GiveNamedItem.{platform}.yaml": "required",
+        },
     },
 ]
 

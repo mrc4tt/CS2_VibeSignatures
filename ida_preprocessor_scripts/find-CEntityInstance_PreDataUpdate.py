@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/client/CLoopModeGame_OnPreDataUpdate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CLoopModeGame_OnPreDataUpdate.{platform}.yaml": "required",
+        },
     },
 ]
 

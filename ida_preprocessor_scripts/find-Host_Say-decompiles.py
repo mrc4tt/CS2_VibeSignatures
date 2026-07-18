@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/Host_Say.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "Host_Say.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "UTIL_SayTextFilter2",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/Host_Say.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "Host_Say.{platform}.yaml": "required",
+        },
     },
 ]
 

@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/engine/CNetworkServerService_OnServerPostSimulate.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CNetworkServerService_OnServerPostSimulate.{platform}.yaml": "required",
+        },
     },
 ]
 

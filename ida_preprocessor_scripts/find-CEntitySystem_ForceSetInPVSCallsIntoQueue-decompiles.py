@@ -20,7 +20,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_m_nExecuteQueuedCreationDepth",
@@ -29,7 +31,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntitySystem_ExecuteQueuedSetInPVS",
@@ -38,7 +42,9 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml": "required",
+        },
     },
 ]
 

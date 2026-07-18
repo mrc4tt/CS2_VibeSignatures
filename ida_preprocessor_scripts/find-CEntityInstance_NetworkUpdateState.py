@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CEntityInstance_NetworkUpdateState_thunk.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CEntityInstance_NetworkUpdateState_thunk.{platform}.yaml": "required",
+        },
     },
 ]
 

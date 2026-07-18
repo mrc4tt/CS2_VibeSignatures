@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/engine/CLoopTypeClientServer_AdvanceTime.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CLoopTypeClientServer_AdvanceTime.{platform}.yaml": "required",
+        },
     },
 ]
 

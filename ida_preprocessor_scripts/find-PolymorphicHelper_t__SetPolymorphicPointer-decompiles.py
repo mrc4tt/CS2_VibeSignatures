@@ -17,7 +17,9 @@ LLM_DECOMPILE = [
             "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntityInstance_AssignChangeAccessorPathIdsPolymorphic",
@@ -26,7 +28,9 @@ LLM_DECOMPILE = [
             "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CEntityInstance_GetChangeAccessorPathInfo_2",
@@ -35,7 +39,9 @@ LLM_DECOMPILE = [
             "references/server/PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "PolymorphicHelper_t__SetPolymorphicPointer.{platform}.yaml": "required",
+        },
     },
 ]
 

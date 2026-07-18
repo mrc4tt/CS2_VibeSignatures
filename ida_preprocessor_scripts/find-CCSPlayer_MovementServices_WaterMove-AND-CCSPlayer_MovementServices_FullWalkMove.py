@@ -16,7 +16,9 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayer_MovementServices_WalkMove.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CCSPlayer_MovementServices_WalkMove.{platform}.yaml": "required",
+        },
     },
     {
         "symbol_name": "CCSPlayer_MovementServices_FullWalkMove",
@@ -25,7 +27,9 @@ LLM_DECOMPILE = [
             "references/server/CCSPlayer_MovementServices_WalkMove.{platform}.yaml",
         ],
         "expected_result_sections": ["found_call"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CCSPlayer_MovementServices_WalkMove.{platform}.yaml": "required",
+        },
     },
 ]
 

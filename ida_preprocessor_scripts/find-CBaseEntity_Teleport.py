@@ -15,7 +15,9 @@ LLM_DECOMPILE = [
             "references/server/CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
-        "dependencies": [],
+        "dependency_policy": {
+            "CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml": "required",
+        },
     },
 ]
 
