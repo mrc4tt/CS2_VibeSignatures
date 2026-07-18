@@ -231,17 +231,26 @@ Restore a clean analysis baseline or verify the current workspace without modify
 uv run gamesymbol_snapshot.py restore -gamever 14168
 uv run gamesymbol_snapshot.py restore -gamever 14168 -replace
 uv run gamesymbol_snapshot.py verify -gamever 14168
+uv run gamesymbol_snapshot.py check-contract -gamever 14168 -json
+uv run gamesymbol_snapshot.py migrate -gamever 14168
 ```
 
 Default restore creates missing YAML and refuses to overwrite semantically different files. `-replace` removes only
 YAML under `bin/<GAMEVER>/`, preserves binaries and IDA databases, then rebuilds the snapshot contents. Candidate
 `build` and low-level/bootstrap `pack` reject missing required outputs and undeclared YAML. `verify` enforces canonical
-bytes and both required round trips.
+bytes and both required round trips. Schema 1 snapshots imply frozen config digest v1 and remain byte-stable; new
+writers emit schema 2 with explicit, domain-separated config digest v2. `check-contract` is a read-only trust probe:
+exit `0` means trusted, exit `3` reports a machine-readable untrusted reason, and invocation/config or operational
+errors remain hard failures. `migrate` explicitly upgrades a validated schema-1 snapshot without changing its `files`
+payload; it never runs implicitly during restore or verify.
 
 Pull requests that can affect analysis output must commit the matching `gamesymbols/<GAMEVER>.yaml` update. PR CI
-restores the base snapshot, invalidates producers affected by snapshot/config/source changes, runs the analyzer,
-strict-packs an actual candidate, and compares it with the PR head snapshot. The head snapshot is expected-only; both
-downstream consumers use the actual candidate, and the ordinary PR workflow never publishes or rewrites tracked bytes.
+uses a trusted base snapshot for restore and targeted invalidation. A missing base snapshot bootstraps from clean YAML;
+an untrusted base snapshot emits a warning and takes the same clean full-rebuild path without restoring any baseline
+payload. The workflow then strict-packs an actual candidate and compares it with the PR head snapshot. Head snapshots,
+actual candidates, release promotion, and republish remain strict: none use the baseline warning fallback. The head
+snapshot is expected-only; both downstream consumers use the actual candidate, and the ordinary PR workflow never
+publishes or rewrites tracked bytes.
 
 ### Currently supported gamedata
 

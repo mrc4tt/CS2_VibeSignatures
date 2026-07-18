@@ -1,5 +1,9 @@
 # Versioned Analysis Config Migration
 
+> Superseded note: `snapshot_version.md` 仅对普通 PR baseline replay 放宽 historical fallback digest/schema/
+> contract mismatch，改为 warning + clean bootstrap。显式 restore、HEAD/candidate comparison、release promotion
+> 与 republish 仍按本文 fail closed。
+
 ## Status
 
 Proposed atomic migration.

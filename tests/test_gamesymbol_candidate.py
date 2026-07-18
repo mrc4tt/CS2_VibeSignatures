@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+from gamesymbol_snapshot_lib.codec import build_snapshot_document, canonical_snapshot_bytes, parse_snapshot_bytes
 from gamesymbol_snapshot_lib.candidate import (
     CandidateContractError,
     CandidatePublicationError,
@@ -14,6 +15,7 @@ from gamesymbol_snapshot_lib.candidate import (
     guard_candidate,
     publish_candidate,
 )
+from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotMismatchError
 from gamesymbol_store import CandidateChangedError
 from tests.gamesymbol_snapshot_test_support import module, skill, write_config, write_yaml
@@ -79,7 +81,11 @@ class TestCandidateLifecycle(unittest.TestCase):
 
                 self.assertEqual(workspace.candidate.read_bytes(), destination.read_bytes())
                 self.assertEqual(info.candidate_sha256, published.candidate_sha256)
-                self.assertEqual("published", json.loads(workspace.session.read_text())["state"])
+                manifest = json.loads(workspace.session.read_text())
+                self.assertEqual(2, manifest["schema_version"])
+                self.assertEqual(2, manifest["snapshot_schema_version"])
+                self.assertEqual(2, manifest["config_digest_version"])
+                self.assertEqual("published", manifest["state"])
             finally:
                 os.chdir(previous)
 
@@ -114,6 +120,33 @@ class TestCandidateLifecycle(unittest.TestCase):
                     expected_path=second.candidate,
                     config_path=first.config,
                     expected_game_version=first.gamever,
+                )
+
+    def test_compare_rejects_equal_payload_with_different_schema_metadata(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = CandidateWorkspace(Path(temp_dir))
+            workspace.build()
+            actual = parse_snapshot_bytes(workspace.candidate.read_bytes())
+            legacy_contract = load_contract(workspace.config, workspace.gamever, workspace.bindir, 1)
+            expected = workspace.root / "expected-v1.yaml"
+            expected.write_bytes(
+                canonical_snapshot_bytes(
+                    build_snapshot_document(
+                        workspace.gamever,
+                        legacy_contract.config_sha256,
+                        actual["files"],
+                        schema_version=1,
+                        config_digest_version=1,
+                    )
+                )
+            )
+
+            with self.assertRaisesRegex(SnapshotMismatchError, "metadata mismatch"):
+                compare_snapshots(
+                    actual_path=workspace.candidate,
+                    expected_path=expected,
+                    config_path=workspace.config,
+                    expected_game_version=workspace.gamever,
                 )
 
     def test_publish_failure_leaves_existing_snapshot_unchanged(self) -> None:

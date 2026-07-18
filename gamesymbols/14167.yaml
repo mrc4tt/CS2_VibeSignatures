@@ -1,4 +1,5 @@
-config_sha256: sha256:9c543ecbc1b33d5191beadc2ca151363df8eda3042c694e71085fec48ed03caa
+config_digest_version: 2
+config_sha256: sha256:836ad266552dc1526db1f0389d1457f331d5b7b2d4a1fa72717efc545353e52d
 file_count: 2901
 files:
   SDL3/SDL_GetMouse.windows.yaml:
@@ -37668,4 +37669,4 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803aae48'
 game_version: '14167'
-schema_version: 1
+schema_version: 2

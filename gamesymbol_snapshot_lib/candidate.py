@@ -15,7 +15,7 @@ from gamesymbol_snapshot_lib.candidate_session import (
     load_manifest,
     update_session,
 )
-from gamesymbol_snapshot_lib.codec import canonical_snapshot_bytes, parse_snapshot_bytes
+from gamesymbol_snapshot_lib.codec import canonical_snapshot_bytes, parse_snapshot_bytes, snapshot_config_digest_version
 from gamesymbol_snapshot_lib.diff import format_mismatch
 from gamesymbol_snapshot_lib.errors import SnapshotMismatchError, SnapshotSchemaError
 from gamesymbol_snapshot_lib.operations import pack_snapshot
@@ -32,6 +32,8 @@ class CandidateInfo:
     path: str
     candidate_sha256: str
     game_version: str
+    snapshot_schema_version: int
+    config_digest_version: int
     config_sha256: str
     file_count: int
 
@@ -85,6 +87,8 @@ def _candidate_info(path: Path) -> CandidateInfo:
         str(path),
         _sha256(raw),
         document["game_version"],
+        document["schema_version"],
+        snapshot_config_digest_version(document),
         document["config_sha256"],
         document["file_count"],
     )
@@ -120,7 +124,14 @@ def guard_candidate(*, candidate_path, session_path) -> CandidateInfo:
         info = _candidate_info(candidate)
     except CandidateContractError as exc:
         raise CandidateChangedError(str(exc)) from exc
-    expected_fields = ("candidate_sha256", "game_version", "config_sha256", "file_count")
+    expected_fields = (
+        "candidate_sha256",
+        "game_version",
+        "snapshot_schema_version",
+        "config_digest_version",
+        "config_sha256",
+        "file_count",
+    )
     for field in expected_fields:
         if manifest.get(field) != getattr(info, field):
             raise CandidateChangedError(f"candidate {field} changed after candidate-ready")
@@ -144,6 +155,10 @@ def compare_snapshots(
         expected_game_version=str(expected_game_version),
         config_path=config_path,
     )
+    metadata = ("schema_version", "config_digest_version", "config_sha256", "file_count")
+    differences = [field for field in metadata if getattr(actual, field) != getattr(expected, field)]
+    if differences:
+        raise SnapshotMismatchError(f"snapshot metadata mismatch: {', '.join(differences)}")
     if actual.candidate_sha256 != expected.candidate_sha256:
         try:
             actual_document = parse_snapshot_bytes(Path(actual_path).read_bytes())

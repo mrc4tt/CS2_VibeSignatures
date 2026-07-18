@@ -10,8 +10,14 @@ from typing import Any, Protocol
 import yaml
 
 from analysis_config import AnalysisConfigError, resolve_analysis_config
-from gamesymbol_snapshot_lib.codec import canonical_snapshot_bytes, canonical_yaml_bytes, parse_snapshot_bytes
-from gamesymbol_snapshot_lib.config import load_contract
+from gamesymbol_snapshot_lib.codec import (
+    SCHEMA_VERSION,
+    canonical_snapshot_bytes,
+    canonical_yaml_bytes,
+    parse_snapshot_bytes,
+    snapshot_config_digest_version,
+)
+from gamesymbol_snapshot_lib.config import LATEST_CONFIG_DIGEST_VERSION, load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError, SnapshotMismatchError, SnapshotSchemaError
 from gamesymbol_snapshot_lib.operations import validate_snapshot_contract
 from gamesymbol_snapshot_lib.paths import canonical_key, is_reparse_point, iter_yaml_paths
@@ -60,6 +66,12 @@ class SymbolEntry:
 class SymbolStore(Protocol):
     @property
     def game_version(self) -> str: ...
+
+    @property
+    def schema_version(self) -> int: ...
+
+    @property
+    def config_digest_version(self) -> int: ...
 
     @property
     def config_sha256(self) -> str: ...
@@ -121,8 +133,19 @@ def _ensure_plain_file(path: Path) -> Path:
 
 
 class _MemorySymbolStore:
-    def __init__(self, game_version: str, *, config_sha256: str, source_sha256: str, files: Mapping[str, Mapping]):
+    def __init__(
+        self,
+        game_version: str,
+        *,
+        schema_version: int,
+        config_digest_version: int,
+        config_sha256: str,
+        source_sha256: str,
+        files: Mapping[str, Mapping],
+    ):
         self._game_version = str(game_version)
+        self._schema_version = schema_version
+        self._config_digest_version = config_digest_version
         self._config_sha256 = config_sha256
         self._candidate_sha256 = source_sha256
         self._files = {path: copy.deepcopy(payload) for path, payload in files.items()}
@@ -134,6 +157,14 @@ class _MemorySymbolStore:
     @property
     def game_version(self) -> str:
         return self._game_version
+
+    @property
+    def schema_version(self) -> int:
+        return self._schema_version
+
+    @property
+    def config_digest_version(self) -> int:
+        return self._config_digest_version
 
     @property
     def config_sha256(self) -> str:
@@ -197,7 +228,8 @@ class SnapshotSymbolStore(_MemorySymbolStore):
             )
         try:
             config_path = resolve_analysis_config(expected_game_version, config_path)
-            contract = load_contract(config_path, expected_game_version, "bin")
+            digest_version = snapshot_config_digest_version(document)
+            contract = load_contract(config_path, expected_game_version, "bin", digest_version)
             validate_snapshot_contract(document, contract)
         except (AnalysisConfigError, SnapshotConfigError, SnapshotMismatchError) as exc:
             raise SnapshotConfigMismatchError(str(exc)) from exc
@@ -206,6 +238,8 @@ class SnapshotSymbolStore(_MemorySymbolStore):
         digest = f"sha256:{hashlib.sha256(raw).hexdigest()}"
         return cls(
             document["game_version"],
+            schema_version=document["schema_version"],
+            config_digest_version=digest_version,
             config_sha256=document["config_sha256"],
             source_sha256=digest,
             files=document["files"],
@@ -215,12 +249,21 @@ class SnapshotSymbolStore(_MemorySymbolStore):
 class DirectorySymbolStore(_MemorySymbolStore):
     """Eager migration/test backend; production workflows must use snapshots."""
 
-    def __init__(self, bin_root, game_version: str, *, config_sha256: str | None = None):
+    def __init__(
+        self,
+        bin_root,
+        game_version: str,
+        *,
+        config_sha256: str | None = None,
+        config_digest_version: int = LATEST_CONFIG_DIGEST_VERSION,
+    ):
         game_root = Path(bin_root) / str(game_version)
         files = self._load_files(game_root)
         digest = f"sha256:{hashlib.sha256(canonical_yaml_bytes(files)).hexdigest()}"
         super().__init__(
             str(game_version),
+            schema_version=SCHEMA_VERSION,
+            config_digest_version=config_digest_version,
             config_sha256=config_sha256 or f"sha256:{'0' * 64}",
             source_sha256=digest,
             files=files,
