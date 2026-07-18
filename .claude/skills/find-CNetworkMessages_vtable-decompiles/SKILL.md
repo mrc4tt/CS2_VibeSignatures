@@ -1,5 +1,5 @@
 ---
-name: find-CNetworkMessages_AllowAdditionalMessageRegistration-AND-CNetworkMessages_IsAdditionalMessageRegistrationAllowed
+name: find-CNetworkMessages_vtable-decompiles
 description: |
   Find and identify CNetworkMessages_AllowAdditionalMessageRegistration and CNetworkMessages_IsAdditionalMessageRegistrationAllowed
   virtual functions in CS2 binary using IDA Pro MCP. Use this skill when reverse engineering CS2 networksystem.dll or
