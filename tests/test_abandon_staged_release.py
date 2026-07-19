@@ -83,10 +83,13 @@ class TestAbandonStagedRelease(unittest.TestCase):
             ),
         )
         for overrides, message in cases:
-            with self.subTest(message=message), patch.object(
-                abandon,
-                "run_command",
-                return_value=completed([], stdout=json.dumps(pull_request_payload(**overrides))),
+            with (
+                self.subTest(message=message),
+                patch.object(
+                    abandon,
+                    "run_command",
+                    return_value=completed([], stdout=json.dumps(pull_request_payload(**overrides))),
+                ),
             ):
                 with self.assertRaisesRegex(abandon.AbandonError, message):
                     abandon.load_pr_identity(
@@ -183,14 +186,14 @@ class TestAbandonStagedRelease(unittest.TestCase):
         self.assertIn("workflow_dispatch:", workflow)
         self.assertNotIn("gamever:\n        description:", workflow)
         self.assertNotIn("build_id:\n        description:", workflow)
-        self.assertIn("gh api \"repos/${{ github.repository }}/pulls/$env:PR_NUMBER\"", workflow)
+        self.assertIn('gh api "repos/${{ github.repository }}/pulls/$env:PR_NUMBER"', workflow)
         self.assertIn("release-promotion-${{ github.repository }}-${{ needs.resolve.outputs.gamever }}", workflow)
         self.assertIn("runs-on: [self-hosted, windows, x64]", workflow)
         self.assertIn("environment: win64", workflow)
         self.assertIn("release_workflow.py abandon-pending", workflow)
         self.assertIn("secrets.PERSISTED_WORKSPACE", workflow)
-        self.assertIn("--pr-number \"$env:PR_NUMBER\"", workflow)
-        self.assertNotIn("--pr-number \"${{ inputs.pr_number }}\"", workflow)
+        self.assertIn('--pr-number "$env:PR_NUMBER"', workflow)
+        self.assertNotIn('--pr-number "${{ inputs.pr_number }}"', workflow)
         self.assertNotIn("cleanup-unmerged", workflow)
 
 
