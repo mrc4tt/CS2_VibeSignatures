@@ -39,11 +39,22 @@ where `{gamever}` can be obtained from `.env` -> `CS2VIBE_GAMEVER`.
 
 **IMPORTANT -- Always pass `-platform` explicitly.** While `-platform` can theoretically be inferred from the binary extension (`.dll` -> windows, `.so` -> linux), auto-inference is unreliable and may produce the wrong platform's reference YAML. Always pass `-platform windows` or `-platform linux` explicitly.
 
+### 3) 自定义输出文件名 (custom output filename)
+
+Use `-output_filename` when the reference YAML file name should differ from the default `<func_name>.<platform>.yaml`:
+
+```bash
+uv run generate_reference_yaml.py -gamever 14141 -module engine -platform windows -func_name CNetworkGameClient_RecordEntityBandwidth -output_filename CNetworkGameClient_RecordEntityBandwidthReference.windows.yaml -mcp_host 127.0.0.1 -mcp_port 13337
+```
+
+`-output_filename` accepts a file name ending in `.yaml`, not a path. The file is still written under `ida_preprocessor_scripts/references/<module>/`. The YAML payload's `func_name` remains the value passed to `-func_name`.
+
 **IMPORTANT -- Run `generate_reference_yaml.py` sequentially, NOT in parallel.** All invocations share the same IDA MCP connection. Running them in parallel will cause connection conflicts and failures. Run one command at a time, waiting for each to complete before starting the next.
 
 ## Output path
 
-- `ida_preprocessor_scripts/references/<module>/<func_name>.<platform>.yaml`
+- Default: `ida_preprocessor_scripts/references/<module>/<func_name>.<platform>.yaml`
+- With `-output_filename <name>.yaml`: `ida_preprocessor_scripts/references/<module>/<name>.yaml`
 
 ## Manual checks after generation
 
