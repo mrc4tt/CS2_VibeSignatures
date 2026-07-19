@@ -22,6 +22,7 @@ BLOCKING_READY_RE = re.compile(
 )
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 WORKFLOW = "abandon-staged-release.yml"
+RUN_TITLE_PREFIX = "Abandon staged release PR"
 BUILD_WORKFLOW_PATH = ".github/workflows/build-on-self-runner.yml"
 RUN_LIST_LIMIT = "50"
 RUN_DISCOVERY_ATTEMPTS = 10
@@ -281,10 +282,18 @@ def list_runs(root: Path) -> list[dict]:
 
 def require_no_duplicate(root: Path, pr_number: int) -> set[int]:
     runs = list_runs(root)
-    title = f"Abandon staged release PR #{pr_number}"
+    title = f"{RUN_TITLE_PREFIX} #{pr_number}"
     for run in runs:
-        if run.get("status") in {"queued", "in_progress"} and run.get("displayTitle") == title:
+        if run.get("status") not in {"queued", "in_progress"}:
+            continue
+        display_title = run.get("displayTitle")
+        if display_title == title:
             raise AbandonError(f"an abandonment workflow is already active for PR #{pr_number}: {run.get('url')}")
+        if display_title == RUN_TITLE_PREFIX:
+            raise AbandonError(
+                "an abandonment workflow with a legacy-truncated title is already active: "
+                f"{run.get('url')}; inspect it before dispatching PR #{pr_number}"
+            )
     return {int(run["databaseId"]) for run in runs if "databaseId" in run}
 
 
@@ -314,16 +323,30 @@ def dispatch(root: Path, identity: dict) -> None:
 
 
 def discover_run(root: Path, known_ids: set[int], *, pr_number: int, source_sha: str) -> str:
+    expected_title = f"{RUN_TITLE_PREFIX} #{pr_number}"
+    unexpected: dict[int, tuple[str, str]] = {}
     for _attempt in range(RUN_DISCOVERY_ATTEMPTS):
         for run in list_runs(root):
             run_id = int(run.get("databaseId", 0))
             if (
                 run_id not in known_ids
-                and run.get("displayTitle") == f"Abandon staged release PR #{pr_number}"
                 and run.get("event") == "workflow_dispatch"
                 and run.get("headSha") == source_sha
             ):
-                return str(run.get("url"))
+                display_title = str(run.get("displayTitle", ""))
+                run_url = str(run.get("url", ""))
+                if display_title == expected_title:
+                    return run_url
+                if display_title == RUN_TITLE_PREFIX:
+                    unexpected[run_id] = (display_title, run_url)
+        if unexpected:
+            details = ", ".join(
+                f"{url} (displayTitle={title!r})" for title, url in unexpected.values()
+            )
+            raise AbandonError(
+                f"workflow was dispatched, but matching Actions run(s) used an unexpected title: {details}; "
+                f"expected {expected_title!r}"
+            )
         time.sleep(RUN_DISCOVERY_DELAY_SECONDS)
     raise AbandonError("workflow was dispatched but its Actions run URL could not be discovered")
 

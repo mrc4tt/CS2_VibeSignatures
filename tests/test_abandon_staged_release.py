@@ -213,6 +213,50 @@ class TestAbandonStagedRelease(unittest.TestCase):
             with self.assertRaisesRegex(abandon.AbandonError, "already active"):
                 abandon.require_no_duplicate(Path("."), 582)
 
+    def test_legacy_truncated_active_workflow_is_rejected(self) -> None:
+        runs = [
+            {
+                "databaseId": 123,
+                "displayTitle": "Abandon staged release PR",
+                "status": "queued",
+                "url": "https://github.com/example/legacy-run",
+            }
+        ]
+        with patch.object(abandon, "list_runs", return_value=runs):
+            with self.assertRaisesRegex(abandon.AbandonError, "legacy-truncated title"):
+                abandon.require_no_duplicate(Path("."), 582)
+
+    def test_discover_run_reports_matching_new_run_url(self) -> None:
+        run = {
+            "databaseId": 124,
+            "displayTitle": "Abandon staged release PR #582",
+            "status": "queued",
+            "url": "https://github.com/example/run/124",
+            "headSha": "a" * 40,
+            "event": "workflow_dispatch",
+        }
+        with patch.object(abandon, "list_runs", return_value=[run]):
+            self.assertEqual(
+                "https://github.com/example/run/124",
+                abandon.discover_run(Path("."), {123}, pr_number=582, source_sha="a" * 40),
+            )
+
+    def test_discover_run_reports_unexpected_title_and_candidate_url(self) -> None:
+        run = {
+            "databaseId": 124,
+            "displayTitle": "Abandon staged release PR",
+            "status": "queued",
+            "url": "https://github.com/example/run/124",
+            "headSha": "a" * 40,
+            "event": "workflow_dispatch",
+        }
+        with patch.object(abandon, "list_runs", return_value=[run]):
+            with self.assertRaisesRegex(
+                abandon.AbandonError,
+                "unexpected title.*https://github.com/example/run/124",
+            ):
+                abandon.discover_run(Path("."), {123}, pr_number=582, source_sha="a" * 40)
+
     def test_dispatch_uses_only_discovered_identity_and_audit_inputs(self) -> None:
         identity = {
             "pr_number": 582,
@@ -264,6 +308,8 @@ class TestAbandonStagedRelease(unittest.TestCase):
     def test_recovery_workflow_still_derives_identity_and_uses_promotion_concurrency(self) -> None:
         workflow = Path(".github/workflows/abandon-staged-release.yml").read_text(encoding="utf-8")
         self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn('run-name: "Abandon staged release PR #${{ inputs.pr_number }}"', workflow)
+        self.assertNotIn("astral-sh/setup-uv", workflow)
         self.assertNotIn("gamever:\n        description:", workflow)
         self.assertNotIn("build_id:\n        description:", workflow)
         self.assertIn('gh api "repos/${{ github.repository }}/pulls/$env:PR_NUMBER"', workflow)
