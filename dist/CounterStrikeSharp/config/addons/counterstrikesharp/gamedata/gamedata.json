@@ -70,8 +70,8 @@
   "CBaseModelEntity_SetModel": {
     "signatures": {
       "library": "server",
-      "windows": "40 53 48 83 EC ? 48 8B D9 4C 8B C2 48 8B 0D E5 48 ? ?",
-      "linux": "55 48 89 E5 53 48 89 FB 48 83 EC ? 48 8D 05 FD ? ? ? 48 8B 38"
+      "windows": "40 53 48 83 EC ? 48 8B D9 4C 8B C2 48 8B 0D 05 48 ? ?",
+      "linux": "55 48 89 E5 53 48 89 FB 48 83 EC ? 48 8D 05 BD ? ? ? 48 8B 38 48 8B 07"
     }
   },
   "CCSPlayer_WeaponServices_CanUse": {
@@ -196,7 +196,7 @@
     "signatures": {
       "library": "server",
       "windows": "48 85 D2 0F 84 ? ? ? ? 48 89 5C 24 ? 57 48 83 EC ? 48 8B DA 48 8B F9 E8 ? ? ? ?",
-      "linux": "48 85 F6 74 0B E9 A6 84 FF FF"
+      "linux": "48 85 F6 74 0B E9 C6 84 FF FF"
     }
   },
   "CBaseEntity_Teleport": {
