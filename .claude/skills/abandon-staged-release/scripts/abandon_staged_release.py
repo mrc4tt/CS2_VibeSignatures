@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dispatch the protected workflow that abandons one unpromoted staged release."""
+"""Discover and abandon one explicitly identified unpromoted staged release."""
 
 import argparse
 import json
@@ -8,12 +8,21 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 ALLOWED_REPOSITORIES = {"HLND2T/CS2_VibeSignatures", "hzqst/CS2_VibeSignatures"}
 OUTPUT_BRANCH_RE = re.compile(r"^gamesymbols/build/(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
+TARGET_RE = re.compile(r"^(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
+CONFIRMATION_RE = re.compile(r"^ABANDON (?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
+RUN_TITLE_RE = re.compile(r"^Release build (?P<gamever>[0-9]{4,10}[a-z]?)$")
+BLOCKING_READY_RE = re.compile(
+    r"another ready staged build blocks (?P<gamever>[0-9]{4,10}[a-z]?): "
+    r"[^\r\n]*[\\/](?P=gamever)[\\/](?P<build_id>[0-9]+-[0-9]+)"
+)
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 WORKFLOW = "abandon-staged-release.yml"
+BUILD_WORKFLOW_PATH = ".github/workflows/build-on-self-runner.yml"
 RUN_LIST_LIMIT = "50"
 RUN_DISCOVERY_ATTEMPTS = 10
 RUN_DISCOVERY_DELAY_SECONDS = 2
@@ -106,38 +115,150 @@ def validate_reason(reason: str) -> str:
     return reason
 
 
-def load_pr_identity(root: Path, repository: str, pr_number: int, confirmation: str, reason: str) -> dict:
-    raw = run_command(["gh", "api", f"repos/{repository}/pulls/{pr_number}"], root).stdout
-    pull = parse_json_object(raw, "pull request lookup")
+def parse_confirmation(confirmation: str) -> tuple[str, str]:
+    match = CONFIRMATION_RE.fullmatch(confirmation)
+    if not match:
+        raise AbandonError("confirmation must exactly equal 'ABANDON <gamever>/<build-id>'")
+    return match.group("gamever"), match.group("build_id")
+
+
+def parse_run_url(target: str, repository: str) -> int | None:
+    parsed = urlparse(target)
+    if not parsed.scheme and not parsed.netloc:
+        return None
+    if parsed.scheme != "https" or parsed.netloc.lower() != "github.com":
+        raise AbandonError("run URL must use https://github.com")
+    parts = [part for part in parsed.path.split("/") if part]
+    if len(parts) not in {5, 7} or parts[2:4] != ["actions", "runs"]:
+        raise AbandonError("target must be GAMEVER/BUILD_ID or a GitHub Actions run/job URL")
+    if len(parts) == 7 and (parts[5] != "job" or not parts[6].isdigit()):
+        raise AbandonError("target must be GAMEVER/BUILD_ID or a GitHub Actions run/job URL")
+    url_repository = f"{parts[0]}/{parts[1]}"
+    if url_repository.lower() != repository.lower():
+        raise AbandonError(f"run URL repository does not match {repository}")
+    if not parts[4].isdigit() or int(parts[4]) <= 0:
+        raise AbandonError("run URL contains an invalid run ID")
+    return int(parts[4])
+
+
+def _load_build_run(root: Path, repository: str, run_id: int) -> dict:
+    raw = run_command(["gh", "api", f"repos/{repository}/actions/runs/{run_id}"], root).stdout
+    run = parse_json_object(raw, "Actions run lookup")
+    if run.get("id") != run_id:
+        raise AbandonError("Actions run lookup returned a different run ID")
+    run_repository = (run.get("repository") or {}).get("full_name")
+    if run_repository != repository or run.get("path") != BUILD_WORKFLOW_PATH:
+        raise AbandonError("run URL does not identify a trusted release build workflow")
+    if run.get("event") not in {"workflow_dispatch", "repository_dispatch"}:
+        raise AbandonError("release build run has an unsupported event type")
+    if run.get("status") != "completed":
+        raise AbandonError("release build run must be completed before abandonment")
+    attempt = run.get("run_attempt")
+    if not isinstance(attempt, int) or attempt <= 0:
+        raise AbandonError("release build run attempt is invalid")
+    title = RUN_TITLE_RE.fullmatch(str(run.get("display_title", "")))
+    if not title:
+        raise AbandonError("release build run title does not contain a valid game version")
+    return {**run, "resolved_gamever": title.group("gamever")}
+
+
+def _blocking_targets(log: str) -> set[tuple[str, str]]:
+    return {(match.group("gamever"), match.group("build_id")) for match in BLOCKING_READY_RE.finditer(log)}
+
+
+def validate_run_target(root: Path, repository: str, run_id: int, *, gamever: str, build_id: str) -> None:
+    run = _load_build_run(root, repository, run_id)
+    if run["resolved_gamever"] != gamever:
+        raise AbandonError("run URL game version does not match confirmation")
+    if f"{run_id}-{run['run_attempt']}" == build_id:
+        return
+    if run.get("conclusion") != "failure":
+        raise AbandonError("run URL does not identify the confirmed staged build")
+    log = run_command(["gh", "run", "view", str(run_id), "--repo", repository, "--log-failed"], root).stdout
+    targets = _blocking_targets(log)
+    expected = (gamever, build_id)
+    if targets != {expected}:
+        if expected not in targets:
+            raise AbandonError("run URL does not report the confirmed READY build as its blocker")
+        raise AbandonError("run URL reports multiple READY build identities; refusing ambiguous abandonment")
+
+
+def resolve_target_identity(root: Path, repository: str, target: str, confirmation: str) -> tuple[str, str]:
+    gamever, build_id = parse_confirmation(confirmation)
+    direct = TARGET_RE.fullmatch(target)
+    if direct:
+        if (direct.group("gamever"), direct.group("build_id")) != (gamever, build_id):
+            raise AbandonError("target GAMEVER/BUILD_ID does not match confirmation")
+        return gamever, build_id
+    run_id = parse_run_url(target, repository)
+    if run_id is None:
+        raise AbandonError("target must be GAMEVER/BUILD_ID or a GitHub Actions run/job URL")
+    validate_run_target(root, repository, run_id, gamever=gamever, build_id=build_id)
+    return gamever, build_id
+
+
+def _trusted_pr_identity(pull: dict, repository: str, gamever: str, build_id: str) -> dict | None:
     head = pull.get("head") or {}
     head_repo = head.get("repo") or {}
     base = pull.get("base") or {}
     author = pull.get("user") or {}
     if pull.get("state") != "closed" or not pull.get("merged_at"):
-        raise AbandonError(f"PR #{pr_number} must be merged before its staged build can be abandoned")
+        return None
     if author.get("login") != "github-actions[bot]":
-        raise AbandonError(f"PR #{pr_number} was not created by github-actions[bot]")
+        return None
     if head_repo.get("full_name") != repository or base.get("ref") != "main":
-        raise AbandonError(f"PR #{pr_number} does not match the trusted same-repository main-branch contract")
+        return None
     match = OUTPUT_BRANCH_RE.fullmatch(str(head.get("ref", "")))
-    if not match:
-        raise AbandonError(f"PR #{pr_number} does not use the generated-output branch protocol")
+    if not match or (match.group("gamever"), match.group("build_id")) != (gamever, build_id):
+        return None
     head_sha = str(head.get("sha", "")).lower()
     if not SHA_RE.fullmatch(head_sha):
-        raise AbandonError(f"PR #{pr_number} head did not resolve to a full commit SHA")
-    gamever, build_id = match.group("gamever"), match.group("build_id")
-    expected_confirmation = f"ABANDON {gamever}/{build_id}"
-    if confirmation != expected_confirmation:
-        raise AbandonError(f"confirmation must exactly equal {expected_confirmation!r}")
+        return None
+    pr_number = pull.get("number")
+    if not isinstance(pr_number, int) or pr_number <= 0:
+        return None
     return {
         "pr_number": pr_number,
         "pr_url": str(pull.get("html_url", "")),
         "gamever": gamever,
         "build_id": build_id,
         "head_sha": head_sha,
-        "confirmation": confirmation,
-        "reason": validate_reason(reason),
     }
+
+
+def discover_pr_identity(root: Path, repository: str, gamever: str, build_id: str) -> dict:
+    branch = f"gamesymbols/build/{gamever}/{build_id}"
+    owner = repository.split("/", 1)[0]
+    result = run_command(
+        [
+            "gh",
+            "api",
+            "-X",
+            "GET",
+            f"repos/{repository}/pulls",
+            "-f",
+            "state=closed",
+            "-f",
+            f"head={owner}:{branch}",
+            "-f",
+            "base=main",
+            "-f",
+            "per_page=100",
+        ],
+        root,
+    )
+    pulls = parse_json_list(result.stdout, "generated-output PR discovery")
+    trusted = [
+        identity
+        for pull in pulls
+        if (identity := _trusted_pr_identity(pull, repository, gamever, build_id)) is not None
+    ]
+    if not trusted:
+        raise AbandonError(f"no trusted merged generated-output PR matches {gamever}/{build_id}")
+    if len(trusted) != 1:
+        numbers = ", ".join(f"#{identity['pr_number']}" for identity in trusted)
+        raise AbandonError(f"multiple trusted merged generated-output PRs match {gamever}/{build_id}: {numbers}")
+    return trusted[0]
 
 
 def list_runs(root: Path) -> list[dict]:
@@ -207,33 +328,35 @@ def discover_run(root: Path, known_ids: set[int], *, pr_number: int, source_sha:
     raise AbandonError("workflow was dispatched but its Actions run URL could not be discovered")
 
 
-def execute(pr_number: int, confirmation: str, reason: str) -> dict:
+def execute(target: str, confirmation: str, reason: str) -> dict:
     root = repository_root()
     repository = require_repository(root)
     require_github_access(root, repository)
     source_sha = resolve_main(root)
-    identity = load_pr_identity(root, repository, pr_number, confirmation, reason)
-    known_ids = require_no_duplicate(root, pr_number)
+    reason = validate_reason(reason)
+    gamever, build_id = resolve_target_identity(root, repository, target, confirmation)
+    identity = discover_pr_identity(root, repository, gamever, build_id)
+    identity.update({"target": target, "confirmation": confirmation, "reason": reason})
+    known_ids = require_no_duplicate(root, identity["pr_number"])
     require_main_unchanged(root, source_sha)
     dispatch(root, identity)
-    identity["run_url"] = discover_run(root, known_ids, pr_number=pr_number, source_sha=source_sha)
+    identity["run_url"] = discover_run(root, known_ids, pr_number=identity["pr_number"], source_sha=source_sha)
     identity["source_sha"] = source_sha
     return identity
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("pr_number", type=int, help="Merged generated-output PR number")
+    parser.add_argument("target", help="GAMEVER/BUILD_ID or trusted GitHub Actions run/job URL")
     parser.add_argument("--confirm", required=True, help="Exact ABANDON <gamever>/<build-id> confirmation")
     parser.add_argument("--reason", required=True, help="One-line audit reason")
     args = parser.parse_args(argv)
-    if args.pr_number <= 0:
-        parser.error("pr_number must be positive")
     try:
-        result = execute(args.pr_number, args.confirm, args.reason)
+        result = execute(args.target, args.confirm, args.reason)
     except (AbandonError, OSError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
+    print(f"Target: {result['target']}")
     print(f"PR: #{result['pr_number']} ({result['pr_url']})")
     print(f"GAMEVER: {result['gamever']}")
     print(f"BUILD_ID: {result['build_id']}")

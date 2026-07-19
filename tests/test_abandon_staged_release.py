@@ -17,12 +17,12 @@ def completed(command, *, stdout="", returncode=0, stderr=""):
     return subprocess.CompletedProcess(command, returncode, stdout=stdout, stderr=stderr)
 
 
-def pull_request_payload(**overrides) -> dict:
+def pull_request_payload(number=582, **overrides) -> dict:
     payload = {
-        "number": 582,
+        "number": number,
         "state": "closed",
         "merged_at": "2026-07-19T12:48:13Z",
-        "html_url": "https://github.com/HLND2T/CS2_VibeSignatures/pull/582",
+        "html_url": f"https://github.com/HLND2T/CS2_VibeSignatures/pull/{number}",
         "user": {"login": "github-actions[bot]"},
         "head": {
             "ref": "gamesymbols/build/14168/29686825445-1",
@@ -30,6 +30,21 @@ def pull_request_payload(**overrides) -> dict:
             "repo": {"full_name": "HLND2T/CS2_VibeSignatures"},
         },
         "base": {"ref": "main"},
+    }
+    payload.update(overrides)
+    return payload
+
+
+def build_run_payload(run_id=29686825445, *, attempt=1, conclusion="success", **overrides) -> dict:
+    payload = {
+        "id": run_id,
+        "run_attempt": attempt,
+        "path": ".github/workflows/build-on-self-runner.yml",
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": conclusion,
+        "display_title": "Release build 14168",
+        "repository": {"full_name": "HLND2T/CS2_VibeSignatures"},
     }
     payload.update(overrides)
     return payload
@@ -45,83 +60,145 @@ class TestAbandonStagedRelease(unittest.TestCase):
         skill = Path(".claude/skills/abandon-staged-release/SKILL.md").read_text(encoding="utf-8")
         agent = Path(".claude/skills/abandon-staged-release/agents/openai.yaml").read_text(encoding="utf-8")
         self.assertIn("Use only when the user explicitly asks", skill)
+        self.assertIn("GAMEVER/BUILD_ID", skill)
+        self.assertIn("Actions run/job URL", skill)
+        self.assertIn("automatically discovers", skill)
         self.assertIn("allow_implicit_invocation: false", agent)
         self.assertIn("bundled script as the only remote-operation entry point", skill)
         self.assertIn("Do not run `cleanup-unmerged`", skill)
         self.assertIn("never automatically reruns a release build", skill)
 
-    def test_pr_identity_is_derived_from_the_trusted_merged_output_pr(self) -> None:
-        with patch.object(
-            abandon,
-            "run_command",
-            return_value=completed([], stdout=json.dumps(pull_request_payload())),
-        ):
-            identity = abandon.load_pr_identity(
+    def test_direct_target_must_match_exact_confirmation(self) -> None:
+        self.assertEqual(
+            ("14168", "29686825445-1"),
+            abandon.resolve_target_identity(
                 Path("."),
                 "HLND2T/CS2_VibeSignatures",
-                582,
+                "14168/29686825445-1",
                 "ABANDON 14168/29686825445-1",
-                "Promotion failed before promote-bin",
-            )
-        self.assertEqual("14168", identity["gamever"])
-        self.assertEqual("29686825445-1", identity["build_id"])
-        self.assertEqual("6a44f19be35e6fc876d9e74b46f494f214b383d1", identity["head_sha"])
-
-    def test_pr_identity_rejects_untrusted_or_unmerged_requests(self) -> None:
-        cases = (
-            ({"merged_at": None}, "must be merged"),
-            ({"user": {"login": "someone"}}, "github-actions"),
-            (
-                {
-                    "head": {
-                        "ref": "gamesymbols/build/14168/29686825445-1",
-                        "sha": "6a44f19be35e6fc876d9e74b46f494f214b383d1",
-                        "repo": {"full_name": "other/repository"},
-                    }
-                },
-                "trusted same-repository",
             ),
         )
-        for overrides, message in cases:
-            with (
-                self.subTest(message=message),
-                patch.object(
-                    abandon,
-                    "run_command",
-                    return_value=completed([], stdout=json.dumps(pull_request_payload(**overrides))),
-                ),
-            ):
-                with self.assertRaisesRegex(abandon.AbandonError, message):
-                    abandon.load_pr_identity(
-                        Path("."),
-                        "HLND2T/CS2_VibeSignatures",
-                        582,
-                        "ABANDON 14168/29686825445-1",
-                        "Promotion failed before promote-bin",
-                    )
+        with self.assertRaisesRegex(abandon.AbandonError, "does not match confirmation"):
+            abandon.resolve_target_identity(
+                Path("."),
+                "HLND2T/CS2_VibeSignatures",
+                "14168/29686825445-2",
+                "ABANDON 14168/29686825445-1",
+            )
 
     def test_confirmation_and_reason_are_strict(self) -> None:
+        with self.assertRaisesRegex(abandon.AbandonError, "confirmation"):
+            abandon.parse_confirmation("ABANDON 14168/wrong")
+        with self.assertRaisesRegex(abandon.AbandonError, "one non-empty line"):
+            abandon.validate_reason("bad\nreason")
+
+    def test_run_url_can_identify_the_staged_build_itself(self) -> None:
+        run = build_run_payload()
+        with patch.object(abandon, "run_command", return_value=completed([], stdout=json.dumps(run))) as command:
+            identity = abandon.resolve_target_identity(
+                Path("."),
+                "HLND2T/CS2_VibeSignatures",
+                "https://github.com/HLND2T/CS2_VibeSignatures/actions/runs/29686825445/job/1",
+                "ABANDON 14168/29686825445-1",
+            )
+        self.assertEqual(("14168", "29686825445-1"), identity)
+        self.assertIn("repos/HLND2T/CS2_VibeSignatures/actions/runs/29686825445", command.call_args.args[0])
+
+    def test_blocked_run_url_can_identify_its_unique_ready_blocker(self) -> None:
+        run = build_run_payload(run_id=29688978009, conclusion="failure")
+        log = "Error: another ready staged build blocks 14168: ***\\release-staging\\14168\\29686825445-1\n"
         with patch.object(
             abandon,
             "run_command",
-            return_value=completed([], stdout=json.dumps(pull_request_payload())),
-        ):
-            with self.assertRaisesRegex(abandon.AbandonError, "confirmation"):
-                abandon.load_pr_identity(
+            side_effect=[completed([], stdout=json.dumps(run)), completed([], stdout=log)],
+        ) as command:
+            identity = abandon.resolve_target_identity(
+                Path("."),
+                "HLND2T/CS2_VibeSignatures",
+                "https://github.com/HLND2T/CS2_VibeSignatures/actions/runs/29688978009/job/88198248637",
+                "ABANDON 14168/29686825445-1",
+            )
+        self.assertEqual(("14168", "29686825445-1"), identity)
+        self.assertIn("--log-failed", command.call_args_list[1].args[0])
+
+    def test_run_url_rejects_untrusted_or_ambiguous_evidence(self) -> None:
+        cases = (
+            (
+                build_run_payload(path=".github/workflows/other.yml"),
+                "",
+                "trusted release build workflow",
+            ),
+            (
+                build_run_payload(run_id=29688978009, conclusion="failure"),
+                "Error: another ready staged build blocks 14168: ***\\release-staging\\14168\\111-1\n",
+                "does not report the confirmed READY build",
+            ),
+            (
+                build_run_payload(run_id=29688978009, conclusion="failure"),
+                "Error: another ready staged build blocks 14168: "
+                "***\\release-staging\\14168\\29686825445-1\n"
+                "Error: another ready staged build blocks 14168: "
+                "***\\release-staging\\14168\\111-1\n",
+                "multiple READY build identities",
+            ),
+        )
+        for run, log, message in cases:
+            responses = [completed([], stdout=json.dumps(run))]
+            if log:
+                responses.append(completed([], stdout=log))
+            with (
+                self.subTest(message=message),
+                patch.object(abandon, "run_command", side_effect=responses),
+                self.assertRaisesRegex(abandon.AbandonError, message),
+            ):
+                abandon.resolve_target_identity(
                     Path("."),
                     "HLND2T/CS2_VibeSignatures",
-                    582,
-                    "ABANDON 14168/wrong",
-                    "Promotion failed before promote-bin",
-                )
-            with self.assertRaisesRegex(abandon.AbandonError, "one non-empty line"):
-                abandon.load_pr_identity(
-                    Path("."),
-                    "HLND2T/CS2_VibeSignatures",
-                    582,
+                    f"https://github.com/HLND2T/CS2_VibeSignatures/actions/runs/{run['id']}",
                     "ABANDON 14168/29686825445-1",
-                    "bad\nreason",
                 )
+
+    def test_run_url_must_match_the_owning_repository(self) -> None:
+        with self.assertRaisesRegex(abandon.AbandonError, "repository does not match"):
+            abandon.resolve_target_identity(
+                Path("."),
+                "HLND2T/CS2_VibeSignatures",
+                "https://github.com/other/repository/actions/runs/29686825445",
+                "ABANDON 14168/29686825445-1",
+            )
+
+    def test_unique_trusted_merged_pr_is_discovered_from_build_identity(self) -> None:
+        pulls = [pull_request_payload()]
+        with patch.object(abandon, "run_command", return_value=completed([], stdout=json.dumps(pulls))) as command:
+            identity = abandon.discover_pr_identity(Path("."), "HLND2T/CS2_VibeSignatures", "14168", "29686825445-1")
+        self.assertEqual(582, identity["pr_number"])
+        self.assertEqual("6a44f19be35e6fc876d9e74b46f494f214b383d1", identity["head_sha"])
+        discovery = command.call_args.args[0]
+        self.assertIn("head=HLND2T:gamesymbols/build/14168/29686825445-1", discovery)
+        self.assertNotIn("582", discovery)
+
+    def test_pr_discovery_rejects_missing_untrusted_or_ambiguous_matches(self) -> None:
+        untrusted = pull_request_payload(user={"login": "someone"})
+        duplicate = pull_request_payload(
+            number=583,
+            head={
+                "ref": "gamesymbols/build/14168/29686825445-1",
+                "sha": "7a44f19be35e6fc876d9e74b46f494f214b383d1",
+                "repo": {"full_name": "HLND2T/CS2_VibeSignatures"},
+            },
+        )
+        cases = (
+            ([], "no trusted merged"),
+            ([untrusted], "no trusted merged"),
+            ([pull_request_payload(), duplicate], "multiple trusted merged"),
+        )
+        for pulls, message in cases:
+            with (
+                self.subTest(message=message),
+                patch.object(abandon, "run_command", return_value=completed([], stdout=json.dumps(pulls))),
+                self.assertRaisesRegex(abandon.AbandonError, message),
+            ):
+                abandon.discover_pr_identity(Path("."), "HLND2T/CS2_VibeSignatures", "14168", "29686825445-1")
 
     def test_duplicate_active_workflow_is_rejected(self) -> None:
         runs = [
@@ -136,7 +213,7 @@ class TestAbandonStagedRelease(unittest.TestCase):
             with self.assertRaisesRegex(abandon.AbandonError, "already active"):
                 abandon.require_no_duplicate(Path("."), 582)
 
-    def test_dispatch_uses_only_derived_identity_and_audit_inputs(self) -> None:
+    def test_dispatch_uses_only_discovered_identity_and_audit_inputs(self) -> None:
         identity = {
             "pr_number": 582,
             "confirmation": "ABANDON 14168/29686825445-1",
@@ -158,22 +235,25 @@ class TestAbandonStagedRelease(unittest.TestCase):
             "gamever": "14168",
             "build_id": "29686825445-1",
             "head_sha": "6" * 40,
-            "confirmation": "ABANDON 14168/29686825445-1",
-            "reason": "Promotion failed before promote-bin",
         }
         with (
             patch.object(abandon, "repository_root", return_value=Path(".")),
             patch.object(abandon, "require_repository", return_value="HLND2T/CS2_VibeSignatures"),
             patch.object(abandon, "require_github_access"),
             patch.object(abandon, "resolve_main", return_value="a" * 40),
-            patch.object(abandon, "load_pr_identity", return_value=identity.copy()),
+            patch.object(
+                abandon,
+                "resolve_target_identity",
+                return_value=("14168", "29686825445-1"),
+            ),
+            patch.object(abandon, "discover_pr_identity", return_value=identity.copy()),
             patch.object(abandon, "require_no_duplicate", return_value={1}),
             patch.object(abandon, "require_main_unchanged"),
             patch.object(abandon, "dispatch") as dispatch,
             patch.object(abandon, "discover_run", return_value="https://github.com/example/run"),
         ):
             result = abandon.execute(
-                582,
+                "14168/29686825445-1",
                 "ABANDON 14168/29686825445-1",
                 "Promotion failed before promote-bin",
             )
@@ -181,13 +261,16 @@ class TestAbandonStagedRelease(unittest.TestCase):
         self.assertEqual("https://github.com/example/run", result["run_url"])
         self.assertEqual("a" * 40, result["source_sha"])
 
-    def test_recovery_workflow_derives_identity_and_uses_promotion_concurrency(self) -> None:
+    def test_recovery_workflow_still_derives_identity_and_uses_promotion_concurrency(self) -> None:
         workflow = Path(".github/workflows/abandon-staged-release.yml").read_text(encoding="utf-8")
         self.assertIn("workflow_dispatch:", workflow)
         self.assertNotIn("gamever:\n        description:", workflow)
         self.assertNotIn("build_id:\n        description:", workflow)
         self.assertIn('gh api "repos/${{ github.repository }}/pulls/$env:PR_NUMBER"', workflow)
-        self.assertIn("release-promotion-${{ github.repository }}-${{ needs.resolve.outputs.gamever }}", workflow)
+        self.assertIn(
+            "release-promotion-${{ github.repository }}-${{ needs.resolve.outputs.gamever }}",
+            workflow,
+        )
         self.assertIn("runs-on: [self-hosted, windows, x64]", workflow)
         self.assertIn("environment: win64", workflow)
         self.assertIn("release_workflow.py abandon-pending", workflow)
