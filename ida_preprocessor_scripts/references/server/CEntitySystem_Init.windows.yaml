@@ -16,7 +16,8 @@ disasm_code: |-
   .text:00000001811F8284                 call    cs:?Set@CUtlString@@QEAAXPEBD@Z; CUtlString::Set(char const *)
   .text:00000001811F828A                 movzx   eax, [rsp+0C8h+arg_20]
   .text:00000001811F8292                 mov     cs:byte_1820B9640, al
-  .text:00000001811F8298                 mov     [rsi+0BBCh], ebx
+  .text:00000001811F8298                 ; 0xBBC = 3004LL = CEntitySystem::m_eNetworkSerializationMode
+  .text:00000001811F8298                 mov     [rsi+0BBCh], ebx; 0xBBC = 3004LL = CEntitySystem::m_eNetworkSerializationMode
   .text:00000001811F829E                 cmp     edi, 1
   .text:00000001811F82A1                 jnz     short loc_1811F82B3
   .text:00000001811F82A3                 cmp     cs:g_pNetworkMessages, 0
@@ -26,8 +27,7 @@ disasm_code: |-
   .text:00000001811F82B3                 xor     al, al
   .text:00000001811F82B5                 ; 0xCB8 = 3256LL = CEntitySystem::m_ComponentUnserializerInfoAllocator
   .text:00000001811F82B5                 lea     rcx, [rsi+0CB8h]; 0xCB8 = 3256LL = CEntitySystem::m_ComponentUnserializerInfoAllocator
-  .text:00000001811F82BC                 ; 0xBDA = 3034LL = CEntitySystem::m_eNetworkSerializationMode
-  .text:00000001811F82BC                 mov     [rsi+0BDAh], al; 0xBDA = 3034LL = CEntitySystem::m_eNetworkSerializationMode
+  .text:00000001811F82BC                 mov     [rsi+0BDAh], al
   .text:00000001811F82C2                 xor     r9d, r9d
   .text:00000001811F82C5                 mov     byte ptr [rsp+0C8h+var_A8], 0
   .text:00000001811F82CA                 xor     r8d, r8d
