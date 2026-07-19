@@ -141,11 +141,9 @@ jobs:
             throw "Release manifest $gamever lacks analysis_config_sha256; refusing archive promotion."
           }
           try {
-            $extractScript = @'
-            import pathlib, subprocess, sys
-            pathlib.Path(sys.argv[2]).write_bytes(subprocess.check_output(["git", "show", f"{sys.argv[1]}:configs/{sys.argv[3]}.yaml"]))
-            '@
-            $extractScript | uv run python - "$sourceSha" "$configPath" "$gamever"
+            uv run python -c `
+              "import pathlib, subprocess, sys; pathlib.Path(sys.argv[2]).write_bytes(subprocess.check_output(['git', 'show', f'{sys.argv[1]}:configs/{sys.argv[3]}.yaml']))" `
+              "$sourceSha" "$configPath" "$gamever"
             if ($LASTEXITCODE -ne 0) { throw "Failed to extract source analysis config from $sourceSha." }
             $actualConfigHash = (Get-FileHash -LiteralPath $configPath -Algorithm SHA256).Hash.ToLowerInvariant()
             if ($actualConfigHash -ne $expectedConfigHash.ToLowerInvariant()) {

@@ -179,7 +179,9 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn(".release-tools/release_workflow.py verify-promotion", self.promotion)
         self.assertIn('"configs\\$gamever.yaml"', self.promotion)
         self.assertIn("analysis_config_sha256", self.promotion)
-        self.assertIn('git", "show", f"{sys.argv[1]}:configs/{sys.argv[3]}.yaml"', self.promotion)
+        self.assertIn("['git', 'show', f'{sys.argv[1]}:configs/{sys.argv[3]}.yaml']", self.promotion)
+        self.assertIn("uv run python -c `", self.promotion)
+        self.assertNotIn("$extractScript = @'", self.promotion)
 
     def test_bump_merge_dispatches_without_creating_tag(self) -> None:
         workflow = Path(".github/workflows/tag-bump-after-merge.yml").read_text(encoding="utf-8")
