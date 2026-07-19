@@ -56,7 +56,17 @@
 - `tests/test_trigger_release_build.py`：repository/auth/version/tag/Release/duplicate/dispatch/run URL。
 - 完成门：全仓 unittest、formatter、Ruff、YAML parse、actionlint 与 CLI non-publishing smoke。
 
+## Explicit Legacy Bootstrap
+
+- `invalidate-republish` 默认仍要求 accepted `release-manifests/<GAMEVER>.json`；缺失时继续保守删除同版本 YAML。
+- 只有 trigger skill 在用户明确要求“无 accepted manifest 时使用 tracked snapshot”后，才传
+  `--allow-legacy-bootstrap` / `allow_legacy_bootstrap=true`；普通 publish、republish、retry 或 same-version 请求不得推断启用。
+- legacy 路径只允许 `workflow_dispatch + mode=republish`，`repository_dispatch` 被 preflight 拒绝。
+- legacy snapshot 从 immutable `SOURCE_SHA` 读取；其最后发布 commit 必须是 `SOURCE_SHA` 祖先，并使用该 commit 的历史
+  versioned config（允许 legacy root config）验证 canonical snapshot contract，再恢复并执行 source/config-aware invalidation。
+- 该开关提供显式 opt-in，而非可证明的“由 skill 发起”身份认证；GitHub workflow 无法区分同权限维护者手工构造的等价 dispatch。
+
 ## Callers
 
 - `repository_dispatch.types: [build-on-self-runner]`
-- `workflow_dispatch(gamever, source_sha, mode)`，通常仅由 trigger SKILL 调用
+- `workflow_dispatch(gamever, source_sha, mode, allow_legacy_bootstrap=false)`，通常仅由 trigger SKILL 调用

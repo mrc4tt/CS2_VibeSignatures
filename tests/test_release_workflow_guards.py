@@ -4,11 +4,77 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from gamesymbol_snapshot_lib.codec import build_snapshot_document, canonical_snapshot_bytes
+from gamesymbol_snapshot_lib.config import load_contract
+from release_workflow_lib.cli import _parser
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.promotion import verify_output_pr, verify_promotion
 from release_workflow_lib.staging import cleanup_incomplete, cleanup_unmerged
 from release_workflow_lib.validation import invalidate_republish, validate_build_input
 from tests.test_release_workflow import ReleaseFixture
+
+
+class LegacyBootstrapFixture:
+    gamever = "14170"
+
+    def __init__(self, root: Path) -> None:
+        self.repo = root / "repo"
+        self.repo.mkdir()
+        self.git("init", "-b", "main")
+        self.git("config", "user.email", "tests@example.com")
+        self.git("config", "user.name", "Tests")
+        self.config = self.repo / "configs" / f"{self.gamever}.yaml"
+        self.snapshot = self.repo / "gamesymbols" / f"{self.gamever}.yaml"
+        changed_skill = self.repo / ".claude" / "skills" / "find-Changed" / "SKILL.md"
+        stable_skill = self.repo / ".claude" / "skills" / "find-Stable" / "SKILL.md"
+        self.config.parent.mkdir(parents=True)
+        self.snapshot.parent.mkdir(parents=True)
+        changed_skill.parent.mkdir(parents=True)
+        stable_skill.parent.mkdir(parents=True)
+        self.config.write_text(
+            "modules:\n"
+            "  - name: server\n"
+            "    path_windows: game/bin/win64/server.dll\n"
+            "    skills:\n"
+            "      - name: find-Changed\n"
+            "        platform: windows\n"
+            "        expected_output:\n"
+            "          - Changed.{platform}.yaml\n"
+            "      - name: find-Stable\n"
+            "        platform: windows\n"
+            "        expected_output:\n"
+            "          - Stable.{platform}.yaml\n",
+            encoding="utf-8",
+        )
+        changed_skill.write_text("changed v1\n", encoding="utf-8")
+        stable_skill.write_text("stable v1\n", encoding="utf-8")
+        contract = load_contract(self.config, self.gamever, self.repo / "bin")
+        document = build_snapshot_document(
+            self.gamever,
+            contract.config_sha256,
+            {
+                "server/Changed.windows.yaml": {"func_name": "Changed", "func_rva": "0x10"},
+                "server/Stable.windows.yaml": {"func_name": "Stable", "func_rva": "0x20"},
+            },
+        )
+        self.snapshot.write_bytes(canonical_snapshot_bytes(document))
+        self.git("add", ".")
+        self.git("commit", "-m", "legacy snapshot")
+        self.base_sha = self.git("rev-parse", "HEAD")
+        changed_skill.write_text("changed v2\n", encoding="utf-8")
+        self.git("add", ".")
+        self.git("commit", "-m", "change one producer")
+        self.source_sha = self.git("rev-parse", "HEAD")
+
+    def git(self, *args: str) -> str:
+        result = subprocess.run(
+            ["git", *args],
+            cwd=self.repo,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
 
 
 class TestReleaseWorkflowGuards(unittest.TestCase):
@@ -61,6 +127,69 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
             self.assertEqual(1, deleted)
             self.assertFalse((game_root / "client.yaml").exists())
             self.assertTrue((game_root / "client.dll").exists())
+
+    def test_legacy_bootstrap_requires_explicit_cli_flag(self) -> None:
+        parser = _parser()
+        common = [
+            "invalidate-republish",
+            "--gamever",
+            "14170",
+            "--source-sha",
+            "1" * 40,
+        ]
+
+        self.assertFalse(parser.parse_args(common).allow_legacy_bootstrap)
+        self.assertTrue(parser.parse_args([*common, "--allow-legacy-bootstrap"]).allow_legacy_bootstrap)
+
+    def test_explicit_legacy_bootstrap_restores_snapshot_and_invalidates_changed_producer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = LegacyBootstrapFixture(Path(tmp))
+
+            deleted = invalidate_republish(
+                repo_root=fixture.repo,
+                gamever=fixture.gamever,
+                source_sha=fixture.source_sha,
+                bindir=fixture.repo / "bin",
+                allow_legacy_bootstrap=True,
+            )
+
+            game_root = fixture.repo / "bin" / fixture.gamever / "server"
+            self.assertEqual(1, deleted)
+            self.assertFalse((game_root / "Changed.windows.yaml").exists())
+            self.assertTrue((game_root / "Stable.windows.yaml").is_file())
+
+    def test_explicit_legacy_bootstrap_rejects_missing_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            with self.assertRaisesRegex(ReleaseWorkflowError, "legacy bootstrap snapshot"):
+                invalidate_republish(
+                    repo_root=repo,
+                    gamever="14170",
+                    source_sha="1" * 40,
+                    bindir=repo / "bin",
+                    allow_legacy_bootstrap=True,
+                )
+
+    def test_explicit_legacy_bootstrap_rejects_snapshot_contract_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = LegacyBootstrapFixture(Path(tmp))
+            invalid_document = build_snapshot_document(
+                fixture.gamever,
+                "sha256:" + "0" * 64,
+                {"server/Stable.windows.yaml": {"func_name": "Stable", "func_rva": "0x20"}},
+            )
+            fixture.snapshot.write_bytes(canonical_snapshot_bytes(invalid_document))
+            fixture.git("add", ".")
+            fixture.git("commit", "-m", "tamper snapshot contract")
+
+            with self.assertRaisesRegex(ReleaseWorkflowError, "trusted legacy bootstrap snapshot was rejected"):
+                invalidate_republish(
+                    repo_root=fixture.repo,
+                    gamever=fixture.gamever,
+                    source_sha=fixture.git("rev-parse", "HEAD"),
+                    bindir=fixture.repo / "bin",
+                    allow_legacy_bootstrap=True,
+                )
 
     def test_lightweight_output_pr_check_rejects_stale_source(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
