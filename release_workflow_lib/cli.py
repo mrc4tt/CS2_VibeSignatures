@@ -14,6 +14,7 @@ from release_workflow_lib.promotion import (
     verify_promotion,
 )
 from release_workflow_lib.staging import (
+    abandon_pending,
     assert_no_other_ready_build,
     cleanup_incomplete,
     cleanup_unmerged,
@@ -130,6 +131,16 @@ def _add_promotion_parsers(commands) -> None:
     complete.add_argument("--pr-number", required=True, type=int)
     complete.add_argument("--event-head-sha", required=True)
     complete.add_argument("--output-merge-sha", required=True)
+
+    abandon = commands.add_parser("abandon-pending")
+    abandon.add_argument("--staging-root", required=True)
+    abandon.add_argument("--persisted-root", required=True)
+    abandon.add_argument("--gamever", required=True)
+    abandon.add_argument("--build-id", required=True)
+    abandon.add_argument("--pr-number", required=True, type=int)
+    abandon.add_argument("--event-head-sha", required=True)
+    abandon.add_argument("--confirmation", required=True)
+    abandon.add_argument("--reason", required=True)
 
     cleanup = commands.add_parser("cleanup-unmerged")
     cleanup.add_argument("--staging-root", required=True)
@@ -286,6 +297,17 @@ def _run_promotion(args) -> object:
             pr_number=args.pr_number,
             event_head_sha=args.event_head_sha,
             output_merge_sha=args.output_merge_sha,
+        )
+    if args.command == "abandon-pending":
+        return abandon_pending(
+            staging_root=args.staging_root,
+            persisted_root=args.persisted_root,
+            gamever=args.gamever,
+            build_id=args.build_id,
+            pr_number=args.pr_number,
+            event_head_sha=args.event_head_sha,
+            confirmation=args.confirmation,
+            reason=args.reason,
         )
     if args.command == "cleanup-unmerged":
         return cleanup_unmerged(args.staging_root, args.pr_number, args.event_head_sha)

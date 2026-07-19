@@ -355,6 +355,7 @@ class TestReleaseWorkflow(unittest.TestCase):
                 build_id=fixture.build_id,
             )
 
+            self.assertTrue((stage_dir / "PROMOTION_STARTED").is_file())
             self.assertEqual(file_inventory(stage_dir / "bin" / fixture.gamever), file_inventory(accepted))
             self.assertTrue(Path(state["backup"]).is_dir())
             finalize_promotion(

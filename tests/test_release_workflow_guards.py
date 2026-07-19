@@ -9,7 +9,7 @@ from gamesymbol_snapshot_lib.config import load_contract
 from release_workflow_lib.cli import _parser
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.promotion import verify_output_pr, verify_promotion
-from release_workflow_lib.staging import cleanup_incomplete, cleanup_unmerged
+from release_workflow_lib.staging import abandon_pending, cleanup_incomplete, cleanup_unmerged
 from release_workflow_lib.validation import invalidate_republish, validate_build_input
 from tests.test_release_workflow import ReleaseFixture
 from tests.release_branch_protocol import LEGACY_OUTPUT_BRANCH
@@ -262,6 +262,98 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
 
             self.assertFalse(stage_dir.exists())
             self.assertEqual(b"accepted", marker.read_bytes())
+
+    def test_explicit_abandon_removes_only_matching_unpromoted_pending_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            fixture.stage()
+            stage_dir = fixture.finalize_and_index()
+            accepted = fixture.root / "persisted" / "bin" / fixture.gamever
+            accepted.mkdir(parents=True)
+            marker = accepted / "accepted.dll"
+            marker.write_bytes(b"accepted")
+
+            result = abandon_pending(
+                staging_root=fixture.staging,
+                persisted_root=fixture.root / "persisted",
+                gamever=fixture.gamever,
+                build_id=fixture.build_id,
+                pr_number=42,
+                event_head_sha=fixture.head_sha,
+                confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
+                reason="Promotion failed before promote-bin",
+            )
+
+            self.assertEqual(fixture.build_id, result["build_id"])
+            self.assertFalse(stage_dir.exists())
+            self.assertFalse((fixture.staging / "pr-index" / "42.json").exists())
+            self.assertEqual(b"accepted", marker.read_bytes())
+
+    def test_explicit_abandon_requires_exact_confirmation_and_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            fixture.stage()
+            stage_dir = fixture.finalize_and_index()
+            kwargs = {
+                "staging_root": fixture.staging,
+                "persisted_root": fixture.root / "persisted",
+                "gamever": fixture.gamever,
+                "build_id": fixture.build_id,
+                "pr_number": 42,
+                "event_head_sha": fixture.head_sha,
+                "reason": "Promotion failed before promote-bin",
+            }
+
+            with self.assertRaisesRegex(ReleaseWorkflowError, "confirmation"):
+                abandon_pending(confirmation="ABANDON wrong/build", **kwargs)
+            with self.assertRaisesRegex(ReleaseWorkflowError, "build identity"):
+                abandon_pending(
+                    confirmation=f"ABANDON {fixture.gamever}/999-1",
+                    **{**kwargs, "build_id": "999-1"},
+                )
+            self.assertTrue(stage_dir.exists())
+
+    def test_explicit_abandon_refuses_any_started_promotion_state(self) -> None:
+        for marker_name in ("PROMOTION_STARTED", "PROMOTED.json", "PROMOTION_COMPLETE"):
+            with self.subTest(marker=marker_name), tempfile.TemporaryDirectory() as tmp:
+                fixture = ReleaseFixture(Path(tmp))
+                fixture.stage()
+                stage_dir = fixture.finalize_and_index()
+                (stage_dir / marker_name).write_text("{}\n", encoding="utf-8")
+
+                with self.assertRaisesRegex(ReleaseWorkflowError, "resume instead of abandon"):
+                    abandon_pending(
+                        staging_root=fixture.staging,
+                        persisted_root=fixture.root / "persisted",
+                        gamever=fixture.gamever,
+                        build_id=fixture.build_id,
+                        pr_number=42,
+                        event_head_sha=fixture.head_sha,
+                        confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
+                        reason="Promotion failed before promote-bin",
+                    )
+
+    def test_explicit_abandon_refuses_transaction_recovery_paths(self) -> None:
+        for suffix in ("incoming", "backup"):
+            with self.subTest(suffix=suffix), tempfile.TemporaryDirectory() as tmp:
+                fixture = ReleaseFixture(Path(tmp))
+                fixture.stage()
+                stage_dir = fixture.finalize_and_index()
+                recovery = fixture.root / "persisted" / "bin" / f".{fixture.gamever}.{fixture.build_id}.{suffix}"
+                recovery.mkdir(parents=True)
+
+                with self.assertRaisesRegex(ReleaseWorkflowError, "recovery path exists"):
+                    abandon_pending(
+                        staging_root=fixture.staging,
+                        persisted_root=fixture.root / "persisted",
+                        gamever=fixture.gamever,
+                        build_id=fixture.build_id,
+                        pr_number=42,
+                        event_head_sha=fixture.head_sha,
+                        confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
+                        reason="Promotion failed before promote-bin",
+                    )
+                self.assertTrue(stage_dir.exists())
 
     def test_incomplete_cleanup_removes_only_state_without_ready_marker(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
