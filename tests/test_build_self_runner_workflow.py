@@ -31,9 +31,18 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
     def test_workspace_bin_is_real_and_republish_uses_affected_invalidation(self) -> None:
         self.assertIn("Workspace bin must be a real directory", self.workflow)
         self.assertIn("Copied persisted bin/$env:GAMEVER into build workspace", self.workflow)
-        self.assertIn("release_workflow.py invalidate-republish", self.workflow)
+        self.assertIn("'invalidate-republish'", self.workflow)
+        self.assertIn("uv run release_workflow.py @args", self.workflow)
         self.assertIn("if: env.MODE == 'republish'", self.workflow)
         self.assertNotIn("force every preprocessor", self.workflow.lower())
+
+    def test_legacy_bootstrap_is_explicit_and_defaults_off(self) -> None:
+        self.assertIn("allow_legacy_bootstrap:", self.workflow)
+        self.assertIn("default: false", self.workflow)
+        self.assertIn("ALLOW_LEGACY_BOOTSTRAP:", self.workflow)
+        self.assertIn('$env:ALLOW_LEGACY_BOOTSTRAP -eq "true"', self.workflow)
+        self.assertIn("--allow-legacy-bootstrap", self.workflow)
+        self.assertIn("Legacy bootstrap is only allowed for workflow_dispatch", self.workflow)
 
     def test_build_restores_and_explicitly_passes_trusted_oldgamever(self) -> None:
         prepare = self.workflow.index("release_workflow.py prepare-oldgamever")
