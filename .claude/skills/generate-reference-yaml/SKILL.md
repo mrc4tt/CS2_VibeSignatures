@@ -39,7 +39,7 @@ where `{gamever}` can be obtained from `.env` -> `CS2VIBE_GAMEVER`.
 
 **IMPORTANT -- Always pass `-platform` explicitly.** While `-platform` can theoretically be inferred from the binary extension (`.dll` -> windows, `.so` -> linux), auto-inference is unreliable and may produce the wrong platform's reference YAML. Always pass `-platform windows` or `-platform linux` explicitly.
 
-### 3) 自定义输出文件名 (custom output filename)
+### 3) Custom output name
 
 Use `-output_filename` when the reference YAML file name should differ from the default `<func_name>.<platform>.yaml`:
 
