@@ -11,20 +11,28 @@ TARGET_GLOBALVAR_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    # Both globals are identified by decompiling IGameSystem_LoopDestroyAllSystems:
-    #   pEventDispatcher = the qword pointer zeroed at the end of the function
-    #   s_GameSystems     = the dword used as backward-loop count before zeroing pEventDispatcher
-    (
-        "IGameSystem_LoopPostInitAllSystems_pEventDispatcher",
-        "prompt/call_llm_decompile.md",
-        "references/server/IGameSystem_LoopDestroyAllSystems.{platform}.yaml",
-    ),
-    (
-        "IGameSystem_LoopDestroyAllSystems_s_GameSystems",
-        "prompt/call_llm_decompile.md",
-        "references/server/IGameSystem_LoopDestroyAllSystems.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameSystem_LoopPostInitAllSystems_pEventDispatcher",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/IGameSystem_LoopDestroyAllSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+        "dependency_policy": {
+            "IGameSystem_LoopDestroyAllSystems.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "IGameSystem_LoopDestroyAllSystems_s_GameSystems",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/IGameSystem_LoopDestroyAllSystems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+        "dependency_policy": {
+            "IGameSystem_LoopDestroyAllSystems.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CGameSceneNode_PreInstanceSpawn",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CGameSceneNode_PreInstanceSpawn",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CBodyGameSystem_SpawnDependencyIsland.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

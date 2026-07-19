@@ -8,12 +8,17 @@ TARGET_GLOBALVAR_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CPlayer_MovementServices_s_pRunCommandPawn",
-        "prompt/call_llm_decompile.md",
-        "references/server/CPlayer_MovementServices_ForceButtons.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CPlayer_MovementServices_s_pRunCommandPawn",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CPlayer_MovementServices_ForceButtons.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+        "dependency_policy": {
+            "CPlayer_MovementServices_ForceButtons.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

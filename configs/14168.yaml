@@ -650,11 +650,15 @@ modules:
       - name: find-INetworkClientService_IsActive
         expected_output:
           - INetworkClientService_IsActive.{platform}.yaml
-        expected_input:
+        expected_input_windows:
           - CNetworkGameServerBase_ServerSimulate.{platform}.yaml
+        expected_input_linux:
+          - CNetworkGameServerBase_ServerSimulateInternal.{platform}.yaml
       - name: find-CNetworkGameServer_GetFreeClient
         expected_output:
           - CNetworkGameServer_GetFreeClient.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_ConnectClient.{platform}.yaml
       - name: find-CNetworkGameServerBase_CreateFakeClient
         expected_output:
           - CNetworkGameServerBase_CreateFakeClient.{platform}.yaml
@@ -1470,22 +1474,23 @@ modules:
         optional_output:
           - IEngineService_GetServiceDependencies.{platform}.yaml
           - IEngineService_GetName.{platform}.yaml
+        optional_input:
+          - CLoopTypeBase_AddDependentServices.{platform}.yaml
         skip_if_exists:
           - IEngineService_GetServiceDependencies.{platform}.yaml
           - IEngineService_GetName.{platform}.yaml
-        prerequisite:
-          - find-CLoopTypeBase_AddDependentServices
       - name: find-CLoopTypeBase_LoadDependentServices-decompiles
         expected_output:
           - IEngineService_GetServiceDependencies.{platform}.yaml
           - IEngineService_GetName.{platform}.yaml
         expected_input:
           - CLoopTypeBase_LoadDependentServices.{platform}.yaml
+        prerequisite:
+          - find-CLoopTypeBase_AddDependentServices-decompiles
         skip_if_exists:
           - IEngineService_GetServiceDependencies.{platform}.yaml
           - IEngineService_GetName.{platform}.yaml
-        prerequisite:
-          - find-CLoopTypeBase_AddDependentServices-decompiles
+        platform: linux
       - name: find-CLoopTypeClientServerService_OnLoopActivate
         expected_output:
           - CLoopTypeClientServerService_OnLoopActivate.{platform}.yaml
@@ -1544,8 +1549,8 @@ modules:
           - CLoopTypeBase_DeallocateLoopMode.{platform}.yaml
         expected_input:
           - CEngineServiceMgr__MainLoop.{platform}.yaml
-        prerequisite:
-          - find-CEngineServiceMgr_DeactivateLoop
+        optional_input:
+          - CEngineServiceMgr_DeactivateLoop.{platform}.yaml
       - name: find-CEngineGameUI_vtable
         expected_output:
           - CEngineGameUI_vtable.{platform}.yaml
@@ -4493,12 +4498,16 @@ modules:
           - CEntitySystem_QueueDestroyEntity.{platform}.yaml
         expected_input:
           - SV_Kill_SmokeGrenade_CommandHandler.{platform}.yaml
-      - name: find-CEntitySystem_QueueDestroyEntity-AND-CEntitySystem_ExecuteQueuedDeletion-decompiles
+      - name: find-CEntitySystem_ExecuteQueuedDeletion
         expected_output:
           - CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml
-          - CEntitySystem_m_nExecuteQueuedDeletionDepth.{platform}.yaml
         expected_input:
           - CEntitySystem_QueueDestroyEntity.{platform}.yaml
+      - name: find-CEntitySystem_m_nExecuteQueuedDeletionDepth
+        expected_output:
+          - CEntitySystem_m_nExecuteQueuedDeletionDepth.{platform}.yaml
+        expected_input:
+          - CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml
       - name: find-CFlashbangProjectile_Spawn-decompiles
         expected_output:
           - CBaseModelEntity_SetModel.{platform}.yaml
@@ -4751,6 +4760,8 @@ modules:
       - name: find-CEntityIdentity_AcceptInputInternal
         expected_output:
           - CEntityIdentity_AcceptInputInternal.{platform}.yaml
+        expected_input:
+          - CEntityIdentity_AcceptInput.{platform}.yaml
       - name: find-CEntityInstance_ScriptAcceptInput
         expected_output:
           - CEntityInstance_ScriptAcceptInput.{platform}.yaml
@@ -4787,6 +4798,8 @@ modules:
       - name: find-CCSPlayer_ItemServices_CanAcquire
         expected_output:
           - CCSPlayer_ItemServices_CanAcquire.{platform}.yaml
+        expected_input:
+          - CBtActionCoordinatedBuy_Update.{platform}.yaml
       - name: find-CCSPlayer_ItemServices_GiveDefaultItems
         expected_output:
           - CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml
@@ -5089,8 +5102,9 @@ modules:
       - name: find-GetCSWeaponDataFromKey-noinline
         optional_output:
           - GetCSWeaponDataFromKey.{platform}.yaml
-        prerequisite:
-          - find-CSmokeGrenadeProjectile_GetCSWeaponData
+        optional_input:
+          - CSmokeGrenadeProjectile_GetCSWeaponData.{platform}.yaml
+        platform: linux
       - name: find-GetCSWeaponDataFromKey-inlined
         expected_output:
           - GetCSWeaponDataFromKey.{platform}.yaml
@@ -5251,8 +5265,9 @@ modules:
           - CBaseEntity_NetworkStateChanged.{platform}.yaml
         expected_input:
           - CBaseEntity_vtable.{platform}.yaml
-        prerequisite:
-          - find-CFlashbangProjectile_Spawn_NetworkStateChangedNotify
+        optional_input:
+          - CFlashbangProjectile_Spawn_NetworkStateChangedNotify.{platform}.yaml
+        platform: windows
       - name: find-CBaseEntity_NetworkStateChanged-inlined
         expected_output:
           - CBaseEntity_NetworkStateChanged.{platform}.yaml
@@ -5949,6 +5964,8 @@ modules:
       - name: find-CPointTeleportAPI_TeleportEntityInternal
         expected_output:
           - CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml
+        expected_input:
+          - CPointTeleport_Activate.{platform}.yaml
       - name: find-CBaseEntity_Teleport
         expected_output:
           - CBaseEntity_Teleport.{platform}.yaml
@@ -6283,10 +6300,10 @@ modules:
       - name: find-CEntitySystem_m_EntityMaterialAttributes
         optional_output:
           - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
+        optional_input:
+          - CEntitySystem_InitEntityMaterialAttributes.{platform}.yaml
         skip_if_exists:
           - CEntitySystem_m_EntityMaterialAttributes.{platform}.yaml
-        prerequisite:
-          - find-CEntitySystem_InitEntityMaterialAttributes
         platform: windows
       - name: find-CEntitySystem_Init-decompiles
         expected_output:
@@ -10083,6 +10100,8 @@ modules:
           - ILoopModeFactory_GetLoopModeType.{platform}.yaml
           - ILoopModeFactory_Shutdown.{platform}.yaml
       - name: find-CEngineServiceMgr_UnregisterLoopMode-noinline
+        optional_input:
+          - UnregisterLoopModeFactory.{platform}.yaml
         platform: linux
         optional_output:
           - CLoopTypeBase_GetImplType.{platform}.yaml
@@ -10090,8 +10109,6 @@ modules:
           - ILoopModeFactory_Shutdown.{platform}.yaml
         expected_input:
           - CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml
-        prerequisite:
-          - find-UnregisterLoopModeFactory
       - name: find-CEngineServiceMgr_UnregisterLoopMode-inlined
         expected_output:
           - CLoopTypeBase_GetImplType.{platform}.yaml

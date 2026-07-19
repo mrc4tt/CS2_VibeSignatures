@@ -15,9 +15,10 @@ from release_workflow_lib.hashing import (
 GAMEVER_RE = re.compile(r"^[0-9]{4,10}[a-z]?$")
 SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 BUILD_ID_RE = re.compile(r"^[0-9]+-[0-9]+$")
-BRANCH_RE = re.compile(r"^gamesymbols/(?P<gamever>[0-9]{4,10}[a-z]?)/build-(?P<build_id>[0-9]+-[0-9]+)$")
+BRANCH_RE = re.compile(r"^gamesymbols/build/(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
 ALLOWED_REPOSITORIES = {"HLND2T/CS2_VibeSignatures", "hzqst/CS2_VibeSignatures"}
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
+CONTRACT_SCHEMA_VERSION = 2
 LEGACY_SCHEMA_VERSION = 1
 TRACKED_FIELDS = {
     "schema_version",
@@ -32,9 +33,11 @@ TRACKED_FIELDS = {
     "workflow_run_url",
     "analysis_config_path",
     "analysis_config_sha256",
+    "analysis_config_contract_digest_version",
     "analysis_config_contract_sha256",
 }
-LEGACY_TRACKED_FIELDS = TRACKED_FIELDS - {
+CONTRACT_TRACKED_FIELDS = TRACKED_FIELDS - {"analysis_config_contract_digest_version"}
+LEGACY_TRACKED_FIELDS = CONTRACT_TRACKED_FIELDS - {
     "analysis_config_path",
     "analysis_config_sha256",
     "analysis_config_contract_sha256",
@@ -59,6 +62,19 @@ def require_mode(value: str) -> str:
     return value
 
 
+def require_build_id(value: str) -> str:
+    value = str(value)
+    if not BUILD_ID_RE.fullmatch(value):
+        raise ReleaseWorkflowError(f"invalid BUILD_ID: {value!r}")
+    return value
+
+
+def format_output_branch(gamever: str, build_id: str) -> str:
+    gamever = require_gamever(gamever)
+    build_id = require_build_id(build_id)
+    return f"gamesymbols/build/{gamever}/{build_id}"
+
+
 def parse_output_branch(branch: str) -> tuple[str, str]:
     match = BRANCH_RE.fullmatch(branch)
     if not match:
@@ -78,13 +94,13 @@ def build_tracked_manifest(
     workflow_run_url: str,
     analysis_config_path: str | None = None,
     analysis_config_sha256: str | None = None,
+    analysis_config_contract_digest_version: int | None = None,
     analysis_config_contract_sha256: str | None = None,
 ) -> dict:
     require_gamever(gamever)
     require_mode(mode)
     require_sha(source_sha, "SOURCE_SHA")
-    if not BUILD_ID_RE.fullmatch(build_id):
-        raise ReleaseWorkflowError(f"invalid BUILD_ID: {build_id!r}")
+    build_id = require_build_id(build_id)
     for label, value in (
         ("candidate_sha256", candidate_sha256),
         ("bin_manifest_sha256", bin_manifest_sha256),
@@ -94,7 +110,16 @@ def build_tracked_manifest(
             raise ReleaseWorkflowError(f"invalid {label}")
     if not workflow_run_url.startswith("https://github.com/"):
         raise ReleaseWorkflowError("workflow_run_url must be a GitHub Actions URL")
-    legacy = analysis_config_path is None and analysis_config_sha256 is None and analysis_config_contract_sha256 is None
+    provenance_values = (
+        analysis_config_path,
+        analysis_config_sha256,
+        analysis_config_contract_sha256,
+    )
+    legacy = all(value is None for value in provenance_values)
+    if any(value is None for value in provenance_values) and not legacy:
+        raise ReleaseWorkflowError("analysis config provenance fields must be provided together")
+    if legacy and analysis_config_contract_digest_version is not None:
+        raise ReleaseWorkflowError("legacy manifest cannot record a config digest version")
     if not legacy:
         if analysis_config_path != f"configs/{gamever}.yaml":
             raise ReleaseWorkflowError("analysis_config_path must be the canonical versioned path")
@@ -107,8 +132,15 @@ def build_tracked_manifest(
         contract_hex = str(analysis_config_contract_sha256 or "").removeprefix("sha256:")
         if len(contract_hex) != HEX_SHA256_LENGTH or any(char not in "0123456789abcdef" for char in contract_hex):
             raise ReleaseWorkflowError("invalid analysis_config_contract_sha256")
+        if analysis_config_contract_digest_version not in {None, 1, 2}:
+            raise ReleaseWorkflowError("invalid analysis_config_contract_digest_version")
+    schema_version = LEGACY_SCHEMA_VERSION
+    if not legacy:
+        schema_version = (
+            SCHEMA_VERSION if analysis_config_contract_digest_version is not None else CONTRACT_SCHEMA_VERSION
+        )
     manifest = {
-        "schema_version": LEGACY_SCHEMA_VERSION if legacy else SCHEMA_VERSION,
+        "schema_version": schema_version,
         "gamever": gamever,
         "release_tag": gamever,
         "mode": mode,
@@ -127,12 +159,21 @@ def build_tracked_manifest(
                 "analysis_config_contract_sha256": analysis_config_contract_sha256,
             }
         )
+        if analysis_config_contract_digest_version is not None:
+            manifest["analysis_config_contract_digest_version"] = analysis_config_contract_digest_version
     return manifest
 
 
 def validate_tracked_manifest(manifest: dict) -> dict:
     schema_version = manifest.get("schema_version")
-    fields = TRACKED_FIELDS if schema_version == SCHEMA_VERSION else LEGACY_TRACKED_FIELDS
+    fields_by_schema = {
+        LEGACY_SCHEMA_VERSION: LEGACY_TRACKED_FIELDS,
+        CONTRACT_SCHEMA_VERSION: CONTRACT_TRACKED_FIELDS,
+        SCHEMA_VERSION: TRACKED_FIELDS,
+    }
+    fields = fields_by_schema.get(schema_version)
+    if fields is None:
+        raise ReleaseWorkflowError(f"unsupported tracked release manifest schema: {schema_version!r}")
     if set(manifest) != fields:
         raise ReleaseWorkflowError("tracked release manifest has unexpected or missing fields")
     expected = build_tracked_manifest(
@@ -146,11 +187,26 @@ def validate_tracked_manifest(manifest: dict) -> dict:
         workflow_run_url=manifest["workflow_run_url"],
         analysis_config_path=manifest.get("analysis_config_path"),
         analysis_config_sha256=manifest.get("analysis_config_sha256"),
+        analysis_config_contract_digest_version=manifest.get("analysis_config_contract_digest_version"),
         analysis_config_contract_sha256=manifest.get("analysis_config_contract_sha256"),
     )
     if manifest != expected:
         raise ReleaseWorkflowError("tracked release manifest is not canonical")
     return manifest
+
+
+def manifest_config_digest_version(manifest: dict, snapshot_document: dict) -> int:
+    from gamesymbol_snapshot_lib.codec import snapshot_config_digest_version
+
+    snapshot_version = snapshot_config_digest_version(snapshot_document)
+    manifest_version = manifest.get("analysis_config_contract_digest_version")
+    if manifest_version is None:
+        if snapshot_version != 1:
+            raise ReleaseWorkflowError("release manifest lacks digest version for a non-legacy snapshot")
+        return 1
+    if manifest_version != snapshot_version:
+        raise ReleaseWorkflowError("release manifest config digest version does not match snapshot")
+    return manifest_version
 
 
 def load_tracked_manifest(path: Path) -> dict:
@@ -201,6 +257,7 @@ def write_release_metadata(
     for field in (
         "analysis_config_path",
         "analysis_config_sha256",
+        "analysis_config_contract_digest_version",
         "analysis_config_contract_sha256",
     ):
         if field in manifest:

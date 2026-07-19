@@ -7,6 +7,10 @@
 后续计划 `candidate-snapshot-as-symbol-store.md` 已将本计划的阶段性 downstream source 与 publication timing
 升级为 candidate-first 架构。本文保留前置设计依据；下文标注 superseded 的条款以该后续计划和当前实现为准。
 
+后续计划 `snapshot_version.md` 进一步 supersede 本文中“任何 base snapshot contract mismatch 都立即失败”的
+条款：普通 PR 的 base snapshot 是可丢弃缓存，trust probe 判定不可信时必须 warning + clean bootstrap；HEAD
+snapshot、actual candidate 与 publication boundary 继续严格失败。
+
 ### Implementation Progress (2026-07-15)
 
 已完成：

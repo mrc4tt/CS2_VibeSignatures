@@ -16,7 +16,13 @@ from release_workflow_lib.hashing import (
     reject_reparse_points,
     validate_output_paths,
 )
-from release_workflow_lib.manifests import load_tracked_manifest
+from release_workflow_lib.manifests import (
+    build_tracked_manifest,
+    format_output_branch,
+    load_tracked_manifest,
+    manifest_config_digest_version,
+    parse_output_branch,
+)
 from release_workflow_lib.promotion import finalize_promotion, promote_bin
 from release_workflow_lib.staging import (
     finalize_stage,
@@ -25,6 +31,10 @@ from release_workflow_lib.staging import (
     write_pr_index,
 )
 from release_workflow_lib.validation import prepare_oldgamever_baseline
+from tests.release_branch_protocol import (
+    ACCEPTED_OUTPUT_BRANCHES,
+    REJECTED_OUTPUT_BRANCHES,
+)
 
 
 class ReleaseFixture:
@@ -45,7 +55,8 @@ class ReleaseFixture:
         (self.repo / "dist" / "nested").mkdir(parents=True)
         self.bin_source.mkdir(parents=True)
         self.analysis_config.write_bytes(b"modules: []\n")
-        snapshot = canonical_snapshot_bytes(build_snapshot_document(self.gamever, f"sha256:{'a' * 64}", {}))
+        contract = load_contract(self.analysis_config, self.gamever, self.repo / "bin")
+        snapshot = canonical_snapshot_bytes(build_snapshot_document(self.gamever, contract.config_sha256, {}))
         (self.repo / "gamesymbols" / f"{self.gamever}.yaml").write_bytes(snapshot)
         self.candidate.write_bytes(snapshot)
         (self.repo / "dist" / "nested" / "gamedata.txt").write_text("gamedata\n", encoding="utf-8")
@@ -58,14 +69,14 @@ class ReleaseFixture:
     def git(self, *arguments: str) -> None:
         subprocess.run(["git", *arguments], cwd=self.repo, check=True, capture_output=True)
 
-    def stage(self) -> dict:
+    def stage(self, *, output_branch: str | None = None) -> dict:
         return stage_build(
             repo_root=self.repo,
             staging_root=self.staging,
             bin_source=self.bin_source,
             candidate=self.candidate,
             repository="HLND2T/CS2_VibeSignatures",
-            output_branch=f"gamesymbols/{self.gamever}/build-{self.build_id}",
+            output_branch=output_branch or format_output_branch(self.gamever, self.build_id),
             gamever=self.gamever,
             mode="new",
             build_id=self.build_id,
@@ -93,6 +104,41 @@ class ReleaseFixture:
 
 
 class TestReleaseWorkflow(unittest.TestCase):
+    def test_output_branch_parser_and_formatter_use_the_canonical_protocol(self) -> None:
+        for branch in ACCEPTED_OUTPUT_BRANCHES:
+            with self.subTest(branch=branch):
+                gamever, build_id = parse_output_branch(branch)
+                self.assertEqual(branch, format_output_branch(gamever, build_id))
+
+        for branch in REJECTED_OUTPUT_BRANCHES:
+            with self.subTest(branch=branch), self.assertRaises(ReleaseWorkflowError):
+                parse_output_branch(branch)
+
+        self.assertEqual(
+            ACCEPTED_OUTPUT_BRANCHES[0],
+            format_output_branch("14168", "29683665467-1"),
+        )
+        with self.assertRaises(ReleaseWorkflowError):
+            format_output_branch("not-a-version", "1-2")
+        with self.assertRaises(ReleaseWorkflowError):
+            format_output_branch("14168", "29683665467")
+
+    def _manifest_with_contract(self, *, digest_version=None) -> dict:
+        return build_tracked_manifest(
+            gamever="14170",
+            mode="new",
+            build_id="123456789-1",
+            source_sha="1" * 40,
+            candidate_sha256="a" * 64,
+            bin_manifest_sha256="b" * 64,
+            tracked_output_manifest_sha256="c" * 64,
+            workflow_run_url="https://github.com/HLND2T/CS2_VibeSignatures/actions/runs/1",
+            analysis_config_path="configs/14170.yaml",
+            analysis_config_sha256="d" * 64,
+            analysis_config_contract_digest_version=digest_version,
+            analysis_config_contract_sha256="sha256:" + "e" * 64,
+        )
+
     def _write_oldgamever_fixture(self, root: Path, *, major_update: bool = False) -> Path:
         repo = root / "repo"
         config = repo / "configs" / "14168.yaml"
@@ -166,10 +212,44 @@ class TestReleaseWorkflow(unittest.TestCase):
                 hashlib.sha256(fixture.analysis_config.read_bytes()).hexdigest(),
                 tracked["analysis_config_sha256"],
             )
-            self.assertEqual("sha256:" + "a" * 64, tracked["analysis_config_contract_sha256"])
+            self.assertEqual(3, tracked["schema_version"])
+            self.assertEqual(2, tracked["analysis_config_contract_digest_version"])
+            self.assertEqual(
+                load_contract(fixture.analysis_config, fixture.gamever, fixture.repo / "bin").config_sha256,
+                tracked["analysis_config_contract_sha256"],
+            )
             self.assertEqual(canonical_json_bytes(tracked), tracked_path.read_bytes())
             self.assertNotIn("timestamp", tracked)
             self.assertNotIn(str(fixture.root), tracked_path.read_text(encoding="utf-8"))
+
+    def test_legacy_contract_manifest_is_v1_only_for_schema_1_snapshot(self) -> None:
+        legacy_manifest = self._manifest_with_contract()
+        schema_1 = build_snapshot_document(
+            "14170",
+            "sha256:" + "e" * 64,
+            {},
+            schema_version=1,
+            config_digest_version=1,
+        )
+        schema_2 = build_snapshot_document("14170", "sha256:" + "e" * 64, {})
+
+        self.assertEqual(2, legacy_manifest["schema_version"])
+        self.assertEqual(1, manifest_config_digest_version(legacy_manifest, schema_1))
+        with self.assertRaisesRegex(ReleaseWorkflowError, "lacks digest version"):
+            manifest_config_digest_version(legacy_manifest, schema_2)
+
+    def test_manifest_and_snapshot_digest_version_mismatch_is_rejected(self) -> None:
+        manifest = self._manifest_with_contract(digest_version=2)
+        schema_1 = build_snapshot_document(
+            "14170",
+            "sha256:" + "e" * 64,
+            {},
+            schema_version=1,
+            config_digest_version=1,
+        )
+
+        with self.assertRaisesRegex(ReleaseWorkflowError, "does not match snapshot"):
+            manifest_config_digest_version(manifest, schema_1)
 
     def test_finalize_binds_ready_state_and_pr_index_to_head_sha(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

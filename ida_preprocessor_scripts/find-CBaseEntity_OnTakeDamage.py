@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBaseEntity_OnTakeDamage",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBaseEntity_TakeDamageOld.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBaseEntity_OnTakeDamage",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBaseEntity_TakeDamageOld.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CBaseEntity_TakeDamageOld.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

@@ -17,17 +17,28 @@ FUNC_VTABLE_RELATIONS = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IGameTypes_CreateWorkshopMapGroup",
-        "prompt/call_llm_decompile.md",
-        "references/server/CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml",
-    ),
-    (
-        "g_pGameTypes",
-        "prompt/call_llm_decompile.md",
-        "references/server/CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameTypes_CreateWorkshopMapGroup",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "g_pGameTypes",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+        "dependency_policy": {
+            "CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

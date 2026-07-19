@@ -1000,6 +1000,9 @@ class TestRunSkillMcpListPreflight(unittest.TestCase):
         self.assertTrue(
             agent_runner._mcp_list_contains_server("\x1b[34m•\x1b[39m  ✗ ida-pro-mcp \x1b[90mfailed\x1b[39m\n")
         )
+        self.assertTrue(
+            agent_runner._mcp_list_contains_server("\x1b[34m●\x1b[39m  ✓ ida-pro-mcp \x1b[90mconnected\x1b[39m\n")
+        )
         self.assertFalse(
             agent_runner._mcp_list_contains_server("\x1b[34m•\x1b[39m  ✗ not-ida-pro-mcp \x1b[90mfailed\x1b[39m\n")
         )

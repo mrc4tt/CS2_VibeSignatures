@@ -8,11 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CLoopTypeBase_LoopTypeShutdown",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CEngineServiceMgr_Shutdown.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CLoopTypeBase_LoopTypeShutdown",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CEngineServiceMgr_Shutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEngineServiceMgr_Shutdown.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

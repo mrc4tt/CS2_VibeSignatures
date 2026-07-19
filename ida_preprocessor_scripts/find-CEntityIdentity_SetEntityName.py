@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntityIdentity_SetEntityName",
-        "prompt/call_llm_decompile.md",
-        "references/server/ScriptBinding_Entity_SetEntityName.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityIdentity_SetEntityName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/ScriptBinding_Entity_SetEntityName.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "ScriptBinding_Entity_SetEntityName.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

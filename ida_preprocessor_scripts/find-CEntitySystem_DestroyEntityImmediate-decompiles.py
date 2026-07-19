@@ -21,37 +21,72 @@ FUNC_VTABLE_RELATIONS = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_OnRemoveEntityFromDatabase",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_DoDestructEntity",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_UpdateOnRemove",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_nSuppressDestroyImmediateCount",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_nSuppressAutoDeletionExecutionCount",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_bEnableAutoDeletionExecution",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_OnRemoveEntityFromDatabase",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_DoDestructEntity",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_UpdateOnRemove",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_nSuppressDestroyImmediateCount",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_nSuppressAutoDeletionExecutionCount",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_bEnableAutoDeletionExecution",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_DestroyEntityImmediate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_DestroyEntityImmediate.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

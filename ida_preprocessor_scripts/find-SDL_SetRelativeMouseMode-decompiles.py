@@ -13,22 +13,39 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "SDL_Mouse_relative_mode",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_SetRelativeMouseMode.{platform}.yaml",
-    ),
-    (
-        "SDL_Mouse_SetRelativeMouseMode",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_SetRelativeMouseMode.{platform}.yaml",
-    ),
-    (
-        "SDL_PerformWarpMouseInWindow",
-        "prompt/call_llm_decompile.md",
-        "references/SDL3/SDL_SetRelativeMouseMode.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "SDL_Mouse_relative_mode",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_SetRelativeMouseMode.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "SDL_SetRelativeMouseMode.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "SDL_Mouse_SetRelativeMouseMode",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_SetRelativeMouseMode.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "SDL_SetRelativeMouseMode.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "SDL_PerformWarpMouseInWindow",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/SDL3/SDL_SetRelativeMouseMode.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "SDL_SetRelativeMouseMode.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

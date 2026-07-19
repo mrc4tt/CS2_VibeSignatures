@@ -8,12 +8,17 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_m_vSpawnOriginOffset",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntityKeyValuesAllocator_GetTempBuffer.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_m_vSpawnOriginOffset",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntityKeyValuesAllocator_GetTempBuffer.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntityKeyValuesAllocator_GetTempBuffer.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

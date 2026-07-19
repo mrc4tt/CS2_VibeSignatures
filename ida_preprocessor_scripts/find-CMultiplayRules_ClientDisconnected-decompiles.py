@@ -10,22 +10,39 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "UTIL_PlayerSlotToPlayerController",
-        "prompt/call_llm_decompile.md",
-        "references/server/CMultiplayRules_ClientDisconnected.{platform}.yaml",
-    ),
-    (
-        "FireTargets",
-        "prompt/call_llm_decompile.md",
-        "references/server/CMultiplayRules_ClientDisconnected.{platform}.yaml",
-    ),
-    (
-        "CCSPlayer_ItemServices_RemoveWeapons",
-        "prompt/call_llm_decompile.md",
-        "references/server/CMultiplayRules_ClientDisconnected.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "UTIL_PlayerSlotToPlayerController",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CMultiplayRules_ClientDisconnected.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CMultiplayRules_ClientDisconnected.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "FireTargets",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CMultiplayRules_ClientDisconnected.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CMultiplayRules_ClientDisconnected.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CCSPlayer_ItemServices_RemoveWeapons",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CMultiplayRules_ClientDisconnected.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CMultiplayRules_ClientDisconnected.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

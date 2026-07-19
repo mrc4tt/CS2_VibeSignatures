@@ -31,6 +31,8 @@ class TestTriggerReleaseBuild(unittest.TestCase):
         self.assertIn("mode=republish", skill)
         self.assertIn("allow_implicit_invocation: false", agent)
         self.assertIn("publish or republish", agent)
+        self.assertIn("--allow-legacy-bootstrap", skill)
+        self.assertIn("Do not infer legacy bootstrap", skill)
 
     def test_latest_uses_last_download_entry(self) -> None:
         self.assertEqual("14169", trigger.select_version("latest", ["14168", "14168b", "14169"]))
@@ -100,10 +102,25 @@ class TestTriggerReleaseBuild(unittest.TestCase):
                 trigger.resolve_mode(Path("."), "HLND2T/CS2_VibeSignatures", "14170")
 
     def test_open_output_pr_blocks_dispatch(self) -> None:
-        pulls = json.dumps([{"headRefName": "gamesymbols/14170/build-1-1", "url": "https://pr"}])
+        pulls = json.dumps([{"headRefName": "gamesymbols/build/14170/1-1", "url": "https://pr"}])
         with patch.object(trigger, "run_command", return_value=completed([], stdout=pulls)):
             with self.assertRaisesRegex(trigger.TriggerError, "already open"):
                 trigger.require_no_duplicate(Path("."), "14170")
+
+    def test_legacy_output_pr_blocks_dispatch_with_migration_error(self) -> None:
+        pulls = json.dumps([{"headRefName": "gamesymbols/14170/build-1-1", "url": "https://legacy-pr"}])
+        with patch.object(trigger, "run_command", return_value=completed([], stdout=pulls)):
+            with self.assertRaisesRegex(trigger.TriggerError, "legacy-format.*must be resolved"):
+                trigger.require_no_duplicate(Path("."), "14170")
+
+    def test_unrelated_version_leaf_branch_does_not_block_dispatch(self) -> None:
+        pulls = json.dumps([{"headRefName": "gamesymbols/14170", "url": "https://historical-pr"}])
+        with patch.object(
+            trigger,
+            "run_command",
+            side_effect=[completed([], stdout=pulls), completed([], stdout="[]")],
+        ):
+            self.assertEqual(set(), trigger.require_no_duplicate(Path("."), "14170"))
 
     def test_active_workflow_run_blocks_dispatch(self) -> None:
         responses = [
@@ -153,12 +170,24 @@ class TestTriggerReleaseBuild(unittest.TestCase):
                     f"source_sha={'1' * 40}",
                     "-f",
                     f"mode={mode}",
+                    "-f",
+                    "allow_legacy_bootstrap=false",
                 ],
                 root,
             )
 
         with self.assertRaisesRegex(trigger.TriggerError, "invalid release mode"):
             trigger.dispatch(root, "14170", "1" * 40, "unsafe")
+
+    def test_dispatch_only_allows_explicit_legacy_bootstrap_for_republish(self) -> None:
+        root = Path("repo")
+        with patch.object(trigger, "run_command", return_value=completed([])) as run:
+            trigger.dispatch(root, "14170", "1" * 40, "republish", allow_legacy_bootstrap=True)
+
+        command = run.call_args.args[0]
+        self.assertIn("allow_legacy_bootstrap=true", command)
+        with self.assertRaisesRegex(trigger.TriggerError, "only valid for republish"):
+            trigger.dispatch(root, "14170", "1" * 40, "new", allow_legacy_bootstrap=True)
 
     def test_dispatch_stops_if_origin_main_advanced(self) -> None:
         with patch.object(trigger, "run_command", return_value=completed([], stdout=f"{'2' * 40}\trefs/heads/main\n")):
@@ -202,7 +231,23 @@ class TestTriggerReleaseBuild(unittest.TestCase):
         access.assert_called_once()
         resolve_mode.assert_called_once_with(root, "HLND2T/CS2_VibeSignatures", "14170")
         unchanged.assert_called_once_with(root, "1" * 40)
-        dispatch.assert_called_once_with(root, "14170", "1" * 40, "new")
+        dispatch.assert_called_once_with(root, "14170", "1" * 40, "new", allow_legacy_bootstrap=False)
+
+    def test_execute_rejects_legacy_bootstrap_for_new_release_before_dispatch(self) -> None:
+        root = Path("repo")
+        with (
+            patch.object(trigger, "repository_root", return_value=root),
+            patch.object(trigger, "require_repository", return_value="HLND2T/CS2_VibeSignatures"),
+            patch.object(trigger, "require_github_access"),
+            patch.object(trigger, "resolve_source", return_value=("1" * 40, "subject")),
+            patch.object(trigger, "available_versions", return_value=["14170"]),
+            patch.object(trigger, "resolve_mode", return_value="new"),
+            patch.object(trigger, "dispatch") as dispatch,
+        ):
+            with self.assertRaisesRegex(trigger.TriggerError, "only valid for republish"):
+                trigger.execute("14170", allow_legacy_bootstrap=True)
+
+        dispatch.assert_not_called()
 
     def test_main_reports_selected_mode(self) -> None:
         result = {
@@ -212,10 +257,13 @@ class TestTriggerReleaseBuild(unittest.TestCase):
             "subject": "subject",
             "run_url": "https://run/11",
         }
-        with patch.object(trigger, "execute", return_value=result), patch("builtins.print") as output:
-            self.assertEqual(0, trigger.main(["14170"]))
+        result["allow_legacy_bootstrap"] = True
+        with patch.object(trigger, "execute", return_value=result) as execute, patch("builtins.print") as output:
+            self.assertEqual(0, trigger.main(["14170", "--allow-legacy-bootstrap"]))
 
+        execute.assert_called_once_with("14170", allow_legacy_bootstrap=True)
         output.assert_any_call("Mode: new")
+        output.assert_any_call("Legacy bootstrap: enabled")
 
 
 if __name__ == "__main__":

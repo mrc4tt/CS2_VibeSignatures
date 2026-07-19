@@ -8,14 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    # Virtual call through IGameSystemFactory vtable found by decompiling
-    # CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
-    (
-        "IGameSystemFactory_SetGlobalPtr",
-        "prompt/call_llm_decompile.md",
-        "references/client/CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameSystemFactory_SetGlobalPtr",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

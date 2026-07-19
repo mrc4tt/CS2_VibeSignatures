@@ -37,11 +37,12 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
         output_filter = (
             "!(github.event.pull_request.user.login == 'github-actions[bot]' &&\n"
-            "        startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&\n"
+            "        startsWith(github.event.pull_request.head.ref, 'gamesymbols/build/') &&\n"
             "        startsWith(github.event.pull_request.title, 'chore(gamesymbols): publish '))"
         )
 
         self.assertEqual(2, workflow.count(output_filter))
+        self.assertNotIn("startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&", workflow)
 
     def test_cpp_test_steps_fail_on_run_cpp_tests_nonzero_exit(self) -> None:
         for workflow_path in (
@@ -137,6 +138,43 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         self.assertNotIn("gamesymbol_candidate.py publish", workflow)
         self.assertNotIn('update_gamedata.py -gamever "$env:GAMEVER" -bindir', workflow)
         self.assertNotIn('run_cpp_tests.py -gamever "$env:GAMEVER" -bindir', workflow)
+
+    def test_baseline_probe_controls_incremental_or_shared_bootstrap_paths(self) -> None:
+        workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
+        step_start = workflow.index("- name: Restore deterministic base and invalidate affected outputs")
+        tests_start = workflow.index("- name: Run Python unit tests")
+        step = workflow[step_start:tests_start]
+
+        probe = step.index("gamesymbol_snapshot.py check-contract")
+        restore = step.index("gamesymbol_snapshot.py restore")
+        invalidate = step.index("gamesymbol_pr_validation.py invalidate")
+        self.assertLess(probe, restore)
+        self.assertLess(restore, invalidate)
+        self.assertIn("if ($probeExitCode -eq 0)", step)
+        self.assertIn("elseif ($probeExitCode -eq 3)", step)
+        self.assertIn('throw "Baseline contract probe failed with exit code $probeExitCode', step)
+        self.assertIn('$baselineMode = "trusted-incremental"', step)
+        self.assertIn('$baselineMode = "untrusted-bootstrap"', step)
+        self.assertIn('$baselineMode = "absent-bootstrap"', step)
+        self.assertEqual(3, step.count("Clear-BootstrapYaml"))
+        self.assertIn('"HAS_BASE_SNAPSHOT=false"', step)
+        self.assertIn('if ($baselineMode -eq "trusted-incremental")', step)
+        self.assertIn('elseif ($baselineMode -eq "absent-bootstrap")', step)
+
+    def test_untrusted_baseline_fallback_is_observable_and_yaml_only(self) -> None:
+        workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
+        step_start = workflow.index("- name: Restore deterministic base and invalidate affected outputs")
+        tests_start = workflow.index("- name: Run Python unit tests")
+        step = workflow[step_start:tests_start]
+
+        self.assertIn("::warning title=Baseline snapshot rejected::reason=$baselineReason", step)
+        self.assertIn('"BASELINE_MODE=$baselineMode"', step)
+        self.assertIn('"Baseline mode: $baselineMode"', step)
+        self.assertIn('"Reason: $baselineReason"', step)
+        self.assertIn('"Incremental invalidation:', step)
+        self.assertIn('Get-ChildItem -LiteralPath $gameRoot -Recurse -File -Filter "*.yaml"', step)
+        self.assertIn("Bootstrap cleanup path must not traverse a reparse point", step)
+        self.assertNotIn("Remove-Item -LiteralPath $gameRoot -Recurse", step)
 
     def test_pr_validation_marks_success_only_after_cpp_tests(self) -> None:
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")

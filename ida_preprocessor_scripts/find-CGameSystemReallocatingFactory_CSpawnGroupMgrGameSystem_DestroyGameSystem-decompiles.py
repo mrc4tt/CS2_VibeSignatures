@@ -9,17 +9,28 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IGameSystem_SetGameSystemGlobalPtrs",
-        "prompt/call_llm_decompile.md",
-        "references/client/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.{platform}.yaml",
-    ),
-    (
-        "IGameSystem_vdtor",
-        "prompt/call_llm_decompile.md",
-        "references/client/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameSystem_SetGameSystemGlobalPtrs",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "IGameSystem_vdtor",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

@@ -27,52 +27,105 @@ TARGET_STRUCT_MEMBER_NAMES_WINDOWS = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "INetworkMessages_SetNetworkSerializationContextData",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
-    (
-        "IFlattenedSerializers_CreateFieldChangedEventQueue",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_sEntSystemName",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_eNetworkSerializationMode",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_Symbols",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_pNetworkFieldChangedEventQueue",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_pNetworkFieldScratchData",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_pFieldChangeLimitSpew",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_ComponentUnserializerInfoAllocator",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "INetworkMessages_SetNetworkSerializationContextData",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "IFlattenedSerializers_CreateFieldChangedEventQueue",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_sEntSystemName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_eNetworkSerializationMode",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_Symbols",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_pNetworkFieldChangedEventQueue",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_pNetworkFieldScratchData",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_pFieldChangeLimitSpew",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_ComponentUnserializerInfoAllocator",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [
@@ -189,19 +242,31 @@ GENERATE_YAML_DESIRED_FIELDS = [
 ]
 
 LLM_DECOMPILE_LINUX = [
-    (
-        "CEntitySystem_ProcessEntityRegistration",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_ProcessEntityRegistration",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
 ]
 
 LLM_DECOMPILE_WINDOWS = [
-    (
-        "CEntitySystem_m_EntityMaterialAttributes",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_Init.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_m_EntityMaterialAttributes",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS_WINDOWS = [

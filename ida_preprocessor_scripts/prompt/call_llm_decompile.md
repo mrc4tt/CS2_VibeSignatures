@@ -10,6 +10,8 @@ These are the target functions you need to reverse-engineering:
 
 What you need to do is to collect all references to "{symbol_name_list}" in the target functions you need to reverse-engineering and output those references as YAML.
 
+Return exactly one YAML mapping. The only permitted top-level keys are `found_vcall`, `found_call`, `found_funcptr`, `found_gv`, and `found_struct_offset`. Never use a requested symbol name as a top-level key. For batched requests, place every result under its result-category list. If no references are found, return all five top-level keys with empty lists. Do not return blank YAML, null, or an empty mapping.
+
 Example:
 
 ```yaml
@@ -25,7 +27,7 @@ found_vcall: # This is for indirect call to virtual function or virtual function
     vfunc_offset: '0x80'
     func_name: INetworkMessages_GetNetworkGroupCount # This must be the true function name we asked to collect, not the sub_XXXXXXXX
 
-found_call: # This is for direct call to non-virtual regular function.
+found_call: # This is for a direct call or direct tail jump to a non-virtual regular function.
 
   - insn_va: '0x180888800'
     insn_disasm: call    sub_180999900
@@ -72,4 +74,14 @@ found_struct_offset: # This is for reference to struct member offset.
     member_name: SetRelativeMouseMode
 ```
 
-If nothing found, output an empty YAML. DO NOT output anything other than the desired YAML. DO NOT collect unrelated symbols.
+If nothing is found, output this complete canonical response:
+
+```yaml
+found_vcall: []
+found_call: []
+found_funcptr: []
+found_gv: []
+found_struct_offset: []
+```
+
+DO NOT output anything other than the desired YAML. DO NOT collect unrelated symbols.

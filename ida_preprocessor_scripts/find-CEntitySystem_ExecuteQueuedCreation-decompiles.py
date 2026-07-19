@@ -9,17 +9,28 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_ExecuteQueuedActivates",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_ExecuteQueuedCreation.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_ExecuteQueuedCreation.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_ExecuteQueuedActivates",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_ExecuteQueuedCreation.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEntitySystem_ExecuteQueuedCreation.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_ExecuteQueuedCreation.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEntitySystem_ExecuteQueuedCreation.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

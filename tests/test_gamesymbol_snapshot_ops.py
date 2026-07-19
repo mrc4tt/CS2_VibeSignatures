@@ -47,6 +47,8 @@ class TestPack(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertTrue(first.endswith(b"\n"))
         self.assertNotIn(b"\r\n", first)
+        self.assertEqual(2, data["schema_version"])
+        self.assertEqual(2, data["config_digest_version"])
         self.assertEqual("14168", data["game_version"])
         self.assertEqual(2, data["file_count"])
         self.assertEqual(

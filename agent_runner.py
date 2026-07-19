@@ -80,7 +80,7 @@ def _mcp_list_contains_server(output, server_name="ida-pro-mcp"):
     if not output:
         return False
     normalized_output = ANSI_ESCAPE_RE.sub("", output)
-    prefix = r"(?:[-*•|│T—]\s*)*(?:[✓✗]\s*)?"
+    prefix = r"(?:[-*•●|│T—]\s*)*(?:[✓✗]\s*)?"
     pattern = re.compile(rf"(?m)^\s*{prefix}{re.escape(server_name)}(?:\s|:|$)")
     return bool(pattern.search(normalized_output))
 

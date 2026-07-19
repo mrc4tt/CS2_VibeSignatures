@@ -12,17 +12,28 @@ TARGET_GLOBALVAR_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CGameRules_FindPickerEntity",
-        "prompt/call_llm_decompile.md",
-        "references/server/FireTarget_CommandHandler.{platform}.yaml",
-    ),
-    (
-        "g_pGameRules",
-        "prompt/call_llm_decompile.md",
-        "references/server/FireTarget_CommandHandler.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CGameRules_FindPickerEntity",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/FireTarget_CommandHandler.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "FireTarget_CommandHandler.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "g_pGameRules",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/FireTarget_CommandHandler.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+        "dependency_policy": {
+            "FireTarget_CommandHandler.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

@@ -13,22 +13,39 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntityInstance_PostDataUpdatePreserve",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PostDataUpdate.{platform}.yaml",
-    ),
-    (
-        "CEntityInstance_PostDataUpdateDelta",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PostDataUpdate.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_flChangeCallbackSpewThreshold",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_PostDataUpdate.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityInstance_PostDataUpdatePreserve",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PostDataUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEntitySystem_PostDataUpdate.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntityInstance_PostDataUpdateDelta",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PostDataUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEntitySystem_PostDataUpdate.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_flChangeCallbackSpewThreshold",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_PostDataUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_PostDataUpdate.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntityInstance_RequiredEdictIndex",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySaveRestoreBlockHandler_SaveInitEntities.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityInstance_RequiredEdictIndex",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySaveRestoreBlockHandler_SaveInitEntities.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEntitySaveRestoreBlockHandler_SaveInitEntities.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

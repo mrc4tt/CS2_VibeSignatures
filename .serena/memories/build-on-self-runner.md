@@ -26,7 +26,7 @@
    `-oldgamever none` 仅用于 `major_update: true`。
 5. validated candidate 发布到工作树后，`stage-build` 创建 tracked manifest 和 pending bin；output commit 后绑定 PR head SHA、
    写 READY，PR 创建后写 `pr-index/<PR>.json`。
-6. output branch 为 `gamesymbols/<GAMEVER>/build-<RUN_ID>-<RUN_ATTEMPT>`，从不 force-push。
+6. output branch 为 `gamesymbols/build/<GAMEVER>/<RUN_ID>-<RUN_ATTEMPT>`，从不 force-push。
 7. promotion 要求 merge commit first parent 等于 `SOURCE_SHA`、second parent 等于 indexed PR head；默认分支若前进则拒绝。
    PR check 和 promotion 都从 PR base 单独 checkout trusted helper，避免执行待校验 merge 中可能被替换的授权代码。
 8. accepted bin 先复制到 sibling incoming 并复核 inventory，再在 per-version lock 下 swap；旧目录保留到 Release assets
@@ -56,7 +56,17 @@
 - `tests/test_trigger_release_build.py`：repository/auth/version/tag/Release/duplicate/dispatch/run URL。
 - 完成门：全仓 unittest、formatter、Ruff、YAML parse、actionlint 与 CLI non-publishing smoke。
 
+## Explicit Legacy Bootstrap
+
+- `invalidate-republish` 默认仍要求 accepted `release-manifests/<GAMEVER>.json`；缺失时继续保守删除同版本 YAML。
+- 只有 trigger skill 在用户明确要求“无 accepted manifest 时使用 tracked snapshot”后，才传
+  `--allow-legacy-bootstrap` / `allow_legacy_bootstrap=true`；普通 publish、republish、retry 或 same-version 请求不得推断启用。
+- legacy 路径只允许 `workflow_dispatch + mode=republish`，`repository_dispatch` 被 preflight 拒绝。
+- legacy snapshot 从 immutable `SOURCE_SHA` 读取；其最后发布 commit 必须是 `SOURCE_SHA` 祖先，并使用该 commit 的历史
+  versioned config（允许 legacy root config）验证 canonical snapshot contract，再恢复并执行 source/config-aware invalidation。
+- 该开关提供显式 opt-in，而非可证明的“由 skill 发起”身份认证；GitHub workflow 无法区分同权限维护者手工构造的等价 dispatch。
+
 ## Callers
 
 - `repository_dispatch.types: [build-on-self-runner]`
-- `workflow_dispatch(gamever, source_sha, mode)`，通常仅由 trigger SKILL 调用
+- `workflow_dispatch(gamever, source_sha, mode, allow_legacy_bootstrap=false)`，通常仅由 trigger SKILL 调用

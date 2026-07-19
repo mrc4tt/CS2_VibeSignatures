@@ -124,6 +124,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Target platform; when omitted, infer it from the current IDA binary path",
     )
     parser.add_argument("-func_name", required=True, help="Function name (required)")
+    parser.add_argument(
+        "-output_filename",
+        default=None,
+        help="Custom output file name; defaults to <func_name>.<platform>.yaml",
+    )
     parser.add_argument("-mcp_host", default="127.0.0.1", help="MCP host")
     parser.add_argument("-mcp_port", type=int, default=13337, help="MCP port")
     parser.add_argument("-mcp_database", default=None, help="Explicit active MCP database session id")
@@ -208,8 +213,22 @@ def build_reference_output_path(
     module: str,
     func_name: str,
     platform: str,
+    output_filename: str | None = None,
 ) -> Path:
-    return Path(repo_root) / "ida_preprocessor_scripts" / "references" / module / f"{func_name}.{platform}.yaml"
+    if output_filename is None:
+        filename = f"{func_name}.{platform}.yaml"
+    else:
+        filename = _normalize_non_empty_text(output_filename)
+        if filename is None:
+            raise ReferenceGenerationError("-output_filename must be non-empty")
+
+    if "/" in filename or "\\" in filename or Path(filename).name != filename:
+        raise ReferenceGenerationError("-output_filename must be a file name, not a path")
+
+    if Path(filename).suffix.lower() != ".yaml":
+        raise ReferenceGenerationError("-output_filename must end with .yaml")
+
+    return Path(repo_root) / "ida_preprocessor_scripts" / "references" / module / filename
 
 
 def build_existing_yaml_path(
@@ -811,6 +830,7 @@ async def run_reference_generation(
             resolved_target["module"],
             args.func_name,
             resolved_target["platform"],
+            args.output_filename,
         )
         return await export_reference_yaml_via_mcp(
             session,

@@ -7,7 +7,7 @@ import yaml
 from analysis_config import AnalysisConfigError, analysis_config_repo_path, read_analysis_config_at_revision
 from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotError
-from gamesymbol_snapshot_lib.operations import load_snapshot_for_contract, restore_snapshot
+from gamesymbol_snapshot_lib.operations import load_snapshot_context, restore_snapshot
 from gamesymbol_snapshot_lib.paths import ensure_real_tree, iter_yaml_paths, path_from_key
 from gamesymbol_snapshot_lib.pr_validation import build_invalidation_plan
 from release_workflow_lib.errors import ReleaseWorkflowError
@@ -15,6 +15,7 @@ from release_workflow_lib.manifests import (
     ALLOWED_REPOSITORIES,
     GAMEVER_RE,
     load_tracked_manifest,
+    manifest_config_digest_version,
     require_gamever,
     require_mode,
     require_sha,
@@ -64,9 +65,30 @@ def validate_build_input(*, repository: str, gamever: str, source_sha: str, mode
         raise ReleaseWorkflowError(f"mode=republish requires tag {gamever} to exist")
 
 
-def _changed_files(base_sha: str, source_sha: str) -> list[str]:
-    output = git_output(["diff", "--name-only", base_sha, source_sha, "--"])
+def _changed_files(repo_root: Path, base_sha: str, source_sha: str) -> list[str]:
+    output = git_output(["-C", str(repo_root), "diff", "--name-only", base_sha, source_sha, "--"])
     return [line for line in output.splitlines() if line]
+
+
+def _require_ancestor(repo_root: Path, base_sha: str, source_sha: str, label: str) -> None:
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "merge-base", "--is-ancestor", base_sha, source_sha],
+        check=False,
+    )
+    if result.returncode != 0:
+        raise ReleaseWorkflowError(f"{label} is not an ancestor of the rebuild SOURCE_SHA")
+
+
+def _git_blob(repo_root: Path, revision: str, repository_path: str) -> bytes:
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "show", f"{revision}:{repository_path}"],
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.decode(errors="replace").strip()
+        raise ReleaseWorkflowError(stderr or f"unable to read {repository_path} at {revision}")
+    return result.stdout
 
 
 def _gamever_key(gamever: str) -> tuple[int, int]:
@@ -129,26 +151,96 @@ def prepare_oldgamever_baseline(*, repo_root: str | Path, gamever: str, bindir: 
     }
 
 
-def invalidate_republish(*, repo_root: Path, gamever: str, source_sha: str, bindir: Path) -> int:
-    repo_root = Path(repo_root)
-    gamever = require_gamever(gamever)
-    source_sha = require_sha(source_sha, "SOURCE_SHA")
-    manifest_path = repo_root / "release-manifests" / f"{gamever}.json"
-    if not manifest_path.is_file():
-        game_root = Path(bindir) / gamever
-        ensure_real_tree(Path(bindir), game_root)
-        paths = list(iter_yaml_paths(game_root))
-        for path in paths:
-            path.unlink()
-        print(f"No accepted release manifest exists; conservative baseline invalidated {len(paths)} YAML file(s)")
-        return len(paths)
+def _invalidate_yaml_baseline(bindir: Path, gamever: str) -> int:
+    game_root = bindir / gamever
+    ensure_real_tree(bindir, game_root)
+    paths = list(iter_yaml_paths(game_root))
+    for path in paths:
+        path.unlink()
+    print(f"No accepted release manifest exists; conservative baseline invalidated {len(paths)} YAML file(s)")
+    return len(paths)
+
+
+def _delete_planned_outputs(plan, game_root: Path) -> int:
+    ensure_real_tree(game_root.parent, game_root)
+    deleted = 0
+    for key in sorted(plan.paths):
+        target = path_from_key(game_root, key)
+        if target.is_file():
+            target.unlink()
+            deleted += 1
+    for reason in plan.reasons:
+        print(reason)
+    print(f"Invalidated {len(plan.paths)} affected output(s); deleted {deleted} YAML file(s)")
+    return deleted
+
+
+def _legacy_snapshot_commit(repo_root: Path, source_sha: str, snapshot_repo_path: str) -> str:
+    try:
+        commit = git_output(["-C", str(repo_root), "log", "-1", "--format=%H", source_sha, "--", snapshot_repo_path])
+    except ReleaseWorkflowError as exc:
+        raise ReleaseWorkflowError(f"legacy bootstrap snapshot is missing: {snapshot_repo_path}") from exc
+    if not commit:
+        raise ReleaseWorkflowError(f"legacy bootstrap snapshot is missing: {snapshot_repo_path}")
+    return require_sha(commit, "legacy snapshot publication SHA")
+
+
+def _invalidate_from_legacy_snapshot(repo_root: Path, gamever: str, source_sha: str, bindir: Path) -> int:
+    snapshot_repo_path = f"gamesymbols/{gamever}.yaml"
+    base_sha = _legacy_snapshot_commit(repo_root, source_sha, snapshot_repo_path)
+    _require_ancestor(repo_root, base_sha, source_sha, "legacy snapshot publication SHA")
+    with tempfile.TemporaryDirectory(prefix="release-legacy-base-") as temp_dir:
+        base_config = Path(temp_dir) / "base.yaml"
+        head_config = Path(temp_dir) / "head.yaml"
+        snapshot = Path(temp_dir) / f"{gamever}.yaml"
+        try:
+            base_history = read_analysis_config_at_revision(
+                base_sha,
+                gamever,
+                allow_legacy_root=True,
+                repo_root=repo_root,
+            )
+            head_history = read_analysis_config_at_revision(
+                source_sha,
+                gamever,
+                allow_legacy_root=False,
+                repo_root=repo_root,
+            )
+        except AnalysisConfigError as exc:
+            raise ReleaseWorkflowError(str(exc)) from exc
+        base_config.write_bytes(base_history.data)
+        head_config.write_bytes(head_history.data)
+        snapshot.write_bytes(_git_blob(repo_root, source_sha, snapshot_repo_path))
+        try:
+            base_context = load_snapshot_context(snapshot, base_config, gamever, bindir)
+            restore_snapshot(gamever, bindir, base_config, snapshot, replace=True)
+        except (SnapshotError, OSError, UnicodeError) as exc:
+            raise ReleaseWorkflowError(f"trusted legacy bootstrap snapshot was rejected: {exc}") from exc
+        head_contract = load_contract(head_config, gamever, bindir)
+        plan = build_invalidation_plan(
+            base_context.contract,
+            head_contract,
+            base_context.document,
+            base_context.document,
+            _changed_files(repo_root, base_sha, source_sha),
+            repo_root,
+        )
+    print(f"WARNING: explicitly authorized legacy bootstrap from {snapshot_repo_path} at {base_sha}")
+    return _delete_planned_outputs(plan, head_contract.game_root)
+
+
+def _invalidate_from_accepted_manifest(
+    repo_root: Path,
+    gamever: str,
+    source_sha: str,
+    bindir: Path,
+    manifest_path: Path,
+) -> int:
     manifest = load_tracked_manifest(manifest_path)
     base_sha = require_sha(manifest["source_sha"], "previous SOURCE_SHA")
     if base_sha == source_sha:
         raise ReleaseWorkflowError("republish SOURCE_SHA must be newer than the accepted generator source")
-    result = subprocess.run(["git", "merge-base", "--is-ancestor", base_sha, source_sha], check=False)
-    if result.returncode != 0:
-        raise ReleaseWorkflowError("previous accepted SOURCE_SHA is not an ancestor of the rebuild SOURCE_SHA")
+    _require_ancestor(repo_root, base_sha, source_sha, "previous accepted SOURCE_SHA")
     snapshot = repo_root / "gamesymbols" / f"{gamever}.yaml"
     with tempfile.TemporaryDirectory(prefix="release-base-") as temp_dir:
         base_config = Path(temp_dir) / "base.yaml"
@@ -170,7 +262,8 @@ def invalidate_republish(*, repo_root: Path, gamever: str, source_sha: str, bind
             raise ReleaseWorkflowError(str(exc)) from exc
         base_config.write_bytes(base_history.data)
         head_config.write_bytes(head_history.data)
-        base_contract = load_contract(base_config, gamever, bindir)
+        base_context = load_snapshot_context(snapshot, base_config, gamever, bindir)
+        base_contract = base_context.contract
         head_contract = load_contract(head_config, gamever, bindir)
         if manifest.get("analysis_config_path") and manifest["analysis_config_path"] != base_history.repository_path:
             raise ReleaseWorkflowError("accepted manifest analysis config path does not match SOURCE_SHA")
@@ -181,24 +274,38 @@ def invalidate_republish(*, repo_root: Path, gamever: str, source_sha: str, bind
             and manifest["analysis_config_contract_sha256"] != base_contract.config_sha256
         ):
             raise ReleaseWorkflowError("accepted manifest analysis config contract does not match snapshot")
-        base_document, _raw = load_snapshot_for_contract(snapshot, base_contract)
+        manifest_digest_version = manifest_config_digest_version(manifest, base_context.document)
+        if manifest_digest_version != base_contract.config_digest_version:
+            raise ReleaseWorkflowError("accepted manifest analysis config digest version does not match snapshot")
         restore_snapshot(gamever, bindir, base_config, snapshot, replace=True)
         plan = build_invalidation_plan(
             base_contract,
             head_contract,
-            base_document,
-            base_document,
-            _changed_files(base_sha, source_sha),
+            base_context.document,
+            base_context.document,
+            _changed_files(repo_root, base_sha, source_sha),
             repo_root,
         )
-    ensure_real_tree(Path(bindir), head_contract.game_root)
-    deleted = 0
-    for key in sorted(plan.paths):
-        target = path_from_key(head_contract.game_root, key)
-        if target.is_file():
-            target.unlink()
-            deleted += 1
-    for reason in plan.reasons:
-        print(reason)
-    print(f"Invalidated {len(plan.paths)} affected output(s); deleted {deleted} YAML file(s)")
-    return deleted
+    return _delete_planned_outputs(plan, head_contract.game_root)
+
+
+def invalidate_republish(
+    *,
+    repo_root: Path,
+    gamever: str,
+    source_sha: str,
+    bindir: Path,
+    allow_legacy_bootstrap: bool = False,
+) -> int:
+    repo_root = Path(repo_root).resolve()
+    gamever = require_gamever(gamever)
+    source_sha = require_sha(source_sha, "SOURCE_SHA")
+    bindir = Path(bindir)
+    if not bindir.is_absolute():
+        bindir = repo_root / bindir
+    manifest_path = repo_root / "release-manifests" / f"{gamever}.json"
+    if manifest_path.is_file():
+        return _invalidate_from_accepted_manifest(repo_root, gamever, source_sha, bindir, manifest_path)
+    if allow_legacy_bootstrap:
+        return _invalidate_from_legacy_snapshot(repo_root, gamever, source_sha, bindir)
+    return _invalidate_yaml_baseline(bindir, gamever)

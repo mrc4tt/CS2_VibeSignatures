@@ -17,57 +17,116 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CNetworkServerService_OnServerAdvanceTick",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
-    ),
-    (
-        "CNetworkServerService_OnServerPollNetworking",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
-    ),
-    (
-        "CNetworkServerService_OnServerProcessNetworking",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
-    ),
-    (
-        "CNetworkServerService_OnServerBeginSimulate",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
-    ),
-    (
-        "CNetworkServerService_OnServerEndSimulate",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
-    ),
-    (
-        "CNetworkServerService_OnServerPostSimulate",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
-    ),
-    (
-        "CNetworkServerService_OnServerPostAdvanceTick",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
-    ),
-    (
-        "CNetworkServerService_OnFrameBoundary",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
-    ),
-    (
-        "CNetworkServerService_OnClientPollNetworking",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
-    ),
-    (
-        "CNetworkServerService_OnSimpleLoopFrameUpdate",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CNetworkServerService_OnServerAdvanceTick",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CNetworkServerService_OnServerPollNetworking",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CNetworkServerService_OnServerProcessNetworking",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CNetworkServerService_OnServerBeginSimulate",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CNetworkServerService_OnServerEndSimulate",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CNetworkServerService_OnServerPostSimulate",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CNetworkServerService_OnServerPostAdvanceTick",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CNetworkServerService_OnFrameBoundary",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CNetworkServerService_OnClientPollNetworking",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CNetworkServerService_OnSimpleLoopFrameUpdate",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkServerService_RegisterEventMapInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CNetworkServerService_RegisterEventMapInternal.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

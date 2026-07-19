@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBaseAnimGraph_GetAnimationController",
-        "prompt/call_llm_decompile.md",
-        "references/server/CScriptedSequence_SynchronizeSequence.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBaseAnimGraph_GetAnimationController",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CScriptedSequence_SynchronizeSequence.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CScriptedSequence_SynchronizeSequence.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

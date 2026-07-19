@@ -25,6 +25,7 @@ class SkillNode:
 class SnapshotContract:
     game_version: str
     game_root: Path
+    config_digest_version: int
     config_sha256: str
     required_paths: frozenset[str]
     optional_paths: frozenset[str]
@@ -34,6 +35,13 @@ class SnapshotContract:
     @property
     def formal_paths(self) -> frozenset[str]:
         return self.required_paths | self.optional_paths
+
+
+@dataclass(frozen=True)
+class SnapshotContext:
+    document: dict
+    raw_bytes: bytes
+    contract: SnapshotContract
 
 
 @dataclass(frozen=True)

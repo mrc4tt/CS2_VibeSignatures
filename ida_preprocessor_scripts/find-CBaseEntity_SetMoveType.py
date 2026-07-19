@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBaseEntity_SetMoveType",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEnvShake_Spawn.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBaseEntity_SetMoveType",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEnvShake_Spawn.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEnvShake_Spawn.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

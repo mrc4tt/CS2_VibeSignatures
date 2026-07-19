@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_SetInPVS",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySaveRestoreBlockHandler_RestoreEntity.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_SetInPVS",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySaveRestoreBlockHandler_RestoreEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEntitySaveRestoreBlockHandler_RestoreEntity.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

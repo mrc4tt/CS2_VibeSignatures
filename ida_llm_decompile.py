@@ -28,19 +28,38 @@ except Exception:
 
 
 _UNSET = object()
-_LLM_INSTRUCTION_RESULT_SECTIONS = (
+LLM_DECOMPILE_RESULT_SECTIONS = (
     "found_vcall",
     "found_call",
     "found_funcptr",
     "found_gv",
     "found_struct_offset",
 )
+_LLM_INSTRUCTION_RESULT_SECTIONS = LLM_DECOMPILE_RESULT_SECTIONS
 _LLM_RESULT_SYMBOL_KEYS = {
     "found_vcall": "func_name",
     "found_call": "func_name",
     "found_funcptr": "funcptr_name",
     "found_gv": "gv_name",
 }
+_LLM_RESULT_REQUIRED_KEYS = {
+    "found_vcall": ("insn_va", "insn_disasm", "vfunc_offset", "func_name"),
+    "found_call": ("insn_va", "insn_disasm", "func_name"),
+    "found_funcptr": ("insn_va", "insn_disasm", "funcptr_name"),
+    "found_gv": ("insn_va", "insn_disasm", "gv_name"),
+    "found_struct_offset": ("insn_va", "insn_disasm", "offset", "size", "struct_name", "member_name"),
+}
+_LLM_SCHEMA_ISSUE_TYPES = frozenset(
+    {
+        "yaml_parse_error",
+        "yaml_root_type_mismatch",
+        "yaml_schema_mismatch",
+        "yaml_section_type_mismatch",
+        "yaml_entry_shape_mismatch",
+        "wrapped_symbol_mismatch",
+        "unexpected_result_symbol",
+    }
+)
 _DISASM_ADDRESS_LINE_RE = re.compile(r"^\s*(?:[^:\s]+:)?([0-9A-Fa-f]{4,16})\s+(.+?)\s*$")
 _DISASM_MEMORY_DISPLACEMENT_RE = re.compile(r"(?:^|[+-])\s*(0x[0-9A-Fa-f]+|[0-9A-Fa-f]+[hH]|\d+)(?=\s*(?:[+-]|$))")
 
@@ -182,9 +201,7 @@ def _parse_yaml_mapping(text):
         return None
     if parsed is None:
         return {}
-    if isinstance(parsed, dict):
-        return parsed
-    return None
+    return parsed if isinstance(parsed, dict) else None
 
 
 def _normalize_llm_entries(entries, required_keys):
@@ -405,56 +422,260 @@ def _render_llm_decompile_blocks(reference_items, target_items):
     return reference_blocks, target_blocks
 
 
-def parse_llm_decompile_response(response_text):
+def _new_llm_schema_issue(issue_type, message, **details):
+    return {
+        "issue_type": issue_type,
+        "message": message,
+        **details,
+    }
+
+
+def _extract_llm_yaml_candidates(response_text):
     response_text = str(response_text or "").strip()
     if not response_text:
-        return _empty_llm_decompile_result()
-
-    candidates = []
-    for match in re.finditer(
-        r"```(?:yaml|yml)[ \t]*\n?(.*?)```",
-        response_text,
-        re.IGNORECASE | re.DOTALL,
-    ):
-        candidates.append(match.group(1).strip())
+        return []
+    candidates = [
+        match.group(1).strip()
+        for match in re.finditer(
+            r"```(?:yaml|yml)[ \t]*\n?(.*?)```",
+            response_text,
+            re.IGNORECASE | re.DOTALL,
+        )
+    ]
     if not candidates:
-        for match in re.finditer(r"```[ \t]*\n(.*?)```", response_text, re.DOTALL):
-            candidates.append(match.group(1).strip())
-    if not candidates:
-        candidates.append(response_text)
+        candidates = [match.group(1).strip() for match in re.finditer(r"```[ \t]*\n(.*?)```", response_text, re.DOTALL)]
+    return candidates or [response_text]
 
-    parsed = None
+
+def _load_llm_yaml_document(response_text):
+    candidates = _extract_llm_yaml_candidates(response_text)
+    if not candidates:
+        issue = _new_llm_schema_issue("yaml_parse_error", "The YAML response was blank.")
+        return None, [issue]
+    if yaml is None:
+        issue = _new_llm_schema_issue("yaml_parse_error", "YAML parsing support is unavailable.")
+        return None, [issue]
+
+    last_issue = None
     for candidate in candidates:
-        if not candidate:
+        try:
+            parsed = yaml.load(candidate, Loader=yaml.BaseLoader)
+        except yaml.YAMLError as exc:
+            last_issue = _new_llm_schema_issue("yaml_parse_error", f"The YAML could not be parsed: {exc}.")
             continue
-        parsed = _parse_yaml_mapping(candidate)
-        if parsed is not None:
-            break
+        if isinstance(parsed, dict):
+            return parsed, []
+        root_type = type(parsed).__name__ if parsed is not None else "null"
+        last_issue = _new_llm_schema_issue(
+            "yaml_root_type_mismatch",
+            f"The YAML root must be a mapping, but it was {root_type}.",
+            actual_type=root_type,
+        )
+    return None, [last_issue or _new_llm_schema_issue("yaml_parse_error", "The YAML response was empty.")]
 
-    if not isinstance(parsed, dict):
-        return _empty_llm_decompile_result()
 
+def _normalize_requested_symbol_names(symbol_name_list):
+    if isinstance(symbol_name_list, (list, tuple, set, frozenset)):
+        values = symbol_name_list
+    else:
+        values = [symbol_name_list]
+    return tuple(dict.fromkeys(str(value or "").strip() for value in values if str(value or "").strip()))
+
+
+def _normalize_llm_decompile_mapping(parsed):
     return {
-        "found_vcall": _normalize_llm_entries(
-            parsed.get("found_vcall", []),
-            ("insn_va", "insn_disasm", "vfunc_offset", "func_name"),
-        ),
-        "found_call": _normalize_llm_entries(
-            parsed.get("found_call", []),
-            ("insn_va", "insn_disasm", "func_name"),
-        ),
+        "found_vcall": _normalize_llm_entries(parsed.get("found_vcall", []), _LLM_RESULT_REQUIRED_KEYS["found_vcall"]),
+        "found_call": _normalize_llm_entries(parsed.get("found_call", []), _LLM_RESULT_REQUIRED_KEYS["found_call"]),
         "found_funcptr": _normalize_llm_entries(
-            parsed.get("found_funcptr", []),
-            ("insn_va", "insn_disasm", "funcptr_name"),
+            parsed.get("found_funcptr", []), _LLM_RESULT_REQUIRED_KEYS["found_funcptr"]
         ),
-        "found_gv": _normalize_llm_entries(
-            parsed.get("found_gv", []),
-            ("insn_va", "insn_disasm", "gv_name"),
-        ),
-        "found_struct_offset": _normalize_llm_struct_offset_entries(
-            parsed.get("found_struct_offset", []),
-        ),
+        "found_gv": _normalize_llm_entries(parsed.get("found_gv", []), _LLM_RESULT_REQUIRED_KEYS["found_gv"]),
+        "found_struct_offset": _normalize_llm_struct_offset_entries(parsed.get("found_struct_offset", [])),
     }
+
+
+def _validate_llm_raw_section(section_name, entries, location_prefix=""):
+    location = f"{location_prefix}{section_name}"
+    if not isinstance(entries, list):
+        issue = _new_llm_schema_issue(
+            "yaml_section_type_mismatch",
+            f"{location} must be a list, but it was {type(entries).__name__}.",
+            section_name=section_name,
+            actual_type=type(entries).__name__,
+        )
+        return [issue], 0
+
+    issues = []
+    valid_entry_count = 0
+    for entry_index, entry in enumerate(entries):
+        entry_location = f"{location}[{entry_index}]"
+        if not isinstance(entry, dict):
+            issues.append(
+                _new_llm_schema_issue(
+                    "yaml_entry_shape_mismatch",
+                    f"{entry_location} must be a mapping, but it was {type(entry).__name__}.",
+                )
+            )
+            continue
+        invalid_fields = [
+            key
+            for key in _LLM_RESULT_REQUIRED_KEYS[section_name]
+            if isinstance(entry.get(key), (dict, list)) or not str(entry.get(key, "") or "").strip()
+        ]
+        if invalid_fields:
+            issues.append(
+                _new_llm_schema_issue(
+                    "yaml_entry_shape_mismatch",
+                    f"{entry_location} has missing or invalid fields: {', '.join(invalid_fields)}.",
+                    invalid_fields=invalid_fields,
+                )
+            )
+            continue
+        valid_entry_count += 1
+    return issues, valid_entry_count
+
+
+def _classify_canonical_llm_mapping(parsed, root_keys):
+    recognized_keys = set(_LLM_INSTRUCTION_RESULT_SECTIONS)
+    unknown_keys = sorted(root_keys - recognized_keys)
+    issues = []
+    if unknown_keys:
+        issues.append(
+            _new_llm_schema_issue(
+                "yaml_schema_mismatch",
+                f"Unknown or mixed top-level YAML keys: {', '.join(unknown_keys)}.",
+                unknown_keys=unknown_keys,
+            )
+        )
+    valid_entry_count = 0
+    for section_name in _LLM_INSTRUCTION_RESULT_SECTIONS:
+        if section_name not in parsed:
+            continue
+        section_issues, section_count = _validate_llm_raw_section(section_name, parsed[section_name])
+        issues.extend(section_issues)
+        valid_entry_count += section_count
+    result = _normalize_llm_decompile_mapping(parsed)
+    if issues:
+        return result, "invalid", issues
+    if valid_entry_count:
+        return result, "canonical", []
+    if root_keys == recognized_keys and all(not parsed[section] for section in recognized_keys):
+        return result, "explicit_empty", []
+    issue = _new_llm_schema_issue(
+        "yaml_schema_mismatch",
+        "A no-result response must contain all five canonical sections with empty lists.",
+    )
+    return result, "invalid", [issue]
+
+
+def _validate_llm_wrapped_section(wrapper_symbol, section_name, entries):
+    issues, valid_entry_count = _validate_llm_raw_section(section_name, entries, f"{wrapper_symbol}.")
+    flattened_entries = []
+    if not isinstance(entries, list):
+        return flattened_entries, issues, valid_entry_count
+    for entry_index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            continue
+        entry_symbol = _get_llm_result_symbol_name(section_name, entry)
+        if entry_symbol != wrapper_symbol:
+            issues.append(
+                _new_llm_schema_issue(
+                    "wrapped_symbol_mismatch",
+                    f"{wrapper_symbol}.{section_name}[{entry_index}] identifies {entry_symbol!r}, "
+                    f"not wrapper {wrapper_symbol!r}.",
+                    wrapper_symbol=wrapper_symbol,
+                    entry_symbol=entry_symbol,
+                )
+            )
+        flattened_entries.append(entry)
+    return flattened_entries, issues, valid_entry_count
+
+
+def _flatten_llm_wrapped_mapping(parsed):
+    recognized_sections = set(_LLM_INSTRUCTION_RESULT_SECTIONS)
+    flattened = _empty_llm_decompile_result()
+    issues = []
+    valid_entry_count = 0
+    for wrapper_symbol, wrapped_sections in parsed.items():
+        if not isinstance(wrapped_sections, dict):
+            issues.append(
+                _new_llm_schema_issue(
+                    "yaml_schema_mismatch",
+                    f"Wrapper {wrapper_symbol!r} must contain a mapping of result sections.",
+                )
+            )
+            continue
+        nested_keys = set(wrapped_sections)
+        unknown_nested_keys = sorted(nested_keys - recognized_sections)
+        if unknown_nested_keys:
+            issues.append(
+                _new_llm_schema_issue(
+                    "yaml_schema_mismatch",
+                    f"Wrapper {wrapper_symbol!r} contains unknown result sections: {', '.join(unknown_nested_keys)}.",
+                )
+            )
+        for section_name in nested_keys & recognized_sections:
+            flattened_entries, section_issues, section_count = _validate_llm_wrapped_section(
+                wrapper_symbol, section_name, wrapped_sections[section_name]
+            )
+            flattened[section_name].extend(flattened_entries)
+            issues.extend(section_issues)
+            valid_entry_count += section_count
+    return flattened, issues, valid_entry_count
+
+
+def _classify_wrapped_llm_mapping(parsed, root_keys, requested_symbols):
+    unknown_wrappers = sorted(root_keys - requested_symbols)
+    if unknown_wrappers:
+        issue = _new_llm_schema_issue(
+            "yaml_schema_mismatch",
+            f"Top-level wrapper symbols were not requested: {', '.join(unknown_wrappers)}.",
+            unknown_keys=unknown_wrappers,
+        )
+        return _empty_llm_decompile_result(), "invalid", [issue]
+
+    flattened, issues, valid_entry_count = _flatten_llm_wrapped_mapping(parsed)
+    if not valid_entry_count:
+        issues.append(
+            _new_llm_schema_issue(
+                "yaml_schema_mismatch",
+                "A symbol-wrapped compatibility response must contain at least one valid result entry.",
+            )
+        )
+    result = _normalize_llm_decompile_mapping(flattened)
+    return (result, "invalid", issues) if issues else (result, "symbol_wrapped", [])
+
+
+def _parse_llm_decompile_response_with_issues(response_text, requested_symbol_names=None):
+    parsed, load_issues = _load_llm_yaml_document(response_text)
+    if load_issues:
+        return {
+            "result": _empty_llm_decompile_result(),
+            "schema_kind": "invalid",
+            "issues": load_issues,
+            "root_keys": [],
+            "compatibility_flattened": False,
+        }
+    root_keys = set(parsed)
+    if not root_keys:
+        issue = _new_llm_schema_issue("yaml_schema_mismatch", "The YAML mapping must not be empty.")
+        result, schema_kind, issues = _empty_llm_decompile_result(), "invalid", [issue]
+    elif root_keys & set(_LLM_INSTRUCTION_RESULT_SECTIONS):
+        result, schema_kind, issues = _classify_canonical_llm_mapping(parsed, root_keys)
+    else:
+        requested_symbols = set(_normalize_requested_symbol_names(requested_symbol_names))
+        result, schema_kind, issues = _classify_wrapped_llm_mapping(parsed, root_keys, requested_symbols)
+    return {
+        "result": result,
+        "schema_kind": schema_kind,
+        "issues": issues,
+        "root_keys": sorted(str(key) for key in root_keys),
+        "compatibility_flattened": schema_kind == "symbol_wrapped",
+    }
+
+
+def parse_llm_decompile_response(response_text):
+    return _parse_llm_decompile_response_with_issues(response_text)["result"]
 
 
 def _normalize_disasm_whitespace(value):
@@ -547,11 +768,22 @@ def _normalize_expected_result_sections(expected_result_sections):
     return normalized
 
 
+def _get_llm_result_symbol_name(section_name, entry):
+    if section_name == "found_struct_offset":
+        struct_name = str(entry.get("struct_name", "")).strip()
+        member_name = str(entry.get("member_name", "")).strip()
+        if not struct_name or not member_name:
+            return ""
+        return f"{struct_name}_{member_name}".replace(".", "_")
+
+    symbol_key = _LLM_RESULT_SYMBOL_KEYS.get(section_name)
+    return str(entry.get(symbol_key, "") if symbol_key else "").strip()
+
+
 def _validate_llm_result_sections(parsed_result, expected_result_sections):
     issues = []
     for section_name, entry_index, entry in _iter_llm_instruction_entries(parsed_result):
-        symbol_key = _LLM_RESULT_SYMBOL_KEYS.get(section_name)
-        symbol_name = str(entry.get(symbol_key, "") if symbol_key else "").strip()
+        symbol_name = _get_llm_result_symbol_name(section_name, entry)
         expected_sections = expected_result_sections.get(symbol_name, set())
         if not expected_sections or section_name in expected_sections:
             continue
@@ -563,6 +795,32 @@ def _validate_llm_result_sections(parsed_result, expected_result_sections):
                 "symbol_name": symbol_name,
                 "reported_disasm": _normalize_disasm_whitespace(entry.get("insn_disasm")),
                 "expected_sections": sorted(expected_sections),
+            }
+        )
+    return issues
+
+
+def _validate_llm_requested_symbols(parsed_result, requested_symbol_names):
+    requested_symbols = set(_normalize_requested_symbol_names(requested_symbol_names))
+    if not requested_symbols:
+        return []
+    issues = []
+    for section_name, entry_index, entry in _iter_llm_instruction_entries(parsed_result):
+        symbol_name = _get_llm_result_symbol_name(section_name, entry)
+        if symbol_name in requested_symbols:
+            continue
+        requested_text = ", ".join(sorted(requested_symbols))
+        issues.append(
+            {
+                "issue_type": "unexpected_result_symbol",
+                "section_name": section_name,
+                "entry_index": entry_index,
+                "symbol_name": symbol_name,
+                "requested_symbols": sorted(requested_symbols),
+                "message": (
+                    f"{section_name}[{entry_index}] identifies {symbol_name!r}, which is not in the requested "
+                    f"symbol set: {requested_text}."
+                ),
             }
         )
     return issues
@@ -608,10 +866,17 @@ def _validate_llm_vcall_offsets(parsed_result):
     return issues
 
 
-def _validate_llm_decompile_result(parsed_result, disasm_index, expected_result_sections):
+def _validate_llm_decompile_result(
+    parsed_result,
+    disasm_index,
+    expected_result_sections,
+    *,
+    requested_symbol_names=None,
+):
     return (
         _validate_llm_instruction_pairs(parsed_result, disasm_index)
         + _validate_llm_result_sections(parsed_result, expected_result_sections)
+        + _validate_llm_requested_symbols(parsed_result, requested_symbol_names)
         + _validate_llm_vcall_offsets(parsed_result)
     )
 
@@ -649,6 +914,8 @@ def _format_llm_vcall_offset_issue(issue):
 
 
 def _format_llm_validation_issue(issue):
+    if issue["issue_type"] in _LLM_SCHEMA_ISSUE_TYPES:
+        return f"- {issue['message']}"
     if issue["issue_type"] == "result_section_mismatch":
         return _format_llm_result_section_issue(issue)
     if issue["issue_type"] == "vcall_offset_mismatch":
@@ -656,8 +923,45 @@ def _format_llm_validation_issue(issue):
     return _format_llm_instruction_issue(issue)
 
 
+def _build_llm_schema_correction_guidance(validation_issues):
+    if not any(issue["issue_type"] in _LLM_SCHEMA_ISSUE_TYPES for issue in validation_issues):
+        return ""
+    permitted_keys = ", ".join(_LLM_INSTRUCTION_RESULT_SECTIONS)
+    return f"""
+The only permitted top-level keys are: {permitted_keys}.
+Symbol names must never be top-level keys. For batched requests, append every result to its category list.
+
+Canonical empty response:
+```yaml
+found_vcall: []
+found_call: []
+found_funcptr: []
+found_gv: []
+found_struct_offset: []
+```
+
+Canonical multi-symbol example:
+```yaml
+found_vcall: []
+found_call:
+  - insn_va: '0x1000'
+    insn_disasm: call    sub_1000
+    func_name: FirstRequestedSymbol
+found_funcptr:
+  - insn_va: '0x1010'
+    insn_disasm: lea     rax, sub_1010
+    funcptr_name: SecondRequestedSymbol
+found_gv: []
+found_struct_offset: []
+```
+""".strip()
+
+
 def _build_llm_instruction_correction_prompt(validation_issues):
     issue_text = "\n".join(_format_llm_validation_issue(issue) for issue in validation_issues)
+    schema_guidance = _build_llm_schema_correction_guidance(validation_issues)
+    if schema_guidance:
+        schema_guidance = f"\n{schema_guidance}\n"
     has_vcall_issue = any(
         issue["issue_type"] == "vcall_offset_mismatch" or "found_vcall" in issue.get("expected_sections", [])
         for issue in validation_issues
@@ -669,14 +973,40 @@ def _build_llm_instruction_correction_prompt(validation_issues):
             "`vfunc_offset` displacement. Do not use a `lea` instruction that merely loads the function pointer "
             "target.\n"
         )
+    has_struct_offset_issue = any(
+        "found_struct_offset" in issue.get("expected_sections", []) for issue in validation_issues
+    )
+    struct_offset_guidance = ""
+    if has_struct_offset_issue:
+        struct_offset_guidance = (
+            "\nFor `found_struct_offset`, report the exact instruction that accesses the member and provide "
+            "`offset`, `size`, `struct_name`, and `member_name`. A function pointer loaded from a regular struct "
+            "field is still `found_struct_offset`, not `found_vcall`.\n"
+        )
     return (
         "Your previous YAML output contains invalid references.\n"
         "Each insn_va must identify the exact target instruction written in insn_disasm; only whitespace "
         "differences are allowed.\n\n"
-        f"Mismatches:\n{issue_text}\n{vcall_guidance}\n"
+        f"Mismatches:\n{issue_text}\n{schema_guidance}{vcall_guidance}{struct_offset_guidance}\n"
         "Re-check every entry and return the complete YAML output for all requested symbols. "
         "Do not return a patch, partial YAML, explanation, or any text outside the complete YAML."
     )
+
+
+def _build_llm_result_section_requirements(expected_result_sections):
+    if not expected_result_sections:
+        return ""
+    lines = ["Required result sections:"]
+    for symbol_name, section_names in expected_result_sections.items():
+        lines.append(f"- {symbol_name}: {' or '.join(sorted(section_names))}")
+    lines.extend(
+        [
+            "",
+            "Function-pointer fields stored inside a regular struct are `found_struct_offset`, not `found_vcall`. "
+            "Use `found_vcall` only for virtual dispatch/vtable slots.",
+        ]
+    )
+    return "\n".join(lines)
 
 
 def _append_llm_instruction_correction(conversation_messages, content, validation_issues):
@@ -688,58 +1018,157 @@ def _append_llm_instruction_correction(conversation_messages, content, validatio
     )
 
 
+def _parse_and_validate_llm_decompile_content(
+    content,
+    *,
+    requested_symbol_names,
+    disasm_index,
+    expected_result_sections,
+    symbol_name_text,
+    debug,
+):
+    parse_outcome = _parse_llm_decompile_response_with_issues(content, requested_symbol_names)
+    parsed_result = parse_outcome["result"]
+    if debug:
+        _debug_print_json(
+            f"llm_decompile schema outcome for {symbol_name_text}",
+            {
+                "schema_kind": parse_outcome["schema_kind"],
+                "root_keys": parse_outcome["root_keys"],
+                "compatibility_flattened": parse_outcome["compatibility_flattened"],
+                "issues": parse_outcome["issues"],
+            },
+            debug=True,
+        )
+        _debug_print_json(f"llm_decompile parsed response for {symbol_name_text}", parsed_result, debug=True)
+    semantic_issues = _validate_llm_decompile_result(
+        parsed_result,
+        disasm_index,
+        expected_result_sections,
+        requested_symbol_names=requested_symbol_names,
+    )
+    return parse_outcome, parsed_result, parse_outcome["issues"] + semantic_issues
+
+
+async def _handle_llm_transport_error(
+    exc,
+    *,
+    attempt_index,
+    max_attempts,
+    retry_delay,
+    retry_backoff_factor,
+    retry_max_delay,
+    symbol_name_text,
+    debug,
+):
+    is_last_attempt = attempt_index >= max_attempts - 1
+    if not _is_transient_llm_error(exc) or is_last_attempt:
+        if debug:
+            print(f"    Preprocess: llm_decompile call failed for {symbol_name_text}: {exc}")
+        return None
+    if debug:
+        print(
+            f"    Preprocess: llm_decompile transient failure for {symbol_name_text} on attempt "
+            f"{attempt_index + 1}/{max_attempts}: {exc}; retrying in {retry_delay:.2f}s"
+        )
+    if retry_delay > 0:
+        await asyncio.sleep(retry_delay)
+    return min(retry_delay * retry_backoff_factor, retry_max_delay)
+
+
+async def _call_llm_transport_attempt(
+    transport,
+    attempt_kwargs,
+    *,
+    attempt_index,
+    retry_settings,
+    symbol_name_text,
+    debug,
+):
+    max_attempts, retry_delay, retry_backoff_factor, retry_max_delay = retry_settings
+    try:
+        return True, transport(**attempt_kwargs), retry_delay
+    except Exception as exc:
+        retry_delay = await _handle_llm_transport_error(
+            exc,
+            attempt_index=attempt_index,
+            max_attempts=max_attempts,
+            retry_delay=retry_delay,
+            retry_backoff_factor=retry_backoff_factor,
+            retry_max_delay=retry_max_delay,
+            symbol_name_text=symbol_name_text,
+            debug=debug,
+        )
+        return False, None, retry_delay
+
+
+def _llm_validation_retry_exhausted(
+    attempt_index,
+    *,
+    max_attempts,
+    parse_outcome,
+    validation_issues,
+    symbol_name_text,
+    debug,
+):
+    if attempt_index < max_attempts - 1:
+        return False
+    if debug:
+        issue_types = sorted({issue["issue_type"] for issue in validation_issues})
+        print(
+            f"    Preprocess: llm_decompile validation retry exhausted for {symbol_name_text}; "
+            f"schema_kind={parse_outcome['schema_kind']} issue_types={','.join(issue_types)}"
+        )
+    return True
+
+
 async def _call_llm_decompile_with_validation(
     *,
     transport,
     request_kwargs,
     conversation_messages,
-    disasm_index,
-    expected_result_sections,
-    symbol_name_text,
+    validation_settings,
     retry_settings,
     debug,
 ):
+    disasm_index, expected_result_sections, requested_symbol_names, symbol_name_text = validation_settings
     max_attempts, retry_delay, retry_backoff_factor, retry_max_delay = retry_settings
     for attempt_index in range(max_attempts):
         attempt_kwargs = dict(request_kwargs)
         attempt_kwargs["messages"] = list(conversation_messages)
-        try:
-            content = transport(**attempt_kwargs)
-        except Exception as exc:
-            is_last_attempt = attempt_index >= max_attempts - 1
-            if not _is_transient_llm_error(exc) or is_last_attempt:
-                if debug:
-                    print(f"    Preprocess: llm_decompile call failed for {symbol_name_text}: {exc}")
+        transport_ok, content, retry_delay = await _call_llm_transport_attempt(
+            transport,
+            attempt_kwargs,
+            attempt_index=attempt_index,
+            retry_settings=(max_attempts, retry_delay, retry_backoff_factor, retry_max_delay),
+            symbol_name_text=symbol_name_text,
+            debug=debug,
+        )
+        if not transport_ok:
+            if retry_delay is None:
                 return _empty_llm_decompile_result()
-            if debug:
-                print(
-                    f"    Preprocess: llm_decompile transient failure for {symbol_name_text} on attempt "
-                    f"{attempt_index + 1}/{max_attempts}: {exc}; retrying in {retry_delay:.2f}s"
-                )
-            if retry_delay > 0:
-                await asyncio.sleep(retry_delay)
-            retry_delay = min(retry_delay * retry_backoff_factor, retry_max_delay)
             continue
 
-        if debug:
-            _debug_print_multiline(f"llm_decompile raw response for {symbol_name_text}", content, debug=True)
-        parsed_result = parse_llm_decompile_response(content)
-        if debug:
-            _debug_print_json(f"llm_decompile parsed response for {symbol_name_text}", parsed_result, debug=True)
-        validation_issues = _validate_llm_decompile_result(
-            parsed_result,
-            disasm_index,
-            expected_result_sections,
+        _debug_print_multiline(f"llm_decompile raw response for {symbol_name_text}", content, debug=debug)
+        parse_outcome, parsed_result, validation_issues = _parse_and_validate_llm_decompile_content(
+            content,
+            requested_symbol_names=requested_symbol_names,
+            disasm_index=disasm_index,
+            expected_result_sections=expected_result_sections,
+            symbol_name_text=symbol_name_text,
+            debug=debug,
         )
         if not validation_issues:
             return parsed_result
-        if debug:
-            _debug_print_json(
-                f"llm_decompile instruction mismatches for {symbol_name_text}", validation_issues, debug=True
-            )
-        if attempt_index >= max_attempts - 1:
-            if debug:
-                print(f"    Preprocess: llm_decompile hallucination retry exhausted for {symbol_name_text}")
+        _debug_print_json("llm_decompile validation issues", validation_issues, debug=debug)
+        if _llm_validation_retry_exhausted(
+            attempt_index,
+            max_attempts=max_attempts,
+            parse_outcome=parse_outcome,
+            validation_issues=validation_issues,
+            symbol_name_text=symbol_name_text,
+            debug=debug,
+        ):
             return _empty_llm_decompile_result()
         _append_llm_instruction_correction(conversation_messages, content, validation_issues)
     return _empty_llm_decompile_result()
@@ -837,35 +1266,31 @@ def _prepare_llm_decompile_request(
         default=8.0,
     )
 
-    if isinstance(llm_spec, dict):
-        llm_specs = [llm_spec]
-    elif isinstance(llm_spec, (tuple, list)) and llm_spec:
-        llm_specs = list(llm_spec)
-    else:
+    if not isinstance(llm_spec, dict):
         if debug:
             print(f"    Preprocess: invalid llm_decompile spec for {func_name}")
         return None
 
-    if not all(isinstance(spec, dict) for spec in llm_specs):
-        if debug:
-            print(f"    Preprocess: invalid llm_decompile spec for {func_name}")
-        return None
-
-    prompt_value = llm_specs[0].get("prompt_path")
+    prompt_value = llm_spec.get("prompt_path")
     if not isinstance(prompt_value, str) or not prompt_value:
         if debug:
             print(f"    Preprocess: invalid llm_decompile prompt path for {func_name}: {prompt_value!r}")
         return None
 
-    for current_spec in llm_specs[1:]:
-        current_prompt_value = current_spec.get("prompt_path")
-        if current_prompt_value != prompt_value:
-            if debug:
-                print(
-                    "    Preprocess: mixed llm_decompile prompt paths for "
-                    f"{func_name}: {prompt_value!r} != {current_prompt_value!r}"
-                )
-            return None
+    reference_values = llm_spec.get("reference_yaml_paths")
+    if not isinstance(reference_values, (tuple, list)) or not reference_values:
+        if debug:
+            print(f"    Preprocess: invalid llm_decompile reference paths for {func_name}: {reference_values!r}")
+        return None
+
+    expected_result_sections = llm_spec.get("expected_result_sections")
+    if not isinstance(expected_result_sections, (tuple, list)) or not expected_result_sections:
+        if debug:
+            print(
+                f"    Preprocess: invalid llm_decompile expected result sections for "
+                f"{func_name}: {expected_result_sections!r}"
+            )
+        return None
 
     scripts_dir = _get_preprocessor_scripts_dir(preprocessor_scripts_dir)
     prompt_path = Path(
@@ -894,8 +1319,7 @@ def _prepare_llm_decompile_request(
     reference_items = []
     reference_yaml_paths = []
     target_func_names = []
-    for current_spec in llm_specs:
-        reference_value = current_spec.get("reference_yaml_path")
+    for reference_value in reference_values:
         if not isinstance(reference_value, str) or not reference_value:
             if debug:
                 print(f"    Preprocess: invalid llm_decompile reference path for {func_name}: {reference_value!r}")
@@ -963,6 +1387,7 @@ def _prepare_llm_decompile_request(
         "reference_yaml_paths": reference_yaml_paths,
         "target_func_names": target_func_names,
         "reference_yaml_path": reference_yaml_path,
+        "expected_result_sections": list(expected_result_sections),
         "prompt_template": prompt_template,
         "target_func_name": target_func_name,
         "disasm_for_reference": str(reference_data.get("disasm_code", "") or ""),
@@ -1042,10 +1467,9 @@ async def call_llm_decompile(
             print("    Preprocess: call_llm_text unavailable for llm_decompile")
         return _empty_llm_decompile_result()
 
-    if isinstance(symbol_name_list, (list, tuple, set)):
-        symbol_name_text = ", ".join(str(item).strip() for item in symbol_name_list if str(item).strip())
-    else:
-        symbol_name_text = str(symbol_name_list or "").strip()
+    requested_symbol_names = _normalize_requested_symbol_names(symbol_name_list)
+    symbol_name_text = ", ".join(requested_symbol_names)
+    normalized_expected_sections = _normalize_expected_result_sections(expected_result_sections)
 
     if reference_blocks is None or target_blocks is None:
         fallback_reference_blocks, fallback_target_blocks = _render_llm_decompile_blocks(
@@ -1097,6 +1521,9 @@ async def call_llm_decompile(
             f"Target functions:\n{target_blocks}\n\n"
             f'Please collect all references to "{symbol_name_text}" and output YAML.'
         )
+    section_requirements = _build_llm_result_section_requirements(normalized_expected_sections)
+    if section_requirements:
+        prompt = f"{prompt}\n\n{section_requirements}"
     system_prompt = "You are a reverse engineering expert."
     if debug:
         print(
@@ -1156,14 +1583,11 @@ async def call_llm_decompile(
     )
     max_delay = _normalize_llm_retry_delay(retry_max_delay, default=8.0)
     disasm_index = _build_target_disasm_index(target_disasm_codes, disasm_code=disasm_code)
-    normalized_expected_sections = _normalize_expected_result_sections(expected_result_sections)
     return await _call_llm_decompile_with_validation(
         transport=transport,
         request_kwargs=request_kwargs,
         conversation_messages=conversation_messages,
-        disasm_index=disasm_index,
-        expected_result_sections=normalized_expected_sections,
-        symbol_name_text=symbol_name_text,
+        validation_settings=(disasm_index, normalized_expected_sections, requested_symbol_names, symbol_name_text),
         retry_settings=(max_attempts, delay, backoff_factor, max_delay),
         debug=debug,
     )

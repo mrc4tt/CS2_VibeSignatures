@@ -851,6 +851,32 @@ modules:
             modules[0]["skills"][0]["optional_output"],
         )
 
+    def test_parse_config_reads_optional_inputs(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.yaml"
+            config_path.write_text(
+                """
+modules:
+  - name: engine
+    skills:
+      - name: find-consumer
+        optional_input:
+          - Optional.{platform}.yaml
+        optional_input_windows:
+          - WindowsOptional.{platform}.yaml
+        optional_input_linux:
+          - LinuxOptional.{platform}.yaml
+""".strip()
+                + "\n",
+                encoding="utf-8",
+            )
+
+            skill = ida_analyze_bin.parse_config(str(config_path))[0]["skills"][0]
+
+        self.assertEqual(["Optional.{platform}.yaml"], skill["optional_input"])
+        self.assertEqual(["WindowsOptional.{platform}.yaml"], skill["optional_input_windows"])
+        self.assertEqual(["LinuxOptional.{platform}.yaml"], skill["optional_input_linux"])
+
     def test_parse_config_reads_platform_expected_outputs(self) -> None:
         with TemporaryDirectory() as temp_dir:
             config_path = Path(temp_dir) / "config.yaml"
@@ -1048,6 +1074,52 @@ class TestSkillOrdering(unittest.TestCase):
         self.assertEqual([["first", "second"]], graph.cycles)
         self.assertEqual(1, len(graph.warnings))
 
+    def test_topological_sort_rejects_required_input_cycle(self) -> None:
+        skills = [
+            {
+                "name": "first",
+                "expected_output": ["First.{platform}.yaml"],
+                "expected_input": ["Second.{platform}.yaml"],
+            },
+            {
+                "name": "second",
+                "expected_output": ["Second.{platform}.yaml"],
+                "expected_input": ["First.{platform}.yaml"],
+            },
+        ]
+
+        with self.assertRaisesRegex(ValueError, "Artifact dependency cycle"):
+            ida_analyze_bin.topological_sort_skills(skills)
+
+    def test_topological_sort_rejects_optional_input_cycle(self) -> None:
+        skills = [
+            {
+                "name": "first",
+                "optional_output": ["First.{platform}.yaml"],
+                "optional_input": ["Second.{platform}.yaml"],
+            },
+            {
+                "name": "second",
+                "optional_output": ["Second.{platform}.yaml"],
+                "optional_input": ["First.{platform}.yaml"],
+            },
+        ]
+
+        with self.assertRaisesRegex(ValueError, "Artifact dependency cycle"):
+            ida_analyze_bin.topological_sort_skills(skills)
+
+    def test_topological_sort_rejects_self_dependency(self) -> None:
+        skills = [
+            {
+                "name": "self-dependent",
+                "expected_output": ["Self.{platform}.yaml"],
+                "expected_input": ["Self.{platform}.yaml"],
+            }
+        ]
+
+        with self.assertRaisesRegex(ValueError, "Artifact dependency cycle"):
+            ida_analyze_bin.topological_sort_skills(skills)
+
     def test_topological_sort_skills_keeps_ilooptype_after_deactivateloop(
         self,
     ) -> None:
@@ -1077,12 +1149,12 @@ class TestSkillOrdering(unittest.TestCase):
             ordered.index("find-CLoopTypeBase_DeallocateLoopMode"),
         )
 
-    def test_topological_sort_skills_ignores_optional_output(self) -> None:
+    def test_topological_sort_skills_orders_optional_producer_before_consumer(self) -> None:
         skills = [
             {
                 "name": "consumer",
                 "expected_output": ["Consumer.{platform}.yaml"],
-                "expected_input": ["OptionalOnly.{platform}.yaml"],
+                "optional_input": ["OptionalOnly.{platform}.yaml"],
             },
             {
                 "name": "optional_producer",
@@ -1092,7 +1164,12 @@ class TestSkillOrdering(unittest.TestCase):
 
         ordered = ida_analyze_bin.topological_sort_skills(skills)
 
-        self.assertEqual(["consumer", "optional_producer"], ordered)
+        self.assertEqual(["optional_producer", "consumer"], ordered)
+        graph = ida_analyze_bin.build_skill_graph(skills)
+        self.assertIn(
+            ("optional_producer", "consumer", EdgeType.OPTIONAL_INPUT),
+            {(edge.source, edge.target, edge.edge_type) for edge in graph.edges},
+        )
 
 
 class TestExecutionPlan(unittest.TestCase):
@@ -1921,6 +1998,90 @@ class TestProcessBinary(unittest.TestCase):
         self.assertEqual((1, 0, 1), (success, fail, skip))
         mock_run_skill.assert_not_called()
 
+    def test_process_binary_allows_missing_optional_input_and_passes_declaration(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_dir = Path(temp_dir) / "engine"
+            binary_dir.mkdir(parents=True, exist_ok=True)
+            binary_path = str(binary_dir / "engine2.dll")
+            optional_path = binary_dir / "Optional.windows.yaml"
+
+            def _fake_preprocess(*, expected_outputs, optional_inputs, **_kwargs):
+                self.assertEqual([str(optional_path)], optional_inputs)
+                Path(expected_outputs[0]).write_text("func_name: Consumer\n", encoding="utf-8")
+                return "success"
+
+            fake_process = object()
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=fake_process),
+                patch.object(ida_analyze_bin, "ensure_mcp_available", return_value=(fake_process, True)),
+                patch.object(ida_analyze_bin, "_run_validate_expected_input_artifacts_via_mcp", return_value=[]),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_preprocess_single_skill_via_mcp",
+                    side_effect=_fake_preprocess,
+                ),
+                patch.object(ida_analyze_bin, "run_skill", return_value=False),
+                patch.object(ida_analyze_bin, "quit_ida_gracefully", return_value=None),
+            ):
+                result = ida_analyze_bin.process_binary(
+                    binary_path=binary_path,
+                    skills=[
+                        {
+                            "name": "find-consumer",
+                            "expected_output": ["Consumer.{platform}.yaml"],
+                            "optional_input": ["Optional.{platform}.yaml"],
+                        }
+                    ],
+                    agent="codex",
+                    host="127.0.0.1",
+                    port=13337,
+                    ida_args="",
+                    platform="windows",
+                    max_retries=1,
+                )
+
+        self.assertEqual((1, 0, 0), result)
+
+    def test_process_binary_rejects_existing_invalid_optional_input(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_dir = Path(temp_dir) / "engine"
+            binary_dir.mkdir(parents=True, exist_ok=True)
+            binary_path = str(binary_dir / "engine2.dll")
+            optional_path = binary_dir / "Optional.windows.yaml"
+            optional_path.write_text("func_name: Optional\n", encoding="utf-8")
+            fake_process = object()
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=fake_process),
+                patch.object(ida_analyze_bin, "ensure_mcp_available", return_value=(fake_process, True)),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_validate_expected_input_artifacts_via_mcp",
+                    side_effect=[[], [f"{optional_path}: invalid"]],
+                ),
+                patch.object(ida_analyze_bin, "_run_preprocess_single_skill_via_mcp") as preprocess,
+                patch.object(ida_analyze_bin, "quit_ida_gracefully", return_value=None),
+            ):
+                result = ida_analyze_bin.process_binary(
+                    binary_path=binary_path,
+                    skills=[
+                        {
+                            "name": "find-consumer",
+                            "expected_output": ["Consumer.{platform}.yaml"],
+                            "optional_input": ["Optional.{platform}.yaml"],
+                        }
+                    ],
+                    agent="codex",
+                    host="127.0.0.1",
+                    port=13337,
+                    ida_args="",
+                    platform="windows",
+                    max_retries=1,
+                )
+
+        self.assertEqual((0, 1, 0), result)
+        preprocess.assert_not_called()
+
     def test_process_binary_skips_preprocessor_and_runs_agent_skill_when_skip_pp_enabled(self) -> None:
         with TemporaryDirectory() as temp_dir:
             binary_dir = Path(temp_dir) / "bin" / "14141" / "engine"
@@ -2614,6 +2775,10 @@ class TestProcessBinary(unittest.TestCase):
                 str(binary_dir / "CEngineServiceMgr_DeactivateLoop.windows.yaml"),
             ],
             mock_preprocess.call_args.kwargs["expected_outputs"],
+        )
+        self.assertEqual(
+            [str(binary_dir / "CEngineServiceMgr__MainLoop.windows.yaml")],
+            mock_preprocess.call_args.kwargs["expected_inputs"],
         )
         mock_run_skill.assert_not_called()
 

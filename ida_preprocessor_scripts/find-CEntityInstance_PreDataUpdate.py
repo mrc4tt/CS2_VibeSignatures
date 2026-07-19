@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntityInstance_PreDataUpdate",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeGame_OnPreDataUpdate.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityInstance_PreDataUpdate",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeGame_OnPreDataUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CLoopModeGame_OnPreDataUpdate.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

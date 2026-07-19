@@ -13,22 +13,39 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_m_nSuppressDormancyChangeCount",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_nExecuteQueuedCreationDepth",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_ExecuteQueuedSetInPVS",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_m_nSuppressDormancyChangeCount",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_nExecuteQueuedCreationDepth",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_ExecuteQueuedSetInPVS",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEntitySystem_ForceSetInPVSCallsIntoQueue.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
