@@ -48,8 +48,9 @@
 - archive/tag/upload 失败：READY、private manifest、staged bin 和 promoted backup 保留，promotion 可重跑。
 - `promote-bin` 在触碰 accepted bin 前写 `PROMOTION_STARTED`；显式 abandon 仅允许该 marker、`PROMOTED.json`、
   `PROMOTION_COMPLETE` 及 matching incoming/backup 全部不存在时删除 staged directory 与 PR index。
-- `.claude/skills/abandon-staged-release/` 只 dispatch 受保护的 `abandon-staged-release.yml`；workflow 从 merged Bot PR
-  推导 gamever/build/head SHA，并复用 per-version promotion concurrency 与 `win64` environment。
+- `.claude/skills/abandon-staged-release/` 接受显式 `GAMEVER/BUILD_ID`，或 staged build 自身 / 唯一被其 READY
+  状态阻塞的可信 Actions run URL；客户端从 exact output branch 自动发现唯一 merged Bot PR 与 head SHA，再只 dispatch
+  受保护的 `abandon-staged-release.yml`。workflow 继续复用 per-version promotion concurrency 与 `win64` environment。
 - existing target 已等于 staged inventory：`promote-bin` 作为幂等重试成功返回，不重复 swap。
 - Release assets 使用 `--clobber`，随后下载每个 asset 并比较 SHA-256；未验证成功前不写 completion marker。
 
@@ -58,7 +59,8 @@
 - `tests/test_release_workflow.py`：manifest/hash/path/reparse/index/cleanup/swap/idempotency/tag guards/stale merge。
 - `tests/test_build_self_runner_workflow.py`：trigger/checkout/order/no-premerge-publication/promotion/tag/bump/lightweight check。
 - `tests/test_trigger_release_build.py`：repository/auth/version/tag/Release/duplicate/dispatch/run URL。
-- `tests/test_abandon_staged_release.py`：Skill 显式调用、PR identity、confirmation/reason、duplicate dispatch 与 recovery workflow。
+- `tests/test_abandon_staged_release.py`：Skill 显式 target、run/log blocker identity、唯一可信 merged PR 自动发现、
+  confirmation/reason、duplicate dispatch 与 recovery workflow。
 - 完成门：全仓 unittest、formatter、Ruff、YAML parse、actionlint 与 CLI non-publishing smoke。
 
 ## Explicit Legacy Bootstrap
