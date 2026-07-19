@@ -1,0 +1,6 @@
+interface:
+  display_name: "Abandon Staged Release"
+  short_description: "Safely abandon an unpromoted staged release"
+  default_prompt: "Use $abandon-staged-release to explicitly abandon a specific unpromoted staged release build."
+policy:
+  allow_implicit_invocation: false

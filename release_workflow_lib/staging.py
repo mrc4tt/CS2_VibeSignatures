@@ -21,12 +21,17 @@ from release_workflow_lib.manifests import (
     build_tracked_manifest,
     load_tracked_manifest,
     parse_output_branch,
+    require_build_id,
     require_gamever,
     require_sha,
     validate_tracked_manifest,
     verify_tracked_outputs,
 )
 from gamesymbol_snapshot_lib.operations import load_snapshot_context
+
+
+ABANDON_REASON_MAX_LENGTH = 500
+PROMOTION_STATE_MARKERS = ("PROMOTION_STARTED", "PROMOTED.json", "PROMOTION_COMPLETE")
 
 
 def staging_directory(staging_root: Path, gamever: str, build_id: str) -> Path:
@@ -256,10 +261,68 @@ def load_indexed_pending(staging_root: Path, pr_number: int, event_head_sha: str
 
 def cleanup_unmerged(staging_root: Path, pr_number: int, event_head_sha: str) -> None:
     _index, _pending, stage_dir = load_indexed_pending(staging_root, pr_number, event_head_sha)
+    _remove_indexed_pending(staging_root, pr_number, stage_dir)
+
+
+def _remove_indexed_pending(staging_root: Path, pr_number: int, stage_dir: Path) -> None:
     index_path = contained_path(Path(staging_root), "pr-index", f"{pr_number}.json")
     reject_reparse_points(stage_dir)
     shutil.rmtree(stage_dir)
     index_path.unlink()
+
+
+def abandon_pending(
+    *,
+    staging_root: Path,
+    persisted_root: Path,
+    gamever: str,
+    build_id: str,
+    pr_number: int,
+    event_head_sha: str,
+    confirmation: str,
+    reason: str,
+) -> dict:
+    gamever = require_gamever(gamever)
+    build_id = require_build_id(build_id)
+    expected_confirmation = f"ABANDON {gamever}/{build_id}"
+    if confirmation != expected_confirmation:
+        raise ReleaseWorkflowError(f"confirmation must exactly equal {expected_confirmation!r}")
+    reason = str(reason).strip()
+    if not reason or len(reason) > ABANDON_REASON_MAX_LENGTH or any(char in reason for char in "\r\n"):
+        raise ReleaseWorkflowError("abandon reason must be one non-empty line of at most 500 characters")
+
+    index, pending, stage_dir = load_indexed_pending(staging_root, pr_number, event_head_sha)
+    expected_identity = (gamever, build_id)
+    if (index.get("gamever"), index.get("build_id")) != expected_identity:
+        raise ReleaseWorkflowError("requested build identity does not match pending PR index")
+    if (pending.get("gamever"), pending.get("build_id")) != expected_identity:
+        raise ReleaseWorkflowError("requested build identity does not match private pending manifest")
+
+    for marker in PROMOTION_STATE_MARKERS:
+        marker_path = stage_dir / marker
+        reject_reparse_components(staging_root, marker_path)
+        if marker_path.exists():
+            raise ReleaseWorkflowError(
+                f"promotion state exists; recovery must resume instead of abandon: {marker_path}"
+            )
+
+    persisted_root = Path(persisted_root)
+    reject_reparse_components(persisted_root, persisted_root)
+    accepted_root = contained_path(persisted_root, "bin")
+    for suffix in ("incoming", "backup"):
+        recovery_path = contained_path(accepted_root, f".{gamever}.{build_id}.{suffix}")
+        reject_reparse_components(persisted_root, recovery_path)
+        if recovery_path.exists():
+            raise ReleaseWorkflowError(f"promotion recovery path exists; refusing abandon: {recovery_path}")
+
+    _remove_indexed_pending(staging_root, pr_number, stage_dir)
+    return {
+        "gamever": gamever,
+        "build_id": build_id,
+        "pr_number": pr_number,
+        "pr_head_sha": require_sha(event_head_sha, "event head SHA"),
+        "reason": reason,
+    }
 
 
 def cleanup_incomplete(staging_root: Path, gamever: str, build_id: str) -> bool:

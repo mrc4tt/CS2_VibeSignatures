@@ -21,6 +21,8 @@ from release_workflow_lib.manifests import (
     SCHEMA_VERSION,
     load_tracked_manifest,
     parse_output_branch,
+    require_build_id,
+    require_gamever,
     require_sha,
     verify_tracked_outputs,
 )
@@ -204,6 +206,8 @@ def _swap_verified_bin(
 
 
 def promote_bin(*, persisted_root: Path, stage_dir: Path, gamever: str, build_id: str) -> dict:
+    gamever = require_gamever(gamever)
+    build_id = require_build_id(build_id)
     persisted_root = Path(persisted_root)
     reject_reparse_components(persisted_root, persisted_root)
     persisted_root = persisted_root.resolve()
@@ -212,6 +216,8 @@ def promote_bin(*, persisted_root: Path, stage_dir: Path, gamever: str, build_id
     source = contained_path(stage_dir, "bin", gamever)
     reject_reparse_components(stage_dir, stage_dir / "manifest.json")
     pending = load_json_object(stage_dir / "manifest.json")
+    if (pending.get("gamever"), pending.get("build_id")) != (gamever, build_id):
+        raise ReleaseWorkflowError("promotion request does not match private pending manifest")
     expected_files = pending.get("bin_files", [])
     expected_hash = pending.get("bin_manifest_sha256")
     if verify_inventory(source, expected_files) != expected_hash:
@@ -224,6 +230,12 @@ def promote_bin(*, persisted_root: Path, stage_dir: Path, gamever: str, build_id
     backup = contained_path(accepted_root, f".{gamever}.{build_id}.backup")
     lock_path = contained_path(persisted_root, "release-staging", "locks", f"{gamever}.lock")
     with _version_lock(lock_path):
+        started_path = stage_dir / "PROMOTION_STARTED"
+        reject_reparse_components(stage_dir, started_path)
+        write_canonical_json(
+            started_path,
+            {"schema_version": SCHEMA_VERSION, "gamever": gamever, "build_id": build_id},
+        )
         if target.is_dir() and inventory_sha256(file_inventory(target)) == expected_hash:
             return _write_promoted_state(stage_dir=stage_dir, target=target, backup=backup if backup.exists() else None)
         moved_old = _swap_verified_bin(
