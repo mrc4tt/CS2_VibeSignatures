@@ -17,14 +17,14 @@ disasm_code: |-
   .text:0000000001E7C3E0                 sub     rsp, 68h
   .text:0000000001E7C3E4                 call    __ZN10CUtlString3SetEPKc; CUtlString::Set(char const*)
   .text:0000000001E7C3E9                 lea     rax, unk_27C4271
-  .text:0000000001E7C3F0                 mov     [rbx+0BBCh], r13d
+  .text:0000000001E7C3F0                 ; 0xBBC = 3004LL = CEntitySystem::m_eNetworkSerializationMode
+  .text:0000000001E7C3F0                 mov     [rbx+0BBCh], r13d; 0xBBC = 3004LL = CEntitySystem::m_eNetworkSerializationMode
   .text:0000000001E7C3F7                 mov     [rax], r14b
   .text:0000000001E7C3FA                 cmp     r12d, 1
   .text:0000000001E7C3FE                 jz      loc_1E7C748
   .text:0000000001E7C404                 lea     r13, g_pNetworkMessages
   .text:0000000001E7C40B                 xor     eax, eax
-  .text:0000000001E7C40D                 ; 0xBDA = 3034LL = CEntitySystem::m_eNetworkSerializationMode
-  .text:0000000001E7C40D                 mov     [rbx+0BDAh], al; 0xBDA = 3034LL = CEntitySystem::m_eNetworkSerializationMode
+  .text:0000000001E7C40D                 mov     [rbx+0BDAh], al
   .text:0000000001E7C413                 ; bool
   .text:0000000001E7C413                 xor     r8d, r8d; bool
   .text:0000000001E7C416                 ; void *
