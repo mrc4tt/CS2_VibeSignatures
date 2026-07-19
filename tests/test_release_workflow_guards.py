@@ -12,6 +12,8 @@ from release_workflow_lib.promotion import verify_output_pr, verify_promotion
 from release_workflow_lib.staging import cleanup_incomplete, cleanup_unmerged
 from release_workflow_lib.validation import invalidate_republish, validate_build_input
 from tests.test_release_workflow import ReleaseFixture
+from tests.release_branch_protocol import LEGACY_OUTPUT_BRANCH
+from release_workflow_lib.manifests import format_output_branch
 
 
 class LegacyBootstrapFixture:
@@ -205,7 +207,7 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                         repository="HLND2T/CS2_VibeSignatures",
                         head_repository="HLND2T/CS2_VibeSignatures",
                         author="github-actions[bot]",
-                        branch=f"gamesymbols/{fixture.gamever}/build-{fixture.build_id}",
+                        branch=f"gamesymbols/build/{fixture.gamever}/{fixture.build_id}",
                         base_sha="9" * 40,
                         head_sha=fixture.head_sha,
                     )
@@ -226,13 +228,25 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                         repository="HLND2T/CS2_VibeSignatures",
                         head_repository="HLND2T/CS2_VibeSignatures",
                         author="github-actions[bot]",
-                        branch=f"gamesymbols/{fixture.gamever}/build-{fixture.build_id}",
+                        branch=f"gamesymbols/build/{fixture.gamever}/{fixture.build_id}",
                         base_branch="main",
                         default_branch="main",
                         pr_number=42,
                         event_head_sha=fixture.head_sha,
                         merge_sha="4" * 40,
                     )
+
+    def test_stage_build_rejects_the_legacy_output_branch_protocol(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            with self.assertRaisesRegex(ReleaseWorkflowError, "invalid generated-output branch"):
+                fixture.stage(output_branch=LEGACY_OUTPUT_BRANCH)
+
+    def test_stage_build_rejects_output_branch_identity_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            with self.assertRaisesRegex(ReleaseWorkflowError, "does not match GAMEVER and BUILD_ID"):
+                fixture.stage(output_branch=format_output_branch("14171", fixture.build_id))
 
     def test_unmerged_cleanup_cannot_touch_accepted_bin(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -18,8 +18,10 @@ from release_workflow_lib.hashing import (
 )
 from release_workflow_lib.manifests import (
     build_tracked_manifest,
+    format_output_branch,
     load_tracked_manifest,
     manifest_config_digest_version,
+    parse_output_branch,
 )
 from release_workflow_lib.promotion import finalize_promotion, promote_bin
 from release_workflow_lib.staging import (
@@ -29,6 +31,10 @@ from release_workflow_lib.staging import (
     write_pr_index,
 )
 from release_workflow_lib.validation import prepare_oldgamever_baseline
+from tests.release_branch_protocol import (
+    ACCEPTED_OUTPUT_BRANCHES,
+    REJECTED_OUTPUT_BRANCHES,
+)
 
 
 class ReleaseFixture:
@@ -63,14 +69,14 @@ class ReleaseFixture:
     def git(self, *arguments: str) -> None:
         subprocess.run(["git", *arguments], cwd=self.repo, check=True, capture_output=True)
 
-    def stage(self) -> dict:
+    def stage(self, *, output_branch: str | None = None) -> dict:
         return stage_build(
             repo_root=self.repo,
             staging_root=self.staging,
             bin_source=self.bin_source,
             candidate=self.candidate,
             repository="HLND2T/CS2_VibeSignatures",
-            output_branch=f"gamesymbols/{self.gamever}/build-{self.build_id}",
+            output_branch=output_branch or format_output_branch(self.gamever, self.build_id),
             gamever=self.gamever,
             mode="new",
             build_id=self.build_id,
@@ -98,6 +104,25 @@ class ReleaseFixture:
 
 
 class TestReleaseWorkflow(unittest.TestCase):
+    def test_output_branch_parser_and_formatter_use_the_canonical_protocol(self) -> None:
+        for branch in ACCEPTED_OUTPUT_BRANCHES:
+            with self.subTest(branch=branch):
+                gamever, build_id = parse_output_branch(branch)
+                self.assertEqual(branch, format_output_branch(gamever, build_id))
+
+        for branch in REJECTED_OUTPUT_BRANCHES:
+            with self.subTest(branch=branch), self.assertRaises(ReleaseWorkflowError):
+                parse_output_branch(branch)
+
+        self.assertEqual(
+            ACCEPTED_OUTPUT_BRANCHES[0],
+            format_output_branch("14168", "29683665467-1"),
+        )
+        with self.assertRaises(ReleaseWorkflowError):
+            format_output_branch("not-a-version", "1-2")
+        with self.assertRaises(ReleaseWorkflowError):
+            format_output_branch("14168", "29683665467")
+
     def _manifest_with_contract(self, *, digest_version=None) -> dict:
         return build_tracked_manifest(
             gamever="14170",

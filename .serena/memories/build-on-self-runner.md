@@ -26,7 +26,7 @@
    `-oldgamever none` 仅用于 `major_update: true`。
 5. validated candidate 发布到工作树后，`stage-build` 创建 tracked manifest 和 pending bin；output commit 后绑定 PR head SHA、
    写 READY，PR 创建后写 `pr-index/<PR>.json`。
-6. output branch 为 `gamesymbols/<GAMEVER>/build-<RUN_ID>-<RUN_ATTEMPT>`，从不 force-push。
+6. output branch 为 `gamesymbols/build/<GAMEVER>/<RUN_ID>-<RUN_ATTEMPT>`，从不 force-push。
 7. promotion 要求 merge commit first parent 等于 `SOURCE_SHA`、second parent 等于 indexed PR head；默认分支若前进则拒绝。
    PR check 和 promotion 都从 PR base 单独 checkout trusted helper，避免执行待校验 merge 中可能被替换的授权代码。
 8. accepted bin 先复制到 sibling incoming 并复核 inventory，再在 per-version lock 下 swap；旧目录保留到 Release assets

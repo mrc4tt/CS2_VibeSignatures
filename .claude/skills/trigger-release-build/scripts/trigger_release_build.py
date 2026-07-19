@@ -169,9 +169,16 @@ def require_no_duplicate(root: Path, gamever: str) -> set[int]:
     pulls = run_command(
         ["gh", "pr", "list", "--state", "open", "--limit", RUN_LIST_LIMIT, "--json", "headRefName,url"], root
     )
+    canonical_prefix = f"gamesymbols/build/{gamever}/"
+    legacy_prefix = f"gamesymbols/{gamever}/build-"
     for pull in parse_json_list(pulls.stdout, "gh pr list"):
-        if str(pull.get("headRefName", "")).startswith(f"gamesymbols/{gamever}/build-"):
+        head_ref = str(pull.get("headRefName", ""))
+        if head_ref.startswith(canonical_prefix):
             raise TriggerError(f"an output PR is already open for {gamever}: {pull.get('url')}")
+        if head_ref.startswith(legacy_prefix):
+            raise TriggerError(
+                f"a legacy-format output PR must be resolved before dispatch for {gamever}: {pull.get('url')}"
+            )
     runs = list_runs(root)
     title = f"Release build {gamever}"
     for run in runs:

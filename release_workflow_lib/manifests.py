@@ -15,7 +15,7 @@ from release_workflow_lib.hashing import (
 GAMEVER_RE = re.compile(r"^[0-9]{4,10}[a-z]?$")
 SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 BUILD_ID_RE = re.compile(r"^[0-9]+-[0-9]+$")
-BRANCH_RE = re.compile(r"^gamesymbols/(?P<gamever>[0-9]{4,10}[a-z]?)/build-(?P<build_id>[0-9]+-[0-9]+)$")
+BRANCH_RE = re.compile(r"^gamesymbols/build/(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
 ALLOWED_REPOSITORIES = {"HLND2T/CS2_VibeSignatures", "hzqst/CS2_VibeSignatures"}
 SCHEMA_VERSION = 3
 CONTRACT_SCHEMA_VERSION = 2
@@ -62,6 +62,19 @@ def require_mode(value: str) -> str:
     return value
 
 
+def require_build_id(value: str) -> str:
+    value = str(value)
+    if not BUILD_ID_RE.fullmatch(value):
+        raise ReleaseWorkflowError(f"invalid BUILD_ID: {value!r}")
+    return value
+
+
+def format_output_branch(gamever: str, build_id: str) -> str:
+    gamever = require_gamever(gamever)
+    build_id = require_build_id(build_id)
+    return f"gamesymbols/build/{gamever}/{build_id}"
+
+
 def parse_output_branch(branch: str) -> tuple[str, str]:
     match = BRANCH_RE.fullmatch(branch)
     if not match:
@@ -87,8 +100,7 @@ def build_tracked_manifest(
     require_gamever(gamever)
     require_mode(mode)
     require_sha(source_sha, "SOURCE_SHA")
-    if not BUILD_ID_RE.fullmatch(build_id):
-        raise ReleaseWorkflowError(f"invalid BUILD_ID: {build_id!r}")
+    build_id = require_build_id(build_id)
     for label, value in (
         ("candidate_sha256", candidate_sha256),
         ("bin_manifest_sha256", bin_manifest_sha256),

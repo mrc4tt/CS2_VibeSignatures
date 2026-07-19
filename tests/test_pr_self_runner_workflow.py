@@ -37,11 +37,12 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
         output_filter = (
             "!(github.event.pull_request.user.login == 'github-actions[bot]' &&\n"
-            "        startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&\n"
+            "        startsWith(github.event.pull_request.head.ref, 'gamesymbols/build/') &&\n"
             "        startsWith(github.event.pull_request.title, 'chore(gamesymbols): publish '))"
         )
 
         self.assertEqual(2, workflow.count(output_filter))
+        self.assertNotIn("startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&", workflow)
 
     def test_cpp_test_steps_fail_on_run_cpp_tests_nonzero_exit(self) -> None:
         for workflow_path in (

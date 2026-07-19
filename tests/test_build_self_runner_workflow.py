@@ -1,11 +1,15 @@
+import re
 import unittest
 from pathlib import Path
+
+from tests.release_branch_protocol import ACCEPTED_OUTPUT_BRANCHES, REJECTED_OUTPUT_BRANCHES
 
 
 class TestBuildSelfRunnerWorkflow(unittest.TestCase):
     def setUp(self) -> None:
         self.workflow = Path(".github/workflows/build-on-self-runner.yml").read_text(encoding="utf-8")
         self.promotion = Path(".github/workflows/promote-release-after-output-merge.yml").read_text(encoding="utf-8")
+        self.validation = Path(".github/workflows/validate-generated-output-pr.yml").read_text(encoding="utf-8")
 
     def test_build_is_dispatch_only_with_machine_inputs(self) -> None:
         self.assertIn("workflow_dispatch:", self.workflow)
@@ -113,7 +117,8 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
 
     def test_build_stops_after_pending_pr_without_publication(self) -> None:
         self.assertIn("release-manifests/$env:GAMEVER.json", self.workflow)
-        self.assertIn("gamesymbols/$env:GAMEVER/build-$env:BUILD_ID", self.workflow)
+        self.assertIn("gamesymbols/build/$env:GAMEVER/$env:BUILD_ID", self.workflow)
+        self.assertNotIn("gamesymbols/$env:GAMEVER/build-$env:BUILD_ID", self.workflow)
         self.assertIn("release_workflow.py write-pr-index", self.workflow)
         self.assertNotIn("Archive release payload", self.workflow)
         self.assertNotIn("Promote verified bin transactionally", self.workflow)
@@ -125,6 +130,30 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn('git checkout -b "$env:OUTPUT_BRANCH"', self.workflow)
         self.assertIn('git push origin "HEAD:refs/heads/$env:OUTPUT_BRANCH"', self.workflow)
         self.assertNotIn("--force-with-lease", self.workflow)
+
+    def test_duplicate_guard_uses_new_protocol_and_blocks_legacy_prs(self) -> None:
+        self.assertIn('$canonicalPrefix = "gamesymbols/build/$gamever/"', self.workflow)
+        self.assertIn('$legacyPrefix = "gamesymbols/$gamever/build-"', self.workflow)
+        self.assertIn("A legacy-format output PR must be resolved before dispatch", self.workflow)
+
+    def test_promotion_identity_and_event_filters_use_new_protocol(self) -> None:
+        expected_regex = "^gamesymbols/build/(?<gamever>[0-9]{4,10}[a-z]?)/(?<build_id>[0-9]+-[0-9]+)$"
+        self.assertIn(expected_regex, self.promotion)
+        self.assertEqual(
+            3, self.promotion.count("startsWith(github.event.pull_request.head.ref, 'gamesymbols/build/')")
+        )
+        self.assertNotIn("startsWith(github.event.pull_request.head.ref, 'gamesymbols/')", self.promotion)
+
+        contract_re = re.compile(r"^gamesymbols/build/(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
+        for branch in ACCEPTED_OUTPUT_BRANCHES:
+            with self.subTest(branch=branch):
+                self.assertIsNotNone(contract_re.fullmatch(branch))
+        for branch in REJECTED_OUTPUT_BRANCHES:
+            with self.subTest(branch=branch):
+                self.assertIsNone(contract_re.fullmatch(branch))
+
+        self.assertIn("startsWith(github.event.pull_request.head.ref, 'gamesymbols/build/')", self.validation)
+        self.assertNotIn("startsWith(github.event.pull_request.head.ref, 'gamesymbols/')", self.validation)
 
     def test_full_repository_checks_run_before_analysis(self) -> None:
         unit_tests = self.workflow.index("python -m unittest discover -s tests -b")

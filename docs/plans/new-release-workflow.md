@@ -150,7 +150,7 @@ default branch, `download.yaml` membership, and tag presence rules before using 
 10. Create an immutable generated-output branch and PR, then write the PR-number index.
 11. Stop. Do not archive, promote accepted bin, create a tag, or publish a Release in this workflow.
 
-The branch name is `gamesymbols/<GAMEVER>/build-<BUILD_ID>`. It is never force-pushed after review begins. A new build
+The branch name is `gamesymbols/build/<GAMEVER>/<BUILD_ID>`. It is never force-pushed after review begins. A new build
 uses a new branch and staging directory. By default, another open generated-output PR for the same `GAMEVER` blocks a
 new dispatch instead of silently superseding reviewed output.
 
@@ -245,7 +245,7 @@ Add a dedicated workflow, for example `.github/workflows/promote-release-after-o
 - `pull_request.merged == true`
 - repository is allowlisted and head repository equals the base repository
 - PR author is `github-actions[bot]`
-- branch matches `gamesymbols/<GAMEVER>/build-<BUILD_ID>`
+- branch matches `gamesymbols/build/<GAMEVER>/<BUILD_ID>`
 - base branch is the default branch
 - PR index and private manifest exist and match the event head SHA
 - merge diff contains only allowed generated-output paths

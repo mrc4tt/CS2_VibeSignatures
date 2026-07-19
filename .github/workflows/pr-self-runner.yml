@@ -22,7 +22,7 @@ jobs:
         startsWith(github.event.pull_request.head.ref, 'bump-download/') &&
         startsWith(github.event.pull_request.title, 'chore(download): Update manifest for ')) &&
       !(github.event.pull_request.user.login == 'github-actions[bot]' &&
-        startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&
+        startsWith(github.event.pull_request.head.ref, 'gamesymbols/build/') &&
         startsWith(github.event.pull_request.title, 'chore(gamesymbols): publish '))
     environment: win64
     runs-on: [self-hosted, windows, x64]
@@ -652,7 +652,7 @@ jobs:
         startsWith(github.event.pull_request.head.ref, 'bump-download/') &&
         startsWith(github.event.pull_request.title, 'chore(download): Update manifest for ')) &&
       !(github.event.pull_request.user.login == 'github-actions[bot]' &&
-        startsWith(github.event.pull_request.head.ref, 'gamesymbols/') &&
+        startsWith(github.event.pull_request.head.ref, 'gamesymbols/build/') &&
         startsWith(github.event.pull_request.title, 'chore(gamesymbols): publish '))
     environment: win64
     runs-on: [self-hosted, windows, x64]
