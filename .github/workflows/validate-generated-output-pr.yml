@@ -12,7 +12,7 @@ jobs:
     if: >
       github.event.pull_request.user.login == 'github-actions[bot]' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      startsWith(github.event.pull_request.head.ref, 'gamesymbols/')
+      startsWith(github.event.pull_request.head.ref, 'gamesymbols/build/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact output head

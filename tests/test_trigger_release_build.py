@@ -102,10 +102,25 @@ class TestTriggerReleaseBuild(unittest.TestCase):
                 trigger.resolve_mode(Path("."), "HLND2T/CS2_VibeSignatures", "14170")
 
     def test_open_output_pr_blocks_dispatch(self) -> None:
-        pulls = json.dumps([{"headRefName": "gamesymbols/14170/build-1-1", "url": "https://pr"}])
+        pulls = json.dumps([{"headRefName": "gamesymbols/build/14170/1-1", "url": "https://pr"}])
         with patch.object(trigger, "run_command", return_value=completed([], stdout=pulls)):
             with self.assertRaisesRegex(trigger.TriggerError, "already open"):
                 trigger.require_no_duplicate(Path("."), "14170")
+
+    def test_legacy_output_pr_blocks_dispatch_with_migration_error(self) -> None:
+        pulls = json.dumps([{"headRefName": "gamesymbols/14170/build-1-1", "url": "https://legacy-pr"}])
+        with patch.object(trigger, "run_command", return_value=completed([], stdout=pulls)):
+            with self.assertRaisesRegex(trigger.TriggerError, "legacy-format.*must be resolved"):
+                trigger.require_no_duplicate(Path("."), "14170")
+
+    def test_unrelated_version_leaf_branch_does_not_block_dispatch(self) -> None:
+        pulls = json.dumps([{"headRefName": "gamesymbols/14170", "url": "https://historical-pr"}])
+        with patch.object(
+            trigger,
+            "run_command",
+            side_effect=[completed([], stdout=pulls), completed([], stdout="[]")],
+        ):
+            self.assertEqual(set(), trigger.require_no_duplicate(Path("."), "14170"))
 
     def test_active_workflow_run_blocks_dispatch(self) -> None:
         responses = [
