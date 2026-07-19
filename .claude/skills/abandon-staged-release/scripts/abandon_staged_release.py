@@ -328,11 +328,7 @@ def discover_run(root: Path, known_ids: set[int], *, pr_number: int, source_sha:
     for _attempt in range(RUN_DISCOVERY_ATTEMPTS):
         for run in list_runs(root):
             run_id = int(run.get("databaseId", 0))
-            if (
-                run_id not in known_ids
-                and run.get("event") == "workflow_dispatch"
-                and run.get("headSha") == source_sha
-            ):
+            if run_id not in known_ids and run.get("event") == "workflow_dispatch" and run.get("headSha") == source_sha:
                 display_title = str(run.get("displayTitle", ""))
                 run_url = str(run.get("url", ""))
                 if display_title == expected_title:
@@ -340,9 +336,7 @@ def discover_run(root: Path, known_ids: set[int], *, pr_number: int, source_sha:
                 if display_title == RUN_TITLE_PREFIX:
                     unexpected[run_id] = (display_title, run_url)
         if unexpected:
-            details = ", ".join(
-                f"{url} (displayTitle={title!r})" for title, url in unexpected.values()
-            )
+            details = ", ".join(f"{url} (displayTitle={title!r})" for title, url in unexpected.values())
             raise AbandonError(
                 f"workflow was dispatched, but matching Actions run(s) used an unexpected title: {details}; "
                 f"expected {expected_title!r}"
