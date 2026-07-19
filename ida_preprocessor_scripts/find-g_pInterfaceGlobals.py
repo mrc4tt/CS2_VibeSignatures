@@ -38,11 +38,17 @@ async def preprocess_skill(
 ):
     """Reuse previous gamever gv_sig; fallback to LLM_DECOMPILE of ConnectInterfaces."""
     llm_decompile = [
-        (
-            "g_pInterfaceGlobals",
-            "prompt/call_llm_decompile.md",
-            "references/{module_name}/ConnectInterfaces.{platform}.yaml",
-        ),
+        {
+            "symbol_name": "g_pInterfaceGlobals",
+            "prompt_path": "prompt/call_llm_decompile.md",
+            "reference_yaml_paths": [
+                "references/{module_name}/ConnectInterfaces.{platform}.yaml",
+            ],
+            "expected_result_sections": ["found_gv"],
+            "dependency_policy": {
+                "ConnectInterfaces.{platform}.yaml": "required",
+            },
+        },
     ]
 
     return await preprocess_common_skill(

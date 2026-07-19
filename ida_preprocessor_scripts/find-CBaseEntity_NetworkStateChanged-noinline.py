@@ -16,12 +16,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBaseEntity_NetworkStateChanged",
-        "prompt/call_llm_decompile.md",
-        "references/server/CFlashbangProjectile_Spawn_NetworkStateChangedNotify.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBaseEntity_NetworkStateChanged",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CFlashbangProjectile_Spawn_NetworkStateChangedNotify.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CFlashbangProjectile_Spawn_NetworkStateChangedNotify.{platform}.yaml": "optional",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

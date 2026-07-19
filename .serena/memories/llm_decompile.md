@@ -75,6 +75,13 @@ flowchart TD
 - Request batching assumes one `preprocess_common_skill(...)` invocation shares a stable platform/LLM config. The cache key currently includes model, prompt path, reference YAML paths, and temperature, but not symbol name.
 - In multi-target batches, `call_llm_decompile(...)` receives full `target_blocks` for every grouped target, but the scalar `disasm_code` and `procedure` arguments are taken from the first resolved target detail.
 
+## Agent Skill fallback pointer: CEntitySystem_m_entityNames
+- Trigger signal: `find-CEntitySystem_m_entityNames` cannot find the expected `sub_*(this + off + 8, this + off, &key)` call after a game update.
+- Root cause / constraint: the ordered-map/RB-tree lookup helper may be inlined into `CEntitySystem_AddEntityToNameMap`; anonymous helper names and fixed decompiler call shapes are not stable.
+- Correct practice: use `.claude/skills/find-CEntitySystem_m_entityNames/SKILL.md`, anchor on the entity-name key plus RB-tree field cluster, and derive the common `this + off` across inline/de-inline boundaries.
+- Validation: run `uv run ida_analyze_bin.py -gamever <gamever> -oldgamever none -modules=server -debug -skip_pp -skill=find-CEntitySystem_m_entityNames` and require `Failed: 0` with a non-empty platform YAML.
+- Scope: struct-member recovery for `CEntitySystem::m_entityNames`; the same semantic-anchor pattern generalizes to other fragile LLM_DECOMPILE finders.
+
 ## Callers
 - `ida_preprocessor_scripts/find-CBaseEntity_OnTakeDamage.py` - passes a single-symbol `LLM_DECOMPILE` spec plus `func_vtable_relations` to recover a vfunc-style target.
 - `ida_preprocessor_scripts/find-CEntityInstance_Disconnect-AND-CEntityComponentHelperT_Free.py` - passes two symbols that share the same prompt/reference pair, exercising batch reuse.

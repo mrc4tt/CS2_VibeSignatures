@@ -10,22 +10,39 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "INetworkMessages_GetNetworkGroupCount",
-        "prompt/call_llm_decompile.md",
-        "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
-    ),
-    (
-        "INetworkMessages_GetNetworkGroupName",
-        "prompt/call_llm_decompile.md",
-        "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
-    ),
-    (
-        "INetworkMessages_GetNetworkGroupColor",
-        "prompt/call_llm_decompile.md",
-        "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "INetworkMessages_GetNetworkGroupCount",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CNetworkSystem_SendNetworkStats.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "INetworkMessages_GetNetworkGroupName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CNetworkSystem_SendNetworkStats.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "INetworkMessages_GetNetworkGroupColor",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/networksystem/CNetworkSystem_SendNetworkStats.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CNetworkSystem_SendNetworkStats.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

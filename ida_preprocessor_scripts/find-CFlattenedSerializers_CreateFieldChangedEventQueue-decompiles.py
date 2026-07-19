@@ -9,17 +9,28 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "INetworkMessages_GetFieldChangeCallbackOrderCount",
-        "prompt/call_llm_decompile.md",
-        "references/networksystem/CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml",
-    ),
-    (
-        "INetworkMessages_GetFieldChangeCallbackPriorities",
-        "prompt/call_llm_decompile.md",
-        "references/networksystem/CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "INetworkMessages_GetFieldChangeCallbackOrderCount",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/networksystem/CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "INetworkMessages_GetFieldChangeCallbackPriorities",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/networksystem/CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

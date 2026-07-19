@@ -8,12 +8,17 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBaseEntity_m_NetworkTransmitComponent",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBaseEntity_NetworkStateChanged.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBaseEntity_m_NetworkTransmitComponent",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBaseEntity_NetworkStateChanged.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CBaseEntity_NetworkStateChanged.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

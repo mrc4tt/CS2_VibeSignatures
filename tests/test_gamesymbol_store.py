@@ -66,6 +66,8 @@ class TestSnapshotSymbolStore(unittest.TestCase):
                 [entry.path for entry in store.glob_module("server", "ITest_*.windows.yaml")],
             )
             self.assertTrue(store.candidate_sha256.startswith("sha256:"))
+            self.assertEqual(2, store.schema_version)
+            self.assertEqual(2, store.config_digest_version)
 
     def test_missing_and_unsafe_queries_are_typed(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -99,9 +101,7 @@ class TestSnapshotSymbolStore(unittest.TestCase):
                 )
 
             noncanonical = workspace.root / "noncanonical.yaml"
-            noncanonical.write_bytes(
-                workspace.snapshot.read_bytes().replace(b"schema_version: 1\n", b"schema_version: 1\r\n")
-            )
+            noncanonical.write_bytes(b"\n" + workspace.snapshot.read_bytes())
             with self.assertRaises(SnapshotCanonicalError):
                 SnapshotSymbolStore.open(
                     noncanonical,

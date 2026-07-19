@@ -21,17 +21,28 @@ FUNC_VTABLE_RELATIONS = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IVEngineServer2_ServerCommand",
-        "prompt/call_llm_decompile.md",
-        "references/server/CMultiplayRules_ctor.{platform}.yaml",
-    ),
-    (
-        "IVEngineServer2_IsDedicatedServer",
-        "prompt/call_llm_decompile.md",
-        "references/server/CMultiplayRules_ctor.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IVEngineServer2_ServerCommand",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CMultiplayRules_ctor.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CMultiplayRules_ctor.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "IVEngineServer2_IsDedicatedServer",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CMultiplayRules_ctor.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CMultiplayRules_ctor.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

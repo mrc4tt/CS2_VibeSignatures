@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBasePlayerPawn_EyeVectors",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSBotManager_BotPlaceCommand.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBasePlayerPawn_EyeVectors",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSBotManager_BotPlaceCommand.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CCSBotManager_BotPlaceCommand.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

@@ -9,17 +9,28 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_Activate",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_PostDataUpdate",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_Activate",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_PostDataUpdate",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEntitySystem_ExecuteQueuedPostDataUpdateAndActivates.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

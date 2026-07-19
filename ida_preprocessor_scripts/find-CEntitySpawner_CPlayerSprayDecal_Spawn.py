@@ -8,11 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CEntitySpawner_CPlayerSprayDecal_Spawn",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayerPawn_SprayPaint.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySpawner_CPlayerSprayDecal_Spawn",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayerPawn_SprayPaint.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CCSPlayerPawn_SprayPaint.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

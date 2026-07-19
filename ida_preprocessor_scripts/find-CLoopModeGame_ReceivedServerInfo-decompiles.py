@@ -9,20 +9,28 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    # Both functions found by decompiling CLoopModeGame_ReceivedServerInfo:
-    #   IGameSystem_AddByName = called repeatedly with string literal args ("GameRulesGameSystem", etc.)
-    #   IGameSystem_Add       = called with pointer return values from singleton accessors
-    (
-        "IGameSystem_AddByName",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeGame_ReceivedServerInfo.{platform}.yaml",
-    ),
-    (
-        "IGameSystem_Add",
-        "prompt/call_llm_decompile.md",
-        "references/client/CLoopModeGame_ReceivedServerInfo.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IGameSystem_AddByName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeGame_ReceivedServerInfo.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CLoopModeGame_ReceivedServerInfo.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "IGameSystem_Add",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/client/CLoopModeGame_ReceivedServerInfo.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CLoopModeGame_ReceivedServerInfo.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

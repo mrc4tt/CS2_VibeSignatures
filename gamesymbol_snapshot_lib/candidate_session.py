@@ -6,7 +6,7 @@ from pathlib import Path
 
 from gamesymbol_snapshot_lib.paths import is_reparse_point
 
-SESSION_SCHEMA_VERSION = 1
+SESSION_SCHEMA_VERSION = 2
 VALIDATION_STEPS = ("gamedata", "cpp_tests")
 
 
@@ -84,6 +84,8 @@ def _validate_manifest(manifest: object, session: Path) -> dict:
         "candidate_path": str,
         "candidate_sha256": str,
         "game_version": str,
+        "snapshot_schema_version": int,
+        "config_digest_version": int,
         "config_sha256": str,
         "file_count": int,
         "file_identity": dict,

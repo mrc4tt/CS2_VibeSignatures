@@ -8,12 +8,17 @@ TARGET_GLOBALVAR_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "g_pEntitySystem",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_CreateEntitySystem.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "g_pEntitySystem",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_CreateEntitySystem.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+        "dependency_policy": {
+            "CEntitySystem_CreateEntitySystem.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

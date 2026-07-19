@@ -26,16 +26,28 @@ TARGET_FUNCTION_NAMES = [
 
 # Both vfuncs are called inside the standalone CLoopTypeBase_AddDependentServices helper.
 LLM_DECOMPILE = [
-    (
-        "IEngineService_GetServiceDependencies",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CLoopTypeBase_AddDependentServices.{platform}.yaml",
-    ),
-    (
-        "IEngineService_GetName",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CLoopTypeBase_AddDependentServices.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IEngineService_GetServiceDependencies",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CLoopTypeBase_AddDependentServices.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CLoopTypeBase_AddDependentServices.{platform}.yaml": "optional",
+        },
+    },
+    {
+        "symbol_name": "IEngineService_GetName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CLoopTypeBase_AddDependentServices.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CLoopTypeBase_AddDependentServices.{platform}.yaml": "optional",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

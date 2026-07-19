@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CGameEntitySystem_FindEntityByClassName",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSGameRules_PlayerSpawn.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CGameEntitySystem_FindEntityByClassName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSGameRules_PlayerSpawn.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CCSGameRules_PlayerSpawn.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

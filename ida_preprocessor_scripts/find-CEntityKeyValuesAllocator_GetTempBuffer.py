@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntityKeyValuesAllocator_GetTempBuffer",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySpawner_CPlayerSprayDecal_Spawn.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityKeyValuesAllocator_GetTempBuffer",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySpawner_CPlayerSprayDecal_Spawn.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEntitySpawner_CPlayerSprayDecal_Spawn.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

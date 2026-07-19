@@ -382,7 +382,78 @@ jobs:
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
+
+          function Clear-BootstrapYaml {
+            $gameRoot = [IO.Path]::GetFullPath((Join-Path $env:WORKSPACE "bin\$env:GAMEVER"))
+            $workspaceRoot = [IO.Path]::GetFullPath($env:WORKSPACE)
+            $workspacePrefix = $workspaceRoot.TrimEnd('\') + '\'
+            if (-not $gameRoot.StartsWith($workspacePrefix, [StringComparison]::OrdinalIgnoreCase)) {
+              throw "Resolved game root is outside PR workspace: $gameRoot"
+            }
+            if (-not (Test-Path -LiteralPath $gameRoot -PathType Container)) {
+              throw "Current game root does not exist: $gameRoot"
+            }
+            $current = $gameRoot
+            while ($current.StartsWith($workspacePrefix, [StringComparison]::OrdinalIgnoreCase)) {
+              $item = Get-Item -LiteralPath $current -Force
+              if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+                throw "Bootstrap cleanup path must not traverse a reparse point: $current"
+              }
+              if ($current -eq $workspaceRoot) {
+                break
+              }
+              $current = Split-Path -Parent $current
+            }
+            Get-ChildItem -LiteralPath $gameRoot -Recurse -File -Filter "*.yaml" |
+              ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
+            Write-Host "Bootstrap validation: cleared persisted YAML for $env:GAMEVER."
+          }
+
+          $baselineMode = "absent-bootstrap"
+          $baselineReason = "base_snapshot_absent"
           if ($env:HAS_BASE_SNAPSHOT -eq "true") {
+            $probeLines = @(
+              & uv run gamesymbol_snapshot.py check-contract `
+                -gamever "$env:GAMEVER" `
+                -bindir bin `
+                -configyaml "$env:BASE_CONFIG" `
+                -snapshot "$env:BASE_SNAPSHOT" `
+                -json
+            )
+            $probeExitCode = $LASTEXITCODE
+            $probeText = ($probeLines -join "`n").Trim()
+            if ($probeExitCode -eq 0) {
+              try {
+                $probe = $probeText | ConvertFrom-Json
+              } catch {
+                throw "Baseline contract probe returned invalid JSON: $probeText"
+              }
+              if ($probe.trusted -ne $true -or $probe.reason -ne "trusted") {
+                throw "Baseline contract probe returned an invalid trusted result: $probeText"
+              }
+              $baselineMode = "trusted-incremental"
+              $baselineReason = "trusted"
+            } elseif ($probeExitCode -eq 3) {
+              try {
+                $probe = $probeText | ConvertFrom-Json
+              } catch {
+                throw "Baseline contract probe returned invalid JSON: $probeText"
+              }
+              if ($probe.trusted -ne $false -or [string]::IsNullOrWhiteSpace([string]$probe.reason)) {
+                throw "Baseline contract probe returned an invalid untrusted result: $probeText"
+              }
+              $baselineMode = "untrusted-bootstrap"
+              $baselineReason = [string]$probe.reason
+              Write-Output "::warning title=Baseline snapshot rejected::reason=$baselineReason; incremental validation disabled; falling back to clean full rebuild"
+              Clear-BootstrapYaml
+              $env:HAS_BASE_SNAPSHOT = "false"
+              "HAS_BASE_SNAPSHOT=false" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            } else {
+              throw "Baseline contract probe failed with exit code $probeExitCode`: $probeText"
+            }
+          }
+
+          if ($baselineMode -eq "trusted-incremental") {
             uv run gamesymbol_snapshot.py restore `
               -gamever "$env:GAMEVER" `
               -bindir bin `
@@ -404,21 +475,17 @@ jobs:
             if ($LASTEXITCODE -ne 0) {
               throw "gamesymbol_pr_validation.py failed with exit code $LASTEXITCODE"
             }
-          } else {
-            $gameRoot = [IO.Path]::GetFullPath((Join-Path $env:WORKSPACE "bin\$env:GAMEVER"))
-            $workspaceRoot = [IO.Path]::GetFullPath($env:WORKSPACE)
-            $workspacePrefix = $workspaceRoot.TrimEnd('\') + '\'
-            if (-not $gameRoot.StartsWith($workspacePrefix, [StringComparison]::OrdinalIgnoreCase)) {
-              throw "Resolved game root is outside PR workspace: $gameRoot"
-            }
-            $gameRootItem = Get-Item -LiteralPath $gameRoot -Force
-            if ($gameRootItem.Attributes -band [IO.FileAttributes]::ReparsePoint) {
-              throw "Current game root must not be a reparse point: $gameRoot"
-            }
-            Get-ChildItem -LiteralPath $gameRoot -Recurse -File -Filter "*.yaml" |
-              ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
-            Write-Host "Bootstrap validation: cleared persisted YAML for $env:GAMEVER."
+          } elseif ($baselineMode -eq "absent-bootstrap") {
+            Clear-BootstrapYaml
           }
+
+          "BASELINE_MODE=$baselineMode" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          @(
+            "Baseline mode: $baselineMode"
+            "Validation game version: $env:GAMEVER"
+            "Reason: $baselineReason"
+            "Incremental invalidation: $(if ($baselineMode -eq 'trusted-incremental') { 'enabled' } else { 'disabled' })"
+          ) | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
 
       - name: Run Python unit tests
         shell: pwsh

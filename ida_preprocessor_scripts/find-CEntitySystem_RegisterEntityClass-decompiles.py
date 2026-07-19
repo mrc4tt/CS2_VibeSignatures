@@ -9,17 +9,28 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_m_entClassesByCPPClassname",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_RegisterEntityClass.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_m_entClassesByClassname",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntitySystem_RegisterEntityClass.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_m_entClassesByCPPClassname",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_RegisterEntityClass.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_RegisterEntityClass.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_m_entClassesByClassname",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_RegisterEntityClass.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CEntitySystem_RegisterEntityClass.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

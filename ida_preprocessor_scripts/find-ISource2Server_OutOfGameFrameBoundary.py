@@ -8,11 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "ISource2Server_OutOfGameFrameBoundary",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CLoopTypeSimple_FrameUpdate.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "ISource2Server_OutOfGameFrameBoundary",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CLoopTypeSimple_FrameUpdate.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CLoopTypeSimple_FrameUpdate.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

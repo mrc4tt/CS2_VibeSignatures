@@ -10,22 +10,39 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CGameEventManager_Shutdown",
-        "prompt/call_llm_decompile.md",
-        "references/server/CSource2Server_Shutdown.{platform}.yaml",
-    ),
-    (
-        "CLoopModeRegistry_UnregisterLoopModes",
-        "prompt/call_llm_decompile.md",
-        "references/server/CSource2Server_Shutdown.{platform}.yaml",
-    ),
-    (
-        "CEngineServiceRegistry_UnregisterEngineServices",
-        "prompt/call_llm_decompile.md",
-        "references/server/CSource2Server_Shutdown.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CGameEventManager_Shutdown",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CSource2Server_Shutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CSource2Server_Shutdown.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CLoopModeRegistry_UnregisterLoopModes",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CSource2Server_Shutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CSource2Server_Shutdown.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEngineServiceRegistry_UnregisterEngineServices",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CSource2Server_Shutdown.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CSource2Server_Shutdown.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "IEngineServiceMgr_UnregisterLoopMode",
-        "prompt/call_llm_decompile.md",
-        "references/server/CLoopModeRegistry_UnregisterLoopModes.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "IEngineServiceMgr_UnregisterLoopMode",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CLoopModeRegistry_UnregisterLoopModes.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CLoopModeRegistry_UnregisterLoopModes.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

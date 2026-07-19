@@ -9,17 +9,28 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBaseEntity_IsPlayerPawn",
-        "prompt/call_llm_decompile.md",
-        "references/server/UTIL_GetPlayerControllerForEntity.{platform}.yaml",
-    ),
-    (
-        "CBaseEntity_IsPlayerController",
-        "prompt/call_llm_decompile.md",
-        "references/server/UTIL_GetPlayerControllerForEntity.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBaseEntity_IsPlayerPawn",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/UTIL_GetPlayerControllerForEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "UTIL_GetPlayerControllerForEntity.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CBaseEntity_IsPlayerController",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/UTIL_GetPlayerControllerForEntity.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "UTIL_GetPlayerControllerForEntity.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

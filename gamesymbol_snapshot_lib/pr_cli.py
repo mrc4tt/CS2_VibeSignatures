@@ -4,9 +4,8 @@ import traceback
 from pathlib import Path
 
 from analysis_config import AnalysisConfigError, resolve_analysis_config
-from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError, SnapshotMismatchError
-from gamesymbol_snapshot_lib.operations import load_snapshot_for_contract
+from gamesymbol_snapshot_lib.operations import load_snapshot_context
 from gamesymbol_snapshot_lib.paths import ensure_real_tree, path_from_key
 from gamesymbol_snapshot_lib.pr_validation import build_invalidation_plan
 
@@ -57,19 +56,17 @@ def _run(args) -> None:
     head_snapshot = args.headsnapshot or f"gamesymbols/{args.gamever}.yaml"
     args.headconfigyaml = str(resolve_analysis_config(args.gamever, args.headconfigyaml))
     print(f"Head analysis config: {args.headconfigyaml}")
-    base_contract = load_contract(args.baseconfigyaml, args.gamever, args.bindir)
-    head_contract = load_contract(args.headconfigyaml, args.gamever, args.bindir)
-    base_document, _raw = load_snapshot_for_contract(args.basesnapshot, base_contract)
-    head_document, _raw = load_snapshot_for_contract(head_snapshot, head_contract)
+    base = load_snapshot_context(args.basesnapshot, args.baseconfigyaml, args.gamever, args.bindir)
+    head = load_snapshot_context(head_snapshot, args.headconfigyaml, args.gamever, args.bindir)
     plan = build_invalidation_plan(
-        base_contract,
-        head_contract,
-        base_document,
-        head_document,
+        base.contract,
+        head.contract,
+        base.document,
+        head.document,
         _changed_files(args.baseref, args.headref),
         Path.cwd(),
     )
-    deleted = _delete_paths(head_contract, plan.paths)
+    deleted = _delete_paths(head.contract, plan.paths)
     for reason in plan.reasons:
         print(f"  {reason}")
     for path in sorted(plan.paths):

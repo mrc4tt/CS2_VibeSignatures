@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntityInstance_AssignChangeAccessorPathIds",
-        "prompt/call_llm_decompile.md",
-        "references/server/EntityInstanceAssignChangeAccessorPathIds.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityInstance_AssignChangeAccessorPathIds",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/EntityInstanceAssignChangeAccessorPathIds.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "EntityInstanceAssignChangeAccessorPathIds.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

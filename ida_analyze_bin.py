@@ -1455,6 +1455,8 @@ def _run_preprocess_single_skill_via_mcp(
     port,
     skill_name,
     expected_outputs,
+    expected_inputs=None,
+    optional_inputs=None,
     old_yaml_map,
     new_binary_dir,
     platform,
@@ -1475,6 +1477,8 @@ def _run_preprocess_single_skill_via_mcp(
         "port": port,
         "skill_name": skill_name,
         "expected_outputs": expected_outputs,
+        "expected_inputs": expected_inputs,
+        "optional_inputs": optional_inputs,
         "old_yaml_map": old_yaml_map,
         "new_binary_dir": new_binary_dir,
         "platform": platform,
@@ -1506,6 +1510,8 @@ def _run_preprocess_single_skill_via_mcp(
         fallback_kwargs.pop("llm_fake_as", None)
         fallback_kwargs.pop("llm_max_retries", None)
         fallback_kwargs.pop("symbol_aliases", None)
+        fallback_kwargs.pop("expected_inputs", None)
+        fallback_kwargs.pop("optional_inputs", None)
         fallback_kwargs.pop("expected_binary", None)
         fallback_kwargs.pop("explicit_database", None)
         return asyncio.run(preprocess_single_skill_via_mcp(**fallback_kwargs))
@@ -1536,6 +1542,9 @@ def _parse_config_skill(skill, module_name):
         "expected_input": skill.get("expected_input", []),
         "expected_input_windows": skill.get("expected_input_windows", []) or [],
         "expected_input_linux": skill.get("expected_input_linux", []) or [],
+        "optional_input": skill.get("optional_input", []) or [],
+        "optional_input_windows": skill.get("optional_input_windows", []) or [],
+        "optional_input_linux": skill.get("optional_input_linux", []) or [],
         "skip_if_exists": skill.get("skip_if_exists", []) or [],
         "prerequisite": skill.get("prerequisite", []) or [],
         "max_retries": skill.get("max_retries"),
@@ -1697,9 +1706,10 @@ def _build_artifact_producers(skills, platform=None):
     producers = {}
     for skill in skills:
         producer_name = skill["name"]
-        for output_path in _skill_artifact_paths(skill, "expected_output", platform):
-            for key in _normalized_artifact_keys(output_path):
-                producers.setdefault(key, set()).add(producer_name)
+        for output_key in ("expected_output", "optional_output"):
+            for output_path in _skill_artifact_paths(skill, output_key, platform):
+                for key in _normalized_artifact_keys(output_path):
+                    producers.setdefault(key, set()).add(producer_name)
     return producers
 
 
@@ -1711,18 +1721,21 @@ def _build_skill_dependencies(skills, platform=None):
     edge_keys = set()
     for skill in skills:
         consumer = skill["name"]
-        for input_path in _skill_artifact_paths(skill, "expected_input", platform):
-            path_key, name_key = _normalized_artifact_keys(input_path)
-            inferred = set(producers.get(path_key, set()))
-            if not inferred:
-                inferred.update(producers.get(name_key, set()))
-            inferred.discard(consumer)
-            for producer in sorted(inferred):
-                dependencies[consumer].add(producer)
-                edge_key = (producer, consumer, EdgeType.ARTIFACT, input_path)
-                if edge_key not in edge_keys:
-                    edges.append(SkillEdge(producer, consumer, EdgeType.ARTIFACT, input_path))
-                    edge_keys.add(edge_key)
+        for input_key, edge_type in (
+            ("expected_input", EdgeType.ARTIFACT),
+            ("optional_input", EdgeType.OPTIONAL_INPUT),
+        ):
+            for input_path in _skill_artifact_paths(skill, input_key, platform):
+                path_key, name_key = _normalized_artifact_keys(input_path)
+                inferred = set(producers.get(path_key, set()))
+                if not inferred:
+                    inferred.update(producers.get(name_key, set()))
+                for producer in sorted(inferred):
+                    dependencies[consumer].add(producer)
+                    edge_key = (producer, consumer, edge_type, input_path)
+                    if edge_key not in edge_keys:
+                        edges.append(SkillEdge(producer, consumer, edge_type, input_path))
+                        edge_keys.add(edge_key)
         for prerequisite in skill.get("prerequisite", []) or []:
             if prerequisite in skill_names and prerequisite != consumer:
                 dependencies[consumer].add(prerequisite)
@@ -1841,9 +1854,33 @@ def build_skill_graph(skills):
     return _build_skill_graph(skills)
 
 
-def topological_sort_skills(skills):
-    """Return dependency-first skill names, retaining legacy cycle fallback."""
-    graph = build_skill_graph(skills)
+def _raise_for_artifact_dependency_cycles(graph):
+    self_dependencies = sorted(
+        edge.source
+        for edge in graph.edges
+        if edge.source == edge.target and edge.edge_type in {EdgeType.ARTIFACT, EdgeType.OPTIONAL_INPUT}
+    )
+    if self_dependencies:
+        raise ValueError(f"Artifact dependency cycle detected: self-dependencies={self_dependencies}")
+
+    invalid_cycles = []
+    for cycle in graph.cycles:
+        members = set(cycle)
+        if any(
+            edge.edge_type in {EdgeType.ARTIFACT, EdgeType.OPTIONAL_INPUT}
+            and edge.source in members
+            and edge.target in members
+            for edge in graph.edges
+        ):
+            invalid_cycles.append(cycle)
+    if invalid_cycles:
+        raise ValueError(f"Artifact dependency cycle detected: {invalid_cycles}")
+
+
+def topological_sort_skills(skills, platform=None):
+    """Return dependency-first skill names and reject artifact input cycles."""
+    graph = _build_skill_graph(skills, platform)
+    _raise_for_artifact_dependency_cycles(graph)
     for warning in graph.warnings:
         print(f"  Warning: {warning}")
     return graph.order
@@ -1944,6 +1981,7 @@ def _build_execution_job_nodes(
     order_graph = build_skill_graph(skills)
     active_skills = [skill for skill in skills if _skill_runs_on_platform(skill, platform)]
     platform_graph = _build_skill_graph(active_skills, platform)
+    _raise_for_artifact_dependency_cycles(platform_graph)
     nodes = _build_execution_skill_nodes(
         stage=stage,
         job=job,
@@ -1975,10 +2013,12 @@ def _resolve_execution_artifacts(job, active_skills, platform):
     for skill in active_skills:
         node_id = build_task_id(job.id, skill["name"])
         path_groups = (
-            ("expected_output", producers),
-            ("expected_input", consumers),
+            ("expected_output", producers, None),
+            ("optional_output", producers, None),
+            ("expected_input", consumers, EdgeType.CROSS_STAGE_ARTIFACT),
+            ("optional_input", consumers, EdgeType.OPTIONAL_INPUT),
         )
-        for base_key, records in path_groups:
+        for base_key, records, edge_type in path_groups:
             for artifact_path in _skill_artifact_paths(skill, base_key, platform):
                 try:
                     resolved_path = resolve_artifact_path(binary_dir, artifact_path, platform)
@@ -1993,6 +2033,7 @@ def _resolve_execution_artifacts(job, active_skills, platform):
                         "stage_id": job.stage_id,
                         "stage_index": job.stage_index,
                         "node_id": node_id,
+                        "edge_type": edge_type,
                     }
                 )
     return producers, consumers, warnings
@@ -2018,7 +2059,7 @@ def _build_cross_stage_artifact_edges(producers, consumers, job_positions):
                 ExecutionEdge(
                     source=producer["node_id"],
                     target=consumer["node_id"],
-                    edge_type=EdgeType.CROSS_STAGE_ARTIFACT,
+                    edge_type=consumer["edge_type"],
                     artifact=consumer["artifact"],
                 )
             )
@@ -2816,7 +2857,7 @@ def process_binary(
     skill_map = {skill["name"]: skill for skill in skills}
 
     # Topological sort skills based on inferred dependency tree
-    sorted_skill_names = topological_sort_skills(skills)
+    sorted_skill_names = topological_sort_skills(skills, platform=platform)
 
     # Filter skills that need processing (skip if configured outputs already exist)
     skills_to_process = []
@@ -3117,13 +3158,17 @@ def process_binary(
                 abort_binary_processing = True
                 break
 
-            # Check if all expected_input files are available before running the skill
+            # Resolve required and optional input declarations before running the skill.
             _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.VALIDATING_INPUTS)
             platform_input_key = f"expected_input_{platform}"
             combined_input = list(skill.get("expected_input", []) or [])
             combined_input += list(skill.get(platform_input_key, []) or [])
+            platform_optional_input_key = f"optional_input_{platform}"
+            combined_optional_input = list(skill.get("optional_input", []) or [])
+            combined_optional_input += list(skill.get(platform_optional_input_key, []) or [])
             try:
                 expected_inputs = expand_expected_paths(binary_dir, combined_input, platform)
+                optional_inputs = expand_expected_paths(binary_dir, combined_optional_input, platform)
             except ValueError as e:
                 fail_count += 1
                 print(f"  Failed: {skill_name} ({e})")
@@ -3135,6 +3180,22 @@ def process_binary(
                     ProcessPhase.FINISHED,
                     reason=ProcessReason.INVALID_INPUT,
                     error=str(e),
+                )
+                continue
+            overlapping_inputs = sorted(
+                set(map(os.path.normcase, expected_inputs)) & set(map(os.path.normcase, optional_inputs))
+            )
+            if overlapping_inputs:
+                fail_count += 1
+                print(f"  Failed: {skill_name} (input declared as both expected and optional)")
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.INVALID_INPUT,
+                    payload={"overlapping_inputs": overlapping_inputs},
                 )
                 continue
             missing_inputs = [p for p in expected_inputs if not os.path.exists(p)]
@@ -3152,6 +3213,18 @@ def process_binary(
                     payload={"missing_inputs": missing_inputs},
                 )
                 continue
+            missing_optional_inputs = [p for p in optional_inputs if not os.path.exists(p)]
+            if missing_optional_inputs:
+                missing_optional_names = [os.path.basename(p) for p in missing_optional_inputs]
+                print(f"    Optional input missing: {', '.join(missing_optional_names)}")
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.RUNNING,
+                    ProcessPhase.VALIDATING_INPUTS,
+                    payload={"missing_optional_inputs": missing_optional_inputs},
+                )
             invalid_expected_inputs = _run_validate_expected_input_artifacts_via_mcp(
                 host=host,
                 port=port,
@@ -3178,6 +3251,37 @@ def process_binary(
                     ProcessPhase.FINISHED,
                     reason=ProcessReason.INVALID_INPUT,
                     payload={"invalid_inputs": invalid_expected_inputs},
+                )
+                continue
+            existing_optional_inputs = [path for path in optional_inputs if os.path.exists(path)]
+            invalid_optional_inputs = []
+            if existing_optional_inputs:
+                invalid_optional_inputs = _run_validate_expected_input_artifacts_via_mcp(
+                    host=host,
+                    port=port,
+                    expected_inputs=existing_optional_inputs,
+                    platform=platform,
+                    binary_dir=binary_dir,
+                    expected_binary=binary_path,
+                    debug=debug,
+                    config_path=config_path,
+                    category_map=category_map,
+                )
+            if invalid_optional_inputs:
+                fail_count += 1
+                invalid_label = "artifact" if len(invalid_optional_inputs) == 1 else "artifacts"
+                print(
+                    f"  Failed: {skill_name} (invalid optional_input {invalid_label}: "
+                    f"{' | '.join(invalid_optional_inputs)})"
+                )
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.FAILED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.INVALID_INPUT,
+                    payload={"invalid_optional_inputs": invalid_optional_inputs},
                 )
                 continue
             if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
@@ -3222,6 +3326,8 @@ def process_binary(
                         port=port,
                         skill_name=skill_name,
                         expected_outputs=preprocess_outputs,
+                        expected_inputs=expected_inputs,
+                        optional_inputs=optional_inputs,
                         old_yaml_map=old_yaml_map,
                         new_binary_dir=binary_dir,
                         platform=platform,
@@ -3879,14 +3985,18 @@ def main():
         print(f"Error: {exc}")
         sys.exit(1)
 
-    plan = build_execution_plan(
-        modules,
-        platforms=args.platforms,
-        bin_dir=args.bindir,
-        gamever=args.gamever,
-        vcall_finder_selector=args.vcall_finder_filter,
-        include_post_process=args.rename,
-    )
+    try:
+        plan = build_execution_plan(
+            modules,
+            platforms=args.platforms,
+            bin_dir=args.bindir,
+            gamever=args.gamever,
+            vcall_finder_selector=args.vcall_finder_filter,
+            include_post_process=args.rename,
+        )
+    except ValueError as exc:
+        print(f"Error: {exc}")
+        sys.exit(1)
     try:
         reporter = BestEffortProcessReporter(create_process_reporter(args))
     except ProcessReporterConfigurationError as exc:

@@ -26,7 +26,7 @@ from release_workflow_lib.manifests import (
     validate_tracked_manifest,
     verify_tracked_outputs,
 )
-from gamesymbol_snapshot_lib.codec import parse_snapshot_bytes
+from gamesymbol_snapshot_lib.operations import load_snapshot_context
 
 
 def staging_directory(staging_root: Path, gamever: str, build_id: str) -> Path:
@@ -99,7 +99,11 @@ def _write_stage_manifests(
     if analysis_config != expected_config or not analysis_config.is_file():
         raise ReleaseWorkflowError(f"analysis config must be {expected_config}")
     analysis_config_sha256 = sha256_file(analysis_config)
-    candidate_document = parse_snapshot_bytes(Path(candidate).read_bytes(), str(gamever))
+    try:
+        candidate_context = load_snapshot_context(candidate, analysis_config, gamever, repo_root / "bin")
+    except Exception as exc:
+        raise ReleaseWorkflowError(f"candidate snapshot provenance is invalid: {exc}") from exc
+    candidate_document = candidate_context.document
     tracked = build_tracked_manifest(
         gamever=gamever,
         mode=mode,
@@ -111,6 +115,7 @@ def _write_stage_manifests(
         workflow_run_url=workflow_run_url,
         analysis_config_path=f"configs/{gamever}.yaml",
         analysis_config_sha256=analysis_config_sha256,
+        analysis_config_contract_digest_version=candidate_context.contract.config_digest_version,
         analysis_config_contract_sha256=candidate_document["config_sha256"],
     )
     write_canonical_json(repo_root / "release-manifests" / f"{gamever}.json", tracked)

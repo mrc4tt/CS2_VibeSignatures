@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBasePlayerController_SetPlayerName",
-        "prompt/call_llm_decompile.md",
-        "references/server/CGameRules_ClientSettingsChanged.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBasePlayerController_SetPlayerName",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CGameRules_ClientSettingsChanged.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CGameRules_ClientSettingsChanged.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

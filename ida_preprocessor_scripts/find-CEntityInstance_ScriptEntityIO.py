@@ -8,11 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "CEntityInstance_ScriptEntityIO",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntityInstance_FindOutputsByName.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntityInstance_ScriptEntityIO",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntityInstance_FindOutputsByName.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEntityInstance_FindOutputsByName.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

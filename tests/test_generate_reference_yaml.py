@@ -116,6 +116,7 @@ def _base_args(**overrides: object) -> Namespace:
         "module": "engine",
         "platform": "windows",
         "func_name": "CNetworkMessages_FindNetworkGroup",
+        "output_filename": None,
         "mcp_host": "127.0.0.1",
         "mcp_port": 13337,
         "ida_args": "--headless",
@@ -134,6 +135,13 @@ class TestReferenceYamlPureHelpers(unittest.TestCase):
 
         self.assertEqual("server-db", args.mcp_database)
 
+    def test_parse_args_accepts_custom_output_filename(self) -> None:
+        args = generate_reference_yaml.parse_args(
+            ["-func_name", "Example", "-output_filename", "ExampleReference.windows.yaml"]
+        )
+
+        self.assertEqual("ExampleReference.windows.yaml", args.output_filename)
+
     def test_build_reference_output_path_includes_module_and_platform(self) -> None:
         repo_root = Path("/repo")
 
@@ -148,6 +156,32 @@ class TestReferenceYamlPureHelpers(unittest.TestCase):
             Path("/repo/ida_preprocessor_scripts/references/engine/CNetworkMessages_FindNetworkGroup.windows.yaml"),
             output_path,
         )
+
+    def test_build_reference_output_path_uses_custom_filename(self) -> None:
+        output_path = generate_reference_yaml.build_reference_output_path(
+            repo_root=Path("/repo"),
+            module="engine",
+            func_name="CNetworkMessages_FindNetworkGroup",
+            platform="windows",
+            output_filename="CustomReference.windows.yaml",
+        )
+
+        self.assertEqual(
+            Path("/repo/ida_preprocessor_scripts/references/engine/CustomReference.windows.yaml"),
+            output_path,
+        )
+
+    def test_build_reference_output_path_rejects_path_or_non_yaml_filename(self) -> None:
+        for output_filename in ("", "nested/CustomReference.windows.yaml", "CustomReference.windows.txt"):
+            with self.subTest(output_filename=output_filename):
+                with self.assertRaises(generate_reference_yaml.ReferenceGenerationError):
+                    generate_reference_yaml.build_reference_output_path(
+                        repo_root=Path("/repo"),
+                        module="engine",
+                        func_name="CNetworkMessages_FindNetworkGroup",
+                        platform="windows",
+                        output_filename=output_filename,
+                    )
 
     def test_build_existing_yaml_path_uses_bin_gamever_module_func_platform(self) -> None:
         repo_root = Path("/repo")
@@ -1506,7 +1540,7 @@ class TestRunReferenceGeneration(unittest.IsolatedAsyncioTestCase):
             ) as build_reference_output_path,
         ):
             result = await generate_reference_yaml.run_reference_generation(
-                _base_args(),
+                _base_args(output_filename="CustomReference.windows.yaml"),
                 repo_root=Path("/repo"),
             )
 
@@ -1542,6 +1576,7 @@ class TestRunReferenceGeneration(unittest.IsolatedAsyncioTestCase):
             "engine",
             "CNetworkMessages_FindNetworkGroup",
             "windows",
+            "CustomReference.windows.yaml",
         )
 
     async def test_run_reference_generation_uses_autostart_mode_when_enabled(self) -> None:
@@ -1708,6 +1743,7 @@ class TestRunReferenceGeneration(unittest.IsolatedAsyncioTestCase):
             "engine",
             "CNetworkMessages_FindNetworkGroup",
             "windows",
+            None,
         )
         export_reference_yaml_via_mcp.assert_awaited_once_with(
             fake_session,

@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_RegisterAccessor",
-        "prompt/call_llm_decompile.md",
-        "references/server/CGameEntitySystem_ctor.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_RegisterAccessor",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CGameEntitySystem_ctor.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CGameEntitySystem_ctor.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

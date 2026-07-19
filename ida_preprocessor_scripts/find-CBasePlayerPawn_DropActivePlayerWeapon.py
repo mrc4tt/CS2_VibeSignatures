@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBasePlayerPawn_DropActivePlayerWeapon",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBasePlayerPawn_Event_Killed.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBasePlayerPawn_DropActivePlayerWeapon",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBasePlayerPawn_Event_Killed.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CBasePlayerPawn_Event_Killed.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

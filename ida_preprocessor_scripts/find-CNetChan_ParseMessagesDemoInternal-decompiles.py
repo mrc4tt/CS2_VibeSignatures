@@ -12,17 +12,28 @@ TARGET_GLOBALVAR_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CNetChan_ParseNetMessageShowFilter",
-        "prompt/call_llm_decompile.md",
-        "references/networksystem/CNetChan_ParseMessagesDemoInternal.{platform}.yaml",
-    ),
-    (
-        "g_pLoggingChannel",
-        "prompt/call_llm_decompile.md",
-        "references/networksystem/CNetChan_ParseMessagesDemoInternal.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CNetChan_ParseNetMessageShowFilter",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/networksystem/CNetChan_ParseMessagesDemoInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CNetChan_ParseMessagesDemoInternal.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "g_pLoggingChannel",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/networksystem/CNetChan_ParseMessagesDemoInternal.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+        "dependency_policy": {
+            "CNetChan_ParseMessagesDemoInternal.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

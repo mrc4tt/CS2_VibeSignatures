@@ -161,8 +161,21 @@ uv run generate_reference_yaml.py -gamever 14141 -module engine -platform window
      - `ida_preprocessor_scripts/references/<module>/<func_name>.<platform>.yaml`
    - 若 `LLM_DECOMPILE` 使用相对路径，应写成：
      - `references/<module>/<func_name>.<platform>.yaml`
-   - tuple 示例：
-     - `("CNetworkMessages_FindNetworkGroup", "prompt/call_llm_decompile.md", "references/engine/CNetworkGameClient_RecordEntityBandwidth.windows.yaml")`
+   - 每个配置项必须显式声明允许的结果 section：
+
+     ```python
+     {
+         "symbol_name": "INetworkMessages_FindNetworkGroup",
+         "prompt_path": "prompt/call_llm_decompile.md",
+         "reference_yaml_paths": [
+             "references/engine/CNetworkGameClient_RecordEntityBandwidth.{platform}.yaml",
+         ],
+         "expected_result_sections": ["found_vcall"],
+     }
+     ```
+
+   - 合法 section 包括 `found_call`、`found_vcall`、`found_funcptr`、`found_gv` 和 `found_struct_offset`。
+   - 同一 symbol 需要多个 reference 时，应写入同一个 `reference_yaml_paths` 列表，不要声明多个重复 spec。
    - `LLM_DECOMPILE` 复用 `ida_analyze_bin.py` 的共享 `-llm_*` 参数：`-llm_model`、`-llm_apikey`、`-llm_baseurl`、`-llm_temperature`、`-llm_effort`、`-llm_fake_as`
 
 ### 3. 将 yaml(s) 转换为 gamedata json / txt
@@ -207,16 +220,24 @@ uv run gamesymbol_candidate.py publish -candidate "$CANDIDATE_SNAPSHOT" -session
 uv run gamesymbol_snapshot.py restore -gamever 14168
 uv run gamesymbol_snapshot.py restore -gamever 14168 -replace
 uv run gamesymbol_snapshot.py verify -gamever 14168
+uv run gamesymbol_snapshot.py check-contract -gamever 14168 -json
+uv run gamesymbol_snapshot.py migrate -gamever 14168
 ```
 
 默认 restore 只创建缺失 YAML，并拒绝覆盖语义不同的文件。`-replace` 只删除 `bin/<GAMEVER>/` 下的 YAML，
 保留二进制与 IDA database，再重建 snapshot 内容。candidate `build` 与 low-level/bootstrap `pack` 会拒绝
-缺失 required output 与 undeclared YAML；`verify` 还会强制检查 canonical bytes 和两类 round-trip。
+缺失 required output 与 undeclared YAML；`verify` 还会强制检查 canonical bytes 和两类 round-trip。schema 1
+snapshot 隐含冻结的 config digest v1 并保持原字节稳定；新 writer 输出 schema 2，并显式记录带 domain separator
+的 config digest v2。`check-contract` 是只读 trust probe：exit `0` 表示可信，exit `3` 输出 machine-readable
+untrusted reason，CLI/config 或运行时错误仍硬失败。`migrate` 只显式升级已验证的 schema-1 snapshot，且不得改变
+`files` payload；restore/verify 不会隐式迁移。
 
-可能影响分析输出的 PR 必须同时提交对应的 `gamesymbols/<GAMEVER>.yaml` 更新。PR CI 会恢复 base snapshot，
-按 snapshot / config / source 变化 invalidates producer，运行 analyzer，strict-pack actual candidate，再与 PR
-head snapshot 比较。head snapshot 只表示 expected result；两个 downstream consumer 都读取 actual candidate，
-普通 PR workflow 不会 publish 或改写 tracked snapshot。
+可能影响分析输出的 PR 必须同时提交对应的 `gamesymbols/<GAMEVER>.yaml` 更新。PR CI 只在 base snapshot 通过
+trust probe 后执行 restore 与 targeted invalidation；base snapshot 缺失时从 clean YAML bootstrap，不可信时输出
+warning，并在不恢复任何 baseline payload 的前提下走同一个 clean full rebuild。随后运行 analyzer、strict-pack
+actual candidate，再与 PR head snapshot 比较。HEAD snapshot、actual candidate、release promotion 与 republish
+仍保持 strict failure，不使用 baseline fallback。head snapshot 只表示 expected result；两个 downstream consumer
+都读取 actual candidate，普通 PR workflow 不会 publish 或改写 tracked snapshot。
 
 ### 当前支持的 gamedata
 

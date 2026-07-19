@@ -7,7 +7,7 @@ import yaml
 from analysis_config import AnalysisConfigError, analysis_config_repo_path, read_analysis_config_at_revision
 from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotError
-from gamesymbol_snapshot_lib.operations import load_snapshot_for_contract, restore_snapshot
+from gamesymbol_snapshot_lib.operations import load_snapshot_context, restore_snapshot
 from gamesymbol_snapshot_lib.paths import ensure_real_tree, iter_yaml_paths, path_from_key
 from gamesymbol_snapshot_lib.pr_validation import build_invalidation_plan
 from release_workflow_lib.errors import ReleaseWorkflowError
@@ -15,6 +15,7 @@ from release_workflow_lib.manifests import (
     ALLOWED_REPOSITORIES,
     GAMEVER_RE,
     load_tracked_manifest,
+    manifest_config_digest_version,
     require_gamever,
     require_mode,
     require_sha,
@@ -170,7 +171,8 @@ def invalidate_republish(*, repo_root: Path, gamever: str, source_sha: str, bind
             raise ReleaseWorkflowError(str(exc)) from exc
         base_config.write_bytes(base_history.data)
         head_config.write_bytes(head_history.data)
-        base_contract = load_contract(base_config, gamever, bindir)
+        base_context = load_snapshot_context(snapshot, base_config, gamever, bindir)
+        base_contract = base_context.contract
         head_contract = load_contract(head_config, gamever, bindir)
         if manifest.get("analysis_config_path") and manifest["analysis_config_path"] != base_history.repository_path:
             raise ReleaseWorkflowError("accepted manifest analysis config path does not match SOURCE_SHA")
@@ -181,13 +183,15 @@ def invalidate_republish(*, repo_root: Path, gamever: str, source_sha: str, bind
             and manifest["analysis_config_contract_sha256"] != base_contract.config_sha256
         ):
             raise ReleaseWorkflowError("accepted manifest analysis config contract does not match snapshot")
-        base_document, _raw = load_snapshot_for_contract(snapshot, base_contract)
+        manifest_digest_version = manifest_config_digest_version(manifest, base_context.document)
+        if manifest_digest_version != base_contract.config_digest_version:
+            raise ReleaseWorkflowError("accepted manifest analysis config digest version does not match snapshot")
         restore_snapshot(gamever, bindir, base_config, snapshot, replace=True)
         plan = build_invalidation_plan(
             base_contract,
             head_contract,
-            base_document,
-            base_document,
+            base_context.document,
+            base_context.document,
             _changed_files(base_sha, source_sha),
             repo_root,
         )

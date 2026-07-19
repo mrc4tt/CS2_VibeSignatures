@@ -13,22 +13,39 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CBaseAnimGraph_m_skeletonInstance",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBaseAnimGraph_GetAnimationController.{platform}.yaml",
-    ),
-    (
-        "CGameSceneNode_GetSkeletonInstance",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBaseAnimGraph_GetAnimationController.{platform}.yaml",
-    ),
-    (
-        "CSkeletonInstance_m_animationController",
-        "prompt/call_llm_decompile.md",
-        "references/server/CBaseAnimGraph_GetAnimationController.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CBaseAnimGraph_m_skeletonInstance",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBaseAnimGraph_GetAnimationController.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CBaseAnimGraph_GetAnimationController.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CGameSceneNode_GetSkeletonInstance",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBaseAnimGraph_GetAnimationController.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CBaseAnimGraph_GetAnimationController.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CSkeletonInstance_m_animationController",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBaseAnimGraph_GetAnimationController.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CBaseAnimGraph_GetAnimationController.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

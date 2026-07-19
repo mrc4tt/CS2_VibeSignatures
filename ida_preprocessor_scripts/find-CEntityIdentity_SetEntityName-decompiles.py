@@ -9,17 +9,28 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CEntitySystem_RemoveEntityFromNameMap",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntityIdentity_SetEntityName.{platform}.yaml",
-    ),
-    (
-        "CEntitySystem_AddEntityToNameMap",
-        "prompt/call_llm_decompile.md",
-        "references/server/CEntityIdentity_SetEntityName.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CEntitySystem_RemoveEntityFromNameMap",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntityIdentity_SetEntityName.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEntityIdentity_SetEntityName.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CEntitySystem_AddEntityToNameMap",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntityIdentity_SetEntityName.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CEntityIdentity_SetEntityName.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

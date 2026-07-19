@@ -8,11 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    (
-        "INetworkClientService_IsConnected",
-        "prompt/call_llm_decompile.md",
-        "references/engine/SetInfo_CommandHandler.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "INetworkClientService_IsConnected",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/SetInfo_CommandHandler.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "SetInfo_CommandHandler.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

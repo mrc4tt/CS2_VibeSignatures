@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CNetworkGameServer_GetFreeClient",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkGameServerBase_ConnectClient.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CNetworkGameServer_GetFreeClient",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkGameServerBase_ConnectClient.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CNetworkGameServerBase_ConnectClient.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

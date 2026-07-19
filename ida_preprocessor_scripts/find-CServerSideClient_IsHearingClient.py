@@ -8,12 +8,17 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CServerSideClient_IsHearingClient",
-        "prompt/call_llm_decompile.md",
-        "references/engine/CNetworkGameServerBase_SendPeerList.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CServerSideClient_IsHearingClient",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/engine/CNetworkGameServerBase_SendPeerList.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CNetworkGameServerBase_SendPeerList.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [

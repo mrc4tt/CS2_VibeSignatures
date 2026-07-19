@@ -15,27 +15,50 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CCSPlayerController_PlayerForceTeamThink",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
-    ),
-    (
-        "CCSPlayerController_ResetForceTeamThink",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
-    ),
-    (
-        "CCSPlayerController_ResourceDataThink",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
-    ),
-    (
-        "CCSPlayerController_InventoryUpdateThink",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CCSPlayerController_PlayerForceTeamThink",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CCSPlayerController_GetThinkFunction.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CCSPlayerController_ResetForceTeamThink",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call", "found_funcptr"],
+        "dependency_policy": {
+            "CCSPlayerController_GetThinkFunction.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CCSPlayerController_ResourceDataThink",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CCSPlayerController_GetThinkFunction.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CCSPlayerController_InventoryUpdateThink",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayerController_GetThinkFunction.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_funcptr"],
+        "dependency_policy": {
+            "CCSPlayerController_GetThinkFunction.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

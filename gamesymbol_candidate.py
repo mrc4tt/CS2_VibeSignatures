@@ -49,6 +49,8 @@ def parse_args(argv=None):
 
 def _print_info(info) -> None:
     print(f"Game version: {info.game_version}")
+    print(f"Snapshot schema: {info.snapshot_schema_version}")
+    print(f"Config digest version: {info.config_digest_version}")
     print(f"File count: {info.file_count}")
     print(f"Config digest: {info.config_sha256}")
     print(f"Candidate SHA-256: {info.candidate_sha256}")

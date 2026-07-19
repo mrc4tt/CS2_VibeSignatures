@@ -8,12 +8,17 @@ TARGET_STRUCT_MEMBER_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CNetworkTransmitComponent_m_nStateFlags",
-        "prompt/call_llm_decompile.md",
-        "references/server/CNetworkTransmitComponent_StateChanged.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CNetworkTransmitComponent_m_nStateFlags",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CNetworkTransmitComponent_StateChanged.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_struct_offset"],
+        "dependency_policy": {
+            "CNetworkTransmitComponent_StateChanged.{platform}.yaml": "required",
+        },
+    },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

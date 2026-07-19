@@ -10,22 +10,39 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 LLM_DECOMPILE = [
-    # (symbol_name, path_to_prompt, path_to_reference)
-    (
-        "CCSPlayer_ItemServices_GiveNamedItem",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml",
-    ),
-    (
-        "CCSPlayer_WeaponServices_Weapon_GetSlot",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml",
-    ),
-    (
-        "CBasePlayerPawn_RemovePlayerItem",
-        "prompt/call_llm_decompile.md",
-        "references/server/CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml",
-    ),
+    {
+        "symbol_name": "CCSPlayer_ItemServices_GiveNamedItem",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CCSPlayer_WeaponServices_Weapon_GetSlot",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "CBasePlayerPawn_RemovePlayerItem",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
+        "dependency_policy": {
+            "CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml": "required",
+        },
+    },
 ]
 
 FUNC_VTABLE_RELATIONS = [
