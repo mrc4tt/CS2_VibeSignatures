@@ -19,7 +19,8 @@
 ## Architecture
 
 1. 自动新版本由 bump PR merge workflow dispatch `{gamever, source_sha, mode=new, source_pull_request}`；不提前打 tag。
-2. 手动 republish 由显式调用的 `.claude/skills/trigger-release-build/` 解析 `origin/main` immutable SHA 后 dispatch。
+2. 显式调用 `.claude/skills/trigger-release-build/` 时，skill 从 `origin/main` 解析 immutable SHA，并根据 tag/Release
+   的一致状态自动选择 `mode=new` 或 `mode=republish` 后 dispatch；常规新版本仍优先走上一条自动 bump 路径。
 3. build preflight 在 GitHub-hosted runner 校验 allowlist、完整 SHA、default-branch reachability、`download.yaml` membership、
    tag/Release mode guards 与重复 output PR，再占用 Windows self-hosted runner。
 4. republish 从 accepted manifest 的前一 `source_sha` 恢复 snapshot，并复用 source-aware affected-output invalidation；
@@ -56,16 +57,22 @@
 
 ## Verification
 
-- `tests/test_release_workflow.py`：manifest/hash/path/reparse/index/cleanup/swap/idempotency/tag guards/stale merge。
+- `tests/test_release_workflow.py`：branch protocol、old-version baseline、manifest/hash/path/reparse/index/swap/idempotency。
+- `tests/test_release_workflow_guards.py`：tag mode guards、无 manifest 保守 baseline、显式 legacy bootstrap、stale
+  source/merge、cleanup/abandon 与 promotion recovery marker。
 - `tests/test_build_self_runner_workflow.py`：trigger/checkout/order/no-premerge-publication/promotion/tag/bump/lightweight check。
 - `tests/test_trigger_release_build.py`：repository/auth/version/tag/Release/duplicate/dispatch/run URL。
 - `tests/test_abandon_staged_release.py`：Skill 显式 target、run/log blocker identity、唯一可信 merged PR 自动发现、
   confirmation/reason、duplicate dispatch 与 recovery workflow。
-- 完成门：全仓 unittest、formatter、Ruff、YAML parse、actionlint 与 CLI non-publishing smoke。
+- `build-on-self-runner.yml` 的 runtime gate 是 `format_repo_files.py --check`（Ruff format + yamlfix）与全仓
+  `python -m unittest discover -s tests -b`；standalone `ruff check`、actionlint、独立 YAML parse 与 CLI
+  non-publishing smoke 不属于该 build workflow 的运行步骤。
 
 ## Explicit Legacy Bootstrap
 
-- `invalidate-republish` 默认仍要求 accepted `release-manifests/<GAMEVER>.json`；缺失时继续保守删除同版本 YAML。
+- `invalidate-republish` 检测到 accepted `release-manifests/<GAMEVER>.json` 时，从其中的前一 `source_sha`
+  恢复 snapshot 并执行 source/config-aware invalidation；manifest 缺失且未显式启用 legacy bootstrap 时不会直接失败，
+  而是保守删除同版本全部 YAML baseline。
 - 只有 trigger skill 在用户明确要求“无 accepted manifest 时使用 tracked snapshot”后，才传
   `--allow-legacy-bootstrap` / `allow_legacy_bootstrap=true`；普通 publish、republish、retry 或 same-version 请求不得推断启用。
 - legacy 路径只允许 `workflow_dispatch + mode=republish`，`repository_dispatch` 被 preflight 拒绝。
