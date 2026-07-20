@@ -62,6 +62,16 @@ def _git_output(arguments: list[str]) -> str:
     return result.stdout.strip()
 
 
+def _git_is_ancestor(ancestor: str, descendant: str) -> bool:
+    arguments = ["merge-base", "--is-ancestor", ancestor, descendant]
+    result = subprocess.run(["git", *arguments], capture_output=True, text=True, check=False)
+    if result.returncode == 0:
+        return True
+    if result.returncode == 1:
+        return False
+    raise ReleaseWorkflowError(result.stderr.strip() or f"git {' '.join(arguments)} failed")
+
+
 def verify_output_pr(
     *,
     repo_root: Path,
@@ -122,9 +132,19 @@ def verify_promotion(
     parents = _git_output(["rev-list", "--parents", "-n", "1", merge_sha]).split()
     if len(parents) != 3:
         raise ReleaseWorkflowError("promotion requires a two-parent merge commit")
-    if parents[1] != pending["source_sha"] or parents[2] != event_head_sha:
-        raise ReleaseWorkflowError("merge parents do not match SOURCE_SHA and PR head SHA")
-    paths = [line for line in _git_output(["diff", "--name-only", parents[1], merge_sha, "--"]).splitlines() if line]
+    base_parent_sha, merged_head_sha = parents[1:]
+    if merged_head_sha != event_head_sha:
+        raise ReleaseWorkflowError("merge second parent does not match PR head SHA")
+    head_parents = _git_output(["rev-list", "--parents", "-n", "1", event_head_sha]).split()
+    if len(head_parents) != 2 or head_parents[1] != pending["source_sha"]:
+        raise ReleaseWorkflowError("generated-output commit is not directly based on SOURCE_SHA")
+    if not _git_is_ancestor(pending["source_sha"], base_parent_sha):
+        raise ReleaseWorkflowError("SOURCE_SHA is not an ancestor of the merge first parent")
+    paths = [
+        line
+        for line in _git_output(["diff", "--name-only", base_parent_sha, merge_sha, "--"]).splitlines()
+        if line
+    ]
     validate_output_paths(paths, gamever)
     tracked = load_tracked_manifest(Path(repo_root) / "release-manifests" / f"{gamever}.json")
     if {key: pending.get(key) for key in tracked} != tracked:
