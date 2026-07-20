@@ -198,13 +198,14 @@ jobs:
           }
           "tag_sha=$tagSha" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Write checksums and provenance
+      - name: Write release metadata and notes
         shell: pwsh
         run: |
           $gamever = "${{ steps.verify.outputs.gamever }}"
           uv run .release-tools/release_workflow.py write-release-metadata `
             --manifest "release-manifests/$gamever.json" --output-dir . `
             --output-merge-sha "$env:OUTPUT_MERGE_SHA" --tag-sha "${{ steps.tag.outputs.tag_sha }}" `
+            --repository "${{ github.repository }}" `
             --asset "gamedata-$gamever.7z" --asset "gamebin-$gamever.7z"
 
       - name: Publish or replace Release assets and verify hashes
@@ -223,7 +224,7 @@ jobs:
           if ($mode -eq "republish" -and -not $exists) { throw "republish requires Release $gamever." }
           if (-not $exists) {
             gh release create "$gamever" --draft --title "gamedata-$gamever" `
-              --notes "Validated output merge $env:OUTPUT_MERGE_SHA"
+              --notes-file "release-notes-$gamever.md"
             if ($LASTEXITCODE -ne 0) { throw "Failed to create draft Release." }
           }
           gh release upload "$gamever" @assets --clobber
@@ -237,7 +238,8 @@ jobs:
             $remoteHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $verifyDir $asset)).Hash
             if ($localHash -ne $remoteHash) { throw "Uploaded asset hash mismatch: $asset" }
           }
-          gh release edit "$gamever" --notes-file "release-provenance-$gamever.json" --draft=false
+          gh release edit "$gamever" --title "gamedata-$gamever" `
+            --notes-file "release-notes-$gamever.md" --draft=false
           if ($LASTEXITCODE -ne 0) { throw "Failed to finalize Release publication." }
 
       - name: Mark promotion complete and remove recovery backup

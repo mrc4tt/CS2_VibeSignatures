@@ -23,6 +23,7 @@ from release_workflow_lib.manifests import (
     load_tracked_manifest,
     manifest_config_digest_version,
     parse_output_branch,
+    write_release_metadata,
 )
 from release_workflow_lib.promotion import finalize_promotion, promote_bin
 from release_workflow_lib.staging import (
@@ -153,10 +154,10 @@ class TestReleaseWorkflow(unittest.TestCase):
         with self.assertRaises(ReleaseWorkflowError):
             format_output_branch("14168", "29683665467")
 
-    def _manifest_with_contract(self, *, digest_version=None) -> dict:
+    def _manifest_with_contract(self, *, digest_version=None, mode: str = "new") -> dict:
         return build_tracked_manifest(
             gamever="14170",
-            mode="new",
+            mode=mode,
             build_id="123456789-1",
             source_sha="1" * 40,
             candidate_sha256="a" * 64,
@@ -218,6 +219,42 @@ class TestReleaseWorkflow(unittest.TestCase):
 
             self.assertEqual("none", result["oldgamever"])
             self.assertFalse((repo / "bin" / "14168").exists())
+
+    def test_release_metadata_separates_human_notes_from_machine_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            for mode in ("new", "republish"):
+                with self.subTest(mode=mode):
+                    output_dir = Path(tmp) / mode
+                    output_dir.mkdir()
+                    assets = [output_dir / "gamedata-14170.7z", output_dir / "gamebin-14170.7z"]
+                    for asset in assets:
+                        asset.write_bytes(asset.name.encode("utf-8"))
+
+                    provenance_path, checksum_path, notes_path = write_release_metadata(
+                        output_dir=output_dir,
+                        manifest=self._manifest_with_contract(digest_version=2, mode=mode),
+                        output_merge_sha="2" * 40,
+                        tag_sha="3" * 40,
+                        repository="HLND2T/CS2_VibeSignatures",
+                        assets=assets,
+                    )
+
+                    provenance = provenance_path.read_text(encoding="utf-8")
+                    checksums = checksum_path.read_text(encoding="utf-8")
+                    notes = notes_path.read_text(encoding="utf-8")
+                    self.assertTrue(notes.startswith("## CS2 gamedata 14170\n"))
+                    self.assertIn(f"- Build mode: `{mode}`", notes)
+                    self.assertIn("- Build ID: `123456789-1`", notes)
+                    self.assertIn("/commit/" + "1" * 40, notes)
+                    self.assertIn("/commit/" + "2" * 40, notes)
+                    self.assertIn("/commit/" + "3" * 40, notes)
+                    self.assertIn("`gamedata-14170.7z`", notes)
+                    self.assertIn("`gamebin-14170.7z`", notes)
+                    self.assertIn("`SHA256SUMS-14170.txt`", notes)
+                    self.assertIn("`release-provenance-14170.json`", notes)
+                    self.assertNotIn('"schema_version":', notes)
+                    self.assertNotEqual(provenance, notes)
+                    self.assertNotIn(notes_path.name, checksums)
 
     def test_non_major_build_fails_without_trusted_snapshot(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

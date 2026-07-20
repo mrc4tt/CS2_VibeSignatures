@@ -128,6 +128,7 @@ def _add_promotion_parsers(commands) -> None:
     metadata.add_argument("--output-dir", required=True)
     metadata.add_argument("--output-merge-sha", required=True)
     metadata.add_argument("--tag-sha", required=True)
+    metadata.add_argument("--repository", required=True)
     metadata.add_argument("--asset", action="append", required=True)
 
     complete = commands.add_parser("finalize-promotion")
@@ -313,6 +314,7 @@ def _run_promotion(args) -> object:
             manifest=manifest,
             output_merge_sha=args.output_merge_sha,
             tag_sha=args.tag_sha,
+            repository=args.repository,
             assets=[Path(path) for path in args.asset],
         )
         return [str(path) for path in paths]
