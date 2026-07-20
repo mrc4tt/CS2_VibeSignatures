@@ -16,9 +16,10 @@ from gamedata_utils import convert_sig_to_swiftly, normalize_func_name_colons_to
 MODULE_NAME = "SwiftlyS2"
 MODULE_ENABLED = True
 
-# Relative paths to gamedata files within this dist directory
+# Relative paths to gamedata files within the module output directory
 SIGNATURES_PATH = "plugin_files/gamedata/cs2/core/signatures.jsonc"
 OFFSETS_PATH = "plugin_files/gamedata/cs2/core/offsets.jsonc"
+OUTPUT_PATHS = (SIGNATURES_PATH, OFFSETS_PATH)
 
 # Upstream download sources: (raw_url, relative_dest_path)
 DOWNLOAD_SOURCES = [
@@ -33,7 +34,7 @@ DOWNLOAD_SOURCES = [
 ]
 
 
-def update(yaml_data, func_lib_map, platforms, dist_dir, alias_to_name_map, debug=False):
+def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
     """
     Update SwiftlyS2 signatures.jsonc and offsets.jsonc files.
 
@@ -41,7 +42,7 @@ def update(yaml_data, func_lib_map, platforms, dist_dir, alias_to_name_map, debu
         yaml_data: Loaded YAML data
         func_lib_map: Function name to library mapping
         platforms: List of platforms to update
-        dist_dir: Path to this module's dist directory
+        output_dir: Path to this module's versioned output directory
         alias_to_name_map: Mapping from aliases to function names
         debug: If True, collect updated and skipped symbols info
 
@@ -54,7 +55,7 @@ def update(yaml_data, func_lib_map, platforms, dist_dir, alias_to_name_map, debu
     all_skipped_symbols = []
 
     # Update signatures.jsonc
-    sig_path = os.path.join(dist_dir, SIGNATURES_PATH)
+    sig_path = os.path.join(output_dir, SIGNATURES_PATH)
     if os.path.exists(sig_path):
         updated, skipped, updated_syms, skipped_syms = _update_signatures(
             yaml_data, func_lib_map, platforms, sig_path, alias_to_name_map, debug
@@ -67,7 +68,7 @@ def update(yaml_data, func_lib_map, platforms, dist_dir, alias_to_name_map, debu
         print(f"  Warning: SwiftlyS2 signatures not found: {sig_path}")
 
     # Update offsets.jsonc
-    off_path = os.path.join(dist_dir, OFFSETS_PATH)
+    off_path = os.path.join(output_dir, OFFSETS_PATH)
     if os.path.exists(off_path):
         updated, skipped, updated_syms, skipped_syms = _update_offsets(
             yaml_data, func_lib_map, platforms, off_path, alias_to_name_map, debug

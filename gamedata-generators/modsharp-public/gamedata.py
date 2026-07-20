@@ -17,23 +17,29 @@ from gamedata_utils import convert_sig_to_css, normalize_func_name_colons_to_und
 MODULE_NAME = "ModSharp"
 MODULE_ENABLED = True
 
-# Relative paths to gamedata files within this dist directory
+# Relative paths to gamedata files within the module output directory
 GAMEDATA_DIR = ".asset/gamedata"
+OUTPUT_PATHS = (
+    f"{GAMEDATA_DIR}/core.games.jsonc",
+    f"{GAMEDATA_DIR}/engine.games.jsonc",
+    f"{GAMEDATA_DIR}/EntityEnhancement.games.jsonc",
+    f"{GAMEDATA_DIR}/log.games.jsonc",
+    f"{GAMEDATA_DIR}/server.games.jsonc",
+    f"{GAMEDATA_DIR}/tier0.games.jsonc",
+)
 
 # Upstream download sources: (raw_url, relative_dest_path)
 _MODSHARP_BASE_URL = "https://raw.githubusercontent.com/Kxnrl/modsharp-public/master/.asset/gamedata"
 
 DOWNLOAD_SOURCES = [
-    (f"{_MODSHARP_BASE_URL}/core.games.jsonc", f"{GAMEDATA_DIR}/core.games.jsonc"),
-    (f"{_MODSHARP_BASE_URL}/engine.games.jsonc", f"{GAMEDATA_DIR}/engine.games.jsonc"),
-    (f"{_MODSHARP_BASE_URL}/EntityEnhancement.games.jsonc", f"{GAMEDATA_DIR}/EntityEnhancement.games.jsonc"),
-    (f"{_MODSHARP_BASE_URL}/log.games.jsonc", f"{GAMEDATA_DIR}/log.games.jsonc"),
-    (f"{_MODSHARP_BASE_URL}/server.games.jsonc", f"{GAMEDATA_DIR}/server.games.jsonc"),
-    (f"{_MODSHARP_BASE_URL}/tier0.games.jsonc", f"{GAMEDATA_DIR}/tier0.games.jsonc"),
+    (f"{_MODSHARP_BASE_URL}/{path.rsplit('/', 1)[1]}", path)
+    for path in OUTPUT_PATHS
+    if not path.endswith("EntityEnhancement.games.jsonc")
 ]
+STATIC_SOURCES = (("templates/EntityEnhancement.games.jsonc", f"{GAMEDATA_DIR}/EntityEnhancement.games.jsonc"),)
 
 
-def update(yaml_data, func_lib_map, platforms, dist_dir, alias_to_name_map, debug=False):
+def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
     """
     Update ModSharp gamedata files.
 
@@ -41,14 +47,14 @@ def update(yaml_data, func_lib_map, platforms, dist_dir, alias_to_name_map, debu
         yaml_data: Loaded YAML data
         func_lib_map: Function name to library mapping
         platforms: List of platforms to update
-        dist_dir: Path to this module's dist directory
+        output_dir: Path to this module's versioned output directory
         alias_to_name_map: Mapping from aliases to function names
         debug: If True, collect updated and skipped symbols info
 
     Returns:
         Tuple of (updated_count, skipped_count, updated_symbols, skipped_symbols)
     """
-    gamedata_dir = os.path.join(dist_dir, GAMEDATA_DIR)
+    gamedata_dir = os.path.join(output_dir, GAMEDATA_DIR)
 
     if not os.path.isdir(gamedata_dir):
         print(f"  Warning: ModSharp gamedata directory not found: {gamedata_dir}")
@@ -67,11 +73,7 @@ def update(yaml_data, func_lib_map, platforms, dist_dir, alias_to_name_map, debu
         file_path = os.path.join(gamedata_dir, filename)
         print(f"  Processing {filename}...")
 
-        try:
-            gamedata = load_jsonc(file_path)
-        except Exception as e:
-            print(f"    Error loading {filename}: {e}")
-            continue
+        gamedata = load_jsonc(file_path)
 
         file_updated = 0
         file_skipped = 0

@@ -2,11 +2,12 @@
 
 ## Status
 
-Proposed and approved for implementation. This design supersedes the global tracked `dist/` model described in
-`docs/plans/new-release-workflow.md` and the earlier private-staged-gamedata revision of this document.
+Implemented on `dev` as one atomic generated-output, manifest, workflow, and directory-protocol migration. This design
+supersedes the global tracked `dist/` model described in `docs/plans/new-release-workflow.md` and the earlier
+private-staged-gamedata revision of this document.
 
-The implementation must land as one atomic generated-output, manifest, workflow, and directory-protocol migration.
-Until that cutover, current workflows and memories continue describing the implemented `dist/` behavior.
+Before merge/cutover, every open legacy generated-output PR and READY staging transaction must be resolved with the old
+promotion code. The implementation PR must not merge while such state remains.
 
 ## Background
 
@@ -636,6 +637,10 @@ Handle them through an explicit one-time migration/cleanup command that validate
 state, and missing index/recovery paths. It must additionally prove completion from the current accepted-bin inventory
 when that build is still current, or from matching immutable published provenance when a newer same-version promotion
 has superseded accepted bin, before writing a new compact completion record and deleting the heavy stage.
+
+The implemented command is `release_workflow.py migrate-legacy-completed`; it requires the downloaded published
+provenance asset and an independently supplied expected SHA-256 before writing a schema-0 compact completion record.
+The normal `cleanup-completed` command then performs the same guarded trash transition and deletion.
 
 Rollout verification must include:
 

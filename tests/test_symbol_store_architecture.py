@@ -5,6 +5,7 @@ from pathlib import Path
 class TestSymbolStoreArchitecture(unittest.TestCase):
     def test_production_consumers_do_not_read_bin_yaml(self) -> None:
         gamedata = Path("update_gamedata.py").read_text(encoding="utf-8")
+        gamedata_symbols = Path("gamedata_symbol_data.py").read_text(encoding="utf-8")
         cpp_util = Path("cpp_tests_util.py").read_text(encoding="utf-8")
         cpp_runner = Path("run_cpp_tests.py").read_text(encoding="utf-8")
 
@@ -13,7 +14,7 @@ class TestSymbolStoreArchitecture(unittest.TestCase):
         self.assertNotIn("module_dir.glob", cpp_util)
         self.assertNotIn("yaml.safe_load(f)", cpp_util)
         self.assertNotIn("-bindir", cpp_runner)
-        self.assertIn("store.get", gamedata)
+        self.assertIn("store.get", gamedata_symbols)
         self.assertIn("symbol_store.glob_module", cpp_util)
         self.assertIn("open_snapshot_store", cpp_runner)
 
@@ -29,7 +30,8 @@ class TestSymbolStoreArchitecture(unittest.TestCase):
         validation = (skill_root / "post-change-validation/SKILL.md").read_text(encoding="utf-8")
 
         self.assertIn("gamesymbol_candidate.py build", update)
-        self.assertIn('update_gamedata.py -gamever "$GAMEVER" -snapshot "$CANDIDATE"', update)
+        self.assertIn('gamedata_candidate.py build -gamever "$GAMEVER"', update)
+        self.assertIn('gamedata_candidate.py publish -session "$GAMEDATA_SESSION"', update)
         self.assertIn("gamesymbol_candidate.py publish", update)
         self.assertNotIn("gamesymbol_snapshot.py pack", update)
         self.assertIn(

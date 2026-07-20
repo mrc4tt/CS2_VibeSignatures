@@ -181,7 +181,7 @@ uv run generate_reference_yaml.py -gamever 14141 -module engine -platform window
 ### 3. 将 yaml(s) 转换为 gamedata json / txt
 
 ```bash
-uv run update_gamedata.py -gamever 14168 -snapshot gamesymbols/14168.yaml [-debug]
+uv run update_gamedata.py -gamever 14168 -snapshot gamesymbols/14168.yaml -modulesdir gamedata-generators -outputdir gamedata/14168 -download_latest -strict [-debug]
 ```
 
 ### 4. 运行 C++ 测试并检查 cpp headers 是否与 yaml(s) 匹配
@@ -206,12 +206,16 @@ immutable candidate；全部 validation 成功后，publication 只复制 candid
 CANDIDATE_DIR="$(mktemp -d)"
 CANDIDATE_SNAPSHOT="$CANDIDATE_DIR/14168.yaml"
 CANDIDATE_SESSION="$CANDIDATE_DIR/14168.session.json"
+GAMEDATA_ROOT="$CANDIDATE_DIR/gamedata-candidate"
+GAMEDATA_SESSION="$CANDIDATE_DIR/14168.gamedata.session.json"
 uv run gamesymbol_candidate.py build -gamever 14168 -bindir bin -configyaml configs/14168.yaml -output "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION"
-uv run update_gamedata.py -gamever 14168 -configyaml configs/14168.yaml -snapshot "$CANDIDATE_SNAPSHOT"
+uv run gamedata_candidate.py build -gamever 14168 -build-id local-1 -snapshot "$CANDIDATE_SNAPSHOT" -configyaml configs/14168.yaml -candidate-root "$GAMEDATA_ROOT" -session "$GAMEDATA_SESSION"
+uv run gamedata_candidate.py guard -session "$GAMEDATA_SESSION"
 uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step gamedata
 uv run run_cpp_tests.py -gamever 14168 -configyaml configs/14168.yaml -snapshot "$CANDIDATE_SNAPSHOT"
 uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step cpp_tests
 uv run gamesymbol_candidate.py publish -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -snapshot gamesymbols/14168.yaml
+uv run gamedata_candidate.py publish -session "$GAMEDATA_SESSION" -outputdir gamedata/14168
 ```
 
 可使用以下命令恢复确定性分析基线，或只读验证当前 workspace：
@@ -243,50 +247,50 @@ actual candidate，再与 PR head snapshot 比较。HEAD snapshot、actual candi
 
 [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp)
 
-`dist/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json`
+`gamedata/<GAMEVER>/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json`
 
  - `GameEventManager`：在CSS中已废弃。
  - `CEntityResourceManifest_AddResource`：游戏更新时基本不会改动。
 
 [CS2Fixes](https://github.com/Source2ZE/CS2Fixes)
 
-`dist/CS2Fixes/gamedata/cs2fixes.games.txt`
+`gamedata/<GAMEVER>/CS2Fixes/gamedata/cs2fixes.jsonc`
 
  - `CCSPlayerPawn_GetMaxSpeed`，因为它并不存在于 `server.dll` 中。
 
 [swiftlys2](https://github.com/swiftly-solution/swiftlys2)
 
-`dist/swiftlys2/plugin_files/gamedata/cs2/core/offsets.jsonc`
+`gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/offsets.jsonc`
 
-`dist/swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc`
+`gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc`
 
 [plugify](https://github.com/untrustedmodders/plugify-plugin-s2sdk)
 
-`dist/plugify-plugin-s2sdk/assets/gamedata.jsonc`
+`gamedata/<GAMEVER>/plugify-plugin-s2sdk/assets/gamedata.jsonc`
 
 [cs2kz-metamod](https://github.com/KZGlobalTeam/cs2kz-metamod)
 
-`dist/cs2kz-metamod/gamedata/cs2kz-core.games.txt`
+`gamedata/<GAMEVER>/cs2kz-metamod/gamedata/cs2kz-core.games.txt`
 
 [modsharp](https://github.com/Kxnrl/modsharp-public)
 
-`dist/modsharp-public/.asset/gamedata/core.games.jsonc`
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/core.games.jsonc`
 
-`dist/modsharp-public/.asset/gamedata/engine.games.jsonc`
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/engine.games.jsonc`
 
-`dist/modsharp-public/.asset/gamedata/EntityEnhancement.games.jsonc`
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/EntityEnhancement.games.jsonc`
 
-`dist/modsharp-public/.asset/gamedata/log.games.jsonc`
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/log.games.jsonc`
 
-`dist/modsharp-public/.asset/gamedata/server.games.jsonc`
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/server.games.jsonc`
 
-`dist/modsharp-public/.asset/gamedata/tier0.games.jsonc`
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/tier0.games.jsonc`
 
  - 已跳过 230 个符号。
 
 [CS2Surf/Timer](https://github.com/CS2Surf-CN/Timer)
 
-`dist/cs2surf/gamedata/cs2surf-core.games.jsonc`
+`gamedata/<GAMEVER>/cs2surf/gamedata/cs2surf-core.games.jsonc`
 
  - 已跳过 26 个符号。
 
@@ -471,7 +475,7 @@ uv run gamesymbol_candidate.py build -gamever %CS2_GAMEVER% -bindir bin -configy
 ```bash
 @echo Update gamedata from the candidate snapshot
 
-uv run update_gamedata.py -gamever %CS2_GAMEVER% -snapshot %CANDIDATE_SNAPSHOT% -debug
+uv run update_gamedata.py -gamever %CS2_GAMEVER% -snapshot %CANDIDATE_SNAPSHOT% -modulesdir gamedata-generators -outputdir gamedata/%CS2_GAMEVER% -download_latest -strict -debug
 uv run gamesymbol_candidate.py mark -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -step gamedata
 ```
 

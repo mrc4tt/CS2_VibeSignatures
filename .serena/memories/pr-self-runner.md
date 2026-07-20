@@ -24,7 +24,7 @@
 - `gamesymbol_pr_validation.py` - `invalidate` 同版本受影响输出
 - `gamesymbol_candidate.py` - `build` / `compare` / `guard` / `mark`
 - `ida_analyze_bin.py` - 基于恢复/失效后的工作区执行分析
-- `update_gamedata.py` - 从实际候选验证下游 gamedata
+- `gamedata_candidate.py` - 从实际候选在隔离目录生成并 guard 版本化 gamedata
 - `run_cpp_tests.py` - 从实际候选执行 C++ 编译与布局验证
 - `PERSISTED_WORKSPACE/bin/.stignore` - robocopy 的简单文件/目录排除规则
 - `tests/test_pr_self_runner_workflow.py` - 触发条件、顺序、候选边界和关闭清理约束测试

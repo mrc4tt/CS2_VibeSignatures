@@ -10,6 +10,7 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.workflow = Path(".github/workflows/build-on-self-runner.yml").read_text(encoding="utf-8")
         self.promotion = Path(".github/workflows/promote-release-after-output-merge.yml").read_text(encoding="utf-8")
         self.validation = Path(".github/workflows/validate-generated-output-pr.yml").read_text(encoding="utf-8")
+        self.cleanup = Path(".github/workflows/cleanup-completed-release-staging.yml").read_text(encoding="utf-8")
 
     def test_build_is_dispatch_only_with_machine_inputs(self) -> None:
         self.assertIn("workflow_dispatch:", self.workflow)
@@ -59,12 +60,12 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
     def test_candidate_validation_precedes_staging_and_output_pr(self) -> None:
         analyze = self.workflow.index("uv run ida_analyze_bin.py")
         candidate = self.workflow.index("gamesymbol_candidate.py build")
-        gamedata = self.workflow.index("uv run update_gamedata.py")
+        gamedata = self.workflow.index("uv run gamedata_candidate.py build")
         sdk_select = self.workflow.index("- name: Select versioned SDK for C++ ABI validation")
         cpp_tests = self.workflow.index("uv run run_cpp_tests.py")
         sdk_restore = self.workflow.index("- name: Restore pinned SDK revision")
         publish = self.workflow.index("gamesymbol_candidate.py publish")
-        stage_outputs = self.workflow.index('git add -- "gamesymbols/$env:GAMEVER.yaml" dist')
+        stage_outputs = self.workflow.index('git add -- "gamesymbols/$env:GAMEVER.yaml" "gamedata/$env:GAMEVER"')
         stage = self.workflow.index("release_workflow.py stage-build")
         stage_manifest = self.workflow.index('git add -- "release-manifests/$env:GAMEVER.json"')
         commit = self.workflow.index("git commit -m")
@@ -80,6 +81,9 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertLess(stage, stage_manifest)
         self.assertLess(stage_manifest, commit)
         self.assertLess(stage, output_pr)
+        self.assertIn('gamedata_candidate.py publish -session "$env:GAMEDATA_SESSION"', self.workflow)
+        self.assertIn('--gamedata-session "$env:GAMEDATA_SESSION"', self.workflow)
+        self.assertNotIn('git add -- "gamesymbols/$env:GAMEVER.yaml" dist', self.workflow)
 
     def test_cpp_validation_selects_versioned_sdk_with_pinned_fallback(self) -> None:
         checkout = self.workflow.index("submodules: true")
@@ -168,20 +172,34 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         tag = self.promotion.index("Apply immutable tag rules")
         release = self.promotion.index("gh release upload")
         complete = self.promotion.index("release_workflow.py finalize-promotion")
+        cleanup = self.promotion.index("release_workflow.py cleanup-completed")
         self.assertLess(verify, archive)
         self.assertLess(archive, promote)
         self.assertLess(promote, tag)
         self.assertLess(tag, release)
         self.assertLess(release, complete)
+        self.assertLess(complete, cleanup)
         self.assertIn("--clobber", self.promotion)
         self.assertIn("Uploaded asset hash mismatch", self.promotion)
         self.assertIn("Checkout trusted promotion tooling from merge base", self.promotion)
         self.assertIn(".release-tools/release_workflow.py verify-promotion", self.promotion)
         self.assertIn('"configs\\$gamever.yaml"', self.promotion)
+        self.assertIn('"gamedata\\$gamever"', self.promotion)
+        self.assertNotIn('"dist"', self.promotion)
+        self.assertIn('--release-provenance "release-provenance-', self.promotion)
         self.assertIn("analysis_config_sha256", self.promotion)
         self.assertIn("['git', 'show', f'{sys.argv[1]}:configs/{sys.argv[3]}.yaml']", self.promotion)
         self.assertIn("uv run python -c `", self.promotion)
         self.assertNotIn("$extractScript = @'", self.promotion)
+
+    def test_completed_cleanup_sweeps_only_durable_records_on_protected_runner(self) -> None:
+        self.assertIn("schedule:", self.cleanup)
+        self.assertIn("workflow_dispatch:", self.cleanup)
+        self.assertIn("environment: win64", self.cleanup)
+        self.assertIn("runs-on: [self-hosted, windows, x64]", self.cleanup)
+        self.assertIn("release_workflow.py list-completed", self.cleanup)
+        self.assertIn("release_workflow.py cleanup-completed", self.cleanup)
+        self.assertNotIn("LastWriteTime", self.cleanup)
 
     def test_bump_merge_dispatches_without_creating_tag(self) -> None:
         workflow = Path(".github/workflows/tag-bump-after-merge.yml").read_text(encoding="utf-8")

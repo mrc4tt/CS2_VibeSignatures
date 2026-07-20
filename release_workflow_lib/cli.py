@@ -5,9 +5,12 @@ from pathlib import Path
 
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.github import write_github_output
+from release_workflow_lib.legacy_cleanup import migrate_legacy_completed
 from release_workflow_lib.manifests import load_tracked_manifest, write_release_metadata
 from release_workflow_lib.promotion import (
+    cleanup_completed,
     finalize_promotion,
+    list_completed,
     promote_bin,
     reconstruct_workspace,
     verify_output_pr,
@@ -66,6 +69,7 @@ def _add_staging_parsers(commands) -> None:
     stage.add_argument("--source-sha", required=True)
     stage.add_argument("--workflow-run-url", required=True)
     stage.add_argument("--analysis-config", required=True)
+    stage.add_argument("--gamedata-session", required=True)
 
     finalize = commands.add_parser("finalize-stage")
     finalize.add_argument("--repo-root", default=".")
@@ -131,6 +135,24 @@ def _add_promotion_parsers(commands) -> None:
     complete.add_argument("--pr-number", required=True, type=int)
     complete.add_argument("--event-head-sha", required=True)
     complete.add_argument("--output-merge-sha", required=True)
+    complete.add_argument("--release-provenance", required=True)
+
+    completed = commands.add_parser("cleanup-completed")
+    completed.add_argument("--staging-root", required=True)
+    completed.add_argument("--persisted-root", required=True)
+    completed.add_argument("--gamever", required=True)
+    completed.add_argument("--build-id", required=True)
+
+    list_records = commands.add_parser("list-completed")
+    list_records.add_argument("--staging-root", required=True)
+
+    legacy = commands.add_parser("migrate-legacy-completed")
+    legacy.add_argument("--staging-root", required=True)
+    legacy.add_argument("--persisted-root", required=True)
+    legacy.add_argument("--gamever", required=True)
+    legacy.add_argument("--build-id", required=True)
+    legacy.add_argument("--release-provenance", required=True)
+    legacy.add_argument("--expected-provenance-sha256", required=True)
 
     abandon = commands.add_parser("abandon-pending")
     abandon.add_argument("--staging-root", required=True)
@@ -211,6 +233,7 @@ def _run_staging(args) -> object:
             source_sha=args.source_sha,
             workflow_run_url=args.workflow_run_url,
             analysis_config=args.analysis_config,
+            gamedata_session=args.gamedata_session,
         )
     if args.command == "finalize-stage":
         return finalize_stage(
@@ -297,6 +320,25 @@ def _run_promotion(args) -> object:
             pr_number=args.pr_number,
             event_head_sha=args.event_head_sha,
             output_merge_sha=args.output_merge_sha,
+            release_provenance=args.release_provenance,
+        )
+    if args.command == "cleanup-completed":
+        return cleanup_completed(
+            staging_root=args.staging_root,
+            persisted_root=args.persisted_root,
+            gamever=args.gamever,
+            build_id=args.build_id,
+        )
+    if args.command == "list-completed":
+        return list_completed(args.staging_root)
+    if args.command == "migrate-legacy-completed":
+        return migrate_legacy_completed(
+            staging_root=args.staging_root,
+            persisted_root=args.persisted_root,
+            gamever=args.gamever,
+            build_id=args.build_id,
+            release_provenance=args.release_provenance,
+            expected_provenance_sha256=args.expected_provenance_sha256,
         )
     if args.command == "abandon-pending":
         return abandon_pending(
