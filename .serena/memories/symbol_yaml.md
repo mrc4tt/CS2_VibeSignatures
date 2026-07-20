@@ -62,7 +62,7 @@
   - `write_func_yaml`, `write_vtable_yaml`, `write_gv_yaml`, `write_patch_yaml`, `write_struct_offset_yaml`
   - `preprocess_func_sig_via_mcp`, `preprocess_gen_func_sig_via_mcp`, `preprocess_gen_gv_sig_via_mcp`, `preprocess_gv_sig_via_mcp`, `preprocess_patch_via_mcp`, `preprocess_struct_offset_sig_via_mcp`, `preprocess_index_based_vfunc_via_mcp`
 - Loader compatibility logic: `update_gamedata.py` (`parse_struct_yaml`, `load_all_yaml_data`)
-- Downstream consumers: `dist/*/gamedata.py` (notably consumes `func_sig`, `vfunc_index`, `struct_member_offset`, `patch_bytes`).
+- Downstream consumers: `gamedata-generators/*/gamedata.py` (notably consumes `func_sig`, `vfunc_index`, `struct_member_offset`, `patch_bytes`).
 
 ## Notes
 - `offset_sig_disp` exists in writer/preprocess schema but was not observed in current `bin/` files.

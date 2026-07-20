@@ -192,7 +192,7 @@ uv run generate_reference_yaml.py -gamever 14141 -module engine -platform window
 ### 3. Convert yaml(s) to gamedata json / txt
 
 ```bash
-uv run update_gamedata.py -gamever 14168 -snapshot gamesymbols/14168.yaml [-debug]
+uv run update_gamedata.py -gamever 14168 -snapshot gamesymbols/14168.yaml -modulesdir gamedata-generators -outputdir gamedata/14168 -download_latest -strict [-debug]
 ```
 
 ### 4. Run cpp tests and check if cpp headers mismatch from yaml(s)
@@ -217,12 +217,16 @@ that same immutable candidate; publication copies its original bytes only after 
 CANDIDATE_DIR="$(mktemp -d)"
 CANDIDATE_SNAPSHOT="$CANDIDATE_DIR/14168.yaml"
 CANDIDATE_SESSION="$CANDIDATE_DIR/14168.session.json"
+GAMEDATA_ROOT="$CANDIDATE_DIR/gamedata-candidate"
+GAMEDATA_SESSION="$CANDIDATE_DIR/14168.gamedata.session.json"
 uv run gamesymbol_candidate.py build -gamever 14168 -bindir bin -configyaml configs/14168.yaml -output "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION"
-uv run update_gamedata.py -gamever 14168 -configyaml configs/14168.yaml -snapshot "$CANDIDATE_SNAPSHOT"
+uv run gamedata_candidate.py build -gamever 14168 -build-id local-1 -snapshot "$CANDIDATE_SNAPSHOT" -configyaml configs/14168.yaml -candidate-root "$GAMEDATA_ROOT" -session "$GAMEDATA_SESSION"
+uv run gamedata_candidate.py guard -session "$GAMEDATA_SESSION"
 uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step gamedata
 uv run run_cpp_tests.py -gamever 14168 -configyaml configs/14168.yaml -snapshot "$CANDIDATE_SNAPSHOT"
 uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -step cpp_tests
 uv run gamesymbol_candidate.py publish -candidate "$CANDIDATE_SNAPSHOT" -session "$CANDIDATE_SESSION" -snapshot gamesymbols/14168.yaml
+uv run gamedata_candidate.py publish -session "$GAMEDATA_SESSION" -outputdir gamedata/14168
 ```
 
 Restore a clean analysis baseline or verify the current workspace without modifying the tracked snapshot:
@@ -256,7 +260,7 @@ publishes or rewrites tracked bytes.
 
 [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp)
 
-`dist/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json`
+`gamedata/<GAMEVER>/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json`
 
  - 2 skipped symbols.
 
@@ -265,41 +269,41 @@ publishes or rewrites tracked bytes.
 
 [CS2Fixes](https://github.com/Source2ZE/CS2Fixes) 
 
-`dist/CS2Fixes/gamedata/cs2fixes.games.txt`
+`gamedata/<GAMEVER>/CS2Fixes/gamedata/cs2fixes.jsonc`
 
  - `CCSPlayerPawn_GetMaxSpeed` skipped because it is not a thing in `server.dll`
 
 [swiftlys2](https://github.com/swiftly-solution/swiftlys2) 
 
-`dist/swiftlys2/plugin_files/gamedata/cs2/core/offsets.jsonc` 
+`gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/offsets.jsonc`
 
-`dist/swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc`
+`gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc`
 
 [plugify](https://github.com/untrustedmodders/plugify-plugin-s2sdk) 
 
-`dist/plugify-plugin-s2sdk/assets/gamedata.jsonc`
+`gamedata/<GAMEVER>/plugify-plugin-s2sdk/assets/gamedata.jsonc`
 
 [cs2kz-metamod](https://github.com/KZGlobalTeam/cs2kz-metamod) 
 
-`dist/cs2kz-metamod/gamedata/cs2kz-core.games.txt`
+`gamedata/<GAMEVER>/cs2kz-metamod/gamedata/cs2kz-core.games.txt`
 
 [modsharp](https://github.com/Kxnrl/modsharp-public) 
 
-`dist/modsharp-public/.asset/gamedata/core.games.jsonc` 
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/core.games.jsonc`
 
-`dist/modsharp-public/.asset/gamedata/engine.games.jsonc` 
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/engine.games.jsonc`
 
-`dist/modsharp-public/.asset/gamedata/EntityEnhancement.games.jsonc` 
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/EntityEnhancement.games.jsonc`
 
-`dist/modsharp-public/.asset/gamedata/log.games.jsonc` 
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/log.games.jsonc`
 
-`dist/modsharp-public/.asset/gamedata/server.games.jsonc` 
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/server.games.jsonc`
 
-`dist/modsharp-public/.asset/gamedata/tier0.games.jsonc`
+`gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/tier0.games.jsonc`
 
 [CS2Surf/Timer](https://github.com/CS2Surf-CN/Timer) 
 
-`dist/cs2surf/gamedata/cs2surf-core.games.jsonc` 
+`gamedata/<GAMEVER>/cs2surf/gamedata/cs2surf-core.games.jsonc`
  
 ## How to create SKILL for vtable
 
@@ -482,7 +486,7 @@ uv run gamesymbol_candidate.py build -gamever %CS2_GAMEVER% -bindir bin -configy
 ```bash
 @echo Update gamedata from the candidate snapshot
 
-uv run update_gamedata.py -gamever %CS2_GAMEVER% -snapshot %CANDIDATE_SNAPSHOT% -debug
+uv run update_gamedata.py -gamever %CS2_GAMEVER% -snapshot %CANDIDATE_SNAPSHOT% -modulesdir gamedata-generators -outputdir gamedata/%CS2_GAMEVER% -download_latest -strict -debug
 uv run gamesymbol_candidate.py mark -candidate %CANDIDATE_SNAPSHOT% -session %CANDIDATE_SESSION% -step gamedata
 ```
 

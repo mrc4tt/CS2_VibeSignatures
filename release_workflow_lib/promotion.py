@@ -15,16 +15,44 @@ from release_workflow_lib.hashing import (
     validate_output_paths,
     verify_inventory,
     write_canonical_json,
+    sha256_file,
 )
 from release_workflow_lib.manifests import (
     ALLOWED_REPOSITORIES,
     SCHEMA_VERSION,
     load_tracked_manifest,
     parse_output_branch,
+    require_build_id,
+    require_gamever,
     require_sha,
     verify_tracked_outputs,
 )
 from release_workflow_lib.staging import load_indexed_pending
+
+COMPLETION_SCHEMA_VERSION = 1
+COMPLETION_FIELDS = {
+    "schema_version",
+    "gamever",
+    "build_id",
+    "pr_number",
+    "pr_head_sha",
+    "output_merge_sha",
+    "candidate_sha256",
+    "gamedata_manifest_sha256",
+    "bin_manifest_sha256",
+    "release_provenance_sha256",
+}
+LEGACY_COMPLETION_FIELDS = {
+    "schema_version",
+    "gamever",
+    "build_id",
+    "pr_head_sha",
+    "output_merge_sha",
+    "candidate_sha256",
+    "tracked_output_manifest_sha256",
+    "bin_manifest_sha256",
+    "release_provenance_sha256",
+}
 
 
 def _git_output(arguments: list[str]) -> str:
@@ -204,6 +232,8 @@ def _swap_verified_bin(
 
 
 def promote_bin(*, persisted_root: Path, stage_dir: Path, gamever: str, build_id: str) -> dict:
+    gamever = require_gamever(gamever)
+    build_id = require_build_id(build_id)
     persisted_root = Path(persisted_root)
     reject_reparse_components(persisted_root, persisted_root)
     persisted_root = persisted_root.resolve()
@@ -212,6 +242,8 @@ def promote_bin(*, persisted_root: Path, stage_dir: Path, gamever: str, build_id
     source = contained_path(stage_dir, "bin", gamever)
     reject_reparse_components(stage_dir, stage_dir / "manifest.json")
     pending = load_json_object(stage_dir / "manifest.json")
+    if (pending.get("gamever"), pending.get("build_id")) != (gamever, build_id):
+        raise ReleaseWorkflowError("promotion request does not match private pending manifest")
     expected_files = pending.get("bin_files", [])
     expected_hash = pending.get("bin_manifest_sha256")
     if verify_inventory(source, expected_files) != expected_hash:
@@ -224,6 +256,12 @@ def promote_bin(*, persisted_root: Path, stage_dir: Path, gamever: str, build_id
     backup = contained_path(accepted_root, f".{gamever}.{build_id}.backup")
     lock_path = contained_path(persisted_root, "release-staging", "locks", f"{gamever}.lock")
     with _version_lock(lock_path):
+        started_path = stage_dir / "PROMOTION_STARTED"
+        reject_reparse_components(stage_dir, started_path)
+        write_canonical_json(
+            started_path,
+            {"schema_version": SCHEMA_VERSION, "gamever": gamever, "build_id": build_id},
+        )
         if target.is_dir() and inventory_sha256(file_inventory(target)) == expected_hash:
             return _write_promoted_state(stage_dir=stage_dir, target=target, backup=backup if backup.exists() else None)
         moved_old = _swap_verified_bin(
@@ -237,20 +275,185 @@ def promote_bin(*, persisted_root: Path, stage_dir: Path, gamever: str, build_id
         return _write_promoted_state(stage_dir=stage_dir, target=target, backup=backup if moved_old else None)
 
 
-def finalize_promotion(*, staging_root: Path, pr_number: int, event_head_sha: str, output_merge_sha: str) -> None:
+def _completion_record(*, pending: dict, pr_number: int, output_merge_sha: str, release_provenance: Path) -> dict:
+    if pending.get("schema_version") != SCHEMA_VERSION:
+        raise ReleaseWorkflowError("completed cleanup requires the versioned-gamedata release schema")
+    return {
+        "schema_version": COMPLETION_SCHEMA_VERSION,
+        "gamever": pending["gamever"],
+        "build_id": pending["build_id"],
+        "pr_number": pr_number,
+        "pr_head_sha": pending["pr_head_sha"],
+        "output_merge_sha": require_sha(output_merge_sha, "OUTPUT_MERGE_SHA"),
+        "candidate_sha256": pending["candidate_sha256"],
+        "gamedata_manifest_sha256": pending["gamedata_manifest_sha256"],
+        "bin_manifest_sha256": pending["bin_manifest_sha256"],
+        "release_provenance_sha256": sha256_file(release_provenance),
+    }
+
+
+def _validate_completion_record(record: dict, gamever: str, build_id: str) -> dict:
+    schema_version = record.get("schema_version")
+    expected_fields = COMPLETION_FIELDS if schema_version == COMPLETION_SCHEMA_VERSION else LEGACY_COMPLETION_FIELDS
+    if set(record) != expected_fields or schema_version not in {0, COMPLETION_SCHEMA_VERSION}:
+        raise ReleaseWorkflowError("completion record has unexpected fields or schema")
+    if (record.get("gamever"), record.get("build_id")) != (
+        require_gamever(gamever),
+        require_build_id(build_id),
+    ):
+        raise ReleaseWorkflowError("completion record identity mismatch")
+    require_sha(record.get("pr_head_sha", ""), "completion PR head SHA")
+    require_sha(record.get("output_merge_sha", ""), "completion output merge SHA")
+    if schema_version == COMPLETION_SCHEMA_VERSION and (
+        not isinstance(record.get("pr_number"), int) or record["pr_number"] <= 0
+    ):
+        raise ReleaseWorkflowError("completion record has an invalid PR number")
+    hash_fields = [
+        "candidate_sha256",
+        "bin_manifest_sha256",
+        "release_provenance_sha256",
+    ]
+    hash_fields.append("gamedata_manifest_sha256" if schema_version == 1 else "tracked_output_manifest_sha256")
+    for field in hash_fields:
+        value = record.get(field, "")
+        if len(value) != 64 or any(char not in "0123456789abcdef" for char in value):
+            raise ReleaseWorkflowError(f"completion record has an invalid {field}")
+    return record
+
+
+def _recovery_paths(persisted_root: Path, gamever: str, build_id: str) -> tuple[Path, Path]:
+    accepted_root = contained_path(persisted_root, "bin")
+    return (
+        contained_path(accepted_root, f".{gamever}.{build_id}.incoming"),
+        contained_path(accepted_root, f".{gamever}.{build_id}.backup"),
+    )
+
+
+def finalize_promotion(
+    *,
+    staging_root: Path,
+    pr_number: int,
+    event_head_sha: str,
+    output_merge_sha: str,
+    release_provenance: Path,
+) -> dict:
+    staging_root = Path(staging_root)
     _index, pending, stage_dir = load_indexed_pending(staging_root, pr_number, event_head_sha)
     state = load_json_object(stage_dir / "PROMOTED.json")
     accepted = Path(state["accepted"])
     if verify_inventory(accepted, pending["bin_files"]) != pending["bin_manifest_sha256"]:
         raise ReleaseWorkflowError("accepted bin changed before promotion completion")
-    complete = {
-        "schema_version": SCHEMA_VERSION,
-        "output_merge_sha": require_sha(output_merge_sha, "OUTPUT_MERGE_SHA"),
-    }
-    write_canonical_json(stage_dir / "PROMOTION_COMPLETE", complete)
+    release_provenance = Path(release_provenance)
+    if not release_provenance.is_file():
+        raise ReleaseWorkflowError("release provenance is missing before promotion completion")
+    record = _completion_record(
+        pending=pending,
+        pr_number=pr_number,
+        output_merge_sha=output_merge_sha,
+        release_provenance=release_provenance,
+    )
+    write_canonical_json(stage_dir / "PROMOTION_COMPLETE", record)
     backup = state.get("backup")
     if backup and Path(backup).exists():
         reject_reparse_points(Path(backup))
         shutil.rmtree(backup)
-    index_path = contained_path(Path(staging_root), "pr-index", f"{pr_number}.json")
+    persisted_root = accepted.parent.parent
+    incoming_path, backup_path = _recovery_paths(persisted_root, pending["gamever"], pending["build_id"])
+    if incoming_path.exists() or backup_path.exists():
+        raise ReleaseWorkflowError("promotion recovery paths remain after backup finalization")
+    completed_path = contained_path(staging_root, "completed", pending["gamever"], f"{pending['build_id']}.json")
+    write_canonical_json(completed_path, record)
+    index_path = contained_path(staging_root, "pr-index", f"{pr_number}.json")
     index_path.unlink()
+    return record
+
+
+def _matching_pr_indexes(staging_root: Path, gamever: str, build_id: str) -> list[Path]:
+    index_root = contained_path(staging_root, "pr-index")
+    if not index_root.exists():
+        return []
+    reject_reparse_points(index_root)
+    matches = []
+    for path in index_root.glob("*.json"):
+        index = load_json_object(path)
+        if (index.get("gamever"), index.get("build_id")) == (gamever, build_id):
+            matches.append(path)
+    return matches
+
+
+def _validate_completed_stage(stage_dir: Path, record: dict, persisted_root: Path) -> None:
+    complete = load_json_object(stage_dir / "PROMOTION_COMPLETE")
+    if record["schema_version"] == COMPLETION_SCHEMA_VERSION:
+        if complete != record:
+            raise ReleaseWorkflowError("stage completion marker does not match durable completion record")
+    elif complete.get("output_merge_sha") != record["output_merge_sha"]:
+        raise ReleaseWorkflowError("legacy completion marker does not match durable completion record")
+    pending = load_json_object(stage_dir / "manifest.json")
+    expected_pending = {
+        "gamever": record["gamever"],
+        "build_id": record["build_id"],
+        "pr_head_sha": record["pr_head_sha"],
+        "candidate_sha256": record["candidate_sha256"],
+        "bin_manifest_sha256": record["bin_manifest_sha256"],
+    }
+    if record["schema_version"] == COMPLETION_SCHEMA_VERSION:
+        expected_pending["gamedata_manifest_sha256"] = record["gamedata_manifest_sha256"]
+    else:
+        expected_pending["tracked_output_manifest_sha256"] = record["tracked_output_manifest_sha256"]
+    if {key: pending.get(key) for key in expected_pending} != expected_pending:
+        raise ReleaseWorkflowError("private manifest does not match durable completion record")
+    promoted = load_json_object(stage_dir / "PROMOTED.json")
+    expected_accepted = contained_path(persisted_root, "bin", record["gamever"])
+    if Path(promoted.get("accepted", "")) != expected_accepted:
+        raise ReleaseWorkflowError("promoted state does not match completed accepted-bin identity")
+    expected_backup = _recovery_paths(persisted_root, record["gamever"], record["build_id"])[1]
+    if promoted.get("backup") is not None and Path(promoted["backup"]) != expected_backup:
+        raise ReleaseWorkflowError("promoted state backup path does not match completed build identity")
+
+
+def cleanup_completed(*, staging_root: Path, persisted_root: Path, gamever: str, build_id: str) -> dict:
+    staging_root = Path(staging_root)
+    persisted_root = Path(persisted_root)
+    if (persisted_root / "release-staging").resolve() != staging_root.resolve():
+        raise ReleaseWorkflowError("staging_root must be persisted_root/release-staging")
+    # Match the normalized root recorded by promote_bin in PROMOTED.json.
+    persisted_root = persisted_root.resolve()
+    completion_path = contained_path(staging_root, "completed", gamever, f"{build_id}.json")
+    reject_reparse_components(staging_root, completion_path)
+    record = _validate_completion_record(load_json_object(completion_path), gamever, build_id)
+    if _matching_pr_indexes(staging_root, gamever, build_id):
+        raise ReleaseWorkflowError("completed stage still has a matching PR index")
+    incoming_path, backup_path = _recovery_paths(persisted_root, gamever, build_id)
+    if incoming_path.exists() or backup_path.exists():
+        raise ReleaseWorkflowError("completed stage still has promotion recovery paths")
+    stage_dir = contained_path(staging_root, gamever, build_id)
+    trash_dir = contained_path(staging_root, "cleanup-trash", gamever, build_id)
+    lock_path = contained_path(staging_root, "locks", f"{gamever}.lock")
+    resumed = False
+    with _version_lock(lock_path):
+        if stage_dir.exists() and trash_dir.exists():
+            raise ReleaseWorkflowError("both completed stage and cleanup trash exist")
+        if stage_dir.exists():
+            reject_reparse_points(stage_dir)
+            _validate_completed_stage(stage_dir, record, persisted_root)
+            trash_dir.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(stage_dir, trash_dir)
+        elif trash_dir.exists():
+            reject_reparse_points(trash_dir)
+            resumed = True
+        else:
+            return {"status": "already-absent", "gamever": gamever, "build_id": build_id}
+    shutil.rmtree(trash_dir)
+    return {"status": "resumed" if resumed else "removed", "gamever": gamever, "build_id": build_id}
+
+
+def list_completed(staging_root: Path) -> list[dict]:
+    completed_root = contained_path(Path(staging_root), "completed")
+    if not completed_root.exists():
+        return []
+    reject_reparse_points(completed_root)
+    records = []
+    for path in sorted(completed_root.glob("*/*.json")):
+        record = load_json_object(path)
+        records.append(_validate_completion_record(record, path.parent.name, path.stem))
+    return records

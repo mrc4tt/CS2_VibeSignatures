@@ -1,3 +1,4 @@
+import json
 import subprocess
 import tempfile
 import unittest
@@ -8,12 +9,13 @@ from gamesymbol_snapshot_lib.codec import build_snapshot_document, canonical_sna
 from gamesymbol_snapshot_lib.config import load_contract
 from release_workflow_lib.cli import _parser
 from release_workflow_lib.errors import ReleaseWorkflowError
+from release_workflow_lib.hashing import sha256_file, write_canonical_json
+from release_workflow_lib.manifests import CONTRACT_TRACKED_FIELDS, format_output_branch
 from release_workflow_lib.promotion import verify_output_pr, verify_promotion
-from release_workflow_lib.staging import cleanup_incomplete, cleanup_unmerged
+from release_workflow_lib.staging import abandon_pending, cleanup_incomplete, cleanup_unmerged
 from release_workflow_lib.validation import invalidate_republish, validate_build_input
 from tests.test_release_workflow import ReleaseFixture
 from tests.release_branch_protocol import LEGACY_OUTPUT_BRANCH
-from release_workflow_lib.manifests import format_output_branch
 
 
 class LegacyBootstrapFixture:
@@ -262,6 +264,156 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
 
             self.assertFalse(stage_dir.exists())
             self.assertEqual(b"accepted", marker.read_bytes())
+
+    def test_explicit_abandon_removes_only_matching_unpromoted_pending_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            fixture.stage()
+            stage_dir = fixture.finalize_and_index()
+            accepted = fixture.root / "persisted" / "bin" / fixture.gamever
+            accepted.mkdir(parents=True)
+            marker = accepted / "accepted.dll"
+            marker.write_bytes(b"accepted")
+
+            result = abandon_pending(
+                staging_root=fixture.staging,
+                persisted_root=fixture.root / "persisted",
+                repository="HLND2T/CS2_VibeSignatures",
+                output_branch=f"gamesymbols/build/{fixture.gamever}/{fixture.build_id}",
+                gamever=fixture.gamever,
+                build_id=fixture.build_id,
+                pr_number=42,
+                event_head_sha=fixture.head_sha,
+                confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
+                reason="Promotion failed before promote-bin",
+            )
+
+            self.assertEqual(fixture.build_id, result["build_id"])
+            self.assertFalse(stage_dir.exists())
+            self.assertFalse((fixture.staging / "pr-index" / "42.json").exists())
+            self.assertEqual(b"accepted", marker.read_bytes())
+
+    def test_explicit_abandon_requires_exact_confirmation_and_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            fixture.stage()
+            stage_dir = fixture.finalize_and_index()
+            kwargs = {
+                "staging_root": fixture.staging,
+                "persisted_root": fixture.root / "persisted",
+                "repository": "HLND2T/CS2_VibeSignatures",
+                "output_branch": f"gamesymbols/build/{fixture.gamever}/{fixture.build_id}",
+                "gamever": fixture.gamever,
+                "build_id": fixture.build_id,
+                "pr_number": 42,
+                "event_head_sha": fixture.head_sha,
+                "reason": "Promotion failed before promote-bin",
+            }
+
+            with self.assertRaisesRegex(ReleaseWorkflowError, "confirmation"):
+                abandon_pending(confirmation="ABANDON wrong/build", **kwargs)
+            with self.assertRaisesRegex(ReleaseWorkflowError, "build identity"):
+                abandon_pending(
+                    confirmation=f"ABANDON {fixture.gamever}/999-1",
+                    **{**kwargs, "build_id": "999-1"},
+                )
+            with self.assertRaisesRegex(ReleaseWorkflowError, "output branch"):
+                abandon_pending(
+                    confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
+                    **{**kwargs, "output_branch": f"gamesymbols/build/14171/{fixture.build_id}"},
+                )
+            with self.assertRaisesRegex(ReleaseWorkflowError, "allowlisted"):
+                abandon_pending(
+                    confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
+                    **{**kwargs, "repository": "other/repository"},
+                )
+            self.assertTrue(stage_dir.exists())
+
+    def test_explicit_abandon_refuses_any_started_promotion_state(self) -> None:
+        for marker_name in ("PROMOTION_STARTED", "PROMOTED.json", "PROMOTION_COMPLETE"):
+            with self.subTest(marker=marker_name), tempfile.TemporaryDirectory() as tmp:
+                fixture = ReleaseFixture(Path(tmp))
+                fixture.stage()
+                stage_dir = fixture.finalize_and_index()
+                (stage_dir / marker_name).write_text("{}\n", encoding="utf-8")
+
+                with self.assertRaisesRegex(ReleaseWorkflowError, "resume instead of abandon"):
+                    abandon_pending(
+                        staging_root=fixture.staging,
+                        persisted_root=fixture.root / "persisted",
+                        repository="HLND2T/CS2_VibeSignatures",
+                        output_branch=f"gamesymbols/build/{fixture.gamever}/{fixture.build_id}",
+                        gamever=fixture.gamever,
+                        build_id=fixture.build_id,
+                        pr_number=42,
+                        event_head_sha=fixture.head_sha,
+                        confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
+                        reason="Promotion failed before promote-bin",
+                    )
+
+    def test_explicit_abandon_refuses_transaction_recovery_paths(self) -> None:
+        for suffix in ("incoming", "backup"):
+            with self.subTest(suffix=suffix), tempfile.TemporaryDirectory() as tmp:
+                fixture = ReleaseFixture(Path(tmp))
+                fixture.stage()
+                stage_dir = fixture.finalize_and_index()
+                recovery = fixture.root / "persisted" / "bin" / f".{fixture.gamever}.{fixture.build_id}.{suffix}"
+                recovery.mkdir(parents=True)
+
+                with self.assertRaisesRegex(ReleaseWorkflowError, "recovery path exists"):
+                    abandon_pending(
+                        staging_root=fixture.staging,
+                        persisted_root=fixture.root / "persisted",
+                        repository="HLND2T/CS2_VibeSignatures",
+                        output_branch=f"gamesymbols/build/{fixture.gamever}/{fixture.build_id}",
+                        gamever=fixture.gamever,
+                        build_id=fixture.build_id,
+                        pr_number=42,
+                        event_head_sha=fixture.head_sha,
+                        confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
+                        reason="Promotion failed before promote-bin",
+                    )
+                self.assertTrue(stage_dir.exists())
+
+    def test_explicit_abandon_accepts_exact_legacy_branch_and_schema_two_pending_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            fixture.stage()
+            stage_dir = fixture.finalize_and_index()
+            legacy_branch = f"gamesymbols/{fixture.gamever}/build-{fixture.build_id}"
+            manifest_path = stage_dir / "manifest.json"
+            pending = json.loads(manifest_path.read_text(encoding="utf-8"))
+            pending = {
+                **{key: pending[key] for key in CONTRACT_TRACKED_FIELDS},
+                "repository": pending["repository"],
+                "output_branch": legacy_branch,
+                "pr_head_sha": pending["pr_head_sha"],
+                "bin_files": pending["bin_files"],
+                "tracked_files": pending["tracked_files"],
+            }
+            pending["schema_version"] = 2
+            write_canonical_json(manifest_path, pending)
+            (stage_dir / "READY").write_text(f"{sha256_file(manifest_path)}\n", encoding="ascii")
+            index_path = fixture.staging / "pr-index" / "42.json"
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            index.update({"schema_version": 2, "output_branch": legacy_branch})
+            write_canonical_json(index_path, index)
+
+            abandon_pending(
+                staging_root=fixture.staging,
+                persisted_root=fixture.root / "persisted",
+                repository="HLND2T/CS2_VibeSignatures",
+                output_branch=legacy_branch,
+                gamever=fixture.gamever,
+                build_id=fixture.build_id,
+                pr_number=42,
+                event_head_sha=fixture.head_sha,
+                confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
+                reason="Historical promotion failed before promote-bin",
+            )
+
+            self.assertFalse(stage_dir.exists())
+            self.assertFalse(index_path.exists())
 
     def test_incomplete_cleanup_removes_only_state_without_ready_marker(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

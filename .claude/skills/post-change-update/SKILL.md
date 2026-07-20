@@ -16,7 +16,8 @@ layouts and does not commit; callers must place `/post-change-validation` betwee
 
 - `phase` — required; exactly `before-validation` or `after-validation`.
 - `gamever` — use the caller-provided value. If omitted, read `CS2VIBE_GAMEVER` from `.env`.
-- `candidate` and `session` — required for `after-validation`; use the paths returned by `before-validation`.
+- `candidate`, `session`, and `gamedata_session` — required for `after-validation`; use the paths returned by
+  `before-validation`.
 
 Stop if the phase is missing or invalid. Stop if no non-empty game version can be resolved.
 Set `ANALYSIS_CONFIG="configs/$GAMEVER.yaml"` and stop if it is not a file.
@@ -41,9 +42,12 @@ uv run python format_repo_files.py --check
 CANDIDATE_ROOT="$(mktemp -d "/tmp/gamesymbol-candidate-${GAMEVER}-XXXXXX")"
 CANDIDATE="$CANDIDATE_ROOT/${GAMEVER}.yaml"
 CANDIDATE_SESSION="$CANDIDATE_ROOT/${GAMEVER}.session.json"
+GAMEDATA_ROOT="$CANDIDATE_ROOT/gamedata-candidate"
+GAMEDATA_SESSION="$CANDIDATE_ROOT/${GAMEVER}.gamedata.session.json"
 uv run gamesymbol_candidate.py build -gamever "$GAMEVER" -bindir bin -configyaml "$ANALYSIS_CONFIG" -output "$CANDIDATE" -session "$CANDIDATE_SESSION"
 uv run gamesymbol_candidate.py guard -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION"
-uv run update_gamedata.py -gamever "$GAMEVER" -snapshot "$CANDIDATE" -debug
+uv run gamedata_candidate.py build -gamever "$GAMEVER" -build-id local-1 -snapshot "$CANDIDATE" -configyaml "$ANALYSIS_CONFIG" -candidate-root "$GAMEDATA_ROOT" -session "$GAMEDATA_SESSION" -debug
+uv run gamedata_candidate.py guard -session "$GAMEDATA_SESSION"
 uv run gamesymbol_candidate.py guard -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION"
 uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION" -step gamedata
 ```
@@ -52,8 +56,8 @@ The write-mode formatter is intentional. The following `--check` proves the resu
 files are clean. If formatting, the check, or gamedata generation fails, stop the calling task and report the
 failure; do not continue to C++ validation.
 
-On success, report which tracked files changed plus the candidate path, session path, and candidate SHA-256. Return
-control to the caller so it can pass those exact paths to `/post-change-validation`.
+On success, report which tracked files changed plus the symbol candidate/session paths, gamedata session path, and
+candidate SHA-256. Return control to the caller so it can pass those exact paths to `/post-change-validation`.
 
 ## Phase: after-validation
 
@@ -62,7 +66,9 @@ calling task. If that evidence is absent or validation failed, stop without modi
 
 ```bash
 uv run gamesymbol_candidate.py guard -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION"
+uv run gamedata_candidate.py guard -session "$GAMEDATA_SESSION"
 uv run gamesymbol_candidate.py publish -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION" -snapshot "gamesymbols/$GAMEVER.yaml"
+uv run gamedata_candidate.py publish -session "$GAMEDATA_SESSION" -outputdir "gamedata/$GAMEVER"
 ```
 
 If publication fails, report the exit code and diagnostics, then stop before commit. On success, verify that the
