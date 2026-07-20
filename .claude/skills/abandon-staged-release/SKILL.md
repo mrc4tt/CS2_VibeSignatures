@@ -33,6 +33,8 @@ remove staging paths manually, accept a user-supplied SHA/path, resume promotion
 
 3. The script automatically discovers the exact output branch and requires exactly one trusted merged Bot PR from
    the same repository into `main`; it derives the PR number and head SHA rather than accepting either from the user.
+   Discovery accepts the canonical `gamesymbols/build/<GAMEVER>/<BUILD_ID>` branch and, only for historical recovery,
+   the exact legacy `gamesymbols/<GAMEVER>/build-<BUILD_ID>` branch. All other trust and identity checks remain required.
 4. Report the target evidence, discovered PR URL, game version/build ID/head SHA, reason, and Actions run URL.
 5. If the script or workflow refuses the operation, surface the exact safety reason and stop. Never bypass repository,
    PR author/repository/base/branch, confirmation, active-run, promotion-marker, recovery-path, or index/manifest checks.

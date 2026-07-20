@@ -12,7 +12,10 @@ from urllib.parse import urlparse
 
 
 ALLOWED_REPOSITORIES = {"HLND2T/CS2_VibeSignatures", "hzqst/CS2_VibeSignatures"}
-OUTPUT_BRANCH_RE = re.compile(r"^gamesymbols/build/(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
+OUTPUT_BRANCH_RES = (
+    re.compile(r"^gamesymbols/build/(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$"),
+    re.compile(r"^gamesymbols/(?P<gamever>[0-9]{4,10}[a-z]?)/build-(?P<build_id>[0-9]+-[0-9]+)$"),
+)
 TARGET_RE = re.compile(r"^(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
 CONFIRMATION_RE = re.compile(r"^ABANDON (?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
 RUN_TITLE_RE = re.compile(r"^Release build (?P<gamever>[0-9]{4,10}[a-z]?)$")
@@ -209,7 +212,12 @@ def _trusted_pr_identity(pull: dict, repository: str, gamever: str, build_id: st
         return None
     if head_repo.get("full_name") != repository or base.get("ref") != "main":
         return None
-    match = OUTPUT_BRANCH_RE.fullmatch(str(head.get("ref", "")))
+    branch = str(head.get("ref", ""))
+    match = None
+    for pattern in OUTPUT_BRANCH_RES:
+        match = pattern.fullmatch(branch)
+        if match:
+            break
     if not match or (match.group("gamever"), match.group("build_id")) != (gamever, build_id):
         return None
     head_sha = str(head.get("sha", "")).lower()
@@ -224,31 +232,37 @@ def _trusted_pr_identity(pull: dict, repository: str, gamever: str, build_id: st
         "gamever": gamever,
         "build_id": build_id,
         "head_sha": head_sha,
+        "output_branch": branch,
     }
 
 
 def discover_pr_identity(root: Path, repository: str, gamever: str, build_id: str) -> dict:
-    branch = f"gamesymbols/build/{gamever}/{build_id}"
     owner = repository.split("/", 1)[0]
-    result = run_command(
-        [
-            "gh",
-            "api",
-            "-X",
-            "GET",
-            f"repos/{repository}/pulls",
-            "-f",
-            "state=closed",
-            "-f",
-            f"head={owner}:{branch}",
-            "-f",
-            "base=main",
-            "-f",
-            "per_page=100",
-        ],
-        root,
+    branches = (
+        f"gamesymbols/build/{gamever}/{build_id}",
+        f"gamesymbols/{gamever}/build-{build_id}",
     )
-    pulls = parse_json_list(result.stdout, "generated-output PR discovery")
+    pulls = []
+    for branch in branches:
+        result = run_command(
+            [
+                "gh",
+                "api",
+                "-X",
+                "GET",
+                f"repos/{repository}/pulls",
+                "-f",
+                "state=closed",
+                "-f",
+                f"head={owner}:{branch}",
+                "-f",
+                "base=main",
+                "-f",
+                "per_page=100",
+            ],
+            root,
+        )
+        pulls.extend(parse_json_list(result.stdout, f"generated-output PR discovery for {branch}"))
     trusted = [
         identity
         for pull in pulls

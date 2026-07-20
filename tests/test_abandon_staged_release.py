@@ -169,16 +169,47 @@ class TestAbandonStagedRelease(unittest.TestCase):
 
     def test_unique_trusted_merged_pr_is_discovered_from_build_identity(self) -> None:
         pulls = [pull_request_payload()]
-        with patch.object(abandon, "run_command", return_value=completed([], stdout=json.dumps(pulls))) as command:
+        with patch.object(
+            abandon,
+            "run_command",
+            side_effect=[completed([], stdout=json.dumps(pulls)), completed([], stdout="[]")],
+        ) as command:
             identity = abandon.discover_pr_identity(Path("."), "HLND2T/CS2_VibeSignatures", "14168", "29686825445-1")
         self.assertEqual(582, identity["pr_number"])
         self.assertEqual("6a44f19be35e6fc876d9e74b46f494f214b383d1", identity["head_sha"])
-        discovery = command.call_args.args[0]
+        discovery = command.call_args_list[0].args[0]
         self.assertIn("head=HLND2T:gamesymbols/build/14168/29686825445-1", discovery)
         self.assertNotIn("582", discovery)
 
+    def test_exact_legacy_trusted_merged_pr_is_discovered_for_historical_recovery(self) -> None:
+        legacy = pull_request_payload(
+            number=575,
+            head={
+                "ref": "gamesymbols/14168b/build-29568028525-1",
+                "sha": "018b2af391d7e4db6f04f103e80a68c73a6ebfba",
+                "repo": {"full_name": "HLND2T/CS2_VibeSignatures"},
+            },
+        )
+        with patch.object(
+            abandon,
+            "run_command",
+            side_effect=[completed([], stdout="[]"), completed([], stdout=json.dumps([legacy]))],
+        ) as command:
+            identity = abandon.discover_pr_identity(Path("."), "HLND2T/CS2_VibeSignatures", "14168b", "29568028525-1")
+        self.assertEqual(575, identity["pr_number"])
+        self.assertEqual("gamesymbols/14168b/build-29568028525-1", identity["output_branch"])
+        legacy_discovery = command.call_args_list[1].args[0]
+        self.assertIn("head=HLND2T:gamesymbols/14168b/build-29568028525-1", legacy_discovery)
+
     def test_pr_discovery_rejects_missing_untrusted_or_ambiguous_matches(self) -> None:
         untrusted = pull_request_payload(user={"login": "someone"})
+        malformed_legacy = pull_request_payload(
+            head={
+                "ref": "gamesymbols/14168/build-29686825445-1/extra",
+                "sha": "6a44f19be35e6fc876d9e74b46f494f214b383d1",
+                "repo": {"full_name": "HLND2T/CS2_VibeSignatures"},
+            }
+        )
         duplicate = pull_request_payload(
             number=583,
             head={
@@ -188,14 +219,19 @@ class TestAbandonStagedRelease(unittest.TestCase):
             },
         )
         cases = (
-            ([], "no trusted merged"),
-            ([untrusted], "no trusted merged"),
-            ([pull_request_payload(), duplicate], "multiple trusted merged"),
+            (([], []), "no trusted merged"),
+            (([untrusted], []), "no trusted merged"),
+            (([], [malformed_legacy]), "no trusted merged"),
+            (([pull_request_payload()], [duplicate]), "multiple trusted merged"),
         )
-        for pulls, message in cases:
+        for responses, message in cases:
             with (
                 self.subTest(message=message),
-                patch.object(abandon, "run_command", return_value=completed([], stdout=json.dumps(pulls))),
+                patch.object(
+                    abandon,
+                    "run_command",
+                    side_effect=[completed([], stdout=json.dumps(pulls)) for pulls in responses],
+                ),
                 self.assertRaisesRegex(abandon.AbandonError, message),
             ):
                 abandon.discover_pr_identity(Path("."), "HLND2T/CS2_VibeSignatures", "14168", "29686825445-1")
@@ -321,6 +357,9 @@ class TestAbandonStagedRelease(unittest.TestCase):
         self.assertIn("environment: win64", workflow)
         self.assertIn("release_workflow.py abandon-pending", workflow)
         self.assertIn("secrets.PERSISTED_WORKSPACE", workflow)
+        self.assertIn("^gamesymbols/(?<gamever>[0-9]{4,10}[a-z]?)/build-", workflow)
+        self.assertIn('--repository "${{ github.repository }}"', workflow)
+        self.assertIn('--output-branch "$env:OUTPUT_BRANCH"', workflow)
         self.assertIn('--pr-number "$env:PR_NUMBER"', workflow)
         self.assertNotIn('--pr-number "${{ inputs.pr_number }}"', workflow)
         self.assertNotIn("cleanup-unmerged", workflow)

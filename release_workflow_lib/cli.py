@@ -157,6 +157,8 @@ def _add_promotion_parsers(commands) -> None:
     abandon = commands.add_parser("abandon-pending")
     abandon.add_argument("--staging-root", required=True)
     abandon.add_argument("--persisted-root", required=True)
+    abandon.add_argument("--repository", required=True)
+    abandon.add_argument("--output-branch", required=True)
     abandon.add_argument("--gamever", required=True)
     abandon.add_argument("--build-id", required=True)
     abandon.add_argument("--pr-number", required=True, type=int)
@@ -344,6 +346,8 @@ def _run_promotion(args) -> object:
         return abandon_pending(
             staging_root=args.staging_root,
             persisted_root=args.persisted_root,
+            repository=args.repository,
+            output_branch=args.output_branch,
             gamever=args.gamever,
             build_id=args.build_id,
             pr_number=args.pr_number,

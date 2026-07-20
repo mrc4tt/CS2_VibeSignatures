@@ -17,6 +17,9 @@ GAMEVER_RE = re.compile(r"^[0-9]{4,10}[a-z]?$")
 SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 BUILD_ID_RE = re.compile(r"^[0-9]+-[0-9]+$")
 BRANCH_RE = re.compile(r"^gamesymbols/build/(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
+LEGACY_BRANCH_RE = re.compile(
+    r"^gamesymbols/(?P<gamever>[0-9]{4,10}[a-z]?)/build-(?P<build_id>[0-9]+-[0-9]+)$"
+)
 ALLOWED_REPOSITORIES = {"HLND2T/CS2_VibeSignatures", "hzqst/CS2_VibeSignatures"}
 SCHEMA_VERSION = 4
 PRE_GAMEDATA_SCHEMA_VERSION = 3
@@ -90,6 +93,13 @@ def parse_output_branch(branch: str) -> tuple[str, str]:
     if not match:
         raise ReleaseWorkflowError(f"invalid generated-output branch: {branch!r}")
     return match.group("gamever"), match.group("build_id")
+
+
+def parse_abandon_output_branch(branch: str) -> tuple[str, str]:
+    for pattern in (BRANCH_RE, LEGACY_BRANCH_RE):
+        if match := pattern.fullmatch(branch):
+            return match.group("gamever"), match.group("build_id")
+    raise ReleaseWorkflowError(f"invalid generated-output abandonment branch: {branch!r}")
 
 
 def build_tracked_manifest(
@@ -206,8 +216,9 @@ def build_tracked_manifest(
     return manifest
 
 
-def validate_tracked_manifest(manifest: dict) -> dict:
-    schema_version = manifest.get("schema_version")
+def tracked_fields_for_schema(schema_version: object) -> set[str]:
+    if not isinstance(schema_version, int):
+        raise ReleaseWorkflowError(f"unsupported tracked release manifest schema: {schema_version!r}")
     fields_by_schema = {
         LEGACY_SCHEMA_VERSION: LEGACY_TRACKED_FIELDS,
         CONTRACT_SCHEMA_VERSION: CONTRACT_TRACKED_FIELDS,
@@ -217,6 +228,11 @@ def validate_tracked_manifest(manifest: dict) -> dict:
     fields = fields_by_schema.get(schema_version)
     if fields is None:
         raise ReleaseWorkflowError(f"unsupported tracked release manifest schema: {schema_version!r}")
+    return fields
+
+
+def validate_tracked_manifest(manifest: dict) -> dict:
+    fields = tracked_fields_for_schema(manifest.get("schema_version"))
     if set(manifest) != fields:
         raise ReleaseWorkflowError("tracked release manifest has unexpected or missing fields")
     expected = build_tracked_manifest(

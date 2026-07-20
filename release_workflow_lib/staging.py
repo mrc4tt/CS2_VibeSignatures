@@ -21,10 +21,12 @@ from release_workflow_lib.manifests import (
     TRACKED_FIELDS,
     build_tracked_manifest,
     load_tracked_manifest,
+    parse_abandon_output_branch,
     parse_output_branch,
     require_build_id,
     require_gamever,
     require_sha,
+    tracked_fields_for_schema,
     validate_tracked_manifest,
     verify_tracked_outputs,
 )
@@ -253,26 +255,36 @@ def write_pr_index(*, staging_root: Path, pr_number: int, gamever: str, build_id
     return index_path
 
 
-def load_indexed_pending(staging_root: Path, pr_number: int, event_head_sha: str) -> tuple[dict, dict, Path]:
+def load_indexed_pending(
+    staging_root: Path, pr_number: int, event_head_sha: str, *, allow_legacy_schema: bool = False
+) -> tuple[dict, dict, Path]:
     event_head_sha = require_sha(event_head_sha, "event head SHA")
     index_path = contained_path(Path(staging_root), "pr-index", f"{pr_number}.json")
     reject_reparse_components(staging_root, index_path)
     index = load_json_object(index_path)
+    expected_index_fields = {"schema_version", "pr_number", "gamever", "build_id", "pr_head_sha", "output_branch"}
+    if set(index) != expected_index_fields:
+        raise ReleaseWorkflowError("pending PR index has unexpected or missing fields")
     if index.get("pr_number") != pr_number or index.get("pr_head_sha") != event_head_sha:
         raise ReleaseWorkflowError("PR event identity does not match pending index")
     stage_dir = staging_directory(staging_root, index.get("gamever", ""), index.get("build_id", ""))
     reject_reparse_components(staging_root, stage_dir / "manifest.json")
     reject_reparse_components(staging_root, stage_dir / "READY")
     pending = load_json_object(stage_dir / "manifest.json")
-    expected_fields = TRACKED_FIELDS | {"repository", "output_branch", "pr_head_sha", "bin_files", "tracked_files"}
+    if not allow_legacy_schema and pending.get("schema_version") != SCHEMA_VERSION:
+        raise ReleaseWorkflowError("pending staging state does not use the current schema")
+    tracked_fields = tracked_fields_for_schema(pending.get("schema_version"))
+    expected_fields = tracked_fields | {"repository", "output_branch", "pr_head_sha", "bin_files", "tracked_files"}
     if set(pending) != expected_fields:
         raise ReleaseWorkflowError("private pending manifest has unexpected or missing fields")
+    if pending.get("schema_version") != index.get("schema_version"):
+        raise ReleaseWorkflowError("private manifest schema does not match pending PR index")
     if pending.get("pr_head_sha") != event_head_sha or pending.get("output_branch") != index.get("output_branch"):
         raise ReleaseWorkflowError("private manifest identity does not match PR index")
     ready = stage_dir / "READY"
     if not ready.is_file() or ready.read_text(encoding="ascii").strip() != sha256_file(stage_dir / "manifest.json"):
         raise ReleaseWorkflowError("pending staging READY marker is invalid")
-    validate_tracked_manifest({key: pending[key] for key in TRACKED_FIELDS})
+    validate_tracked_manifest({key: pending[key] for key in tracked_fields})
     return index, pending, stage_dir
 
 
@@ -292,6 +304,8 @@ def abandon_pending(
     *,
     staging_root: Path,
     persisted_root: Path,
+    repository: str,
+    output_branch: str,
     gamever: str,
     build_id: str,
     pr_number: int,
@@ -299,8 +313,14 @@ def abandon_pending(
     confirmation: str,
     reason: str,
 ) -> dict:
+    if repository not in ALLOWED_REPOSITORIES:
+        raise ReleaseWorkflowError(f"repository is not allowlisted: {repository}")
     gamever = require_gamever(gamever)
     build_id = require_build_id(build_id)
+    expected_identity = (gamever, build_id)
+    if parse_abandon_output_branch(output_branch) != expected_identity:
+        raise ReleaseWorkflowError("output branch does not match requested build identity")
+    legacy_branch = output_branch != f"gamesymbols/build/{gamever}/{build_id}"
     expected_confirmation = f"ABANDON {gamever}/{build_id}"
     if confirmation != expected_confirmation:
         raise ReleaseWorkflowError(f"confirmation must exactly equal {expected_confirmation!r}")
@@ -308,12 +328,17 @@ def abandon_pending(
     if not reason or len(reason) > ABANDON_REASON_MAX_LENGTH or any(char in reason for char in "\r\n"):
         raise ReleaseWorkflowError("abandon reason must be one non-empty line of at most 500 characters")
 
-    index, pending, stage_dir = load_indexed_pending(staging_root, pr_number, event_head_sha)
-    expected_identity = (gamever, build_id)
+    index, pending, stage_dir = load_indexed_pending(
+        staging_root, pr_number, event_head_sha, allow_legacy_schema=legacy_branch
+    )
     if (index.get("gamever"), index.get("build_id")) != expected_identity:
         raise ReleaseWorkflowError("requested build identity does not match pending PR index")
     if (pending.get("gamever"), pending.get("build_id")) != expected_identity:
         raise ReleaseWorkflowError("requested build identity does not match private pending manifest")
+    if index.get("output_branch") != output_branch or pending.get("output_branch") != output_branch:
+        raise ReleaseWorkflowError("requested output branch does not match indexed pending state")
+    if pending.get("repository") != repository:
+        raise ReleaseWorkflowError("requested repository does not match private pending manifest")
 
     for marker in PROMOTION_STATE_MARKERS:
         marker_path = stage_dir / marker
