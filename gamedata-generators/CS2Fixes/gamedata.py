@@ -21,8 +21,9 @@ from gamedata_utils import (
 MODULE_NAME = "CS2Fixes"
 MODULE_ENABLED = True
 
-# Relative path to gamedata file within this dist directory
+# Relative path to gamedata file within the module output directory
 GAMEDATA_PATH = "gamedata/cs2fixes.jsonc"
+OUTPUT_PATHS = (GAMEDATA_PATH,)
 
 # Upstream download sources: (raw_url, relative_dest_path)
 DOWNLOAD_SOURCES = [
@@ -39,7 +40,7 @@ STRUCT_MEMBER_OFFSET_DIVISOR = {
 }
 
 
-def update(yaml_data, func_lib_map, platforms, dist_dir, alias_to_name_map, debug=False):
+def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
     """
     Update CS2Fixes cs2fixes.jsonc file (JSONC format).
 
@@ -47,14 +48,14 @@ def update(yaml_data, func_lib_map, platforms, dist_dir, alias_to_name_map, debu
         yaml_data: Loaded YAML data
         func_lib_map: Function name to library mapping
         platforms: List of platforms to update
-        dist_dir: Path to this module's dist directory
+        output_dir: Path to this module's versioned output directory
         alias_to_name_map: Mapping from aliases to function names
         debug: If True, collect updated and skipped symbols info
 
     Returns:
         Tuple of (updated_count, skipped_count, updated_symbols, skipped_symbols)
     """
-    gamedata_path = os.path.join(dist_dir, GAMEDATA_PATH)
+    gamedata_path = os.path.join(output_dir, GAMEDATA_PATH)
 
     if not os.path.exists(gamedata_path):
         print(f"  Warning: CS2Fixes gamedata not found: {gamedata_path}")

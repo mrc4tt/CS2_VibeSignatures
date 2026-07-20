@@ -11,7 +11,8 @@ supersedes the previous release timing in
 
 The current new-version flow creates the game-version tag, runs analysis, persists `bin/<GAMEVER>`, creates a
 follow-up snapshot/gamedata PR, and immediately publishes the Release. This allows the shared cache and public
-Release to become official before `gamesymbols/<GAMEVER>.yaml` and `dist/` have been merged into the default branch.
+Release to become official before `gamesymbols/<GAMEVER>.yaml` and `gamedata/<GAMEVER>/` have been merged into the
+default branch.
 
 The new design separates four identities that were previously represented by one tag:
 
@@ -65,7 +66,7 @@ validated build output
 - The generated-output PR is the review and repository-acceptance boundary.
 - `PERSISTED_WORKSPACE/release-staging` is pending, non-authoritative state.
 - `PERSISTED_WORKSPACE/bin/<GAMEVER>` is accepted cache state.
-- `gamesymbols/<GAMEVER>.yaml` and `dist/` on the default branch are the canonical tracked outputs.
+- `gamesymbols/<GAMEVER>.yaml` and `gamedata/<GAMEVER>/` on the default branch are the canonical tracked outputs.
 - GitHub Release is a distribution surface created only from accepted tracked output and the matching staged bin.
 
 ## End-to-End Flows
@@ -144,7 +145,8 @@ default branch, `download.yaml` membership, and tag presence rules before using 
 4. Prepare deterministic base state and apply the invalidation policy described below.
 5. Run the existing analyzer with its normal producer selection, skip, and signature-reuse behavior.
 6. Build one immutable candidate and run gamedata plus C++ validation against that candidate.
-7. Publish the validated candidate into the working tree and generate tracked `dist/` output.
+7. Publish the validated symbol candidate and guarded gamedata candidate into `gamesymbols/<GAMEVER>.yaml` and
+   `gamedata/<GAMEVER>/`.
 8. Write `release-manifests/<GAMEVER>.json` into the output commit.
 9. Stage the validated bin and private manifest under `PERSISTED_WORKSPACE/release-staging`.
 10. Create an immutable generated-output branch and PR, then write the PR-number index.
@@ -208,20 +210,28 @@ PERSISTED_WORKSPACE/
         bin/<GAMEVER>/...
         manifest.json
         READY
+        PROMOTION_STARTED
+        PROMOTED.json
+        PROMOTION_COMPLETE
     pr-index/
       <PR_NUMBER>.json
+    completed/<GAMEVER>/<BUILD_ID>.json
+    cleanup-trash/<GAMEVER>/<BUILD_ID>/...
+    locks/<GAMEVER>.lock
 ```
 
 The private manifest includes the tracked fields plus repository identity, output branch, PR head SHA, file inventory,
 sizes, and hashes. `READY` is written only after all staged files and manifests have been verified. The PR index is
-written only after PR creation and binds PR number, head SHA, `GAMEVER`, and `BUILD_ID`.
+written only after PR creation and binds PR number, head SHA, `GAMEVER`, and `BUILD_ID`. Private staging contains no
+gamedata payload; the accepted Git tree is the only gamedata source used by promotion.
 
 ## Generated-Output PR Contract
 
 The PR may change only:
 
 - `gamesymbols/<GAMEVER>.yaml`
-- tracked files below `dist/`
+- tracked files below the exact `gamedata/<GAMEVER>/` root
+- `release-manifests/<GAMEVER>.json`
 - `release-manifests/<GAMEVER>.json`
 
 The PR author, head repository, branch prefix, base branch, tracked manifest, pending PR index, and event head SHA must
@@ -254,8 +264,8 @@ Promotion performs these steps:
 
 1. Checkout exactly `pull_request.merge_commit_sha` with submodules.
 2. Load the tracked manifest and matching private pending manifest.
-3. Verify the merge base parent matches `SOURCE_SHA`, then verify snapshot, `dist/`, staged-bin inventory, candidate
-   hash, and tracked-output hash.
+3. Verify the merge base parent matches `SOURCE_SHA`, then verify snapshot, versioned gamedata inventory and generator
+   contract, staged-bin inventory, candidate hash, and tracked-output hash.
 4. Reconstruct the release workspace from the merge commit plus staged `bin/<GAMEVER>`.
 5. Create archives and checksum/provenance files.
 6. Promote staged bin transactionally into `PERSISTED_WORKSPACE/bin/<GAMEVER>`.
@@ -263,7 +273,7 @@ Promotion performs these steps:
 8. In `republish` mode, require the tag and Release to exist and never move the tag.
 9. Create the new Release or upload replacement assets with clobber semantics; Release publication is the final public
    commit point.
-10. Mark promotion complete and clean or retain pending state according to the retention policy.
+10. Mark promotion complete, write a durable completion record, then attempt idempotent completed-stage cleanup.
 
 If the PR closes without merge, a cleanup job removes or expires only its pending staging state. It must not modify the
 accepted bin, tag, or Release.
@@ -349,7 +359,8 @@ belong in the script; `SKILL.md` remains a concise operator procedure.
 - New-tag creation accepts an existing tag only when it already points to the expected `OUTPUT_MERGE_SHA`.
 - Release replacement verifies all uploaded asset hashes; a partial upload remains retryable and does not mark promotion
   complete.
-- Pending cleanup never runs before a successful promotion marker or an explicit unmerged-PR cleanup decision.
+- Completed cleanup requires a durable completion record written after Release asset download/hash verification; it
+  atomically renames the exact stage into `cleanup-trash` before recursive deletion.
 
 ## Failure Recovery
 

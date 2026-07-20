@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from gamedata_candidate import build_candidate, publish_candidate
 from gamesymbol_snapshot_lib.codec import build_snapshot_document, canonical_snapshot_bytes
 from gamesymbol_snapshot_lib.config import load_contract
 from release_workflow_lib.errors import ReleaseWorkflowError
@@ -50,21 +51,49 @@ class ReleaseFixture:
         self.bin_source = self.repo / "bin" / self.gamever
         self.candidate = root / "candidate.yaml"
         self.analysis_config = self.repo / "configs" / f"{self.gamever}.yaml"
+        self.gamedata_candidate_root = root / "gamedata-candidate"
+        self.gamedata_session = self.gamedata_candidate_root / "session.json"
         (self.repo / "gamesymbols").mkdir(parents=True)
         self.analysis_config.parent.mkdir(parents=True)
-        (self.repo / "dist" / "nested").mkdir(parents=True)
+        generator = self.repo / "gamedata-generators" / "fixture"
+        generator.mkdir(parents=True)
         self.bin_source.mkdir(parents=True)
         self.analysis_config.write_bytes(b"modules: []\n")
         contract = load_contract(self.analysis_config, self.gamever, self.repo / "bin")
         snapshot = canonical_snapshot_bytes(build_snapshot_document(self.gamever, contract.config_sha256, {}))
         (self.repo / "gamesymbols" / f"{self.gamever}.yaml").write_bytes(snapshot)
         self.candidate.write_bytes(snapshot)
-        (self.repo / "dist" / "nested" / "gamedata.txt").write_text("gamedata\n", encoding="utf-8")
+        (generator / "gamedata.py").write_text(
+            "from pathlib import Path\n"
+            "MODULE_NAME = 'Fixture'\n"
+            "OUTPUT_PATHS = ('nested/gamedata.txt',)\n"
+            "DOWNLOAD_SOURCES = ()\n"
+            "def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):\n"
+            "    path = Path(output_dir) / OUTPUT_PATHS[0]\n"
+            "    path.parent.mkdir(parents=True, exist_ok=True)\n"
+            "    path.write_text('gamedata\\n', encoding='utf-8')\n"
+            "    return 1, 0, [], []\n",
+            encoding="utf-8",
+        )
+        build_candidate(
+            gamever=self.gamever,
+            build_id=self.build_id,
+            snapshot=self.candidate,
+            analysis_config=self.analysis_config,
+            modules_dir=self.repo / "gamedata-generators",
+            candidate_root=self.gamedata_candidate_root,
+            session_path=self.gamedata_session,
+        )
+        publish_candidate(
+            session_path=self.gamedata_session,
+            output_dir=self.repo / "gamedata" / self.gamever,
+        )
         (self.bin_source / "client.dll").write_bytes(b"dll")
         (self.bin_source / "client.yaml").write_text("value: 1\n", encoding="utf-8")
         (self.repo / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
+        (self.repo / ".gitattributes").write_text("gamedata/** -text\n", encoding="utf-8")
         self.git("init", "--quiet")
-        self.git("add", "--", "gamesymbols", "dist")
+        self.git("add", "--", "gamesymbols", "gamedata", "gamedata-generators")
 
     def git(self, *arguments: str) -> None:
         subprocess.run(["git", *arguments], cwd=self.repo, check=True, capture_output=True)
@@ -83,6 +112,7 @@ class ReleaseFixture:
             source_sha=self.source_sha,
             workflow_run_url="https://github.com/HLND2T/CS2_VibeSignatures/actions/runs/123456789",
             analysis_config=self.analysis_config,
+            gamedata_session=self.gamedata_session,
         )
 
     def finalize_and_index(self, pr_number: int = 42) -> Path:
@@ -212,12 +242,15 @@ class TestReleaseWorkflow(unittest.TestCase):
                 hashlib.sha256(fixture.analysis_config.read_bytes()).hexdigest(),
                 tracked["analysis_config_sha256"],
             )
-            self.assertEqual(3, tracked["schema_version"])
+            self.assertEqual(4, tracked["schema_version"])
             self.assertEqual(2, tracked["analysis_config_contract_digest_version"])
             self.assertEqual(
                 load_contract(fixture.analysis_config, fixture.gamever, fixture.repo / "bin").config_sha256,
                 tracked["analysis_config_contract_sha256"],
             )
+            self.assertEqual("gamedata/14170", tracked["gamedata_path"])
+            self.assertEqual(pending["gamedata_manifest_sha256"], tracked["gamedata_manifest_sha256"])
+            self.assertFalse((fixture.staging / fixture.gamever / fixture.build_id / "gamedata").exists())
             self.assertEqual(canonical_json_bytes(tracked), tracked_path.read_bytes())
             self.assertNotIn("timestamp", tracked)
             self.assertNotIn(str(fixture.root), tracked_path.read_text(encoding="utf-8"))
@@ -277,8 +310,9 @@ class TestReleaseWorkflow(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             fixture = ReleaseFixture(Path(tmp))
             fixture.stage()
-            (fixture.repo / "dist" / "nested" / "gamedata.txt").write_text("tampered\n", encoding="utf-8")
-            fixture.git("add", "--", "dist/nested/gamedata.txt")
+            output = fixture.repo / "gamedata" / fixture.gamever / "fixture" / "nested" / "gamedata.txt"
+            output.write_text("tampered\n", encoding="utf-8")
+            fixture.git("add", "--", output.relative_to(fixture.repo).as_posix())
 
             with self.assertRaisesRegex(ReleaseWorkflowError, "tracked output manifest hash mismatch"):
                 finalize_stage(
@@ -289,10 +323,10 @@ class TestReleaseWorkflow(unittest.TestCase):
                     pr_head_sha=fixture.head_sha,
                 )
 
-    def test_untracked_dist_cache_is_excluded_from_tracked_manifest(self) -> None:
+    def test_untracked_other_version_is_excluded_from_tracked_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             fixture = ReleaseFixture(Path(tmp))
-            cache = fixture.repo / "dist" / "nested" / "__pycache__" / "gamedata.pyc"
+            cache = fixture.repo / "gamedata" / "14169" / "fixture" / "other.json"
             cache.parent.mkdir(parents=True)
             cache.write_bytes(b"cache")
 
@@ -307,17 +341,28 @@ class TestReleaseWorkflow(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             fixture = ReleaseFixture(Path(tmp))
             fixture.stage()
-            output = fixture.repo / "dist" / "nested" / "gamedata.txt"
+            output = fixture.repo / "gamedata" / fixture.gamever / "fixture" / "nested" / "gamedata.txt"
             output.write_bytes(b"gamedata\r\n")
 
             fixture.finalize_and_index()
 
     def test_disallowed_generated_output_path_is_rejected(self) -> None:
-        with self.assertRaisesRegex(ReleaseWorkflowError, "disallowed paths"):
-            validate_output_paths(
-                ["gamesymbols/14170.yaml", "release-manifests/14170.json", "config.yaml"],
-                "14170",
-            )
+        rejected = ("config.yaml", "dist/nested/gamedata.json", "gamedata/14171/module/output.json")
+        for path in rejected:
+            with self.subTest(path=path), self.assertRaisesRegex(ReleaseWorkflowError, "disallowed paths"):
+                validate_output_paths(
+                    ["gamesymbols/14170.yaml", "release-manifests/14170.json", path],
+                    "14170",
+                )
+
+        validate_output_paths(
+            [
+                "gamesymbols/14170.yaml",
+                "gamedata/14170/module/output.json",
+                "release-manifests/14170.json",
+            ],
+            "14170",
+        )
 
     def test_reparse_point_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -358,15 +403,19 @@ class TestReleaseWorkflow(unittest.TestCase):
             self.assertTrue((stage_dir / "PROMOTION_STARTED").is_file())
             self.assertEqual(file_inventory(stage_dir / "bin" / fixture.gamever), file_inventory(accepted))
             self.assertTrue(Path(state["backup"]).is_dir())
+            provenance = fixture.root / "release-provenance.json"
+            provenance.write_text("{}\n", encoding="utf-8")
             finalize_promotion(
                 staging_root=fixture.staging,
                 pr_number=42,
                 event_head_sha=fixture.head_sha,
                 output_merge_sha="4" * 40,
+                release_provenance=provenance,
             )
             self.assertFalse(Path(state["backup"]).exists())
             self.assertTrue((stage_dir / "PROMOTION_COMPLETE").is_file())
             self.assertFalse((fixture.staging / "pr-index" / "42.json").exists())
+            self.assertTrue((fixture.staging / "completed" / fixture.gamever / f"{fixture.build_id}.json").is_file())
 
     def test_promote_bin_is_idempotent_after_successful_swap(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,6 +1,7 @@
 import shutil
 from pathlib import Path
 
+from gamedata_candidate import GamedataCandidateError, verify_published_gamedata
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.hashing import (
     contained_path,
@@ -96,6 +97,7 @@ def _write_stage_manifests(
     source_sha: str,
     workflow_run_url: str,
     analysis_config: Path,
+    gamedata_session: Path,
 ) -> dict:
     bin_files = file_inventory(stage_bin)
     tracked_files = tracked_output_inventory(repo_root, gamever)
@@ -109,6 +111,16 @@ def _write_stage_manifests(
     except Exception as exc:
         raise ReleaseWorkflowError(f"candidate snapshot provenance is invalid: {exc}") from exc
     candidate_document = candidate_context.document
+    try:
+        gamedata = verify_published_gamedata(
+            session_path=gamedata_session,
+            repo_root=repo_root,
+            gamever=gamever,
+            candidate=candidate,
+            analysis_config=analysis_config,
+        )
+    except GamedataCandidateError as exc:
+        raise ReleaseWorkflowError(f"versioned gamedata provenance is invalid: {exc}") from exc
     tracked = build_tracked_manifest(
         gamever=gamever,
         mode=mode,
@@ -122,6 +134,9 @@ def _write_stage_manifests(
         analysis_config_sha256=analysis_config_sha256,
         analysis_config_contract_digest_version=candidate_context.contract.config_digest_version,
         analysis_config_contract_sha256=candidate_document["config_sha256"],
+        gamedata_path=gamedata["gamedata_path"],
+        gamedata_manifest_sha256=gamedata["gamedata_manifest_sha256"],
+        generator_contract_sha256=gamedata["generator_contract_sha256"],
     )
     write_canonical_json(repo_root / "release-manifests" / f"{gamever}.json", tracked)
     pending = _pending_payload(
@@ -149,6 +164,7 @@ def stage_build(
     source_sha: str,
     workflow_run_url: str,
     analysis_config: Path,
+    gamedata_session: Path,
 ) -> dict:
     repo_root = Path(repo_root)
     staging_root = Path(staging_root)
@@ -177,6 +193,7 @@ def stage_build(
             source_sha=source_sha,
             workflow_run_url=workflow_run_url,
             analysis_config=analysis_config,
+            gamedata_session=gamedata_session,
         )
     except Exception:
         if stage_dir.exists():

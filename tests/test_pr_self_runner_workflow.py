@@ -88,7 +88,7 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
         analyze = workflow.index("uv run ida_analyze_bin.py")
         candidate = workflow.index("gamesymbol_candidate.py build")
         compare = workflow.index("gamesymbol_candidate.py compare")
-        gamedata = workflow.index("uv run update_gamedata.py")
+        gamedata = workflow.index("uv run gamedata_candidate.py build")
         cpp_tests = workflow.index("uv run run_cpp_tests.py")
 
         self.assertIn('$baseRef = "${{ github.event.pull_request.base.sha }}".Trim()', workflow)
@@ -187,7 +187,7 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
     def test_cpp_validation_selects_sdk_for_effective_gamever_only(self) -> None:
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
         submodule = workflow.index("git submodule update --init --recursive")
-        gamedata = workflow.index("uv run update_gamedata.py")
+        gamedata = workflow.index("uv run gamedata_candidate.py build")
         selector_start = workflow.index("- name: Select versioned SDK for C++ ABI validation")
         cpp_tests = workflow.index("uv run run_cpp_tests.py")
         selector = workflow[selector_start:cpp_tests]

@@ -538,14 +538,22 @@ jobs:
             throw "candidate/head comparison failed with exit code $LASTEXITCODE"
           }
 
-      - name: Update gamedata
+      - name: Build isolated versioned gamedata candidate
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
           uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before gamedata" }
-           uv run update_gamedata.py -gamever "$env:GAMEVER" -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -configyaml "$env:HEAD_CONFIG" -debug -download_latest
-          if ($LASTEXITCODE -ne 0) { throw "update_gamedata.py failed with exit code $LASTEXITCODE" }
+          $gamedataRoot = Join-Path $env:CANDIDATE_ROOT "gamedata-candidate"
+          $gamedataSession = Join-Path $env:CANDIDATE_ROOT "$env:GAMEVER.gamedata.session.json"
+          "GAMEDATA_SESSION=$gamedataSession" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          uv run gamedata_candidate.py build -gamever "$env:GAMEVER" `
+            -build-id "${{ github.run_id }}-${{ github.run_attempt }}" `
+            -snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT" -configyaml "$env:HEAD_CONFIG" `
+            -candidate-root "$gamedataRoot" -session "$gamedataSession" -debug
+          if ($LASTEXITCODE -ne 0) { throw "gamedata candidate build failed with exit code $LASTEXITCODE" }
+          uv run gamedata_candidate.py guard -session "$gamedataSession"
+          if ($LASTEXITCODE -ne 0) { throw "gamedata candidate guard failed" }
           uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after gamedata" }
           uv run gamesymbol_candidate.py mark -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" -step gamedata

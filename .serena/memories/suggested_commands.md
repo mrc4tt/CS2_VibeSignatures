@@ -56,7 +56,7 @@ Convert generated YAML into downstream gamedata:
 
 ```bash
 uv run gamesymbol_candidate.py build -gamever <gamever> -bindir bin -configyaml configs/<GAMEVER>.yaml -output <candidate.yaml> -session <candidate.session.json>
-uv run update_gamedata.py -gamever <gamever> -snapshot <candidate.yaml> [-debug]
+uv run gamedata_candidate.py build -gamever <gamever> -build-id local-1 -snapshot <candidate.yaml> -configyaml configs/<gamever>.yaml -candidate-root <temp-root> -session <session.json> [-debug]
 ```
 
 Run C++ layout validation:
