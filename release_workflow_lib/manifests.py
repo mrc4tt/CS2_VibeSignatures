@@ -17,9 +17,7 @@ GAMEVER_RE = re.compile(r"^[0-9]{4,10}[a-z]?$")
 SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 BUILD_ID_RE = re.compile(r"^[0-9]+-[0-9]+$")
 BRANCH_RE = re.compile(r"^gamesymbols/build/(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
-LEGACY_BRANCH_RE = re.compile(
-    r"^gamesymbols/(?P<gamever>[0-9]{4,10}[a-z]?)/build-(?P<build_id>[0-9]+-[0-9]+)$"
-)
+LEGACY_BRANCH_RE = re.compile(r"^gamesymbols/(?P<gamever>[0-9]{4,10}[a-z]?)/build-(?P<build_id>[0-9]+-[0-9]+)$")
 ALLOWED_REPOSITORIES = {"HLND2T/CS2_VibeSignatures", "hzqst/CS2_VibeSignatures"}
 SCHEMA_VERSION = 4
 PRE_GAMEDATA_SCHEMA_VERSION = 3
