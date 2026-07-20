@@ -416,6 +416,8 @@ def cleanup_completed(*, staging_root: Path, persisted_root: Path, gamever: str,
     persisted_root = Path(persisted_root)
     if (persisted_root / "release-staging").resolve() != staging_root.resolve():
         raise ReleaseWorkflowError("staging_root must be persisted_root/release-staging")
+    # Match the normalized root recorded by promote_bin in PROMOTED.json.
+    persisted_root = persisted_root.resolve()
     completion_path = contained_path(staging_root, "completed", gamever, f"{build_id}.json")
     reject_reparse_components(staging_root, completion_path)
     record = _validate_completion_record(load_json_object(completion_path), gamever, build_id)

@@ -53,6 +53,8 @@ def migrate_legacy_completed(
     persisted_root = Path(persisted_root)
     if (persisted_root / "release-staging").resolve() != staging_root.resolve():
         raise ReleaseWorkflowError("staging_root must be persisted_root/release-staging")
+    # Match the normalized root recorded by promote_bin in PROMOTED.json.
+    persisted_root = persisted_root.resolve()
     stage_dir = staging_directory(staging_root, gamever, build_id)
     reject_reparse_components(staging_root, stage_dir)
     reject_reparse_points(stage_dir)
