@@ -52,7 +52,7 @@ Only when a symbol snapshot was restored successfully, ask exactly: `Need to syn
 - If the user declines, report the selected GAMEVER and finish.
 - If the user confirms, search `bin/<GAMEVER>/*/*.id0`. If any lock file exists, stop, list every path, and tell the
   user to close the corresponding IDA instances.
-- Otherwise run the following command without a timeout, wait for its real exit status, and do not poll unnecessarily:
+- Otherwise run the following command without a timeout, wait for its real exit status, and do not poll unnecessarily (the shell may take a very long time, typically 30 mins):
 
   ```bash
   uv run ida_analyze_bin.py -gamever <GAMEVER> -configyaml configs/<GAMEVER>.yaml -debug -rename >> /tmp/bump_idb_output.log 2>&1
