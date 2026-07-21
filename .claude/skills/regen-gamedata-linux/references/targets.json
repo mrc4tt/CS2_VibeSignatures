@@ -1,0 +1,27 @@
+{
+  "_comment": "Gamedata files this skill regenerates. platform=linux drives libserver.so. Add/remove files here; the skill iterates this list. find_skill routing is resolved dynamically (glob find-* skills for the symbol name) so this stays low-maintenance. tracker_project = matching project in ~/cs2-sig-tracker/reports/<project>/status.json for pre-IDA triage (null = not tracked, always validate in IDA).",
+  "platform": "linux",
+  "module": "server",
+  "tracker_repo": "~/cs2-sig-tracker",
+  "tracker_note": "Signature validator only. reports/<project>/status.json gives per-sig linux status (ok/broken/ambiguous). OFFSET entries are NOT validated (kind=offset, tally.offset_only) — no byte pattern to scan. Tracker never emits NEW sigs; use it only to pick the worklist, then regen in IDA. Triage is valid only when tracker's manifest matches the build loaded in IDA (check status.json manifest / 'Last updated').",
+  "files": [
+    {
+      "tag": "CSS",
+      "path": "~/CounterStrikeSharp/configs/addons/counterstrikesharp/gamedata/gamedata.json",
+      "tracker_project": "CounterStrikeSharp",
+      "note": "47 entries (29 sig + 18 offset). Tracker validates the 29 sigs; 18 offsets are IDA-only (RTTI walk). ~half have find-* skills; NO-SKILL entries self-heal via old-sig relocation only."
+    },
+    {
+      "tag": "matchzy",
+      "path": "~/customGIT/matchzy/gamedata/matchzy.json",
+      "tracker_project": "MatchZy",
+      "note": "5 entries, all signatures, all have find-* skills. Tracker MatchZy status.json is byte-identical source. Grenade *_Create funcs + CCSGameRules_PostCleanUp."
+    },
+    {
+      "tag": "weaponpaints",
+      "path": "~/customGIT/weaponpaints/gamedata/weaponpaints.json",
+      "tracker_project": null,
+      "note": "2 entries, both signatures, both have find-* skills. NOT tracked by cs2-sig-tracker — no triage signal, always relocate/validate in IDA. CAttributeList_SetOrAddAttributeValueByName + UpdateItemView."
+    }
+  ]
+}

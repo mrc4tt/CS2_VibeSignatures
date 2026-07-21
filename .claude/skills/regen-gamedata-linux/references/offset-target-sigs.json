@@ -1,0 +1,53 @@
+{
+  "_comment": "Build-derived cache: a unique signature for the TARGET FUNCTION of each vtable-offset entry. Enables headless ANCHORED offset validation with no IDA/decompile: relocate target_sig on the new build -> func addr -> RTTI-walk the entry's vtable_class (offsets-anchors.json) -> confirm slot N still points to that func. func_rva is the address on the generating build (reference only; the sig is the durable anchor). Regenerate with the Step-1 py_eval in the session log against any known-good build. Kept SEPARATE from offsets-anchors.json so regenerating either file never clobbers the other.",
+  "generated_on_build": "14171",
+  "platform": "linux",
+  "targets": {
+    "CCSPlayerController_ChangeTeam": {
+      "linux": 102, "func_rva": "0x15241f0",
+      "target_sig": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 83 EC ? 44 0F B6 B7 ? 06 00 00"
+    },
+    "CCSPlayerController_Respawn": {
+      "linux": 272, "func_rva": "0x14e5730",
+      "target_sig": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ? ? ? ? E8 ? ? ? ? 80 BB ? 0B 00 00 ? C6 83 ? 0B 00 00 ?"
+    },
+    "CCSPlayer_WeaponServices_SelectItem": {
+      "linux": 31, "func_rva": "0x1588050",
+      "target_sig": "55 48 89 E5 41 57 41 56 41 89 D6 41 55 49 89 FD 41 54 49 89 F4 53 48 83 EC ?"
+    },
+    "CCSPlayer_ItemServices_DropActivePlayerWeapon": {
+      "linux": 27, "func_rva": "0x1578eb0",
+      "target_sig": "55 0F B6 C9 48 89 E5 41 56"
+    },
+    "CCSPlayer_ItemServices_RemoveWeapons": {
+      "linux": 28, "func_rva": "0x1578ff0",
+      "target_sig": "55 48 89 E5 41 55 41 54 41 89 F4 53 48 89 FB 48 83 EC ? 80 7F ? ? 0F 85 ? ? ? ?"
+    },
+    "CCSGameRules_FindPickerEntity": {
+      "linux": 27, "func_rva": "0x18ded70",
+      "target_sig": "55 48 89 E5 41 57 41 56 41 55 49 89 D5 41 54 48 8D 15 ? ? ? ?"
+    },
+    "CBasePlayerPawn_CommitSuicide": {
+      "linux": 384, "func_rva": "0x17d9c20",
+      "target_sig": "55 48 89 E5 41 55 41 89 F5 41 54 41 89 D4"
+    },
+    "CBaseEntity_Teleport": {
+      "linux": 162, "func_rva": "0xd5e580",
+      "target_sig": "8B 05 ? ? ? ? 55 49 89 F9"
+    },
+    "SetStateChanged": {
+      "linux": 29, "func_rva": "0xa31550", "resolve_vtable_class": "CBaseEntity",
+      "target_sig": "55 48 89 E5 53 48 89 FB 48 83 C7 ? 48 83 EC ? 8B 06"
+    },
+    "ISource2GameEntities::CheckTransmit": {
+      "linux": 13, "func_rva": "0x18f0620",
+      "target_sig": "55 48 89 E5 41 57 49 89 FF 41 56 48 8D 3D ? ? ? ? 41 55 4C 63 EA"
+    }
+  },
+  "no_sig": {
+    "_comment": "Trivial accessors (return *(this+off)); function head aliases many funcs so no unique short head-sig. Validate these structurally (slot < vtable_len AND points into .text) or via VTableExplorer/GDT. Could sig via mid-function bytes if needed.",
+    "CCSPlayer_ItemServices_GiveNamedItem": {"linux": 24, "func_rva": "0x152ce70"},
+    "CGameSceneNode_GetSkeletonInstance": {"linux": 14, "func_rva": "0xa60780"},
+    "CBaseEntity_IsPlayerPawn": {"linux": 168, "func_rva": "0xa27f40"}
+  }
+}
