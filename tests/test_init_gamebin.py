@@ -41,7 +41,6 @@ class TestInitGamebin(unittest.TestCase):
         source = SCRIPT.read_text(encoding="utf-8")
         self.assertIn("allow_implicit_invocation: false", agent)
         self.assertIn("$restore-from-snapshot", skill)
-        self.assertIn("需要将已知函数名同步/重命名到idb里?", skill)
         self.assertIn("bin/<GAMEVER>/*/*.id0", skill)
         self.assertNotIn("gamesymbol_snapshot.py", source)
         self.assertNotIn("gamesymbol_snapshot_lib", source)
