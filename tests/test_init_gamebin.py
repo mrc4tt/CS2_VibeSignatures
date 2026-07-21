@@ -35,13 +35,17 @@ class TestInitGamebin(unittest.TestCase):
         with patch.object(init_gamebin, "run_command", return_value=completed([], stdout=f"{expected}\n")):
             self.assertEqual(expected, init_gamebin.repository_root())
 
-    def test_skill_metadata_and_operator_contract(self) -> None:
+    def test_skill_delegates_snapshot_restoration(self) -> None:
         skill = Path(".claude/skills/init-gamebin/SKILL.md").read_text(encoding="utf-8")
         agent = Path(".claude/skills/init-gamebin/agents/openai.yaml").read_text(encoding="utf-8")
-        self.assertNotIn("disable-model-invocation", skill)
+        source = SCRIPT.read_text(encoding="utf-8")
         self.assertIn("allow_implicit_invocation: false", agent)
+        self.assertIn("$restore-from-snapshot", skill)
         self.assertIn("需要将已知函数名同步/重命名到idb里?", skill)
         self.assertIn("bin/<GAMEVER>/*/*.id0", skill)
+        self.assertNotIn("gamesymbol_snapshot.py", source)
+        self.assertNotIn("gamesymbol_snapshot_lib", source)
+        self.assertNotIn("--force-base-snapshot", source)
         self.assertIn(
             "uv run ida_analyze_bin.py -gamever <GAMEVER> -configyaml configs/<GAMEVER>.yaml -debug -rename >> /tmp/bump_idb_output.log 2>&1",
             skill,
@@ -105,10 +109,7 @@ class TestInitGamebin(unittest.TestCase):
                 init_gamebin.depot_download_command("14168", config)
         with patch.dict(os.environ, {"STEAM_USERNAME": "user", "STEAM_PASSWORD": "secret"}, clear=True):
             command = init_gamebin.depot_download_command("14168", config)
-        self.assertEqual(
-            ["-username", "user", "-password", "secret", "-remember-password"],
-            command[-5:],
-        )
+        self.assertEqual(["-username", "user", "-password", "secret", "-remember-password"], command[-5:])
 
     def test_depot_fallback_uses_workflow_commands_in_order(self) -> None:
         root = Path("repo")
@@ -130,67 +131,33 @@ class TestInitGamebin(unittest.TestCase):
 
     def test_prepare_skips_network_when_binaries_are_ready(self) -> None:
         root = Path("repo")
-        snapshot = root / "gamesymbols" / "14168.yaml"
         config = root / "configs" / "14168.yaml"
         with (
             patch.object(init_gamebin, "load_versions", return_value=["14168"]),
-            patch.object(init_gamebin, "find_snapshot", return_value=snapshot),
             patch.object(init_gamebin, "check_binaries", side_effect=[True, True]),
             patch.object(init_gamebin, "download_release_asset") as download,
-            patch.object(init_gamebin, "restore_snapshot") as restore,
             patch.object(init_gamebin, "resolve_analysis_config", return_value=config),
         ):
             result = init_gamebin.prepare(root, "14168")
         self.assertEqual("existing local binaries", result["source"])
-        self.assertTrue(result["snapshot_restored"])
         download.assert_not_called()
-        restore.assert_called_once_with(root, "14168", snapshot, config)
 
-    def test_prepare_404_uses_depot_then_restores_snapshot(self) -> None:
+    def test_prepare_404_uses_depot_fallback(self) -> None:
         root = Path("repo")
-        snapshot = root / "gamesymbols" / "14168.yaml"
         config = root / "configs" / "14168.yaml"
         with (
             patch.object(init_gamebin, "load_versions", return_value=["14168"]),
-            patch.object(init_gamebin, "find_snapshot", return_value=snapshot),
             patch.object(init_gamebin, "check_binaries", side_effect=[False, True]),
             patch.object(init_gamebin, "download_release_asset", return_value=False),
             patch.object(init_gamebin, "run_depot_fallback") as fallback,
-            patch.object(init_gamebin, "restore_snapshot") as restore,
             patch.object(init_gamebin, "resolve_analysis_config", return_value=config),
         ):
             result = init_gamebin.prepare(root, "14168")
         self.assertEqual("Steam depot fallback", result["source"])
-        self.assertTrue(result["snapshot_restored"])
         fallback.assert_called_once_with(root, "14168", config)
-        restore.assert_called_once_with(root, "14168", snapshot, config)
 
-    def test_prepare_without_snapshot_initializes_binaries_and_skips_restore(self) -> None:
-        root = Path("repo")
-        config = root / "configs" / "14169.yaml"
-        with (
-            patch.object(init_gamebin, "load_versions", return_value=["14169"]),
-            patch.object(init_gamebin, "find_snapshot", return_value=None),
-            patch.object(init_gamebin, "check_binaries", side_effect=[False, True]),
-            patch.object(init_gamebin, "download_release_asset", return_value=False),
-            patch.object(init_gamebin, "run_depot_fallback") as fallback,
-            patch.object(init_gamebin, "restore_snapshot") as restore,
-            patch.object(init_gamebin, "resolve_analysis_config", return_value=config),
-        ):
-            result = init_gamebin.prepare(root, "14169")
-        self.assertEqual("Steam depot fallback", result["source"])
-        self.assertFalse(result["snapshot_restored"])
-        fallback.assert_called_once_with(root, "14169", config)
-        restore.assert_not_called()
-
-    def test_main_reports_binary_only_initialization_without_snapshot(self) -> None:
-        result = {
-            "gamever": "14169",
-            "source": "release archive",
-            "copied": 3,
-            "skipped": 0,
-            "snapshot_restored": False,
-        }
+    def test_main_reports_binary_preparation_only(self) -> None:
+        result = {"gamever": "14169", "source": "release archive", "copied": 3, "skipped": 0}
         output = io.StringIO()
         with (
             patch.object(init_gamebin, "repository_root", return_value=Path("repo")),
@@ -198,19 +165,8 @@ class TestInitGamebin(unittest.TestCase):
             patch("sys.stdout", output),
         ):
             self.assertEqual(0, init_gamebin.main(["prepare", "14169"]))
-        self.assertIn("Symbol snapshot: unavailable; binary-only initialization completed", output.getvalue())
-
-    def test_restore_runs_without_replace_then_verifies(self) -> None:
-        root = Path("repo")
-        snapshot = root / "gamesymbols" / "14168.yaml"
-        config = root / "configs" / "14168.yaml"
-        with patch.object(init_gamebin, "run_command", return_value=completed([])) as run:
-            init_gamebin.restore_snapshot(root, "14168", snapshot, config)
-        restore_command = run.call_args_list[0].args[0]
-        verify_command = run.call_args_list[1].args[0]
-        self.assertIn("restore", restore_command)
-        self.assertNotIn("-replace", restore_command)
-        self.assertIn("verify", verify_command)
+        self.assertIn("Selected GAMEVER: 14169", output.getvalue())
+        self.assertNotIn("Symbol snapshot:", output.getvalue())
 
 
 if __name__ == "__main__":
