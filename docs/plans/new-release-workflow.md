@@ -267,7 +267,7 @@ Promotion performs these steps:
 3. Verify the merge base parent matches `SOURCE_SHA`, then verify snapshot, versioned gamedata inventory and generator
    contract, staged-bin inventory, candidate hash, and tracked-output hash.
 4. Reconstruct the release workspace from the merge commit plus staged `bin/<GAMEVER>`.
-5. Create archives and checksum/provenance files.
+5. Create archives, checksum/provenance files, and deterministic human-readable Markdown Release notes.
 6. Promote staged bin transactionally into `PERSISTED_WORKSPACE/bin/<GAMEVER>`.
 7. In `new` mode, create the lightweight `GAMEVER` tag at `OUTPUT_MERGE_SHA`; if it already exists elsewhere, stop.
 8. In `republish` mode, require the tag and Release to exist and never move the tag.
@@ -294,14 +294,16 @@ Release and preserve pending state for retry.
 
 - `RELEASE_TAG == GAMEVER` must not exist before promotion.
 - Create the tag at `OUTPUT_MERGE_SHA`, so the tag contains the accepted snapshot, gamedata, and tracked manifest.
-- Create a new Release and upload `gamedata-<GAMEVER>.7z`, `gamebin-<GAMEVER>.7z`, checksums, and provenance.
+- Create a new Release with concise Markdown notes and upload `gamedata-<GAMEVER>.7z`, `gamebin-<GAMEVER>.7z`, checksums,
+  and provenance.
 
 ### `mode=republish`
 
 - The existing `GAMEVER` tag must exist and is never deleted, recreated, or force-moved.
 - The generated-output PR updates the default branch and tracked manifest.
-- Replace the existing Release assets idempotently and record `tag_sha`, `source_sha`, and `output_merge_sha` in the
-  published provenance file and Release notes.
+- Replace the existing Release assets idempotently, record `tag_sha`, `source_sha`, and `output_merge_sha` in the
+  published provenance file, and summarize those commits in human-readable Release notes that link to the provenance
+  asset.
 
 Remove the existing reusable retagging project SKILL when this workflow is enabled. Moving an
 existing game-version tag contradicts the new release invariant, and keeping an explicit retagging entry point would
@@ -425,6 +427,7 @@ belong in the script; `SKILL.md` remains a concise operator procedure.
   runs against one immutable candidate.
 - Build and promotion can recover without relying on a prior Actions checkout directory.
 - Every published archive has verifiable game version, source SHA, output merge SHA, candidate hash, and bin manifest hash.
+- Every published Release has concise Markdown notes for humans and a separate machine-readable provenance asset.
 - Users can request a rebuild in natural language through the project SKILL without typing a command or SHA.
 - The SKILL refuses wrong repositories, missing authentication, unknown versions, duplicate active work, and unsafe tag
   states before dispatching the workflow.

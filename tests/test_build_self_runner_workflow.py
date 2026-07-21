@@ -192,6 +192,11 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertIn("uv run python -c `", self.promotion)
         self.assertNotIn("$extractScript = @'", self.promotion)
 
+    def test_promotion_publishes_human_notes_instead_of_raw_provenance(self) -> None:
+        self.assertIn('--repository "${{ github.repository }}"', self.promotion)
+        self.assertIn('--notes-file "release-notes-$gamever.md"', self.promotion)
+        self.assertNotIn('--notes-file "release-provenance-$gamever.json"', self.promotion)
+
     def test_completed_cleanup_sweeps_only_durable_records_on_protected_runner(self) -> None:
         self.assertIn("schedule:", self.cleanup)
         self.assertIn("workflow_dispatch:", self.cleanup)

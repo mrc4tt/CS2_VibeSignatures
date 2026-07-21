@@ -307,10 +307,13 @@ def write_release_metadata(
     manifest: dict,
     output_merge_sha: str,
     tag_sha: str,
+    repository: str,
     assets: list[Path],
-) -> tuple[Path, Path]:
+) -> tuple[Path, Path, Path]:
     output_merge_sha = require_sha(output_merge_sha, "OUTPUT_MERGE_SHA")
     tag_sha = require_sha(tag_sha, "tag SHA")
+    if repository not in ALLOWED_REPOSITORIES:
+        raise ReleaseWorkflowError(f"repository is not allowlisted: {repository}")
     asset_records = [
         {"name": path.name, "size": path.stat().st_size, "sha256": sha256_file(path)} for path in sorted(assets)
     ]
@@ -348,4 +351,37 @@ def write_release_metadata(
         "".join(f"{sha256_file(path)}  {path.name}\n" for path in sorted(checksum_assets)),
         encoding="utf-8",
     )
-    return provenance_path, checksum_path
+    release_url = f"https://github.com/{repository}/releases/download/{manifest['release_tag']}"
+    commit_url = f"https://github.com/{repository}/commit"
+    notes_lines = [
+        f"## CS2 gamedata {manifest['gamever']}",
+        "",
+        "Validated release artifacts generated from the accepted repository output.",
+        "",
+        f"- Build mode: `{manifest['mode']}`",
+        f"- Build ID: `{manifest['build_id']}`",
+        f"- Source commit: [`{manifest['source_sha'][:7]}`]({commit_url}/{manifest['source_sha']})",
+        f"- Output merge: [`{output_merge_sha[:7]}`]({commit_url}/{output_merge_sha})",
+        f"- Tag target: [`{tag_sha[:7]}`]({commit_url}/{tag_sha})",
+        "",
+        "### Downloads",
+        "",
+    ]
+    descriptions = {
+        f"gamedata-{manifest['gamever']}.7z": "generated signatures and gamedata",
+        f"gamebin-{manifest['gamever']}.7z": "analyzed game binaries",
+    }
+    for asset in asset_records:
+        name = asset["name"]
+        description = descriptions.get(name, "release artifact")
+        notes_lines.append(f"- [`{name}`]({release_url}/{name}) — {description}")
+    notes_lines.extend(
+        [
+            f"- [`{checksum_path.name}`]({release_url}/{checksum_path.name}) — SHA-256 checksums",
+            f"- [`{provenance_path.name}`]({release_url}/{provenance_path.name}) — machine-readable build provenance",
+            "",
+        ]
+    )
+    notes_path = output_dir / f"release-notes-{manifest['gamever']}.md"
+    notes_path.write_text("\n".join(notes_lines), encoding="utf-8")
+    return provenance_path, checksum_path, notes_path

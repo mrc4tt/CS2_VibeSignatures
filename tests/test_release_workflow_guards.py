@@ -10,7 +10,11 @@ from gamesymbol_snapshot_lib.config import load_contract
 from release_workflow_lib.cli import _parser
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.hashing import sha256_file, write_canonical_json
-from release_workflow_lib.manifests import CONTRACT_TRACKED_FIELDS, format_output_branch
+from release_workflow_lib.manifests import (
+    CONTRACT_TRACKED_FIELDS,
+    PRE_GAMEDATA_TRACKED_FIELDS,
+    format_output_branch,
+)
 from release_workflow_lib.promotion import verify_output_pr, verify_promotion
 from release_workflow_lib.staging import abandon_pending, cleanup_incomplete, cleanup_unmerged
 from release_workflow_lib.validation import invalidate_republish, validate_build_input
@@ -214,16 +218,89 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                         head_sha=fixture.head_sha,
                     )
 
-    def test_promotion_rejects_merge_whose_base_parent_is_not_source_sha(self) -> None:
+    def test_promotion_allows_main_to_advance_after_output_build(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            fixture.stage()
+            fixture.finalize_and_index()
+            merge_sha = "4" * 40
+            base_parent_sha = "9" * 40
+            changed_paths = "\n".join(
+                [
+                    f"gamesymbols/{fixture.gamever}.yaml",
+                    f"gamedata/{fixture.gamever}/fixture/nested/gamedata.txt",
+                    f"release-manifests/{fixture.gamever}.json",
+                ]
+            )
+            with (
+                patch(
+                    "release_workflow_lib.promotion._git_output",
+                    side_effect=[
+                        f"{merge_sha} {base_parent_sha} {fixture.head_sha}",
+                        f"{fixture.head_sha} {fixture.source_sha}",
+                        changed_paths,
+                    ],
+                ),
+                patch("release_workflow_lib.promotion._git_is_ancestor", return_value=True),
+            ):
+                result = verify_promotion(
+                    repo_root=fixture.repo,
+                    staging_root=fixture.staging,
+                    repository="HLND2T/CS2_VibeSignatures",
+                    head_repository="HLND2T/CS2_VibeSignatures",
+                    author="github-actions[bot]",
+                    branch=f"gamesymbols/build/{fixture.gamever}/{fixture.build_id}",
+                    base_branch="main",
+                    default_branch="main",
+                    pr_number=42,
+                    event_head_sha=fixture.head_sha,
+                    merge_sha=merge_sha,
+                )
+
+            self.assertEqual(merge_sha, result["output_merge_sha"])
+
+    def test_promotion_rejects_source_outside_merge_base_history(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            fixture.stage()
+            fixture.finalize_and_index()
+            merge_sha = "4" * 40
+            base_parent_sha = "9" * 40
+            with (
+                patch(
+                    "release_workflow_lib.promotion._git_output",
+                    side_effect=[
+                        f"{merge_sha} {base_parent_sha} {fixture.head_sha}",
+                        f"{fixture.head_sha} {fixture.source_sha}",
+                    ],
+                ),
+                patch("release_workflow_lib.promotion._git_is_ancestor", return_value=False),
+            ):
+                with self.assertRaisesRegex(ReleaseWorkflowError, "not an ancestor"):
+                    verify_promotion(
+                        repo_root=fixture.repo,
+                        staging_root=fixture.staging,
+                        repository="HLND2T/CS2_VibeSignatures",
+                        head_repository="HLND2T/CS2_VibeSignatures",
+                        author="github-actions[bot]",
+                        branch=f"gamesymbols/build/{fixture.gamever}/{fixture.build_id}",
+                        base_branch="main",
+                        default_branch="main",
+                        pr_number=42,
+                        event_head_sha=fixture.head_sha,
+                        merge_sha=merge_sha,
+                    )
+
+    def test_promotion_rejects_merge_with_different_pr_head(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             fixture = ReleaseFixture(Path(tmp))
             fixture.stage()
             fixture.finalize_and_index()
             with patch(
                 "release_workflow_lib.promotion._git_output",
-                return_value=f"{'4' * 40} {'9' * 40} {fixture.head_sha}",
+                return_value=f"{'4' * 40} {'9' * 40} {'8' * 40}",
             ):
-                with self.assertRaisesRegex(ReleaseWorkflowError, "merge parents"):
+                with self.assertRaisesRegex(ReleaseWorkflowError, "second parent"):
                     verify_promotion(
                         repo_root=fixture.repo,
                         staging_root=fixture.staging,
@@ -236,6 +313,34 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                         pr_number=42,
                         event_head_sha=fixture.head_sha,
                         merge_sha="4" * 40,
+                    )
+
+    def test_promotion_rejects_output_commit_not_directly_based_on_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            fixture.stage()
+            fixture.finalize_and_index()
+            merge_sha = "4" * 40
+            with patch(
+                "release_workflow_lib.promotion._git_output",
+                side_effect=[
+                    f"{merge_sha} {'9' * 40} {fixture.head_sha}",
+                    f"{fixture.head_sha} {'8' * 40}",
+                ],
+            ):
+                with self.assertRaisesRegex(ReleaseWorkflowError, "not directly based"):
+                    verify_promotion(
+                        repo_root=fixture.repo,
+                        staging_root=fixture.staging,
+                        repository="HLND2T/CS2_VibeSignatures",
+                        head_repository="HLND2T/CS2_VibeSignatures",
+                        author="github-actions[bot]",
+                        branch=f"gamesymbols/build/{fixture.gamever}/{fixture.build_id}",
+                        base_branch="main",
+                        default_branch="main",
+                        pr_number=42,
+                        event_head_sha=fixture.head_sha,
+                        merge_sha=merge_sha,
                     )
 
     def test_stage_build_rejects_the_legacy_output_branch_protocol(self) -> None:
@@ -410,6 +515,45 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                 event_head_sha=fixture.head_sha,
                 confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
                 reason="Historical promotion failed before promote-bin",
+            )
+
+            self.assertFalse(stage_dir.exists())
+            self.assertFalse(index_path.exists())
+
+    def test_explicit_abandon_accepts_canonical_branch_and_pre_gamedata_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            fixture.stage()
+            stage_dir = fixture.finalize_and_index()
+            manifest_path = stage_dir / "manifest.json"
+            pending = json.loads(manifest_path.read_text(encoding="utf-8"))
+            pending = {
+                **{key: pending[key] for key in PRE_GAMEDATA_TRACKED_FIELDS},
+                "repository": pending["repository"],
+                "output_branch": pending["output_branch"],
+                "pr_head_sha": pending["pr_head_sha"],
+                "bin_files": pending["bin_files"],
+                "tracked_files": pending["tracked_files"],
+            }
+            pending["schema_version"] = 3
+            write_canonical_json(manifest_path, pending)
+            (stage_dir / "READY").write_text(f"{sha256_file(manifest_path)}\n", encoding="ascii")
+            index_path = fixture.staging / "pr-index" / "42.json"
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            index["schema_version"] = 3
+            write_canonical_json(index_path, index)
+
+            abandon_pending(
+                staging_root=fixture.staging,
+                persisted_root=fixture.root / "persisted",
+                repository="HLND2T/CS2_VibeSignatures",
+                output_branch=f"gamesymbols/build/{fixture.gamever}/{fixture.build_id}",
+                gamever=fixture.gamever,
+                build_id=fixture.build_id,
+                pr_number=42,
+                event_head_sha=fixture.head_sha,
+                confirmation=f"ABANDON {fixture.gamever}/{fixture.build_id}",
+                reason="Promotion failed before promote-bin",
             )
 
             self.assertFalse(stage_dir.exists())
