@@ -12609,7 +12609,7 @@ files:
   networksystem/CNetworkMessages_dtor.windows.yaml:
     func_name: CNetworkMessages_dtor
     func_rva: '0xd5680'
-    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 8B DA 48 8B F9 E8 ?? ?? ?? ?? F6 C3 ?? 74 ?? 48 8B 05 ?? ?? ?? ?? 48 8B D7 48 8B 08 48 8B 01 FF 50 ?? 48 8B 5C 24 ?? 48 8B C7 48 83 C4 ?? 5F C3 CC CC CC CC CC CC 48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ??
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 8B DA 48 8B F9 E8 ?? ?? ?? ?? F6 C3 ?? 74 ?? 48 8B 05 80 62 12 00 48 8B D7 48 8B 08 48 8B 01 FF 50 ?? 48 8B 5C 24 ?? 48 8B C7 48 83 C4 ?? 5F C3
     func_size: '0x3a'
     func_va: '0x1800d5680'
     vfunc_index: 36
@@ -13157,8 +13157,8 @@ files:
     func_rva: '0x152500'
     func_size: '0x9'
     func_va: '0x180152500'
-    vfunc_index: 38
-    vfunc_offset: '0x130'
+    vfunc_index: 40
+    vfunc_offset: '0x140'
     vtable_name: CBaseEntity
   server/CBaseEntity_GetChangeAccessorPathInfo_2.linux.yaml:
     func_name: CBaseEntity_GetChangeAccessorPathInfo_2
