@@ -141,9 +141,7 @@ def verify_promotion(
     if not _git_is_ancestor(pending["source_sha"], base_parent_sha):
         raise ReleaseWorkflowError("SOURCE_SHA is not an ancestor of the merge first parent")
     paths = [
-        line
-        for line in _git_output(["diff", "--name-only", base_parent_sha, merge_sha, "--"]).splitlines()
-        if line
+        line for line in _git_output(["diff", "--name-only", base_parent_sha, merge_sha, "--"]).splitlines() if line
     ]
     validate_output_paths(paths, gamever)
     tracked = load_tracked_manifest(Path(repo_root) / "release-manifests" / f"{gamever}.json")

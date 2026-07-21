@@ -327,9 +327,7 @@ def abandon_pending(
     if not reason or len(reason) > ABANDON_REASON_MAX_LENGTH or any(char in reason for char in "\r\n"):
         raise ReleaseWorkflowError("abandon reason must be one non-empty line of at most 500 characters")
 
-    index, pending, stage_dir = load_indexed_pending(
-        staging_root, pr_number, event_head_sha, allow_legacy_schema=True
-    )
+    index, pending, stage_dir = load_indexed_pending(staging_root, pr_number, event_head_sha, allow_legacy_schema=True)
     if (index.get("gamever"), index.get("build_id")) != expected_identity:
         raise ReleaseWorkflowError("requested build identity does not match pending PR index")
     if (pending.get("gamever"), pending.get("build_id")) != expected_identity:
