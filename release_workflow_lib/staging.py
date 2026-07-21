@@ -320,7 +320,6 @@ def abandon_pending(
     expected_identity = (gamever, build_id)
     if parse_abandon_output_branch(output_branch) != expected_identity:
         raise ReleaseWorkflowError("output branch does not match requested build identity")
-    legacy_branch = output_branch != f"gamesymbols/build/{gamever}/{build_id}"
     expected_confirmation = f"ABANDON {gamever}/{build_id}"
     if confirmation != expected_confirmation:
         raise ReleaseWorkflowError(f"confirmation must exactly equal {expected_confirmation!r}")
@@ -329,7 +328,7 @@ def abandon_pending(
         raise ReleaseWorkflowError("abandon reason must be one non-empty line of at most 500 characters")
 
     index, pending, stage_dir = load_indexed_pending(
-        staging_root, pr_number, event_head_sha, allow_legacy_schema=legacy_branch
+        staging_root, pr_number, event_head_sha, allow_legacy_schema=True
     )
     if (index.get("gamever"), index.get("build_id")) != expected_identity:
         raise ReleaseWorkflowError("requested build identity does not match pending PR index")
