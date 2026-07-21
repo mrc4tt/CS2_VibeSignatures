@@ -83,7 +83,7 @@ class TestCandidateLifecycle(unittest.TestCase):
                 self.assertEqual(info.candidate_sha256, published.candidate_sha256)
                 manifest = json.loads(workspace.session.read_text())
                 self.assertEqual(2, manifest["schema_version"])
-                self.assertEqual(2, manifest["snapshot_schema_version"])
+                self.assertEqual(3, manifest["snapshot_schema_version"])
                 self.assertEqual(2, manifest["config_digest_version"])
                 self.assertEqual("published", manifest["state"])
             finally:
@@ -148,6 +148,34 @@ class TestCandidateLifecycle(unittest.TestCase):
                     config_path=workspace.config,
                     expected_game_version=workspace.gamever,
                 )
+
+    def test_compare_accepts_schema_2_and_schema_3_with_matching_output_contract(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = CandidateWorkspace(Path(temp_dir))
+            workspace.build()
+            actual = parse_snapshot_bytes(workspace.candidate.read_bytes())
+            expected = workspace.root / "expected-v2.yaml"
+            expected.write_bytes(
+                canonical_snapshot_bytes(
+                    build_snapshot_document(
+                        workspace.gamever,
+                        actual["config_sha256"],
+                        actual["files"],
+                        schema_version=2,
+                        config_digest_version=2,
+                    )
+                )
+            )
+
+            diff = compare_snapshots(
+                actual_path=workspace.candidate,
+                expected_path=expected,
+                config_path=workspace.config,
+                expected_game_version=workspace.gamever,
+            )
+
+        self.assertTrue(diff.equal)
+        self.assertNotEqual(diff.actual_sha256, diff.expected_sha256)
 
     def test_publish_failure_leaves_existing_snapshot_unchanged(self) -> None:
         with TemporaryDirectory() as temp_dir:

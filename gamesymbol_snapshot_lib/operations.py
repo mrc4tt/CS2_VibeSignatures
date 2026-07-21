@@ -5,14 +5,17 @@ from pathlib import Path
 
 import yaml
 
+from analysis_output_contract import ANALYSIS_OUTPUT_CONTRACT_MISMATCH_REASON
 from analysis_config import resolve_analysis_config
 from gamesymbol_snapshot_lib.codec import (
     LEGACY_SCHEMA_VERSION,
+    SCHEMA_2_VERSION,
     SCHEMA_VERSION,
     build_snapshot_document,
     canonical_snapshot_bytes,
     canonical_yaml_bytes,
     parse_snapshot_bytes,
+    snapshot_analysis_output_contract_version,
     snapshot_config_digest_version,
 )
 from gamesymbol_snapshot_lib.config import (
@@ -77,6 +80,7 @@ def build_actual_document(contract, *, strict: bool = False, schema_version: int
         collect_actual_files(contract, strict=strict),
         schema_version=schema_version,
         config_digest_version=contract.config_digest_version,
+        analysis_output_contract_version=contract.analysis_output_contract_version,
     )
 
 
@@ -105,6 +109,14 @@ def validate_snapshot_contract(document: dict, contract) -> None:
         raise SnapshotMismatchError(
             f"snapshot config digest mismatch: snapshot={document['config_sha256']} actual={contract.config_sha256}",
             reason="config_digest_mismatch",
+        )
+    document_output_contract_version = snapshot_analysis_output_contract_version(document)
+    if document_output_contract_version != contract.analysis_output_contract_version:
+        raise SnapshotMismatchError(
+            "snapshot analysis output contract version mismatch: "
+            f"snapshot={document_output_contract_version} "
+            f"actual={contract.analysis_output_contract_version}",
+            reason=ANALYSIS_OUTPUT_CONTRACT_MISMATCH_REASON,
         )
     _validate_snapshot_paths(document, contract)
 
@@ -294,8 +306,8 @@ def migrate_snapshot(
                 reason="noncanonical_snapshot",
             )
         source = SnapshotContext(document, raw, transitional_contract)
-    if source.document["schema_version"] != LEGACY_SCHEMA_VERSION:
-        raise SnapshotMismatchError("snapshot migration requires a schema 1 source")
+    if source.document["schema_version"] not in {LEGACY_SCHEMA_VERSION, SCHEMA_2_VERSION}:
+        raise SnapshotMismatchError("snapshot migration requires a schema 1 or 2 source")
     target_contract = load_contract(config_path, game_version, bindir, LATEST_CONFIG_DIGEST_VERSION)
     _validate_snapshot_paths(source.document, target_contract)
     migrated = build_snapshot_document(
@@ -304,6 +316,7 @@ def migrate_snapshot(
         source.document["files"],
         schema_version=SCHEMA_VERSION,
         config_digest_version=target_contract.config_digest_version,
+        analysis_output_contract_version=target_contract.analysis_output_contract_version,
     )
     data = canonical_snapshot_bytes(migrated)
     reparsed = parse_snapshot_bytes(data, str(game_version))
