@@ -114,6 +114,7 @@ jobs:
       ALLOW_LEGACY_BOOTSTRAP: ${{ needs.preflight.outputs.allow_legacy_bootstrap }}
       BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       CS2VIBE_AGENT: ${{ secrets.CS2VIBE_AGENT }}
+      CS2VIBE_AGENT_MODEL: ${{ secrets.CS2VIBE_AGENT_MODEL }}
       CS2VIBE_LLM_APIKEY: ${{ secrets.CS2VIBE_LLM_APIKEY }}
       CS2VIBE_LLM_BASEURL: ${{ secrets.CS2VIBE_LLM_BASEURL }}
       CS2VIBE_LLM_EFFORT: ${{ secrets.CS2VIBE_LLM_EFFORT }}

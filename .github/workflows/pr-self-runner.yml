@@ -28,6 +28,7 @@ jobs:
     runs-on: [self-hosted, windows, x64]
     env:
       CS2VIBE_AGENT: ${{ secrets.CS2VIBE_AGENT }}
+      CS2VIBE_AGENT_MODEL: ${{ secrets.CS2VIBE_AGENT_MODEL }}
       CS2VIBE_LLM_APIKEY: ${{ secrets.CS2VIBE_LLM_APIKEY }}
       CS2VIBE_LLM_BASEURL: ${{ secrets.CS2VIBE_LLM_BASEURL }}
       CS2VIBE_LLM_EFFORT: ${{ secrets.CS2VIBE_LLM_EFFORT }}
