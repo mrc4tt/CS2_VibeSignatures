@@ -18,7 +18,8 @@ project-level `$restore-from-snapshot` skill; do not call `gamesymbol_snapshot.p
    uv run python .claude/skills/init-gamebin/scripts/init_gamebin.py versions
    ```
 
-   Tell the user which entry is latest and ask: `Which GAMEVER do you want to initialize?` / `需要初始化哪个GAMEVER?` depending on user perfered language. Wait for an explicit version before continuing.
+   Tell the user which entry is latest and ask: `Which GAMEVER do you want to initialize?`
+   Wait for an explicit version before continuing.
 3. Reject values absent from `download.yaml`; do not guess or silently use latest.
 
 ## Prepare Binaries
@@ -52,8 +53,8 @@ After `$restore-from-snapshot` finishes, inspect its final result. If it reports
 `Symbol snapshot: unavailable; no YAML restored`, report the selected GAMEVER and finish successfully. Do not ask about
 IDB renaming or run IDB renaming for a GAMEVER without restored symbols.
 
-When either a trusted snapshot or a user-confirmed forced base snapshot was restored successfully, ask exactly:
-`Need to sync existing symbols to idb?` / `需要将已知函数名同步/重命名到idb里?` depending on user preferred language.
+When either a trusted snapshot or a user-confirmed forced base snapshot was restored successfully, ask user:
+`Need to sync existing symbols to idb?`
 
 - If the user declines, report the selected GAMEVER and finish.
 - If the user confirms, search `bin/<GAMEVER>/*/*.id0`. If any lock file exists, stop, list every path, and tell the
