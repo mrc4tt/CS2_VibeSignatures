@@ -10,7 +10,12 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import ida_analyze_bin
-from ida_mcp_session import McpDatabaseBinding, McpDatabaseSelectionError, McpToolCallError
+from ida_mcp_session import (
+    McpDatabaseBinding,
+    McpDatabaseSelectionError,
+    McpDatabaseUnavailableError,
+    McpToolCallError,
+)
 from process_reporter import (
     EdgeType,
     PlanNodeType,
@@ -89,6 +94,7 @@ class TestQuitIdaGracefully(unittest.IsolatedAsyncioTestCase):
                 AsyncMock(return_value=True),
             ) as quit_ida_via_mcp,
             patch.object(ida_analyze_bin, "stop_idalib_mcp_process") as stop_process,
+            patch.object(ida_analyze_bin, "wait_for_port_release", return_value=True) as wait_for_release,
         ):
             await ida_analyze_bin.quit_ida_gracefully_async(
                 process,
@@ -105,6 +111,11 @@ class TestQuitIdaGracefully(unittest.IsolatedAsyncioTestCase):
             auto_started=True,
         )
         stop_process.assert_called_once_with(process, debug=False)
+        wait_for_release.assert_called_once_with(
+            "127.0.0.1",
+            13337,
+            ida_analyze_bin.MCP_SHUTDOWN_TIMEOUT,
+        )
 
     async def test_quit_owned_auto_started_worker(self) -> None:
         session = MagicMock()
@@ -254,6 +265,40 @@ class TestStopIdalibMcpProcess(unittest.TestCase):
         process.terminate.assert_called_once_with()
         process.kill.assert_called_once_with()
         self.assertEqual([call(timeout=10), call(timeout=5)], process.wait.call_args_list)
+
+
+class TestWaitForPortRelease(unittest.TestCase):
+    def test_waits_until_the_supervisor_port_is_released(self) -> None:
+        with (
+            patch.object(ida_analyze_bin, "is_port_in_use", side_effect=[True, True, False]) as port_in_use,
+            patch.object(ida_analyze_bin.time, "sleep") as sleep,
+        ):
+            released = ida_analyze_bin.wait_for_port_release(
+                "127.0.0.1",
+                13337,
+                timeout=1.0,
+                retry_interval=0.01,
+            )
+
+        self.assertTrue(released)
+        self.assertEqual(3, port_in_use.call_count)
+        self.assertEqual(2, sleep.call_count)
+
+    def test_returns_false_when_the_port_does_not_release_before_timeout(self) -> None:
+        with (
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=True),
+            patch.object(ida_analyze_bin.time, "monotonic", side_effect=[0.0, 1.0]),
+            patch.object(ida_analyze_bin.time, "sleep") as sleep,
+        ):
+            released = ida_analyze_bin.wait_for_port_release(
+                "127.0.0.1",
+                13337,
+                timeout=0.5,
+                retry_interval=0.01,
+            )
+
+        self.assertFalse(released)
+        sleep.assert_not_called()
 
 
 class TestSurveyBinaryViaSession(unittest.IsolatedAsyncioTestCase):
@@ -454,37 +499,7 @@ class TestMcpEntrypointRouting(unittest.IsolatedAsyncioTestCase):
 
 
 class TestOpenedBinaryIdentityValidation(unittest.TestCase):
-    def test_verification_retries_while_matching_database_is_starting(self) -> None:
-        with TemporaryDirectory() as temp_dir:
-            binary_path = Path(temp_dir) / "libclient.so"
-            binary_path.write_bytes(b"client-binary")
-            ready_survey = {"metadata": {"path": str(binary_path)}}
-
-            with (
-                patch.object(
-                    ida_analyze_bin,
-                    "survey_binary_via_mcp",
-                    new=AsyncMock(
-                        side_effect=[
-                            ida_analyze_bin.McpDatabaseNotReadyError("matching database is not active yet"),
-                            ready_survey,
-                        ]
-                    ),
-                ) as survey_binary,
-                patch.object(ida_analyze_bin.time, "sleep") as sleep,
-            ):
-                verified = ida_analyze_bin.verify_opened_binary_via_mcp(
-                    str(binary_path),
-                    "linux",
-                    worker_ready_timeout=1.0,
-                    retry_interval=0.01,
-                )
-
-        self.assertTrue(verified)
-        self.assertEqual(2, survey_binary.await_count)
-        sleep.assert_called_once_with(0.01)
-
-    def test_verification_stops_after_worker_ready_timeout(self) -> None:
+    def test_verification_does_not_retry_an_inactive_database(self) -> None:
         with TemporaryDirectory() as temp_dir:
             binary_path = Path(temp_dir) / "libclient.so"
             binary_path.write_bytes(b"client-binary")
@@ -493,24 +508,19 @@ class TestOpenedBinaryIdentityValidation(unittest.TestCase):
                 patch.object(
                     ida_analyze_bin,
                     "survey_binary_via_mcp",
-                    new=AsyncMock(
-                        side_effect=ida_analyze_bin.McpDatabaseNotReadyError("matching database is not active yet")
-                    ),
+                    new=AsyncMock(side_effect=McpDatabaseUnavailableError("inactive or unreachable")),
                 ) as survey_binary,
                 patch.object(ida_analyze_bin.time, "sleep") as sleep,
-                patch("sys.stdout", new_callable=io.StringIO) as stdout,
             ):
-                verified = ida_analyze_bin.verify_opened_binary_via_mcp(
-                    str(binary_path),
-                    "linux",
-                    worker_ready_timeout=0.0,
-                    retry_interval=0.01,
-                )
+                with self.assertRaisesRegex(McpDatabaseUnavailableError, "inactive or unreachable"):
+                    ida_analyze_bin.verify_opened_binary_via_mcp(
+                        str(binary_path),
+                        "linux",
+                        retry_interval=0.01,
+                    )
 
-        self.assertFalse(verified)
         self.assertEqual(1, survey_binary.await_count)
         sleep.assert_not_called()
-        self.assertIn("timed out waiting for the IDA worker", stdout.getvalue())
 
     def test_verification_does_not_retry_mcp_tool_error(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -584,6 +594,214 @@ class TestOpenedBinaryIdentityValidation(unittest.TestCase):
         self.assertEqual(1, survey_binary.await_count)
         sleep.assert_not_called()
 
+
+class TestOwnedMcpVerificationRecovery(unittest.TestCase):
+    def test_restarts_an_unhealthy_owned_worker_once_and_reverifies(self) -> None:
+        original_process = object()
+        restarted_process = object()
+        recovery_budget = ida_analyze_bin.McpRecoveryBudget()
+
+        with (
+            patch.object(
+                ida_analyze_bin,
+                "verify_opened_binary_via_mcp",
+                side_effect=[McpDatabaseUnavailableError("inactive or unreachable"), True],
+            ) as verify,
+            patch.object(
+                ida_analyze_bin,
+                "ensure_mcp_available",
+                return_value=(restarted_process, True),
+            ) as ensure,
+            patch("sys.stdout", new_callable=io.StringIO) as stdout,
+        ):
+            process, verified = ida_analyze_bin.verify_owned_mcp_with_single_recovery(
+                original_process,
+                "bin/14172/client/client.dll",
+                "windows",
+                "127.0.0.1",
+                13337,
+                "",
+                False,
+                recovery_budget=recovery_budget,
+            )
+
+        self.assertIs(restarted_process, process)
+        self.assertTrue(verified)
+        self.assertEqual(2, verify.call_count)
+        self.assertNotIn("Failed:", stdout.getvalue())
+        ensure.assert_called_once_with(
+            original_process,
+            "bin/14172/client/client.dll",
+            "127.0.0.1",
+            13337,
+            "",
+            False,
+            recovery_budget=recovery_budget,
+        )
+
+    def test_reverifies_without_restart_when_health_check_recovers(self) -> None:
+        process = object()
+        recovery_budget = ida_analyze_bin.McpRecoveryBudget()
+
+        with (
+            patch.object(
+                ida_analyze_bin,
+                "verify_opened_binary_via_mcp",
+                side_effect=[McpDatabaseUnavailableError("inactive or unreachable"), True],
+            ) as verify,
+            patch.object(
+                ida_analyze_bin,
+                "ensure_mcp_available",
+                return_value=(process, True),
+            ) as ensure,
+        ):
+            recovered_process, verified = ida_analyze_bin.verify_owned_mcp_with_single_recovery(
+                process,
+                "bin/14172/client/client.dll",
+                "windows",
+                "127.0.0.1",
+                13337,
+                "",
+                False,
+                recovery_budget=recovery_budget,
+            )
+
+        self.assertIs(process, recovered_process)
+        self.assertTrue(verified)
+        self.assertEqual(2, verify.call_count)
+        ensure.assert_called_once()
+        self.assertEqual(1, recovery_budget.remaining_restarts)
+
+    def test_stops_after_one_unsuccessful_restart(self) -> None:
+        original_process = object()
+        restarted_process = object()
+        recovery_budget = ida_analyze_bin.McpRecoveryBudget()
+
+        with (
+            patch.object(
+                ida_analyze_bin,
+                "verify_opened_binary_via_mcp",
+                side_effect=McpDatabaseUnavailableError("inactive or unreachable"),
+            ) as verify,
+            patch.object(
+                ida_analyze_bin,
+                "ensure_mcp_available",
+                return_value=(restarted_process, True),
+            ) as ensure,
+        ):
+            process, verified = ida_analyze_bin.verify_owned_mcp_with_single_recovery(
+                original_process,
+                "bin/14172/client/client.dll",
+                "windows",
+                "127.0.0.1",
+                13337,
+                "",
+                False,
+                recovery_budget=recovery_budget,
+            )
+
+        self.assertIs(restarted_process, process)
+        self.assertFalse(verified)
+        self.assertEqual(2, verify.call_count)
+        ensure.assert_called_once()
+
+
+class TestEnsureMcpAvailableRecoveryBudget(unittest.TestCase):
+    def test_only_one_restart_is_allowed_for_the_binary_lifecycle(self) -> None:
+        original_process = MagicMock()
+        original_process.poll.return_value = None
+        restarted_process = MagicMock()
+        restarted_process.poll.return_value = None
+        recovery_budget = ida_analyze_bin.McpRecoveryBudget()
+
+        with (
+            patch.object(ida_analyze_bin, "check_mcp_worker_health", new=AsyncMock(return_value=False)),
+            patch.object(ida_analyze_bin, "quit_ida_gracefully") as quit_ida,
+            patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=restarted_process) as start_ida,
+        ):
+            process, ok = ida_analyze_bin.ensure_mcp_available(
+                original_process,
+                "bin/14172/client/client.dll",
+                "127.0.0.1",
+                13337,
+                "",
+                False,
+                recovery_budget=recovery_budget,
+            )
+            second_process, second_ok = ida_analyze_bin.ensure_mcp_available(
+                process,
+                "bin/14172/client/client.dll",
+                "127.0.0.1",
+                13337,
+                "",
+                False,
+                recovery_budget=recovery_budget,
+            )
+
+        self.assertIs(restarted_process, process)
+        self.assertTrue(ok)
+        self.assertIs(restarted_process, second_process)
+        self.assertFalse(second_ok)
+        self.assertEqual(0, recovery_budget.remaining_restarts)
+        quit_ida.assert_called_once()
+        start_ida.assert_called_once()
+
+    def test_waits_for_a_lingering_launcher_port_before_restart(self) -> None:
+        exited_process = MagicMock()
+        exited_process.poll.return_value = 1
+        exited_process.returncode = 1
+        restarted_process = MagicMock()
+        recovery_budget = ida_analyze_bin.McpRecoveryBudget()
+
+        with (
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=True),
+            patch.object(ida_analyze_bin, "wait_for_port_release", return_value=True) as wait_for_release,
+            patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=restarted_process) as start_ida,
+        ):
+            process, ok = ida_analyze_bin.ensure_mcp_available(
+                exited_process,
+                "bin/14172/client/client.dll",
+                "127.0.0.1",
+                13337,
+                "",
+                False,
+                recovery_budget=recovery_budget,
+            )
+
+        self.assertIs(restarted_process, process)
+        self.assertTrue(ok)
+        self.assertEqual(0, recovery_budget.remaining_restarts)
+        wait_for_release.assert_called_once_with("127.0.0.1", 13337)
+        start_ida.assert_called_once()
+
+    def test_aborts_restart_when_the_launcher_port_never_releases(self) -> None:
+        exited_process = MagicMock()
+        exited_process.poll.return_value = 1
+        exited_process.returncode = 1
+        recovery_budget = ida_analyze_bin.McpRecoveryBudget()
+
+        with (
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=True),
+            patch.object(ida_analyze_bin, "wait_for_port_release", return_value=False),
+            patch.object(ida_analyze_bin, "start_idalib_mcp") as start_ida,
+        ):
+            process, ok = ida_analyze_bin.ensure_mcp_available(
+                exited_process,
+                "bin/14172/client/client.dll",
+                "127.0.0.1",
+                13337,
+                "",
+                False,
+                recovery_budget=recovery_budget,
+            )
+
+        self.assertIsNone(process)
+        self.assertFalse(ok)
+        self.assertEqual(0, recovery_budget.remaining_restarts)
+        start_ida.assert_not_called()
+
+
+class TestOpenedBinaryIdentityValidationHashes(unittest.TestCase):
     def test_accepts_ida_database_suffix_for_expected_binary_path(self) -> None:
         with TemporaryDirectory() as temp_dir:
             binary_path = Path(temp_dir) / "bin" / "14141" / "server" / "libserver.so"
@@ -3586,11 +3804,16 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
             with (
                 patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=fake_process),
                 patch.object(ida_analyze_bin, "verify_opened_binary_via_mcp", return_value=False),
-                patch.object(ida_analyze_bin, "ensure_mcp_available") as mock_ensure,
+                patch.object(
+                    ida_analyze_bin,
+                    "ensure_mcp_available",
+                    return_value=(fake_process, True),
+                ) as mock_ensure,
                 patch.object(ida_analyze_bin, "_run_validate_expected_input_artifacts_via_mcp") as mock_validate,
                 patch.object(ida_analyze_bin, "_run_preprocess_single_skill_via_mcp") as mock_preprocess,
                 patch.object(ida_analyze_bin, "run_skill") as mock_run_skill,
                 patch.object(ida_analyze_bin, "quit_ida_gracefully") as mock_quit_ida,
+                patch.object(ida_analyze_bin, "wait_for_port_release", return_value=True) as wait_for_release,
                 patch("sys.stdout", new_callable=io.StringIO) as stdout,
             ):
                 success, fail, skip = ida_analyze_bin.process_binary(
@@ -3619,6 +3842,133 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
         mock_run_skill.assert_not_called()
         mock_quit_ida.assert_not_called()
         self.mock_stop_ida.assert_called_once_with(fake_process, debug=False)
+        wait_for_release.assert_called_once_with("127.0.0.1", 13337)
+
+    def test_process_binary_recovers_initial_inactive_worker_once(self) -> None:
+        original_process = object()
+        restarted_process = object()
+
+        with TemporaryDirectory() as temp_dir:
+            binary_dir = Path(temp_dir) / "bin" / "14172" / "client"
+            binary_dir.mkdir(parents=True, exist_ok=True)
+            binary_path = str(binary_dir / "client.dll")
+            Path(binary_path).write_bytes(b"client-binary")
+
+            def _fake_preprocess(*, expected_outputs, **_kwargs):
+                Path(expected_outputs[0]).write_text("func_name: Recovered\n", encoding="utf-8")
+                return "success"
+
+            with (
+                patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=original_process) as start_ida,
+                patch.object(
+                    ida_analyze_bin,
+                    "verify_opened_binary_via_mcp",
+                    side_effect=[McpDatabaseUnavailableError("inactive or unreachable"), True, True, True],
+                ) as verify,
+                patch.object(
+                    ida_analyze_bin,
+                    "ensure_mcp_available",
+                    side_effect=[(restarted_process, True), (restarted_process, True)],
+                ) as ensure,
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_validate_expected_input_artifacts_via_mcp",
+                    return_value=[],
+                ),
+                patch.object(
+                    ida_analyze_bin,
+                    "_run_preprocess_single_skill_via_mcp",
+                    side_effect=_fake_preprocess,
+                ),
+                patch.object(ida_analyze_bin, "run_skill", return_value=False),
+                patch.object(ida_analyze_bin, "quit_ida_gracefully") as quit_ida,
+            ):
+                result = ida_analyze_bin.process_binary(
+                    binary_path=binary_path,
+                    skills=[
+                        {
+                            "name": "find-recovered",
+                            "expected_output": ["Recovered.{platform}.yaml"],
+                            "expected_input": [],
+                        }
+                    ],
+                    agent="codex",
+                    host="127.0.0.1",
+                    port=13337,
+                    ida_args="",
+                    platform="windows",
+                    max_retries=1,
+                )
+
+        self.assertEqual((1, 0, 0), result)
+        start_ida.assert_called_once()
+        self.assertEqual(2, ensure.call_count)
+        self.assertEqual(4, verify.call_count)
+        quit_ida.assert_called_once_with(
+            restarted_process,
+            "127.0.0.1",
+            13337,
+            expected_binary=binary_path,
+            debug=False,
+        )
+        self.mock_stop_ida.assert_not_called()
+
+    def test_process_binary_shares_one_restart_budget_across_later_work(self) -> None:
+        original_process = MagicMock()
+        original_process.poll.return_value = None
+        restarted_process = MagicMock()
+        restarted_process.poll.return_value = None
+
+        with TemporaryDirectory() as temp_dir:
+            binary_dir = Path(temp_dir) / "bin" / "14172" / "client"
+            binary_dir.mkdir(parents=True, exist_ok=True)
+            binary_path = str(binary_dir / "client.dll")
+            Path(binary_path).write_bytes(b"client-binary")
+
+            with (
+                patch.object(
+                    ida_analyze_bin,
+                    "start_idalib_mcp",
+                    side_effect=[original_process, restarted_process],
+                ) as start_ida,
+                patch.object(
+                    ida_analyze_bin,
+                    "verify_opened_binary_via_mcp",
+                    side_effect=[McpDatabaseUnavailableError("inactive or unreachable"), True],
+                ),
+                patch.object(
+                    ida_analyze_bin,
+                    "check_mcp_worker_health",
+                    new=AsyncMock(return_value=False),
+                ),
+                patch.object(ida_analyze_bin, "is_port_in_use", return_value=False),
+                patch.object(ida_analyze_bin, "quit_ida_gracefully") as quit_ida,
+                patch.object(ida_analyze_bin, "_run_preprocess_single_skill_via_mcp") as preprocess,
+                patch.object(ida_analyze_bin, "preprocess_single_vcall_object_via_mcp") as preprocess_vcall,
+            ):
+                result = ida_analyze_bin.process_binary(
+                    binary_path=binary_path,
+                    skills=[
+                        {
+                            "name": "find-budget-consumer",
+                            "expected_output": ["BudgetConsumer.{platform}.yaml"],
+                            "expected_input": [],
+                        }
+                    ],
+                    agent="codex",
+                    host="127.0.0.1",
+                    port=13337,
+                    ida_args="",
+                    platform="windows",
+                    max_retries=1,
+                    vcall_targets=["g_pBudgetTarget"],
+                )
+
+        self.assertEqual((0, 2, 0), result)
+        self.assertEqual(2, start_ida.call_count)
+        self.assertEqual(2, quit_ida.call_count)
+        preprocess.assert_not_called()
+        preprocess_vcall.assert_not_called()
 
     def test_process_binary_aborts_before_skill_mcp_work_when_recheck_mismatches(self) -> None:
         fake_process = object()

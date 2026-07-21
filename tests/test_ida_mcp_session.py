@@ -12,8 +12,8 @@ from ida_mcp_session import (
     McpConnectionError,
     McpContractError,
     McpDatabaseBinding,
-    McpDatabaseNotReadyError,
     McpDatabaseSelectionError,
+    McpDatabaseUnavailableError,
     McpToolCallError,
     detect_database_requirement,
     normalize_binary_identity_path,
@@ -114,10 +114,10 @@ class TestSelectDatabaseSession(unittest.TestCase):
 
         self.assertEqual("server-db", selected["session_id"])
 
-    def test_matching_inactive_database_is_reported_as_not_ready(self) -> None:
+    def test_matching_inactive_database_is_reported_as_unavailable(self) -> None:
         inactive_server = {**ACTIVE_SERVER, "is_active": False}
 
-        with self.assertRaisesRegex(McpDatabaseNotReadyError, "not active yet"):
+        with self.assertRaisesRegex(McpDatabaseUnavailableError, "inactive or unreachable"):
             select_database_session(
                 [inactive_server],
                 expected_binary=r"D:\repo\tests\bin\ida-mcp-smoke.dll",
