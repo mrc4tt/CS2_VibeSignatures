@@ -727,6 +727,9 @@ modules:
           - CNetworkGameServerBase_BroadcastPrintf.{platform}.yaml
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_WriteDeltaEntities
+        expected_output:
+          - CNetworkGameServerBase_WriteDeltaEntities.{platform}.yaml
       - name: find-CNetworkGameServerBase_ReserveServerForQueuedGame
         expected_output:
           - CNetworkGameServerBase_ReserveServerForQueuedGame.{platform}.yaml
@@ -781,6 +784,9 @@ modules:
       - name: find-CDemoRecorder_WriteSpawnGroups
         expected_output:
           - CDemoRecorder_WriteSpawnGroups.{platform}.yaml
+      - name: find-CHLTVDemoRecorder_WriteFrameImmediate
+        expected_output:
+          - CHLTVDemoRecorder_WriteFrameImmediate.{platform}.yaml
       - name: find-INetworkMessages_FindNetworkMessageById
         expected_output:
           - INetworkMessages_FindNetworkMessageById.{platform}.yaml
@@ -1607,6 +1613,9 @@ modules:
           - CHLTVClient_ProcessSetConVar.{platform}.yaml
         expected_input:
           - CHLTVClient_vtable.{platform}.yaml
+      - name: find-CHLTVBroadcast_RecordSnapshot
+        expected_output:
+          - CHLTVBroadcast_RecordSnapshot.{platform}.yaml
       - name: find-CServerSideClientBase_vtable
         expected_output:
           - CServerSideClientBase_vtable.{platform}.yaml
@@ -1826,6 +1835,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::BroadcastPrintf
+      - name: CNetworkGameServerBase_WriteDeltaEntities
+        category: func
+        alias:
+          - CNetworkGameServerBase::WriteDeltaEntities
       - name: CNetworkGameServerBase_ReserveServerForQueuedGame
         category: vfunc
         alias:
@@ -1976,6 +1989,10 @@ modules:
         category: func
         alias:
           - CDemoRecorder::WriteSpawnGroups
+      - name: CHLTVDemoRecorder_WriteFrameImmediate
+        category: func
+        alias:
+          - CHLTVDemoRecorder::WriteFrameImmediate
       - name: INetworkMessages_SerializeAbstract
         category: vfunc
         alias:
@@ -2585,6 +2602,10 @@ modules:
         category: vfunc
         alias:
           - CHLTVClient::ProcessSetConVar
+      - name: CHLTVBroadcast_RecordSnapshot
+        category: func
+        alias:
+          - CHLTVBroadcast::RecordSnapshot
       - name: CServerSideClientBase_vtable
         category: vtable
       - name: CDelayedCall2_CServerSideClientBase_UpdateAcknowledgedFramecountCall_vtable

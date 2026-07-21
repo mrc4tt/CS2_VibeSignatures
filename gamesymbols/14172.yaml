@@ -1,6 +1,7 @@
+analysis_output_contract_version: 1
 config_digest_version: 2
-config_sha256: sha256:60925b04877f37c301970e51a467a925a6af63016da7edb431c3bf42005e3e8a
-file_count: 2910
+config_sha256: sha256:2fda95fe6895d00da95826244ec17aecd6dc34182008d272f1cd0b9b555dc2d7
+file_count: 2916
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -5776,6 +5777,18 @@ files:
     vtable_size: '0x160'
     vtable_symbol: ??_7CGameResourceService@@6B@
     vtable_va: '0x18056f120'
+  engine/CHLTVBroadcast_RecordSnapshot.linux.yaml:
+    func_name: CHLTVBroadcast_RecordSnapshot
+    func_rva: '0x5ad550'
+    func_sig: 55 66 41 0F 6E C0 48 89 E5 41 57 41 56
+    func_size: '0x490'
+    func_va: '0x5ad550'
+  engine/CHLTVBroadcast_RecordSnapshot.windows.yaml:
+    func_name: CHLTVBroadcast_RecordSnapshot
+    func_rva: '0x11e040'
+    func_sig: 48 8B C4 48 89 58 ?? 48 89 70 ?? 48 89 78 ?? 55 41 54 41 55 41 56 41 57 48 8D 68 ?? 48 81 EC ?? ?? ?? ?? 4D 8B E0
+    func_size: '0x467'
+    func_va: '0x18011e040'
   engine/CHLTVClient_ProcessSetConVar.linux.yaml:
     func_name: CHLTVClient_ProcessSetConVar
     func_rva: '0x59d180'
@@ -5970,6 +5983,18 @@ files:
     vtable_size: '0x278'
     vtable_symbol: ??_7CHLTVClient@@6B@
     vtable_va: '0x180551f00'
+  engine/CHLTVDemoRecorder_WriteFrameImmediate.linux.yaml:
+    func_name: CHLTVDemoRecorder_WriteFrameImmediate
+    func_rva: '0x5a62c0'
+    func_sig: 55 48 8D 05 ?? ?? ?? ?? 48 89 E5 41 57 49 89 FF 41 56 41 55 49 89 D5
+    func_size: '0xa9b'
+    func_va: '0x5a62c0'
+  engine/CHLTVDemoRecorder_WriteFrameImmediate.windows.yaml:
+    func_name: CHLTVDemoRecorder_WriteFrameImmediate
+    func_rva: '0x129190'
+    func_sig: 48 89 5C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ??
+    func_size: '0xa87'
+    func_va: '0x180129190'
   engine/CL_NET_PrintSummary_CommandHandler.linux.yaml:
     func_name: CL_NET_PrintSummary_CommandHandler
     func_rva: '0x4e4e00'
@@ -8685,6 +8710,18 @@ files:
     vfunc_index: 75
     vfunc_offset: '0x258'
     vtable_name: CNetworkGameServerBase_vtable
+  engine/CNetworkGameServerBase_WriteDeltaEntities.linux.yaml:
+    func_name: CNetworkGameServerBase_WriteDeltaEntities
+    func_rva: '0x541d80'
+    func_sig: 55 48 8D 05 ?? ?? ?? ?? 48 89 E5 41 57 4C 8D BD ?? ?? ?? ??
+    func_size: '0x1de5'
+    func_va: '0x541d80'
+  engine/CNetworkGameServerBase_WriteDeltaEntities.windows.yaml:
+    func_name: CNetworkGameServerBase_WriteDeltaEntities
+    func_rva: '0xd21d0'
+    func_sig: 4C 89 44 24 ?? 48 89 54 24 ?? 48 89 4C 24 ?? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 4C 8B AD ?? ?? ?? ??
+    func_size: '0x1144'
+    func_va: '0x1800d21d0'
   engine/CNetworkGameServerBase_vtable.linux.yaml:
     vtable_class: CNetworkGameServerBase
     vtable_entries:
@@ -37661,4 +37698,4 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14172'
-schema_version: 2
+schema_version: 3
