@@ -27,6 +27,10 @@ class McpDatabaseSelectionError(RuntimeError):
     pass
 
 
+class McpDatabaseNotReadyError(McpDatabaseSelectionError):
+    pass
+
+
 class McpConnectionError(RuntimeError):
     pass
 
@@ -102,12 +106,22 @@ def select_database_session(
     ]
     if explicit_database:
         matches = [session for session in routable if session["session_id"] == explicit_database]
-        if len(matches) != 1:
-            raise McpDatabaseSelectionError(
-                f"MCP database {explicit_database!r} is not an active routable session; "
+        if len(matches) == 1:
+            return matches[0]
+        discovered = [
+            session
+            for session in sessions
+            if session.get("session_id") == explicit_database and session.get("is_active") is not True
+        ]
+        if discovered:
+            raise McpDatabaseNotReadyError(
+                f"MCP database {explicit_database!r} exists but is not active yet; "
                 f"candidates: {_session_summary(sessions)}"
             )
-        return matches[0]
+        raise McpDatabaseSelectionError(
+            f"MCP database {explicit_database!r} is not an active routable session; "
+            f"candidates: {_session_summary(sessions)}"
+        )
 
     if expected_binary:
         expected = normalize_binary_identity_path(expected_binary)
@@ -116,6 +130,19 @@ def select_database_session(
         ]
         if len(matches) == 1:
             return matches[0]
+        discovered = [
+            session
+            for session in sessions
+            if isinstance(session.get("session_id"), str)
+            and session["session_id"].strip()
+            and normalize_binary_identity_path(session.get("input_path", "")) == expected
+            and session.get("is_active") is not True
+        ]
+        if not matches and discovered:
+            raise McpDatabaseNotReadyError(
+                f"MCP database for expected binary {expected_binary!r} exists but is not active yet; "
+                f"candidates: {_session_summary(sessions)}"
+            )
         label = "no" if not matches else "multiple"
         raise McpDatabaseSelectionError(
             f"{label} active MCP database matched expected binary {expected_binary!r}; "

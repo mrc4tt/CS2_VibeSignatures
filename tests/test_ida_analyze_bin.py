@@ -454,6 +454,64 @@ class TestMcpEntrypointRouting(unittest.IsolatedAsyncioTestCase):
 
 
 class TestOpenedBinaryIdentityValidation(unittest.TestCase):
+    def test_verification_retries_while_matching_database_is_starting(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_path = Path(temp_dir) / "libclient.so"
+            binary_path.write_bytes(b"client-binary")
+            ready_survey = {"metadata": {"path": str(binary_path)}}
+
+            with (
+                patch.object(
+                    ida_analyze_bin,
+                    "survey_binary_via_mcp",
+                    new=AsyncMock(
+                        side_effect=[
+                            ida_analyze_bin.McpDatabaseNotReadyError("matching database is not active yet"),
+                            ready_survey,
+                        ]
+                    ),
+                ) as survey_binary,
+                patch.object(ida_analyze_bin.time, "sleep") as sleep,
+            ):
+                verified = ida_analyze_bin.verify_opened_binary_via_mcp(
+                    str(binary_path),
+                    "linux",
+                    worker_ready_timeout=1.0,
+                    retry_interval=0.01,
+                )
+
+        self.assertTrue(verified)
+        self.assertEqual(2, survey_binary.await_count)
+        sleep.assert_called_once_with(0.01)
+
+    def test_verification_stops_after_worker_ready_timeout(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            binary_path = Path(temp_dir) / "libclient.so"
+            binary_path.write_bytes(b"client-binary")
+
+            with (
+                patch.object(
+                    ida_analyze_bin,
+                    "survey_binary_via_mcp",
+                    new=AsyncMock(
+                        side_effect=ida_analyze_bin.McpDatabaseNotReadyError("matching database is not active yet")
+                    ),
+                ) as survey_binary,
+                patch.object(ida_analyze_bin.time, "sleep") as sleep,
+                patch("sys.stdout", new_callable=io.StringIO) as stdout,
+            ):
+                verified = ida_analyze_bin.verify_opened_binary_via_mcp(
+                    str(binary_path),
+                    "linux",
+                    worker_ready_timeout=0.0,
+                    retry_interval=0.01,
+                )
+
+        self.assertFalse(verified)
+        self.assertEqual(1, survey_binary.await_count)
+        sleep.assert_not_called()
+        self.assertIn("timed out waiting for the IDA worker", stdout.getvalue())
+
     def test_verification_does_not_retry_mcp_tool_error(self) -> None:
         with TemporaryDirectory() as temp_dir:
             binary_path = Path(temp_dir) / "server.dll"
