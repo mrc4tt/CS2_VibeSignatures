@@ -2,16 +2,9 @@ import ast
 from collections import defaultdict, deque
 from pathlib import Path
 
+from gamesymbol_snapshot_lib.codec import snapshot_analysis_output_contract_version
 from gamesymbol_snapshot_lib.model import InvalidationPlan
 
-CORE_ANALYSIS_FILES = {
-    "agent_runner.py",
-    "ida_analyze_bin.py",
-    "ida_analyze_util.py",
-    "ida_llm_decompile.py",
-    "ida_llm_utils.py",
-    "ida_skill_preprocessor.py",
-}
 BROAD_ANALYSIS_FILES = {
     ".claude/agents/sig-finder.md",
     ".opencode/agents/sig-finder.md",
@@ -119,7 +112,7 @@ def _source_changed_nodes(head_contract, changed_files: list[str], repo_root: Pa
         if path == f"configs/{head_contract.game_version}.yaml":
             nodes.update(head_contract.nodes)
             reasons.append(f"active analysis config change: {path}")
-        elif path in CORE_ANALYSIS_FILES or path in BROAD_ANALYSIS_FILES:
+        elif path in BROAD_ANALYSIS_FILES:
             nodes.update(head_contract.nodes)
             reasons.append(f"core analysis change: {path}")
         elif path.startswith("ida_preprocessor_scripts/references/") and path.endswith(".yaml"):
@@ -218,6 +211,9 @@ def build_invalidation_plan(
     seed_nodes.update(_owners_for_paths(head_contract, delta_paths))
     config_nodes = _config_changed_nodes(base_contract, head_contract)
     seed_nodes.update(config_nodes)
+    base_output_contract_version = snapshot_analysis_output_contract_version(base_snapshot)
+    if base_output_contract_version != head_contract.analysis_output_contract_version:
+        seed_nodes.update(head_contract.nodes)
     source_nodes, source_reasons = _source_changed_nodes(head_contract, changed_files, repo_root)
     seed_nodes.update(source_nodes)
     head_seeds = _head_seed_nodes(base_contract, head_contract, seed_nodes)
@@ -228,5 +224,10 @@ def build_invalidation_plan(
     reasons = [f"snapshot delta: {len(delta_paths)} path(s)"] if delta_paths else []
     if config_nodes:
         reasons.append(f"config delta: {len(config_nodes)} producer(s)")
+    if base_output_contract_version != head_contract.analysis_output_contract_version:
+        reasons.append(
+            "analysis output contract version: "
+            f"{base_output_contract_version} -> {head_contract.analysis_output_contract_version}"
+        )
     reasons.extend(source_reasons)
     return InvalidationPlan(frozenset(paths), frozenset(seed_nodes | closed_head_nodes), tuple(reasons))

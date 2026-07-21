@@ -12,6 +12,7 @@ from ida_mcp_session import (
     McpConnectionError,
     McpContractError,
     McpDatabaseBinding,
+    McpDatabaseNotReadyError,
     McpDatabaseSelectionError,
     McpToolCallError,
     detect_database_requirement,
@@ -112,6 +113,15 @@ class TestSelectDatabaseSession(unittest.TestCase):
         )
 
         self.assertEqual("server-db", selected["session_id"])
+
+    def test_matching_inactive_database_is_reported_as_not_ready(self) -> None:
+        inactive_server = {**ACTIVE_SERVER, "is_active": False}
+
+        with self.assertRaisesRegex(McpDatabaseNotReadyError, "not active yet"):
+            select_database_session(
+                [inactive_server],
+                expected_binary=r"D:\repo\tests\bin\ida-mcp-smoke.dll",
+            )
 
     def test_single_active_routable_session_is_selected(self) -> None:
         selected = select_database_session([ACTIVE_SERVER])

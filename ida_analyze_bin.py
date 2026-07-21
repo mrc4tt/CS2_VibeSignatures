@@ -76,6 +76,7 @@ from ida_skill_preprocessor import (
 from ida_mcp_session import (
     McpConnectionError,
     McpContractError,
+    McpDatabaseNotReadyError,
     McpDatabaseSelectionError,
     McpToolCallError,
     check_ida_mcp_supervisor_health,
@@ -760,9 +761,11 @@ def verify_opened_binary_via_mcp(
     port=DEFAULT_PORT,
     debug=False,
     verify_timeout=OPENED_BINARY_VERIFY_TIMEOUT,
+    worker_ready_timeout=MCP_STARTUP_TIMEOUT,
     retry_interval=OPENED_BINARY_VERIFY_RETRY_INTERVAL,
 ):
-    deadline = time.monotonic() + max(0.0, verify_timeout)
+    worker_ready_deadline = time.monotonic() + max(0.0, worker_ready_timeout)
+    metadata_deadline = None
     while True:
         try:
             survey = asyncio.run(
@@ -773,6 +776,16 @@ def verify_opened_binary_via_mcp(
                     expected_binary=binary_path,
                 )
             )
+        except McpDatabaseNotReadyError as exc:
+            if time.monotonic() >= worker_ready_deadline:
+                print("  Failed: opened binary verification failed")
+                print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
+                print(f"    Reason: timed out waiting for the IDA worker to become active: {exc}")
+                return False
+            if debug:
+                print("  Matching IDA database is still starting; retrying verification...")
+            time.sleep(max(0.0, retry_interval))
+            continue
         except (McpConnectionError, McpContractError, McpDatabaseSelectionError, McpToolCallError) as exc:
             print("  Failed: opened binary verification failed")
             print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
@@ -785,11 +798,15 @@ def verify_opened_binary_via_mcp(
             ["survey_binary returned no metadata"],
             ["path mismatch: opened metadata path is missing"],
         )
-        if not retryable or time.monotonic() >= deadline:
+        if not retryable:
+            break
+        if metadata_deadline is None:
+            metadata_deadline = time.monotonic() + max(0.0, verify_timeout)
+        if time.monotonic() >= metadata_deadline:
             break
         if debug:
             print("  Opened binary metadata is not ready; retrying verification...")
-        time.sleep(retry_interval)
+        time.sleep(max(0.0, retry_interval))
 
     metadata = survey.get("metadata") if isinstance(survey, dict) else {}
     opened_path = metadata.get("path") if isinstance(metadata, dict) else None

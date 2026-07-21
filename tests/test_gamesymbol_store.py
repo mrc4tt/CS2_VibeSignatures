@@ -66,7 +66,7 @@ class TestSnapshotSymbolStore(unittest.TestCase):
                 [entry.path for entry in store.glob_module("server", "ITest_*.windows.yaml")],
             )
             self.assertTrue(store.candidate_sha256.startswith("sha256:"))
-            self.assertEqual(2, store.schema_version)
+            self.assertEqual(3, store.schema_version)
             self.assertEqual(2, store.config_digest_version)
 
     def test_missing_and_unsafe_queries_are_typed(self) -> None:

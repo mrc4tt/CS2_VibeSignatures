@@ -65,6 +65,7 @@ def _run(args) -> None:
             "reason": "trusted",
             "schema_version": context.document["schema_version"],
             "config_digest_version": context.contract.config_digest_version,
+            "analysis_output_contract_version": context.contract.analysis_output_contract_version,
         }
         print(json.dumps(result, sort_keys=True) if args.json else "Snapshot contract is trusted")
     else:

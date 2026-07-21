@@ -3,14 +3,25 @@ from collections.abc import Mapping
 
 import yaml
 
+from analysis_output_contract import ANALYSIS_OUTPUT_CONTRACT_VERSION
 from gamesymbol_snapshot_lib.errors import SnapshotSchemaError
 from gamesymbol_snapshot_lib.paths import validate_snapshot_key
 
 LEGACY_SCHEMA_VERSION = 1
-SCHEMA_VERSION = 2
+SCHEMA_2_VERSION = 2
+SCHEMA_VERSION = 3
 SCHEMA_1_KEYS = ("schema_version", "game_version", "config_sha256", "file_count", "files")
 SCHEMA_2_KEYS = (
     "schema_version",
+    "config_digest_version",
+    "game_version",
+    "config_sha256",
+    "file_count",
+    "files",
+)
+SCHEMA_3_KEYS = (
+    "schema_version",
+    "analysis_output_contract_version",
     "config_digest_version",
     "game_version",
     "config_sha256",
@@ -57,12 +68,30 @@ def snapshot_config_digest_version(document: Mapping) -> int:
     schema_version = document.get("schema_version")
     if schema_version == LEGACY_SCHEMA_VERSION:
         return 1
-    if schema_version == SCHEMA_VERSION:
+    if schema_version in {SCHEMA_2_VERSION, SCHEMA_VERSION}:
         version = document.get("config_digest_version")
         if not isinstance(version, int) or isinstance(version, bool) or version != 2:
             raise SnapshotSchemaError(
                 f"unsupported snapshot config_digest_version: {version!r}",
                 reason="unsupported_config_digest_version",
+            )
+        return version
+    raise SnapshotSchemaError(
+        f"unsupported snapshot schema_version: {schema_version!r}",
+        reason="unsupported_snapshot_schema",
+    )
+
+
+def snapshot_analysis_output_contract_version(document: Mapping) -> int:
+    schema_version = document.get("schema_version")
+    if schema_version in {LEGACY_SCHEMA_VERSION, SCHEMA_2_VERSION}:
+        return 1
+    if schema_version == SCHEMA_VERSION:
+        version = document.get("analysis_output_contract_version")
+        if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+            raise SnapshotSchemaError(
+                f"invalid snapshot analysis_output_contract_version: {version!r}",
+                reason="invalid_analysis_output_contract_version",
             )
         return version
     raise SnapshotSchemaError(
@@ -78,6 +107,7 @@ def build_snapshot_document(
     *,
     schema_version: int = SCHEMA_VERSION,
     config_digest_version: int | None = None,
+    analysis_output_contract_version: int | None = None,
 ) -> dict:
     ordered_files = {path: canonicalize(files[path]) for path in sorted(files)}
     if schema_version == LEGACY_SCHEMA_VERSION:
@@ -85,6 +115,24 @@ def build_snapshot_document(
             raise SnapshotSchemaError("schema 1 snapshots require config digest version 1")
         return {
             "schema_version": LEGACY_SCHEMA_VERSION,
+            "game_version": str(game_version),
+            "config_sha256": config_sha256,
+            "file_count": len(ordered_files),
+            "files": ordered_files,
+        }
+    if schema_version == SCHEMA_2_VERSION:
+        if config_digest_version is None:
+            config_digest_version = 2
+        if config_digest_version != 2:
+            raise SnapshotSchemaError(
+                f"unsupported snapshot config_digest_version: {config_digest_version!r}",
+                reason="unsupported_config_digest_version",
+            )
+        if analysis_output_contract_version not in (None, 1):
+            raise SnapshotSchemaError("schema 2 snapshots imply analysis output contract version 1")
+        return {
+            "schema_version": SCHEMA_2_VERSION,
+            "config_digest_version": config_digest_version,
             "game_version": str(game_version),
             "config_sha256": config_sha256,
             "file_count": len(ordered_files),
@@ -102,8 +150,20 @@ def build_snapshot_document(
             f"unsupported snapshot config_digest_version: {config_digest_version!r}",
             reason="unsupported_config_digest_version",
         )
+    if analysis_output_contract_version is None:
+        analysis_output_contract_version = ANALYSIS_OUTPUT_CONTRACT_VERSION
+    if (
+        not isinstance(analysis_output_contract_version, int)
+        or isinstance(analysis_output_contract_version, bool)
+        or analysis_output_contract_version < 1
+    ):
+        raise SnapshotSchemaError(
+            f"invalid snapshot analysis_output_contract_version: {analysis_output_contract_version!r}",
+            reason="invalid_analysis_output_contract_version",
+        )
     return {
         "schema_version": SCHEMA_VERSION,
+        "analysis_output_contract_version": analysis_output_contract_version,
         "config_digest_version": config_digest_version,
         "game_version": str(game_version),
         "config_sha256": config_sha256,
@@ -121,6 +181,7 @@ def canonical_snapshot_bytes(document: Mapping) -> bytes:
         document["files"],
         schema_version=schema_version,
         config_digest_version=digest_version,
+        analysis_output_contract_version=snapshot_analysis_output_contract_version(document),
     )
     return canonical_yaml_bytes(canonical)
 
@@ -129,8 +190,12 @@ def _validate_metadata(document: object, expected_game_version: str | None) -> d
     if not isinstance(document, dict):
         raise SnapshotSchemaError("snapshot top level must be a mapping")
     schema_version = document.get("schema_version")
-    expected_keys = SCHEMA_1_KEYS if schema_version == LEGACY_SCHEMA_VERSION else SCHEMA_2_KEYS
-    if schema_version not in {LEGACY_SCHEMA_VERSION, SCHEMA_VERSION}:
+    expected_keys = {
+        LEGACY_SCHEMA_VERSION: SCHEMA_1_KEYS,
+        SCHEMA_2_VERSION: SCHEMA_2_KEYS,
+        SCHEMA_VERSION: SCHEMA_3_KEYS,
+    }.get(schema_version)
+    if expected_keys is None:
         raise SnapshotSchemaError(
             f"unsupported snapshot schema_version: {schema_version!r}",
             reason="unsupported_snapshot_schema",
@@ -138,6 +203,7 @@ def _validate_metadata(document: object, expected_game_version: str | None) -> d
     if set(document) != set(expected_keys):
         raise SnapshotSchemaError(f"snapshot schema {schema_version} must contain exactly: {', '.join(expected_keys)}")
     snapshot_config_digest_version(document)
+    snapshot_analysis_output_contract_version(document)
     game_version = document.get("game_version")
     if not isinstance(game_version, str):
         raise SnapshotSchemaError("snapshot game_version must be a string")

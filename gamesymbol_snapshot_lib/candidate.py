@@ -15,7 +15,12 @@ from gamesymbol_snapshot_lib.candidate_session import (
     load_manifest,
     update_session,
 )
-from gamesymbol_snapshot_lib.codec import canonical_snapshot_bytes, parse_snapshot_bytes, snapshot_config_digest_version
+from gamesymbol_snapshot_lib.codec import (
+    canonical_snapshot_bytes,
+    parse_snapshot_bytes,
+    snapshot_analysis_output_contract_version,
+    snapshot_config_digest_version,
+)
 from gamesymbol_snapshot_lib.diff import format_mismatch
 from gamesymbol_snapshot_lib.errors import SnapshotMismatchError, SnapshotSchemaError
 from gamesymbol_snapshot_lib.operations import pack_snapshot
@@ -155,7 +160,7 @@ def compare_snapshots(
         expected_game_version=str(expected_game_version),
         config_path=config_path,
     )
-    metadata = ("schema_version", "config_digest_version", "config_sha256", "file_count")
+    metadata = ("config_digest_version", "config_sha256", "file_count")
     differences = [field for field in metadata if getattr(actual, field) != getattr(expected, field)]
     if differences:
         raise SnapshotMismatchError(f"snapshot metadata mismatch: {', '.join(differences)}")
@@ -165,6 +170,17 @@ def compare_snapshots(
             expected_document = parse_snapshot_bytes(Path(expected_path).read_bytes())
         except OSError as exc:
             raise CandidateContractError(f"unable to read snapshots for comparison: {exc}") from exc
+        if snapshot_analysis_output_contract_version(actual_document) != snapshot_analysis_output_contract_version(
+            expected_document
+        ):
+            raise SnapshotMismatchError("snapshot metadata mismatch: analysis_output_contract_version")
+        if actual_document["files"] == expected_document["files"]:
+            if session_path is not None:
+                guard_candidate(candidate_path=actual_path, session_path=session_path)
+                session, manifest = load_manifest(session_path)
+                manifest["completed_steps"]["expected_compare"] = True
+                update_session(session, manifest, state="expected_matched")
+            return SnapshotDiff(actual.candidate_sha256, expected.candidate_sha256, True)
         raise SnapshotMismatchError(format_mismatch(expected_document["files"], actual_document["files"]))
     if session_path is not None:
         guard_candidate(candidate_path=actual_path, session_path=session_path)

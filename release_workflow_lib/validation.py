@@ -5,8 +5,9 @@ from pathlib import Path
 import yaml
 
 from analysis_config import AnalysisConfigError, analysis_config_repo_path, read_analysis_config_at_revision
+from analysis_output_contract import ANALYSIS_OUTPUT_CONTRACT_MISMATCH_REASON
 from gamesymbol_snapshot_lib.config import load_contract
-from gamesymbol_snapshot_lib.errors import SnapshotError
+from gamesymbol_snapshot_lib.errors import SnapshotError, SnapshotMismatchError
 from gamesymbol_snapshot_lib.operations import load_snapshot_context, restore_snapshot
 from gamesymbol_snapshot_lib.paths import ensure_real_tree, iter_yaml_paths, path_from_key
 from gamesymbol_snapshot_lib.pr_validation import build_invalidation_plan
@@ -214,6 +215,11 @@ def _invalidate_from_legacy_snapshot(repo_root: Path, gamever: str, source_sha: 
         try:
             base_context = load_snapshot_context(snapshot, base_config, gamever, bindir)
             restore_snapshot(gamever, bindir, base_config, snapshot, replace=True)
+        except SnapshotMismatchError as exc:
+            if exc.reason == ANALYSIS_OUTPUT_CONTRACT_MISMATCH_REASON:
+                print("Analysis output contract changed; discarding the legacy snapshot baseline")
+                return _invalidate_yaml_baseline(bindir, gamever)
+            raise ReleaseWorkflowError(f"trusted legacy bootstrap snapshot was rejected: {exc}") from exc
         except (SnapshotError, OSError, UnicodeError) as exc:
             raise ReleaseWorkflowError(f"trusted legacy bootstrap snapshot was rejected: {exc}") from exc
         head_contract = load_contract(head_config, gamever, bindir)
@@ -262,7 +268,13 @@ def _invalidate_from_accepted_manifest(
             raise ReleaseWorkflowError(str(exc)) from exc
         base_config.write_bytes(base_history.data)
         head_config.write_bytes(head_history.data)
-        base_context = load_snapshot_context(snapshot, base_config, gamever, bindir)
+        try:
+            base_context = load_snapshot_context(snapshot, base_config, gamever, bindir)
+        except SnapshotMismatchError as exc:
+            if exc.reason == ANALYSIS_OUTPUT_CONTRACT_MISMATCH_REASON:
+                print("Analysis output contract changed; discarding the accepted snapshot baseline")
+                return _invalidate_yaml_baseline(bindir, gamever)
+            raise
         base_contract = base_context.contract
         head_contract = load_contract(head_config, gamever, bindir)
         if manifest.get("analysis_config_path") and manifest["analysis_config_path"] != base_history.repository_path:

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import yaml
 
+import analysis_output_contract
 import ida_analyze_bin
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError
 from gamesymbol_snapshot_lib.model import SkillNode, SnapshotContract
@@ -239,6 +240,7 @@ def _build_contract(
         bindir / game_version,
         config_digest_version,
         config_sha256,
+        analysis_output_contract.ANALYSIS_OUTPUT_CONTRACT_VERSION,
         required,
         optional,
         owners,

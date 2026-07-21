@@ -1,0 +1,6 @@
+interface:
+  display_name: "Pack Snapshot"
+  short_description: "Pack and verify tracked game-symbol snapshots"
+  default_prompt: "Use $pack-snapshot to pack and verify a snapshot for one GAMEVER."
+policy:
+  allow_implicit_invocation: false

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Idempotently initialize release binaries and symbol YAMLs for one GAMEVER."""
+"""Idempotently initialize release binaries for one GAMEVER."""
 
 import argparse
 import os
@@ -16,7 +16,7 @@ import yaml
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from analysis_config import AnalysisConfigError, resolve_analysis_config
+from analysis_config import AnalysisConfigError, resolve_analysis_config  # noqa: E402
 
 RELEASE_URL = "https://github.com/HLND2T/CS2_VibeSignatures/releases/download/{0}/gamebin-{0}.7z"
 GAMEVER_RE = re.compile(r"^[0-9]{4,10}[a-z]?$")
@@ -85,12 +85,6 @@ def select_version(requested: str, versions: list[str]) -> str:
     if requested not in versions:
         raise InitGamebinError(f"GAMEVER {requested} is absent from download.yaml")
     return requested
-
-
-def find_snapshot(root: Path, gamever: str) -> Path | None:
-    """Return the tracked snapshot when this GAMEVER has one."""
-    snapshot = root / "gamesymbols" / f"{gamever}.yaml"
-    return snapshot if snapshot.is_file() else None
 
 
 def check_binaries(root: Path, gamever: str, config_path: Path) -> bool:
@@ -236,33 +230,14 @@ def run_depot_fallback(root: Path, gamever: str, config_path: Path) -> None:
     run_command(command, root, label="copy_depot_bin.py")
 
 
-def restore_snapshot(root: Path, gamever: str, snapshot: Path, config_path: Path) -> None:
-    """Restore missing YAML without replacement, then verify the complete snapshot."""
-    relative_snapshot = snapshot.relative_to(root).as_posix()
-    common = [
-        "-gamever",
-        gamever,
-        "-bindir",
-        "bin",
-        "-configyaml",
-        str(config_path),
-        "-snapshot",
-        relative_snapshot,
-        "-debug",
-    ]
-    run_command(["uv", "run", "gamesymbol_snapshot.py", "restore", *common], root, label="snapshot restore")
-    run_command(["uv", "run", "gamesymbol_snapshot.py", "verify", *common], root, label="snapshot verify")
-
-
 def prepare(root: Path, requested: str) -> dict:
-    """Execute the complete preparation workflow and return a summary."""
-    gamever = select_version(requested, load_versions(root / "download.yaml"))
-    snapshot = find_snapshot(root, gamever)
+    """Prepare configured binaries and return a summary."""
+    versions = load_versions(root / "download.yaml")
+    gamever = select_version(requested, versions)
     try:
         config_path = resolve_analysis_config(gamever, repo_root=root)
     except AnalysisConfigError as exc:
-        snapshot_path = root / "gamesymbols" / f"{gamever}.yaml"
-        raise InitGamebinError(f"{exc}; matching snapshot path: {snapshot_path}") from exc
+        raise InitGamebinError(str(exc)) from exc
     source = "existing local binaries"
     copied = skipped = 0
     if not check_binaries(root, gamever, config_path):
@@ -279,14 +254,11 @@ def prepare(root: Path, requested: str) -> dict:
                 source = "Steam depot fallback"
     if not check_binaries(root, gamever, config_path):
         raise InitGamebinError(f"configured binaries are still incomplete for GAMEVER {gamever}")
-    if snapshot is not None:
-        restore_snapshot(root, gamever, snapshot, config_path)
     return {
         "gamever": gamever,
         "source": source,
         "copied": copied,
         "skipped": skipped,
-        "snapshot_restored": snapshot is not None,
     }
 
 
@@ -303,7 +275,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("versions", help="List GAMEVER values from download.yaml")
-    prepare_parser = commands.add_parser("prepare", help="Prepare binaries and symbol YAMLs")
+    prepare_parser = commands.add_parser("prepare", help="Prepare configured binaries")
     prepare_parser.add_argument("gamever", help="Exact GAMEVER from download.yaml, or latest")
     args = parser.parse_args(argv)
     try:
@@ -315,10 +287,6 @@ def main(argv=None) -> int:
             print(f"Selected GAMEVER: {result['gamever']}")
             print(f"Binary source: {result['source']}")
             print(f"Archive merge: {result['copied']} copied, {result['skipped']} skipped")
-            if result["snapshot_restored"]:
-                print("Symbol snapshot: restored and verified")
-            else:
-                print("Symbol snapshot: unavailable; binary-only initialization completed")
     except InitGamebinError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

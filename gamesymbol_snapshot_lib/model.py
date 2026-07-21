@@ -27,6 +27,7 @@ class SnapshotContract:
     game_root: Path
     config_digest_version: int
     config_sha256: str
+    analysis_output_contract_version: int
     required_paths: frozenset[str]
     optional_paths: frozenset[str]
     owners_by_path: dict[str, frozenset[str]]
