@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import analysis_output_contract
 from gamesymbol_snapshot_lib.codec import build_snapshot_document, canonical_snapshot_bytes
 from gamesymbol_snapshot_lib.config import load_contract
 from release_workflow_lib.cli import _parser
@@ -198,6 +199,27 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                     bindir=fixture.repo / "bin",
                     allow_legacy_bootstrap=True,
                 )
+
+    def test_legacy_bootstrap_discards_outputs_when_analysis_output_contract_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = LegacyBootstrapFixture(Path(tmp))
+            game_root = fixture.repo / "bin" / fixture.gamever / "server"
+            game_root.mkdir(parents=True)
+            (game_root / "Changed.windows.yaml").write_text("func_name: Changed\n", encoding="utf-8")
+            (game_root / "Stable.windows.yaml").write_text("func_name: Stable\n", encoding="utf-8")
+
+            with patch.object(analysis_output_contract, "ANALYSIS_OUTPUT_CONTRACT_VERSION", 2):
+                deleted = invalidate_republish(
+                    repo_root=fixture.repo,
+                    gamever=fixture.gamever,
+                    source_sha=fixture.source_sha,
+                    bindir=fixture.repo / "bin",
+                    allow_legacy_bootstrap=True,
+                )
+
+            self.assertEqual(2, deleted)
+            self.assertFalse((game_root / "Changed.windows.yaml").exists())
+            self.assertFalse((game_root / "Stable.windows.yaml").exists())
 
     def test_lightweight_output_pr_check_rejects_stale_source(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

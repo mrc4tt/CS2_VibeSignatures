@@ -1,4 +1,5 @@
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -8,7 +9,7 @@ from tests.gamesymbol_snapshot_test_support import module, skill, write_config
 
 
 def snapshot(files):
-    return {"files": files}
+    return {"schema_version": 2, "files": files}
 
 
 class TestInvalidationPlan(unittest.TestCase):
@@ -69,6 +70,40 @@ class TestInvalidationPlan(unittest.TestCase):
             )
 
         self.assertEqual({"server/Target.windows.yaml"}, plan.paths)
+
+    def test_core_runtime_change_keeps_snapshot_when_output_contract_matches(self) -> None:
+        modules = [module("server", [skill("find-target", ["Target.{platform}.yaml"])], linux=False)]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            base, head = self._contracts(root, modules)
+            unchanged = snapshot({"server/Target.windows.yaml": {"value": 1}})
+            plan = build_invalidation_plan(base, head, unchanged, unchanged, ["ida_analyze_bin.py"], root)
+
+        self.assertEqual(frozenset(), plan.paths)
+        self.assertEqual((), plan.reasons)
+
+    def test_output_contract_version_change_invalidates_all_nodes(self) -> None:
+        modules = [
+            module(
+                "server",
+                [skill("find-a", ["A.{platform}.yaml"]), skill("find-b", ["B.{platform}.yaml"])],
+                linux=False,
+            )
+        ]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            base, head = self._contracts(root, modules)
+            head = replace(head, analysis_output_contract_version=2)
+            unchanged = snapshot(
+                {
+                    "server/A.windows.yaml": {"value": 1},
+                    "server/B.windows.yaml": {"value": 1},
+                }
+            )
+            plan = build_invalidation_plan(base, head, unchanged, unchanged, [], root)
+
+        self.assertEqual(set(unchanged["files"]), plan.paths)
+        self.assertIn("analysis output contract version: 1 -> 2", plan.reasons)
 
     def test_config_change_and_deleted_output_remove_base_and_head_paths(self) -> None:
         base_modules = [module("server", [skill("find-target", ["Old.{platform}.yaml"])], linux=False)]
