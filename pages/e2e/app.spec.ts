@@ -20,8 +20,8 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/v1/runs/run-1', (route) => route.fulfill({ json: run }))
 })
 
-test('loads the run list from the SPA root', async ({ page }) => {
-  await page.goto('/')
+test('loads the run list from the runs route', async ({ page }) => {
+  await page.goto('/runs')
   await expect(page.getByRole('link', { name: 'run-1' })).toBeVisible()
 })
 
@@ -45,7 +45,7 @@ test('opens the static symbol browser without a Process API connection', async (
 })
 
 test('switches the static application between supported languages', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/runs')
   await page.getByLabel('语言').click()
   await page.locator('.ant-select-dropdown').getByText('English', { exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Analysis runs' })).toBeVisible()

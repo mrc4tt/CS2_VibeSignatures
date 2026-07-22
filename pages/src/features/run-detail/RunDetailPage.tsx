@@ -101,7 +101,7 @@ function RunDetailContent(props: DetailContentProps) {
   const { t } = useTranslation()
   return (
     <Space orientation="vertical" size="large" className="full-width">
-      <Link to="/"><ArrowLeftOutlined /> {t('detail.backToRuns')}</Link>
+      <Link to="/runs"><ArrowLeftOutlined /> {t('detail.backToRuns')}</Link>
       <RunHeader onRefresh={props.onRefresh} />
       {!props.graph ? <Card><Empty description={t('detail.waitingForPlan')} /></Card> : (
         <>

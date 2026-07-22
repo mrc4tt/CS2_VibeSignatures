@@ -26,21 +26,21 @@ export function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
   const selectedLanguage = resolveLanguage(i18n.resolvedLanguage)
-  const activeTab = location.pathname.startsWith('/symbols') ? 'symbols' : 'runs'
+const activeTab = location.pathname.startsWith('/symbols') ? 'symbols' : 'runs'
   return (
     <Layout className="app-layout">
       <Header className="app-header">
-        <Link to="/" className="app-brand">
+        <Link to="/symbols" className="app-brand">
           <DashboardOutlined />
           <Typography.Text strong>CS2 VibeSignatures</Typography.Text>
         </Link>
         <Tabs
           className="app-nav"
           activeKey={activeTab}
-          onChange={(key) => void navigate(key === 'symbols' ? '/symbols' : '/')}
+          onChange={(key) => void navigate(key === 'symbols' ? '/symbols' : '/runs')}
           items={[
-            { key: 'runs', label: t('navigation.runs') },
             { key: 'symbols', label: t('navigation.symbols') },
+            { key: 'runs', label: t('navigation.runs') },
           ]}
         />
         <Space className="api-summary">
@@ -64,11 +64,12 @@ export function AppShell() {
         </Space>
       </Header>
       <Content className="app-content">
-        <Routes>
+<Routes>
           <Route path="/symbols" element={<Suspense fallback={<div className="page-spinner">{t('app.loadingPage')}</div>}><ExploreSymbolsPage /></Suspense>} />
-          <Route path="/" element={<ApiGate connected={connected} onSettings={() => setSettingsOpen(true)}><RunListPage /></ApiGate>} />
+          <Route path="/" element={<Navigate to="/symbols" replace />} />
+          <Route path="/runs" element={<ApiGate connected={connected} onSettings={() => setSettingsOpen(true)}><RunListPage /></ApiGate>} />
           <Route path="/runs/:runId" element={<ApiGate connected={connected} onSettings={() => setSettingsOpen(true)}><RunDetailPage /></ApiGate>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/symbols" replace />} />
         </Routes>
       </Content>
       <ApiSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
