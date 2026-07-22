@@ -1,0 +1,25 @@
+func_name: CBaseEntity_VPhysicsEndTouch
+func_va: '0x19556c0'
+disasm_code: |-
+  .text:00000000019556C0                 push    rbp
+  .text:00000000019556C1                 mov     rbp, rsp
+  .text:00000000019556C4                 push    r12
+  .text:00000000019556C6                 mov     r12, rdi
+  .text:00000000019556C9                 push    rbx
+  .text:00000000019556CA                 mov     rax, [rdi]
+  .text:00000000019556CD                 mov     rbx, rsi
+  .text:00000000019556D0                 call    qword ptr [rax+4A8h] ; 0x4A8 = CBaseEntity_EndTouch
+  .text:00000000019556D6                 mov     rax, [rbx]
+  .text:00000000019556D9                 mov     rsi, r12
+  .text:00000000019556DC                 mov     rdi, rbx
+  .text:00000000019556DF                 pop     rbx
+  .text:00000000019556E0                 pop     r12
+  .text:00000000019556E2                 pop     rbp
+  .text:00000000019556E3                 mov     rax, [rax+4A8h] ; 0x4A8 = CBaseEntity_EndTouch
+  .text:00000000019556EA                 jmp     rax
+procedure: |-
+  __int64 __fastcall CBaseEntity_VPhysicsEndTouch(__int64 a1, __int64 a2)
+  {
+    (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 1192LL))(a1); // 1192LL = 0x4A8 = CBaseEntity_EndTouch
+    return (*(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)a2 + 1192LL))(a2, a1); // 1192LL = 0x4A8 = CBaseEntity_EndTouch
+  }

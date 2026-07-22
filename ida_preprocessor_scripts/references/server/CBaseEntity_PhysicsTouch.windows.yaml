@@ -1,4 +1,4 @@
-func_name: CBaseEntity_PhysicsNotifyOtherOfEndTouch
+func_name: CBaseEntity_PhysicsTouch
 func_va: '0x180d1ac60'
 disasm_code: |-
   .text:0000000180D1AC60                 test    rdx, rdx
@@ -14,10 +14,10 @@ disasm_code: |-
   .text:0000000180D1AC83                 test    r8b, 1
   .text:0000000180D1AC87                 jnz     short locret_180D1AC93
   .text:0000000180D1AC89                 mov     rax, [rcx]
-  .text:0000000180D1AC8C                 jmp     qword ptr [rax+4A0h] ; 0x4A0 = CBaseEntity_EndTouch
+  .text:0000000180D1AC8C                 jmp     qword ptr [rax+4A0h] ; 0x4A0 = CBaseEntity_Touch
   .text:0000000180D1AC93                 retn
 procedure: |-
-  __int64 __fastcall CBaseEntity::PhysicsNotifyOtherOfEndTouch(_QWORD *a1, __int64 a2)
+  __int64 __fastcall CBaseEntity_PhysicsTouch(_QWORD *a1, __int64 a2)
   {
     __int64 result; // rax
 
@@ -28,7 +28,7 @@ procedure: |-
       {
         result = *(_QWORD *)(a2 + 16);
         if ( (*(_DWORD *)(result + 48) & 0x200) == 0 )
-          return (*(__int64 (__fastcall **)(_QWORD *))(*a1 + 1184LL))(a1); // 1184 = 0x4A0 = CBaseEntity_EndTouch
+          return (*(__int64 (__fastcall **)(_QWORD *))(*a1 + 1184LL))(a1); // 1184 = 0x4A0 = CBaseEntity_Touch
       }
     }
     return result;

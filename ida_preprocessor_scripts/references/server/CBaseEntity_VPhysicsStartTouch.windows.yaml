@@ -1,4 +1,4 @@
-func_name: CBaseEntity_PhysicsDispatchStartTouch
+func_name: CBaseEntity_VPhysicsStartTouch
 func_va: '0x180d26ff0'
 disasm_code: |-
   .text:0000000180D26FF0                 mov     [rsp+arg_0], rbx

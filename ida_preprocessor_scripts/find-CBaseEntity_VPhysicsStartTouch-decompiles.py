@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CBaseEntity_PhysicsDispatchStartTouch-AND-CBaseEntity_PhysicsNotifyOtherOfEndTouch-decompiles skill."""
+"""Preprocess script for find-CBaseEntity_VPhysicsStartTouch-decompiles skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
     "CBaseEntity_StartTouch",
     "CBaseEntity_Touch",
-    "CBaseEntity_EndTouch",
 ]
 
 LLM_DECOMPILE = [
@@ -14,33 +13,22 @@ LLM_DECOMPILE = [
         "symbol_name": "CBaseEntity_StartTouch",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
-            "references/server/CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml",
+            "references/server/CBaseEntity_VPhysicsStartTouch.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
         "dependency_policy": {
-            "CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml": "required",
+            "CBaseEntity_VPhysicsStartTouch.{platform}.yaml": "required",
         },
     },
     {
         "symbol_name": "CBaseEntity_Touch",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
-            "references/server/CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml",
+            "references/server/CBaseEntity_VPhysicsStartTouch.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
         "dependency_policy": {
-            "CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml": "required",
-        },
-    },
-    {
-        "symbol_name": "CBaseEntity_EndTouch",
-        "prompt_path": "prompt/call_llm_decompile.md",
-        "reference_yaml_paths": [
-            "references/server/CBaseEntity_PhysicsNotifyOtherOfEndTouch.{platform}.yaml",
-        ],
-        "expected_result_sections": ["found_vcall"],
-        "dependency_policy": {
-            "CBaseEntity_PhysicsNotifyOtherOfEndTouch.{platform}.yaml": "required",
+            "CBaseEntity_VPhysicsStartTouch.{platform}.yaml": "required",
         },
     },
 ]
@@ -49,7 +37,6 @@ FUNC_VTABLE_RELATIONS = [
     # (func_name, vtable_class)
     ("CBaseEntity_StartTouch", "CBaseEntity"),
     ("CBaseEntity_Touch", "CBaseEntity"),
-    ("CBaseEntity_EndTouch", "CBaseEntity"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
@@ -66,16 +53,6 @@ GENERATE_YAML_DESIRED_FIELDS = [
     ),
     (
         "CBaseEntity_Touch",
-        [
-            "func_name",
-            "vfunc_sig",
-            "vfunc_offset",
-            "vfunc_index",
-            "vtable_name",
-        ],
-    ),
-    (
-        "CBaseEntity_EndTouch",
         [
             "func_name",
             "vfunc_sig",

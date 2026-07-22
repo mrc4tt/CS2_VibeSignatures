@@ -284,17 +284,17 @@ disasm_code: |-
   .text:0000000000E3CA04                 jz      loc_E3C518
   .text:0000000000E3CA0A                 mov     rsi, rbx
   .text:0000000000E3CA0D                 mov     rdi, r14
-  .text:0000000000E3CA10                 call    CBaseEntity_PhysicsNotifyOtherOfEndTouch
+  .text:0000000000E3CA10                 call    CBaseEntity_PhysicsTouch
   .text:0000000000E3CA15                 mov     rsi, r14
   .text:0000000000E3CA18                 mov     rdi, rbx
-  .text:0000000000E3CA1B                 call    CBaseEntity_PhysicsNotifyOtherOfEndTouch
+  .text:0000000000E3CA1B                 call    CBaseEntity_PhysicsTouch
   .text:0000000000E3CA20                 mov     eax, [r13+0]
   .text:0000000000E3CA24                 test    al, 10h
   .text:0000000000E3CA26                 jz      loc_E3C520
   .text:0000000000E3CA2C                 mov     rsi, rbx
   .text:0000000000E3CA2F                 mov     rdi, r14
   .text:0000000000E3CA32                 add     r15, 100h
-  .text:0000000000E3CA39                 call    CBaseEntity_PhysicsDispatchTouch
+  .text:0000000000E3CA39                 call    CBaseEntity_VPhysicsEndTouch
   .text:0000000000E3CA3E                 cmp     [rbp+var_1F8], r15
   .text:0000000000E3CA45                 jnz     loc_E3C534
   .text:0000000000E3CA4B                 mov     r13, [rbp+var_230]
@@ -371,7 +371,7 @@ disasm_code: |-
   .text:0000000000E3CB96                 mov     rcx, r13
   .text:0000000000E3CB99                 mov     rsi, rbx
   .text:0000000000E3CB9C                 mov     rdi, r14
-  .text:0000000000E3CB9F                 call    CBaseEntity_PhysicsDispatchStartTouch
+  .text:0000000000E3CB9F                 call    CBaseEntity_VPhysicsStartTouch
   .text:0000000000E3CBA4                 jmp     loc_E3C8FA
   .text:0000000000E3CBB0                 mov     rax, cs:qword_2501EC8
   .text:0000000000E3CBB7                 mov     rax, [rax+8]
@@ -724,7 +724,7 @@ procedure: |-
             goto LABEL_5;
   LABEL_43:
           v5 += 256;
-          CBaseEntity_PhysicsDispatchTouch(v8, v13);
+          CBaseEntity_VPhysicsEndTouch(v8, v13);
           if ( v71 == v5 )
           {
   LABEL_44:
@@ -839,7 +839,7 @@ procedure: |-
   LABEL_58:
           v45 = nullptr;
   LABEL_59:
-          CBaseEntity_PhysicsDispatchStartTouch(v8, v13, v45, v6);
+          CBaseEntity_VPhysicsStartTouch(v8, v13, v45, v6);
           goto LABEL_27;
         }
         if ( (*(_BYTE *)v6 & 4) != 0 )
@@ -991,8 +991,8 @@ procedure: |-
         if ( (*v6 & 8) == 0 )
           goto LABEL_4;
   LABEL_42:
-        CBaseEntity_PhysicsNotifyOtherOfEndTouch(v8, v13);
-        CBaseEntity_PhysicsNotifyOtherOfEndTouch(v13, v8);
+        CBaseEntity_PhysicsTouch(v8, v13);
+        CBaseEntity_PhysicsTouch(v13, v8);
         if ( (*v6 & 0x10) != 0 )
           goto LABEL_43;
   LABEL_5:

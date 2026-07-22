@@ -1,6 +1,6 @@
 analysis_output_contract_version: 1
 config_digest_version: 2
-config_sha256: sha256:85769f526a034c1471cff91bfd0ff2eb260e3def2bc0a599978977556b5631ed
+config_sha256: sha256:2545f444baff8ea915a9c05f35a7c6ee840ed50e0cc345cb913fe6f54c982bc3
 file_count: 2936
 files:
   SDL3/SDL_GetMouse.windows.yaml:
@@ -12822,7 +12822,7 @@ files:
   networksystem/CNetworkMessages_dtor.windows.yaml:
     func_name: CNetworkMessages_dtor
     func_rva: '0xd5680'
-    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 8B DA 48 8B F9 E8 ?? ?? ?? ?? F6 C3 ?? 74 ?? 48 8B 05 80 62 12 00 48 8B D7 48 8B 08 48 8B 01 FF 50 ?? 48 8B 5C 24 ?? 48 8B C7 48 83 C4 ?? 5F C3
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 8B DA 48 8B F9 E8 ?? ?? ?? ?? F6 C3 ?? 74 ?? 48 8B 05 ?? ?? ?? ?? 48 8B D7 48 8B 08 48 8B 01 FF 50 ?? 48 8B 5C 24 ?? 48 8B C7 48 83 C4 ?? 5F C3 CC CC CC CC CC CC 48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ??
     func_size: '0x3a'
     func_va: '0x1800d5680'
     vfunc_index: 36
@@ -13370,8 +13370,8 @@ files:
     func_rva: '0x152500'
     func_size: '0x9'
     func_va: '0x180152500'
-    vfunc_index: 40
-    vfunc_offset: '0x140'
+    vfunc_index: 38
+    vfunc_offset: '0x130'
     vtable_name: CBaseEntity
   server/CBaseEntity_GetChangeAccessorPathInfo_2.linux.yaml:
     func_name: CBaseEntity_GetChangeAccessorPathInfo_2
@@ -13587,38 +13587,14 @@ files:
     vfunc_offset: '0x400'
     vfunc_sig: FF 90 00 04 00 00 48 63 05 ?? ?? ?? ??
     vtable_name: CBaseEntity
-  server/CBaseEntity_PhysicsDispatchStartTouch.linux.yaml:
-    func_name: CBaseEntity_PhysicsDispatchStartTouch
-    func_rva: '0x19555e0'
-    func_sig: 55 48 89 E5 41 57 41 56 4C 8D 7D ?? 49 89 D6 41 55 49 89 CD
-    func_size: '0xd7'
-    func_va: '0x19555e0'
-  server/CBaseEntity_PhysicsDispatchStartTouch.windows.yaml:
-    func_name: CBaseEntity_PhysicsDispatchStartTouch
-    func_rva: '0xd8fa40'
-    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC ?? 48 8B F1 4C 8B F2 49 8B 49 ??
-    func_size: '0xf6'
-    func_va: '0x180d8fa40'
-  server/CBaseEntity_PhysicsDispatchTouch.linux.yaml:
-    func_name: CBaseEntity_PhysicsDispatchTouch
-    func_rva: '0x19556c0'
-    func_sig: 55 48 89 E5 41 54 49 89 FC 53 48 8B 07 48 89 F3 FF 90 ?? ?? ?? ??
-    func_size: '0x2c'
-    func_va: '0x19556c0'
-  server/CBaseEntity_PhysicsDispatchTouch.windows.yaml:
-    func_name: CBaseEntity_PhysicsDispatchTouch
-    func_rva: '0xd8fa00'
-    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 01 48 8B FA 48 8B D9 FF 90 ?? ?? ?? ?? 48 8B 07
-    func_size: '0x33'
-    func_va: '0x180d8fa00'
-  server/CBaseEntity_PhysicsNotifyOtherOfEndTouch.linux.yaml:
-    func_name: CBaseEntity_PhysicsNotifyOtherOfEndTouch
+  server/CBaseEntity_PhysicsTouch.linux.yaml:
+    func_name: CBaseEntity_PhysicsTouch
     func_rva: '0x19555a0'
     func_sig: 48 85 F6 74 ?? 48 8B 47 ?? F6 40 ?? ?? 75 ?? 48 8B 46 ?? F6 40 ?? ?? 75 ?? 48 8B 07 FF A0 ?? ?? ?? ??
     func_size: '0x29'
     func_va: '0x19555a0'
-  server/CBaseEntity_PhysicsNotifyOtherOfEndTouch.windows.yaml:
-    func_name: CBaseEntity_PhysicsNotifyOtherOfEndTouch
+  server/CBaseEntity_PhysicsTouch.windows.yaml:
+    func_name: CBaseEntity_PhysicsTouch
     func_rva: '0xd83d50'
     func_sig: 48 85 D2 74 ?? 48 8B 41 ?? 44 8B 40 ?? 41 C1 E8 ?? 41 F6 C0 ?? 75 ?? 48 8B 42 ?? 44 8B 40 ??
     func_size: '0x34'
@@ -14611,6 +14587,30 @@ files:
     vfunc_index: 145
     vfunc_offset: '0x488'
     vtable_name: CBaseEntity
+  server/CBaseEntity_VPhysicsEndTouch.linux.yaml:
+    func_name: CBaseEntity_VPhysicsEndTouch
+    func_rva: '0x19556c0'
+    func_sig: 55 48 89 E5 41 54 49 89 FC 53 48 8B 07 48 89 F3 FF 90 ?? ?? ?? ??
+    func_size: '0x2c'
+    func_va: '0x19556c0'
+  server/CBaseEntity_VPhysicsEndTouch.windows.yaml:
+    func_name: CBaseEntity_VPhysicsEndTouch
+    func_rva: '0xd8fa00'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 01 48 8B FA 48 8B D9 FF 90 ?? ?? ?? ?? 48 8B 07
+    func_size: '0x33'
+    func_va: '0x180d8fa00'
+  server/CBaseEntity_VPhysicsStartTouch.linux.yaml:
+    func_name: CBaseEntity_VPhysicsStartTouch
+    func_rva: '0x19555e0'
+    func_sig: 55 48 89 E5 41 57 41 56 4C 8D 7D ?? 49 89 D6 41 55 49 89 CD
+    func_size: '0xd7'
+    func_va: '0x19555e0'
+  server/CBaseEntity_VPhysicsStartTouch.windows.yaml:
+    func_name: CBaseEntity_VPhysicsStartTouch
+    func_rva: '0xd8fa40'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC ?? 48 8B F1 4C 8B F2 49 8B 49 ??
+    func_size: '0xf6'
+    func_va: '0x180d8fa40'
   server/CBaseEntity_ctor.linux.yaml:
     func_name: CBaseEntity_ctor
     func_rva: '0x1802720'
