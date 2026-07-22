@@ -1,7 +1,9 @@
 import { ArrowLeftOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons'
 import { Alert, Button, Card, Empty, Progress, Space, Spin, Tag, Typography } from 'antd'
+import type { TFunction } from 'i18next'
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { ProcessPhase, TaskStatus } from '../../api/types'
 import { StatusTag } from '../../components/StatusTag'
 import { buildDag, buildMindMap, defaultMindMapExpansion, type GraphFilters } from '../../graph/model'
@@ -39,26 +41,37 @@ function writeFilters(params: URLSearchParams, filters: GraphFilters): URLSearch
   return next
 }
 
-function streamLabel(status: string): string {
-  return { connecting: 'SSE 连接中', connected: 'SSE 已连接', reconnecting: 'SSE 重连中', closed: 'SSE 已关闭' }[status] || status
+function streamLabel(status: string, t: TFunction): string {
+  return {
+    connecting: t('detail.sseConnecting'),
+    connected: t('detail.sseConnected'),
+    reconnecting: t('detail.sseReconnecting'),
+    closed: t('detail.sseClosed'),
+  }[status] || status
 }
 
 function RunHeader({ onRefresh }: { onRefresh(): void }) {
   const run = useRunLiveStore((state) => state.run)
   const streamStatus = useRunLiveStore((state) => state.streamStatus)
+  const { t } = useTranslation()
   if (!run) return null
   return (
     <Card>
       <div className="run-header-grid">
         <div>
-          <Space wrap><StatusTag status={run.effective_status} /><Tag>{streamLabel(streamStatus)}</Tag></Space>
+          <Space wrap><StatusTag status={run.effective_status} /><Tag>{streamLabel(streamStatus, t)}</Tag></Space>
           <Typography.Title level={2}>{run.run_id}</Typography.Title>
-          <Typography.Text type="secondary">{run.current_skill_id || '当前没有正在执行的任务'}</Typography.Text>
+          <Typography.Text type="secondary">{run.current_skill_id || t('detail.noCurrentTask')}</Typography.Text>
         </div>
         <div className="run-progress">
           <Progress type="dashboard" percent={run.progress.percent} status={run.progress.failed ? 'exception' : 'normal'} />
-          <Typography.Text type="secondary">成功 {run.progress.succeeded} · 失败 {run.progress.failed} · 跳过 {run.progress.skipped} · 中止 {run.progress.aborted}</Typography.Text>
-          <Button icon={<ReloadOutlined />} onClick={onRefresh}>刷新快照</Button>
+          <Typography.Text type="secondary">{t('detail.progressSummary', {
+            succeeded: run.progress.succeeded,
+            failed: run.progress.failed,
+            skipped: run.progress.skipped,
+            aborted: run.progress.aborted,
+          })}</Typography.Text>
+          <Button icon={<ReloadOutlined />} onClick={onRefresh}>{t('detail.refreshSnapshot')}</Button>
         </div>
       </div>
       {run.error_summary && <Alert type="error" showIcon message={run.error_summary} className="run-error" />}
@@ -85,13 +98,14 @@ interface DetailContentProps {
 }
 
 function RunDetailContent(props: DetailContentProps) {
+  const { t } = useTranslation()
   return (
     <Space orientation="vertical" size="large" className="full-width">
-      <Link to="/"><ArrowLeftOutlined /> 返回 Run 列表</Link>
+      <Link to="/"><ArrowLeftOutlined /> {t('detail.backToRuns')}</Link>
       <RunHeader onRefresh={props.onRefresh} />
-      {!props.graph ? <Card><Empty description="任务已排队，等待 ExecutionPlan 初始化；页面会保持 SSE 连接并自动刷新。" /></Card> : (
+      {!props.graph ? <Card><Empty description={t('detail.waitingForPlan')} /></Card> : (
         <>
-          {props.graph.warnings.length > 0 && <Alert type="warning" showIcon icon={<WarningOutlined />} message="ExecutionPlan 警告" description={<pre className="warning-block">{JSON.stringify(props.graph.warnings, null, 2)}</pre>} />}
+          {props.graph.warnings.length > 0 && <Alert type="warning" showIcon icon={<WarningOutlined />} message={t('detail.executionPlanWarnings')} description={<pre className="warning-block">{JSON.stringify(props.graph.warnings, null, 2)}</pre>} />}
           <Card><RunFilterBar graph={props.graph} filters={props.filters} onChange={props.onFilters} /></Card>
           {props.mindMap && props.dag && <RunViewTabs view={props.view} mindMap={props.mindMap} dag={props.dag} tasks={props.tasks} filters={props.filters} selectedTask={props.selectedTask} showStageOrder={props.showStageOrder} onView={(key) => props.onParam('view', key)} onSelect={props.onSelect} onToggleExpand={props.onToggle} onShowStageOrder={props.onShowStageOrder} />}
           <TaskDrawer runId={props.runId} taskId={props.selectedTask} graph={props.graph} onClose={() => props.onParam('task')} onNavigate={props.onSelect} />
@@ -107,6 +121,7 @@ export function RunDetailPage() {
   const [mindMapExpansion, setMindMapExpansion] = useState<{ runId: string; nodes: Set<string> } | null>(null)
   const [showStageOrder, setShowStageOrder] = useState(false)
   const { snapshotQuery } = useRunLive(runId)
+  const { t } = useTranslation()
   const run = useRunLiveStore((state) => state.run)
   const graph = useRunLiveStore((state) => state.graph)
   const tasksById = useRunLiveStore((state) => state.tasksById)
@@ -144,7 +159,7 @@ export function RunDetailPage() {
   }
 
   if (snapshotQuery.isLoading || !run) return <div className="page-spinner"><Spin size="large" /></div>
-  if (snapshotQuery.error) return <Alert type="error" showIcon message={snapshotQuery.error.message} description="无法读取 Run Snapshot，请检查 Run ID 和 API 状态。" />
+  if (snapshotQuery.error) return <Alert type="error" showIcon message={snapshotQuery.error.message} description={t('detail.snapshotError')} />
 
   return <RunDetailContent runId={runId} graph={graph} tasks={tasks} filters={filters} view={view} selectedTask={selectedTask} mindMap={mindMap} dag={dag} showStageOrder={showStageOrder} onRefresh={() => void snapshotQuery.refetch()} onFilters={(next) => setParams(writeFilters(params, next), { replace: true })} onParam={updateParam} onSelect={selectTask} onToggle={toggleExpanded} onShowStageOrder={setShowStageOrder} />
 }

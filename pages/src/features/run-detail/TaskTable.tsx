@@ -1,8 +1,11 @@
 import { Button, Table, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import type { TaskView } from '../../api/types'
 import { StatusTag } from '../../components/StatusTag'
+import { phaseLabel } from '../../components/status'
 import type { GraphFilters } from '../../graph/model'
 
 function matches(task: TaskView, filters: GraphFilters): boolean {
@@ -15,21 +18,22 @@ function matches(task: TaskView, filters: GraphFilters): boolean {
   return !filters.jobId || filters.jobId === 'all' || task.job_id === filters.jobId
 }
 
-function columns(onSelect: (id: string) => void): ColumnsType<TaskView> {
+function columns(onSelect: (id: string) => void, t: TFunction): ColumnsType<TaskView> {
   return [
-    { title: '任务', dataIndex: 'name', width: 260, render: (name, task) => <Button type="link" onClick={() => onSelect(task.task_id)}>{name}</Button> },
-    { title: '描述', dataIndex: 'description', width: 360, ellipsis: true, render: (value) => <Typography.Text title={value || undefined}>{value || '—'}</Typography.Text> },
-    { title: '状态', dataIndex: 'status', width: 105, render: (status) => <StatusTag status={status} /> },
-    { title: 'Phase', dataIndex: 'phase', width: 170 },
-    { title: '类型', dataIndex: 'task_type', width: 130 },
-    { title: 'Stage', dataIndex: 'stage_id', width: 190, ellipsis: true },
-    { title: 'Job', dataIndex: 'job_id', width: 220, ellipsis: true },
-    { title: '更新时间', dataIndex: 'updated_at', width: 170, render: (value) => value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '—' },
-    { title: '原因', dataIndex: 'reason', ellipsis: true, render: (value) => value || '—' },
+    { title: t('taskTable.task'), dataIndex: 'name', width: 260, render: (name, task) => <Button type="link" onClick={() => onSelect(task.task_id)}>{name}</Button> },
+    { title: t('taskTable.description'), dataIndex: 'description', width: 360, ellipsis: true, render: (value) => <Typography.Text title={value || undefined}>{value || t('common.notAvailable')}</Typography.Text> },
+    { title: t('runs.status'), dataIndex: 'status', width: 105, render: (status) => <StatusTag status={status} /> },
+    { title: t('phase.label'), dataIndex: 'phase', width: 170, render: (phase) => phaseLabel(phase, t) },
+    { title: t('taskTable.type'), dataIndex: 'task_type', width: 130 },
+    { title: t('taskTable.stage'), dataIndex: 'stage_id', width: 190, ellipsis: true },
+    { title: t('taskTable.job'), dataIndex: 'job_id', width: 220, ellipsis: true },
+    { title: t('taskTable.updatedAt'), dataIndex: 'updated_at', width: 170, render: (value) => value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : t('common.notAvailable') },
+    { title: t('taskTable.reason'), dataIndex: 'reason', ellipsis: true, render: (value) => value || t('common.notAvailable') },
   ]
 }
 
 export function TaskTable({ tasks, filters, onSelect }: { tasks: TaskView[]; filters: GraphFilters; onSelect(id: string): void }) {
   const rows = tasks.filter((task) => matches(task, filters))
-  return <Table rowKey="task_id" virtual columns={columns(onSelect)} dataSource={rows} pagination={{ pageSize: 100, showSizeChanger: false }} scroll={{ x: 1760, y: 520 }} />
+  const { t } = useTranslation()
+  return <Table rowKey="task_id" virtual columns={columns(onSelect, t)} dataSource={rows} pagination={{ pageSize: 100, showSizeChanger: false }} scroll={{ x: 1760, y: 520 }} />
 }

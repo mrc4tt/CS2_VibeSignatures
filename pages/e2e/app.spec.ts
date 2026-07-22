@@ -12,6 +12,7 @@ const run = {
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('cs2vibe.apiConnected:http://127.0.0.1:8000', 'true')
+    localStorage.setItem('cs2vibe.language', 'zh-CN')
   })
   await page.route('**/api/v1/runs?**', (route) => route.fulfill({ json: { items: [run], offset: 0, next_offset: null, has_more: false } }))
   await page.route('**/api/v1/runs/run-1/snapshot', (route) => route.fulfill({ json: { run, graph: null, tasks: [], snapshot_event_id: '1-0' } }))
@@ -28,6 +29,19 @@ test('loads a run detail through the SPA fallback route', async ({ page }) => {
   await page.goto('/runs/run-1')
   await expect(page.getByText('run-1', { exact: true })).toBeVisible()
   await expect(page.getByText(/等待 ExecutionPlan 初始化/)).toBeVisible()
+})
+
+test('switches the static application between supported languages', async ({ page }) => {
+  await page.goto('/')
+  await page.getByLabel('语言').click()
+  await page.locator('.ant-select-dropdown').getByText('English', { exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Analysis runs' })).toBeVisible()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+
+  await page.getByLabel('Language').click()
+  await page.locator('.ant-select-dropdown').getByText('Traditional Chinese', { exact: true }).click()
+  await expect(page.getByRole('heading', { name: '分析任務' })).toBeVisible()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW')
 })
 
 test('switches between graph and list views and opens task details', async ({ page }) => {
