@@ -1,6 +1,5 @@
 import io
 import json
-import posixpath
 import subprocess
 import unittest
 from contextlib import asynccontextmanager
@@ -34,52 +33,6 @@ def _tool_result(payload):
 @asynccontextmanager
 async def _async_context(value):
     yield value
-
-
-def _expand_platform_paths(paths, platform):
-    return [path.replace("{platform}", platform) for path in paths or []]
-
-
-def _artifact_key(module_name, artifact_path):
-    normalized_artifact = artifact_path.replace("\\", "/")
-    return posixpath.normpath(posixpath.join("_artifacts", module_name, normalized_artifact))
-
-
-def _skill_platform_paths(skill, base_key, platform):
-    paths = list(skill.get(base_key, []) or [])
-    paths.extend(skill.get(f"{base_key}_{platform}", []) or [])
-    return _expand_platform_paths(paths, platform)
-
-
-def _find_module_skill_dependency_gaps(modules, platform):
-    available_artifacts = set()
-    gaps = []
-    for module_index, module in enumerate(modules):
-        module_name = module["name"]
-        skills = module.get("skills") or []
-        skill_map = {skill["name"]: skill for skill in skills}
-        for skill_name in ida_analyze_bin.topological_sort_skills(skills):
-            skill = skill_map[skill_name]
-            skill_platform = skill.get("platform")
-            if skill_platform and skill_platform != platform:
-                continue
-
-            missing = [
-                key
-                for key in (
-                    _artifact_key(module_name, path)
-                    for path in _skill_platform_paths(skill, "expected_input", platform)
-                )
-                if key not in available_artifacts
-            ]
-            if missing:
-                gaps.append(
-                    f"{platform} module[{module_index}] {module_name}/{skill_name} missing: {', '.join(missing)}"
-                )
-
-            for output in _skill_platform_paths(skill, "expected_output", platform):
-                available_artifacts.add(_artifact_key(module_name, output))
-    return gaps
 
 
 class TestQuitIdaGracefully(unittest.IsolatedAsyncioTestCase):
@@ -265,6 +218,25 @@ class TestStopIdalibMcpProcess(unittest.TestCase):
         process.terminate.assert_called_once_with()
         process.kill.assert_called_once_with()
         self.assertEqual([call(timeout=10), call(timeout=5)], process.wait.call_args_list)
+
+
+class TestIsPortInUse(unittest.TestCase):
+    def test_returns_true_when_connection_succeeds(self) -> None:
+        connection = MagicMock()
+        with patch.object(ida_analyze_bin.socket, "create_connection", return_value=connection) as create_connection:
+            result = ida_analyze_bin.is_port_in_use("127.0.0.1", 13337)
+
+        self.assertTrue(result)
+        create_connection.assert_called_once_with(("127.0.0.1", 13337), timeout=1)
+        connection.__enter__.assert_called_once_with()
+        connection.__exit__.assert_called_once()
+
+    def test_returns_false_when_connection_fails(self) -> None:
+        with patch.object(ida_analyze_bin.socket, "create_connection", side_effect=OSError) as create_connection:
+            result = ida_analyze_bin.is_port_in_use("127.0.0.1", 13337)
+
+        self.assertFalse(result)
+        create_connection.assert_called_once_with(("127.0.0.1", 13337), timeout=1)
 
 
 class TestWaitForPortRelease(unittest.TestCase):
@@ -716,6 +688,7 @@ class TestEnsureMcpAvailableRecoveryBudget(unittest.TestCase):
 
         with (
             patch.object(ida_analyze_bin, "check_mcp_worker_health", new=AsyncMock(return_value=False)),
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=False) as port_in_use,
             patch.object(ida_analyze_bin, "quit_ida_gracefully") as quit_ida,
             patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=restarted_process) as start_ida,
         ):
@@ -743,6 +716,7 @@ class TestEnsureMcpAvailableRecoveryBudget(unittest.TestCase):
         self.assertIs(restarted_process, second_process)
         self.assertFalse(second_ok)
         self.assertEqual(0, recovery_budget.remaining_restarts)
+        port_in_use.assert_called_once_with("127.0.0.1", 13337)
         quit_ida.assert_called_once()
         start_ida.assert_called_once()
 
@@ -986,6 +960,24 @@ class TestResolveArtifactPathIntegration(unittest.TestCase):
 
 
 class TestParseConfig(unittest.TestCase):
+    def test_parse_config_document_reuses_an_already_loaded_document(self) -> None:
+        document = {
+            "modules": [
+                {
+                    "name": "server",
+                    "path_windows": "server.dll",
+                    "path_linux": "libserver.so",
+                    "skills": [],
+                }
+            ]
+        }
+
+        with patch.object(ida_analyze_bin, "_load_config_document") as load_document:
+            modules = ida_analyze_bin.parse_config("unused.yaml", config_document=document)
+
+        self.assertEqual("server", modules[0]["name"])
+        load_document.assert_not_called()
+
     def test_parse_config_reads_optional_module_and_skill_descriptions(self) -> None:
         with TemporaryDirectory() as temp_dir:
             config_path = Path(temp_dir) / "config.yaml"
@@ -1624,21 +1616,14 @@ class TestConfigSkillDependencyGraph(unittest.TestCase):
             },
         ]
 
-        gaps = _find_module_skill_dependency_gaps(modules, "windows")
+        gaps = ida_analyze_bin.find_module_skill_dependency_gaps(modules, "windows")
 
         self.assertEqual(
             ["windows module[0] client/consumer missing: _artifacts/engine/Late.windows.yaml"],
             gaps,
         )
-
-    def test_config_module_skills_have_no_expected_input_order_gaps(self) -> None:
-        modules = ida_analyze_bin.parse_config("configs/14168.yaml")
-
-        gaps = []
-        for platform in ("windows", "linux"):
-            gaps.extend(_find_module_skill_dependency_gaps(modules, platform))
-
-        self.assertEqual([], gaps)
+        with self.assertRaisesRegex(ValueError, "client/consumer missing"):
+            ida_analyze_bin.validate_module_skill_dependencies(modules)
 
 
 class TestSkillSelection(unittest.TestCase):
@@ -2134,14 +2119,16 @@ class TestStartIdalibMcp(unittest.TestCase):
         fake_process = MagicMock()
         mock_popen.return_value = fake_process
 
-        process = ida_analyze_bin.start_idalib_mcp(
-            "bin/14160/client/client.dll",
-            host="127.0.0.1",
-            port=13337,
-            debug=False,
-        )
+        with patch.object(ida_analyze_bin, "is_port_in_use", return_value=False) as port_in_use:
+            process = ida_analyze_bin.start_idalib_mcp(
+                "bin/14160/client/client.dll",
+                host="127.0.0.1",
+                port=13337,
+                debug=False,
+            )
 
         self.assertIs(fake_process, process)
+        port_in_use.assert_called_once_with("127.0.0.1", 13337)
         mock_popen.assert_called_once()
         args, kwargs = mock_popen.call_args
         self.assertEqual(
@@ -3792,6 +3779,9 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
         stop_patcher = patch.object(ida_analyze_bin, "stop_idalib_mcp_process")
         self.mock_stop_ida = stop_patcher.start()
         self.addCleanup(stop_patcher.stop)
+        wait_patcher = patch.object(ida_analyze_bin, "wait_for_port_release", return_value=True)
+        self.mock_wait_for_release = wait_patcher.start()
+        self.addCleanup(wait_patcher.stop)
 
     def test_process_binary_aborts_before_preprocess_when_opened_binary_mismatches(self) -> None:
         fake_process = object()
@@ -3813,7 +3803,6 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
                 patch.object(ida_analyze_bin, "_run_preprocess_single_skill_via_mcp") as mock_preprocess,
                 patch.object(ida_analyze_bin, "run_skill") as mock_run_skill,
                 patch.object(ida_analyze_bin, "quit_ida_gracefully") as mock_quit_ida,
-                patch.object(ida_analyze_bin, "wait_for_port_release", return_value=True) as wait_for_release,
                 patch("sys.stdout", new_callable=io.StringIO) as stdout,
             ):
                 success, fail, skip = ida_analyze_bin.process_binary(
@@ -3842,7 +3831,7 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
         mock_run_skill.assert_not_called()
         mock_quit_ida.assert_not_called()
         self.mock_stop_ida.assert_called_once_with(fake_process, debug=False)
-        wait_for_release.assert_called_once_with("127.0.0.1", 13337)
+        self.mock_wait_for_release.assert_called_once_with("127.0.0.1", 13337)
 
     def test_process_binary_recovers_initial_inactive_worker_once(self) -> None:
         original_process = object()
@@ -4019,6 +4008,8 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
         mock_preprocess.assert_not_called()
         mock_run_skill.assert_not_called()
         mock_quit_ida.assert_not_called()
+        self.mock_stop_ida.assert_called_once_with(fake_process, debug=False)
+        self.mock_wait_for_release.assert_called_once_with("127.0.0.1", 13337)
 
     def test_process_binary_aborts_before_agent_fallback_when_recheck_mismatches(self) -> None:
         fake_process = object()
@@ -4071,6 +4062,8 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
         mock_preprocess.assert_called_once()
         mock_run_skill.assert_not_called()
         mock_quit_ida.assert_not_called()
+        self.mock_stop_ida.assert_called_once_with(fake_process, debug=False)
+        self.mock_wait_for_release.assert_called_once_with("127.0.0.1", 13337)
 
     def test_process_binary_aborts_before_vcall_export_when_recheck_mismatches(self) -> None:
         fake_process = object()
@@ -4109,6 +4102,8 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
         self.assertEqual((0, 1, 0), (success, fail, skip))
         mock_vcall.assert_not_called()
         mock_quit_ida.assert_not_called()
+        self.mock_stop_ida.assert_called_once_with(fake_process, debug=False)
+        self.mock_wait_for_release.assert_called_once_with("127.0.0.1", 13337)
 
     def test_process_binary_aborts_before_post_process_when_recheck_mismatches(self) -> None:
         fake_process = object()
@@ -4155,6 +4150,8 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
         self.assertEqual((0, 1, 1), (success, fail, skip))
         mock_post_process.assert_not_called()
         mock_quit_ida.assert_not_called()
+        self.mock_stop_ida.assert_called_once_with(fake_process, debug=False)
+        self.mock_wait_for_release.assert_called_once_with("127.0.0.1", 13337)
 
 
 class TestExpectedInputArtifactValidation(unittest.IsolatedAsyncioTestCase):
@@ -4881,6 +4878,11 @@ class TestProcessBinaryLlmWiring(unittest.TestCase):
 
 
 class TestMainReporterLifecycle(unittest.TestCase):
+    def setUp(self) -> None:
+        patcher = patch.object(ida_analyze_bin, "_load_config_document", return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     @patch.object(ida_analyze_bin, "parse_config")
     @patch("ida_analyze_bin.os.path.exists", return_value=True)
     @patch.object(ida_analyze_bin, "parse_args")
@@ -4952,6 +4954,11 @@ class TestMainReporterLifecycle(unittest.TestCase):
 
 
 class TestMainLlmWiring(unittest.TestCase):
+    def setUp(self) -> None:
+        patcher = patch.object(ida_analyze_bin, "_load_config_document", return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     @patch.object(ida_analyze_bin, "process_binary", return_value=(0, 0, 0))
     @patch.object(ida_analyze_bin, "parse_config")
     @patch("ida_analyze_bin.os.path.exists", return_value=True)
@@ -5179,6 +5186,11 @@ class TestMainLlmWiring(unittest.TestCase):
 
 
 class TestMainPostProcessWiring(unittest.TestCase):
+    def setUp(self) -> None:
+        patcher = patch.object(ida_analyze_bin, "_load_config_document", return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     @patch.object(ida_analyze_bin, "parse_config")
     @patch("ida_analyze_bin.os.path.exists", return_value=True)
     @patch.object(ida_analyze_bin, "parse_args")
@@ -5239,6 +5251,11 @@ class TestMainPostProcessWiring(unittest.TestCase):
 
 
 class TestMainSkillFilterWiring(unittest.TestCase):
+    def setUp(self) -> None:
+        patcher = patch.object(ida_analyze_bin, "_load_config_document", return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     @patch.object(ida_analyze_bin, "process_binary", return_value=(1, 0, 0))
     @patch.object(ida_analyze_bin, "parse_config")
     @patch("ida_analyze_bin.os.path.exists", return_value=True)

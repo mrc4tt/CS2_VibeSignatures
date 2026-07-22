@@ -129,7 +129,7 @@ disasm_code: |-
   .text:00000001805448C5                 mov     rdx, rsi
   .text:00000001805448C8                 mov     rcx, r14
   .text:00000001805448CB                 cmovnz  r8, rax
-  .text:00000001805448CF                 call    CBaseEntity_PhysicsDispatchStartTouch ; dispatches CBaseEntity_StartTouch (vfunc 0x498) and CBaseEntity_Touch (vfunc 0x4A0)
+  .text:00000001805448CF                 call    CBaseEntity_VPhysicsStartTouch ; dispatches CBaseEntity_StartTouch (vfunc 0x498) and CBaseEntity_Touch (vfunc 0x4A0)
   .text:00000001805448D4                 mov     edx, 0FFFFFFFFh
   .text:00000001805448D9                 lea     rcx, unk_181D8D1D8
   .text:00000001805448E0                 call    sub_18146E6D0
@@ -371,15 +371,15 @@ disasm_code: |-
   .text:0000000180544CF5                 jz      short loc_180544D0D
   .text:0000000180544CF7                 mov     rdx, rsi
   .text:0000000180544CFA                 mov     rcx, r14
-  .text:0000000180544CFD                 call    CBaseEntity_PhysicsNotifyOtherOfEndTouch ; dispatches CBaseEntity_EndTouch (vfunc 0x4A8)
+  .text:0000000180544CFD                 call    CBaseEntity_PhysicsTouch ; dispatches CBaseEntity_EndTouch (vfunc 0x4A8)
   .text:0000000180544D02                 mov     rdx, r14
   .text:0000000180544D05                 mov     rcx, rsi
-  .text:0000000180544D08                 call    CBaseEntity_PhysicsNotifyOtherOfEndTouch ; dispatches CBaseEntity_EndTouch (vfunc 0x4A8)
+  .text:0000000180544D08                 call    CBaseEntity_PhysicsTouch ; dispatches CBaseEntity_EndTouch (vfunc 0x4A8)
   .text:0000000180544D0D                 test    byte ptr [rbx], 10h
   .text:0000000180544D10                 jz      short loc_180544D1D
   .text:0000000180544D12                 mov     rdx, rsi
   .text:0000000180544D15                 mov     rcx, r14
-  .text:0000000180544D18                 call    CBaseEntity_PhysicsDispatchTouch ; dispatches CBaseEntity_Touch (vfunc 0x4A0)
+  .text:0000000180544D18                 call    CBaseEntity_VPhysicsEndTouch ; dispatches CBaseEntity_Touch (vfunc 0x4A0)
   .text:0000000180544D1D                 lea     r10, ??_7CLegacyCollisionData@@6B@; const CLegacyCollisionData::`vftable'
   .text:0000000180544D24                 add     r13, 100h
   .text:0000000180544D2B                 sub     rdi, 1
@@ -630,7 +630,7 @@ procedure: |-
               v18 = 0;
               if ( v17 )
                 v18 = *((_QWORD *)&v94 + 1) + 8LL;
-              CBaseEntity_PhysicsDispatchStartTouch(v12, v16, v18, v8);
+              CBaseEntity_VPhysicsStartTouch(v12, v16, v18, v8);
             }
             v19 = (const char **)sub_18146E6D0(&unk_181D8D1D8, 0xFFFFFFFFLL);
             if ( !v19 )
@@ -806,11 +806,11 @@ procedure: |-
           }
           if ( (*(_BYTE *)v8 & 8) != 0 )
           {
-            CBaseEntity_PhysicsNotifyOtherOfEndTouch(v12, v16);
-            CBaseEntity_PhysicsNotifyOtherOfEndTouch(v16, v12);
+            CBaseEntity_PhysicsTouch(v12, v16);
+            CBaseEntity_PhysicsTouch(v16, v12);
           }
           if ( (*(_BYTE *)v8 & 0x10) != 0 )
-            CBaseEntity_PhysicsDispatchTouch(v12, v16);
+            CBaseEntity_VPhysicsEndTouch(v12, v16);
         }
         v6 += 256;
         v105 = --v5;

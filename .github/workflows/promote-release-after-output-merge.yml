@@ -48,10 +48,12 @@ jobs:
       PERSISTED_WORKSPACE: ${{ secrets.PERSISTED_WORKSPACE }}
     steps:
       - uses: actions/checkout@v4
+        id: checkout-cleanup
         with:
           ref: ${{ github.event.repository.default_branch }}
 
       - name: Remove only indexed pending state
+        id: cleanup-pending
         shell: pwsh
         run: |
           $index = Join-Path $env:PERSISTED_WORKSPACE "release-staging\pr-index\${{ github.event.pull_request.number }}.json"
@@ -83,6 +85,7 @@ jobs:
       OUTPUT_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
     steps:
       - name: Checkout exact accepted output merge
+        id: checkout-output
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
@@ -90,6 +93,7 @@ jobs:
           submodules: true
 
       - name: Checkout trusted promotion tooling from merge base
+        id: checkout-tooling
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.sha }}
@@ -119,6 +123,7 @@ jobs:
             --merge-sha "$env:OUTPUT_MERGE_SHA" --github-output "$env:GITHUB_OUTPUT"
 
       - name: Reconstruct release workspace from accepted commit and staged bin
+        id: reconstruct
         shell: pwsh
         run: |
           uv run .release-tools/release_workflow.py reconstruct `
@@ -127,6 +132,7 @@ jobs:
             --gamever "${{ steps.verify.outputs.gamever }}"
 
       - name: Create release archives
+        id: create-archives
         shell: pwsh
         run: |
           $gamever = "${{ steps.verify.outputs.gamever }}"
@@ -165,6 +171,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Failed to create gamebin archive." }
 
       - name: Promote verified bin transactionally
+        id: promote-bin
         shell: pwsh
         run: |
           uv run .release-tools/release_workflow.py promote-bin `
@@ -199,6 +206,7 @@ jobs:
           "tag_sha=$tagSha" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Write release metadata and notes
+        id: release-metadata
         shell: pwsh
         run: |
           $gamever = "${{ steps.verify.outputs.gamever }}"
@@ -209,6 +217,7 @@ jobs:
             --asset "gamedata-$gamever.7z" --asset "gamebin-$gamever.7z"
 
       - name: Publish or replace Release assets and verify hashes
+        id: publish-release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
@@ -243,6 +252,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Failed to finalize Release publication." }
 
       - name: Mark promotion complete and remove recovery backup
+        id: finalize-promotion
         shell: pwsh
         run: |
           uv run .release-tools/release_workflow.py finalize-promotion `
@@ -253,6 +263,7 @@ jobs:
             --release-provenance "release-provenance-${{ steps.verify.outputs.gamever }}.json"
 
       - name: Attempt completed staging cleanup
+        id: cleanup-completed
         shell: pwsh
         run: |
           uv run .release-tools/release_workflow.py cleanup-completed `

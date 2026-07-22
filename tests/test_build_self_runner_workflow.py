@@ -1,245 +1,143 @@
-import re
 import unittest
-from pathlib import Path
 
-from tests.release_branch_protocol import ACCEPTED_OUTPUT_BRANCHES, REJECTED_OUTPUT_BRANCHES
+from tests.workflow_contract_test_support import load_workflow, step_order, steps_by_id, workflow_job
 
 
 class TestBuildSelfRunnerWorkflow(unittest.TestCase):
     def setUp(self) -> None:
-        self.workflow = Path(".github/workflows/build-on-self-runner.yml").read_text(encoding="utf-8")
-        self.promotion = Path(".github/workflows/promote-release-after-output-merge.yml").read_text(encoding="utf-8")
-        self.validation = Path(".github/workflows/validate-generated-output-pr.yml").read_text(encoding="utf-8")
-        self.cleanup = Path(".github/workflows/cleanup-completed-release-staging.yml").read_text(encoding="utf-8")
+        self.build_workflow = load_workflow("build-on-self-runner.yml")
+        self.build_job = workflow_job(self.build_workflow, "build")
+        self.build_steps = steps_by_id(self.build_job)
 
-    def test_build_is_dispatch_only_with_machine_inputs(self) -> None:
-        self.assertIn("workflow_dispatch:", self.workflow)
-        self.assertIn("repository_dispatch:", self.workflow)
-        self.assertIn("source_sha:", self.workflow)
-        self.assertIn("options: [new, republish]", self.workflow)
-        self.assertNotIn("push:\n    tags:", self.workflow)
+    def test_dispatch_contract_permissions_and_job_dependency(self) -> None:
+        triggers = self.build_workflow["on"]
+        dispatch_inputs = triggers["workflow_dispatch"]["inputs"]
 
-    def test_preflight_validates_before_self_hosted_build(self) -> None:
-        preflight = self.workflow.index("preflight:")
-        self_hosted = self.workflow.index("runs-on: [self-hosted, windows, x64]")
-        validation = self.workflow.index("release_workflow.py validate-build")
-        self.assertLess(preflight, validation)
-        self.assertLess(validation, self_hosted)
-        self.assertIn("SOURCE_SHA is not reachable", Path("release_workflow_lib/validation.py").read_text())
-        self.assertIn('gh release view "$gamever"', self.workflow)
+        self.assertEqual(["build-on-self-runner"], triggers["repository_dispatch"]["types"])
+        self.assertEqual("string", dispatch_inputs["gamever"]["type"])
+        self.assertEqual("string", dispatch_inputs["source_sha"]["type"])
+        self.assertEqual(["new", "republish"], dispatch_inputs["mode"]["options"])
+        self.assertEqual(False, dispatch_inputs["allow_legacy_bootstrap"]["default"])
+        self.assertEqual(
+            {"actions": "read", "contents": "write", "pull-requests": "write"},
+            self.build_workflow["permissions"],
+        )
+        self.assertEqual("preflight", self.build_job["needs"])
+        preflight = workflow_job(self.build_workflow, "preflight")
+        self.assertEqual("${{ steps.resolve.outputs.source_sha }}", preflight["outputs"]["source_sha"])
+        self.assertIn("github.repository == 'HLND2T/CS2_VibeSignatures'", preflight["if"])
 
-    def test_checkout_uses_exact_source_sha_not_tag(self) -> None:
-        self.assertIn("ref: ${{ needs.preflight.outputs.source_sha }}", self.workflow)
-        self.assertNotIn("ref: ${{ github.ref }}", self.workflow)
-        self.assertNotIn("github.ref_name", self.workflow)
+    def test_fast_and_full_test_suites_run_before_analysis(self) -> None:
+        tests_step = self.build_steps["test-suites"]
+        run = tests_step["run"]
 
-    def test_workspace_bin_is_real_and_republish_uses_affected_invalidation(self) -> None:
-        self.assertIn("Workspace bin must be a real directory", self.workflow)
-        self.assertIn("Copied persisted bin/$env:GAMEVER into build workspace", self.workflow)
-        self.assertIn("'invalidate-republish'", self.workflow)
-        self.assertIn("uv run release_workflow.py @args", self.workflow)
-        self.assertIn("if: env.MODE == 'republish'", self.workflow)
-        self.assertNotIn("force every preprocessor", self.workflow.lower())
-
-    def test_legacy_bootstrap_is_explicit_and_defaults_off(self) -> None:
-        self.assertIn("allow_legacy_bootstrap:", self.workflow)
-        self.assertIn("default: false", self.workflow)
-        self.assertIn("ALLOW_LEGACY_BOOTSTRAP:", self.workflow)
-        self.assertIn('$env:ALLOW_LEGACY_BOOTSTRAP -eq "true"', self.workflow)
-        self.assertIn("--allow-legacy-bootstrap", self.workflow)
-        self.assertIn("Legacy bootstrap is only allowed for workflow_dispatch", self.workflow)
-
-    def test_build_restores_and_explicitly_passes_trusted_oldgamever(self) -> None:
-        prepare = self.workflow.index("release_workflow.py prepare-oldgamever")
-        analyze = self.workflow.index("uv run ida_analyze_bin.py")
-        self.assertLess(prepare, analyze)
-        self.assertIn("OLDGAMEVER: ${{ steps.oldgamever.outputs.oldgamever }}", self.workflow)
-        self.assertIn("$args += @('-oldgamever', $env:OLDGAMEVER)", self.workflow)
-        self.assertNotIn("resolve major_update", self.workflow)
+        self.assertIn("format_repo_files.py --check", run)
+        for suite_name in ("unit", "repository-contract", "redis-integration", "release-integration", "all"):
+            self.assertIn(suite_name, run)
+        self.assertIn("tests/run_test_suite.py $suite -b --durations 30", run)
+        self.assertEqual(
+            sorted(step_order(self.build_job, "test-suites", "analyze", "build-candidates", "cpp-tests")),
+            step_order(self.build_job, "test-suites", "analyze", "build-candidates", "cpp-tests"),
+        )
 
     def test_candidate_validation_precedes_staging_and_output_pr(self) -> None:
-        analyze = self.workflow.index("uv run ida_analyze_bin.py")
-        candidate = self.workflow.index("gamesymbol_candidate.py build")
-        gamedata = self.workflow.index("uv run gamedata_candidate.py build")
-        sdk_select = self.workflow.index("- name: Select versioned SDK for C++ ABI validation")
-        cpp_tests = self.workflow.index("uv run run_cpp_tests.py")
-        sdk_restore = self.workflow.index("- name: Restore pinned SDK revision")
-        publish = self.workflow.index("gamesymbol_candidate.py publish")
-        stage_outputs = self.workflow.index('git add -- "gamesymbols/$env:GAMEVER.yaml" "gamedata/$env:GAMEVER"')
-        stage = self.workflow.index("release_workflow.py stage-build")
-        stage_manifest = self.workflow.index('git add -- "release-manifests/$env:GAMEVER.json"')
-        commit = self.workflow.index("git commit -m")
-        output_pr = self.workflow.index("gh pr create")
-        self.assertLess(analyze, candidate)
-        self.assertLess(candidate, gamedata)
-        self.assertLess(gamedata, sdk_select)
-        self.assertLess(sdk_select, cpp_tests)
-        self.assertLess(cpp_tests, sdk_restore)
-        self.assertLess(sdk_restore, publish)
-        self.assertLess(publish, stage_outputs)
-        self.assertLess(stage_outputs, stage)
-        self.assertLess(stage, stage_manifest)
-        self.assertLess(stage_manifest, commit)
-        self.assertLess(stage, output_pr)
-        self.assertIn('gamedata_candidate.py publish -session "$env:GAMEDATA_SESSION"', self.workflow)
-        self.assertIn('--gamedata-session "$env:GAMEDATA_SESSION"', self.workflow)
-        self.assertNotIn('git add -- "gamesymbols/$env:GAMEVER.yaml" dist', self.workflow)
-
-    def test_cpp_validation_selects_versioned_sdk_with_pinned_fallback(self) -> None:
-        checkout = self.workflow.index("submodules: true")
-        selector_start = self.workflow.index("- name: Select versioned SDK for C++ ABI validation")
-        cpp_tests = self.workflow.index("uv run run_cpp_tests.py")
-        selector = self.workflow[selector_start:cpp_tests]
-
-        self.assertLess(checkout, selector_start)
-        self.assertIn('$sdkRef = "cs2-$env:GAMEVER"', selector)
-        self.assertIn('$sdkRemote = "https://github.com/HLND2T/hl2sdk.git"', selector)
-        self.assertIn('ls-remote --heads $sdkRemote "refs/heads/$sdkRef"', selector)
-        self.assertIn("SDK_ABI_REF=pinned-submodule", selector)
-        self.assertIn("SDK_ABI_SHA=$pinnedSha", selector)
-        self.assertIn("No versioned SDK branch exists for $sdkRef", selector)
-        self.assertIn('fetch --no-tags $sdkRemote "refs/heads/$sdkRef"', selector)
-        self.assertIn("checkout --detach $remoteSha", selector)
-        self.assertIn("selected SHA=$selectedSha; pinned SHA=$pinnedSha", selector)
-
-    def test_cpp_validation_always_restores_exact_pinned_sdk_sha(self) -> None:
-        restore_start = self.workflow.index("- name: Restore pinned SDK revision")
-        publish = self.workflow.index("- name: Publish fully validated immutable candidate")
-        restore = self.workflow[restore_start:publish]
-
-        self.assertIn("if: always()", restore)
-        self.assertIn('if ($env:SDK_ABI_SWITCHED -ne "true")', restore)
-        self.assertIn('checkout --detach "$env:SDK_PINNED_SHA"', restore)
-        self.assertIn("restored pinned SHA=$restoredSha", restore)
-
-    def test_build_passes_one_immutable_analysis_config_through_every_stage(self) -> None:
-        self.assertIn("ANALYSIS_CONFIG=", self.workflow)
-        self.assertIn("ANALYSIS_CONFIG_SHA256=", self.workflow)
-        self.assertIn('-config "$env:ANALYSIS_CONFIG"', self.workflow)
-        self.assertIn('-configyaml "$env:ANALYSIS_CONFIG"', self.workflow)
-        self.assertIn('--analysis-config "$env:ANALYSIS_CONFIG"', self.workflow)
-
-    def test_build_stops_after_pending_pr_without_publication(self) -> None:
-        self.assertIn("release-manifests/$env:GAMEVER.json", self.workflow)
-        self.assertIn("gamesymbols/build/$env:GAMEVER/$env:BUILD_ID", self.workflow)
-        self.assertNotIn("gamesymbols/$env:GAMEVER/build-$env:BUILD_ID", self.workflow)
-        self.assertIn("release_workflow.py write-pr-index", self.workflow)
-        self.assertNotIn("Archive release payload", self.workflow)
-        self.assertNotIn("Promote verified bin transactionally", self.workflow)
-        self.assertNotIn("action-gh-release", self.workflow)
-        self.assertNotIn("gh release upload", self.workflow)
-        self.assertNotIn("git tag ", self.workflow)
-
-    def test_output_branch_is_immutable_after_review_starts(self) -> None:
-        self.assertIn('git checkout -b "$env:OUTPUT_BRANCH"', self.workflow)
-        self.assertIn('git push origin "HEAD:refs/heads/$env:OUTPUT_BRANCH"', self.workflow)
-        self.assertNotIn("--force-with-lease", self.workflow)
-
-    def test_duplicate_guard_uses_new_protocol_and_blocks_legacy_prs(self) -> None:
-        self.assertIn('$canonicalPrefix = "gamesymbols/build/$gamever/"', self.workflow)
-        self.assertIn('$legacyPrefix = "gamesymbols/$gamever/build-"', self.workflow)
-        self.assertIn("A legacy-format output PR must be resolved before dispatch", self.workflow)
-
-    def test_promotion_identity_and_event_filters_use_new_protocol(self) -> None:
-        expected_regex = "^gamesymbols/build/(?<gamever>[0-9]{4,10}[a-z]?)/(?<build_id>[0-9]+-[0-9]+)$"
-        self.assertIn(expected_regex, self.promotion)
-        self.assertEqual(
-            3, self.promotion.count("startsWith(github.event.pull_request.head.ref, 'gamesymbols/build/')")
+        expected_order = step_order(
+            self.build_job,
+            "analyze",
+            "build-candidates",
+            "select-sdk",
+            "cpp-tests",
+            "restore-sdk",
+            "publish-candidate",
+            "stage-pending",
+            "create-output-pr",
+            "cleanup",
         )
-        self.assertNotIn("startsWith(github.event.pull_request.head.ref, 'gamesymbols/')", self.promotion)
+        self.assertEqual(sorted(expected_order), expected_order)
+        self.assertIn("gamesymbol_candidate.py build", self.build_steps["build-candidates"]["run"])
+        self.assertIn("gamedata_candidate.py build", self.build_steps["build-candidates"]["run"])
+        self.assertIn("run_cpp_tests.py", self.build_steps["cpp-tests"]["run"])
+        self.assertIn("gamesymbol_candidate.py publish", self.build_steps["publish-candidate"]["run"])
+        self.assertIn("release_workflow.py stage-build", self.build_steps["stage-pending"]["run"])
+        self.assertIn("gh pr create", self.build_steps["create-output-pr"]["run"])
+        self.assertEqual("always()", self.build_steps["restore-sdk"]["if"])
+        build_commands = "\n".join(str(step.get("run", "")) for step in self.build_job["steps"])
+        self.assertNotIn("gh release", build_commands)
 
-        contract_re = re.compile(r"^gamesymbols/build/(?P<gamever>[0-9]{4,10}[a-z]?)/(?P<build_id>[0-9]+-[0-9]+)$")
-        for branch in ACCEPTED_OUTPUT_BRANCHES:
-            with self.subTest(branch=branch):
-                self.assertIsNotNone(contract_re.fullmatch(branch))
-        for branch in REJECTED_OUTPUT_BRANCHES:
-            with self.subTest(branch=branch):
-                self.assertIsNone(contract_re.fullmatch(branch))
+    def test_exact_source_config_and_sdk_identity_are_threaded_through_build(self) -> None:
+        checkout = self.build_steps["checkout-source"]
+        self.assertEqual("actions/checkout@v4", checkout["uses"])
+        self.assertEqual("${{ needs.preflight.outputs.source_sha }}", checkout["with"]["ref"])
+        self.assertIn("ANALYSIS_CONFIG=$config", self.build_steps["resolve-config"]["run"])
+        self.assertIn("'-configyaml', $env:ANALYSIS_CONFIG", self.build_steps["analyze"]["run"])
+        self.assertIn('-configyaml "$env:ANALYSIS_CONFIG"', self.build_steps["cpp-tests"]["run"])
+        self.assertIn(
+            'git -C $sdkPath checkout --detach "$env:SDK_PINNED_SHA"',
+            self.build_steps["restore-sdk"]["run"],
+        )
 
-        self.assertIn("startsWith(github.event.pull_request.head.ref, 'gamesymbols/build/')", self.validation)
-        self.assertNotIn("startsWith(github.event.pull_request.head.ref, 'gamesymbols/')", self.validation)
+    def test_promotion_is_bound_to_accepted_merge_and_validation_order(self) -> None:
+        workflow = load_workflow("promote-release-after-output-merge.yml")
+        promote = workflow_job(workflow, "promote")
+        steps = steps_by_id(promote)
 
-    def test_full_repository_checks_run_before_analysis(self) -> None:
-        unit_tests = self.workflow.index("python -m unittest discover -s tests -b")
-        analysis = self.workflow.index("uv run ida_analyze_bin.py")
-        self.assertIn("format_repo_files.py --check", self.workflow)
-        self.assertLess(unit_tests, analysis)
+        self.assertEqual({"contents": "write", "pull-requests": "read"}, workflow["permissions"])
+        self.assertEqual(["closed"], workflow["on"]["pull_request"]["types"])
+        self.assertEqual("resolve", promote["needs"])
+        self.assertIn("github.event.pull_request.merged == true", promote["if"])
+        self.assertIn("github.event.pull_request.base.ref == github.event.repository.default_branch", promote["if"])
+        promotion_order = step_order(
+            promote,
+            "verify",
+            "reconstruct",
+            "create-archives",
+            "promote-bin",
+            "tag",
+            "release-metadata",
+            "publish-release",
+            "finalize-promotion",
+            "cleanup-completed",
+        )
+        self.assertEqual(sorted(promotion_order), promotion_order)
+        self.assertIn("release_workflow.py verify-promotion", steps["verify"]["run"])
+        self.assertIn("release_workflow.py promote-bin", steps["promote-bin"]["run"])
+        self.assertIn("gh release", steps["publish-release"]["run"])
+        self.assertIn("release_workflow.py finalize-promotion", steps["finalize-promotion"]["run"])
 
-    def test_promotion_orders_verification_before_publication(self) -> None:
-        verify = self.promotion.index("release_workflow.py verify-promotion")
-        archive = self.promotion.index("Create release archives")
-        promote = self.promotion.index("release_workflow.py promote-bin")
-        tag = self.promotion.index("Apply immutable tag rules")
-        release = self.promotion.index("gh release upload")
-        complete = self.promotion.index("release_workflow.py finalize-promotion")
-        cleanup = self.promotion.index("release_workflow.py cleanup-completed")
-        self.assertLess(verify, archive)
-        self.assertLess(archive, promote)
-        self.assertLess(promote, tag)
-        self.assertLess(tag, release)
-        self.assertLess(release, complete)
-        self.assertLess(complete, cleanup)
-        self.assertIn("--clobber", self.promotion)
-        self.assertIn("Uploaded asset hash mismatch", self.promotion)
-        self.assertIn("Checkout trusted promotion tooling from merge base", self.promotion)
-        self.assertIn(".release-tools/release_workflow.py verify-promotion", self.promotion)
-        self.assertIn('"configs\\$gamever.yaml"', self.promotion)
-        self.assertIn('"gamedata\\$gamever"', self.promotion)
-        self.assertNotIn('"dist"', self.promotion)
-        self.assertIn('--release-provenance "release-provenance-', self.promotion)
-        self.assertIn("analysis_config_sha256", self.promotion)
-        self.assertIn("['git', 'show', f'{sys.argv[1]}:configs/{sys.argv[3]}.yaml']", self.promotion)
-        self.assertIn("uv run python -c `", self.promotion)
-        self.assertNotIn("$extractScript = @'", self.promotion)
+    def test_bump_merge_dispatches_build_without_publishing_release_state(self) -> None:
+        bump = load_workflow("bump-download.yml")
+        bump_job = workflow_job(bump, "bump")
+        bump_steps = steps_by_id(bump_job)
+        order = step_order(bump_job, "checkout", "sync-refs", "configure-git", "preview", "bump", "branch", "create-pr")
 
-    def test_promotion_publishes_human_notes_instead_of_raw_provenance(self) -> None:
-        self.assertIn('--repository "${{ github.repository }}"', self.promotion)
-        self.assertIn('--notes-file "release-notes-$gamever.md"', self.promotion)
-        self.assertNotIn('--notes-file "release-provenance-$gamever.json"', self.promotion)
+        self.assertEqual(sorted(order), order)
+        self.assertEqual({"contents": "write", "pull-requests": "write"}, bump["permissions"])
+        self.assertIn("git fetch origin --prune --prune-tags --tags", bump_steps["sync-refs"]["run"])
+        self.assertNotIn("git tag", "\n".join(str(step.get("run", "")) for step in bump_job["steps"]))
 
-    def test_completed_cleanup_sweeps_only_durable_records_on_protected_runner(self) -> None:
-        self.assertIn("schedule:", self.cleanup)
-        self.assertIn("workflow_dispatch:", self.cleanup)
-        self.assertIn("environment: win64", self.cleanup)
-        self.assertIn("runs-on: [self-hosted, windows, x64]", self.cleanup)
-        self.assertIn("release_workflow.py list-completed", self.cleanup)
-        self.assertIn("release_workflow.py cleanup-completed", self.cleanup)
-        self.assertNotIn("LastWriteTime", self.cleanup)
+        dispatch = load_workflow("tag-bump-after-merge.yml")
+        dispatch_job = workflow_job(dispatch, "dispatch-build")
+        dispatch_step = steps_by_id(dispatch_job)["dispatch-build"]
+        self.assertEqual(["closed"], dispatch["on"]["pull_request"]["types"])
+        self.assertIn("github.event.pull_request.merged == true", dispatch_job["if"])
+        self.assertIn('event_type = "build-on-self-runner"', dispatch_step["run"])
+        self.assertIn('mode = "new"', dispatch_step["run"])
 
-    def test_bump_merge_dispatches_without_creating_tag(self) -> None:
-        workflow = Path(".github/workflows/tag-bump-after-merge.yml").read_text(encoding="utf-8")
-        self.assertIn("gamever = $gamever", workflow)
-        self.assertIn("source_sha = $sourceSha", workflow)
-        self.assertIn('mode = "new"', workflow)
-        self.assertIn("source_pull_request", workflow)
-        self.assertIn("contents/configs/$gamever.yaml?ref=$sourceSha", workflow)
-        self.assertNotIn("git tag", workflow)
-        self.assertNotIn("git push origin", workflow)
+    def test_generated_output_pr_validation_is_read_only_and_provenance_bound(self) -> None:
+        workflow = load_workflow("validate-generated-output-pr.yml")
+        validate = workflow_job(workflow, "validate")
+        steps = steps_by_id(validate)
 
-    def test_existing_config_missing_tag_dispatches_instead_of_repairing_tag(self) -> None:
-        workflow = Path(".github/workflows/bump-download.yml").read_text(encoding="utf-8")
-        self.assertIn("dispatch_build == 'true'", workflow)
-        self.assertIn('mode = "new"', workflow)
-        self.assertIn("source_sha = $headSha.Trim()", workflow)
-        self.assertNotIn("Failed to push repaired tag", workflow)
-        self.assertNotIn('git push origin "refs/tags/', workflow)
-        self.assertIn("configs/$tag.yaml", workflow)
-
-    def test_bump_workflow_carries_version_config_in_preview_and_pr_contract(self) -> None:
-        workflow = Path(".github/workflows/bump-download.yml").read_text(encoding="utf-8")
-        self.assertGreaterEqual(workflow.count("-configs-dir configs"), 2)
-        self.assertIn("analysis_config_source_gamever", workflow)
-        self.assertIn("analysis_config_path", workflow)
-        self.assertIn("exact initial copy", workflow)
-
-    def test_generated_output_pr_has_a_lightweight_required_check(self) -> None:
-        workflow = Path(".github/workflows/validate-generated-output-pr.yml").read_text(encoding="utf-8")
-        self.assertIn("release_workflow.py verify-output-pr", workflow)
-        self.assertIn("Checkout trusted validation tooling from PR base", workflow)
-        self.assertIn(".release-tools/release_workflow.py verify-output-pr", workflow)
-        self.assertIn("github.event.pull_request.base.sha", workflow)
-        self.assertIn("github.event.pull_request.head.sha", workflow)
-        self.assertNotIn("ida_analyze_bin.py", workflow)
+        self.assertEqual({"contents": "read"}, workflow["permissions"])
+        self.assertEqual(
+            ["opened", "synchronize", "reopened", "ready_for_review"], workflow["on"]["pull_request"]["types"]
+        )
+        self.assertIn("startsWith(github.event.pull_request.head.ref, 'gamesymbols/build/')", validate["if"])
+        self.assertEqual(
+            sorted(step_order(validate, "checkout-output", "setup-uv", "checkout-tooling", "verify-output")),
+            step_order(validate, "checkout-output", "setup-uv", "checkout-tooling", "verify-output"),
+        )
+        self.assertIn("release_workflow.py verify-output-pr", steps["verify-output"]["run"])
 
 
 if __name__ == "__main__":

@@ -31,6 +31,7 @@ from gamesymbol_snapshot_lib.errors import (
 )
 from gamesymbol_snapshot_lib.model import SnapshotContext
 from gamesymbol_snapshot_lib.paths import canonical_key, ensure_real_tree, iter_yaml_paths, path_from_key
+from trusted_yaml import load_yaml_file
 
 
 LOGGER = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ LOGGER = logging.getLogger(__name__)
 
 def _load_yaml_mapping(path: Path) -> dict:
     try:
-        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload = load_yaml_file(path)
     except (OSError, UnicodeError, yaml.YAMLError) as exc:
         raise SnapshotMismatchError(f"unable to read symbol YAML {path}: {exc}") from exc
     if not isinstance(payload, dict):
@@ -133,8 +134,7 @@ def load_snapshot_for_contract(snapshot_path, contract, require_canonical=True):
     raw = _read_snapshot(snapshot_path)
     document = parse_snapshot_bytes(raw, contract.game_version)
     validate_snapshot_contract(document, contract)
-    canonical = canonical_snapshot_bytes(document)
-    if require_canonical and raw != canonical:
+    if require_canonical and raw != canonical_snapshot_bytes(document):
         raise SnapshotMismatchError(
             f"snapshot is not canonical: {snapshot_path}",
             reason="noncanonical_snapshot",

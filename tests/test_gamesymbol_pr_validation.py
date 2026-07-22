@@ -4,6 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from gamesymbol_snapshot_lib.config import load_contract
+from gamesymbol_snapshot_lib.model import ChangedPath
 from gamesymbol_snapshot_lib.pr_validation import build_invalidation_plan
 from tests.gamesymbol_snapshot_test_support import module, skill, write_config
 
@@ -122,6 +123,68 @@ class TestInvalidationPlan(unittest.TestCase):
 
         self.assertEqual({"server/Old.windows.yaml", "server/New.windows.yaml"}, plan.paths)
 
+    def test_config_insertion_keeps_later_fingerprint_stable_and_does_not_invalidate_other_modules(self) -> None:
+        base_modules = [
+            module("SDL3", [skill("find-sdl", ["SDL.{platform}.yaml"])], linux=False),
+            module(
+                "server",
+                [skill("find-a", ["A.{platform}.yaml"]), skill("find-b", ["B.{platform}.yaml"])],
+                linux=False,
+            ),
+        ]
+        head_modules = [
+            base_modules[0],
+            module(
+                "server",
+                [
+                    skill("find-a", ["A.{platform}.yaml"]),
+                    skill("find-inserted", ["Inserted.{platform}.yaml"]),
+                    skill("find-b", ["B.{platform}.yaml"]),
+                ],
+                linux=False,
+            ),
+        ]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            base, head = self._contracts(root, base_modules, head_modules)
+            base_b = next(node for node in base.nodes.values() if node.skill_name == "find-b")
+            head_b = next(node for node in head.nodes.values() if node.skill_name == "find-b")
+            unchanged = snapshot(
+                {
+                    "SDL3/SDL.windows.yaml": {"value": 1},
+                    "server/A.windows.yaml": {"value": 1},
+                    "server/B.windows.yaml": {"value": 1},
+                }
+            )
+            plan = build_invalidation_plan(
+                base,
+                head,
+                unchanged,
+                unchanged,
+                [ChangedPath("M", "configs/1.yaml", "configs/1.yaml")],
+                root,
+            )
+
+        self.assertEqual(base_b.fingerprint, head_b.fingerprint)
+        self.assertEqual({"server/Inserted.windows.yaml"}, plan.paths)
+
+    def test_other_game_version_config_change_is_ignored(self) -> None:
+        modules = [module("server", [skill("find-target", ["Target.{platform}.yaml"])], linux=False)]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            base, head = self._contracts(root, modules)
+            unchanged = snapshot({"server/Target.windows.yaml": {"value": 1}})
+            plan = build_invalidation_plan(
+                base,
+                head,
+                unchanged,
+                unchanged,
+                [ChangedPath("M", "configs/2.yaml", "configs/2.yaml")],
+                root,
+            )
+
+        self.assertEqual(frozenset(), plan.paths)
+
     def test_same_basename_in_other_module_is_not_invalidated(self) -> None:
         modules = [
             module("engine", [skill("find-engine", ["Same.{platform}.yaml"])], linux=False),
@@ -180,7 +243,8 @@ class TestInvalidationPlan(unittest.TestCase):
             scripts = root / "ida_preprocessor_scripts"
             scripts.mkdir()
             (scripts / "find-target.py").write_text(
-                'REFERENCE = "references/server/Input.{platform}.yaml"\n', encoding="utf-8"
+                'LLM_DECOMPILE = [{"reference_yaml_paths": ["references/server/Input.{platform}.yaml"]}]\n',
+                encoding="utf-8",
             )
             base, head = self._contracts(root, modules)
             plan = build_invalidation_plan(

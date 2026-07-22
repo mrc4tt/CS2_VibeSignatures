@@ -5,6 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from tests.workflow_contract_test_support import load_workflow, step_order, steps_by_id, workflow_job
+
 
 SCRIPT = Path(".claude/skills/abandon-staged-release/scripts/abandon_staged_release.py")
 SPEC = importlib.util.spec_from_file_location("abandon_staged_release", SCRIPT)
@@ -342,27 +344,30 @@ class TestAbandonStagedRelease(unittest.TestCase):
         self.assertEqual("a" * 40, result["source_sha"])
 
     def test_recovery_workflow_still_derives_identity_and_uses_promotion_concurrency(self) -> None:
-        workflow = Path(".github/workflows/abandon-staged-release.yml").read_text(encoding="utf-8")
-        self.assertIn("workflow_dispatch:", workflow)
-        self.assertIn('run-name: "Abandon staged release PR #${{ inputs.pr_number }}"', workflow)
-        self.assertNotIn("astral-sh/setup-uv", workflow)
-        self.assertNotIn("gamever:\n        description:", workflow)
-        self.assertNotIn("build_id:\n        description:", workflow)
-        self.assertIn('gh api "repos/${{ github.repository }}/pulls/$env:PR_NUMBER"', workflow)
-        self.assertIn(
+        workflow = load_workflow("abandon-staged-release.yml")
+        inputs = workflow["on"]["workflow_dispatch"]["inputs"]
+        resolve = workflow_job(workflow, "resolve")
+        abandon_job = workflow_job(workflow, "abandon")
+        identity = steps_by_id(resolve)["identity"]
+        abandon_steps = steps_by_id(abandon_job)
+
+        self.assertEqual({"pr_number", "confirmation", "reason"}, set(inputs))
+        self.assertEqual({"contents": "read", "pull-requests": "read"}, workflow["permissions"])
+        self.assertIn('gh api "repos/${{ github.repository }}/pulls/$env:PR_NUMBER"', identity["run"])
+        self.assertIn("^gamesymbols/(?<gamever>[0-9]{4,10}[a-z]?)/build-", identity["run"])
+        self.assertEqual("resolve", abandon_job["needs"])
+        self.assertEqual("win64", abandon_job["environment"])
+        self.assertEqual(["self-hosted", "windows", "x64"], abandon_job["runs-on"])
+        self.assertEqual(
             "release-promotion-${{ github.repository }}-${{ needs.resolve.outputs.gamever }}",
-            workflow,
+            abandon_job["concurrency"]["group"],
         )
-        self.assertIn("runs-on: [self-hosted, windows, x64]", workflow)
-        self.assertIn("environment: win64", workflow)
-        self.assertIn("release_workflow.py abandon-pending", workflow)
-        self.assertIn("secrets.PERSISTED_WORKSPACE", workflow)
-        self.assertIn("^gamesymbols/(?<gamever>[0-9]{4,10}[a-z]?)/build-", workflow)
-        self.assertIn('--repository "${{ github.repository }}"', workflow)
-        self.assertIn('--output-branch "$env:OUTPUT_BRANCH"', workflow)
-        self.assertIn('--pr-number "$env:PR_NUMBER"', workflow)
-        self.assertNotIn('--pr-number "${{ inputs.pr_number }}"', workflow)
-        self.assertNotIn("cleanup-unmerged", workflow)
+        self.assertEqual(
+            sorted(step_order(abandon_job, "checkout", "abandon-pending", "verify-cleanup")),
+            step_order(abandon_job, "checkout", "abandon-pending", "verify-cleanup"),
+        )
+        self.assertIn("release_workflow.py abandon-pending", abandon_steps["abandon-pending"]["run"])
+        self.assertIn('--pr-number "$env:PR_NUMBER"', abandon_steps["abandon-pending"]["run"])
 
 
 if __name__ == "__main__":

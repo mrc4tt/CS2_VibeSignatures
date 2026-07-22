@@ -24,6 +24,7 @@ jobs:
       PERSISTED_WORKSPACE: ${{ secrets.PERSISTED_WORKSPACE }}
     steps:
       - name: Checkout main
+        id: checkout
         uses: actions/checkout@v4
         with:
           ref: main
@@ -31,6 +32,7 @@ jobs:
           submodules: true
 
       - name: Synchronize git refs
+        id: sync-refs
         shell: pwsh
         run: |
           $workspace = (Resolve-Path -LiteralPath $env:GITHUB_WORKSPACE).Path -replace '\\', '/'
@@ -38,6 +40,7 @@ jobs:
           git fetch origin --prune --prune-tags --tags "+refs/heads/*:refs/remotes/origin/*"
 
       - name: Configure git
+        id: configure-git
         shell: pwsh
         run: |
           git config user.name "github-actions[bot]"
@@ -123,6 +126,7 @@ jobs:
           "branch=$branch" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Create or update bump pull request
+        id: create-pr
         if: steps.bump.outputs.updated == 'true' && steps.bump.outputs.dispatch_build != 'true' && steps.duplicate.outputs.skip_pr != 'true'
         uses: actions/github-script@v7
         env:
@@ -198,6 +202,7 @@ jobs:
             core.notice(`Created bump pull request: ${pull.html_url}`);
 
       - name: Dispatch build for an accepted config entry without a release tag
+        id: dispatch-existing
         if: steps.bump.outputs.updated == 'true' && steps.bump.outputs.dispatch_build == 'true'
         shell: pwsh
         env:
