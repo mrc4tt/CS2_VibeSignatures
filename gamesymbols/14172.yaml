@@ -12822,7 +12822,7 @@ files:
   networksystem/CNetworkMessages_dtor.windows.yaml:
     func_name: CNetworkMessages_dtor
     func_rva: '0xd5680'
-    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 8B DA 48 8B F9 E8 ?? ?? ?? ?? F6 C3 ?? 74 ?? 48 8B 05 ?? ?? ?? ?? 48 8B D7 48 8B 08 48 8B 01 FF 50 ?? 48 8B 5C 24 ?? 48 8B C7 48 83 C4 ?? 5F C3 CC CC CC CC CC CC 48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ??
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 8B DA 48 8B F9 E8 ?? ?? ?? ?? F6 C3 ?? 74 ?? 48 8B 05 80 62 12 00 48 8B D7 48 8B 08 48 8B 01 FF 50 ?? 48 8B 5C 24 ?? 48 8B C7 48 83 C4 ?? 5F C3
     func_size: '0x3a'
     func_va: '0x1800d5680'
     vfunc_index: 36
@@ -13301,15 +13301,16 @@ files:
     func_va: '0x18055c7d0'
   server/CBaseEntity_EndTouch.linux.yaml:
     func_name: CBaseEntity_EndTouch
-    vfunc_index: 148
-    vfunc_offset: '0x4a0'
-    vfunc_sig: FF A0 A0 04 00 00
+    vfunc_index: 149
+    vfunc_offset: '0x4a8'
+    vfunc_sig: FF 90 A8 04 00 00 48 8B 03 4C 89 E6 48 89 DF 5B 41 5C 5D 48 8B 80 ?? ?? ?? ?? FF E0 CC CC CC CC 48 85 F6
+    vfunc_sig_allow_across_function_boundary: true
     vtable_name: CBaseEntity
   server/CBaseEntity_EndTouch.windows.yaml:
     func_name: CBaseEntity_EndTouch
-    vfunc_index: 149
-    vfunc_offset: '0x4a8'
-    vfunc_sig: 48 FF A0 A8 04 00 00
+    vfunc_index: 150
+    vfunc_offset: '0x4b0'
+    vfunc_sig: FF 90 B0 04 00 00 48 8B 07 48 8B D3 48 8B CF 48 8B 5C 24 ??
     vtable_name: CBaseEntity
   server/CBaseEntity_FullEdictChanged.linux.yaml:
     func_name: CBaseEntity_FullEdictChanged
@@ -13370,8 +13371,8 @@ files:
     func_rva: '0x152500'
     func_size: '0x9'
     func_va: '0x180152500'
-    vfunc_index: 38
-    vfunc_offset: '0x130'
+    vfunc_index: 40
+    vfunc_offset: '0x140'
     vtable_name: CBaseEntity
   server/CBaseEntity_GetChangeAccessorPathInfo_2.linux.yaml:
     func_name: CBaseEntity_GetChangeAccessorPathInfo_2
