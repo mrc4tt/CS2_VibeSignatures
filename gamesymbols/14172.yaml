@@ -1,7 +1,7 @@
 analysis_output_contract_version: 1
 config_digest_version: 2
-config_sha256: sha256:2545f444baff8ea915a9c05f35a7c6ee840ed50e0cc345cb913fe6f54c982bc3
-file_count: 2936
+config_sha256: sha256:0ed41bb6134a447b32b6a0fd3fd0d9a346a6cb5248fa2feea9ac7121b4705b06
+file_count: 2940
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -27466,6 +27466,30 @@ files:
     vtable_size: '0x50'
     vtable_symbol: ??_7?$CGameSystemReallocatingFactory@VCSource2EntitySystem@@V1@@@6B@
     vtable_va: '0x181795ad8'
+  server/CHostage_DropHostage.linux.yaml:
+    func_name: CHostage_DropHostage
+    func_rva: '0xcbe410'
+    func_sig: 55 48 89 E5 41 57 41 89 D7 41 56 41 55 49 89 F5 41 54 53
+    func_size: '0x68c'
+    func_va: '0xcbe410'
+  server/CHostage_DropHostage.windows.yaml:
+    func_name: CHostage_DropHostage
+    func_rva: '0x343ee0'
+    func_sig: 48 8B C4 55 41 56 48 8D 6C 24 ??
+    func_size: '0x49d'
+    func_va: '0x180343ee0'
+  server/CHostage_Follow.linux.yaml:
+    func_name: CHostage_Follow
+    func_rva: '0x13a7c40'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 89 F3 48 83 EC ?? 48 85 F6
+    func_size: '0x56a'
+    func_va: '0x13a7c40'
+  server/CHostage_Follow.windows.yaml:
+    func_name: CHostage_Follow
+    func_rva: '0x916050'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 81 EC ?? ?? ?? ??
+    func_size: '0x42a'
+    func_va: '0x180916050'
   server/CInferno_InfernoThink.linux.yaml:
     func_name: CInferno_InfernoThink
     func_rva: '0xcab7e0'

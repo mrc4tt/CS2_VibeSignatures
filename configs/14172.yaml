@@ -5676,6 +5676,12 @@ modules:
       - name: find-CCSBot_PrintIfWatched
         expected_output:
           - CCSBot_PrintIfWatched.{platform}.yaml
+      - name: find-CHostage_Follow
+        expected_output:
+          - CHostage_Follow.{platform}.yaml
+      - name: find-CHostage_DropHostage
+        expected_output:
+          - CHostage_DropHostage.{platform}.yaml
       - name: find-HideState_vtable
         expected_output:
           - HideState_vtable.{platform}.yaml
@@ -8814,6 +8820,14 @@ modules:
         category: func
         alias:
           - CCSBot::PrintIfWatched
+      - name: CHostage_Follow
+        category: func
+        alias:
+          - CHostage::Follow
+      - name: CHostage_DropHostage
+        category: func
+        alias:
+          - CHostage::DropHostage
       - name: HideState_vtable
         category: vtable
       - name: HideState_OnUpdate
