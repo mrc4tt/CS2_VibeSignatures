@@ -40,6 +40,7 @@ jobs:
 
     steps:
       - name: Prepare PR workspace variables
+        id: prepare-workspace
         shell: pwsh
         run: |
           $prNumber = "${{ github.event.pull_request.number }}"
@@ -73,6 +74,7 @@ jobs:
           "WORKSPACE=$prWorkspace" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Checkout PR merge ref
+        id: checkout-merge
         shell: pwsh
         run: |
           $workspaceName = "CS2_VibeSignatures-pr-$env:PR_NUMBER"
@@ -116,12 +118,14 @@ jobs:
           git config --global --add safe.directory "$safeDirectory"
 
       - name: Check formatting
+        id: format
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
           uv run python format_repo_files.py --check
 
       - name: Determine release version from PR download config
+        id: select-version
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
@@ -139,6 +143,7 @@ jobs:
           Write-Host "PR release GAMEVER=$gamever"
 
       - name: Extract deterministic base snapshot
+        id: base-snapshot
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
@@ -251,6 +256,7 @@ jobs:
           Write-Host "PR validation GAMEVER=$validationGamever (release GAMEVER=$env:PR_GAMEVER)"
 
       - name: Prepare persisted depot link and PR bin copy
+        id: prepare-bin
         shell: pwsh
         run: |
           function Ensure-DirectoryLink {
@@ -380,6 +386,7 @@ jobs:
           $global:LASTEXITCODE = 0
 
       - name: Restore deterministic base and invalidate affected outputs
+        id: restore-base
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
@@ -489,6 +496,7 @@ jobs:
           ) | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
 
       - name: Run Python test suites
+        id: test-suites
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
@@ -498,6 +506,7 @@ jobs:
           }
 
       - name: Analyze binaries
+        id: analyze
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
@@ -507,6 +516,7 @@ jobs:
           }
 
       - name: Build actual candidate snapshot
+        id: build-snapshot
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
@@ -529,6 +539,7 @@ jobs:
           }
 
       - name: Compare actual candidate with PR head snapshot
+        id: compare-snapshot
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
@@ -543,6 +554,7 @@ jobs:
           }
 
       - name: Build isolated versioned gamedata candidate
+        id: build-gamedata
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
@@ -564,6 +576,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "failed to mark gamedata validation" }
 
       - name: Select versioned SDK for C++ ABI validation
+        id: select-sdk
         shell: pwsh
         run: |
           $sdkPath = Join-Path $env:WORKSPACE "hl2sdk_cs2"
@@ -606,6 +619,7 @@ jobs:
           }
 
       - name: Run C++ tests
+        id: cpp-tests
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
@@ -621,6 +635,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "failed to mark C++ validation" }
 
       - name: Restore pinned SDK revision
+        id: restore-sdk
         if: always()
         shell: pwsh
         run: |
@@ -641,12 +656,14 @@ jobs:
           Write-Host "C++ ABI SDK restore: restored pinned SHA=$restoredSha"
 
       - name: Mark snapshot validation success
+        id: mark-success
         shell: pwsh
         run: |
           Set-Location $env:WORKSPACE
           "validated" | Out-File -LiteralPath ".snapshot-validation-success" -Encoding ascii
 
       - name: Clean candidate session
+        id: cleanup
         if: always()
         shell: pwsh
         run: |
@@ -670,6 +687,7 @@ jobs:
     runs-on: [self-hosted, windows, x64]
     steps:
       - name: Finalize PR workspace
+        id: finalize-workspace
         shell: pwsh
         run: |
           $prNumber = "${{ github.event.pull_request.number }}"

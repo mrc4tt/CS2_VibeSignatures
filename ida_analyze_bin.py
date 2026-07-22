@@ -38,6 +38,7 @@ import hashlib
 import inspect
 import json
 import os
+import posixpath
 import socket
 import subprocess
 import sys
@@ -1660,6 +1661,56 @@ def _parse_module_vcall_finder(module, module_name):
                 f"expected string, got {type(object_name).__name__}"
             )
     return objects
+
+
+def _config_artifact_key(module_name, artifact_path):
+    normalized_artifact = artifact_path.replace("\\", "/")
+    return posixpath.normpath(posixpath.join("_artifacts", module_name, normalized_artifact))
+
+
+def _config_skill_platform_paths(skill, base_key, platform):
+    paths = list(skill.get(base_key, []) or [])
+    paths.extend(skill.get(f"{base_key}_{platform}", []) or [])
+    return [path.replace("{platform}", platform) for path in paths]
+
+
+def find_module_skill_dependency_gaps(modules, platform):
+    """Return config inputs that are unavailable when their consumer would run."""
+    available_artifacts = set()
+    gaps = []
+    for module_index, module in enumerate(modules):
+        module_name = module["name"]
+        skills = module.get("skills") or []
+        skill_map = {skill["name"]: skill for skill in skills}
+        for skill_name in topological_sort_skills(skills, platform=platform):
+            skill = skill_map[skill_name]
+            skill_platform = skill.get("platform")
+            if skill_platform and skill_platform != platform:
+                continue
+            missing = [
+                key
+                for key in (
+                    _config_artifact_key(module_name, path)
+                    for path in _config_skill_platform_paths(skill, "expected_input", platform)
+                )
+                if key not in available_artifacts
+            ]
+            if missing:
+                gaps.append(
+                    f"{platform} module[{module_index}] {module_name}/{skill_name} missing: {', '.join(missing)}"
+                )
+            for output in _config_skill_platform_paths(skill, "expected_output", platform):
+                available_artifacts.add(_config_artifact_key(module_name, output))
+    return gaps
+
+
+def validate_module_skill_dependencies(modules):
+    """Reject analysis modules whose required inputs are unavailable at execution time."""
+    dependency_gaps = []
+    for platform in ("windows", "linux"):
+        dependency_gaps.extend(find_module_skill_dependency_gaps(modules, platform))
+    if dependency_gaps:
+        raise ValueError("analysis config dependency gaps:\n" + "\n".join(dependency_gaps))
 
 
 def parse_config_document(config):
@@ -4171,6 +4222,7 @@ def main():
 
     print("\nParsing config...")
     modules = parse_config(args.configyaml, config_document=config_document)
+    validate_module_skill_dependencies(modules)
     print(f"Found {len(modules)} modules")
     if not modules:
         print("No modules found in config.")

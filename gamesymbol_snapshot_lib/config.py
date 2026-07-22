@@ -231,6 +231,7 @@ def _build_contract(
     game_version = str(game_version)
     try:
         modules = ida_analyze_bin.parse_config_document(config_document)
+        ida_analyze_bin.validate_module_skill_dependencies(modules)
         nodes = _collect_nodes(modules, bindir / game_version)
     except (OSError, ValueError, TypeError) as exc:
         raise SnapshotConfigError(f"invalid analysis contract: {exc}") from exc

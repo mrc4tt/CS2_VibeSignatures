@@ -1,6 +1,5 @@
 import io
 import json
-import posixpath
 import subprocess
 import unittest
 from contextlib import asynccontextmanager
@@ -34,52 +33,6 @@ def _tool_result(payload):
 @asynccontextmanager
 async def _async_context(value):
     yield value
-
-
-def _expand_platform_paths(paths, platform):
-    return [path.replace("{platform}", platform) for path in paths or []]
-
-
-def _artifact_key(module_name, artifact_path):
-    normalized_artifact = artifact_path.replace("\\", "/")
-    return posixpath.normpath(posixpath.join("_artifacts", module_name, normalized_artifact))
-
-
-def _skill_platform_paths(skill, base_key, platform):
-    paths = list(skill.get(base_key, []) or [])
-    paths.extend(skill.get(f"{base_key}_{platform}", []) or [])
-    return _expand_platform_paths(paths, platform)
-
-
-def _find_module_skill_dependency_gaps(modules, platform):
-    available_artifacts = set()
-    gaps = []
-    for module_index, module in enumerate(modules):
-        module_name = module["name"]
-        skills = module.get("skills") or []
-        skill_map = {skill["name"]: skill for skill in skills}
-        for skill_name in ida_analyze_bin.topological_sort_skills(skills):
-            skill = skill_map[skill_name]
-            skill_platform = skill.get("platform")
-            if skill_platform and skill_platform != platform:
-                continue
-
-            missing = [
-                key
-                for key in (
-                    _artifact_key(module_name, path)
-                    for path in _skill_platform_paths(skill, "expected_input", platform)
-                )
-                if key not in available_artifacts
-            ]
-            if missing:
-                gaps.append(
-                    f"{platform} module[{module_index}] {module_name}/{skill_name} missing: {', '.join(missing)}"
-                )
-
-            for output in _skill_platform_paths(skill, "expected_output", platform):
-                available_artifacts.add(_artifact_key(module_name, output))
-    return gaps
 
 
 class TestQuitIdaGracefully(unittest.IsolatedAsyncioTestCase):
@@ -1663,21 +1616,14 @@ class TestConfigSkillDependencyGraph(unittest.TestCase):
             },
         ]
 
-        gaps = _find_module_skill_dependency_gaps(modules, "windows")
+        gaps = ida_analyze_bin.find_module_skill_dependency_gaps(modules, "windows")
 
         self.assertEqual(
             ["windows module[0] client/consumer missing: _artifacts/engine/Late.windows.yaml"],
             gaps,
         )
-
-    def test_config_module_skills_have_no_expected_input_order_gaps(self) -> None:
-        modules = ida_analyze_bin.parse_config("configs/14168.yaml")
-
-        gaps = []
-        for platform in ("windows", "linux"):
-            gaps.extend(_find_module_skill_dependency_gaps(modules, platform))
-
-        self.assertEqual([], gaps)
+        with self.assertRaisesRegex(ValueError, "client/consumer missing"):
+            ida_analyze_bin.validate_module_skill_dependencies(modules)
 
 
 class TestSkillSelection(unittest.TestCase):

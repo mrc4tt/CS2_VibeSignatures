@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch immutable new-version build
+        id: dispatch-build
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}

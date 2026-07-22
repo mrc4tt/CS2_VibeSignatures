@@ -45,12 +45,14 @@ jobs:
       allow_legacy_bootstrap: ${{ steps.resolve.outputs.allow_legacy_bootstrap }}
     steps:
       - name: Checkout default branch for trust validation
+        id: checkout-trust
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
 
       - uses: astral-sh/setup-uv@v6
+        id: setup-uv
 
       - name: Resolve and validate dispatch contract
         id: resolve
@@ -125,6 +127,7 @@ jobs:
       PERSISTED_WORKSPACE: ${{ secrets.PERSISTED_WORKSPACE }}
     steps:
       - name: Checkout exact generator source
+        id: checkout-source
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.preflight.outputs.source_sha }}
@@ -132,6 +135,7 @@ jobs:
           submodules: true
 
       - name: Prepare persisted depot link and real bin copy
+        id: prepare-workspace
         shell: pwsh
         run: |
           if ([string]::IsNullOrWhiteSpace($env:PERSISTED_WORKSPACE)) { throw "PERSISTED_WORKSPACE is not configured." }
@@ -166,6 +170,7 @@ jobs:
             --gamever "$env:GAMEVER" --build-id "$env:BUILD_ID"
 
       - name: Resolve immutable analysis config
+        id: resolve-config
         shell: pwsh
         run: |
           $config = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE "configs\$env:GAMEVER.yaml"))
@@ -179,6 +184,7 @@ jobs:
           Write-Host "Analysis config SHA-256: $hash"
 
       - name: Check formatting and run repository test suites
+        id: test-suites
         shell: pwsh
         run: |
           uv run python format_repo_files.py --check
@@ -189,6 +195,7 @@ jobs:
           }
 
       - name: Restore accepted same-version state and invalidate affected outputs
+        id: restore-state
         if: env.MODE == 'republish'
         shell: pwsh
         run: |
@@ -223,6 +230,7 @@ jobs:
           throw "copy_depot_bin.py -checkonly failed with exit code $code"
 
       - name: Download and copy missing depot binaries
+        id: download-binaries
         if: steps.cache.outputs.ready != 'true'
         shell: pwsh
         run: |
@@ -233,6 +241,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "copy_depot_bin.py failed with exit code $LASTEXITCODE" }
 
       - name: Analyze binaries with normal producer scheduling
+        id: analyze
         shell: pwsh
         env:
           OLDGAMEVER: ${{ steps.oldgamever.outputs.oldgamever }}
@@ -247,6 +256,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "ida_analyze_bin.py failed with exit code $LASTEXITCODE" }
 
       - name: Build immutable symbol and gamedata candidates
+        id: build-candidates
         shell: pwsh
         run: |
           $root = Join-Path $env:RUNNER_TEMP "release-candidates\$env:BUILD_ID"
@@ -277,6 +287,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "failed to mark gamedata validation" }
 
       - name: Select versioned SDK for C++ ABI validation
+        id: select-sdk
         shell: pwsh
         run: |
           $sdkPath = Join-Path $env:GITHUB_WORKSPACE "hl2sdk_cs2"
@@ -322,6 +333,7 @@ jobs:
           }
 
       - name: Run C++ tests
+        id: cpp-tests
         shell: pwsh
         run: |
           uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
@@ -334,6 +346,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "failed to mark C++ validation" }
 
       - name: Restore pinned SDK revision
+        id: restore-sdk
         if: always()
         shell: pwsh
         run: |
@@ -354,6 +367,7 @@ jobs:
           Write-Host "C++ ABI SDK restore: restored pinned SHA=$restoredSha"
 
       - name: Publish fully validated immutable candidate
+        id: publish-candidate
         shell: pwsh
         run: |
           uv run gamesymbol_candidate.py publish -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" `
@@ -378,6 +392,7 @@ jobs:
           }
 
       - name: Stage validated pending state and tracked manifest
+        id: stage-pending
         shell: pwsh
         run: |
           git config user.name "github-actions[bot]"
@@ -397,6 +412,7 @@ jobs:
             --workflow-run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
       - name: Create immutable generated-output branch and PR
+        id: create-output-pr
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
@@ -425,6 +441,7 @@ jobs:
           Write-Host "Generated-output PR: $prUrl"
 
       - name: Clean incomplete staging and candidate session
+        id: cleanup
         if: always()
         shell: pwsh
         run: |
