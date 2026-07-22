@@ -19,6 +19,7 @@ export interface GameSymbolRecord {
   platform: GameSymbolPlatform
   kind: string
   payload: JsonObject
+  aliases?: string[]
 }
 
 export interface GameSymbolDataset {
@@ -53,7 +54,60 @@ export interface GameSymbolIndex {
 interface CachedDataset {
   mtimeMs: number
   size: number
+  configMtimeMs: number
+  configSize: number
   dataset: GameSymbolDataset
+}
+
+function optionalStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is string => typeof item === 'string' && item.length > 0)
+}
+
+export interface ConfigAliasIndex {
+  aliases: Map<string, string[]>
+}
+
+export function buildConfigAliasIndex(raw: unknown, source: string): ConfigAliasIndex {
+  if (!isObject(raw)) throw new Error(`${source}: config root must be a mapping`)
+  const modules = raw.modules
+  if (!Array.isArray(modules)) throw new Error(`${source}: modules must be an array`)
+  const aliases = new Map<string, string[]>()
+  for (const moduleEntry of modules) {
+    if (!isObject(moduleEntry)) continue
+    const moduleName = moduleEntry.name
+    if (typeof moduleName !== 'string' || moduleName.length === 0) continue
+    const symbols = moduleEntry.symbols
+    if (!Array.isArray(symbols)) continue
+    for (const symbolEntry of symbols) {
+      if (!isObject(symbolEntry)) continue
+      const name = symbolEntry.name
+      if (typeof name !== 'string' || name.length === 0) continue
+      const aliasValues = optionalStringArray(symbolEntry.alias)
+      if (aliasValues.length === 0) continue
+      const key = `${moduleName}/${name}`
+      const existing = aliases.get(key)
+      if (existing) {
+        for (const alias of aliasValues) if (!existing.includes(alias)) existing.push(alias)
+      } else {
+        aliases.set(key, [...aliasValues])
+      }
+    }
+  }
+  return { aliases }
+}
+
+export function attachAliasesToDataset(dataset: GameSymbolDataset, aliasIndex: ConfigAliasIndex): GameSymbolDataset {
+  if (aliasIndex.aliases.size === 0) return dataset
+  let changed = false
+  const records = dataset.records.map((record) => {
+    const key = `${record.module}/${record.artifact}`
+    const aliases = aliasIndex.aliases.get(key)
+    if (!aliases || aliases.length === 0) return record
+    changed = true
+    return { ...record, aliases }
+  })
+  return changed ? { ...dataset, records } : dataset
 }
 
 function isObject(value: unknown): value is JsonObject {
@@ -176,7 +230,7 @@ export function createGameSymbolIndex(datasets: GameSymbolDataset[]): GameSymbol
   }
 }
 
-export function gameSymbolsPlugin(symbolsDirectory: string): Plugin {
+export function gameSymbolsPlugin(symbolsDirectory: string, configsDirectory?: string): Plugin {
   const cache = new Map<string, CachedDataset>()
 
   async function snapshotFiles(): Promise<string[]> {
@@ -188,15 +242,46 @@ export function gameSymbolsPlugin(symbolsDirectory: string): Plugin {
 
   async function loadDataset(filePath: string): Promise<GameSymbolDataset> {
     const fileStat = await stat(filePath)
-    const cached = cache.get(filePath)
-    if (cached?.mtimeMs === fileStat.mtimeMs && cached.size === fileStat.size) return cached.dataset
-
     const fileName = basename(filePath)
     const match = SNAPSHOT_FILE_PATTERN.exec(fileName)
     if (!match) throw new Error(`Invalid gamesymbol snapshot filename: ${fileName}`)
+    const configPath = configsDirectory ? join(configsDirectory, `${match[1]}.yaml`) : undefined
+
+    let configStat = { mtimeMs: 0, size: 0 }
+    if (configPath) {
+      try {
+        const cs = await stat(configPath)
+        configStat = { mtimeMs: cs.mtimeMs, size: cs.size }
+      } catch {
+        configStat = { mtimeMs: 0, size: 0 }
+      }
+    }
+
+    const cached = cache.get(filePath)
+    if (
+      cached?.mtimeMs === fileStat.mtimeMs && cached.size === fileStat.size
+      && cached.configMtimeMs === configStat.mtimeMs && cached.configSize === configStat.size
+    ) return cached.dataset
+
     const raw = parse(await readFile(filePath, 'utf8')) as unknown
-    const dataset = normalizeGameSymbolSnapshot(raw, match[1], filePath)
-    cache.set(filePath, { mtimeMs: fileStat.mtimeMs, size: fileStat.size, dataset })
+    let dataset = normalizeGameSymbolSnapshot(raw, match[1], filePath)
+
+    if (configPath && (configStat.mtimeMs !== 0 || configStat.size !== 0)) {
+      try {
+        const configRaw = parse(await readFile(configPath, 'utf8')) as unknown
+        dataset = attachAliasesToDataset(dataset, buildConfigAliasIndex(configRaw, configPath))
+      } catch {
+        // config missing/invalid is non-fatal: keep unaliased dataset
+      }
+    }
+
+    cache.set(filePath, {
+      mtimeMs: fileStat.mtimeMs,
+      size: fileStat.size,
+      configMtimeMs: configStat.mtimeMs,
+      configSize: configStat.size,
+      dataset,
+    })
     return dataset
   }
 

@@ -8,7 +8,8 @@ export function filterSymbolRecords(records: GameSymbolRecord[], filters: Symbol
     if (filters.module && record.module !== filters.module) return false
     if (filters.platform && record.platform !== filters.platform) return false
     if (!query) return true
-    return `${record.symbolName} ${record.artifact} ${record.id}`.toLowerCase().includes(query)
+    const haystack = `${record.symbolName} ${record.artifact} ${record.id} ${(record.aliases ?? []).join(' ')}`.toLowerCase()
+    return haystack.includes(query)
   })
 }
 

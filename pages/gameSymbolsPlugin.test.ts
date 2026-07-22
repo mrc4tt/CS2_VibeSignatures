@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createGameSymbolIndex, normalizeGameSymbolSnapshot } from './gameSymbolsPlugin'
+import { attachAliasesToDataset, buildConfigAliasIndex, createGameSymbolIndex, normalizeGameSymbolSnapshot } from './gameSymbolsPlugin'
 
 function snapshot(files: Record<string, Record<string, unknown>>, gameVersion = '14168b') {
   return {
@@ -45,5 +45,52 @@ describe('gameSymbolsPlugin normalization', () => {
     const revision = normalizeGameSymbolSnapshot(snapshot({}, '14168b'), '14168b', '14168b.yaml')
     const latest = normalizeGameSymbolSnapshot(snapshot({}, '14169'), '14169', '14169.yaml')
     expect(createGameSymbolIndex([older, latest, revision]).versions.map((entry) => entry.gameVersion)).toEqual(['14169', '14168b', '14168'])
+  })
+})
+
+describe('config alias attachment', () => {
+  it('builds an alias index keyed by module/symbol-name and merges repeated modules', () => {
+    const config = {
+      modules: [
+        { name: 'networksystem', symbols: [
+          { name: 'CNetworkMessages_RegisterNetworkCategory', category: 'vfunc', alias: ['CNetworkMessages::RegisterNetworkCategory'] },
+          { name: 'CNetworkMessages_NoAlias', category: 'vfunc' },
+        ] },
+        { name: 'networksystem', symbols: [
+          { name: 'CNetworkMessages_RegisterNetworkCategory', category: 'vfunc', alias: ['CNetworkMessages::RegisterNetworkCategoryAlt'] },
+        ] },
+        { name: 'emptymodule' },
+        { name: 'no-symbols-array', symbols: 'oops' },
+      ],
+    }
+    const index = buildConfigAliasIndex(config, 'config.yaml')
+    expect(index.aliases.get('networksystem/CNetworkMessages_RegisterNetworkCategory')).toEqual([
+      'CNetworkMessages::RegisterNetworkCategory',
+      'CNetworkMessages::RegisterNetworkCategoryAlt',
+    ])
+    expect(index.aliases.has('networksystem/CNetworkMessages_NoAlias')).toBe(false)
+  })
+
+  it('attaches aliases to matching records by module and artifact across both platforms', () => {
+    const dataset = normalizeGameSymbolSnapshot(snapshot({
+      'networksystem/CNetworkMessages_RegisterNetworkCategory.windows.yaml': { func_name: 'CNetworkMessages_RegisterNetworkCategory', vfunc_index: 0 },
+      'networksystem/CNetworkMessages_RegisterNetworkCategory.linux.yaml': { func_name: 'CNetworkMessages_RegisterNetworkCategory', vfunc_index: 0 },
+      'networksystem/CNetworkMessages_Unaliased.windows.yaml': { func_name: 'CNetworkMessages_Unaliased', vfunc_index: 1 },
+    }), '14172', 'snapshot.yaml')
+    const index = buildConfigAliasIndex({
+      modules: [{ name: 'networksystem', symbols: [{ name: 'CNetworkMessages_RegisterNetworkCategory', category: 'vfunc', alias: ['CNetworkMessages::RegisterNetworkCategory'] }] }],
+    }, 'config.yaml')
+    const aliased = attachAliasesToDataset(dataset, index)
+    expect(aliased.records).toEqual(expect.arrayContaining([
+      expect.objectContaining({ platform: 'windows', aliases: ['CNetworkMessages::RegisterNetworkCategory'] }),
+      expect.objectContaining({ platform: 'linux', aliases: ['CNetworkMessages::RegisterNetworkCategory'] }),
+      expect.objectContaining({ artifact: 'CNetworkMessages_Unaliased', aliases: undefined }),
+    ]))
+  })
+
+  it('returns the same dataset instance when the alias index is empty', () => {
+    const dataset = normalizeGameSymbolSnapshot(snapshot({ 'networksystem/F.windows.yaml': { func_name: 'F' } }), '14172', 'snapshot.yaml')
+    const index = buildConfigAliasIndex({ modules: [] }, 'config.yaml')
+    expect(attachAliasesToDataset(dataset, index)).toBe(dataset)
   })
 })

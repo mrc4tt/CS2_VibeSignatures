@@ -28,7 +28,7 @@ const resources = {
       symbols: {
         title: 'Explore Symbols', subtitle: 'Browse versioned game symbol snapshots and search across modules and platforms.', gameVersion: 'Game version',
         treeTitle: 'Symbol tree', searchTitle: 'Find symbols', allModules: 'All modules', searchPlaceholder: 'Search symbol name or artifact', allPlatforms: 'All platforms',
-        windows: 'Windows', linux: 'Linux', symbolName: 'Symbol', kind: 'Kind', module: 'Module', platform: 'Platform', artifact: 'Artifact', sourcePath: 'Snapshot path',
+        windows: 'Windows', linux: 'Linux', symbolName: 'Symbol', kind: 'Kind', module: 'Module', platform: 'Platform', artifact: 'Artifact', sourcePath: 'Snapshot path', aliases: 'Aliases',
         detailTitle: 'Symbol details', payload: 'Snapshot payload', loading: 'Loading symbol data…', indexError: 'Unable to load the symbol version index', datasetError: 'Unable to load this symbol snapshot',
         noSymbols: 'No symbols in this snapshot', noMatches: 'No symbols match the current filters', resultCount: '{{count}} records',
         signature: { func: 'Function Signature', vfunc: 'Virtual Call Signature', global: 'GlobalVariable Signature', structOffset: 'StructMemberOffset Signature' },
@@ -57,7 +57,7 @@ const resources = {
       symbols: {
         title: '浏览符号', subtitle: '浏览按游戏版本保存的符号快照，并按模块和平台查找特定符号。', gameVersion: '游戏版本',
         treeTitle: '符号树', searchTitle: '查找符号', allModules: '全部模块', searchPlaceholder: '搜索符号名或 Artifact', allPlatforms: '全部平台',
-        windows: 'Windows', linux: 'Linux', symbolName: '符号名', kind: '类型', module: '模块', platform: '平台', artifact: 'Artifact', sourcePath: '快照路径',
+        windows: 'Windows', linux: 'Linux', symbolName: '符号名', kind: '类型', module: '模块', platform: '平台', artifact: 'Artifact', sourcePath: '快照路径', aliases: '别名',
         detailTitle: '符号详情', payload: '快照数据', loading: '正在加载符号数据…', indexError: '无法加载符号版本索引', datasetError: '无法加载当前符号快照',
         noSymbols: '当前快照没有符号', noMatches: '没有符号符合当前筛选条件', resultCount: '共 {{count}} 条记录',
         signature: { func: '函数特征码', vfunc: '间接调用特征码', global: '全局变量特征码', structOffset: '结构偏移特征码' },
@@ -86,7 +86,7 @@ const resources = {
       symbols: {
         title: '瀏覽符號', subtitle: '瀏覽依遊戲版本保存的符號快照，並依模組和平台查找特定符號。', gameVersion: '遊戲版本',
         treeTitle: '符號樹', searchTitle: '查找符號', allModules: '所有模組', searchPlaceholder: '搜尋符號名稱或 Artifact', allPlatforms: '所有平台',
-        windows: 'Windows', linux: 'Linux', symbolName: '符號名稱', kind: '類型', module: '模組', platform: '平台', artifact: 'Artifact', sourcePath: '快照路徑',
+        windows: 'Windows', linux: 'Linux', symbolName: '符號名稱', kind: '類型', module: '模組', platform: '平台', artifact: 'Artifact', sourcePath: '快照路徑', aliases: '別名',
         detailTitle: '符號詳情', payload: '快照資料', loading: '正在載入符號資料…', indexError: '無法載入符號版本索引', datasetError: '無法載入目前符號快照',
         noSymbols: '目前快照沒有符號', noMatches: '沒有符號符合目前篩選條件', resultCount: '共 {{count}} 筆記錄',
         signature: { func: '函式特徵碼', vfunc: '間接調用特徵碼', global: '全域變數特徵碼', structOffset: '結構成員偏移量特徵碼' },

@@ -1,7 +1,7 @@
 import { ApiOutlined, DashboardOutlined, GlobalOutlined, SettingOutlined } from '@ant-design/icons'
 import { Badge, Button, Layout, Select, Space, Tabs, Typography } from 'antd'
 import { lazy, Suspense, useState, type ReactNode } from 'react'
-import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ApiSettingsDrawer } from '../components/ApiSettingsDrawer'
 import { ConnectionGate } from '../components/ConnectionGate'
@@ -19,25 +19,31 @@ function ApiGate({ connected, onSettings, children }: { connected: boolean; onSe
   return <Suspense fallback={<div className="page-spinner">{t('app.loadingPage')}</div>}>{children}</Suspense>
 }
 
+type AppTab = 'symbols' | 'runs'
+
 export function AppShell() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const { baseUrl, connected } = useApiConfig()
   const { t, i18n } = useTranslation()
   const location = useLocation()
-  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState<AppTab>(() => (location.pathname.startsWith('/runs') ? 'runs' : 'symbols'))
   const selectedLanguage = resolveLanguage(i18n.resolvedLanguage)
-const activeTab = location.pathname.startsWith('/symbols') ? 'symbols' : 'runs'
+
+  function selectTab(key: string) {
+    setActiveTab(key === 'symbols' ? 'symbols' : 'runs')
+  }
+
   return (
     <Layout className="app-layout">
       <Header className="app-header">
-        <Link to="/symbols" className="app-brand">
+        <Link to="/symbols" className="app-brand" onClick={() => setActiveTab('symbols')}>
           <DashboardOutlined />
           <Typography.Text strong>CS2 VibeSignatures</Typography.Text>
         </Link>
         <Tabs
           className="app-nav"
           activeKey={activeTab}
-          onChange={(key) => void navigate(key === 'symbols' ? '/symbols' : '/runs')}
+          onChange={selectTab}
           items={[
             { key: 'symbols', label: t('navigation.symbols') },
             { key: 'runs', label: t('navigation.runs') },
@@ -64,13 +70,17 @@ const activeTab = location.pathname.startsWith('/symbols') ? 'symbols' : 'runs'
         </Space>
       </Header>
       <Content className="app-content">
-<Routes>
-          <Route path="/symbols" element={<Suspense fallback={<div className="page-spinner">{t('app.loadingPage')}</div>}><ExploreSymbolsPage /></Suspense>} />
-          <Route path="/" element={<Navigate to="/symbols" replace />} />
-          <Route path="/runs" element={<ApiGate connected={connected} onSettings={() => setSettingsOpen(true)}><RunListPage /></ApiGate>} />
-          <Route path="/runs/:runId" element={<ApiGate connected={connected} onSettings={() => setSettingsOpen(true)}><RunDetailPage /></ApiGate>} />
-          <Route path="*" element={<Navigate to="/symbols" replace />} />
-        </Routes>
+        {activeTab === 'symbols' ? (
+          <Suspense fallback={<div className="page-spinner">{t('app.loadingPage')}</div>}>
+            <ExploreSymbolsPage />
+          </Suspense>
+        ) : (
+          <Routes>
+            <Route path="/runs" element={<ApiGate connected={connected} onSettings={() => setSettingsOpen(true)}><RunListPage /></ApiGate>} />
+            <Route path="/runs/:runId" element={<ApiGate connected={connected} onSettings={() => setSettingsOpen(true)}><RunDetailPage /></ApiGate>} />
+            <Route path="*" element={<ApiGate connected={connected} onSettings={() => setSettingsOpen(true)}><RunListPage /></ApiGate>} />
+          </Routes>
+        )}
       </Content>
       <ApiSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Layout>

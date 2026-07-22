@@ -1,4 +1,4 @@
-import { Descriptions, Drawer, Tag, Typography } from 'antd'
+import { Descriptions, Drawer, Space, Tag, Typography } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { symbolKindLabel } from './model'
 import type { GameSymbolRecord } from './types'
@@ -38,6 +38,13 @@ export function SymbolDetailDrawer({ record, onClose }: Props) {
             <Descriptions.Item label={t('symbols.platform')}><Tag color={record.platform === 'windows' ? 'blue' : 'gold'}>{record.platform}</Tag></Descriptions.Item>
             <Descriptions.Item label={t('symbols.kind')}>{symbolKindLabel(record.kind, t)}</Descriptions.Item>
             <Descriptions.Item label={t('symbols.artifact')}>{record.artifact}</Descriptions.Item>
+            <Descriptions.Item label={t('symbols.aliases')}>
+              {record.aliases && record.aliases.length > 0 ? (
+                <Space wrap size={[4, 4]}>
+                  {record.aliases.map((alias) => <Tag key={alias} color="geekblue">{alias}</Tag>)}
+                </Space>
+              ) : <Typography.Text type="secondary">—</Typography.Text>}
+            </Descriptions.Item>
             <Descriptions.Item label={t('symbols.sourcePath')}><Typography.Text copyable>{record.id}</Typography.Text></Descriptions.Item>
             {sig && (
               <Descriptions.Item label={t(sig.label)}>

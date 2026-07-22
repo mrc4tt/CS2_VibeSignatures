@@ -18,6 +18,7 @@ export interface GameSymbolRecord {
   platform: GameSymbolPlatform
   kind: string
   payload: Record<string, unknown>
+  aliases?: string[]
 }
 
 export interface GameSymbolDataset {
