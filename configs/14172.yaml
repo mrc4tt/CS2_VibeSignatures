@@ -727,6 +727,9 @@ modules:
           - CNetworkGameServerBase_BroadcastPrintf.{platform}.yaml
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_WriteDeltaEntities
+        expected_output:
+          - CNetworkGameServerBase_WriteDeltaEntities.{platform}.yaml
       - name: find-CNetworkGameServerBase_ReserveServerForQueuedGame
         expected_output:
           - CNetworkGameServerBase_ReserveServerForQueuedGame.{platform}.yaml
@@ -781,6 +784,9 @@ modules:
       - name: find-CDemoRecorder_WriteSpawnGroups
         expected_output:
           - CDemoRecorder_WriteSpawnGroups.{platform}.yaml
+      - name: find-CHLTVDemoRecorder_WriteFrameImmediate
+        expected_output:
+          - CHLTVDemoRecorder_WriteFrameImmediate.{platform}.yaml
       - name: find-INetworkMessages_FindNetworkMessageById
         expected_output:
           - INetworkMessages_FindNetworkMessageById.{platform}.yaml
@@ -1607,6 +1613,9 @@ modules:
           - CHLTVClient_ProcessSetConVar.{platform}.yaml
         expected_input:
           - CHLTVClient_vtable.{platform}.yaml
+      - name: find-CHLTVBroadcast_RecordSnapshot
+        expected_output:
+          - CHLTVBroadcast_RecordSnapshot.{platform}.yaml
       - name: find-CServerSideClientBase_vtable
         expected_output:
           - CServerSideClientBase_vtable.{platform}.yaml
@@ -1826,6 +1835,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::BroadcastPrintf
+      - name: CNetworkGameServerBase_WriteDeltaEntities
+        category: func
+        alias:
+          - CNetworkGameServerBase::WriteDeltaEntities
       - name: CNetworkGameServerBase_ReserveServerForQueuedGame
         category: vfunc
         alias:
@@ -1976,6 +1989,10 @@ modules:
         category: func
         alias:
           - CDemoRecorder::WriteSpawnGroups
+      - name: CHLTVDemoRecorder_WriteFrameImmediate
+        category: func
+        alias:
+          - CHLTVDemoRecorder::WriteFrameImmediate
       - name: INetworkMessages_SerializeAbstract
         category: vfunc
         alias:
@@ -2264,6 +2281,14 @@ modules:
         category: vfunc
         alias:
           - CEngineClient::DumpNetStats
+      - name: CEngineClient_SendStringCmd
+        category: vfunc
+        alias:
+          - CEngineClient::SendStringCmd
+      - name: INetworkGameClient_SendStringCmd
+        category: vfunc
+        alias:
+          - INetworkGameClient::SendStringCmd
       - name: CEngineServer_vtable
         category: vtable
       - name: CMapListService_vtable
@@ -2585,6 +2610,10 @@ modules:
         category: vfunc
         alias:
           - CHLTVClient::ProcessSetConVar
+      - name: CHLTVBroadcast_RecordSnapshot
+        category: func
+        alias:
+          - CHLTVBroadcast::RecordSnapshot
       - name: CServerSideClientBase_vtable
         category: vtable
       - name: CDelayedCall2_CServerSideClientBase_UpdateAcknowledgedFramecountCall_vtable
@@ -3206,6 +3235,38 @@ modules:
       - name: find-CGameEntitySystem_vtable
         expected_output:
           - CGameEntitySystem_vtable.{platform}.yaml
+      - name: find-CGameEventManager_vtable
+        expected_output:
+          - CGameEventManager_vtable.{platform}.yaml
+      - name: find-CNetworkGameClient_OnSource1Source1LegacyGameEvent
+        expected_output:
+          - CNetworkGameClient_OnSource1Source1LegacyGameEvent.{platform}.yaml
+      - name: find-CNetworkGameClient_OnSource1Source1LegacyGameEvent-decompiles
+        expected_output:
+          - IGameEventManager2_UnserializeEvent.{platform}.yaml
+          - IGameEventManager2_FireEventClientSide.{platform}.yaml
+        expected_input:
+          - CNetworkGameClient_OnSource1Source1LegacyGameEvent.{platform}.yaml
+      - name: find-CMapAnNodeManager_FireGameEvent
+        expected_output:
+          - CMapAnNodeManager_FireGameEvent.{platform}.yaml
+      - name: find-IVEngineClient2_SendStringCmd
+        expected_output:
+          - IVEngineClient2_SendStringCmd.{platform}.yaml
+        expected_input:
+          - CMapAnNodeManager_FireGameEvent.{platform}.yaml
+      - name: find-CGameEventManager_FireEventClientSide
+        expected_output:
+          - CGameEventManager_FireEventClientSide.{platform}.yaml
+        expected_input:
+          - CGameEventManager_vtable.{platform}.yaml
+          - IGameEventManager2_FireEventClientSide.{platform}.yaml
+      - name: find-CGameEventManager_UnserializeEvent
+        expected_output:
+          - CGameEventManager_UnserializeEvent.{platform}.yaml
+        expected_input:
+          - CGameEventManager_vtable.{platform}.yaml
+          - IGameEventManager2_UnserializeEvent.{platform}.yaml
       - name: find-CSteamworksGameStats_OnReceivedSessionID
         expected_output:
           - CSteamworksGameStats_OnReceivedSessionID.{platform}.yaml
@@ -3790,6 +3851,36 @@ modules:
           - IGameSystem::OnClientPreEntityThink
       - name: CGameEntitySystem_vtable
         category: vtable
+      - name: CGameEventManager_vtable
+        category: vtable
+      - name: CNetworkGameClient_OnSource1Source1LegacyGameEvent
+        category: func
+        alias:
+          - CNetworkGameClient::OnSource1Source1LegacyGameEvent
+      - name: CMapAnNodeManager_FireGameEvent
+        category: func
+        alias:
+          - CMapAnNodeManager::FireGameEvent
+      - name: IVEngineClient2_SendStringCmd
+        category: vfunc
+        alias:
+          - IVEngineClient2::SendStringCmd
+      - name: IGameEventManager2_UnserializeEvent
+        category: vfunc
+        alias:
+          - IGameEventManager2::UnserializeEvent
+      - name: IGameEventManager2_FireEventClientSide
+        category: vfunc
+        alias:
+          - IGameEventManager2::FireEventClientSide
+      - name: CGameEventManager_FireEventClientSide
+        category: vfunc
+        alias:
+          - CGameEventManager::FireEventClientSide
+      - name: CGameEventManager_UnserializeEvent
+        category: vfunc
+        alias:
+          - CGameEventManager::UnserializeEvent
       - name: CSteamworksGameStats_OnReceivedSessionID
         category: func
         alias:
@@ -9993,6 +10084,17 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-CEngineClient_SendStringCmd
+        expected_output:
+          - CEngineClient_SendStringCmd.{platform}.yaml
+        expected_input:
+          - CEngineClient_vtable.{platform}.yaml
+          - ../client/IVEngineClient2_SendStringCmd.{platform}.yaml
+      - name: find-INetworkGameClient_SendStringCmd
+        expected_output:
+          - INetworkGameClient_SendStringCmd.{platform}.yaml
+        expected_input:
+          - CEngineClient_SendStringCmd.{platform}.yaml
       - name: find-CNetworkClientService_SendNetMessage
         platform: windows
         expected_output:

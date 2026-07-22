@@ -68,8 +68,8 @@ from ida_skill_preprocessor import (
 from ida_mcp_session import (
     McpConnectionError,
     McpContractError,
-    McpDatabaseNotReadyError,
     McpDatabaseSelectionError,
+    McpDatabaseUnavailableError,
     McpToolCallError,
     check_ida_mcp_supervisor_health,
     normalize_binary_identity_path,
@@ -119,12 +119,26 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 13337
 POST_PROCESS_FUNC_RENAME_BATCH_SIZE = 50
 MCP_STARTUP_TIMEOUT = 1200  # seconds to wait for MCP server
+MCP_SHUTDOWN_TIMEOUT = 10.0
 QEXIT_CONNECTION_RESET_MARKER = "[WinError 10054]"
 OPENED_BINARY_VERIFY_TIMEOUT = 60.0
 OPENED_BINARY_VERIFY_RETRY_INTERVAL = 2.0
 _ARTIFACT_SYMBOL_CATEGORY_CACHE = {}
 _BINARY_HASH_CACHE = {}
 _PE_STYLE_BASE_ADDRESS = 0x180000000
+
+
+class McpRecoveryBudget:
+    """Limit lifecycle-owner MCP restarts for one binary processing run."""
+
+    def __init__(self, restart_limit=1):
+        self.remaining_restarts = max(0, int(restart_limit))
+
+    def consume_restart(self):
+        if self.remaining_restarts <= 0:
+            return False
+        self.remaining_restarts -= 1
+        return True
 
 
 class AnalysisReporting:
@@ -753,11 +767,9 @@ def verify_opened_binary_via_mcp(
     port=DEFAULT_PORT,
     debug=False,
     verify_timeout=OPENED_BINARY_VERIFY_TIMEOUT,
-    worker_ready_timeout=MCP_STARTUP_TIMEOUT,
     retry_interval=OPENED_BINARY_VERIFY_RETRY_INTERVAL,
 ):
-    worker_ready_deadline = time.monotonic() + max(0.0, worker_ready_timeout)
-    metadata_deadline = None
+    deadline = time.monotonic() + max(0.0, verify_timeout)
     while True:
         try:
             survey = asyncio.run(
@@ -768,16 +780,8 @@ def verify_opened_binary_via_mcp(
                     expected_binary=binary_path,
                 )
             )
-        except McpDatabaseNotReadyError as exc:
-            if time.monotonic() >= worker_ready_deadline:
-                print("  Failed: opened binary verification failed")
-                print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
-                print(f"    Reason: timed out waiting for the IDA worker to become active: {exc}")
-                return False
-            if debug:
-                print("  Matching IDA database is still starting; retrying verification...")
-            time.sleep(max(0.0, retry_interval))
-            continue
+        except McpDatabaseUnavailableError:
+            raise
         except (McpConnectionError, McpContractError, McpDatabaseSelectionError, McpToolCallError) as exc:
             print("  Failed: opened binary verification failed")
             print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
@@ -790,11 +794,7 @@ def verify_opened_binary_via_mcp(
             ["survey_binary returned no metadata"],
             ["path mismatch: opened metadata path is missing"],
         )
-        if not retryable:
-            break
-        if metadata_deadline is None:
-            metadata_deadline = time.monotonic() + max(0.0, verify_timeout)
-        if time.monotonic() >= metadata_deadline:
+        if not retryable or time.monotonic() >= deadline:
             break
         if debug:
             print("  Opened binary metadata is not ready; retrying verification...")
@@ -972,7 +972,15 @@ async def preprocess_single_vcall_object_via_mcp(
         )
 
 
-def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
+def ensure_mcp_available(
+    process,
+    binary_path,
+    host,
+    port,
+    ida_args,
+    debug,
+    recovery_budget=None,
+):
     """
     Ensure idalib-mcp is running and responsive. Restart if necessary.
 
@@ -991,6 +999,8 @@ def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
         Tuple of (new_process, ok) where new_process may be the same object
         if no restart was needed, and ok indicates whether MCP is available.
     """
+    restart_authorized = False
+
     # Step 1: check if the process has already exited
     if process is not None and process.poll() is not None:
         if debug:
@@ -1002,16 +1012,78 @@ def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
         healthy = asyncio.run(check_mcp_worker_health(host, port, binary_path))
         if healthy:
             return process, True
-        print("  MCP health check failed, restarting idalib-mcp...")
+        print("  MCP health check failed")
+        if recovery_budget is not None:
+            restart_authorized = recovery_budget.consume_restart()
+            if not restart_authorized:
+                print("  MCP recovery restart already used; not restarting idalib-mcp again")
+                return process, False
         quit_ida_gracefully(process, host, port, expected_binary=binary_path, debug=debug)
         process = None
 
     # Step 3: restart idalib-mcp
+    if recovery_budget is not None and not restart_authorized:
+        if not recovery_budget.consume_restart():
+            print("  MCP recovery restart already used; not restarting idalib-mcp again")
+            return process, False
+    if is_port_in_use(host, port):
+        if debug:
+            print(f"  Waiting for MCP port {host}:{port} to be released before restart...")
+        if not wait_for_port_release(host, port):
+            print(f"  Failed: MCP port {host}:{port} remained in use; recovery restart aborted")
+            return None, False
     print("  Restarting idalib-mcp...")
     new_process = start_idalib_mcp(binary_path, host, port, ida_args, debug)
     if new_process is None:
         return None, False
     return new_process, True
+
+
+def verify_owned_mcp_with_single_recovery(
+    process,
+    binary_path,
+    platform,
+    host,
+    port,
+    ida_args,
+    debug,
+    recovery_budget=None,
+):
+    """Verify the opened binary and recover an unavailable owned worker once."""
+    try:
+        return process, verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug)
+    except McpDatabaseUnavailableError as exc:
+        print("  Opened binary verification found an unavailable MCP worker; checking recovery...")
+        print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
+        print(f"    Reason: {exc}")
+
+    original_process = process
+    process, mcp_ok = ensure_mcp_available(
+        process,
+        binary_path,
+        host,
+        port,
+        ida_args,
+        debug,
+        recovery_budget=recovery_budget,
+    )
+    if not mcp_ok:
+        print("  Failed: unable to recover the unavailable MCP worker")
+        return process, False
+
+    if process is original_process and debug:
+        print("  MCP worker recovered without a restart; re-verifying opened binary...")
+    elif process is not original_process:
+        print("  Re-verifying opened binary after the single MCP recovery restart...")
+
+    try:
+        verified = verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug)
+    except McpDatabaseUnavailableError as exc:
+        print("  Failed: MCP worker remained unavailable after recovery")
+        print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
+        print(f"    Reason: {exc}")
+        verified = False
+    return process, verified
 
 
 async def quit_ida_via_mcp(host, port, *, expected_binary, auto_started):
@@ -1059,6 +1131,14 @@ async def quit_ida_gracefully_async(process, host, port, *, expected_binary, deb
         pass
 
     await asyncio.to_thread(stop_idalib_mcp_process, process, debug=debug)
+    released = await asyncio.to_thread(
+        wait_for_port_release,
+        host,
+        port,
+        MCP_SHUTDOWN_TIMEOUT,
+    )
+    if debug and not released:
+        print(f"  MCP port {host}:{port} remained in use after shutdown")
 
 
 def quit_ida_gracefully(process, host, port, *, expected_binary, debug=False):
@@ -2713,6 +2793,16 @@ def is_port_in_use(host, port):
         return False
 
 
+def wait_for_port_release(host, port, timeout=MCP_SHUTDOWN_TIMEOUT, retry_interval=0.1):
+    """Wait for a stopped local supervisor to release its listening port."""
+    deadline = time.monotonic() + max(0.0, timeout)
+    while is_port_in_use(host, port):
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(max(0.0, retry_interval))
+    return True
+
+
 def start_idalib_mcp(
     binary_path,
     host=DEFAULT_HOST,
@@ -3060,8 +3150,19 @@ def process_binary(
     if reporting is not None and job_id is not None:
         reporting.emit_task_status(job_id, TaskStatus.RUNNING, ProcessPhase.VALIDATING_BINARY)
     force_local_process_stop = False
+    recovery_budget = McpRecoveryBudget()
     try:
-        if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+        process, verified = verify_owned_mcp_with_single_recovery(
+            process,
+            binary_path,
+            platform,
+            host,
+            port,
+            ida_args,
+            debug,
+            recovery_budget=recovery_budget,
+        )
+        if not verified:
             pending_count = _pending_binary_work_count(
                 skills_to_process=skills_to_process,
                 vcall_targets=vcall_targets,
@@ -3140,11 +3241,24 @@ def process_binary(
             _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.WAITING_FOR_MCP)
 
             # Ensure MCP connection is alive before running the skill
-            process, mcp_ok = ensure_mcp_available(process, binary_path, host, port, ida_args, debug)
+            process, mcp_ok = ensure_mcp_available(
+                process,
+                binary_path,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
             if not mcp_ok:
-                remaining = len(skills_to_process) - skill_index
+                remaining = _pending_binary_work_count(
+                    skills_to_process=skills_to_process,
+                    skill_index=skill_index,
+                    vcall_targets=vcall_targets,
+                    post_process_yaml_items=startup_post_process_yaml_items,
+                )
                 fail_count += remaining
-                print(f"  Failed to restore MCP connection, aborting remaining {remaining} skill(s)")
+                print(f"  Failed to restore MCP connection, aborting remaining {remaining} work item(s)")
                 _abort_binary_reporting(
                     reporting,
                     job_id,
@@ -3153,7 +3267,17 @@ def process_binary(
                 )
                 abort_binary_processing = True
                 break
-            if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+            process, verified = verify_owned_mcp_with_single_recovery(
+                process,
+                binary_path,
+                platform,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
+            if not verified:
                 remaining = _pending_binary_work_count(
                     skills_to_process=skills_to_process,
                     skill_index=skill_index,
@@ -3301,7 +3425,17 @@ def process_binary(
                     payload={"invalid_optional_inputs": invalid_optional_inputs},
                 )
                 continue
-            if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+            process, verified = verify_owned_mcp_with_single_recovery(
+                process,
+                binary_path,
+                platform,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
+            if not verified:
                 remaining = _pending_binary_work_count(
                     skills_to_process=skills_to_process,
                     skill_index=skill_index,
@@ -3465,7 +3599,17 @@ def process_binary(
                 )
                 continue
 
-            if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+            process, verified = verify_owned_mcp_with_single_recovery(
+                process,
+                binary_path,
+                platform,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
+            if not verified:
                 remaining = _pending_binary_work_count(
                     skills_to_process=skills_to_process,
                     skill_index=skill_index,
@@ -3544,7 +3688,15 @@ def process_binary(
                 TaskStatus.RUNNING,
                 ProcessPhase.WAITING_FOR_MCP,
             )
-            process, mcp_ok = ensure_mcp_available(process, binary_path, host, port, ida_args, debug)
+            process, mcp_ok = ensure_mcp_available(
+                process,
+                binary_path,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
             if not mcp_ok:
                 remaining = len(vcall_targets) - object_index
                 fail_count += remaining
@@ -3557,7 +3709,17 @@ def process_binary(
                     "MCP connection could not be restored",
                 )
                 break
-            if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+            process, verified = verify_owned_mcp_with_single_recovery(
+                process,
+                binary_path,
+                platform,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
+            if not verified:
                 remaining = _pending_binary_work_count(
                     vcall_targets=vcall_targets,
                     vcall_index=object_index,
@@ -3702,7 +3864,15 @@ def process_binary(
                 TaskStatus.RUNNING,
                 ProcessPhase.POSTPROCESSING,
             )
-            process, mcp_ok = ensure_mcp_available(process, binary_path, host, port, ida_args, debug)
+            process, mcp_ok = ensure_mcp_available(
+                process,
+                binary_path,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
             if not mcp_ok:
                 fail_count += 1
                 print("  Failed to restore MCP connection, skipping post_process")
@@ -3714,7 +3884,17 @@ def process_binary(
                     reason=ProcessReason.MCP_UNAVAILABLE,
                 )
             else:
-                if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+                process, verified = verify_owned_mcp_with_single_recovery(
+                    process,
+                    binary_path,
+                    platform,
+                    host,
+                    port,
+                    ida_args,
+                    debug,
+                    recovery_budget=recovery_budget,
+                )
+                if not verified:
                     fail_count += 1
                     force_local_process_stop = True
                     print("  Aborting current binary after opened binary verification failure (1 pending work item(s))")
@@ -3769,6 +3949,9 @@ def process_binary(
         if force_local_process_stop:
             print("  Stopping current idalib-mcp after opened binary verification failure")
             stop_idalib_mcp_process(process, debug=debug)
+            released = wait_for_port_release(host, port)
+            if debug and not released:
+                print(f"  MCP port {host}:{port} remained in use after shutdown")
         else:
             quit_ida_gracefully(process, host, port, expected_binary=binary_path, debug=debug)
 

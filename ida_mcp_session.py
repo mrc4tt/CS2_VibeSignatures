@@ -27,7 +27,7 @@ class McpDatabaseSelectionError(RuntimeError):
     pass
 
 
-class McpDatabaseNotReadyError(McpDatabaseSelectionError):
+class McpDatabaseUnavailableError(McpDatabaseSelectionError):
     pass
 
 
@@ -80,12 +80,14 @@ def detect_database_requirement(tools: Sequence[Any]) -> bool:
 def _session_summary(sessions: Sequence[Mapping[str, Any]]) -> str:
     return "; ".join(
         "session_id={session_id!r}, input_path={input_path!r}, backend={backend!r}, "
-        "owned={owned!r}, is_active={is_active!r}".format(
+        "owned={owned!r}, is_active={is_active!r}, pid={pid!r}, worker_pid={worker_pid!r}".format(
             session_id=session.get("session_id"),
             input_path=session.get("input_path"),
             backend=session.get("backend"),
             owned=session.get("owned"),
             is_active=session.get("is_active"),
+            pid=session.get("pid"),
+            worker_pid=session.get("worker_pid"),
         )
         for session in sessions
     )
@@ -114,8 +116,8 @@ def select_database_session(
             if session.get("session_id") == explicit_database and session.get("is_active") is not True
         ]
         if discovered:
-            raise McpDatabaseNotReadyError(
-                f"MCP database {explicit_database!r} exists but is not active yet; "
+            raise McpDatabaseUnavailableError(
+                f"MCP database {explicit_database!r} exists but is inactive or unreachable; "
                 f"candidates: {_session_summary(sessions)}"
             )
         raise McpDatabaseSelectionError(
@@ -139,8 +141,8 @@ def select_database_session(
             and session.get("is_active") is not True
         ]
         if not matches and discovered:
-            raise McpDatabaseNotReadyError(
-                f"MCP database for expected binary {expected_binary!r} exists but is not active yet; "
+            raise McpDatabaseUnavailableError(
+                f"MCP database for expected binary {expected_binary!r} exists but is inactive or unreachable; "
                 f"candidates: {_session_summary(sessions)}"
             )
         label = "no" if not matches else "multiple"

@@ -1,0 +1,282 @@
+func_name: CNetworkGameClient_OnSource1Source1LegacyGameEvent
+func_va: '0x16da1a0'
+disasm_code: |-
+  .text:00000000016DA1A0                 push    rbp
+  .text:00000000016DA1A1                 mov     rbp, rsp
+  .text:00000000016DA1A4                 push    r15
+  .text:00000000016DA1A6                 push    r14
+  .text:00000000016DA1A8                 push    r13
+  .text:00000000016DA1AA                 push    r12
+  .text:00000000016DA1AC                 mov     r12, rdi
+  .text:00000000016DA1AF                 push    rbx
+  .text:00000000016DA1B0                 lea     rdi, unk_47DECB0
+  .text:00000000016DA1B7                 mov     rbx, rsi
+  .text:00000000016DA1BA                 mov     esi, 0FFFFFFFFh
+  .text:00000000016DA1BF                 sub     rsp, 38h
+  .text:00000000016DA1C3                 call    sub_20D1310
+  .text:00000000016DA1C8                 test    rax, rax
+  .text:00000000016DA1CB                 jz      short loc_16DA240
+  .text:00000000016DA1CD                 movzx   eax, byte ptr [rax]
+  .text:00000000016DA1D0                 test    al, al
+  .text:00000000016DA1D2                 jz      short loc_16DA1DA
+  .text:00000000016DA1D4                 test    byte ptr [rbx+40h], 4
+  .text:00000000016DA1D8                 jnz     short loc_16DA250
+  .text:00000000016DA1DA                 mov     rdi, cs:qword_47DEB90
+  .text:00000000016DA1E1                 mov     rsi, rbx
+  .text:00000000016DA1E4                 mov     rax, [rdi]
+  .text:00000000016DA1E7                 call    qword ptr [rax+68h] ; 68h = IGameEventManager2_UnserializeEvent
+  .text:00000000016DA1EA                 mov     r12, rax
+  .text:00000000016DA1ED                 test    rax, rax
+  .text:00000000016DA1F0                 jz      loc_16DA3D8
+  .text:00000000016DA1F6                 cmp     dword ptr [rbx+70h], 1
+  .text:00000000016DA1FA                 jz      loc_16DA360
+  .text:00000000016DA200                 mov     rdi, cs:qword_47DEB90
+  .text:00000000016DA207                 lea     rdx, sub_169CBF0
+  .text:00000000016DA20E                 mov     rax, [rdi]
+  .text:00000000016DA211                 mov     rax, [rax+48h] ; 48h = IGameEventManager2_FireEventClientSide
+  .text:00000000016DA215                 cmp     rax, rdx
+  .text:00000000016DA218                 jnz     loc_16DA3C0
+  .text:00000000016DA21E                 add     rsp, 38h
+  .text:00000000016DA222                 mov     rsi, r12
+  .text:00000000016DA225                 mov     ecx, 1
+  .text:00000000016DA22A                 pop     rbx
+  .text:00000000016DA22B                 xor     edx, edx
+  .text:00000000016DA22D                 pop     r12
+  .text:00000000016DA22F                 pop     r13
+  .text:00000000016DA231                 pop     r14
+  .text:00000000016DA233                 pop     r15
+  .text:00000000016DA235                 pop     rbp
+  .text:00000000016DA236                 jmp     sub_169C6B0
+  .text:00000000016DA240                 mov     rax, cs:qword_47DECB8
+  .text:00000000016DA247                 mov     rax, [rax+8]
+  .text:00000000016DA24B                 jmp     short loc_16DA1CD
+  .text:00000000016DA250                 lea     rdi, unk_47DECA0
+  .text:00000000016DA257                 mov     esi, 0FFFFFFFFh
+  .text:00000000016DA25C                 mov     r13d, [rbx+6Ch]
+  .text:00000000016DA260                 call    sub_20D1310
+  .text:00000000016DA265                 test    rax, rax
+  .text:00000000016DA268                 jz      loc_16DA3F8
+  .text:00000000016DA26E                 lea     r14, qword_47F9B38
+  .text:00000000016DA275                 mov     eax, [rax]
+  .text:00000000016DA277                 mov     rdi, [r14]
+  .text:00000000016DA27A                 add     r13d, eax
+  .text:00000000016DA27D                 mov     rax, [rdi]
+  .text:00000000016DA280                 call    qword ptr [rax+128h]
+  .text:00000000016DA286                 cmp     eax, r13d
+  .text:00000000016DA289                 jge     loc_16DA1DA
+  .text:00000000016DA28F                 mov     r15d, [r12+448h]
+  .text:00000000016DA297                 mov     edx, [r12+458h]
+  .text:00000000016DA29F                 lea     eax, [r15+1]
+  .text:00000000016DA2A3                 cmp     eax, edx
+  .text:00000000016DA2A5                 jg      loc_16DA448
+  .text:00000000016DA2AB                 mov     [r12+448h], eax
+  .text:00000000016DA2B3                 test    r15d, r15d
+  .text:00000000016DA2B6                 jg      loc_16DA428
+  .text:00000000016DA2BC                 mov     r15, [r12+450h]
+  .text:00000000016DA2C4                 lea     rax, unk_42AC590
+  .text:00000000016DA2CB                 movsd   xmm0, qword ptr [rbx+8]
+  .text:00000000016DA2D0                 lea     rsi, [rbx+30h]
+  .text:00000000016DA2D4                 mov     [r15], rax
+  .text:00000000016DA2D7                 mov     eax, [rbx+10h]
+  .text:00000000016DA2DA                 lea     rdi, [r15+30h]
+  .text:00000000016DA2DE                 movsd   qword ptr [r15+8], xmm0
+  .text:00000000016DA2E4                 movss   xmm0, dword ptr [rbx+20h]
+  .text:00000000016DA2E9                 movss   dword ptr [r15+20h], xmm0
+  .text:00000000016DA2EF                 mov     [r15+10h], eax
+  .text:00000000016DA2F3                 movzx   eax, byte ptr [rbx+14h]
+  .text:00000000016DA2F7                 mov     [r15+14h], al
+  .text:00000000016DA2FB                 mov     rax, [rbx+18h]
+  .text:00000000016DA2FF                 mov     [r15+18h], rax
+  .text:00000000016DA303                 mov     rax, [rbx+28h]
+  .text:00000000016DA307                 mov     [r15+28h], rax
+  .text:00000000016DA30B                 call    sub_123D980
+  .text:00000000016DA310                 lea     rax, off_43AA6D0
+  .text:00000000016DA317                 mov     [r15], rax
+  .text:00000000016DA31A                 mov     rdi, [r14]
+  .text:00000000016DA31D                 add     rax, 40h ; '@'
+  .text:00000000016DA321                 mov     [r15+30h], rax
+  .text:00000000016DA325                 mov     ebx, [r12+448h]
+  .text:00000000016DA32D                 mov     rax, [rdi]
+  .text:00000000016DA330                 call    qword ptr [rax+128h]
+  .text:00000000016DA336                 add     rsp, 38h
+  .text:00000000016DA33A                 mov     r8d, ebx
+  .text:00000000016DA33D                 mov     edx, r13d
+  .text:00000000016DA340                 pop     rbx
+  .text:00000000016DA341                 lea     rsi, aOnsource1sourc; "OnSource1Source1LegacyGameEvent: Early "...
+  .text:00000000016DA348                 mov     ecx, eax
+  .text:00000000016DA34A                 ; _QWORD
+  .text:00000000016DA34A                 mov     edi, 2; _QWORD
+  .text:00000000016DA34F                 pop     r12
+  .text:00000000016DA351                 xor     eax, eax
+  .text:00000000016DA353                 pop     r13
+  .text:00000000016DA355                 pop     r14
+  .text:00000000016DA357                 pop     r15
+  .text:00000000016DA359                 pop     rbp
+  .text:00000000016DA35A                 jmp     _DevMsg
+  .text:00000000016DA360                 mov     rax, [rax]
+  .text:00000000016DA363                 lea     rbx, aRealtimePassth; "realtime_passthrough"
+  .text:00000000016DA36A                 mov     rdi, rbx
+  .text:00000000016DA36D                 mov     r13, [rax+0A8h]
+  .text:00000000016DA374                 call    sub_1674450
+  .text:00000000016DA379                 lea     rdx, sub_166FBC0
+  .text:00000000016DA380                 mov     [rbp+var_4C], 0FFFFFFFFh
+  .text:00000000016DA387                 mov     [rbp+var_50], eax
+  .text:00000000016DA38A                 mov     [rbp+var_48], rbx
+  .text:00000000016DA38E                 cmp     r13, rdx
+  .text:00000000016DA391                 jnz     short loc_16DA410
+  .text:00000000016DA393                 lea     rsi, [rbp+var_40]
+  .text:00000000016DA397                 mov     edx, 1
+  .text:00000000016DA39C                 mov     [rbp+var_40], eax
+  .text:00000000016DA39F                 lea     rdi, [r12+58h]
+  .text:00000000016DA3A4                 mov     [rbp+var_3C], 0FFFFFFFFh
+  .text:00000000016DA3AB                 mov     [rbp+var_38], rbx
+  .text:00000000016DA3AF                 call    sub_20E19E0
+  .text:00000000016DA3B4                 jmp     loc_16DA200
+  .text:00000000016DA3C0                 add     rsp, 38h
+  .text:00000000016DA3C4                 mov     rsi, r12
+  .text:00000000016DA3C7                 pop     rbx
+  .text:00000000016DA3C8                 pop     r12
+  .text:00000000016DA3CA                 pop     r13
+  .text:00000000016DA3CC                 pop     r14
+  .text:00000000016DA3CE                 pop     r15
+  .text:00000000016DA3D0                 pop     rbp
+  .text:00000000016DA3D1                 jmp     rax
+  .text:00000000016DA3D8                 lea     rdi, aCnetworkgamecl; "CNetworkGameClient::OnSource1Source1Leg"...
+  .text:00000000016DA3DF                 add     rsp, 38h
+  .text:00000000016DA3E3                 xor     eax, eax
+  .text:00000000016DA3E5                 pop     rbx
+  .text:00000000016DA3E6                 pop     r12
+  .text:00000000016DA3E8                 pop     r13
+  .text:00000000016DA3EA                 pop     r14
+  .text:00000000016DA3EC                 pop     r15
+  .text:00000000016DA3EE                 pop     rbp
+  .text:00000000016DA3EF                 jmp     __Z6DevMsgPKcz; DevMsg(char const*,...)
+  .text:00000000016DA3F8                 mov     rax, cs:qword_47DECA8
+  .text:00000000016DA3FF                 mov     rax, [rax+8]
+  .text:00000000016DA403                 jmp     loc_16DA26E
+  .text:00000000016DA410                 lea     rsi, [rbp+var_50]
+  .text:00000000016DA414                 mov     edx, 1
+  .text:00000000016DA419                 mov     rdi, r12
+  .text:00000000016DA41C                 call    r13
+  .text:00000000016DA41F                 jmp     loc_16DA200
+  .text:00000000016DA428                 movsxd  rdx, r15d
+  .text:00000000016DA42B                 ; src
+  .text:00000000016DA42B                 mov     rsi, [r12+450h]; src
+  .text:00000000016DA433                 ; n
+  .text:00000000016DA433                 imul    rdx, 78h ; 'x'; n
+  .text:00000000016DA437                 ; dest
+  .text:00000000016DA437                 lea     rdi, [rsi+78h]; dest
+  .text:00000000016DA43B                 call    _memmove
+  .text:00000000016DA440                 jmp     loc_16DA2BC
+  .text:00000000016DA448                 lea     rdi, [r12+450h]
+  .text:00000000016DA450                 mov     esi, eax
+  .text:00000000016DA452                 mov     [rbp+var_54], eax
+  .text:00000000016DA455                 sub     esi, edx
+  .text:00000000016DA457                 call    sub_16DA080
+  .text:00000000016DA45C                 mov     eax, [rbp+var_54]
+  .text:00000000016DA45F                 jmp     loc_16DA2AB
+procedure: |-
+  __int64 __fastcall sub_16DA1A0(__int64 a1, __int64 a2)
+  {
+    _BYTE *v3; // rax
+    __int64 v4; // rax
+    __int64 v5; // r12
+    __int64 (__fastcall *v6)(); // rax
+    int v8; // r13d
+    _DWORD *v9; // rax
+    int v10; // r13d
+    int v11; // r15d
+    int v12; // edx
+    int v13; // eax
+    __int64 v14; // r15
+    __int64 v15; // xmm0_8
+    int v16; // eax
+    __int64 v17; // rdi
+    int v18; // ebx
+    int v19; // eax
+    __int64 (__fastcall *v20)(); // r13
+    int v21; // eax
+    _DWORD v22[2]; // [rsp+10h] [rbp-50h] BYREF
+    const char *v23; // [rsp+18h] [rbp-48h]
+    _DWORD v24[2]; // [rsp+20h] [rbp-40h] BYREF
+    const char *v25; // [rsp+28h] [rbp-38h]
+
+    v3 = (_BYTE *)sub_20D1310(&unk_47DECB0, 0xFFFFFFFFLL);
+    if ( !v3 )
+      v3 = *(_BYTE **)(qword_47DECB8 + 8);
+    if ( !*v3 || (*(_BYTE *)(a2 + 64) & 4) == 0 )
+      goto LABEL_5;
+    v8 = *(_DWORD *)(a2 + 108);
+    v9 = (_DWORD *)sub_20D1310(&unk_47DECA0, 0xFFFFFFFFLL);
+    if ( !v9 )
+      v9 = *(_DWORD **)(qword_47DECA8 + 8);
+    v10 = *v9 + v8;
+    if ( (*(int (__fastcall **)(__int64))(*(_QWORD *)qword_47F9B38 + 296LL))(qword_47F9B38) < v10 )
+    {
+      v11 = *(_DWORD *)(a1 + 1096);
+      v12 = *(_DWORD *)(a1 + 1112);
+      v13 = v11 + 1;
+      if ( v11 + 1 > v12 )
+      {
+        sub_16DA080(a1 + 1104, (unsigned int)(v13 - v12));
+        v13 = v11 + 1;
+      }
+      *(_DWORD *)(a1 + 1096) = v13;
+      if ( v11 > 0 )
+        memmove((void *)(*(_QWORD *)(a1 + 1104) + 120LL), *(const void **)(a1 + 1104), 120LL * v11);
+      v14 = *(_QWORD *)(a1 + 1104);
+      v15 = *(_QWORD *)(a2 + 8);
+      *(_QWORD *)v14 = &unk_42AC590;
+      v16 = *(_DWORD *)(a2 + 16);
+      *(_QWORD *)(v14 + 8) = v15;
+      *(_DWORD *)(v14 + 32) = *(_DWORD *)(a2 + 32);
+      *(_DWORD *)(v14 + 16) = v16;
+      *(_BYTE *)(v14 + 20) = *(_BYTE *)(a2 + 20);
+      *(_QWORD *)(v14 + 24) = *(_QWORD *)(a2 + 24);
+      *(_QWORD *)(v14 + 40) = *(_QWORD *)(a2 + 40);
+      sub_123D980(v14 + 48, a2 + 48);
+      *(_QWORD *)v14 = &off_43AA6D0;
+      v17 = qword_47F9B38;
+      *(_QWORD *)(v14 + 48) = off_43AA710;
+      v18 = *(_DWORD *)(a1 + 1096);
+      v19 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v17 + 296LL))(v17);
+      return DevMsg(2, "OnSource1Source1LegacyGameEvent: Early event sv %d / cl %d. Total in queue %d.\n", v10, v19, v18);
+    }
+    else
+    {
+  LABEL_5:
+      v4 = (*(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)qword_47DEB90 + 104LL))(qword_47DEB90, a2); // 104LL = 0x68 = IGameEventManager2_UnserializeEvent
+      v5 = v4;
+      if ( v4 )
+      {
+        if ( *(_DWORD *)(a2 + 112) == 1 )
+        {
+          v20 = *(__int64 (__fastcall **)())(*(_QWORD *)v4 + 168LL);
+          v21 = sub_1674450("realtime_passthrough");
+          v22[1] = -1;
+          v22[0] = v21;
+          v23 = "realtime_passthrough";
+          if ( v20 == sub_166FBC0 )
+          {
+            v24[0] = v21;
+            v24[1] = -1;
+            v25 = "realtime_passthrough";
+            sub_20E19E0(v5 + 88, v24, 1);
+          }
+          else
+          {
+            ((void (__fastcall *)(__int64, _DWORD *, __int64))v20)(v5, v22, 1);
+          }
+        }
+        v6 = *(__int64 (__fastcall **)())(*(_QWORD *)qword_47DEB90 + 72LL); // 72LL = 0x48 = IGameEventManager2_FireEventClientSide
+        if ( v6 == sub_169CBF0 )
+          return sub_169C6B0(qword_47DEB90, v5, 0, 1);
+        else
+          return ((__int64 (__fastcall *)(__int64, __int64))v6)(qword_47DEB90, v5);
+      }
+      else
+      {
+        return DevMsg("CNetworkGameClient::OnSource1Source1LegacyGameEvent: UnserializeKeyValue failed.\n");
+      }
+    }
+  }
