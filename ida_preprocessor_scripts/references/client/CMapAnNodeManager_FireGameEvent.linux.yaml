@@ -1,0 +1,278 @@
+func_name: CMapAnNodeManager_FireGameEvent
+func_va: '0x1a28420'
+disasm_code: |-
+  .text:0000000001A28420                 push    rbp
+  .text:0000000001A28421                 mov     rbp, rsp
+  .text:0000000001A28424                 push    r14
+  .text:0000000001A28426                 push    r13
+  .text:0000000001A28428                 push    r12
+  .text:0000000001A2842A                 push    rbx
+  .text:0000000001A2842B                 add     rsp, 0FFFFFFFFFFFFFF80h
+  .text:0000000001A2842F                 lea     r14, qword_47FE7D0
+  .text:0000000001A28436                 cmp     qword ptr [r14], 0
+  .text:0000000001A2843A                 jz      loc_1A2851B
+  .text:0000000001A28440                 mov     rax, [rsi]
+  .text:0000000001A28443                 mov     r12, rdi
+  .text:0000000001A28446                 mov     rbx, rsi
+  .text:0000000001A28449                 mov     rdi, rsi
+  .text:0000000001A2844C                 call    qword ptr [rax+10h]
+  .text:0000000001A2844F                 mov     r13, rax
+  .text:0000000001A28452                 call    sub_19BD210
+  .text:0000000001A28457                 test    al, al
+  .text:0000000001A28459                 jz      short loc_1A284A0
+  .text:0000000001A2845B                 lea     rsi, s2; "round_start"
+  .text:0000000001A28462                 ; s1
+  .text:0000000001A28462                 mov     rdi, r13; s1
+  .text:0000000001A28465                 call    strcmp
+  .text:0000000001A2846A                 test    eax, eax
+  .text:0000000001A2846C                 jz      loc_1A28600
+  .text:0000000001A28472                 lea     rsi, aGrenadeThrown; "grenade_thrown"
+  .text:0000000001A28479                 ; s1
+  .text:0000000001A28479                 mov     rdi, r13; s1
+  .text:0000000001A2847C                 call    strcmp
+  .text:0000000001A28481                 test    eax, eax
+  .text:0000000001A28483                 jz      loc_1A28530
+  .text:0000000001A28489                 lea     rsi, aSmokegrenadeDe; "smokegrenade_detonate"
+  .text:0000000001A28490                 ; s1
+  .text:0000000001A28490                 mov     rdi, r13; s1
+  .text:0000000001A28493                 call    strcmp
+  .text:0000000001A28498                 test    eax, eax
+  .text:0000000001A2849A                 jz      loc_1A28580
+  .text:0000000001A284A0                 mov     rax, [rbx]
+  .text:0000000001A284A3                 mov     rdi, rbx
+  .text:0000000001A284A6                 call    qword ptr [rax+10h]
+  .text:0000000001A284A9                 lea     rsi, aRoundFreezeEnd; "round_freeze_end"
+  .text:0000000001A284B0                 cmp     rax, rsi
+  .text:0000000001A284B3                 jz      short loc_1A284C6
+  .text:0000000001A284B5                 test    rax, rax
+  .text:0000000001A284B8                 jz      short loc_1A2851B
+  .text:0000000001A284BA                 ; s1
+  .text:0000000001A284BA                 mov     rdi, rax; s1
+  .text:0000000001A284BD                 call    strcmp
+  .text:0000000001A284C2                 test    eax, eax
+  .text:0000000001A284C4                 jnz     short loc_1A2851B
+  .text:0000000001A284C6                 mov     rax, cs:qword_480C840
+  .text:0000000001A284CD                 lea     rbx, [rbp+var_A0]
+  .text:0000000001A284D4                 ; _QWORD
+  .text:0000000001A284D4                 mov     esi, 80h; _QWORD
+  .text:0000000001A284D9                 lea     rdx, aSS_9; "%s \"%s\""
+  .text:0000000001A284E0                 ; _QWORD
+  .text:0000000001A284E0                 mov     rdi, rbx; _QWORD
+  .text:0000000001A284E3                 lea     rcx, aAnnotationsFil; "annotations_file_at_freezetime"
+  .text:0000000001A284EA                 mov     r8, [rax+48h]
+  .text:0000000001A284EE                 lea     rax, haystack
+  .text:0000000001A284F5                 test    r8, r8
+  .text:0000000001A284F8                 cmovz   r8, rax
+  .text:0000000001A284FC                 xor     eax, eax
+  .text:0000000001A284FE                 call    _V_snprintf
+  .text:0000000001A28503                 lea     rax, qword_47F9B38
+  .text:0000000001A2850A                 mov     rdx, rbx
+  .text:0000000001A2850D                 xor     esi, esi
+  .text:0000000001A2850F                 mov     rdi, [rax]
+  .text:0000000001A28512                 mov     rax, [rdi]
+  .text:0000000001A28515                 call    qword ptr [rax+190h]  ; 190h = IVEngineClient2_SendStringCmd
+  .text:0000000001A2851B                 sub     rsp, 0FFFFFFFFFFFFFF80h
+  .text:0000000001A2851F                 pop     rbx
+  .text:0000000001A28520                 pop     r12
+  .text:0000000001A28522                 pop     r13
+  .text:0000000001A28524                 pop     r14
+  .text:0000000001A28526                 pop     rbp
+  .text:0000000001A28527                 retn
+  .text:0000000001A28530                 mov     rdi, [r14]
+  .text:0000000001A28533                 call    sub_1352B20
+  .text:0000000001A28538                 test    al, al
+  .text:0000000001A2853A                 jz      loc_1A28489
+  .text:0000000001A28540                 lea     rax, qword_47F9B38
+  .text:0000000001A28547                 mov     rdi, [rax]
+  .text:0000000001A2854A                 mov     rax, [rdi]
+  .text:0000000001A2854D                 call    qword ptr [rax+310h]
+  .text:0000000001A28553                 mov     edi, eax
+  .text:0000000001A28555                 call    sub_15D88E0
+  .text:0000000001A2855A                 test    rax, rax
+  .text:0000000001A2855D                 jz      short loc_1A2851B
+  .text:0000000001A2855F                 xor     esi, esi
+  .text:0000000001A28561                 mov     rdi, r12
+  .text:0000000001A28564                 call    sub_19C9B60
+  .text:0000000001A28569                 mov     [r12+90h], rax
+  .text:0000000001A28571                 jmp     loc_1A28489
+  .text:0000000001A28580                 mov     rdi, [r14]
+  .text:0000000001A28583                 call    sub_1352B20
+  .text:0000000001A28588                 test    al, al
+  .text:0000000001A2858A                 jz      short loc_1A2851B
+  .text:0000000001A2858C                 mov     r12, [r12+90h]
+  .text:0000000001A28594                 test    r12, r12
+  .text:0000000001A28597                 jz      short loc_1A2851B
+  .text:0000000001A28599                 lea     rsi, asc_B5C357; "X"
+  .text:0000000001A285A0                 mov     rdi, rbx
+  .text:0000000001A285A3                 pxor    xmm0, xmm0
+  .text:0000000001A285A7                 call    sub_1436490
+  .text:0000000001A285AC                 lea     rsi, aY_0; "Y"
+  .text:0000000001A285B3                 mov     rdi, rbx
+  .text:0000000001A285B6                 movss   dword ptr [rbp+var_A0], xmm0
+  .text:0000000001A285BE                 pxor    xmm0, xmm0
+  .text:0000000001A285C2                 call    sub_1436490
+  .text:0000000001A285C7                 lea     rsi, aZ; "Z"
+  .text:0000000001A285CE                 mov     rdi, rbx
+  .text:0000000001A285D1                 movss   dword ptr [rbp+var_A0+4], xmm0
+  .text:0000000001A285D9                 pxor    xmm0, xmm0
+  .text:0000000001A285DD                 call    sub_1436490
+  .text:0000000001A285E2                 lea     rsi, [rbp+var_A0]
+  .text:0000000001A285E9                 mov     rdi, r12
+  .text:0000000001A285EC                 movss   [rbp+var_98], xmm0
+  .text:0000000001A285F4                 call    sub_1A28240
+  .text:0000000001A285F9                 jmp     loc_1A2851B
+  .text:0000000001A28600                 lea     rax, qword_47F9B38
+  .text:0000000001A28607                 mov     rdi, [rax]
+  .text:0000000001A2860A                 mov     rax, [rdi]
+  .text:0000000001A2860D                 call    qword ptr [rax+208h]
+  .text:0000000001A28613                 mov     esi, 0FFFFFFFFh
+  .text:0000000001A28618                 lea     rdi, unk_480C850
+  .text:0000000001A2861F                 mov     rbx, rax
+  .text:0000000001A28622                 call    sub_20D1310
+  .text:0000000001A28627                 test    rax, rax
+  .text:0000000001A2862A                 jz      loc_1A286E0
+  .text:0000000001A28630                 movzx   eax, byte ptr [rax]
+  .text:0000000001A28633                 test    al, al
+  .text:0000000001A28635                 jz      short loc_1A28690
+  .text:0000000001A28637                 lea     rsi, aEmpty_0; "<empty>"
+  .text:0000000001A2863E                 ; s1
+  .text:0000000001A2863E                 mov     rdi, rbx; s1
+  .text:0000000001A28641                 call    strcmp
+  .text:0000000001A28646                 test    eax, eax
+  .text:0000000001A28648                 jnz     loc_1A286D0
+  .text:0000000001A2864E                 mov     eax, [r12+50h]
+  .text:0000000001A28653                 test    eax, eax
+  .text:0000000001A28655                 jle     loc_1A2851B
+  .text:0000000001A2865B                 xor     ebx, ebx
+  .text:0000000001A2865D                 nop     dword ptr [rax]
+  .text:0000000001A28660                 mov     rax, [r12+58h]
+  .text:0000000001A28665                 mov     rdi, [rax+rbx*8]
+  .text:0000000001A28669                 add     rbx, 1
+  .text:0000000001A2866D                 mov     rax, [rdi]
+  .text:0000000001A28670                 call    qword ptr [rax+28h]
+  .text:0000000001A28673                 cmp     [r12+50h], ebx
+  .text:0000000001A28678                 jg      short loc_1A28660
+  .text:0000000001A2867A                 sub     rsp, 0FFFFFFFFFFFFFF80h
+  .text:0000000001A2867E                 pop     rbx
+  .text:0000000001A2867F                 pop     r12
+  .text:0000000001A28681                 pop     r13
+  .text:0000000001A28683                 pop     r14
+  .text:0000000001A28685                 pop     rbp
+  .text:0000000001A28686                 retn
+  .text:0000000001A28690                 lea     rdi, unk_4680470
+  .text:0000000001A28697                 mov     esi, 0FFFFFFFFh
+  .text:0000000001A2869C                 call    sub_1357750
+  .text:0000000001A286A1                 mov     edx, eax
+  .text:0000000001A286A3                 mov     eax, [r12+50h]
+  .text:0000000001A286A8                 test    edx, edx
+  .text:0000000001A286AA                 jle     short loc_1A28653
+  .text:0000000001A286AC                 test    eax, eax
+  .text:0000000001A286AE                 jnz     short loc_1A28653
+  .text:0000000001A286B0                 lea     rsi, aEmpty_0; "<empty>"
+  .text:0000000001A286B7                 ; s1
+  .text:0000000001A286B7                 mov     rdi, rbx; s1
+  .text:0000000001A286BA                 call    strcmp
+  .text:0000000001A286BF                 test    eax, eax
+  .text:0000000001A286C1                 jz      loc_1A2851B
+  .text:0000000001A286C7                 nop     word ptr [rax+rax+00000000h]
+  .text:0000000001A286D0                 mov     rsi, rbx
+  .text:0000000001A286D3                 mov     rdi, r12
+  .text:0000000001A286D6                 call    sub_19E80F0
+  .text:0000000001A286DB                 jmp     loc_1A2864E
+  .text:0000000001A286E0                 mov     rax, cs:qword_480C858
+  .text:0000000001A286E7                 mov     rax, [rax+8]
+  .text:0000000001A286EB                 jmp     loc_1A28630
+procedure: |-
+  void __fastcall CMapAnNodeManager_FireGameEvent(__int64 a1, __int64 a2)
+  {
+    const char *v3; // r13
+    const char *v4; // rax
+    const bool *v5; // r8
+    unsigned int v6; // eax
+    __int64 v7; // r12
+    const char *v8; // rbx
+    _BYTE *v9; // rax
+    int v10; // eax
+    __int64 v11; // rbx
+    __int64 v12; // rdi
+    int v13; // edx
+    _DWORD v14[40]; // [rsp+0h] [rbp-A0h] BYREF
+
+    if ( !qword_47FE7D0 )
+      return;
+    v3 = (const char *)(*(__int64 (__fastcall **)(__int64))(*(_QWORD *)a2 + 16LL))(a2);
+    if ( !(unsigned __int8)sub_19BD210() )
+      goto LABEL_6;
+    if ( !strcmp(v3, "round_start") )
+    {
+      v8 = (const char *)(*(__int64 (__fastcall **)(__int64))(*(_QWORD *)qword_47F9B38 + 520LL))(qword_47F9B38);
+      v9 = (_BYTE *)sub_20D1310(&unk_480C850, 0xFFFFFFFFLL);
+      if ( !v9 )
+        v9 = *(_BYTE **)(qword_480C858 + 8);
+      if ( *v9 )
+      {
+        if ( !strcmp(v8, "<empty>") )
+        {
+  LABEL_23:
+          v10 = *(_DWORD *)(a1 + 80);
+          goto LABEL_24;
+        }
+      }
+      else
+      {
+        v13 = sub_1357750(&unk_4680470, 0xFFFFFFFFLL);
+        v10 = *(_DWORD *)(a1 + 80);
+        if ( v13 <= 0 || v10 )
+        {
+  LABEL_24:
+          if ( v10 > 0 )
+          {
+            v11 = 0;
+            do
+            {
+              v12 = *(_QWORD *)(*(_QWORD *)(a1 + 88) + 8 * v11++);
+              (*(void (__fastcall **)(__int64))(*(_QWORD *)v12 + 40LL))(v12);
+            }
+            while ( *(_DWORD *)(a1 + 80) > (int)v11 );
+          }
+          return;
+        }
+        if ( !strcmp(v8, "<empty>") )
+          return;
+      }
+      sub_19E80F0(a1, v8);
+      goto LABEL_23;
+    }
+    if ( !strcmp(v3, "grenade_thrown") && (unsigned __int8)sub_1352B20(qword_47FE7D0) )
+    {
+      v6 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)qword_47F9B38 + 784LL))(qword_47F9B38);
+      if ( !sub_15D88E0(v6) )
+        return;
+      *(_QWORD *)(a1 + 144) = sub_19C9B60(a1, 0);
+    }
+    if ( strcmp(v3, "smokegrenade_detonate") )
+    {
+  LABEL_6:
+      v4 = (const char *)(*(__int64 (__fastcall **)(__int64))(*(_QWORD *)a2 + 16LL))(a2);
+      if ( v4 == "round_freeze_end" || v4 && !strcmp(v4, "round_freeze_end") )
+      {
+        v5 = *(const bool **)(qword_480C840 + 72);
+        if ( !v5 )
+          v5 = &haystack;
+        V_snprintf(v14, 128, "%s \"%s\"", "annotations_file_at_freezetime", v5);
+        (*(void (__fastcall **)(__int64, _QWORD, _DWORD *))(*(_QWORD *)qword_47F9B38 + 400LL))(qword_47F9B38, 0, v14);  // 400LL = 0x190 = IVEngineClient2_SendStringCmd
+      }
+      return;
+    }
+    if ( (unsigned __int8)sub_1352B20(qword_47FE7D0) )
+    {
+      v7 = *(_QWORD *)(a1 + 144);
+      if ( v7 )
+      {
+        v14[0] = sub_1436490(a2, "X", 0.0);
+        v14[1] = sub_1436490(a2, "Y", 0.0);
+        v14[2] = sub_1436490(a2, "Z", 0.0);
+        sub_1A28240(v7, v14);
+      }
+    }
+  }

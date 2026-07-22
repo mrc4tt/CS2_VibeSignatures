@@ -1,7 +1,7 @@
 analysis_output_contract_version: 1
 config_digest_version: 2
-config_sha256: sha256:65770d7269daaf65d71ce363faab46534b2383068ec1fb35aa01205013d43f57
-file_count: 2928
+config_sha256: sha256:85769f526a034c1471cff91bfd0ff2eb260e3def2bc0a599978977556b5631ed
+file_count: 2936
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -1040,6 +1040,18 @@ files:
     vtable_size: '0x48'
     vtable_symbol: ??_7CLoopModeGame@@6B@
     vtable_va: '0x181ad5460'
+  client/CMapAnNodeManager_FireGameEvent.linux.yaml:
+    func_name: CMapAnNodeManager_FireGameEvent
+    func_rva: '0x1a28420'
+    func_sig: 55 48 89 E5 41 56 41 55 41 54 53 48 83 C4 ??
+    func_size: '0x2d0'
+    func_va: '0x1a28420'
+  client/CMapAnNodeManager_FireGameEvent.windows.yaml:
+    func_name: CMapAnNodeManager_FireGameEvent
+    func_rva: '0xbd1dd0'
+    func_sig: 48 8B C4 48 89 70 ?? 57 48 81 EC ?? ?? ?? ?? 48 83 3D ?? ?? ?? ?? ??
+    func_size: '0x370'
+    func_va: '0x180bd1dd0'
   client/CModelState_SetupJointState.windows.yaml:
     func_name: CModelState_SetupJointState
     func_rva: '0xa59cc0'
@@ -3051,6 +3063,18 @@ files:
     vfunc_index: 41
     vfunc_offset: '0x148'
     vtable_name: IVEngineClient2
+  client/IVEngineClient2_SendStringCmd.linux.yaml:
+    func_name: IVEngineClient2_SendStringCmd
+    vfunc_index: 50
+    vfunc_offset: '0x190'
+    vfunc_sig: FF 90 90 01 00 00 48 83 EC ??
+    vtable_name: IVEngineClient2
+  client/IVEngineClient2_SendStringCmd.windows.yaml:
+    func_name: IVEngineClient2_SendStringCmd
+    vfunc_index: 50
+    vfunc_offset: '0x190'
+    vfunc_sig: FF 90 90 01 00 00 48 8B 9C 24 ?? ?? ?? ?? 48 8B AC 24 ?? ?? ?? ??
+    vtable_name: IVEngineClient2
   client/RegisterEventListener_Abstract.linux.yaml:
     func_name: RegisterEventListener_Abstract
     func_rva: '0x1664b60'
@@ -4179,6 +4203,24 @@ files:
     vfunc_index: 184
     vfunc_offset: '0x5c0'
     vtable_name: CEngineClient_vtable
+  engine/CEngineClient_SendStringCmd.linux.yaml:
+    func_name: CEngineClient_SendStringCmd
+    func_rva: '0x4e5230'
+    func_sig: 48 8D 05 F1 2A 4F ??
+    func_size: '0x13'
+    func_va: '0x4e5230'
+    vfunc_index: 101
+    vfunc_offset: '0x328'
+    vtable_name: CEngineClient
+  engine/CEngineClient_SendStringCmd.windows.yaml:
+    func_name: CEngineClient_SendStringCmd
+    func_rva: '0x75420'
+    func_sig: 48 8B 0D ?? ?? ?? ?? 48 85 C9 74 ?? 48 8B 01 83 FA ??
+    func_size: '0x24'
+    func_va: '0x180075420'
+    vfunc_index: 50
+    vfunc_offset: '0x190'
+    vtable_name: CEngineClient
   engine/CEngineClient_vtable.linux.yaml:
     vtable_class: CEngineClient
     vtable_entries:
@@ -10652,6 +10694,16 @@ files:
     vfunc_offset: '0x100'
     vfunc_sig: FF 90 00 01 00 00 84 C0 0F 84 ?? ?? ?? ?? 48 8B 1D ?? ?? ?? ??
     vtable_name: INetworkClientService
+  engine/INetworkGameClient_SendStringCmd.linux.yaml:
+    func_name: INetworkGameClient_SendStringCmd
+    vfunc_index: 38
+    vfunc_offset: '0x130'
+    vtable_name: INetworkGameClient
+  engine/INetworkGameClient_SendStringCmd.windows.yaml:
+    func_name: INetworkGameClient_SendStringCmd
+    vfunc_index: 38
+    vfunc_offset: '0x130'
+    vtable_name: INetworkGameClient
   engine/INetworkGameServer_GetMaxClients.linux.yaml:
     func_name: INetworkGameServer_GetMaxClients
     vfunc_index: 12

@@ -2281,6 +2281,14 @@ modules:
         category: vfunc
         alias:
           - CEngineClient::DumpNetStats
+      - name: CEngineClient_SendStringCmd
+        category: vfunc
+        alias:
+          - CEngineClient::SendStringCmd
+      - name: INetworkGameClient_SendStringCmd
+        category: vfunc
+        alias:
+          - INetworkGameClient::SendStringCmd
       - name: CEngineServer_vtable
         category: vtable
       - name: CMapListService_vtable
@@ -3239,6 +3247,14 @@ modules:
           - IGameEventManager2_FireEventClientSide.{platform}.yaml
         expected_input:
           - CNetworkGameClient_OnSource1Source1LegacyGameEvent.{platform}.yaml
+      - name: find-CMapAnNodeManager_FireGameEvent
+        expected_output:
+          - CMapAnNodeManager_FireGameEvent.{platform}.yaml
+      - name: find-IVEngineClient2_SendStringCmd
+        expected_output:
+          - IVEngineClient2_SendStringCmd.{platform}.yaml
+        expected_input:
+          - CMapAnNodeManager_FireGameEvent.{platform}.yaml
       - name: find-CGameEventManager_FireEventClientSide
         expected_output:
           - CGameEventManager_FireEventClientSide.{platform}.yaml
@@ -3841,6 +3857,14 @@ modules:
         category: func
         alias:
           - CNetworkGameClient::OnSource1Source1LegacyGameEvent
+      - name: CMapAnNodeManager_FireGameEvent
+        category: func
+        alias:
+          - CMapAnNodeManager::FireGameEvent
+      - name: IVEngineClient2_SendStringCmd
+        category: vfunc
+        alias:
+          - IVEngineClient2::SendStringCmd
       - name: IGameEventManager2_UnserializeEvent
         category: vfunc
         alias:
@@ -10060,6 +10084,17 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-CEngineClient_SendStringCmd
+        expected_output:
+          - CEngineClient_SendStringCmd.{platform}.yaml
+        expected_input:
+          - CEngineClient_vtable.{platform}.yaml
+          - ../client/IVEngineClient2_SendStringCmd.{platform}.yaml
+      - name: find-INetworkGameClient_SendStringCmd
+        expected_output:
+          - INetworkGameClient_SendStringCmd.{platform}.yaml
+        expected_input:
+          - CEngineClient_SendStringCmd.{platform}.yaml
       - name: find-CNetworkClientService_SendNetMessage
         platform: windows
         expected_output:
