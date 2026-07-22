@@ -264,16 +264,48 @@ the old name for historical context.
 
 ## Step 10: Run Post-Change Gates
 
-Run the repository update and validation skills in this exact order before committing:
+Before committing, run the repository update and validation skills in the exact order below. Every gate is
+mandatory.
 
-1. **ALWAYS** Use SKILL `/post-change-update` with `phase=before-validation` and
-   `gamever=<gamever>` from `.env` -> `CS2VIBE_GAMEVER`.
-2. **ALWAYS** Use SKILL `/post-change-validation` with the same `gamever`.
-3. Only after validation succeeds, **ALWAYS** Use SKILL `/post-change-update` with
-   `phase=after-validation` and the same `gamever`.
+### 10a. Format and update gamedata
 
-These calls replace any direct `format_repo_files.py`, `update_gamedata.py`, `run_cpp_tests.py`, or
-`gamesymbol_snapshot.py pack` commands. If any gate fails, stop the entire rename task and do not commit.
+**ALWAYS** Use SKILL `/post-change-update` with:
+
+- `phase=before-validation`
+- `gamever=<gamever>` from `.env` -> `CS2VIBE_GAMEVER`
+
+This replaces direct `format_repo_files.py` and `update_gamedata.py` commands in this workflow.
+
+### 10b. Regression tests
+
+Run the non-MCP unittest suite:
+
+```bash
+uv run python -c "from pathlib import Path; import sys, unittest; excluded={'test_ida_mcp_session', 'test_smoke_ida_mcp_2'}; modules=[f'tests.{path.stem}' for path in Path('tests').glob('test_*.py') if path.stem not in excluded]; result=unittest.TextTestRunner(buffer=True).run(unittest.defaultTestLoader.loadTestsFromNames(modules)); sys.exit(not result.wasSuccessful())"
+```
+
+This intentionally excludes the IDA MCP adapter and smoke modules (`test_ida_mcp_session`,
+`test_smoke_ida_mcp_2`) to keep preprocessor work fast. Run those modules separately when changing
+MCP routing or lifecycle code.
+
+**Keep 0 selected unittest failures before committing.** If any test fails, investigate and fix it before
+proceeding to the final validation gate.
+
+### 10c. Validate C++ layouts
+
+**ALWAYS** Use SKILL `/post-change-validation` with the same `gamever`.
+
+If it fails or cannot run tests, it will report the reason and stop the entire rename task. Do not fix or retry
+inside this workflow, do not pack the snapshot, and do not commit.
+
+### 10d. Pack the gamesymbol snapshot
+
+Only after `/post-change-validation` succeeds, **ALWAYS** Use SKILL `/post-change-update` with:
+
+- `phase=after-validation`
+- the same `gamever`
+
+This step is mandatory. A missing or failed `gamesymbol_snapshot.py pack` blocks the commit.
 
 ---
 
@@ -307,7 +339,8 @@ git commit -m "refactor(preprocessor): rename OldName to NewName" -m "Co-Authore
 - [ ] Downstream preprocessor script `.py` and `configs/<GAMEVER>.yaml` entries updated (if any)
 - [ ] Final grep shows zero stale references
 - [ ] `/post-change-update phase=before-validation` succeeds for the selected game version
-- [ ] `/post-change-validation` succeeds for the same game version
+- [ ] Non-MCP unittest command above passes with 0 failures
+- [ ] `/post-change-validation` runs C++ tests and succeeds for the same game version
 - [ ] `/post-change-update phase=after-validation` packs `gamesymbols/<gamever>.yaml`
 - [ ] All changes committed to git
 
