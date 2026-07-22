@@ -21,10 +21,10 @@ diagnose *why*, present several concrete resolution options, and ask the user wh
 Do not disable or record the skill before the user answers. If the user explicitly answers that it
 cannot be solved now and asks to temporarily disable the skill, append the failure to
 `docs/ida_validation_failure-<GAMEVER>.md`, comment that skill out of `configs/<GAMEVER>.yaml`, and
-run the unittest suite before resuming validation. If the config dependency test reports consumers
-whose `expected_input` can no longer be produced, apply the same ask-before-action rule to each
-dependent skill. Environment / infrastructure failures are **not** skill bugs — STOP and surface
-those instead of quarantining a skill.
+run the `unit` and `repository-contract` unittest suites before resuming validation. If the config
+dependency test reports consumers whose `expected_input` can no longer be produced, apply the same
+ask-before-action rule to each dependent skill. Environment / infrastructure failures are **not**
+skill bugs — STOP and surface those instead of quarantining a skill.
 
 Resolve `GAMEVER` from the user's explicit request or `CS2VIBE_GAMEVER`; use only
 `configs/$GAMEVER.yaml` for the validation run and all quarantine edits.
@@ -214,19 +214,22 @@ in Step 3. Use the Edit tool with an `old_string` that includes the *preceding s
 (which differs per module) so the match is unique — a bare block match would silently hit the wrong
 module.
 
-### Step 7 — Run unittest after every configs/<GAMEVER>.yaml quarantine
+### Step 7 — Run unit and repository-contract tests after every configs/<GAMEVER>.yaml quarantine
 
-Immediately after commenting out any skill block, run the non-MCP unittest suite:
+Immediately after commenting out any skill block, run both explicit unittest suites:
 
 ```bash
-uv run python -c "from pathlib import Path; import sys, unittest; excluded={'test_ida_mcp_session', 'test_smoke_ida_mcp_2'}; modules=[f'tests.{path.stem}' for path in Path('tests').glob('test_*.py') if path.stem not in excluded]; result=unittest.TextTestRunner(buffer=True).run(unittest.defaultTestLoader.loadTestsFromNames(modules)); sys.exit(not result.wasSuccessful())"
+uv run python tests/run_test_suite.py unit -b --durations 30
+uv run python tests/run_test_suite.py repository-contract -b --durations 30
 ```
 
-The command excludes the IDA MCP adapter and smoke modules (`test_ida_mcp_session`,
-`test_smoke_ida_mcp_2`) because this loop does not modify MCP routing or lifecycle code. Run them
-separately whenever MCP code changes.
+The suite runner audits that every discovered test is assigned exactly once. The `unit` suite covers
+the implementation-level analysis, config, snapshot, and candidate behavior; the
+`repository-contract` suite covers checked-in configuration and dependency-graph invariants. Redis
+and release integration suites are outside this quarantine gate.
 
-- **All tests pass** → the active `configs/<GAMEVER>.yaml` dependency chain is intact; continue to Step 8.
+- **Both suites pass** → the active `configs/<GAMEVER>.yaml` dependency chain is intact; continue to
+  Step 8.
 - **Only**
   `TestConfigSkillDependencyGraph.test_config_module_skills_have_no_expected_input_order_gaps`
   fails → inspect its dependency-gap list. Each entry identifies a consumer whose `expected_input`
@@ -239,18 +242,18 @@ separately whenever MCP code changes.
   Here `server/find-ChildSkill` is the affected child skill. Report the gap, provide viable options
   such as repairing/restoring the producer, changing the consumer dependency when semantically
   correct, or temporarily disabling the child, and ask the user how to proceed. Stop and wait for the
-  answer. If the user selects a repair, implement it and re-run the full unittest suite. Only if the
+  answer. If the user selects a repair, implement it and re-run both unittest suites. Only if the
   user explicitly says it cannot be solved now and asks to temporarily disable that child, append
   its unittest failure, dependency diagnosis, and decision to
   `docs/ida_validation_failure-<GAMEVER>.md`; then comment that child's full block under the named
-  module using the Step 6 rules and re-run the full unittest suite immediately.
+  module using the Step 6 rules and re-run both unittest suites immediately.
 - **Any other unittest failure** → STOP and ask. It is not evidence that another skill should be
   quarantined.
 
 Handle one unique child skill per unittest iteration. A child may be listed once per platform;
 comment its all-platform `{platform}` block only once after explicit approval. Ask again for each
 newly exposed descendant; a previous quarantine decision does not authorize later descendants. Keep
-re-running unittest until the suite passes. Do not return to IDA validation while unittest is red.
+re-running both suites until they pass. Do not return to IDA validation while either suite is red.
 
 ### Step 8 — Resume the validation loop
 
@@ -283,11 +286,11 @@ skipped (their outputs exist), so the next run reaches the next failure quickly.
 
 - `tail -15` is only for the verdict; always parse the **full** `/tmp/ida_validation_output.txt` to
   identify the failing skill and its reason.
-- IDA validation surfaces one actionable skill per iteration (fail-fast). The mandatory unittest
-  loop may surface several dependency descendants; ask about and handle one block per unittest
-  iteration.
-- Never run the next IDA validation iteration until the non-MCP unittest command above passes with
-  zero failures.
+- IDA validation surfaces one actionable skill per iteration (fail-fast). The mandatory `unit` and
+  `repository-contract` loop may surface several dependency descendants; ask about and handle one
+  block per unittest iteration.
+- Never run the next IDA validation iteration until both suite-runner commands above pass with zero
+  failures.
 - On the quarantine path, edit `configs/<GAMEVER>.yaml` by commenting only. Re-enabling a skill once
   it's fixed is a separate manual step — the commented blocks plus
   `docs/ida_validation_failure-<GAMEVER>.md` are the resulting to-do list.

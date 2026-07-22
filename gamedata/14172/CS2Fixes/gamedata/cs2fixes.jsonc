@@ -424,8 +424,8 @@
 		},
 		"CBaseEntity::EndTouch":
 		{
-			"windows": 149,
-			"linux": 148
+			"windows": 150,
+			"linux": 149
 		},
 		"Teleport":
 		{

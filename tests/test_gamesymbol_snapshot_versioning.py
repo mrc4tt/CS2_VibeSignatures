@@ -1,6 +1,5 @@
 import contextlib
 import io
-import subprocess
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -135,20 +134,11 @@ class TestConfigDigestVersioning(unittest.TestCase):
         self.assertEqual(missing_digest, empty_digest)
         self.assertNotEqual(missing_digest, nonempty_digest)
 
-    def test_incident_historical_config_restores_original_v1_digest(self) -> None:
-        raw = subprocess.check_output(
-            [
-                "git",
-                "show",
-                "c9e6ce7ab91d6163988114d9cec16d4d3c24b2d0:configs/14168b.yaml",
-            ]
-        )
-        with TemporaryDirectory() as temp_dir:
-            config = Path(temp_dir) / "14168b.yaml"
-            config.write_bytes(raw)
-            digest = load_contract(config, "14168b", Path(temp_dir) / "bin", 1).config_sha256
+    def test_checked_in_v1_regression_fixture_keeps_digest(self) -> None:
+        config = Path("tests/fixtures/config_digest_v1_regression.yaml")
+        digest = load_contract(config, "fixture", "bin", 1).config_sha256
 
-        self.assertEqual("sha256:c77057be2c4eaf34af820aeab35b151aceac39af516f87fffdf69886680d6dfc", digest)
+        self.assertEqual("sha256:b2b853cf7045d34f20d10641729d7586d7ed840434423d5f10f6c2d6cf737b73", digest)
 
 
 class TestSnapshotSchemaVersioning(unittest.TestCase):

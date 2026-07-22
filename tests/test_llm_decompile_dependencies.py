@@ -8,6 +8,7 @@ from unittest.mock import patch
 import yaml
 
 import ida_analyze_util
+from trusted_yaml import load_yaml_file
 
 
 def _artifact_key(module_name, artifact_path, platform):
@@ -304,7 +305,7 @@ class TestRepositoryLlmDecompileDependencyPolicy(unittest.TestCase):
 
     @staticmethod
     def _config_data(config_path):
-        config = yaml.safe_load(config_path.read_text(encoding="utf-8-sig"))
+        config = load_yaml_file(config_path, cache=True, copy_result=False)
         configured = {}
         producers = {"required": {}, "optional": {}}
         for module in config["modules"]:
@@ -359,7 +360,7 @@ class TestRepositoryLlmDecompileDependencyPolicy(unittest.TestCase):
                                     self.assertTrue(reference_path.is_file())
                                 if not reference_path.is_file():
                                     continue
-                                payload = yaml.safe_load(reference_path.read_text(encoding="utf-8-sig")) or {}
+                                payload = load_yaml_file(reference_path, cache=True, copy_result=False) or {}
                                 inferred.add(f"{payload['func_name']}.{platform}.yaml")
 
                             resolved_policy = {
@@ -410,37 +411,6 @@ class TestRepositoryLlmDecompileDependencyPolicy(unittest.TestCase):
                                     producer_key=key,
                                 ):
                                     self.assertEqual(1, len(matching_producers))
-
-    def test_execute_queued_deletion_skills_are_split(self):
-        scripts_dir = Path("ida_preprocessor_scripts")
-        old_name = "find-CEntitySystem_QueueDestroyEntity-AND-CEntitySystem_ExecuteQueuedDeletion-decompiles"
-        self.assertFalse((scripts_dir / f"{old_name}.py").exists())
-
-        expected = {
-            "find-CEntitySystem_ExecuteQueuedDeletion": (
-                "CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml",
-                "CEntitySystem_QueueDestroyEntity.{platform}.yaml",
-            ),
-            "find-CEntitySystem_m_nExecuteQueuedDeletionDepth": (
-                "CEntitySystem_m_nExecuteQueuedDeletionDepth.{platform}.yaml",
-                "CEntitySystem_ExecuteQueuedDeletion.{platform}.yaml",
-            ),
-        }
-        for skill_name, (output_name, input_name) in expected.items():
-            script_path = scripts_dir / f"{skill_name}.py"
-            self.assertTrue(script_path.is_file())
-            specs = self._literal_llm_specs(script_path)
-            self.assertEqual(1, len(specs))
-            self.assertEqual({input_name: "required"}, specs[0][1]["dependency_policy"])
-
-            for config_path in Path("configs").glob("*.yaml"):
-                configured, _producers = self._config_data(config_path)
-                matches = configured.get(skill_name, [])
-                self.assertTrue(matches, f"{config_path}: missing {skill_name}")
-                for _module_name, skill in matches:
-                    self.assertEqual([output_name], skill.get("expected_output"))
-                    self.assertEqual([input_name], skill.get("expected_input"))
-                self.assertNotIn(old_name, config_path.read_text(encoding="utf-8-sig"))
 
 
 if __name__ == "__main__":

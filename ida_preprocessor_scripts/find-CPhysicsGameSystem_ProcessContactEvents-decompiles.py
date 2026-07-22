@@ -5,9 +5,9 @@ from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
     "IVPhys2World_GetTouchingList",
-    "CBaseEntity_PhysicsDispatchStartTouch",
-    "CBaseEntity_PhysicsNotifyOtherOfEndTouch",
-    "CBaseEntity_PhysicsDispatchTouch",
+    "CBaseEntity_VPhysicsStartTouch",
+    "CBaseEntity_PhysicsTouch",
+    "CBaseEntity_VPhysicsEndTouch",
 ]
 
 LLM_DECOMPILE = [
@@ -23,7 +23,7 @@ LLM_DECOMPILE = [
         },
     },
     {
-        "symbol_name": "CBaseEntity_PhysicsDispatchStartTouch",
+        "symbol_name": "CBaseEntity_VPhysicsStartTouch",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
             "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
@@ -34,7 +34,7 @@ LLM_DECOMPILE = [
         },
     },
     {
-        "symbol_name": "CBaseEntity_PhysicsNotifyOtherOfEndTouch",
+        "symbol_name": "CBaseEntity_PhysicsTouch",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
             "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
@@ -45,7 +45,7 @@ LLM_DECOMPILE = [
         },
     },
     {
-        "symbol_name": "CBaseEntity_PhysicsDispatchTouch",
+        "symbol_name": "CBaseEntity_VPhysicsEndTouch",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
             "references/server/CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml",
@@ -75,7 +75,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
         ],
     ),
     (
-        "CBaseEntity_PhysicsDispatchStartTouch",
+        "CBaseEntity_VPhysicsStartTouch",
         [
             "func_name",
             "func_sig",
@@ -85,7 +85,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
         ],
     ),
     (
-        "CBaseEntity_PhysicsNotifyOtherOfEndTouch",
+        "CBaseEntity_PhysicsTouch",
         [
             "func_name",
             "func_sig",
@@ -95,7 +95,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
         ],
     ),
     (
-        "CBaseEntity_PhysicsDispatchTouch",
+        "CBaseEntity_VPhysicsEndTouch",
         [
             "func_name",
             "func_sig",

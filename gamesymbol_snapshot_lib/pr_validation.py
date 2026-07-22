@@ -1,9 +1,16 @@
-import ast
 from collections import defaultdict, deque
 from pathlib import Path
+from typing import Mapping
 
+from gamesymbol_snapshot_lib.analysis_sources import (
+    AnalysisSourceIndex,
+    PREPROCESSOR_PREFIX,
+    REFERENCE_PREFIX,
+    workspace_python_sources,
+)
 from gamesymbol_snapshot_lib.codec import snapshot_analysis_output_contract_version
-from gamesymbol_snapshot_lib.model import InvalidationPlan
+from gamesymbol_snapshot_lib.errors import SnapshotConfigError
+from gamesymbol_snapshot_lib.model import ChangedPath, InvalidationPlan
 
 BROAD_ANALYSIS_FILES = {
     ".claude/agents/sig-finder.md",
@@ -32,112 +39,181 @@ def _fingerprints_by_logical(contract):
     return {key: sorted(values) for key, values in grouped.items()}
 
 
-def _config_changed_nodes(base_contract, head_contract) -> set[str]:
+def _config_changed_logical_keys(base_contract, head_contract) -> set[tuple[str, str, str]]:
     base_fingerprints = _fingerprints_by_logical(base_contract)
     head_fingerprints = _fingerprints_by_logical(head_contract)
-    changed_keys = {
+    return {
         key
         for key in set(base_fingerprints) | set(head_fingerprints)
         if base_fingerprints.get(key) != head_fingerprints.get(key)
     }
+
+
+def _config_changed_nodes(base_contract, head_contract) -> set[str]:
+    changed_keys = _config_changed_logical_keys(base_contract, head_contract)
     base_groups = _nodes_by_logical(base_contract)
     head_groups = _nodes_by_logical(head_contract)
     return set().union(*(base_groups.get(key, set()) | head_groups.get(key, set()) for key in changed_keys))
 
 
-def _skill_nodes(head_contract):
+def _skill_nodes(contract):
     by_skill = defaultdict(set)
-    for node in head_contract.nodes.values():
+    for node in contract.nodes.values():
         by_skill[node.skill_name].add(node.node_id)
     return by_skill
 
 
-def _python_importers(repo_root: Path) -> dict[str, set[str]]:
-    importers = defaultdict(set)
-    scripts = repo_root / "ida_preprocessor_scripts"
-    for path in scripts.glob("*.py"):
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, SyntaxError):
+def _nodes_for_skills(by_skill: Mapping[str, set[str]], skill_names: set[str]) -> set[str]:
+    if not skill_names:
+        return set()
+    return set().union(*(by_skill.get(name, set()) for name in skill_names))
+
+
+def _normalize_changes(changed_files: list[str | ChangedPath]) -> list[ChangedPath]:
+    changes = []
+    for changed in changed_files:
+        if isinstance(changed, ChangedPath):
+            changes.append(changed)
             continue
-        for node in ast.walk(tree):
-            modules = []
-            if isinstance(node, ast.ImportFrom) and node.module:
-                modules.append(node.module)
-            elif isinstance(node, ast.Import):
-                modules.extend(alias.name for alias in node.names)
-            for module in modules:
-                prefix = "ida_preprocessor_scripts."
-                if module.startswith(prefix):
-                    imported = module.removeprefix(prefix).split(".")[0]
-                    importers[imported].add(path.stem)
-    return importers
+        path = str(changed).replace("\\", "/").removeprefix("./")
+        if path:
+            changes.append(ChangedPath("M", path, path))
+    return changes
 
 
-def _dependent_preprocessors(repo_root: Path, changed_stem: str) -> set[str]:
-    importers = _python_importers(repo_root)
-    visited = {changed_stem}
-    queue = deque([changed_stem])
-    while queue:
-        for importer in importers.get(queue.popleft(), set()):
-            if importer not in visited:
-                visited.add(importer)
-                queue.append(importer)
-    return {stem for stem in visited if stem.startswith("find-")}
+def _base_path(change: ChangedPath) -> str | None:
+    return change.old_path if change.status in {"M", "D", "R"} else None
 
 
-def _reference_consumers(repo_root: Path, changed_path: str) -> set[str]:
-    prefix = "ida_preprocessor_scripts/"
-    relative = changed_path.removeprefix(prefix)
-    templates = {relative}
-    for platform in ("windows", "linux"):
-        templates.add(relative.replace(f".{platform}.yaml", ".{platform}.yaml"))
-    consumers = set()
-    for path in (repo_root / "ida_preprocessor_scripts").glob("find-*.py"):
-        try:
-            source = path.read_text(encoding="utf-8").replace("\\", "/")
-        except (OSError, UnicodeError):
+def _head_path(change: ChangedPath) -> str | None:
+    return change.new_path if change.status in {"A", "M", "R", "C"} else None
+
+
+def _is_reference(path: str | None) -> bool:
+    return bool(path and path.startswith(REFERENCE_PREFIX) and path.endswith(".yaml"))
+
+
+def _is_preprocessor(path: str | None) -> bool:
+    return bool(path and path.startswith(PREPROCESSOR_PREFIX) and path.endswith(".py"))
+
+
+def _format_names(names: set[str]) -> str:
+    return ",".join(sorted(names)) or "none"
+
+
+def _reference_change_nodes(
+    change: ChangedPath,
+    base_index: AnalysisSourceIndex,
+    head_index: AnalysisSourceIndex,
+    base_by_skill,
+    head_by_skill,
+) -> tuple[set[str], list[str]]:
+    base_path = _base_path(change)
+    head_path = _head_path(change)
+    base_reference = base_path if _is_reference(base_path) else None
+    head_reference = head_path if _is_reference(head_path) else None
+    if base_reference is None and head_reference is None:
+        return set(), []
+    base_consumers = base_index.reference_consumers(base_reference) if base_reference else set()
+    head_consumers = head_index.reference_consumers(head_reference) if head_reference else set()
+    if head_reference and not head_consumers:
+        raise SnapshotConfigError(f"error[orphan_active_reference]: {head_reference} has no HEAD consumer")
+    nodes = _nodes_for_skills(base_by_skill, base_consumers)
+    nodes.update(_nodes_for_skills(head_by_skill, head_consumers))
+    reasons = []
+    if base_reference and head_reference and change.status == "R":
+        reasons.append(f"reference rename: base {base_reference} -> HEAD {head_reference}")
+    elif base_reference and head_reference:
+        reasons.append(f"reference modify: {head_reference}")
+    elif head_reference:
+        action = "copy" if change.status == "C" else "add"
+        reasons.append(f"reference {action}: HEAD {head_reference}")
+    elif base_consumers:
+        reasons.append(f"reference delete: base {base_reference}")
+    else:
+        action = "renamed" if change.status == "R" else "deleted"
+        reasons.append(f"warning: {action} orphan reference had no base consumer: {base_reference}")
+    if base_consumers or head_consumers:
+        reasons.append(
+            f"reference consumers: base={_format_names(base_consumers)}; HEAD={_format_names(head_consumers)}"
+        )
+    return nodes, reasons
+
+
+def _preprocessor_change_nodes(
+    change: ChangedPath,
+    base_index: AnalysisSourceIndex,
+    head_index: AnalysisSourceIndex,
+    base_by_skill,
+    head_by_skill,
+    head_contract,
+) -> tuple[set[str], list[str]]:
+    base_path = _base_path(change)
+    head_path = _head_path(change)
+    base_source = base_path if _is_preprocessor(base_path) else None
+    head_source = head_path if _is_preprocessor(head_path) else None
+    if base_source is None and head_source is None:
+        return set(), []
+    base_skills = base_index.dependent_preprocessors(base_source) if base_source else set()
+    head_skills = head_index.dependent_preprocessors(head_source) if head_source else set()
+    nodes = _nodes_for_skills(base_by_skill, base_skills)
+    nodes.update(_nodes_for_skills(head_by_skill, head_skills))
+    if not base_skills and not head_skills:
+        path_text = f"base={base_source or 'none'}; HEAD={head_source or 'none'}"
+        return set(head_contract.nodes), [f"unmapped analysis source (broad rebuild): {path_text}"]
+    paths = [path for path in (base_source, head_source) if path]
+    reason = f"preprocessor change: {' -> '.join(dict.fromkeys(paths))}"
+    return nodes, [reason]
+
+
+def _agent_skill_change_nodes(change: ChangedPath, base_by_skill, head_by_skill) -> tuple[set[str], list[str]]:
+    nodes = set()
+    paths = []
+    for path, by_skill in ((_base_path(change), base_by_skill), (_head_path(change), head_by_skill)):
+        if not path or not path.startswith(".claude/skills/"):
             continue
-        if any(template in source for template in templates):
-            consumers.add(path.stem)
-    return consumers
+        parts = path.split("/")
+        if len(parts) >= 3 and parts[2] in by_skill:
+            nodes.update(by_skill[parts[2]])
+            paths.append(path)
+    return nodes, [f"Agent skill change: {' -> '.join(dict.fromkeys(paths))}"] if paths else []
 
 
-def _source_changed_nodes(head_contract, changed_files: list[str], repo_root: Path) -> tuple[set[str], list[str]]:
+def _source_changed_nodes(
+    base_contract,
+    head_contract,
+    changes: list[ChangedPath],
+    base_sources: Mapping[str, str],
+    head_sources: Mapping[str, str],
+) -> tuple[set[str], list[str]]:
     nodes = set()
     reasons = []
-    by_skill = _skill_nodes(head_contract)
-    for raw_path in changed_files:
-        path = raw_path.replace("\\", "/")
-        if path == f"configs/{head_contract.game_version}.yaml":
+    base_by_skill = _skill_nodes(base_contract)
+    head_by_skill = _skill_nodes(head_contract)
+    needs_source_index = any(
+        _is_reference(change.old_path)
+        or _is_reference(change.new_path)
+        or _is_preprocessor(change.old_path)
+        or _is_preprocessor(change.new_path)
+        for change in changes
+    )
+    empty_index = AnalysisSourceIndex((), {})
+    base_index = AnalysisSourceIndex.build(base_sources, "base") if needs_source_index else empty_index
+    head_index = AnalysisSourceIndex.build(head_sources, "HEAD") if needs_source_index else empty_index
+    for change in changes:
+        broad_paths = {path for path in (change.old_path, change.new_path) if path in BROAD_ANALYSIS_FILES}
+        if broad_paths:
             nodes.update(head_contract.nodes)
-            reasons.append(f"active analysis config change: {path}")
-        elif path in BROAD_ANALYSIS_FILES:
-            nodes.update(head_contract.nodes)
-            reasons.append(f"core analysis change: {path}")
-        elif path.startswith("ida_preprocessor_scripts/references/") and path.endswith(".yaml"):
-            skill_names = _reference_consumers(repo_root, path)
-            matched = set().union(*(by_skill.get(name, set()) for name in skill_names)) if skill_names else set()
-            if matched:
-                nodes.update(matched)
-                reasons.append(f"reference change: {path}")
-            else:
-                nodes.update(head_contract.nodes)
-                reasons.append(f"unmapped analysis reference (broad rebuild): {path}")
-        elif path.startswith("ida_preprocessor_scripts/") and path.endswith(".py"):
-            skill_names = _dependent_preprocessors(repo_root, Path(path).stem)
-            matched = set().union(*(by_skill.get(name, set()) for name in skill_names)) if skill_names else set()
-            if matched:
-                nodes.update(matched)
-                reasons.append(f"preprocessor change: {path}")
-            else:
-                nodes.update(head_contract.nodes)
-                reasons.append(f"unmapped analysis source (broad rebuild): {path}")
-        elif path.startswith(".claude/skills/"):
-            parts = path.split("/")
-            if len(parts) >= 3 and parts[2] in by_skill:
-                nodes.update(by_skill[parts[2]])
-                reasons.append(f"Agent skill change: {path}")
+            reasons.extend(f"core analysis change: {path}" for path in sorted(broad_paths))
+        reference_nodes, reference_reasons = _reference_change_nodes(
+            change, base_index, head_index, base_by_skill, head_by_skill
+        )
+        preprocessor_nodes, preprocessor_reasons = _preprocessor_change_nodes(
+            change, base_index, head_index, base_by_skill, head_by_skill, head_contract
+        )
+        agent_nodes, agent_reasons = _agent_skill_change_nodes(change, base_by_skill, head_by_skill)
+        nodes.update(reference_nodes | preprocessor_nodes | agent_nodes)
+        reasons.extend(reference_reasons + preprocessor_reasons + agent_reasons)
     return nodes, reasons
 
 
@@ -202,19 +278,31 @@ def build_invalidation_plan(
     head_contract,
     base_snapshot: dict,
     head_snapshot: dict,
-    changed_files: list[str],
+    changed_files: list[str | ChangedPath],
     repo_root,
+    *,
+    base_sources: Mapping[str, str] | None = None,
+    head_sources: Mapping[str, str] | None = None,
 ) -> InvalidationPlan:
     repo_root = Path(repo_root)
+    changes = _normalize_changes(changed_files)
+    if base_sources is None or head_sources is None:
+        workspace_sources = workspace_python_sources(repo_root)
+        base_sources = workspace_sources if base_sources is None else base_sources
+        head_sources = workspace_sources if head_sources is None else head_sources
     delta_paths = _snapshot_delta(base_snapshot, head_snapshot)
     seed_nodes = _owners_for_paths(base_contract, delta_paths)
     seed_nodes.update(_owners_for_paths(head_contract, delta_paths))
+    config_keys = _config_changed_logical_keys(base_contract, head_contract)
     config_nodes = _config_changed_nodes(base_contract, head_contract)
     seed_nodes.update(config_nodes)
     base_output_contract_version = snapshot_analysis_output_contract_version(base_snapshot)
-    if base_output_contract_version != head_contract.analysis_output_contract_version:
+    contract_version_changed = base_output_contract_version != head_contract.analysis_output_contract_version
+    if contract_version_changed:
         seed_nodes.update(head_contract.nodes)
-    source_nodes, source_reasons = _source_changed_nodes(head_contract, changed_files, repo_root)
+    source_nodes, source_reasons = _source_changed_nodes(
+        base_contract, head_contract, changes, base_sources, head_sources
+    )
     seed_nodes.update(source_nodes)
     head_seeds = _head_seed_nodes(base_contract, head_contract, seed_nodes)
     closed_head_nodes = _closure(_dependency_graph(head_contract), head_seeds)
@@ -222,12 +310,15 @@ def build_invalidation_plan(
     paths.update(_outputs_for_nodes(base_contract, seed_nodes))
     paths.update(_outputs_for_nodes(head_contract, closed_head_nodes | seed_nodes))
     reasons = [f"snapshot delta: {len(delta_paths)} path(s)"] if delta_paths else []
-    if config_nodes:
-        reasons.append(f"config delta: {len(config_nodes)} producer(s)")
-    if base_output_contract_version != head_contract.analysis_output_contract_version:
+    if config_keys:
+        reasons.append(f"config delta: {len(config_keys)} logical producer(s)")
+    if contract_version_changed:
         reasons.append(
             "analysis output contract version: "
             f"{base_output_contract_version} -> {head_contract.analysis_output_contract_version}"
         )
     reasons.extend(source_reasons)
+    closure_count = len(closed_head_nodes - head_seeds)
+    if closure_count:
+        reasons.append(f"dependency closure: {closure_count} additional producer(s)")
     return InvalidationPlan(frozenset(paths), frozenset(seed_nodes | closed_head_nodes), tuple(reasons))

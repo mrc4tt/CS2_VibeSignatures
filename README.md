@@ -42,6 +42,30 @@ uv run python format_repo_files.py --check
 
 The formatter only uses files returned by `git ls-files --cached -- '*.py' '*.yaml'`, so ignored files and untracked scratch files are skipped. YAML files under `ida_preprocessor_scripts/references/` and canonical lockfiles under `gamesymbols/` are also skipped because their own generators control byte-stable formatting.
 
+## Tests
+
+Use the fast isolated suite during local edit-test loops:
+
+```bash
+uv run python tests/run_test_suite.py unit -b --durations 30
+```
+
+The remaining primary suites keep repository-state, Redis, and Git release-transaction coverage explicit:
+
+```bash
+uv run python tests/run_test_suite.py repository-contract -b --durations 30
+uv run python tests/run_test_suite.py redis-integration -b --durations 30
+uv run python tests/run_test_suite.py release-integration -b --durations 30
+```
+
+Run every assigned test and audit that no discovered test is missing or duplicated before completion:
+
+```bash
+uv run python tests/run_test_suite.py all -b --durations 30
+```
+
+During the suite-runner migration, also cross-check legacy discovery with `uv run python -m unittest discover -s tests -b`.
+
 ## Overall workflow
 
 ### 1. Download CS2 depot and copy binaries to workspace

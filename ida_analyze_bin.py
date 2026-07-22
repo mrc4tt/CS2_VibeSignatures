@@ -41,6 +41,7 @@ import logging
 import os
 import re
 import signal
+import posixpath
 import socket
 import subprocess
 import sys
@@ -76,8 +77,8 @@ from ida_skill_preprocessor import (
 from ida_mcp_session import (
     McpConnectionError,
     McpContractError,
-    McpDatabaseNotReadyError,
     McpDatabaseSelectionError,
+    McpDatabaseUnavailableError,
     McpToolCallError,
     check_ida_mcp_supervisor_health,
     normalize_binary_identity_path,
@@ -114,6 +115,7 @@ from process_reporter import (
     is_valid_task_transition,
 )
 from process_reporter_factory import create_process_reporter
+from trusted_yaml import load_yaml, load_yaml_file
 
 load_dotenv()
 
@@ -127,12 +129,25 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 13337
 POST_PROCESS_FUNC_RENAME_BATCH_SIZE = 50
 MCP_STARTUP_TIMEOUT = 1200  # seconds to wait for MCP server
+MCP_SHUTDOWN_TIMEOUT = 10.0
 QEXIT_CONNECTION_RESET_MARKER = "[WinError 10054]"
 OPENED_BINARY_VERIFY_TIMEOUT = 60.0
 OPENED_BINARY_VERIFY_RETRY_INTERVAL = 2.0
-_ARTIFACT_SYMBOL_CATEGORY_CACHE = {}
 _BINARY_HASH_CACHE = {}
 _PE_STYLE_BASE_ADDRESS = 0x180000000
+
+
+class McpRecoveryBudget:
+    """Limit lifecycle-owner MCP restarts for one binary processing run."""
+
+    def __init__(self, restart_limit=1):
+        self.remaining_restarts = max(0, int(restart_limit))
+
+    def consume_restart(self):
+        if self.remaining_restarts <= 0:
+            return False
+        self.remaining_restarts -= 1
+        return True
 
 
 class AnalysisReporting:
@@ -278,21 +293,8 @@ def _resolve_config_path(config_path):
     return Path(config_path).expanduser().resolve()
 
 
-def _load_artifact_symbol_category_map(config_path):
-    resolved_config_path = _resolve_config_path(config_path)
-    cache_key = os.fspath(resolved_config_path)
-    cached = _ARTIFACT_SYMBOL_CATEGORY_CACHE.get(cache_key)
-    if cached is not None:
-        return cached
-
+def _artifact_symbol_category_map_from_document(config_data):
     category_map = {}
-    try:
-        with open(resolved_config_path, "r", encoding="utf-8") as handle:
-            config_data = yaml.safe_load(handle) or {}
-    except Exception:
-        _ARTIFACT_SYMBOL_CATEGORY_CACHE[cache_key] = category_map
-        return category_map
-
     for module_entry in config_data.get("modules", []):
         if not isinstance(module_entry, dict):
             continue
@@ -303,18 +305,10 @@ def _load_artifact_symbol_category_map(config_path):
             category = str(symbol_entry.get("category", "")).strip()
             if symbol_name and category and symbol_name not in category_map:
                 category_map[symbol_name] = category
-
-    _ARTIFACT_SYMBOL_CATEGORY_CACHE[cache_key] = category_map
     return category_map
 
 
-def _load_symbol_alias_map(config_path):
-    resolved_config_path = _resolve_config_path(config_path)
-    try:
-        with resolved_config_path.open("r", encoding="utf-8") as handle:
-            config_data = yaml.safe_load(handle) or {}
-    except Exception:
-        return {}
+def _symbol_alias_map_from_document(config_data):
     aliases = {}
     for module_entry in config_data.get("modules", []):
         if not isinstance(module_entry, dict):
@@ -329,6 +323,24 @@ def _load_symbol_alias_map(config_path):
             raw_aliases = values if isinstance(values, (list, tuple)) else [values]
             aliases[symbol_name] = tuple(alias for value in raw_aliases if (alias := str(value or "").strip()))
     return aliases
+
+
+def _load_config_document(config_path):
+    return load_yaml_file(_resolve_config_path(config_path), cache=True, copy_result=False) or {}
+
+
+def _load_artifact_symbol_category_map(config_path):
+    try:
+        return _artifact_symbol_category_map_from_document(_load_config_document(config_path))
+    except Exception:
+        return {}
+
+
+def _load_symbol_alias_map(config_path):
+    try:
+        return _symbol_alias_map_from_document(_load_config_document(config_path))
+    except Exception:
+        return {}
 
 
 def _derive_artifact_symbol_name(artifact_path, platform):
@@ -466,7 +478,7 @@ async def validate_expected_input_artifacts_via_session(
 
         try:
             with open(artifact_path, "r", encoding="utf-8") as handle:
-                artifact_payload = yaml.safe_load(handle)
+                artifact_payload = load_yaml(handle)
         except Exception as exc:
             invalid_artifacts.append(f"{artifact_path}: failed to read YAML ({exc})")
             continue
@@ -761,11 +773,9 @@ def verify_opened_binary_via_mcp(
     port=DEFAULT_PORT,
     debug=False,
     verify_timeout=OPENED_BINARY_VERIFY_TIMEOUT,
-    worker_ready_timeout=MCP_STARTUP_TIMEOUT,
     retry_interval=OPENED_BINARY_VERIFY_RETRY_INTERVAL,
 ):
-    worker_ready_deadline = time.monotonic() + max(0.0, worker_ready_timeout)
-    metadata_deadline = None
+    deadline = time.monotonic() + max(0.0, verify_timeout)
     while True:
         try:
             survey = asyncio.run(
@@ -776,16 +786,8 @@ def verify_opened_binary_via_mcp(
                     expected_binary=binary_path,
                 )
             )
-        except McpDatabaseNotReadyError as exc:
-            if time.monotonic() >= worker_ready_deadline:
-                print("  Failed: opened binary verification failed")
-                print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
-                print(f"    Reason: timed out waiting for the IDA worker to become active: {exc}")
-                return False
-            if debug:
-                print("  Matching IDA database is still starting; retrying verification...")
-            time.sleep(max(0.0, retry_interval))
-            continue
+        except McpDatabaseUnavailableError:
+            raise
         except (McpConnectionError, McpContractError, McpDatabaseSelectionError, McpToolCallError) as exc:
             print("  Failed: opened binary verification failed")
             print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
@@ -798,11 +800,7 @@ def verify_opened_binary_via_mcp(
             ["survey_binary returned no metadata"],
             ["path mismatch: opened metadata path is missing"],
         )
-        if not retryable:
-            break
-        if metadata_deadline is None:
-            metadata_deadline = time.monotonic() + max(0.0, verify_timeout)
-        if time.monotonic() >= metadata_deadline:
+        if not retryable or time.monotonic() >= deadline:
             break
         if debug:
             print("  Opened binary metadata is not ready; retrying verification...")
@@ -980,7 +978,15 @@ async def preprocess_single_vcall_object_via_mcp(
         )
 
 
-def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
+def ensure_mcp_available(
+    process,
+    binary_path,
+    host,
+    port,
+    ida_args,
+    debug,
+    recovery_budget=None,
+):
     """
     Ensure idalib-mcp is running and responsive. Restart if necessary.
 
@@ -999,6 +1005,8 @@ def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
         Tuple of (new_process, ok) where new_process may be the same object
         if no restart was needed, and ok indicates whether MCP is available.
     """
+    restart_authorized = False
+
     # Step 1: check if the process has already exited
     if process is not None and process.poll() is not None:
         if debug:
@@ -1010,16 +1018,78 @@ def ensure_mcp_available(process, binary_path, host, port, ida_args, debug):
         healthy = asyncio.run(check_mcp_worker_health(host, port, binary_path))
         if healthy:
             return process, True
-        print("  MCP health check failed, restarting idalib-mcp...")
+        print("  MCP health check failed")
+        if recovery_budget is not None:
+            restart_authorized = recovery_budget.consume_restart()
+            if not restart_authorized:
+                print("  MCP recovery restart already used; not restarting idalib-mcp again")
+                return process, False
         quit_ida_gracefully(process, host, port, expected_binary=binary_path, debug=debug)
         process = None
 
     # Step 3: restart idalib-mcp
+    if recovery_budget is not None and not restart_authorized:
+        if not recovery_budget.consume_restart():
+            print("  MCP recovery restart already used; not restarting idalib-mcp again")
+            return process, False
+    if is_port_in_use(host, port):
+        if debug:
+            print(f"  Waiting for MCP port {host}:{port} to be released before restart...")
+        if not wait_for_port_release(host, port):
+            print(f"  Failed: MCP port {host}:{port} remained in use; recovery restart aborted")
+            return None, False
     print("  Restarting idalib-mcp...")
     new_process = start_idalib_mcp(binary_path, host, port, ida_args, debug)
     if new_process is None:
         return None, False
     return new_process, True
+
+
+def verify_owned_mcp_with_single_recovery(
+    process,
+    binary_path,
+    platform,
+    host,
+    port,
+    ida_args,
+    debug,
+    recovery_budget=None,
+):
+    """Verify the opened binary and recover an unavailable owned worker once."""
+    try:
+        return process, verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug)
+    except McpDatabaseUnavailableError as exc:
+        print("  Opened binary verification found an unavailable MCP worker; checking recovery...")
+        print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
+        print(f"    Reason: {exc}")
+
+    original_process = process
+    process, mcp_ok = ensure_mcp_available(
+        process,
+        binary_path,
+        host,
+        port,
+        ida_args,
+        debug,
+        recovery_budget=recovery_budget,
+    )
+    if not mcp_ok:
+        print("  Failed: unable to recover the unavailable MCP worker")
+        return process, False
+
+    if process is original_process and debug:
+        print("  MCP worker recovered without a restart; re-verifying opened binary...")
+    elif process is not original_process:
+        print("  Re-verifying opened binary after the single MCP recovery restart...")
+
+    try:
+        verified = verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug)
+    except McpDatabaseUnavailableError as exc:
+        print("  Failed: MCP worker remained unavailable after recovery")
+        print(f"    Expected: {_absolute_path_preserve_spelling(binary_path)}")
+        print(f"    Reason: {exc}")
+        verified = False
+    return process, verified
 
 
 async def quit_ida_via_mcp(host, port, *, expected_binary, auto_started):
@@ -1067,6 +1137,14 @@ async def quit_ida_gracefully_async(process, host, port, *, expected_binary, deb
         pass
 
     await asyncio.to_thread(stop_idalib_mcp_process, process, debug=debug)
+    released = await asyncio.to_thread(
+        wait_for_port_release,
+        host,
+        port,
+        MCP_SHUTDOWN_TIMEOUT,
+    )
+    if debug and not released:
+        print(f"  MCP port {host}:{port} remained in use after shutdown")
 
 
 def quit_ida_gracefully(process, host, port, *, expected_binary, debug=False):
@@ -1202,7 +1280,7 @@ def _is_major_update_gamever(gamever, download_path=DEFAULT_DOWNLOAD_FILE):
 
     try:
         with open(path, "r", encoding="utf-8") as handle:
-            data = yaml.safe_load(handle) or {}
+            data = load_yaml(handle) or {}
     except Exception:
         return False
 
@@ -1593,19 +1671,61 @@ def _parse_module_vcall_finder(module, module_name):
     return objects
 
 
-def parse_config(config_path):
-    """
-    Parse an analysis config and extract module information.
+def _config_artifact_key(module_name, artifact_path):
+    normalized_artifact = artifact_path.replace("\\", "/")
+    return posixpath.normpath(posixpath.join("_artifacts", module_name, normalized_artifact))
 
-    Args:
-        config_path: Path to the selected analysis config
 
-    Returns:
-        List of module dictionaries containing name, paths, and skills
-    """
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f) or {}
+def _config_skill_platform_paths(skill, base_key, platform):
+    paths = list(skill.get(base_key, []) or [])
+    paths.extend(skill.get(f"{base_key}_{platform}", []) or [])
+    return [path.replace("{platform}", platform) for path in paths]
 
+
+def find_module_skill_dependency_gaps(modules, platform):
+    """Return config inputs that are unavailable when their consumer would run."""
+    available_artifacts = set()
+    gaps = []
+    for module_index, module in enumerate(modules):
+        module_name = module["name"]
+        skills = module.get("skills") or []
+        skill_map = {skill["name"]: skill for skill in skills}
+        for skill_name in topological_sort_skills(skills, platform=platform):
+            skill = skill_map[skill_name]
+            skill_platform = skill.get("platform")
+            if skill_platform and skill_platform != platform:
+                continue
+            missing = [
+                key
+                for key in (
+                    _config_artifact_key(module_name, path)
+                    for path in _config_skill_platform_paths(skill, "expected_input", platform)
+                )
+                if key not in available_artifacts
+            ]
+            if missing:
+                gaps.append(
+                    f"{platform} module[{module_index}] {module_name}/{skill_name} missing: {', '.join(missing)}"
+                )
+            for output in _config_skill_platform_paths(skill, "expected_output", platform):
+                available_artifacts.add(_config_artifact_key(module_name, output))
+    return gaps
+
+
+def validate_module_skill_dependencies(modules):
+    """Reject analysis modules whose required inputs are unavailable at execution time."""
+    dependency_gaps = []
+    for platform in ("windows", "linux"):
+        dependency_gaps.extend(find_module_skill_dependency_gaps(modules, platform))
+    if dependency_gaps:
+        raise ValueError("analysis config dependency gaps:\n" + "\n".join(dependency_gaps))
+
+
+def parse_config_document(config):
+    """Transform an already loaded analysis config into executable modules."""
+    config = config or {}
+    if not isinstance(config, dict):
+        raise TypeError("analysis config top level must be a mapping")
     modules = []
     for stage_index, module in enumerate(config.get("modules", [])):
         name = module.get("name")
@@ -1633,6 +1753,12 @@ def parse_config(config_path):
         )
 
     return modules
+
+
+def parse_config(config_path, config_document=None):
+    """Parse an analysis config and extract module information."""
+    config = _load_config_document(config_path) if config_document is None else config_document
+    return parse_config_document(config)
 
 
 def resolve_module_vcall_targets(module, selector):
@@ -2280,7 +2406,7 @@ def _load_post_process_yaml_mapping(path, debug=False):
     """Load one post_process YAML file and return a mapping payload or None."""
     try:
         with open(path, "r", encoding="utf-8") as handle:
-            payload = yaml.safe_load(handle)
+            payload = load_yaml(handle)
     except Exception as exc:
         if debug:
             print(f"  Post-process: skipping unreadable YAML {path}: {exc}")
@@ -2721,6 +2847,16 @@ def is_port_in_use(host, port):
         return False
 
 
+def wait_for_port_release(host, port, timeout=MCP_SHUTDOWN_TIMEOUT, retry_interval=0.1):
+    """Wait for a stopped local supervisor to release its listening port."""
+    deadline = time.monotonic() + max(0.0, timeout)
+    while is_port_in_use(host, port):
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(max(0.0, retry_interval))
+    return True
+
+
 def start_idalib_mcp(
     binary_path,
     host=DEFAULT_HOST,
@@ -3070,8 +3206,19 @@ def process_binary(
     if reporting is not None and job_id is not None:
         reporting.emit_task_status(job_id, TaskStatus.RUNNING, ProcessPhase.VALIDATING_BINARY)
     force_local_process_stop = False
+    recovery_budget = McpRecoveryBudget()
     try:
-        if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+        process, verified = verify_owned_mcp_with_single_recovery(
+            process,
+            binary_path,
+            platform,
+            host,
+            port,
+            ida_args,
+            debug,
+            recovery_budget=recovery_budget,
+        )
+        if not verified:
             pending_count = _pending_binary_work_count(
                 skills_to_process=skills_to_process,
                 vcall_targets=vcall_targets,
@@ -3150,11 +3297,24 @@ def process_binary(
             _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.WAITING_FOR_MCP)
 
             # Ensure MCP connection is alive before running the skill
-            process, mcp_ok = ensure_mcp_available(process, binary_path, host, port, ida_args, debug)
+            process, mcp_ok = ensure_mcp_available(
+                process,
+                binary_path,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
             if not mcp_ok:
-                remaining = len(skills_to_process) - skill_index
+                remaining = _pending_binary_work_count(
+                    skills_to_process=skills_to_process,
+                    skill_index=skill_index,
+                    vcall_targets=vcall_targets,
+                    post_process_yaml_items=startup_post_process_yaml_items,
+                )
                 fail_count += remaining
-                print(f"  Failed to restore MCP connection, aborting remaining {remaining} skill(s)")
+                print(f"  Failed to restore MCP connection, aborting remaining {remaining} work item(s)")
                 _abort_binary_reporting(
                     reporting,
                     job_id,
@@ -3163,7 +3323,17 @@ def process_binary(
                 )
                 abort_binary_processing = True
                 break
-            if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+            process, verified = verify_owned_mcp_with_single_recovery(
+                process,
+                binary_path,
+                platform,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
+            if not verified:
                 remaining = _pending_binary_work_count(
                     skills_to_process=skills_to_process,
                     skill_index=skill_index,
@@ -3311,7 +3481,17 @@ def process_binary(
                     payload={"invalid_optional_inputs": invalid_optional_inputs},
                 )
                 continue
-            if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+            process, verified = verify_owned_mcp_with_single_recovery(
+                process,
+                binary_path,
+                platform,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
+            if not verified:
                 remaining = _pending_binary_work_count(
                     skills_to_process=skills_to_process,
                     skill_index=skill_index,
@@ -3475,7 +3655,17 @@ def process_binary(
                 )
                 continue
 
-            if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+            process, verified = verify_owned_mcp_with_single_recovery(
+                process,
+                binary_path,
+                platform,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
+            if not verified:
                 remaining = _pending_binary_work_count(
                     skills_to_process=skills_to_process,
                     skill_index=skill_index,
@@ -3554,7 +3744,15 @@ def process_binary(
                 TaskStatus.RUNNING,
                 ProcessPhase.WAITING_FOR_MCP,
             )
-            process, mcp_ok = ensure_mcp_available(process, binary_path, host, port, ida_args, debug)
+            process, mcp_ok = ensure_mcp_available(
+                process,
+                binary_path,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
             if not mcp_ok:
                 remaining = len(vcall_targets) - object_index
                 fail_count += remaining
@@ -3567,7 +3765,17 @@ def process_binary(
                     "MCP connection could not be restored",
                 )
                 break
-            if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+            process, verified = verify_owned_mcp_with_single_recovery(
+                process,
+                binary_path,
+                platform,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
+            if not verified:
                 remaining = _pending_binary_work_count(
                     vcall_targets=vcall_targets,
                     vcall_index=object_index,
@@ -3712,7 +3920,15 @@ def process_binary(
                 TaskStatus.RUNNING,
                 ProcessPhase.POSTPROCESSING,
             )
-            process, mcp_ok = ensure_mcp_available(process, binary_path, host, port, ida_args, debug)
+            process, mcp_ok = ensure_mcp_available(
+                process,
+                binary_path,
+                host,
+                port,
+                ida_args,
+                debug,
+                recovery_budget=recovery_budget,
+            )
             if not mcp_ok:
                 fail_count += 1
                 print("  Failed to restore MCP connection, skipping post_process")
@@ -3724,7 +3940,17 @@ def process_binary(
                     reason=ProcessReason.MCP_UNAVAILABLE,
                 )
             else:
-                if not verify_opened_binary_via_mcp(binary_path, platform, host, port, debug=debug):
+                process, verified = verify_owned_mcp_with_single_recovery(
+                    process,
+                    binary_path,
+                    platform,
+                    host,
+                    port,
+                    ida_args,
+                    debug,
+                    recovery_budget=recovery_budget,
+                )
+                if not verified:
                     fail_count += 1
                     force_local_process_stop = True
                     print("  Aborting current binary after opened binary verification failure (1 pending work item(s))")
@@ -3779,6 +4005,9 @@ def process_binary(
         if force_local_process_stop:
             print("  Stopping current idalib-mcp after opened binary verification failure")
             stop_idalib_mcp_process(process, debug=debug)
+            released = wait_for_port_release(host, port)
+            if debug and not released:
+                print(f"  MCP port {host}:{port} remained in use after shutdown")
         else:
             quit_ida_gracefully(process, host, port, expected_binary=binary_path, debug=debug)
 
@@ -3996,12 +4225,14 @@ def main():
     except AnalysisConfigError as exc:
         print(f"Error: {exc}")
         sys.exit(1)
-    args.artifact_category_map = _load_artifact_symbol_category_map(args.configyaml)
-    args.symbol_aliases = _load_symbol_alias_map(args.configyaml)
+    config_document = _load_config_document(args.configyaml)
+    args.artifact_category_map = _artifact_symbol_category_map_from_document(config_document)
+    args.symbol_aliases = _symbol_alias_map_from_document(config_document)
     _print_main_configuration(args)
 
     print("\nParsing config...")
-    modules = parse_config(args.configyaml)
+    modules = parse_config(args.configyaml, config_document=config_document)
+    validate_module_skill_dependencies(modules)
     print(f"Found {len(modules)} modules")
     if not modules:
         print("No modules found in config.")

@@ -261,6 +261,10 @@ class _CodexHandler(BaseHTTPRequestHandler):
         return
 
 
+def _serve_http(server: HTTPServer) -> None:
+    server.serve_forever(poll_interval=0.01)
+
+
 class TestCallLlmTextCodexHttp(unittest.TestCase):
     def setUp(self) -> None:
         _CodexHandler.content_type = "text/event-stream"
@@ -275,7 +279,7 @@ class TestCallLlmTextCodexHttp(unittest.TestCase):
         _CodexHandler.json_bodies = []
 
         self._server = HTTPServer(("127.0.0.1", 0), _CodexHandler)
-        self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
+        self._thread = threading.Thread(target=_serve_http, args=(self._server,), daemon=True)
         self._thread.start()
         self._base_url = f"http://127.0.0.1:{self._server.server_port}/v1"
 

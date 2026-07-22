@@ -727,6 +727,9 @@ modules:
           - CNetworkGameServerBase_BroadcastPrintf.{platform}.yaml
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_WriteDeltaEntities
+        expected_output:
+          - CNetworkGameServerBase_WriteDeltaEntities.{platform}.yaml
       - name: find-CNetworkGameServerBase_ReserveServerForQueuedGame
         expected_output:
           - CNetworkGameServerBase_ReserveServerForQueuedGame.{platform}.yaml
@@ -781,6 +784,9 @@ modules:
       - name: find-CDemoRecorder_WriteSpawnGroups
         expected_output:
           - CDemoRecorder_WriteSpawnGroups.{platform}.yaml
+      - name: find-CHLTVDemoRecorder_WriteFrameImmediate
+        expected_output:
+          - CHLTVDemoRecorder_WriteFrameImmediate.{platform}.yaml
       - name: find-INetworkMessages_FindNetworkMessageById
         expected_output:
           - INetworkMessages_FindNetworkMessageById.{platform}.yaml
@@ -1607,6 +1613,9 @@ modules:
           - CHLTVClient_ProcessSetConVar.{platform}.yaml
         expected_input:
           - CHLTVClient_vtable.{platform}.yaml
+      - name: find-CHLTVBroadcast_RecordSnapshot
+        expected_output:
+          - CHLTVBroadcast_RecordSnapshot.{platform}.yaml
       - name: find-CServerSideClientBase_vtable
         expected_output:
           - CServerSideClientBase_vtable.{platform}.yaml
@@ -1826,6 +1835,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::BroadcastPrintf
+      - name: CNetworkGameServerBase_WriteDeltaEntities
+        category: func
+        alias:
+          - CNetworkGameServerBase::WriteDeltaEntities
       - name: CNetworkGameServerBase_ReserveServerForQueuedGame
         category: vfunc
         alias:
@@ -1976,6 +1989,10 @@ modules:
         category: func
         alias:
           - CDemoRecorder::WriteSpawnGroups
+      - name: CHLTVDemoRecorder_WriteFrameImmediate
+        category: func
+        alias:
+          - CHLTVDemoRecorder::WriteFrameImmediate
       - name: INetworkMessages_SerializeAbstract
         category: vfunc
         alias:
@@ -2264,6 +2281,14 @@ modules:
         category: vfunc
         alias:
           - CEngineClient::DumpNetStats
+      - name: CEngineClient_SendStringCmd
+        category: vfunc
+        alias:
+          - CEngineClient::SendStringCmd
+      - name: INetworkGameClient_SendStringCmd
+        category: vfunc
+        alias:
+          - INetworkGameClient::SendStringCmd
       - name: CEngineServer_vtable
         category: vtable
       - name: CMapListService_vtable
@@ -2585,6 +2610,10 @@ modules:
         category: vfunc
         alias:
           - CHLTVClient::ProcessSetConVar
+      - name: CHLTVBroadcast_RecordSnapshot
+        category: func
+        alias:
+          - CHLTVBroadcast::RecordSnapshot
       - name: CServerSideClientBase_vtable
         category: vtable
       - name: CDelayedCall2_CServerSideClientBase_UpdateAcknowledgedFramecountCall_vtable
@@ -3206,6 +3235,38 @@ modules:
       - name: find-CGameEntitySystem_vtable
         expected_output:
           - CGameEntitySystem_vtable.{platform}.yaml
+      - name: find-CGameEventManager_vtable
+        expected_output:
+          - CGameEventManager_vtable.{platform}.yaml
+      - name: find-CNetworkGameClient_OnSource1Source1LegacyGameEvent
+        expected_output:
+          - CNetworkGameClient_OnSource1Source1LegacyGameEvent.{platform}.yaml
+      - name: find-CNetworkGameClient_OnSource1Source1LegacyGameEvent-decompiles
+        expected_output:
+          - IGameEventManager2_UnserializeEvent.{platform}.yaml
+          - IGameEventManager2_FireEventClientSide.{platform}.yaml
+        expected_input:
+          - CNetworkGameClient_OnSource1Source1LegacyGameEvent.{platform}.yaml
+      - name: find-CMapAnNodeManager_FireGameEvent
+        expected_output:
+          - CMapAnNodeManager_FireGameEvent.{platform}.yaml
+      - name: find-IVEngineClient2_SendStringCmd
+        expected_output:
+          - IVEngineClient2_SendStringCmd.{platform}.yaml
+        expected_input:
+          - CMapAnNodeManager_FireGameEvent.{platform}.yaml
+      - name: find-CGameEventManager_FireEventClientSide
+        expected_output:
+          - CGameEventManager_FireEventClientSide.{platform}.yaml
+        expected_input:
+          - CGameEventManager_vtable.{platform}.yaml
+          - IGameEventManager2_FireEventClientSide.{platform}.yaml
+      - name: find-CGameEventManager_UnserializeEvent
+        expected_output:
+          - CGameEventManager_UnserializeEvent.{platform}.yaml
+        expected_input:
+          - CGameEventManager_vtable.{platform}.yaml
+          - IGameEventManager2_UnserializeEvent.{platform}.yaml
       - name: find-CSteamworksGameStats_OnReceivedSessionID
         expected_output:
           - CSteamworksGameStats_OnReceivedSessionID.{platform}.yaml
@@ -3790,6 +3851,36 @@ modules:
           - IGameSystem::OnClientPreEntityThink
       - name: CGameEntitySystem_vtable
         category: vtable
+      - name: CGameEventManager_vtable
+        category: vtable
+      - name: CNetworkGameClient_OnSource1Source1LegacyGameEvent
+        category: func
+        alias:
+          - CNetworkGameClient::OnSource1Source1LegacyGameEvent
+      - name: CMapAnNodeManager_FireGameEvent
+        category: func
+        alias:
+          - CMapAnNodeManager::FireGameEvent
+      - name: IVEngineClient2_SendStringCmd
+        category: vfunc
+        alias:
+          - IVEngineClient2::SendStringCmd
+      - name: IGameEventManager2_UnserializeEvent
+        category: vfunc
+        alias:
+          - IGameEventManager2::UnserializeEvent
+      - name: IGameEventManager2_FireEventClientSide
+        category: vfunc
+        alias:
+          - IGameEventManager2::FireEventClientSide
+      - name: CGameEventManager_FireEventClientSide
+        category: vfunc
+        alias:
+          - CGameEventManager::FireEventClientSide
+      - name: CGameEventManager_UnserializeEvent
+        category: vfunc
+        alias:
+          - CGameEventManager::UnserializeEvent
       - name: CSteamworksGameStats_OnReceivedSessionID
         category: func
         alias:
@@ -5300,6 +5391,9 @@ modules:
         expected_input:
           - CCSPlayer_ItemServices_DropActivePlayerWeapon.{platform}.yaml
           - CCSPlayer_WeaponServices_vtable.{platform}.yaml
+      - name: find-CBasePlayerWeapon_Shoot_Secondary
+        expected_output:
+          - CBasePlayerWeapon_Shoot_Secondary.{platform}.yaml
       - name: find-CCSPlayer_WeaponServices_SelectItem
         expected_output:
           - CCSPlayer_WeaponServices_SelectItem.{platform}.yaml
@@ -5585,6 +5679,12 @@ modules:
       - name: find-CCSBot_PrintIfWatched
         expected_output:
           - CCSBot_PrintIfWatched.{platform}.yaml
+      - name: find-CHostage_Follow
+        expected_output:
+          - CHostage_Follow.{platform}.yaml
+      - name: find-CHostage_DropHostage
+        expected_output:
+          - CHostage_DropHostage.{platform}.yaml
       - name: find-HideState_vtable
         expected_output:
           - HideState_vtable.{platform}.yaml
@@ -5828,19 +5928,23 @@ modules:
       - name: find-CPhysicsGameSystem_ProcessContactEvents-decompiles
         expected_output:
           - IVPhys2World_GetTouchingList.{platform}.yaml
-          - CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml
-          - CBaseEntity_PhysicsNotifyOtherOfEndTouch.{platform}.yaml
-          - CBaseEntity_PhysicsDispatchTouch.{platform}.yaml
+          - CBaseEntity_VPhysicsStartTouch.{platform}.yaml
+          - CBaseEntity_PhysicsTouch.{platform}.yaml
+          - CBaseEntity_VPhysicsEndTouch.{platform}.yaml
         expected_input:
           - CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml
-      - name: find-CBaseEntity_PhysicsDispatchStartTouch-AND-CBaseEntity_PhysicsNotifyOtherOfEndTouch-decompiles
+      - name: find-CBaseEntity_VPhysicsStartTouch-decompiles
         expected_output:
           - CBaseEntity_StartTouch.{platform}.yaml
           - CBaseEntity_Touch.{platform}.yaml
+        expected_input:
+          - CBaseEntity_VPhysicsStartTouch.{platform}.yaml
+          - CBaseEntity_vtable.{platform}.yaml
+      - name: find-CBaseEntity_VPhysicsEndTouch-decompiles
+        expected_output:
           - CBaseEntity_EndTouch.{platform}.yaml
         expected_input:
-          - CBaseEntity_PhysicsDispatchStartTouch.{platform}.yaml
-          - CBaseEntity_PhysicsNotifyOtherOfEndTouch.{platform}.yaml
+          - CBaseEntity_VPhysicsEndTouch.{platform}.yaml
           - CBaseEntity_vtable.{platform}.yaml
       - name: find-CTriggerPush_Touch
         expected_output:
@@ -8719,6 +8823,14 @@ modules:
         category: func
         alias:
           - CCSBot::PrintIfWatched
+      - name: CHostage_Follow
+        category: func
+        alias:
+          - CHostage::Follow
+      - name: CHostage_DropHostage
+        category: func
+        alias:
+          - CHostage::DropHostage
       - name: HideState_vtable
         category: vtable
       - name: HideState_OnUpdate
@@ -8787,6 +8899,10 @@ modules:
         category: vfunc
         alias:
           - CCSPlayer_WeaponServices::DropWeapon
+      - name: CBasePlayerWeapon_Shoot_Secondary
+        category: func
+        alias:
+          - CBasePlayerWeapon::Shoot_Secondary
       - name: CCSPlayer_ItemServices_RemoveWeapons
         category: vfunc
         alias:
@@ -8966,18 +9082,18 @@ modules:
         category: func
         alias:
           - CPhysicsGameSystem::ProcessContactEvents
-      - name: CBaseEntity_PhysicsDispatchStartTouch
+      - name: CBaseEntity_VPhysicsStartTouch
         category: func
         alias:
-          - CBaseEntity::PhysicsDispatchStartTouch
-      - name: CBaseEntity_PhysicsNotifyOtherOfEndTouch
+          - CBaseEntity::VPhysicsStartTouch
+      - name: CBaseEntity_PhysicsTouch
         category: func
         alias:
-          - CBaseEntity::PhysicsNotifyOtherOfEndTouch
-      - name: CBaseEntity_PhysicsDispatchTouch
+          - CBaseEntity::PhysicsTouch
+      - name: CBaseEntity_VPhysicsEndTouch
         category: func
         alias:
-          - CBaseEntity::PhysicsDispatchTouch
+          - CBaseEntity::VPhysicsEndTouch
       - name: CBaseEntity_StartTouch
         category: vfunc
         alias:
@@ -9993,6 +10109,17 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-CEngineClient_SendStringCmd
+        expected_output:
+          - CEngineClient_SendStringCmd.{platform}.yaml
+        expected_input:
+          - CEngineClient_vtable.{platform}.yaml
+          - ../client/IVEngineClient2_SendStringCmd.{platform}.yaml
+      - name: find-INetworkGameClient_SendStringCmd
+        expected_output:
+          - INetworkGameClient_SendStringCmd.{platform}.yaml
+        expected_input:
+          - CEngineClient_SendStringCmd.{platform}.yaml
       - name: find-CNetworkClientService_SendNetMessage
         platform: windows
         expected_output:
@@ -10663,3 +10790,29 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - engine  # bin/{gamever}/engine/CNetworkGameServerBase_*.{platform}.yaml
+  - name: IGameEventManager2_MSVC
+    symbol: IGameEventManager2
+    alias_symbols:
+      - CGameEventManager
+    cpp: cpp_tests/igameeventmanager2.cpp
+    headers:
+      - hl2sdk_cs2/public/igameevents.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - client  # bin/{gamever}/client/CGameEventManager_*.{platform}.yaml

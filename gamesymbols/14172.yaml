@@ -1,6 +1,7 @@
+analysis_output_contract_version: 1
 config_digest_version: 2
-config_sha256: sha256:60925b04877f37c301970e51a467a925a6af63016da7edb431c3bf42005e3e8a
-file_count: 2910
+config_sha256: sha256:1383dab63dbfee628c6525778110b02c7b1c5bb2b96bae4f06ebe533294c9cf6
+file_count: 2942
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -385,6 +386,91 @@ files:
     vtable_size: '0xc0'
     vtable_symbol: ??_7CGameEntitySystem@@6B@
     vtable_va: '0x181acece8'
+  client/CGameEventManager_FireEventClientSide.linux.yaml:
+    func_name: CGameEventManager_FireEventClientSide
+    func_rva: '0x169cbf0'
+    func_sig: B9 01 00 00 00 31 D2 E9 B4 FA ?? ??
+    func_size: '0xc'
+    func_va: '0x169cbf0'
+    vfunc_index: 9
+    vfunc_offset: '0x48'
+    vtable_name: CGameEventManager
+  client/CGameEventManager_FireEventClientSide.windows.yaml:
+    func_name: CGameEventManager_FireEventClientSide
+    func_rva: '0x996a80'
+    func_sig: 40 53 41 54 41 56 48 83 EC ?? 4C 8B F2
+    func_size: '0x259'
+    func_va: '0x180996a80'
+    vfunc_index: 8
+    vfunc_offset: '0x40'
+    vtable_name: CGameEventManager
+  client/CGameEventManager_UnserializeEvent.linux.yaml:
+    func_name: CGameEventManager_UnserializeEvent
+    func_rva: '0x1699730'
+    func_sig: 55 48 8D 87 ?? ?? ?? ?? 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4
+    func_size: '0x62b'
+    func_va: '0x1699730'
+    vfunc_index: 13
+    vfunc_offset: '0x68'
+    vtable_name: CGameEventManager
+  client/CGameEventManager_UnserializeEvent.windows.yaml:
+    func_name: CGameEventManager_UnserializeEvent
+    func_rva: '0x9d12f0'
+    func_sig: 48 8B C4 48 89 50 ?? 55 41 54 41 55 41 56
+    func_size: '0x6e4'
+    func_va: '0x1809d12f0'
+    vfunc_index: 12
+    vfunc_offset: '0x60'
+    vtable_name: CGameEventManager
+  client/CGameEventManager_vtable.linux.yaml:
+    vtable_class: CGameEventManager
+    vtable_entries:
+      0: '0x16c4800'
+      1: '0x16c4cb0'
+      10: '0x1699610'
+      11: '0x1683970'
+      12: '0x168a820'
+      13: '0x1699730'
+      14: '0x16cce20'
+      15: '0x16871a0'
+      16: '0x16ccda0'
+      2: '0x16ea6c0'
+      3: '0x16c3fe0'
+      4: '0x16ccf90'
+      5: '0x16cd120'
+      6: '0x1686600'
+      7: '0x16cc3a0'
+      8: '0x169cb30'
+      9: '0x169cbf0'
+    vtable_numvfunc: 17
+    vtable_rva: '0x43aa8d8'
+    vtable_size: '0x88'
+    vtable_symbol: _ZTV17CGameEventManager + 0x10
+    vtable_va: '0x43aa8d8'
+  client/CGameEventManager_vtable.windows.yaml:
+    vtable_class: CGameEventManager
+    vtable_entries:
+      0: '0x18097c0f0'
+      1: '0x1809a9770'
+      10: '0x1809970d0'
+      11: '0x1809c20f0'
+      12: '0x1809d12f0'
+      13: '0x1809aa880'
+      14: '0x1809af1b0'
+      15: '0x1809825e0'
+      2: '0x1809b7f10'
+      3: '0x18097e080'
+      4: '0x180995cc0'
+      5: '0x1809b4c00'
+      6: '0x180988530'
+      7: '0x1809967a0'
+      8: '0x180996a80'
+      9: '0x18098cb20'
+    vtable_numvfunc: 16
+    vtable_rva: '0x1ad1c58'
+    vtable_size: '0x80'
+    vtable_symbol: ??_7CGameEventManager@@6B@
+    vtable_va: '0x181ad1c58'
   client/CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.linux.yaml:
     func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
     func_rva: '0x1675980'
@@ -954,6 +1040,18 @@ files:
     vtable_size: '0x48'
     vtable_symbol: ??_7CLoopModeGame@@6B@
     vtable_va: '0x181ad5460'
+  client/CMapAnNodeManager_FireGameEvent.linux.yaml:
+    func_name: CMapAnNodeManager_FireGameEvent
+    func_rva: '0x1a28420'
+    func_sig: 55 48 89 E5 41 56 41 55 41 54 53 48 83 C4 ??
+    func_size: '0x2d0'
+    func_va: '0x1a28420'
+  client/CMapAnNodeManager_FireGameEvent.windows.yaml:
+    func_name: CMapAnNodeManager_FireGameEvent
+    func_rva: '0xbd1dd0'
+    func_sig: 48 8B C4 48 89 70 ?? 57 48 81 EC ?? ?? ?? ?? 48 83 3D ?? ?? ?? ?? ??
+    func_size: '0x370'
+    func_va: '0x180bd1dd0'
   client/CModelState_SetupJointState.windows.yaml:
     func_name: CModelState_SetupJointState
     func_rva: '0xa59cc0'
@@ -981,6 +1079,18 @@ files:
     offset_sig_disp: 0
     size: 4
     struct_name: CModelState
+  client/CNetworkGameClient_OnSource1Source1LegacyGameEvent.linux.yaml:
+    func_name: CNetworkGameClient_OnSource1Source1LegacyGameEvent
+    func_rva: '0x16da1a0'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 8D 3D ?? ?? ?? ?? 48 89 F3 BE ?? ?? ?? ?? 48 83 EC ?? E8 ?? ?? ?? ?? 48 85 C0 74 ?? 0F B6 00 84 C0 74 ??
+    func_size: '0x2c4'
+    func_va: '0x16da1a0'
+  client/CNetworkGameClient_OnSource1Source1LegacyGameEvent.windows.yaml:
+    func_name: CNetworkGameClient_OnSource1Source1LegacyGameEvent
+    func_rva: '0x9ac4d0'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B FA 48 8B D9 BA ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 85 C0 75 ?? 48 8B 05 ?? ?? ?? ?? 48 8B 40 ?? 48 89 74 24 ??
+    func_size: '0x17b'
+    func_va: '0x1809ac4d0'
   client/CNetworkSerializerBindingBuildFilter_GetFieldPriority.linux.yaml:
     func_name: CNetworkSerializerBindingBuildFilter_GetFieldPriority
     func_rva: '0x2df8170'
@@ -2147,6 +2257,33 @@ files:
     vfunc_offset: '0xe8'
     vfunc_sig: FF 90 E8 00 00 00 48 8B D8 E8 ?? ?? ?? ?? 48 8B 15 ?? ?? ?? ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 4C 8B 44 24 ?? 48 8D 05 ?? ?? ?? ?? 48 89 44 24 ??
     vtable_name: IEngineServiceMgr
+  client/IGameEventManager2_FireEventClientSide.linux.yaml:
+    func_name: IGameEventManager2_FireEventClientSide
+    vfunc_index: 9
+    vfunc_offset: '0x48'
+    vfunc_sig: 48 8B 40 48 48 39 D0 0F 85 ?? ?? ?? ?? 48 83 C4 ??
+    vfunc_sig_allow_across_function_boundary: true
+    vtable_name: IGameEventManager2
+  client/IGameEventManager2_FireEventClientSide.windows.yaml:
+    func_name: IGameEventManager2_FireEventClientSide
+    vfunc_index: 8
+    vfunc_offset: '0x40'
+    vfunc_sig: 48 FF 60 40 CC CC CC CC CC 48 8B C4
+    vfunc_sig_allow_across_function_boundary: true
+    vtable_name: IGameEventManager2
+  client/IGameEventManager2_UnserializeEvent.linux.yaml:
+    func_name: IGameEventManager2_UnserializeEvent
+    vfunc_index: 13
+    vfunc_offset: '0x68'
+    vfunc_sig: FF 50 68 49 89 C4 48 85 C0 0F 84 ?? ?? ?? ?? 83 7B ?? ??
+    vfunc_sig_allow_across_function_boundary: true
+    vtable_name: IGameEventManager2
+  client/IGameEventManager2_UnserializeEvent.windows.yaml:
+    func_name: IGameEventManager2_UnserializeEvent
+    vfunc_index: 12
+    vfunc_offset: '0x60'
+    vfunc_sig: FF 50 60 48 8B F0 48 85 C0
+    vtable_name: IGameEventManager2
   client/IGameSystemFactory_CreateGameSystem.linux.yaml:
     func_name: IGameSystemFactory_CreateGameSystem
     vfunc_index: 3
@@ -2925,6 +3062,18 @@ files:
     func_name: IVEngineClient2_GetNetworkClient
     vfunc_index: 41
     vfunc_offset: '0x148'
+    vtable_name: IVEngineClient2
+  client/IVEngineClient2_SendStringCmd.linux.yaml:
+    func_name: IVEngineClient2_SendStringCmd
+    vfunc_index: 50
+    vfunc_offset: '0x190'
+    vfunc_sig: FF 90 90 01 00 00 48 83 EC ??
+    vtable_name: IVEngineClient2
+  client/IVEngineClient2_SendStringCmd.windows.yaml:
+    func_name: IVEngineClient2_SendStringCmd
+    vfunc_index: 50
+    vfunc_offset: '0x190'
+    vfunc_sig: FF 90 90 01 00 00 48 8B 9C 24 ?? ?? ?? ?? 48 8B AC 24 ?? ?? ?? ??
     vtable_name: IVEngineClient2
   client/RegisterEventListener_Abstract.linux.yaml:
     func_name: RegisterEventListener_Abstract
@@ -4054,6 +4203,24 @@ files:
     vfunc_index: 184
     vfunc_offset: '0x5c0'
     vtable_name: CEngineClient_vtable
+  engine/CEngineClient_SendStringCmd.linux.yaml:
+    func_name: CEngineClient_SendStringCmd
+    func_rva: '0x4e5230'
+    func_sig: 48 8D 05 F1 2A 4F ??
+    func_size: '0x13'
+    func_va: '0x4e5230'
+    vfunc_index: 101
+    vfunc_offset: '0x328'
+    vtable_name: CEngineClient
+  engine/CEngineClient_SendStringCmd.windows.yaml:
+    func_name: CEngineClient_SendStringCmd
+    func_rva: '0x75420'
+    func_sig: 48 8B 0D ?? ?? ?? ?? 48 85 C9 74 ?? 48 8B 01 83 FA ??
+    func_size: '0x24'
+    func_va: '0x180075420'
+    vfunc_index: 50
+    vfunc_offset: '0x190'
+    vtable_name: CEngineClient
   engine/CEngineClient_vtable.linux.yaml:
     vtable_class: CEngineClient
     vtable_entries:
@@ -5776,6 +5943,18 @@ files:
     vtable_size: '0x160'
     vtable_symbol: ??_7CGameResourceService@@6B@
     vtable_va: '0x18056f120'
+  engine/CHLTVBroadcast_RecordSnapshot.linux.yaml:
+    func_name: CHLTVBroadcast_RecordSnapshot
+    func_rva: '0x5ad550'
+    func_sig: 55 66 41 0F 6E C0 48 89 E5 41 57 41 56
+    func_size: '0x490'
+    func_va: '0x5ad550'
+  engine/CHLTVBroadcast_RecordSnapshot.windows.yaml:
+    func_name: CHLTVBroadcast_RecordSnapshot
+    func_rva: '0x11e040'
+    func_sig: 48 8B C4 48 89 58 ?? 48 89 70 ?? 48 89 78 ?? 55 41 54 41 55 41 56 41 57 48 8D 68 ?? 48 81 EC ?? ?? ?? ?? 4D 8B E0
+    func_size: '0x467'
+    func_va: '0x18011e040'
   engine/CHLTVClient_ProcessSetConVar.linux.yaml:
     func_name: CHLTVClient_ProcessSetConVar
     func_rva: '0x59d180'
@@ -5970,6 +6149,18 @@ files:
     vtable_size: '0x278'
     vtable_symbol: ??_7CHLTVClient@@6B@
     vtable_va: '0x180551f00'
+  engine/CHLTVDemoRecorder_WriteFrameImmediate.linux.yaml:
+    func_name: CHLTVDemoRecorder_WriteFrameImmediate
+    func_rva: '0x5a62c0'
+    func_sig: 55 48 8D 05 ?? ?? ?? ?? 48 89 E5 41 57 49 89 FF 41 56 41 55 49 89 D5
+    func_size: '0xa9b'
+    func_va: '0x5a62c0'
+  engine/CHLTVDemoRecorder_WriteFrameImmediate.windows.yaml:
+    func_name: CHLTVDemoRecorder_WriteFrameImmediate
+    func_rva: '0x129190'
+    func_sig: 48 89 5C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ??
+    func_size: '0xa87'
+    func_va: '0x180129190'
   engine/CL_NET_PrintSummary_CommandHandler.linux.yaml:
     func_name: CL_NET_PrintSummary_CommandHandler
     func_rva: '0x4e4e00'
@@ -8685,6 +8876,18 @@ files:
     vfunc_index: 75
     vfunc_offset: '0x258'
     vtable_name: CNetworkGameServerBase_vtable
+  engine/CNetworkGameServerBase_WriteDeltaEntities.linux.yaml:
+    func_name: CNetworkGameServerBase_WriteDeltaEntities
+    func_rva: '0x541d80'
+    func_sig: 55 48 8D 05 ?? ?? ?? ?? 48 89 E5 41 57 4C 8D BD ?? ?? ?? ??
+    func_size: '0x1de5'
+    func_va: '0x541d80'
+  engine/CNetworkGameServerBase_WriteDeltaEntities.windows.yaml:
+    func_name: CNetworkGameServerBase_WriteDeltaEntities
+    func_rva: '0xd21d0'
+    func_sig: 4C 89 44 24 ?? 48 89 54 24 ?? 48 89 4C 24 ?? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 4C 8B AD ?? ?? ?? ??
+    func_size: '0x1144'
+    func_va: '0x1800d21d0'
   engine/CNetworkGameServerBase_vtable.linux.yaml:
     vtable_class: CNetworkGameServerBase
     vtable_entries:
@@ -10491,6 +10694,16 @@ files:
     vfunc_offset: '0x100'
     vfunc_sig: FF 90 00 01 00 00 84 C0 0F 84 ?? ?? ?? ?? 48 8B 1D ?? ?? ?? ??
     vtable_name: INetworkClientService
+  engine/INetworkGameClient_SendStringCmd.linux.yaml:
+    func_name: INetworkGameClient_SendStringCmd
+    vfunc_index: 38
+    vfunc_offset: '0x130'
+    vtable_name: INetworkGameClient
+  engine/INetworkGameClient_SendStringCmd.windows.yaml:
+    func_name: INetworkGameClient_SendStringCmd
+    vfunc_index: 38
+    vfunc_offset: '0x130'
+    vtable_name: INetworkGameClient
   engine/INetworkGameServer_GetMaxClients.linux.yaml:
     func_name: INetworkGameServer_GetMaxClients
     vfunc_index: 12
@@ -13088,15 +13301,17 @@ files:
     func_va: '0x18055c7d0'
   server/CBaseEntity_EndTouch.linux.yaml:
     func_name: CBaseEntity_EndTouch
-    vfunc_index: 148
-    vfunc_offset: '0x4a0'
-    vfunc_sig: FF A0 A0 04 00 00
+    vfunc_index: 149
+    vfunc_offset: '0x4a8'
+    vfunc_sig: FF 90 A8 04 00 00 48 8B 03 4C 89 E6 48 89 DF 5B 41 5C 5D 48 8B 80 ?? ?? ?? ?? FF E0 CC CC CC CC 48 85 F6
+    vfunc_sig_allow_across_function_boundary: true
     vtable_name: CBaseEntity
   server/CBaseEntity_EndTouch.windows.yaml:
     func_name: CBaseEntity_EndTouch
-    vfunc_index: 149
-    vfunc_offset: '0x4a8'
-    vfunc_sig: 48 FF A0 A8 04 00 00
+    vfunc_index: 150
+    vfunc_offset: '0x4b0'
+    vfunc_sig: FF 90 B0 04 00 00 48 8B 07 48 8B D3 48 8B CF 48 8B 5C 24 ??
+    vfunc_sig_allow_across_function_boundary: true
     vtable_name: CBaseEntity
   server/CBaseEntity_FullEdictChanged.linux.yaml:
     func_name: CBaseEntity_FullEdictChanged
@@ -13374,38 +13589,14 @@ files:
     vfunc_offset: '0x400'
     vfunc_sig: FF 90 00 04 00 00 48 63 05 ?? ?? ?? ??
     vtable_name: CBaseEntity
-  server/CBaseEntity_PhysicsDispatchStartTouch.linux.yaml:
-    func_name: CBaseEntity_PhysicsDispatchStartTouch
-    func_rva: '0x19555e0'
-    func_sig: 55 48 89 E5 41 57 41 56 4C 8D 7D ?? 49 89 D6 41 55 49 89 CD
-    func_size: '0xd7'
-    func_va: '0x19555e0'
-  server/CBaseEntity_PhysicsDispatchStartTouch.windows.yaml:
-    func_name: CBaseEntity_PhysicsDispatchStartTouch
-    func_rva: '0xd8fa40'
-    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC ?? 48 8B F1 4C 8B F2 49 8B 49 ??
-    func_size: '0xf6'
-    func_va: '0x180d8fa40'
-  server/CBaseEntity_PhysicsDispatchTouch.linux.yaml:
-    func_name: CBaseEntity_PhysicsDispatchTouch
-    func_rva: '0x19556c0'
-    func_sig: 55 48 89 E5 41 54 49 89 FC 53 48 8B 07 48 89 F3 FF 90 ?? ?? ?? ??
-    func_size: '0x2c'
-    func_va: '0x19556c0'
-  server/CBaseEntity_PhysicsDispatchTouch.windows.yaml:
-    func_name: CBaseEntity_PhysicsDispatchTouch
-    func_rva: '0xd8fa00'
-    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 01 48 8B FA 48 8B D9 FF 90 ?? ?? ?? ?? 48 8B 07
-    func_size: '0x33'
-    func_va: '0x180d8fa00'
-  server/CBaseEntity_PhysicsNotifyOtherOfEndTouch.linux.yaml:
-    func_name: CBaseEntity_PhysicsNotifyOtherOfEndTouch
+  server/CBaseEntity_PhysicsTouch.linux.yaml:
+    func_name: CBaseEntity_PhysicsTouch
     func_rva: '0x19555a0'
     func_sig: 48 85 F6 74 ?? 48 8B 47 ?? F6 40 ?? ?? 75 ?? 48 8B 46 ?? F6 40 ?? ?? 75 ?? 48 8B 07 FF A0 ?? ?? ?? ??
     func_size: '0x29'
     func_va: '0x19555a0'
-  server/CBaseEntity_PhysicsNotifyOtherOfEndTouch.windows.yaml:
-    func_name: CBaseEntity_PhysicsNotifyOtherOfEndTouch
+  server/CBaseEntity_PhysicsTouch.windows.yaml:
+    func_name: CBaseEntity_PhysicsTouch
     func_rva: '0xd83d50'
     func_sig: 48 85 D2 74 ?? 48 8B 41 ?? 44 8B 40 ?? 41 C1 E8 ?? 41 F6 C0 ?? 75 ?? 48 8B 42 ?? 44 8B 40 ??
     func_size: '0x34'
@@ -14398,6 +14589,30 @@ files:
     vfunc_index: 145
     vfunc_offset: '0x488'
     vtable_name: CBaseEntity
+  server/CBaseEntity_VPhysicsEndTouch.linux.yaml:
+    func_name: CBaseEntity_VPhysicsEndTouch
+    func_rva: '0x19556c0'
+    func_sig: 55 48 89 E5 41 54 49 89 FC 53 48 8B 07 48 89 F3 FF 90 ?? ?? ?? ??
+    func_size: '0x2c'
+    func_va: '0x19556c0'
+  server/CBaseEntity_VPhysicsEndTouch.windows.yaml:
+    func_name: CBaseEntity_VPhysicsEndTouch
+    func_rva: '0xd8fa00'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 01 48 8B FA 48 8B D9 FF 90 ?? ?? ?? ?? 48 8B 07
+    func_size: '0x33'
+    func_va: '0x180d8fa00'
+  server/CBaseEntity_VPhysicsStartTouch.linux.yaml:
+    func_name: CBaseEntity_VPhysicsStartTouch
+    func_rva: '0x19555e0'
+    func_sig: 55 48 89 E5 41 57 41 56 4C 8D 7D ?? 49 89 D6 41 55 49 89 CD
+    func_size: '0xd7'
+    func_va: '0x19555e0'
+  server/CBaseEntity_VPhysicsStartTouch.windows.yaml:
+    func_name: CBaseEntity_VPhysicsStartTouch
+    func_rva: '0xd8fa40'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC ?? 48 8B F1 4C 8B F2 49 8B 49 ??
+    func_size: '0xf6'
+    func_va: '0x180d8fa40'
   server/CBaseEntity_ctor.linux.yaml:
     func_name: CBaseEntity_ctor
     func_rva: '0x1802720'
@@ -16911,21 +17126,33 @@ files:
     vtable_size: '0xc68'
     vtable_symbol: ??_7CBasePlayerPawn@@6B@
     vtable_va: '0x1817b0f90'
+  server/CBasePlayerWeapon_Shoot_Secondary.linux.yaml:
+    func_name: CBasePlayerWeapon_Shoot_Secondary
+    func_rva: '0x1440c10'
+    func_sig: 55 48 8D 15 ?? ?? ?? ?? 48 89 E5 41 54 41 89 F4 53 48 8B 07 48 89 FB 48 8B 80 ?? ?? ?? ?? 48 39 D0 0F 85 ?? ?? ?? ??
+    func_size: '0x2ea'
+    func_va: '0x1440c10'
+  server/CBasePlayerWeapon_Shoot_Secondary.windows.yaml:
+    func_name: CBasePlayerWeapon_Shoot_Secondary
+    func_rva: '0x9bbc30'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 01 48 8B F9 0F BF DA
+    func_size: '0x1c7'
+    func_va: '0x1809bbc30'
   server/CBaseTrigger_EndTouch.linux.yaml:
     func_name: CBaseTrigger_EndTouch
-    func_rva: '0xd1dc00'
-    func_size: '0x82'
-    func_va: '0xd1dc00'
-    vfunc_index: 148
-    vfunc_offset: '0x4a0'
+    func_rva: '0xd23d90'
+    func_size: '0x11'
+    func_va: '0xd23d90'
+    vfunc_index: 149
+    vfunc_offset: '0x4a8'
     vtable_name: CBaseTrigger
   server/CBaseTrigger_EndTouch.windows.yaml:
     func_name: CBaseTrigger_EndTouch
-    func_rva: '0x3d4f10'
-    func_size: '0x66'
-    func_va: '0x1803d4f10'
-    vfunc_index: 149
-    vfunc_offset: '0x4a8'
+    func_rva: '0x3b9b60'
+    func_size: '0x238'
+    func_va: '0x1803b9b60'
+    vfunc_index: 150
+    vfunc_offset: '0x4b0'
     vtable_name: CBaseTrigger
   server/CBaseTrigger_PassesTriggerFilters.linux.yaml:
     func_name: CBaseTrigger_PassesTriggerFilters
@@ -27251,6 +27478,30 @@ files:
     vtable_size: '0x50'
     vtable_symbol: ??_7?$CGameSystemReallocatingFactory@VCSource2EntitySystem@@V1@@@6B@
     vtable_va: '0x181795ad8'
+  server/CHostage_DropHostage.linux.yaml:
+    func_name: CHostage_DropHostage
+    func_rva: '0xcbe410'
+    func_sig: 55 48 89 E5 41 57 41 89 D7 41 56 41 55 49 89 F5 41 54 53
+    func_size: '0x68c'
+    func_va: '0xcbe410'
+  server/CHostage_DropHostage.windows.yaml:
+    func_name: CHostage_DropHostage
+    func_rva: '0x343ee0'
+    func_sig: 48 8B C4 55 41 56 48 8D 6C 24 ??
+    func_size: '0x49d'
+    func_va: '0x180343ee0'
+  server/CHostage_Follow.linux.yaml:
+    func_name: CHostage_Follow
+    func_rva: '0x13a7c40'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 89 F3 48 83 EC ?? 48 85 F6
+    func_size: '0x56a'
+    func_va: '0x13a7c40'
+  server/CHostage_Follow.windows.yaml:
+    func_name: CHostage_Follow
+    func_rva: '0x916050'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 81 EC ?? ?? ?? ??
+    func_size: '0x42a'
+    func_va: '0x180916050'
   server/CInferno_InfernoThink.linux.yaml:
     func_name: CInferno_InfernoThink
     func_rva: '0xcab7e0'
@@ -37661,4 +37912,4 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14172'
-schema_version: 2
+schema_version: 3

@@ -6,6 +6,7 @@ import yaml
 from analysis_output_contract import ANALYSIS_OUTPUT_CONTRACT_VERSION
 from gamesymbol_snapshot_lib.errors import SnapshotSchemaError
 from gamesymbol_snapshot_lib.paths import validate_snapshot_key
+from trusted_yaml import load_yaml
 
 LEGACY_SCHEMA_VERSION = 1
 SCHEMA_2_VERSION = 2
@@ -223,7 +224,7 @@ def _validate_metadata(document: object, expected_game_version: str | None) -> d
 
 def parse_snapshot_bytes(data: bytes, expected_game_version: str | None = None) -> dict:
     try:
-        document = yaml.safe_load(data)
+        document = load_yaml(data)
     except yaml.YAMLError as exc:
         raise SnapshotSchemaError(f"unable to parse snapshot YAML: {exc}") from exc
     document = _validate_metadata(document, expected_game_version)

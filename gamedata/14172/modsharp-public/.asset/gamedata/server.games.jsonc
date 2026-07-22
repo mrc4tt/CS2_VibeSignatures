@@ -956,8 +956,8 @@
             "windows": 186
         },
         "CBaseEntity::EndTouch": {
-            "linux": 148,
-            "windows": 149
+            "linux": 149,
+            "windows": 150
         },
         "CBaseEntity::Event_Killed": {
             "linux": 128,

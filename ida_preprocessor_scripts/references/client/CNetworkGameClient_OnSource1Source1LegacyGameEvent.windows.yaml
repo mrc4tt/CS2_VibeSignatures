@@ -1,0 +1,147 @@
+func_name: CNetworkGameClient_OnSource1Source1LegacyGameEvent
+func_va: '0x1809ac4d0'
+disasm_code: |-
+  .text:00000001809AC4D0                 mov     [rsp+arg_8], rbx
+  .text:00000001809AC4D5                 push    rdi
+  .text:00000001809AC4D6                 sub     rsp, 40h
+  .text:00000001809AC4DA                 mov     rdi, rdx
+  .text:00000001809AC4DD                 mov     rbx, rcx
+  .text:00000001809AC4E0                 mov     edx, 0FFFFFFFFh
+  .text:00000001809AC4E5                 lea     rcx, unk_18238C7E0
+  .text:00000001809AC4EC                 call    sub_1818622D0
+  .text:00000001809AC4F1                 test    rax, rax
+  .text:00000001809AC4F4                 jnz     short loc_1809AC501
+  .text:00000001809AC4F6                 mov     rax, cs:qword_18238C7E8
+  .text:00000001809AC4FD                 mov     rax, [rax+8]
+  .text:00000001809AC501                 mov     [rsp+48h+arg_0], rsi
+  .text:00000001809AC506                 cmp     byte ptr [rax], 0
+  .text:00000001809AC509                 jz      loc_1809AC5AA
+  .text:00000001809AC50F                 mov     eax, [rdi+40h]
+  .text:00000001809AC512                 shr     eax, 2
+  .text:00000001809AC515                 test    al, 1
+  .text:00000001809AC517                 jz      loc_1809AC5AA
+  .text:00000001809AC51D                 mov     edx, 0FFFFFFFFh
+  .text:00000001809AC522                 lea     rcx, unk_18238C7F0
+  .text:00000001809AC529                 call    sub_1818622D0
+  .text:00000001809AC52E                 test    rax, rax
+  .text:00000001809AC531                 jnz     short loc_1809AC53E
+  .text:00000001809AC533                 mov     rax, cs:qword_18238C7F8
+  .text:00000001809AC53A                 mov     rax, [rax+8]
+  .text:00000001809AC53E                 mov     rcx, cs:g_pEngineClient
+  .text:00000001809AC545                 mov     esi, [rdi+6Ch]
+  .text:00000001809AC548                 add     esi, [rax]
+  .text:00000001809AC54A                 mov     rax, [rcx]
+  .text:00000001809AC54D                 call    qword ptr [rax+128h]
+  .text:00000001809AC553                 cmp     esi, eax
+  .text:00000001809AC555                 jle     short loc_1809AC5AA
+  .text:00000001809AC557                 mov     r8, rdi
+  .text:00000001809AC55A                 lea     rcx, [rbx+448h]
+  .text:00000001809AC561                 xor     edx, edx
+  .text:00000001809AC563                 call    sub_1809A0A10
+  .text:00000001809AC568                 mov     rcx, cs:g_pEngineClient
+  .text:00000001809AC56F                 mov     ebx, [rbx+448h]
+  .text:00000001809AC575                 mov     rax, [rcx]
+  .text:00000001809AC578                 call    qword ptr [rax+128h]
+  .text:00000001809AC57E                 mov     r8d, esi
+  .text:00000001809AC581                 mov     [rsp+48h+var_28], ebx
+  .text:00000001809AC585                 mov     r9d, eax
+  .text:00000001809AC588                 lea     rdx, aOnsource1sourc; "OnSource1Source1LegacyGameEvent: Early "...
+  .text:00000001809AC58F                 mov     ecx, 2
+  .text:00000001809AC594                 call    cs:DevMsg
+  .text:00000001809AC59A                 mov     rsi, [rsp+48h+arg_0]
+  .text:00000001809AC59F                 mov     rbx, [rsp+48h+arg_8]
+  .text:00000001809AC5A4                 add     rsp, 40h
+  .text:00000001809AC5A8                 pop     rdi
+  .text:00000001809AC5A9                 retn
+  .text:00000001809AC5AA                 mov     rcx, cs:g_pGameEventManager
+  .text:00000001809AC5B1                 mov     rdx, rdi
+  .text:00000001809AC5B4                 mov     rax, [rcx]
+  .text:00000001809AC5B7                 call    qword ptr [rax+60h] ; 60h = IGameEventManager2_UnserializeEvent
+  .text:00000001809AC5BA                 mov     rsi, rax
+  .text:00000001809AC5BD                 test    rax, rax
+  .text:00000001809AC5C0                 jnz     short loc_1809AC5DF
+  .text:00000001809AC5C2                 lea     rcx, aCnetworkgamecl; "CNetworkGameClient::OnSource1Source1Leg"...
+  .text:00000001809AC5C9                 mov     rsi, [rsp+48h+arg_0]
+  .text:00000001809AC5CE                 mov     rbx, [rsp+48h+arg_8]
+  .text:00000001809AC5D3                 add     rsp, 40h
+  .text:00000001809AC5D7                 pop     rdi
+  .text:00000001809AC5D8                 jmp     cs:?DevMsg@@YAXPEBDZZ; DevMsg(char const *,...)
+  .text:00000001809AC5DF                 cmp     dword ptr [rdi+70h], 1
+  .text:00000001809AC5E3                 jnz     short loc_1809AC62B
+  .text:00000001809AC5E5                 mov     rax, [rax]
+  .text:00000001809AC5E8                 lea     rcx, aRealtimePassth+4; "time_passthrough"
+  .text:00000001809AC5EF                 mov     edx, 10h
+  .text:00000001809AC5F4                 mov     r8d, 0CAED6EF2h
+  .text:00000001809AC5FA                 mov     rbx, [rax+0A0h]
+  .text:00000001809AC601                 call    sub_180224E90
+  .text:00000001809AC606                 mov     [rsp+48h+var_18], eax
+  .text:00000001809AC60A                 lea     rdx, [rsp+48h+var_18]
+  .text:00000001809AC60F                 lea     rax, aRealtimePassth; "realtime_passthrough"
+  .text:00000001809AC616                 mov     [rsp+48h+var_14], 0FFFFFFFFh
+  .text:00000001809AC61E                 mov     r8b, 1
+  .text:00000001809AC621                 mov     [rsp+48h+var_10], rax
+  .text:00000001809AC626                 mov     rcx, rsi
+  .text:00000001809AC629                 call    rbx
+  .text:00000001809AC62B                 mov     rcx, cs:g_pGameEventManager
+  .text:00000001809AC632                 mov     rdx, rsi
+  .text:00000001809AC635                 mov     rax, [rcx]
+  .text:00000001809AC638                 mov     rsi, [rsp+48h+arg_0]
+  .text:00000001809AC63D                 mov     rbx, [rsp+48h+arg_8]
+  .text:00000001809AC642                 add     rsp, 40h
+  .text:00000001809AC646                 pop     rdi
+  .text:00000001809AC647                 jmp     qword ptr [rax+40h] ; 40h = IGameEventManager2_FireEventClientSide
+procedure: |-
+  void __fastcall sub_1809AC4D0(__int64 a1, _DWORD *a2)
+  {
+    _BYTE *v4; // rax
+    _DWORD *v5; // rax
+    int v6; // esi
+    int v7; // ebx
+    int v8; // eax
+    __int64 v9; // rax
+    __int64 v10; // rsi
+    void (__fastcall *v11)(__int64, _DWORD *, __int64); // rbx
+    __int64 v12; // r8
+    _DWORD v13[2]; // [rsp+30h] [rbp-18h] BYREF
+    const char *v14; // [rsp+38h] [rbp-10h]
+
+    v4 = (_BYTE *)sub_1818622D0(&unk_18238C7E0, 0xFFFFFFFFLL);
+    if ( !v4 )
+      v4 = *(_BYTE **)(qword_18238C7E8 + 8);
+    if ( !*v4 || (a2[16] & 4) == 0 )
+      goto LABEL_9;
+    v5 = (_DWORD *)sub_1818622D0(&unk_18238C7F0, 0xFFFFFFFFLL);
+    if ( !v5 )
+      v5 = *(_DWORD **)(qword_18238C7F8 + 8);
+    v6 = *v5 + a2[27];
+    if ( v6 > (*(int (__fastcall **)(__int64))(*(_QWORD *)g_pEngineClient + 296LL))(g_pEngineClient) )
+    {
+      sub_1809A0A10(a1 + 1096, 0, a2);
+      v7 = *(_DWORD *)(a1 + 1096);
+      v8 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)g_pEngineClient + 296LL))(g_pEngineClient);
+      DevMsg(2, "OnSource1Source1LegacyGameEvent: Early event sv %d / cl %d. Total in queue %d.\n", v6, v8, v7);
+    }
+    else
+    {
+  LABEL_9:
+      v9 = (*(__int64 (__fastcall **)(__int64, _DWORD *))(*(_QWORD *)g_pGameEventManager + 96LL))(g_pGameEventManager, a2); // 96LL = 0x60 = IGameEventManager2_UnserializeEvent
+      v10 = v9;
+      if ( v9 )
+      {
+        if ( a2[28] == 1 )
+        {
+          v11 = *(void (__fastcall **)(__int64, _DWORD *, __int64))(*(_QWORD *)v9 + 160LL);
+          v13[0] = sub_180224E90("time_passthrough", 16, 3404558066LL);
+          v13[1] = -1;
+          LOBYTE(v12) = 1;
+          v14 = "realtime_passthrough";
+          v11(v10, v13, v12);
+        }
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)g_pGameEventManager + 64LL))(g_pGameEventManager, v10); // 64LL = 0x40 = IGameEventManager2_FireEventClientSide
+      }
+      else
+      {
+        DevMsg("CNetworkGameClient::OnSource1Source1LegacyGameEvent: UnserializeKeyValue failed.\n");
+      }
+    }
+  }

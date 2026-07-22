@@ -1,12 +1,19 @@
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 import yaml
 
 from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotMismatchError, SnapshotSchemaError
-from gamesymbol_snapshot_lib.operations import build_actual_document, pack_snapshot, restore_snapshot, verify_snapshot
+from gamesymbol_snapshot_lib.operations import (
+    build_actual_document,
+    load_snapshot_for_contract,
+    pack_snapshot,
+    restore_snapshot,
+    verify_snapshot,
+)
 from gamesymbol_snapshot_lib.snapshot_cli import main as snapshot_main
 from tests.gamesymbol_snapshot_test_support import module, skill, write_config, write_yaml
 
@@ -110,6 +117,24 @@ class TestPack(unittest.TestCase):
 
 
 class TestRestoreAndVerify(unittest.TestCase):
+    def test_noncanonical_check_can_skip_canonical_serialization(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = SnapshotWorkspace(Path(temp_dir))
+            workspace.write_required()
+            workspace.pack()
+            contract = load_contract(workspace.config, "14168", workspace.bindir)
+
+            with patch("gamesymbol_snapshot_lib.operations.canonical_snapshot_bytes") as canonical_snapshot_bytes:
+                document, raw = load_snapshot_for_contract(
+                    workspace.snapshot,
+                    contract,
+                    require_canonical=False,
+                )
+
+        self.assertEqual("14168", document["game_version"])
+        self.assertTrue(raw)
+        canonical_snapshot_bytes.assert_not_called()
+
     def test_replace_restores_round_trip_and_preserves_non_yaml_files(self) -> None:
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

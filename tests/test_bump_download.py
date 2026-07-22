@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import ANY, call, patch
 
 import bump_download
+from tests.workflow_contract_test_support import load_workflow, step_order, steps_by_id, workflow_job
 
 
 class TestBumpDownload(unittest.TestCase):
@@ -1017,25 +1018,13 @@ class TestBumpDownload(unittest.TestCase):
                 bump_download.load_config(config)
 
     def test_bump_workflow_prunes_local_only_tags_before_bump(self) -> None:
-        workflow = Path(".github/workflows/bump-download.yml").read_text(encoding="utf-8")
-        sync_step = "\n".join(
-            [
-                "      - name: Synchronize git refs",
-                "        shell: pwsh",
-                "        run: |",
-            ]
-        )
+        workflow = load_workflow("bump-download.yml")
+        job = workflow_job(workflow, "bump")
+        steps = steps_by_id(job)
+        order = step_order(job, "checkout", "sync-refs", "configure-git", "preview", "bump")
 
-        self.assertIn(sync_step, workflow)
-        self.assertIn("git fetch origin --prune --prune-tags --tags", workflow)
-        checkout_index = workflow.index("- name: Checkout main")
-        sync_index = workflow.index(sync_step)
-        configure_index = workflow.index("- name: Configure git")
-        bump_index = workflow.index("- name: Bump download config")
-
-        self.assertLess(checkout_index, sync_index)
-        self.assertLess(sync_index, configure_index)
-        self.assertLess(sync_index, bump_index)
+        self.assertEqual(sorted(order), order)
+        self.assertIn("git fetch origin --prune --prune-tags --tags", steps["sync-refs"]["run"])
 
 
 if __name__ == "__main__":
