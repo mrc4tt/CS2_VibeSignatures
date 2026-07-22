@@ -142,7 +142,7 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
     def test_baseline_probe_controls_incremental_or_shared_bootstrap_paths(self) -> None:
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
         step_start = workflow.index("- name: Restore deterministic base and invalidate affected outputs")
-        tests_start = workflow.index("- name: Run Python unit tests")
+        tests_start = workflow.index("- name: Run Python test suites")
         step = workflow[step_start:tests_start]
 
         probe = step.index("gamesymbol_snapshot.py check-contract")
@@ -164,7 +164,7 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
     def test_untrusted_baseline_fallback_is_observable_and_yaml_only(self) -> None:
         workflow = Path(".github/workflows/pr-self-runner.yml").read_text(encoding="utf-8")
         step_start = workflow.index("- name: Restore deterministic base and invalidate affected outputs")
-        tests_start = workflow.index("- name: Run Python unit tests")
+        tests_start = workflow.index("- name: Run Python test suites")
         step = workflow[step_start:tests_start]
 
         self.assertIn("::warning title=Baseline snapshot rejected::reason=$baselineReason", step)

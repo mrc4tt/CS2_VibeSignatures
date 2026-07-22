@@ -160,9 +160,10 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
         self.assertNotIn("startsWith(github.event.pull_request.head.ref, 'gamesymbols/')", self.validation)
 
     def test_full_repository_checks_run_before_analysis(self) -> None:
-        unit_tests = self.workflow.index("python -m unittest discover -s tests -b")
+        unit_tests = self.workflow.index("tests/run_test_suite.py $suite -b --durations 30")
         analysis = self.workflow.index("uv run ida_analyze_bin.py")
         self.assertIn("format_repo_files.py --check", self.workflow)
+        self.assertIn("'unit', 'repository-contract', 'redis-integration', 'release-integration', 'all'", self.workflow)
         self.assertLess(unit_tests, analysis)
 
     def test_promotion_orders_verification_before_publication(self) -> None:
