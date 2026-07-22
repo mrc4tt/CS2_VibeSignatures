@@ -3227,6 +3227,30 @@ modules:
       - name: find-CGameEntitySystem_vtable
         expected_output:
           - CGameEntitySystem_vtable.{platform}.yaml
+      - name: find-CGameEventManager_vtable
+        expected_output:
+          - CGameEventManager_vtable.{platform}.yaml
+      - name: find-CNetworkGameClient_OnSource1Source1LegacyGameEvent
+        expected_output:
+          - CNetworkGameClient_OnSource1Source1LegacyGameEvent.{platform}.yaml
+      - name: find-CNetworkGameClient_OnSource1Source1LegacyGameEvent-decompiles
+        expected_output:
+          - IGameEventManager2_UnserializeEvent.{platform}.yaml
+          - IGameEventManager2_FireEventClientSide.{platform}.yaml
+        expected_input:
+          - CNetworkGameClient_OnSource1Source1LegacyGameEvent.{platform}.yaml
+      - name: find-CGameEventManager_FireEventClientSide
+        expected_output:
+          - CGameEventManager_FireEventClientSide.{platform}.yaml
+        expected_input:
+          - CGameEventManager_vtable.{platform}.yaml
+          - IGameEventManager2_FireEventClientSide.{platform}.yaml
+      - name: find-CGameEventManager_UnserializeEvent
+        expected_output:
+          - CGameEventManager_UnserializeEvent.{platform}.yaml
+        expected_input:
+          - CGameEventManager_vtable.{platform}.yaml
+          - IGameEventManager2_UnserializeEvent.{platform}.yaml
       - name: find-CSteamworksGameStats_OnReceivedSessionID
         expected_output:
           - CSteamworksGameStats_OnReceivedSessionID.{platform}.yaml
@@ -3811,6 +3835,28 @@ modules:
           - IGameSystem::OnClientPreEntityThink
       - name: CGameEntitySystem_vtable
         category: vtable
+      - name: CGameEventManager_vtable
+        category: vtable
+      - name: CNetworkGameClient_OnSource1Source1LegacyGameEvent
+        category: func
+        alias:
+          - CNetworkGameClient::OnSource1Source1LegacyGameEvent
+      - name: IGameEventManager2_UnserializeEvent
+        category: vfunc
+        alias:
+          - IGameEventManager2::UnserializeEvent
+      - name: IGameEventManager2_FireEventClientSide
+        category: vfunc
+        alias:
+          - IGameEventManager2::FireEventClientSide
+      - name: CGameEventManager_FireEventClientSide
+        category: vfunc
+        alias:
+          - CGameEventManager::FireEventClientSide
+      - name: CGameEventManager_UnserializeEvent
+        category: vfunc
+        alias:
+          - CGameEventManager::UnserializeEvent
       - name: CSteamworksGameStats_OnReceivedSessionID
         category: func
         alias:
