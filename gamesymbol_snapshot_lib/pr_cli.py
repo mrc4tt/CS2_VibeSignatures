@@ -1,10 +1,13 @@
 import argparse
+import io
 import subprocess
+import tarfile
 import traceback
 from pathlib import Path
 
 from analysis_config import AnalysisConfigError, resolve_analysis_config
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError, SnapshotMismatchError
+from gamesymbol_snapshot_lib.model import ChangedPath
 from gamesymbol_snapshot_lib.operations import load_snapshot_context
 from gamesymbol_snapshot_lib.paths import ensure_real_tree, path_from_key
 from gamesymbol_snapshot_lib.pr_validation import build_invalidation_plan
@@ -29,16 +32,80 @@ def parse_args(argv=None):
     return parser.parse_args(argv)
 
 
-def _changed_files(base_ref: str, head_ref: str) -> list[str]:
+def _decode_git_field(value: bytes) -> str:
+    try:
+        return value.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise SnapshotConfigError(f"Git returned a non-UTF-8 path: {exc}") from exc
+
+
+def _parse_changed_paths(raw: bytes) -> list[ChangedPath]:
+    fields = raw.split(b"\0")
+    if fields and fields[-1] == b"":
+        fields.pop()
+    changes = []
+    index = 0
+    while index < len(fields):
+        status_token = _decode_git_field(fields[index])
+        index += 1
+        status = status_token[:1]
+        if status not in {"A", "M", "D", "R", "C"}:
+            raise SnapshotConfigError(f"error[unsupported_git_status]: {status_token}")
+        required_paths = 2 if status in {"R", "C"} else 1
+        if index + required_paths > len(fields):
+            raise SnapshotConfigError(f"malformed git diff --name-status record for {status_token}")
+        paths = [_decode_git_field(value) for value in fields[index : index + required_paths]]
+        index += required_paths
+        if status == "A":
+            changes.append(ChangedPath(status, None, paths[0]))
+        elif status == "D":
+            changes.append(ChangedPath(status, paths[0], None))
+        elif status == "M":
+            changes.append(ChangedPath(status, paths[0], paths[0]))
+        else:
+            changes.append(ChangedPath(status, paths[0], paths[1]))
+    return changes
+
+
+def _changed_paths(base_ref: str, head_ref: str, repo_root: Path) -> list[ChangedPath]:
     result = subprocess.run(
-        ["git", "diff", "--name-only", base_ref, head_ref, "--"],
+        ["git", "diff", "--name-status", "-M", "-z", base_ref, head_ref, "--"],
+        cwd=repo_root,
         capture_output=True,
-        text=True,
         check=False,
     )
     if result.returncode != 0:
-        raise SnapshotConfigError(result.stderr.strip() or "git diff --name-only failed")
-    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+        stderr = result.stderr.decode("utf-8", errors="replace").strip()
+        raise SnapshotConfigError(stderr or "git diff --name-status failed")
+    return _parse_changed_paths(result.stdout)
+
+
+def _revision_sources(ref: str, repo_root: Path) -> dict[str, str]:
+    result = subprocess.run(
+        ["git", "archive", "--format=tar", ref, "--", "ida_preprocessor_scripts"],
+        cwd=repo_root,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.decode("utf-8", errors="replace").strip()
+        raise SnapshotConfigError(stderr or f"git archive failed for {ref}")
+    sources = {}
+    try:
+        with tarfile.open(fileobj=io.BytesIO(result.stdout), mode="r:") as archive:
+            for member in sorted(archive.getmembers(), key=lambda item: item.name):
+                if not member.isfile() or not member.name.endswith(".py"):
+                    continue
+                extracted = archive.extractfile(member)
+                if extracted is None:
+                    continue
+                try:
+                    sources[member.name.replace("\\", "/")] = extracted.read().decode("utf-8")
+                except UnicodeDecodeError as exc:
+                    raise SnapshotConfigError(f"non-UTF-8 analysis source at {ref}:{member.name}") from exc
+    except tarfile.TarError as exc:
+        raise SnapshotConfigError(f"unable to read analysis sources from {ref}: {exc}") from exc
+    return sources
 
 
 def _delete_paths(contract, paths: frozenset[str]) -> int:
@@ -53,18 +120,22 @@ def _delete_paths(contract, paths: frozenset[str]) -> int:
 
 
 def _run(args) -> None:
+    repo_root = Path.cwd()
     head_snapshot = args.headsnapshot or f"gamesymbols/{args.gamever}.yaml"
     args.headconfigyaml = str(resolve_analysis_config(args.gamever, args.headconfigyaml))
     print(f"Head analysis config: {args.headconfigyaml}")
     base = load_snapshot_context(args.basesnapshot, args.baseconfigyaml, args.gamever, args.bindir)
     head = load_snapshot_context(head_snapshot, args.headconfigyaml, args.gamever, args.bindir)
+    changes = _changed_paths(args.baseref, args.headref, repo_root)
     plan = build_invalidation_plan(
         base.contract,
         head.contract,
         base.document,
         head.document,
-        _changed_files(args.baseref, args.headref),
-        Path.cwd(),
+        changes,
+        repo_root,
+        base_sources=_revision_sources(args.baseref, repo_root),
+        head_sources=_revision_sources(args.headref, repo_root),
     )
     deleted = _delete_paths(head.contract, plan.paths)
     for reason in plan.reasons:

@@ -49,7 +49,6 @@ V2_SKILL_FIELDS = (
     "prerequisite",
     "skip_if_exists",
 )
-ANALYSIS_SKILL_FIELDS = V2_SKILL_FIELDS
 V2_DOMAIN_SEPARATOR = b"gamesymbol-config-contract:v2\n"
 
 
@@ -159,20 +158,26 @@ def _make_node(module: dict, skill: dict, skill_index: int, platform: str, game_
     required, optional, _combined = ida_analyze_bin.expand_skill_output_paths(str(binary_dir), skill, platform)
     required_keys = frozenset(canonical_key(game_root, path) for path in required if path.endswith(".yaml"))
     optional_keys = frozenset(canonical_key(game_root, path) for path in optional if path.endswith(".yaml"))
-    input_paths = list(skill.get("expected_input", []) or [])
-    input_paths += list(skill.get(f"expected_input_{platform}", []) or [])
-    input_paths += list(skill.get("optional_input", []) or [])
-    input_paths += list(skill.get(f"optional_input_{platform}", []) or [])
-    inputs = _resolved_keys(binary_dir, input_paths, platform, game_root)
+    required_input_paths = list(skill.get("expected_input", []) or [])
+    required_input_paths += list(skill.get(f"expected_input_{platform}", []) or [])
+    optional_input_paths = list(skill.get("optional_input", []) or [])
+    optional_input_paths += list(skill.get(f"optional_input_{platform}", []) or [])
+    required_inputs = _resolved_keys(binary_dir, required_input_paths, platform, game_root)
+    optional_inputs = _resolved_keys(binary_dir, optional_input_paths, platform, game_root)
+    inputs = required_inputs | optional_inputs
     node_id = f"{module['stage_index']}:{skill_index}:{module['name']}:{platform}:{skill['name']}"
     fingerprint_data = {
         "stage_index": module["stage_index"],
         "module_name": module["name"],
-        "path_windows": module.get("path_windows"),
-        "path_linux": module.get("path_linux"),
-        "skill_index": skill_index,
-        "skill": {field: skill.get(field) for field in ANALYSIS_SKILL_FIELDS},
+        "binary_path": module.get(f"path_{platform}"),
+        "skill_name": skill["name"],
         "platform": platform,
+        "required_outputs": sorted(required_keys),
+        "optional_outputs": sorted(optional_keys),
+        "required_inputs": sorted(required_inputs),
+        "optional_inputs": sorted(optional_inputs),
+        "prerequisites": list(skill.get("prerequisite", []) or []),
+        "skip_if_exists": list(skill.get("skip_if_exists", []) or []),
     }
     fingerprint = hashlib.sha256(
         json.dumps(fingerprint_data, sort_keys=True, separators=(",", ":")).encode("utf-8")
