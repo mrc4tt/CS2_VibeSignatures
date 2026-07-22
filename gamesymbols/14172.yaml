@@ -1,7 +1,7 @@
 analysis_output_contract_version: 1
 config_digest_version: 2
-config_sha256: sha256:0ed41bb6134a447b32b6a0fd3fd0d9a346a6cb5248fa2feea9ac7121b4705b06
-file_count: 2940
+config_sha256: sha256:1383dab63dbfee628c6525778110b02c7b1c5bb2b96bae4f06ebe533294c9cf6
+file_count: 2942
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -17126,6 +17126,18 @@ files:
     vtable_size: '0xc68'
     vtable_symbol: ??_7CBasePlayerPawn@@6B@
     vtable_va: '0x1817b0f90'
+  server/CBasePlayerWeapon_Shoot_Secondary.linux.yaml:
+    func_name: CBasePlayerWeapon_Shoot_Secondary
+    func_rva: '0x1440c10'
+    func_sig: 55 48 8D 15 ?? ?? ?? ?? 48 89 E5 41 54 41 89 F4 53 48 8B 07 48 89 FB 48 8B 80 ?? ?? ?? ?? 48 39 D0 0F 85 ?? ?? ?? ??
+    func_size: '0x2ea'
+    func_va: '0x1440c10'
+  server/CBasePlayerWeapon_Shoot_Secondary.windows.yaml:
+    func_name: CBasePlayerWeapon_Shoot_Secondary
+    func_rva: '0x9bbc30'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 01 48 8B F9 0F BF DA
+    func_size: '0x1c7'
+    func_va: '0x1809bbc30'
   server/CBaseTrigger_EndTouch.linux.yaml:
     func_name: CBaseTrigger_EndTouch
     func_rva: '0xd23d90'
