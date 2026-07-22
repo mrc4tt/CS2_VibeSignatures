@@ -1,26 +1,28 @@
 import { ApiOutlined, SettingOutlined } from '@ant-design/icons'
 import { Alert, Button, Card, Space, Typography } from 'antd'
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import { ApiError } from '../api/client'
 import { useApiConfig } from '../app/apiContext'
 
-function connectionHint(error: Error): string {
+function connectionHint(error: Error, t: TFunction): string {
   if (error instanceof ApiError && error.detail.code === 'redis_unavailable') {
-    return 'FastAPI 已启动，但 Redis 尚未就绪。请检查 Redis 地址和服务状态。'
+    return t('connection.redisUnavailable')
   }
-  return '请确认 FastAPI 已启动、Pages Origin 已加入 CORS allowlist，并允许浏览器访问本地网络。'
+  return t('connection.hint')
 }
 
 export function ConnectionGate({ onSettings }: { onSettings(): void }) {
   const { baseUrl, connect, connecting, connectionError } = useApiConfig()
+  const { t } = useTranslation()
   return (
     <div className="connection-wrap">
       <Card className="connection-card">
         <Space orientation="vertical" size="large" className="full-width">
           <div>
-            <Typography.Title level={2}>连接本地进度 API</Typography.Title>
+            <Typography.Title level={2}>{t('connection.title')}</Typography.Title>
             <Typography.Paragraph type="secondary">
-              页面将从当前浏览器连接 <Typography.Text code>{baseUrl}</Typography.Text>，并检查 FastAPI
-              与 Redis readiness。
+              {t('connection.descriptionBefore')}<Typography.Text code>{baseUrl}</Typography.Text>{t('connection.descriptionAfter')}
             </Typography.Paragraph>
           </div>
           {connectionError && (
@@ -28,7 +30,7 @@ export function ConnectionGate({ onSettings }: { onSettings(): void }) {
               type="error"
               showIcon
               message={connectionError.message}
-              description={connectionHint(connectionError)}
+              description={connectionHint(connectionError, t)}
             />
           )}
           <Space>
@@ -39,10 +41,10 @@ export function ConnectionGate({ onSettings }: { onSettings(): void }) {
               loading={connecting}
               onClick={() => void connect().catch(() => undefined)}
             >
-              连接本地 API
+              {t('connection.connect')}
             </Button>
             <Button size="large" icon={<SettingOutlined />} onClick={onSettings}>
-              修改地址
+              {t('connection.changeAddress')}
             </Button>
           </Space>
         </Space>

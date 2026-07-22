@@ -8,6 +8,7 @@ import {
   setApiConnected,
 } from '../api/config'
 import { useRunLiveStore } from '../features/run-detail/liveStore'
+import i18n from '../i18n'
 import { ApiContext } from './apiContext'
 
 export function ApiProvider({ children }: { children: ReactNode }) {
@@ -25,7 +26,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
       setApiConnected(baseUrl, true)
       setConnected(true)
     } catch (error) {
-      setConnectionError(error instanceof Error ? error : new Error('连接失败'))
+      setConnectionError(error instanceof Error ? error : new Error(i18n.t('errors.connectionFailed')))
       setConnected(false)
       throw error
     } finally {

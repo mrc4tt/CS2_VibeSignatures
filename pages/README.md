@@ -22,6 +22,8 @@ uv run uvicorn process_api:app --host 127.0.0.1 --port 8000
 
 `esa.jsonc` publishes `dist/` and uses SPA fallback routing. A public Pages application still calls the localhost of the computer running the browser; the CDN cannot reach a different computer's localhost.
 
+The Vite build validates `../gamesymbols/*.yaml` and emits a version index plus one JSON asset per game version. The `/symbols` route loads these assets on demand and remains available without a Process API connection.
+
 For an exact Pages origin:
 
 ```powershell

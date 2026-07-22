@@ -9,10 +9,10 @@ function buildTimeApiBase(): string | undefined {
 export function normalizeApiBaseUrl(value: string): string {
   const url = new URL(value.trim())
   if (!['http:', 'https:'].includes(url.protocol)) {
-    throw new Error('API 地址只支持 HTTP 或 HTTPS')
+    throw new Error(i18n.t('errors.apiHttpOnly'))
   }
   if (url.username || url.password || url.search || url.hash) {
-    throw new Error('API 地址不能包含账号、密码、查询参数或锚点')
+    throw new Error(i18n.t('errors.apiAddressParts'))
   }
   const pathname = url.pathname.replace(/\/+$/, '')
   return `${url.origin}${pathname}`
@@ -43,3 +43,4 @@ export function setApiConnected(baseUrl: string, connected: boolean): void {
   if (connected) localStorage.setItem(key, 'true')
   else localStorage.removeItem(key)
 }
+import i18n from '../i18n'

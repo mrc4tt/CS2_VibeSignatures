@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
-import { afterAll, afterEach, beforeAll } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest'
 import { server } from './server'
+import i18n from '../i18n'
 
 class ResizeObserverStub {
   disconnect() {}
@@ -31,5 +32,6 @@ const nativeGetComputedStyle = window.getComputedStyle
 window.getComputedStyle = (element: Element) => nativeGetComputedStyle(element)
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+beforeEach(async () => { await i18n.changeLanguage('zh-CN') })
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())

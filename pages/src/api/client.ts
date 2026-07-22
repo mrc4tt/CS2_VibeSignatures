@@ -7,6 +7,7 @@ import type {
   SnapshotResponse,
   TaskDetail,
 } from './types'
+import i18n from '../i18n'
 
 export class ApiError extends Error {
   status: number
@@ -25,10 +26,10 @@ async function readError(response: Response): Promise<ApiErrorDetail> {
     const body = (await response.json()) as { detail?: Partial<ApiErrorDetail> }
     return {
       code: body.detail?.code || `http_${response.status}`,
-      message: body.detail?.message || response.statusText || '请求失败',
+      message: body.detail?.message || response.statusText || i18n.t('errors.requestFailed'),
     }
   } catch {
-    return { code: `http_${response.status}`, message: response.statusText || '请求失败' }
+    return { code: `http_${response.status}`, message: response.statusText || i18n.t('errors.requestFailed') }
   }
 }
 
@@ -39,7 +40,7 @@ export async function requestJson<T>(url: string, signal?: AbortSignal): Promise
   } catch (error) {
     throw new ApiError(0, {
       code: 'network_error',
-      message: error instanceof Error ? error.message : '无法连接 API',
+      message: error instanceof Error ? error.message : i18n.t('errors.cannotConnectApi'),
     })
   }
   if (!response.ok) throw new ApiError(response.status, await readError(response))
