@@ -12,8 +12,10 @@ from pathlib import Path
 
 try:
     import yaml
+    from trusted_yaml import load_yaml_file
 except ImportError:
     yaml = None
+    load_yaml_file = None
 
 try:
     from ida_llm_utils import (
@@ -1341,8 +1343,7 @@ def _prepare_llm_decompile_request(
             return None
 
         try:
-            with open(reference_yaml_path, "r", encoding="utf-8") as handle:
-                reference_data = yaml.safe_load(handle) or {}
+            reference_data = load_yaml_file(reference_yaml_path, cache=True) or {}
         except Exception as exc:
             if debug:
                 print(f"    Preprocess: failed to read llm_decompile reference for {func_name}: {exc}")

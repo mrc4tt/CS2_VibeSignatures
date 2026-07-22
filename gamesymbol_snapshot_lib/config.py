@@ -9,6 +9,7 @@ import ida_analyze_bin
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError
 from gamesymbol_snapshot_lib.model import SkillNode, SnapshotContract
 from gamesymbol_snapshot_lib.paths import canonical_key
+from trusted_yaml import load_yaml_file
 
 PLATFORMS = ("windows", "linux")
 LATEST_CONFIG_DIGEST_VERSION = 2
@@ -54,7 +55,7 @@ V2_DOMAIN_SEPARATOR = b"gamesymbol-config-contract:v2\n"
 
 def _load_raw_config(config_path: Path) -> dict:
     try:
-        raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        raw = load_yaml_file(config_path, cache=True) or {}
     except (OSError, yaml.YAMLError) as exc:
         raise SnapshotConfigError(f"unable to read config {config_path}: {exc}") from exc
     if not isinstance(raw, dict) or not isinstance(raw.get("modules", []), list):
@@ -224,13 +225,12 @@ def _collect_paths(nodes: dict[str, SkillNode]):
 
 
 def _build_contract(
-    config_path, game_version, bindir, config_digest_version: int, config_sha256: str
+    config_document, game_version, bindir, config_digest_version: int, config_sha256: str
 ) -> SnapshotContract:
-    config_path = Path(config_path)
     bindir = Path(bindir)
     game_version = str(game_version)
     try:
-        modules = ida_analyze_bin.parse_config(str(config_path))
+        modules = ida_analyze_bin.parse_config_document(config_document)
         nodes = _collect_nodes(modules, bindir / game_version)
     except (OSError, ValueError, TypeError) as exc:
         raise SnapshotConfigError(f"invalid analysis contract: {exc}") from exc
@@ -258,7 +258,7 @@ def load_contract(
     raw = _load_raw_config(config_path)
     normalized = _normalized_contract(raw, config_digest_version)
     return _build_contract(
-        config_path,
+        raw,
         game_version,
         bindir,
         config_digest_version,
@@ -271,4 +271,4 @@ def load_unversioned_schema1_contract(config_path, game_version, bindir) -> Snap
     config_path = Path(config_path)
     raw = _load_raw_config(config_path)
     normalized = _normalized_contract(raw, 2)
-    return _build_contract(config_path, game_version, bindir, 1, _unversioned_digest(normalized))
+    return _build_contract(raw, game_version, bindir, 1, _unversioned_digest(normalized))

@@ -1007,6 +1007,24 @@ class TestResolveArtifactPathIntegration(unittest.TestCase):
 
 
 class TestParseConfig(unittest.TestCase):
+    def test_parse_config_document_reuses_an_already_loaded_document(self) -> None:
+        document = {
+            "modules": [
+                {
+                    "name": "server",
+                    "path_windows": "server.dll",
+                    "path_linux": "libserver.so",
+                    "skills": [],
+                }
+            ]
+        }
+
+        with patch.object(ida_analyze_bin, "_load_config_document") as load_document:
+            modules = ida_analyze_bin.parse_config("unused.yaml", config_document=document)
+
+        self.assertEqual("server", modules[0]["name"])
+        load_document.assert_not_called()
+
     def test_parse_config_reads_optional_module_and_skill_descriptions(self) -> None:
         with TemporaryDirectory() as temp_dir:
             config_path = Path(temp_dir) / "config.yaml"
@@ -4915,10 +4933,9 @@ class TestProcessBinaryLlmWiring(unittest.TestCase):
 
 class TestMainReporterLifecycle(unittest.TestCase):
     def setUp(self) -> None:
-        for loader_name in ("_load_artifact_symbol_category_map", "_load_symbol_alias_map"):
-            patcher = patch.object(ida_analyze_bin, loader_name, return_value={})
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        patcher = patch.object(ida_analyze_bin, "_load_config_document", return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     @patch.object(ida_analyze_bin, "parse_config")
     @patch("ida_analyze_bin.os.path.exists", return_value=True)
@@ -4992,10 +5009,9 @@ class TestMainReporterLifecycle(unittest.TestCase):
 
 class TestMainLlmWiring(unittest.TestCase):
     def setUp(self) -> None:
-        for loader_name in ("_load_artifact_symbol_category_map", "_load_symbol_alias_map"):
-            patcher = patch.object(ida_analyze_bin, loader_name, return_value={})
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        patcher = patch.object(ida_analyze_bin, "_load_config_document", return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     @patch.object(ida_analyze_bin, "process_binary", return_value=(0, 0, 0))
     @patch.object(ida_analyze_bin, "parse_config")
@@ -5225,10 +5241,9 @@ class TestMainLlmWiring(unittest.TestCase):
 
 class TestMainPostProcessWiring(unittest.TestCase):
     def setUp(self) -> None:
-        for loader_name in ("_load_artifact_symbol_category_map", "_load_symbol_alias_map"):
-            patcher = patch.object(ida_analyze_bin, loader_name, return_value={})
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        patcher = patch.object(ida_analyze_bin, "_load_config_document", return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     @patch.object(ida_analyze_bin, "parse_config")
     @patch("ida_analyze_bin.os.path.exists", return_value=True)
@@ -5291,10 +5306,9 @@ class TestMainPostProcessWiring(unittest.TestCase):
 
 class TestMainSkillFilterWiring(unittest.TestCase):
     def setUp(self) -> None:
-        for loader_name in ("_load_artifact_symbol_category_map", "_load_symbol_alias_map"):
-            patcher = patch.object(ida_analyze_bin, loader_name, return_value={})
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        patcher = patch.object(ida_analyze_bin, "_load_config_document", return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     @patch.object(ida_analyze_bin, "process_binary", return_value=(1, 0, 0))
     @patch.object(ida_analyze_bin, "parse_config")

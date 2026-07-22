@@ -106,6 +106,7 @@ from process_reporter import (
     is_valid_task_transition,
 )
 from process_reporter_factory import create_process_reporter
+from trusted_yaml import load_yaml, load_yaml_file
 
 load_dotenv()
 
@@ -123,7 +124,6 @@ MCP_SHUTDOWN_TIMEOUT = 10.0
 QEXIT_CONNECTION_RESET_MARKER = "[WinError 10054]"
 OPENED_BINARY_VERIFY_TIMEOUT = 60.0
 OPENED_BINARY_VERIFY_RETRY_INTERVAL = 2.0
-_ARTIFACT_SYMBOL_CATEGORY_CACHE = {}
 _BINARY_HASH_CACHE = {}
 _PE_STYLE_BASE_ADDRESS = 0x180000000
 
@@ -284,21 +284,8 @@ def _resolve_config_path(config_path):
     return Path(config_path).expanduser().resolve()
 
 
-def _load_artifact_symbol_category_map(config_path):
-    resolved_config_path = _resolve_config_path(config_path)
-    cache_key = os.fspath(resolved_config_path)
-    cached = _ARTIFACT_SYMBOL_CATEGORY_CACHE.get(cache_key)
-    if cached is not None:
-        return cached
-
+def _artifact_symbol_category_map_from_document(config_data):
     category_map = {}
-    try:
-        with open(resolved_config_path, "r", encoding="utf-8") as handle:
-            config_data = yaml.safe_load(handle) or {}
-    except Exception:
-        _ARTIFACT_SYMBOL_CATEGORY_CACHE[cache_key] = category_map
-        return category_map
-
     for module_entry in config_data.get("modules", []):
         if not isinstance(module_entry, dict):
             continue
@@ -309,18 +296,10 @@ def _load_artifact_symbol_category_map(config_path):
             category = str(symbol_entry.get("category", "")).strip()
             if symbol_name and category and symbol_name not in category_map:
                 category_map[symbol_name] = category
-
-    _ARTIFACT_SYMBOL_CATEGORY_CACHE[cache_key] = category_map
     return category_map
 
 
-def _load_symbol_alias_map(config_path):
-    resolved_config_path = _resolve_config_path(config_path)
-    try:
-        with resolved_config_path.open("r", encoding="utf-8") as handle:
-            config_data = yaml.safe_load(handle) or {}
-    except Exception:
-        return {}
+def _symbol_alias_map_from_document(config_data):
     aliases = {}
     for module_entry in config_data.get("modules", []):
         if not isinstance(module_entry, dict):
@@ -335,6 +314,24 @@ def _load_symbol_alias_map(config_path):
             raw_aliases = values if isinstance(values, (list, tuple)) else [values]
             aliases[symbol_name] = tuple(alias for value in raw_aliases if (alias := str(value or "").strip()))
     return aliases
+
+
+def _load_config_document(config_path):
+    return load_yaml_file(_resolve_config_path(config_path), cache=True, copy_result=False) or {}
+
+
+def _load_artifact_symbol_category_map(config_path):
+    try:
+        return _artifact_symbol_category_map_from_document(_load_config_document(config_path))
+    except Exception:
+        return {}
+
+
+def _load_symbol_alias_map(config_path):
+    try:
+        return _symbol_alias_map_from_document(_load_config_document(config_path))
+    except Exception:
+        return {}
 
 
 def _derive_artifact_symbol_name(artifact_path, platform):
@@ -472,7 +469,7 @@ async def validate_expected_input_artifacts_via_session(
 
         try:
             with open(artifact_path, "r", encoding="utf-8") as handle:
-                artifact_payload = yaml.safe_load(handle)
+                artifact_payload = load_yaml(handle)
         except Exception as exc:
             invalid_artifacts.append(f"{artifact_path}: failed to read YAML ({exc})")
             continue
@@ -1274,7 +1271,7 @@ def _is_major_update_gamever(gamever, download_path=DEFAULT_DOWNLOAD_FILE):
 
     try:
         with open(path, "r", encoding="utf-8") as handle:
-            data = yaml.safe_load(handle) or {}
+            data = load_yaml(handle) or {}
     except Exception:
         return False
 
@@ -1665,19 +1662,11 @@ def _parse_module_vcall_finder(module, module_name):
     return objects
 
 
-def parse_config(config_path):
-    """
-    Parse an analysis config and extract module information.
-
-    Args:
-        config_path: Path to the selected analysis config
-
-    Returns:
-        List of module dictionaries containing name, paths, and skills
-    """
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f) or {}
-
+def parse_config_document(config):
+    """Transform an already loaded analysis config into executable modules."""
+    config = config or {}
+    if not isinstance(config, dict):
+        raise TypeError("analysis config top level must be a mapping")
     modules = []
     for stage_index, module in enumerate(config.get("modules", [])):
         name = module.get("name")
@@ -1705,6 +1694,12 @@ def parse_config(config_path):
         )
 
     return modules
+
+
+def parse_config(config_path, config_document=None):
+    """Parse an analysis config and extract module information."""
+    config = _load_config_document(config_path) if config_document is None else config_document
+    return parse_config_document(config)
 
 
 def resolve_module_vcall_targets(module, selector):
@@ -2352,7 +2347,7 @@ def _load_post_process_yaml_mapping(path, debug=False):
     """Load one post_process YAML file and return a mapping payload or None."""
     try:
         with open(path, "r", encoding="utf-8") as handle:
-            payload = yaml.safe_load(handle)
+            payload = load_yaml(handle)
     except Exception as exc:
         if debug:
             print(f"  Post-process: skipping unreadable YAML {path}: {exc}")
@@ -4169,12 +4164,13 @@ def main():
     except AnalysisConfigError as exc:
         print(f"Error: {exc}")
         sys.exit(1)
-    args.artifact_category_map = _load_artifact_symbol_category_map(args.configyaml)
-    args.symbol_aliases = _load_symbol_alias_map(args.configyaml)
+    config_document = _load_config_document(args.configyaml)
+    args.artifact_category_map = _artifact_symbol_category_map_from_document(config_document)
+    args.symbol_aliases = _symbol_alias_map_from_document(config_document)
     _print_main_configuration(args)
 
     print("\nParsing config...")
-    modules = parse_config(args.configyaml)
+    modules = parse_config(args.configyaml, config_document=config_document)
     print(f"Found {len(modules)} modules")
     if not modules:
         print("No modules found in config.")

@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-import yaml
+from trusted_yaml import load_yaml_file
 
 
 REQUIRED_SKILL_INPUTS = {
@@ -13,7 +13,7 @@ REQUIRED_SKILL_INPUTS = {
 class TestConfigSchedulingDependencies(unittest.TestCase):
     def test_all_configs_declare_required_scheduling_inputs(self) -> None:
         for config_path in sorted(Path("configs").glob("*.yaml")):
-            config = yaml.safe_load(config_path.read_text(encoding="utf-8-sig"))
+            config = load_yaml_file(config_path, cache=True, copy_result=False)
             configured_skills = {
                 skill["name"]: skill
                 for module in config["modules"]
