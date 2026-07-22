@@ -31,6 +31,19 @@ test('loads a run detail through the SPA fallback route', async ({ page }) => {
   await expect(page.getByText(/等待 ExecutionPlan 初始化/)).toBeVisible()
 })
 
+test('opens the static symbol browser without a Process API connection', async ({ page }) => {
+  await page.goto('/symbols')
+  await page.getByRole('button', { name: 'API 设置' }).click()
+  await page.getByRole('button', { name: '断开当前连接' }).click()
+  await page.keyboard.press('Escape')
+  await page.getByRole('tab', { name: '分析任务' }).click()
+  await expect(page.getByRole('heading', { name: '连接本地进度 API' })).toBeVisible()
+  await page.getByRole('tab', { name: '浏览符号' }).click()
+  await expect(page.getByRole('heading', { name: '浏览符号' })).toBeVisible()
+  await expect(page.getByLabel('游戏版本')).toHaveText(/14172/)
+  await expect(page.getByText(/共 2942 条记录/)).toBeVisible()
+})
+
 test('switches the static application between supported languages', async ({ page }) => {
   await page.goto('/')
   await page.getByLabel('语言').click()
