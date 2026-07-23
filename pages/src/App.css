@@ -4,8 +4,10 @@
 .app-nav { align-self: stretch; margin-right: auto; }
 .app-nav .ant-tabs-nav { height: 100%; margin: 0; }
 .app-nav .ant-tabs-content-holder { display: none; }
-.api-summary { min-width: 0; }
-.api-summary .ant-typography { max-width: 380px; }
+.api-summary { min-width: 0; align-items: center !important; }
+.api-summary .ant-space-item { vertical-align: middle; }
+.api-summary .ant-typography { max-width: 380px; vertical-align: middle !important; }
+.api-summary .ant-badge { vertical-align: middle !important; }
 .app-content { width: 100%; margin: 0 auto; padding: 28px clamp(16px, 4vw, 48px) 60px; }
 .full-width { width: 100%; }
 .page-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }

@@ -1,7 +1,7 @@
 import { ApiOutlined, DashboardOutlined, GlobalOutlined, SettingOutlined } from '@ant-design/icons'
 import { Badge, Button, Layout, Select, Space, Tabs, Typography } from 'antd'
 import { lazy, Suspense, useState, type ReactNode } from 'react'
-import { Link, Route, Routes, useLocation } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ApiSettingsDrawer } from '../components/ApiSettingsDrawer'
 import { ConnectionGate } from '../components/ConnectionGate'
@@ -36,10 +36,10 @@ export function AppShell() {
   return (
     <Layout className="app-layout">
       <Header className="app-header">
-        <Link to="/symbols" className="app-brand" onClick={() => setActiveTab('symbols')}>
+        <a href="https://github.com/HLND2T/CS2_VibeSignatures" target="_blank" rel="noopener noreferrer" className="app-brand">
           <DashboardOutlined />
           <Typography.Text strong>CS2 VibeSignatures</Typography.Text>
-        </Link>
+        </a>
         <Tabs
           className="app-nav"
           activeKey={activeTab}
@@ -49,7 +49,7 @@ export function AppShell() {
             { key: 'runs', label: t('navigation.runs') },
           ]}
         />
-        <Space className="api-summary">
+        <Space className="api-summary" align="center">
           <Badge status={connected ? 'success' : 'default'} />
           <Typography.Text type="secondary" ellipsis title={baseUrl}>
             <ApiOutlined /> {baseUrl}

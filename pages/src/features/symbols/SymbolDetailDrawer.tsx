@@ -10,24 +10,45 @@ interface Props {
 
 type SignatureField = { labelKey: string; field: string }
 
-const SIGNATURE_FIELDS: Record<string, SignatureField> = {
-  function: { labelKey: 'symbols.signature.func', field: 'func_sig' },
-  virtualFunction: { labelKey: 'symbols.signature.vfunc', field: 'vfunc_sig' },
-  global: { labelKey: 'symbols.signature.global', field: 'gv_sig' },
-  structMember: { labelKey: 'symbols.signature.structOffset', field: 'offset_sig' },
+const SIGNATURE_FIELDS: Record<string, SignatureField[]> = {
+  function: [{ labelKey: 'symbols.signature.func', field: 'func_sig' }],
+  virtualFunction: [
+    { labelKey: 'symbols.signature.vfunc', field: 'vfunc_sig' },
+    { labelKey: 'symbols.signature.func', field: 'func_sig' },
+  ],
+  global: [{ labelKey: 'symbols.signature.global', field: 'gv_sig' }],
+  structMember: [{ labelKey: 'symbols.signature.structOffset', field: 'offset_sig' }],
 }
 
 function signatureValue(record: GameSymbolRecord): { label: string; value: string } | null {
-  const spec = SIGNATURE_FIELDS[record.kind]
-  if (!spec) return null
-  const raw = record.payload[spec.field]
-  if (typeof raw !== 'string' || raw.length === 0) return null
-  return { label: spec.labelKey, value: raw }
+  const specs = SIGNATURE_FIELDS[record.kind]
+  if (!specs) return null
+  for (const spec of specs) {
+    const raw = record.payload[spec.field]
+    if (typeof raw === 'string' && raw.length > 0) return { label: spec.labelKey, value: raw }
+  }
+  return null
+}
+
+type ExtraField = { labelKey: string; field: string }
+
+const VFUNC_EXTRA_FIELDS: ExtraField[] = [
+  { labelKey: 'symbols.vfuncIndex', field: 'vfunc_index' },
+  { labelKey: 'symbols.vfuncOffset', field: 'vfunc_offset' },
+]
+
+function extraFieldsFor(record: GameSymbolRecord): ExtraField[] {
+  if (record.kind !== 'virtualFunction') return []
+  return VFUNC_EXTRA_FIELDS.filter((spec) => {
+    const raw = record.payload[spec.field]
+    return typeof raw === 'number' || (typeof raw === 'string' && raw.length > 0)
+  })
 }
 
 export function SymbolDetailDrawer({ record, onClose }: Props) {
   const { t } = useTranslation()
   const sig = record ? signatureValue(record) : null
+  const extras = record ? extraFieldsFor(record) : []
   return (
     <Drawer title={t('symbols.detailTitle')} open={Boolean(record)} onClose={onClose} width={720}>
       {record && (
@@ -51,6 +72,11 @@ export function SymbolDetailDrawer({ record, onClose }: Props) {
                 <Typography.Paragraph copyable style={{ margin: 0 }} className="symbol-signature">{sig.value}</Typography.Paragraph>
               </Descriptions.Item>
             )}
+            {extras.map((spec) => (
+              <Descriptions.Item key={spec.field} label={t(spec.labelKey)}>
+                <Typography.Text copyable>{String(record.payload[spec.field])}</Typography.Text>
+              </Descriptions.Item>
+            ))}
           </Descriptions>
           <Typography.Title level={4} className="symbol-payload-title">{t('symbols.payload')}</Typography.Title>
           <pre className="json-block symbol-payload">{JSON.stringify(record.payload, null, 2)}</pre>

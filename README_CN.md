@@ -2,6 +2,8 @@
 
 [English README](README.md)
 
+[GUI](https://hlnd2t.github.io/CS2_VibeSignatures/)
+
 这是一个主要用于为 CS2 生成 signatures/offsets，并通过 Agent SKILLS 与 MCP Calls 更新 HL2SDK_CS2 C++ 头文件的项目。
 
 该项目的设计目标是在**完全无需人工参与**的情况下更新 signatures/offsets/cpp headers。

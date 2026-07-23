@@ -14,6 +14,7 @@ from release_workflow_lib.hashing import sha256_file, write_canonical_json
 from release_workflow_lib.manifests import (
     CONTRACT_TRACKED_FIELDS,
     PRE_GAMEDATA_TRACKED_FIELDS,
+    build_tracked_manifest,
     format_output_branch,
 )
 from release_workflow_lib.promotion import verify_output_pr, verify_promotion
@@ -136,6 +137,97 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
             self.assertEqual(1, deleted)
             self.assertFalse((game_root / "client.yaml").exists())
             self.assertTrue((game_root / "client.dll").exists())
+
+    def test_republish_reuses_validated_tracked_snapshot_newer_than_accepted_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            config = repo / "configs" / "14170.yaml"
+            snapshot = repo / "gamesymbols" / "14170.yaml"
+            manifest_path = repo / "release-manifests" / "14170.json"
+            game_root = repo / "bin" / "14170"
+            config.parent.mkdir(parents=True)
+            snapshot.parent.mkdir(parents=True)
+            game_root.mkdir(parents=True)
+            subprocess.run(["git", "init", "-b", "main", str(repo)], check=True, capture_output=True)
+            subprocess.run(["git", "config", "user.email", "tests@example.com"], cwd=repo, check=True)
+            subprocess.run(["git", "config", "user.name", "Tests"], cwd=repo, check=True)
+
+            def write_config(*outputs: str) -> None:
+                skills = "".join(
+                    "      - name: find-{}\n        platform: windows\n        expected_output:\n          - {}.{{platform}}.yaml\n".format(
+                        output, output
+                    )
+                    for output in outputs
+                )
+                config.write_text(
+                    f"modules:\n  - name: server\n    path_windows: game/bin/win64/server.dll\n    skills:\n{skills}",
+                    encoding="utf-8",
+                    newline="\n",
+                )
+
+            def write_snapshot(*outputs: str) -> None:
+                contract = load_contract(config, "14170", repo / "bin")
+                snapshot.write_bytes(
+                    canonical_snapshot_bytes(
+                        build_snapshot_document(
+                            "14170",
+                            contract.config_sha256,
+                            {
+                                f"server/{output}.windows.yaml": {"func_name": output, "func_rva": "0x10"}
+                                for output in outputs
+                            },
+                        )
+                    )
+                )
+
+            def commit(message: str) -> str:
+                subprocess.run(["git", "add", "."], cwd=repo, check=True)
+                subprocess.run(["git", "commit", "-m", message], cwd=repo, check=True, capture_output=True)
+                return subprocess.run(
+                    ["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True
+                ).stdout.strip()
+
+            write_config("Stable")
+            write_snapshot("Stable")
+            accepted_source_sha = commit("add generator source")
+            accepted_contract = load_contract(config, "14170", repo / "bin")
+            manifest_path.parent.mkdir(parents=True)
+            write_canonical_json(
+                manifest_path,
+                build_tracked_manifest(
+                    gamever="14170",
+                    mode="republish",
+                    build_id="123456789-1",
+                    source_sha=accepted_source_sha,
+                    candidate_sha256="a" * 64,
+                    bin_manifest_sha256="b" * 64,
+                    tracked_output_manifest_sha256="c" * 64,
+                    workflow_run_url="https://github.com/HLND2T/CS2_VibeSignatures/actions/runs/123456789",
+                    analysis_config_path="configs/14170.yaml",
+                    analysis_config_sha256=sha256_file(config),
+                    analysis_config_contract_digest_version=accepted_contract.config_digest_version,
+                    analysis_config_contract_sha256=accepted_contract.config_sha256,
+                ),
+            )
+            commit("publish accepted release")
+
+            write_config("Stable", "Added")
+            write_snapshot("Stable", "Added")
+            tracked_snapshot_sha = commit("refresh validated tracked snapshot")
+            self.assertNotEqual(accepted_source_sha, tracked_snapshot_sha)
+            (repo / "README.md").write_text("unrelated change\n", encoding="utf-8")
+            source_sha = commit("change documentation")
+
+            deleted = invalidate_republish(
+                repo_root=repo,
+                gamever="14170",
+                source_sha=source_sha,
+                bindir=repo / "bin",
+            )
+
+            self.assertEqual(0, deleted)
+            self.assertTrue((game_root / "server" / "Stable.windows.yaml").is_file())
+            self.assertTrue((game_root / "server" / "Added.windows.yaml").is_file())
 
     def test_legacy_bootstrap_requires_explicit_cli_flag(self) -> None:
         parser = _parser()

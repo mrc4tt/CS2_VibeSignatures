@@ -176,14 +176,18 @@ def _delete_planned_outputs(plan, game_root: Path) -> int:
     return deleted
 
 
-def _legacy_snapshot_commit(repo_root: Path, source_sha: str, snapshot_repo_path: str) -> str:
+def _latest_path_commit(repo_root: Path, source_sha: str, repository_path: str, label: str) -> str:
     try:
-        commit = git_output(["-C", str(repo_root), "log", "-1", "--format=%H", source_sha, "--", snapshot_repo_path])
+        commit = git_output(["-C", str(repo_root), "log", "-1", "--format=%H", source_sha, "--", repository_path])
     except ReleaseWorkflowError as exc:
-        raise ReleaseWorkflowError(f"legacy bootstrap snapshot is missing: {snapshot_repo_path}") from exc
+        raise ReleaseWorkflowError(f"{label} is missing: {repository_path}") from exc
     if not commit:
-        raise ReleaseWorkflowError(f"legacy bootstrap snapshot is missing: {snapshot_repo_path}")
-    return require_sha(commit, "legacy snapshot publication SHA")
+        raise ReleaseWorkflowError(f"{label} is missing: {repository_path}")
+    return require_sha(commit, f"{label} SHA")
+
+
+def _legacy_snapshot_commit(repo_root: Path, source_sha: str, snapshot_repo_path: str) -> str:
+    return _latest_path_commit(repo_root, source_sha, snapshot_repo_path, "legacy bootstrap snapshot")
 
 
 def _invalidate_from_legacy_snapshot(repo_root: Path, gamever: str, source_sha: str, bindir: Path) -> int:
@@ -247,13 +251,25 @@ def _invalidate_from_accepted_manifest(
     if base_sha == source_sha:
         raise ReleaseWorkflowError("republish SOURCE_SHA must be newer than the accepted generator source")
     _require_ancestor(repo_root, base_sha, source_sha, "previous accepted SOURCE_SHA")
-    snapshot = repo_root / "gamesymbols" / f"{gamever}.yaml"
+    snapshot_repo_path = f"gamesymbols/{gamever}.yaml"
+    manifest_repo_path = f"release-manifests/{gamever}.json"
+    accepted_manifest_sha = _latest_path_commit(repo_root, source_sha, manifest_repo_path, "accepted manifest")
+    snapshot_sha = _latest_path_commit(repo_root, source_sha, snapshot_repo_path, "tracked snapshot")
     with tempfile.TemporaryDirectory(prefix="release-base-") as temp_dir:
-        base_config = Path(temp_dir) / "base.yaml"
+        accepted_config = Path(temp_dir) / "accepted.yaml"
+        snapshot_config = Path(temp_dir) / "snapshot.yaml"
         head_config = Path(temp_dir) / "head.yaml"
+        accepted_snapshot = Path(temp_dir) / "accepted-snapshot.yaml"
+        snapshot = Path(temp_dir) / f"{gamever}.yaml"
         try:
-            base_history = read_analysis_config_at_revision(
+            accepted_history = read_analysis_config_at_revision(
                 base_sha,
+                gamever,
+                allow_legacy_root=True,
+                repo_root=repo_root,
+            )
+            snapshot_history = read_analysis_config_at_revision(
+                snapshot_sha,
                 gamever,
                 allow_legacy_root=True,
                 repo_root=repo_root,
@@ -266,36 +282,49 @@ def _invalidate_from_accepted_manifest(
             )
         except AnalysisConfigError as exc:
             raise ReleaseWorkflowError(str(exc)) from exc
-        base_config.write_bytes(base_history.data)
+        accepted_config.write_bytes(accepted_history.data)
+        snapshot_config.write_bytes(snapshot_history.data)
         head_config.write_bytes(head_history.data)
+        accepted_snapshot.write_bytes(_git_blob(repo_root, accepted_manifest_sha, snapshot_repo_path))
+        snapshot.write_bytes(_git_blob(repo_root, snapshot_sha, snapshot_repo_path))
         try:
-            base_context = load_snapshot_context(snapshot, base_config, gamever, bindir)
+            accepted_context = load_snapshot_context(accepted_snapshot, accepted_config, gamever, bindir)
         except SnapshotMismatchError as exc:
             if exc.reason == ANALYSIS_OUTPUT_CONTRACT_MISMATCH_REASON:
                 print("Analysis output contract changed; discarding the accepted snapshot baseline")
                 return _invalidate_yaml_baseline(bindir, gamever)
             raise
-        base_contract = base_context.contract
-        head_contract = load_contract(head_config, gamever, bindir)
-        if manifest.get("analysis_config_path") and manifest["analysis_config_path"] != base_history.repository_path:
+        accepted_contract = accepted_context.contract
+        if (
+            manifest.get("analysis_config_path")
+            and manifest["analysis_config_path"] != accepted_history.repository_path
+        ):
             raise ReleaseWorkflowError("accepted manifest analysis config path does not match SOURCE_SHA")
-        if manifest.get("analysis_config_sha256") and manifest["analysis_config_sha256"] != base_history.sha256:
+        if manifest.get("analysis_config_sha256") and manifest["analysis_config_sha256"] != accepted_history.sha256:
             raise ReleaseWorkflowError("accepted manifest analysis config hash does not match SOURCE_SHA")
         if (
             manifest.get("analysis_config_contract_sha256")
-            and manifest["analysis_config_contract_sha256"] != base_contract.config_sha256
+            and manifest["analysis_config_contract_sha256"] != accepted_contract.config_sha256
         ):
             raise ReleaseWorkflowError("accepted manifest analysis config contract does not match snapshot")
-        manifest_digest_version = manifest_config_digest_version(manifest, base_context.document)
-        if manifest_digest_version != base_contract.config_digest_version:
+        manifest_digest_version = manifest_config_digest_version(manifest, accepted_context.document)
+        if manifest_digest_version != accepted_contract.config_digest_version:
             raise ReleaseWorkflowError("accepted manifest analysis config digest version does not match snapshot")
-        restore_snapshot(gamever, bindir, base_config, snapshot, replace=True)
+        try:
+            snapshot_context = load_snapshot_context(snapshot, snapshot_config, gamever, bindir)
+        except SnapshotMismatchError as exc:
+            if exc.reason == ANALYSIS_OUTPUT_CONTRACT_MISMATCH_REASON:
+                print("Analysis output contract changed; discarding the tracked snapshot baseline")
+                return _invalidate_yaml_baseline(bindir, gamever)
+            raise
+        head_contract = load_contract(head_config, gamever, bindir)
+        restore_snapshot(gamever, bindir, snapshot_config, snapshot, replace=True)
         plan = build_invalidation_plan(
-            base_contract,
+            snapshot_context.contract,
             head_contract,
-            base_context.document,
-            base_context.document,
-            _changed_files(repo_root, base_sha, source_sha),
+            snapshot_context.document,
+            snapshot_context.document,
+            _changed_files(repo_root, snapshot_sha, source_sha),
             repo_root,
         )
     return _delete_planned_outputs(plan, head_contract.game_root)

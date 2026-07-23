@@ -29,7 +29,6 @@ function columns(onSelect: (record: GameSymbolRecord) => void, t: TFunction): Co
       width: 120,
       render: (platform: GameSymbolPlatform) => <Tag color={platform === 'windows' ? 'blue' : 'gold'}>{platform}</Tag>,
     },
-    { title: t('symbols.artifact'), dataIndex: 'artifact', width: 300, ellipsis: true },
   ]
 }
 
