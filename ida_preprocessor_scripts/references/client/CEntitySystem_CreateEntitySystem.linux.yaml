@@ -1,0 +1,64 @@
+func_name: CEntitySystem_CreateEntitySystem
+func_va: '0x2df7b10'
+disasm_code: |-
+  .text:0000000002DF7B10                 push    rbp
+  .text:0000000002DF7B11                 mov     rbp, rsp
+  .text:0000000002DF7B14                 push    r15
+  .text:0000000002DF7B16                 push    r14
+  .text:0000000002DF7B18                 push    r13
+  .text:0000000002DF7B1A                 mov     r13d, edx
+  .text:0000000002DF7B1D                 push    r12
+  .text:0000000002DF7B1F                 push    rbx
+  .text:0000000002DF7B20                 sub     rsp, 8
+  .text:0000000002DF7B24                 mov     eax, cs:dword_4A433C8
+  .text:0000000002DF7B2A                 lea     edx, [rax+1]
+  .text:0000000002DF7B2D                 mov     cs:dword_4A433C8, edx
+  .text:0000000002DF7B33                 test    eax, eax
+  .text:0000000002DF7B35                 jle     short loc_2DF7B50
+  .text:0000000002DF7B37                 add     rsp, 8
+  .text:0000000002DF7B3B                 pop     rbx
+  .text:0000000002DF7B3C                 pop     r12
+  .text:0000000002DF7B3E                 pop     r13
+  .text:0000000002DF7B40                 pop     r14
+  .text:0000000002DF7B42                 pop     r15
+  .text:0000000002DF7B44                 pop     rbp
+  .text:0000000002DF7B45                 retn
+  .text:0000000002DF7B50                 mov     rbx, rdi
+  .text:0000000002DF7B53                 ; _QWORD
+  .text:0000000002DF7B53                 mov     edi, 20A0h; _QWORD
+  .text:0000000002DF7B58                 mov     r12d, esi
+  .text:0000000002DF7B5B                 mov     r14d, ecx
+  .text:0000000002DF7B5E                 call    __Znwm; operator new(ulong)
+  .text:0000000002DF7B63                 mov     r15, rax
+  .text:0000000002DF7B66                 mov     rdi, rax
+  .text:0000000002DF7B69                 call    CEntitySystem_ctor
+  .text:0000000002DF7B6E                 movzx   r8d, r14b
+  .text:0000000002DF7B72                 mov     ecx, r13d
+  .text:0000000002DF7B75                 mov     edx, r12d
+  .text:0000000002DF7B78                 mov     cs:g_pEntitySystem, r15
+  .text:0000000002DF7B7F                 add     rsp, 8
+  .text:0000000002DF7B83                 mov     rsi, rbx
+  .text:0000000002DF7B86                 mov     rdi, r15
+  .text:0000000002DF7B89                 pop     rbx
+  .text:0000000002DF7B8A                 pop     r12
+  .text:0000000002DF7B8C                 pop     r13
+  .text:0000000002DF7B8E                 pop     r14
+  .text:0000000002DF7B90                 pop     r15
+  .text:0000000002DF7B92                 pop     rbp
+  .text:0000000002DF7B93                 jmp     CEntitySystem_Init
+procedure: |-
+  __int64 __fastcall CEntitySystem_CreateEntitySystem(const char *a1, int a2, int a3, char a4)
+  {
+    __int64 result; // rax
+    __int64 v7; // r15
+
+    result = (unsigned int)dword_4A433C8++;
+    if ( (int)result <= 0 )
+    {
+      v7 = operator new(8352);
+      CEntitySystem_ctor(v7);
+      g_pEntitySystem = v7;
+      return CEntitySystem_Init(v7, a1, a2, a3, a4);
+    }
+    return result;
+  }

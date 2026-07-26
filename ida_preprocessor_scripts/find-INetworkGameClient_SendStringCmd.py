@@ -2,7 +2,7 @@
 """Preprocess script for find-INetworkGameClient_SendStringCmd skill.
 
 INetworkGameClient::SendStringCmd is an abstract-interface vfunc dispatched by
-CEngineClient::SendStringCmd. Its slot is resolved by scanning the source
+CEngineClient::ExecuteClientCmd. Its slot is resolved by scanning the source
 function for its unique register-indirect virtual call.
 """
 
@@ -10,7 +10,7 @@ from ida_preprocessor_scripts._indirect_vcall_target_common import (
     preprocess_indirect_vcall_target_skill,
 )
 
-SOURCE_FUNCTION_NAME = "CEngineClient_SendStringCmd"
+SOURCE_FUNCTION_NAME = "CEngineClient_ExecuteClientCmd"
 
 TARGET_FUNCTION_NAME = "INetworkGameClient_SendStringCmd"
 VTABLE_CLASS = "INetworkGameClient"
@@ -38,7 +38,7 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Scan CEngineClient::SendStringCmd for its unique indirect vcall."""
+    """Scan CEngineClient::ExecuteClientCmd for its unique indirect vcall."""
     _ = skill_name, old_yaml_map, image_base
 
     return await preprocess_indirect_vcall_target_skill(

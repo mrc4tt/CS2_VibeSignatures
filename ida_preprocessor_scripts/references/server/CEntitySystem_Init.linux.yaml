@@ -38,8 +38,8 @@ disasm_code: |-
   .text:0000000001E7C426                 call    __ZN21CUtlScratchMemoryPool4InitEjjPvb; CUtlScratchMemoryPool::Init(uint,uint,void *,bool)
   .text:0000000001E7C42B                 lea     r14, qword_27C41A8
   .text:0000000001E7C432                 lea     rax, [rbx+10h]
-  .text:0000000001E7C436                 mov     cs:qword_256F1A8, rbx
-  .text:0000000001E7C43D                 mov     cs:qword_256F1A0, rax
+  .text:0000000001E7C436                 mov     cs:g_EntitySystem, rbx
+  .text:0000000001E7C43D                 mov     cs:g_pEntityList, rax
   .text:0000000001E7C444                 mov     r12, [r14]
   .text:0000000001E7C447                 test    r12, r12
   .text:0000000001E7C44A                 jz      short loc_1E7C4B9
@@ -649,8 +649,8 @@ procedure: |-
     v9 = a3 == 1 && g_pNetworkMessages != nullptr;
     *(_BYTE *)(a1 + 3034) = v9;
     CUtlScratchMemoryPool::Init((CUtlScratchMemoryPool *)(a1 + 3264), 0x400u, 0, nullptr, 0);// 0xCC0 = 3264LL = CEntitySystem::m_ComponentUnserializerInfoAllocator
-    qword_256F1A8 = a1;
-    qword_256F1A0 = a1 + 16;
+    g_EntitySystem = a1;
+    g_pEntityList = a1 + 16;
     v10 = qword_27C41A8;
     if ( qword_27C41A8 )
     {

@@ -12,6 +12,11 @@ TARGET_FUNCTION_NAMES_LINUX = [
     "CEntitySystem_ProcessEntityRegistration",
 ]
 
+TARGET_GLOBALVAR_NAMES = [
+    "g_EntitySystem",
+    "g_pEntityList",
+]
+
 TARGET_STRUCT_MEMBER_NAMES = [
     "CEntitySystem_m_sEntSystemName",
     "CEntitySystem_m_eNetworkSerializationMode",
@@ -45,6 +50,28 @@ LLM_DECOMPILE = [
             "references/server/CEntitySystem_Init.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "g_EntitySystem",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
+        "dependency_policy": {
+            "CEntitySystem_Init.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "g_pEntityList",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CEntitySystem_Init.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_gv"],
         "dependency_policy": {
             "CEntitySystem_Init.{platform}.yaml": "required",
         },
@@ -154,6 +181,32 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "vfunc_offset",
             "vfunc_index",
             "vtable_name",
+        ],
+    ),
+    (
+        "g_EntitySystem",
+        [
+            "gv_name",
+            "gv_va",
+            "gv_rva",
+            "gv_sig",
+            "gv_sig_va",
+            "gv_inst_offset",
+            "gv_inst_length",
+            "gv_inst_disp",
+        ],
+    ),
+    (
+        "g_pEntityList",
+        [
+            "gv_name",
+            "gv_va",
+            "gv_rva",
+            "gv_sig",
+            "gv_sig_va",
+            "gv_inst_offset",
+            "gv_inst_length",
+            "gv_inst_disp",
         ],
     ),
     (
@@ -332,6 +385,7 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         func_names=func_names,
+        gv_names=TARGET_GLOBALVAR_NAMES,
         struct_member_names=struct_member_names,
         func_vtable_relations=FUNC_VTABLE_RELATIONS,
         llm_decompile_specs=llm_decompile,

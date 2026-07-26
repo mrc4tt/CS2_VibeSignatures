@@ -1,0 +1,75 @@
+func_name: C_GameRules_ctor
+func_va: '0x18fb310'
+disasm_code: |-
+  .text:00000000018FB310                 push    rbp
+  .text:00000000018FB311                 lea     rax, off_43CA368
+  .text:00000000018FB318                 mov     rbp, rsp
+  .text:00000000018FB31B                 push    rbx
+  .text:00000000018FB31C                 mov     rbx, rdi
+  .text:00000000018FB31F                 sub     rsp, 8
+  .text:00000000018FB323                 cmp     cs:_ZTHN18CEntitySpawnHelper16tm_pCurEntityPtrE_ptr, 0
+  .text:00000000018FB32B                 mov     [rdi], rax
+  .text:00000000018FB32E                 mov     qword ptr [rdi+8], 0
+  .text:00000000018FB336                 jz      short loc_18FB33D
+  .text:00000000018FB338                 call    _ZTHN18CEntitySpawnHelper16tm_pCurEntityPtrE
+  .text:00000000018FB33D                 ; _QWORD
+  .text:00000000018FB33D                 lea     rdi, qword_44FDB40; _QWORD
+  .text:00000000018FB345                 call    ___tls_get_addr
+  .text:00000000018FB34D                 mov     qword ptr [rbx+10h], 0
+  .text:00000000018FB355                 ; _QWORD
+  .text:00000000018FB355                 mov     esi, 1; _QWORD
+  .text:00000000018FB35A                 mov     qword ptr [rbx+18h], 0
+  .text:00000000018FB362                 mov     qword ptr [rbx+20h], 0
+  .text:00000000018FB36A                 mov     dword ptr [rbx+28h], 0FFFFFFFFh
+  .text:00000000018FB371                 mov     byte ptr [rbx+2Ch], 0
+  .text:00000000018FB375                 mov     qword ptr [rbx+30h], 0
+  .text:00000000018FB37D                 mov     rax, [rax]
+  .text:00000000018FB380                 mov     byte ptr [rbx+38h], 0
+  .text:00000000018FB384                 mov     cs:g_pGameRules, rbx
+  .text:00000000018FB38B                 mov     [rbx+8], rax
+  .text:00000000018FB38F                 lea     rbx, dword_47F9B48
+  .text:00000000018FB396                 ; _QWORD
+  .text:00000000018FB396                 mov     edi, [rbx]; _QWORD
+  .text:00000000018FB398                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018FB39D                 test    al, al
+  .text:00000000018FB39F                 jnz     short loc_18FB3B0
+  .text:00000000018FB3A1                 mov     rbx, [rbp+var_8]
+  .text:00000000018FB3A5                 leave
+  .text:00000000018FB3A6                 retn
+  .text:00000000018FB3B0                 ; _QWORD
+  .text:00000000018FB3B0                 mov     edi, [rbx]; _QWORD
+  .text:00000000018FB3B2                 lea     rcx, aCl; "CL"
+  .text:00000000018FB3B9                 ; _QWORD
+  .text:00000000018FB3B9                 mov     esi, 1; _QWORD
+  .text:00000000018FB3BE                 xor     eax, eax
+  .text:00000000018FB3C0                 mov     rbx, [rbp+var_8]
+  .text:00000000018FB3C4                 lea     rdx, aSCgamerulesCga_0; "%s:  CGameRules::CGameRules constructed"...
+  .text:00000000018FB3CB                 leave
+  .text:00000000018FB3CC                 jmp     _LoggingSystem_Log
+procedure: |-
+  __int64 __fastcall sub_18FB310(__int64 a1)
+  {
+    __int64 *addr; // rax
+    __int64 v2; // rax
+    __int64 result; // rax
+
+    *(_QWORD *)a1 = off_43CA368;
+    *(_QWORD *)(a1 + 8) = 0;
+    if ( &_ZTHN18CEntitySpawnHelper16tm_pCurEntityPtrE )
+      ZTHN18CEntitySpawnHelper16tm_pCurEntityPtrE();
+    addr = (__int64 *)__tls_get_addr(&qword_44FDB40);
+    *(_QWORD *)(a1 + 16) = 0;
+    *(_QWORD *)(a1 + 24) = 0;
+    *(_QWORD *)(a1 + 32) = 0;
+    *(_DWORD *)(a1 + 40) = -1;
+    *(_BYTE *)(a1 + 44) = 0;
+    *(_QWORD *)(a1 + 48) = 0;
+    v2 = *addr;
+    *(_BYTE *)(a1 + 56) = 0;
+    g_pGameRules = a1;
+    *(_QWORD *)(a1 + 8) = v2;
+    result = LoggingSystem_IsChannelEnabled((unsigned int)dword_47F9B48, 1);
+    if ( (_BYTE)result )
+      return LoggingSystem_Log((unsigned int)dword_47F9B48, 1, "%s:  CGameRules::CGameRules constructed\n", "CL");
+    return result;
+  }

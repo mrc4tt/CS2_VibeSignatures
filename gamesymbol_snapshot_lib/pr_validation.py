@@ -6,6 +6,7 @@ from gamesymbol_snapshot_lib.analysis_sources import (
     AnalysisSourceIndex,
     PREPROCESSOR_PREFIX,
     REFERENCE_PREFIX,
+    ReferenceConsumer,
     workspace_python_sources,
 )
 from gamesymbol_snapshot_lib.codec import snapshot_analysis_output_contract_version
@@ -69,6 +70,17 @@ def _nodes_for_skills(by_skill: Mapping[str, set[str]], skill_names: set[str]) -
     return set().union(*(by_skill.get(name, set()) for name in skill_names))
 
 
+def _nodes_for_reference_consumers(contract, consumers: set[ReferenceConsumer]) -> set[str]:
+    return {
+        node.node_id
+        for node in contract.nodes.values()
+        for consumer in consumers
+        if node.skill_name == consumer.skill_name
+        and node.module_name == consumer.module_name
+        and node.platform == consumer.platform
+    }
+
+
 def _normalize_changes(changed_files: list[str | ChangedPath]) -> list[ChangedPath]:
     changes = []
     for changed in changed_files:
@@ -97,16 +109,16 @@ def _is_preprocessor(path: str | None) -> bool:
     return bool(path and path.startswith(PREPROCESSOR_PREFIX) and path.endswith(".py"))
 
 
-def _format_names(names: set[str]) -> str:
-    return ",".join(sorted(names)) or "none"
+def _format_consumers(consumers: set[ReferenceConsumer]) -> str:
+    return ",".join(sorted(consumer.label for consumer in consumers)) or "none"
 
 
 def _reference_change_nodes(
     change: ChangedPath,
     base_index: AnalysisSourceIndex,
     head_index: AnalysisSourceIndex,
-    base_by_skill,
-    head_by_skill,
+    base_contract,
+    head_contract,
 ) -> tuple[set[str], list[str]]:
     base_path = _base_path(change)
     head_path = _head_path(change)
@@ -114,12 +126,12 @@ def _reference_change_nodes(
     head_reference = head_path if _is_reference(head_path) else None
     if base_reference is None and head_reference is None:
         return set(), []
-    base_consumers = base_index.reference_consumers(base_reference) if base_reference else set()
-    head_consumers = head_index.reference_consumers(head_reference) if head_reference else set()
+    base_consumers = base_index.reference_consumers(base_reference, base_contract) if base_reference else set()
+    head_consumers = head_index.reference_consumers(head_reference, head_contract) if head_reference else set()
     if head_reference and not head_consumers:
         raise SnapshotConfigError(f"error[orphan_active_reference]: {head_reference} has no HEAD consumer")
-    nodes = _nodes_for_skills(base_by_skill, base_consumers)
-    nodes.update(_nodes_for_skills(head_by_skill, head_consumers))
+    nodes = _nodes_for_reference_consumers(base_contract, base_consumers)
+    nodes.update(_nodes_for_reference_consumers(head_contract, head_consumers))
     reasons = []
     if base_reference and head_reference and change.status == "R":
         reasons.append(f"reference rename: base {base_reference} -> HEAD {head_reference}")
@@ -135,7 +147,7 @@ def _reference_change_nodes(
         reasons.append(f"warning: {action} orphan reference had no base consumer: {base_reference}")
     if base_consumers or head_consumers:
         reasons.append(
-            f"reference consumers: base={_format_names(base_consumers)}; HEAD={_format_names(head_consumers)}"
+            f"reference consumers: base={_format_consumers(base_consumers)}; HEAD={_format_consumers(head_consumers)}"
         )
     return nodes, reasons
 
@@ -206,7 +218,7 @@ def _source_changed_nodes(
             nodes.update(head_contract.nodes)
             reasons.extend(f"core analysis change: {path}" for path in sorted(broad_paths))
         reference_nodes, reference_reasons = _reference_change_nodes(
-            change, base_index, head_index, base_by_skill, head_by_skill
+            change, base_index, head_index, base_contract, head_contract
         )
         preprocessor_nodes, preprocessor_reasons = _preprocessor_change_nodes(
             change, base_index, head_index, base_by_skill, head_by_skill, head_contract

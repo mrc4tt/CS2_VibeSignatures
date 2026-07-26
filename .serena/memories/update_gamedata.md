@@ -34,4 +34,6 @@ symbol candidate + config -> trusted generator contract
 
 ## Callers
 - Build and PR self-runner workflows.
-- `post-change-update`.
+- `create-pr` orchestrates candidate build and validated publication for staged local changes.
+- `prepare-post-change-candidate` builds isolated candidate gamedata.
+- `publish-post-change-candidate` publishes validated candidate gamedata.

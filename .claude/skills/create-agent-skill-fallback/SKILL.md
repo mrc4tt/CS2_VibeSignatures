@@ -147,28 +147,38 @@ Do not report the fallback as complete unless this end-to-end Agent-Skill-only t
 environment is unavailable, report the validation as blocked rather than substituting a preprocessor run or a
 ground-truth-only review.
 
-### Step 6 — Run post-change gates
+### Step 6 — Commit Changes to `dev`
 
-After the end-to-end fallback test has produced and verified its YAMLs, run these skills in order:
-
-1. **ALWAYS** Use SKILL `/post-change-update` with `phase=before-validation` and the tested `gamever`.
-2. **ALWAYS** Use SKILL `/post-change-validation` with the same `gamever`.
-3. Only after validation succeeds, **ALWAYS** Use SKILL `/post-change-update` with
-   `phase=after-validation` and the same `gamever`.
-
-These calls replace direct formatting, gamedata update, C++ validation, and snapshot-pack commands. If any gate
-fails, stop the entire task and do not commit.
-
-### Step 7 — Commit
-
-If on `main`, branch to `dev` first. Review `git status --short`, then stage the new SKILL.md, changed tracked
-gamedata files, and `gamesymbols/<gamever>.yaml` **explicitly**; never use `git add -A`. Commit with:
+After the end-to-end fallback test has produced and verified its YAMLs, record the required one-line memory pointer
+per the repo workflow. Ensure the delivery branch is `dev`; never commit directly to `main`. If the local `dev`
+branch exists, switch to it. Otherwise, switch to `main` first and create `dev` from `main`:
 
 ```bash
-git commit -m "feat(fallback): add find-XXXX skill" -m "Co-Authored-By: Codex (GPT-5.x)"
+if git show-ref --verify --quiet refs/heads/dev; then
+  git switch dev
+else
+  git switch main
+  git switch -c dev
+fi
 ```
 
-Then record a one-line memory pointer per the repo workflow.
+If any branch switch fails, stop and report the error. Review `git status --short`, then explicitly stage the new
+fallback skill and that memory update; never use `git add -A`:
+
+```bash
+git add -- .claude/skills/find-XXXX/SKILL.md <memory-pointer-path>
+git diff --cached --name-only
+```
+
+Stop if the staged-path list contains anything unrelated to this task. Commit only the staged task changes using
+the repository commit format:
+
+```bash
+git commit -m "feat(skills): add find-XXXX fallback" -m "Co-Authored-By: Codex"
+```
+
+Do not call `/create-pr`, push the branch, or open a pull request unless the user separately requests it. Finish by
+reporting the commit hash, tested game version, unittest result, and Agent-Skill-only result.
 
 ---
 
@@ -322,10 +332,9 @@ Written beside the binary, one per symbol: `<symbol>.windows.yaml` / `<symbol>.l
 - [ ] Real Agent-Skill-only test passed with `uv run ida_analyze_bin.py -gamever <gamever> -oldgamever none
       -modules=<module> -debug -skip_pp -skill=<skill_name>`; the log proves preprocessing was skipped, the
       Agent Skill actually started, all expected YAMLs were produced, and the summary reports `Failed: 0`.
-- [ ] `/post-change-update phase=before-validation` succeeds for the tested game version.
-- [ ] `/post-change-validation` succeeds for the same game version.
-- [ ] `/post-change-update phase=after-validation` packs `gamesymbols/<gamever>.yaml`.
-- [ ] New SKILL.md, gamedata, and snapshot staged explicitly and committed on `dev`; memory pointer recorded.
+- [ ] The current branch is `dev` (created from `main` when it did not already exist).
+- [ ] New SKILL.md and memory pointer are explicitly staged and committed.
+- [ ] `/create-pr` was not called; no push or PR was performed without a separate user request.
 
 ## Worked example — `find-CEntitySystem_Init-decompiles`
 

@@ -36,10 +36,10 @@ disasm_code: |-
   .text:00000001811F82D8                 mov     rbx, cs:qword_1820B9438
   .text:00000001811F82DF                 lea     rax, [rsi+10h]
   .text:00000001811F82E3                 xor     r15d, r15d
-  .text:00000001811F82E6                 mov     cs:qword_181E1C888, rsi
+  .text:00000001811F82E6                 mov     cs:g_EntitySystem, rsi
   .text:00000001811F82ED                 test    rsi, rsi
   .text:00000001811F82F0                 cmovz   rax, r15
-  .text:00000001811F82F4                 mov     cs:qword_181D9D980, rax
+  .text:00000001811F82F4                 mov     cs:g_pEntityList, rax
   .text:00000001811F82FB                 test    rbx, rbx
   .text:00000001811F82FE                 jz      short loc_1811F834D
   .text:00000001811F8300                 test    byte ptr [rbx+68h], 2
@@ -516,10 +516,10 @@ procedure: |-
     CUtlScratchMemoryPool::Init((CUtlScratchMemoryPool *)(a1 + 3256), 0x400u, 0, nullptr, 0);// 0xCB8 = 3256LL = CEntitySystem::m_ComponentUnserializerInfoAllocator
     v11 = qword_1820B9438;
     v12 = a1 + 16;
-    qword_181E1C888 = a1;
+    g_EntitySystem = a1;
     if ( !a1 )
       v12 = 0;
-    qword_181D9D980 = v12;
+    g_pEntityList = v12;
     if ( qword_1820B9438 )
     {
       do

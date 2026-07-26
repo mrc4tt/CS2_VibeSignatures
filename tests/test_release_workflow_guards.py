@@ -332,13 +332,13 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                         head_sha=fixture.head_sha,
                     )
 
-    def test_promotion_allows_main_to_advance_after_output_build(self) -> None:
+    def test_promotion_requires_exact_source_as_merge_first_parent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             fixture = ReleaseFixture(Path(tmp))
             fixture.stage()
             fixture.finalize_and_index()
             merge_sha = "4" * 40
-            base_parent_sha = "9" * 40
+            base_parent_sha = fixture.source_sha
             changed_paths = "\n".join(
                 [
                     f"gamesymbols/{fixture.gamever}.yaml",
@@ -346,16 +346,13 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                     f"release-manifests/{fixture.gamever}.json",
                 ]
             )
-            with (
-                patch(
-                    "release_workflow_lib.promotion._git_output",
-                    side_effect=[
-                        f"{merge_sha} {base_parent_sha} {fixture.head_sha}",
-                        f"{fixture.head_sha} {fixture.source_sha}",
-                        changed_paths,
-                    ],
-                ),
-                patch("release_workflow_lib.promotion._git_is_ancestor", return_value=True),
+            with patch(
+                "release_workflow_lib.promotion._git_output",
+                side_effect=[
+                    f"{merge_sha} {base_parent_sha} {fixture.head_sha}",
+                    f"{fixture.head_sha} {fixture.source_sha}",
+                    changed_paths,
+                ],
             ):
                 result = verify_promotion(
                     repo_root=fixture.repo,
@@ -373,24 +370,21 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
 
             self.assertEqual(merge_sha, result["output_merge_sha"])
 
-    def test_promotion_rejects_source_outside_merge_base_history(self) -> None:
+    def test_promotion_rejects_default_branch_advancement_after_output_build(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             fixture = ReleaseFixture(Path(tmp))
             fixture.stage()
             fixture.finalize_and_index()
             merge_sha = "4" * 40
             base_parent_sha = "9" * 40
-            with (
-                patch(
-                    "release_workflow_lib.promotion._git_output",
-                    side_effect=[
-                        f"{merge_sha} {base_parent_sha} {fixture.head_sha}",
-                        f"{fixture.head_sha} {fixture.source_sha}",
-                    ],
-                ),
-                patch("release_workflow_lib.promotion._git_is_ancestor", return_value=False),
+            with patch(
+                "release_workflow_lib.promotion._git_output",
+                side_effect=[
+                    f"{merge_sha} {base_parent_sha} {fixture.head_sha}",
+                    f"{fixture.head_sha} {fixture.source_sha}",
+                ],
             ):
-                with self.assertRaisesRegex(ReleaseWorkflowError, "not an ancestor"):
+                with self.assertRaisesRegex(ReleaseWorkflowError, "exactly match SOURCE_SHA"):
                     verify_promotion(
                         repo_root=fixture.repo,
                         staging_root=fixture.staging,

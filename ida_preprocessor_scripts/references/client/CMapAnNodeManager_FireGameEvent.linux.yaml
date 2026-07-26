@@ -70,7 +70,7 @@ disasm_code: |-
   .text:0000000001A2850D                 xor     esi, esi
   .text:0000000001A2850F                 mov     rdi, [rax]
   .text:0000000001A28512                 mov     rax, [rdi]
-  .text:0000000001A28515                 call    qword ptr [rax+190h]  ; 190h = IVEngineClient2_SendStringCmd
+  .text:0000000001A28515                 call    qword ptr [rax+190h]  ; 190h = IVEngineClient2_ExecuteClientCmd
   .text:0000000001A2851B                 sub     rsp, 0FFFFFFFFFFFFFF80h
   .text:0000000001A2851F                 pop     rbx
   .text:0000000001A28520                 pop     r12
@@ -260,7 +260,7 @@ procedure: |-
         if ( !v5 )
           v5 = &haystack;
         V_snprintf(v14, 128, "%s \"%s\"", "annotations_file_at_freezetime", v5);
-        (*(void (__fastcall **)(__int64, _QWORD, _DWORD *))(*(_QWORD *)qword_47F9B38 + 400LL))(qword_47F9B38, 0, v14);  // 400LL = 0x190 = IVEngineClient2_SendStringCmd
+        (*(void (__fastcall **)(__int64, _QWORD, _DWORD *))(*(_QWORD *)qword_47F9B38 + 400LL))(qword_47F9B38, 0, v14);  // 400LL = 0x190 = IVEngineClient2_ExecuteClientCmd
       }
       return;
     }

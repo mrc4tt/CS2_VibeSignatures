@@ -141,43 +141,45 @@ Notes:
 - `reference_modules` comments should document the YAML file naming pattern
 - If no `alias_symbols`, the reference YAML files use the `symbol` name directly
 
-### Step 6: Run post-change gates
+### Step 6: Commit Changes to `dev`
 
-Run the repository update and validation skills in this exact order:
-
-1. **ALWAYS** Use SKILL `/post-change-update` with `phase=before-validation` and
-   `gamever=<gamever>` from `.env` -> `CS2VIBE_GAMEVER`.
-2. **ALWAYS** Use SKILL `/post-change-validation` with the same `gamever`.
-3. Only after validation succeeds, **ALWAYS** Use SKILL `/post-change-update` with
-   `phase=after-validation` and the same `gamever`.
-
-`/post-change-validation` runs `run_cpp_tests.py` and requires real runnable tests. Expected success includes
-compilation plus a clean vtable/record-layout comparison.
-
-If validation reports a compile, configuration, layout, or environment failure, **STOP the entire task** and
-report its reason. Do not edit the test, retry validation, pack the snapshot, or commit during that task.
-
-### Step 7: Commit
-
-Never commit directly to `main`; switch to or create `dev` first. Review `git status --short`, then explicitly
-stage only the new test, its config entry, changed tracked gamedata, and the snapshot:
+After validation passes, ensure the delivery branch is `dev`. Never commit directly to `main`. If the local `dev`
+branch exists, switch to it. Otherwise, switch to `main` first and create `dev` from `main`:
 
 ```bash
-git add cpp_tests/{interface_lowercase}.cpp configs/<GAMEVER>.yaml
-git add <changed-dist-gamedata-files> gamesymbols/<gamever>.yaml
-git commit -m "test(cpp-tests): add {InterfaceName} layout validation" -m "Co-Authored-By: Codex (GPT-5.x)"
+if git show-ref --verify --quiet refs/heads/dev; then
+  git switch dev
+else
+  git switch main
+  git switch -c dev
+fi
 ```
 
-Never use `git add -A` and never enter this step unless all three post-change gate calls succeeded.
+If any branch switch fails, stop and report the error. Review `git status --short`, then explicitly stage only the
+new test and its config entry:
+
+```bash
+git add -- cpp_tests/{interface_lowercase}.cpp configs/<GAMEVER>.yaml
+git diff --cached --name-only
+```
+
+Never use `git add -A`. Stop if the staged-path list contains anything unrelated to this task. Commit only the
+staged task changes using the repository commit format:
+
+```bash
+git commit -m "test(cpp-tests): add {InterfaceName} vtable validation" -m "Co-Authored-By: Codex"
+```
+
+Do not call `/create-pr`, push the branch, or open a pull request unless the user separately requests it. Finish by
+reporting the commit hash and the validation results.
 
 ## Checklist
 
 - [ ] New cpp test follows the platform/RESTRICT preamble and calls a virtual method
 - [ ] `configs/<GAMEVER>.yaml` entry contains the correct symbol, aliases, header, and reference modules
-- [ ] `/post-change-update phase=before-validation` succeeds for the selected game version
-- [ ] `/post-change-validation` succeeds for the same game version
-- [ ] `/post-change-update phase=after-validation` packs `gamesymbols/<gamever>.yaml`
-- [ ] All task-related files are explicitly staged and committed on `dev`
+- [ ] The current branch is `dev` (created from `main` when it did not already exist)
+- [ ] Only the new test and config entry are explicitly staged and committed
+- [ ] `/create-pr` was not called; no push or PR was performed without a separate user request
 
 ## Reference: Existing Examples
 

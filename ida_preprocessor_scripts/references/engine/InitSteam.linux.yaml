@@ -1,0 +1,205 @@
+func_name: InitSteam
+func_va: '0x3526a0'
+disasm_code: |-
+  .text:00000000003526A0                 push    rbp
+  .text:00000000003526A1                 ; bool
+  .text:00000000003526A1                 xor     edx, edx; bool
+  .text:00000000003526A3                 mov     rbp, rsp
+  .text:00000000003526A6                 push    r13
+  .text:00000000003526A8                 push    r12
+  .text:00000000003526AA                 mov     r12d, esi
+  .text:00000000003526AD                 push    rbx
+  .text:00000000003526AE                 lea     rsi, aFilesystem; "FileSystem"
+  .text:00000000003526B5                 sub     rsp, 1008h
+  .text:00000000003526BC                 call    __ZN9KeyValues7FindKeyEPKcb; KeyValues::FindKey(char const*,bool)
+  .text:00000000003526C1                 test    rax, rax
+  .text:00000000003526C4                 jz      loc_35288E
+  .text:00000000003526CA                 ; _QWORD
+  .text:00000000003526CA                 mov     edx, cs:g_nSteamAppId; _QWORD
+  .text:00000000003526D0                 lea     r13, aSteamappid; "SteamAppId"
+  .text:00000000003526D7                 mov     rbx, rax
+  .text:00000000003526DA                 test    edx, edx
+  .text:00000000003526DC                 jz      loc_352830
+  .text:00000000003526E2                 lea     rsi, aBreakpadappid; "BreakpadAppId"
+  .text:00000000003526E9                 ; _QWORD
+  .text:00000000003526E9                 mov     rdi, rbx; _QWORD
+  .text:00000000003526EC                 call    __ZNK9KeyValues6GetIntEPKci; KeyValues::GetInt(char const*,int)
+  .text:00000000003526F1                 mov     cs:g_nBreakpadAppId, eax
+  .text:00000000003526F7                 test    r12b, r12b
+  .text:00000000003526FA                 jnz     loc_352810
+  .text:0000000000352700                 mov     edx, cs:g_nSteamAppId
+  .text:0000000000352706                 lea     rbx, [rbp+var_1020]
+  .text:000000000035270D                 xor     eax, eax
+  .text:000000000035270F                 lea     rsi, aD_2; "%d"
+  .text:0000000000352716                 mov     rdi, rbx
+  .text:0000000000352719                 call    sub_352610
+  .text:000000000035271E                 ; _QWORD
+  .text:000000000035271E                 mov     rsi, rbx; _QWORD
+  .text:0000000000352721                 ; _QWORD
+  .text:0000000000352721                 mov     edx, 1; _QWORD
+  .text:0000000000352726                 ; _QWORD
+  .text:0000000000352726                 mov     rdi, r13; _QWORD
+  .text:0000000000352729                 call    _Plat_SetEnv
+  .text:000000000035272E                 ; _QWORD
+  .text:000000000035272E                 mov     rsi, rbx; _QWORD
+  .text:0000000000352731                 ; _QWORD
+  .text:0000000000352731                 mov     edx, 1; _QWORD
+  .text:0000000000352736                 lea     rdi, aSteamgameid; "SteamGameId"
+  .text:000000000035273D                 call    _Plat_SetEnv
+  .text:0000000000352742                 mov     ebx, cs:g_nSteamAppId
+  .text:0000000000352748                 mov     eax, cs:dword_9E2098
+  .text:000000000035274E                 cmp     ebx, eax
+  .text:0000000000352750                 jz      short loc_352772
+  .text:0000000000352752                 call    _CommandLine
+  .text:0000000000352757                 mov     esi, 6BD98EDDh
+  .text:000000000035275C                 mov     rdi, rax
+  .text:000000000035275F                 mov     rax, [rax]
+  .text:0000000000352762                 call    qword ptr [rax+90h]
+  .text:0000000000352768                 test    al, al
+  .text:000000000035276A                 jz      short loc_3527A8
+  .text:000000000035276C                 mov     eax, cs:g_nSteamAppId
+  .text:0000000000352772                 mov     rbx, cs:LOG_GENERAL_ptr
+  .text:0000000000352779                 ; _QWORD
+  .text:0000000000352779                 mov     esi, 2; _QWORD
+  .text:000000000035277E                 cmp     cs:g_nBreakpadAppId, eax
+  .text:0000000000352784                 ; _QWORD
+  .text:0000000000352784                 mov     edi, [rbx]; _QWORD
+  .text:0000000000352786                 jz      short loc_3527E0
+  .text:0000000000352788                 call    _LoggingSystem_IsChannelEnabled
+  .text:000000000035278D                 test    al, al
+  .text:000000000035278F                 jnz     short loc_3527B8
+  .text:0000000000352791                 add     rsp, 1008h
+  .text:0000000000352798                 mov     eax, 1
+  .text:000000000035279D                 pop     rbx
+  .text:000000000035279E                 pop     r12
+  .text:00000000003527A0                 pop     r13
+  .text:00000000003527A2                 pop     rbp
+  .text:00000000003527A3                 retn
+  .text:00000000003527A8                 mov     edi, ebx
+  .text:00000000003527AA                 call    sub_344190
+  .text:00000000003527AF                 jmp     short loc_35276C
+  .text:00000000003527B8                 ; _QWORD
+  .text:00000000003527B8                 mov     edi, [rbx]; _QWORD
+  .text:00000000003527BA                 lea     rdx, aSteamAppidDBre; "Steam AppId(%d), BreakpadId(%d)\n"
+  .text:00000000003527C1                 ; _QWORD
+  .text:00000000003527C1                 mov     esi, 2; _QWORD
+  .text:00000000003527C6                 xor     eax, eax
+  .text:00000000003527C8                 mov     r8d, cs:g_nBreakpadAppId
+  .text:00000000003527CF                 mov     ecx, cs:g_nSteamAppId
+  .text:00000000003527D5                 call    _LoggingSystem_Log
+  .text:00000000003527DA                 jmp     short loc_352791
+  .text:00000000003527E0                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000003527E5                 test    al, al
+  .text:00000000003527E7                 jz      short loc_352791
+  .text:00000000003527E9                 ; _QWORD
+  .text:00000000003527E9                 mov     edi, [rbx]; _QWORD
+  .text:00000000003527EB                 lea     rdx, aSteamAppidD; "Steam AppId(%d)\n"
+  .text:00000000003527F2                 ; _QWORD
+  .text:00000000003527F2                 mov     esi, 2; _QWORD
+  .text:00000000003527F7                 xor     eax, eax
+  .text:00000000003527F9                 mov     ecx, cs:g_nSteamAppId
+  .text:00000000003527FF                 call    _LoggingSystem_Log
+  .text:0000000000352804                 jmp     short loc_352791
+  .text:0000000000352810                 lea     rsi, aBreakpadappidT; "BreakpadAppId_Tools"
+  .text:0000000000352817                 ; _QWORD
+  .text:0000000000352817                 mov     edx, eax; _QWORD
+  .text:0000000000352819                 ; _QWORD
+  .text:0000000000352819                 mov     rdi, rbx; _QWORD
+  .text:000000000035281C                 call    __ZNK9KeyValues6GetIntEPKci; KeyValues::GetInt(char const*,int)
+  .text:0000000000352821                 mov     cs:g_nBreakpadAppId, eax
+  .text:0000000000352827                 jmp     loc_352700
+  .text:0000000000352830                 lea     rsi, aForcefixedappi; "ForceFixedAppIds"
+  .text:0000000000352837                 ; _QWORD
+  .text:0000000000352837                 xor     edx, edx; _QWORD
+  .text:0000000000352839                 ; _QWORD
+  .text:0000000000352839                 mov     rdi, rax; _QWORD
+  .text:000000000035283C                 call    __ZNK9KeyValues6GetIntEPKci; KeyValues::GetInt(char const*,int)
+  .text:0000000000352841                 lea     r13, aSteamappid; "SteamAppId"
+  .text:0000000000352848                 ; _QWORD
+  .text:0000000000352848                 mov     rsi, r13; _QWORD
+  .text:000000000035284B                 test    eax, eax
+  .text:000000000035284D                 jz      short loc_352870
+  .text:000000000035284F                 ; _QWORD
+  .text:000000000035284F                 xor     edx, edx; _QWORD
+  .text:0000000000352851                 ; _QWORD
+  .text:0000000000352851                 mov     rdi, rbx; _QWORD
+  .text:0000000000352854                 call    __ZNK9KeyValues6GetIntEPKci; KeyValues::GetInt(char const*,int)
+  .text:0000000000352859                 mov     edx, eax
+  .text:000000000035285B                 mov     cs:g_nSteamAppId, eax
+  .text:0000000000352861                 jmp     loc_3526E2
+  .text:0000000000352870                 call    _CommandLine
+  .text:0000000000352875                 mov     esi, 0C2EC365Ch
+  .text:000000000035287A                 mov     rdx, r13
+  .text:000000000035287D                 mov     rdi, rax
+  .text:0000000000352880                 mov     rax, [rax]
+  .text:0000000000352883                 call    qword ptr [rax+0A0h]
+  .text:0000000000352889                 mov     rsi, rax
+  .text:000000000035288C                 jmp     short loc_35284F
+  .text:000000000035288E                 lea     rdi, aGameInfoFileDo; "Game info file does not specify a steam"...
+  .text:0000000000352895                 xor     eax, eax
+  .text:0000000000352897                 call    _Plat_FatalError
+procedure: |-
+  __int64 __fastcall InitSteam(KeyValues *a1, char a2)
+  {
+    __int64 Key; // rax
+    __int64 v4; // rdx
+    __int64 v5; // rbx
+    unsigned int v6; // eax
+    unsigned int v7; // ebx
+    int v8; // eax
+    __int64 v9; // rax
+    const char *v11; // rsi
+    unsigned int Int; // eax
+    __int64 v13; // rax
+    _BYTE v14[4128]; // [rsp+0h] [rbp-1020h] BYREF
+
+    Key = KeyValues::FindKey(a1, "FileSystem", 0);
+    if ( !Key )
+    {
+      Plat_FatalError("Game info file does not specify a steam app id!\n");
+      JUMPOUT(0x35289C);
+    }
+    v4 = (unsigned int)g_nSteamAppId;
+    v5 = Key;
+    if ( !(_DWORD)g_nSteamAppId )
+    {
+      v11 = "SteamAppId";
+      if ( !(unsigned int)KeyValues::GetInt(Key, "ForceFixedAppIds", 0) )
+      {
+        v13 = CommandLine();
+        v11 = (const char *)(*(__int64 (__fastcall **)(__int64, __int64, const char *))(*(_QWORD *)v13 + 160LL))(
+                              v13,
+                              3270260316LL,
+                              "SteamAppId");
+      }
+      Int = KeyValues::GetInt(v5, v11, 0);
+      v4 = Int;
+      LODWORD(g_nSteamAppId) = Int;
+    }
+    v6 = KeyValues::GetInt(v5, "BreakpadAppId", v4);
+    g_nBreakpadAppId = v6;
+    if ( a2 )
+      g_nBreakpadAppId = KeyValues::GetInt(v5, "BreakpadAppId_Tools", v6);
+    sub_352610(v14, "%d", g_nSteamAppId);
+    Plat_SetEnv("SteamAppId", v14, 1);
+    Plat_SetEnv("SteamGameId", v14, 1);
+    v7 = g_nSteamAppId;
+    v8 = dword_9E2098;
+    if ( (_DWORD)g_nSteamAppId != dword_9E2098 )
+    {
+      v9 = CommandLine();
+      if ( !(*(unsigned __int8 (__fastcall **)(__int64, __int64))(*(_QWORD *)v9 + 144LL))(v9, 1809419997) )
+        sub_344190(v7);
+      v8 = g_nSteamAppId;
+    }
+    if ( g_nBreakpadAppId == v8 )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled(LOG_GENERAL, 2) )
+        LoggingSystem_Log(LOG_GENERAL, 2, "Steam AppId(%d)\n", g_nSteamAppId);
+    }
+    else if ( (unsigned __int8)LoggingSystem_IsChannelEnabled(LOG_GENERAL, 2) )
+    {
+      LoggingSystem_Log(LOG_GENERAL, 2, "Steam AppId(%d), BreakpadId(%d)\n", g_nSteamAppId, g_nBreakpadAppId);
+    }
+    return 1;
+  }

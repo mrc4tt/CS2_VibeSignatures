@@ -51,62 +51,80 @@ modules:
     symbols:
       - name: SDL_PreInitMouse
         category: func
+        platform: windows
       - name: SDL_QuitMouse
         category: func
+        platform: windows
       - name: SDL_GetMouse
         category: func
+        platform: windows
       - name: SDL_mouse_initialized
         category: gv
+        platform: windows
       - name: SDL_Mouse
         category: struct
       - name: SDL_Mouse_was_touch_mouse_events
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: was_touch_mouse_events
       - name: SDL_Mouse_cursor_visible
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: cursor_visible
       - name: SDL_MouseWarpEmulationChanged
         category: func
+        platform: windows
       - name: SDL_SetRelativeMouseMode
         category: func
+        platform: windows
       - name: SDL_Mouse_warp_emulation_active
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: warp_emulation_active
       - name: SDL_Mouse_relative_mode
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: relative_mode
       - name: SDL_Mouse_SetRelativeMouseMode
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: SetRelativeMouseMode
       - name: SDL_PerformWarpMouseInWindow
         category: func
+        platform: windows
       - name: SDL_Mouse_focus
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: focus
       - name: SDL_Mouse_last_x
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: last_x
       - name: SDL_Mouse_last_y
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: last_y
       - name: SDL_Mouse_has_position
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: has_position
       - name: SDL_Mouse_relative_mode_warp_motion
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: relative_mode_warp_motion
       - name: SDL_Mouse_WarpMouse
         category: structmember
+        platform: windows
         struct: SDL_Mouse
         member: WarpMouse
   - name: vphysics2
@@ -123,8 +141,101 @@ modules:
   - name: scenesystem
     path_windows: game/bin/win64/scenesystem.dll
     path_linux: game/bin/linuxsteamrt64/libscenesystem.so
-    skills: []
-    symbols: []
+    skills:
+      - name: find-SC_DumpWorld_CommandHandler
+        expected_output:
+          - SC_DumpWorld_CommandHandler.{platform}.yaml
+        platform: windows
+      - name: find-SC_DumpWorld_CommandHandler-decompiles
+        expected_output:
+          - ISceneSystem_GetWorldsInfo.{platform}.yaml
+          - ISceneWorld_GetObjectsInfo.{platform}.yaml
+          - ISceneWorld_GetWorldName.{platform}.yaml
+          - ISceneSystem_GetObjectBounds.{platform}.yaml
+          - ISceneSystem_GetObjectClassName.{platform}.yaml
+          - CSceneObject_pDesc.{platform}.yaml
+          - CSceneObject_nFlags.{platform}.yaml
+          - CSceneObject_fOriginX.{platform}.yaml
+          - CSceneObject_fOriginY.{platform}.yaml
+          - CSceneObject_fOriginZ.{platform}.yaml
+          - CSceneObject_nClassIndex.{platform}.yaml
+        expected_input:
+          - SC_DumpWorld_CommandHandler.{platform}.yaml
+        platform: windows
+    symbols:
+      - name: SC_DumpWorld_CommandHandler
+        category: func
+        platform: windows
+      - name: ISceneSystem_GetWorldsInfo
+        category: vfunc
+        platform: windows
+        alias:
+          - ISceneSystem::GetWorldsInfo
+      - name: ISceneWorld_GetObjectsInfo
+        category: vfunc
+        platform: windows
+        alias:
+          - ISceneWorld::GetObjectsInfo
+      - name: ISceneWorld_GetWorldName
+        category: vfunc
+        platform: windows
+        alias:
+          - ISceneWorld::GetWorldName
+      - name: ISceneSystem_GetObjectBounds
+        category: vfunc
+        platform: windows
+        alias:
+          - ISceneSystem::GetObjectBounds
+      - name: ISceneSystem_GetObjectClassName
+        category: vfunc
+        platform: windows
+        alias:
+          - ISceneSystem::GetObjectClassName
+      - name: CSceneObject
+        category: struct
+        platform: windows
+      - name: CSceneObject_pDesc
+        category: structmember
+        platform: windows
+        struct: CSceneObject
+        member: pDesc
+        alias:
+          - CSceneObject::pDesc
+      - name: CSceneObject_nFlags
+        category: structmember
+        platform: windows
+        struct: CSceneObject
+        member: nFlags
+        alias:
+          - CSceneObject::nFlags
+      - name: CSceneObject_fOriginX
+        category: structmember
+        platform: windows
+        struct: CSceneObject
+        member: fOriginX
+        alias:
+          - CSceneObject::fOriginX
+      - name: CSceneObject_fOriginY
+        category: structmember
+        platform: windows
+        struct: CSceneObject
+        member: fOriginY
+        alias:
+          - CSceneObject::fOriginY
+      - name: CSceneObject_fOriginZ
+        category: structmember
+        platform: windows
+        struct: CSceneObject
+        member: fOriginZ
+        alias:
+          - CSceneObject::fOriginZ
+      - name: CSceneObject_nClassIndex
+        category: structmember
+        platform: windows
+        struct: CSceneObject
+        member: nClassIndex
+        alias:
+          - CSceneObject::nClassIndex
   - name: networksystem
     path_windows: game/bin/win64/networksystem.dll
     path_linux: game/bin/linuxsteamrt64/libnetworksystem.so
@@ -414,16 +525,22 @@ modules:
           - CNetworkSystem::SendNetworkStats
       - name: CNetworkMessages_GetNetworkGroupCount
         category: vfunc
+        source_alias:
+          - INetworkMessages_GetNetworkGroupCount
         alias:
           - CNetworkMessages::GetNetworkGroupCount
         shared: true
       - name: CNetworkMessages_GetNetworkGroupName
         category: vfunc
+        source_alias:
+          - INetworkMessages_GetNetworkGroupName
         alias:
           - CNetworkMessages::GetNetworkGroupName
         shared: true
       - name: CNetworkMessages_GetNetworkGroupColor
         category: vfunc
+        source_alias:
+          - INetworkMessages_GetNetworkGroupColor
         alias:
           - CNetworkMessages::GetNetworkGroupColor
         shared: true
@@ -1075,8 +1192,47 @@ modules:
           - INetworkMessages_FindNetworkGroup.{platform}.yaml
         expected_input:
           - CNetworkGameClient_RecordEntityBandwidth.{platform}.yaml
+      - name: find-InitSteam
+        expected_output:
+          - InitSteam.{platform}.yaml
+      - name: find-InitSteam-decompiles
+        expected_output:
+          - g_nSteamAppId.{platform}.yaml
+          - g_nBreakpadAppId.{platform}.yaml
+        expected_input:
+          - InitSteam.{platform}.yaml
+      - name: find-CRenderingWorldSession_FindOrCreateWorldSession
+        platform: windows
+        expected_output:
+          - CRenderingWorldSession_FindOrCreateWorldSession.{platform}.yaml
+      - name: find-CRenderingWorldSession_GetEntityLumpForTemplate
+        platform: windows
+        expected_output:
+          - CRenderingWorldSession_GetEntityLumpForTemplate.{platform}.yaml
       - name: find-CEngineClient_vtable
         expected_output:
+          - CEngineClient_vtable.{platform}.yaml
+      - name: find-CEngineClient_GetEntityLumpForTemplate
+        platform: windows
+        expected_output:
+          - CEngineClient_GetEntityLumpForTemplate.{platform}.yaml
+        expected_input:
+          - CRenderingWorldSession_GetEntityLumpForTemplate.{platform}.yaml
+          - CEngineClient_vtable.{platform}.yaml
+      - name: find-CEngineClient_FindOrCreateWorldSession
+        platform: windows
+        expected_output:
+          - CEngineClient_FindOrCreateWorldSession.{platform}.yaml
+        expected_input:
+          - CRenderingWorldSession_FindOrCreateWorldSession.{platform}.yaml
+          - CRenderingWorldSession_GetEntityLumpForTemplate.{platform}.yaml
+          - CEngineClient_vtable.{platform}.yaml
+      - name: find-CEngineClient_GetStatsAppID
+        platform: windows
+        expected_output:
+          - CEngineClient_GetStatsAppID.{platform}.yaml
+        expected_input:
+          - g_nBreakpadAppId.{platform}.yaml
           - CEngineClient_vtable.{platform}.yaml
       - name: find-CEngineClient_DumpNetStats
         expected_output:
@@ -1799,6 +1955,8 @@ modules:
         alias:
           - CServerSideClientBase::ClientPrintf
           - ClientPrintf
+      - name: CNetworkGameServer
+        category: struct
       - name: CNetworkGameServer_ClientList
         category: structmember
         struct: CNetworkGameServer
@@ -1817,6 +1975,7 @@ modules:
         category: vtable
       - name: CNetworkGameServerBase_ServerSimulateInternal
         category: func
+        platform: linux
         alias:
           - CNetworkGameServerBase::ServerSimulateInternal
       - name: CNetworkGameServerBase_ServerSimulate
@@ -1922,6 +2081,7 @@ modules:
           - CNetworkGameServerBase::Shutdown
       - name: CNetworkGameServerBase_ShutdownInternal
         category: func
+        platform: linux
         alias:
           - CNetworkGameServerBase::ShutdownInternal
       - name: CNetworkGameServer_ActivateServer
@@ -2018,6 +2178,7 @@ modules:
           - CNetChan::ParseMessagesDemo
       - name: CNetworkGameClient_ProcessPacketEntitiesInternal
         category: func
+        platform: windows
         alias:
           - CNetworkGameClient::ProcessPacketEntitiesInternal
       - name: CNetworkGameClient_ProcessPacketEntities
@@ -2058,6 +2219,7 @@ modules:
         shared: true
       - name: INetworkClientService_IsConnected
         category: vfunc
+        platform: windows
         alias:
           - INetworkClientService::IsConnected
         shared: true
@@ -2075,6 +2237,7 @@ modules:
           - CNetworkClientService::SplitScreenConnect
       - name: CNetworkClientService_SendNetMessage
         category: vfunc
+        platform: windows
         alias:
           - CNetworkClientService::SendNetMessage
       - name: CNetworkClientService_SendStringCmd
@@ -2099,6 +2262,7 @@ modules:
           - CNetworkClientService::OnStatus
       - name: CNetworkClientService_ServerCmd
         category: vfunc
+        platform: windows
         alias:
           - CNetworkClientService::ServerCmd
       - name: CNetworkClientService_GetDisconnectReason
@@ -2275,16 +2439,72 @@ modules:
         alias:
           - INetworkMessages::SetIsForServer
         shared: true
+      - name: InitSteam
+        category: func
+      - name: g_nSteamAppId
+        category: gv
+      - name: g_nBreakpadAppId
+        category: gv
+      - name: CRenderingWorldSession_FindOrCreateWorldSession
+        category: func
+        platform: windows
+        alias:
+          - CRenderingWorldSession::FindOrCreateWorldSession
+      - name: CRenderingWorldSession_GetEntityLumpForTemplate
+        category: func
+        platform: windows
+        alias:
+          - CRenderingWorldSession::GetEntityLumpForTemplate
       - name: CEngineClient_vtable
         category: vtable
+      - name: CEngineClient_GetEntityLumpForTemplate
+        category: vfunc
+        platform: windows
+        alias:
+          - CEngineClient::GetEntityLumpForTemplate
+      - name: CEngineClient_FindOrCreateWorldSession
+        category: vfunc
+        platform: windows
+        alias:
+          - CEngineClient::FindOrCreateWorldSession
+      - name: CEngineClient_GetStatsAppID
+        category: vfunc
+        platform: windows
+        alias:
+          - CEngineClient::GetStatsAppID
       - name: CEngineClient_DumpNetStats
         category: vfunc
         alias:
           - CEngineClient::DumpNetStats
-      - name: CEngineClient_SendStringCmd
+      - name: CEngineClient_ExecuteClientCmd
         category: vfunc
         alias:
-          - CEngineClient::SendStringCmd
+          - CEngineClient::ExecuteClientCmd
+      - name: CInputService_ProcessCommand
+        category: func
+        platform: windows
+        alias:
+          - CInputService::ProcessCommand
+      - name: CInputService_ProcessCommandBuffers
+        category: func
+        platform: windows
+        alias:
+          - CInputService::ProcessCommandBuffers
+      - name: CInputService_HandleAnalogValueChange
+        category: func
+        platform: windows
+        alias:
+          - CInputService::HandleAnalogValueChange
+      - name: CInputService_HandleInputEvent
+        category: func
+        platform: windows
+        alias:
+          - CInputService::HandleInputEvent
+      - name: CEngineClient_ClientCmd_Unrestricted
+        category: vfunc
+        platform: windows
+        alias:
+          - CEngineClient::ClientCmd_Unrestricted
       - name: INetworkGameClient_SendStringCmd
         category: vfunc
         alias:
@@ -2311,6 +2531,7 @@ modules:
         category: func
       - name: GetSteamUniverse
         category: func
+        platform: linux
       - name: CEngineServer_ShowFrameTimeReport
         category: vfunc
         alias:
@@ -2392,6 +2613,14 @@ modules:
         category: vfunc
         alias:
           - CEngineServer::IsDedicatedServer
+      - name: CEngineServer_GetServerGlobals
+        category: vfunc
+        alias:
+          - CEngineServer::GetServerGlobals
+      - name: CEngineServer_IsLogEnabled
+        category: vfunc
+        alias:
+          - CEngineServer::IsLogEnabled
       - name: CEngineServer_ServerCommand
         category: vfunc
         alias:
@@ -2512,10 +2741,12 @@ modules:
           - CLoopTypeBase::AddDependentServices
       - name: CLoopTypeBase_GenerateServiceDependencies
         category: func
+        platform: windows
         alias:
           - CLoopTypeBase::GenerateServiceDependencies
       - name: CLoopTypeBase_GenerateSecondaryDependencies
         category: func
+        platform: windows
         alias:
           - CLoopTypeBase::GenerateSecondaryDependencies
       - name: CLoopTypeBase_LoadDependentServices
@@ -2630,6 +2861,7 @@ modules:
         category: vtable
       - name: CServerSideClientBase_MarkSpawnGroupLoadCompleted
         category: func
+        platform: windows
         alias:
           - CServerSideClientBase::MarkSpawnGroupLoadCompleted
       - name: CServerSideClientBase_ProcessSpawnGroup_LoadCompleted
@@ -2686,6 +2918,7 @@ modules:
         category: vtable
       - name: CNetworkGameClientBase_ServerCmd
         category: vfunc
+        platform: windows
         alias:
           - CNetworkGameClientBase::ServerCmd
       - name: CNetworkGameClientBase_ProcessSetConVar
@@ -3221,6 +3454,26 @@ modules:
       - name: find-CSource2Client_vtable
         expected_output:
           - CSource2Client_vtable.{platform}.yaml
+      - name: find-CSource2Client_Connect
+        expected_output:
+          - CSource2Client_Connect.{platform}.yaml
+        expected_input:
+          - CSource2Client_vtable.{platform}.yaml
+      - name: find-CSource2Client_Connect-decompiles
+        expected_output:
+          - g_pEngineClient.{platform}.yaml
+        expected_input:
+          - CSource2Client_Connect.{platform}.yaml
+      - name: find-CBasePlayerController_CheckForLocalPlayer
+        expected_output:
+          - CBasePlayerController_CheckForLocalPlayer.{platform}.yaml
+        expected_input:
+          - g_pEngineClient.{platform}.yaml
+      - name: find-CBasePlayerController_CheckForLocalPlayer-decompiles
+        expected_output:
+          - s_pLocalPlayer.{platform}.yaml
+        expected_input:
+          - CBasePlayerController_CheckForLocalPlayer.{platform}.yaml
       - name: find-CSource2Client_OnDisconnect
         expected_output:
           - CSource2Client_OnDisconnect.{platform}.yaml
@@ -3250,9 +3503,9 @@ modules:
       - name: find-CMapAnNodeManager_FireGameEvent
         expected_output:
           - CMapAnNodeManager_FireGameEvent.{platform}.yaml
-      - name: find-IVEngineClient2_SendStringCmd
+      - name: find-IVEngineClient2_ExecuteClientCmd
         expected_output:
-          - IVEngineClient2_SendStringCmd.{platform}.yaml
+          - IVEngineClient2_ExecuteClientCmd.{platform}.yaml
         expected_input:
           - CMapAnNodeManager_FireGameEvent.{platform}.yaml
       - name: find-CGameEventManager_FireEventClientSide
@@ -3443,6 +3696,29 @@ modules:
           - INetworkClientService_SendNetMessage.{platform}.yaml
         expected_input:
           - SendViolationReport.{platform}.yaml
+      - name: find-ClientAntiTamperTest-windows
+        platform: windows
+        expected_output:
+          - ClientAntiTamperTest.{platform}.yaml
+        expected_input:
+          - SendViolationReport.{platform}.yaml
+      - name: find-C_MultiplayRules_vtable
+        expected_output:
+          - C_MultiplayRules_vtable.{platform}.yaml
+      - name: find-C_GameRules_vtable
+        expected_output:
+          - C_GameRules_vtable.{platform}.yaml
+      - name: find-C_GameRules_ctor
+        expected_output:
+          - C_GameRules_ctor.{platform}.yaml
+        expected_input:
+          - C_GameRules_vtable.{platform}.yaml
+          - C_MultiplayRules_vtable.{platform}.yaml
+      - name: find-C_GameRules_ctor-decompiles
+        expected_output:
+          - g_pGameRules.{platform}.yaml
+        expected_input:
+          - C_GameRules_ctor.{platform}.yaml
       - name: find-ConnectInterfaces
         expected_output:
           - ConnectInterfaces.{platform}.yaml
@@ -3576,6 +3852,120 @@ modules:
           - CNetworkSerializerBindingBuildFilter_GetFieldPriority.{platform}.yaml
         expected_input:
           - CNetworkSerializerBindingBuildFilter_vtable.{platform}.yaml
+      - name: find-GameStateAPI_RegisterAPIs  # xref_strings "Is gamestate data currently latched and not updating (e.g. end-of-match)" + "FULLMATCH:IsLatched"
+        platform: windows
+        expected_output:
+          - GameStateAPI_RegisterAPIs.{platform}.yaml
+      - name: find-GameStateAPI_RegisterAPIs-extract-apis
+        platform: windows
+        expected_output:
+          - GameStateAPI_IsLatched.{platform}.yaml
+          - GameStateAPI_GetPlayerSlot.{platform}.yaml
+          - GameStateAPI_GetPlayerName.{platform}.yaml
+          - GameStateAPI_GetPlayerXuidStringFromPlayerSlot.{platform}.yaml
+          - GameStateAPI_GetLocalPlayerXuid.{platform}.yaml
+          - GameStateAPI_GetLocalOrInEyePlayerXuid.{platform}.yaml
+          - GameStateAPI_GetHudPlayerXuid.{platform}.yaml
+          - GameStateAPI_GetPlayerTeamName.{platform}.yaml
+          - GameStateAPI_GetPlayerTeamNumber.{platform}.yaml
+          - GameStateAPI_GetCoachingTeamNumber.{platform}.yaml
+          - GameStateAPI_GetAssociatedTeamNumber.{platform}.yaml
+          - GameStateAPI_IsPlayerConnected.{platform}.yaml
+          - GameStateAPI_IsPlayerAlive.{platform}.yaml
+          - GameStateAPI_GetPlayerPing.{platform}.yaml
+          - GameStateAPI_GetPlayerKills.{platform}.yaml
+          - GameStateAPI_GetPlayerRoundKills.{platform}.yaml
+          - GameStateAPI_GetPlayerAssists.{platform}.yaml
+          - GameStateAPI_GetPlayerDeaths.{platform}.yaml
+          - GameStateAPI_GetPlayerMVPs.{platform}.yaml
+          - GameStateAPI_GetPlayerMoney.{platform}.yaml
+          - GameStateAPI_GetPlayerScore.{platform}.yaml
+          - GameStateAPI_GetPlayerClanTag.{platform}.yaml
+          - GameStateAPI_GetPlayerActiveCoinRank.{platform}.yaml
+          - GameStateAPI_GetPlayerCompetitiveRankType.{platform}.yaml
+          - GameStateAPI_GetPlayerCompetitiveRanking.{platform}.yaml
+          - GameStateAPI_GetPlayerCompetitiveWins.{platform}.yaml
+          - GameStateAPI_GetPlayerPremierRankStatsObject.{platform}.yaml
+          - GameStateAPI_GetPlayerDisplayFlairItem.{platform}.yaml
+          - GameStateAPI_GetPlayerStatus.{platform}.yaml
+          - GameStateAPI_IsFakePlayer.{platform}.yaml
+          - GameStateAPI_GetPlayerActiveWeaponItemId.{platform}.yaml
+          - GameStateAPI_IsXuidValid.{platform}.yaml
+          - GameStateAPI_GetPlayerVoiceVolume.{platform}.yaml
+          - GameStateAPI_SetPlayerVoiceVolume.{platform}.yaml
+          - GameStateAPI_GetMapsInMapGroup.{platform}.yaml
+          - GameStateAPI_GetMapDisplayNameToken.{platform}.yaml
+          - GameStateAPI_GetMapsInCurrentMapGroup.{platform}.yaml
+          - GameStateAPI_GetPlayerLifetime.{platform}.yaml
+          - GameStateAPI_GetPlayerColor.{platform}.yaml
+          - GameStateAPI_GetPlayerXpLevel.{platform}.yaml
+          - GameStateAPI_GetPlayerXpTrailLevel.{platform}.yaml
+          - GameStateAPI_GetPlayerCommendsLeader.{platform}.yaml
+          - GameStateAPI_GetPlayerCommendsTeacher.{platform}.yaml
+          - GameStateAPI_GetPlayerCommendsFriendly.{platform}.yaml
+          - GameStateAPI_HasCommunicationAbuseMute.{platform}.yaml
+          - GameStateAPI_HasCommunicationBan.{platform}.yaml
+          - GameStateAPI_ShouldShowHudElements.{platform}.yaml
+          - GameStateAPI_IsQueuedMatchmaking.{platform}.yaml
+          - GameStateAPI_GetKickTargets.{platform}.yaml
+          - GameStateAPI_GetPlayerCharacterItemID.{platform}.yaml
+          - GameStateAPI_GetCharacterDefaultCheerByXuid.{platform}.yaml
+          - GameStateAPI_GetCharacterDefaultDefeatByXuid.{platform}.yaml
+          - GameStateAPI_ArePlayersEnemies.{platform}.yaml
+          - GameStateAPI_GetCSGOGameUIStateName.{platform}.yaml
+          - GameStateAPI_IsLocalPlayerPlayingMatch.{platform}.yaml
+          - GameStateAPI_IsConnectedOrConnectingToServer.{platform}.yaml
+          - GameStateAPI_AreTeamsPlayingSwitchedSides.{platform}.yaml
+          - GameStateAPI_AreTeamsPlayingSwitchedSidesInRound.{platform}.yaml
+          - GameStateAPI_IsReportCategoryEnabledForSelectedPlayer.{platform}.yaml
+          - GameStateAPI_SubmitPlayerReport.{platform}.yaml
+          - GameStateAPI_SubmitServerReport.{platform}.yaml
+          - GameStateAPI_QueryServersForCommendation.{platform}.yaml
+          - GameStateAPI_GetCommendationTokensAvailable.{platform}.yaml
+          - GameStateAPI_GetMyCommendationsJSOForUser.{platform}.yaml
+          - GameStateAPI_SubmitCommendation.{platform}.yaml
+          - GameStateAPI_IsSelectedPlayerMuted.{platform}.yaml
+          - GameStateAPI_ToggleMute.{platform}.yaml
+          - GameStateAPI_GetCrosshairCode.{platform}.yaml
+          - GameStateAPI_IsDemoOrHltv.{platform}.yaml
+          - GameStateAPI_IsOverwatch.{platform}.yaml
+          - GameStateAPI_IsLocalPlayerWatchingOwnDemo.{platform}.yaml
+          - GameStateAPI_IsLocalPlayerHLTV.{platform}.yaml
+          - GameStateAPI_IsHLTVAutodirectorOn.{platform}.yaml
+          - GameStateAPI_SetCasterIsCameraman.{platform}.yaml
+          - GameStateAPI_SetCasterIsHeard.{platform}.yaml
+          - GameStateAPI_SetCasterControlsXray.{platform}.yaml
+          - GameStateAPI_SetCasterControlsUI.{platform}.yaml
+          - GameStateAPI_GetServerName.{platform}.yaml
+          - GameStateAPI_GetMapName.{platform}.yaml
+          - GameStateAPI_GetTournamentEventStage.{platform}.yaml
+          - GameStateAPI_GetGameModeInternalName.{platform}.yaml
+          - GameStateAPI_GetGameModeImagePath.{platform}.yaml
+          - GameStateAPI_GetGameModeName.{platform}.yaml
+          - GameStateAPI_GetViewerCount.{platform}.yaml
+          - GameStateAPI_GetMapBSPName.{platform}.yaml
+          - GameStateAPI_IsQueuedMatchmakingMode_Team.{platform}.yaml
+          - GameStateAPI_HasHalfTime.{platform}.yaml
+          - GameStateAPI_GetPlayerModel.{platform}.yaml
+          - GameStateAPI_GetAllPlayersMatchDataJSO.{platform}.yaml
+          - GameStateAPI_GetPlayerDataJSO.{platform}.yaml
+          - GameStateAPI_GetTimeDataJSO.{platform}.yaml
+          - GameStateAPI_GetScoreDataJSO.{platform}.yaml
+          - GameStateAPI_GetPlayerStatsJSO.{platform}.yaml
+          - GameStateAPI_GetMatchInfoJSO.{platform}.yaml
+          - GameStateAPI_GetMatchEndWinDataJSO.{platform}.yaml
+          - GameStateAPI_GetAccoladeLocalizationString.{platform}.yaml
+          - GameStateAPI_GetTeamClanName.{platform}.yaml
+          - GameStateAPI_GetTeamLogoImagePath.{platform}.yaml
+          - GameStateAPI_GetTeamFlagImagePath.{platform}.yaml
+          - GameStateAPI_GetTeamTotalPlayerCount.{platform}.yaml
+          - GameStateAPI_GetTeamLivingPlayerCount.{platform}.yaml
+          - GameStateAPI_GetTeamNextRoundLossBonus.{platform}.yaml
+          - GameStateAPI_GetActiveQuestID.{platform}.yaml
+          - GameStateAPI_GetAnnotationsViewingLevel.{platform}.yaml
+          - GameStateAPI_BIsLocalServerHost.{platform}.yaml
+        expected_input:
+          - GameStateAPI_RegisterAPIs.{platform}.yaml
     symbols:
       - name: CLoopModeGame_RegisterEventMapInternal
         category: func
@@ -3677,6 +4067,7 @@ modules:
           - ILoopMode::AddViewsToSceneSystem
       - name: CLoopModeGame_LoopInitInternal
         category: func
+        platform: linux
         alias:
           - CLoopModeGame::LoopInitInternal
       - name: CLoopModeGame_LoopInit
@@ -3837,6 +4228,18 @@ modules:
           - IGameSystem::OnClientPreRenderAlt
       - name: CSource2Client_vtable
         category: vtable
+      - name: CSource2Client_Connect
+        category: vfunc
+        alias:
+          - CSource2Client::Connect
+      - name: g_pEngineClient
+        category: gv
+      - name: CBasePlayerController_CheckForLocalPlayer
+        category: func
+        alias:
+          - CBasePlayerController::CheckForLocalPlayer
+      - name: s_pLocalPlayer
+        category: gv
       - name: CSource2Client_OnDisconnect
         category: vfunc
         alias:
@@ -3861,10 +4264,10 @@ modules:
         category: func
         alias:
           - CMapAnNodeManager::FireGameEvent
-      - name: IVEngineClient2_SendStringCmd
+      - name: IVEngineClient2_ExecuteClientCmd
         category: vfunc
         alias:
-          - IVEngineClient2::SendStringCmd
+          - IVEngineClient2::ExecuteClientCmd
       - name: IGameEventManager2_UnserializeEvent
         category: vfunc
         alias:
@@ -3979,12 +4382,14 @@ modules:
           - CSkeletonInstance::PostDataUpdate
       - name: CSkeletonInstance_m_modelState
         category: structmember
+        platform: windows
         struct: CSkeletonInstance
         member: m_modelState
         alias:
           - CSkeletonInstance::m_modelState
       - name: CSkeletonInstance_m_modelState_m_hModel
         category: structmember
+        platform: windows
         struct: CSkeletonInstance
         member: m_modelState.m_hModel
         alias:
@@ -3993,22 +4398,26 @@ modules:
         category: struct
       - name: CModelState_SetupJointState
         category: func
+        platform: windows
         alias:
           - CModelState::SetupJointState
       - name: CModelState_m_nTotalTransformCount
         category: structmember
+        platform: windows
         struct: CModelState
         member: m_nTotalTransformCount
         alias:
           - CModelState::m_nTotalTransformCount
       - name: CModelState_m_nBoneCount
         category: structmember
+        platform: windows
         struct: CModelState
         member: m_nBoneCount
         alias:
           - CModelState::m_nBoneCount
       - name: CModelState_m_nAttachmentCount
         category: structmember
+        platform: windows
         struct: CModelState
         member: m_nAttachmentCount
         alias:
@@ -4017,22 +4426,40 @@ modules:
         category: vtable
       - name: SendViolationReport
         category: func
+        platform: windows
       - name: IVEngineClient2_GetNetworkClient
         category: vfunc
+        platform: windows
         alias:
           - IVEngineClient2::GetNetworkClient
       - name: INetworkClient_GetLocalAddress
         category: vfunc
+        platform: windows
         alias:
           - INetworkClient::GetLocalAddress
       - name: INetworkClientService_IsConnected
         category: vfunc
+        platform: windows
         alias:
           - INetworkClientService::IsConnected
       - name: INetworkClientService_SendNetMessage
         category: vfunc
+        platform: windows
         alias:
           - INetworkClientService::SendNetMessage
+      - name: ClientAntiTamperTest
+        category: func
+        platform: windows
+      - name: C_MultiplayRules_vtable
+        category: vtable
+      - name: C_GameRules_vtable
+        category: vtable
+      - name: C_GameRules_ctor
+        category: func
+        alias:
+          - C_GameRules::C_GameRules
+      - name: g_pGameRules
+        category: gv
       - name: ConnectInterfaces
         category: func
       - name: g_pVApplication
@@ -4277,6 +4704,431 @@ modules:
         category: vfunc
         alias:
           - CNetworkSerializerBindingBuildFilter::GetFieldPriority
+      - name: GameStateAPI_RegisterAPIs
+        category: func
+        platform: windows
+        alias:
+          - GameStateAPI::RegisterAPIs
+      - name: GameStateAPI_IsLatched
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsLatched]
+      - name: GameStateAPI_GetPlayerSlot
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerSlot]
+      - name: GameStateAPI_GetPlayerName
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerName]
+      - name: GameStateAPI_GetPlayerXuidStringFromPlayerSlot
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerXuidStringFromPlayerSlot]
+      - name: GameStateAPI_GetLocalPlayerXuid
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetLocalPlayerXuid]
+      - name: GameStateAPI_GetLocalOrInEyePlayerXuid
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetLocalOrInEyePlayerXuid]
+      - name: GameStateAPI_GetHudPlayerXuid
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetHudPlayerXuid]
+      - name: GameStateAPI_GetPlayerTeamName
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerTeamName]
+      - name: GameStateAPI_GetPlayerTeamNumber
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerTeamNumber]
+      - name: GameStateAPI_GetCoachingTeamNumber
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetCoachingTeamNumber]
+      - name: GameStateAPI_GetAssociatedTeamNumber
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetAssociatedTeamNumber]
+      - name: GameStateAPI_IsPlayerConnected
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsPlayerConnected]
+      - name: GameStateAPI_IsPlayerAlive
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsPlayerAlive]
+      - name: GameStateAPI_GetPlayerPing
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerPing]
+      - name: GameStateAPI_GetPlayerKills
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerKills]
+      - name: GameStateAPI_GetPlayerRoundKills
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerRoundKills]
+      - name: GameStateAPI_GetPlayerAssists
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerAssists]
+      - name: GameStateAPI_GetPlayerDeaths
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerDeaths]
+      - name: GameStateAPI_GetPlayerMVPs
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerMVPs]
+      - name: GameStateAPI_GetPlayerMoney
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerMoney]
+      - name: GameStateAPI_GetPlayerScore
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerScore]
+      - name: GameStateAPI_GetPlayerClanTag
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerClanTag]
+      - name: GameStateAPI_GetPlayerActiveCoinRank
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerActiveCoinRank]
+      - name: GameStateAPI_GetPlayerCompetitiveRankType
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerCompetitiveRankType]
+      - name: GameStateAPI_GetPlayerCompetitiveRanking
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerCompetitiveRanking]
+      - name: GameStateAPI_GetPlayerCompetitiveWins
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerCompetitiveWins]
+      - name: GameStateAPI_GetPlayerPremierRankStatsObject
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerPremierRankStatsObject]
+      - name: GameStateAPI_GetPlayerDisplayFlairItem
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerDisplayFlairItem]
+      - name: GameStateAPI_GetPlayerStatus
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerStatus]
+      - name: GameStateAPI_IsFakePlayer
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsFakePlayer]
+      - name: GameStateAPI_GetPlayerActiveWeaponItemId
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerActiveWeaponItemId]
+      - name: GameStateAPI_IsXuidValid
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsXuidValid]
+      - name: GameStateAPI_GetPlayerVoiceVolume
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerVoiceVolume]
+      - name: GameStateAPI_SetPlayerVoiceVolume
+        category: func
+        platform: windows
+        alias: [GameStateAPI::SetPlayerVoiceVolume]
+      - name: GameStateAPI_GetMapsInMapGroup
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetMapsInMapGroup]
+      - name: GameStateAPI_GetMapDisplayNameToken
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetMapDisplayNameToken]
+      - name: GameStateAPI_GetMapsInCurrentMapGroup
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetMapsInCurrentMapGroup]
+      - name: GameStateAPI_GetPlayerLifetime
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerLifetime]
+      - name: GameStateAPI_GetPlayerColor
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerColor]
+      - name: GameStateAPI_GetPlayerXpLevel
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerXpLevel]
+      - name: GameStateAPI_GetPlayerXpTrailLevel
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerXpTrailLevel]
+      - name: GameStateAPI_GetPlayerCommendsLeader
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerCommendsLeader]
+      - name: GameStateAPI_GetPlayerCommendsTeacher
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerCommendsTeacher]
+      - name: GameStateAPI_GetPlayerCommendsFriendly
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerCommendsFriendly]
+      - name: GameStateAPI_HasCommunicationAbuseMute
+        category: func
+        platform: windows
+        alias: [GameStateAPI::HasCommunicationAbuseMute]
+      - name: GameStateAPI_HasCommunicationBan
+        category: func
+        platform: windows
+        alias: [GameStateAPI::HasCommunicationBan]
+      - name: GameStateAPI_ShouldShowHudElements
+        category: func
+        platform: windows
+        alias: [GameStateAPI::ShouldShowHudElements]
+      - name: GameStateAPI_IsQueuedMatchmaking
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsQueuedMatchmaking]
+      - name: GameStateAPI_GetKickTargets
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetKickTargets]
+      - name: GameStateAPI_GetPlayerCharacterItemID
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerCharacterItemID]
+      - name: GameStateAPI_GetCharacterDefaultCheerByXuid
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetCharacterDefaultCheerByXuid]
+      - name: GameStateAPI_GetCharacterDefaultDefeatByXuid
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetCharacterDefaultDefeatByXuid]
+      - name: GameStateAPI_ArePlayersEnemies
+        category: func
+        platform: windows
+        alias: [GameStateAPI::ArePlayersEnemies]
+      - name: GameStateAPI_GetCSGOGameUIStateName
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetCSGOGameUIStateName]
+      - name: GameStateAPI_IsLocalPlayerPlayingMatch
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsLocalPlayerPlayingMatch]
+      - name: GameStateAPI_IsConnectedOrConnectingToServer
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsConnectedOrConnectingToServer]
+      - name: GameStateAPI_AreTeamsPlayingSwitchedSides
+        category: func
+        platform: windows
+        alias: [GameStateAPI::AreTeamsPlayingSwitchedSides]
+      - name: GameStateAPI_AreTeamsPlayingSwitchedSidesInRound
+        category: func
+        platform: windows
+        alias: [GameStateAPI::AreTeamsPlayingSwitchedSidesInRound]
+      - name: GameStateAPI_IsReportCategoryEnabledForSelectedPlayer
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsReportCategoryEnabledForSelectedPlayer]
+      - name: GameStateAPI_SubmitPlayerReport
+        category: func
+        platform: windows
+        alias: [GameStateAPI::SubmitPlayerReport]
+      - name: GameStateAPI_SubmitServerReport
+        category: func
+        platform: windows
+        alias: [GameStateAPI::SubmitServerReport]
+      - name: GameStateAPI_QueryServersForCommendation
+        category: func
+        platform: windows
+        alias: [GameStateAPI::QueryServersForCommendation]
+      - name: GameStateAPI_GetCommendationTokensAvailable
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetCommendationTokensAvailable]
+      - name: GameStateAPI_GetMyCommendationsJSOForUser
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetMyCommendationsJSOForUser]
+      - name: GameStateAPI_SubmitCommendation
+        category: func
+        platform: windows
+        alias: [GameStateAPI::SubmitCommendation]
+      - name: GameStateAPI_IsSelectedPlayerMuted
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsSelectedPlayerMuted]
+      - name: GameStateAPI_ToggleMute
+        category: func
+        platform: windows
+        alias: [GameStateAPI::ToggleMute]
+      - name: GameStateAPI_GetCrosshairCode
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetCrosshairCode]
+      - name: GameStateAPI_IsDemoOrHltv
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsDemoOrHltv]
+      - name: GameStateAPI_IsOverwatch
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsOverwatch]
+      - name: GameStateAPI_IsLocalPlayerWatchingOwnDemo
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsLocalPlayerWatchingOwnDemo]
+      - name: GameStateAPI_IsLocalPlayerHLTV
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsLocalPlayerHLTV]
+      - name: GameStateAPI_IsHLTVAutodirectorOn
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsHLTVAutodirectorOn]
+      - name: GameStateAPI_SetCasterIsCameraman
+        category: func
+        platform: windows
+        alias: [GameStateAPI::SetCasterIsCameraman]
+      - name: GameStateAPI_SetCasterIsHeard
+        category: func
+        platform: windows
+        alias: [GameStateAPI::SetCasterIsHeard]
+      - name: GameStateAPI_SetCasterControlsXray
+        category: func
+        platform: windows
+        alias: [GameStateAPI::SetCasterControlsXray]
+      - name: GameStateAPI_SetCasterControlsUI
+        category: func
+        platform: windows
+        alias: [GameStateAPI::SetCasterControlsUI]
+      - name: GameStateAPI_GetServerName
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetServerName]
+      - name: GameStateAPI_GetMapName
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetMapName]
+      - name: GameStateAPI_GetTournamentEventStage
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetTournamentEventStage]
+      - name: GameStateAPI_GetGameModeInternalName
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetGameModeInternalName]
+      - name: GameStateAPI_GetGameModeImagePath
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetGameModeImagePath]
+      - name: GameStateAPI_GetGameModeName
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetGameModeName]
+      - name: GameStateAPI_GetViewerCount
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetViewerCount]
+      - name: GameStateAPI_GetMapBSPName
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetMapBSPName]
+      - name: GameStateAPI_IsQueuedMatchmakingMode_Team
+        category: func
+        platform: windows
+        alias: [GameStateAPI::IsQueuedMatchmakingMode_Team]
+      - name: GameStateAPI_HasHalfTime
+        category: func
+        platform: windows
+        alias: [GameStateAPI::HasHalfTime]
+      - name: GameStateAPI_GetPlayerModel
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerModel]
+      - name: GameStateAPI_GetAllPlayersMatchDataJSO
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetAllPlayersMatchDataJSO]
+      - name: GameStateAPI_GetPlayerDataJSO
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerDataJSO]
+      - name: GameStateAPI_GetTimeDataJSO
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetTimeDataJSO]
+      - name: GameStateAPI_GetScoreDataJSO
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetScoreDataJSO]
+      - name: GameStateAPI_GetPlayerStatsJSO
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetPlayerStatsJSO]
+      - name: GameStateAPI_GetMatchInfoJSO
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetMatchInfoJSO]
+      - name: GameStateAPI_GetMatchEndWinDataJSO
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetMatchEndWinDataJSO]
+      - name: GameStateAPI_GetAccoladeLocalizationString
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetAccoladeLocalizationString]
+      - name: GameStateAPI_GetTeamClanName
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetTeamClanName]
+      - name: GameStateAPI_GetTeamLogoImagePath
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetTeamLogoImagePath]
+      - name: GameStateAPI_GetTeamFlagImagePath
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetTeamFlagImagePath]
+      - name: GameStateAPI_GetTeamTotalPlayerCount
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetTeamTotalPlayerCount]
+      - name: GameStateAPI_GetTeamLivingPlayerCount
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetTeamLivingPlayerCount]
+      - name: GameStateAPI_GetTeamNextRoundLossBonus
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetTeamNextRoundLossBonus]
+      - name: GameStateAPI_GetActiveQuestID
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetActiveQuestID]
+      - name: GameStateAPI_GetAnnotationsViewingLevel
+        category: func
+        platform: windows
+        alias: [GameStateAPI::GetAnnotationsViewingLevel]
+      - name: GameStateAPI_BIsLocalServerHost
+        category: func
+        platform: windows
+        alias: [GameStateAPI::BIsLocalServerHost]
   - name: server
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
@@ -4682,6 +5534,9 @@ modules:
           - CBaseModelEntity_Script_SetSkin.{platform}.yaml
         expected_input:
           - CBaseModelEntity_GetScriptDescInternal.{platform}.yaml
+      - name: find-ScriptBinding_CBaseModelEntity_SetModel
+        expected_output:
+          - ScriptBinding_CBaseModelEntity_SetModel.{platform}.yaml
       - name: find-CEntityInstance_NetworkUpdateState_thunk
         expected_output:
           - CEntityInstance_NetworkUpdateState_thunk.{platform}.yaml
@@ -5012,6 +5867,16 @@ modules:
           - CSource2Server_Connect.{platform}.yaml
         expected_input:
           - CSource2Server_vtable.{platform}.yaml
+      - name: find-CSource2Server_Connect-decompiles
+        expected_output:
+          - IVEngineServer2_GetServerGlobals.{platform}.yaml
+          - g_engine.{platform}.yaml
+          - g_pEngineServer.{platform}.yaml
+          - g_pSource2Engine.{platform}.yaml
+          - g_networkstringtable.{platform}.yaml
+          - g_pGameTypes.{platform}.yaml
+        expected_input:
+          - CSource2Server_Connect.{platform}.yaml
       - name: find-IAppSystem_Connect
         expected_output:
           - IAppSystem_Connect.{platform}.yaml
@@ -5076,9 +5941,11 @@ modules:
         expected_output:
           - IGameSystem_OnServerPreEntityThink.{platform}.yaml
           - IGameSystem_OnServerPostEntityThink.{platform}.yaml
+          - IVEngineServer2_IsLogEnabled.{platform}.yaml
         expected_input:
           - CSource2Server_GameFrame.{platform}.yaml
           - IGameSystem_vtable.{platform}.yaml
+          - g_engine.{platform}.yaml
       - name: find-CSource2Server_Init-decompiles
         expected_output:
           - CGameEventManager_Init.{platform}.yaml
@@ -6112,7 +6979,6 @@ modules:
           - CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml
       - name: find-CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup-decompiles
         expected_output:
-          - g_pGameTypes.{platform}.yaml
           - IGameTypes_CreateWorkshopMapGroup.{platform}.yaml
         expected_input:
           - CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.{platform}.yaml
@@ -6381,6 +7247,8 @@ modules:
         expected_output:
           - INetworkMessages_SetNetworkSerializationContextData.{platform}.yaml
           - IFlattenedSerializers_CreateFieldChangedEventQueue.{platform}.yaml
+          - g_EntitySystem.{platform}.yaml
+          - g_pEntityList.{platform}.yaml
           - CEntitySystem_m_sEntSystemName.{platform}.yaml
           - CEntitySystem_m_eNetworkSerializationMode.{platform}.yaml
           - CEntitySystem_m_Symbols.{platform}.yaml
@@ -7636,6 +8504,10 @@ modules:
         category: func
         alias:
           - CBaseModelEntity::ScriptSetModel
+      - name: ScriptBinding_CBaseModelEntity_SetModel
+        category: func
+        alias:
+          - CS_Script_SetModel
       - name: CBaseModelEntity_ScriptGetRenderAlpha
         category: func
         alias:
@@ -7929,10 +8801,6 @@ modules:
         category: vfunc
         alias:
           - CCSGameRules::PlayerSpawn
-      - name: CBasePlayerController_Respawn
-        category: vfunc
-        alias:
-          - CBasePlayerController::Respawn
       - name: CCSPlayerController_Respawn
         category: vfunc
         alias:
@@ -7951,10 +8819,12 @@ modules:
           - CCSPlayerPawnBase::OnSetDormant
       - name: CCSPlayerPawnBase_CheckForIdle
         category: vfunc
+        platform: windows
         alias:
           - CCSPlayerPawnBase::CheckForIdle
       - name: CCSPlayerPawnBase_CheckForIdleInternal
         category: func
+        platform: linux
         alias:
           - CCSPlayerPawnBase::CheckForIdleInternal
       - name: CCSPlayerPawn_PostThink
@@ -8069,6 +8939,14 @@ modules:
         category: vfunc
         alias:
           - IVEngineServer2::IsDedicatedServer
+      - name: IVEngineServer2_GetServerGlobals
+        category: vfunc
+        alias:
+          - IVEngineServer2::GetServerGlobals
+      - name: IVEngineServer2_IsLogEnabled
+        category: vfunc
+        alias:
+          - IVEngineServer2::IsLogEnabled
       - name: CSource2Server_Shutdown
         category: vfunc
         alias:
@@ -8115,6 +8993,7 @@ modules:
         category: func
       - name: FireBulletImpactEvent
         category: func
+        platform: linux
       - name: TraceAttack
         category: func
       - name: CTakeDamageInfo_HitGroupInfo
@@ -8300,6 +9179,8 @@ modules:
         category: vfunc
         alias:
           - CBaseEntity::FullEdictChanged
+      - name: CBaseEntity
+        category: struct
       - name: CBaseEntity_m_NetworkTransmitComponent
         category: structmember
         struct: CBaseEntity
@@ -8310,6 +9191,8 @@ modules:
         category: func
         alias:
           - CNetworkTransmitComponent::StateChanged
+      - name: CNetworkTransmitComponent
+        category: struct
       - name: CNetworkTransmitComponent_m_nStateFlags
         category: structmember
         struct: CNetworkTransmitComponent
@@ -8405,6 +9288,8 @@ modules:
           - CEntityKeyValues::Initialized
       - name: CEntitySystem_m_nEntityKeyValuesAllocatorRefCount
         category: structmember
+        struct: CEntitySystem
+        member: m_nEntityKeyValuesAllocatorRefCount
         alias:
           - CEntitySystem::m_nEntityKeyValuesAllocatorRefCount
       - name: CEntitySystem_AddRefKeyValues
@@ -8693,10 +9578,6 @@ modules:
         category: func
         alias:
           - CBaseEntity::Script_TakeDamage
-      - name: CBaseEntity_SetGravityScale
-        category: func
-        alias:
-          - CBaseEntity::SetGravityScale
       - name: CBaseEntity_SetAbsVelocity
         category: func
         alias:
@@ -8942,6 +9823,7 @@ modules:
           - CEntitySystem::AddEntityIOEvent2
       - name: CEntitySystem_AddEntityIOEventBuildStruct
         category: func
+        platform: linux
         alias:
           - CEntitySystem::AddEntityIOEventBuildStruct
       - name: CEntitySystem_AddEntityIOEventToQueue
@@ -8970,6 +9852,8 @@ modules:
         category: vfunc
         alias:
           - CGameEntitySystem::OnAddEntity
+      - name: CGameEntitySystem
+        category: struct
       - name: CGameEntitySystem_m_iNetworkedEntCount
         category: structmember
         struct: CGameEntitySystem
@@ -9243,6 +10127,14 @@ modules:
           - CDedicatedServerWorkshopManager::SwitchToWorkshopMapGroup
       - name: g_pGameTypes
         category: gv
+      - name: g_engine
+        category: gv
+      - name: g_pEngineServer
+        category: gv
+      - name: g_pSource2Engine
+        category: gv
+      - name: g_networkstringtable
+        category: gv
       - name: IGameTypes_CreateWorkshopMapGroup
         category: vfunc
         alias:
@@ -9449,12 +10341,17 @@ modules:
         category: func
       - name: g_pEntitySystem
         category: gv
+      - name: g_EntitySystem
+        category: gv
+      - name: g_pEntityList
+        category: gv
       - name: CEntitySystem_Init
         category: func
         alias:
           - CEntitySystem::Init
       - name: CEntitySystem_ProcessEntityRegistration
         category: func
+        platform: linux
         alias:
           - CEntitySystem::ProcessEntityRegistration
       - name: CEntitySystem_PostCreateEntitySystem
@@ -9467,10 +10364,12 @@ modules:
           - CSource2EntitySystem::StaticInit
       - name: CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters
         category: func
+        platform: windows
         alias:
           - CSpawnGroupEntityFilterRegistrar::RegisterSpawnGroupEntityFilters
       - name: CGameEntitySystem_m_spawnGroupEntityFilters
         category: structmember
+        platform: windows
         struct: CGameEntitySystem
         member: m_spawnGroupEntityFilters
         alias:
@@ -9483,6 +10382,7 @@ modules:
           - CGameEntitySystem::m_pEntity2Networkables
       - name: CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses
         category: func
+        platform: linux
         alias:
           - CEntity2NetworkClasses<ServerClass>::InitEntity2NetworkClasses
       - name: CEntitySystem_m_sEntSystemName
@@ -9558,6 +10458,8 @@ modules:
         shared: true
       - name: CFlattenedSerializers_CreateFieldChangedEventQueue
         category: vfunc
+        source_alias:
+          - IFlattenedSerializers_CreateFieldChangedEventQueue
         alias:
           - CFlattenedSerializers::CreateFieldChangedEventQueue
         shared: true
@@ -9568,10 +10470,6 @@ modules:
         shared: true
       - name: RegisterSchemaTypeOverride_CEntityHandle
         category: func
-      - name: PolymorphicHelper_t__SetPolymorphicPointer
-        category: func
-        alias:
-          - PolymorphicHelper_t::SetPolymorphicPointer
       - name: GetCSceneEntityScriptDesc
         category: func
       - name: CSceneEntity_vtable
@@ -9694,6 +10592,7 @@ modules:
           - CNetworkUtlVectorEmbedded<CSPerRoundStats_t>::NetworkStateChanged_m_perRoundStats
       - name: CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount
         category: func
+        platform: windows
         alias:
           - CUtlVectorEmbeddedNetworkVar<CSPerRoundStats_t, NetworkVar>::SetCount
       - name: EntityInstanceAddChangeAccessorPath
@@ -9702,6 +10601,7 @@ modules:
         category: func
       - name: CNetworkUtlVectorEmbedded_TryLateResolve_m_vecRenderAttributes
         category: func
+        platform: windows
         alias:
           - CNetworkUtlVectorEmbedded<CRenderAttribute>::TryLateResolve
       - name: INetworkMessages_GetLoggingChannel
@@ -9715,6 +10615,7 @@ modules:
         category: vtable
       - name: CPhysicsEntitySolver_PhysEnableEntityCollisions
         category: vfunc
+        platform: windows
         alias:
           - CPhysicsEntitySolver::PhysEnableEntityCollisions
       - name: PhysEnableEntityCollisions
@@ -9753,6 +10654,7 @@ modules:
           - ILoopMode::AddViewsToSceneSystem
       - name: CLoopModeGame_LoopInitInternal
         category: func
+        platform: linux
         alias:
           - CLoopModeGame::LoopInitInternal
       - name: CLoopModeGame_LoopInit
@@ -9831,6 +10733,7 @@ modules:
           - IGameSystem::LoopPreShutdownAllSystems
       - name: CLoopModeGame_Shutdown
         category: func
+        platform: linux
         alias:
           - CLoopModeGame::Shutdown
       - name: CLoopModeGame_LoopShutdown
@@ -10109,17 +11012,45 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
-      - name: find-CEngineClient_SendStringCmd
+      - name: find-CInputService_ProcessCommand
+        platform: windows
         expected_output:
-          - CEngineClient_SendStringCmd.{platform}.yaml
+          - CInputService_ProcessCommand.{platform}.yaml
+      - name: find-CInputService_ProcessCommandBuffers
+        platform: windows
+        expected_output:
+          - CInputService_ProcessCommandBuffers.{platform}.yaml
+        expected_input:
+          - CInputService_ProcessCommand.{platform}.yaml
+      - name: find-CInputService_HandleAnalogValueChange
+        platform: windows
+        expected_output:
+          - CInputService_HandleAnalogValueChange.{platform}.yaml
+      - name: find-CInputService_HandleInputEvent
+        platform: windows
+        expected_output:
+          - CInputService_HandleInputEvent.{platform}.yaml
+      - name: find-CEngineClient_ClientCmd_Unrestricted
+        platform: windows
+        expected_output:
+          - CEngineClient_ClientCmd_Unrestricted.{platform}.yaml
         expected_input:
           - CEngineClient_vtable.{platform}.yaml
-          - ../client/IVEngineClient2_SendStringCmd.{platform}.yaml
+          - CInputService_ProcessCommand.{platform}.yaml
+          - CInputService_ProcessCommandBuffers.{platform}.yaml
+          - CInputService_HandleAnalogValueChange.{platform}.yaml
+          - CInputService_HandleInputEvent.{platform}.yaml
+      - name: find-CEngineClient_ExecuteClientCmd
+        expected_output:
+          - CEngineClient_ExecuteClientCmd.{platform}.yaml
+        expected_input:
+          - CEngineClient_vtable.{platform}.yaml
+          - ../client/IVEngineClient2_ExecuteClientCmd.{platform}.yaml
       - name: find-INetworkGameClient_SendStringCmd
         expected_output:
           - INetworkGameClient_SendStringCmd.{platform}.yaml
         expected_input:
-          - CEngineClient_SendStringCmd.{platform}.yaml
+          - CEngineClient_ExecuteClientCmd.{platform}.yaml
       - name: find-CNetworkClientService_SendNetMessage
         platform: windows
         expected_output:
@@ -10208,6 +11139,18 @@ modules:
         expected_input:
           - CEngineServer_vtable.{platform}.yaml
           - ../server/IVEngineServer2_IsDedicatedServer.{platform}.yaml
+      - name: find-CEngineServer_GetServerGlobals
+        expected_output:
+          - CEngineServer_GetServerGlobals.{platform}.yaml
+        expected_input:
+          - CEngineServer_vtable.{platform}.yaml
+          - ../server/IVEngineServer2_GetServerGlobals.{platform}.yaml
+      - name: find-CEngineServer_IsLogEnabled
+        expected_output:
+          - CEngineServer_IsLogEnabled.{platform}.yaml
+        expected_input:
+          - CEngineServer_vtable.{platform}.yaml
+          - ../server/IVEngineServer2_IsLogEnabled.{platform}.yaml
       - name: find-CEngineServer_ServerCommand
         expected_output:
           - CEngineServer_ServerCommand.{platform}.yaml

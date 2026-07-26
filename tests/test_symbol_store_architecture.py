@@ -10,6 +10,13 @@ PRODUCTION_CONSUMERS = (
     "run_cpp_tests.py",
 )
 
+POST_CHANGE_CALLERS = (
+    "create-preprocessor-scripts",
+    "create-cpp-tests",
+    "create-agent-skill-fallback",
+    "rename-preprocessor-scripts",
+)
+
 
 def _parse(path: str) -> ast.Module:
     return ast.parse(Path(path).read_text(encoding="utf-8"), filename=path)
@@ -88,19 +95,55 @@ class TestSymbolStoreArchitecture(unittest.TestCase):
 
     def test_post_change_skills_preserve_candidate_lifecycle(self) -> None:
         skill_root = Path(".claude/skills")
-        update = (skill_root / "post-change-update/SKILL.md").read_text(encoding="utf-8")
+        prepare = (skill_root / "prepare-post-change-candidate/SKILL.md").read_text(encoding="utf-8")
         validation = (skill_root / "post-change-validation/SKILL.md").read_text(encoding="utf-8")
+        publish = (skill_root / "publish-post-change-candidate/SKILL.md").read_text(encoding="utf-8")
 
-        self.assertIn("gamesymbol_candidate.py build", update)
-        self.assertIn('gamedata_candidate.py build -gamever "$GAMEVER"', update)
-        self.assertIn('gamedata_candidate.py publish -session "$GAMEDATA_SESSION"', update)
-        self.assertIn("gamesymbol_candidate.py publish", update)
-        self.assertNotIn("gamesymbol_snapshot.py pack", update)
+        self.assertIn("gamesymbol_candidate.py build", prepare)
+        self.assertIn('gamedata_candidate.py build -gamever "$GAMEVER"', prepare)
+        self.assertIn('-snapshot "$CANDIDATE"', prepare)
+        self.assertIn('-session "$GAMEDATA_SESSION"', prepare)
+        self.assertNotIn("gamesymbol_candidate.py publish", prepare)
         self.assertIn(
             'run_cpp_tests.py -gamever "$GAMEVER" -configyaml "$ANALYSIS_CONFIG" -snapshot "$CANDIDATE"',
             validation,
         )
-        self.assertIn("gamesymbol_candidate.py mark", validation)
+        self.assertIn(
+            'gamesymbol_candidate.py mark -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION" -step cpp_tests',
+            validation,
+        )
+        self.assertIn('gamedata_candidate.py publish -session "$GAMEDATA_SESSION"', publish)
+        self.assertIn(
+            'gamesymbol_candidate.py publish -candidate "$CANDIDATE" -session "$CANDIDATE_SESSION"',
+            publish,
+        )
+        self.assertNotIn("gamesymbol_candidate.py build", publish)
+        self.assertNotIn("gamesymbol_snapshot.py pack", publish)
+
+    def test_create_pr_owns_post_change_delivery(self) -> None:
+        skill_root = Path(".claude/skills")
+        create_pr = (skill_root / "create-pr/SKILL.md").read_text(encoding="utf-8")
+        lifecycle = (
+            "/prepare-post-change-candidate",
+            "/post-change-validation",
+            "/publish-post-change-candidate",
+        )
+
+        positions = [create_pr.index(skill_name) for skill_name in lifecycle]
+        self.assertEqual(sorted(positions), positions)
+        self.assertIn("git diff --cached --quiet", create_pr)
+        self.assertIn("git diff --cached --name-only", create_pr)
+        self.assertIn("git add --", create_pr)
+        self.assertIn("git commit", create_pr)
+        self.assertIn("git push -u origin", create_pr)
+        self.assertIn("gh pr create", create_pr)
+
+        for caller_name in POST_CHANGE_CALLERS:
+            with self.subTest(caller=caller_name):
+                caller = (skill_root / caller_name / "SKILL.md").read_text(encoding="utf-8")
+                self.assertIn("/create-pr", caller)
+                for lifecycle_skill in lifecycle:
+                    self.assertNotIn(lifecycle_skill, caller)
 
 
 if __name__ == "__main__":

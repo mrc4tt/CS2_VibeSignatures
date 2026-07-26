@@ -1,0 +1,73 @@
+func_name: C_GameRules_ctor
+func_va: '0x180b42fc0'
+disasm_code: |-
+  .text:0000000180B42FC0                 mov     [rsp+arg_0], rbx
+  .text:0000000180B42FC5                 mov     [rsp+arg_8], rsi
+  .text:0000000180B42FCA                 push    rdi
+  .text:0000000180B42FCB                 sub     rsp, 20h
+  .text:0000000180B42FCF                 mov     edx, cs:TlsIndex
+  .text:0000000180B42FD5                 lea     rax, ??_7C_GameRules@@6B@; const C_GameRules::`vftable'
+  .text:0000000180B42FDC                 mov     [rcx], rax
+  .text:0000000180B42FDF                 xor     esi, esi
+  .text:0000000180B42FE1                 mov     rax, gs:58h
+  .text:0000000180B42FEA                 mov     rbx, rcx
+  .text:0000000180B42FED                 mov     [rcx+8], rsi
+  .text:0000000180B42FF1                 mov     rdi, [rax+rdx*8]
+  .text:0000000180B42FF5                 mov     eax, 6Ch ; 'l'
+  .text:0000000180B42FFA                 cmp     [rax+rdi], sil
+  .text:0000000180B42FFE                 jnz     short loc_180B43005
+  .text:0000000180B43000                 call    sub_1818ABF44
+  .text:0000000180B43005                 mov     eax, 38h ; '8'
+  .text:0000000180B4300A                 mov     edx, 1
+  .text:0000000180B4300F                 mov     rax, [rax+rdi]
+  .text:0000000180B43013                 mov     [rbx+8], rax
+  .text:0000000180B43017                 mov     [rbx+18h], rsi
+  .text:0000000180B4301B                 mov     [rbx+20h], rsi
+  .text:0000000180B4301F                 mov     [rbx+10h], esi
+  .text:0000000180B43022                 mov     dword ptr [rbx+28h], 0FFFFFFFFh
+  .text:0000000180B43029                 mov     [rbx+2Ch], sil
+  .text:0000000180B4302D                 mov     [rbx+30h], rsi
+  .text:0000000180B43031                 mov     [rbx+38h], sil
+  .text:0000000180B43035                 mov     ecx, cs:dword_18239F558
+  .text:0000000180B4303B                 mov     cs:g_pGameRules, rbx
+  .text:0000000180B43042                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180B43048                 test    al, al
+  .text:0000000180B4304A                 jz      short loc_180B4306B
+  .text:0000000180B4304C                 mov     ecx, cs:dword_18239F558
+  .text:0000000180B43052                 lea     r9, aCl_1; "CL"
+  .text:0000000180B43059                 lea     r8, aSCgamerulesCga; "%s:  CGameRules::CGameRules constructed"...
+  .text:0000000180B43060                 mov     edx, 1
+  .text:0000000180B43065                 call    cs:LoggingSystem_Log
+  .text:0000000180B4306B                 mov     rsi, [rsp+28h+arg_8]
+  .text:0000000180B43070                 mov     rax, rbx
+  .text:0000000180B43073                 mov     rbx, [rsp+28h+arg_0]
+  .text:0000000180B43078                 add     rsp, 20h
+  .text:0000000180B4307C                 pop     rdi
+  .text:0000000180B4307D                 retn
+procedure: |-
+  __int64 __fastcall C_GameRules_ctor(__int64 a1)
+  {
+    __int64 v1; // rdx
+    _QWORD *ThreadLocalStoragePointer; // rax
+    __int64 v4; // rdi
+
+    v1 = (unsigned int)TlsIndex;
+    *(_QWORD *)a1 = &C_GameRules::`vftable';
+    ThreadLocalStoragePointer = NtCurrentTeb()->ThreadLocalStoragePointer;
+    *(_QWORD *)(a1 + 8) = 0;
+    v4 = ThreadLocalStoragePointer[v1];
+    if ( !*(_BYTE *)(v4 + 108) )
+      sub_1818ABF44();
+    *(_QWORD *)(a1 + 8) = *(_QWORD *)(v4 + 56);
+    *(_QWORD *)(a1 + 24) = 0;
+    *(_QWORD *)(a1 + 32) = 0;
+    *(_DWORD *)(a1 + 16) = 0;
+    *(_DWORD *)(a1 + 40) = -1;
+    *(_BYTE *)(a1 + 44) = 0;
+    *(_QWORD *)(a1 + 48) = 0;
+    *(_BYTE *)(a1 + 56) = 0;
+    g_pGameRules = (Concurrency::details::WorkQueue *)a1;
+    if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18239F558, 1) )
+      LoggingSystem_Log((unsigned int)dword_18239F558, 1, "%s:  CGameRules::CGameRules constructed\n", "CL");
+    return a1;
+  }

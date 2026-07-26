@@ -163,6 +163,33 @@ class TestReferenceInvalidation(unittest.TestCase):
 
         self.assertEqual({"engine/Engine.windows.yaml"}, plan.paths)
 
+    def test_module_name_template_scopes_consumer_to_changed_module_and_platform(self) -> None:
+        modules = [
+            module("client", [skill("find-shared", ["Client.{platform}.yaml"])]),
+            module("server", [skill("find-shared", ["Server.{platform}.yaml"])]),
+        ]
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            base_config = root / "base.yaml"
+            head_config = root / "head.yaml"
+            write_config(base_config, modules)
+            write_config(head_config, modules)
+            base = load_contract(base_config, "1", root / "bin")
+            head = load_contract(head_config, "1", root / "bin")
+            sources = source_map(**{"find-shared": find_source("references/{module_name}/Input.{platform}.yaml")})
+            reference = "ida_preprocessor_scripts/references/client/Input.linux.yaml"
+            plan = self._plan(
+                base,
+                head,
+                [ChangedPath("A", None, reference)],
+                root,
+                sources,
+                sources,
+            )
+
+        self.assertEqual({"client/Client.linux.yaml"}, plan.paths)
+        self.assertTrue(any("find-shared[client/linux]" in reason for reason in plan.reasons))
+
     def test_pr_605_shaped_touch_change_does_not_invalidate_sdl3(self) -> None:
         base_modules = [
             module("SDL3", [skill("find-sdl", ["Mouse.windows.yaml"])], linux=False),

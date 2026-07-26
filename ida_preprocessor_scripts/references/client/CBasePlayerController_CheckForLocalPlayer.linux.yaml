@@ -1,0 +1,115 @@
+func_name: CBasePlayerController_CheckForLocalPlayer
+func_va: '0x15f0280'
+disasm_code: |-
+  .text:00000000015F0280                 push    rbp
+  .text:00000000015F0281                 mov     rbp, rsp
+  .text:00000000015F0284                 push    r12
+  .text:00000000015F0286                 mov     r12, rdi
+  .text:00000000015F0289                 push    rbx
+  .text:00000000015F028A                 mov     ebx, esi
+  .text:00000000015F028C                 sub     rsp, 10h
+  .text:00000000015F0290                 cmp     esi, 0FFFFFFFFh
+  .text:00000000015F0293                 jz      short loc_15F02AA
+  .text:00000000015F0295                 lea     rax, g_pEngineClient
+  .text:00000000015F029C                 mov     rdi, [rax]
+  .text:00000000015F029F                 mov     rax, [rdi]
+  .text:00000000015F02A2                 call    qword ptr [rax+110h]
+  .text:00000000015F02A8                 mov     ebx, eax
+  .text:00000000015F02AA                 mov     eax, cs:dword_47CC9B4
+  .text:00000000015F02B0                 test    eax, eax
+  .text:00000000015F02B2                 jz      loc_15F0353
+  .text:00000000015F02B8                 mov     ebx, cs:dword_47CC9B0
+  .text:00000000015F02BE                 cmp     ebx, 0FFFFFFFFh
+  .text:00000000015F02C1                 jnz     loc_15F0350
+  .text:00000000015F02C7                 mov     rdi, r12
+  .text:00000000015F02CA                 call    sub_2DCC8F0
+  .text:00000000015F02CF                 cmp     eax, 0FFFFFFFFh
+  .text:00000000015F02D2                 jnz     loc_15F0378
+  .text:00000000015F02D8                 lea     rbx, [rbp+var_20]
+  .text:00000000015F02DC                 mov     edx, 9
+  .text:00000000015F02E1                 mov     rax, 0FFFFFFFF00000000h
+  .text:00000000015F02EB                 mov     byte ptr [r12+908h], 1
+  .text:00000000015F02F4                 mov     [r12+848h], rax
+  .text:00000000015F02FC                 lea     rsi, aSndSoundmixer; "snd_soundmixer"
+  .text:00000000015F0303                 mov     rdi, rbx
+  .text:00000000015F0306                 mov     cs:s_pLocalPlayer, r12
+  .text:00000000015F030D                 call    sub_20D0B90
+  .text:00000000015F0312                 mov     rax, [rbp+var_18]
+  .text:00000000015F0316                 test    rax, rax
+  .text:00000000015F0319                 jz      short loc_15F032E
+  .text:00000000015F031B                 test    byte ptr [rax+31h], 4
+  .text:00000000015F031F                 jnz     short loc_15F032E
+  .text:00000000015F0321                 mov     esi, 0FFFFFFFFh
+  .text:00000000015F0326                 mov     rdi, rbx
+  .text:00000000015F0329                 call    sub_20D28F0
+  .text:00000000015F032E                 mov     rdi, rbx
+  .text:00000000015F0331                 call    nullsub_1836
+  .text:00000000015F0336                 mov     rdi, r12
+  .text:00000000015F0339                 call    sub_1099DE0
+  .text:00000000015F033E                 add     rsp, 10h
+  .text:00000000015F0342                 mov     rdi, r12
+  .text:00000000015F0345                 pop     rbx
+  .text:00000000015F0346                 pop     r12
+  .text:00000000015F0348                 pop     rbp
+  .text:00000000015F0349                 jmp     sub_15DA350
+  .text:00000000015F0350                 sub     ebx, 1
+  .text:00000000015F0353                 mov     rdi, r12
+  .text:00000000015F0356                 call    sub_2DCC8F0
+  .text:00000000015F035B                 cmp     eax, 0FFFFFFFFh
+  .text:00000000015F035E                 jnz     short loc_15F0378
+  .text:00000000015F0360                 cmp     eax, ebx
+  .text:00000000015F0362                 jz      loc_15F02D8
+  .text:00000000015F0368                 add     rsp, 10h
+  .text:00000000015F036C                 pop     rbx
+  .text:00000000015F036D                 pop     r12
+  .text:00000000015F036F                 pop     rbp
+  .text:00000000015F0370                 retn
+  .text:00000000015F0378                 sub     eax, 1
+  .text:00000000015F037B                 jmp     short loc_15F0360
+procedure: |-
+  __int64 __fastcall CBasePlayerController_CheckForLocalPlayer(__int64 a1, int a2)
+  {
+    int v2; // ebx
+    __int64 result; // rax
+    _BYTE v4[8]; // [rsp+0h] [rbp-20h] BYREF
+    __int64 v5; // [rsp+8h] [rbp-18h]
+
+    v2 = a2;
+    if ( a2 != -1 )
+      v2 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)g_pEngineClient + 272LL))(g_pEngineClient);
+    if ( !dword_47CC9B4 )
+    {
+  LABEL_11:
+      result = sub_2DCC8F0(a1);
+      if ( (_DWORD)result == -1 )
+        goto LABEL_12;
+      goto LABEL_14;
+    }
+    v2 = dword_47CC9B0;
+    if ( dword_47CC9B0 != -1 )
+    {
+      v2 = dword_47CC9B0 - 1;
+      goto LABEL_11;
+    }
+    LODWORD(result) = sub_2DCC8F0(a1);
+    if ( (_DWORD)result != -1 )
+    {
+  LABEL_14:
+      result = (unsigned int)(result - 1);
+  LABEL_12:
+      if ( (_DWORD)result != v2 )
+        return result;
+    }
+    *(_BYTE *)(a1 + 2312) = 1;
+    *(_QWORD *)(a1 + 2120) = 0xFFFFFFFF00000000LL;
+    s_pLocalPlayer = a1;
+    sub_20D0B90(v4, "snd_soundmixer", 9);
+    if ( v5 )
+    {
+      if ( (*(_BYTE *)(v5 + 49) & 4) == 0 )
+        sub_20D28F0(v4, 0xFFFFFFFFLL);
+    }
+    nullsub_1836(v4);
+    sub_1099DE0(a1);
+    return sub_15DA350(a1);
+  }

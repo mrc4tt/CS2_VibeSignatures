@@ -1,0 +1,56 @@
+func_name: CEntitySystem_CreateEntitySystem
+func_va: '0x1814eb240'
+disasm_code: |-
+  .text:00000001814EB240                 mov     [rsp+arg_0], rbx
+  .text:00000001814EB245                 mov     [rsp+arg_8], rbp
+  .text:00000001814EB24A                 mov     [rsp+arg_10], rsi
+  .text:00000001814EB24F                 push    rdi
+  .text:00000001814EB250                 sub     rsp, 30h
+  .text:00000001814EB254                 mov     eax, cs:dword_18254FE80
+  .text:00000001814EB25A                 movzx   ebx, r9b
+  .text:00000001814EB25E                 mov     r10d, eax
+  .text:00000001814EB261                 mov     edi, r8d
+  .text:00000001814EB264                 inc     eax
+  .text:00000001814EB266                 mov     esi, edx
+  .text:00000001814EB268                 mov     cs:dword_18254FE80, eax
+  .text:00000001814EB26E                 mov     rbp, rcx
+  .text:00000001814EB271                 test    r10d, r10d
+  .text:00000001814EB274                 jg      short loc_1814EB2A9
+  .text:00000001814EB276                 mov     ecx, 2090h
+  .text:00000001814EB27B                 call    sub_180BCB090
+  .text:00000001814EB280                 test    rax, rax
+  .text:00000001814EB283                 jz      short loc_1814EB28D
+  .text:00000001814EB285                 mov     rcx, rax
+  .text:00000001814EB288                 call    CEntitySystem_ctor
+  .text:00000001814EB28D                 mov     r9d, edi
+  .text:00000001814EB290                 mov     cs:g_pEntitySystem, rax
+  .text:00000001814EB297                 mov     r8d, esi
+  .text:00000001814EB29A                 mov     [rsp+38h+var_18], bl
+  .text:00000001814EB29E                 mov     rdx, rbp
+  .text:00000001814EB2A1                 mov     rcx, rax
+  .text:00000001814EB2A4                 call    CEntitySystem_Init
+  .text:00000001814EB2A9                 mov     rbx, [rsp+38h+arg_0]
+  .text:00000001814EB2AE                 mov     rbp, [rsp+38h+arg_8]
+  .text:00000001814EB2B3                 mov     rsi, [rsp+38h+arg_10]
+  .text:00000001814EB2B8                 add     rsp, 30h
+  .text:00000001814EB2BC                 pop     rdi
+  .text:00000001814EB2BD                 retn
+procedure: |-
+  __int64 __fastcall CEntitySystem_CreateEntitySystem(const char *a1, int a2, int a3, char a4)
+  {
+    int v5; // r10d
+    __int64 result; // rax
+    __int64 v10; // rax
+
+    v5 = dword_18254FE80;
+    result = (unsigned int)++dword_18254FE80;
+    if ( v5 <= 0 )
+    {
+      v10 = sub_180BCB090(8336);
+      if ( v10 )
+        v10 = CEntitySystem_ctor(v10);
+      g_pEntitySystem = v10;
+      return CEntitySystem_Init(v10, a1, a2, a3, a4);
+    }
+    return result;
+  }

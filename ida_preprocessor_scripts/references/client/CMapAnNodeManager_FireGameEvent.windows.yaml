@@ -195,7 +195,7 @@ disasm_code: |-
   .text:0000000180BD210F                 lea     r8, [rsp+0D8h+var_88]
   .text:0000000180BD2114                 xor     edx, edx
   .text:0000000180BD2116                 mov     rax, [rcx]
-  .text:0000000180BD2119                 call    qword ptr [rax+190h]  ; 190h = IVEngineClient2_SendStringCmd
+  .text:0000000180BD2119                 call    qword ptr [rax+190h]  ; 190h = IVEngineClient2_ExecuteClientCmd
   .text:0000000180BD211F                 mov     rbx, [rsp+0D8h+arg_0]
   .text:0000000180BD2127                 mov     rbp, [rsp+0D8h+arg_8]
   .text:0000000180BD212F                 mov     rsi, [rsp+0D8h+arg_18]
@@ -353,7 +353,7 @@ procedure: |-
           v23 = *(char **)(qword_1823B0570 + 72);
         V_snprintf(v29, 128, "%s \"%s\"", "annotations_file_at_freezetime", v23);
         return (*(__int64 (__fastcall **)(__int64, _QWORD, _BYTE *))(*(_QWORD *)g_pEngineClient
-                                                                   + 0x190LL))(// 400LL = 0x190 = IVEngineClient2_SendStringCmd
+                                                                   + 0x190LL))(// 400LL = 0x190 = IVEngineClient2_ExecuteClientCmd
                  g_pEngineClient,
                  0,
                  v29);

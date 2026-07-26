@@ -2,9 +2,8 @@
 name: post-change-validation
 description: |
   Run the repository's C++ post-change validation gate against an immutable candidate snapshot before publication.
-  Use when a project workflow explicitly requests final C++ validation after formatting and gamedata updates.
+  Use after `/prepare-post-change-candidate` and before `/publish-post-change-candidate`.
   Any failed, skipped, or non-runnable validation stops the calling task and must be reported to the user.
-disable-model-invocation: true
 ---
 
 # Post-Change Validation
@@ -16,7 +15,7 @@ successful validation.
 ## Inputs
 
 - `gamever` — use the caller-provided value. If omitted, read `CS2VIBE_GAMEVER` from `.env`.
-- `candidate` — required candidate snapshot path produced by `/post-change-update phase=before-validation`.
+- `candidate` — required candidate snapshot path produced by `/prepare-post-change-candidate`.
 - `session` — required session manifest path paired with that candidate.
 
 If no non-empty game version is available, stop immediately:
@@ -85,7 +84,7 @@ Use this form:
 ```
 
 Then **STOP the entire calling task**. Do not attempt a fix or retry, do not invoke
-`/post-change-update phase=after-validation`, and do not enter any commit step.
+`/publish-post-change-candidate`, and do not enter any commit step.
 
 ### Step 4 — Report success
 
@@ -97,4 +96,5 @@ uv run gamesymbol_candidate.py mark -candidate "$CANDIDATE" -session "$CANDIDATE
 ```
 
 Report the game version, candidate SHA-256, and zero-valued failure counters. The caller may then invoke
-`/post-change-update phase=after-validation` with the same game version, candidate, and session.
+`/publish-post-change-candidate` with the same game version, candidate, candidate session, and gamedata session
+returned by `/prepare-post-change-candidate`.

@@ -30,6 +30,7 @@ from urllib.parse import urlparse
 import shutil
 
 from analysis_config import AnalysisConfigError, resolve_analysis_config
+from gamedata_config_validation import finding_delta, print_config_findings, validate_gamedata_config
 from gamedata_contract import (
     GamedataContractError,
     canonicalize_output_text,
@@ -37,6 +38,13 @@ from gamedata_contract import (
     gamedata_manifest_sha256,
     generator_contract_sha256,
     validate_output_tree,
+)
+from gamedata_diagnostics import (
+    DiagnosticAggregator,
+    diagnostic_delta,
+    print_diagnostic_summary,
+    print_overlay_diagnostics,
+    print_resolved_diagnostics,
 )
 
 from gamedata_symbol_data import (
@@ -158,24 +166,18 @@ def download_latest_gamedata(modules, output_root, *, strict=False):
     return success_count, len(failures)
 
 
-def print_debug_info(title, missing_symbols, updated_symbols, skipped_symbols):
+def print_debug_info(title, updated_symbols, skipped_symbols):
     """
     Print detailed debug information.
 
     Args:
         title: Section title
-        missing_symbols: List of missing symbols from YAML loading
         updated_symbols: Dict of {target_name: list of updated symbols}
         skipped_symbols: Dict of {target_name: list of skipped symbols}
     """
     print(f"\n{'=' * 60}")
     print(f"DEBUG INFO: {title}")
     print("=" * 60)
-
-    if missing_symbols:
-        print(f"\n[Missing YAML Files] ({len(missing_symbols)} items)")
-        for item in missing_symbols:
-            print(f"  - {item['name']} ({item['library']}/{item['platform']})")
 
     for target_name, symbols in updated_symbols.items():
         if symbols:
@@ -193,23 +195,42 @@ def print_debug_info(title, missing_symbols, updated_symbols, skipped_symbols):
 def _module_data(contract, base_config, base_data, base_maps, symbol_store, platforms, debug, strict):
     extra_config_path = contract.source_dir / "config.yaml"
     if not extra_config_path.is_file():
-        return base_data, *base_maps, []
+        return base_data, *base_maps, None, None
     try:
         extra_config = load_config(extra_config_path)
         if not isinstance(extra_config, dict):
             raise ValueError("top-level YAML value must be a mapping")
         merged_config = merge_configs(base_config, extra_config)
+        findings = validate_gamedata_config(merged_config)
         func_lib_map = build_function_library_map(merged_config)
         alias_map = build_alias_to_name_map(merged_config)
-        yaml_data, missing = load_all_yaml_data(merged_config, symbol_store, platforms, debug=debug)
+        yaml_data, diagnostics = load_all_yaml_data(merged_config, symbol_store, platforms, debug=debug)
         print(f"  Using merged config with {len(func_lib_map)} function mappings")
-        return yaml_data, func_lib_map, alias_map, missing
+        return yaml_data, func_lib_map, alias_map, diagnostics, findings
     except Exception as exc:
         if strict:
             raise GamedataContractError(f"failed to load extra config for {contract.directory}: {exc}") from exc
         print(f"  Warning: Failed to load extra config for {contract.name}: {exc}")
         print("  Falling back to base config")
-        return base_data, *base_maps, []
+        return base_data, *base_maps, None, None
+
+
+def _load_base_context(base_config, symbol_store, platforms, debug):
+    findings = validate_gamedata_config(base_config)
+    func_lib_map = build_function_library_map(base_config)
+    alias_map = build_alias_to_name_map(base_config)
+    yaml_data, diagnostics = load_all_yaml_data(base_config, symbol_store, platforms, debug=debug)
+    return yaml_data, (func_lib_map, alias_map), diagnostics, findings
+
+
+def _seed_output_root(modules, output_root):
+    os.makedirs(output_root, exist_ok=True)
+    for contract in modules:
+        for source, target in contract.static_sources:
+            destination = os.path.join(output_root, contract.directory, *target.split("/"))
+            os.makedirs(os.path.dirname(destination), exist_ok=True)
+            shutil.copy2(contract.source_dir / source, destination)
+            print(f"  Seeded static template: {contract.directory}/{target}")
 
 
 def generate_gamedata(
@@ -241,18 +262,13 @@ def generate_gamedata(
     base_config = load_config(config_path)
     if not isinstance(base_config, dict):
         raise GamedataContractError(f"invalid analysis config mapping: {config_path}")
-    base_func_lib_map = build_function_library_map(base_config)
-    base_alias_map = build_alias_to_name_map(base_config)
-    base_data, base_missing = load_all_yaml_data(base_config, symbol_store, platforms, debug=debug)
+    base_data, base_maps, base_diagnostics, base_findings = _load_base_context(
+        base_config, symbol_store, platforms, debug
+    )
+    print_config_findings(base_findings, title="Config validation findings", debug=debug)
     modules = discover_generator_modules(modules_dir)
     print(f"Found {len(modules)} enabled generators")
-    os.makedirs(output_root, exist_ok=True)
-    for contract in modules:
-        for source, target in contract.static_sources:
-            destination = os.path.join(output_root, contract.directory, *target.split("/"))
-            os.makedirs(os.path.dirname(destination), exist_ok=True)
-            shutil.copy2(contract.source_dir / source, destination)
-            print(f"  Seeded static template: {contract.directory}/{target}")
+    _seed_output_root(modules, output_root)
     if download_latest:
         downloaded, failed = download_latest_gamedata(modules, output_root, strict=strict)
         print(f"Downloads complete: {downloaded} succeeded, {failed} failed")
@@ -261,21 +277,31 @@ def generate_gamedata(
     total_skipped = 0
     all_updated_symbols = {}
     all_skipped_symbols = {}
-    all_missing_symbols = list(base_missing) if debug else []
+    diagnostics = DiagnosticAggregator()
+    diagnostics.add("base", base_diagnostics)
     for contract in modules:
         print(f"\n{'=' * 50}\nUpdating {contract.name}...")
-        yaml_data, func_lib_map, alias_map, missing = _module_data(
+        yaml_data, func_lib_map, alias_map, merged_diagnostics, merged_findings = _module_data(
             contract,
             base_config,
             base_data,
-            (base_func_lib_map, base_alias_map),
+            base_maps,
             symbol_store,
             platforms,
             debug,
             strict,
         )
-        if debug:
-            all_missing_symbols.extend(missing)
+        if merged_diagnostics is not None:
+            diagnostics.add(contract.directory, merged_diagnostics)
+            print_overlay_diagnostics(diagnostic_delta(merged_diagnostics, base_diagnostics))
+            if debug:
+                print_resolved_diagnostics(diagnostic_delta(base_diagnostics, merged_diagnostics))
+        if merged_findings is not None:
+            print_config_findings(
+                finding_delta(merged_findings, base_findings),
+                title="  Overlay config validation findings",
+                debug=debug,
+            )
         module_output_root = os.path.join(output_root, contract.directory)
         try:
             updated, skipped, updated_symbols, skipped_symbols = contract.module.update(
@@ -294,8 +320,9 @@ def generate_gamedata(
 
     canonicalize_output_text(output_root)
     files = validate_output_tree(output_root, gamever, modules) if strict else []
+    print_diagnostic_summary(diagnostics, debug=debug)
     if debug:
-        print_debug_info("Summary", all_missing_symbols, all_updated_symbols, all_skipped_symbols)
+        print_debug_info("Summary", all_updated_symbols, all_skipped_symbols)
     print(f"\n{'=' * 50}\nTotal: {total_updated} updates, {total_skipped} skipped")
     return {
         "updated": total_updated,

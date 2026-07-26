@@ -58,11 +58,10 @@ def _normalize_reference_path(path: str) -> str:
     return normalized.removeprefix(PREPROCESSOR_PREFIX)
 
 
-def _reference_matches(template: str, changed_path: str) -> bool:
+def _reference_matches(template: str, changed_path: str, module_name: str, platform: str) -> bool:
     relative = _normalize_reference_path(changed_path)
-    if template == relative:
-        return True
-    return any(template.replace("{platform}", platform) == relative for platform in ("windows", "linux"))
+    resolved = template.replace("{module_name}", module_name).replace("{platform}", platform)
+    return resolved == relative
 
 
 def _imported_preprocessor_names(tree: ast.AST) -> set[str]:
@@ -83,6 +82,17 @@ def _imported_preprocessor_names(tree: ast.AST) -> set[str]:
 def _is_top_level_python(path: str) -> bool:
     pure_path = PurePosixPath(path)
     return pure_path.parent.as_posix() == PREPROCESSOR_PREFIX.rstrip("/") and pure_path.suffix == ".py"
+
+
+@dataclass(frozen=True)
+class ReferenceConsumer:
+    skill_name: str
+    module_name: str
+    platform: str
+
+    @property
+    def label(self) -> str:
+        return f"{self.skill_name}[{self.module_name}/{self.platform}]"
 
 
 @dataclass(frozen=True)
@@ -109,9 +119,13 @@ class AnalysisSourceIndex:
             {name: frozenset(values) for name, values in sorted(importers.items())},
         )
 
-    def reference_consumers(self, changed_path: str) -> set[str]:
+    def reference_consumers(self, changed_path: str, contract) -> set[ReferenceConsumer]:
         return {
-            skill_name for template, skill_name in self.reference_owners if _reference_matches(template, changed_path)
+            ReferenceConsumer(node.skill_name, node.module_name, node.platform)
+            for template, skill_name in self.reference_owners
+            for node in contract.nodes.values()
+            if node.skill_name == skill_name
+            and _reference_matches(template, changed_path, node.module_name, node.platform)
         }
 
     def dependent_preprocessors(self, changed_path: str) -> set[str]:

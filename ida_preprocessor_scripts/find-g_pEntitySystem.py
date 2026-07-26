@@ -12,7 +12,7 @@ LLM_DECOMPILE = [
         "symbol_name": "g_pEntitySystem",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
-            "references/server/CEntitySystem_CreateEntitySystem.{platform}.yaml",
+            "references/{module_name}/CEntitySystem_CreateEntitySystem.{platform}.yaml",
         ],
         "expected_result_sections": ["found_gv"],
         "dependency_policy": {

@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CEngineClient_SendStringCmd skill."""
+"""Preprocess script for find-CEngineClient_ExecuteClientCmd skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CEngineClient_SendStringCmd",
+    "CEngineClient_ExecuteClientCmd",
 ]
 
 INHERIT_VFUNCS = [
     # (target_func_name, inherit_vtable_class, base_vfunc_name, generate_func_sig)
     (
-        "CEngineClient_SendStringCmd",
+        "CEngineClient_ExecuteClientCmd",
         "CEngineClient",
-        "../client/IVEngineClient2_SendStringCmd",
+        "../client/IVEngineClient2_ExecuteClientCmd",
         True,
     ),
 ]
@@ -22,7 +22,7 @@ INHERIT_VFUNCS = [
 # lets the normal vtable relation recover that platform's actual slot.
 FUNC_XREFS_LINUX = [
     {
-        "func_name": "CEngineClient_SendStringCmd",
+        "func_name": "CEngineClient_ExecuteClientCmd",
         "xref_strings": [],
         "xref_gvs": [],
         "xref_signatures": [
@@ -37,12 +37,12 @@ FUNC_XREFS_LINUX = [
 ]
 
 FUNC_VTABLE_RELATIONS = [
-    ("CEngineClient_SendStringCmd", "CEngineClient"),
+    ("CEngineClient_ExecuteClientCmd", "CEngineClient"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     (
-        "CEngineClient_SendStringCmd",
+        "CEngineClient_ExecuteClientCmd",
         [
             "func_name",
             "func_va",
@@ -67,7 +67,7 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Resolve CEngineClient's SendStringCmd implementation on each ABI."""
+    """Resolve CEngineClient's ExecuteClientCmd implementation on each ABI."""
     _ = skill_name
 
     if platform == "linux":

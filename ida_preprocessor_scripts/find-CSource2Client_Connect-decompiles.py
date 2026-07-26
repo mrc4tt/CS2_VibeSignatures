@@ -1,40 +1,39 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-IVEngineClient2_SendStringCmd skill."""
+"""Preprocess script for find-CSource2Client_Connect-decompiles skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
-TARGET_FUNCTION_NAMES = [
-    "IVEngineClient2_SendStringCmd",
+TARGET_GLOBALVAR_NAMES = [
+    "g_pEngineClient",
 ]
 
 LLM_DECOMPILE = [
     {
-        "symbol_name": "IVEngineClient2_SendStringCmd",
+        "symbol_name": "g_pEngineClient",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
-            "references/client/CMapAnNodeManager_FireGameEvent.{platform}.yaml",
+            "references/client/CSource2Client_Connect.{platform}.yaml",
         ],
-        "expected_result_sections": ["found_vcall"],
+        "expected_result_sections": ["found_gv"],
         "dependency_policy": {
-            "CMapAnNodeManager_FireGameEvent.{platform}.yaml": "required",
+            "CSource2Client_Connect.{platform}.yaml": "required",
         },
     },
 ]
 
-FUNC_VTABLE_RELATIONS = [
-    # IVEngineClient2 is abstract; this relation supplies vtable metadata only.
-    ("IVEngineClient2_SendStringCmd", "IVEngineClient2"),
-]
-
 GENERATE_YAML_DESIRED_FIELDS = [
+    # (symbol_name, generate_yaml_fields)
     (
-        "IVEngineClient2_SendStringCmd",
+        "g_pEngineClient",
         [
-            "func_name",
-            "vfunc_sig",
-            "vfunc_offset",
-            "vfunc_index",
-            "vtable_name",
+            "gv_name",
+            "gv_va",
+            "gv_rva",
+            "gv_sig",
+            "gv_sig_va",
+            "gv_inst_offset",
+            "gv_inst_length",
+            "gv_inst_disp",
         ],
     ),
 ]
@@ -51,7 +50,7 @@ async def preprocess_skill(
     llm_config=None,
     debug=False,
 ):
-    """Resolve the IVEngineClient2 SendStringCmd slot from FireGameEvent."""
+    """Reuse previous gamever gv_sig to locate the target global and write YAML."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -59,8 +58,7 @@ async def preprocess_skill(
         new_binary_dir=new_binary_dir,
         platform=platform,
         image_base=image_base,
-        func_names=TARGET_FUNCTION_NAMES,
-        func_vtable_relations=FUNC_VTABLE_RELATIONS,
+        gv_names=TARGET_GLOBALVAR_NAMES,
         llm_decompile_specs=LLM_DECOMPILE,
         llm_config=llm_config,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,

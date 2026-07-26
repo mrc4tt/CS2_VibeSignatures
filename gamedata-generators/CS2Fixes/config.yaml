@@ -9,3 +9,7 @@ modules:
         category: vfunc
         alias:
           - Teleport
+      - name: ScriptBinding_CBaseModelEntity_SetModel
+        category: func
+        alias:
+          - CS_Script_SetModel

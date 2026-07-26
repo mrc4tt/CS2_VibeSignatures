@@ -4,20 +4,9 @@ import copy
 
 import yaml
 
+from gamedata_diagnostics import GamedataDiagnostic
+from gamedata_symbol_config import downstream_aliases, source_candidate_names
 from gamesymbol_store import SymbolStore
-
-PATCH_COMPAT_ALIASES = {
-    "CCSPlayer_MovementServices_FullWalkMove_SpeedClamp": [
-        "ServerMovementUnlock",
-    ],
-    "CCSPlayer_MovementServices_CheckJumpButton_WaterPatch": [
-        "CheckJumpButtonWater",
-        "FixWaterFloorJump",
-    ],
-    "CCSBotManager_AddBot_BotNavIgnore": [
-        "BotNavIgnore",
-    ],
-}
 
 
 def load_config(config_path):
@@ -237,21 +226,27 @@ def _target_platforms(symbol, platforms):
     return [platform for platform in platforms if platform == symbol_platform]
 
 
-def _symbol_aliases(func_name, symbol):
-    aliases = symbol.get("alias", [])
-    aliases = [aliases] if isinstance(aliases, str) else list(aliases)
-    if symbol.get("category") == "patch":
-        aliases = list(dict.fromkeys([*aliases, *PATCH_COMPAT_ALIASES.get(func_name, [])]))
-    return aliases
-
-
-def _missing_item(func_name, module_name, platform, *, filename):
-    return {
-        "name": func_name,
-        "library": module_name,
-        "platform": platform,
-        "path": _canonical_key(module_name, filename),
-    }
+def _diagnostic(
+    reason,
+    *,
+    module_name,
+    func_name,
+    category,
+    platform,
+    attempted_paths,
+    detail=None,
+):
+    return GamedataDiagnostic(
+        reason=reason,
+        severity="warning",
+        module=module_name,
+        symbol=func_name,
+        category=category,
+        platform=platform,
+        canonical_path=attempted_paths[0],
+        attempted_paths=tuple(attempted_paths),
+        detail=detail,
+    )
 
 
 def _load_legacy_struct(store, cache, *, module_name, struct_name, platform):
@@ -272,16 +267,20 @@ def _load_structmember_platform(
     module_name,
     func_name,
     platform,
-    missing_symbols,
-    debug,
+    diagnostics,
 ):
     member_name = symbol["member"]
-    primary_filename = f"{func_name}.{platform}.yaml"
-    primary = store.get(module_name, primary_filename)
-    parsed = parse_struct_yaml(primary)
-    if member_name in parsed:
-        symbol_data[platform] = {"struct_member_offset": parsed[member_name]}
-        return
+    attempted_paths = []
+    primary_found = False
+    for candidate_name in source_candidate_names(func_name, symbol):
+        primary_filename = f"{candidate_name}.{platform}.yaml"
+        attempted_paths.append(_canonical_key(module_name, primary_filename))
+        primary = store.get(module_name, primary_filename)
+        primary_found = primary_found or primary is not None
+        parsed = parse_struct_yaml(primary)
+        if member_name in parsed:
+            symbol_data[platform] = {"struct_member_offset": parsed[member_name]}
+            return
     legacy, legacy_filename = _load_legacy_struct(
         store,
         cache,
@@ -289,61 +288,75 @@ def _load_structmember_platform(
         struct_name=symbol["struct"],
         platform=platform,
     )
+    legacy_key = _canonical_key(module_name, legacy_filename)
+    if legacy_key not in attempted_paths:
+        attempted_paths.append(legacy_key)
     if legacy is not None and member_name in legacy:
         symbol_data[platform] = {"struct_member_offset": legacy[member_name]}
         return
-    if debug:
-        missing_symbols.append(_missing_item(func_name, module_name, platform, filename=primary_filename))
-    primary_key = _canonical_key(module_name, primary_filename)
-    legacy_key = _canonical_key(module_name, legacy_filename)
-    if primary is not None:
-        print(f"  Warning: Member {member_name} not found in {primary_key}")
-    elif legacy is not None:
-        print(f"  Warning: Member {member_name} not found in {legacy_key}")
-    else:
-        print(f"  Warning: Struct member YAML not found: {primary_key}")
+    found_artifact = primary_found or legacy is not None
+    diagnostics.append(
+        _diagnostic(
+            "structmember_member_missing" if found_artifact else "structmember_yaml_missing",
+            module_name=module_name,
+            func_name=func_name,
+            category="structmember",
+            platform=platform,
+            attempted_paths=attempted_paths,
+            detail=(f"member {member_name!r} was not present in available artifacts" if found_artifact else None),
+        )
+    )
 
 
-def _load_standard_platform(store, symbol_data, *, category, aliases, module_name, func_name, platform):
-    candidate_names = [func_name, *aliases] if category == "patch" else [func_name]
-    alias_keys = []
-    for candidate_name in candidate_names:
+def _load_standard_platform(store, symbol_data, *, symbol, category, module_name, func_name, platform, diagnostics):
+    attempted_paths = []
+    for candidate_name in source_candidate_names(func_name, symbol):
         filename = f"{candidate_name}.{platform}.yaml"
+        attempted_paths.append(_canonical_key(module_name, filename))
         payload = store.get(module_name, filename)
         if not payload or (category == "patch" and "patch_bytes" not in payload):
-            if candidate_name != func_name:
-                alias_keys.append(_canonical_key(module_name, filename))
             continue
         symbol_data[platform] = payload
-        return True, alias_keys
-    return False, alias_keys
-
-
-def _warn_standard_missing(category, missing_key, alias_keys):
-    if category == "patch" and alias_keys:
-        print(
-            f"  Warning: Patch YAML not found or missing patch_bytes: "
-            f"{missing_key} (tried aliases: {', '.join(alias_keys)})"
+        return
+    diagnostics.append(
+        _diagnostic(
+            "patch_yaml_missing_or_invalid" if category == "patch" else "missing_yaml",
+            module_name=module_name,
+            func_name=func_name,
+            category=category,
+            platform=platform,
+            attempted_paths=attempted_paths,
         )
-    elif category == "patch":
-        print(f"  Warning: Patch YAML not found or missing patch_bytes: {missing_key}")
-    else:
-        print(f"  Warning: YAML not found: {missing_key}")
+    )
 
 
-def _load_symbol(store, cache, *, symbol, module_name, platforms, missing_symbols, debug):
+def _load_symbol(store, cache, *, symbol, module_name, platforms, diagnostics):
     func_name = symbol.get("name")
     if not func_name:
         return None
     category = symbol.get("category")
-    aliases = _symbol_aliases(func_name, symbol)
+    if category == "struct":
+        return None
+    aliases = list(downstream_aliases(func_name, symbol))
     symbol_data = {"library": module_name, "category": category, "aliases": aliases}
     target_platforms = _target_platforms(symbol, platforms)
     if not target_platforms:
         return None
     if category == "structmember":
         if not symbol.get("struct") or not symbol.get("member"):
-            print(f"  Warning: structmember {func_name} missing struct or member field")
+            for platform in target_platforms:
+                path = _canonical_key(module_name, f"{func_name}.{platform}.yaml")
+                diagnostics.append(
+                    _diagnostic(
+                        "structmember_config_invalid",
+                        module_name=module_name,
+                        func_name=func_name,
+                        category=category,
+                        platform=platform,
+                        attempted_paths=(path,),
+                        detail="structmember requires non-empty struct and member fields",
+                    )
+                )
             return symbol_data
         for platform in target_platforms:
             _load_structmember_platform(
@@ -354,26 +367,20 @@ def _load_symbol(store, cache, *, symbol, module_name, platforms, missing_symbol
                 module_name=module_name,
                 func_name=func_name,
                 platform=platform,
-                missing_symbols=missing_symbols,
-                debug=debug,
+                diagnostics=diagnostics,
             )
         return symbol_data
     for platform in target_platforms:
-        loaded, alias_keys = _load_standard_platform(
+        _load_standard_platform(
             store,
             symbol_data,
+            symbol=symbol,
             category=category,
-            aliases=aliases,
             module_name=module_name,
             func_name=func_name,
             platform=platform,
+            diagnostics=diagnostics,
         )
-        if loaded:
-            continue
-        filename = f"{func_name}.{platform}.yaml"
-        if debug:
-            missing_symbols.append(_missing_item(func_name, module_name, platform, filename=filename))
-        _warn_standard_missing(category, _canonical_key(module_name, filename), alias_keys)
     return symbol_data
 
 
@@ -385,10 +392,10 @@ def load_all_yaml_data(config, symbol_store: SymbolStore, platforms, *, debug=Fa
         config: Parsed analysis config data
         symbol_store: Read-only symbol source
         platforms: List of platforms to load
-        debug: If True, collect missing symbols info
+        debug: Compatibility argument; diagnostics are always collected
 
     Returns:
-        Tuple: (yaml_data dict, missing_symbols list)
+        Tuple: (yaml_data dict, diagnostics list)
         yaml_data: {
             func_name: {
                 "library": str,
@@ -397,10 +404,10 @@ def load_all_yaml_data(config, symbol_store: SymbolStore, platforms, *, debug=Fa
                 platform: yaml_data
             }
         }
-        missing_symbols: List of {"name": str, "library": str, "platform": str, "path": str}
+        diagnostics: List of structured artifact-resolution diagnostics
     """
     yaml_data = {}
-    missing_symbols = []
+    diagnostics = []
 
     legacy_struct_cache = {}
     for module in config.get("modules", []):
@@ -414,10 +421,9 @@ def load_all_yaml_data(config, symbol_store: SymbolStore, platforms, *, debug=Fa
                 symbol=symbol,
                 module_name=module_name,
                 platforms=platforms,
-                missing_symbols=missing_symbols,
-                debug=debug,
+                diagnostics=diagnostics,
             )
             if symbol_data is not None:
                 yaml_data[symbol["name"]] = symbol_data
 
-    return yaml_data, missing_symbols
+    return yaml_data, diagnostics

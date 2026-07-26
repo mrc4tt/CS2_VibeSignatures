@@ -562,6 +562,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed before gamedata" }
           $gamedataRoot = Join-Path $env:CANDIDATE_ROOT "gamedata-candidate"
           $gamedataSession = Join-Path $env:CANDIDATE_ROOT "$env:GAMEVER.gamedata.session.json"
+          $env:GAMEDATA_SESSION = $gamedataSession
           "GAMEDATA_SESSION=$gamedataSession" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           uv run gamedata_candidate.py build -gamever "$env:GAMEVER" `
             -build-id "${{ github.run_id }}-${{ github.run_attempt }}" `
@@ -570,6 +571,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "gamedata candidate build failed with exit code $LASTEXITCODE" }
           uv run gamedata_candidate.py guard -session "$gamedataSession"
           if ($LASTEXITCODE -ne 0) { throw "gamedata candidate guard failed" }
+          uv run gamedata_candidate.py verify-tracked `
+            -session "$env:GAMEDATA_SESSION" `
+            -gamever "$env:GAMEVER" `
+            -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" `
+            -configyaml "$env:HEAD_CONFIG" `
+            -repo-root "$env:WORKSPACE" `
+            -revision HEAD
+          if ($LASTEXITCODE -ne 0) { throw "tracked gamedata verification failed" }
           uv run gamesymbol_candidate.py guard -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION"
           if ($LASTEXITCODE -ne 0) { throw "candidate guard failed after gamedata" }
           uv run gamesymbol_candidate.py mark -candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT" -session "$env:CANDIDATE_SESSION" -step gamedata

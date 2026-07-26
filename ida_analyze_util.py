@@ -4176,11 +4176,12 @@ async def preprocess_gen_gv_sig_via_mcp(
     session,
     gv_va,
     image_base,
+    gv_name=None,
     gv_access_inst_va=None,
     gv_access_func_va=None,
     min_sig_bytes=8,
-    max_sig_bytes=128,
-    max_instructions=64,
+    max_sig_bytes=512,
+    max_instructions=256,
     max_candidates=32,
     extra_wildcard_offsets=None,
     allow_across_function_boundary=False,
@@ -4197,6 +4198,7 @@ async def preprocess_gen_gv_sig_via_mcp(
         session: Active MCP ClientSession.
         gv_va: Global variable virtual address (int or hex string).
         image_base: Binary image base address (int).
+        gv_name: Optional global variable symbol name for diagnostics.
         gv_access_inst_va: Optional instruction address known to access gv_va.
         gv_access_func_va: Optional function address to constrain candidate search.
         min_sig_bytes: Minimum signature prefix length to try.
@@ -4608,7 +4610,8 @@ async def preprocess_gen_gv_sig_via_mcp(
 
     if best is None:
         if debug:
-            print(f"    Preprocess: failed to generate a unique gv-access signature for {hex(gv_va_int)}")
+            target_name = gv_name or hex(gv_va_int)
+            print(f"    Preprocess: failed to generate a unique gv-access signature for {target_name}")
         return None
 
     if debug:
@@ -6455,6 +6458,7 @@ async def _preprocess_direct_gv_sig_via_mcp(
         session=session,
         gv_va=resolved_gv_va,
         image_base=image_base,
+        gv_name=gv_name,
         gv_access_inst_va=gv_access_inst_va,
         allow_across_function_boundary=allow_across_function_boundary,
         debug=debug,

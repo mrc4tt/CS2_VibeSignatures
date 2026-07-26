@@ -124,7 +124,13 @@ class RedisRunQueue:
         self.consumer = consumer or f"{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:8]}"
         self.recovery_idle_ms = max(0, recovery_idle_ms)
         self.stream_maxlen = stream_maxlen
-        self.client = Redis.from_url(redis_url, decode_responses=True)
+        self.client = Redis.from_url(
+            redis_url,
+            decode_responses=True,
+            socket_connect_timeout=1.0,
+            socket_timeout=2.0,
+            health_check_interval=15,
+        )
         self._submit_script = self.client.register_script(SUBMIT_RUN_LUA)
         self._transition_script = self.client.register_script(SCHEDULER_RUN_TRANSITION_LUA)
 

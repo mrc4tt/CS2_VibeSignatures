@@ -975,8 +975,9 @@ Update current guidance that authors or consumes the analysis config, including:
 
 - `README.md`
 - `README_CN.md`
-- `.claude/skills/post-change-update/SKILL.md`
+- `.claude/skills/prepare-post-change-candidate/SKILL.md`
 - `.claude/skills/post-change-validation/SKILL.md`
+- `.claude/skills/publish-post-change-candidate/SKILL.md`
 - `.claude/skills/fix-cppheaders/SKILL.md`
 - `.claude/skills/create-preprocessor-scripts/SKILL.md`
 - `.claude/skills/create-cpp-tests/SKILL.md`

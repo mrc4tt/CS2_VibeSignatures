@@ -46,12 +46,31 @@ class TestPrSelfRunnerWorkflow(unittest.TestCase):
     def test_pr_validation_uses_one_candidate_and_never_publishes(self) -> None:
         self.assertIn("ACTUAL_CANDIDATE_SNAPSHOT=$candidate", self.steps["build-snapshot"]["run"])
         self.assertIn('-expected "$env:HEAD_SNAPSHOT"', self.steps["compare-snapshot"]["run"])
-        self.assertIn('-snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT"', self.steps["build-gamedata"]["run"])
+        gamedata = self.steps["build-gamedata"]["run"]
+        self.assertIn('-snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT"', gamedata)
+        self.assertIn("gamedata_candidate.py verify-tracked", gamedata)
+        self.assertIn('-session "$env:GAMEDATA_SESSION"', gamedata)
+        self.assertIn('-gamever "$env:GAMEVER"', gamedata)
+        self.assertIn('-candidate "$env:ACTUAL_CANDIDATE_SNAPSHOT"', gamedata)
+        self.assertIn('-configyaml "$env:HEAD_CONFIG"', gamedata)
+        self.assertIn('-repo-root "$env:WORKSPACE"', gamedata)
+        self.assertIn("-revision HEAD", gamedata)
+        self.assertIn("tracked gamedata verification failed", gamedata)
+        self.assertLess(
+            gamedata.index("gamedata_candidate.py guard"), gamedata.index("gamedata_candidate.py verify-tracked")
+        )
+        self.assertLess(
+            gamedata.index("gamedata_candidate.py verify-tracked"),
+            gamedata.index("gamesymbol_candidate.py mark"),
+        )
         self.assertIn('-snapshot "$env:ACTUAL_CANDIDATE_SNAPSHOT"', self.steps["cpp-tests"]["run"])
         commands = "\n".join(str(step.get("run", "")) for step in self.validate["steps"])
         self.assertNotIn("gamesymbol_candidate.py publish", commands)
         self.assertNotIn("gamedata_candidate.py publish", commands)
         self.assertNotIn("gh release", commands)
+        self.assertNotIn("git commit", commands)
+        self.assertNotIn("git push", commands)
+        self.assertNotIn("gh pr", commands)
 
     def test_baseline_bootstrap_has_explicit_contract_and_path_safety_gates(self) -> None:
         run = self.steps["restore-base"]["run"]

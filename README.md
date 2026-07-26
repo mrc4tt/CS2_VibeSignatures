@@ -16,7 +16,7 @@ Currently, all signatures/offsets from **CounterStrikeSharp** and **CS2Fixes** c
 
 2. [depotdownloader](https://github.com/steamre/depotdownloader) (`depotdownloader.exe` must be available in PATH)
 
-3. claude / codex
+3. claude / codex / opencode
 
 4. IDA Pro 9.0+
 
@@ -24,7 +24,7 @@ Currently, all signatures/offsets from **CounterStrikeSharp** and **CS2Fixes** c
 
 6. [idalib](https://docs.hex-rays.com/user-guide/idalib) (mandatory for `ida_analyze_bin.py`)
 
-7. Clang-LLVM (mandatory for `run_cpp_tests.py`, `clang.exe` must be available in PATH)
+7. Clang-LLVM (clang must be in PATH)
 
 ## Formatting
 
@@ -274,13 +274,14 @@ exit `0` means trusted, exit `3` reports a machine-readable untrusted reason, an
 errors remain hard failures. `migrate` explicitly upgrades a validated schema-1 snapshot without changing its `files`
 payload; it never runs implicitly during restore or verify.
 
-Pull requests that can affect analysis output must commit the matching `gamesymbols/<GAMEVER>.yaml` update. PR CI
-uses a trusted base snapshot for restore and targeted invalidation. A missing base snapshot bootstraps from clean YAML;
-an untrusted base snapshot emits a warning and takes the same clean full-rebuild path without restoring any baseline
-payload. The workflow then strict-packs an actual candidate and compares it with the PR head snapshot. Head snapshots,
-actual candidates, release promotion, and republish remain strict: none use the baseline warning fallback. The head
-snapshot is expected-only; both downstream consumers use the actual candidate, and the ordinary PR workflow never
-publishes or rewrites tracked bytes.
+Pull requests that can affect analysis or gamedata generator output must commit matching
+`gamesymbols/<GAMEVER>.yaml` and `gamedata/<GAMEVER>/` outputs when their bytes change. PR CI uses a trusted base
+snapshot for restore and targeted invalidation. A missing base snapshot bootstraps from clean YAML; an untrusted base
+snapshot emits a warning and takes the same clean full-rebuild path without restoring any baseline payload. The
+workflow then strict-packs an actual symbol candidate, compares it with the PR head snapshot, builds guarded gamedata
+from that actual candidate, and compares its inventory with raw gamedata blobs from the explicit PR head Git revision.
+Head outputs are expected-only; downstream validation uses the actual candidate transaction. The ordinary PR workflow
+never repairs, stages, commits, publishes, or rewrites missing tracked outputs.
 
 ### Currently supported gamedata
 

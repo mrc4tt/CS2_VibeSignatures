@@ -1,0 +1,341 @@
+func_name: SC_DumpWorld_CommandHandler
+func_va: '0x1800f9e00'
+disasm_code: |-
+  .text:00000001800F9E00                 mov     rax, rsp
+  .text:00000001800F9E03                 push    rbp
+  .text:00000001800F9E04                 lea     rbp, [rax-118h]
+  .text:00000001800F9E0B                 sub     rsp, 220h
+  .text:00000001800F9E12                 mov     rcx, cs:g_pSceneSystem
+  .text:00000001800F9E19                 mov     [rax+8], rbx
+  .text:00000001800F9E1D                 mov     rbx, rdx
+  .text:00000001800F9E20                 mov     [rax+20h], r12
+  .text:00000001800F9E24                 lea     rdx, [rbp+110h+var_178]
+  .text:00000001800F9E28                 xor     r12d, r12d
+  .text:00000001800F9E2B                 mov     [rbp+110h+var_170], r12
+  .text:00000001800F9E2F                 mov     [rbp+110h+var_168], r12
+  .text:00000001800F9E33                 mov     [rbp+110h+var_178], r12d
+  .text:00000001800F9E37                 mov     rax, [rcx]
+  .text:00000001800F9E3A                 call    qword ptr [rax+300h]  ; 300h = ISceneSystem_GetWorldsInfo
+  .text:00000001800F9E40                 cmp     dword ptr [rbx+438h], 2
+  .text:00000001800F9E47                 jnz     loc_1800FA0F0
+  .text:00000001800F9E4D                 mov     rax, [rbx+440h]
+  .text:00000001800F9E54                 mov     [rsp+220h+arg_10], rdi
+  .text:00000001800F9E5C                 mov     rcx, [rax+8]
+  .text:00000001800F9E60                 call    cs:V_atoi
+  .text:00000001800F9E66                 movsxd  rdi, eax
+  .text:00000001800F9E69                 test    eax, eax
+  .text:00000001800F9E6B                 js      loc_1800FA0E8
+  .text:00000001800F9E71                 cmp     edi, [rbp+110h+var_178]
+  .text:00000001800F9E74                 jge     loc_1800FA0E8
+  .text:00000001800F9E7A                 mov     rcx, [rbp+110h+var_170]
+  .text:00000001800F9E7E                 lea     rdx, [rbp+110h+var_190]
+  .text:00000001800F9E82                 mov     [rsp+220h+arg_8], rsi
+  .text:00000001800F9E8A                 mov     rsi, [rcx+rdi*8]
+  .text:00000001800F9E8E                 mov     [rbp+110h+var_188], r12
+  .text:00000001800F9E92                 mov     rcx, rsi
+  .text:00000001800F9E95                 mov     [rbp+110h+var_180], r12
+  .text:00000001800F9E99                 mov     [rbp+110h+var_190], r12d
+  .text:00000001800F9E9D                 mov     r8, [rsi]
+  .text:00000001800F9EA0                 call    qword ptr [r8+38h]  ; 38h = ISceneWorld_GetObjectsInfo
+  .text:00000001800F9EA4                 mov     ecx, cs:dword_18088EDC8
+  .text:00000001800F9EAA                 mov     edx, 2
+  .text:00000001800F9EAF                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:00000001800F9EB5                 test    al, al
+  .text:00000001800F9EB7                 jz      short loc_1800F9EEE
+  .text:00000001800F9EB9                 mov     rax, [rsi]
+  .text:00000001800F9EBC                 mov     rcx, rsi
+  .text:00000001800F9EBF                 mov     ebx, [rbp+110h+var_190]
+  .text:00000001800F9EC2                 call    qword ptr [rax+50h]  ; 50h = ISceneWorld_GetWorldName
+  .text:00000001800F9EC5                 mov     ecx, cs:dword_18088EDC8
+  .text:00000001800F9ECB                 lea     r8, aDumpingSceneWo; "-- Dumping Scene World %d: 0x%p '%s': %"...
+  .text:00000001800F9ED2                 mov     dword ptr [rsp+220h+var_1F0], ebx
+  .text:00000001800F9ED6                 mov     r9d, edi
+  .text:00000001800F9ED9                 mov     [rsp+220h+var_1F8], rax
+  .text:00000001800F9EDE                 mov     edx, 2
+  .text:00000001800F9EE3                 mov     [rsp+220h+var_200], rsi
+  .text:00000001800F9EE8                 call    cs:LoggingSystem_Log
+  .text:00000001800F9EEE                 mov     ebx, r12d
+  .text:00000001800F9EF1                 cmp     [rbp+110h+var_190], r12d
+  .text:00000001800F9EF5                 jle     loc_1800FA087
+  .text:00000001800F9EFB                 mov     [rsp+218h], r14
+  .text:00000001800F9F03                 mov     rdi, r12
+  .text:00000001800F9F06                 mov     [rsp+220h+var_10], r15
+  .text:00000001800F9F0E                 movaps  [rsp+220h+var_28+8], xmm6
+  .text:00000001800F9F16                 movaps  [rsp+220h+var_38+8], xmm7
+  .text:00000001800F9F1E                 movaps  xmmword ptr [rsp+220h+objectClassName+100h], xmm8
+  .text:00000001800F9F27                 nop     word ptr [rax+rax+00000000h]
+  .text:00000001800F9F30                 mov     rax, [rbp+110h+var_188]
+  .text:00000001800F9F34                 lea     r9, [rbp+110h+vecMaxs]
+  .text:00000001800F9F38                 mov     rcx, cs:g_pSceneSystem
+  .text:00000001800F9F3F                 lea     r8, [rbp+110h+vecMins]
+  .text:00000001800F9F43                 mov     rsi, [rdi+rax]
+  .text:00000001800F9F47                 mov     rax, [rcx]
+  .text:00000001800F9F4A                 mov     rdx, rsi
+  .text:00000001800F9F4D                 mov     r14, [rsi+18h]  ; 18h = CSceneObject::pDesc (structmember, struct=CSceneObject, member=pDesc)
+  .text:00000001800F9F51                 mov     r15, [rsi+80h]  ; 80h = CSceneObject::nFlags (structmember, struct=CSceneObject, member=nFlags)
+  .text:00000001800F9F58                 call    qword ptr [rax+0F0h]  ; 0F0h = ISceneSystem_GetObjectBounds
+  .text:00000001800F9F5E                 mov     rcx, cs:g_pSceneSystem
+  .text:00000001800F9F65                 lea     r8, [rbp+110h+objectClassName]
+  .text:00000001800F9F69                 movzx   edx, byte ptr [rsi+9Bh]  ; 9Bh = CSceneObject::nClassIndex (structmember, struct=CSceneObject, member=nClassIndex)
+  .text:00000001800F9F70                 mov     r9d, 100h
+  .text:00000001800F9F76                 movss   xmm8, dword ptr [rsi+3Ch]  ; 3Ch = CSceneObject::fOriginX (structmember, struct=CSceneObject, member=fOriginX)
+  .text:00000001800F9F7C                 movss   xmm7, dword ptr [rsi+4Ch]  ; 4Ch = CSceneObject::fOriginY (structmember, struct=CSceneObject, member=fOriginY)
+  .text:00000001800F9F81                 mov     rax, [rcx]
+  .text:00000001800F9F84                 movss   xmm6, dword ptr [rsi+5Ch]  ; 5Ch = CSceneObject::fOriginZ (structmember, struct=CSceneObject, member=fOriginZ)
+  .text:00000001800F9F89                 call    qword ptr [rax+318h]  ; 318h = ISceneSystem_GetObjectClassName
+  .text:00000001800F9F8F                 mov     ecx, cs:dword_18088EDC8
+  .text:00000001800F9F95                 mov     edx, 2
+  .text:00000001800F9F9A                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:00000001800F9FA0                 test    al, al
+  .text:00000001800F9FA2                 jz      loc_1800FA04F
+  .text:00000001800F9FA8                 movss   xmm0, [rbp+110h+var_158]
+  .text:00000001800F9FAD                 lea     rax, [rbp+110h+objectClassName]
+  .text:00000001800F9FB1                 movss   xmm1, [rbp+110h+var_15C]
+  .text:00000001800F9FB6                 lea     r8, aObject4d0xPCla; "Object %4d: 0x%p, class=%20s, origin=(%"...
+  .text:00000001800F9FBD                 movss   xmm2, [rbp+110h+vecMaxs]
+  .text:00000001800F9FC2                 mov     r9d, ebx
+  .text:00000001800F9FC5                 movss   xmm3, [rbp+110h+var_148]
+  .text:00000001800F9FCA                 mov     edx, 2
+  .text:00000001800F9FCF                 movss   xmm4, [rbp+110h+var_14C]
+  .text:00000001800F9FD4                 movss   xmm5, [rbp+110h+vecMins]
+  .text:00000001800F9FD9                 mov     ecx, cs:dword_18088EDC8
+  .text:00000001800F9FDF                 mov     [rsp+80h], r15
+  .text:00000001800F9FE7                 mov     [rsp+220h+var_1A8], r14
+  .text:00000001800F9FEC                 cvtps2pd xmm0, xmm0
+  .text:00000001800F9FEF                 cvtps2pd xmm1, xmm1
+  .text:00000001800F9FF2                 movsd   [rsp+220h+var_1B0], xmm0
+  .text:00000001800F9FF8                 movsd   [rsp+220h+var_1B8], xmm1
+  .text:00000001800F9FFE                 cvtps2pd xmm2, xmm2
+  .text:00000001800FA001                 cvtps2pd xmm3, xmm3
+  .text:00000001800FA004                 movsd   [rsp+220h+var_1C0], xmm2
+  .text:00000001800FA00A                 movsd   [rsp+220h+var_1C8], xmm3
+  .text:00000001800FA010                 cvtps2pd xmm4, xmm4
+  .text:00000001800FA013                 cvtps2pd xmm5, xmm5
+  .text:00000001800FA016                 movsd   [rsp+220h+var_1D0], xmm4
+  .text:00000001800FA01C                 movsd   [rsp+220h+var_1D8], xmm5
+  .text:00000001800FA022                 cvtps2pd xmm6, xmm6
+  .text:00000001800FA025                 cvtps2pd xmm7, xmm7
+  .text:00000001800FA028                 movsd   [rsp+220h+var_1E0], xmm6
+  .text:00000001800FA02E                 movsd   [rsp+220h+var_1E8], xmm7
+  .text:00000001800FA034                 cvtps2pd xmm8, xmm8
+  .text:00000001800FA038                 movsd   [rsp+220h+var_1F0], xmm8
+  .text:00000001800FA03F                 mov     [rsp+220h+var_1F8], rax
+  .text:00000001800FA044                 mov     [rsp+220h+var_200], rsi
+  .text:00000001800FA049                 call    cs:LoggingSystem_Log
+  .text:00000001800FA04F                 inc     ebx
+  .text:00000001800FA051                 add     rdi, 8
+  .text:00000001800FA055                 cmp     ebx, [rbp+110h+var_190]
+  .text:00000001800FA058                 jl      loc_1800F9F30
+  .text:00000001800FA05E                 movaps  xmm8, xmmword ptr [rsp+220h+objectClassName+100h]
+  .text:00000001800FA067                 movaps  xmm7, [rsp+220h+var_38+8]
+  .text:00000001800FA06F                 movaps  xmm6, [rsp+220h+var_28+8]
+  .text:00000001800FA077                 mov     r15, [rsp+220h+var_10]
+  .text:00000001800FA07F                 mov     r14, [rsp+218h]
+  .text:00000001800FA087                 mov     eax, dword ptr [rbp+110h+var_180+4]
+  .text:00000001800FA08A                 mov     rsi, [rsp+220h+arg_8]
+  .text:00000001800FA092                 mov     rdx, [rbp+110h+var_188]
+  .text:00000001800FA096                 mov     [rbp+110h+var_190], r12d
+  .text:00000001800FA09A                 test    eax, 0C0000000h
+  .text:00000001800FA09F                 jnz     short loc_1800FA0E8
+  .text:00000001800FA0A1                 test    rdx, rdx
+  .text:00000001800FA0A4                 jz      short loc_1800FA0C0
+  .text:00000001800FA0A6                 mov     rax, cs:g_pMemAlloc
+  .text:00000001800FA0AD                 mov     rcx, [rax]
+  .text:00000001800FA0B0                 mov     rax, [rcx]
+  .text:00000001800FA0B3                 call    qword ptr [rax+18h]
+  .text:00000001800FA0B6                 mov     eax, dword ptr [rbp+110h+var_180+4]
+  .text:00000001800FA0B9                 mov     rdx, r12
+  .text:00000001800FA0BC                 mov     [rbp+110h+var_188], rdx
+  .text:00000001800FA0C0                 mov     dword ptr [rbp+110h+var_180], r12d
+  .text:00000001800FA0C4                 test    eax, 0C0000000h
+  .text:00000001800FA0C9                 jnz     short loc_1800FA0E8
+  .text:00000001800FA0CB                 test    rdx, rdx
+  .text:00000001800FA0CE                 jz      short loc_1800FA0E4
+  .text:00000001800FA0D0                 mov     rax, cs:g_pMemAlloc
+  .text:00000001800FA0D7                 mov     rcx, [rax]
+  .text:00000001800FA0DA                 mov     rax, [rcx]
+  .text:00000001800FA0DD                 call    qword ptr [rax+18h]
+  .text:00000001800FA0E0                 mov     [rbp+110h+var_188], r12
+  .text:00000001800FA0E4                 mov     dword ptr [rbp+110h+var_180], r12d
+  .text:00000001800FA0E8                 mov     rdi, [rsp+220h+arg_10]
+  .text:00000001800FA0F0                 mov     eax, dword ptr [rbp+110h+var_168+4]
+  .text:00000001800FA0F3                 mov     rbx, [rsp+220h+arg_0]
+  .text:00000001800FA0FB                 mov     rdx, [rbp+110h+var_170]
+  .text:00000001800FA0FF                 mov     [rbp+110h+var_178], r12d
+  .text:00000001800FA103                 test    eax, 0C0000000h
+  .text:00000001800FA108                 jnz     short loc_1800FA12D
+  .text:00000001800FA10A                 test    rdx, rdx
+  .text:00000001800FA10D                 jz      short loc_1800FA129
+  .text:00000001800FA10F                 mov     rax, cs:g_pMemAlloc
+  .text:00000001800FA116                 mov     rcx, [rax]
+  .text:00000001800FA119                 mov     rax, [rcx]
+  .text:00000001800FA11C                 call    qword ptr [rax+18h]
+  .text:00000001800FA11F                 mov     eax, dword ptr [rbp+110h+var_168+4]
+  .text:00000001800FA122                 mov     rdx, r12
+  .text:00000001800FA125                 mov     [rbp+110h+var_170], rdx
+  .text:00000001800FA129                 mov     dword ptr [rbp+110h+var_168], r12d
+  .text:00000001800FA12D                 mov     r12, [rsp+220h+arg_18]
+  .text:00000001800FA135                 test    eax, 0C0000000h
+  .text:00000001800FA13A                 jnz     short loc_1800FA151
+  .text:00000001800FA13C                 test    rdx, rdx
+  .text:00000001800FA13F                 jz      short loc_1800FA151
+  .text:00000001800FA141                 mov     rax, cs:g_pMemAlloc
+  .text:00000001800FA148                 mov     rcx, [rax]
+  .text:00000001800FA14B                 mov     rax, [rcx]
+  .text:00000001800FA14E                 call    qword ptr [rax+18h]
+  .text:00000001800FA151                 add     rsp, 220h
+  .text:00000001800FA158                 pop     rbp
+  .text:00000001800FA159                 retn
+procedure: |-
+  __int64 __fastcall SC_DumpWorld_CommandHandler(__int64 a1, __int64 a2)
+  {
+    int v3; // eax
+    int v4; // edi
+    const void *pWorld; // rsi
+    int numObjects; // ebx
+    const char *worldName; // rax
+    int v8; // ebx
+    __int64 v9; // rdi
+    __int64 v10; // rsi
+    const void *v11; // r14
+    __int64 v12; // r15
+    float v13; // xmm8_4
+    float v14; // xmm7_4
+    float v15; // xmm6_4
+    int v16; // eax
+    __int64 v17; // rdx
+    __int64 result; // rax
+    __int64 v19; // rdx
+    int v20; // [rsp+98h] [rbp-80h] BYREF
+    __int64 v21; // [rsp+A0h] [rbp-78h]
+    __int64 v22; // [rsp+A8h] [rbp-70h]
+    int v23; // [rsp+B0h] [rbp-68h] BYREF
+    __int64 v24; // [rsp+B8h] [rbp-60h]
+    __int64 v25; // [rsp+C0h] [rbp-58h]
+    float v26[4]; // [rsp+C8h] [rbp-50h] BYREF
+    float v27[4]; // [rsp+D8h] [rbp-40h] BYREF
+    char objectClassName[264]; // [rsp+E8h] [rbp-30h] BYREF
+
+    v24 = 0;
+    v25 = 0;
+    v23 = 0;
+    (*(void (__fastcall **)(__int64, int *))(*(_QWORD *)g_pSceneSystem + 768LL))(g_pSceneSystem, &v23);// 768LL = 0x300 = ISceneSystem_GetWorldsInfo
+    if ( *(_DWORD *)(a2 + 1080) == 2 )
+    {
+      v3 = V_atoi(*(_QWORD *)(*(_QWORD *)(a2 + 1088) + 8LL));
+      v4 = v3;
+      if ( v3 >= 0 && v3 < v23 )
+      {
+        pWorld = *(const void **)(v24 + 8LL * v3);
+        v21 = 0;
+        v22 = 0;
+        v20 = 0;
+        (*(void (__fastcall **)(const void *, int *))(*(_QWORD *)pWorld + 56LL))(pWorld, &v20);// 56LL = 0x38 = ISceneWorld_GetObjectsInfo
+        if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18088EDC8, 2) )
+        {
+          numObjects = v20;
+          worldName = (const char *)(*(__int64 (__fastcall **)(const void *))(*(_QWORD *)pWorld + 80LL))(pWorld);// 80LL = 0x50 = ISceneWorld_GetWorldName
+          LoggingSystem_Log(
+            (unsigned int)dword_18088EDC8,
+            2,
+            "-- Dumping Scene World %d: 0x%p '%s': %d objects --\n",
+            v4,
+            pWorld,
+            worldName,
+            numObjects);
+        }
+        v8 = 0;
+        if ( v20 > 0 )
+        {
+          v9 = 0;
+          do
+          {
+            v10 = *(_QWORD *)(v9 + v21);
+            v11 = *(const void **)(v10 + 24);     // 24 = 0x18 = CSceneObject::pDesc (structmember, struct=CSceneObject, member=pDesc)
+            v12 = *(_QWORD *)(v10 + 128);         // 128 = 0x80 = CSceneObject::nFlags (structmember, struct=CSceneObject, member=nFlags)
+            (*(void (__fastcall **)(__int64, __int64, float *, float *))(*(_QWORD *)g_pSceneSystem
+                                                                       + 240LL))(// 240LL = 0xF0 = ISceneSystem_GetObjectBounds
+              g_pSceneSystem,
+              v10,
+              v27,
+              v26);
+            v13 = *(float *)(v10 + 60);           // 60 = 0x3C = CSceneObject::fOriginX (structmember, struct=CSceneObject, member=fOriginX)
+            v14 = *(float *)(v10 + 76);           // 76 = 0x4C = CSceneObject::fOriginY (structmember, struct=CSceneObject, member=fOriginY)
+            v15 = *(float *)(v10 + 92);           // 92 = 0x5C = CSceneObject::fOriginZ (structmember, struct=CSceneObject, member=fOriginZ)
+            (*(void (__fastcall **)(__int64, _QWORD, char *, __int64))(*(_QWORD *)g_pSceneSystem
+                                                                     + 792LL))(// 792LL = 0x318 = ISceneSystem_GetObjectClassName
+              g_pSceneSystem,
+              *(unsigned __int8 *)(v10 + 155),    // 155 = 0x9B = CSceneObject::nClassIndex (structmember, struct=CSceneObject, member=nClassIndex)
+              objectClassName,
+              256);
+            if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18088EDC8, 2) )
+              LoggingSystem_Log(
+                (unsigned int)dword_18088EDC8,
+                2,
+                "Object %4d: 0x%p, class=%20s, origin=(%13g,%13g,%13g), bounds=(%13g,%13g,%13g):(%13g,%13g,%13g), desc=0x%p"
+                ", flags=0x%016llX\n",
+                v8,
+                (const void *)v10,
+                objectClassName,
+                v13,
+                v14,
+                v15,
+                v27[0],
+                v27[1],
+                v27[2],
+                v26[0],
+                v26[1],
+                v26[2],
+                v11,
+                v12);
+            ++v8;
+            v9 += 8;
+          }
+          while ( v8 < v20 );
+        }
+        v16 = HIDWORD(v22);
+        v17 = v21;
+        v20 = 0;
+        if ( (v22 & 0xC000000000000000uLL) == 0 )
+        {
+          if ( v21 )
+          {
+            (*(void (__fastcall **)(_QWORD, __int64))(*g_pMemAlloc + 24LL))(g_pMemAlloc, v21);
+            v16 = HIDWORD(v22);
+            v17 = 0;
+            v21 = 0;
+          }
+          LODWORD(v22) = 0;
+          if ( (v16 & 0xC0000000) == 0 )
+          {
+            if ( v17 )
+            {
+              (*(void (__fastcall **)(_QWORD))(*g_pMemAlloc + 24LL))(g_pMemAlloc);
+              v21 = 0;
+            }
+            LODWORD(v22) = 0;
+          }
+        }
+      }
+    }
+    result = HIDWORD(v25);
+    v19 = v24;
+    v23 = 0;
+    if ( (v25 & 0xC000000000000000uLL) == 0 )
+    {
+      if ( v24 )
+      {
+        (*(void (__fastcall **)(_QWORD, __int64))(*g_pMemAlloc + 24LL))(g_pMemAlloc, v24);
+        result = HIDWORD(v25);
+        v19 = 0;
+        v24 = 0;
+      }
+      LODWORD(v25) = 0;
+    }
+    if ( (result & 0xC0000000) == 0 )
+    {
+      if ( v19 )
+        return (*(__int64 (__fastcall **)(_QWORD))(*g_pMemAlloc + 24LL))(g_pMemAlloc);
+    }
+    return result;
+  }

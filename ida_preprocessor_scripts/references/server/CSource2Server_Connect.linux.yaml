@@ -1,0 +1,612 @@
+func_name: CSource2Server_Connect
+func_va: '0x18d2600'
+disasm_code: |-
+  .text:00000000018D2600                 push    rbp
+  .text:00000000018D2601                 xor     eax, eax
+  .text:00000000018D2603                 mov     rbp, rsp
+  .text:00000000018D2606                 push    r12
+  .text:00000000018D2608                 mov     r12, rdi
+  .text:00000000018D260B                 push    rbx
+  .text:00000000018D260C                 lea     rdi, aConnecttier123; "ConnectTier1/2/3Libraries - Start"
+  .text:00000000018D2613                 mov     rbx, rsi
+  .text:00000000018D2616                 sub     rsp, 20h
+  .text:00000000018D261A                 call    _COM_TimestampedLog
+  .text:00000000018D261F                 lea     rdi, [rbp+var_18]
+  .text:00000000018D2623                 mov     esi, 1
+  .text:00000000018D2628                 mov     [rbp+var_28], rbx
+  .text:00000000018D262C                 mov     [rbp+var_20], rbx
+  .text:00000000018D2630                 mov     [rbp+var_18], rbx
+  .text:00000000018D2634                 call    ConnectInterfaces
+  .text:00000000018D2639                 lea     rdi, [rbp+var_20]
+  .text:00000000018D263D                 mov     esi, 1
+  .text:00000000018D2642                 call    ConnectTier2Libraries
+  .text:00000000018D2647                 mov     edx, 1
+  .text:00000000018D264C                 mov     esi, 1
+  .text:00000000018D2651                 add     dword ptr [r12+20h], 1
+  .text:00000000018D2657                 lea     rdi, [rbp+var_28]
+  .text:00000000018D265B                 call    ConnectGameInterfaces
+  .text:00000000018D2660                 lea     rax, g_pHostUtils
+  .text:00000000018D2667                 mov     rdi, [rax]
+  .text:00000000018D266A                 mov     rax, [rdi]
+  .text:00000000018D266D                 call    qword ptr [rax+58h]
+  .text:00000000018D2670                 lea     rdx, g_pEconSchemaSymbolTable
+  .text:00000000018D2677                 lea     rdi, aConnecttier123_0; "ConnectTier1/2/3Libraries - Finish"
+  .text:00000000018D267E                 mov     [rdx], rax
+  .text:00000000018D2681                 xor     eax, eax
+  .text:00000000018D2683                 call    _COM_TimestampedLog
+  .text:00000000018D2688                 lea     rax, g_pVEngineCvar
+  .text:00000000018D268F                 cmp     qword ptr [rax], 0
+  .text:00000000018D2693                 jz      loc_18D2968
+  .text:00000000018D2699                 lea     rdi, aSource2enginet; "Source2EngineToServer001"
+  .text:00000000018D26A0                 xor     esi, esi
+  .text:00000000018D26A2                 call    rbx
+  .text:00000000018D26A4                 mov     rdi, rax
+  .text:00000000018D26A7                 mov     cs:g_engine, rax
+  .text:00000000018D26AE                 test    rax, rax
+  .text:00000000018D26B1                 jz      loc_18D29A0
+  .text:00000000018D26B7                 mov     rax, [rax]
+  .text:00000000018D26BA                 call    qword ptr [rax+258h]  ; 258h = IVEngineServer2_GetServerGlobals
+  .text:00000000018D26C0                 test    rax, rax
+  .text:00000000018D26C3                 jz      short loc_18D26D0
+  .text:00000000018D26C5                 lea     rdx, GlobalVarsWarningFunc
+  .text:00000000018D26CC                 mov     [rax+28h], rdx
+  .text:00000000018D26D0                 lea     rax, g_pEngineServer
+  .text:00000000018D26D7                 lea     rdx, g_pSource2Engine
+  .text:00000000018D26DE                 mov     rax, [rax]
+  .text:00000000018D26E1                 mov     [rdx], rax
+  .text:00000000018D26E4                 test    rax, rax
+  .text:00000000018D26E7                 jz      loc_18D2930
+  .text:00000000018D26ED                 lea     rdi, aFactoriesStart; "Factories - Start"
+  .text:00000000018D26F4                 xor     eax, eax
+  .text:00000000018D26F6                 call    _COM_TimestampedLog
+  .text:00000000018D26FB                 lea     rdi, aSource2enginet_0; "Source2EngineToServerStringTable001"
+  .text:00000000018D2702                 xor     esi, esi
+  .text:00000000018D2704                 call    rbx
+  .text:00000000018D2706                 mov     cs:g_networkstringtable, rax
+  .text:00000000018D270D                 test    rax, rax
+  .text:00000000018D2710                 jz      loc_18D29E0
+  .text:00000000018D2716                 lea     rdi, aGamemodelinfo0; "GameModelInfo001"
+  .text:00000000018D271D                 xor     esi, esi
+  .text:00000000018D271F                 call    rbx
+  .text:00000000018D2721                 mov     cs:g_modelinfo, rax
+  .text:00000000018D2728                 test    rax, rax
+  .text:00000000018D272B                 jz      loc_18D2A20
+  .text:00000000018D2731                 lea     rdi, aSaverestoredat; "SaveRestoreDataVersion001"
+  .text:00000000018D2738                 xor     esi, esi
+  .text:00000000018D273A                 call    rbx
+  .text:00000000018D273C                 lea     rdx, g_pSaveRestoreHostDataMgr
+  .text:00000000018D2743                 mov     [rdx], rax
+  .text:00000000018D2746                 test    rax, rax
+  .text:00000000018D2749                 jz      loc_18D2900
+  .text:00000000018D274F                 lea     rdi, aVfilesystem017; "VFileSystem017"
+  .text:00000000018D2756                 xor     esi, esi
+  .text:00000000018D2758                 call    rbx
+  .text:00000000018D275A                 mov     cs:g_filesystem, rax
+  .text:00000000018D2761                 test    rax, rax
+  .text:00000000018D2764                 jz      loc_18D2AC0
+  .text:00000000018D276A                 lea     rdi, aSoundopsystem0; "SoundOpSystem001"
+  .text:00000000018D2771                 xor     esi, esi
+  .text:00000000018D2773                 call    rbx
+  .text:00000000018D2775                 mov     cs:g_soundopsystem, rax
+  .text:00000000018D277C                 test    rax, rax
+  .text:00000000018D277F                 jz      loc_18D2B00
+  .text:00000000018D2785                 lea     rdi, aScenefilecache; "SceneFileCache002"
+  .text:00000000018D278C                 xor     esi, esi
+  .text:00000000018D278E                 call    rbx
+  .text:00000000018D2790                 mov     cs:g_scenefilecache, rax
+  .text:00000000018D2797                 test    rax, rax
+  .text:00000000018D279A                 jz      loc_18D2B40
+  .text:00000000018D27A0                 lea     rdi, aInetsupport001; "INETSUPPORT_001"
+  .text:00000000018D27A7                 xor     esi, esi
+  .text:00000000018D27A9                 call    rbx
+  .text:00000000018D27AB                 mov     cs:g_netsupport, rax
+  .text:00000000018D27B2                 test    rax, rax
+  .text:00000000018D27B5                 jz      loc_18D2B80
+  .text:00000000018D27BB                 lea     rdi, aGameconfigserv; "GameConfigServerV001"
+  .text:00000000018D27C2                 xor     esi, esi
+  .text:00000000018D27C4                 call    rbx
+  .text:00000000018D27C6                 lea     rdx, g_pGameConfiguration
+  .text:00000000018D27CD                 mov     [rdx], rax
+  .text:00000000018D27D0                 test    rax, rax
+  .text:00000000018D27D3                 jz      loc_18D2A60
+  .text:00000000018D27D9                 call    _CommandLine
+  .text:00000000018D27DE                 xor     edx, edx
+  .text:00000000018D27E0                 mov     esi, 5AFDDFCDh
+  .text:00000000018D27E5                 mov     rdi, rax
+  .text:00000000018D27E8                 mov     rax, [rax]
+  .text:00000000018D27EB                 call    qword ptr [rax+18h]
+  .text:00000000018D27EE                 test    rax, rax
+  .text:00000000018D27F1                 jz      loc_18D28C0
+  .text:00000000018D27F7                 lea     rax, g_pMatchFramework
+  .text:00000000018D27FE                 mov     rdi, [rax]
+  .text:00000000018D2801                 test    rdi, rdi
+  .text:00000000018D2804                 jz      loc_18D2BC0
+  .text:00000000018D280A                 mov     rax, [rdi]
+  .text:00000000018D280D                 call    qword ptr [rax+60h]
+  .text:00000000018D2810                 mov     rdi, rax
+  .text:00000000018D2813                 test    rax, rax
+  .text:00000000018D2816                 jz      short loc_18D2827
+  .text:00000000018D2818                 mov     rax, [rax]
+  .text:00000000018D281B                 lea     rsi, aSource2server0; "Source2Server001"
+  .text:00000000018D2822                 mov     rdx, r12
+  .text:00000000018D2825                 call    qword ptr [rax]
+  .text:00000000018D2827                 call    AppIsDedicatedServer
+  .text:00000000018D282C                 lea     rdi, aGametypes001; "GameTypes001"
+  .text:00000000018D2833                 xor     esi, esi
+  .text:00000000018D2835                 call    rbx
+  .text:00000000018D2837                 lea     rdx, g_pGameTypes
+  .text:00000000018D283E                 mov     [rdx], rax
+  .text:00000000018D2841                 test    rax, rax
+  .text:00000000018D2844                 jz      loc_18D2C00
+  .text:00000000018D284A                 lea     rax, g_pSerializedEntities
+  .text:00000000018D2851                 mov     rdi, [rax]
+  .text:00000000018D2854                 mov     rax, [rdi]
+  .text:00000000018D2857                 call    qword ptr [rax+70h]
+  .text:00000000018D285A                 cmp     cs:g_pGameEventSystem, 0
+  .text:00000000018D2862                 mov     cs:qword_2868770, rax
+  .text:00000000018D2869                 jz      short loc_18D28E0
+  .text:00000000018D286B                 lea     rdi, aFactoriesFinis; "Factories - Finish"
+  .text:00000000018D2872                 xor     eax, eax
+  .text:00000000018D2874                 call    _COM_TimestampedLog
+  .text:00000000018D2879                 xor     edi, edi
+  .text:00000000018D287B                 call    sub_2142680
+  .text:00000000018D2880                 call    sub_213A320
+  .text:00000000018D2885                 lea     rsi, aServer; "server"
+  .text:00000000018D288C                 mov     rdi, rax
+  .text:00000000018D288F                 call    sub_20FC1A0
+  .text:00000000018D2894                 mov     rdi, cs:g_engine
+  .text:00000000018D289B                 mov     rax, [rdi]
+  .text:00000000018D289E                 call    qword ptr [rax+268h]
+  .text:00000000018D28A4                 mov     [r12+30h], rbx
+  .text:00000000018D28A9                 mov     cs:g_pSharedChangeInfo, rax
+  .text:00000000018D28B0                 add     rsp, 20h
+  .text:00000000018D28B4                 mov     eax, 1
+  .text:00000000018D28B9                 pop     rbx
+  .text:00000000018D28BA                 pop     r12
+  .text:00000000018D28BC                 pop     rbp
+  .text:00000000018D28BD                 retn
+  .text:00000000018D28C0                 lea     rdi, aVscriptmanager; "VScriptManager010"
+  .text:00000000018D28C7                 xor     esi, esi
+  .text:00000000018D28C9                 call    rbx
+  .text:00000000018D28CB                 lea     rdx, g_pScriptManager
+  .text:00000000018D28D2                 mov     [rdx], rax
+  .text:00000000018D28D5                 jmp     loc_18D27F7
+  .text:00000000018D28E0                 lea     rdi, aGameeventsyste; "GameEventSystemServerV001"
+  .text:00000000018D28E7                 xor     esi, esi
+  .text:00000000018D28E9                 call    rbx
+  .text:00000000018D28EB                 mov     cs:g_pGameEventSystem, rax
+  .text:00000000018D28F2                 jmp     loc_18D286B
+  .text:00000000018D2900                 ; _QWORD
+  .text:00000000018D2900                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2906                 ; _QWORD
+  .text:00000000018D2906                 mov     esi, 3; _QWORD
+  .text:00000000018D290B                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2910                 test    al, al
+  .text:00000000018D2912                 jnz     loc_18D2AA0
+  .text:00000000018D2918                 nop     dword ptr [rax+rax+00000000h]
+  .text:00000000018D2920                 xor     eax, eax
+  .text:00000000018D2922                 add     rsp, 20h
+  .text:00000000018D2926                 pop     rbx
+  .text:00000000018D2927                 pop     r12
+  .text:00000000018D2929                 pop     rbp
+  .text:00000000018D292A                 retn
+  .text:00000000018D2930                 ; _QWORD
+  .text:00000000018D2930                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2936                 ; _QWORD
+  .text:00000000018D2936                 mov     esi, 3; _QWORD
+  .text:00000000018D293B                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2940                 test    al, al
+  .text:00000000018D2942                 jz      short loc_18D2920
+  .text:00000000018D2944                 ; _QWORD
+  .text:00000000018D2944                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D294A                 lea     rdx, aErrorCsource2s; "ERROR: CSource2Server::Connect - No g_p"...
+  .text:00000000018D2951                 ; _QWORD
+  .text:00000000018D2951                 mov     esi, 3; _QWORD
+  .text:00000000018D2956                 xor     eax, eax
+  .text:00000000018D2958                 call    _LoggingSystem_Log
+  .text:00000000018D295D                 xor     eax, eax
+  .text:00000000018D295F                 jmp     short loc_18D2922
+  .text:00000000018D2968                 ; _QWORD
+  .text:00000000018D2968                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D296E                 ; _QWORD
+  .text:00000000018D296E                 mov     esi, 3; _QWORD
+  .text:00000000018D2973                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2978                 test    al, al
+  .text:00000000018D297A                 jz      short loc_18D2920
+  .text:00000000018D297C                 ; _QWORD
+  .text:00000000018D297C                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2982                 lea     rdx, aErrorCsource2s_0; "ERROR: CSource2Server::Connect - 'g_pCV"...
+  .text:00000000018D2989                 ; _QWORD
+  .text:00000000018D2989                 mov     esi, 3; _QWORD
+  .text:00000000018D298E                 xor     eax, eax
+  .text:00000000018D2990                 call    _LoggingSystem_Log
+  .text:00000000018D2995                 xor     eax, eax
+  .text:00000000018D2997                 jmp     short loc_18D2922
+  .text:00000000018D29A0                 ; _QWORD
+  .text:00000000018D29A0                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D29A6                 ; _QWORD
+  .text:00000000018D29A6                 mov     esi, 3; _QWORD
+  .text:00000000018D29AB                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D29B0                 test    al, al
+  .text:00000000018D29B2                 jz      loc_18D2920
+  .text:00000000018D29B8                 ; _QWORD
+  .text:00000000018D29B8                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D29BE                 lea     rdx, aErrorCsource2s_1; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D29C5                 ; _QWORD
+  .text:00000000018D29C5                 mov     esi, 3; _QWORD
+  .text:00000000018D29CA                 xor     eax, eax
+  .text:00000000018D29CC                 call    _LoggingSystem_Log
+  .text:00000000018D29D1                 xor     eax, eax
+  .text:00000000018D29D3                 jmp     loc_18D2922
+  .text:00000000018D29E0                 ; _QWORD
+  .text:00000000018D29E0                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D29E6                 ; _QWORD
+  .text:00000000018D29E6                 mov     esi, 3; _QWORD
+  .text:00000000018D29EB                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D29F0                 test    al, al
+  .text:00000000018D29F2                 jz      loc_18D2920
+  .text:00000000018D29F8                 ; _QWORD
+  .text:00000000018D29F8                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D29FE                 lea     rdx, aErrorCsource2s_2; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D2A05                 ; _QWORD
+  .text:00000000018D2A05                 mov     esi, 3; _QWORD
+  .text:00000000018D2A0A                 xor     eax, eax
+  .text:00000000018D2A0C                 call    _LoggingSystem_Log
+  .text:00000000018D2A11                 xor     eax, eax
+  .text:00000000018D2A13                 jmp     loc_18D2922
+  .text:00000000018D2A20                 ; _QWORD
+  .text:00000000018D2A20                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2A26                 ; _QWORD
+  .text:00000000018D2A26                 mov     esi, 3; _QWORD
+  .text:00000000018D2A2B                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2A30                 test    al, al
+  .text:00000000018D2A32                 jz      loc_18D2920
+  .text:00000000018D2A38                 ; _QWORD
+  .text:00000000018D2A38                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2A3E                 lea     rdx, aErrorCsource2s_3; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D2A45                 ; _QWORD
+  .text:00000000018D2A45                 mov     esi, 3; _QWORD
+  .text:00000000018D2A4A                 xor     eax, eax
+  .text:00000000018D2A4C                 call    _LoggingSystem_Log
+  .text:00000000018D2A51                 xor     eax, eax
+  .text:00000000018D2A53                 jmp     loc_18D2922
+  .text:00000000018D2A60                 ; _QWORD
+  .text:00000000018D2A60                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2A66                 ; _QWORD
+  .text:00000000018D2A66                 mov     esi, 3; _QWORD
+  .text:00000000018D2A6B                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2A70                 test    al, al
+  .text:00000000018D2A72                 jz      loc_18D2920
+  .text:00000000018D2A78                 ; _QWORD
+  .text:00000000018D2A78                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2A7E                 lea     rdx, aErrorCsource2s_4; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D2A85                 ; _QWORD
+  .text:00000000018D2A85                 mov     esi, 3; _QWORD
+  .text:00000000018D2A8A                 xor     eax, eax
+  .text:00000000018D2A8C                 call    _LoggingSystem_Log
+  .text:00000000018D2A91                 xor     eax, eax
+  .text:00000000018D2A93                 jmp     loc_18D2922
+  .text:00000000018D2AA0                 ; _QWORD
+  .text:00000000018D2AA0                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2AA6                 lea     rdx, aErrorCsource2s_5; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D2AAD                 ; _QWORD
+  .text:00000000018D2AAD                 mov     esi, 3; _QWORD
+  .text:00000000018D2AB2                 xor     eax, eax
+  .text:00000000018D2AB4                 call    _LoggingSystem_Log
+  .text:00000000018D2AB9                 xor     eax, eax
+  .text:00000000018D2ABB                 jmp     loc_18D2922
+  .text:00000000018D2AC0                 ; _QWORD
+  .text:00000000018D2AC0                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2AC6                 ; _QWORD
+  .text:00000000018D2AC6                 mov     esi, 3; _QWORD
+  .text:00000000018D2ACB                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2AD0                 test    al, al
+  .text:00000000018D2AD2                 jz      loc_18D2920
+  .text:00000000018D2AD8                 ; _QWORD
+  .text:00000000018D2AD8                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2ADE                 lea     rdx, aErrorCsource2s_6; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D2AE5                 ; _QWORD
+  .text:00000000018D2AE5                 mov     esi, 3; _QWORD
+  .text:00000000018D2AEA                 xor     eax, eax
+  .text:00000000018D2AEC                 call    _LoggingSystem_Log
+  .text:00000000018D2AF1                 xor     eax, eax
+  .text:00000000018D2AF3                 jmp     loc_18D2922
+  .text:00000000018D2B00                 ; _QWORD
+  .text:00000000018D2B00                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2B06                 ; _QWORD
+  .text:00000000018D2B06                 mov     esi, 3; _QWORD
+  .text:00000000018D2B0B                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2B10                 test    al, al
+  .text:00000000018D2B12                 jz      loc_18D2920
+  .text:00000000018D2B18                 ; _QWORD
+  .text:00000000018D2B18                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2B1E                 lea     rdx, aErrorCsource2s_7; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D2B25                 ; _QWORD
+  .text:00000000018D2B25                 mov     esi, 3; _QWORD
+  .text:00000000018D2B2A                 xor     eax, eax
+  .text:00000000018D2B2C                 call    _LoggingSystem_Log
+  .text:00000000018D2B31                 xor     eax, eax
+  .text:00000000018D2B33                 jmp     loc_18D2922
+  .text:00000000018D2B40                 ; _QWORD
+  .text:00000000018D2B40                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2B46                 ; _QWORD
+  .text:00000000018D2B46                 mov     esi, 3; _QWORD
+  .text:00000000018D2B4B                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2B50                 test    al, al
+  .text:00000000018D2B52                 jz      loc_18D2920
+  .text:00000000018D2B58                 ; _QWORD
+  .text:00000000018D2B58                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2B5E                 lea     rdx, aErrorCsource2s_8; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D2B65                 ; _QWORD
+  .text:00000000018D2B65                 mov     esi, 3; _QWORD
+  .text:00000000018D2B6A                 xor     eax, eax
+  .text:00000000018D2B6C                 call    _LoggingSystem_Log
+  .text:00000000018D2B71                 xor     eax, eax
+  .text:00000000018D2B73                 jmp     loc_18D2922
+  .text:00000000018D2B80                 ; _QWORD
+  .text:00000000018D2B80                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2B86                 ; _QWORD
+  .text:00000000018D2B86                 mov     esi, 3; _QWORD
+  .text:00000000018D2B8B                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2B90                 test    al, al
+  .text:00000000018D2B92                 jz      loc_18D2920
+  .text:00000000018D2B98                 ; _QWORD
+  .text:00000000018D2B98                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2B9E                 lea     rdx, aErrorCsource2s_9; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D2BA5                 ; _QWORD
+  .text:00000000018D2BA5                 mov     esi, 3; _QWORD
+  .text:00000000018D2BAA                 xor     eax, eax
+  .text:00000000018D2BAC                 call    _LoggingSystem_Log
+  .text:00000000018D2BB1                 xor     eax, eax
+  .text:00000000018D2BB3                 jmp     loc_18D2922
+  .text:00000000018D2BC0                 ; _QWORD
+  .text:00000000018D2BC0                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2BC6                 ; _QWORD
+  .text:00000000018D2BC6                 mov     esi, 3; _QWORD
+  .text:00000000018D2BCB                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2BD0                 test    al, al
+  .text:00000000018D2BD2                 jz      loc_18D2920
+  .text:00000000018D2BD8                 ; _QWORD
+  .text:00000000018D2BD8                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2BDE                 lea     rdx, aErrorCsource2s_10; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D2BE5                 ; _QWORD
+  .text:00000000018D2BE5                 mov     esi, 3; _QWORD
+  .text:00000000018D2BEA                 xor     eax, eax
+  .text:00000000018D2BEC                 call    _LoggingSystem_Log
+  .text:00000000018D2BF1                 xor     eax, eax
+  .text:00000000018D2BF3                 jmp     loc_18D2922
+  .text:00000000018D2C00                 ; _QWORD
+  .text:00000000018D2C00                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2C06                 ; _QWORD
+  .text:00000000018D2C06                 mov     esi, 3; _QWORD
+  .text:00000000018D2C0B                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000018D2C10                 test    al, al
+  .text:00000000018D2C12                 jz      loc_18D2920
+  .text:00000000018D2C18                 ; _QWORD
+  .text:00000000018D2C18                 mov     edi, cs:dword_2868900; _QWORD
+  .text:00000000018D2C1E                 lea     rdx, aErrorCsource2s_11; "ERROR: CSource2Server::Connect - Failed"...
+  .text:00000000018D2C25                 ; _QWORD
+  .text:00000000018D2C25                 mov     esi, 3; _QWORD
+  .text:00000000018D2C2A                 xor     eax, eax
+  .text:00000000018D2C2C                 call    _LoggingSystem_Log
+  .text:00000000018D2C31                 xor     eax, eax
+  .text:00000000018D2C33                 jmp     loc_18D2922
+procedure: |-
+  __int64 __fastcall CSource2Server_Connect(
+          __int64 a1,
+          __int64 (__fastcall *a2)(void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden this), _QWORD))
+  {
+    __int64 v3; // rax
+    __int64 v4; // rax
+    __int64 v5; // rax
+    void (__fastcall ***v6)(_QWORD, const char *, __int64); // rax
+    void (__fastcall ***v7)(_QWORD, const char *, _QWORD); // rdi
+    __int64 v8; // rax
+    __int64 v9; // rax
+    __int64 (__fastcall *v11)(void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden), _QWORD); // [rsp+8h] [rbp-28h] BYREF
+    __int64 (__fastcall *v12)(void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden), _QWORD); // [rsp+10h] [rbp-20h] BYREF
+    __int64 (__fastcall *v13[3])(void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden), _QWORD); // [rsp+18h] [rbp-18h] BYREF
+
+    COM_TimestampedLog("ConnectTier1/2/3Libraries - Start");
+    v11 = a2;
+    v12 = a2;
+    v13[0] = a2;
+    ConnectInterfaces(v13, 1);
+    ConnectTier2Libraries(&v12, 1);
+    ++*(_DWORD *)(a1 + 32);
+    ConnectGameInterfaces(&v11, 1, 1);
+    g_pEconSchemaSymbolTable = (*(__int64 (__fastcall **)(_QWORD *))(*g_pHostUtils + 88LL))(g_pHostUtils);
+    COM_TimestampedLog("ConnectTier1/2/3Libraries - Finish");
+    if ( !g_pVEngineCvar )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log((unsigned int)dword_2868900, 3, "ERROR: CSource2Server::Connect - 'g_pCVar' is nullptr\n");
+        return 0;
+      }
+      return 0;
+    }
+    v3 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"Source2EngineToServer001", 0);
+    g_engine = v3;
+    if ( !v3 )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to engine\n");
+        return 0;
+      }
+      return 0;
+    }
+    v4 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v3 + 600LL))(v3);// 600 = 0x258 = IVEngineServer2_GetServerGlobals
+    if ( v4 )
+      *(_QWORD *)(v4 + 40) = GlobalVarsWarningFunc;
+    g_pSource2Engine = (_QWORD *)g_pEngineServer;
+    if ( !g_pEngineServer )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log((unsigned int)dword_2868900, 3, "ERROR: CSource2Server::Connect - No g_pSource2Engine\n");
+        return 0;
+      }
+      return 0;
+    }
+    COM_TimestampedLog("Factories - Start");
+    g_networkstringtable = a2(
+                             (void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"Source2EngineToServerStringTable001",
+                             0);
+    if ( !g_networkstringtable )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to networkstringtable\n");
+        return 0;
+      }
+      return 0;
+    }
+    g_modelinfo = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"GameModelInfo001", 0);
+    if ( !g_modelinfo )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to modelinfo\n");
+        return 0;
+      }
+      return 0;
+    }
+    g_pSaveRestoreHostDataMgr = a2(
+                                  (void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"SaveRestoreDataVersion001",
+                                  0);
+    if ( !g_pSaveRestoreHostDataMgr )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to saverestore data in host.dll\n");
+        return 0;
+      }
+      return 0;
+    }
+    g_filesystem = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"VFileSystem017", 0);
+    if ( !g_filesystem )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to filesystem\n");
+        return 0;
+      }
+      return 0;
+    }
+    g_soundopsystem = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"SoundOpSystem001", 0);
+    if ( !g_soundopsystem )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to soundopsystem\n");
+        return 0;
+      }
+      return 0;
+    }
+    g_scenefilecache = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"SceneFileCache002", 0);
+    if ( !g_scenefilecache )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to scenefilecache\n");
+        return 0;
+      }
+      return 0;
+    }
+    g_netsupport = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"INETSUPPORT_001", 0);
+    if ( !g_netsupport )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to netsupport\n");
+        return 0;
+      }
+      return 0;
+    }
+    g_pGameConfiguration = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"GameConfigServerV001", 0);
+    if ( !g_pGameConfiguration )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to g_pGameConfiguration\n");
+        return 0;
+      }
+      return 0;
+    }
+    v5 = CommandLine();
+    if ( !(*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)v5 + 24LL))(v5, 1526587341, 0) )
+      g_pScriptManager = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"VScriptManager010", 0);
+    if ( !g_pMatchFramework )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to g_pMatchFramework\n");
+        return 0;
+      }
+      return 0;
+    }
+    v6 = (void (__fastcall ***)(_QWORD, const char *, __int64))(*(__int64 (__fastcall **)(_QWORD *))(*g_pMatchFramework
+                                                                                                   + 96LL))(g_pMatchFramework);
+    v7 = v6;
+    if ( v6 )
+      (**v6)(v6, "Source2Server001", a1);
+    AppIsDedicatedServer(v7);
+    g_pGameTypes = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"GameTypes001", 0);
+    if ( !g_pGameTypes )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_2868900, 3) )
+      {
+        LoggingSystem_Log(
+          (unsigned int)dword_2868900,
+          3,
+          "ERROR: CSource2Server::Connect - Failed to connect to g_pGameTypes\n");
+        return 0;
+      }
+      return 0;
+    }
+    qword_2868770 = (*(__int64 (__fastcall **)(_QWORD *))(*g_pSerializedEntities + 112LL))(g_pSerializedEntities);
+    if ( !g_pGameEventSystem )
+      g_pGameEventSystem = a2(
+                             (void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"GameEventSystemServerV001",
+                             0);
+    COM_TimestampedLog("Factories - Finish");
+    sub_2142680(0);
+    v8 = sub_213A320();
+    sub_20FC1A0(v8, "server");
+    v9 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)g_engine + 616LL))(g_engine);
+    *(_QWORD *)(a1 + 48) = a2;
+    g_pSharedChangeInfo = v9;
+    return 1;
+  }

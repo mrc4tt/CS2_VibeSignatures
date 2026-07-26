@@ -262,12 +262,13 @@ snapshot 隐含冻结的 config digest v1 并保持原字节稳定；新 writer 
 untrusted reason，CLI/config 或运行时错误仍硬失败。`migrate` 只显式升级已验证的 schema-1 snapshot，且不得改变
 `files` payload；restore/verify 不会隐式迁移。
 
-可能影响分析输出的 PR 必须同时提交对应的 `gamesymbols/<GAMEVER>.yaml` 更新。PR CI 只在 base snapshot 通过
-trust probe 后执行 restore 与 targeted invalidation；base snapshot 缺失时从 clean YAML bootstrap，不可信时输出
-warning，并在不恢复任何 baseline payload 的前提下走同一个 clean full rebuild。随后运行 analyzer、strict-pack
-actual candidate，再与 PR head snapshot 比较。HEAD snapshot、actual candidate、release promotion 与 republish
-仍保持 strict failure，不使用 baseline fallback。head snapshot 只表示 expected result；两个 downstream consumer
-都读取 actual candidate，普通 PR workflow 不会 publish 或改写 tracked snapshot。
+可能影响分析或 gamedata generator 输出的 PR，必须在实际 bytes 变化时同时提交匹配的
+`gamesymbols/<GAMEVER>.yaml` 与 `gamedata/<GAMEVER>/`。PR CI 只在 base snapshot 通过 trust probe 后执行 restore
+与 targeted invalidation；base snapshot 缺失时从 clean YAML bootstrap，不可信时输出 warning，并在不恢复任何
+baseline payload 的前提下走同一个 clean full rebuild。随后 strict-pack actual symbol candidate、与 PR head
+snapshot 比较，再从该 actual candidate 构建 guarded gamedata，并与显式 PR head Git revision 中的 raw gamedata
+blob inventory 比较。head outputs 只表示 expected result，downstream validation 使用 actual candidate transaction；
+普通 PR workflow 不会自动修复、stage、commit、publish 或改写遗漏的 tracked output。
 
 ### 当前支持的 gamedata
 

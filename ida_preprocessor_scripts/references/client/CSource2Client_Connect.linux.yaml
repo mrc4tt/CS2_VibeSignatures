@@ -1,0 +1,630 @@
+func_name: CSource2Client_Connect
+func_va: '0x1895490'
+disasm_code: |-
+  .text:0000000001895490                 push    rbp
+  .text:0000000001895491                 mov     rbp, rsp
+  .text:0000000001895494                 push    r15
+  .text:0000000001895496                 push    r14
+  .text:0000000001895498                 lea     r15, [rbp+dest]
+  .text:000000000189549F                 push    r13
+  .text:00000000018954A1                 lea     r13, [rbp+var_430]
+  .text:00000000018954A8                 push    r12
+  .text:00000000018954AA                 mov     r12, rdi
+  .text:00000000018954AD                 push    rbx
+  .text:00000000018954AE                 mov     rbx, rsi
+  .text:00000000018954B1                 sub     rsp, 648h
+  .text:00000000018954B8                 call    sub_3F47C00
+  .text:00000000018954BD                 mov     [r12+50h], rbx
+  .text:00000000018954C2                 mov     dword ptr [r12+448h], 0BF800000h
+  .text:00000000018954CE                 call    sub_23188A0
+  .text:00000000018954D3                 mov     esi, 1
+  .text:00000000018954D8                 mov     rdi, r13
+  .text:00000000018954DB                 mov     [rbp+var_668], rbx
+  .text:00000000018954E2                 mov     [rbp+dest], rbx
+  .text:00000000018954E9                 mov     qword ptr [rbp+var_430], rbx
+  .text:00000000018954F0                 call    ConnectInterfaces
+  .text:00000000018954F5                 mov     esi, 1
+  .text:00000000018954FA                 mov     rdi, r15
+  .text:00000000018954FD                 call    sub_3F1E9E0
+  .text:0000000001895502                 mov     edx, 2
+  .text:0000000001895507                 mov     esi, 1
+  .text:000000000189550C                 add     dword ptr [r12+28h], 1
+  .text:0000000001895512                 lea     rdi, [rbp+var_668]
+  .text:0000000001895519                 call    sub_230CCE0
+  .text:000000000189551E                 lea     rax, qword_48B2C80
+  .text:0000000001895525                 mov     rdi, [rax]
+  .text:0000000001895528                 mov     rax, [rdi]
+  .text:000000000189552B                 call    qword ptr [rax+58h]
+  .text:000000000189552E                 lea     rdx, qword_48A20D0
+  .text:0000000001895535                 xor     esi, esi
+  .text:0000000001895537                 lea     rdi, aSource2enginet_0; "Source2EngineToClient001"
+  .text:000000000189553E                 mov     [rdx], rax
+  .text:0000000001895541                 call    rbx
+  .text:0000000001895543                 mov     cs:g_pEngineClient, rax
+  .text:000000000189554A                 test    rax, rax
+  .text:000000000189554D                 jz      loc_1895750
+  .text:0000000001895553                 lea     rax, g_pSource2EngineToClient
+  .text:000000000189555A                 lea     rdx, qword_48ADDB0
+  .text:0000000001895561                 mov     rax, [rax]
+  .text:0000000001895564                 mov     [rdx], rax
+  .text:0000000001895567                 test    rax, rax
+  .text:000000000189556A                 jz      loc_1895750
+  .text:0000000001895570                 lea     rdi, aSteamutils010; "SteamUtils010"
+  .text:0000000001895577                 ; _QWORD
+  .text:0000000001895577                 mov     rsi, r13; _QWORD
+  .text:000000000189557A                 call    _SteamInternal_SteamAPI_Init
+  .text:000000000189557F                 mov     r14d, eax
+  .text:0000000001895582                 test    eax, eax
+  .text:0000000001895584                 jnz     loc_1895768
+  .text:000000000189558A                 ; _QWORD
+  .text:000000000189558A                 xor     edi, edi; _QWORD
+  .text:000000000189558C                 mov     [rbp+var_430], 0
+  .text:0000000001895593                 call    _SteamAPI_SetTryCatchCallbacks
+  .text:0000000001895598                 call    _CommandLine
+  .text:000000000189559D                 mov     esi, 6B952A6h
+  .text:00000000018955A2                 mov     rdi, rax
+  .text:00000000018955A5                 mov     rax, [rax]
+  .text:00000000018955A8                 call    qword ptr [rax+20h]
+  .text:00000000018955AB                 test    al, al
+  .text:00000000018955AD                 jnz     loc_1895B95
+  .text:00000000018955B3                 ; _QWORD
+  .text:00000000018955B3                 lea     rdi, off_45324F0; _QWORD
+  .text:00000000018955BA                 call    _SteamInternal_ContextInit
+  .text:00000000018955BF                 cmp     qword ptr [rax], 0
+  .text:00000000018955C3                 jz      loc_1895B3F
+  .text:00000000018955C9                 ; _QWORD
+  .text:00000000018955C9                 lea     rdi, off_4501730; _QWORD
+  .text:00000000018955D0                 call    _SteamInternal_ContextInit
+  .text:00000000018955D5                 cmp     qword ptr [rax], 0
+  .text:00000000018955D9                 jz      loc_1895B3F
+  .text:00000000018955DF                 ; _QWORD
+  .text:00000000018955DF                 lea     rdi, off_4505000; _QWORD
+  .text:00000000018955E6                 call    _SteamInternal_ContextInit
+  .text:00000000018955EB                 cmp     qword ptr [rax], 0
+  .text:00000000018955EF                 jz      loc_1895B3F
+  .text:00000000018955F5                 ; _QWORD
+  .text:00000000018955F5                 lea     rdi, off_4569430; _QWORD
+  .text:00000000018955FC                 call    _SteamInternal_ContextInit
+  .text:0000000001895601                 cmp     qword ptr [rax], 0
+  .text:0000000001895605                 jz      loc_1895B3F
+  .text:000000000189560B                 ; _QWORD
+  .text:000000000189560B                 lea     rdi, off_454B800; _QWORD
+  .text:0000000001895612                 call    _SteamInternal_ContextInit
+  .text:0000000001895617                 cmp     qword ptr [rax], 0
+  .text:000000000189561B                 jz      loc_1895B3F
+  .text:0000000001895621                 ; _QWORD
+  .text:0000000001895621                 lea     rdi, off_4501730; _QWORD
+  .text:0000000001895628                 call    _SteamInternal_ContextInit
+  .text:000000000189562D                 mov     rdi, [rax]
+  .text:0000000001895630                 mov     rax, [rdi]
+  .text:0000000001895633                 call    qword ptr [rax+10h]
+  .text:0000000001895636                 mov     rdx, rax
+  .text:0000000001895639                 shr     rdx, 30h
+  .text:000000000189563D                 cmp     dl, 0Fh
+  .text:0000000001895640                 jbe     short loc_1895690
+  .text:0000000001895642                 mov     rcx, rax
+  .text:0000000001895645                 shr     rcx, 34h
+  .text:0000000001895649                 and     ecx, 0Fh
+  .text:000000000189564C                 cmp     cl, 0Ah
+  .text:000000000189564F                 ja      short loc_1895690
+  .text:0000000001895651                 mov     rcx, rax
+  .text:0000000001895654                 shr     rcx, 38h
+  .text:0000000001895658                 sub     ecx, 1
+  .text:000000000189565B                 cmp     cl, 3
+  .text:000000000189565E                 ja      short loc_1895690
+  .text:0000000001895660                 and     edx, 0FFFFFFF0h
+  .text:0000000001895663                 cmp     dl, 10h
+  .text:0000000001895666                 jz      loc_1895AD0
+  .text:000000000189566C                 cmp     dl, 70h ; 'p'
+  .text:000000000189566F                 jz      loc_1895A08
+  .text:0000000001895675                 cmp     dl, 30h ; '0'
+  .text:0000000001895678                 jnz     loc_18957B9
+  .text:000000000189567E                 test    eax, eax
+  .text:0000000001895680                 jnz     loc_18957B9
+  .text:0000000001895686                 nop     word ptr [rax+rax+00000000h]
+  .text:0000000001895690                 ; _QWORD
+  .text:0000000001895690                 mov     edx, 400h; _QWORD
+  .text:0000000001895695                 ; _QWORD
+  .text:0000000001895695                 mov     rdi, r13; _QWORD
+  .text:0000000001895698                 mov     r14d, 2
+  .text:000000000189569E                 lea     rsi, aSteamidIsNotVa; "SteamID is not valid.  (Steam client ru"...
+  .text:00000000018956A5                 call    __V_strncpy
+  .text:00000000018956AA                 call    _CommandLine
+  .text:00000000018956AF                 mov     esi, 0CDBD1292h
+  .text:00000000018956B4                 lea     rbx, qword_B535F0
+  .text:00000000018956BB                 mov     rdi, rax
+  .text:00000000018956BE                 mov     rax, [rax]
+  .text:00000000018956C1                 call    qword ptr [rax+90h]
+  .text:00000000018956C7                 ; char *
+  .text:00000000018956C7                 lea     rsi, byte_BFB8D8; char *
+  .text:00000000018956CE                 test    al, al
+  .text:00000000018956D0                 jz      loc_1895A24
+  .text:00000000018956D6                 xor     eax, eax
+  .text:00000000018956D8                 ; this
+  .text:00000000018956D8                 mov     rdi, r15; this
+  .text:00000000018956DB                 mov     [rbp+dest], rax
+  .text:00000000018956E2                 call    __ZN10CUtlString3SetEPKc; CUtlString::Set(char const*)
+  .text:00000000018956E7                 cmp     [rbp+var_430], 0
+  .text:00000000018956EE                 jnz     loc_1895B5E
+  .text:00000000018956F4                 mov     rsi, [rbp+dest]
+  .text:00000000018956FB                 test    rsi, rsi
+  .text:00000000018956FE                 jz      loc_1895B7D
+  .text:0000000001895704                 lea     rdi, aS_65; "%s\n"
+  .text:000000000189570B                 xor     eax, eax
+  .text:000000000189570D                 call    _Warning
+  .text:0000000001895712                 lea     rax, g_pSource2EngineToClient
+  .text:0000000001895719                 mov     rdi, [rax]
+  .text:000000000189571C                 mov     rax, [rdi]
+  .text:000000000189571F                 call    qword ptr [rax+3C8h]
+  .text:0000000001895725                 ; _QWORD
+  .text:0000000001895725                 mov     rsi, [rbp+dest]; _QWORD
+  .text:000000000189572C                 ; _QWORD
+  .text:000000000189572C                 mov     rdx, rax; _QWORD
+  .text:000000000189572F                 test    rsi, rsi
+  .text:0000000001895732                 jz      loc_1895B89
+  .text:0000000001895738                 ; _QWORD
+  .text:0000000001895738                 mov     rdi, rbx; _QWORD
+  .text:000000000189573B                 call    _Plat_MessageBox
+  .text:0000000001895740                 ; _QWORD
+  .text:0000000001895740                 mov     edi, 64h ; 'd'; _QWORD
+  .text:0000000001895745                 call    _Plat_ExitProcess
+  .text:000000000189574A                 nop     word ptr [rax+rax+00h]
+  .text:0000000001895750                 xor     eax, eax
+  .text:0000000001895752                 add     rsp, 648h
+  .text:0000000001895759                 pop     rbx
+  .text:000000000189575A                 pop     r12
+  .text:000000000189575C                 pop     r13
+  .text:000000000189575E                 pop     r14
+  .text:0000000001895760                 pop     r15
+  .text:0000000001895762                 pop     rbp
+  .text:0000000001895763                 retn
+  .text:0000000001895768                 lea     rdi, aSteamapiInitFa; "SteamAPI_Init failed.  %s\n"
+  .text:000000000189576F                 mov     rsi, r13
+  .text:0000000001895772                 xor     eax, eax
+  .text:0000000001895774                 call    _Warning
+  .text:0000000001895779                 ; _QWORD
+  .text:0000000001895779                 xor     edi, edi; _QWORD
+  .text:000000000189577B                 call    _SteamAPI_SetTryCatchCallbacks
+  .text:0000000001895780                 call    _CommandLine
+  .text:0000000001895785                 mov     esi, 6B952A6h
+  .text:000000000189578A                 mov     rdi, rax
+  .text:000000000189578D                 mov     rax, [rax]
+  .text:0000000001895790                 call    qword ptr [rax+20h]
+  .text:0000000001895793                 test    al, al
+  .text:0000000001895795                 jz      loc_18956AA
+  .text:000000000189579B                 call    _CommandLine
+  .text:00000000018957A0                 mov     esi, 8F74045Fh
+  .text:00000000018957A5                 mov     rdi, rax
+  .text:00000000018957A8                 mov     rax, [rax]
+  .text:00000000018957AB                 call    qword ptr [rax+90h]
+  .text:00000000018957B1                 test    al, al
+  .text:00000000018957B3                 jz      loc_1895BA3
+  .text:00000000018957B9                 lea     rdi, aClientdllFacto; "ClientDLL factories - Start"
+  .text:00000000018957C0                 xor     eax, eax
+  .text:00000000018957C2                 call    _COM_TimestampedLog
+  .text:00000000018957C7                 lea     rdi, aGamemodelinfo0; "GameModelInfo001"
+  .text:00000000018957CE                 xor     esi, esi
+  .text:00000000018957D0                 call    rbx
+  .text:00000000018957D2                 mov     cs:qword_47F9B30, rax
+  .text:00000000018957D9                 test    rax, rax
+  .text:00000000018957DC                 jz      loc_1895750
+  .text:00000000018957E2                 lea     rdi, aSaverestoredat; "SaveRestoreDataVersion001"
+  .text:00000000018957E9                 xor     esi, esi
+  .text:00000000018957EB                 call    rbx
+  .text:00000000018957ED                 lea     rdx, qword_47E1370
+  .text:00000000018957F4                 mov     [rdx], rax
+  .text:00000000018957F7                 test    rax, rax
+  .text:00000000018957FA                 jz      loc_1895750
+  .text:0000000001895800                 lea     rdi, aVengineGameuif; "VENGINE_GAMEUIFUNCS_VERSION005"
+  .text:0000000001895807                 xor     esi, esi
+  .text:0000000001895809                 call    rbx
+  .text:000000000189580B                 mov     cs:qword_47F9A70, rax
+  .text:0000000001895812                 test    rax, rax
+  .text:0000000001895815                 jz      loc_1895750
+  .text:000000000189581B                 lea     rdi, aSource2enginet; "Source2EngineToClientStringTable001"
+  .text:0000000001895822                 xor     esi, esi
+  .text:0000000001895824                 call    rbx
+  .text:0000000001895826                 mov     cs:qword_47F9B20, rax
+  .text:000000000189582D                 test    rax, rax
+  .text:0000000001895830                 jz      loc_1895750
+  .text:0000000001895836                 lea     rdi, aVfilesystem017; "VFileSystem017"
+  .text:000000000189583D                 xor     esi, esi
+  .text:000000000189583F                 call    rbx
+  .text:0000000001895841                 mov     cs:qword_47F9B18, rax
+  .text:0000000001895848                 test    rax, rax
+  .text:000000000189584B                 jz      loc_1895750
+  .text:0000000001895851                 lea     rdi, aInputsystemver; "InputSystemVersion001"
+  .text:0000000001895858                 xor     esi, esi
+  .text:000000000189585A                 call    rbx
+  .text:000000000189585C                 mov     cs:qword_47F9A68, rax
+  .text:0000000001895863                 test    rax, rax
+  .text:0000000001895866                 jz      loc_1895750
+  .text:000000000189586C                 lea     rdi, aGameconfigclie; "GameConfigClientV001"
+  .text:0000000001895873                 xor     esi, esi
+  .text:0000000001895875                 call    rbx
+  .text:0000000001895877                 lea     rdx, qword_47DEE28
+  .text:000000000189587E                 mov     [rdx], rax
+  .text:0000000001895881                 test    rax, rax
+  .text:0000000001895884                 jz      loc_1895750
+  .text:000000000189588A                 lea     rdi, aScenefilecache; "SceneFileCache002"
+  .text:0000000001895891                 xor     esi, esi
+  .text:0000000001895893                 call    rbx
+  .text:0000000001895895                 mov     cs:qword_47F9A60, rax
+  .text:000000000189589C                 test    rax, rax
+  .text:000000000189589F                 jz      loc_1895750
+  .text:00000000018958A5                 lea     rdi, aResponserulesc; "ResponseRulesCache001"
+  .text:00000000018958AC                 xor     esi, esi
+  .text:00000000018958AE                 call    rbx
+  .text:00000000018958B0                 lea     rdx, unk_48B2C68
+  .text:00000000018958B7                 mov     [rdx], rax
+  .text:00000000018958BA                 test    rax, rax
+  .text:00000000018958BD                 jz      loc_1895750
+  .text:00000000018958C3                 lea     r13, g_pNetworkSystem
+  .text:00000000018958CA                 cmp     qword ptr [r13+0], 0
+  .text:00000000018958CF                 jz      loc_1895AB8
+  .text:00000000018958D5                 lea     r13, g_pSerializedEntities
+  .text:00000000018958DC                 cmp     qword ptr [r13+0], 0
+  .text:00000000018958E1                 jz      loc_1895AA0
+  .text:00000000018958E7                 lea     rax, g_pFlattenedSerializers
+  .text:00000000018958EE                 cmp     qword ptr [rax], 0
+  .text:00000000018958F2                 jz      loc_1895A80
+  .text:00000000018958F8                 lea     rax, g_pNetworkMessages
+  .text:00000000018958FF                 cmp     qword ptr [rax], 0
+  .text:0000000001895903                 jz      loc_1895A60
+  .text:0000000001895909                 lea     rdi, aGametypes001; "GameTypes001"
+  .text:0000000001895910                 xor     esi, esi
+  .text:0000000001895912                 call    rbx
+  .text:0000000001895914                 lea     rdx, qword_4688D00
+  .text:000000000189591B                 mov     [rdx], rax
+  .text:000000000189591E                 test    rax, rax
+  .text:0000000001895921                 jz      loc_1895750
+  .text:0000000001895927                 mov     rdi, [r13+0]
+  .text:000000000189592B                 mov     rax, [rdi]
+  .text:000000000189592E                 call    qword ptr [rax+70h]
+  .text:0000000001895931                 cmp     cs:qword_47F9A50, 0
+  .text:0000000001895939                 mov     cs:qword_47F9A58, rax
+  .text:0000000001895940                 jz      loc_1895B28
+  .text:0000000001895946                 lea     rdi, aImemanager001; "IMEManager001"
+  .text:000000000189594D                 xor     esi, esi
+  .text:000000000189594F                 call    rbx
+  .text:0000000001895951                 lea     rdx, unk_48ADEE8
+  .text:0000000001895958                 lea     rdi, aClientdllFacto_0; "ClientDLL factories - End"
+  .text:000000000189595F                 mov     [rdx], rax
+  .text:0000000001895962                 xor     eax, eax
+  .text:0000000001895964                 call    _COM_TimestampedLog
+  .text:0000000001895969                 call    _CommandLine
+  .text:000000000189596E                 xor     edx, edx
+  .text:0000000001895970                 mov     esi, 5AFDDFCDh
+  .text:0000000001895975                 mov     rdi, rax
+  .text:0000000001895978                 mov     rax, [rax]
+  .text:000000000189597B                 call    qword ptr [rax+18h]
+  .text:000000000189597E                 test    rax, rax
+  .text:0000000001895981                 jz      loc_1895B08
+  .text:0000000001895987                 lea     rdi, aLegacygameui00; "LegacyGameUI001"
+  .text:000000000189598E                 xor     esi, esi
+  .text:0000000001895990                 call    rbx
+  .text:0000000001895992                 lea     rdx, qword_48678F8
+  .text:0000000001895999                 mov     edi, 1
+  .text:000000000189599E                 mov     [rdx], rax
+  .text:00000000018959A1                 call    sub_2E09500
+  .text:00000000018959A6                 call    sub_2E011A0
+  .text:00000000018959AB                 lea     rsi, aClient; "client"
+  .text:00000000018959B2                 mov     rdi, rax
+  .text:00000000018959B5                 call    sub_2DC4920
+  .text:00000000018959BA                 test    r14d, r14d
+  .text:00000000018959BD                 jz      loc_1895AF0
+  .text:00000000018959C3                 ; src
+  .text:00000000018959C3                 lea     rsi, unk_9A2960; src
+  .text:00000000018959CA                 ; n
+  .text:00000000018959CA                 mov     edx, 226h; n
+  .text:00000000018959CF                 ; dest
+  .text:00000000018959CF                 mov     rdi, r15; dest
+  .text:00000000018959D2                 call    _memcpy
+  .text:00000000018959D7                 lea     rax, g_pFileSystem
+  .text:00000000018959DE                 mov     edx, 226h
+  .text:00000000018959E3                 mov     rsi, r15
+  .text:00000000018959E6                 lea     rcx, off_4568CD0
+  .text:00000000018959ED                 mov     rdi, [rax]
+  .text:00000000018959F0                 mov     rax, [rdi]
+  .text:00000000018959F3                 call    qword ptr [rax+390h]
+  .text:00000000018959F9                 mov     eax, 1
+  .text:00000000018959FE                 jmp     loc_1895752
+  .text:0000000001895A08                 test    eax, eax
+  .text:0000000001895A0A                 jz      loc_1895690
+  .text:0000000001895A10                 shr     rax, 20h
+  .text:0000000001895A14                 test    eax, 0FFFFFh
+  .text:0000000001895A19                 jz      loc_18957B9
+  .text:0000000001895A1F                 jmp     loc_1895690
+  .text:0000000001895A24                 lea     rbx, aLauncherError; "Launcher Error"
+  .text:0000000001895A2B                 lea     rsi, aFatalErrorFail; "FATAL ERROR: Failed to connect with loc"...
+  .text:0000000001895A32                 cmp     r14d, 2
+  .text:0000000001895A36                 jz      loc_18956D6
+  .text:0000000001895A3C                 lea     rsi, aFatalErrorFail_0; "FATAL ERROR: Failed to initialize the S"...
+  .text:0000000001895A43                 cmp     r14d, 3
+  .text:0000000001895A47                 jnz     loc_18956D6
+  .text:0000000001895A4D                 lea     rsi, aFatalErrorStea; "FATAL ERROR: Steam client version misma"...
+  .text:0000000001895A54                 jmp     loc_18956D6
+  .text:0000000001895A60                 lea     rdi, aNetworkmessage; "NetworkMessagesVersion001"
+  .text:0000000001895A67                 xor     esi, esi
+  .text:0000000001895A69                 call    rbx
+  .text:0000000001895A6B                 lea     rcx, g_pNetworkMessages
+  .text:0000000001895A72                 mov     [rcx], rax
+  .text:0000000001895A75                 jmp     loc_1895909
+  .text:0000000001895A80                 lea     rdi, aFlattenedseria; "FlattenedSerializersVersion001"
+  .text:0000000001895A87                 xor     esi, esi
+  .text:0000000001895A89                 call    rbx
+  .text:0000000001895A8B                 lea     rcx, g_pFlattenedSerializers
+  .text:0000000001895A92                 mov     [rcx], rax
+  .text:0000000001895A95                 jmp     loc_18958F8
+  .text:0000000001895AA0                 lea     rdi, aSerializedenti; "SerializedEntitiesVersion001"
+  .text:0000000001895AA7                 xor     esi, esi
+  .text:0000000001895AA9                 call    rbx
+  .text:0000000001895AAB                 mov     [r13+0], rax
+  .text:0000000001895AAF                 jmp     loc_18958E7
+  .text:0000000001895AB8                 lea     rdi, aNetworksystemv; "NetworkSystemVersion001"
+  .text:0000000001895ABF                 xor     esi, esi
+  .text:0000000001895AC1                 call    rbx
+  .text:0000000001895AC3                 mov     [r13+0], rax
+  .text:0000000001895AC7                 jmp     loc_18958D5
+  .text:0000000001895AD0                 test    eax, eax
+  .text:0000000001895AD2                 jz      loc_1895690
+  .text:0000000001895AD8                 shr     rax, 20h
+  .text:0000000001895ADC                 and     eax, 0FFFFFh
+  .text:0000000001895AE1                 cmp     eax, 1
+  .text:0000000001895AE4                 jnz     loc_1895690
+  .text:0000000001895AEA                 jmp     loc_18957B9
+  .text:0000000001895AF0                 call    sub_20AAB80
+  .text:0000000001895AF5                 mov     rdi, rax
+  .text:0000000001895AF8                 call    sub_20AAE00
+  .text:0000000001895AFD                 jmp     loc_18959C3
+  .text:0000000001895B08                 lea     rdi, aVscriptmanager; "VScriptManager010"
+  .text:0000000001895B0F                 xor     esi, esi
+  .text:0000000001895B11                 call    qword ptr [r12+50h]
+  .text:0000000001895B16                 lea     rdx, g_pScriptManager
+  .text:0000000001895B1D                 mov     [rdx], rax
+  .text:0000000001895B20                 jmp     loc_1895987
+  .text:0000000001895B28                 lea     rdi, aGameeventsyste_0; "GameEventSystemClientV001"
+  .text:0000000001895B2F                 xor     esi, esi
+  .text:0000000001895B31                 call    rbx
+  .text:0000000001895B33                 mov     cs:qword_47F9A50, rax
+  .text:0000000001895B3A                 jmp     loc_1895946
+  .text:0000000001895B3F                 ; _QWORD
+  .text:0000000001895B3F                 mov     edx, 400h; _QWORD
+  .text:0000000001895B44                 ; _QWORD
+  .text:0000000001895B44                 mov     rdi, r13; _QWORD
+  .text:0000000001895B47                 mov     r14d, 1
+  .text:0000000001895B4D                 lea     rsi, aMissingRequire; "Missing required interface"
+  .text:0000000001895B54                 call    __V_strncpy
+  .text:0000000001895B59                 jmp     loc_18956AA
+  .text:0000000001895B5E                 lea     rsi, asc_B7035B; "\n\n"
+  .text:0000000001895B65                 ; _QWORD
+  .text:0000000001895B65                 mov     rdi, r15; _QWORD
+  .text:0000000001895B68                 call    __ZN10CUtlStringpLEPKc; CUtlString::operator+=(char const*)
+  .text:0000000001895B6D                 ; _QWORD
+  .text:0000000001895B6D                 mov     rsi, r13; _QWORD
+  .text:0000000001895B70                 ; _QWORD
+  .text:0000000001895B70                 mov     rdi, r15; _QWORD
+  .text:0000000001895B73                 call    __ZN10CUtlStringpLEPKc; CUtlString::operator+=(char const*)
+  .text:0000000001895B78                 jmp     loc_18956F4
+  .text:0000000001895B7D                 lea     rsi, haystack
+  .text:0000000001895B84                 jmp     loc_1895704
+  .text:0000000001895B89                 lea     rsi, haystack
+  .text:0000000001895B90                 jmp     loc_1895738
+  .text:0000000001895B95                 lea     rdi, aApplicationRun; "Application running with '-nosteam' but"...
+  .text:0000000001895B9C                 xor     eax, eax
+  .text:0000000001895B9E                 call    _Plat_FatalError
+  .text:0000000001895BA3                 lea     rdi, aCommandLinePar; "Command line parameter '-nosteam' can o"...
+  .text:0000000001895BAA                 call    _Plat_FatalError
+  .text:0000000001895BAF                 ; Trap to Debugger
+  .text:0000000001895BAF                 int     3; Trap to Debugger
+procedure: |-
+  __int64 __fastcall CSource2Client_Connect(
+          __int64 a1,
+          __int64 (__fastcall *a2)(void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden this), _QWORD))
+  {
+    int v2; // r14d
+    __int64 v3; // rax
+    _QWORD *v4; // rax
+    unsigned __int64 v5; // rax
+    char v6; // dl
+    __int64 v7; // rax
+    const char *v8; // rbx
+    const char *v9; // rsi
+    const char *v10; // rsi
+    __int64 v11; // rax
+    char *v12; // rsi
+    __int64 v14; // rax
+    __int64 v15; // rax
+    __int64 v16; // rax
+    __int64 v17; // rax
+    __int64 v18; // rax
+    __int64 (__fastcall *v19)(void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden), _QWORD); // [rsp+8h] [rbp-668h] BYREF
+    _QWORD dest[70]; // [rsp+10h] [rbp-660h] BYREF
+    char v21[1072]; // [rsp+240h] [rbp-430h] BYREF
+
+    sub_3F47C00();
+    *(_QWORD *)(a1 + 80) = a2;
+    *(_DWORD *)(a1 + 1096) = -1082130432;
+    sub_23188A0();
+    v19 = a2;
+    dest[0] = a2;
+    *(_QWORD *)v21 = a2;
+    ConnectInterfaces(
+      (__int64 (__fastcall **)(void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden), _QWORD))v21,
+      1);
+    sub_3F1E9E0(dest, 1);
+    ++*(_DWORD *)(a1 + 40);
+    sub_230CCE0(&v19, 1, 2);
+    qword_48A20D0 = (*(__int64 (__fastcall **)(_QWORD *))(*qword_48B2C80 + 88LL))(qword_48B2C80);
+    g_pEngineClient = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"Source2EngineToClient001", 0);
+    if ( !g_pEngineClient )
+      return 0;
+    qword_48ADDB0 = g_pSource2EngineToClient;
+    if ( !g_pSource2EngineToClient )
+      return 0;
+    v2 = SteamInternal_SteamAPI_Init("SteamUtils010", v21);
+    if ( v2 )
+    {
+      Warning("SteamAPI_Init failed.  %s\n", v21);
+      SteamAPI_SetTryCatchCallbacks(0);
+      v14 = CommandLine();
+      if ( !(*(unsigned __int8 (__fastcall **)(__int64, __int64))(*(_QWORD *)v14 + 32LL))(v14, 112808614) )
+        goto LABEL_18;
+      v15 = CommandLine();
+      if ( (*(unsigned __int8 (__fastcall **)(__int64, __int64))(*(_QWORD *)v15 + 144LL))(v15, 2406745183LL) )
+        goto LABEL_29;
+  LABEL_65:
+      Plat_FatalError("Command line parameter '-nosteam' can only be used in insecure mode ('-insecure').");
+      __debugbreak();
+    }
+    v21[0] = 0;
+    SteamAPI_SetTryCatchCallbacks(0);
+    v3 = CommandLine();
+    if ( (*(unsigned __int8 (__fastcall **)(__int64, __int64))(*(_QWORD *)v3 + 32LL))(v3, 112808614) )
+    {
+      Plat_FatalError("Application running with '-nosteam' but Steam is present.");
+      goto LABEL_65;
+    }
+    if ( !*(_QWORD *)SteamInternal_ContextInit(&off_45324F0)
+      || !*(_QWORD *)SteamInternal_ContextInit(&off_4501730)
+      || !*(_QWORD *)SteamInternal_ContextInit(&off_4505000)
+      || !*(_QWORD *)SteamInternal_ContextInit(&off_4569430)
+      || !*(_QWORD *)SteamInternal_ContextInit(&off_454B800) )
+    {
+      v2 = 1;
+      _V_strncpy(v21, "Missing required interface", 1024);
+  LABEL_18:
+      v7 = CommandLine();
+      v8 = (const char *)&qword_B535F0;
+      v9 = &byte_BFB8D8;
+      if ( !(*(unsigned __int8 (__fastcall **)(__int64, __int64))(*(_QWORD *)v7 + 144LL))(v7, 3451720338LL) )
+      {
+        v8 = "Launcher Error";
+        v9 = "FATAL ERROR: Failed to connect with local Steam Client process!\n"
+             "\n"
+             "Please make sure that you are running latest version of the Steam Client and launch the game from Steam.\n";
+        if ( v2 != 2 )
+        {
+          v9 = "FATAL ERROR: Failed to initialize the Steamworks SDK.";
+          if ( v2 == 3 )
+            v9 = "FATAL ERROR: Steam client version mismatch.\n"
+                 "\n"
+                 "Please make sure that you are running latest version of the Steam Client and launch the game from Steam.\n"
+                 "You can check for Steam Client updates using Steam main menu:\n"
+                 "             Steam > Check for Steam Client Updates...";
+        }
+      }
+      dest[0] = 0;
+      CUtlString::Set((CUtlString *)dest, v9);
+      if ( v21[0] )
+      {
+        CUtlString::operator+=(dest, "\n\n");
+        CUtlString::operator+=(dest, v21);
+      }
+      v10 = (const char *)dest[0];
+      if ( !dest[0] )
+        v10 = &haystack;
+      Warning("%s\n", v10);
+      v11 = (*(__int64 (__fastcall **)(_QWORD *))(*g_pSource2EngineToClient + 968LL))(g_pSource2EngineToClient);
+      v12 = (char *)dest[0];
+      if ( !dest[0] )
+        v12 = &haystack;
+      Plat_MessageBox(v8, v12, v11);
+      Plat_ExitProcess(100);
+      return 0;
+    }
+    v4 = (_QWORD *)SteamInternal_ContextInit(&off_4501730);
+    v5 = (*(__int64 (__fastcall **)(_QWORD))(*(_QWORD *)*v4 + 16LL))(*v4);
+    if ( BYTE6(v5) <= 0xFu || ((v5 >> 52) & 0xF) > 0xA || (unsigned __int8)(HIBYTE(v5) - 1) > 3u )
+      goto LABEL_17;
+    v6 = BYTE6(v5) & 0xF0;
+    if ( (BYTE6(v5) & 0xF0) == 0x10 )
+    {
+      if ( !(_DWORD)v5 || (HIDWORD(v5) & 0xFFFFF) != 1 )
+        goto LABEL_17;
+    }
+    else if ( v6 == 112 )
+    {
+      if ( !(_DWORD)v5 || (v5 & 0xFFFFF00000000LL) != 0 )
+        goto LABEL_17;
+    }
+    else if ( v6 == 48 && !(_DWORD)v5 )
+    {
+  LABEL_17:
+      v2 = 2;
+      _V_strncpy(v21, "SteamID is not valid.  (Steam client running but no user logged on?)", 1024);
+      goto LABEL_18;
+    }
+  LABEL_29:
+    COM_TimestampedLog("ClientDLL factories - Start");
+    qword_47F9B30 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"GameModelInfo001", 0);
+    if ( !qword_47F9B30 )
+      return 0;
+    qword_47E1370 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"SaveRestoreDataVersion001", 0);
+    if ( !qword_47E1370 )
+      return 0;
+    qword_47F9A70 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"VENGINE_GAMEUIFUNCS_VERSION005", 0);
+    if ( !qword_47F9A70 )
+      return 0;
+    qword_47F9B20 = a2(
+                      (void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"Source2EngineToClientStringTable001",
+                      0);
+    if ( !qword_47F9B20 )
+      return 0;
+    qword_47F9B18 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"VFileSystem017", 0);
+    if ( !qword_47F9B18 )
+      return 0;
+    qword_47F9A68 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"InputSystemVersion001", 0);
+    if ( !qword_47F9A68 )
+      return 0;
+    qword_47DEE28 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"GameConfigClientV001", 0);
+    if ( !qword_47DEE28 )
+      return 0;
+    qword_47F9A60 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"SceneFileCache002", 0);
+    if ( !qword_47F9A60 )
+      return 0;
+    unk_48B2C68 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"ResponseRulesCache001", 0);
+    if ( !unk_48B2C68 )
+      return 0;
+    if ( !g_pNetworkSystem )
+      g_pNetworkSystem = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"NetworkSystemVersion001", 0);
+    if ( !g_pSerializedEntities )
+      g_pSerializedEntities = (_QWORD *)a2(
+                                          (void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"SerializedEntitiesVersion001",
+                                          0);
+    if ( !g_pFlattenedSerializers )
+      g_pFlattenedSerializers = (_QWORD *)a2(
+                                            (void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"FlattenedSerializersVersion001",
+                                            0);
+    if ( !g_pNetworkMessages )
+      g_pNetworkMessages = (_QWORD *)a2(
+                                       (void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"NetworkMessagesVersion001",
+                                       0);
+    qword_4688D00 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"GameTypes001", 0);
+    if ( !qword_4688D00 )
+      return 0;
+    qword_47F9A58 = (*(__int64 (__fastcall **)(_QWORD *))(*g_pSerializedEntities + 112LL))(g_pSerializedEntities);
+    if ( !qword_47F9A50 )
+      qword_47F9A50 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"GameEventSystemClientV001", 0);
+    unk_48ADEE8 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"IMEManager001", 0);
+    COM_TimestampedLog("ClientDLL factories - End");
+    v16 = CommandLine();
+    if ( !(*(__int64 (__fastcall **)(__int64, __int64, _QWORD))(*(_QWORD *)v16 + 24LL))(v16, 1526587341, 0) )
+      g_pScriptManager = (*(__int64 (__fastcall **)(const char *, _QWORD))(a1 + 80))("VScriptManager010", 0);
+    qword_48678F8 = a2((void (__fastcall **)(__cxxabiv1::__class_type_info *__hidden))"LegacyGameUI001", 0);
+    sub_2E09500(1);
+    v17 = sub_2E011A0();
+    sub_2DC4920(v17, "client");
+    if ( !v2 )
+    {
+      v18 = sub_20AAB80();
+      sub_20AAE00(v18);
+    }
+    memcpy(dest, &unk_9A2960, 0x226u);
+    (*(void (__fastcall **)(_QWORD *, _QWORD *, __int64, __int64 (__fastcall ***)()))(*g_pFileSystem + 912LL))(
+      g_pFileSystem,
+      dest,
+      550,
+      &off_4568CD0);
+    return 1;
+  }
