@@ -1,0 +1,639 @@
+func_name: CDemoPlayer_StartPlayback
+func_va: '0x180033cc0'
+disasm_code: |-
+  .text:0000000180033CC0                 mov     rax, rsp
+  .text:0000000180033CC3                 mov     [rax+20h], r9
+  .text:0000000180033CC7                 push    rbp
+  .text:0000000180033CC8                 push    rbx
+  .text:0000000180033CC9                 lea     rbp, [rax-5Fh]
+  .text:0000000180033CCD                 sub     rsp, 0B8h
+  .text:0000000180033CD4                 movaps  xmmword ptr [rax-48h], xmm6
+  .text:0000000180033CD8                 mov     [rax+10h], rsi
+  .text:0000000180033CDC                 xor     esi, esi
+  .text:0000000180033CDE                 mov     [rax-18h], rdi
+  .text:0000000180033CE2                 mov     rdi, rcx
+  .text:0000000180033CE5                 mov     [rax-20h], r12
+  .text:0000000180033CE9                 movzx   r12d, r8b
+  .text:0000000180033CED                 mov     [rax-28h], r13
+  .text:0000000180033CF1                 mov     r13, r9
+  .text:0000000180033CF4                 mov     qword ptr [rbp+57h+var_70+8], rcx
+  .text:0000000180033CF8                 mov     [rax-38h], r15
+  .text:0000000180033CFC                 lea     rax, [rbp+57h+arg_0]
+  .text:0000000180033D00                 mov     qword ptr [rcx+1F8h], 0FFFFFFFFFFFFFFFFh
+  .text:0000000180033D0B                 lea     rcx, [rbp+57h+var_80]
+  .text:0000000180033D0F                 mov     qword ptr [rbp+57h+var_70], rax
+  .text:0000000180033D13                 movaps  xmm6, [rbp+57h+var_70]
+  .text:0000000180033D17                 mov     [rbp+57h+arg_0], 1
+  .text:0000000180033D1B                 mov     [rbp+57h+var_80], rsi
+  .text:0000000180033D1F                 call    cs:?Set@CUtlString@@QEAAXPEBD@Z; CUtlString::Set(char const *)
+  .text:0000000180033D25                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180033D2B                 mov     edx, 2
+  .text:0000000180033D30                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180033D36                 lea     r15, unk_180528AFF
+  .text:0000000180033D3D                 test    al, al
+  .text:0000000180033D3F                 jz      short loc_180033D81
+  .text:0000000180033D41                 mov     rax, [rbp+57h+var_80]
+  .text:0000000180033D45                 lea     r9, aDemo_0; "demo"
+  .text:0000000180033D4C                 test    rax, rax
+  .text:0000000180033D4F                 lea     r8, aPlayingSFromS; "playing %s from '%s'\n"
+  .text:0000000180033D56                 mov     rcx, r15
+  .text:0000000180033D59                 mov     edx, 2
+  .text:0000000180033D5E                 cmovnz  rcx, rax
+  .text:0000000180033D62                 test    r12b, r12b
+  .text:0000000180033D65                 lea     rax, aTimedemo; "timedemo"
+  .text:0000000180033D6C                 mov     qword ptr [rsp+0C0h+var_A0], rcx
+  .text:0000000180033D71                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180033D77                 cmovnz  r9, rax
+  .text:0000000180033D7B                 call    cs:LoggingSystem_Log
+  .text:0000000180033D81                 test    r13, r13
+  .text:0000000180033D84                 jz      short loc_180033DEA
+  .text:0000000180033D86                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180033D8C                 call    cs:LoggingSystem_GetChannelVerbosity
+  .text:0000000180033D92                 cmp     eax, 3
+  .text:0000000180033D95                 jl      short loc_180033DEA
+  .text:0000000180033D97                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180033D9D                 mov     edx, 2
+  .text:0000000180033DA2                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180033DA8                 test    al, al
+  .text:0000000180033DAA                 jz      short loc_180033DC4
+  .text:0000000180033DAC                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180033DB2                 lea     r8, aDemoPlaybackOp; "Demo playback options:\n"
+  .text:0000000180033DB9                 mov     edx, 2
+  .text:0000000180033DBE                 call    cs:LoggingSystem_Log
+  .text:0000000180033DC4                 mov     edx, cs:dword_18068C1F0
+  .text:0000000180033DCA                 lea     rcx, [rbp+57h+var_60]
+  .text:0000000180033DCE                 mov     r8d, 2
+  .text:0000000180033DD4                 call    cs:??0CKeyValuesDumpContextToLoggingChannel@@QEAA@HW4LoggingSeverity_t@@@Z; CKeyValuesDumpContextToLoggingChannel::CKeyValuesDumpContextToLoggingChannel(int,LoggingSeverity_t)
+  .text:0000000180033DDA                 xor     r8d, r8d
+  .text:0000000180033DDD                 lea     rdx, [rbp+57h+var_60]
+  .text:0000000180033DE1                 mov     rcx, r13
+  .text:0000000180033DE4                 call    cs:?Dump@KeyValues@@QEAA_NPEAVIKeyValuesDumpContext@@H@Z; KeyValues::Dump(IKeyValuesDumpContext *,int)
+  .text:0000000180033DEA                 mov     rbx, cs:g_pNetworkGameClient
+  .text:0000000180033DF1                 mov     [rsp+0C0h+var_28], r14
+  .text:0000000180033DF9                 test    rbx, rbx
+  .text:0000000180033DFC                 jz      loc_180034256
+  .text:0000000180033E02                 call    cs:VProfLite_Clear
+  .text:0000000180033E08                 mov     cl, 1
+  .text:0000000180033E0A                 call    cs:VProfLite_SetEnabled
+  .text:0000000180033E10                 lea     rdx, [rbp+57h+var_80]
+  .text:0000000180033E14                 call    sub_1800326A0
+  .text:0000000180033E19                 test    al, al
+  .text:0000000180033E1B                 jz      loc_1800342CF
+  .text:0000000180033E21                 lea     rdx, [rbp+57h+var_80]
+  .text:0000000180033E25                 mov     rcx, rdi
+  .text:0000000180033E28                 call    sub_180033720
+  .text:0000000180033E2D                 test    al, al
+  .text:0000000180033E2F                 jz      loc_1800342CF
+  .text:0000000180033E35                 mov     rcx, rdi
+  .text:0000000180033E38                 call    sub_180033460
+  .text:0000000180033E3D                 test    al, al
+  .text:0000000180033E3F                 jz      loc_1800342CF
+  .text:0000000180033E45                 mov     eax, [rdi+0D8h]
+  .text:0000000180033E4B                 mov     [rdi+200h], eax
+  .text:0000000180033E51                 test    r12b, r12b
+  .text:0000000180033E54                 jz      loc_180033F39
+  .text:0000000180033E5A                 mov     edx, 0FFFFFFFFh
+  .text:0000000180033E5F                 lea     rcx, unk_18068C238
+  .text:0000000180033E66                 call    sub_1803FEF60
+  .text:0000000180033E6B                 test    rax, rax
+  .text:0000000180033E6E                 jnz     short loc_180033E7B
+  .text:0000000180033E70                 mov     rax, cs:qword_18068C240
+  .text:0000000180033E77                 mov     rax, [rax+8]
+  .text:0000000180033E7B                 mov     rax, [rax]
+  .text:0000000180033E7E                 mov     rcx, r15
+  .text:0000000180033E81                 test    rax, rax
+  .text:0000000180033E84                 cmovnz  rcx, rax
+  .text:0000000180033E88                 xor     r9d, r9d
+  .text:0000000180033E8B                 xor     r8d, r8d
+  .text:0000000180033E8E                 xor     edx, edx
+  .text:0000000180033E90                 call    sub_180037770
+  .text:0000000180033E95                 mov     edx, 0FFFFFFFFh
+  .text:0000000180033E9A                 lea     rcx, unk_18068C248
+  .text:0000000180033EA1                 mov     r13d, eax
+  .text:0000000180033EA4                 call    sub_1803FEF60
+  .text:0000000180033EA9                 test    rax, rax
+  .text:0000000180033EAC                 jnz     short loc_180033EB9
+  .text:0000000180033EAE                 mov     rax, cs:qword_18068C250
+  .text:0000000180033EB5                 mov     rax, [rax+8]
+  .text:0000000180033EB9                 mov     rax, [rax]
+  .text:0000000180033EBC                 mov     r14, r15
+  .text:0000000180033EBF                 test    rax, rax
+  .text:0000000180033EC2                 cmovnz  r14, rax
+  .text:0000000180033EC6                 xor     r9d, r9d
+  .text:0000000180033EC9                 mov     rcx, r14
+  .text:0000000180033ECC                 xor     r8d, r8d
+  .text:0000000180033ECF                 xor     edx, edx
+  .text:0000000180033ED1                 call    sub_180037770
+  .text:0000000180033ED6                 mov     esi, eax
+  .text:0000000180033ED8                 test    eax, eax
+  .text:0000000180033EDA                 js      short loc_180033F02
+  .text:0000000180033EDC                 mov     edx, 2Bh ; '+'
+  .text:0000000180033EE1                 mov     rcx, r14
+  .text:0000000180033EE4                 call    sub_1804287E4
+  .text:0000000180033EE9                 test    rax, rax
+  .text:0000000180033EEC                 jz      short loc_180033F02
+  .text:0000000180033EEE                 xor     r9d, r9d
+  .text:0000000180033EF1                 xor     r8d, r8d
+  .text:0000000180033EF4                 xor     edx, edx
+  .text:0000000180033EF6                 mov     rcx, r14
+  .text:0000000180033EF9                 call    sub_180037770
+  .text:0000000180033EFE                 lea     esi, [rax+r13]
+  .text:0000000180033F02                 cmp     r13d, 64h ; 'd'
+  .text:0000000180033F06                 jl      short loc_180033F19
+  .text:0000000180033F08                 lea     eax, [r13-64h]
+  .text:0000000180033F0C                 mov     byte ptr [rdi+18A3h], 1
+  .text:0000000180033F13                 mov     [rdi+220h], eax
+  .text:0000000180033F19                 test    esi, esi
+  .text:0000000180033F1B                 jle     short loc_180033F2B
+  .text:0000000180033F1D                 cmp     esi, [rdi+220h]
+  .text:0000000180033F23                 jle     short loc_180033F2B
+  .text:0000000180033F25                 mov     [rdi+224h], esi
+  .text:0000000180033F2B                 xor     ecx, ecx
+  .text:0000000180033F2D                 call    cs:RandomSeed
+  .text:0000000180033F33                 mov     r13, [rbp+57h+arg_18]
+  .text:0000000180033F37                 xor     esi, esi
+  .text:0000000180033F39                 mov     rcx, cs:g_pNetworkClientService
+  .text:0000000180033F40                 mov     byte ptr [rdi+1230h], 1 ; 1230h = CDemoPlayer::m_bIsPlaying (structmember, struct=CDemoPlayer, member=m_bIsPlaying)
+  .text:0000000180033F47                 mov     byte ptr [rdi+1232h], 0
+  .text:0000000180033F4E                 mov     dword ptr [rbx+230h], 2
+  .text:0000000180033F58                 mov     rax, [rcx]
+  .text:0000000180033F5B                 call    qword ptr [rax+1C0h]
+  .text:0000000180033F61                 mov     rcx, cs:g_pNetworkSystem
+  .text:0000000180033F68                 lea     rdx, aDemo_1; "DEMO"
+  .text:0000000180033F6F                 mov     [rdi+204h], eax
+  .text:0000000180033F75                 xor     r9d, r9d
+  .text:0000000180033F78                 mov     dword ptr [rsp+30h], 1
+  .text:0000000180033F80                 xor     r8d, r8d
+  .text:0000000180033F83                 mov     [rsp+0C0h+var_98], 2
+  .text:0000000180033F8B                 mov     rax, [rcx]
+  .text:0000000180033F8E                 mov     qword ptr [rsp+0C0h+var_A0], rdx
+  .text:0000000180033F93                 mov     edx, cs:dword_18060EFC4
+  .text:0000000180033F99                 call    qword ptr [rax+0B0h]
+  .text:0000000180033F9F                 mov     [rbx+0F0h], rax
+  .text:0000000180033FA6                 test    rax, rax
+  .text:0000000180033FA9                 jnz     short loc_180033FD0
+  .text:0000000180033FAB                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180033FB1                 mov     edx, 3
+  .text:0000000180033FB6                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180033FBC                 test    al, al
+  .text:0000000180033FBE                 jz      loc_1800342CF
+  .text:0000000180033FC4                 lea     r8, aCdemoplayerSta_3; "CDemoPlayer::StartPlayback: failed to c"...
+  .text:0000000180033FCB                 jmp     loc_1800342B0
+  .text:0000000180033FD0                 movss   xmm1, cs:dword_180585200
+  .text:0000000180033FD8                 xor     r8d, r8d
+  .text:0000000180033FDB                 mov     [rbp+57h+arg_0], 0
+  .text:0000000180033FDF                 mov     rcx, [rbx+0F0h]
+  .text:0000000180033FE6                 mov     rax, [rcx]
+  .text:0000000180033FE9                 call    qword ptr [rax+1B8h]
+  .text:0000000180033FEF                 mov     eax, cs:dword_18060EFC4
+  .text:0000000180033FF5                 mov     rcx, rbx
+  .text:0000000180033FF8                 mov     [rbx+23Ch], eax
+  .text:0000000180033FFE                 mov     rdx, [rbx+0F0h]
+  .text:0000000180034005                 call    sub_18007CBE0
+  .text:000000018003400A                 mov     rcx, rbx
+  .text:000000018003400D                 call    CNetworkGameClientBase_DeferActivate
+  .text:0000000180034012                 mov     rcx, cs:g_pNetworkSystem
+  .text:0000000180034019                 mov     rax, [rcx]
+  .text:000000018003401C                 call    qword ptr [rax+0D8h]
+  .text:0000000180034022                 xorps   xmm1, xmm1
+  .text:0000000180034025                 lea     rdx, [rbp+57h+var_70]
+  .text:0000000180034029                 cvtsd2ss xmm1, xmm0
+  .text:000000018003402D                 lea     rcx, [rbp+57h+var_80]
+  .text:0000000180034031                 movss   dword ptr [rbx+250h], xmm1
+  .text:0000000180034039                 mov     [rdi+18A2h], r12b
+  .text:0000000180034040                 mov     dword ptr [rdi+228h], 0FFFFFFFFh
+  .text:000000018003404A                 mov     dword ptr [rdi+21Ch], 0FFFFFFFFh
+  .text:0000000180034054                 mov     [rdi+22Ch], esi
+  .text:000000018003405A                 mov     byte ptr [rdi+18A1h], 0
+  .text:0000000180034061                 mov     [rdi+210h], esi
+  .text:0000000180034067                 mov     dword ptr [rdi+214h], 3F800000h
+  .text:0000000180034071                 call    cs:?StripExtension@CUtlString@@QEBA?AV1@XZ; CUtlString::StripExtension(void)
+  .text:0000000180034077                 cmp     byte ptr [rdi+18A0h], 0
+  .text:000000018003407E                 jz      short loc_1800340BB
+  .text:0000000180034080                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180034086                 mov     edx, 2
+  .text:000000018003408B                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180034091                 test    al, al
+  .text:0000000180034093                 jz      short loc_1800340B4
+  .text:0000000180034095                 mov     ecx, cs:dword_18068C1F0
+  .text:000000018003409B                 lea     r9, aFalse; "false"
+  .text:00000001800340A2                 lea     r8, aCdemoplayerSet; "CDemoPlayer::SetIgnorePacketsForResourc"...
+  .text:00000001800340A9                 mov     edx, 2
+  .text:00000001800340AE                 call    cs:LoggingSystem_Log
+  .text:00000001800340B4                 mov     byte ptr [rdi+18A0h], 0
+  .text:00000001800340BB                 mov     rcx, rdi
+  .text:00000001800340BE                 call    sub_180034410
+  .text:00000001800340C3                 mov     r8, r13
+  .text:00000001800340C6                 lea     rdx, [rbp+57h+var_70]
+  .text:00000001800340CA                 mov     rcx, rdi
+  .text:00000001800340CD                 call    sub_180033190
+  .text:00000001800340D2                 lea     r14, [rdi+1938h]
+  .text:00000001800340D9                 mov     eax, [r14]
+  .text:00000001800340DC                 mov     r12, r14
+  .text:00000001800340DF                 sub     eax, 1
+  .text:00000001800340E2                 movsxd  rsi, eax
+  .text:00000001800340E5                 js      short loc_180034112
+  .text:00000001800340E7                 nop     word ptr [rax+rax+00000000h]
+  .text:00000001800340F0                 mov     rax, [r14+8]
+  .text:00000001800340F4                 cmp     qword ptr [rax+rsi*8], 0
+  .text:00000001800340F9                 lea     rcx, [rax+rsi*8]
+  .text:00000001800340FD                 jz      short loc_180034105
+  .text:00000001800340FF                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180034105                 sub     rsi, 1
+  .text:0000000180034109                 jns     short loc_1800340F0
+  .text:000000018003410B                 lea     r12, [rdi+1938h]
+  .text:0000000180034112                 xor     esi, esi
+  .text:0000000180034114                 mov     [r14], esi
+  .text:0000000180034117                 test    dword ptr [r14+14h], 0C0000000h
+  .text:000000018003411F                 jnz     short loc_180034142
+  .text:0000000180034121                 mov     rdx, [r14+8]
+  .text:0000000180034125                 test    rdx, rdx
+  .text:0000000180034128                 jz      short loc_18003413E
+  .text:000000018003412A                 mov     rax, cs:g_pMemAlloc
+  .text:0000000180034131                 mov     rcx, [rax]
+  .text:0000000180034134                 mov     rax, [rcx]
+  .text:0000000180034137                 call    qword ptr [rax+18h]
+  .text:000000018003413A                 mov     [r14+8], rsi
+  .text:000000018003413E                 mov     [r14+10h], esi
+  .text:0000000180034142                 mov     rcx, cs:g_pSource2Client
+  .text:0000000180034149                 mov     rdx, r15
+  .text:000000018003414C                 mov     r9, r13
+  .text:000000018003414F                 mov     r8, r12
+  .text:0000000180034152                 mov     rax, [rcx]
+  .text:0000000180034155                 mov     r10, [rax+1F0h]
+  .text:000000018003415C                 mov     rax, qword ptr [rbp+57h+var_70]
+  .text:0000000180034160                 test    rax, rax
+  .text:0000000180034163                 cmovnz  rdx, rax
+  .text:0000000180034167                 call    r10
+  .text:000000018003416A                 mov     rcx, rdi
+  .text:000000018003416D                 call    sub_18002F460
+  .text:0000000180034172                 mov     rcx, cs:g_pSource2Client
+  .text:0000000180034179                 mov     r9, r13
+  .text:000000018003417C                 mov     rax, [rcx]
+  .text:000000018003417F                 mov     r10, [rax+1F0h]
+  .text:0000000180034186                 mov     rax, qword ptr [rbp+57h+var_70]
+  .text:000000018003418A                 test    rax, rax
+  .text:000000018003418D                 cmovnz  r15, rax
+  .text:0000000180034191                 xor     r8d, r8d
+  .text:0000000180034194                 mov     rdx, r15
+  .text:0000000180034197                 call    r10
+  .text:000000018003419A                 mov     rcx, cs:g_pTestScriptMgr
+  .text:00000001800341A1                 test    rcx, rcx
+  .text:00000001800341A4                 jz      short loc_1800341B3
+  .text:00000001800341A6                 mov     rax, [rcx]
+  .text:00000001800341A9                 lea     rdx, aDemoplaybackst; "DemoPlaybackStarted"
+  .text:00000001800341B0                 call    qword ptr [rax+60h]
+  .text:00000001800341B3                 mov     edi, esi
+  .text:00000001800341B5                 cmp     [rbx+2CCF90h], esi
+  .text:00000001800341BB                 jle     short loc_1800341EA
+  .text:00000001800341BD                 nop     dword ptr [rax]
+  .text:00000001800341C0                 mov     rax, [rbx+2CCF98h]
+  .text:00000001800341C7                 mov     rcx, [rsi+rax]
+  .text:00000001800341CB                 test    rcx, rcx
+  .text:00000001800341CE                 jz      short loc_1800341DA
+  .text:00000001800341D0                 mov     rax, [rcx]
+  .text:00000001800341D3                 mov     edx, 1
+  .text:00000001800341D8                 call    qword ptr [rax]
+  .text:00000001800341DA                 inc     edi
+  .text:00000001800341DC                 add     rsi, 8
+  .text:00000001800341E0                 cmp     edi, [rbx+2CCF90h]
+  .text:00000001800341E6                 jl      short loc_1800341C0
+  .text:00000001800341E8                 xor     esi, esi
+  .text:00000001800341EA                 mov     [rbx+2CCF90h], esi
+  .text:00000001800341F0                 test    dword ptr [rbx+2CCFA4h], 0C0000000h
+  .text:00000001800341FA                 jnz     short loc_180034225
+  .text:00000001800341FC                 mov     rdx, [rbx+2CCF98h]
+  .text:0000000180034203                 test    rdx, rdx
+  .text:0000000180034206                 jz      short loc_18003421F
+  .text:0000000180034208                 mov     rax, cs:g_pMemAlloc
+  .text:000000018003420F                 mov     rcx, [rax]
+  .text:0000000180034212                 mov     rax, [rcx]
+  .text:0000000180034215                 call    qword ptr [rax+18h]
+  .text:0000000180034218                 mov     [rbx+2CCF98h], rsi
+  .text:000000018003421F                 mov     [rbx+2CCFA0h], esi
+  .text:0000000180034225                 mov     [rbx+2CD188h], rsi
+  .text:000000018003422C                 mov     [rbx+2CD190h], rsi
+  .text:0000000180034233                 mov     dword ptr [rbx+24Ch], 0FFFFFFFFh
+  .text:000000018003423D                 mov     bl, 1
+  .text:000000018003423F                 cmp     qword ptr [rbp+57h+var_70], 0
+  .text:0000000180034244                 jz      loc_1800342D1
+  .text:000000018003424A                 lea     rcx, [rbp+57h+var_70]
+  .text:000000018003424E                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180034254                 jmp     short loc_1800342D1
+  .text:0000000180034256                 lea     rax, aCBuildworkerCs_0; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:000000018003425D                 mov     dword ptr [rbp+57h+var_48], 0DDEh
+  .text:0000000180034264                 mov     [rbp+57h+var_60], rax
+  .text:0000000180034268                 lea     rcx, [rbp+57h+var_60]
+  .text:000000018003426C                 lea     rax, aCdemoplayerSta_4; "CDemoPlayer::StartPlayback"
+  .text:0000000180034273                 mov     dword ptr [rbp+57h+var_48+4], 14h
+  .text:000000018003427A                 mov     [rbp+57h+var_58], rax
+  .text:000000018003427E                 lea     rax, aPclient; "pClient"
+  .text:0000000180034285                 mov     [rbp+57h+var_50], rax
+  .text:0000000180034289                 call    cs:?Assert_ConditionFailed@@YA_NAEBU_AssertCompileTimeConstantStruct_t@@@Z; Assert_ConditionFailed(_AssertCompileTimeConstantStruct_t const &)
+  .text:000000018003428F                 test    al, al
+  .text:0000000180034291                 jz      short loc_180034294
+  .text:0000000180034293                 ; Trap to Debugger
+  .text:0000000180034293                 int     3; Trap to Debugger
+  .text:0000000180034294                 mov     ecx, cs:dword_18068C1F0
+  .text:000000018003429A                 mov     edx, 3
+  .text:000000018003429F                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:00000001800342A5                 test    al, al
+  .text:00000001800342A7                 jz      short loc_1800342CF
+  .text:00000001800342A9                 lea     r8, aCanTPlayBackNo; "can't play back, no CNetworkGameClient "...
+  .text:00000001800342B0                 mov     rax, [rbp+57h+var_80]
+  .text:00000001800342B4                 mov     edx, 3
+  .text:00000001800342B9                 mov     ecx, cs:dword_18068C1F0
+  .text:00000001800342BF                 test    rax, rax
+  .text:00000001800342C2                 cmovnz  r15, rax
+  .text:00000001800342C6                 mov     r9, r15
+  .text:00000001800342C9                 call    cs:LoggingSystem_Log
+  .text:00000001800342CF                 xor     bl, bl
+  .text:00000001800342D1                 cmp     [rbp+57h+var_80], 0
+  .text:00000001800342D6                 mov     r15, [rsp+0C0h+var_30]
+  .text:00000001800342DE                 mov     r14, [rsp+0C0h+var_28]
+  .text:00000001800342E6                 mov     r13, [rsp+0C0h+var_20]
+  .text:00000001800342EE                 mov     r12, [rsp+0C0h+var_18]
+  .text:00000001800342F6                 mov     rdi, [rsp+0B0h]
+  .text:00000001800342FE                 mov     rsi, [rsp+0C0h+arg_8]
+  .text:0000000180034306                 jz      short loc_180034312
+  .text:0000000180034308                 lea     rcx, [rbp+57h+var_80]
+  .text:000000018003430C                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180034312                 movq    rcx, xmm6
+  .text:0000000180034317                 cmp     byte ptr [rcx], 0
+  .text:000000018003431A                 jz      short loc_180034343
+  .text:000000018003431C                 psrldq  xmm6, 8
+  .text:0000000180034321                 movq    rcx, xmm6
+  .text:0000000180034326                 add     rcx, 20h ; ' '
+  .text:000000018003432A                 mov     rdx, [rcx]
+  .text:000000018003432D                 call    qword ptr [rdx+10h]
+  .text:0000000180034330                 mov     r8, cs:off_180611758
+  .text:0000000180034337                 lea     rcx, off_180611758
+  .text:000000018003433E                 xor     edx, edx
+  .text:0000000180034340                 call    qword ptr [r8]
+  .text:0000000180034343                 movaps  xmm6, [rsp+0C0h+var_48+8]
+  .text:000000018003434B                 movzx   eax, bl
+  .text:000000018003434E                 add     rsp, 0B8h
+  .text:0000000180034355                 pop     rbx
+  .text:0000000180034356                 pop     rbp
+  .text:0000000180034357                 retn
+procedure: |-
+  __int64 __fastcall sub_180033CC0(__int64 a1, const char *a2, char a3, KeyValues *a4)
+  {
+    KeyValues *v6; // r13
+    __m128i v7; // xmm6
+    void *v8; // r15
+    const char *v9; // r9
+    void *v10; // rcx
+    __int64 v11; // rbx
+    __int64 v12; // rcx
+    __int64 v13; // rcx
+    void **v14; // rax
+    void *v15; // rax
+    void *v16; // rcx
+    int v17; // r13d
+    void **v18; // rax
+    void *v19; // rax
+    void *v20; // r14
+    int v21; // esi
+    __int64 v22; // rcx
+    int v23; // eax
+    __int64 v24; // rcx
+    __int64 v25; // rax
+    __int64 v26; // rdx
+    const char *v27; // r8
+    float v28; // xmm1_4
+    __int64 v29; // r12
+    int v30; // eax
+    __int64 v31; // rsi
+    CUtlString *v32; // rcx
+    __int64 v33; // rsi
+    void *v34; // rdx
+    int i; // edi
+    void (__fastcall ***v36)(_QWORD, __int64); // rcx
+    unsigned __int8 v37; // bl
+    unsigned __int64 v38; // rcx
+    _QWORD v40[2]; // [rsp+48h] [rbp-29h] BYREF
+    __m128i v41; // [rsp+58h] [rbp-19h] BYREF
+    _QWORD v42[5]; // [rsp+68h] [rbp-9h] BYREF
+    char v43; // [rsp+D8h] [rbp+67h] BYREF
+    KeyValues *v44; // [rsp+F0h] [rbp+7Fh]
+
+    v44 = a4;
+    v6 = a4;
+    v41.m128i_i64[1] = a1;
+    *(_QWORD *)(a1 + 504) = -1;
+    v41.m128i_i64[0] = (__int64)&v43;
+    v7 = v41;
+    v43 = 1;
+    v40[0] = 0;
+    CUtlString::Set((CUtlString *)v40, a2);
+    v8 = &unk_180528AFF;
+    if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18068C1F0, 2) )
+    {
+      v9 = "demo";
+      v10 = &unk_180528AFF;
+      if ( v40[0] )
+        v10 = (void *)v40[0];
+      if ( a3 )
+        v9 = "timedemo";
+      LoggingSystem_Log((unsigned int)dword_18068C1F0, 2, "playing %s from '%s'\n", v9, v10);
+    }
+    if ( v6 && (int)LoggingSystem_GetChannelVerbosity((unsigned int)dword_18068C1F0) >= 3 )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18068C1F0, 2) )
+        LoggingSystem_Log((unsigned int)dword_18068C1F0, 2, "Demo playback options:\n");
+      CKeyValuesDumpContextToLoggingChannel::CKeyValuesDumpContextToLoggingChannel(v42, (unsigned int)dword_18068C1F0, 2);
+      KeyValues::Dump(v6, (struct IKeyValuesDumpContext *)v42, 0);
+    }
+    v11 = g_pNetworkGameClient;
+    if ( !g_pNetworkGameClient )
+    {
+      v42[3] = 0x1400000DDELL;
+      v42[0] = "C:\\buildworker\\csgo_rel_win64\\build\\src\\engine2\\cl_demo.cpp";
+      v42[1] = "CDemoPlayer::StartPlayback";
+      v42[2] = "pClient";
+      if ( Assert_ConditionFailed((const struct _AssertCompileTimeConstantStruct_t *)v42) )
+        __debugbreak();
+      if ( !(unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18068C1F0, 3) )
+        goto LABEL_73;
+      v27 = "can't play back, no CNetworkGameClient for demo '%s'\n";
+      goto LABEL_70;
+    }
+    VProfLite_Clear();
+    LOBYTE(v12) = 1;
+    VProfLite_SetEnabled(v12);
+    if ( !(unsigned __int8)sub_1800326A0(v13, v40)
+      || !(unsigned __int8)sub_180033720(a1, v40)
+      || !(unsigned __int8)sub_180033460(a1) )
+    {
+  LABEL_73:
+      v37 = 0;
+      goto LABEL_74;
+    }
+    *(_DWORD *)(a1 + 512) = *(_DWORD *)(a1 + 216);
+    if ( a3 )
+    {
+      v14 = (void **)sub_1803FEF60(&unk_18068C238, 0xFFFFFFFFLL);
+      if ( !v14 )
+        v14 = *(void ***)(qword_18068C240 + 8);
+      v15 = *v14;
+      v16 = &unk_180528AFF;
+      if ( v15 )
+        v16 = v15;
+      v17 = sub_180037770(v16, 0, 0, 0);
+      v18 = (void **)sub_1803FEF60(&unk_18068C248, 0xFFFFFFFFLL);
+      if ( !v18 )
+        v18 = *(void ***)(qword_18068C250 + 8);
+      v19 = *v18;
+      v20 = &unk_180528AFF;
+      if ( v19 )
+        v20 = v19;
+      v21 = sub_180037770(v20, 0, 0, 0);
+      if ( v21 >= 0 && sub_1804287E4(v20, 43) )
+        v21 = sub_180037770(v20, 0, 0, 0) + v17;
+      if ( v17 >= 100 )
+      {
+        *(_BYTE *)(a1 + 6307) = 1;
+        *(_DWORD *)(a1 + 544) = v17 - 100;
+      }
+      if ( v21 > 0 && v21 > *(_DWORD *)(a1 + 544) )
+        *(_DWORD *)(a1 + 548) = v21;
+      RandomSeed(0);
+      v6 = v44;
+    }
+    v22 = g_pNetworkClientService;
+    *(_BYTE *)(a1 + 4656) = 1;                    // 4656 = 0x1230 = CDemoPlayer::m_bIsPlaying (structmember, struct=CDemoPlayer, member=m_bIsPlaying)
+    *(_BYTE *)(a1 + 4658) = 0;
+    *(_DWORD *)(v11 + 560) = 2;
+    v23 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v22 + 448LL))(v22);
+    v24 = g_pNetworkSystem;
+    *(_DWORD *)(a1 + 516) = v23;
+    v25 = (*(__int64 (__fastcall **)(__int64, _QWORD, _QWORD, _QWORD, const char *, int, int))(*(_QWORD *)v24 + 176LL))(
+            v24,
+            (unsigned int)dword_18060EFC4,
+            0,
+            0,
+            "DEMO",
+            2,
+            1);
+    *(_QWORD *)(v11 + 240) = v25;
+    if ( !v25 )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18068C1F0, 3) )
+      {
+        v27 = "CDemoPlayer::StartPlayback: failed to create demo net channel for '%s'\n";
+  LABEL_70:
+        if ( v40[0] )
+          v8 = (void *)v40[0];
+        LoggingSystem_Log((unsigned int)dword_18068C1F0, 3, v27, v8);
+        goto LABEL_73;
+      }
+      goto LABEL_73;
+    }
+    v43 = 0;
+    (*(void (__fastcall **)(_QWORD, __int64, _QWORD))(**(_QWORD **)(v11 + 240) + 440LL))(*(_QWORD *)(v11 + 240), v26, 0);
+    *(_DWORD *)(v11 + 572) = dword_18060EFC4;
+    sub_18007CBE0(v11, *(_QWORD *)(v11 + 240));
+    CNetworkGameClientBase_DeferActivate((__int64 *)v11);
+    v28 = (*(double (__fastcall **)(__int64))(*(_QWORD *)g_pNetworkSystem + 216LL))(g_pNetworkSystem);
+    *(float *)(v11 + 592) = v28;
+    *(_BYTE *)(a1 + 6306) = a3;
+    *(_DWORD *)(a1 + 552) = -1;
+    *(_DWORD *)(a1 + 540) = -1;
+    *(_DWORD *)(a1 + 556) = 0;
+    *(_BYTE *)(a1 + 6305) = 0;
+    *(_DWORD *)(a1 + 528) = 0;
+    *(_DWORD *)(a1 + 532) = 1065353216;
+    CUtlString::StripExtension(v40, &v41);
+    if ( *(_BYTE *)(a1 + 6304) )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18068C1F0, 2) )
+        LoggingSystem_Log(
+          (unsigned int)dword_18068C1F0,
+          2,
+          "CDemoPlayer::SetIgnorePacketsForResourceLoading(%s)\n",
+          "false");
+      *(_BYTE *)(a1 + 6304) = 0;
+    }
+    sub_180034410(a1);
+    sub_180033190(a1, &v41, v6);
+    v29 = a1 + 6456;
+    v30 = *(_DWORD *)(a1 + 6456) - 1;
+    v31 = v30;
+    if ( v30 >= 0 )
+    {
+      do
+      {
+        v32 = (CUtlString *)(*(_QWORD *)(a1 + 6464) + 8 * v31);
+        if ( *(_QWORD *)v32 )
+          CUtlString::FreeMemoryBlock(v32);
+        --v31;
+      }
+      while ( v31 >= 0 );
+      v29 = a1 + 6456;
+    }
+    v33 = 0;
+    *(_DWORD *)(a1 + 6456) = 0;
+    if ( (*(_DWORD *)(a1 + 6476) & 0xC0000000) == 0 )
+    {
+      if ( *(_QWORD *)(a1 + 6464) )
+      {
+        (*(void (__fastcall **)(_QWORD))(*g_pMemAlloc + 24LL))(g_pMemAlloc);
+        *(_QWORD *)(a1 + 6464) = 0;
+      }
+      *(_DWORD *)(a1 + 6472) = 0;
+    }
+    v34 = &unk_180528AFF;
+    if ( v41.m128i_i64[0] )
+      v34 = (void *)v41.m128i_i64[0];
+    (*(void (__fastcall **)(__int64, void *, __int64, KeyValues *))(*(_QWORD *)g_pSource2Client + 496LL))(
+      g_pSource2Client,
+      v34,
+      v29,
+      v6);
+    sub_18002F460(a1);
+    if ( v41.m128i_i64[0] )
+      v8 = (void *)v41.m128i_i64[0];
+    (*(void (__fastcall **)(__int64, void *, _QWORD, KeyValues *))(*(_QWORD *)g_pSource2Client + 496LL))(
+      g_pSource2Client,
+      v8,
+      0,
+      v6);
+    if ( g_pTestScriptMgr )
+      (*(void (__fastcall **)(__int64, const char *))(*(_QWORD *)g_pTestScriptMgr + 96LL))(
+        g_pTestScriptMgr,
+        "DemoPlaybackStarted");
+    for ( i = 0; i < *(_DWORD *)(v11 + 2936720); v33 += 8 )
+    {
+      v36 = *(void (__fastcall ****)(_QWORD, __int64))(v33 + *(_QWORD *)(v11 + 2936728));
+      if ( v36 )
+        (**v36)(v36, 1);
+      ++i;
+    }
+    *(_DWORD *)(v11 + 2936720) = 0;
+    if ( (*(_DWORD *)(v11 + 2936740) & 0xC0000000) == 0 )
+    {
+      if ( *(_QWORD *)(v11 + 2936728) )
+      {
+        (*(void (__fastcall **)(_QWORD))(*g_pMemAlloc + 24LL))(g_pMemAlloc);
+        *(_QWORD *)(v11 + 2936728) = 0;
+      }
+      *(_DWORD *)(v11 + 2936736) = 0;
+    }
+    *(_QWORD *)(v11 + 2937224) = 0;
+    *(_QWORD *)(v11 + 2937232) = 0;
+    *(_DWORD *)(v11 + 588) = -1;
+    v37 = 1;
+    if ( v41.m128i_i64[0] )
+      CUtlString::FreeMemoryBlock((CUtlString *)&v41);
+  LABEL_74:
+    if ( v40[0] )
+      CUtlString::FreeMemoryBlock((CUtlString *)v40);
+    if ( *(_BYTE *)v7.m128i_i64[0] )
+    {
+      v38 = _mm_srli_si128(v7, 8).m128i_u64[0] + 32;
+      (*(void (__fastcall **)(unsigned __int64))(*(_QWORD *)v38 + 16LL))(v38);
+      ((void (__fastcall *)(__int64 (__fastcall ***)(), _QWORD))*off_180611758)(&off_180611758, 0);
+    }
+    return v37;
+  }

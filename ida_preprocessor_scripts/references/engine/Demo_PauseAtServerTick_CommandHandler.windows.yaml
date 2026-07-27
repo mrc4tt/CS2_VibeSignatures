@@ -1,0 +1,139 @@
+func_name: Demo_PauseAtServerTick_CommandHandler
+func_va: '0x180038540'
+disasm_code: |-
+  .text:0000000180038540                 mov     [rsp+arg_0], rbx
+  .text:0000000180038545                 mov     [rsp+arg_8], rsi
+  .text:000000018003854A                 push    rdi
+  .text:000000018003854B                 sub     rsp, 30h
+  .text:000000018003854F                 mov     rcx, cs:g_pDemoPlayer
+  .text:0000000180038556                 lea     rsi, g_DemoPlayer
+  .text:000000018003855D                 mov     rdi, cs:g_pNetworkGameClient
+  .text:0000000180038564                 mov     rbx, rdx
+  .text:0000000180038567                 cmp     rcx, rsi
+  .text:000000018003856A                 jnz     loc_180038671
+  .text:0000000180038570                 mov     rax, [rcx]
+  .text:0000000180038573                 call    qword ptr [rax+58h]
+  .text:0000000180038576                 test    al, al
+  .text:0000000180038578                 jz      loc_180038671
+  .text:000000018003857E                 test    rdi, rdi
+  .text:0000000180038581                 jz      loc_180038671
+  .text:0000000180038587                 cmp     byte ptr cs:qword_18068DB2C+1, 0
+  .text:000000018003858E                 jnz     loc_18003869E
+  .text:0000000180038594                 movss   xmm2, cs:dword_180585200
+  .text:000000018003859C                 mov     rcx, rbx
+  .text:000000018003859F                 call    sub_180043DA0
+  .text:00000001800385A4                 movaps  xmm2, xmm0
+  .text:00000001800385A7                 xorps   xmm0, xmm0
+  .text:00000001800385AA                 comiss  xmm0, xmm2
+  .text:00000001800385AD                 jbe     short loc_1800385D4
+  .text:00000001800385AF                 mov     ecx, cs:dword_18068C1F0
+  .text:00000001800385B5                 mov     edx, 3
+  .text:00000001800385BA                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:00000001800385C0                 test    al, al
+  .text:00000001800385C2                 jz      loc_18003869E
+  .text:00000001800385C8                 lea     r8, aMissingInvalid; "Missing/invalid pause tick number.\n"
+  .text:00000001800385CF                 jmp     loc_18003868D
+  .text:00000001800385D4                 cvttss2si ebx, xmm2
+  .text:00000001800385D8                 movd    xmm0, ebx
+  .text:00000001800385DC                 cvtdq2ps xmm0, xmm0
+  .text:00000001800385DF                 subss   xmm2, xmm0
+  .text:00000001800385E3                 cmp     ebx, [rdi+378h]
+  .text:00000001800385E9                 jg      short loc_180038649
+  .text:00000001800385EB                 movss   xmm1, cs:dword_180585200
+  .text:00000001800385F3                 mov     rcx, rsi
+  .text:00000001800385F6                 call    CDemoPlayer_Pause ; CDemoPlayer::Pause
+  .text:00000001800385FB                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180038601                 mov     edx, 3
+  .text:0000000180038606                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:000000018003860C                 test    al, al
+  .text:000000018003860E                 jz      loc_18003869E
+  .text:0000000180038614                 mov     eax, [rdi+378h]
+  .text:000000018003861A                 lea     r8, aDesiredPauseTi; "Desired pause tick %d is not in the fut"...
+  .text:0000000180038621                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180038627                 mov     r9d, ebx
+  .text:000000018003862A                 mov     edx, 3
+  .text:000000018003862F                 mov     [rsp+38h+var_18], eax
+  .text:0000000180038633                 call    cs:LoggingSystem_Log
+  .text:0000000180038639                 mov     rbx, [rsp+38h+arg_0]
+  .text:000000018003863E                 mov     rsi, [rsp+38h+arg_8]
+  .text:0000000180038643                 add     rsp, 30h
+  .text:0000000180038647                 pop     rdi
+  .text:0000000180038648                 retn
+  .text:0000000180038649                 mov     edx, ebx
+  .text:000000018003864B                 lea     rcx, [rsp+38h+arg_10]
+  .text:0000000180038650                 call    sub_180311B60
+  .text:0000000180038655                 mov     rax, [rsp+38h+arg_10]
+  .text:000000018003865A                 mov     qword ptr cs:xmmword_18068C4B0+0Ch, rax
+  .text:0000000180038661                 mov     rbx, [rsp+38h+arg_0]
+  .text:0000000180038666                 mov     rsi, [rsp+38h+arg_8]
+  .text:000000018003866B                 add     rsp, 30h
+  .text:000000018003866F                 pop     rdi
+  .text:0000000180038670                 retn
+  .text:0000000180038671                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180038677                 mov     edx, 3
+  .text:000000018003867C                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180038682                 test    al, al
+  .text:0000000180038684                 jz      short loc_18003869E
+  .text:0000000180038686                 lea     r8, aErrorNotCurren; "Error - Not currently playing back a de"...
+  .text:000000018003868D                 mov     ecx, cs:dword_18068C1F0
+  .text:0000000180038693                 mov     edx, 3
+  .text:0000000180038698                 call    cs:LoggingSystem_Log
+  .text:000000018003869E                 mov     rbx, [rsp+38h+arg_0]
+  .text:00000001800386A3                 mov     rsi, [rsp+38h+arg_8]
+  .text:00000001800386A8                 add     rsp, 30h
+  .text:00000001800386AC                 pop     rdi
+  .text:00000001800386AD                 retn
+procedure: |-
+  double __fastcall Demo_PauseAtServerTick_CommandHandler(__int64 a1, __int64 a2)
+  {
+    __int64 v2; // rdi
+    __int64 v4; // rdx
+    double v5; // xmm0_8
+    float v6; // xmm2_4
+    double result; // xmm0_8
+    unsigned int v8; // ebx
+    __int64 v9; // [rsp+50h] [rbp+18h] BYREF
+
+    v2 = g_pNetworkGameClient;
+    if ( g_pDemoPlayer == &g_DemoPlayer
+      && (*(unsigned __int8 (__fastcall **)(__int64 *))(*g_pDemoPlayer + 88))(g_pDemoPlayer)
+      && v2 )
+    {
+      if ( !BYTE1(qword_18068DB2C) )
+      {
+        v5 = sub_180043DA0(a2);
+        v6 = *(float *)&v5;
+        result = 0.0;
+        if ( v6 >= 0.0 )
+        {
+          v8 = (int)v6;
+          *(_QWORD *)&result = COERCE_UNSIGNED_INT((float)(int)v6);
+          if ( (int)v6 > *(_DWORD *)(v2 + 888) )
+          {
+            sub_180311B60(&v9, v8);
+            *(_QWORD *)((char *)&xmmword_18068C4B0 + 12) = v9;
+          }
+          else
+          {
+            CDemoPlayer_Pause((__int64)&g_DemoPlayer, v4); // CDemoPlayer::Pause
+            if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18068C1F0, 3) )
+              return LoggingSystem_Log(
+                       (unsigned int)dword_18068C1F0,
+                       3,
+                       "Desired pause tick %d is not in the future.  The current tick is %d.  Pausing playback immediately.\n",
+                       v8,
+                       *(_DWORD *)(v2 + 888));
+          }
+        }
+        else if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18068C1F0, 3) )
+        {
+          return LoggingSystem_Log((unsigned int)dword_18068C1F0, 3, "Missing/invalid pause tick number.\n");
+        }
+      }
+    }
+    else if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_18068C1F0, 3) )
+    {
+      return LoggingSystem_Log((unsigned int)dword_18068C1F0, 3, "Error - Not currently playing back a demo.\n");
+    }
+    return result;
+  }

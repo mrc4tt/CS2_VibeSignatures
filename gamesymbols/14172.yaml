@@ -73,8 +73,8 @@ binaries:
       path: game/bin/win64/vphysics2.dll
       sha256: 8bb3c48086c6e053300d2db6a019a56d2d1dfdb231c3556ff0dd7e77bc170995
 config_digest_version: 2
-config_sha256: sha256:0c2801990dc194aeb17f99363e75c7825129b9a980e02425fd1e6c799fddafb9
-file_count: 3134
+config_sha256: sha256:93f4170f86434b1757379485c6b9c2c1478270b2bceed716de72619bd18ac4bb
+file_count: 3153
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -2543,6 +2543,18 @@ files:
     vtable_size: '0x248'
     vtable_symbol: ??_7C_MultiplayRules@@6B@
     vtable_va: '0x181a51550'
+  client/C_ServerVoiceHandler_OnServerVoiceData.linux.yaml:
+    func_name: C_ServerVoiceHandler_OnServerVoiceData
+    func_rva: '0x1863980'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 F3 48 81 EC ?? ?? ?? ?? 8B 46 ?? 48 89 BD ?? ?? ?? ??
+    func_size: '0x369'
+    func_va: '0x1863980'
+  client/C_ServerVoiceHandler_OnServerVoiceData.windows.yaml:
+    func_name: C_ServerVoiceHandler_OnServerVoiceData
+    func_rva: '0xaec370'
+    func_sig: 48 89 4C 24 ?? 53 55 56 57 41 54 41 55 41 57 48 81 EC ?? ?? ?? ??
+    func_size: '0x425'
+    func_va: '0x180aec370'
   client/ClientAntiTamperTest.windows.yaml:
     func_name: ClientAntiTamperTest
     func_rva: '0x1322c80'
@@ -4263,6 +4275,18 @@ files:
     vfunc_index: 41
     vfunc_offset: '0x148'
     vtable_name: IVEngineClient2
+  client/IVEngineClient2_IsPlayingDemo.linux.yaml:
+    func_name: IVEngineClient2_IsPlayingDemo
+    vfunc_index: 42
+    vfunc_offset: '0x150'
+    vfunc_sig: FF 90 50 01 00 00 84 C0 0F 85 ?? ?? ?? ?? E8 ?? ?? ?? ??
+    vtable_name: IVEngineClient2
+  client/IVEngineClient2_IsPlayingDemo.windows.yaml:
+    func_name: IVEngineClient2_IsPlayingDemo
+    vfunc_index: 42
+    vfunc_offset: '0x150'
+    vfunc_sig: FF 90 50 01 00 00 84 C0 74 ?? 83 FD ??
+    vtable_name: IVEngineClient2
   client/RegisterEventListener_Abstract.linux.yaml:
     func_name: RegisterEventListener_Abstract
     func_rva: '0x1664b60'
@@ -5337,6 +5361,182 @@ files:
     vtable_size: '0x10'
     vtable_symbol: ??_7?$CDelayedCall2@VCServerSideClientBase@@V1@UUpdateAcknowledgedFramecountCall_t@1@Uempty_t@@@@6B@
     vtable_va: '0x180544f20'
+  engine/CDemoPlayer_InternalReadPacket.windows.yaml:
+    func_name: CDemoPlayer_InternalReadPacket
+    func_rva: '0x2aef0'
+    func_sig: 48 89 4C 24 ?? 53 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ?? 45 33 FF
+    func_size: '0x922'
+    func_va: '0x18002aef0'
+  engine/CDemoPlayer_Pause.windows.yaml:
+    func_name: CDemoPlayer_Pause
+    func_rva: '0x354e0'
+    func_sig: 48 89 5C 24 ?? 57 48 81 EC ?? ?? ?? ?? 0F 29 74 24 ??
+    func_size: '0x12e'
+    func_va: '0x1800354e0'
+    vfunc_index: 18
+    vfunc_offset: '0x90'
+    vtable_name: CDemoPlayer_vtable
+  engine/CDemoPlayer_PlayDemo.windows.yaml:
+    func_name: CDemoPlayer_PlayDemo
+    func_rva: '0x30b40'
+    func_sig: 40 55 53 56 57 41 54 41 56 48 8D AC 24 ?? ?? ?? ??
+    func_size: '0x4d9'
+    func_va: '0x180030b40'
+    vfunc_index: 7
+    vfunc_offset: '0x38'
+    vtable_name: CDemoPlayer_vtable
+  engine/CDemoPlayer_SetIgnorePacketsForResourceLoading.windows.yaml:
+    func_name: CDemoPlayer_SetIgnorePacketsForResourceLoading
+    func_rva: '0x2e960'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 0F B6 DA 48 8B F9 3A 91 ?? 18 00 00
+    func_size: '0x6a'
+    func_va: '0x18002e960'
+    vfunc_index: 31
+    vfunc_offset: '0xf8'
+    vtable_name: CDemoPlayer_vtable
+  engine/CDemoPlayer_SkipToTick.windows.yaml:
+    func_name: CDemoPlayer_SkipToTick
+    func_rva: '0x29260'
+    func_sig: 40 55 53 57 41 55
+    func_size: '0x74a'
+    func_va: '0x180029260'
+    vfunc_index: 19
+    vfunc_offset: '0x98'
+    vtable_name: CDemoPlayer_vtable
+  engine/CDemoPlayer_StartPlayback.windows.yaml:
+    func_name: CDemoPlayer_StartPlayback
+    func_rva: '0x33cc0'
+    func_sig: 48 8B C4 4C 89 48 ?? 55 53
+    func_size: '0x698'
+    func_va: '0x180033cc0'
+    vfunc_index: 8
+    vfunc_offset: '0x40'
+    vtable_name: CDemoPlayer_vtable
+  engine/CDemoPlayer_StopPlayback.windows.yaml:
+    func_name: CDemoPlayer_StopPlayback
+    func_rva: '0x28d90'
+    func_sig: 40 53 48 83 EC ?? 80 B9 ?? 12 00 00 ?? 48 8B D9 0F 84 ?? ?? ?? ??
+    func_size: '0x473'
+    func_va: '0x180028d90'
+    vfunc_index: 21
+    vfunc_offset: '0xa8'
+    vtable_name: CDemoPlayer_vtable
+  engine/CDemoPlayer_m_bIsPaused.windows.yaml:
+    member_name: m_bIsPaused
+    offset: '0x1231'
+    offset_sig: C6 81 ?? 12 00 00 ?? 0F 57 C0
+    offset_sig_disp: 0
+    size: 1
+    struct_name: CDemoPlayer
+  engine/CDemoPlayer_m_bIsPlaying.windows.yaml:
+    member_name: m_bIsPlaying
+    offset: '0x1230'
+    offset_sig: C6 87 ?? 12 00 00 ?? C6 87 ?? 12 00 00 ??
+    offset_sig_disp: 0
+    size: 1
+    struct_name: CDemoPlayer
+  engine/CDemoPlayer_vtable.linux.yaml:
+    vtable_class: CDemoPlayer
+    vtable_entries:
+      0: '0x47c590'
+      1: '0x47cb00'
+      10: '0x470950'
+      11: '0x470960'
+      12: '0x470930'
+      13: '0x472250'
+      14: '0x470910'
+      15: '0x4708b0'
+      16: '0x470820'
+      17: '0x470a20'
+      18: '0x470a10'
+      19: '0x48e260'
+      2: '0x470810'
+      20: '0x48e420'
+      21: '0x490330'
+      22: '0x47c550'
+      23: '0x4902a0'
+      24: '0x4708f0'
+      25: '0x47d5d0'
+      26: '0x470900'
+      27: '0x470a40'
+      28: '0x476660'
+      29: '0x470a30'
+      3: '0x4709a0'
+      30: '0x480000'
+      31: '0x47c570'
+      32: '0x4727f0'
+      33: '0x470940'
+      34: '0x48cfc0'
+      35: '0x470850'
+      36: '0x470830'
+      37: '0x470840'
+      38: '0x470970'
+      39: '0x470980'
+      4: '0x4709b0'
+      40: '0x470990'
+      41: '0x47fce0'
+      42: '0x47f880'
+      43: '0x472be0'
+      5: '0x4709e0'
+      6: '0x4708d0'
+      7: '0x470cf0'
+      8: '0x477060'
+      9: '0x486be0'
+    vtable_numvfunc: 44
+    vtable_rva: '0x9aacb8'
+    vtable_size: '0x160'
+    vtable_symbol: _ZTV11CDemoPlayer + 0x10
+    vtable_va: '0x9aacb8'
+  engine/CDemoPlayer_vtable.windows.yaml:
+    vtable_class: CDemoPlayer
+    vtable_entries:
+      0: '0x18002de90'
+      1: '0x1800247f0'
+      10: '0x18002e9f0'
+      11: '0x18002dc00'
+      12: '0x180035a50'
+      13: '0x18002dbe0'
+      14: '0x180029220'
+      15: '0x1800245d0'
+      16: '0x180035af0'
+      17: '0x180035ae0'
+      18: '0x1800354e0'
+      19: '0x180029260'
+      2: '0x180035a80'
+      20: '0x180035610'
+      21: '0x180028d90'
+      22: '0x18002b820'
+      23: '0x180021e70'
+      24: '0x18002cf40'
+      25: '0x1800245d0'
+      26: '0x180039130'
+      27: '0x180035b00'
+      28: '0x1800361c0'
+      29: '0x1800361d0'
+      3: '0x180035a90'
+      30: '0x180029210'
+      31: '0x18002e960'
+      32: '0x18002e9d0'
+      33: '0x18002aef0'
+      34: '0x180024820'
+      35: '0x180024800'
+      36: '0x180024810'
+      37: '0x180024440'
+      38: '0x1800354c0'
+      39: '0x1800354d0'
+      4: '0x180035a90'
+      40: '0x180034360'
+      41: '0x1800343c0'
+      5: '0x180029240'
+      6: '0x180035ac0'
+      7: '0x180030b40'
+      8: '0x180033cc0'
+      9: '0x18002e9e0'
+    vtable_numvfunc: 42
+    vtable_rva: '0x52db28'
+    vtable_size: '0x150'
+    vtable_symbol: ??_7CDemoPlayer@@6B@
+    vtable_va: '0x18052db28'
   engine/CDemoRecorder_ParseMessage.linux.yaml:
     func_name: CDemoRecorder_ParseMessage
     func_rva: '0x47db80'
@@ -5498,6 +5698,22 @@ files:
     vfunc_index: 15
     vfunc_offset: '0x78'
     vtable_name: CEngineClient_vtable
+  engine/CEngineClient_IsPlayingDemo.linux.yaml:
+    func_name: CEngineClient_IsPlayingDemo
+    func_rva: '0x4e68c0'
+    func_size: '0x40'
+    func_va: '0x4e68c0'
+    vfunc_index: 42
+    vfunc_offset: '0x150'
+    vtable_name: CEngineClient
+  engine/CEngineClient_IsPlayingDemo.windows.yaml:
+    func_name: CEngineClient_IsPlayingDemo
+    func_rva: '0x75c60'
+    func_size: '0x1b'
+    func_va: '0x180075c60'
+    vfunc_index: 42
+    vfunc_offset: '0x150'
+    vtable_name: CEngineClient
   engine/CEngineClient_vtable.linux.yaml:
     vtable_class: CEngineClient
     vtable_entries:
@@ -12101,6 +12317,18 @@ files:
     func_sig: 41 57 48 83 EC ?? 8B 05 ?? ?? ?? ?? 4C 8B F9
     func_size: '0x1bc'
     func_va: '0x1803fe530'
+  engine/Demo_PauseAtServerTick_CommandHandler.linux.yaml:
+    func_name: Demo_PauseAtServerTick_CommandHandler
+    func_rva: '0x48e930'
+    func_sig: 55 48 89 E5 41 55 41 54 49 89 F4 53 48 83 EC ?? 48 8D 05 ?? ?? ?? ??
+    func_size: '0x1a5'
+    func_va: '0x48e930'
+  engine/Demo_PauseAtServerTick_CommandHandler.windows.yaml:
+    func_name: Demo_PauseAtServerTick_CommandHandler
+    func_rva: '0x38540'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B 0D ?? ?? ?? ?? 48 8D 35 ?? ?? ?? ??
+    func_size: '0x16e'
+    func_va: '0x180038540'
   engine/GetFrameTimeAmnesty.linux.yaml:
     func_name: GetFrameTimeAmnesty
     func_rva: '0x37b490'
@@ -39771,5 +39999,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14172'
-last_publish_time: '2026-07-27T06:53:13Z'
+last_publish_time: '2026-07-27T10:53:00Z'
 schema_version: 4

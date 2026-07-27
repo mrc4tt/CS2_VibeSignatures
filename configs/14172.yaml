@@ -879,6 +879,68 @@ modules:
           - INetworkMessages_Serialize.{platform}.yaml
         expected_input:
           - CNetworkGameClient_SendMovePacket.{platform}.yaml
+      - name: find-CDemoPlayer_vtable
+        expected_output:
+          - CDemoPlayer_vtable.{platform}.yaml
+      - name: find-CDemoPlayer_SkipToTick
+        platform: windows
+        expected_output:
+          - CDemoPlayer_SkipToTick.{platform}.yaml
+        expected_input:
+          - CDemoPlayer_vtable.{platform}.yaml
+      - name: find-CDemoPlayer_PlayDemo
+        platform: windows
+        expected_output:
+          - CDemoPlayer_PlayDemo.{platform}.yaml
+        expected_input:
+          - CDemoPlayer_vtable.{platform}.yaml
+      - name: find-CDemoPlayer_StopPlayback
+        platform: windows
+        expected_output:
+          - CDemoPlayer_StopPlayback.{platform}.yaml
+        expected_input:
+          - CDemoPlayer_vtable.{platform}.yaml
+      - name: find-CDemoPlayer_StartPlayback
+        platform: windows
+        expected_output:
+          - CDemoPlayer_StartPlayback.{platform}.yaml
+        expected_input:
+          - CDemoPlayer_vtable.{platform}.yaml
+          - CDemoPlayer_SkipToTick.{platform}.yaml
+      - name: find-CDemoPlayer_SetIgnorePacketsForResourceLoading
+        platform: windows
+        expected_output:
+          - CDemoPlayer_SetIgnorePacketsForResourceLoading.{platform}.yaml
+        expected_input:
+          - CDemoPlayer_vtable.{platform}.yaml
+          - CDemoPlayer_InternalReadPacket.{platform}.yaml
+          - CDemoPlayer_StartPlayback.{platform}.yaml
+      - name: find-CDemoPlayer_InternalReadPacket
+        platform: windows
+        expected_output:
+          - CDemoPlayer_InternalReadPacket.{platform}.yaml
+      - name: find-Demo_PauseAtServerTick_CommandHandler
+        expected_output:
+          - Demo_PauseAtServerTick_CommandHandler.{platform}.yaml
+      - name: find-CDemoPlayer_StartPlayback-decompiles
+        platform: windows
+        expected_output:
+          - CDemoPlayer_m_bIsPlaying.{platform}.yaml
+        expected_input:
+          - CDemoPlayer_StartPlayback.{platform}.yaml
+      - name: find-Demo_PauseAtServerTick_CommandHandler-decompiles
+        platform: windows
+        expected_output:
+          - CDemoPlayer_Pause.{platform}.yaml
+        expected_input:
+          - Demo_PauseAtServerTick_CommandHandler.{platform}.yaml
+          - CDemoPlayer_vtable.{platform}.yaml
+      - name: find-CDemoPlayer_Pause-decompiles
+        platform: windows
+        expected_output:
+          - CDemoPlayer_m_bIsPaused.{platform}.yaml
+        expected_input:
+          - CDemoPlayer_Pause.{platform}.yaml
       - name: find-CDemoRecorder_vtable
         expected_output:
           - CDemoRecorder_vtable.{platform}.yaml
@@ -2144,6 +2206,62 @@ modules:
         alias:
           - INetworkMessages::Serialize
         shared: true
+      - name: CDemoPlayer_vtable
+        category: vtable
+      - name: CDemoPlayer_SkipToTick
+        category: vfunc
+        platform: windows
+        alias:
+          - CDemoPlayer::SkipToTick
+      - name: CDemoPlayer_PlayDemo
+        category: vfunc
+        platform: windows
+        alias:
+          - CDemoPlayer::PlayDemo
+      - name: CDemoPlayer_StopPlayback
+        category: vfunc
+        platform: windows
+        alias:
+          - CDemoPlayer::StopPlayback
+      - name: CDemoPlayer_StartPlayback
+        category: vfunc
+        platform: windows
+        alias:
+          - CDemoPlayer::StartPlayback
+      - name: CDemoPlayer_SetIgnorePacketsForResourceLoading
+        category: vfunc
+        platform: windows
+        alias:
+          - CDemoPlayer::SetIgnorePacketsForResourceLoading
+      - name: CDemoPlayer_InternalReadPacket
+        category: func
+        platform: windows
+        alias:
+          - CDemoPlayer::InternalReadPacket
+      - name: Demo_PauseAtServerTick_CommandHandler
+        category: func
+      - name: CDemoPlayer_Pause
+        category: vfunc
+        platform: windows
+        alias:
+          - CDemoPlayer::Pause
+      - name: CDemoPlayer
+        category: struct
+        platform: windows
+      - name: CDemoPlayer_m_bIsPlaying
+        category: structmember
+        platform: windows
+        struct: CDemoPlayer
+        member: m_bIsPlaying
+        alias:
+          - CDemoPlayer::m_bIsPlaying
+      - name: CDemoPlayer_m_bIsPaused
+        category: structmember
+        platform: windows
+        struct: CDemoPlayer
+        member: m_bIsPaused
+        alias:
+          - CDemoPlayer::m_bIsPaused
       - name: CDemoRecorder_vtable
         category: vtable
       - name: CDemoRecorder_ParseMessage
@@ -2522,6 +2640,10 @@ modules:
         category: vfunc
         alias:
           - CEngineClient::ExecuteClientCmd
+      - name: CEngineClient_IsPlayingDemo
+        category: vfunc
+        alias:
+          - CEngineClient::IsPlayingDemo
       - name: CInputService_ProcessCommandBuffer
         category: func
         platform: windows
@@ -3541,6 +3663,14 @@ modules:
       - name: find-CMapAnNodeManager_FireGameEvent
         expected_output:
           - CMapAnNodeManager_FireGameEvent.{platform}.yaml
+      - name: find-C_ServerVoiceHandler_OnServerVoiceData
+        expected_output:
+          - C_ServerVoiceHandler_OnServerVoiceData.{platform}.yaml
+      - name: find-C_ServerVoiceHandler_OnServerVoiceData-decompiles
+        expected_output:
+          - IVEngineClient2_IsPlayingDemo.{platform}.yaml
+        expected_input:
+          - C_ServerVoiceHandler_OnServerVoiceData.{platform}.yaml
       - name: find-IVEngineClient2_ExecuteClientCmd
         expected_output:
           - IVEngineClient2_ExecuteClientCmd.{platform}.yaml
@@ -4302,6 +4432,14 @@ modules:
         category: func
         alias:
           - CMapAnNodeManager::FireGameEvent
+      - name: C_ServerVoiceHandler_OnServerVoiceData
+        category: func
+        alias:
+          - C_ServerVoiceHandler::OnServerVoiceData
+      - name: IVEngineClient2_IsPlayingDemo
+        category: vfunc
+        alias:
+          - IVEngineClient2::IsPlayingDemo
       - name: IVEngineClient2_ExecuteClientCmd
         category: vfunc
         alias:
@@ -11078,6 +11216,12 @@ modules:
         expected_input:
           - CEngineClient_vtable.{platform}.yaml
           - ../client/IVEngineClient2_ExecuteClientCmd.{platform}.yaml
+      - name: find-CEngineClient_IsPlayingDemo
+        expected_output:
+          - CEngineClient_IsPlayingDemo.{platform}.yaml
+        expected_input:
+          - CEngineClient_vtable.{platform}.yaml
+          - ../client/IVEngineClient2_IsPlayingDemo.{platform}.yaml
       - name: find-INetworkGameClient_SendStringCmd
         expected_output:
           - INetworkGameClient_SendStringCmd.{platform}.yaml

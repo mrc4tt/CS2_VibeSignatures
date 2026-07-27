@@ -1,0 +1,112 @@
+func_name: CDemoPlayer_Pause
+func_va: '0x1800354e0'
+disasm_code: |-
+  .text:00000001800354E0                 mov     [rsp+arg_10], rbx
+  .text:00000001800354E5                 push    rdi
+  .text:00000001800354E6                 sub     rsp, 80h
+  .text:00000001800354ED                 movaps  [rsp+88h+var_18], xmm6
+  .text:00000001800354F2                 xor     edi, edi
+  .text:00000001800354F4                 movaps  xmm6, xmm1
+  .text:00000001800354F7                 mov     byte ptr [rcx+1231h], 1 ; 1231h = CDemoPlayer::m_bIsPaused (structmember, struct=CDemoPlayer, member=m_bIsPaused)
+  .text:00000001800354FE                 xorps   xmm0, xmm0
+  .text:0000000180035501                 mov     rbx, rcx
+  .text:0000000180035504                 comiss  xmm6, xmm0
+  .text:0000000180035507                 jbe     short loc_180035528
+  .text:0000000180035509                 call    cs:Plat_FloatTime
+  .text:000000018003550F                 xorps   xmm1, xmm1
+  .text:0000000180035512                 cvtss2sd xmm1, xmm6
+  .text:0000000180035516                 addsd   xmm0, xmm1
+  .text:000000018003551A                 cvtsd2ss xmm0, xmm0
+  .text:000000018003551E                 movss   dword ptr [rbx+210h], xmm0
+  .text:0000000180035526                 jmp     short loc_18003554F
+  .text:0000000180035528                 mov     [rcx+210h], edi
+  .text:000000018003552E                 cmp     [rcx+1232h], dil
+  .text:0000000180035535                 jz      short loc_18003554F
+  .text:0000000180035537                 mov     rax, cs:off_180612A40
+  .text:000000018003553E                 lea     rcx, off_180612A40
+  .text:0000000180035545                 call    qword ptr [rax+10h]
+  .text:0000000180035548                 mov     [rbx+1232h], dil
+  .text:000000018003554F                 cmp     [rbx+1230h], dil
+  .text:0000000180035556                 jz      loc_1800355F8
+  .text:000000018003555C                 mov     ecx, [rbx+10h]
+  .text:000000018003555F                 test    ecx, ecx
+  .text:0000000180035561                 jz      short loc_18003559E
+  .text:0000000180035563                 cmp     ecx, 1
+  .text:0000000180035566                 jnz     loc_1800355F8
+  .text:000000018003556C                 mov     rcx, cs:g_pSource2Client
+  .text:0000000180035573                 movzx   edx, byte ptr [rbx+1231h] ; 1231h = CDemoPlayer::m_bIsPaused (structmember, struct=CDemoPlayer, member=m_bIsPaused)
+  .text:000000018003557A                 mov     rax, [rcx]
+  .text:000000018003557D                 call    qword ptr [rax+0D8h]
+  .text:0000000180035583                 cmp     [rbx+1231h], dil ; 1231h = CDemoPlayer::m_bIsPaused (structmember, struct=CDemoPlayer, member=m_bIsPaused)
+  .text:000000018003558A                 jnz     short loc_1800355F8
+  .text:000000018003558C                 mov     rcx, cs:g_pSource2Client
+  .text:0000000180035593                 mov     rax, [rcx]
+  .text:0000000180035596                 call    qword ptr [rax+0E0h]
+  .text:000000018003559C                 jmp     short loc_1800355F8
+  .text:000000018003559E                 movzx   eax, byte ptr [rbx+1231h] ; 1231h = CDemoPlayer::m_bIsPaused (structmember, struct=CDemoPlayer, member=m_bIsPaused)
+  .text:00000001800355A5                 mov     rcx, cs:g_pNetworkGameClient
+  .text:00000001800355AC                 mov     [rsp+88h+var_54], 0FFh
+  .text:00000001800355B1                 mov     [rsp+88h+var_50], 0FFFFFFFFFFFFFFFFh
+  .text:00000001800355BA                 mov     [rsp+88h+var_48], 0BF800000h
+  .text:00000001800355C2                 mov     [rcx+29Dh], al
+  .text:00000001800355C8                 movzx   eax, dil
+  .text:00000001800355CC                 shr     al, 1
+  .text:00000001800355CE                 mov     [rsp+88h+var_40], 0FFFFFFFFFFFFFFFFh
+  .text:00000001800355D7                 test    al, 1
+  .text:00000001800355D9                 jz      short loc_1800355F8
+  .text:00000001800355DB                 lea     rcx, [rdi-2]
+  .text:00000001800355DF                 call    sub_1802BF3F0
+  .text:00000001800355E4                 mov     rax, cs:g_pMemAlloc
+  .text:00000001800355EB                 lea     rdx, [rdi-2]
+  .text:00000001800355EF                 mov     rcx, [rax]
+  .text:00000001800355F2                 mov     rax, [rcx]
+  .text:00000001800355F5                 call    qword ptr [rax+18h]
+  .text:00000001800355F8                 mov     rbx, [rsp+88h+arg_10]
+  .text:0000000180035600                 movaps  xmm6, [rsp+88h+var_18]
+  .text:0000000180035605                 add     rsp, 80h
+  .text:000000018003560C                 pop     rdi
+  .text:000000018003560D                 retn
+procedure: |-
+  void __fastcall CDemoPlayer_Pause(__int64 a1, __int64 a2)
+  {
+    float v2; // xmm1_4
+    float v4; // xmm0_4
+    int v5; // ecx
+
+    *(_BYTE *)(a1 + 4657) = 1;                    // 4657 = 0x1231 = CDemoPlayer::m_bIsPaused (structmember, struct=CDemoPlayer, member=m_bIsPaused)
+    if ( v2 <= 0.0 )
+    {
+      *(_DWORD *)(a1 + 528) = 0;
+      if ( *(_BYTE *)(a1 + 4658) )
+      {
+        ((void (__fastcall *)(__int64 (__fastcall ***)(int, int, int, int, int, int, int, int, char, __int64, int, char), __int64))off_180612A40[2])(
+          &off_180612A40,
+          a2);
+        *(_BYTE *)(a1 + 4658) = 0;
+      }
+    }
+    else
+    {
+      v4 = Plat_FloatTime(a1, a2) + v2;
+      *(float *)(a1 + 528) = v4;
+    }
+    if ( *(_BYTE *)(a1 + 4656) )
+    {
+      v5 = *(_DWORD *)(a1 + 16);
+      if ( v5 )
+      {
+        if ( v5 == 1 )
+        {
+          (*(void (__fastcall **)(__int64, _QWORD))(*(_QWORD *)g_pSource2Client + 216LL))(
+            g_pSource2Client,
+            *(unsigned __int8 *)(a1 + 4657)); // 4657 = 0x1231 = CDemoPlayer::m_bIsPaused (structmember, struct=CDemoPlayer, member=m_bIsPaused)
+          if ( !*(_BYTE *)(a1 + 4657) ) // 4657 = 0x1231 = CDemoPlayer::m_bIsPaused (structmember, struct=CDemoPlayer, member=m_bIsPaused)
+            (*(void (__fastcall **)(__int64))(*(_QWORD *)g_pSource2Client + 224LL))(g_pSource2Client);
+        }
+      }
+      else
+      {
+        *(_BYTE *)(g_pNetworkGameClient + 669) = *(_BYTE *)(a1 + 4657); // 4657 = 0x1231 = CDemoPlayer::m_bIsPaused (structmember, struct=CDemoPlayer, member=m_bIsPaused)
+      }
+    }
+  }

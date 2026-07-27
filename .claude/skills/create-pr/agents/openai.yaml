@@ -1,6 +1,6 @@
 interface:
   display_name: "Create Pull Request"
-  short_description: "Validate staged changes and open a pull request"
-  default_prompt: "Use $create-pr to validate my staged changes and create a pull request."
+  short_description: "Create a PR from staged changes or existing commits"
+  default_prompt: "Use $create-pr to create a pull request from my staged changes or current branch commits."
 policy:
   allow_implicit_invocation: false

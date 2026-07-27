@@ -37,9 +37,17 @@ const VFUNC_EXTRA_FIELDS: ExtraField[] = [
   { labelKey: 'symbols.vfuncOffset', field: 'vfunc_offset' },
 ]
 
+const STRUCT_MEMBER_EXTRA_FIELDS: ExtraField[] = [
+  { labelKey: 'symbols.memberOffset', field: 'offset' },
+]
+
 function extraFieldsFor(record: GameSymbolRecord): ExtraField[] {
-  if (record.kind !== 'virtualFunction') return []
-  return VFUNC_EXTRA_FIELDS.filter((spec) => {
+  const specs = record.kind === 'virtualFunction'
+    ? VFUNC_EXTRA_FIELDS
+    : record.kind === 'structMember'
+      ? STRUCT_MEMBER_EXTRA_FIELDS
+      : []
+  return specs.filter((spec) => {
     const raw = record.payload[spec.field]
     return typeof raw === 'number' || (typeof raw === 'string' && raw.length > 0)
   })
