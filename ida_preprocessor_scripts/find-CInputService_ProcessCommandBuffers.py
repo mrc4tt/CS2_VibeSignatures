@@ -17,7 +17,7 @@ FUNC_XREFS = [
         ],
         "xref_gvs": [],
         "xref_signatures": [],
-        "xref_funcs": ["CInputService_ProcessCommand"],
+        "xref_funcs": ["CInputService_ProcessCommandBuffer"],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],

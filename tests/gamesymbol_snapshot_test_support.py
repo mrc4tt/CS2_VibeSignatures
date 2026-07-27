@@ -8,6 +8,11 @@ def write_yaml(path: Path, data) -> None:
     path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
 
+def write_binary(path: Path, data: bytes | None = None) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data if data is not None else f"binary:{path.name}".encode("utf-8"))
+
+
 def write_config(path: Path, modules) -> None:
     write_yaml(path, {"modules": modules})
 

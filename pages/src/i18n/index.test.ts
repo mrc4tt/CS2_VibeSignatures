@@ -14,6 +14,7 @@ describe('i18n', () => {
       await changeLanguage(language)
       expect(statusLabel('running', i18n.t)).not.toBe('running')
       expect(phaseLabel('preprocessing', i18n.t)).not.toBe('preprocessing')
+      expect(i18n.t('symbols.versionMetadata', { time: '2026-01-02 03:04:05', count: 3 })).not.toContain('symbols.versionMetadata')
     }
   })
 

@@ -1,0 +1,31 @@
+func_name: CEngineSoundServices_ShouldSuppressNonUISounds
+func_va: '0x1800feb10'
+disasm_code: |-
+  .text:00000001800FEB10                 sub     rsp, 28h
+  .text:00000001800FEB14                 mov     rax, cs:g_EngineGameUI
+  .text:00000001800FEB1B                 lea     rcx, g_EngineGameUI
+  .text:00000001800FEB22                 call    qword ptr [rax+60h]
+  .text:00000001800FEB25                 test    al, al
+  .text:00000001800FEB27                 jnz     short loc_1800FEB42
+  .text:00000001800FEB29                 mov     rcx, cs:g_pNetworkClientService
+  .text:00000001800FEB30                 mov     rax, [rcx]
+  .text:00000001800FEB33                 call    qword ptr [rax+110h]  ; 110h = INetworkClientService_IsConnecting
+  .text:00000001800FEB39                 test    al, al
+  .text:00000001800FEB3B                 jnz     short loc_1800FEB42
+  .text:00000001800FEB3D                 add     rsp, 28h
+  .text:00000001800FEB41                 retn
+  .text:00000001800FEB42                 mov     al, 1
+  .text:00000001800FEB44                 add     rsp, 28h
+  .text:00000001800FEB48                 retn
+procedure: |-
+  char sub_1800FEB10()
+  {
+    char result; // al
+
+    if ( ((unsigned __int8 (__fastcall *)(__int64 (__fastcall ***)()))g_EngineGameUI[12])(&g_EngineGameUI) )
+      return 1;
+    result = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)g_pNetworkClientService + 272LL))(g_pNetworkClientService);// 272LL = 0x110 = INetworkClientService_IsConnecting
+    if ( result )
+      return 1;
+    return result;
+  }

@@ -1,0 +1,36 @@
+func_name: CInputService_IsClientOnlyCommandAllowed
+func_va: '0x586cb0'
+disasm_code: |-
+  .text:0000000000586CB0                 push    rbp
+  .text:0000000000586CB1                 mov     rbp, rsp
+  .text:0000000000586CB4                 push    rbx
+  .text:0000000000586CB5                 sub     rsp, 8
+  .text:0000000000586CB9                 lea     rbx, g_pNetworkServerService
+  .text:0000000000586CC0                 mov     rdi, [rbx]
+  .text:0000000000586CC3                 mov     rax, [rdi]
+  .text:0000000000586CC6                 call    qword ptr [rax+0F0h]
+  .text:0000000000586CCC                 test    al, al
+  .text:0000000000586CCE                 jz      short loc_586CE8
+  .text:0000000000586CD0                 mov     rdi, [rbx]
+  .text:0000000000586CD3                 mov     rax, [rdi]
+  .text:0000000000586CD6                 call    qword ptr [rax+0D0h]
+  .text:0000000000586CDC                 mov     rbx, [rbp+var_8]
+  .text:0000000000586CE0                 leave
+  .text:0000000000586CE1                 xor     eax, 1
+  .text:0000000000586CE4                 retn
+  .text:0000000000586CE8                 lea     rax, g_pNetworkClientService
+  .text:0000000000586CEF                 mov     rdi, [rax]
+  .text:0000000000586CF2                 mov     rax, [rdi]
+  .text:0000000000586CF5                 call    qword ptr [rax+110h]  ; 110h = INetworkClientService_IsPutInServer
+  .text:0000000000586CFB                 mov     rbx, [rbp+var_8]
+  .text:0000000000586CFF                 leave
+  .text:0000000000586D00                 xor     eax, 1
+  .text:0000000000586D03                 retn
+procedure: |-
+  __int64 CInputService_IsClientOnlyCommandAllowed()
+  {
+    if ( (*(unsigned __int8 (__fastcall **)(_QWORD *))(*g_pNetworkServerService + 240LL))(g_pNetworkServerService) )
+      return (*(unsigned int (__fastcall **)(_QWORD *))(*g_pNetworkServerService + 208LL))(g_pNetworkServerService) ^ 1;
+    else
+      return (*(unsigned int (__fastcall **)(_QWORD *))(*g_pNetworkClientService + 272LL))(g_pNetworkClientService) ^ 1;// 272LL = 0x110 = INetworkClientService_IsPutInServer
+  }

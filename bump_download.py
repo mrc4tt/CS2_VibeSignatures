@@ -345,7 +345,7 @@ def create_commit(
         paths = [config_path]
     subprocess.run(["git", "add", *(str(path) for path in paths)], check=True)
     subprocess.run(
-        ["git", "commit", "-m", f"chore(download): 更新 {patch_version} 下载清单"],
+        ["git", "commit", "-m", f"chore(download): Update download manifest for {patch_version}"],
         check=True,
     )
 

@@ -74,6 +74,17 @@ def _write_yaml(path: Path, payload: dict[str, object]) -> None:
 
 
 class TestPreprocessIndexBasedVfuncViaMcp(unittest.IsolatedAsyncioTestCase):
+    def test_inherited_vfunc_name_preserves_target_for_vtable_artifact(self) -> None:
+        self.assertEqual(
+            "CLoopModeFactory_CLoopModeGame_Shutdown",
+            ida_analyze_util._build_inherited_vfunc_name(
+                base_vfunc_name="../engine/ILoopModeFactory_Shutdown",
+                base_vtable_name="ILoopModeFactory",
+                inherit_vtable_class="CLoopModeFactory_CLoopModeGame_vtable",
+                fallback_name="CLoopModeFactory_CLoopModeGame_Shutdown",
+            ),
+        )
+
     async def test_preprocess_common_skill_emits_slot_only_inherited_vfunc(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             module_dir = Path(temp_dir) / "bin" / "14141" / "server"
@@ -628,6 +639,61 @@ class TestVtableAliasSupport(unittest.IsolatedAsyncioTestCase):
             symbol_aliases=alias_map["CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem"],
         )
         mock_write_vtable_yaml.assert_called_once()
+
+    async def test_preprocess_common_skill_uses_canonical_vtable_symbol(self) -> None:
+        fake_vtable_data = {
+            "vtable_class": "CEngineSoundServices",
+            "vtable_symbol": "off_18054C4B0",
+            "vtable_va": "0x18054c4b0",
+            "vtable_rva": "0x54c4b0",
+            "vtable_size": "0x180",
+            "vtable_numvfunc": 48,
+            "vtable_entries": {0: "0x1800fe710"},
+        }
+
+        with (
+            patch.object(
+                ida_analyze_util,
+                "preprocess_vtable_via_mcp",
+                AsyncMock(return_value=fake_vtable_data),
+            ),
+            patch.object(
+                ida_analyze_util,
+                "write_vtable_yaml",
+            ) as mock_write_vtable_yaml,
+        ):
+            result = await ida_analyze_util.preprocess_common_skill(
+                session="session",
+                expected_outputs=["/tmp/CEngineSoundServices_vtable.windows.yaml"],
+                vtable_class_names=["CEngineSoundServices"],
+                canonical_vtable_symbols={
+                    "CEngineSoundServices": "CEngineSoundServices_vtable",
+                },
+                platform="windows",
+                image_base=0x180000000,
+                generate_yaml_desired_fields=[
+                    (
+                        "CEngineSoundServices",
+                        [
+                            "vtable_class",
+                            "vtable_symbol",
+                            "vtable_va",
+                            "vtable_rva",
+                            "vtable_size",
+                            "vtable_numvfunc",
+                            "vtable_entries",
+                        ],
+                    )
+                ],
+                debug=True,
+            )
+
+        self.assertTrue(result)
+        written_payload = mock_write_vtable_yaml.call_args.args[1]
+        self.assertEqual(
+            "CEngineSoundServices_vtable",
+            written_payload["vtable_symbol"],
+        )
 
     async def test_preprocess_func_sig_uses_aliases_when_generating_missing_vtable_yaml(self) -> None:
         alias_map = {
@@ -1186,6 +1252,7 @@ class TestVtableArtifactStemSupport(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsNotNone(result)
         assert result is not None
+        self.assertEqual("CDerived_Touch", result["func_name"])
         self.assertEqual("CDerived_vtable2", result["vtable_name"])
         self.assertEqual(35, result["vfunc_index"])
         self.assertEqual("0x118", result["vfunc_offset"])
@@ -5081,6 +5148,154 @@ class TestLlmDecompileSupport(unittest.IsolatedAsyncioTestCase):
             expected_sections,
         )
 
+    def test_build_llm_instruction_validations_uses_symbol_specific_constraints(self) -> None:
+        instruction_rules = [{"regex": r"^cmp\s+eax,\s*\[[^\]]+\]$", "text": "cmp reg, [base+offset]"}]
+        specs_map = {
+            "CNetworkGameServer_ClientList": {
+                "instruction_rules": instruction_rules,
+                "expected_size": 4,
+            },
+            "UnconstrainedSymbol": {
+                "expected_result_sections": ["found_call"],
+            },
+        }
+
+        validations = ida_analyze_util._build_llm_instruction_validations(
+            ["CNetworkGameServer_ClientList", "UnconstrainedSymbol"],
+            specs_map,
+        )
+
+        self.assertEqual(
+            {
+                "CNetworkGameServer_ClientList": {
+                    "instruction_rules": instruction_rules,
+                    "expected_size": 4,
+                }
+            },
+            validations,
+        )
+
+    def test_validate_llm_instruction_constraints_accepts_both_cmp_operand_orders(self) -> None:
+        symbol_name = "CNetworkGameServer_ClientList"
+        instruction_rules = [
+            {
+                "regex": r"(?i)^cmp\s+(?:e(?:ax|bx|cx|dx|si|di|bp|sp)|r(?:[89]|1[0-5])d)\s*,\s*(?:dword ptr\s+)?\[[^\]]+\]$",
+                "text": "cmp reg, [base+offset]",
+            },
+            {
+                "regex": r"(?i)^cmp\s+(?:dword ptr\s+)?\[[^\]]+\]\s*,\s*(?:e(?:ax|bx|cx|dx|si|di|bp|sp)|r(?:[89]|1[0-5])d)$",
+                "text": "cmp [base+offset], reg",
+            },
+        ]
+        validations = ida_llm_decompile._normalize_instruction_validations(
+            {symbol_name: {"instruction_rules": instruction_rules, "expected_size": 4}}
+        )
+
+        for insn_disasm in ("cmp ebx, [r12+248h]", "cmp [r12+248h], ebx"):
+            with self.subTest(insn_disasm=insn_disasm):
+                parsed_result = ida_analyze_util._empty_llm_decompile_result()
+                parsed_result["found_struct_offset"].append(
+                    {
+                        "insn_disasm": insn_disasm,
+                        "offset": "0x248",
+                        "size": "4",
+                        "struct_name": "CNetworkGameServer",
+                        "member_name": "ClientList",
+                    }
+                )
+
+                issues = ida_llm_decompile._validate_llm_instruction_constraints(parsed_result, validations)
+
+                self.assertEqual([], issues)
+
+    def test_validate_llm_instruction_constraints_reports_rule_size_and_displacement_mismatches(self) -> None:
+        symbol_name = "CNetworkGameServer_ClientList"
+        validations = ida_llm_decompile._normalize_instruction_validations(
+            {
+                symbol_name: {
+                    "instruction_rules": [{"regex": r"(?i)^cmp\s+.+$", "text": "cmp operands"}],
+                    "expected_size": 4,
+                }
+            }
+        )
+        parsed_result = ida_analyze_util._empty_llm_decompile_result()
+        parsed_result["found_struct_offset"].append(
+            {
+                "insn_disasm": "mov rax, [r12+250h]",
+                "offset": "0x248",
+                "size": "8",
+                "struct_name": "CNetworkGameServer",
+                "member_name": "ClientList",
+            }
+        )
+
+        issues = ida_llm_decompile._validate_llm_instruction_constraints(parsed_result, validations)
+
+        self.assertEqual(
+            {
+                "instruction_rule_mismatch",
+                "instruction_size_mismatch",
+                "struct_offset_displacement_mismatch",
+            },
+            {issue["issue_type"] for issue in issues},
+        )
+
+    def test_validate_llm_instruction_constraints_accepts_exact_zero_and_negative_displacements(self) -> None:
+        symbol_name = "CNetworkGameServer_ClientList"
+        validations = ida_llm_decompile._normalize_instruction_validations(
+            {
+                symbol_name: {
+                    "instruction_rules": [{"regex": r"(?i)^cmp\s+.+$", "text": "cmp operands"}],
+                    "expected_size": 4,
+                }
+            }
+        )
+
+        for insn_disasm, offset in (("cmp eax, [rax]", "0"), ("cmp eax, [rbp-8]", "-8")):
+            with self.subTest(insn_disasm=insn_disasm, offset=offset):
+                parsed_result = ida_analyze_util._empty_llm_decompile_result()
+                parsed_result["found_struct_offset"].append(
+                    {
+                        "insn_disasm": insn_disasm,
+                        "offset": offset,
+                        "size": "4",
+                        "struct_name": "CNetworkGameServer",
+                        "member_name": "ClientList",
+                    }
+                )
+
+                issues = ida_llm_decompile._validate_llm_instruction_constraints(parsed_result, validations)
+
+                self.assertEqual([], issues)
+
+    def test_validate_llm_instruction_constraints_rejects_unproven_zero_displacement(self) -> None:
+        symbol_name = "CNetworkGameServer_ClientList"
+        validations = ida_llm_decompile._normalize_instruction_validations(
+            {
+                symbol_name: {
+                    "instruction_rules": [{"regex": r"(?i)^cmp\s+.+$", "text": "cmp operands"}],
+                    "expected_size": 4,
+                }
+            }
+        )
+
+        for insn_disasm in ("cmp eax, [rax+rcx*4]", "cmp eax, [rax+MemberAlias]"):
+            with self.subTest(insn_disasm=insn_disasm):
+                parsed_result = ida_analyze_util._empty_llm_decompile_result()
+                parsed_result["found_struct_offset"].append(
+                    {
+                        "insn_disasm": insn_disasm,
+                        "offset": "0",
+                        "size": "4",
+                        "struct_name": "CNetworkGameServer",
+                        "member_name": "ClientList",
+                    }
+                )
+
+                issues = ida_llm_decompile._validate_llm_instruction_constraints(parsed_result, validations)
+
+                self.assertEqual(["struct_offset_displacement_mismatch"], [issue["issue_type"] for issue in issues])
+
     def test_get_llm_result_symbol_name_canonicalizes_struct_members(self) -> None:
         entry = {
             "struct_name": "SDL.Mouse",
@@ -5791,6 +6006,75 @@ found_struct_offset:
         self.assertEqual("WarpMouse", parsed["found_struct_offset"][0]["member_name"])
         mock_call_llm_text.assert_called_once()
 
+    async def test_call_llm_decompile_retries_symbol_specific_instruction_constraints(self) -> None:
+        invalid_response = """
+found_struct_offset:
+  - insn_va: '0x516474'
+    insn_disasm: mov     rax, [r12+250h]
+    offset: '0x248'
+    size: 8
+    struct_name: CNetworkGameServer
+    member_name: ClientList
+""".strip()
+        corrected_response = """
+found_struct_offset:
+  - insn_va: '0x51646A'
+    insn_disasm: cmp     [r12+248h], ebx
+    offset: '0x248'
+    size: 4
+    struct_name: CNetworkGameServer
+    member_name: ClientList
+""".strip()
+        disasm_code = (
+            ".text:000000000051646A                 cmp     [r12+248h], ebx\n"
+            ".text:0000000000516474                 mov     rax, [r12+250h]"
+        )
+        instruction_rules = [
+            {
+                "regex": r"(?i)^cmp\s+(?:e(?:ax|bx|cx|dx|si|di|bp|sp)|r(?:[89]|1[0-5])d)\s*,\s*(?:dword ptr\s+)?\[[^\]]+\]$",
+                "text": "cmp reg, [base+offset]",
+            },
+            {
+                "regex": r"(?i)^cmp\s+(?:dword ptr\s+)?\[[^\]]+\]\s*,\s*(?:e(?:ax|bx|cx|dx|si|di|bp|sp)|r(?:[89]|1[0-5])d)$",
+                "text": "cmp [base+offset], reg",
+            },
+        ]
+
+        with patch.object(
+            ida_analyze_util,
+            "call_llm_text",
+            side_effect=[invalid_response, corrected_response],
+            create=True,
+        ) as mock_call_llm_text:
+            parsed = await ida_analyze_util.call_llm_decompile(
+                client=object(),
+                model="gpt-5.4",
+                symbol_name_list=["CNetworkGameServer_ClientList"],
+                expected_result_sections={"CNetworkGameServer_ClientList": "found_struct_offset"},
+                instruction_validations={
+                    "CNetworkGameServer_ClientList": {
+                        "instruction_rules": instruction_rules,
+                        "expected_size": 4,
+                    }
+                },
+                disasm_code=disasm_code,
+                max_retries=2,
+                retry_initial_delay=0,
+            )
+
+        self.assertEqual("0x51646A", parsed["found_struct_offset"][0]["insn_va"])
+        self.assertEqual("0x248", parsed["found_struct_offset"][0]["offset"])
+        self.assertEqual("4", parsed["found_struct_offset"][0]["size"])
+        self.assertEqual(2, mock_call_llm_text.call_count)
+        correction_prompt = mock_call_llm_text.call_args_list[1].kwargs["messages"][3]["content"]
+        self.assertIn("must use one of these forms", correction_prompt)
+        self.assertIn("cmp reg, [base+offset]", correction_prompt)
+        self.assertIn("cmp [base+offset], reg", correction_prompt)
+        self.assertNotIn("(?i)^cmp", correction_prompt)
+        self.assertIn("required size is 4", correction_prompt)
+        self.assertIn("contains memory displacement(s) 0x250", correction_prompt)
+        self.assertIn("offset must be the displacement", correction_prompt)
+
     async def test_call_llm_decompile_fails_closed_after_struct_category_retry_exhaustion(self) -> None:
         hallucinated_response = """
 found_vcall:
@@ -6421,6 +6705,28 @@ found_struct_offset: []
             specs_map,
         )
 
+    def test_build_llm_decompile_specs_map_normalizes_instruction_constraints(self) -> None:
+        instruction_rules = [{"regex": r"(?i)^cmp\s+.+$", "text": "cmp operands"}]
+        specs_map = ida_analyze_util._build_llm_decompile_specs_map(
+            [
+                {
+                    "symbol_name": "CNetworkGameServer_ClientList",
+                    "prompt_path": "prompt/call_llm_decompile.md",
+                    "reference_yaml_paths": ["references/reference.yaml"],
+                    "expected_result_sections": ["found_struct_offset"],
+                    "instruction_rules": instruction_rules,
+                    "expected_size": 4,
+                    "dependency_policy": {
+                        "reference.{platform}.yaml": "required",
+                    },
+                }
+            ],
+            debug=True,
+        )
+
+        self.assertEqual(instruction_rules, specs_map["CNetworkGameServer_ClientList"]["instruction_rules"])
+        self.assertEqual(4, specs_map["CNetworkGameServer_ClientList"]["expected_size"])
+
     def test_build_llm_decompile_specs_map_rejects_legacy_tuple(self) -> None:
         specs_map = ida_analyze_util._build_llm_decompile_specs_map(
             [("ILoopMode_OnLoopActivate", "prompt/call_llm_decompile.md", "references/reference_a.yaml")],
@@ -6445,6 +6751,17 @@ found_struct_offset: []
             "missing_sections": {key: value for key, value in base_spec.items() if key != "expected_result_sections"},
             "unknown_key": {**base_spec, "schema": "found_vcall"},
             "unknown_section": {**base_spec, "expected_result_sections": ["found_unknown"]},
+            "empty_instruction_rules": {**base_spec, "instruction_rules": []},
+            "legacy_string_instruction_rule": {**base_spec, "instruction_rules": [r"(?i)^cmp\s+.+$"]},
+            "missing_instruction_rule_text": {
+                **base_spec,
+                "instruction_rules": [{"regex": r"(?i)^cmp\s+.+$"}],
+            },
+            "invalid_instruction_rule": {
+                **base_spec,
+                "instruction_rules": [{"regex": r"(", "text": "cmp operands"}],
+            },
+            "invalid_expected_size": {**base_spec, "expected_size": 0},
             "empty_policy": {**base_spec, "dependency_policy": {}},
             "invalid_policy": {**base_spec, "dependency_policy": {"reference_a.{platform}.yaml": "runtime"}},
             "legacy_dependencies": {**base_spec, "dependencies": []},
@@ -6463,6 +6780,23 @@ found_struct_offset: []
             {func_name: "func"},
             {func_name: {"desired_output_fields": ["func_name", "vfunc_sig"]}},
             {func_name: "CEntitySystem"},
+            debug=True,
+        )
+
+        self.assertFalse(result)
+
+    def test_validate_llm_decompile_spec_compatibility_rejects_expected_size_for_function(self) -> None:
+        func_name = "CEntitySystem_OnRemoveEntity"
+        result = ida_analyze_util._validate_llm_decompile_spec_compatibility(
+            {
+                func_name: {
+                    "expected_result_sections": ["found_call"],
+                    "expected_size": 4,
+                }
+            },
+            {func_name: "func"},
+            {func_name: {"desired_output_fields": ["func_name", "func_sig"]}},
+            {},
             debug=True,
         )
 

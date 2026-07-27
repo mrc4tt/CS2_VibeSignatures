@@ -335,5 +335,148 @@ class TestFindGInterfaceGlobalsPpGlobal(unittest.IsolatedAsyncioTestCase):
         mock_write.assert_not_called()
 
 
+class TestCanonicalVtablePreprocessors(unittest.IsolatedAsyncioTestCase):
+    MAIN_VTABLE_CASES = (
+        ("CEngineClient", "_ZTV13CEngineClient + 0x10"),
+        ("CEngineServer", "_ZTV13CEngineServer + 0x10"),
+        ("CLoopTypeSimpleService", "_ZTV22CLoopTypeSimpleService + 0x10"),
+        ("CNetSupportImpl", "_ZTV15CNetSupportImpl + 0x10"),
+        ("CSplitScreenService", "_ZTV19CSplitScreenService + 0x10"),
+        ("CFlattenedSerializers", "_ZTV21CFlattenedSerializers + 0x10"),
+        (
+            "CEntFireOutputAutoCompletionFunctor",
+            "_ZTV35CEntFireOutputAutoCompletionFunctor + 0x10",
+        ),
+        (
+            "CEntitySaveRestoreBlockHandler",
+            "_ZTV30CEntitySaveRestoreBlockHandler + 0x10",
+        ),
+        ("CSaveRestoreBlockSet", "_ZTV20CSaveRestoreBlockSet + 0x10"),
+        ("CSource2GameClients", "_ZTV19CSource2GameClients + 0x10"),
+        ("CSource2GameEntities", "_ZTV20CSource2GameEntities + 0x10"),
+        ("CSource2Server", "_ZTV14CSource2Server + 0x10"),
+        (
+            "CLoopModeFactory_CLoopModeGame",
+            "_ZTV16CLoopModeFactoryI13CLoopModeGameE + 0x10",
+        ),
+        (
+            "CEntityComponentHelperT_CBodyComponent",
+            "_ZTV23CEntityComponentHelperTI14CBodyComponent32CEntityComponentHelperReferencedIS0_EE + 0x10",
+        ),
+    )
+
+    async def test_main_vtable_finders_forward_platform_canonical_symbols(self) -> None:
+        for class_name, linux_symbol in self.MAIN_VTABLE_CASES:
+            script_path = Path(f"ida_preprocessor_scripts/find-{class_name}_vtable.py")
+            for platform, expected_symbol in (
+                ("windows", f"{class_name}_vtable"),
+                ("linux", linux_symbol),
+            ):
+                with self.subTest(class_name=class_name, platform=platform):
+                    module = _load_module(
+                        script_path,
+                        f"canonical_{class_name}_{platform}",
+                    )
+                    mock_preprocess_common_skill = AsyncMock(return_value=True)
+                    with patch.object(
+                        module,
+                        "preprocess_common_skill",
+                        mock_preprocess_common_skill,
+                    ):
+                        result = await module.preprocess_skill(
+                            session="session",
+                            skill_name="skill",
+                            expected_outputs=["out.yaml"],
+                            old_yaml_map={},
+                            new_binary_dir="bin_dir",
+                            platform=platform,
+                            image_base=0x180000000,
+                            debug=True,
+                        )
+
+                    self.assertTrue(result)
+                    self.assertEqual(
+                        {class_name: expected_symbol},
+                        mock_preprocess_common_skill.await_args.kwargs["canonical_vtable_symbols"],
+                    )
+
+    async def test_ordinal_vtable_finders_only_override_linux_symbols(self) -> None:
+        for output_stem in (
+            "CSpawnGroupMgrGameSystem_vtable2",
+            "CLoopTypeClientServerService_vtable2",
+        ):
+            script_path = Path(f"ida_preprocessor_scripts/find-{output_stem}.py")
+            for platform in ("windows", "linux"):
+                with self.subTest(output_stem=output_stem, platform=platform):
+                    module = _load_module(
+                        script_path,
+                        f"canonical_{output_stem}_{platform}",
+                    )
+                    mock_preprocess_ordinal_vtable = AsyncMock(return_value={"vtable_symbol": output_stem})
+                    with (
+                        patch.object(
+                            module,
+                            "preprocess_ordinal_vtable_via_mcp",
+                            mock_preprocess_ordinal_vtable,
+                        ),
+                        patch.object(module, "write_vtable_yaml"),
+                    ):
+                        result = await module.preprocess_skill(
+                            session="session",
+                            skill_name="skill",
+                            expected_outputs=[f"tmp/{output_stem}.{platform}.yaml"],
+                            old_yaml_map={},
+                            new_binary_dir="bin_dir",
+                            platform=platform,
+                            image_base=0x180000000,
+                            debug=True,
+                        )
+
+                    self.assertTrue(result)
+                    self.assertEqual(
+                        output_stem if platform == "linux" else None,
+                        mock_preprocess_ordinal_vtable.await_args.kwargs["canonical_vtable_symbol"],
+                    )
+
+    async def test_source2_server_vtable2_overrides_automatic_symbol(self) -> None:
+        script_path = Path("ida_preprocessor_scripts/find-CSource2Server_vtable2.py")
+        for platform in ("windows", "linux"):
+            with self.subTest(platform=platform):
+                module = _load_module(
+                    script_path,
+                    f"canonical_CSource2Server_vtable2_{platform}",
+                )
+                automatic_payload = {
+                    "vtable_class": "CSource2Server",
+                    "vtable_symbol": "off_180000000",
+                }
+                with (
+                    patch.object(module, "_read_yaml", return_value={"vtable_va": "0x1"}),
+                    patch.object(
+                        module,
+                        "_lookup_vtable2",
+                        AsyncMock(return_value=automatic_payload),
+                    ),
+                    patch.object(module, "write_vtable_yaml") as mock_write_vtable_yaml,
+                ):
+                    result = await module.preprocess_skill(
+                        session="session",
+                        skill_name="skill",
+                        expected_outputs=[f"tmp/CSource2Server_vtable2.{platform}.yaml"],
+                        old_yaml_map={},
+                        new_binary_dir="bin_dir",
+                        platform=platform,
+                        image_base=0x180000000,
+                        debug=True,
+                    )
+
+                self.assertTrue(result)
+                written_payload = mock_write_vtable_yaml.call_args.args[1]
+                self.assertEqual(
+                    "CSource2Server_vtable2",
+                    written_payload["vtable_symbol"],
+                )
+
+
 if __name__ == "__main__":
     unittest.main()

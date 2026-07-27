@@ -11,8 +11,13 @@ TARGET_FUNCTION_NAMES = [
 FUNC_XREFS = [
     {
         "func_name": "CInputService_ProcessCommand",
+        # Substring matching is intentional here: the literals carry a trailing
+        # "\n", and "SV: Cheat command '%s' ignored." is also a prefix of the
+        # "... Set sv_cheats to 1 enable cheats." variant. The intersection with
+        # "Unknown command '%s'!" collapses the candidate set to ProcessCommand.
         "xref_strings": [
-            "Cannot execute concommand '%s', missing required FCVAR flag",
+            "Unknown command '%s'!",
+            "SV: Cheat command '%s' ignored.",
         ],
         "xref_gvs": [],
         "xref_signatures": [],
@@ -25,6 +30,7 @@ FUNC_XREFS = [
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
+    # (symbol_name, generate_yaml_fields)
     (
         "CInputService_ProcessCommand",
         [

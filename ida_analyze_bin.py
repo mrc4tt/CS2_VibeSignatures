@@ -34,7 +34,6 @@ Output:
 """
 
 import argparse
-import hashlib
 import inspect
 import json
 import logging
@@ -46,6 +45,8 @@ import socket
 import subprocess
 import sys
 import time
+
+from binary_hashing import hash_file
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -691,14 +692,7 @@ def _hash_file(path):
     if cached:
         return cached
 
-    md5_hash = hashlib.md5()
-    sha256_hash = hashlib.sha256()
-    with open(absolute_path, "rb") as f:
-        for chunk in iter(lambda: f.read(1024 * 1024), b""):
-            md5_hash.update(chunk)
-            sha256_hash.update(chunk)
-
-    hashes = {"md5": md5_hash.hexdigest(), "sha256": sha256_hash.hexdigest()}
+    hashes = hash_file(absolute_path)
     _BINARY_HASH_CACHE[cache_key] = hashes
     return hashes
 
@@ -1303,11 +1297,11 @@ def parse_vcall_finder_filter(raw_value):
     Parse vcall finder selector into normalized filter structure.
 
     Args:
-        raw_value: Raw selector string from CLI, e.g. "*", "a,b", or None
+        raw_value: Raw selector string from CLI, e.g. "a,b" or None
 
     Returns:
         None if selector is not provided; otherwise:
-        {"all": bool, "names": set[str]}
+        {"names": list[str]}
 
     Raises:
         ValueError: If selector is empty or has invalid format.
@@ -1322,20 +1316,19 @@ def parse_vcall_finder_filter(raw_value):
     if not selector:
         raise ValueError("selector cannot be empty")
 
-    if selector == "*":
-        return {"all": True, "names": set()}
-
     names = []
+    seen_names = set()
     for name in selector.split(","):
         normalized_name = name.strip()
         if not normalized_name:
             raise ValueError("selector contains empty object name")
-        names.append(normalized_name)
+        if normalized_name == "*":
+            raise ValueError("wildcard is not supported; specify object names explicitly")
+        if normalized_name not in seen_names:
+            seen_names.add(normalized_name)
+            names.append(normalized_name)
 
-    if "*" in names:
-        raise ValueError("'*' cannot be combined with object names")
-
-    return {"all": False, "names": set(names)}
+    return {"names": names}
 
 
 def _parse_optional_llm_temperature(raw_value, parser):
@@ -1423,9 +1416,7 @@ def parse_args():
         default=None,
         help="Exact skill name to run; all other skills are skipped",
     )
-    parser.add_argument(
-        "-vcall_finder", default=None, help="vcall_finder object selector: '*' for all, or comma-separated object names"
-    )
+    parser.add_argument("-vcall_finder", default=None, help="Comma-separated vcall_finder object names")
     parser.add_argument(
         "-llm_model",
         default=os.environ.get("CS2VIBE_LLM_MODEL", DEFAULT_LLM_MODEL),
@@ -1529,6 +1520,9 @@ def parse_args():
         args.vcall_finder_filter = parse_vcall_finder_filter(args.vcall_finder)
     except ValueError as e:
         parser.error(f"Invalid -vcall_finder: {e}")
+    if args.vcall_finder_filter is not None:
+        if args.module_filter is None or not args.module_filter or "*" in args.module_filter:
+            parser.error("-vcall_finder requires explicit -modules without '*'")
 
     # Resolve oldgamever
     if args.oldgamever is None:
@@ -1655,22 +1649,6 @@ def _parse_config_skill(skill, module_name):
     }
 
 
-def _parse_module_vcall_finder(module, module_name):
-    objects = module.get("vcall_finder")
-    objects = [] if objects is None else objects
-    if not isinstance(objects, list):
-        raise ValueError(
-            f"Invalid vcall_finder for module '{module_name}': expected list, got {type(objects).__name__}"
-        )
-    for object_name in objects:
-        if not isinstance(object_name, str):
-            raise ValueError(
-                f"Invalid vcall_finder entry for module '{module_name}': "
-                f"expected string, got {type(object_name).__name__}"
-            )
-    return objects
-
-
 def _config_artifact_key(module_name, artifact_path):
     normalized_artifact = artifact_path.replace("\\", "/")
     return posixpath.normpath(posixpath.join("_artifacts", module_name, normalized_artifact))
@@ -1738,8 +1716,6 @@ def parse_config_document(config):
             for skill in module.get("skills", []) or []
             if (parsed := _parse_config_skill(skill, name)) is not None
         ]
-        raw_vcall_finder_objects = _parse_module_vcall_finder(module, name)
-
         modules.append(
             {
                 "stage_index": stage_index,
@@ -1747,7 +1723,6 @@ def parse_config_document(config):
                 "description": _optional_config_description(module.get("description"), f"module '{name}'"),
                 "path_windows": module.get("path_windows"),
                 "path_linux": module.get("path_linux"),
-                "vcall_finder_objects": raw_vcall_finder_objects,
                 "skills": skills,
             }
         )
@@ -1762,41 +1737,11 @@ def parse_config(config_path, config_document=None):
 
 
 def resolve_module_vcall_targets(module, selector):
-    """
-    Resolve module-level vcall_finder targets using declared module objects only.
-
-    Args:
-        module: Module dictionary from parse_config()
-        selector: Parsed selector from parse_vcall_finder_filter()
-
-    Returns:
-        List of object names that exist in module["vcall_finder_objects"].
-    """
-    if "vcall_finder_objects" not in module or module.get("vcall_finder_objects") is None:
-        declared_objects = []
-    else:
-        declared_objects = module.get("vcall_finder_objects")
-    if not isinstance(declared_objects, list):
-        raise ValueError(
-            f"Invalid vcall_finder_objects for module '{module.get('name', '<unknown>')}': "
-            f"expected list, got {type(declared_objects).__name__}"
-        )
-
-    for object_name in declared_objects:
-        if not isinstance(object_name, str):
-            raise ValueError(
-                f"Invalid vcall_finder_objects entry for module '{module.get('name', '<unknown>')}': "
-                f"expected string, got {type(object_name).__name__}"
-            )
-
+    """Return explicitly requested vcall_finder targets for a selected module."""
+    del module
     if selector is None:
         return []
-
-    if selector.get("all"):
-        return [name for name in declared_objects if name]
-
-    selected_names = selector.get("names", set())
-    return [name for name in declared_objects if name and name in selected_names]
+    return list(selector.get("names", []))
 
 
 def _select_skills_by_name(skills, selected_skill_name):
@@ -2986,6 +2931,7 @@ def process_binary(
     config_path=None,
     category_map=None,
     symbol_aliases=None,
+    found_vcall_objects=None,
 ):
     """
     Process a single binary file.
@@ -3005,6 +2951,7 @@ def process_binary(
         rename: Run module/platform post_process over valid expected output YAML mappings
         skip_error: Continue processing later skills after skill or preprocessor failures
         skip_pp: Skip preprocessing scripts and run Agent Skills directly
+        found_vcall_objects: Optional run-scoped set updated when an object exists in this binary
 
     Returns:
         Tuple of (success_count, fail_count, skip_count)
@@ -3833,6 +3780,8 @@ def process_binary(
                 continue
 
             object_status = export_stats["status"]
+            if export_stats.get("object_found") is True and found_vcall_objects is not None:
+                found_vcall_objects.add(object_name)
             if object_status == "success":
                 success_count += 1
                 _report_vcall_status(
@@ -4035,6 +3984,11 @@ def _print_main_configuration(args):
 
 
 def _select_execution_modules(modules, args):
+    if args.module_filter is not None:
+        available_module_names = {module["name"] for module in modules}
+        missing_module_names = [name for name in args.module_filter if name not in available_module_names]
+        if missing_module_names:
+            raise ValueError(f"Module(s) not found: {', '.join(missing_module_names)}")
     selected = _select_modules_by_skill(modules, getattr(args, "skill", None), args.module_filter)
     if args.module_filter is not None:
         selected = [module for module in selected if module["name"] in args.module_filter]
@@ -4060,7 +4014,17 @@ def _resolve_old_binary_dir(args, module_name, module_path):
     return None
 
 
-def _invoke_process_binary(args, module, platform, binary_path, old_binary_dir, vcall_targets, reporting, job_id):
+def _invoke_process_binary(
+    args,
+    module,
+    platform,
+    binary_path,
+    old_binary_dir,
+    vcall_targets,
+    reporting,
+    job_id,
+    found_vcall_objects,
+):
     return process_binary(
         binary_path,
         module["skills"],
@@ -4090,6 +4054,7 @@ def _invoke_process_binary(args, module, platform, binary_path, old_binary_dir, 
         config_path=args.configyaml,
         category_map=args.artifact_category_map,
         symbol_aliases=args.symbol_aliases,
+        found_vcall_objects=found_vcall_objects,
     )
 
 
@@ -4098,7 +4063,7 @@ def _skip_platform_job(reporting, job_id, status, reason, message, task_status=T
     reporting.finish_job_tasks(job_id, task_status, reason, message)
 
 
-def _process_platform(args, module, platform, vcall_targets, reporting):
+def _process_platform(args, module, platform, vcall_targets, reporting, found_vcall_objects):
     job_id = build_job_id(build_stage_id(module.get("stage_index", 0), module["name"]), platform)
     module_path = module.get(f"path_{platform}")
     work_count = len(module["skills"]) + len(vcall_targets)
@@ -4126,7 +4091,15 @@ def _process_platform(args, module, platform, vcall_targets, reporting):
     reporting.emit_task_status(job_id, TaskStatus.RUNNING, ProcessPhase.WAITING_FOR_MCP)
     old_binary_dir = _resolve_old_binary_dir(args, module["name"], module_path)
     counts = _invoke_process_binary(
-        args, module, platform, binary_path, old_binary_dir, vcall_targets, reporting, job_id
+        args,
+        module,
+        platform,
+        binary_path,
+        old_binary_dir,
+        vcall_targets,
+        reporting,
+        job_id,
+        found_vcall_objects,
     )
     job_status = TaskStatus.FAILED if counts[1] else TaskStatus.SUCCEEDED
     reporting.emit_task_status(job_id, job_status, ProcessPhase.FINISHED)
@@ -4161,12 +4134,17 @@ def _aggregate_vcall_object(args, object_name):
     return aggregate_vcall_results_for_object(**aggregate_kwargs)
 
 
-def _run_vcall_aggregation(args, object_names):
+def _run_vcall_aggregation(args, object_names, found_object_names=None):
     counts = [0, 0, 0]
     if not args.vcall_finder_filter or not object_names:
         return counts
     print("\nRunning vcall_finder LLM aggregation")
-    for object_name in sorted(object_names):
+    found_object_names = set(object_names) if found_object_names is None else found_object_names
+    for object_name in object_names:
+        if object_name not in found_object_names:
+            counts[1] += 1
+            print(f"  Failed to find vcall_finder object in selected modules/platforms: {object_name}")
+            continue
         print(f"  Aggregating vcall_finder: {object_name}")
         try:
             stats = _aggregate_vcall_object(args, object_name)
@@ -4185,14 +4163,14 @@ def _run_vcall_aggregation(args, object_names):
 
 def _execute_analysis(args, modules, reporting):
     totals = [0, 0, 0]
-    all_vcall_objects = set()
+    all_vcall_objects = list((args.vcall_finder_filter or {}).get("names", []))
+    found_vcall_objects = set()
     abort_processing = False
     for module in modules:
         vcall_targets = resolve_module_vcall_targets(module, args.vcall_finder_filter)
-        all_vcall_objects.update(vcall_targets)
         _print_module_header(module, vcall_targets)
         for platform in args.platforms:
-            counts = _process_platform(args, module, platform, vcall_targets, reporting)
+            counts = _process_platform(args, module, platform, vcall_targets, reporting, found_vcall_objects)
             totals = [total + count for total, count in zip(totals, counts)]
             if counts[1] and not getattr(args, "skip_error", False):
                 abort_processing = True
@@ -4203,7 +4181,7 @@ def _execute_analysis(args, modules, reporting):
         if abort_processing:
             break
     if not abort_processing:
-        aggregate_counts = _run_vcall_aggregation(args, all_vcall_objects)
+        aggregate_counts = _run_vcall_aggregation(args, all_vcall_objects, found_vcall_objects)
         totals = [total + count for total, count in zip(totals, aggregate_counts)]
     return totals, abort_processing
 

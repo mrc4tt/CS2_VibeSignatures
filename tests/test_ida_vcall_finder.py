@@ -88,6 +88,7 @@ class TestExportObjectXrefDetailsViaMcp(unittest.IsolatedAsyncioTestCase):
             )
 
             self.assertEqual("success", summary["status"])
+            self.assertIs(True, summary["object_found"])
             self.assertEqual(1, summary["exported_functions"])
             self.assertEqual(0, summary["failed_functions"])
             second_code = session.call_tool.await_args_list[1].kwargs["arguments"]["code"]
@@ -129,9 +130,42 @@ class TestExportObjectXrefDetailsViaMcp(unittest.IsolatedAsyncioTestCase):
             )
 
             self.assertEqual("failed", summary["status"])
+            self.assertIs(True, summary["object_found"])
             self.assertEqual(0, summary["exported_functions"])
             self.assertEqual(1, summary["failed_functions"])
             self.assertEqual(0, summary["skipped_functions"])
+
+    async def test_export_object_xref_details_marks_missing_object_not_found(self) -> None:
+        session = AsyncMock()
+        session.call_tool.return_value = _py_eval_payload({"object_ea": None, "functions": []})
+
+        summary = await ida_vcall_finder.export_object_xref_details_via_mcp(
+            session,
+            output_root="vcall_finder",
+            gamever="14172",
+            module_name="server",
+            platform="windows",
+            object_name="g_pMissing",
+        )
+
+        self.assertEqual("skipped", summary["status"])
+        self.assertIs(False, summary["object_found"])
+
+    async def test_export_object_xref_details_marks_existing_object_without_xrefs_found(self) -> None:
+        session = AsyncMock()
+        session.call_tool.return_value = _py_eval_payload({"object_ea": "0x1000", "functions": []})
+
+        summary = await ida_vcall_finder.export_object_xref_details_via_mcp(
+            session,
+            output_root="vcall_finder",
+            gamever="14172",
+            module_name="server",
+            platform="windows",
+            object_name="g_pExisting",
+        )
+
+        self.assertEqual("skipped", summary["status"])
+        self.assertIs(True, summary["object_found"])
 
 
 class TestCallOpenAiForVcalls(unittest.TestCase):

@@ -3,7 +3,22 @@ import { attachAliasesToDataset, buildConfigAliasIndex, createGameSymbolIndex, n
 
 function snapshot(files: Record<string, Record<string, unknown>>, gameVersion = '14168b') {
   return {
-    schema_version: 3,
+    schema_version: 4,
+    last_publish_time: '2026-01-02T03:04:05Z',
+    binaries: {
+      server: {
+        windows: {
+          path: 'game/bin/win64/server.dll',
+          sha256: '1'.repeat(64),
+          md5: '2'.repeat(32),
+        },
+        linux: {
+          path: 'game/bin/linuxsteamrt64/libserver.so',
+          sha256: '3'.repeat(64),
+          md5: '4'.repeat(32),
+        },
+      },
+    },
     config_digest_version: 2,
     analysis_output_contract_version: 1,
     config_sha256: 'sha256:test',
@@ -22,6 +37,13 @@ describe('gameSymbolsPlugin normalization', () => {
     }), '14168b', 'snapshot.yaml')
 
     expect(dataset.source.gameVersion).toBe('14168b')
+    expect(dataset.schemaVersion).toBe(2)
+    expect(dataset.source.lastPublishTime).toBe('2026-01-02T03:04:05Z')
+    expect(dataset.binaries.server.windows).toEqual({
+      path: 'game/bin/win64/server.dll',
+      sha256: '1'.repeat(64),
+      md5: '2'.repeat(32),
+    })
     expect(dataset.modules).toEqual([
       { name: 'client', count: 1, windowsCount: 1, linuxCount: 0 },
       { name: 'server', count: 2, windowsCount: 1, linuxCount: 1 },
@@ -38,13 +60,21 @@ describe('gameSymbolsPlugin normalization', () => {
     expect(() => normalizeGameSymbolSnapshot({ ...value, file_count: 2 }, '14168b', 'snapshot.yaml')).toThrow(/file_count/)
     expect(() => normalizeGameSymbolSnapshot(value, '14169', 'snapshot.yaml')).toThrow(/does not match filename/)
     expect(() => normalizeGameSymbolSnapshot(snapshot({ 'server\\nested/Test.windows.yaml': { func_name: 'Test' } }), '14168b', 'snapshot.yaml')).toThrow(/invalid symbol path/)
+    expect(() => normalizeGameSymbolSnapshot({ ...value, last_publish_time: 'invalid' }, '14168b', 'snapshot.yaml')).toThrow(/last_publish_time/)
+    expect(() => normalizeGameSymbolSnapshot({ ...value, binaries: { server: { windows: { path: 'server.dll', sha256: 'A'.repeat(64), md5: '2'.repeat(32) } } } }, '14168b', 'snapshot.yaml')).toThrow(/sha256/)
   })
 
   it('sorts versions newest first without treating suffixes as numbers', () => {
     const older = normalizeGameSymbolSnapshot(snapshot({}, '14168'), '14168', '14168.yaml')
     const revision = normalizeGameSymbolSnapshot(snapshot({}, '14168b'), '14168b', '14168b.yaml')
     const latest = normalizeGameSymbolSnapshot(snapshot({}, '14169'), '14169', '14169.yaml')
-    expect(createGameSymbolIndex([older, latest, revision]).versions.map((entry) => entry.gameVersion)).toEqual(['14169', '14168b', '14168'])
+    const index = createGameSymbolIndex([older, latest, revision])
+    expect(index.schemaVersion).toBe(2)
+    expect(index.versions.map((entry) => entry.gameVersion)).toEqual(['14169', '14168b', '14168'])
+    expect(index.versions[0]).toEqual(expect.objectContaining({
+      lastPublishTime: '2026-01-02T03:04:05Z',
+      fileCount: 0,
+    }))
   })
 })
 
@@ -76,7 +106,7 @@ describe('config alias attachment', () => {
       'networksystem/CNetworkMessages_RegisterNetworkCategory.windows.yaml': { func_name: 'CNetworkMessages_RegisterNetworkCategory', vfunc_index: 0 },
       'networksystem/CNetworkMessages_RegisterNetworkCategory.linux.yaml': { func_name: 'CNetworkMessages_RegisterNetworkCategory', vfunc_index: 0 },
       'networksystem/CNetworkMessages_Unaliased.windows.yaml': { func_name: 'CNetworkMessages_Unaliased', vfunc_index: 1 },
-    }), '14172', 'snapshot.yaml')
+    }, '14172'), '14172', 'snapshot.yaml')
     const index = buildConfigAliasIndex({
       modules: [{ name: 'networksystem', symbols: [{ name: 'CNetworkMessages_RegisterNetworkCategory', category: 'vfunc', alias: ['CNetworkMessages::RegisterNetworkCategory'] }] }],
     }, 'config.yaml')
@@ -84,12 +114,12 @@ describe('config alias attachment', () => {
     expect(aliased.records).toEqual(expect.arrayContaining([
       expect.objectContaining({ platform: 'windows', aliases: ['CNetworkMessages::RegisterNetworkCategory'] }),
       expect.objectContaining({ platform: 'linux', aliases: ['CNetworkMessages::RegisterNetworkCategory'] }),
-      expect.objectContaining({ artifact: 'CNetworkMessages_Unaliased', aliases: undefined }),
     ]))
+    expect(aliased.records.find((record) => record.artifact === 'CNetworkMessages_Unaliased')).not.toHaveProperty('aliases')
   })
 
   it('returns the same dataset instance when the alias index is empty', () => {
-    const dataset = normalizeGameSymbolSnapshot(snapshot({ 'networksystem/F.windows.yaml': { func_name: 'F' } }), '14172', 'snapshot.yaml')
+    const dataset = normalizeGameSymbolSnapshot(snapshot({ 'networksystem/F.windows.yaml': { func_name: 'F' } }, '14172'), '14172', 'snapshot.yaml')
     const index = buildConfigAliasIndex({ modules: [] }, 'config.yaml')
     expect(attachAliasesToDataset(dataset, index)).toBe(dataset)
   })

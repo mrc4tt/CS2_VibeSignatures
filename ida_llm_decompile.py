@@ -63,7 +63,14 @@ _LLM_SCHEMA_ISSUE_TYPES = frozenset(
     }
 )
 _DISASM_ADDRESS_LINE_RE = re.compile(r"^\s*(?:[^:\s]+:)?([0-9A-Fa-f]{4,16})\s+(.+?)\s*$")
-_DISASM_MEMORY_DISPLACEMENT_RE = re.compile(r"(?:^|[+-])\s*(0x[0-9A-Fa-f]+|[0-9A-Fa-f]+[hH]|\d+)(?=\s*(?:[+-]|$))")
+_DISASM_MEMORY_DISPLACEMENT_RE = re.compile(
+    r"(?P<sign>^|[+-])\s*(?P<value>0x[0-9A-Fa-f]+|[0-9A-Fa-f]+[hH]|\d+)(?=\s*(?:[+-]|$))"
+)
+_DISASM_BASE_REGISTER_PATTERN = r"(?:[re](?:ax|bx|cx|dx|si|di|bp|sp)|r(?:[89]|1[0-5])d?|[re]ip)"
+_DISASM_ZERO_OFFSET_MEMORY_RE = re.compile(
+    rf"^\s*{_DISASM_BASE_REGISTER_PATTERN}(?:\s*\+\s*(?:0x0+|0+[hH]?))?\s*$",
+    re.IGNORECASE,
+)
 
 
 def _absolute_path_preserve_spelling(path):
@@ -770,6 +777,56 @@ def _normalize_expected_result_sections(expected_result_sections):
     return normalized
 
 
+def _normalize_instruction_validations(instruction_validations):
+    if instruction_validations is None:
+        return {}
+    if not isinstance(instruction_validations, dict):
+        return None
+
+    normalized = {}
+    for symbol_name, raw_validation in instruction_validations.items():
+        symbol_name = str(symbol_name or "").strip()
+        if not symbol_name or not isinstance(raw_validation, dict):
+            return None
+        if set(raw_validation) - {"instruction_rules", "expected_size"}:
+            return None
+
+        validation = {}
+        if "instruction_rules" in raw_validation:
+            raw_rules = raw_validation.get("instruction_rules")
+            if not isinstance(raw_rules, (tuple, list)) or not raw_rules:
+                return None
+            compiled_rules = []
+            for raw_rule in raw_rules:
+                if not isinstance(raw_rule, dict) or set(raw_rule) != {"regex", "text"}:
+                    return None
+                regex_text = raw_rule.get("regex")
+                instruction_text = raw_rule.get("text")
+                if (
+                    not isinstance(regex_text, str)
+                    or not regex_text.strip()
+                    or not isinstance(instruction_text, str)
+                    or not instruction_text.strip()
+                ):
+                    return None
+                try:
+                    compiled_regex = re.compile(regex_text)
+                except re.error:
+                    return None
+                compiled_rules.append({"regex": compiled_regex, "text": instruction_text})
+            validation["instruction_rules"] = tuple(compiled_rules)
+
+        if "expected_size" in raw_validation:
+            expected_size = raw_validation.get("expected_size")
+            if isinstance(expected_size, bool) or not isinstance(expected_size, int) or expected_size <= 0:
+                return None
+            validation["expected_size"] = expected_size
+
+        if validation:
+            normalized[symbol_name] = validation
+    return normalized
+
+
 def _get_llm_result_symbol_name(section_name, entry):
     if section_name == "found_struct_offset":
         struct_name = str(entry.get("struct_name", "")).strip()
@@ -828,23 +885,34 @@ def _validate_llm_requested_symbols(parsed_result, requested_symbol_names):
     return issues
 
 
+def _extract_memory_operands(disasm):
+    return re.findall(r"\[([^\]]+)\]", str(disasm or ""))
+
+
 def _extract_memory_displacements(disasm):
     displacements = set()
-    for memory_operand in re.findall(r"\[([^\]]+)\]", str(disasm or "")):
+    for memory_operand in _extract_memory_operands(disasm):
         for match in _DISASM_MEMORY_DISPLACEMENT_RE.finditer(memory_operand):
-            value = _parse_llm_int_value(match.group(1))
+            value = _parse_llm_int_value(match.group("value"))
             if value is not None:
+                if match.group("sign") == "-":
+                    value = -value
                 displacements.add(value)
     return displacements
+
+
+def _instruction_contains_memory_offset(disasm, offset):
+    if offset is None:
+        return False
+    if offset != 0:
+        return offset in _extract_memory_displacements(disasm)
+    return any(_DISASM_ZERO_OFFSET_MEMORY_RE.fullmatch(operand) for operand in _extract_memory_operands(disasm))
 
 
 def _instruction_contains_vfunc_offset(disasm, vfunc_offset):
     if vfunc_offset is None or vfunc_offset < 0:
         return False
-    displacements = _extract_memory_displacements(disasm)
-    if vfunc_offset in displacements:
-        return True
-    return vfunc_offset == 0 and "[" in str(disasm or "") and not displacements
+    return _instruction_contains_memory_offset(disasm, vfunc_offset)
 
 
 def _validate_llm_vcall_offsets(parsed_result):
@@ -868,10 +936,70 @@ def _validate_llm_vcall_offsets(parsed_result):
     return issues
 
 
+def _validate_llm_instruction_constraints(parsed_result, instruction_validations):
+    issues = []
+    for section_name, entry_index, entry in _iter_llm_instruction_entries(parsed_result):
+        symbol_name = _get_llm_result_symbol_name(section_name, entry)
+        validation = instruction_validations.get(symbol_name)
+        if not validation:
+            continue
+
+        reported_disasm = _normalize_disasm_whitespace(entry.get("insn_disasm"))
+        instruction_rules = validation.get("instruction_rules", ())
+        if instruction_rules and not any(rule["regex"].fullmatch(reported_disasm) for rule in instruction_rules):
+            issues.append(
+                {
+                    "issue_type": "instruction_rule_mismatch",
+                    "section_name": section_name,
+                    "entry_index": entry_index,
+                    "symbol_name": symbol_name,
+                    "reported_disasm": reported_disasm,
+                    "instruction_rule_texts": [rule["text"] for rule in instruction_rules],
+                }
+            )
+
+        if section_name != "found_struct_offset":
+            continue
+
+        if "expected_size" in validation:
+            reported_size_text = str(entry.get("size", "")).strip()
+            reported_size = _parse_llm_int_value(reported_size_text)
+            if reported_size != validation["expected_size"]:
+                issues.append(
+                    {
+                        "issue_type": "instruction_size_mismatch",
+                        "section_name": section_name,
+                        "entry_index": entry_index,
+                        "symbol_name": symbol_name,
+                        "reported_disasm": reported_disasm,
+                        "reported_size": reported_size_text,
+                        "expected_size": validation["expected_size"],
+                    }
+                )
+
+        offset_text = str(entry.get("offset", "")).strip()
+        offset = _parse_llm_int_value(offset_text)
+        displacements = _extract_memory_displacements(reported_disasm)
+        if not _instruction_contains_memory_offset(reported_disasm, offset):
+            issues.append(
+                {
+                    "issue_type": "struct_offset_displacement_mismatch",
+                    "section_name": section_name,
+                    "entry_index": entry_index,
+                    "symbol_name": symbol_name,
+                    "reported_disasm": reported_disasm,
+                    "offset": offset_text,
+                    "instruction_displacements": sorted(displacements),
+                }
+            )
+    return issues
+
+
 def _validate_llm_decompile_result(
     parsed_result,
     disasm_index,
     expected_result_sections,
+    instruction_validations,
     *,
     requested_symbol_names=None,
 ):
@@ -880,6 +1008,7 @@ def _validate_llm_decompile_result(
         + _validate_llm_result_sections(parsed_result, expected_result_sections)
         + _validate_llm_requested_symbols(parsed_result, requested_symbol_names)
         + _validate_llm_vcall_offsets(parsed_result)
+        + _validate_llm_instruction_constraints(parsed_result, instruction_validations)
     )
 
 
@@ -915,6 +1044,37 @@ def _format_llm_vcall_offset_issue(issue):
     )
 
 
+def _format_llm_instruction_rule_issue(issue):
+    location = f"{issue['section_name']}[{issue['entry_index']}]"
+    rules_text = " or ".join(f"`{rule_text}`" for rule_text in issue["instruction_rule_texts"])
+    return (
+        f"- {location}: symbol {issue['symbol_name']!r} reports `{issue['reported_disasm']}`, but the "
+        f"instruction must use one of these forms: {rules_text}."
+    )
+
+
+def _format_llm_instruction_size_issue(issue):
+    location = f"{issue['section_name']}[{issue['entry_index']}]"
+    return (
+        f"- {location}: symbol {issue['symbol_name']!r} reports size {issue['reported_size']!r} for "
+        f"`{issue['reported_disasm']}`, but the required size is {issue['expected_size']}."
+    )
+
+
+def _format_llm_struct_offset_displacement_issue(issue):
+    location = f"{issue['section_name']}[{issue['entry_index']}]"
+    displacement_text = ", ".join(
+        f"-0x{-value:X}" if value < 0 else f"0x{value:X}" for value in issue["instruction_displacements"]
+    )
+    if not displacement_text:
+        displacement_text = "<none>"
+    return (
+        f"- {location}: symbol {issue['symbol_name']!r} reports offset {issue['offset']!r}, but "
+        f"`{issue['reported_disasm']}` contains memory displacement(s) {displacement_text}. The reported "
+        "offset must be the displacement accessed by that exact instruction."
+    )
+
+
 def _format_llm_validation_issue(issue):
     if issue["issue_type"] in _LLM_SCHEMA_ISSUE_TYPES:
         return f"- {issue['message']}"
@@ -922,6 +1082,12 @@ def _format_llm_validation_issue(issue):
         return _format_llm_result_section_issue(issue)
     if issue["issue_type"] == "vcall_offset_mismatch":
         return _format_llm_vcall_offset_issue(issue)
+    if issue["issue_type"] == "instruction_rule_mismatch":
+        return _format_llm_instruction_rule_issue(issue)
+    if issue["issue_type"] == "instruction_size_mismatch":
+        return _format_llm_instruction_size_issue(issue)
+    if issue["issue_type"] == "struct_offset_displacement_mismatch":
+        return _format_llm_struct_offset_displacement_issue(issue)
     return _format_llm_instruction_issue(issue)
 
 
@@ -976,7 +1142,9 @@ def _build_llm_instruction_correction_prompt(validation_issues):
             "target.\n"
         )
     has_struct_offset_issue = any(
-        "found_struct_offset" in issue.get("expected_sections", []) for issue in validation_issues
+        issue.get("section_name") == "found_struct_offset"
+        or "found_struct_offset" in issue.get("expected_sections", [])
+        for issue in validation_issues
     )
     struct_offset_guidance = ""
     if has_struct_offset_issue:
@@ -1026,6 +1194,7 @@ def _parse_and_validate_llm_decompile_content(
     requested_symbol_names,
     disasm_index,
     expected_result_sections,
+    instruction_validations,
     symbol_name_text,
     debug,
 ):
@@ -1047,6 +1216,7 @@ def _parse_and_validate_llm_decompile_content(
         parsed_result,
         disasm_index,
         expected_result_sections,
+        instruction_validations,
         requested_symbol_names=requested_symbol_names,
     )
     return parse_outcome, parsed_result, parse_outcome["issues"] + semantic_issues
@@ -1133,7 +1303,13 @@ async def _call_llm_decompile_with_validation(
     retry_settings,
     debug,
 ):
-    disasm_index, expected_result_sections, requested_symbol_names, symbol_name_text = validation_settings
+    (
+        disasm_index,
+        expected_result_sections,
+        instruction_validations,
+        requested_symbol_names,
+        symbol_name_text,
+    ) = validation_settings
     max_attempts, retry_delay, retry_backoff_factor, retry_max_delay = retry_settings
     for attempt_index in range(max_attempts):
         attempt_kwargs = dict(request_kwargs)
@@ -1157,6 +1333,7 @@ async def _call_llm_decompile_with_validation(
             requested_symbol_names=requested_symbol_names,
             disasm_index=disasm_index,
             expected_result_sections=expected_result_sections,
+            instruction_validations=instruction_validations,
             symbol_name_text=symbol_name_text,
             debug=debug,
         )
@@ -1455,6 +1632,7 @@ async def call_llm_decompile(
     retry_max_delay=None,
     debug=False,
     *,
+    instruction_validations=None,
     call_llm_text_func=_UNSET,
     normalize_temperature_func=_UNSET,
 ):
@@ -1471,6 +1649,11 @@ async def call_llm_decompile(
     requested_symbol_names = _normalize_requested_symbol_names(symbol_name_list)
     symbol_name_text = ", ".join(requested_symbol_names)
     normalized_expected_sections = _normalize_expected_result_sections(expected_result_sections)
+    normalized_instruction_validations = _normalize_instruction_validations(instruction_validations)
+    if normalized_instruction_validations is None:
+        if debug:
+            print(f"    Preprocess: invalid llm_decompile instruction validations for {symbol_name_text}")
+        return _empty_llm_decompile_result()
 
     if reference_blocks is None or target_blocks is None:
         fallback_reference_blocks, fallback_target_blocks = _render_llm_decompile_blocks(
@@ -1588,7 +1771,13 @@ async def call_llm_decompile(
         transport=transport,
         request_kwargs=request_kwargs,
         conversation_messages=conversation_messages,
-        validation_settings=(disasm_index, normalized_expected_sections, requested_symbol_names, symbol_name_text),
+        validation_settings=(
+            disasm_index,
+            normalized_expected_sections,
+            normalized_instruction_validations,
+            requested_symbol_names,
+            symbol_name_text,
+        ),
         retry_settings=(max_attempts, delay, backoff_factor, max_delay),
         debug=debug,
     )

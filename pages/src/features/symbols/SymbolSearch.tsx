@@ -42,6 +42,7 @@ export function SymbolSearch({ records, modules, filters, onChange, onSelect }: 
           allowClear
           showSearch
           optionFilterProp="label"
+          aria-label={t('symbols.allModules')}
           placeholder={t('symbols.allModules')}
           value={filters.module}
           onChange={(module) => patch({ module })}
@@ -57,6 +58,7 @@ export function SymbolSearch({ records, modules, filters, onChange, onSelect }: 
         />
         <Select
           allowClear
+          aria-label={t('symbols.allPlatforms')}
           placeholder={t('symbols.allPlatforms')}
           value={filters.platform}
           onChange={(platform) => patch({ platform })}

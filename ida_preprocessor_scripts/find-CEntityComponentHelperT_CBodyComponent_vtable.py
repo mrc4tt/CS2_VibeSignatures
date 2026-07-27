@@ -6,6 +6,12 @@ from ida_analyze_util import preprocess_common_skill
 TARGET_CLASS_NAMES = [
     "CEntityComponentHelperT_CBodyComponent",
 ]
+CANONICAL_VTABLE_SYMBOLS_BY_PLATFORM = {
+    "windows": {"CEntityComponentHelperT_CBodyComponent": "CEntityComponentHelperT_CBodyComponent_vtable"},
+    "linux": {
+        "CEntityComponentHelperT_CBodyComponent": "_ZTV23CEntityComponentHelperTI14CBodyComponent32CEntityComponentHelperReferencedIS0_EE + 0x10"
+    },
+}
 
 MANGLED_CLASS_NAMES = {
     "CEntityComponentHelperT_CBodyComponent": [
@@ -51,5 +57,6 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
+        canonical_vtable_symbols=CANONICAL_VTABLE_SYMBOLS_BY_PLATFORM.get(platform),
         debug=debug,
     )

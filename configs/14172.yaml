@@ -239,11 +239,6 @@ modules:
   - name: networksystem
     path_windows: game/bin/win64/networksystem.dll
     path_linux: game/bin/linuxsteamrt64/libnetworksystem.so
-    vcall_finder:
-      - g_NetworkMessages
-      - g_pNetworkMessages
-      - g_pFlattenedSerializers
-      - g_FlattenedSerializers
     skills:
       - name: find-CNetChan_vtable
         expected_output:
@@ -563,11 +558,6 @@ modules:
   - name: engine
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
-    vcall_finder:
-      - g_pNetworkMessages
-      - g_pFlattenedSerializers
-      - g_NetworkClientService
-      - g_pNetworkClientService
     skills:
       - name: find-CNetworkGameServer_vtable
         expected_output:
@@ -656,6 +646,11 @@ modules:
           - CServerSideClient_IsHearingClient.{platform}.yaml
         expected_input:
           - CNetworkGameServerBase_SendPeerList.{platform}.yaml
+          - CServerSideClient_vtable.{platform}.yaml
+      - name: find-CServerSideClient_ExecuteStringCommand
+        expected_output:
+          - CServerSideClient_ExecuteStringCommand.{platform}.yaml
+        expected_input:
           - CServerSideClient_vtable.{platform}.yaml
       - name: find-CGameResourceService_vtable
         expected_output:
@@ -1750,6 +1745,12 @@ modules:
           - INetworkClientService_IsConnected.{platform}.yaml
         expected_input:
           - SetInfo_CommandHandler.{platform}.yaml
+      - name: find-CInputService_ProcessConVar
+        expected_output:
+          - CInputService_ProcessConVar.{platform}.yaml
+      - name: find-CInputService_ProcessCommand
+        expected_output:
+          - CInputService_ProcessCommand.{platform}.yaml
       - name: find-CSplitScreenService_vtable
         expected_output:
           - CSplitScreenService_vtable.{platform}.yaml
@@ -1899,6 +1900,10 @@ modules:
         category: vfunc
         alias:
           - IsHearingClient
+      - name: CServerSideClient_ExecuteStringCommand
+        category: vfunc
+        alias:
+          - CServerSideClient::ExecuteStringCommand
       - name: CGameResourceService_BuildResourceManifest
         category: func
         alias:
@@ -2223,8 +2228,31 @@ modules:
         alias:
           - INetworkClientService::IsConnected
         shared: true
+      - name: INetworkClientService_IsPutInServer
+        category: vfunc
+        alias:
+          - INetworkClientService::IsPutInServer
+        shared: true
+      - name: INetworkClientService_IsConnecting
+        category: vfunc
+        alias:
+          - INetworkClientService::IsConnecting
+        shared: true
       - name: SetInfo_CommandHandler
         category: func
+      - name: CInputService_ProcessConVar
+        category: func
+        alias:
+          - CInputService::ProcessConVar
+      - name: CInputService_ProcessCommand
+        category: func
+        alias:
+          - CInputService::ProcessCommand
+      - name: CInputService_IsClientOnlyCommandAllowed
+        category: func
+        platform: linux
+        alias:
+          - CInputService::IsClientOnlyCommandAllowed
       - name: CNetworkClientService_vtable
         category: vtable
       - name: CNetworkClientService_ReceivedServerInfo
@@ -2281,6 +2309,20 @@ modules:
         category: vfunc
         alias:
           - CNetworkClientService::IsConnected
+      - name: CNetworkClientService_IsPutInServer
+        category: vfunc
+        alias:
+          - CNetworkClientService::IsPutInServer
+      - name: CNetworkClientService_IsConnecting
+        category: vfunc
+        alias:
+          - CNetworkClientService::IsConnecting
+      - name: CEngineSoundServices_vtable
+        category: vtable
+      - name: CEngineSoundServices_ShouldSuppressNonUISounds
+        category: vfunc
+        alias:
+          - CEngineSoundServices::ShouldSuppressNonUISounds
       - name: CNetworkClientService_ClockDriftAdjustFrameTime
         category: vfunc
         alias:
@@ -2480,11 +2522,11 @@ modules:
         category: vfunc
         alias:
           - CEngineClient::ExecuteClientCmd
-      - name: CInputService_ProcessCommand
+      - name: CInputService_ProcessCommandBuffer
         category: func
         platform: windows
         alias:
-          - CInputService::ProcessCommand
+          - CInputService::ProcessCommandBuffer
       - name: CInputService_ProcessCommandBuffers
         category: func
         platform: windows
@@ -3192,10 +3234,6 @@ modules:
   - name: client
     path_windows: game/csgo/bin/win64/client.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libclient.so
-    vcall_finder:
-      - g_pNetworkMessages
-      - g_pFlattenedSerializers
-      - g_pNetworkClientService
     skills:
       - name: find-IGameSystem_vtable
         expected_output:
@@ -5132,12 +5170,6 @@ modules:
   - name: server
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
-    vcall_finder:
-      - g_pNetworkMessages
-      - g_pFlattenedSerializers
-      - g_pNetworkClientService
-      - g_pEntitySystem
-      - g_pGameEntitySystem
     skills:
       - name: find-CSource2Server_vtable
         expected_output:
@@ -11012,16 +11044,16 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
-      - name: find-CInputService_ProcessCommand
+      - name: find-CInputService_ProcessCommandBuffer
         platform: windows
         expected_output:
-          - CInputService_ProcessCommand.{platform}.yaml
+          - CInputService_ProcessCommandBuffer.{platform}.yaml
       - name: find-CInputService_ProcessCommandBuffers
         platform: windows
         expected_output:
           - CInputService_ProcessCommandBuffers.{platform}.yaml
         expected_input:
-          - CInputService_ProcessCommand.{platform}.yaml
+          - CInputService_ProcessCommandBuffer.{platform}.yaml
       - name: find-CInputService_HandleAnalogValueChange
         platform: windows
         expected_output:
@@ -11036,7 +11068,7 @@ modules:
           - CEngineClient_ClientCmd_Unrestricted.{platform}.yaml
         expected_input:
           - CEngineClient_vtable.{platform}.yaml
-          - CInputService_ProcessCommand.{platform}.yaml
+          - CInputService_ProcessCommandBuffer.{platform}.yaml
           - CInputService_ProcessCommandBuffers.{platform}.yaml
           - CInputService_HandleAnalogValueChange.{platform}.yaml
           - CInputService_HandleInputEvent.{platform}.yaml
@@ -11284,6 +11316,31 @@ modules:
           - g_pNavGameTest.{platform}.yaml
         expected_input:
           - g_pInterfaceGlobals.{platform}.yaml
+      # Linux emits the FCVAR_CLIENTCMD_CAN_EXECUTE gate that Windows inlines into
+      # ProcessConVar/ProcessCommand as a shared out-of-line helper, so the
+      # INetworkClientService::IsPutInServer vcall only exists there on Linux.
+      # Keep this in the late engine pass because its global-variable anchors are
+      # produced by find-g_pInterfaceGlobals_ppGlobal immediately above.
+      - name: find-CInputService_IsClientOnlyCommandAllowed-linux
+        platform: linux
+        expected_output:
+          - CInputService_IsClientOnlyCommandAllowed.{platform}.yaml
+        expected_input:
+          - g_pNetworkClientService.{platform}.yaml
+          - g_pNetworkServerService.{platform}.yaml
+      - name: find-CInputService_ProcessConVar-decompiles
+        expected_output:
+          - INetworkClientService_IsPutInServer.{platform}.yaml
+        expected_input_windows:
+          - CInputService_ProcessConVar.{platform}.yaml
+        expected_input_linux:
+          - CInputService_IsClientOnlyCommandAllowed.{platform}.yaml
+      - name: find-CNetworkClientService_IsPutInServer
+        expected_output:
+          - CNetworkClientService_IsPutInServer.{platform}.yaml
+        expected_input:
+          - CNetworkClientService_vtable.{platform}.yaml
+          - INetworkClientService_IsPutInServer.{platform}.yaml
       # Resolve the CNetworkGameServer override from the base vfunc's inherited slot.
       - name: find-CNetworkGameServer_GetPlayerNetworkIDString
         expected_output:
@@ -11326,6 +11383,28 @@ modules:
           - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
           - CNetworkGameServer_vtable.{platform}.yaml
           - g_pSource2GameClients.{platform}.yaml
+      - name: find-CEngineSoundServices_vtable
+        expected_output:
+          - CEngineSoundServices_vtable.{platform}.yaml
+      # Late-pass placement: the xref anchor g_pNetworkClientService is only produced by
+      # find-g_pInterfaceGlobals_ppGlobal in this same late engine pass.
+      - name: find-CEngineSoundServices_ShouldSuppressNonUISounds
+        expected_output:
+          - CEngineSoundServices_ShouldSuppressNonUISounds.{platform}.yaml
+        expected_input:
+          - CEngineSoundServices_vtable.{platform}.yaml
+          - g_pNetworkClientService.{platform}.yaml
+      - name: find-CEngineSoundServices_ShouldSuppressNonUISounds-decompiles
+        expected_output:
+          - INetworkClientService_IsConnecting.{platform}.yaml
+        expected_input:
+          - CEngineSoundServices_ShouldSuppressNonUISounds.{platform}.yaml
+      - name: find-CNetworkClientService_IsConnecting
+        expected_output:
+          - CNetworkClientService_IsConnecting.{platform}.yaml
+        expected_input:
+          - CNetworkClientService_vtable.{platform}.yaml
+          - INetworkClientService_IsConnecting.{platform}.yaml
   - name: client  # Execute Shutdown-dependent client skills after engine2.dll generates ILoopModeFactory_Shutdown
     path_windows: game/csgo/bin/win64/client.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libclient.so

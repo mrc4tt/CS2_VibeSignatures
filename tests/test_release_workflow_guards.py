@@ -66,6 +66,16 @@ class LegacyBootstrapFixture:
                 "server/Changed.windows.yaml": {"func_name": "Changed", "func_rva": "0x10"},
                 "server/Stable.windows.yaml": {"func_name": "Stable", "func_rva": "0x20"},
             },
+            last_publish_time="2026-01-02T03:04:05Z",
+            binaries={
+                "server": {
+                    "windows": {
+                        "path": "game/bin/win64/server.dll",
+                        "sha256": "1" * 64,
+                        "md5": "2" * 32,
+                    }
+                }
+            },
         )
         self.snapshot.write_bytes(canonical_snapshot_bytes(document))
         self.git("add", ".")
@@ -176,6 +186,16 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                                 f"server/{output}.windows.yaml": {"func_name": output, "func_rva": "0x10"}
                                 for output in outputs
                             },
+                            last_publish_time="2026-01-02T03:04:05Z",
+                            binaries={
+                                "server": {
+                                    "windows": {
+                                        "path": "game/bin/win64/server.dll",
+                                        "sha256": "1" * 64,
+                                        "md5": "2" * 32,
+                                    }
+                                }
+                            },
                         )
                     )
                 )
@@ -278,6 +298,16 @@ class TestReleaseWorkflowGuards(unittest.TestCase):
                 fixture.gamever,
                 "sha256:" + "0" * 64,
                 {"server/Stable.windows.yaml": {"func_name": "Stable", "func_rva": "0x20"}},
+                last_publish_time="2026-01-02T03:04:05Z",
+                binaries={
+                    "server": {
+                        "windows": {
+                            "path": "game/bin/win64/server.dll",
+                            "sha256": "1" * 64,
+                            "md5": "2" * 32,
+                        }
+                    }
+                },
             )
             fixture.snapshot.write_bytes(canonical_snapshot_bytes(invalid_document))
             fixture.git("add", ".")

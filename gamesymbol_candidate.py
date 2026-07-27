@@ -28,6 +28,10 @@ def parse_args(argv=None):
     build.add_argument("-configyaml", default=None, help="Analysis config path; defaults to configs/<GAMEVER>.yaml")
     build.add_argument("-output", required=True)
     build.add_argument("-session", required=True)
+    build.add_argument(
+        "-last-publish-time",
+        help="Explicit UTC publication time (YYYY-MM-DDTHH:mm:ssZ); defaults to the current time",
+    )
 
     compare = commands.add_parser("compare")
     compare.add_argument("-gamever", required=True)
@@ -67,6 +71,7 @@ def _run(args) -> None:
             config_path=args.configyaml,
             output_path=args.output,
             session_path=args.session,
+            last_publish_time=args.last_publish_time,
         )
         print("Candidate snapshot ready:")
         _print_info(info)

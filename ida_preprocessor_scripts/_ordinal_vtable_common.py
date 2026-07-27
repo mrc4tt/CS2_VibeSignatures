@@ -318,6 +318,7 @@ async def preprocess_ordinal_vtable_via_mcp(
     debug=False,
     symbol_aliases=None,
     expected_offset_to_top=None,
+    canonical_vtable_symbol=None,
 ):
     """Resolve an ordinal vtable candidate and normalize it to YAML-like fields."""
     _ = platform
@@ -389,7 +390,7 @@ async def preprocess_ordinal_vtable_via_mcp(
 
     try:
         vtable_class = vtable_info["vtable_class"]
-        vtable_symbol = vtable_info["vtable_symbol"]
+        vtable_symbol = canonical_vtable_symbol or vtable_info["vtable_symbol"]
         vtable_va = vtable_info["vtable_va"]
         vtable_size = vtable_info["vtable_size"]
         vtable_numvfunc = vtable_info["vtable_numvfunc"]

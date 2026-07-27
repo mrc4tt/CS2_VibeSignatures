@@ -27,7 +27,8 @@ from release_workflow_lib.manifests import (
     require_sha,
     verify_tracked_outputs,
 )
-from release_workflow_lib.staging import load_indexed_pending
+from gamesymbol_snapshot_lib.operations import load_snapshot_context
+from release_workflow_lib.staging import load_indexed_pending, verify_snapshot_binaries
 
 COMPLETION_SCHEMA_VERSION = 1
 COMPLETION_FIELDS = {
@@ -143,6 +144,13 @@ def verify_promotion(
     bin_hash = verify_inventory(stage_dir / "bin" / gamever, pending.get("bin_files", []))
     if bin_hash != tracked["bin_manifest_sha256"]:
         raise ReleaseWorkflowError("staged bin hash differs from tracked manifest")
+    snapshot_context = load_snapshot_context(
+        Path(repo_root) / "gamesymbols" / f"{gamever}.yaml",
+        Path(repo_root) / "configs" / f"{gamever}.yaml",
+        gamever,
+        Path(repo_root) / "bin",
+    )
+    verify_snapshot_binaries(snapshot_context.document, stage_dir / "bin" / gamever)
     return {**tracked, "stage_dir": str(stage_dir), "output_merge_sha": merge_sha}
 
 

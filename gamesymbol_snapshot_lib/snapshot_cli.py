@@ -41,6 +41,10 @@ def parse_args(argv=None):
                 "-sourceconfigyaml",
                 help="Optional historical config used only to validate the schema-1 source",
             )
+            subparser.add_argument(
+                "-last-publish-time",
+                help="Explicit UTC historical publication time (YYYY-MM-DDTHH:mm:ssZ)",
+            )
     return parser.parse_args(argv)
 
 
@@ -73,6 +77,7 @@ def _run(args) -> None:
             *common,
             output_path=args.output,
             source_config_path=args.sourceconfigyaml,
+            last_publish_time=args.last_publish_time,
         )
         print(f"Migrated {args.output or args.snapshot or f'gamesymbols/{args.gamever}.yaml'} ({len(data)} bytes)")
 

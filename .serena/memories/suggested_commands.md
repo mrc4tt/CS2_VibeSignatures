@@ -23,7 +23,7 @@ Notes:
 Analyze binaries and generate symbol YAML from `configs/<GAMEVER>.yaml`:
 
 ```bash
-uv run ida_analyze_bin.py -gamever <gamever> [-oldgamever <previous_gamever>] [-configyaml configs/<gamever>.yaml] [-modules server] [-platform windows] [-agent claude|codex|"claude.cmd"|"codex.cmd"] [-maxretry 3] [-vcall_finder g_pNetworkMessages|*] [-llm_model gpt-5.4] [-llm_apikey <key>] [-llm_baseurl https://api.example.com/v1] [-llm_temperature 0.2] [-llm_effort medium] [-llm_fake_as codex] [-debug]
+uv run ida_analyze_bin.py -gamever <gamever> [-oldgamever <previous_gamever>] [-configyaml configs/<gamever>.yaml] [-modules server] [-platform windows] [-agent claude|codex|"claude.cmd"|"codex.cmd"] [-maxretry 3] [-vcall_finder g_pNetworkMessages] [-llm_model gpt-5.4] [-llm_apikey <key>] [-llm_baseurl https://api.example.com/v1] [-llm_temperature 0.2] [-llm_effort medium] [-llm_fake_as codex] [-debug]
 ```
 
 Notes:
@@ -32,11 +32,14 @@ Notes:
 - Shared LLM environment variable fallbacks are `CS2VIBE_LLM_APIKEY`, `CS2VIBE_LLM_BASEURL`, `CS2VIBE_LLM_MODEL`, `CS2VIBE_LLM_TEMPERATURE`, `CS2VIBE_LLM_EFFORT`, and `CS2VIBE_LLM_FAKE_AS`.
 - LLM workflows do not read `OPENAI_API_KEY`, `OPENAI_API_BASE`, or `OPENAI_API_MODEL`.
 
-Run `vcall_finder` for a configured object:
+Run `vcall_finder` for explicitly selected modules and objects:
 
 ```bash
 uv run ida_analyze_bin.py -gamever <gamever> -modules networksystem -platform windows -vcall_finder g_pNetworkMessages -llm_model gpt-5.4 -llm_apikey <key> -llm_effort high -llm_fake_as codex -llm_baseurl http://127.0.0.1:8080/v1
 ```
+
+`-vcall_finder` does not read object registrations from the versioned config. It requires explicit modules, rejects
+`*`, and applies every requested object to every requested module.
 
 Outputs:
 - Per-function detail YAML: `vcall_finder/<gamever>/<object_name>/<module>/<platform>/...`

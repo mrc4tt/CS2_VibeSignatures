@@ -904,6 +904,8 @@ def _build_inherited_vfunc_name(
     fallback_name,
 ):
     func_name = fallback_name
+    if _is_vtable_artifact_stem(inherit_vtable_class):
+        return func_name
     base_artifact_stem = Path(str(base_vfunc_name)).name
     if base_vtable_name and base_artifact_stem.startswith(base_vtable_name + "_"):
         method_suffix = base_artifact_stem[len(base_vtable_name) + 1 :]
@@ -1067,7 +1069,8 @@ _LLM_DECOMPILE_REQUIRED_SPEC_KEYS = frozenset(
         "dependency_policy",
     }
 )
-_LLM_DECOMPILE_SPEC_KEYS = _LLM_DECOMPILE_REQUIRED_SPEC_KEYS
+_LLM_DECOMPILE_OPTIONAL_SPEC_KEYS = frozenset({"instruction_rules", "expected_size"})
+_LLM_DECOMPILE_SPEC_KEYS = _LLM_DECOMPILE_REQUIRED_SPEC_KEYS | _LLM_DECOMPILE_OPTIONAL_SPEC_KEYS
 _LLM_DECOMPILE_DEPENDENCY_POLICIES = frozenset({"required", "optional"})
 
 
@@ -1120,6 +1123,56 @@ def _normalize_llm_decompile_spec(spec, debug=False):
     )
     if references is None or sections is None:
         return None
+    instruction_rules = None
+    if "instruction_rules" in spec:
+        raw_instruction_rules = spec.get("instruction_rules")
+        if not isinstance(raw_instruction_rules, (tuple, list)) or not raw_instruction_rules:
+            if debug:
+                print(
+                    f"    Preprocess: invalid llm_decompile instruction rules for "
+                    f"{symbol_name}: {raw_instruction_rules!r}"
+                )
+            return None
+        instruction_rules = []
+        for raw_instruction_rule in raw_instruction_rules:
+            if not isinstance(raw_instruction_rule, dict) or set(raw_instruction_rule) != {"regex", "text"}:
+                if debug:
+                    print(
+                        f"    Preprocess: invalid llm_decompile instruction rule shape for "
+                        f"{symbol_name}: {raw_instruction_rule!r}"
+                    )
+                return None
+            instruction_regex = raw_instruction_rule.get("regex")
+            instruction_text = raw_instruction_rule.get("text")
+            if (
+                not isinstance(instruction_regex, str)
+                or not instruction_regex.strip()
+                or not isinstance(instruction_text, str)
+                or not instruction_text.strip()
+            ):
+                if debug:
+                    print(
+                        f"    Preprocess: empty llm_decompile instruction rule field for "
+                        f"{symbol_name}: {raw_instruction_rule!r}"
+                    )
+                return None
+            try:
+                re.compile(instruction_regex)
+            except re.error as exc:
+                if debug:
+                    print(
+                        f"    Preprocess: invalid llm_decompile instruction rule for {symbol_name}: "
+                        f"{instruction_regex!r}: {exc}"
+                    )
+                return None
+            instruction_rules.append({"regex": instruction_regex, "text": instruction_text})
+    expected_size = spec.get("expected_size")
+    if "expected_size" in spec and (
+        isinstance(expected_size, bool) or not isinstance(expected_size, int) or expected_size <= 0
+    ):
+        if debug:
+            print(f"    Preprocess: invalid llm_decompile expected_size for {symbol_name}: {expected_size!r}")
+        return None
     raw_policy = spec.get("dependency_policy")
     if not isinstance(raw_policy, dict) or not raw_policy:
         if debug:
@@ -1149,6 +1202,10 @@ def _normalize_llm_decompile_spec(spec, debug=False):
         "expected_result_sections": sections,
         "dependency_policy": dependency_policy,
     }
+    if instruction_rules is not None:
+        normalized["instruction_rules"] = instruction_rules
+    if "expected_size" in spec:
+        normalized["expected_size"] = expected_size
     return normalized
 
 
@@ -1351,6 +1408,13 @@ def _validate_llm_decompile_spec_compatibility(
         if needs_vtable and symbol_name not in vtable_relations_map:
             if debug:
                 print(f"    Preprocess: missing vtable relation for llm_decompile target {symbol_name}")
+            return False
+        if "expected_size" in spec and target_kind != "struct_member":
+            if debug:
+                print(
+                    f"    Preprocess: llm_decompile expected_size is only valid for struct members: "
+                    f"symbol={symbol_name}, target_kind={target_kind!r}"
+                )
             return False
     return True
 
@@ -2640,12 +2704,14 @@ async def call_llm_decompile(
     retry_backoff_factor=None,
     retry_max_delay=None,
     debug=False,
+    instruction_validations=None,
 ):
     return await _ida_llm_decompile.call_llm_decompile(
         client=client,
         model=model,
         symbol_name_list=symbol_name_list,
         expected_result_sections=expected_result_sections,
+        instruction_validations=instruction_validations,
         disasm_code=disasm_code,
         target_disasm_codes=target_disasm_codes,
         procedure=procedure,
@@ -2679,6 +2745,16 @@ def _build_expected_llm_result_sections(symbol_names, llm_decompile_specs_map):
         if section_names:
             expected_sections[symbol_name] = list(section_names)
     return expected_sections
+
+
+def _build_llm_instruction_validations(symbol_names, llm_decompile_specs_map):
+    validations = {}
+    for symbol_name in symbol_names:
+        llm_spec = (llm_decompile_specs_map or {}).get(symbol_name) or {}
+        validation = {key: llm_spec[key] for key in ("instruction_rules", "expected_size") if key in llm_spec}
+        if validation:
+            validations[symbol_name] = validation
+    return validations
 
 
 async def preprocess_vtable_via_mcp(
@@ -7620,6 +7696,7 @@ async def preprocess_common_skill(
     llm_config=None,
     mangled_class_names=None,
     debug=False,
+    canonical_vtable_symbols=None,
 ):
     """Reusable preprocess_skill implementation for func/vfunc, gv, patch, struct-member, vtable, inherit-vfunc, func-xref, and vtable-relation targets.
 
@@ -7634,6 +7711,8 @@ async def preprocess_common_skill(
     - ``mangled_class_names``: optional mapping from canonical vtable class
       names to explicit mangled symbol aliases. These aliases are tried before
       auto-derived vtable symbols and RTTI fallback.
+    - ``canonical_vtable_symbols``: optional mapping from vtable class names to
+      deterministic symbols emitted in generated YAML.
     - ``inherit_vfuncs``: inherited virtual function targets resolved by
       base-class vfunc_index + vtable lookup via
       ``preprocess_index_based_vfunc_via_mcp``.  Each element is a tuple of
@@ -7684,6 +7763,8 @@ async def preprocess_common_skill(
         vtable_class_names: List of class names for vtable lookup, or None.
         mangled_class_names: Mapping from canonical vtable class name to
             explicit mangled aliases for vtable lookup (may be empty/None).
+        canonical_vtable_symbols: Mapping from vtable class name to the
+            deterministic symbol emitted in generated YAML (may be empty/None).
         inherit_vfuncs: List of inherited vfunc specs (may be empty/None).
         func_xrefs: List of dict specs for unified xref-based function lookup
             (may be empty/None). Supported keys are func_name,
@@ -7700,6 +7781,8 @@ async def preprocess_common_skill(
             requires symbol_name, prompt_path, reference_yaml_paths, and
             expected_result_sections plus a non-empty dependency_policy that
             classifies every reference artifact as required or optional.
+            Optional instruction_rules entries pair a regex with human-readable
+            correction text; expected_size constrains struct-member results.
         llm_config: Optional LLM config dict for llm_decompile fallback.
         debug: Enable debug output.
 
@@ -7715,6 +7798,7 @@ async def preprocess_common_skill(
     func_xrefs = func_xrefs or []
     func_vtable_relations = func_vtable_relations or []
     llm_decompile_specs = llm_decompile_specs or []
+    canonical_vtable_symbols = canonical_vtable_symbols or {}
     normalized_mangled_class_names = _normalize_mangled_class_names(
         mangled_class_names,
         debug=debug,
@@ -7924,6 +8008,11 @@ async def preprocess_common_skill(
         )
         if vtable_data is None:
             return False
+
+        canonical_vtable_symbol = canonical_vtable_symbols.get(vtable_class)
+        if canonical_vtable_symbol:
+            vtable_data = dict(vtable_data)
+            vtable_data["vtable_symbol"] = canonical_vtable_symbol
 
         payload = _assemble_symbol_payload(
             vtable_class,
@@ -8312,10 +8401,15 @@ async def preprocess_common_skill(
                 llm_symbol_name_list,
                 llm_decompile_specs_map,
             )
+            instruction_validations = _build_llm_instruction_validations(
+                llm_symbol_name_list,
+                llm_decompile_specs_map,
+            )
             return await call_llm_decompile(
                 model=llm_request["model"],
                 symbol_name_list=llm_symbol_name_list,
                 expected_result_sections=expected_result_sections,
+                instruction_validations=instruction_validations,
                 disasm_code=primary_target_detail.get("disasm_code", ""),
                 target_disasm_codes=[target_detail.get("disasm_code", "") for target_detail in llm_target_details],
                 procedure=primary_target_detail.get("procedure", ""),

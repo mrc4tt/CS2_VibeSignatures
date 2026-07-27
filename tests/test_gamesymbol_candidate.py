@@ -18,7 +18,7 @@ from gamesymbol_snapshot_lib.candidate import (
 from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotMismatchError
 from gamesymbol_store import CandidateChangedError
-from tests.gamesymbol_snapshot_test_support import module, skill, write_config, write_yaml
+from tests.gamesymbol_snapshot_test_support import module, skill, write_binary, write_config, write_yaml
 
 
 class CandidateWorkspace:
@@ -32,6 +32,7 @@ class CandidateWorkspace:
         self.session = self.stage / f"{self.gamever}.session.json"
         write_config(self.config, [module("server", [skill("find", ["Foo.{platform}.yaml"])], linux=False)])
         write_yaml(self.bindir / self.gamever / "server" / "Foo.windows.yaml", {"func_name": "Foo"})
+        write_binary(self.bindir / self.gamever / "server" / "server.dll")
 
     def build(self):
         return build_candidate_snapshot(
@@ -83,7 +84,7 @@ class TestCandidateLifecycle(unittest.TestCase):
                 self.assertEqual(info.candidate_sha256, published.candidate_sha256)
                 manifest = json.loads(workspace.session.read_text())
                 self.assertEqual(2, manifest["schema_version"])
-                self.assertEqual(3, manifest["snapshot_schema_version"])
+                self.assertEqual(4, manifest["snapshot_schema_version"])
                 self.assertEqual(2, manifest["config_digest_version"])
                 self.assertEqual("published", manifest["state"])
             finally:
@@ -149,23 +150,15 @@ class TestCandidateLifecycle(unittest.TestCase):
                     expected_game_version=workspace.gamever,
                 )
 
-    def test_compare_accepts_schema_2_and_schema_3_with_matching_output_contract(self) -> None:
+    def test_compare_accepts_only_last_publish_time_difference(self) -> None:
         with TemporaryDirectory() as temp_dir:
             workspace = CandidateWorkspace(Path(temp_dir))
             workspace.build()
             actual = parse_snapshot_bytes(workspace.candidate.read_bytes())
-            expected = workspace.root / "expected-v2.yaml"
-            expected.write_bytes(
-                canonical_snapshot_bytes(
-                    build_snapshot_document(
-                        workspace.gamever,
-                        actual["config_sha256"],
-                        actual["files"],
-                        schema_version=2,
-                        config_digest_version=2,
-                    )
-                )
-            )
+            expected = workspace.root / "expected-time.yaml"
+            expected_document = dict(actual)
+            expected_document["last_publish_time"] = "2026-01-02T03:04:05Z"
+            expected.write_bytes(canonical_snapshot_bytes(expected_document))
 
             diff = compare_snapshots(
                 actual_path=workspace.candidate,
@@ -176,6 +169,23 @@ class TestCandidateLifecycle(unittest.TestCase):
 
         self.assertTrue(diff.equal)
         self.assertNotEqual(diff.actual_sha256, diff.expected_sha256)
+
+    def test_compare_rejects_binary_metadata_difference(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = CandidateWorkspace(Path(temp_dir))
+            workspace.build()
+            expected_document = parse_snapshot_bytes(workspace.candidate.read_bytes())
+            expected_document["binaries"]["server"]["windows"]["md5"] = "0" * 32
+            expected = workspace.root / "expected-binary.yaml"
+            expected.write_bytes(canonical_snapshot_bytes(expected_document))
+
+            with self.assertRaisesRegex(SnapshotMismatchError, "binaries"):
+                compare_snapshots(
+                    actual_path=workspace.candidate,
+                    expected_path=expected,
+                    config_path=workspace.config,
+                    expected_game_version=workspace.gamever,
+                )
 
     def test_publish_failure_leaves_existing_snapshot_unchanged(self) -> None:
         with TemporaryDirectory() as temp_dir:

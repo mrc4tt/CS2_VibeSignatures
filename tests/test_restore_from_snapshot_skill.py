@@ -9,7 +9,7 @@ from unittest.mock import patch
 import yaml
 
 from gamesymbol_snapshot_lib.operations import pack_snapshot
-from tests.gamesymbol_snapshot_test_support import module, skill, write_config, write_yaml
+from tests.gamesymbol_snapshot_test_support import module, skill, write_binary, write_config, write_yaml
 
 
 SCRIPT = Path(".claude/skills/restore-from-snapshot/scripts/restore_from_snapshot.py")
@@ -45,7 +45,7 @@ class TestRestoreFromSnapshotSkill(unittest.TestCase):
             result = restore_skill.find_base_snapshot(root, "14171", ["14168", "14169", "14170", "14171"])
         self.assertEqual(snapshots / "14170.yaml", result)
 
-    def test_trusted_restore_then_verifies(self) -> None:
+    def test_trusted_restore_uses_internal_round_trip_verification(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             snapshot = root / "gamesymbols" / "14168.yaml"
@@ -56,11 +56,9 @@ class TestRestoreFromSnapshotSkill(unittest.TestCase):
                 patch.object(restore_skill, "load_versions", return_value=["14168"]),
                 patch.object(restore_skill, "resolve_analysis_config", return_value=config),
                 patch.object(restore_skill, "restore_snapshot") as restore,
-                patch.object(restore_skill, "verify_snapshot") as verify,
             ):
                 result = restore_skill.restore(root, "14168")
         restore.assert_called_once_with("14168", root / "bin", config, snapshot, replace=False)
-        verify.assert_called_once_with("14168", root / "bin", config, snapshot)
         self.assertEqual("trusted", result["mode"])
 
     def test_trusted_restore_runs_against_a_real_temporary_snapshot_workspace(self) -> None:
@@ -73,8 +71,12 @@ class TestRestoreFromSnapshotSkill(unittest.TestCase):
             linux = root / "bin/14168/server/A.linux.yaml"
             write_yaml(windows, {"func_name": "A", "func_size": 1})
             write_yaml(linux, {"func_name": "A", "func_size": 2})
+            write_binary(root / "bin/14168/server/server.dll")
+            write_binary(root / "bin/14168/server/server.so")
             snapshot = root / "gamesymbols" / "14168.yaml"
             pack_snapshot("14168", root / "bin", config, snapshot)
+            (root / "bin/14168/server/server.dll").unlink()
+            (root / "bin/14168/server/server.so").unlink()
             windows.unlink()
             linux.unlink()
 

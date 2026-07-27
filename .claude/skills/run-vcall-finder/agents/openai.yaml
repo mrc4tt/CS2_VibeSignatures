@@ -1,0 +1,6 @@
+interface:
+  display_name: "Run VCall Finder"
+  short_description: "Run vcall_finder for selected modules and symbols"
+  default_prompt: "Use $run-vcall-finder to scan specified modules and symbols for virtual calls."
+policy:
+  allow_implicit_invocation: false

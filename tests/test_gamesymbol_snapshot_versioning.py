@@ -11,6 +11,7 @@ import analysis_output_contract
 from gamesymbol_snapshot_lib.codec import (
     LEGACY_SCHEMA_VERSION,
     SCHEMA_2_VERSION,
+    SCHEMA_3_VERSION,
     SCHEMA_VERSION,
     build_snapshot_document,
     canonical_snapshot_bytes,
@@ -29,7 +30,7 @@ from gamesymbol_snapshot_lib.config import (
 from gamesymbol_snapshot_lib.errors import SnapshotMismatchError, SnapshotSchemaError, SnapshotUntrustedError
 from gamesymbol_snapshot_lib.operations import check_snapshot_contract, migrate_snapshot
 from gamesymbol_snapshot_lib.snapshot_cli import main as snapshot_main
-from tests.gamesymbol_snapshot_test_support import module, skill, write_config
+from tests.gamesymbol_snapshot_test_support import module, skill, write_binary, write_config
 
 
 class VersioningFixture:
@@ -61,10 +62,27 @@ class VersioningFixture:
             {"server/A.windows.yaml": {"func_name": "A", "func_rva": "0x10"}},
             schema_version=schema_version,
             config_digest_version=digest_version,
+            last_publish_time="2026-01-02T03:04:05Z" if schema_version == SCHEMA_VERSION else None,
+            binaries=(
+                {
+                    "server": {
+                        "windows": {
+                            "path": "game/bin/win64/server.dll",
+                            "sha256": "1" * 64,
+                            "md5": "2" * 32,
+                        }
+                    }
+                }
+                if schema_version == SCHEMA_VERSION
+                else None
+            ),
         )
         data = canonical_snapshot_bytes(document)
         self.snapshot.write_bytes(data)
         return data
+
+    def write_binary(self) -> None:
+        write_binary(self.bindir / self.gamever / "server" / "server.dll", b"server-binary")
 
 
 class TestConfigDigestVersioning(unittest.TestCase):
@@ -180,7 +198,7 @@ class TestSnapshotSchemaVersioning(unittest.TestCase):
 
     def test_schema_3_requires_positive_analysis_output_contract_version(self) -> None:
         base = {
-            "schema_version": SCHEMA_VERSION,
+            "schema_version": SCHEMA_3_VERSION,
             "config_digest_version": 2,
             "game_version": "1",
             "config_sha256": "sha256:" + "0" * 64,
@@ -193,10 +211,51 @@ class TestSnapshotSchemaVersioning(unittest.TestCase):
         with self.assertRaisesRegex(SnapshotSchemaError, "analysis_output_contract_version"):
             parse_snapshot_bytes(yaml.safe_dump(base).encode())
 
-    def test_contract_probe_accepts_v1_v2_and_v3_without_mutating_bin(self) -> None:
+    def test_schema_4_requires_exact_valid_publish_metadata(self) -> None:
+        base = {
+            "schema_version": SCHEMA_VERSION,
+            "last_publish_time": "2026-01-02T03:04:05Z",
+            "binaries": {
+                "server": {
+                    "windows": {
+                        "path": "game/bin/win64/server.dll",
+                        "sha256": "1" * 64,
+                        "md5": "2" * 32,
+                    }
+                }
+            },
+            "analysis_output_contract_version": 1,
+            "config_digest_version": 2,
+            "game_version": "1",
+            "config_sha256": "sha256:" + "0" * 64,
+            "file_count": 0,
+            "files": {},
+        }
+        parsed = parse_snapshot_bytes(canonical_snapshot_bytes(base))
+        self.assertEqual(base, parsed)
+
+        invalid_cases = (
+            ("last_publish_time", "2026-01-02T03:04:05+00:00"),
+            ("last_publish_time", "2026-02-30T03:04:05Z"),
+            ("sha256", "A" * 64),
+            ("sha256", "1" * 63),
+            ("md5", "2" * 31),
+        )
+        for field, value in invalid_cases:
+            with self.subTest(field=field, value=value):
+                candidate = yaml.safe_load(yaml.safe_dump(base))
+                if field == "last_publish_time":
+                    candidate[field] = value
+                else:
+                    candidate["binaries"]["server"]["windows"][field] = value
+                with self.assertRaises(SnapshotSchemaError):
+                    parse_snapshot_bytes(yaml.safe_dump(candidate).encode())
+
+    def test_contract_probe_accepts_v1_through_v4_without_mutating_bin(self) -> None:
         cases = (
             (1, LEGACY_SCHEMA_VERSION),
             (2, SCHEMA_2_VERSION),
+            (2, SCHEMA_3_VERSION),
             (2, SCHEMA_VERSION),
         )
         for digest_version, schema_version in cases:
@@ -260,6 +319,7 @@ class TestSnapshotSchemaVersioning(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             fixture = VersioningFixture(Path(temp_dir))
             source = parse_snapshot_bytes(fixture.write_snapshot(1))
+            fixture.write_binary()
 
             migrated_raw = migrate_snapshot(
                 fixture.gamever,
@@ -269,14 +329,16 @@ class TestSnapshotSchemaVersioning(unittest.TestCase):
             )
             migrated = parse_snapshot_bytes(migrated_raw)
 
-            self.assertEqual(3, migrated["schema_version"])
+            self.assertEqual(4, migrated["schema_version"])
             self.assertEqual(2, migrated["config_digest_version"])
             self.assertEqual(1, migrated["analysis_output_contract_version"])
             self.assertEqual(source["game_version"], migrated["game_version"])
             self.assertEqual(source["file_count"], migrated["file_count"])
             self.assertEqual(source["files"], migrated["files"])
             self.assertEqual(migrated_raw, fixture.snapshot.read_bytes())
-            with self.assertRaisesRegex(SnapshotMismatchError, "schema 1 or 2 source"):
+            self.assertIn("last_publish_time", migrated)
+            self.assertIn("binaries", migrated)
+            with self.assertRaisesRegex(SnapshotMismatchError, "schema 1, 2, or 3 source"):
                 migrate_snapshot(fixture.gamever, fixture.bindir, fixture.config, fixture.snapshot)
 
     def test_migration_accepts_known_unversioned_schema_1_transition_digest(self) -> None:
@@ -295,25 +357,47 @@ class TestSnapshotSchemaVersioning(unittest.TestCase):
                 config_digest_version=1,
             )
             fixture.snapshot.write_bytes(canonical_snapshot_bytes(source))
+            fixture.write_binary()
 
             migrated = parse_snapshot_bytes(
                 migrate_snapshot(fixture.gamever, fixture.bindir, fixture.config, fixture.snapshot)
             )
 
-        self.assertEqual(3, migrated["schema_version"])
+        self.assertEqual(4, migrated["schema_version"])
         self.assertEqual(source["files"], migrated["files"])
 
-    def test_migration_upgrades_schema_2_to_schema_3(self) -> None:
+    def test_migration_upgrades_schema_2_to_schema_4(self) -> None:
         with TemporaryDirectory() as temp_dir:
             fixture = VersioningFixture(Path(temp_dir))
             source = parse_snapshot_bytes(fixture.write_snapshot(2, schema_version=SCHEMA_2_VERSION))
+            fixture.write_binary()
 
             migrated = parse_snapshot_bytes(
                 migrate_snapshot(fixture.gamever, fixture.bindir, fixture.config, fixture.snapshot)
             )
 
-        self.assertEqual(3, migrated["schema_version"])
+        self.assertEqual(4, migrated["schema_version"])
         self.assertEqual(1, migrated["analysis_output_contract_version"])
+        self.assertEqual(source["files"], migrated["files"])
+
+    def test_migration_upgrades_schema_3_with_explicit_historical_time(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            fixture = VersioningFixture(Path(temp_dir))
+            source = parse_snapshot_bytes(fixture.write_snapshot(2, schema_version=SCHEMA_3_VERSION))
+            fixture.write_binary()
+
+            migrated = parse_snapshot_bytes(
+                migrate_snapshot(
+                    fixture.gamever,
+                    fixture.bindir,
+                    fixture.config,
+                    fixture.snapshot,
+                    last_publish_time="2025-12-31T23:59:58Z",
+                )
+            )
+
+        self.assertEqual(4, migrated["schema_version"])
+        self.assertEqual("2025-12-31T23:59:58Z", migrated["last_publish_time"])
         self.assertEqual(source["files"], migrated["files"])
 
 

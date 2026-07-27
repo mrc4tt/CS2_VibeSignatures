@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import dayjs from 'dayjs'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getGameSymbolDataset, getGameSymbolIndex } from './data'
 import { ExploreSymbolsPage } from './ExploreSymbolsPage'
 import type { GameSymbolDataset } from './types'
@@ -12,10 +13,16 @@ vi.mock('./data', () => ({
 }))
 
 const dataset: GameSymbolDataset = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   source: {
-    gameVersion: '14172', snapshotSchemaVersion: 3, configDigestVersion: 2,
+    gameVersion: '14172', snapshotSchemaVersion: 4, configDigestVersion: 2,
     analysisOutputContractVersion: 1, configSha256: 'sha256:test', fileCount: 3,
+    lastPublishTime: '2026-07-27T04:42:43Z',
+  },
+  binaries: {
+    server: {
+      windows: { path: 'game/bin/win64/server.dll', sha256: '1'.repeat(64), md5: '2'.repeat(32) },
+    },
   },
   modules: [
     { name: 'client', count: 1, windowsCount: 1, linuxCount: 0 },
@@ -34,12 +41,14 @@ function renderPage() {
 }
 
 describe('ExploreSymbolsPage', () => {
+  afterEach(cleanup)
+
   beforeEach(() => {
     vi.mocked(getGameSymbolIndex).mockResolvedValue({
-      schemaVersion: 1,
+      schemaVersion: 2,
       versions: [
-        { gameVersion: '14172', url: '14172.json', snapshotSchemaVersion: 3, fileCount: 3 },
-        { gameVersion: '14171', url: '14171.json', snapshotSchemaVersion: 2, fileCount: 2 },
+        { gameVersion: '14172', url: '14172.json', snapshotSchemaVersion: 4, fileCount: 3, lastPublishTime: '2026-07-27T04:42:43Z' },
+        { gameVersion: '14171', url: '14171.json', snapshotSchemaVersion: 4, fileCount: 2, lastPublishTime: '2026-07-26T01:02:03Z' },
       ],
     })
     vi.mocked(getGameSymbolDataset).mockImplementation(async (version) => ({
@@ -53,14 +62,15 @@ describe('ExploreSymbolsPage', () => {
     renderPage()
 
     expect(await screen.findByText('共 3 条记录')).toBeInTheDocument()
+    expect(screen.getByText(`最后更新 ${dayjs('2026-07-27T04:42:43Z').format('YYYY-MM-DD HH:mm:ss')} · 3 个符号`)).toBeInTheDocument()
     expect(getGameSymbolDataset).toHaveBeenCalledWith('14172.json', expect.any(AbortSignal))
 
-    await user.click(screen.getByText('全部模块'))
+    await user.click(screen.getByRole('combobox', { name: '全部模块' }))
     await user.click(await screen.findByText('server', { selector: '.ant-select-item-option-content' }))
     expect(await screen.findByText('共 2 条记录')).toBeInTheDocument()
 
     await user.type(screen.getByPlaceholderText('搜索符号名或 Artifact'), 'Teleport')
-    await user.click(screen.getByText('全部平台'))
+    await user.click(screen.getByRole('combobox', { name: '全部平台' }))
     await user.click(await screen.findByText('Linux', { selector: '.ant-select-item-option-content' }))
     expect(await screen.findByText('共 1 条记录')).toBeInTheDocument()
     expect(screen.getAllByText('CBaseEntity_Teleport').length).toBeGreaterThan(0)
@@ -69,8 +79,10 @@ describe('ExploreSymbolsPage', () => {
   it('opens full details from a search result', async () => {
     const user = userEvent.setup()
     renderPage()
-    const table = await screen.findByRole('table')
-    await user.click(within(table).getAllByRole('button', { name: 'CEntityInstance' })[0])
+    await screen.findByText('共 3 条记录')
+    const searchCard = document.querySelector('.symbol-search-card')
+    expect(searchCard).not.toBeNull()
+    await user.click(within(searchCard as HTMLElement).getByRole('button', { name: 'CEntityInstance' }))
     expect(await screen.findByText('符号详情')).toBeInTheDocument()
     expect(screen.getByText('client/CEntityInstance_vtable.windows.yaml')).toBeInTheDocument()
     expect(screen.getByText(/"vtable_class": "CEntityInstance"/)).toBeInTheDocument()
@@ -79,11 +91,13 @@ describe('ExploreSymbolsPage', () => {
   it('switches game versions and loads the selected snapshot', async () => {
     const user = userEvent.setup()
     renderPage()
-    await screen.findByText('共 3 条记录')
+    await screen.findByText(`最后更新 ${dayjs('2026-07-27T04:42:43Z').format('YYYY-MM-DD HH:mm:ss')} · 3 个符号`)
 
     await user.click(screen.getByLabelText('游戏版本'))
-    await user.click(await screen.findByText(/14171 · 2/, { selector: '.ant-select-item-option-content' }))
+    await user.click(await screen.findByText('14171', { selector: '.ant-select-item-option-content' }))
 
     expect(getGameSymbolDataset).toHaveBeenCalledWith('14171.json', expect.any(AbortSignal))
+    expect(screen.getByText(`最后更新 ${dayjs('2026-07-26T01:02:03Z').format('YYYY-MM-DD HH:mm:ss')} · 2 个符号`)).toBeInTheDocument()
+    expect(screen.queryByText(/14171 · 2/)).not.toBeInTheDocument()
   })
 })

@@ -1036,6 +1036,20 @@ modules:
         self.assertEqual([0, 1, 2], [module["stage_index"] for module in modules])
         self.assertEqual(["engine", "client", "engine"], [module["name"] for module in modules])
 
+    def test_parse_config_does_not_expose_legacy_vcall_finder_registration(self) -> None:
+        modules = ida_analyze_bin.parse_config_document(
+            {
+                "modules": [
+                    {
+                        "name": "server",
+                        "vcall_finder": ["g_pNetworkMessages"],
+                    }
+                ]
+            }
+        )
+
+        self.assertNotIn("vcall_finder_objects", modules[0])
+
     def test_parse_config_reads_skip_if_exists(self) -> None:
         with TemporaryDirectory() as temp_dir:
             config_path = Path(temp_dir) / "config.yaml"
@@ -1550,7 +1564,6 @@ class TestExecutionPlan(unittest.TestCase):
                 "name": "engine",
                 "path_windows": "game/bin/win64/engine2.dll",
                 "skills": [{"name": "find-target"}],
-                "vcall_finder_objects": ["g_pTarget"],
             }
         ]
 
@@ -1559,7 +1572,7 @@ class TestExecutionPlan(unittest.TestCase):
             platforms=["windows"],
             bin_dir="bin",
             gamever="14141",
-            vcall_finder_selector={"all": True},
+            vcall_finder_selector={"names": ["g_pTarget"]},
             include_post_process=True,
         )
 
@@ -4361,6 +4374,49 @@ class TestInspectFuncVaPyEvalSelfHeal(unittest.IsolatedAsyncioTestCase):
     clear=False,
 )
 class TestParseArgsLlmOptions(unittest.TestCase):
+    def test_parse_vcall_finder_filter_preserves_order_and_deduplicates(self) -> None:
+        selector = ida_analyze_bin.parse_vcall_finder_filter("g_pSecond, g_pFirst, g_pSecond")
+
+        self.assertEqual({"names": ["g_pSecond", "g_pFirst"]}, selector)
+
+    def test_parse_vcall_finder_filter_rejects_wildcard(self) -> None:
+        with self.assertRaisesRegex(ValueError, "wildcard is not supported"):
+            ida_analyze_bin.parse_vcall_finder_filter("*")
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14171")
+    def test_parse_args_requires_explicit_modules_for_vcall_finder(self, _mock_resolve_oldgamever) -> None:
+        with (
+            patch(
+                "sys.argv",
+                ["ida_analyze_bin.py", "-gamever", "14172", "-vcall_finder", "g_pNetworkMessages"],
+            ),
+            patch("sys.stderr", new_callable=io.StringIO) as fake_stderr,
+            self.assertRaises(SystemExit) as exc,
+        ):
+            ida_analyze_bin.parse_args()
+
+        self.assertEqual(2, exc.exception.code)
+        self.assertIn("requires explicit -modules", fake_stderr.getvalue())
+
+    @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14171")
+    def test_parse_args_accepts_explicit_vcall_modules_and_objects(self, _mock_resolve_oldgamever) -> None:
+        with patch(
+            "sys.argv",
+            [
+                "ida_analyze_bin.py",
+                "-gamever",
+                "14172",
+                "-modules",
+                "server,engine",
+                "-vcall_finder",
+                "g_pFirst,g_pSecond",
+            ],
+        ):
+            args = ida_analyze_bin.parse_args()
+
+        self.assertEqual(["server", "engine"], args.module_filter)
+        self.assertEqual({"names": ["g_pFirst", "g_pSecond"]}, args.vcall_finder_filter)
+
     @patch.object(ida_analyze_bin, "resolve_oldgamever", return_value="14140")
     def test_parse_args_accepts_skip_error(self, _mock_resolve_oldgamever) -> None:
         with patch(
@@ -4923,7 +4979,6 @@ class TestMainReporterLifecycle(unittest.TestCase):
                 "stage_index": 3,
                 "name": "engine",
                 "skills": [{"name": "find-target", "expected_output": [], "expected_input": []}],
-                "vcall_finder_objects": [],
                 "path_windows": "game/bin/win64/engine2.dll",
             }
         ]
@@ -4959,7 +5014,7 @@ class TestMainLlmWiring(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    @patch.object(ida_analyze_bin, "process_binary", return_value=(0, 0, 0))
+    @patch.object(ida_analyze_bin, "process_binary")
     @patch.object(ida_analyze_bin, "parse_config")
     @patch("ida_analyze_bin.os.path.exists", return_value=True)
     @patch.object(ida_analyze_bin, "parse_args")
@@ -4968,7 +5023,7 @@ class TestMainLlmWiring(unittest.TestCase):
         mock_parse_args,
         _mock_exists,
         mock_parse_config,
-        _mock_process_binary,
+        mock_process_binary,
     ) -> None:
         captured = {}
 
@@ -5007,13 +5062,13 @@ class TestMainLlmWiring(unittest.TestCase):
             gamever="14141",
             oldgamever=None,
             platforms=["windows"],
-            module_filter=None,
-            modules="*",
+            module_filter=["networksystem"],
+            modules="networksystem",
             agent="codex",
             ida_args="",
             debug=False,
             maxretry=3,
-            vcall_finder_filter={"all": True},
+            vcall_finder_filter={"names": ["g_pNetworkMessages"]},
             llm_model="gpt-4.1-mini",
             llm_apikey="test-api-key",
             llm_baseurl="https://example.invalid/v1",
@@ -5026,10 +5081,15 @@ class TestMainLlmWiring(unittest.TestCase):
             {
                 "name": "networksystem",
                 "skills": [],
-                "vcall_finder_objects": ["g_pNetworkMessages"],
                 "path_windows": "game/bin/win64/networksystem.dll",
             }
         ]
+
+        def mark_object_found(*_args, **kwargs):
+            kwargs["found_vcall_objects"].add("g_pNetworkMessages")
+            return (0, 0, 0)
+
+        mock_process_binary.side_effect = mark_object_found
 
         with patch.object(
             ida_analyze_bin,
@@ -5055,6 +5115,15 @@ class TestMainLlmWiring(unittest.TestCase):
             captured["kwargs"],
         )
 
+    def test_vcall_aggregation_fails_when_object_was_not_found(self) -> None:
+        args = SimpleNamespace(vcall_finder_filter={"names": ["g_pMissing"]})
+
+        with patch.object(ida_analyze_bin, "_aggregate_vcall_object") as aggregate:
+            counts = ida_analyze_bin._run_vcall_aggregation(args, ["g_pMissing"], set())
+
+        self.assertEqual([0, 1, 0], counts)
+        aggregate.assert_not_called()
+
     @patch.object(ida_analyze_bin, "parse_config")
     @patch("ida_analyze_bin.os.path.exists", return_value=True)
     @patch.object(ida_analyze_bin, "parse_args")
@@ -5070,13 +5139,13 @@ class TestMainLlmWiring(unittest.TestCase):
             gamever="14141",
             oldgamever=None,
             platforms=["windows"],
-            module_filter=None,
-            modules="*",
+            module_filter=["engine", "server"],
+            modules="engine,server",
             agent="codex",
             ida_args="",
             debug=False,
             maxretry=3,
-            vcall_finder_filter={"all": True},
+            vcall_finder_filter={"names": ["g_pFirst", "g_pSecond"]},
             llm_model="gpt-4.1-mini",
             llm_apikey=None,
             llm_baseurl=None,
@@ -5095,7 +5164,6 @@ class TestMainLlmWiring(unittest.TestCase):
                         "expected_input": [],
                     }
                 ],
-                "vcall_finder_objects": ["g_pFirst"],
                 "path_windows": "game/bin/win64/engine2.dll",
             },
             {
@@ -5107,7 +5175,6 @@ class TestMainLlmWiring(unittest.TestCase):
                         "expected_input": [],
                     }
                 ],
-                "vcall_finder_objects": ["g_pSecond"],
                 "path_windows": "game/bin/win64/server.dll",
             },
         ]
@@ -5138,13 +5205,13 @@ class TestMainLlmWiring(unittest.TestCase):
             gamever="14141",
             oldgamever=None,
             platforms=["windows"],
-            module_filter=None,
-            modules="*",
+            module_filter=["engine", "server"],
+            modules="engine,server",
             agent="codex",
             ida_args="",
             debug=False,
             maxretry=3,
-            vcall_finder_filter={"all": True},
+            vcall_finder_filter={"names": ["g_pFirst", "g_pSecond"]},
             llm_model="gpt-4.1-mini",
             llm_apikey=None,
             llm_baseurl=None,
@@ -5158,19 +5225,21 @@ class TestMainLlmWiring(unittest.TestCase):
             {
                 "name": "engine",
                 "skills": [{"name": "find-first", "expected_output": [], "expected_input": []}],
-                "vcall_finder_objects": ["g_pFirst"],
                 "path_windows": "game/bin/win64/engine2.dll",
             },
             {
                 "name": "server",
                 "skills": [{"name": "find-second", "expected_output": [], "expected_input": []}],
-                "vcall_finder_objects": ["g_pSecond"],
                 "path_windows": "game/bin/win64/server.dll",
             },
         ]
 
+        def fail_but_mark_objects_found(*_args, **kwargs):
+            kwargs["found_vcall_objects"].update(kwargs["vcall_targets"])
+            return (0, 1, 0)
+
         with (
-            patch.object(ida_analyze_bin, "process_binary", return_value=(0, 1, 0)) as mock_process,
+            patch.object(ida_analyze_bin, "process_binary", side_effect=fail_but_mark_objects_found) as mock_process,
             patch.object(
                 ida_analyze_bin,
                 "aggregate_vcall_results_for_object",
@@ -5238,7 +5307,6 @@ class TestMainPostProcessWiring(unittest.TestCase):
                         "expected_input": [],
                     }
                 ],
-                "vcall_finder_objects": [],
                 "path_windows": "game/bin/win64/server.dll",
             }
         ]
@@ -5296,13 +5364,11 @@ class TestMainSkillFilterWiring(unittest.TestCase):
             {
                 "name": "client",
                 "skills": [{"name": "find-other"}],
-                "vcall_finder_objects": [],
                 "path_windows": "game/bin/win64/client.dll",
             },
             {
                 "name": "server",
                 "skills": [{"name": "find-target"}, {"name": "find-other"}],
-                "vcall_finder_objects": [],
                 "path_windows": "game/bin/win64/server.dll",
             },
         ]

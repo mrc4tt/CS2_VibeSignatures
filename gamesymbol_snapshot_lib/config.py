@@ -1,13 +1,13 @@
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import yaml
 
 import analysis_output_contract
 import ida_analyze_bin
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError
-from gamesymbol_snapshot_lib.model import SkillNode, SnapshotContract
+from gamesymbol_snapshot_lib.model import BinaryTarget, SkillNode, SnapshotContract
 from gamesymbol_snapshot_lib.paths import canonical_key
 from trusted_yaml import load_yaml_file
 
@@ -229,6 +229,46 @@ def _collect_paths(nodes: dict[str, SkillNode]):
     return frozenset(required), frozenset(optional), frozen_owners
 
 
+def _validate_binary_source_path(value: object, context: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise SnapshotConfigError(f"{context} must be a non-empty string")
+    if "\\" in value or PureWindowsPath(value).is_absolute():
+        raise SnapshotConfigError(f"{context} must be a relative POSIX path")
+    path = PurePosixPath(value)
+    if path.is_absolute() or "//" in value or any(part in {"", ".", ".."} for part in path.parts):
+        raise SnapshotConfigError(f"{context} is unsafe: {value!r}")
+    return path.as_posix()
+
+
+def _collect_binary_targets(modules: list[dict]) -> dict[tuple[str, str], BinaryTarget]:
+    targets = {}
+    case_spellings = {}
+    for module in modules:
+        module_name = module["name"]
+        if module_name in {".", ".."} or "/" in module_name or "\\" in module_name:
+            raise SnapshotConfigError(f"invalid binary module name: {module_name!r}")
+        prior_module = case_spellings.setdefault(module_name.casefold(), module_name)
+        if prior_module != module_name:
+            raise SnapshotConfigError(f"case-insensitive binary module collision: {prior_module!r} and {module_name!r}")
+        for platform in PLATFORMS:
+            raw_path = module.get(f"path_{platform}")
+            if raw_path is None:
+                continue
+            source_path = _validate_binary_source_path(
+                raw_path,
+                f"modules[{module['stage_index']}].path_{platform}",
+            )
+            key = (module_name, platform)
+            previous = targets.get(key)
+            if previous is not None and previous.source_path != source_path:
+                raise SnapshotConfigError(
+                    f"conflicting binary path for {module_name}/{platform}: "
+                    f"{previous.source_path!r} and {source_path!r}"
+                )
+            targets[key] = BinaryTarget(module_name, platform, source_path)
+    return targets
+
+
 def _build_contract(
     config_document, game_version, bindir, config_digest_version: int, config_sha256: str
 ) -> SnapshotContract:
@@ -238,6 +278,7 @@ def _build_contract(
         modules = ida_analyze_bin.parse_config_document(config_document)
         ida_analyze_bin.validate_module_skill_dependencies(modules)
         nodes = _collect_nodes(modules, bindir / game_version)
+        binary_targets = _collect_binary_targets(modules)
     except (OSError, ValueError, TypeError) as exc:
         raise SnapshotConfigError(f"invalid analysis contract: {exc}") from exc
     required, optional, owners = _collect_paths(nodes)
@@ -251,6 +292,7 @@ def _build_contract(
         optional,
         owners,
         nodes,
+        binary_targets,
     )
 
 

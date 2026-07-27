@@ -6,6 +6,10 @@ from ida_analyze_util import preprocess_common_skill
 TARGET_CLASS_NAMES = [
     "CLoopModeFactory_CLoopModeGame",
 ]
+CANONICAL_VTABLE_SYMBOLS_BY_PLATFORM = {
+    "windows": {"CLoopModeFactory_CLoopModeGame": "CLoopModeFactory_CLoopModeGame_vtable"},
+    "linux": {"CLoopModeFactory_CLoopModeGame": "_ZTV16CLoopModeFactoryI13CLoopModeGameE + 0x10"},
+}
 
 MANGLED_CLASS_NAMES = {
     "CLoopModeFactory_CLoopModeGame": [
@@ -50,5 +54,6 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
+        canonical_vtable_symbols=CANONICAL_VTABLE_SYMBOLS_BY_PLATFORM.get(platform),
         debug=debug,
     )

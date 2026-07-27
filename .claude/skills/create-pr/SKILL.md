@@ -75,8 +75,6 @@ creation and report the paths. Untracked files may remain, but record them and n
 
 Validate the intended branch before running expensive gates:
 
-- Require `HEAD` to equal `origin/main`. If the current branch is behind, ahead, or diverged, stop before the gates;
-  do not pull, rebase, merge, or hide older commits inside this staged-change PR.
 - On `main`, choose the caller-provided `branch` or derive a valid, unused `dev-<topic>` name. Validate it with
   `git check-ref-format --branch <dev-branch>` and require that it does not exist locally or on `origin`.
 - On an existing `dev*` branch whose `HEAD` still equals `origin/main`, use that branch unless the caller explicitly

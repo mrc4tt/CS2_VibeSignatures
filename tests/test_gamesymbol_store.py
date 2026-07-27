@@ -13,7 +13,7 @@ from gamesymbol_store import (
     SnapshotSymbolStore,
     SymbolNotFoundError,
 )
-from tests.gamesymbol_snapshot_test_support import module, skill, write_config, write_yaml
+from tests.gamesymbol_snapshot_test_support import module, skill, write_binary, write_config, write_yaml
 
 
 class StoreWorkspace:
@@ -29,6 +29,7 @@ class StoreWorkspace:
         ]
         write_config(self.config, [module("server", [skill("find-vtable", outputs)], linux=False)])
         self._write_symbols()
+        write_binary(self.bindir / self.gamever / "server/server.dll")
         self.snapshot = root / "candidate" / f"{self.gamever}.yaml"
         pack_snapshot(self.gamever, self.bindir, self.config, self.snapshot)
 
@@ -66,7 +67,7 @@ class TestSnapshotSymbolStore(unittest.TestCase):
                 [entry.path for entry in store.glob_module("server", "ITest_*.windows.yaml")],
             )
             self.assertTrue(store.candidate_sha256.startswith("sha256:"))
-            self.assertEqual(3, store.schema_version)
+            self.assertEqual(4, store.schema_version)
             self.assertEqual(2, store.config_digest_version)
 
     def test_missing_and_unsafe_queries_are_typed(self) -> None:

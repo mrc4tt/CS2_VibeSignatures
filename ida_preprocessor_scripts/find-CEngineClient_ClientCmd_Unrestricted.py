@@ -19,7 +19,7 @@ FUNC_XREFS = [
         "xref_signatures": [],
         "xref_funcs": [],
         "exclude_funcs": [
-            "CInputService_ProcessCommand",
+            "CInputService_ProcessCommandBuffer",
             "CInputService_ProcessCommandBuffers",
             "CInputService_HandleAnalogValueChange",
             "CInputService_HandleInputEvent",

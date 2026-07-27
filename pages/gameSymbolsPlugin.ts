@@ -11,6 +11,14 @@ type JsonObject = Record<string, unknown>
 
 export type GameSymbolPlatform = 'windows' | 'linux'
 
+export interface GameSymbolBinary {
+  path: string
+  sha256: string
+  md5: string
+}
+
+export type GameSymbolBinaries = Record<string, Partial<Record<GameSymbolPlatform, GameSymbolBinary>>>
+
 export interface GameSymbolRecord {
   id: string
   module: string
@@ -23,7 +31,7 @@ export interface GameSymbolRecord {
 }
 
 export interface GameSymbolDataset {
-  schemaVersion: 1
+  schemaVersion: 2
   source: {
     gameVersion: string
     snapshotSchemaVersion: number
@@ -31,7 +39,9 @@ export interface GameSymbolDataset {
     analysisOutputContractVersion: number
     configSha256: string
     fileCount: number
+    lastPublishTime: string
   }
+  binaries: GameSymbolBinaries
   modules: Array<{
     name: string
     count: number
@@ -42,12 +52,13 @@ export interface GameSymbolDataset {
 }
 
 export interface GameSymbolIndex {
-  schemaVersion: 1
+  schemaVersion: 2
   versions: Array<{
     gameVersion: string
     url: string
     snapshotSchemaVersion: number
     fileCount: number
+    lastPublishTime: string
   }>
 }
 
@@ -129,6 +140,38 @@ function optionalInteger(value: unknown, fallback: number, field: string, source
   return requiredInteger(value, field, source)
 }
 
+function requiredPublishTime(value: unknown, source: string): string {
+  const publishTime = requiredString(value, 'last_publish_time', source)
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(publishTime) || Number.isNaN(Date.parse(publishTime))) {
+    throw new Error(`${source}: last_publish_time must be UTC ISO 8601 with second precision and Z suffix`)
+  }
+  return publishTime
+}
+
+function normalizeBinaries(value: unknown, source: string): GameSymbolBinaries {
+  if (!isObject(value)) throw new Error(`${source}: binaries must be a mapping`)
+  const binaries: GameSymbolBinaries = {}
+  for (const [module, platformsValue] of Object.entries(value).sort(([left], [right]) => left.localeCompare(right))) {
+    if (!module || module === '.' || module === '..' || module.includes('/') || module.includes('\\')) {
+      throw new Error(`${source}: invalid binary module ${module}`)
+    }
+    if (!isObject(platformsValue)) throw new Error(`${source}: binaries.${module} must be a mapping`)
+    const platforms: Partial<Record<GameSymbolPlatform, GameSymbolBinary>> = {}
+    for (const [platform, metadataValue] of Object.entries(platformsValue)) {
+      if (platform !== 'windows' && platform !== 'linux') throw new Error(`${source}: unsupported binary platform ${platform}`)
+      if (!isObject(metadataValue)) throw new Error(`${source}: binaries.${module}.${platform} must be a mapping`)
+      const path = requiredString(metadataValue.path, `binaries.${module}.${platform}.path`, source)
+      const sha256 = requiredString(metadataValue.sha256, `binaries.${module}.${platform}.sha256`, source)
+      const md5 = requiredString(metadataValue.md5, `binaries.${module}.${platform}.md5`, source)
+      if (!/^[0-9a-f]{64}$/.test(sha256)) throw new Error(`${source}: binaries.${module}.${platform}.sha256 is invalid`)
+      if (!/^[0-9a-f]{32}$/.test(md5)) throw new Error(`${source}: binaries.${module}.${platform}.md5 is invalid`)
+      platforms[platform] = { path, sha256, md5 }
+    }
+    binaries[module] = platforms
+  }
+  return binaries
+}
+
 function symbolKind(payload: JsonObject): string {
   if (typeof payload.patch_name === 'string') return 'patch'
   if (typeof payload.vtable_class === 'string') return 'vtable'
@@ -160,6 +203,8 @@ export function normalizeGameSymbolSnapshot(raw: unknown, expectedGameVersion: s
   const fileCount = requiredInteger(raw.file_count, 'file_count', source)
   const fileEntries = Object.entries(files)
   if (fileEntries.length !== fileCount) throw new Error(`${source}: file_count ${fileCount} does not match ${fileEntries.length} files`)
+  const lastPublishTime = requiredPublishTime(raw.last_publish_time, source)
+  const binaries = normalizeBinaries(raw.binaries, source)
 
   const moduleCounts = new Map<string, { count: number; windowsCount: number; linuxCount: number }>()
   const records = fileEntries.map(([id, payloadValue]) => {
@@ -191,7 +236,7 @@ export function normalizeGameSymbolSnapshot(raw: unknown, expectedGameVersion: s
   })
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     source: {
       gameVersion,
       snapshotSchemaVersion: requiredInteger(raw.schema_version, 'schema_version', source),
@@ -199,7 +244,9 @@ export function normalizeGameSymbolSnapshot(raw: unknown, expectedGameVersion: s
       analysisOutputContractVersion: optionalInteger(raw.analysis_output_contract_version, 1, 'analysis_output_contract_version', source),
       configSha256: requiredString(raw.config_sha256, 'config_sha256', source),
       fileCount,
+      lastPublishTime,
     },
+    binaries,
     modules: [...moduleCounts.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([name, counts]) => ({ name, ...counts })),
@@ -218,13 +265,14 @@ function compareGameVersions(left: string, right: string): number {
 
 export function createGameSymbolIndex(datasets: GameSymbolDataset[]): GameSymbolIndex {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     versions: datasets
       .map((dataset) => ({
         gameVersion: dataset.source.gameVersion,
         url: `${dataset.source.gameVersion}.json`,
         snapshotSchemaVersion: dataset.source.snapshotSchemaVersion,
         fileCount: dataset.source.fileCount,
+        lastPublishTime: dataset.source.lastPublishTime,
       }))
       .sort((left, right) => compareGameVersions(left.gameVersion, right.gameVersion)),
   }
@@ -301,6 +349,7 @@ export function gameSymbolsPlugin(symbolsDirectory: string, configsDirectory?: s
     name: 'gamesymbol-assets',
     configureServer(server) {
       server.watcher.add(symbolsDirectory)
+      if (configsDirectory) server.watcher.add(configsDirectory)
       server.middlewares.use(async (request, response, next) => {
         const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
         if (pathname.endsWith('/gamesymbols/index.json')) {
@@ -327,6 +376,12 @@ export function gameSymbolsPlugin(symbolsDirectory: string, configsDirectory?: s
     async buildStart() {
       const files = await snapshotFiles()
       files.forEach((filePath) => this.addWatchFile(filePath))
+      if (configsDirectory) {
+        files.forEach((filePath) => {
+          const match = SNAPSHOT_FILE_PATTERN.exec(basename(filePath))
+          if (match) this.addWatchFile(join(configsDirectory, `${match[1]}.yaml`))
+        })
+      }
     },
     async generateBundle() {
       const files = await snapshotFiles()

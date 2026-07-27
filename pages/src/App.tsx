@@ -31,7 +31,7 @@ export default function App() {
       <AntApp>
         <QueryClientProvider client={queryClient}>
           <ApiProvider>
-            <BrowserRouter>
+            <BrowserRouter basename={import.meta.env.BASE_URL}>
               <AppShell />
             </BrowserRouter>
           </ApiProvider>

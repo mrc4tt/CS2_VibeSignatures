@@ -1,15 +1,19 @@
 import logging
 import os
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
+from pathlib import PurePosixPath
 
 import yaml
 
+from binary_hashing import hash_file
 from analysis_output_contract import ANALYSIS_OUTPUT_CONTRACT_MISMATCH_REASON
 from analysis_config import resolve_analysis_config
 from gamesymbol_snapshot_lib.codec import (
     LEGACY_SCHEMA_VERSION,
     SCHEMA_2_VERSION,
+    SCHEMA_3_VERSION,
     SCHEMA_VERSION,
     build_snapshot_document,
     canonical_snapshot_bytes,
@@ -23,14 +27,20 @@ from gamesymbol_snapshot_lib.config import (
     load_contract,
     load_unversioned_schema1_contract,
 )
-from gamesymbol_snapshot_lib.diff import format_mismatch
+from gamesymbol_snapshot_lib.diff import format_snapshot_mismatch
 from gamesymbol_snapshot_lib.errors import (
     SnapshotMismatchError,
     SnapshotSchemaError,
     SnapshotUntrustedError,
 )
 from gamesymbol_snapshot_lib.model import SnapshotContext
-from gamesymbol_snapshot_lib.paths import canonical_key, ensure_real_tree, iter_yaml_paths, path_from_key
+from gamesymbol_snapshot_lib.paths import (
+    canonical_key,
+    ensure_real_tree,
+    is_reparse_point,
+    iter_yaml_paths,
+    path_from_key,
+)
 from trusted_yaml import load_yaml_file
 
 
@@ -73,8 +83,58 @@ def _schema_for_digest(config_digest_version: int) -> int:
     return LEGACY_SCHEMA_VERSION if config_digest_version == 1 else SCHEMA_VERSION
 
 
-def build_actual_document(contract, *, strict: bool = False, schema_version: int | None = None) -> dict:
+def _utc_publish_time() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _binary_file_path(contract, target) -> Path:
+    return contract.game_root / target.module_name / PurePosixPath(target.source_path).name
+
+
+def _ensure_plain_binary(path: Path, game_root: Path) -> None:
+    if not path.exists() or not path.is_file():
+        raise SnapshotMismatchError(f"binary file is missing: {path}")
+    current = path
+    while True:
+        if is_reparse_point(current):
+            raise SnapshotMismatchError(f"binary file path must not traverse a link/reparse point: {current}")
+        if current == game_root:
+            break
+        if game_root not in current.parents:
+            raise SnapshotMismatchError(f"binary file escapes game version root: {path}")
+        current = current.parent
+
+
+def collect_binary_metadata(contract) -> dict:
+    binaries = {}
+    for key in sorted(contract.binary_targets):
+        target = contract.binary_targets[key]
+        binary_path = _binary_file_path(contract, target)
+        _ensure_plain_binary(binary_path, contract.game_root)
+        try:
+            hashes = hash_file(binary_path)
+        except OSError as exc:
+            raise SnapshotMismatchError(f"unable to hash binary file {binary_path}: {exc}") from exc
+        binaries.setdefault(target.module_name, {})[target.platform] = {
+            "path": target.source_path,
+            "sha256": hashes["sha256"],
+            "md5": hashes["md5"],
+        }
+    return binaries
+
+
+def build_actual_document(
+    contract,
+    *,
+    strict: bool = False,
+    schema_version: int | None = None,
+    last_publish_time: str | None = None,
+    binaries: dict | None = None,
+) -> dict:
     schema_version = schema_version or _schema_for_digest(contract.config_digest_version)
+    if schema_version == SCHEMA_VERSION:
+        last_publish_time = last_publish_time or _utc_publish_time()
+        binaries = collect_binary_metadata(contract) if binaries is None else binaries
     return build_snapshot_document(
         contract.game_version,
         contract.config_sha256,
@@ -82,6 +142,8 @@ def build_actual_document(contract, *, strict: bool = False, schema_version: int
         schema_version=schema_version,
         config_digest_version=contract.config_digest_version,
         analysis_output_contract_version=contract.analysis_output_contract_version,
+        last_publish_time=last_publish_time,
+        binaries=binaries,
     )
 
 
@@ -120,6 +182,20 @@ def validate_snapshot_contract(document: dict, contract) -> None:
             reason=ANALYSIS_OUTPUT_CONTRACT_MISMATCH_REASON,
         )
     _validate_snapshot_paths(document, contract)
+    if document["schema_version"] == SCHEMA_VERSION:
+        expected_paths = {
+            (target.module_name, target.platform): target.source_path for target in contract.binary_targets.values()
+        }
+        actual_paths = {
+            (module, platform): metadata["path"]
+            for module, platforms in document["binaries"].items()
+            for platform, metadata in platforms.items()
+        }
+        if actual_paths != expected_paths:
+            raise SnapshotMismatchError(
+                f"snapshot binaries do not match config: snapshot={actual_paths!r} actual={expected_paths!r}",
+                reason="snapshot_contract_mismatch",
+            )
 
 
 def _read_snapshot(snapshot_path: Path) -> bytes:
@@ -172,11 +248,18 @@ def _atomic_write(path: Path, data: bytes) -> None:
             temporary.unlink()
 
 
-def pack_snapshot(game_version, bindir="bin", config_path=None, snapshot_path=None) -> bytes:
+def pack_snapshot(
+    game_version,
+    bindir="bin",
+    config_path=None,
+    snapshot_path=None,
+    last_publish_time: str | None = None,
+) -> bytes:
     snapshot_path = Path(snapshot_path or f"gamesymbols/{game_version}.yaml")
     config_path = resolve_analysis_config(game_version, config_path)
     contract = load_contract(config_path, game_version, bindir, LATEST_CONFIG_DIGEST_VERSION)
-    document = build_actual_document(contract)
+    ensure_real_tree(Path(bindir), contract.game_root)
+    document = build_actual_document(contract, last_publish_time=last_publish_time)
     data = canonical_snapshot_bytes(document)
     reparsed = parse_snapshot_bytes(data, str(game_version))
     validate_snapshot_contract(reparsed, contract)
@@ -217,7 +300,12 @@ def _round_trip_document(document: dict, game_version: str, config_path) -> byte
         contract = load_contract(config_path, game_version, bindir, digest_version)
         ensure_real_tree(bindir, contract.game_root)
         _write_document_files(contract, document, overwrite=True)
-        actual = build_actual_document(contract, schema_version=document["schema_version"])
+        actual = build_actual_document(
+            contract,
+            schema_version=document["schema_version"],
+            last_publish_time=document.get("last_publish_time"),
+            binaries=document.get("binaries"),
+        )
         return canonical_snapshot_bytes(actual)
 
 
@@ -251,12 +339,16 @@ def restore_snapshot(game_version, bindir="bin", config_path=None, snapshot_path
     else:
         _delete_yaml_tree(context.contract.game_root)
     _write_document_files(context.contract, context.document, overwrite=replace)
-    if replace:
-        restored = canonical_snapshot_bytes(
-            build_actual_document(context.contract, schema_version=context.document["schema_version"])
+    restored = canonical_snapshot_bytes(
+        build_actual_document(
+            context.contract,
+            schema_version=context.document["schema_version"],
+            last_publish_time=context.document.get("last_publish_time"),
+            binaries=context.document.get("binaries"),
         )
-        if restored != context.raw_bytes:
-            raise SnapshotMismatchError("restore -replace round-trip did not reproduce the snapshot")
+    )
+    if restored != context.raw_bytes:
+        raise SnapshotMismatchError("restore round-trip did not reproduce the snapshot")
     return context.raw_bytes
 
 
@@ -264,10 +356,14 @@ def verify_snapshot(game_version, bindir="bin", config_path=None, snapshot_path=
     snapshot_path = Path(snapshot_path or f"gamesymbols/{game_version}.yaml")
     config_path = resolve_analysis_config(game_version, config_path)
     context = load_snapshot_context(snapshot_path, config_path, game_version, bindir, require_canonical=True)
-    actual_document = build_actual_document(context.contract, schema_version=context.document["schema_version"])
+    actual_document = build_actual_document(
+        context.contract,
+        schema_version=context.document["schema_version"],
+        last_publish_time=context.document.get("last_publish_time"),
+    )
     actual_bytes = canonical_snapshot_bytes(actual_document)
     if actual_bytes != context.raw_bytes:
-        raise SnapshotMismatchError(format_mismatch(context.document["files"], actual_document["files"]))
+        raise SnapshotMismatchError(format_snapshot_mismatch(context.document, actual_document))
     snapshot_round_trip = _round_trip_document(context.document, str(game_version), config_path)
     if snapshot_round_trip != context.raw_bytes:
         raise SnapshotMismatchError("snapshot restore/pack round-trip is not byte-stable")
@@ -284,6 +380,7 @@ def migrate_snapshot(
     snapshot_path=None,
     output_path=None,
     source_config_path=None,
+    last_publish_time: str | None = None,
 ) -> bytes:
     snapshot_path = Path(snapshot_path or f"gamesymbols/{game_version}.yaml")
     output_path = Path(output_path or snapshot_path)
@@ -306,8 +403,8 @@ def migrate_snapshot(
                 reason="noncanonical_snapshot",
             )
         source = SnapshotContext(document, raw, transitional_contract)
-    if source.document["schema_version"] not in {LEGACY_SCHEMA_VERSION, SCHEMA_2_VERSION}:
-        raise SnapshotMismatchError("snapshot migration requires a schema 1 or 2 source")
+    if source.document["schema_version"] not in {LEGACY_SCHEMA_VERSION, SCHEMA_2_VERSION, SCHEMA_3_VERSION}:
+        raise SnapshotMismatchError("snapshot migration requires a schema 1, 2, or 3 source")
     target_contract = load_contract(config_path, game_version, bindir, LATEST_CONFIG_DIGEST_VERSION)
     _validate_snapshot_paths(source.document, target_contract)
     migrated = build_snapshot_document(
@@ -317,6 +414,8 @@ def migrate_snapshot(
         schema_version=SCHEMA_VERSION,
         config_digest_version=target_contract.config_digest_version,
         analysis_output_contract_version=target_contract.analysis_output_contract_version,
+        last_publish_time=last_publish_time or _utc_publish_time(),
+        binaries=collect_binary_metadata(target_contract),
     )
     data = canonical_snapshot_bytes(migrated)
     reparsed = parse_snapshot_bytes(data, str(game_version))

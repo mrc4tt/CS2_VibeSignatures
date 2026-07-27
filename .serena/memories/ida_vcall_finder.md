@@ -6,7 +6,7 @@
 ## Responsibilities
 - Build and normalize `vcall_finder` output paths, including detail YAML paths and object-level summary file paths.
 - Generate remote `py_eval` scripts to query object xref functions inside IDA and export function disassembly plus Hex-Rays pseudocode.
-- Parse and validate the JSON/ack payload returned by MCP `py_eval`, and report `success/failed/skipped` statistics.
+- Parse and validate the JSON/ack payload returned by MCP `py_eval`, report `success/failed/skipped` statistics, and distinguish an absent object from an existing object with no xrefs.
 - Assemble LLM prompts, call `OpenAI.chat.completions.create`, normalize `found_vcall`, write cached results back into detail YAML, and append them to the summary.
 
 ## Involved Files & Symbols
@@ -59,7 +59,7 @@ Key implementation points:
 ## Notes
 - This module is not a standalone CLI; it is currently invoked by `ida_analyze_bin.py` via import.
 - `_normalize_safe_path_component` replaces `::`, path separators, reserved device names, and illegal characters to avoid cross-platform path issues.
-- `export_object_xref_details_via_mcp` returns `skipped` for "object not found" or "no xref functions"; it returns `failed` for invalid payloads, ack validation failures, missing fields in function items, and similar issues.
+- `export_object_xref_details_via_mcp` returns `object_found=False` for "object not found", `True` when the object exists even if it has no xrefs, and `None` when the object query cannot be completed. The analyzer aggregates only objects found in at least one selected module/platform, preventing stale detail files from hiding a misspelled target.
 - If a detail YAML file already exists, `export_object_xref_details_via_mcp` skips that function instead of re-exporting it.
 - LLM aggregation has a hard dependency on `api_key` when a new client must be created; if no client is passed in and `api_key` is empty, `create_openai_client` raises immediately.
 - `parse_llm_vcall_response` supports both fenced YAML code blocks and plain YAML text; any item missing `insn_va/insn_disasm/vfunc_offset` is discarded in `normalize_found_vcalls`.

@@ -1,12 +1,21 @@
 export type GameSymbolPlatform = 'windows' | 'linux'
 
+export interface GameSymbolBinary {
+  path: string
+  sha256: string
+  md5: string
+}
+
+export type GameSymbolBinaries = Record<string, Partial<Record<GameSymbolPlatform, GameSymbolBinary>>>
+
 export interface GameSymbolIndex {
-  schemaVersion: 1
+  schemaVersion: 2
   versions: Array<{
     gameVersion: string
     url: string
     snapshotSchemaVersion: number
     fileCount: number
+    lastPublishTime: string
   }>
 }
 
@@ -22,7 +31,7 @@ export interface GameSymbolRecord {
 }
 
 export interface GameSymbolDataset {
-  schemaVersion: 1
+  schemaVersion: 2
   source: {
     gameVersion: string
     snapshotSchemaVersion: number
@@ -30,7 +39,9 @@ export interface GameSymbolDataset {
     analysisOutputContractVersion: number
     configSha256: string
     fileCount: number
+    lastPublishTime: string
   }
+  binaries: GameSymbolBinaries
   modules: Array<{
     name: string
     count: number

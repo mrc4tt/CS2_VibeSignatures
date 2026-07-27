@@ -1,0 +1,26 @@
+func_name: CEngineSoundServices_ShouldSuppressNonUISounds
+func_va: '0x57d9e0'
+disasm_code: |-
+  .text:000000000057D9E0                 push    rbp
+  .text:000000000057D9E1                 mov     rbp, rsp
+  .text:000000000057D9E4                 call    sub_3D0930
+  .text:000000000057D9E9                 test    al, al
+  .text:000000000057D9EB                 jnz     short loc_57DA08
+  .text:000000000057D9ED                 lea     rax, g_pNetworkClientService
+  .text:000000000057D9F4                 pop     rbp
+  .text:000000000057D9F5                 mov     rdi, [rax]
+  .text:000000000057D9F8                 mov     rax, [rdi]
+  .text:000000000057D9FB                 mov     rax, [rax+118h]  ; 118h = INetworkClientService_IsConnecting
+  .text:000000000057DA02                 jmp     rax
+  .text:000000000057DA08                 pop     rbp
+  .text:000000000057DA09                 retn
+procedure: |-
+  __int64 sub_57D9E0()
+  {
+    __int64 result; // rax
+
+    result = sub_3D0930();
+    if ( !(_BYTE)result )
+      return (*(__int64 (__fastcall **)(_QWORD *))(*g_pNetworkClientService + 280LL))(g_pNetworkClientService);// 280LL = 0x118 = INetworkClientService_IsConnecting
+    return result;
+  }

@@ -212,12 +212,13 @@ class TestOrdinalVtableCommon(unittest.IsolatedAsyncioTestCase):
             debug=True,
             symbol_aliases=["??_7CSpawnGroupMgrGameSystem@@6B@_0"],
             expected_offset_to_top=None,
+            canonical_vtable_symbol="CSpawnGroupMgrGameSystem_vtable2",
         )
 
         self.assertEqual(
             {
                 "vtable_class": "CSpawnGroupMgrGameSystem",
-                "vtable_symbol": "??_7CSpawnGroupMgrGameSystem@@6B@_0",
+                "vtable_symbol": "CSpawnGroupMgrGameSystem_vtable2",
                 "vtable_va": "0x1819682b0",
                 "vtable_rva": "0x19682b0",
                 "vtable_size": "0x10",

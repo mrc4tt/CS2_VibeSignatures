@@ -1,6 +1,7 @@
 import shutil
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
+from binary_hashing import hash_file
 from gamedata_candidate import GamedataCandidateError, verify_published_gamedata
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.hashing import (
@@ -35,6 +36,31 @@ from gamesymbol_snapshot_lib.operations import load_snapshot_context
 
 ABANDON_REASON_MAX_LENGTH = 500
 PROMOTION_STATE_MARKERS = ("PROMOTION_STARTED", "PROMOTED.json", "PROMOTION_COMPLETE")
+
+
+def verify_snapshot_binaries(document: dict, stage_bin: Path) -> int:
+    """Bind v4 snapshot binary metadata to the immutable staged binary tree."""
+    binaries = document.get("binaries")
+    if binaries is None:
+        return 0
+    checked = 0
+    for module, platforms in binaries.items():
+        for platform, metadata in platforms.items():
+            binary = contained_path(stage_bin, module, PurePosixPath(metadata["path"]).name)
+            reject_reparse_components(stage_bin, binary)
+            if not binary.is_file():
+                raise ReleaseWorkflowError(f"snapshot binary is missing from staged bin: {module}/{platform}: {binary}")
+            try:
+                actual = hash_file(binary)
+            except OSError as exc:
+                raise ReleaseWorkflowError(f"unable to hash staged snapshot binary {binary}: {exc}") from exc
+            expected = {"md5": metadata["md5"], "sha256": metadata["sha256"]}
+            if actual != expected:
+                raise ReleaseWorkflowError(
+                    f"snapshot binary hash mismatch for {module}/{platform}: expected={expected!r} actual={actual!r}"
+                )
+            checked += 1
+    return checked
 
 
 def staging_directory(staging_root: Path, gamever: str, build_id: str) -> Path:
@@ -113,6 +139,7 @@ def _write_stage_manifests(
     except Exception as exc:
         raise ReleaseWorkflowError(f"candidate snapshot provenance is invalid: {exc}") from exc
     candidate_document = candidate_context.document
+    verify_snapshot_binaries(candidate_document, stage_bin)
     try:
         gamedata = verify_published_gamedata(
             session_path=gamedata_session,
@@ -222,6 +249,13 @@ def finalize_stage(*, repo_root: Path, staging_root: Path, gamever: str, build_i
     bin_hash = verify_inventory(stage_dir / "bin" / gamever, pending.get("bin_files", []))
     if bin_hash != tracked["bin_manifest_sha256"]:
         raise ReleaseWorkflowError("staged bin manifest hash mismatch")
+    snapshot_context = load_snapshot_context(
+        Path(repo_root) / "gamesymbols" / f"{gamever}.yaml",
+        Path(repo_root) / "configs" / f"{gamever}.yaml",
+        gamever,
+        Path(repo_root) / "bin",
+    )
+    verify_snapshot_binaries(snapshot_context.document, stage_dir / "bin" / gamever)
     pending["pr_head_sha"] = pr_head_sha
     write_canonical_json(stage_dir / "manifest.json", pending)
     ready_hash = sha256_file(stage_dir / "manifest.json")

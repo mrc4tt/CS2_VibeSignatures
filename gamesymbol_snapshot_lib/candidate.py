@@ -21,7 +21,7 @@ from gamesymbol_snapshot_lib.codec import (
     snapshot_analysis_output_contract_version,
     snapshot_config_digest_version,
 )
-from gamesymbol_snapshot_lib.diff import format_mismatch
+from gamesymbol_snapshot_lib.diff import format_snapshot_mismatch
 from gamesymbol_snapshot_lib.errors import SnapshotMismatchError, SnapshotSchemaError
 from gamesymbol_snapshot_lib.operations import pack_snapshot
 from gamesymbol_snapshot_lib.paths import is_reparse_point
@@ -99,10 +99,12 @@ def _candidate_info(path: Path) -> CandidateInfo:
     )
 
 
-def build_candidate_snapshot(*, game_version, bin_root, config_path, output_path, session_path) -> CandidateInfo:
+def build_candidate_snapshot(
+    *, game_version, bin_root, config_path, output_path, session_path, last_publish_time: str | None = None
+) -> CandidateInfo:
     output, session = _validate_staging_paths(output_path, session_path)
     try:
-        pack_snapshot(game_version, bin_root, config_path, output)
+        pack_snapshot(game_version, bin_root, config_path, output, last_publish_time=last_publish_time)
         store = SnapshotSymbolStore.open(
             output,
             expected_game_version=str(game_version),
@@ -160,28 +162,24 @@ def compare_snapshots(
         expected_game_version=str(expected_game_version),
         config_path=config_path,
     )
-    metadata = ("config_digest_version", "config_sha256", "file_count")
-    differences = [field for field in metadata if getattr(actual, field) != getattr(expected, field)]
-    if differences:
-        raise SnapshotMismatchError(f"snapshot metadata mismatch: {', '.join(differences)}")
     if actual.candidate_sha256 != expected.candidate_sha256:
         try:
             actual_document = parse_snapshot_bytes(Path(actual_path).read_bytes())
             expected_document = parse_snapshot_bytes(Path(expected_path).read_bytes())
         except OSError as exc:
             raise CandidateContractError(f"unable to read snapshots for comparison: {exc}") from exc
-        if snapshot_analysis_output_contract_version(actual_document) != snapshot_analysis_output_contract_version(
-            expected_document
-        ):
-            raise SnapshotMismatchError("snapshot metadata mismatch: analysis_output_contract_version")
-        if actual_document["files"] == expected_document["files"]:
+        comparable_actual = dict(actual_document)
+        comparable_expected = dict(expected_document)
+        comparable_actual.pop("last_publish_time", None)
+        comparable_expected.pop("last_publish_time", None)
+        if comparable_actual == comparable_expected:
             if session_path is not None:
                 guard_candidate(candidate_path=actual_path, session_path=session_path)
                 session, manifest = load_manifest(session_path)
                 manifest["completed_steps"]["expected_compare"] = True
                 update_session(session, manifest, state="expected_matched")
             return SnapshotDiff(actual.candidate_sha256, expected.candidate_sha256, True)
-        raise SnapshotMismatchError(format_mismatch(expected_document["files"], actual_document["files"]))
+        raise SnapshotMismatchError(format_snapshot_mismatch(comparable_expected, comparable_actual))
     if session_path is not None:
         guard_candidate(candidate_path=actual_path, session_path=session_path)
         session, manifest = load_manifest(session_path)

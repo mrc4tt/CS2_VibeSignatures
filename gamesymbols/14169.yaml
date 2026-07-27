@@ -1,3 +1,77 @@
+analysis_output_contract_version: 1
+binaries:
+  SDL3:
+    linux:
+      md5: 162ca8615324301e1178c4e6bf19b4bd
+      path: game/bin/linuxsteamrt64/libSDL3.so.0
+      sha256: 9e7a3fad0b402463e4ce7e63002acf6da83d5c0da5cd0ffc662e6c5ad0e6a152
+    windows:
+      md5: c8e4327939e9b8cfefb47c029f2328be
+      path: game/bin/win64/SDL3.dll
+      sha256: 88da29e2be64715261f84602140804b48edd132e7fb62d48b1558d6d49695cd5
+  client:
+    linux:
+      md5: 0ae272529126991e067a42255e0a39fc
+      path: game/csgo/bin/linuxsteamrt64/libclient.so
+      sha256: 29ad0f8ecc2e0aec185342b92230daeb7e5cfa588044c24f8c88d78f11444a31
+    windows:
+      md5: 16917fce6c15715434f6604e8086d38a
+      path: game/csgo/bin/win64/client.dll
+      sha256: 868e1df4ba4a2a1e73c3a5a563405bbf49abc24330e0dc6e24f7cc9d186c0bac
+  engine:
+    linux:
+      md5: 2e59b4a93691e933b58bc23a83872960
+      path: game/bin/linuxsteamrt64/libengine2.so
+      sha256: 8e8faad65d8ab10549294053a3735e925849ed7b1b8b74822336b7cbbc578dd0
+    windows:
+      md5: 4162e50df26e708bc436a584138f37b2
+      path: game/bin/win64/engine2.dll
+      sha256: f17de07f69da4b6cd630cf24a34cea96eccdaef73ef324afa16f198baf262463
+  matchmaking:
+    linux:
+      md5: 8d29a92e94a02b6bb99fc7349685cd53
+      path: game/csgo/bin/linuxsteamrt64/libmatchmaking.so
+      sha256: 70c1b3a45f02faf771466d53e948580c8b26af6abb1237b53257275f46f64e0d
+    windows:
+      md5: 2b31ace99095c30452cf66da552350c1
+      path: game/csgo/bin/win64/matchmaking.dll
+      sha256: 3a775a6ac7e65e6713c706a82d2505b821befa4370f766549c6baa463c19d7d6
+  networksystem:
+    linux:
+      md5: fc97d01eaa99da249d13f89b1ff5ce97
+      path: game/bin/linuxsteamrt64/libnetworksystem.so
+      sha256: ff1ec63234d7ae241b8f3eb80e745bca19ca2469572c68efd9b8d490da357fad
+    windows:
+      md5: a0cb6cfba2886877d803d53ec78416d9
+      path: game/bin/win64/networksystem.dll
+      sha256: 9d7d6ba9d54c77eadd0bdbdc2c2daac3ada3e22e42a7e0e6bbb542b77f2682bd
+  scenesystem:
+    linux:
+      md5: 1a1ae751967d1eda488db9751aeea34c
+      path: game/bin/linuxsteamrt64/libscenesystem.so
+      sha256: a6d8820ba22db4168194b4d16d7f9e095d9cdb4a84a4a7ddf96f33f057d31c7c
+    windows:
+      md5: cdd2596915b3cf5a8a83f6ad7dc9df20
+      path: game/bin/win64/scenesystem.dll
+      sha256: c520dac13abc1d7587cdeaf5808898a368fecba4af64c242ba163642eec63caf
+  server:
+    linux:
+      md5: 79c2f6cd496b24cf913b898710f1c659
+      path: game/csgo/bin/linuxsteamrt64/libserver.so
+      sha256: 7901921615a521c513aa7305cc40a676e7c5b1251aa6b8e99927928f05d25f8d
+    windows:
+      md5: a900c061b9cc37949963db9fd9a49910
+      path: game/csgo/bin/win64/server.dll
+      sha256: bdb81200c1fe8d2db104210f041eae2360a6432ac804bd8611c338a507b4a8d2
+  vphysics2:
+    linux:
+      md5: b179d36c637926a983d703d6e5f214dc
+      path: game/bin/linuxsteamrt64/libvphysics2.so
+      sha256: a6ee9cb6427feaf930b6ef7da249862be0906821b87560aa4a44621a4a1e029b
+    windows:
+      md5: 5e03b1abafc769f9358ce64878c89da4
+      path: game/bin/win64/vphysics2.dll
+      sha256: 8bb3c48086c6e053300d2db6a019a56d2d1dfdb231c3556ff0dd7e77bc170995
 config_digest_version: 2
 config_sha256: sha256:60925b04877f37c301970e51a467a925a6af63016da7edb431c3bf42005e3e8a
 file_count: 2906
@@ -37638,4 +37712,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14169'
-schema_version: 2
+last_publish_time: '2026-07-20T15:25:45Z'
+schema_version: 4

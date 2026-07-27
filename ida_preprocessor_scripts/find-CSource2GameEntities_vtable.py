@@ -4,6 +4,10 @@
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_CLASS_NAMES = ["CSource2GameEntities"]
+CANONICAL_VTABLE_SYMBOLS_BY_PLATFORM = {
+    "windows": {"CSource2GameEntities": "CSource2GameEntities_vtable"},
+    "linux": {"CSource2GameEntities": "_ZTV20CSource2GameEntities + 0x10"},
+}
 
 
 GENERATE_YAML_DESIRED_FIELDS = [
@@ -41,5 +45,6 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
+        canonical_vtable_symbols=CANONICAL_VTABLE_SYMBOLS_BY_PLATFORM.get(platform),
         debug=debug,
     )

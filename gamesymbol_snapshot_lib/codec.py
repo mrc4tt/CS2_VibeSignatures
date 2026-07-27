@@ -1,5 +1,7 @@
 import re
 from collections.abc import Mapping
+from datetime import datetime
+from pathlib import PurePosixPath, PureWindowsPath
 
 import yaml
 
@@ -10,7 +12,8 @@ from trusted_yaml import load_yaml
 
 LEGACY_SCHEMA_VERSION = 1
 SCHEMA_2_VERSION = 2
-SCHEMA_VERSION = 3
+SCHEMA_3_VERSION = 3
+SCHEMA_VERSION = 4
 SCHEMA_1_KEYS = ("schema_version", "game_version", "config_sha256", "file_count", "files")
 SCHEMA_2_KEYS = (
     "schema_version",
@@ -29,7 +32,23 @@ SCHEMA_3_KEYS = (
     "file_count",
     "files",
 )
+SCHEMA_4_KEYS = (
+    "schema_version",
+    "last_publish_time",
+    "binaries",
+    "analysis_output_contract_version",
+    "config_digest_version",
+    "game_version",
+    "config_sha256",
+    "file_count",
+    "files",
+)
 DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+MD5_PATTERN = re.compile(r"^[0-9a-f]{32}$")
+PUBLISH_TIME_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+BINARY_PLATFORMS = ("windows", "linux")
+BINARY_METADATA_KEYS = ("path", "sha256", "md5")
 
 
 class CanonicalDumper(yaml.SafeDumper):
@@ -69,7 +88,7 @@ def snapshot_config_digest_version(document: Mapping) -> int:
     schema_version = document.get("schema_version")
     if schema_version == LEGACY_SCHEMA_VERSION:
         return 1
-    if schema_version in {SCHEMA_2_VERSION, SCHEMA_VERSION}:
+    if schema_version in {SCHEMA_2_VERSION, SCHEMA_3_VERSION, SCHEMA_VERSION}:
         version = document.get("config_digest_version")
         if not isinstance(version, int) or isinstance(version, bool) or version != 2:
             raise SnapshotSchemaError(
@@ -87,7 +106,7 @@ def snapshot_analysis_output_contract_version(document: Mapping) -> int:
     schema_version = document.get("schema_version")
     if schema_version in {LEGACY_SCHEMA_VERSION, SCHEMA_2_VERSION}:
         return 1
-    if schema_version == SCHEMA_VERSION:
+    if schema_version in {SCHEMA_3_VERSION, SCHEMA_VERSION}:
         version = document.get("analysis_output_contract_version")
         if not isinstance(version, int) or isinstance(version, bool) or version < 1:
             raise SnapshotSchemaError(
@@ -109,6 +128,8 @@ def build_snapshot_document(
     schema_version: int = SCHEMA_VERSION,
     config_digest_version: int | None = None,
     analysis_output_contract_version: int | None = None,
+    last_publish_time: str | None = None,
+    binaries: Mapping | None = None,
 ) -> dict:
     ordered_files = {path: canonicalize(files[path]) for path in sorted(files)}
     if schema_version == LEGACY_SCHEMA_VERSION:
@@ -139,7 +160,7 @@ def build_snapshot_document(
             "file_count": len(ordered_files),
             "files": ordered_files,
         }
-    if schema_version != SCHEMA_VERSION:
+    if schema_version not in {SCHEMA_3_VERSION, SCHEMA_VERSION}:
         raise SnapshotSchemaError(
             f"unsupported snapshot schema_version: {schema_version!r}",
             reason="unsupported_snapshot_schema",
@@ -162,14 +183,24 @@ def build_snapshot_document(
             f"invalid snapshot analysis_output_contract_version: {analysis_output_contract_version!r}",
             reason="invalid_analysis_output_contract_version",
         )
-    return {
-        "schema_version": SCHEMA_VERSION,
+    document = {
+        "schema_version": schema_version,
         "analysis_output_contract_version": analysis_output_contract_version,
         "config_digest_version": config_digest_version,
         "game_version": str(game_version),
         "config_sha256": config_sha256,
         "file_count": len(ordered_files),
         "files": ordered_files,
+    }
+    if schema_version == SCHEMA_3_VERSION:
+        return document
+    if last_publish_time is None or binaries is None:
+        raise SnapshotSchemaError("schema 4 snapshots require last_publish_time and binaries")
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "last_publish_time": last_publish_time,
+        "binaries": canonicalize(binaries),
+        **{key: value for key, value in document.items() if key != "schema_version"},
     }
 
 
@@ -183,6 +214,8 @@ def canonical_snapshot_bytes(document: Mapping) -> bytes:
         schema_version=schema_version,
         config_digest_version=digest_version,
         analysis_output_contract_version=snapshot_analysis_output_contract_version(document),
+        last_publish_time=document.get("last_publish_time"),
+        binaries=document.get("binaries"),
     )
     return canonical_yaml_bytes(canonical)
 
@@ -194,7 +227,8 @@ def _validate_metadata(document: object, expected_game_version: str | None) -> d
     expected_keys = {
         LEGACY_SCHEMA_VERSION: SCHEMA_1_KEYS,
         SCHEMA_2_VERSION: SCHEMA_2_KEYS,
-        SCHEMA_VERSION: SCHEMA_3_KEYS,
+        SCHEMA_3_VERSION: SCHEMA_3_KEYS,
+        SCHEMA_VERSION: SCHEMA_4_KEYS,
     }.get(schema_version)
     if expected_keys is None:
         raise SnapshotSchemaError(
@@ -219,7 +253,55 @@ def _validate_metadata(document: object, expected_game_version: str | None) -> d
     count = document.get("file_count")
     if not isinstance(count, int) or isinstance(count, bool) or count != len(document["files"]):
         raise SnapshotSchemaError("snapshot file_count does not match files")
+    if schema_version == SCHEMA_VERSION:
+        _validate_publish_metadata(document)
     return document
+
+
+def _validate_binary_path(value: object, context: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise SnapshotSchemaError(f"{context} must be a non-empty string")
+    if "\\" in value or PureWindowsPath(value).is_absolute():
+        raise SnapshotSchemaError(f"{context} must be a relative POSIX path")
+    path = PurePosixPath(value)
+    if path.is_absolute() or "//" in value or any(part in {"", ".", ".."} for part in path.parts):
+        raise SnapshotSchemaError(f"{context} is unsafe: {value!r}")
+    return path.as_posix()
+
+
+def _validate_publish_metadata(document: dict) -> None:
+    publish_time = document.get("last_publish_time")
+    if not isinstance(publish_time, str) or not PUBLISH_TIME_PATTERN.fullmatch(publish_time):
+        raise SnapshotSchemaError("snapshot last_publish_time must be UTC ISO 8601 with second precision and Z suffix")
+    try:
+        datetime.strptime(publish_time, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError as exc:
+        raise SnapshotSchemaError("snapshot last_publish_time is invalid") from exc
+    binaries = document.get("binaries")
+    if not isinstance(binaries, dict):
+        raise SnapshotSchemaError("snapshot binaries must be a mapping")
+    module_spellings = {}
+    for module, platforms in binaries.items():
+        if not isinstance(module, str) or not module or module in {".", ".."} or "/" in module or "\\" in module:
+            raise SnapshotSchemaError(f"invalid snapshot binary module: {module!r}")
+        prior_module = module_spellings.setdefault(module.casefold(), module)
+        if prior_module != module:
+            raise SnapshotSchemaError(
+                f"case-insensitive snapshot binary module collision: {prior_module!r} and {module!r}"
+            )
+        if not isinstance(platforms, dict) or not platforms:
+            raise SnapshotSchemaError(f"snapshot binaries.{module} must be a non-empty mapping")
+        if not set(platforms).issubset(BINARY_PLATFORMS):
+            raise SnapshotSchemaError(f"snapshot binaries.{module} contains an unsupported platform")
+        for platform, metadata in platforms.items():
+            context = f"snapshot binaries.{module}.{platform}"
+            if not isinstance(metadata, dict) or set(metadata) != set(BINARY_METADATA_KEYS):
+                raise SnapshotSchemaError(f"{context} must contain exactly: {', '.join(BINARY_METADATA_KEYS)}")
+            metadata["path"] = _validate_binary_path(metadata.get("path"), f"{context}.path")
+            if not isinstance(metadata.get("sha256"), str) or not SHA256_PATTERN.fullmatch(metadata["sha256"]):
+                raise SnapshotSchemaError(f"{context}.sha256 is invalid")
+            if not isinstance(metadata.get("md5"), str) or not MD5_PATTERN.fullmatch(metadata["md5"]):
+                raise SnapshotSchemaError(f"{context}.md5 is invalid")
 
 
 def parse_snapshot_bytes(data: bytes, expected_game_version: str | None = None) -> dict:

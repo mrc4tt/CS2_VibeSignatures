@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Card, Select, Space, Spin, Typography } from 'antd'
+import dayjs from 'dayjs'
 import { useDeferredValue, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getGameSymbolDataset, getGameSymbolIndex } from './data'
@@ -31,6 +32,12 @@ export function ExploreSymbolsPage() {
     staleTime: Infinity,
   })
   const dataset = datasetQuery.data
+  const versionMetadata = versionEntry
+    ? t('symbols.versionMetadata', {
+        time: dayjs(versionEntry.lastPublishTime).format('YYYY-MM-DD HH:mm:ss'),
+        count: versionEntry.fileCount,
+      })
+    : undefined
   const filteredRecords = useMemo(
     () => dataset ? filterSymbolRecords(dataset.records, { ...filters, query: deferredQuery }) : [],
     [dataset, deferredQuery, filters],
@@ -49,20 +56,22 @@ export function ExploreSymbolsPage() {
           <Typography.Title level={2}>{t('symbols.title')}</Typography.Title>
           <Typography.Text type="secondary">{t('symbols.subtitle')}</Typography.Text>
         </div>
-        <Select
-          showSearch
-          optionFilterProp="label"
-          aria-label={t('symbols.gameVersion')}
-          placeholder={t('symbols.gameVersion')}
-          value={gameVersion}
-          loading={indexQuery.isLoading}
-          onChange={changeVersion}
-          options={indexQuery.data?.versions.map((version) => ({
-            value: version.gameVersion,
-            label: `${version.gameVersion} · ${version.fileCount}`,
-          }))}
-          style={{ width: 210 }}
-        />
+        <div className="symbol-version-controls">
+          {versionMetadata && <Typography.Text type="secondary" className="symbol-version-metadata">{versionMetadata}</Typography.Text>}
+          <Select
+            showSearch
+            optionFilterProp="label"
+            aria-label={t('symbols.gameVersion')}
+            placeholder={t('symbols.gameVersion')}
+            value={gameVersion}
+            loading={indexQuery.isLoading}
+            onChange={changeVersion}
+            options={indexQuery.data?.versions.map((version) => ({
+              value: version.gameVersion,
+              label: version.gameVersion,
+            }))}
+          />
+        </div>
       </div>
 
       {indexQuery.error && <Alert type="error" showIcon message={t('symbols.indexError')} description={indexQuery.error.message} />}
@@ -71,7 +80,7 @@ export function ExploreSymbolsPage() {
 
       {dataset && (
         <div className="symbol-browser-grid">
-          <Card title={t('symbols.treeTitle')} extra={<Typography.Text type="secondary">{dataset.source.fileCount}</Typography.Text>} className="symbol-tree-card">
+          <Card title={t('symbols.treeTitle')} className="symbol-tree-card">
             <SymbolTree records={dataset.records} selectedRecordId={selectedRecord?.id} onSelect={setSelectedRecord} />
           </Card>
           <Card title={t('symbols.searchTitle')} className="symbol-search-card">

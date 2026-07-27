@@ -17,7 +17,7 @@ sys.path.insert(0, str(REPOSITORY_ROOT))
 from analysis_config import AnalysisConfigError, resolve_analysis_config  # noqa: E402
 from gamesymbol_snapshot_lib.codec import canonical_yaml_bytes, parse_snapshot_bytes  # noqa: E402
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError, SnapshotMismatchError  # noqa: E402
-from gamesymbol_snapshot_lib.operations import restore_snapshot, verify_snapshot  # noqa: E402
+from gamesymbol_snapshot_lib.operations import restore_snapshot  # noqa: E402
 from gamesymbol_snapshot_lib.paths import ensure_real_tree, iter_yaml_paths, path_from_key  # noqa: E402
 
 GAMEVER_RE = re.compile(r"^[0-9]{4,10}[a-z]?$")
@@ -161,7 +161,6 @@ def restore(root: Path, gamever: str, force_base_gamever: str | None = None, *, 
     try:
         config = resolve_analysis_config(gamever, repo_root=root)
         restore_snapshot(gamever, root / "bin", config, snapshot, replace=replace)
-        verify_snapshot(gamever, root / "bin", config, snapshot)
     except (AnalysisConfigError, SnapshotConfigError, SnapshotMismatchError, OSError) as exc:
         raise RestoreSnapshotError(str(exc)) from exc
     return {"mode": "trusted", "gamever": gamever, "replaced": replace}
@@ -189,7 +188,7 @@ def main(argv=None) -> int:
         return 1
     if result["mode"] == "trusted":
         suffix = " with replacement" if result["replaced"] else ""
-        print(f"Symbol snapshot: restored and verified{suffix}")
+        print(f"Symbol snapshot: restored and round-trip verified{suffix}")
     elif result["mode"] == "forced-base":
         print(f"Symbol snapshot: force-restored without trust checks from gamesymbols/{result['base_gamever']}.yaml")
     else:

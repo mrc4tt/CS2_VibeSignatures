@@ -35,6 +35,17 @@ LLM_DECOMPILE = [
             "references/engine/CEngineServer_ClientPrintf.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "instruction_rules": [
+            {
+                "regex": r"(?i)^cmp\s+(?:e(?:ax|bx|cx|dx|si|di|bp|sp)|r(?:[89]|1[0-5])d)\s*,\s*(?:dword ptr\s+)?\[[^\]]+\]$",
+                "text": "cmp reg, [base+offset]",
+            },
+            {
+                "regex": r"(?i)^cmp\s+(?:dword ptr\s+)?\[[^\]]+\]\s*,\s*(?:e(?:ax|bx|cx|dx|si|di|bp|sp)|r(?:[89]|1[0-5])d)$",
+                "text": "cmp [base+offset], reg",
+            },
+        ],
+        "expected_size": 4,
         "dependency_policy": {
             "CEngineServer_ClientPrintf.{platform}.yaml": "required",
         },

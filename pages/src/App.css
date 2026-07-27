@@ -12,6 +12,9 @@
 .full-width { width: 100%; }
 .page-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .page-title-row .ant-typography { margin: 0; }
+.symbol-version-controls { display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+.symbol-version-controls .ant-select { width: 210px; }
+.symbol-version-metadata { min-width: 0; overflow-wrap: anywhere; text-align: right; }
 .filter-row { width: 100%; }
 .table-card .ant-card-body { padding: 0; }
 .load-more { padding: 18px; text-align: center; border-top: 1px solid var(--panel-border); }
@@ -80,6 +83,8 @@
   .api-summary .ant-btn { font-size: 0; }
   .api-summary .ant-btn .anticon { margin-inline-end: 0; font-size: 14px; }
   .page-title-row { align-items: stretch; flex-direction: column; }
-  .page-title-row > .ant-select { width: 100% !important; }
+  .symbol-version-controls { width: 100%; align-items: stretch; justify-content: flex-start; flex-direction: column; }
+  .symbol-version-controls .ant-select { width: 100% !important; }
+  .symbol-version-metadata { text-align: left; }
   .filter-row > * { width: 100% !important; }
 }

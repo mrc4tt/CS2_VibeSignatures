@@ -497,7 +497,7 @@ class TestBumpDownload(unittest.TestCase):
             [
                 call(["git", "add", "download.yaml"], check=True),
                 call(
-                    ["git", "commit", "-m", "chore(download): 更新 1.41.6.1 下载清单"],
+                    ["git", "commit", "-m", "chore(download): Update download manifest for 1.41.6.1"],
                     check=True,
                 ),
             ],

@@ -54,6 +54,13 @@ class SkillNode:
 
 
 @dataclass(frozen=True)
+class BinaryTarget:
+    module_name: str
+    platform: str
+    source_path: str
+
+
+@dataclass(frozen=True)
 class SnapshotContract:
     game_version: str
     game_root: Path
@@ -64,6 +71,7 @@ class SnapshotContract:
     optional_paths: frozenset[str]
     owners_by_path: dict[str, frozenset[str]]
     nodes: dict[str, SkillNode]
+    binary_targets: dict[tuple[str, str], BinaryTarget]
 
     @property
     def formal_paths(self) -> frozenset[str]:

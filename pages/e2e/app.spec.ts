@@ -21,18 +21,34 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('loads the run list from the runs route', async ({ page }) => {
-  await page.goto('/runs')
+  await page.goto('runs')
   await expect(page.getByRole('link', { name: 'run-1' })).toBeVisible()
 })
 
 test('loads a run detail through the SPA fallback route', async ({ page }) => {
-  await page.goto('/runs/run-1')
+  await page.goto('runs/run-1')
   await expect(page.getByText('run-1', { exact: true })).toBeVisible()
   await expect(page.getByText(/等待 ExecutionPlan 初始化/)).toBeVisible()
 })
 
 test('opens the static symbol browser without a Process API connection', async ({ page }) => {
-  await page.goto('/symbols')
+  const indexResponse = await page.request.get('gamesymbols/index.json')
+  expect(indexResponse.ok()).toBeTruthy()
+  const index = await indexResponse.json()
+  expect(index.schemaVersion).toBe(2)
+  const currentVersion = index.versions[0]
+  expect(currentVersion.lastPublishTime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
+  const datasetResponse = await page.request.get(`gamesymbols/${currentVersion.url}`)
+  expect(datasetResponse.ok()).toBeTruthy()
+  const dataset = await datasetResponse.json()
+  expect(dataset.schemaVersion).toBe(2)
+  expect(dataset.source.lastPublishTime).toBe(currentVersion.lastPublishTime)
+  expect(Object.keys(dataset.binaries).length).toBeGreaterThan(0)
+  const firstBinary = Object.values(Object.values(dataset.binaries)[0] as Record<string, unknown>)[0] as Record<string, string>
+  expect(firstBinary.sha256).toMatch(/^[0-9a-f]{64}$/)
+  expect(firstBinary.md5).toMatch(/^[0-9a-f]{32}$/)
+
+  await page.goto('symbols')
   await page.getByRole('button', { name: 'API 设置' }).click()
   await page.getByRole('button', { name: '断开当前连接' }).click()
   await page.keyboard.press('Escape')
@@ -40,12 +56,16 @@ test('opens the static symbol browser without a Process API connection', async (
   await expect(page.getByRole('heading', { name: '连接本地进度 API' })).toBeVisible()
   await page.getByRole('tab', { name: '浏览符号' }).click()
   await expect(page.getByRole('heading', { name: '浏览符号' })).toBeVisible()
-  await expect(page.getByLabel('游戏版本')).toHaveText(/14172/)
-  await expect(page.getByText(/共 2942 条记录/)).toBeVisible()
+  await expect(page.locator('.symbol-version-controls').getByText(currentVersion.gameVersion, { exact: true })).toBeVisible()
+  await expect(page.getByText(new RegExp(`最后更新 \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2} · ${currentVersion.fileCount} 个符号`))).toBeVisible()
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.getByLabel('游戏版本')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
 })
 
 test('switches the static application between supported languages', async ({ page }) => {
-  await page.goto('/runs')
+  await page.goto('runs')
   await page.getByLabel('语言').click()
   await page.locator('.ant-select-dropdown').getByText('English', { exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Analysis runs' })).toBeVisible()
@@ -76,7 +96,7 @@ test('switches between graph and list views and opens task details', async ({ pa
   await page.unroute('**/api/v1/runs/run-1/snapshot')
   await page.route('**/api/v1/runs/run-1/snapshot', (route) => route.fulfill({ json: { run: { ...run, current_job_id: jobId, current_skill_id: taskId }, graph, tasks: [task], snapshot_event_id: '1-0' } }))
   await page.route('**/api/v1/runs/run-1/tasks/**', (route) => route.fulfill({ json: { ...task, dependencies: [], dependents: [] } }))
-  await page.goto('/runs/run-1')
+  await page.goto('runs/run-1')
   await expect(page.getByText('思维导图')).toBeVisible()
   await expect(page.getByText('find-target', { exact: true }).first()).toBeVisible()
   await page.getByRole('tab', { name: '真实 DAG' }).click()

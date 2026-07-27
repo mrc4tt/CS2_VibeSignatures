@@ -8,7 +8,7 @@ from unittest.mock import patch
 import cpp_tests_util
 import run_cpp_tests
 from gamesymbol_snapshot_lib.operations import pack_snapshot
-from tests.gamesymbol_snapshot_test_support import module, skill, write_config
+from tests.gamesymbol_snapshot_test_support import module, skill, write_binary, write_config
 from gamesymbol_store import DirectorySymbolStore, SnapshotSymbolStore
 
 
@@ -174,6 +174,7 @@ class TestCompareVtableWithYaml(unittest.TestCase):
                 "func_name: ITest_First\nvfunc_index: 0\n",
                 encoding="utf-8",
             )
+            write_binary(module_dir / "server.dll")
             snapshot = root / "candidate.yaml"
             pack_snapshot(gamever, bindir, config, snapshot)
             store = SnapshotSymbolStore.open(snapshot, expected_game_version=gamever, config_path=config)

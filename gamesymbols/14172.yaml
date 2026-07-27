@@ -1,7 +1,80 @@
 analysis_output_contract_version: 1
+binaries:
+  SDL3:
+    linux:
+      md5: 162ca8615324301e1178c4e6bf19b4bd
+      path: game/bin/linuxsteamrt64/libSDL3.so.0
+      sha256: 9e7a3fad0b402463e4ce7e63002acf6da83d5c0da5cd0ffc662e6c5ad0e6a152
+    windows:
+      md5: c8e4327939e9b8cfefb47c029f2328be
+      path: game/bin/win64/SDL3.dll
+      sha256: 88da29e2be64715261f84602140804b48edd132e7fb62d48b1558d6d49695cd5
+  client:
+    linux:
+      md5: 03e5ec592417cfae1b17ffa497040c81
+      path: game/csgo/bin/linuxsteamrt64/libclient.so
+      sha256: 46f1f5f63a0942a1768522ba5096ba4cb3daa6dcba323a1420d216635ca4579c
+    windows:
+      md5: 060607910b6d94eeee0212c1497f58fc
+      path: game/csgo/bin/win64/client.dll
+      sha256: 92228e5cf38bcdffc4c5d694a3b2d470aed3da1e57460b6ac317d6f22172e21a
+  engine:
+    linux:
+      md5: 2e59b4a93691e933b58bc23a83872960
+      path: game/bin/linuxsteamrt64/libengine2.so
+      sha256: 8e8faad65d8ab10549294053a3735e925849ed7b1b8b74822336b7cbbc578dd0
+    windows:
+      md5: 4162e50df26e708bc436a584138f37b2
+      path: game/bin/win64/engine2.dll
+      sha256: f17de07f69da4b6cd630cf24a34cea96eccdaef73ef324afa16f198baf262463
+  matchmaking:
+    linux:
+      md5: a00616f6b0bdac155f7e680a82747108
+      path: game/csgo/bin/linuxsteamrt64/libmatchmaking.so
+      sha256: 2ab0ef039924332329210e010bed4dfe0d56a937fdcb66a66a42cb0a2539e5bf
+    windows:
+      md5: 9c4bcb6d7808149d6ae12dae6a235a00
+      path: game/csgo/bin/win64/matchmaking.dll
+      sha256: 4d58b54eb0db92c8259d6ddc532105b372ebc9a05cce1b9afeaa5e05bb0935eb
+  networksystem:
+    linux:
+      md5: fc97d01eaa99da249d13f89b1ff5ce97
+      path: game/bin/linuxsteamrt64/libnetworksystem.so
+      sha256: ff1ec63234d7ae241b8f3eb80e745bca19ca2469572c68efd9b8d490da357fad
+    windows:
+      md5: a0cb6cfba2886877d803d53ec78416d9
+      path: game/bin/win64/networksystem.dll
+      sha256: 9d7d6ba9d54c77eadd0bdbdc2c2daac3ada3e22e42a7e0e6bbb542b77f2682bd
+  scenesystem:
+    linux:
+      md5: 1a1ae751967d1eda488db9751aeea34c
+      path: game/bin/linuxsteamrt64/libscenesystem.so
+      sha256: a6d8820ba22db4168194b4d16d7f9e095d9cdb4a84a4a7ddf96f33f057d31c7c
+    windows:
+      md5: cdd2596915b3cf5a8a83f6ad7dc9df20
+      path: game/bin/win64/scenesystem.dll
+      sha256: c520dac13abc1d7587cdeaf5808898a368fecba4af64c242ba163642eec63caf
+  server:
+    linux:
+      md5: 2f0f913fecaf252496ea67338a782744
+      path: game/csgo/bin/linuxsteamrt64/libserver.so
+      sha256: 844c936daf1080b2b9b24a305e47504ab56d465e1d5d11061a2c9c5e6b61d38b
+    windows:
+      md5: cfa125a523c151c79ec202e425da8f9b
+      path: game/csgo/bin/win64/server.dll
+      sha256: 1cb53081d93033dfb2487319f97807b4cc545ba465f45677a2b2fa7861e4bcb0
+  vphysics2:
+    linux:
+      md5: b179d36c637926a983d703d6e5f214dc
+      path: game/bin/linuxsteamrt64/libvphysics2.so
+      sha256: a6ee9cb6427feaf930b6ef7da249862be0906821b87560aa4a44621a4a1e029b
+    windows:
+      md5: 5e03b1abafc769f9358ce64878c89da4
+      path: game/bin/win64/vphysics2.dll
+      sha256: 8bb3c48086c6e053300d2db6a019a56d2d1dfdb231c3556ff0dd7e77bc170995
 config_digest_version: 2
-config_sha256: sha256:c4965d001f822c8299dccafa28e4e680d950374b9651dc188032f86bbff79826
-file_count: 3115
+config_sha256: sha256:0c2801990dc194aeb17f99363e75c7825129b9a980e02425fd1e6c799fddafb9
+file_count: 3134
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -665,7 +738,7 @@ files:
     vtable_numvfunc: 5
     vtable_rva: '0x1ad4558'
     vtable_size: '0x28'
-    vtable_symbol: off_181AD4558
+    vtable_symbol: CLoopModeFactory_CLoopModeGame_vtable
     vtable_va: '0x181ad4558'
   client/CLoopModeGame_AddViewsToSceneSystem.linux.yaml:
     func_name: CLoopModeGame_AddViewsToSceneSystem
@@ -1990,7 +2063,7 @@ files:
     vtable_numvfunc: 66
     vtable_rva: '0x42eda50'
     vtable_size: '0x210'
-    vtable_symbol: off_42EDA50
+    vtable_symbol: CSpawnGroupMgrGameSystem_vtable2
     vtable_va: '0x42eda50'
   client/CSpawnGroupMgrGameSystem_vtable2.windows.yaml:
     vtable_class: CSpawnGroupMgrGameSystem
@@ -5809,7 +5882,7 @@ files:
     vtable_numvfunc: 185
     vtable_rva: '0x538258'
     vtable_size: '0x5c8'
-    vtable_symbol: off_180538258
+    vtable_symbol: CEngineClient_vtable
     vtable_va: '0x180538258'
   engine/CEngineGameUI_Shutdown.linux.yaml:
     func_name: CEngineGameUI_Shutdown
@@ -6210,7 +6283,7 @@ files:
   engine/CEngineServer_ServerCommand.windows.yaml:
     func_name: CEngineServer_ServerCommand
     func_rva: '0xa05f0'
-    func_sig: 48 8B 0D 31 88 5E ??
+    func_sig: 48 8B 0D 51 88 5E ??
     func_size: '0x1c'
     func_va: '0x1800a05f0'
     vfunc_index: 45
@@ -6528,7 +6601,7 @@ files:
     vtable_numvfunc: 122
     vtable_rva: '0x53f128'
     vtable_size: '0x3d0'
-    vtable_symbol: off_18053F128
+    vtable_symbol: CEngineServer_vtable
     vtable_va: '0x18053f128'
   engine/CEngineServiceMgr_DeactivateLoop.windows.yaml:
     func_name: CEngineServiceMgr_DeactivateLoop
@@ -6849,6 +6922,136 @@ files:
     vtable_size: '0x1e8'
     vtable_symbol: ??_7CEngineServiceMgr@@6B@
     vtable_va: '0x18057f5c0'
+  engine/CEngineSoundServices_ShouldSuppressNonUISounds.linux.yaml:
+    func_name: CEngineSoundServices_ShouldSuppressNonUISounds
+    func_rva: '0x57d9e0'
+    func_sig: 55 48 89 E5 E8 ?? ?? ?? ?? 84 C0 75 ?? 48 8D 05 ?? ?? ?? ?? 5D
+    func_size: '0x2a'
+    func_va: '0x57d9e0'
+    vfunc_index: 47
+    vfunc_offset: '0x178'
+    vtable_name: CEngineSoundServices_vtable
+  engine/CEngineSoundServices_ShouldSuppressNonUISounds.windows.yaml:
+    func_name: CEngineSoundServices_ShouldSuppressNonUISounds
+    func_rva: '0xfeb10'
+    func_sig: 48 83 EC ?? 48 8B 05 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? FF 50 ?? 84 C0 75 ??
+    func_size: '0x39'
+    func_va: '0x1800feb10'
+    vfunc_index: 47
+    vfunc_offset: '0x178'
+    vtable_name: CEngineSoundServices_vtable
+  engine/CEngineSoundServices_vtable.linux.yaml:
+    vtable_class: CEngineSoundServices
+    vtable_entries:
+      0: '0x57dd30'
+      1: '0x57e6f0'
+      10: '0x57ccd0'
+      11: '0x57cd00'
+      12: '0x57cd30'
+      13: '0x57cd80'
+      14: '0x57cdb0'
+      15: '0x57cf70'
+      16: '0x57cfa0'
+      17: '0x57cff0'
+      18: '0x57cde0'
+      19: '0x57ce70'
+      2: '0x57caa0'
+      20: '0x57d020'
+      21: '0x57ced0'
+      22: '0x57ce10'
+      23: '0x57ce40'
+      24: '0x57cea0'
+      25: '0x57cc70'
+      26: '0x57d050'
+      27: '0x57ec30'
+      28: '0x57cc40'
+      29: '0x57d150'
+      3: '0x57da10'
+      30: '0x57e460'
+      31: '0x57e380'
+      32: '0x57ec10'
+      33: '0x57e250'
+      34: '0x57d0e0'
+      35: '0x57d0f0'
+      36: '0x57d110'
+      37: '0x57d130'
+      38: '0x57cf00'
+      39: '0x57d080'
+      4: '0x57cac0'
+      40: '0x57d0b0'
+      41: '0x57cf10'
+      42: '0x57cf40'
+      43: '0x57cbb0'
+      44: '0x57cb00'
+      45: '0x57cb30'
+      46: '0x57cb80'
+      47: '0x57d9e0'
+      5: '0x57cbe0'
+      6: '0x57cc00'
+      7: '0x57cc20'
+      8: '0x57ccb0'
+      9: '0x57ccc0'
+    vtable_numvfunc: 48
+    vtable_rva: '0x9b3768'
+    vtable_size: '0x180'
+    vtable_symbol: _ZTV20CEngineSoundServices + 0x10
+    vtable_va: '0x9b3768'
+  engine/CEngineSoundServices_vtable.windows.yaml:
+    vtable_class: CEngineSoundServices
+    vtable_entries:
+      0: '0x1800fe710'
+      1: '0x1800fe870'
+      10: '0x1800feb80'
+      11: '0x1800feba0'
+      12: '0x1800febc0'
+      13: '0x1800fec10'
+      14: '0x1800fec30'
+      15: '0x1800fed90'
+      16: '0x1800fedb0'
+      17: '0x1800fee00'
+      18: '0x1800fec50'
+      19: '0x1800fecb0'
+      2: '0x1800fe950'
+      20: '0x1800fee20'
+      21: '0x1800fed30'
+      22: '0x1800fec70'
+      23: '0x1800fec90'
+      24: '0x1800fecf0'
+      25: '0x1800feb50'
+      26: '0x1800fee40'
+      27: '0x1800feec0'
+      28: '0x1800feaf0'
+      29: '0x1800245f0'
+      3: '0x1800fe970'
+      30: '0x1800ff040'
+      31: '0x1800ff0e0'
+      32: '0x1800ff100'
+      33: '0x1800ff130'
+      34: '0x1800245f0'
+      35: '0x1800fefd0'
+      36: '0x1800ff000'
+      37: '0x1800ff020'
+      38: '0x1800245f0'
+      39: '0x1800fee60'
+      4: '0x1800fe990'
+      40: '0x1800fee80'
+      41: '0x1800fed50'
+      42: '0x1800fed70'
+      43: '0x1800fea70'
+      44: '0x1800fe9c0'
+      45: '0x1800fe9e0'
+      46: '0x1800fea50'
+      47: '0x1800feb10'
+      5: '0x1800fea90'
+      6: '0x1800feab0'
+      7: '0x1800fead0'
+      8: '0x1800245f0'
+      9: '0x1800245f0'
+    vtable_numvfunc: 48
+    vtable_rva: '0x54c4b0'
+    vtable_size: '0x180'
+    vtable_symbol: CEngineSoundServices_vtable
+    vtable_va: '0x18054c4b0'
   engine/CGameClientConnectPrerequisite_ctor.linux.yaml:
     func_name: CGameClientConnectPrerequisite_ctor
     func_rva: '0x41b770'
@@ -7411,8 +7614,26 @@ files:
     func_sig: 48 89 4C 24 ?? 53 55 56 57 41 55 41 56 41 57
     func_size: '0x584'
     func_va: '0x1801c0370'
+  engine/CInputService_IsClientOnlyCommandAllowed.linux.yaml:
+    func_name: CInputService_IsClientOnlyCommandAllowed
+    func_rva: '0x586cb0'
+    func_sig: 55 48 89 E5 53 48 83 EC ?? 48 8D 1D ?? ?? ?? ?? 48 8B 3B 48 8B 07 FF 90 ?? ?? ?? ?? 84 C0
+    func_size: '0x54'
+    func_va: '0x586cb0'
+  engine/CInputService_ProcessCommand.linux.yaml:
+    func_name: CInputService_ProcessCommand
+    func_rva: '0x3ec500'
+    func_sig: 55 48 89 E5 41 57 41 56 41 89 F6 41 55 41 89 D5
+    func_size: '0xcd7'
+    func_va: '0x3ec500'
   engine/CInputService_ProcessCommand.windows.yaml:
     func_name: CInputService_ProcessCommand
+    func_rva: '0x1c3320'
+    func_sig: 48 89 5C 24 ?? 4C 89 4C 24 ?? 48 89 4C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ??
+    func_size: '0x528'
+    func_va: '0x1801c3320'
+  engine/CInputService_ProcessCommandBuffer.windows.yaml:
+    func_name: CInputService_ProcessCommandBuffer
     func_rva: '0x1c41b0'
     func_sig: 48 89 5C 24 ?? 44 89 44 24 ?? 89 54 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8B EC
     func_size: '0x502'
@@ -7423,6 +7644,18 @@ files:
     func_sig: 89 54 24 ?? 48 89 4C 24 ?? 53 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ?? 45 33 F6
     func_size: '0x492'
     func_va: '0x1801c3d10'
+  engine/CInputService_ProcessConVar.linux.yaml:
+    func_name: CInputService_ProcessConVar
+    func_rva: '0x3edb50'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 4D 89 C4 53 48 81 EC ?? ?? ?? ?? 48 8B 41 ??
+    func_size: '0x498'
+    func_va: '0x3edb50'
+  engine/CInputService_ProcessConVar.windows.yaml:
+    func_name: CInputService_ProcessConVar
+    func_rva: '0x1c3850'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 4C 8B BD ?? ?? ?? ??
+    func_size: '0x4b6'
+    func_va: '0x1801c3850'
   engine/CL_NET_PrintSummary_CommandHandler.linux.yaml:
     func_name: CL_NET_PrintSummary_CommandHandler
     func_rva: '0x4e4e00'
@@ -7700,7 +7933,7 @@ files:
     vtable_numvfunc: 1
     vtable_rva: '0x99da40'
     vtable_size: '0x8'
-    vtable_symbol: off_99DA40
+    vtable_symbol: CLoopTypeClientServerService_vtable2
     vtable_va: '0x99da40'
   engine/CLoopTypeClientServerService_vtable2.windows.yaml:
     vtable_class: CLoopTypeClientServerService
@@ -7991,7 +8224,7 @@ files:
     vtable_numvfunc: 23
     vtable_rva: '0x5828b0'
     vtable_size: '0xb8'
-    vtable_symbol: off_1805828B0
+    vtable_symbol: CLoopTypeSimpleService_vtable
     vtable_va: '0x1805828b0'
   engine/CLoopTypeSimple_FrameUpdate.linux.yaml:
     func_name: CLoopTypeSimple_FrameUpdate
@@ -8264,7 +8497,7 @@ files:
     vtable_numvfunc: 22
     vtable_rva: '0x54cfe0'
     vtable_size: '0xb0'
-    vtable_symbol: off_18054CFE0
+    vtable_symbol: CNetSupportImpl_vtable
     vtable_va: '0x18054cfe0'
   engine/CNetworkClientService_AddClientPrerequisites.linux.yaml:
     func_name: CNetworkClientService_AddClientPrerequisites
@@ -8421,6 +8654,38 @@ files:
     func_va: '0x1801d57a0'
     vfunc_index: 32
     vfunc_offset: '0x100'
+    vtable_name: CNetworkClientService
+  engine/CNetworkClientService_IsConnecting.linux.yaml:
+    func_name: CNetworkClientService_IsConnecting
+    func_rva: '0x429b30'
+    func_size: '0x1b'
+    func_va: '0x429b30'
+    vfunc_index: 35
+    vfunc_offset: '0x118'
+    vtable_name: CNetworkClientService
+  engine/CNetworkClientService_IsConnecting.windows.yaml:
+    func_name: CNetworkClientService_IsConnecting
+    func_rva: '0x1d5ce0'
+    func_size: '0x3c'
+    func_va: '0x1801d5ce0'
+    vfunc_index: 34
+    vfunc_offset: '0x110'
+    vtable_name: CNetworkClientService
+  engine/CNetworkClientService_IsPutInServer.linux.yaml:
+    func_name: CNetworkClientService_IsPutInServer
+    func_rva: '0x429940'
+    func_size: '0x39'
+    func_va: '0x429940'
+    vfunc_index: 34
+    vfunc_offset: '0x110'
+    vtable_name: CNetworkClientService
+  engine/CNetworkClientService_IsPutInServer.windows.yaml:
+    func_name: CNetworkClientService_IsPutInServer
+    func_rva: '0x1d57c0'
+    func_size: '0x23'
+    func_va: '0x1801d57c0'
+    vfunc_index: 33
+    vfunc_offset: '0x108'
     vtable_name: CNetworkClientService
   engine/CNetworkClientService_OnStatus.linux.yaml:
     func_name: CNetworkClientService_OnStatus
@@ -11476,6 +11741,24 @@ files:
     vtable_size: '0x278'
     vtable_symbol: ??_7CServerSideClientBase@@6B@
     vtable_va: '0x180545638'
+  engine/CServerSideClient_ExecuteStringCommand.linux.yaml:
+    func_name: CServerSideClient_ExecuteStringCommand
+    func_rva: '0x539920'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 49 89 FD 41 54 49 89 F4 53 48 81 EC ?? ?? ?? ?? E8 ?? ?? ?? ??
+    func_size: '0x60a'
+    func_va: '0x539920'
+    vfunc_index: 15
+    vfunc_offset: '0x78'
+    vtable_name: CServerSideClient_vtable
+  engine/CServerSideClient_ExecuteStringCommand.windows.yaml:
+    func_name: CServerSideClient_ExecuteStringCommand
+    func_rva: '0xbd3c0'
+    func_sig: 40 55 53 56 48 8D AC 24 ?? ?? ?? ??
+    func_size: '0x341'
+    func_va: '0x1800bd3c0'
+    vfunc_index: 14
+    vfunc_offset: '0x70'
+    vtable_name: CServerSideClient_vtable
   engine/CServerSideClient_IsHearingClient.linux.yaml:
     func_name: CServerSideClient_IsHearingClient
     func_rva: '0x532280'
@@ -11804,7 +12087,7 @@ files:
     vtable_numvfunc: 43
     vtable_rva: '0x578ca8'
     vtable_size: '0x158'
-    vtable_symbol: off_180578CA8
+    vtable_symbol: CSplitScreenService_vtable
     vtable_va: '0x180578ca8'
   engine/ConnectInterfaces.linux.yaml:
     func_name: ConnectInterfaces
@@ -11967,6 +12250,30 @@ files:
     vfunc_index: 32
     vfunc_offset: '0x100'
     vfunc_sig: FF 90 00 01 00 00 84 C0 0F 84 ?? ?? ?? ?? 48 8B 1D ?? ?? ?? ??
+    vtable_name: INetworkClientService
+  engine/INetworkClientService_IsConnecting.linux.yaml:
+    func_name: INetworkClientService_IsConnecting
+    vfunc_index: 35
+    vfunc_offset: '0x118'
+    vfunc_sig: 48 8B 80 18 01 00 00 FF E0
+    vtable_name: INetworkClientService
+  engine/INetworkClientService_IsConnecting.windows.yaml:
+    func_name: INetworkClientService_IsConnecting
+    vfunc_index: 34
+    vfunc_offset: '0x110'
+    vfunc_sig: FF 90 10 01 00 00 84 C0 75 ?? 48 83 C4 ?? C3 B0 ??
+    vtable_name: INetworkClientService
+  engine/INetworkClientService_IsPutInServer.linux.yaml:
+    func_name: INetworkClientService_IsPutInServer
+    vfunc_index: 34
+    vfunc_offset: '0x110'
+    vfunc_sig: FF 90 10 01 00 00 48 8B 5D ??
+    vtable_name: INetworkClientService
+  engine/INetworkClientService_IsPutInServer.windows.yaml:
+    func_name: INetworkClientService_IsPutInServer
+    vfunc_index: 33
+    vfunc_offset: '0x108'
+    vfunc_sig: FF 90 08 01 00 00 84 C0 0F 94 C0 84 C0 75 ?? E8 ?? ?? ?? ?? 84 C0 75 ?? 48 8B 0D ?? ?? ?? ?? 48 8B 01 FF 50 ?? 84 C0 75 ?? 48 8B 0D ?? ?? ?? ?? BA ?? ?? ?? ?? 8B 09 FF 15 ?? ?? ?? ?? 84 C0 74 ??
     vtable_name: INetworkClientService
   engine/INetworkGameClient_SendStringCmd.linux.yaml:
     func_name: INetworkGameClient_SendStringCmd
@@ -13451,7 +13758,7 @@ files:
     vtable_numvfunc: 45
     vtable_rva: '0x22a7c0'
     vtable_size: '0x168'
-    vtable_symbol: off_18022A7C0
+    vtable_symbol: CFlattenedSerializers_vtable
     vtable_va: '0x18022a7c0'
   networksystem/CNetChan_ParseMessagesDemo.linux.yaml:
     func_name: CNetChan_ParseMessagesDemo
@@ -23180,7 +23487,7 @@ files:
     vtable_numvfunc: 4
     vtable_rva: '0x17ade38'
     vtable_size: '0x20'
-    vtable_symbol: off_1817ADE38
+    vtable_symbol: CEntFireOutputAutoCompletionFunctor_vtable
     vtable_va: '0x1817ade38'
   server/CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses.linux.yaml:
     func_name: CEntity2NetworkClasses_ServerClass_InitEntity2NetworkClasses
@@ -23336,7 +23643,7 @@ files:
     vtable_numvfunc: 6
     vtable_rva: '0x15e1a00'
     vtable_size: '0x30'
-    vtable_symbol: off_1815E1A00
+    vtable_symbol: CEntityComponentHelperT_CBodyComponent_vtable
     vtable_va: '0x1815e1a00'
   server/CEntityComponentHelperT_Free.linux.yaml:
     func_name: CEntityComponentHelperT_Free
@@ -24171,7 +24478,7 @@ files:
   server/CEntitySaveRestoreBlockHandler_PostRestore.windows.yaml:
     func_name: CEntitySaveRestoreBlockHandler_PostRestore
     func_rva: '0xb53bd0'
-    func_sig: 48 8B 0D 99 A8 46 ??
+    func_sig: 48 8B 0D 29 A3 46 ??
     func_size: '0xe'
     func_va: '0x180b53bd0'
     vfunc_index: 8
@@ -24353,7 +24660,7 @@ files:
     vtable_numvfunc: 9
     vtable_rva: '0x1793550'
     vtable_size: '0x48'
-    vtable_symbol: off_181793550
+    vtable_symbol: CEntitySaveRestoreBlockHandler_vtable
     vtable_va: '0x181793550'
   server/CEntitySpawner_CPlayerSprayDecal_Spawn.linux.yaml:
     func_name: CEntitySpawner_CPlayerSprayDecal_Spawn
@@ -29044,7 +29351,7 @@ files:
     vtable_numvfunc: 5
     vtable_rva: '0x179ce08'
     vtable_size: '0x28'
-    vtable_symbol: off_18179CE08
+    vtable_symbol: CLoopModeFactory_CLoopModeGame_vtable
     vtable_va: '0x18179ce08'
   server/CLoopModeGame_AddViewsToSceneSystem.linux.yaml:
     func_name: CLoopModeGame_AddViewsToSceneSystem
@@ -33359,7 +33666,7 @@ files:
     vtable_numvfunc: 12
     vtable_rva: '0x1794470'
     vtable_size: '0x60'
-    vtable_symbol: off_181794470
+    vtable_symbol: CSaveRestoreBlockSet_vtable
     vtable_va: '0x181794470'
   server/CSceneEntity_GetScriptDesc.linux.yaml:
     func_name: CSceneEntity_GetScriptDesc
@@ -34472,7 +34779,7 @@ files:
     vtable_numvfunc: 44
     vtable_rva: '0x17dd4a0'
     vtable_size: '0x160'
-    vtable_symbol: off_1817DD4A0
+    vtable_symbol: CSource2GameClients_vtable
     vtable_va: '0x1817dd4a0'
   server/CSource2GameEntities_CheckTransmit.linux.yaml:
     func_name: CSource2GameEntities_CheckTransmit
@@ -34545,7 +34852,7 @@ files:
     vtable_numvfunc: 18
     vtable_rva: '0x17dcb88'
     vtable_size: '0x90'
-    vtable_symbol: off_1817DCB88
+    vtable_symbol: CSource2GameEntities_vtable
     vtable_va: '0x1817dcb88'
   server/CSource2Server_ApplyGameSettings.linux.yaml:
     func_name: CSource2Server_ApplyGameSettings
@@ -35082,7 +35389,7 @@ files:
     vtable_numvfunc: 99
     vtable_rva: '0x17dc1b8'
     vtable_size: '0x318'
-    vtable_symbol: off_1817DC1B8
+    vtable_symbol: CSource2Server_vtable
     vtable_va: '0x1817dc1b8'
   server/CSource2Server_vtable2.linux.yaml:
     vtable_class: CSource2Server
@@ -35091,7 +35398,7 @@ files:
     vtable_numvfunc: 1
     vtable_rva: '0x24c96a0'
     vtable_size: '0x8'
-    vtable_symbol: off_24C96A0
+    vtable_symbol: CSource2Server_vtable2
     vtable_va: '0x24c96a0'
   server/CSource2Server_vtable2.windows.yaml:
     vtable_class: CSource2Server
@@ -35100,7 +35407,7 @@ files:
     vtable_numvfunc: 1
     vtable_rva: '0x17dc4d8'
     vtable_size: '0x8'
-    vtable_symbol: off_1817DC4D8
+    vtable_symbol: CSource2Server_vtable2
     vtable_va: '0x1817dc4d8'
   server/CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters.windows.yaml:
     func_name: CSpawnGroupEntityFilterRegistrar_RegisterSpawnGroupEntityFilters
@@ -35517,7 +35824,7 @@ files:
     vtable_numvfunc: 66
     vtable_rva: '0x23c9978'
     vtable_size: '0x210'
-    vtable_symbol: off_23C9978
+    vtable_symbol: CSpawnGroupMgrGameSystem_vtable2
     vtable_va: '0x23c9978'
   server/CSpawnGroupMgrGameSystem_vtable2.windows.yaml:
     vtable_class: CSpawnGroupMgrGameSystem
@@ -39464,4 +39771,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14172'
-schema_version: 3
+last_publish_time: '2026-07-27T06:53:13Z'
+schema_version: 4

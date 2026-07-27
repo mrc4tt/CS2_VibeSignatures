@@ -59,9 +59,32 @@ class ReleaseFixture:
         generator = self.repo / "gamedata-generators" / "fixture"
         generator.mkdir(parents=True)
         self.bin_source.mkdir(parents=True)
-        self.analysis_config.write_bytes(b"modules: []\n")
+        client_binary = self.bin_source / "client" / "client.dll"
+        client_binary.parent.mkdir()
+        client_binary.write_bytes(b"dll")
+        (self.bin_source / "client" / "client.yaml").write_text("value: 1\n", encoding="utf-8")
+        self.analysis_config.write_text(
+            "modules:\n  - name: client\n    path_windows: game/bin/win64/client.dll\n    skills: []\n",
+            encoding="utf-8",
+        )
         contract = load_contract(self.analysis_config, self.gamever, self.repo / "bin")
-        snapshot = canonical_snapshot_bytes(build_snapshot_document(self.gamever, contract.config_sha256, {}))
+        snapshot = canonical_snapshot_bytes(
+            build_snapshot_document(
+                self.gamever,
+                contract.config_sha256,
+                {},
+                last_publish_time="2026-01-02T03:04:05Z",
+                binaries={
+                    "client": {
+                        "windows": {
+                            "path": "game/bin/win64/client.dll",
+                            "sha256": hashlib.sha256(b"dll").hexdigest(),
+                            "md5": hashlib.md5(b"dll").hexdigest(),
+                        }
+                    }
+                },
+            )
+        )
         (self.repo / "gamesymbols" / f"{self.gamever}.yaml").write_bytes(snapshot)
         self.candidate.write_bytes(snapshot)
         (generator / "gamedata.py").write_text(
@@ -89,8 +112,6 @@ class ReleaseFixture:
             session_path=self.gamedata_session,
             output_dir=self.repo / "gamedata" / self.gamever,
         )
-        (self.bin_source / "client.dll").write_bytes(b"dll")
-        (self.bin_source / "client.yaml").write_text("value: 1\n", encoding="utf-8")
         (self.repo / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
         (self.repo / ".gitattributes").write_text("gamedata/** -text\n", encoding="utf-8")
         self.git("init", "--quiet")
@@ -192,6 +213,16 @@ class TestReleaseWorkflow(unittest.TestCase):
             "14168",
             contract.config_sha256,
             {"server/Test.windows.yaml": {"func_name": "Test", "func_rva": "0x10"}},
+            last_publish_time="2026-01-02T03:04:05Z",
+            binaries={
+                "server": {
+                    "windows": {
+                        "path": "game/bin/win64/server.dll",
+                        "sha256": "1" * 64,
+                        "md5": "2" * 32,
+                    }
+                }
+            },
         )
         snapshot.write_bytes(canonical_snapshot_bytes(document))
         major_line = "    major_update: true\n" if major_update else ""
@@ -292,6 +323,16 @@ class TestReleaseWorkflow(unittest.TestCase):
             self.assertNotIn("timestamp", tracked)
             self.assertNotIn(str(fixture.root), tracked_path.read_text(encoding="utf-8"))
 
+    def test_stage_rejects_snapshot_binary_hash_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ReleaseFixture(Path(tmp))
+            (fixture.bin_source / "client" / "client.dll").write_bytes(b"changed")
+
+            with self.assertRaisesRegex(ReleaseWorkflowError, "snapshot binary hash mismatch"):
+                fixture.stage()
+
+            self.assertFalse((fixture.staging / fixture.gamever / fixture.build_id).exists())
+
     def test_legacy_contract_manifest_is_v1_only_for_schema_1_snapshot(self) -> None:
         legacy_manifest = self._manifest_with_contract()
         schema_1 = build_snapshot_document(
@@ -301,7 +342,13 @@ class TestReleaseWorkflow(unittest.TestCase):
             schema_version=1,
             config_digest_version=1,
         )
-        schema_2 = build_snapshot_document("14170", "sha256:" + "e" * 64, {})
+        schema_2 = build_snapshot_document(
+            "14170",
+            "sha256:" + "e" * 64,
+            {},
+            schema_version=2,
+            config_digest_version=2,
+        )
 
         self.assertEqual(2, legacy_manifest["schema_version"])
         self.assertEqual(1, manifest_config_digest_version(legacy_manifest, schema_1))

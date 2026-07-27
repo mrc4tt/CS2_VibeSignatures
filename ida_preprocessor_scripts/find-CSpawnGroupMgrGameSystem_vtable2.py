@@ -11,6 +11,7 @@ from ida_preprocessor_scripts._ordinal_vtable_common import (
 
 TARGET_CLASS_NAME = "CSpawnGroupMgrGameSystem"
 TARGET_OUTPUT_STEM = "CSpawnGroupMgrGameSystem_vtable2"
+CANONICAL_VTABLE_SYMBOLS_BY_PLATFORM = {"linux": TARGET_OUTPUT_STEM}
 WINDOWS_SYMBOL_ALIASES = ["??_7CSpawnGroupMgrGameSystem@@6B@_0"]
 LINUX_EXPECTED_OFFSET_TO_TOP = -8
 
@@ -50,6 +51,7 @@ async def preprocess_skill(
         debug=debug,
         symbol_aliases=symbol_aliases,
         expected_offset_to_top=expected_offset_to_top,
+        canonical_vtable_symbol=CANONICAL_VTABLE_SYMBOLS_BY_PLATFORM.get(platform),
     )
     if not result:
         return False

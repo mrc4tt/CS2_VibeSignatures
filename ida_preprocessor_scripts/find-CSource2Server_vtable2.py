@@ -16,6 +16,7 @@ from ida_analyze_util import parse_mcp_result, write_vtable_yaml
 TARGET_CLASS_NAME = "CSource2Server"
 TARGET_OUTPUT_STEM = "CSource2Server_vtable2"
 MAIN_VTABLE_STEM = "CSource2Server_vtable"
+CANONICAL_VTABLE_SYMBOL = TARGET_OUTPUT_STEM
 
 MANGLED_CLASS_NAMES = {
     "CSource2Server": [
@@ -210,5 +211,7 @@ async def preprocess_skill(
     if not isinstance(selected, dict):
         return False
 
+    selected = dict(selected)
+    selected["vtable_symbol"] = CANONICAL_VTABLE_SYMBOL
     write_vtable_yaml(output_path, selected)
     return True

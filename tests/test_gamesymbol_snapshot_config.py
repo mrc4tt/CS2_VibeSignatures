@@ -57,6 +57,34 @@ class TestSnapshotContract(unittest.TestCase):
             contract = load_contract(config, "1", root / "bin")
 
         self.assertEqual({"server/A.windows.yaml"}, contract.required_paths)
+        self.assertEqual({("server", "windows")}, set(contract.binary_targets))
+
+    def test_binary_targets_include_skillless_modules_and_deduplicate_stages(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            config = root / "config.yaml"
+            repeated = module("server", [])
+            write_config(config, [repeated, repeated])
+
+            contract = load_contract(config, "1", root / "bin")
+
+        self.assertEqual({("server", "windows"), ("server", "linux")}, set(contract.binary_targets))
+        self.assertEqual(
+            "game/bin/linuxsteamrt64/server.so",
+            contract.binary_targets[("server", "linux")].source_path,
+        )
+
+    def test_binary_target_rejects_conflicting_stage_paths(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            config = root / "config.yaml"
+            first = module("server", [])
+            second = module("server", [])
+            second["path_windows"] = "game/bin/win64/other.dll"
+            write_config(config, [first, second])
+
+            with self.assertRaisesRegex(SnapshotConfigError, "conflicting binary path"):
+                load_contract(config, "1", root / "bin")
 
     def test_digest_ignores_descriptions_but_tracks_analysis_fields(self) -> None:
         with TemporaryDirectory() as temp_dir:

@@ -887,7 +887,7 @@ async def export_object_xref_details_via_mcp(
     platform: str,
     object_name: str,
     debug: bool = False,
-) -> dict[str, int]:
+) -> dict[str, Any]:
     gamever = _require_nonempty_text(gamever, "gamever")
     module_name = _require_nonempty_text(module_name, "module_name")
     platform = _require_nonempty_text(platform, "platform")
@@ -906,6 +906,7 @@ async def export_object_xref_details_via_mcp(
             print(f"    vcall_finder: py_eval failed at object-xref step with {object_scope}: {exc!r}")
         return {
             "status": "failed",
+            "object_found": None,
             "exported_functions": 0,
             "failed_functions": 1,
             "skipped_functions": 0,
@@ -922,6 +923,7 @@ async def export_object_xref_details_via_mcp(
             print(f"    vcall_finder: invalid object-xref payload with {object_scope}")
         return {
             "status": "failed",
+            "object_found": None,
             "exported_functions": 0,
             "failed_functions": 1,
             "skipped_functions": 0,
@@ -929,6 +931,7 @@ async def export_object_xref_details_via_mcp(
     if not object_data.get("object_ea"):
         return {
             "status": "skipped",
+            "object_found": False,
             "exported_functions": 0,
             "failed_functions": 0,
             "skipped_functions": 1,
@@ -938,6 +941,7 @@ async def export_object_xref_details_via_mcp(
     if isinstance(functions, (str, bytes, bytearray)) or not isinstance(functions, Sequence):
         return {
             "status": "failed",
+            "object_found": True,
             "exported_functions": 0,
             "failed_functions": 1,
             "skipped_functions": 0,
@@ -946,6 +950,7 @@ async def export_object_xref_details_via_mcp(
     if not functions:
         return {
             "status": "skipped",
+            "object_found": True,
             "exported_functions": 0,
             "failed_functions": 0,
             "skipped_functions": 1,
@@ -1046,6 +1051,7 @@ async def export_object_xref_details_via_mcp(
 
     return {
         "status": status,
+        "object_found": True,
         "exported_functions": exported_functions,
         "failed_functions": failed_functions,
         "skipped_functions": skipped_functions,

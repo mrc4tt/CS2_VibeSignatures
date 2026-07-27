@@ -67,7 +67,7 @@ Key implementation points:
 ## Notes
 - `-platform` only accepts `windows` and `linux`, and supports comma-separated values; invalid values immediately raise `parser.error(...)`.
 - `-modules=*` means no module filtering; otherwise it is split by commas into `module_filter`.
-- `-vcall_finder` accepts `*` or a comma-separated object list; empty strings, empty object names, and mixing `*` with explicit names all raise errors.
+- `-vcall_finder` accepts only an explicit comma-separated object list, preserves first-seen order, and requires an explicit `-modules` list; `*`, empty selectors, and empty object names raise errors.
 - `-oldgamever=none` explicitly disables old-version reuse; if omitted, the script auto-detects the nearest older version by directory existence, including suffixed versions such as `14141a` — unless `gamever` is flagged `major_update: true` in `download.yaml`, in which case auto-resolution is skipped and old-version reuse stays disabled.
 - `-ida_args` is ultimately forwarded to `idalib-mcp` via `str.split()`, which is not robust for arguments containing spaces or complex quoting.
 - The main command examples in `README.md` cover most commonly used parameters, but the source code additionally exposes `-bindir`, `-ida_args`, and `-rename`.
@@ -79,7 +79,7 @@ Key implementation points:
 - `-platform`: target platform list; defaults to `windows,linux`; parsed into `args.platforms`.
 - `-agent`: Agent executable name to invoke; defaults to `claude`; example values include `claude`, `claude.cmd`, `codex`, and `codex.cmd`.
 - `-modules`: module filter; defaults to `*`; accepts a comma-separated module list.
-- `-vcall_finder`: vcall_finder object filter; supports `*` or a comma-separated object list; parsed into `args.vcall_finder_filter`.
+- `-vcall_finder`: explicit comma-separated vcall_finder object list; parsed into `args.vcall_finder_filter` and applied to every explicitly selected module without config registration.
 - `-llm_model`: LLM model name; defaults to `gpt-4o`.
 - `-llm_apikey`: LLM API key; used by preprocessing and `vcall_finder` aggregation.
 - `-llm_baseurl`: LLM base URL; compatible with OpenAI-style APIs; required when `-llm_fake_as=codex`.

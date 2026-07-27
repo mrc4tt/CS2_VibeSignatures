@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from tests.gamesymbol_snapshot_test_support import module, skill, write_config, write_yaml
+from tests.gamesymbol_snapshot_test_support import module, skill, write_binary, write_config, write_yaml
 
 
 SCRIPT = Path(".claude/skills/pack-snapshot/scripts/pack_snapshot.py")
@@ -52,6 +52,8 @@ class TestPackSnapshotSkill(unittest.TestCase):
             write_config(config, [module("server", [skill("find-a", ["A.{platform}.yaml"])])])
             write_yaml(root / "bin/14168/server/A.windows.yaml", {"func_name": "A", "func_size": 1})
             write_yaml(root / "bin/14168/server/A.linux.yaml", {"func_name": "A", "func_size": 2})
+            write_binary(root / "bin/14168/server/server.dll")
+            write_binary(root / "bin/14168/server/server.so")
 
             result = pack_skill.pack(root, "14168")
 

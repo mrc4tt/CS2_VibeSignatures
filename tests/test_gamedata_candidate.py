@@ -50,7 +50,13 @@ class GamedataCandidateFixture:
         self.config.parent.mkdir(parents=True)
         self.config.write_text("modules: []\n", encoding="utf-8")
         contract = load_contract(self.config, self.gamever, root / "bin")
-        document = build_snapshot_document(self.gamever, contract.config_sha256, {})
+        document = build_snapshot_document(
+            self.gamever,
+            contract.config_sha256,
+            {},
+            last_publish_time="2026-01-02T03:04:05Z",
+            binaries={},
+        )
         self.snapshot.write_bytes(canonical_snapshot_bytes(document))
         generator = self.modules / "fixture"
         generator.mkdir(parents=True)

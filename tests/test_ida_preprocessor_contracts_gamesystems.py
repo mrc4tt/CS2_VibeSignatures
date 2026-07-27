@@ -234,6 +234,7 @@ class TestFindCSpawnGroupMgrGameSystemVtable2(unittest.IsolatedAsyncioTestCase):
             debug=True,
             symbol_aliases=["??_7CSpawnGroupMgrGameSystem@@6B@_0"],
             expected_offset_to_top=None,
+            canonical_vtable_symbol=None,
         )
         mock_write_vtable_yaml.assert_called_once_with(
             "tmp/CSpawnGroupMgrGameSystem_vtable2.windows.yaml",
@@ -286,6 +287,7 @@ class TestFindCSpawnGroupMgrGameSystemVtable2(unittest.IsolatedAsyncioTestCase):
             debug=True,
             symbol_aliases=None,
             expected_offset_to_top=-8,
+            canonical_vtable_symbol="CSpawnGroupMgrGameSystem_vtable2",
         )
         mock_write_vtable_yaml.assert_called_once_with(
             "tmp/CSpawnGroupMgrGameSystem_vtable2.linux.yaml",

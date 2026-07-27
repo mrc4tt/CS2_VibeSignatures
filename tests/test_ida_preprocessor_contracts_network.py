@@ -1,3 +1,4 @@
+import re
 import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
@@ -19,6 +20,27 @@ I_GET_LOGGING_CHANNEL_LINUX_SCRIPT_PATH = Path(
     "ida_preprocessor_scripts/find-INetworkMessages_GetLoggingChannel-linux.py"
 )
 CNETWORK_SERVER_SERVICE_INIT_SCRIPT_PATH = Path("ida_preprocessor_scripts/find-CNetworkServerService_Init.py")
+CLIENT_PRINTF_DECOMPILES_SCRIPT_PATH = Path("ida_preprocessor_scripts/find-CEngineServer_ClientPrintf-decompiles.py")
+
+
+class TestClientListLlmContract(unittest.TestCase):
+    def test_client_list_requires_dword_cmp_instruction(self) -> None:
+        module = _load_module(
+            CLIENT_PRINTF_DECOMPILES_SCRIPT_PATH,
+            "find_CEngineServer_ClientPrintf_decompiles",
+        )
+        spec = next(item for item in module.LLM_DECOMPILE if item["symbol_name"] == "CNetworkGameServer_ClientList")
+
+        self.assertEqual(["found_struct_offset"], spec["expected_result_sections"])
+        self.assertEqual(4, spec["expected_size"])
+        self.assertEqual(2, len(spec["instruction_rules"]))
+        self.assertEqual(
+            ["cmp reg, [base+offset]", "cmp [base+offset], reg"],
+            [rule["text"] for rule in spec["instruction_rules"]],
+        )
+        self.assertTrue(any(re.fullmatch(rule["regex"], "cmp ebx, [r12+248h]") for rule in spec["instruction_rules"]))
+        self.assertTrue(any(re.fullmatch(rule["regex"], "cmp [r12+248h], ebx") for rule in spec["instruction_rules"]))
+        self.assertFalse(any(re.fullmatch(rule["regex"], "mov rax, [r12+250h]") for rule in spec["instruction_rules"]))
 
 
 class TestInheritVfuncWrapperContracts(unittest.IsolatedAsyncioTestCase):
