@@ -1,17 +1,61 @@
-import type { GameSymbolDataset, GameSymbolIndex } from './types'
+import type { GameSymbolDataset, GameSymbolIndex, GameSymbolIndexVersion } from './types'
 
 const SYMBOL_ASSET_ROOT = `${import.meta.env.BASE_URL}gamesymbols/`
+const SHA256_PATTERN = /^[0-9a-f]{64}$/
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
 
 async function requestJson<T>(url: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(url, { signal })
+  const response = await fetch(url, { signal, cache: 'no-cache' })
   if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   return response.json() as Promise<T>
 }
 
-export function getGameSymbolIndex(signal?: AbortSignal): Promise<GameSymbolIndex> {
-  return requestJson<GameSymbolIndex>(`${SYMBOL_ASSET_ROOT}index.json`, signal)
+function validateIndexVersion(value: unknown, index: number): asserts value is GameSymbolIndexVersion {
+  if (!isObject(value)) throw new Error(`Invalid game-symbol index v3 entry at versions[${index}]`)
+  const { gameVersion, url, sha256, size, snapshotSchemaVersion, fileCount, lastPublishTime } = value
+  if (typeof gameVersion !== 'string' || !/^\d{4,10}[a-z]?$/.test(gameVersion)) throw new Error(`Invalid gameVersion at versions[${index}]`)
+  if (typeof sha256 !== 'string' || !SHA256_PATTERN.test(sha256)) throw new Error(`Invalid sha256 at versions[${index}]`)
+  if (url !== `${gameVersion}.${sha256}.json`) throw new Error(`Invalid content-addressed url at versions[${index}]`)
+  if (!Number.isInteger(size) || (size as number) <= 0) throw new Error(`Invalid size at versions[${index}]`)
+  if (!Number.isInteger(snapshotSchemaVersion)) throw new Error(`Invalid snapshotSchemaVersion at versions[${index}]`)
+  if (!Number.isInteger(fileCount) || (fileCount as number) < 0) throw new Error(`Invalid fileCount at versions[${index}]`)
+  if (typeof lastPublishTime !== 'string') throw new Error(`Invalid lastPublishTime at versions[${index}]`)
 }
 
-export function getGameSymbolDataset(assetUrl: string, signal?: AbortSignal): Promise<GameSymbolDataset> {
-  return requestJson<GameSymbolDataset>(`${SYMBOL_ASSET_ROOT}${assetUrl}`, signal)
+export async function getGameSymbolIndex(signal?: AbortSignal): Promise<GameSymbolIndex> {
+  const value = await requestJson<unknown>(`${SYMBOL_ASSET_ROOT}index.json`, signal)
+  if (!isObject(value) || value.schemaVersion !== 3 || !Array.isArray(value.versions)) {
+    throw new Error('Invalid game-symbol index schema; expected v3')
+  }
+  value.versions.forEach(validateIndexVersion)
+  return value as unknown as GameSymbolIndex
+}
+
+async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', new Uint8Array(bytes))
+  return Array.from(new Uint8Array(digest), (value) => value.toString(16).padStart(2, '0')).join('')
+}
+
+export async function getGameSymbolDataset(version: GameSymbolIndexVersion, signal?: AbortSignal): Promise<GameSymbolDataset> {
+  validateIndexVersion(version, 0)
+  const response = await fetch(`${SYMBOL_ASSET_ROOT}${version.url}`, { signal })
+  if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+
+  const bytes = await response.arrayBuffer()
+  if (bytes.byteLength !== version.size) {
+    throw new Error(`Game-symbol snapshot size mismatch: expected ${version.size}, received ${bytes.byteLength}`)
+  }
+  const actualSha256 = await sha256Hex(bytes)
+  if (actualSha256 !== version.sha256) {
+    throw new Error(`Game-symbol snapshot SHA-256 mismatch: expected ${version.sha256}, received ${actualSha256}`)
+  }
+
+  const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) as unknown
+  if (!isObject(value) || value.schemaVersion !== 2 || !isObject(value.source) || value.source.gameVersion !== version.gameVersion) {
+    throw new Error(`Invalid game-symbol snapshot for ${version.gameVersion}`)
+  }
+  return value as unknown as GameSymbolDataset
 }

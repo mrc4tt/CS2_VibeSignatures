@@ -73,8 +73,8 @@ binaries:
       path: game/bin/win64/vphysics2.dll
       sha256: 8bb3c48086c6e053300d2db6a019a56d2d1dfdb231c3556ff0dd7e77bc170995
 config_digest_version: 2
-config_sha256: sha256:93f4170f86434b1757379485c6b9c2c1478270b2bceed716de72619bd18ac4bb
-file_count: 3153
+config_sha256: sha256:fc6b143a0bf200c3e04de64e37515f75aca5ee7881526132b439a71df2c08396
+file_count: 3155
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -23662,6 +23662,20 @@ files:
     func_sig: 48 8B C4 55 53 48 8D A8 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 83 B9 ?? ?? ?? ?? ??
     func_size: '0x688'
     func_va: '0x1801eff20'
+  server/CEngineServer_UnloadSpawnGroup.linux.yaml:
+    func_name: CEngineServer_UnloadSpawnGroup
+    vfunc_index: 60
+    vfunc_offset: '0x1e0'
+    vfunc_sig: FF 90 E0 01 00 00 89 83 ?? ?? ?? ??
+    vfunc_sig_max_match: 2
+    vtable_name: CEngineServer
+  server/CEngineServer_UnloadSpawnGroup.windows.yaml:
+    func_name: CEngineServer_UnloadSpawnGroup
+    vfunc_index: 60
+    vfunc_offset: '0x1e0'
+    vfunc_sig: 4C 8B 80 E0 01 00 00 48 63 C3
+    vfunc_sig_max_match: 2
+    vtable_name: CEngineServer
   server/CEngineServiceRegistry_UnregisterEngineServices.linux.yaml:
     func_name: CEngineServiceRegistry_UnregisterEngineServices
     func_rva: '0x2038f10'
@@ -39999,5 +40013,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14172'
-last_publish_time: '2026-07-27T10:53:00Z'
+last_publish_time: '2026-07-28T08:22:09Z'
 schema_version: 4

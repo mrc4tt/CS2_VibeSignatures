@@ -45,15 +45,15 @@ describe('ExploreSymbolsPage', () => {
 
   beforeEach(() => {
     vi.mocked(getGameSymbolIndex).mockResolvedValue({
-      schemaVersion: 2,
+      schemaVersion: 3,
       versions: [
-        { gameVersion: '14172', url: '14172.json', snapshotSchemaVersion: 4, fileCount: 3, lastPublishTime: '2026-07-27T04:42:43Z' },
-        { gameVersion: '14171', url: '14171.json', snapshotSchemaVersion: 4, fileCount: 2, lastPublishTime: '2026-07-26T01:02:03Z' },
+        { gameVersion: '14172', url: `14172.${'a'.repeat(64)}.json`, sha256: 'a'.repeat(64), size: 123, snapshotSchemaVersion: 4, fileCount: 3, lastPublishTime: '2026-07-27T04:42:43Z' },
+        { gameVersion: '14171', url: `14171.${'b'.repeat(64)}.json`, sha256: 'b'.repeat(64), size: 122, snapshotSchemaVersion: 4, fileCount: 2, lastPublishTime: '2026-07-26T01:02:03Z' },
       ],
     })
     vi.mocked(getGameSymbolDataset).mockImplementation(async (version) => ({
       ...dataset,
-      source: { ...dataset.source, gameVersion: version },
+      source: { ...dataset.source, gameVersion: version.gameVersion },
     }))
   })
 
@@ -63,7 +63,10 @@ describe('ExploreSymbolsPage', () => {
 
     expect(await screen.findByText('共 3 条记录')).toBeInTheDocument()
     expect(screen.getByText(`最后更新 ${dayjs('2026-07-27T04:42:43Z').format('YYYY-MM-DD HH:mm:ss')} · 3 个符号`)).toBeInTheDocument()
-    expect(getGameSymbolDataset).toHaveBeenCalledWith('14172.json', expect.any(AbortSignal))
+    expect(getGameSymbolDataset).toHaveBeenCalledWith(expect.objectContaining({
+      gameVersion: '14172',
+      url: `14172.${'a'.repeat(64)}.json`,
+    }), expect.any(AbortSignal))
 
     await user.click(screen.getByRole('combobox', { name: '全部模块' }))
     await user.click(await screen.findByText('server', { selector: '.ant-select-item-option-content' }))
@@ -96,7 +99,10 @@ describe('ExploreSymbolsPage', () => {
     await user.click(screen.getByLabelText('游戏版本'))
     await user.click(await screen.findByText('14171', { selector: '.ant-select-item-option-content' }))
 
-    expect(getGameSymbolDataset).toHaveBeenCalledWith('14171.json', expect.any(AbortSignal))
+    expect(getGameSymbolDataset).toHaveBeenCalledWith(expect.objectContaining({
+      gameVersion: '14171',
+      url: `14171.${'b'.repeat(64)}.json`,
+    }), expect.any(AbortSignal))
     expect(screen.getByText(`最后更新 ${dayjs('2026-07-26T01:02:03Z').format('YYYY-MM-DD HH:mm:ss')} · 2 个符号`)).toBeInTheDocument()
     expect(screen.queryByText(/14171 · 2/)).not.toBeInTheDocument()
   })

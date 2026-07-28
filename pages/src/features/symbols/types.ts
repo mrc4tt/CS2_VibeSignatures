@@ -8,15 +8,19 @@ export interface GameSymbolBinary {
 
 export type GameSymbolBinaries = Record<string, Partial<Record<GameSymbolPlatform, GameSymbolBinary>>>
 
+export interface GameSymbolIndexVersion {
+  gameVersion: string
+  url: string
+  sha256: string
+  size: number
+  snapshotSchemaVersion: number
+  fileCount: number
+  lastPublishTime: string
+}
+
 export interface GameSymbolIndex {
-  schemaVersion: 2
-  versions: Array<{
-    gameVersion: string
-    url: string
-    snapshotSchemaVersion: number
-    fileCount: number
-    lastPublishTime: string
-  }>
+  schemaVersion: 3
+  versions: GameSymbolIndexVersion[]
 }
 
 export interface GameSymbolRecord {

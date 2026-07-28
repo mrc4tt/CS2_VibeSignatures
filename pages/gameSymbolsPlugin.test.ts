@@ -1,5 +1,6 @@
+import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { attachAliasesToDataset, buildConfigAliasIndex, createGameSymbolIndex, normalizeGameSymbolSnapshot } from './gameSymbolsPlugin'
+import { attachAliasesToDataset, buildConfigAliasIndex, createGameSymbolIndex, encodeGameSymbolAsset, normalizeGameSymbolSnapshot } from './gameSymbolsPlugin'
 
 function snapshot(files: Record<string, Record<string, unknown>>, gameVersion = '14168b') {
   return {
@@ -68,13 +69,37 @@ describe('gameSymbolsPlugin normalization', () => {
     const older = normalizeGameSymbolSnapshot(snapshot({}, '14168'), '14168', '14168.yaml')
     const revision = normalizeGameSymbolSnapshot(snapshot({}, '14168b'), '14168b', '14168b.yaml')
     const latest = normalizeGameSymbolSnapshot(snapshot({}, '14169'), '14169', '14169.yaml')
-    const index = createGameSymbolIndex([older, latest, revision])
-    expect(index.schemaVersion).toBe(2)
+    const index = createGameSymbolIndex([older, latest, revision].map(encodeGameSymbolAsset))
+    expect(index.schemaVersion).toBe(3)
     expect(index.versions.map((entry) => entry.gameVersion)).toEqual(['14169', '14168b', '14168'])
     expect(index.versions[0]).toEqual(expect.objectContaining({
       lastPublishTime: '2026-01-02T03:04:05Z',
       fileCount: 0,
+      sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+      size: expect.any(Number),
     }))
+    expect(index.versions[0].url).toBe(`${index.versions[0].gameVersion}.${index.versions[0].sha256}.json`)
+  })
+
+  it('hashes and emits the exact UTF-8 snapshot bytes under a content-addressed name', () => {
+    const dataset = normalizeGameSymbolSnapshot(snapshot({
+      'server/Test.windows.yaml': { func_name: 'Test', note: '最终字节' },
+    }, '14172'), '14172', 'snapshot.yaml')
+    const asset = encodeGameSymbolAsset(dataset)
+    const expectedBytes = Buffer.from(JSON.stringify(dataset), 'utf8')
+
+    expect(Buffer.from(asset.bytes)).toEqual(expectedBytes)
+    expect(asset.size).toBe(expectedBytes.byteLength)
+    expect(asset.size).toBeGreaterThan(JSON.stringify(dataset).length)
+    expect(asset.sha256).toBe(createHash('sha256').update(expectedBytes).digest('hex'))
+    expect(asset.url).toBe(`14172.${asset.sha256}.json`)
+
+    const changed = encodeGameSymbolAsset({
+      ...dataset,
+      records: dataset.records.map((record) => ({ ...record, payload: { ...record.payload, note: '内容变化' } })),
+    })
+    expect(changed.url).not.toBe(asset.url)
+    expect(changed.url).toMatch(/^14172\.[0-9a-f]{64}\.json$/)
   })
 })
 

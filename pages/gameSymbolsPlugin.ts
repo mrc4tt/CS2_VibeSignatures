@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { readFile, readdir, stat } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import type { Plugin } from 'vite'
@@ -52,14 +53,26 @@ export interface GameSymbolDataset {
 }
 
 export interface GameSymbolIndex {
-  schemaVersion: 2
-  versions: Array<{
-    gameVersion: string
-    url: string
-    snapshotSchemaVersion: number
-    fileCount: number
-    lastPublishTime: string
-  }>
+  schemaVersion: 3
+  versions: GameSymbolIndexVersion[]
+}
+
+export interface GameSymbolIndexVersion {
+  gameVersion: string
+  url: string
+  sha256: string
+  size: number
+  snapshotSchemaVersion: number
+  fileCount: number
+  lastPublishTime: string
+}
+
+export interface EncodedGameSymbolAsset {
+  dataset: GameSymbolDataset
+  bytes: Uint8Array
+  sha256: string
+  size: number
+  url: string
 }
 
 interface CachedDataset {
@@ -263,16 +276,30 @@ function compareGameVersions(left: string, right: string): number {
   return rightMatch[2].localeCompare(leftMatch[2])
 }
 
-export function createGameSymbolIndex(datasets: GameSymbolDataset[]): GameSymbolIndex {
+export function encodeGameSymbolAsset(dataset: GameSymbolDataset): EncodedGameSymbolAsset {
+  const bytes = Buffer.from(JSON.stringify(dataset), 'utf8')
+  const sha256 = createHash('sha256').update(bytes).digest('hex')
   return {
-    schemaVersion: 2,
-    versions: datasets
-      .map((dataset) => ({
-        gameVersion: dataset.source.gameVersion,
-        url: `${dataset.source.gameVersion}.json`,
-        snapshotSchemaVersion: dataset.source.snapshotSchemaVersion,
-        fileCount: dataset.source.fileCount,
-        lastPublishTime: dataset.source.lastPublishTime,
+    dataset,
+    bytes,
+    sha256,
+    size: bytes.byteLength,
+    url: `${dataset.source.gameVersion}.${sha256}.json`,
+  }
+}
+
+export function createGameSymbolIndex(assets: EncodedGameSymbolAsset[]): GameSymbolIndex {
+  return {
+    schemaVersion: 3,
+    versions: assets
+      .map((asset) => ({
+        gameVersion: asset.dataset.source.gameVersion,
+        url: asset.url,
+        sha256: asset.sha256,
+        size: asset.size,
+        snapshotSchemaVersion: asset.dataset.source.snapshotSchemaVersion,
+        fileCount: asset.dataset.source.fileCount,
+        lastPublishTime: asset.dataset.source.lastPublishTime,
       }))
       .sort((left, right) => compareGameVersions(left.gameVersion, right.gameVersion)),
   }
@@ -337,12 +364,20 @@ export function gameSymbolsPlugin(symbolsDirectory: string, configsDirectory?: s
     return Promise.all((await snapshotFiles()).map(loadDataset))
   }
 
-  function sendJson(response: import('node:http').ServerResponse, value: unknown): void {
-    const body = JSON.stringify(value)
+  async function loadAllAssets(): Promise<EncodedGameSymbolAsset[]> {
+    return (await loadAll()).map(encodeGameSymbolAsset)
+  }
+
+  function sendBytes(response: import('node:http').ServerResponse, bytes: Uint8Array): void {
     response.statusCode = 200
     response.setHeader('Content-Type', 'application/json; charset=utf-8')
     response.setHeader('Cache-Control', 'no-cache')
-    response.end(body)
+    response.setHeader('Content-Length', bytes.byteLength)
+    response.end(bytes)
+  }
+
+  function sendJson(response: import('node:http').ServerResponse, value: unknown): void {
+    sendBytes(response, Buffer.from(JSON.stringify(value), 'utf8'))
   }
 
   return {
@@ -354,20 +389,26 @@ export function gameSymbolsPlugin(symbolsDirectory: string, configsDirectory?: s
         const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
         if (pathname.endsWith('/gamesymbols/index.json')) {
           try {
-            sendJson(response, createGameSymbolIndex(await loadAll()))
+            sendJson(response, createGameSymbolIndex(await loadAllAssets()))
           } catch (error) {
             next(error instanceof Error ? error : new Error(String(error)))
           }
           return
         }
 
-        const match = /\/gamesymbols\/(\d{4,10}[a-z]?)\.json$/.exec(pathname)
+        const match = /\/gamesymbols\/(\d{4,10}[a-z]?)\.([0-9a-f]{64})\.json$/.exec(pathname)
         if (!match) {
           next()
           return
         }
         try {
-          sendJson(response, await loadDataset(join(symbolsDirectory, `${match[1]}.yaml`)))
+          const asset = encodeGameSymbolAsset(await loadDataset(join(symbolsDirectory, `${match[1]}.yaml`)))
+          if (asset.sha256 !== match[2]) {
+            response.statusCode = 404
+            response.end()
+            return
+          }
+          sendBytes(response, asset.bytes)
         } catch (error) {
           next(error instanceof Error ? error : new Error(String(error)))
         }
@@ -385,18 +426,18 @@ export function gameSymbolsPlugin(symbolsDirectory: string, configsDirectory?: s
     },
     async generateBundle() {
       const files = await snapshotFiles()
-      const datasets = await Promise.all(files.map(loadDataset))
-      datasets.forEach((dataset) => {
+      const assets = (await Promise.all(files.map(loadDataset))).map(encodeGameSymbolAsset)
+      assets.forEach((asset) => {
         this.emitFile({
           type: 'asset',
-          fileName: `gamesymbols/${dataset.source.gameVersion}.json`,
-          source: JSON.stringify(dataset),
+          fileName: `gamesymbols/${asset.url}`,
+          source: asset.bytes,
         })
       })
       this.emitFile({
         type: 'asset',
         fileName: 'gamesymbols/index.json',
-        source: JSON.stringify(createGameSymbolIndex(datasets)),
+        source: JSON.stringify(createGameSymbolIndex(assets)),
       })
     },
   }

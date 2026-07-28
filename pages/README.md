@@ -22,7 +22,9 @@ uv run uvicorn process_api:app --host 127.0.0.1 --port 8000
 
 `esa.jsonc` publishes `dist/` and uses SPA fallback routing. A public Pages application still calls the localhost of the computer running the browser; the CDN cannot reach a different computer's localhost.
 
-The Vite build validates `../gamesymbols/*.yaml` and emits JSON contract v2: a version index with publication time and symbol count, plus one JSON asset per game version with the snapshot binary hashes. The `/symbols` route loads these assets on demand and remains available without a Process API connection.
+The Vite build validates `../gamesymbols/*.yaml` and emits index schema v3. Every version entry carries the SHA-256 and byte size of the exact UTF-8 JSON response body, and its URL is strictly `<gameVersion>.<sha256>.json`. The browser verifies those bytes before decoding or parsing the snapshot.
+
+The Pages workflow keeps finalized snapshot bytes in the append-only `pages-snapshots` branch. Its history is required to contain additions only, pushes are non-forced, and an existing digest file must remain byte-identical. A same-version content change therefore adds a new digest file, while every previously archived digest is copied into later Pages artifacts. After deployment, the workflow fetches the public Pages responses and recomputes their size and SHA-256 so CDN delivery is checked against index v3 as well.
 
 For an exact Pages origin:
 
@@ -40,5 +42,6 @@ Do not use a wildcard CORS origin with private-network access.
 npm run lint
 npm test
 npm run build
+npm run verify:gamesymbols
 npm run test:e2e
 ```

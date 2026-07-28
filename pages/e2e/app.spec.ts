@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { createHash } from 'node:crypto'
 
 const run = {
   run_id: 'run-1', status: 'running', effective_status: 'running', is_stale: false,
@@ -35,12 +36,18 @@ test('opens the static symbol browser without a Process API connection', async (
   const indexResponse = await page.request.get('gamesymbols/index.json')
   expect(indexResponse.ok()).toBeTruthy()
   const index = await indexResponse.json()
-  expect(index.schemaVersion).toBe(2)
+  expect(index.schemaVersion).toBe(3)
   const currentVersion = index.versions[0]
+  expect(currentVersion.sha256).toMatch(/^[0-9a-f]{64}$/)
+  expect(currentVersion.url).toBe(`${currentVersion.gameVersion}.${currentVersion.sha256}.json`)
+  expect(currentVersion.size).toBeGreaterThan(0)
   expect(currentVersion.lastPublishTime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
   const datasetResponse = await page.request.get(`gamesymbols/${currentVersion.url}`)
   expect(datasetResponse.ok()).toBeTruthy()
-  const dataset = await datasetResponse.json()
+  const datasetBytes = await datasetResponse.body()
+  expect(datasetBytes.byteLength).toBe(currentVersion.size)
+  expect(createHash('sha256').update(datasetBytes).digest('hex')).toBe(currentVersion.sha256)
+  const dataset = JSON.parse(datasetBytes.toString('utf8'))
   expect(dataset.schemaVersion).toBe(2)
   expect(dataset.source.lastPublishTime).toBe(currentVersion.lastPublishTime)
   expect(Object.keys(dataset.binaries).length).toBeGreaterThan(0)

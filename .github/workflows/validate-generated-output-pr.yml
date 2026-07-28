@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Checkout exact output head
         id: checkout-output
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
@@ -27,7 +27,7 @@ jobs:
 
       - name: Checkout trusted validation tooling from PR base
         id: checkout-tooling
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: .release-tools

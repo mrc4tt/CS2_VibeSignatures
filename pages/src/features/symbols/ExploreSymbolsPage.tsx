@@ -21,13 +21,13 @@ export function ExploreSymbolsPage() {
   const indexQuery = useQuery({
     queryKey: ['gamesymbols', 'index'],
     queryFn: ({ signal }) => getGameSymbolIndex(signal),
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
   })
   const gameVersion = selectedVersion ?? indexQuery.data?.versions[0]?.gameVersion
   const versionEntry = indexQuery.data?.versions.find((version) => version.gameVersion === gameVersion)
   const datasetQuery = useQuery({
-    queryKey: ['gamesymbols', gameVersion],
-    queryFn: ({ signal }) => getGameSymbolDataset(versionEntry!.url, signal),
+    queryKey: ['gamesymbols', gameVersion, versionEntry?.url],
+    queryFn: ({ signal }) => getGameSymbolDataset(versionEntry!, signal),
     enabled: Boolean(versionEntry),
     staleTime: Infinity,
   })

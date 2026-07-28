@@ -66,7 +66,7 @@ class TestBuildSelfRunnerWorkflow(unittest.TestCase):
 
     def test_exact_source_config_and_sdk_identity_are_threaded_through_build(self) -> None:
         checkout = self.build_steps["checkout-source"]
-        self.assertEqual("actions/checkout@v4", checkout["uses"])
+        self.assertEqual("actions/checkout@v5", checkout["uses"])
         self.assertEqual("${{ needs.preflight.outputs.source_sha }}", checkout["with"]["ref"])
         self.assertIn("ANALYSIS_CONFIG=$config", self.build_steps["resolve-config"]["run"])
         self.assertIn("'-configyaml', $env:ANALYSIS_CONFIG", self.build_steps["analyze"]["run"])
