@@ -76,6 +76,7 @@ Expected: FAIL，至少报出一个 `missing ...`，因为这些辅助函数和�
 
 在 `ida_analyze_util.py` 中、`preprocess_common_skill()` 之前加入以下实现，保持函数短小、职责单一：
 
+{% raw %}
 ```python
 def _read_yaml_file(path):
     try:
@@ -160,7 +161,7 @@ result = json.dumps([hex(ea) for ea in sorted(func_starts)])
     except Exception:
         return set()
 
-{%
+
 async def _get_func_basic_info_via_mcp(session, func_va, image_base, debug=False):
     py_code = f'''
 import idaapi, json
@@ -176,7 +177,6 @@ if func and func.start_ea == target_ea:
 else:
     result = json.dumps(None)
 '''
-%}
 
     eval_result = await session.call_tool(
         name="py_eval",
@@ -303,6 +303,7 @@ async def preprocess_func_xrefs_via_mcp(
     sig_data["func_name"] = func_name
     return sig_data
 ```
+{% endraw %}
 
 - [ ] **Step 3: 用 monkeypatch 探针验证联合求交和当前版本 YAML 读取**
 
