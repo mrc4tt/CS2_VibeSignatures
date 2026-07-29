@@ -110,7 +110,7 @@ Required parameters:
 ## IEEE 754 Float Reference
 
 - `100.0f` = `0x42C80000` = `1120403456` decimal
-- `145.0f` = `0x43110000` = `1125122048` decimal
+- `145.0f` = `0x43110000` = `1125187584` decimal
 
 ## Output YAML Files
 

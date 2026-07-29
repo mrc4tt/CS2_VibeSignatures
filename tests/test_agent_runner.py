@@ -40,6 +40,8 @@ class TestSkillRunnerProjectPromptConfiguration(unittest.TestCase):
         self.assertNotIn("model_reasoning_effort=high", command.args)
         self.assertNotIn("model_reasoning_summary=none", command.args)
         self.assertNotIn("model_verbosity=low", command.args)
+        self.assertNotIn("--approval-mode", command.args)
+        self.assertNotIn("full-auto", command.args)
 
     def test_project_configs_define_skill_runner_prompt_and_runtime_settings(self) -> None:
         config_paths = [
@@ -72,14 +74,16 @@ class TestSkillRunnerProjectPromptConfiguration(unittest.TestCase):
         self.assertIn('model_reasoning_effort = "high"', codex_config)
         self.assertIn('model_reasoning_summary = "none"', codex_config)
         self.assertIn('model_verbosity = "low"', codex_config)
+        self.assertIn('approval_policy = "never"', codex_config)
+        self.assertIn('sandbox_mode    = "workspace-write"', codex_config)
         self.assertEqual([".claude/SKILL_RUNNER.md"], opencode_config["instructions"])
 
 
 class TestAgentPermissionArgs(unittest.TestCase):
-    def test_returns_full_auto_permission_args_for_each_agent_kind(self) -> None:
+    def test_returns_permission_args_for_each_agent_kind(self) -> None:
         expected_args = {
             "claude": ["--permission-mode", "auto"],
-            "codex": ["--approval-mode", "full-auto"],
+            "codex": [],
             "opencode": ["--auto"],
         }
 
@@ -93,10 +97,9 @@ class TestAgentPermissionArgs(unittest.TestCase):
             agent_runner._agent_permission_args("claude", claude_permission_mode="acceptEdits"),
         )
 
-    def test_skill_commands_enable_full_auto_permissions(self) -> None:
+    def test_skill_commands_use_cli_permission_args_when_required(self) -> None:
         expected_args = {
             "claude": ["--permission-mode", "auto"],
-            "codex": ["--approval-mode", "full-auto"],
             "opencode": ["--auto"],
         }
 
@@ -116,6 +119,18 @@ class TestAgentPermissionArgs(unittest.TestCase):
                     permission_args,
                     command.args[permission_index : permission_index + len(permission_args)],
                 )
+
+        codex_command = agent_runner._build_agent_command(
+            agent="codex",
+            agent_kind="codex",
+            skill_name="find-test",
+            session_id="session-id",
+            opencode_session_id=None,
+            developer_instructions='developer_instructions="test"',
+            is_retry=False,
+        )
+        self.assertNotIn("--approval-mode", codex_command.args)
+        self.assertNotIn("full-auto", codex_command.args)
 
 
 class TestAgentModelArgs(unittest.TestCase):

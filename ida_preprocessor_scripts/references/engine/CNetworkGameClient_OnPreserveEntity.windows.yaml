@@ -1,0 +1,146 @@
+func_name: CNetworkGameClient_OnPreserveEntity
+func_va: '0x1800470c0'
+disasm_code: |-
+  .text:00000001800470C0                 mov     [rsp+arg_10], rbx
+  .text:00000001800470C5                 push    rsi
+  .text:00000001800470C6                 sub     rsp, 120h
+  .text:00000001800470CD                 mov     rbx, rdx
+  .text:00000001800470D0                 mov     rsi, rcx
+  .text:00000001800470D3                 mov     edx, 0FFFFFFFFh
+  .text:00000001800470D8                 lea     rcx, unk_18068DD58
+  .text:00000001800470DF                 call    sub_1803FEF60
+  .text:00000001800470E4                 test    rax, rax
+  .text:00000001800470E7                 jnz     short loc_1800470F4
+  .text:00000001800470E9                 mov     rax, qword ptr cs:unk_18068DD60
+  .text:00000001800470F0                 mov     rax, [rax+8]
+  .text:00000001800470F4                 movzx   eax, byte ptr [rax]
+  .text:00000001800470F7                 test    al, al
+  .text:00000001800470F9                 jz      loc_18004720F
+  .text:00000001800470FF                 mov     edx, [rbx+30h]
+  .text:0000000180047102                 lea     r8, [rsp+128h+var_C8]
+  .text:0000000180047107                 xorps   xmm0, xmm0
+  .text:000000018004710A                 mov     [rsp+128h+arg_0], rbp
+  .text:0000000180047112                 xorps   xmm1, xmm1
+  .text:0000000180047115                 mov     [rsp+128h+arg_8], rdi
+  .text:000000018004711D                 lea     rdi, [rbx+30h]
+  .text:0000000180047121                 movdqa  [rsp+128h+var_C8], xmm0
+  .text:0000000180047127                 xor     ebp, ebp
+  .text:0000000180047129                 movdqa  [rsp+128h+var_B8], xmm1
+  .text:000000018004712F                 mov     r9b, 1
+  .text:0000000180047132                 movdqa  [rsp+128h+var_A8], xmm0
+  .text:000000018004713B                 mov     rcx, rsi
+  .text:000000018004713E                 movdqa  [rsp+128h+var_98], xmm1
+  .text:0000000180047147                 movdqa  [rsp+128h+var_88], xmm0
+  .text:0000000180047150                 mov     [rsp+128h+var_78], ebp
+  .text:0000000180047157                 mov     [rsp+128h+var_74], 0FFFFFFFFFFFFFFFFh
+  .text:0000000180047163                 call    CNetworkGameClient_GetClientNetworkable
+  .text:0000000180047168                 test    al, al
+  .text:000000018004716A                 jnz     short loc_1800471DB
+  .text:000000018004716C                 xor     r8d, r8d
+  .text:000000018004716F                 lea     rcx, [rsp+128h+var_E8]
+  .text:0000000180047174                 xor     edx, edx
+  .text:0000000180047176                 call    sub_18004C590
+  .text:000000018004717B                 mov     rbx, rax
+  .text:000000018004717E                 call    cs:GetDefaultMiniDumpTypeFlags
+  .text:0000000180047184                 mov     [rsp+128h+var_F8], rbp
+  .text:0000000180047189                 lea     rdx, aOnpreserveenti; "onpreserveentity"
+  .text:0000000180047190                 or      eax, 2
+  .text:0000000180047193                 mov     [rsp+128h+var_100], rbp
+  .text:0000000180047198                 mov     r8d, eax
+  .text:000000018004719B                 mov     [rsp+128h+var_108], rbp
+  .text:00000001800471A0                 mov     r9, rbx
+  .text:00000001800471A3                 lea     rcx, [rsp+128h+var_68]
+  .text:00000001800471AB                 call    sub_18004C5A0
+  .text:00000001800471B0                 xor     r8d, r8d
+  .text:00000001800471B3                 lea     rdx, [rsp+128h+var_68]
+  .text:00000001800471BB                 xor     ecx, ecx
+  .text:00000001800471BD                 call    cs:InvokeMiniDumpHandler
+  .text:00000001800471C3                 mov     rcx, rdi
+  .text:00000001800471C6                 call    sub_18004C710
+  .text:00000001800471CB                 mov     edx, eax
+  .text:00000001800471CD                 lea     rcx, aOnpreserveenti_0; "OnPreserveEntity: missing client entity"...
+  .text:00000001800471D4                 call    cs:Plat_FatalError
+  .text:00000001800471DA                 ; Trap to Debugger
+  .text:00000001800471DA                 int     3; Trap to Debugger
+  .text:00000001800471DB                 mov     rax, qword ptr [rsp+128h+var_C8]
+  .text:00000001800471E0                 test    rax, rax
+  .text:00000001800471E3                 jz      short loc_180047220
+  .text:00000001800471E5                 cmp     [rax+33h], bpl
+  .text:00000001800471E9                 jnz     short loc_1800471FF
+  .text:00000001800471EB                 mov     edx, [rdi]
+  .text:00000001800471ED                 lea     rcx, [rbx+0C0h]
+  .text:00000001800471F4                 mov     r8d, 4
+  .text:00000001800471FA                 call    sub_180044FB0
+  .text:00000001800471FF                 mov     rbp, [rsp+128h+arg_0]
+  .text:0000000180047207                 mov     rdi, [rsp+128h+arg_8]
+  .text:000000018004720F                 mov     rbx, [rsp+128h+arg_10]
+  .text:0000000180047217                 add     rsp, 120h
+  .text:000000018004721E                 pop     rsi
+  .text:000000018004721F                 retn
+  .text:0000000180047220                 lea     rax, aCBuildworkerCs_2; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180047227                 mov     [rsp+128h+var_D0], 3FCh
+  .text:000000018004722F                 mov     [rsp+128h+var_E8], rax
+  .text:0000000180047234                 lea     rcx, [rsp+128h+var_E8]
+  .text:0000000180047239                 lea     rax, aCnetworkgamecl_0; "CNetworkGameClient::OnPreserveEntity"
+  .text:0000000180047240                 mov     [rsp+128h+var_CC], 16h
+  .text:0000000180047248                 mov     [rsp+128h+var_E0], rax
+  .text:000000018004724D                 lea     rax, aPclass; "pClass"
+  .text:0000000180047254                 mov     [rsp+128h+var_D8], rax
+  .text:0000000180047259                 call    cs:?Assert_ConditionFailed_Fatal@@YAXAEBU_AssertCompileTimeConstantStruct_t@@@Z; Assert_ConditionFailed_Fatal(_AssertCompileTimeConstantStruct_t const &)
+procedure: |-
+  __int64 __fastcall CNetworkGameClient_OnPreserveEntity(__int64 a1, __int64 a2)
+  {
+    unsigned __int8 *v4; // rax
+    __int64 v5; // r9
+    __int64 result; // rax
+    __int64 v7; // rdx
+    unsigned int *v8; // rdi
+    int v9; // ebx
+    int DefaultMiniDumpTypeFlags; // eax
+    int v11; // eax
+    _QWORD v12[3]; // [rsp+40h] [rbp-E8h] BYREF
+    int v13; // [rsp+58h] [rbp-D0h]
+    int v14; // [rsp+5Ch] [rbp-CCh]
+    _OWORD v15[5]; // [rsp+60h] [rbp-C8h] BYREF
+    int v16; // [rsp+B0h] [rbp-78h]
+    __int64 v17; // [rsp+B4h] [rbp-74h]
+    _BYTE v18[104]; // [rsp+C0h] [rbp-68h] BYREF
+
+    v4 = (unsigned __int8 *)sub_1803FEF60(&unk_18068DD58, 0xFFFFFFFFLL);
+    if ( !v4 )
+      v4 = *(unsigned __int8 **)(unk_18068DD60 + 8);
+    result = *v4;
+    if ( (_BYTE)result )
+    {
+      v7 = *(unsigned int *)(a2 + 48);
+      v8 = (unsigned int *)(a2 + 48);
+      memset(v15, 0, sizeof(v15));
+      LOBYTE(v5) = 1;
+      v16 = 0;
+      v17 = -1;
+      if ( !(unsigned __int8)CNetworkGameClient_GetClientNetworkable(a1, v7, v15, v5) )
+      {
+        v9 = sub_18004C590(v12, 0, 0);
+        DefaultMiniDumpTypeFlags = GetDefaultMiniDumpTypeFlags();
+        sub_18004C5A0((unsigned int)v18, (unsigned int)"onpreserveentity", DefaultMiniDumpTypeFlags | 2, v9, 0, 0, 0);
+        InvokeMiniDumpHandler(0, v18, 0);
+        v11 = sub_18004C710(v8);
+        Plat_FatalError("OnPreserveEntity: missing client entity %d.\n", v11);
+        __debugbreak();
+      }
+      result = *(_QWORD *)&v15[0];
+      if ( !*(_QWORD *)&v15[0] )
+      {
+        v13 = 1020;
+        v12[0] = "C:\\buildworker\\csgo_rel_win64\\build\\src\\engine2\\cl_ents_parse.cpp";
+        v14 = 22;
+        v12[1] = "CNetworkGameClient::OnPreserveEntity";
+        v12[2] = "pClass";
+        Assert_ConditionFailed_Fatal((const struct _AssertCompileTimeConstantStruct_t *)v12);
+        JUMPOUT(0x18004725FLL);
+      }
+      if ( !*(_BYTE *)(*(_QWORD *)&v15[0] + 51LL) )
+        return sub_180044FB0(a2 + 192, *v8, 4);
+    }
+    return result;
+  }

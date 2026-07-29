@@ -2,12 +2,42 @@ import subprocess
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
-from gamesymbol_snapshot_lib.pr_cli import _parse_changed_paths, _revision_sources
+from gamesymbol_snapshot_lib.errors import SnapshotMismatchError
+from gamesymbol_snapshot_lib.model import SnapshotContext
+from gamesymbol_snapshot_lib.pr_cli import _load_head_context, _parse_changed_paths, _revision_sources
 
 
 class TestGitChangeCollection(unittest.TestCase):
+    def test_stale_head_config_uses_trusted_base_payload_for_invalidation(self) -> None:
+        base = SnapshotContext({"files": {"server/Stable.windows.yaml": {}}}, b"base", "base-contract")
+        head_contract = object()
+
+        with (
+            patch(
+                "gamesymbol_snapshot_lib.pr_cli.load_snapshot_context",
+                side_effect=SnapshotMismatchError("digest mismatch", reason="config_digest_mismatch"),
+            ),
+            patch("gamesymbol_snapshot_lib.pr_cli.load_contract", return_value=head_contract) as load_contract,
+        ):
+            head = _load_head_context("head.yaml", "head-config.yaml", "14172", "bin", base)
+
+        self.assertEqual(base.document, head.document)
+        self.assertEqual(base.raw_bytes, head.raw_bytes)
+        self.assertIs(head_contract, head.contract)
+        load_contract.assert_called_once_with("head-config.yaml", "14172", "bin", 2)
+
+    def test_head_snapshot_failures_other_than_config_digest_mismatch_propagate(self) -> None:
+        base = SnapshotContext({}, b"base", "base-contract")
+        failure = SnapshotMismatchError("snapshot is not canonical", reason="noncanonical_snapshot")
+
+        with patch("gamesymbol_snapshot_lib.pr_cli.load_snapshot_context", side_effect=failure):
+            with self.assertRaisesRegex(SnapshotMismatchError, "not canonical"):
+                _load_head_context("head.yaml", "head-config.yaml", "14172", "bin", base)
+
     def test_parse_name_status_preserves_status_rename_sides_and_spaces(self) -> None:
+
         raw = (
             b"A\0new file.py\0"
             b"M\0modified.py\0"

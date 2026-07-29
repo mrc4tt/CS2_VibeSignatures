@@ -2764,10 +2764,6 @@ modules:
           - INetworkGameClient::SendStringCmd
       - name: CEngineServer_vtable
         category: vtable
-      - name: CEngineServer_MakeSpawnGroupActive
-        category: vfunc
-        alias:
-          - CEngineServer::MakeSpawnGroupActive
       - name: CMapListService_vtable
         category: vtable
       - name: CEngineServer_DumpNetStats
@@ -2874,6 +2870,10 @@ modules:
         category: vfunc
         alias:
           - CEngineServer::GetServerGlobals
+      - name: CEngineServer_GetAchievementMgr
+        category: vfunc
+        alias:
+          - CEngineServer::GetAchievementMgr
       - name: CEngineServer_IsLogEnabled
         category: vfunc
         alias:
@@ -4533,6 +4533,7 @@ modules:
         category: vfunc
         alias:
           - IVEngineClient2::IsPlayingDemo
+          - OnServerVoiceData_IsPlayingDemo_Callee
       - name: IVEngineClient2_ExecuteClientCmd
         category: vfunc
         alias:
@@ -5901,6 +5902,16 @@ modules:
         expected_input:
           - CPlayerCommandQueue_ctor.{platform}.yaml
           - CBasePlayerController_vtable.{platform}.yaml
+      - name: find-CBasePlayerController_SetConnectedState
+        expected_output:
+          - CBasePlayerController_SetConnectedState.{platform}.yaml
+        expected_input:
+          - CPlayerCommandQueue_ctor.{platform}.yaml
+      - name: find-IVEngineServer2_GetAchievementMgr
+        expected_output:
+          - IVEngineServer2_GetAchievementMgr.{platform}.yaml
+        expected_input:
+          - CBasePlayerController_SetConnectedState.{platform}.yaml
       - name: find-FireTarget_CommandHandler
         expected_output:
           - FireTarget_CommandHandler.{platform}.yaml
@@ -7364,11 +7375,6 @@ modules:
           - CSpawnGroupMgrGameSystem_SetActiveSpawnGroup.{platform}.yaml
         expected_input:
           - CSpawnGroupMgrGameSystem_vtable.{platform}.yaml
-      - name: find-CSpawnGroupMgrGameSystem_SetActiveSpawnGroup-decompiles
-        expected_output:
-          - IVEngineServer2_MakeSpawnGroupActive.{platform}.yaml
-        expected_input:
-          - CSpawnGroupMgrGameSystem_SetActiveSpawnGroup.{platform}.yaml
       - name: find-CSpawnGroupMgrGameSystem_UnloadSpawnGroup
         expected_output:
           - CSpawnGroupMgrGameSystem_UnloadSpawnGroup.{platform}.yaml
@@ -8879,6 +8885,10 @@ modules:
         category: vfunc
         alias:
           - CBasePlayerController::Connect
+      - name: CBasePlayerController_SetConnectedState
+        category: func
+        alias:
+          - CBasePlayerController::SetConnectedState
       - name: CSource2GameClients_ClientDisconnect
         category: vfunc
         alias:
@@ -9218,6 +9228,10 @@ modules:
         category: vfunc
         alias:
           - IVEngineServer2::GetServerGlobals
+      - name: IVEngineServer2_GetAchievementMgr
+        category: vfunc
+        alias:
+          - IVEngineServer2::GetAchievementMgr
       - name: IVEngineServer2_IsLogEnabled
         category: vfunc
         alias:
@@ -10418,10 +10432,6 @@ modules:
         category: vfunc
         alias:
           - CEngineServer::UnloadSpawnGroup
-      - name: IVEngineServer2_MakeSpawnGroupActive
-        category: vfunc
-        alias:
-          - IVEngineServer2::MakeSpawnGroupActive
       - name: CSpawnGroupMgrGameSystem_GetSpawnGroups
         category: func
         alias:
@@ -11434,6 +11444,12 @@ modules:
         expected_input:
           - CEngineServer_vtable.{platform}.yaml
           - ../server/IVEngineServer2_GetServerGlobals.{platform}.yaml
+      - name: find-CEngineServer_GetAchievementMgr
+        expected_output:
+          - CEngineServer_GetAchievementMgr.{platform}.yaml
+        expected_input:
+          - CEngineServer_vtable.{platform}.yaml
+          - ../server/IVEngineServer2_GetAchievementMgr.{platform}.yaml
       - name: find-CEngineServer_IsLogEnabled
         expected_output:
           - CEngineServer_IsLogEnabled.{platform}.yaml
@@ -11446,12 +11462,6 @@ modules:
         expected_input:
           - CEngineServer_vtable.{platform}.yaml
           - ../server/IVEngineServer2_ServerCommand.{platform}.yaml
-      - name: find-CEngineServer_MakeSpawnGroupActive
-        expected_output:
-          - CEngineServer_MakeSpawnGroupActive.{platform}.yaml
-        expected_input:
-          - CEngineServer_vtable.{platform}.yaml
-          - ../server/IVEngineServer2_MakeSpawnGroupActive.{platform}.yaml
       - name: find-ConnectInterfaces
         expected_output:
           - ConnectInterfaces.{platform}.yaml

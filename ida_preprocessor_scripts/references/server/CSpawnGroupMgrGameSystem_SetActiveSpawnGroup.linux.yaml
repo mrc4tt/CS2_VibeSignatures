@@ -1,0 +1,264 @@
+func_name: CSpawnGroupMgrGameSystem_SetActiveSpawnGroup
+func_va: '0xf28550'
+disasm_code: |-
+  .text:0000000000F28550                 push    rbp
+  .text:0000000000F28551                 mov     rbp, rsp
+  .text:0000000000F28554                 push    r14
+  .text:0000000000F28556                 push    r13
+  .text:0000000000F28558                 push    r12
+  .text:0000000000F2855A                 push    rbx
+  .text:0000000000F2855B                 mov     ebx, esi
+  .text:0000000000F2855D                 sub     rsp, 30h
+  .text:0000000000F28561                 call    sub_F279C0
+  .text:0000000000F28566                 test    rax, rax
+  .text:0000000000F28569                 jz      loc_F286D8
+  .text:0000000000F2856F                 mov     rdi, [rax]
+  .text:0000000000F28572                 lea     rdx, sub_EFB940
+  .text:0000000000F28579                 mov     rax, [rdi]
+  .text:0000000000F2857C                 mov     rax, [rax]
+  .text:0000000000F2857F                 cmp     rax, rdx
+  .text:0000000000F28582                 jnz     loc_F286C8
+  .text:0000000000F28588                 mov     r12, [rdi+8]
+  .text:0000000000F2858C                 lea     rax, haystack
+  .text:0000000000F28593                 test    r12, r12
+  .text:0000000000F28596                 cmovz   r12, rax
+  .text:0000000000F2859A                 lea     r14, g_pEntitySystem
+  .text:0000000000F285A1                 mov     rdi, [r14]
+  .text:0000000000F285A4                 call    sub_2115E60
+  .text:0000000000F285A9                 mov     r13d, eax
+  .text:0000000000F285AC                 cmp     ebx, eax
+  .text:0000000000F285AE                 jz      short loc_F2862A
+  .text:0000000000F285B0                 mov     rdi, [r14]
+  .text:0000000000F285B3                 mov     esi, ebx
+  .text:0000000000F285B5                 call    sub_2115E50
+  .text:0000000000F285BA                 lea     rax, g_engine
+  .text:0000000000F285C1                 mov     esi, ebx
+  .text:0000000000F285C3                 mov     rdi, [rax]
+  .text:0000000000F285C6                 mov     rax, [rdi]
+  .text:0000000000F285C9                 call    qword ptr [rax+200h] ; 200h = IVEngineServer2_MakeSpawnGroupActive
+  .text:0000000000F285CF                 mov     dword ptr [rbp+var_40], ebx
+  .text:0000000000F285D2                 lea     rbx, [rbp+var_38]
+  .text:0000000000F285D6                 ; char *
+  .text:0000000000F285D6                 mov     rsi, r12; char *
+  .text:0000000000F285D9                 ; this
+  .text:0000000000F285D9                 mov     rdi, rbx; this
+  .text:0000000000F285DC                 mov     [rbp+var_38], 0
+  .text:0000000000F285E4                 mov     [rbp+var_30], r13d
+  .text:0000000000F285E8                 call    __ZN10CUtlString3SetEPKc; CUtlString::Set(char const*)
+  .text:0000000000F285ED                 ; _QWORD
+  .text:0000000000F285ED                 mov     edi, cs:dword_272E148; _QWORD
+  .text:0000000000F285F3                 ; _QWORD
+  .text:0000000000F285F3                 mov     esi, 1; _QWORD
+  .text:0000000000F285F8                 call    _LoggingSystem_IsChannelEnabled
+  .text:0000000000F285FD                 test    al, al
+  .text:0000000000F285FF                 jnz     short loc_F28640
+  .text:0000000000F28601                 mov     edi, cs:dword_25B4524
+  .text:0000000000F28607                 test    edi, edi
+  .text:0000000000F28609                 js      short loc_F2866D
+  .text:0000000000F2860B                 lea     rcx, [rbp+var_40]
+  .text:0000000000F2860F                 xor     edx, edx
+  .text:0000000000F28611                 mov     esi, 99h
+  .text:0000000000F28616                 call    sub_EC6CF0
+  .text:0000000000F2861B                 cmp     [rbp+var_38], 0
+  .text:0000000000F28620                 jz      short loc_F2862A
+  .text:0000000000F28622                 ; this
+  .text:0000000000F28622                 mov     rdi, rbx; this
+  .text:0000000000F28625                 call    __ZN10CUtlString15FreeMemoryBlockEv; CUtlString::FreeMemoryBlock(void)
+  .text:0000000000F2862A                 add     rsp, 30h
+  .text:0000000000F2862E                 pop     rbx
+  .text:0000000000F2862F                 pop     r12
+  .text:0000000000F28631                 pop     r13
+  .text:0000000000F28633                 pop     r14
+  .text:0000000000F28635                 pop     rbp
+  .text:0000000000F28636                 retn
+  .text:0000000000F28640                 ; _QWORD
+  .text:0000000000F28640                 mov     edi, cs:dword_272E148; _QWORD
+  .text:0000000000F28646                 mov     r8, r12
+  .text:0000000000F28649                 ; _QWORD
+  .text:0000000000F28649                 mov     esi, 1; _QWORD
+  .text:0000000000F2864E                 xor     eax, eax
+  .text:0000000000F28650                 lea     rcx, aSv_0; "SV"
+  .text:0000000000F28657                 lea     rdx, aSCspawngroupmg; "%s:  CSpawnGroupMgrGameSystem::PerformA"...
+  .text:0000000000F2865E                 call    _LoggingSystem_Log
+  .text:0000000000F28663                 mov     edi, cs:dword_25B4524
+  .text:0000000000F28669                 test    edi, edi
+  .text:0000000000F2866B                 jns     short loc_F2860B
+  .text:0000000000F2866D                 lea     r13, off_23C1238
+  .text:0000000000F28674                 mov     [rbp+var_48], 0
+  .text:0000000000F2867C                 mov     [rbp+var_50], r13
+  .text:0000000000F28680                 movzx   eax, cs:byte_2727750
+  .text:0000000000F28687                 test    al, al
+  .text:0000000000F28689                 jz      loc_F28768
+  .text:0000000000F2868F                 mov     rax, cs:qword_2727758
+  .text:0000000000F28696                 lea     r12, [rbp+var_50]
+  .text:0000000000F2869A                 mov     rdi, r12
+  .text:0000000000F2869D                 mov     [rbp+var_50], rax
+  .text:0000000000F286A1                 call    qword ptr [rax+98h]
+  .text:0000000000F286A7                 mov     rdi, r12
+  .text:0000000000F286AA                 mov     [rbp+var_50], r13
+  .text:0000000000F286AE                 mov     cs:dword_25B4524, eax
+  .text:0000000000F286B4                 call    nullsub_653
+  .text:0000000000F286B9                 mov     edi, cs:dword_25B4524
+  .text:0000000000F286BF                 jmp     loc_F2860B
+  .text:0000000000F286C8                 call    rax
+  .text:0000000000F286CA                 mov     r12, rax
+  .text:0000000000F286CD                 jmp     loc_F2859A
+  .text:0000000000F286D8                 ; _QWORD
+  .text:0000000000F286D8                 mov     edi, cs:dword_272E148; _QWORD
+  .text:0000000000F286DE                 ; _QWORD
+  .text:0000000000F286DE                 mov     esi, 1; _QWORD
+  .text:0000000000F286E3                 call    _LoggingSystem_IsChannelEnabled
+  .text:0000000000F286E8                 test    al, al
+  .text:0000000000F286EA                 jz      loc_F2862A
+  .text:0000000000F286F0                 lea     edx, [rbx-80000000h]
+  .text:0000000000F286F6                 mov     [rbp+var_40], 0
+  .text:0000000000F286FE                 lea     r12, [rbp+var_40]
+  .text:0000000000F28702                 cmp     edx, 7FFFFFFEh
+  .text:0000000000F28708                 ja      loc_F287A0
+  .text:0000000000F2870E                 lea     rsi, aCoU; "CO-%u"
+  .text:0000000000F28715                 ; this
+  .text:0000000000F28715                 mov     rdi, r12; this
+  .text:0000000000F28718                 xor     eax, eax
+  .text:0000000000F2871A                 call    __ZN10CUtlString6FormatEPKcz; CUtlString::Format(char const*,...)
+  .text:0000000000F2871F                 mov     rcx, [rbp+var_40]
+  .text:0000000000F28723                 lea     rax, haystack
+  .text:0000000000F2872A                 ; _QWORD
+  .text:0000000000F2872A                 mov     esi, 1; _QWORD
+  .text:0000000000F2872F                 ; _QWORD
+  .text:0000000000F2872F                 mov     edi, cs:dword_272E148; _QWORD
+  .text:0000000000F28735                 lea     rdx, aSCspawngroupmg_0; "%s:  CSpawnGroupMgrGameSystem::Activate"...
+  .text:0000000000F2873C                 test    rcx, rcx
+  .text:0000000000F2873F                 cmovz   rcx, rax
+  .text:0000000000F28743                 xor     eax, eax
+  .text:0000000000F28745                 call    _LoggingSystem_Log
+  .text:0000000000F2874A                 cmp     [rbp+var_40], 0
+  .text:0000000000F2874F                 jz      loc_F2862A
+  .text:0000000000F28755                 ; this
+  .text:0000000000F28755                 mov     rdi, r12; this
+  .text:0000000000F28758                 call    __ZN10CUtlString15FreeMemoryBlockEv; CUtlString::FreeMemoryBlock(void)
+  .text:0000000000F2875D                 jmp     loc_F2862A
+  .text:0000000000F28768                 lea     r12, byte_2727750
+  .text:0000000000F2876F                 ; _QWORD
+  .text:0000000000F2876F                 mov     rdi, r12; _QWORD
+  .text:0000000000F28772                 call    ___cxa_guard_acquire
+  .text:0000000000F28777                 test    eax, eax
+  .text:0000000000F28779                 jz      loc_F2868F
+  .text:0000000000F2877F                 mov     rax, cs:off_25B3F18
+  .text:0000000000F28786                 ; _QWORD
+  .text:0000000000F28786                 mov     rdi, r12; _QWORD
+  .text:0000000000F28789                 mov     cs:qword_2727758, rax
+  .text:0000000000F28790                 call    ___cxa_guard_release
+  .text:0000000000F28795                 jmp     loc_F2868F
+  .text:0000000000F287A0                 mov     edx, ebx
+  .text:0000000000F287A2                 ; this
+  .text:0000000000F287A2                 mov     rdi, r12; this
+  .text:0000000000F287A5                 xor     eax, eax
+  .text:0000000000F287A7                 lea     rsi, aU_0; "%u"
+  .text:0000000000F287AE                 call    __ZN10CUtlString6FormatEPKcz; CUtlString::Format(char const*,...)
+  .text:0000000000F287B3                 jmp     loc_F2871F
+procedure: |-
+  __int64 __fastcall CSpawnGroupMgrGameSystem_SetActiveSpawnGroup(__int64 a1, __int64 a2)
+  {
+    __int64 (****v2)(void); // rax
+    __int64 (***v3)(void); // rdi
+    __int64 (*v4)(void); // rax
+    const char *v5; // r12
+    __int64 result; // rax
+    int v7; // r13d
+    __int64 v8; // rdi
+    int v9; // eax
+    const bool *v10; // rcx
+    _QWORD v11[2]; // [rsp+0h] [rbp-50h] BYREF
+    const bool *v12; // [rsp+10h] [rbp-40h] BYREF
+    __int64 v13; // [rsp+18h] [rbp-38h] BYREF
+    int v14; // [rsp+20h] [rbp-30h]
+
+    v2 = (__int64 (****)(void))sub_F279C0(a1, a2);
+    if ( v2 )
+    {
+      v3 = *v2;
+      v4 = ***v2;
+      if ( v4 == sub_EFB940 )
+      {
+        v5 = (const char *)v3[1];
+        if ( !v5 )
+          v5 = (const char *)&haystack;
+      }
+      else
+      {
+        v5 = (const char *)v4();
+      }
+      result = sub_2115E60(g_pEntitySystem);
+      v7 = result;
+      if ( (_DWORD)a2 != (_DWORD)result )
+      {
+        sub_2115E50(g_pEntitySystem, (unsigned int)a2);
+        (*(void (__fastcall **)(__int64, _QWORD))(*(_QWORD *)g_engine + 512LL))(g_engine, (unsigned int)a2);// 512LL = 0x200 = IVEngineServer2_MakeSpawnGroupActive
+        LODWORD(v12) = a2;
+        v13 = 0;
+        v14 = v7;
+        CUtlString::Set((CUtlString *)&v13, v5);
+        if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_272E148, 1) )
+        {
+          LoggingSystem_Log(
+            (unsigned int)dword_272E148,
+            1,
+            "%s:  CSpawnGroupMgrGameSystem::PerformActivateSpawnGroup(%s)\n",
+            "SV",
+            v5);
+          v8 = (unsigned int)dword_25B4524;
+          if ( dword_25B4524 >= 0 )
+          {
+  LABEL_8:
+            result = sub_EC6CF0(v8, 153, 0, &v12);
+            if ( v13 )
+              return CUtlString::FreeMemoryBlock((CUtlString *)&v13);
+            return result;
+          }
+        }
+        else
+        {
+          v8 = (unsigned int)dword_25B4524;
+          if ( dword_25B4524 >= 0 )
+            goto LABEL_8;
+        }
+        v11[1] = 0;
+        v11[0] = off_23C1238;
+        if ( !(_BYTE)byte_2727750 && (unsigned int)__cxa_guard_acquire(&byte_2727750) )
+        {
+          qword_2727758 = (__int64)off_25B3F18[0];
+          __cxa_guard_release(&byte_2727750);
+        }
+        v11[0] = qword_2727758;
+        v9 = (*(__int64 (__fastcall **)(_QWORD *))(qword_2727758 + 152))(v11);
+        v11[0] = off_23C1238;
+        dword_25B4524 = v9;
+        nullsub_653(v11);
+        v8 = (unsigned int)dword_25B4524;
+        goto LABEL_8;
+      }
+    }
+    else
+    {
+      result = LoggingSystem_IsChannelEnabled((unsigned int)dword_272E148, 1);
+      if ( (_BYTE)result )
+      {
+        v12 = nullptr;
+        if ( (unsigned int)a2 + 0x80000000 > 0x7FFFFFFE )
+          CUtlString::Format((CUtlString *)&v12, "%u", a2);
+        else
+          CUtlString::Format((CUtlString *)&v12, "CO-%u", a2 + 0x80000000);
+        v10 = v12;
+        if ( !v12 )
+          v10 = &haystack;
+        result = LoggingSystem_Log(
+                   (unsigned int)dword_272E148,
+                   1,
+                   "%s:  CSpawnGroupMgrGameSystem::ActivateSpawnGroup:  no such group\n",
+                   v10);
+        if ( v12 )
+          return CUtlString::FreeMemoryBlock((CUtlString *)&v12);
+      }
+    }
+    return result;
+  }

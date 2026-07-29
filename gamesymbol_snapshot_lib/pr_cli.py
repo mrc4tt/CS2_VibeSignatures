@@ -7,7 +7,8 @@ from pathlib import Path
 
 from analysis_config import AnalysisConfigError, resolve_analysis_config
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError, SnapshotMismatchError
-from gamesymbol_snapshot_lib.model import ChangedPath
+from gamesymbol_snapshot_lib.config import LATEST_CONFIG_DIGEST_VERSION, load_contract
+from gamesymbol_snapshot_lib.model import ChangedPath, SnapshotContext
 from gamesymbol_snapshot_lib.operations import load_snapshot_context
 from gamesymbol_snapshot_lib.paths import ensure_real_tree, path_from_key
 from gamesymbol_snapshot_lib.pr_validation import build_invalidation_plan
@@ -119,13 +120,24 @@ def _delete_paths(contract, paths: frozenset[str]) -> int:
     return deleted
 
 
+def _load_head_context(snapshot_path, config_path, game_version, bindir, base: SnapshotContext) -> SnapshotContext:
+    try:
+        return load_snapshot_context(snapshot_path, config_path, game_version, bindir)
+    except SnapshotMismatchError as exc:
+        if exc.reason != "config_digest_mismatch":
+            raise
+        print("Head snapshot config is stale; using the trusted base snapshot payload for invalidation")
+        contract = load_contract(config_path, game_version, bindir, LATEST_CONFIG_DIGEST_VERSION)
+        return SnapshotContext(base.document, base.raw_bytes, contract)
+
+
 def _run(args) -> None:
     repo_root = Path.cwd()
     head_snapshot = args.headsnapshot or f"gamesymbols/{args.gamever}.yaml"
     args.headconfigyaml = str(resolve_analysis_config(args.gamever, args.headconfigyaml))
     print(f"Head analysis config: {args.headconfigyaml}")
     base = load_snapshot_context(args.basesnapshot, args.baseconfigyaml, args.gamever, args.bindir)
-    head = load_snapshot_context(head_snapshot, args.headconfigyaml, args.gamever, args.bindir)
+    head = _load_head_context(head_snapshot, args.headconfigyaml, args.gamever, args.bindir, base)
     changes = _changed_paths(args.baseref, args.headref, repo_root)
     plan = build_invalidation_plan(
         base.contract,

@@ -249,7 +249,7 @@ def _agent_permission_args(agent_kind: str, *, claude_permission_mode: str = "")
     if agent_kind == "opencode":
         return ["--auto"]
     if agent_kind == "codex":
-        return ["--approval-mode", "full-auto"]
+        return []
     permission_mode = str(claude_permission_mode or "").strip() or "auto"
     return ["--permission-mode", permission_mode]
 

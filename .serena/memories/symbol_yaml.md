@@ -13,7 +13,7 @@
 - Virtual function (fallback-signature style): may include `vfunc_sig` (and in one file, `vfunc_inst_offset`)
 - VTable dump: `vtable_class`, `vtable_va`, `vtable_rva`, `vtable_size`, `vtable_numvfunc`, `vtable_entries` (optional `vtable_symbol`)
 - Global variable signature: `gv_name`, `gv_va`, `gv_rva`, `gv_sig`, `gv_sig_va`, `gv_inst_offset`, `gv_inst_length`, `gv_inst_disp`
-- Patch: `patch_name`, `patch_sig`, `patch_bytes`
+- Patch: `patch_name`, `patch_va`, `patch_rva`, `patch_sig`, optional `patch_sig_disp`, `patch_bytes`
 - Struct member offset (new format): `struct_name`, `member_name`, `offset`, optional `size`, `offset_sig`
 - Legacy struct-member files (old format): top-level hex key only (example: `'0x68': HitGroupInfo 8`)
 
@@ -48,7 +48,10 @@
 - `gv_inst_disp`: Byte offset inside that instruction where the displacement begins.
 
 - `patch_name`: Logical patch identifier.
+- `patch_va`: Absolute virtual address where `patch_sig` matches in the current binary.
+- `patch_rva`: Relative virtual address of the same signature match (`patch_va - image_base`).
 - `patch_sig`: Signature used to locate the patch site.
+- `patch_sig_disp`: Optional byte displacement from the signature match to the target instruction.
 - `patch_bytes`: Replacement bytes to write at the located patch site.
 
 - `struct_name`: Struct/class name containing the member.

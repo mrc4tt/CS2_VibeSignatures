@@ -55,6 +55,7 @@ the user's explicit yes.
 Treat only these outputs as success:
 
 - `Symbol snapshot: restored and verified`
+- `Symbol snapshot: restored and round-trip verified`
 - `Symbol snapshot: restored and verified with replacement`
 - `Symbol snapshot: force-restored without trust checks from gamesymbols/<BASE_GAMEVER>.yaml`
 - `Symbol snapshot: unavailable; no YAML restored` after the user answers no or no base suggestion exists

@@ -824,7 +824,14 @@ VTABLE_YAML_ORDER = [
     "vtable_numvfunc",
     "vtable_entries",
 ]
-PATCH_YAML_ORDER = ["patch_name", "patch_sig", "patch_bytes"]
+PATCH_YAML_ORDER = [
+    "patch_name",
+    "patch_va",
+    "patch_rva",
+    "patch_sig",
+    "patch_sig_disp",
+    "patch_bytes",
+]
 STRUCT_MEMBER_YAML_ORDER = [
     "struct_name",
     "member_name",
@@ -4878,14 +4885,15 @@ async def preprocess_patch_via_mcp(session, new_path, old_path, image_base, new_
     Preprocess a patch output by reusing old-version patch metadata.
 
     Verifies that old ``patch_sig`` can be uniquely found in the new binary via
-    ``find_bytes``. On success, reuses ``patch_name``, ``patch_sig``, and
+    ``find_bytes``. On success, records the new signature-match VA/RVA and reuses
+    ``patch_name``, ``patch_sig``, optional ``patch_sig_disp``, and
     ``patch_bytes`` from old YAML.
 
     Args:
         session: Active MCP ClientSession
         new_path: Full path to expected output YAML
         old_path: Full path to old version YAML (may be None)
-        image_base: Binary image base address (reserved)
+        image_base: Binary image base address
         new_binary_dir: Directory for new version outputs (reserved)
         platform: "windows" or "linux" (reserved)
         debug: Enable debug output
@@ -4893,7 +4901,7 @@ async def preprocess_patch_via_mcp(session, new_path, old_path, image_base, new_
     Returns:
         Dict with patch YAML data, or None on failure
     """
-    _ = image_base, new_binary_dir, platform  # Reserved for future behavior.
+    _ = new_binary_dir, platform  # Reserved for future behavior.
 
     if yaml is None:
         if debug:
@@ -4952,16 +4960,37 @@ async def preprocess_patch_via_mcp(session, new_path, old_path, image_base, new_
     except Exception:
         match_count_int = len(matches)
 
-    if match_count_int != 1:
+    if match_count_int != 1 or len(matches) != 1:
         if debug:
             print(f"    Preprocess: patch_sig matched {match_count_int} (need 1) in {os.path.basename(old_path)}")
         return None
 
-    return {
+    try:
+        patch_va_int = int(matches[0], 0) if isinstance(matches[0], str) else int(matches[0])
+        image_base_int = int(image_base, 0) if isinstance(image_base, str) else int(image_base)
+    except (TypeError, ValueError):
+        if debug:
+            print(f"    Preprocess: invalid patch match/image base for {os.path.basename(old_path)}")
+        return None
+
+    result = {
         "patch_name": old_data.get("patch_name") or os.path.basename(new_path).rsplit(".", 2)[0],
+        "patch_va": hex(patch_va_int),
+        "patch_rva": hex(patch_va_int - image_base_int),
         "patch_sig": patch_sig,
         "patch_bytes": patch_bytes,
     }
+    patch_sig_disp = old_data.get("patch_sig_disp")
+    if patch_sig_disp is not None:
+        try:
+            patch_sig_disp_int = int(patch_sig_disp, 0) if isinstance(patch_sig_disp, str) else int(patch_sig_disp)
+        except (TypeError, ValueError):
+            if debug:
+                print(f"    Preprocess: invalid patch_sig_disp in {os.path.basename(old_path)}")
+            return None
+        if patch_sig_disp_int > 0:
+            result["patch_sig_disp"] = patch_sig_disp_int
+    return result
 
 
 async def preprocess_struct_offset_sig_via_mcp(

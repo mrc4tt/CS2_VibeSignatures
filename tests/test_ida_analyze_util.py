@@ -73,6 +73,78 @@ def _write_yaml(path: Path, payload: dict[str, object]) -> None:
     path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
+class TestPatchYamlMetadata(unittest.IsolatedAsyncioTestCase):
+    def test_write_patch_yaml_preserves_address_fields_in_stable_order(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_path = Path(temp_dir) / "Patch.windows.yaml"
+
+            ida_analyze_util.write_patch_yaml(
+                output_path,
+                {
+                    "patch_bytes": "90 90",
+                    "patch_sig_disp": 5,
+                    "patch_sig": "AA BB",
+                    "patch_rva": "0x123456",
+                    "patch_va": "0x180123456",
+                    "patch_name": "Patch",
+                },
+            )
+
+            payload = yaml.safe_load(output_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            [
+                "patch_name",
+                "patch_va",
+                "patch_rva",
+                "patch_sig",
+                "patch_sig_disp",
+                "patch_bytes",
+            ],
+            list(payload),
+        )
+
+    async def test_preprocess_patch_recomputes_signature_match_va_and_rva(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            old_path = temp_path / "Patch.windows.yaml"
+            new_path = temp_path / "new" / "Patch.windows.yaml"
+            _write_yaml(
+                old_path,
+                {
+                    "patch_name": "Patch",
+                    "patch_va": "0x180000010",
+                    "patch_rva": "0x10",
+                    "patch_sig": "AA BB",
+                    "patch_sig_disp": 5,
+                    "patch_bytes": "90 90",
+                },
+            )
+            session = AsyncMock()
+            session.call_tool.return_value = _FakeCallToolResult([{"matches": ["0x180123456"], "n": 1}])
+
+            result = await ida_analyze_util.preprocess_patch_via_mcp(
+                session=session,
+                new_path=str(new_path),
+                old_path=str(old_path),
+                image_base=0x180000000,
+                new_binary_dir=str(new_path.parent),
+                platform="windows",
+            )
+
+        self.assertEqual(
+            {
+                "patch_name": "Patch",
+                "patch_va": "0x180123456",
+                "patch_rva": "0x123456",
+                "patch_sig": "AA BB",
+                "patch_sig_disp": 5,
+                "patch_bytes": "90 90",
+            },
+            result,
+        )
+
+
 class TestPreprocessIndexBasedVfuncViaMcp(unittest.IsolatedAsyncioTestCase):
     def test_inherited_vfunc_name_preserves_target_for_vtable_artifact(self) -> None:
         self.assertEqual(

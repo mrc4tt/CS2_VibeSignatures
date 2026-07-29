@@ -59,7 +59,7 @@ When either a trusted snapshot or a user-confirmed forced base snapshot was rest
 - If the user declines, report the selected GAMEVER and finish.
 - If the user confirms, search `bin/<GAMEVER>/*/*.id0`. If any lock file exists, stop, list every path, and tell the
   user to close the corresponding IDA instances.
-- Otherwise run the following command without a timeout, wait for its real exit status, and do not poll unnecessarily (the shell may take a very long time, typically 30 mins):
+- Otherwise run the following command in shell/bash without an execution timeout that could interrupt it. Let the shell/bash process run through the entire IDB-renaming workflow and wait for its real exit status; do not cancel, terminate, or time out the process while it is still running. Do not poll unnecessarily (the shell may take a very long time, typically 30 mins):
 
   ```bash
   uv run ida_analyze_bin.py -gamever <GAMEVER> -configyaml configs/<GAMEVER>.yaml -debug -rename >> /tmp/bump_idb_output.log 2>&1
