@@ -1,0 +1,9 @@
+# GitHub Pages (classic Jekyll build) configuration.
+# Exclude files whose code samples contain Liquid-looking {{ }} / {% %}
+# sequences that break or mangle the Jekyll render:
+# - docs/superpowers/: agent plan/spec dumps with python f-strings and
+#   GitHub Actions ${{ }} expressions
+# - hl2sdk_cs2/: vendored SDK (incl. protobuf third_party READMEs)
+exclude:
+  - docs/superpowers/
+  - hl2sdk_cs2/
