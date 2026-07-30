@@ -75,6 +75,52 @@ git diff --name-status origin/main...HEAD
 git diff --stat origin/main...HEAD
 ```
 
+### PowerShell Native Command Execution
+
+On Windows PowerShell, use the following wrapper when recording the Step 1 native-command output and exit codes.
+Use `CommandArgs` rather than `Args`: PowerShell variable names are case-insensitive, and `$args` is an automatic
+variable. Pass the argument array through the named `-CommandArgs` parameter so it cannot be lost or ambiguously
+bound. Do not set `$ErrorActionPreference = 'Stop'` around these commands because native tools may write normal
+status messages to stderr. Interpret each command using its captured `$LASTEXITCODE` according to this skill.
+
+```powershell
+function Run-Native {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Name,
+
+        [Parameter(Mandatory)]
+        [string]$Executable,
+
+        [Parameter(Mandatory)]
+        [string[]]$CommandArgs
+    )
+
+    $output = & $Executable @CommandArgs 2>&1
+    $exitCode = $LASTEXITCODE
+
+    Write-Output "<<<$Name exit=$exitCode>>>"
+    if ($null -ne $output) {
+        $output | ForEach-Object { $_.ToString() }
+    }
+    Write-Output "<<<END $Name>>>"
+}
+
+Run-Native -Name 'branch' -Executable 'git' -CommandArgs @('branch', '--show-current')
+Run-Native -Name 'status_short' -Executable 'git' -CommandArgs @('status', '--short')
+Run-Native -Name 'cached_quiet' -Executable 'git' -CommandArgs @('diff', '--cached', '--quiet')
+```
+
+Use the same explicit form for every remaining command in Step 1, for example:
+
+```powershell
+Run-Native -Name 'fetch_main' -Executable 'git' -CommandArgs @('fetch', 'origin', 'main', '--prune')
+Run-Native -Name 'gh_auth' -Executable 'gh' -CommandArgs @('auth', 'status')
+Run-Native -Name 'committed_names' -Executable 'git' -CommandArgs @(
+    'diff', '--name-only', 'origin/main...HEAD'
+)
+```
+
 `git diff --name-only` must be empty in both modes. If any unstaged tracked change exists, stop before formatting,
 candidate creation, push, or PR creation and report the paths. Untracked files may remain, but record them and never
 stage them.

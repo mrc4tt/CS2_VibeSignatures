@@ -983,6 +983,40 @@ modules:
       - name: find-CNetworkClientService_vtable
         expected_output:
           - CNetworkClientService_vtable.{platform}.yaml
+      - name: find-CNetworkClientService_RegisterEventMapInternal
+        platform: windows
+        expected_output:
+          - CNetworkClientService_RegisterEventMapInternal.{platform}.yaml
+      - name: find-CNetworkClientService_RegisterEventMap
+        platform: windows
+        expected_output:
+          - CNetworkClientService_RegisterEventMap.{platform}.yaml
+        expected_input:
+          - CNetworkClientService_RegisterEventMapInternal.{platform}.yaml
+          - CNetworkClientService_vtable.{platform}.yaml
+      - name: find-CNetworkClientService_OnEventMapCallbacks-engine
+        platform: windows
+        expected_output:
+          - RegisterEventListener_Abstract.{platform}.yaml
+          - CNetworkClientService_OnClientAdvanceTick.{platform}.yaml
+          - CNetworkClientService_OnClientProcessGameInput.{platform}.yaml
+          - CNetworkClientService_OnClientPollNetworking.{platform}.yaml
+          - CNetworkClientService_OnClientProcessNetworking.{platform}.yaml
+          - CNetworkClientService_OnClientSimulate.{platform}.yaml
+          - CNetworkClientService_OnClientPauseSimulate.{platform}.yaml
+          - CNetworkClientService_OnClientFrameSimulate.{platform}.yaml
+          - CNetworkClientService_OnSimpleLoopFrameUpdate.{platform}.yaml
+          - CNetworkClientService_OnFrameBoundary.{platform}.yaml
+          - CNetworkClientService_OnServerPostSimulate.{platform}.yaml
+          - CNetworkClientService_OnServerBeginAsyncPostTickWork.{platform}.yaml
+        expected_input:
+          - CNetworkClientService_RegisterEventMapInternal.{platform}.yaml
+      - name: find-CNetworkClientService_OnClientProcessGameInput-decompiles
+        platform: windows
+        expected_output:
+          - ISource2Client_ProcessGameInput.{platform}.yaml
+        expected_input:
+          - CNetworkClientService_OnClientProcessGameInput.{platform}.yaml
       - name: find-CNetworkClientService_ReceivedServerInfo
         expected_output:
           - CNetworkClientService_ReceivedServerInfo.{platform}.yaml
@@ -1239,6 +1273,19 @@ modules:
       - name: find-CNetworkGameClient_vtable
         expected_output:
           - CNetworkGameClient_vtable.{platform}.yaml
+      - name: find-CNetworkClientService_OnSimpleLoopFrameUpdate-decompiles
+        platform: windows
+        expected_output:
+          - CNetworkGameClient_CreateMove.{platform}.yaml
+        expected_input:
+          - CNetworkClientService_OnSimpleLoopFrameUpdate.{platform}.yaml
+          - CNetworkGameClient_vtable.{platform}.yaml
+      - name: find-CNetworkGameClient_CreateMove-decompiles
+        platform: windows
+        expected_output:
+          - ISource2Client_CreateMove.{platform}.yaml
+        expected_input:
+          - CNetworkGameClient_CreateMove.{platform}.yaml
       - name: find-CNetworkGameClient_SetSignonState
         platform: windows
         expected_output:
@@ -2375,6 +2422,16 @@ modules:
           - CMsgSource2NetworkFlowQuality::PrintStats
       - name: CNetworkGameClient_vtable
         category: vtable
+      - name: CNetworkGameClient_CreateMove
+        category: vfunc
+        platform: windows
+        alias:
+          - CNetworkGameClient::CreateMove
+      - name: ISource2Client_CreateMove
+        category: vfunc
+        platform: windows
+        alias:
+          - ISource2Client::CreateMove
       - name: CNetworkGameClient_SetSignonState
         category: vfunc
         platform: windows
@@ -2462,6 +2519,79 @@ modules:
           - CInputService::IsClientOnlyCommandAllowed
       - name: CNetworkClientService_vtable
         category: vtable
+      - name: CNetworkClientService_RegisterEventMapInternal
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::RegisterEventMapInternal
+      - name: CNetworkClientService_RegisterEventMap
+        category: vfunc
+        platform: windows
+        alias:
+          - CNetworkClientService::RegisterEventMap
+      - name: RegisterEventListener_Abstract
+        category: func
+        platform: windows
+      - name: CNetworkClientService_OnClientAdvanceTick
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnClientAdvanceTick
+      - name: CNetworkClientService_OnClientProcessGameInput
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnClientProcessGameInput
+      - name: ISource2Client_ProcessGameInput
+        category: vfunc
+        platform: windows
+        alias:
+          - ISource2Client::ProcessGameInput
+      - name: CNetworkClientService_OnClientPollNetworking
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnClientPollNetworking
+      - name: CNetworkClientService_OnClientProcessNetworking
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnClientProcessNetworking
+      - name: CNetworkClientService_OnClientSimulate
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnClientSimulate
+      - name: CNetworkClientService_OnClientPauseSimulate
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnClientPauseSimulate
+      - name: CNetworkClientService_OnClientFrameSimulate
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnClientFrameSimulate
+      - name: CNetworkClientService_OnSimpleLoopFrameUpdate
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnSimpleLoopFrameUpdate
+      - name: CNetworkClientService_OnFrameBoundary
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnFrameBoundary
+      - name: CNetworkClientService_OnServerPostSimulate
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnServerPostSimulate
+      - name: CNetworkClientService_OnServerBeginAsyncPostTickWork
+        category: func
+        platform: windows
+        alias:
+          - CNetworkClientService::OnServerBeginAsyncPostTickWork
       - name: CNetworkClientService_ReceivedServerInfo
         category: vfunc
         alias:
@@ -3707,6 +3837,100 @@ modules:
       - name: find-CSource2Client_vtable
         expected_output:
           - CSource2Client_vtable.{platform}.yaml
+      - name: find-CSource2Client_CreateMove
+        platform: windows
+        expected_output:
+          - CSource2Client_CreateMove.{platform}.yaml
+        expected_input:
+          - CSource2Client_vtable.{platform}.yaml
+          - ../engine/ISource2Client_CreateMove.{platform}.yaml
+      - name: find-CSource2Client_CreateMove-decompiles
+        platform: windows
+        expected_output:
+          - CClientInput_CreateMove.{platform}.yaml
+        expected_input:
+          - CSource2Client_CreateMove.{platform}.yaml
+      - name: find-CClientInput_CreateMove-decompiles
+        platform: windows
+        expected_output:
+          - CClientInput_m_viewangles.{platform}.yaml
+        expected_input:
+          - CClientInput_CreateMove.{platform}.yaml
+      - name: find-CSource2Client_ProcessGameInput
+        platform: windows
+        expected_output:
+          - CSource2Client_ProcessGameInput.{platform}.yaml
+        expected_input:
+          - CSource2Client_vtable.{platform}.yaml
+          - ../engine/ISource2Client_ProcessGameInput.{platform}.yaml
+      - name: find-CSource2Client_ProcessGameInput-decompiles
+        platform: windows
+        expected_output:
+          - ISource2Client_FrameStageNotify.{platform}.yaml
+        expected_input:
+          - CSource2Client_ProcessGameInput.{platform}.yaml
+      - name: find-CSource2Client_FrameStageNotify
+        platform: windows
+        expected_output:
+          - CSource2Client_FrameStageNotify.{platform}.yaml
+        expected_input:
+          - CSource2Client_vtable.{platform}.yaml
+          - ISource2Client_FrameStageNotify.{platform}.yaml
+      - name: find-CSource2Client_FrameStageNotify-decompiles
+        platform: windows
+        expected_output:
+          - OnRenderStart.{platform}.yaml
+        expected_input:
+          - CSource2Client_FrameStageNotify.{platform}.yaml
+      - name: find-OnRenderStart-decompiles
+        platform: windows
+        expected_output:
+          - IViewRender_OnRenderStart.{platform}.yaml
+        expected_input:
+          - OnRenderStart.{platform}.yaml
+      - name: find-CViewRender_vtable
+        expected_output:
+          - CViewRender_vtable.{platform}.yaml
+      - name: find-CViewRender_OnRenderStart
+        platform: windows
+        expected_output:
+          - CViewRender_OnRenderStart.{platform}.yaml
+        expected_input:
+          - CViewRender_vtable.{platform}.yaml
+          - IViewRender_OnRenderStart.{platform}.yaml
+      - name: find-CViewRender_OnRenderStart-decompiles  # by LLM_DECOMPILE CViewRender_OnRenderStart
+        platform: windows
+        expected_input:
+          - CViewRender_OnRenderStart.{platform}.yaml
+        expected_output:
+          - g_ViewMatrix.{platform}.yaml  # gv
+      - name: find-CViewRender_Render
+        platform: windows
+        expected_output:
+          - CViewRender_Render.{platform}.yaml
+        expected_input:
+          - CViewRender_vtable.{platform}.yaml
+      - name: find-C_BaseEntity_SetInterpolationPhase
+        platform: windows
+        expected_output:
+          - C_BaseEntity_SetInterpolationPhase.{platform}.yaml
+      - name: find-GlobalVarsWarningFunc
+        platform: windows
+        expected_output:
+          - GlobalVarsWarningFunc.{platform}.yaml
+      - name: find-CSource2Client_SetGlobals
+        platform: windows
+        expected_output:
+          - CSource2Client_SetGlobals.{platform}.yaml
+        expected_input:
+          - GlobalVarsWarningFunc.{platform}.yaml
+          - CSource2Client_vtable.{platform}.yaml
+      - name: find-CSource2Client_SetGlobals-decompiles
+        platform: windows
+        expected_output:
+          - gpGlobals.{platform}.yaml
+        expected_input:
+          - CSource2Client_SetGlobals.{platform}.yaml
       - name: find-CSource2Client_Connect
         expected_output:
           - CSource2Client_Connect.{platform}.yaml
@@ -3764,6 +3988,12 @@ modules:
           - IVEngineClient2_IsPlayingDemo.{platform}.yaml
         expected_input:
           - C_ServerVoiceHandler_OnServerVoiceData.{platform}.yaml
+      - name: find-OnServerVoiceData_IsPlayingDemo_Callee
+        platform: windows
+        expected_output:
+          - OnServerVoiceData_IsPlayingDemo_Callee.{platform}.yaml
+        expected_input:
+          - IVEngineClient2_IsPlayingDemo.{platform}.yaml
       - name: find-IVEngineClient2_ExecuteClientCmd
         expected_output:
           - IVEngineClient2_ExecuteClientCmd.{platform}.yaml
@@ -3927,18 +4157,18 @@ modules:
         platform: windows
         expected_output:
           - CSkeletonInstance_m_modelState_m_hModel.{platform}.yaml
-          - CSkeletonInstance_m_modelState.{platform}.yaml
-          - CModelState_SetupJointState.{platform}.yaml
+          - CSkeletonInstance_m_modelState_m_simulationState.{platform}.yaml
+          - CSimulationState_SetupJointState.{platform}.yaml
         expected_input:
           - CSkeletonInstance_PostDataUpdate.{platform}.yaml
-      - name: find-CModelState_SetupJointState-windows
+      - name: find-CSimulationState_SetupJointState-windows
         platform: windows
         expected_output:
-          - CModelState_m_nTotalTransformCount.{platform}.yaml
-          - CModelState_m_nBoneCount.{platform}.yaml
-          - CModelState_m_nAttachmentCount.{platform}.yaml
+          - CSimulationState_m_nTotalTransformCount.{platform}.yaml
+          - CSimulationState_m_nBoneCount.{platform}.yaml
+          - CSimulationState_m_nAttachmentCount.{platform}.yaml
         expected_input:
-          - CModelState_SetupJointState.{platform}.yaml
+          - CSimulationState_SetupJointState.{platform}.yaml
       - name: find-CUserMessage_ExtraUserData_vtable
         expected_output:
           - CUserMessage_ExtraUserData_vtable.{platform}.yaml
@@ -4489,6 +4719,80 @@ modules:
           - IGameSystem::OnClientPreRenderAlt
       - name: CSource2Client_vtable
         category: vtable
+      - name: CSource2Client_CreateMove
+        category: vfunc
+        platform: windows
+        alias:
+          - CSource2Client::CreateMove
+      - name: CClientInput
+        category: struct
+        platform: windows
+      - name: CClientInput_CreateMove
+        category: vfunc
+        platform: windows
+        alias:
+          - CClientInput::CreateMove
+      - name: CClientInput_m_viewangles
+        category: structmember
+        platform: windows
+        struct: CClientInput
+        member: m_viewangles
+        alias:
+          - CClientInput::m_viewangles
+      - name: CSource2Client_ProcessGameInput
+        category: vfunc
+        platform: windows
+        alias:
+          - CSource2Client::ProcessGameInput
+      - name: ISource2Client_FrameStageNotify
+        category: vfunc
+        platform: windows
+        alias:
+          - ISource2Client::FrameStageNotify
+      - name: CSource2Client_FrameStageNotify
+        category: vfunc
+        platform: windows
+        alias:
+          - CSource2Client::FrameStageNotify
+      - name: OnRenderStart
+        category: func
+        platform: windows
+      - name: IViewRender_OnRenderStart
+        category: vfunc
+        platform: windows
+        alias:
+          - IViewRender::OnRenderStart
+      - name: CViewRender_vtable
+        category: vtable
+      - name: CViewRender_OnRenderStart
+        category: vfunc
+        platform: windows
+        alias:
+          - CViewRender::OnRenderStart
+      - name: g_ViewMatrix
+        category: gv
+        platform: windows
+      - name: CViewRender_Render
+        category: vfunc
+        platform: windows
+        alias:
+          - CViewRender::Render
+      - name: C_BaseEntity_SetInterpolationPhase
+        category: func
+        platform: windows
+        alias:
+          - C_BaseEntity::SetInterpolationPhase
+      - name: GlobalVarsWarningFunc
+        category: func
+        platform: windows
+      - name: CSource2Client_SetGlobals
+        category: vfunc
+        platform: windows
+        alias:
+          - CSource2Client::SetGlobals
+      - name: gpGlobals
+        category: gv
+        platform: windows
       - name: CSource2Client_Connect
         category: vfunc
         alias:
@@ -4533,7 +4837,9 @@ modules:
         category: vfunc
         alias:
           - IVEngineClient2::IsPlayingDemo
-          - OnServerVoiceData_IsPlayingDemo_Callee
+      - name: OnServerVoiceData_IsPlayingDemo_Callee
+        category: patch
+        platform: windows
       - name: IVEngineClient2_ExecuteClientCmd
         category: vfunc
         alias:
@@ -4650,13 +4956,13 @@ modules:
         category: vfunc
         alias:
           - CSkeletonInstance::PostDataUpdate
-      - name: CSkeletonInstance_m_modelState
+      - name: CSkeletonInstance_m_modelState_m_simulationState
         category: structmember
         platform: windows
         struct: CSkeletonInstance
-        member: m_modelState
+        member: m_modelState.m_simulationState
         alias:
-          - CSkeletonInstance::m_modelState
+          - CSkeletonInstance::m_modelState.m_simulationState
       - name: CSkeletonInstance_m_modelState_m_hModel
         category: structmember
         platform: windows
@@ -4664,34 +4970,34 @@ modules:
         member: m_modelState.m_hModel
         alias:
           - CSkeletonInstance::m_modelState.m_hModel
-      - name: CModelState
+      - name: CSimulationState
         category: struct
-      - name: CModelState_SetupJointState
+      - name: CSimulationState_SetupJointState
         category: func
         platform: windows
         alias:
-          - CModelState::SetupJointState
-      - name: CModelState_m_nTotalTransformCount
+          - CSimulationState::SetupJointState
+      - name: CSimulationState_m_nTotalTransformCount
         category: structmember
         platform: windows
-        struct: CModelState
+        struct: CSimulationState
         member: m_nTotalTransformCount
         alias:
-          - CModelState::m_nTotalTransformCount
-      - name: CModelState_m_nBoneCount
+          - CSimulationState::m_nTotalTransformCount
+      - name: CSimulationState_m_nBoneCount
         category: structmember
         platform: windows
-        struct: CModelState
+        struct: CSimulationState
         member: m_nBoneCount
         alias:
-          - CModelState::m_nBoneCount
-      - name: CModelState_m_nAttachmentCount
+          - CSimulationState::m_nBoneCount
+      - name: CSimulationState_m_nAttachmentCount
         category: structmember
         platform: windows
-        struct: CModelState
+        struct: CSimulationState
         member: m_nAttachmentCount
         alias:
-          - CModelState::m_nAttachmentCount
+          - CSimulationState::m_nAttachmentCount
       - name: CUserMessage_ExtraUserData_vtable
         category: vtable
       - name: SendViolationReport

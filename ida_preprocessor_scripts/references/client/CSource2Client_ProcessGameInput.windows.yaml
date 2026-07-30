@@ -1,0 +1,76 @@
+func_name: CSource2Client_ProcessGameInput
+func_va: '0x180b200a0'
+disasm_code: |-
+  .text:0000000180B200A0                 mov     [rsp+arg_0], rbx
+  .text:0000000180B200A5                 mov     [rsp+arg_8], rbp
+  .text:0000000180B200AA                 mov     [rsp+arg_10], rsi
+  .text:0000000180B200AF                 push    rdi
+  .text:0000000180B200B0                 sub     rsp, 30h
+  .text:0000000180B200B4                 mov     rax, [rcx]
+  .text:0000000180B200B7                 mov     ebx, edx
+  .text:0000000180B200B9                 movaps  [rsp+38h+var_18], xmm6
+  .text:0000000180B200BE                 xor     edx, edx
+  .text:0000000180B200C0                 movzx   esi, r9b
+  .text:0000000180B200C4                 movaps  xmm6, xmm2
+  .text:0000000180B200C7                 call    qword ptr [rax+120h] ; 120h = ISource2Client_FrameStageNotify
+  .text:0000000180B200CD                 call    sub_180AA5320
+  .text:0000000180B200D2                 mov     cl, 1
+  .text:0000000180B200D4                 movzx   ebp, al
+  .text:0000000180B200D7                 call    sub_180A91F70
+  .text:0000000180B200DC                 call    cs:ThreadInMainThread
+  .text:0000000180B200E2                 movzx   edi, cs:byte_18208D450
+  .text:0000000180B200E9                 mov     ecx, 1
+  .text:0000000180B200EE                 test    al, al
+  .text:0000000180B200F0                 cmovz   edi, ecx
+  .text:0000000180B200F3                 call    cs:ThreadInMainThread
+  .text:0000000180B200F9                 test    al, al
+  .text:0000000180B200FB                 jz      short loc_180B20104
+  .text:0000000180B200FD                 mov     cs:byte_18208D450, 1
+  .text:0000000180B20104                 mov     rcx, cs:g_pCSGOInput
+  .text:0000000180B2010B                 movzx   r9d, sil
+  .text:0000000180B2010F                 mov     cs:byte_1824361D8, 1
+  .text:0000000180B20116                 movaps  xmm2, xmm6
+  .text:0000000180B20119                 mov     edx, ebx
+  .text:0000000180B2011B                 mov     rax, [rcx]
+  .text:0000000180B2011E                 call    qword ptr [rax+20h]
+  .text:0000000180B20121                 movzx   ecx, bpl
+  .text:0000000180B20125                 call    sub_180A91F70
+  .text:0000000180B2012A                 mov     cs:byte_1824361D8, 0
+  .text:0000000180B20131                 call    cs:ThreadInMainThread
+  .text:0000000180B20137                 test    al, al
+  .text:0000000180B20139                 jz      short loc_180B20142
+  .text:0000000180B2013B                 mov     cs:byte_18208D450, dil
+  .text:0000000180B20142                 mov     rbx, [rsp+38h+arg_0]
+  .text:0000000180B20147                 mov     rbp, [rsp+38h+arg_8]
+  .text:0000000180B2014C                 mov     rsi, [rsp+38h+arg_10]
+  .text:0000000180B20151                 movaps  xmm6, [rsp+38h+var_18]
+  .text:0000000180B20156                 add     rsp, 30h
+  .text:0000000180B2015A                 pop     rdi
+  .text:0000000180B2015B                 retn
+procedure: |-
+  __int64 __fastcall CSource2Client_ProcessGameInput(__int64 a1, unsigned int a2, __int64 a3, unsigned __int8 a4)
+  {
+    char v6; // bp
+    char v7; // al
+    char v8; // di
+    __int64 v9; // r8
+    __int64 result; // rax
+
+    (*(void (__fastcall **)(__int64, _QWORD))(*(_QWORD *)a1 + 288LL))(a1, 0);// 288LL = 0x120 = ISource2Client_FrameStageNotify
+    v6 = sub_180AA5320();
+    sub_180A91F70(1);
+    v7 = ThreadInMainThread();
+    v8 = byte_18208D450;
+    if ( !v7 )
+      v8 = 1;
+    if ( (unsigned __int8)ThreadInMainThread() )
+      byte_18208D450 = 1;
+    byte_1824361D8 = 1;
+    (*(void (__fastcall **)(__int64 *, _QWORD, __int64, _QWORD))(*g_pCSGOInput + 32))(g_pCSGOInput, a2, v9, a4);
+    sub_180A91F70(v6);
+    byte_1824361D8 = 0;
+    result = ThreadInMainThread();
+    if ( (_BYTE)result )
+      byte_18208D450 = v8;
+    return result;
+  }

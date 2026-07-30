@@ -1,0 +1,158 @@
+func_name: CViewRender_OnRenderStart
+func_va: '0x180bada10'
+disasm_code: |-
+  .text:0000000180BADA10                 mov     [rsp+arg_8], rbx
+  .text:0000000180BADA15                 mov     [rsp+arg_10], rbp
+  .text:0000000180BADA1A                 push    rsi
+  .text:0000000180BADA1B                 push    rdi
+  .text:0000000180BADA1C                 push    r14
+  .text:0000000180BADA1E                 sub     rsp, 0B0h
+  .text:0000000180BADA25                 mov     r14, rcx
+  .text:0000000180BADA28                 lea     rdx, [rsp+0C8h+arg_0]
+  .text:0000000180BADA30                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180BADA37                 mov     rax, [rcx]
+  .text:0000000180BADA3A                 call    qword ptr [rax+310h]
+  .text:0000000180BADA40                 xor     r9d, r9d
+  .text:0000000180BADA43                 mov     byte ptr [rsp+0C8h+var_A0], 1
+  .text:0000000180BADA48                 mov     r8d, 131h
+  .text:0000000180BADA4E                 lea     rdx, aCBuildworkerCs_66; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180BADA55                 lea     rcx, [rsp+0C8h+var_58]
+  .text:0000000180BADA5A                 mov     eax, [rax]
+  .text:0000000180BADA5C                 mov     dword ptr [rsp+0C8h+var_A8], eax
+  .text:0000000180BADA60                 call    sub_180AFF9F0
+  .text:0000000180BADA65                 xor     edx, edx
+  .text:0000000180BADA67                 mov     rcx, r14
+  .text:0000000180BADA6A                 call    sub_180BB35B0
+  .text:0000000180BADA6F                 lea     rcx, [rsp+0C8h+var_58]
+  .text:0000000180BADA74                 call    sub_180B01450
+  .text:0000000180BADA79                 lea     rax, [rsp+0C8h+var_58]
+  .text:0000000180BADA7E                 mov     byte ptr [r14+12F0h], 1
+  .text:0000000180BADA86                 lea     rcx, g_ViewMatrix ; target g_ViewMatrix access, select this instruction for found_gv
+  .text:0000000180BADA8D                 mov     [rsp+0C8h+var_A0], rax
+  .text:0000000180BADA92                 mov     [rsp+0C8h+var_A8], rcx
+  .text:0000000180BADA97                 lea     r9, unk_1823AA300
+  .text:0000000180BADA9E                 mov     rcx, cs:g_RenderGameSystem
+  .text:0000000180BADAA5                 lea     r8, unk_1823AA2C0
+  .text:0000000180BADAAC                 lea     rdx, [r14+10h]
+  .text:0000000180BADAB0                 call    CRenderGameSystem_SetupView
+  .text:0000000180BADAB5                 movss   xmm1, cs:dword_181971410
+  .text:0000000180BADABD                 lea     rcx, [rsp+0C8h+var_68]
+  .text:0000000180BADAC2                 movss   xmm3, cs:dword_1819713D8
+  .text:0000000180BADACA                 movaps  xmm2, xmm1
+  .text:0000000180BADACD                 movss   dword ptr [rsp+0C8h+var_A8], xmm3
+  .text:0000000180BADAD3                 call    sub_18015ED00
+  .text:0000000180BADAD8                 test    byte ptr [r14+561h], 2
+  .text:0000000180BADAE0                 jz      short loc_180BADAED
+  .text:0000000180BADAE2                 movss   xmm4, dword ptr [r14+4E4h]
+  .text:0000000180BADAEB                 jmp     short loc_180BADB09
+  .text:0000000180BADAED                 movd    xmm4, dword ptr [r14+440h]
+  .text:0000000180BADAF6                 movd    xmm0, dword ptr [r14+448h]
+  .text:0000000180BADAFF                 cvtdq2ps xmm4, xmm4
+  .text:0000000180BADB02                 cvtdq2ps xmm0, xmm0
+  .text:0000000180BADB05                 divss   xmm4, xmm0
+  .text:0000000180BADB09                 movss   xmm0, [rsp+0C8h+var_5C]
+  .text:0000000180BADB0F                 lea     r8, [r14+4C8h]
+  .text:0000000180BADB16                 movss   xmm1, [rsp+0C8h+var_60]
+  .text:0000000180BADB1C                 lea     rdx, [r14+4B0h]
+  .text:0000000180BADB23                 movss   xmm3, dword ptr [r14+4A8h]
+  .text:0000000180BADB2C                 lea     rcx, [r14+10h]
+  .text:0000000180BADB30                 movss   xmm2, dword ptr [r14+4D8h]
+  .text:0000000180BADB39                 movss   [rsp+0C8h+var_78], xmm0
+  .text:0000000180BADB3F                 movss   xmm0, [rsp+0C8h+var_64]
+  .text:0000000180BADB45                 movss   [rsp+0C8h+var_80], xmm1
+  .text:0000000180BADB4B                 movss   xmm1, [rsp+0C8h+var_68]
+  .text:0000000180BADB51                 movss   [rsp+0C8h+var_88], xmm0
+  .text:0000000180BADB57                 movss   [rsp+0C8h+var_90], xmm1
+  .text:0000000180BADB5D                 movss   dword ptr [rsp+0C8h+var_98], xmm4
+  .text:0000000180BADB63                 movss   dword ptr [rsp+0C8h+var_A0], xmm3
+  .text:0000000180BADB69                 movss   xmm3, dword ptr [r14+4D4h]
+  .text:0000000180BADB72                 movss   dword ptr [rsp+0C8h+var_A8], xmm2
+  .text:0000000180BADB78                 call    sub_180815940
+  .text:0000000180BADB7D                 lea     rdx, [r14+4B0h]
+  .text:0000000180BADB84                 lea     rcx, [rsp+0C8h+var_68]
+  .text:0000000180BADB89                 call    sub_1801CC0A0
+  .text:0000000180BADB8E                 movss   xmm0, dword ptr [r14+4E4h]
+  .text:0000000180BADB97                 lea     rcx, xmmword_1823AA030
+  .text:0000000180BADB9E                 movss   xmm1, dword ptr [r14+4A8h]
+  .text:0000000180BADBA7                 lea     rdx, [r14+4C8h]
+  .text:0000000180BADBAE                 movss   xmm3, dword ptr [r14+4D8h]
+  .text:0000000180BADBB7                 movss   xmm2, dword ptr [r14+4D4h]
+  .text:0000000180BADBC0                 mov     [rsp+0C8h+var_98], rcx
+  .text:0000000180BADBC5                 mov     rcx, rax
+  .text:0000000180BADBC8                 movss   dword ptr [rsp+0C8h+var_A0], xmm0
+  .text:0000000180BADBCE                 movss   dword ptr [rsp+0C8h+var_A8], xmm1
+  .text:0000000180BADBD4                 call    sub_18160DE20
+  .text:0000000180BADBD9                 mov     rax, cs:gpGlobals
+  .text:0000000180BADBE0                 lea     r11, [rsp+0C8h+var_18]
+  .text:0000000180BADBE8                 mov     rbx, [r11+28h]
+  .text:0000000180BADBEC                 mov     rbp, [r11+30h]
+  .text:0000000180BADBF0                 mov     ecx, [rax+4]
+  .text:0000000180BADBF3                 mov     cs:dword_1823AA020, ecx
+  .text:0000000180BADBF9                 mov     byte ptr [r14+12F0h], 0
+  .text:0000000180BADC01                 mov     rsp, r11
+  .text:0000000180BADC04                 pop     r14
+  .text:0000000180BADC06                 pop     rdi
+  .text:0000000180BADC07                 pop     rsi
+  .text:0000000180BADC08                 retn
+procedure: |-
+  void *__fastcall CViewRender_OnRenderStart(__int64 a1)
+  {
+    int *v2; // rax
+    int v3; // xmm4_4
+    _DWORD *v4; // rax
+    void *result; // rax
+    char v6; // [rsp+28h] [rbp-A0h]
+    int v7[4]; // [rsp+60h] [rbp-68h] BYREF
+    _BYTE v8[64]; // [rsp+70h] [rbp-58h] BYREF
+    char v9; // [rsp+D0h] [rbp+8h] BYREF
+
+    v2 = (int *)(*(__int64 (__fastcall **)(__int64, char *))(*(_QWORD *)g_pEngineClient + 784LL))(g_pEngineClient, &v9);
+    v6 = 1;
+    sub_180AFF9F0(
+      (__int64)v8,
+      (__int64)"C:\\buildworker\\csgo_rel_win64\\build\\src\\game\\client\\view.cpp",
+      0x131u,
+      0,
+      *v2,
+      v6);
+    sub_180BB35B0((__int64 *)a1);
+    sub_180B01450((__int64)v8);
+    *(_BYTE *)(a1 + 4848) = 1;
+    CRenderGameSystem_SetupView(
+      g_RenderGameSystem,
+      a1 + 16,
+      (__int64)&unk_1823AA2C0,
+      (__int64)&unk_1823AA300,
+      (__int64)&g_ViewMatrix,  // target g_ViewMatrix access, select this for found_gv
+      (__int64)v8);
+    sub_18015ED00((__int64)v7, -1.0, -1.0, 1.0, 1065353216);
+    if ( (*(_BYTE *)(a1 + 1377) & 2) != 0 )
+      v3 = *(int *)(a1 + 1252);
+    else
+      *(float *)&v3 = (float)*(int *)(a1 + 1088) / (float)*(int *)(a1 + 1096);
+    sub_180815940(
+      a1 + 16,
+      a1 + 1200,
+      a1 + 1224,
+      *(float *)(a1 + 1236),
+      *(_DWORD *)(a1 + 1240),
+      *(_DWORD *)(a1 + 1192),
+      v3,
+      v7[0],
+      v7[1],
+      v7[2],
+      v7[3]);
+    v4 = sub_1801CC0A0(v7, (_DWORD *)(a1 + 1200));
+    sub_18160DE20(
+      (__int64)v4,
+      a1 + 1224,
+      *(float *)(a1 + 1236),
+      *(float *)(a1 + 1240),
+      *(_DWORD *)(a1 + 1192),
+      *(_DWORD *)(a1 + 1252),
+      xmmword_1823AA030);
+    result = gpGlobals;
+    dword_1823AA020 = *((_DWORD *)gpGlobals + 1);
+    *(_BYTE *)(a1 + 4848) = 0;
+    return result;
+  }

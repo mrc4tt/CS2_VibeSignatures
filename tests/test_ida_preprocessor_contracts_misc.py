@@ -3,11 +3,32 @@ import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-from tests.ida_preprocessor_test_support import load_module as _load_module, py_eval_payload as _py_eval_payload
+import yaml
+
+from tests.ida_preprocessor_test_support import (
+    FakeCallToolResult,
+    load_module as _load_module,
+    py_eval_payload as _py_eval_payload,
+)
 
 
 PROCESS_MOVEMENT_SCRIPT_PATH = Path("ida_preprocessor_scripts/find-CCSPlayer_MovementServices_ProcessMovement.py")
 INTERFACE_GLOBALS_PPGLOBAL_SCRIPT_PATH = Path("ida_preprocessor_scripts/find-g_pInterfaceGlobals_ppGlobal.py")
+ONSERVER_VOICE_IS_PLAYING_DEMO_CALLEE_SCRIPT_PATH = Path(
+    "ida_preprocessor_scripts/find-OnServerVoiceData_IsPlayingDemo_Callee.py"
+)
+
+
+def _write_is_playing_demo_source_yaml(path: Path, **overrides) -> None:
+    payload = {
+        "func_name": "IVEngineClient2_IsPlayingDemo",
+        "vtable_name": "IVEngineClient2",
+        "vfunc_offset": "0x150",
+        "vfunc_index": 42,
+        "vfunc_sig": "FF 90 50 01 00 00 84 C0 74 ?? 83 FD ??",
+    }
+    payload.update(overrides)
+    path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
 class TestFindCBaseEntityCollisionRulesChanged(unittest.IsolatedAsyncioTestCase):
@@ -476,6 +497,115 @@ class TestCanonicalVtablePreprocessors(unittest.IsolatedAsyncioTestCase):
                     "CSource2Server_vtable2",
                     written_payload["vtable_symbol"],
                 )
+
+
+class TestFindOnServerVoiceDataIsPlayingDemoCallee(unittest.IsolatedAsyncioTestCase):
+    async def test_generates_patch_yaml_from_unique_vfunc_signature_match(self) -> None:
+        module = _load_module(
+            ONSERVER_VOICE_IS_PLAYING_DEMO_CALLEE_SCRIPT_PATH,
+            "find_OnServerVoiceData_IsPlayingDemo_Callee",
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            module_dir = Path(temp_dir)
+            source_path = module_dir / "IVEngineClient2_IsPlayingDemo.windows.yaml"
+            output_path = module_dir / "OnServerVoiceData_IsPlayingDemo_Callee.windows.yaml"
+            _write_is_playing_demo_source_yaml(source_path)
+
+            session = AsyncMock()
+            session.call_tool.return_value = FakeCallToolResult([{"matches": ["0x180aec45d"], "n": 1}])
+
+            result = await module.preprocess_skill(
+                session=session,
+                skill_name="find-OnServerVoiceData_IsPlayingDemo_Callee",
+                expected_outputs=[str(output_path)],
+                old_yaml_map={},
+                new_binary_dir=str(module_dir),
+                platform="windows",
+                image_base=0x180000000,
+                debug=True,
+            )
+
+            payload = yaml.safe_load(output_path.read_text(encoding="utf-8"))
+
+        self.assertTrue(result)
+        session.call_tool.assert_awaited_once_with(
+            name="find_bytes",
+            arguments={
+                "patterns": ["FF 90 50 01 00 00 84 C0 74 ?? 83 FD ??"],
+                "limit": 2,
+            },
+        )
+        self.assertEqual(
+            {
+                "patch_name": "OnServerVoiceData_IsPlayingDemo_Callee",
+                "patch_va": "0x180aec45d",
+                "patch_rva": "0xaec45d",
+                "patch_sig": "FF 90 50 01 00 00 84 C0 74 ?? 83 FD ??",
+                "patch_sig_disp": 0,
+            },
+            payload,
+        )
+
+    async def test_rejects_signature_that_does_not_start_at_the_vcall(self) -> None:
+        module = _load_module(
+            ONSERVER_VOICE_IS_PLAYING_DEMO_CALLEE_SCRIPT_PATH,
+            "find_OnServerVoiceData_IsPlayingDemo_Callee_bad_sig",
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            module_dir = Path(temp_dir)
+            source_path = module_dir / "IVEngineClient2_IsPlayingDemo.windows.yaml"
+            output_path = module_dir / "OnServerVoiceData_IsPlayingDemo_Callee.windows.yaml"
+            _write_is_playing_demo_source_yaml(
+                source_path,
+                vfunc_sig="48 8B 01 FF 90 50 01 00 00",
+            )
+
+            session = AsyncMock()
+            result = await module.preprocess_skill(
+                session=session,
+                skill_name="find-OnServerVoiceData_IsPlayingDemo_Callee",
+                expected_outputs=[str(output_path)],
+                old_yaml_map={},
+                new_binary_dir=str(module_dir),
+                platform="windows",
+                image_base=0x180000000,
+            )
+
+            self.assertFalse(output_path.exists())
+
+        self.assertFalse(result)
+        session.call_tool.assert_not_awaited()
+
+    async def test_rejects_non_unique_signature_match(self) -> None:
+        module = _load_module(
+            ONSERVER_VOICE_IS_PLAYING_DEMO_CALLEE_SCRIPT_PATH,
+            "find_OnServerVoiceData_IsPlayingDemo_Callee_multi",
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            module_dir = Path(temp_dir)
+            source_path = module_dir / "IVEngineClient2_IsPlayingDemo.windows.yaml"
+            output_path = module_dir / "OnServerVoiceData_IsPlayingDemo_Callee.windows.yaml"
+            _write_is_playing_demo_source_yaml(source_path)
+
+            session = AsyncMock()
+            session.call_tool.return_value = FakeCallToolResult([{"matches": ["0x180aec45d", "0x180bed000"], "n": 2}])
+
+            result = await module.preprocess_skill(
+                session=session,
+                skill_name="find-OnServerVoiceData_IsPlayingDemo_Callee",
+                expected_outputs=[str(output_path)],
+                old_yaml_map={},
+                new_binary_dir=str(module_dir),
+                platform="windows",
+                image_base=0x180000000,
+            )
+
+            self.assertFalse(output_path.exists())
+
+        self.assertFalse(result)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,9 @@ from tests.ida_preprocessor_test_support import load_module as _load_module
 ON_EVENT_MAP_CALLBACKS_CLIENT_SCRIPT_PATH = Path(
     "ida_preprocessor_scripts/find-CLoopModeGame_OnEventMapCallbacks-client.py"
 )
+CNETWORK_CLIENT_SERVICE_ON_EVENT_MAP_CALLBACKS_SCRIPT_PATH = Path(
+    "ida_preprocessor_scripts/find-CNetworkClientService_OnEventMapCallbacks-engine.py"
+)
 REALLOCATING_FACTORY_SCRIPT_PATH = Path(
     "ida_preprocessor_scripts/find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.py"
 )
@@ -64,6 +67,79 @@ class TestFindCLoopModeGameOnEventMapCallbacksClient(unittest.IsolatedAsyncioTes
             generate_yaml_desired_fields=module.GENERATE_YAML_DESIRED_FIELDS,
             search_window_after_anchor=module.SEARCH_WINDOW_AFTER_ANCHOR,
             search_window_before_call=module.SEARCH_WINDOW_BEFORE_CALL,
+            debug=True,
+        )
+
+
+class TestFindCNetworkClientServiceOnEventMapCallbacks(unittest.IsolatedAsyncioTestCase):
+    async def test_preprocess_skill_forwards_llm_decompile_contract(
+        self,
+    ) -> None:
+        module = _load_module(
+            CNETWORK_CLIENT_SERVICE_ON_EVENT_MAP_CALLBACKS_SCRIPT_PATH,
+            "find_CNetworkClientService_OnEventMapCallbacks_engine",
+        )
+        mock_preprocess_common_skill = AsyncMock(return_value=True)
+
+        with patch.object(
+            module,
+            "preprocess_common_skill",
+            mock_preprocess_common_skill,
+        ):
+            result = await module.preprocess_skill(
+                session="session",
+                skill_name="skill",
+                expected_outputs=["out.yaml"],
+                old_yaml_map={"k": "v"},
+                new_binary_dir="bin_dir",
+                platform="windows",
+                image_base=0x180000000,
+                llm_config={"model": "test-model"},
+                debug=True,
+            )
+
+        self.assertTrue(result)
+        self.assertEqual("CNetworkClientService_RegisterEventMapInternal", module.SOURCE_YAML_STEM)
+        self.assertEqual(
+            [
+                "RegisterEventListener_Abstract",
+                "CNetworkClientService_OnClientAdvanceTick",
+                "CNetworkClientService_OnClientProcessGameInput",
+                "CNetworkClientService_OnClientPollNetworking",
+                "CNetworkClientService_OnClientProcessNetworking",
+                "CNetworkClientService_OnClientSimulate",
+                "CNetworkClientService_OnClientPauseSimulate",
+                "CNetworkClientService_OnClientFrameSimulate",
+                "CNetworkClientService_OnSimpleLoopFrameUpdate",
+                "CNetworkClientService_OnFrameBoundary",
+                "CNetworkClientService_OnServerPostSimulate",
+                "CNetworkClientService_OnServerBeginAsyncPostTickWork",
+            ],
+            module.TARGET_FUNCTION_NAMES,
+        )
+        self.assertEqual(
+            [["found_call"]] + [["found_funcptr"]] * len(module.CALLBACK_FUNCTION_NAMES),
+            [spec["expected_result_sections"] for spec in module.LLM_DECOMPILE],
+        )
+        desired_fields = dict(module.GENERATE_YAML_DESIRED_FIELDS)
+        self.assertEqual(set(module.TARGET_FUNCTION_NAMES), set(desired_fields))
+        for function_name in module.TARGET_FUNCTION_NAMES:
+            self.assertIn("func_sig", desired_fields[function_name])
+        self.assertNotIn(
+            "CNetworkClientService_OnClientPostAdvanceTick",
+            module.TARGET_FUNCTION_NAMES,
+        )
+        mock_preprocess_common_skill.assert_awaited_once_with(
+            session="session",
+            expected_outputs=["out.yaml"],
+            old_yaml_map={"k": "v"},
+            new_binary_dir="bin_dir",
+            platform="windows",
+            image_base=0x180000000,
+            func_names=module.TARGET_FUNCTION_NAMES,
+            llm_decompile_specs=module.LLM_DECOMPILE,
+            llm_config={"model": "test-model"},
+            generate_yaml_desired_fields=module.GENERATE_YAML_DESIRED_FIELDS,
             debug=True,
         )
 

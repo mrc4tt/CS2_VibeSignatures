@@ -1,0 +1,446 @@
+func_name: OnRenderStart
+func_va: '0x180b1cc20'
+disasm_code: |-
+  .text:0000000180B1CC20                 push    rbx
+  .text:0000000180B1CC22                 push    rsi
+  .text:0000000180B1CC23                 push    r13
+  .text:0000000180B1CC25                 push    r14
+  .text:0000000180B1CC27                 sub     rsp, 48h
+  .text:0000000180B1CC2B                 mov     [rsp+68h+var_30], rdi
+  .text:0000000180B1CC30                 mov     ecx, 3
+  .text:0000000180B1CC35                 mov     [rsp+68h+var_38], r12
+  .text:0000000180B1CC3A                 mov     [rsp+68h+var_40], r15
+  .text:0000000180B1CC3F                 call    sub_1809FB620
+  .text:0000000180B1CC44                 mov     ecx, 4
+  .text:0000000180B1CC49                 call    sub_1809FB620
+  .text:0000000180B1CC4E                 mov     ecx, 5
+  .text:0000000180B1CC53                 call    sub_1809FB620
+  .text:0000000180B1CC58                 mov     cl, 1
+  .text:0000000180B1CC5A                 call    sub_1803D9F90
+  .text:0000000180B1CC5F                 mov     byte ptr [rsp+68h+arg_0], al
+  .text:0000000180B1CC63                 call    cs:ThreadInMainThread
+  .text:0000000180B1CC69                 test    al, al
+  .text:0000000180B1CC6B                 jz      short loc_180B1CC74
+  .text:0000000180B1CC6D                 mov     cs:byte_18208D450, 0
+  .text:0000000180B1CC74                 mov     rcx, cs:gpGlobals
+  .text:0000000180B1CC7B                 movss   xmm1, dword ptr [rcx+30h]
+  .text:0000000180B1CC80                 mov     ecx, 0FFFFFFFFh
+  .text:0000000180B1CC85                 call    C_BaseEntity_SetInterpolationPhase
+  .text:0000000180B1CC8A                 call    cs:ThreadInMainThread
+  .text:0000000180B1CC90                 test    al, al
+  .text:0000000180B1CC92                 jz      short loc_180B1CC9B
+  .text:0000000180B1CC94                 mov     cs:byte_18208D450, 1
+  .text:0000000180B1CC9B                 mov     cl, 1
+  .text:0000000180B1CC9D                 call    sub_180A91F70
+  .text:0000000180B1CCA2                 call    sub_181187980
+  .text:0000000180B1CCA7                 mov     rcx, cs:qword_182219A88
+  .text:0000000180B1CCAE                 test    rcx, rcx
+  .text:0000000180B1CCB1                 jz      short loc_180B1CCB8
+  .text:0000000180B1CCB3                 call    sub_18034E060
+  .text:0000000180B1CCB8                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CCBF                 lea     rdx, [rsp+68h+arg_8]
+  .text:0000000180B1CCC4                 mov     [rsp+68h+var_28], rbp
+  .text:0000000180B1CCC9                 xor     ebx, ebx
+  .text:0000000180B1CCCB                 mov     rax, [rcx]
+  .text:0000000180B1CCCE                 call    qword ptr [rax+310h]
+  .text:0000000180B1CCD4                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CCDB                 cmp     [rax], ebx
+  .text:0000000180B1CCDD                 mov     rax, [rcx]
+  .text:0000000180B1CCE0                 jnz     short loc_180B1CD0A
+  .text:0000000180B1CCE2                 call    qword ptr [rax+328h]
+  .text:0000000180B1CCE8                 test    al, al
+  .text:0000000180B1CCEA                 jz      short loc_180B1CD00
+  .text:0000000180B1CCEC                 mov     rsi, [rsp+68h+arg_0]
+  .text:0000000180B1CCF1                 xor     dil, dil
+  .text:0000000180B1CCF4                 mov     ebp, dword ptr [rsp+68h+arg_0]
+  .text:0000000180B1CCF8                 movzx   r14d, byte ptr [rsp+68h+arg_0]
+  .text:0000000180B1CCFE                 jmp     short loc_180B1CD52
+  .text:0000000180B1CD00                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CD07                 mov     rax, [rcx]
+  .text:0000000180B1CD0A                 mov     r9, [rax+318h]
+  .text:0000000180B1CD11                 lea     rdx, [rsp+68h+arg_10]
+  .text:0000000180B1CD19                 xor     r8d, r8d
+  .text:0000000180B1CD1C                 lea     rsi, aCBuildworkerCs_56; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180B1CD23                 mov     ebp, 0B6Fh
+  .text:0000000180B1CD28                 mov     dil, 1
+  .text:0000000180B1CD2B                 call    r9
+  .text:0000000180B1CD2E                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CD35                 lea     rdx, aCBuildworkerCs_56; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180B1CD3C                 movzx   r9d, dil
+  .text:0000000180B1CD40                 mov     r8d, ebp
+  .text:0000000180B1CD43                 mov     ebx, [rax]
+  .text:0000000180B1CD45                 mov     rax, [rcx]
+  .text:0000000180B1CD48                 call    qword ptr [rax+320h]
+  .text:0000000180B1CD4E                 movzx   r14d, al
+  .text:0000000180B1CD52                 mov     rcx, cs:g_pCSGOInput
+  .text:0000000180B1CD59                 xor     edx, edx
+  .text:0000000180B1CD5B                 call    CCSGOInput_CAM_Think
+  .text:0000000180B1CD60                 test    dil, dil
+  .text:0000000180B1CD63                 jz      short loc_180B1CD98
+  .text:0000000180B1CD65                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CD6C                 lea     rdx, [rsp+68h+arg_8]
+  .text:0000000180B1CD71                 mov     r8d, ebx
+  .text:0000000180B1CD74                 mov     r9, [rcx]
+  .text:0000000180B1CD77                 call    qword ptr [r9+318h]
+  .text:0000000180B1CD7E                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CD85                 movzx   r9d, r14b
+  .text:0000000180B1CD89                 mov     r8d, ebp
+  .text:0000000180B1CD8C                 mov     rdx, rsi
+  .text:0000000180B1CD8F                 mov     rax, [rcx]
+  .text:0000000180B1CD92                 call    qword ptr [rax+320h]
+  .text:0000000180B1CD98                 mov     r15, [rsp+68h+arg_0]
+  .text:0000000180B1CD9D                 xor     edi, edi
+  .text:0000000180B1CD9F                 mov     r12d, dword ptr [rsp+68h+arg_0]
+  .text:0000000180B1CDA4                 xor     eax, eax
+  .text:0000000180B1CDA6                 movzx   r14d, byte ptr [rsp+68h+arg_0]
+  .text:0000000180B1CDAC                 xor     esi, esi
+  .text:0000000180B1CDAE                 mov     r13d, 1
+  .text:0000000180B1CDB4                 cmp     eax, r13d
+  .text:0000000180B1CDB7                 jz      loc_180B1CECB
+  .text:0000000180B1CDBD                 mov     ecx, esi
+  .text:0000000180B1CDBF                 call    sub_180C824F0
+  .text:0000000180B1CDC4                 test    rax, rax
+  .text:0000000180B1CDC7                 jz      loc_180B1CEBF
+  .text:0000000180B1CDCD                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CDD4                 lea     rdx, [rsp+68h+arg_8]
+  .text:0000000180B1CDD9                 xor     ebx, ebx
+  .text:0000000180B1CDDB                 mov     rax, [rcx]
+  .text:0000000180B1CDDE                 call    qword ptr [rax+310h]
+  .text:0000000180B1CDE4                 cmp     [rax], esi
+  .text:0000000180B1CDE6                 jnz     short loc_180B1CE01
+  .text:0000000180B1CDE8                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CDEF                 mov     rax, [rcx]
+  .text:0000000180B1CDF2                 call    qword ptr [rax+328h]
+  .text:0000000180B1CDF8                 test    al, al
+  .text:0000000180B1CDFA                 jz      short loc_180B1CE01
+  .text:0000000180B1CDFC                 xor     bpl, bpl
+  .text:0000000180B1CDFF                 jmp     short loc_180B1CE74
+  .text:0000000180B1CE01                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CE08                 movzx   ebp, r13b
+  .text:0000000180B1CE0C                 lea     r15, aCBuildworkerCs_56; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180B1CE13                 mov     r12d, 0B77h
+  .text:0000000180B1CE19                 mov     rax, [rcx]
+  .text:0000000180B1CE1C                 test    esi, esi
+  .text:0000000180B1CE1E                 jz      short loc_180B1CE27
+  .text:0000000180B1CE20                 jns     short loc_180B1CE27
+  .text:0000000180B1CE22                 xor     r8d, r8d
+  .text:0000000180B1CE25                 jmp     short loc_180B1CE2A
+  .text:0000000180B1CE27                 mov     r8d, esi
+  .text:0000000180B1CE2A                 lea     rdx, [rsp+68h+arg_10]
+  .text:0000000180B1CE32                 call    qword ptr [rax+318h]
+  .text:0000000180B1CE38                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CE3F                 mov     ebx, [rax]
+  .text:0000000180B1CE41                 mov     rax, [rcx]
+  .text:0000000180B1CE44                 test    esi, esi
+  .text:0000000180B1CE46                 jnz     short loc_180B1CE4D
+  .text:0000000180B1CE48                 xor     r9b, r9b
+  .text:0000000180B1CE4B                 jmp     short loc_180B1CE59
+  .text:0000000180B1CE4D                 test    esi, esi
+  .text:0000000180B1CE4F                 mov     r9d, 0FFh
+  .text:0000000180B1CE55                 cmovns  r9d, r13d
+  .text:0000000180B1CE59                 not     r9b
+  .text:0000000180B1CE5C                 lea     rdx, aCBuildworkerCs_56; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180B1CE63                 shr     r9b, 7
+  .text:0000000180B1CE67                 mov     r8d, r12d
+  .text:0000000180B1CE6A                 call    qword ptr [rax+320h]
+  .text:0000000180B1CE70                 movzx   r14d, al
+  .text:0000000180B1CE74                 mov     ecx, esi
+  .text:0000000180B1CE76                 call    sub_180C824F0
+  .text:0000000180B1CE7B                 mov     rcx, rax
+  .text:0000000180B1CE7E                 mov     rdx, [rax]
+  .text:0000000180B1CE81                 call    qword ptr [rdx+10h]
+  .text:0000000180B1CE84                 test    bpl, bpl
+  .text:0000000180B1CE87                 jz      short loc_180B1CEBF
+  .text:0000000180B1CE89                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CE90                 lea     rdx, [rsp+68h+arg_18]
+  .text:0000000180B1CE98                 mov     r8d, ebx
+  .text:0000000180B1CE9B                 mov     r9, [rcx]
+  .text:0000000180B1CE9E                 call    qword ptr [r9+318h]
+  .text:0000000180B1CEA5                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CEAC                 movzx   r9d, r14b
+  .text:0000000180B1CEB0                 mov     r8d, r12d
+  .text:0000000180B1CEB3                 mov     rdx, r15
+  .text:0000000180B1CEB6                 mov     rax, [rcx]
+  .text:0000000180B1CEB9                 call    qword ptr [rax+320h]
+  .text:0000000180B1CEBF                 lea     eax, [rdi+1]
+  .text:0000000180B1CEC2                 mov     edi, eax
+  .text:0000000180B1CEC4                 mov     esi, eax
+  .text:0000000180B1CEC6                 jmp     loc_180B1CDB4
+  .text:0000000180B1CECB                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CED2                 lea     rdx, [rsp+68h+arg_8]
+  .text:0000000180B1CED7                 xor     ebx, ebx
+  .text:0000000180B1CED9                 mov     rax, [rcx]
+  .text:0000000180B1CEDC                 call    qword ptr [rax+310h]
+  .text:0000000180B1CEE2                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CEE9                 mov     r15, [rsp+68h+var_40]
+  .text:0000000180B1CEEE                 mov     r12, [rsp+68h+var_38]
+  .text:0000000180B1CEF3                 cmp     [rax], ebx
+  .text:0000000180B1CEF5                 mov     rax, [rcx]
+  .text:0000000180B1CEF8                 jnz     short loc_180B1CF22
+  .text:0000000180B1CEFA                 call    qword ptr [rax+328h]
+  .text:0000000180B1CF00                 test    al, al
+  .text:0000000180B1CF02                 jz      short loc_180B1CF18
+  .text:0000000180B1CF04                 mov     rsi, [rsp+68h+arg_0]
+  .text:0000000180B1CF09                 xor     dil, dil
+  .text:0000000180B1CF0C                 mov     ebp, dword ptr [rsp+68h+arg_0]
+  .text:0000000180B1CF10                 movzx   r14d, byte ptr [rsp+68h+arg_0]
+  .text:0000000180B1CF16                 jmp     short loc_180B1CF6A
+  .text:0000000180B1CF18                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CF1F                 mov     rax, [rcx]
+  .text:0000000180B1CF22                 mov     r9, [rax+318h]
+  .text:0000000180B1CF29                 lea     rdx, [rsp+68h+arg_10]
+  .text:0000000180B1CF31                 xor     r8d, r8d
+  .text:0000000180B1CF34                 lea     rsi, aCBuildworkerCs_56; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180B1CF3B                 mov     ebp, 0B7Eh
+  .text:0000000180B1CF40                 mov     dil, 1
+  .text:0000000180B1CF43                 call    r9
+  .text:0000000180B1CF46                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CF4D                 lea     rdx, aCBuildworkerCs_56; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180B1CF54                 movzx   r9d, r13b
+  .text:0000000180B1CF58                 mov     r8d, ebp
+  .text:0000000180B1CF5B                 mov     ebx, [rax]
+  .text:0000000180B1CF5D                 mov     rax, [rcx]
+  .text:0000000180B1CF60                 call    qword ptr [rax+320h]
+  .text:0000000180B1CF66                 movzx   r14d, al
+  .text:0000000180B1CF6A                 xor     ecx, ecx
+  .text:0000000180B1CF6C                 call    sub_180AAF680
+  .text:0000000180B1CF71                 movzx   r13d, byte ptr [rsp+68h+arg_0]
+  .text:0000000180B1CF77                 test    dil, dil
+  .text:0000000180B1CF7A                 mov     rdi, [rsp+68h+var_30]
+  .text:0000000180B1CF7F                 jz      short loc_180B1CFB4
+  .text:0000000180B1CF81                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CF88                 lea     rdx, [rsp+68h+arg_0]
+  .text:0000000180B1CF8D                 mov     r8d, ebx
+  .text:0000000180B1CF90                 mov     r9, [rcx]
+  .text:0000000180B1CF93                 call    qword ptr [r9+318h]
+  .text:0000000180B1CF9A                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1CFA1                 movzx   r9d, r14b
+  .text:0000000180B1CFA5                 mov     r8d, ebp
+  .text:0000000180B1CFA8                 mov     rdx, rsi
+  .text:0000000180B1CFAB                 mov     rax, [rcx]
+  .text:0000000180B1CFAE                 call    qword ptr [rax+320h]
+  .text:0000000180B1CFB4                 mov     rcx, cs:g_pViewRender
+  .text:0000000180B1CFBB                 mov     rax, [rcx]
+  .text:0000000180B1CFBE                 call    qword ptr [rax+20h] ; 20h = IViewRender_OnRenderStart
+  .text:0000000180B1CFC1                 call    sub_1810361A0
+  .text:0000000180B1CFC6                 call    sub_18102E970
+  .text:0000000180B1CFCB                 call    sub_180A94ED0
+  .text:0000000180B1CFD0                 movzx   ecx, r13b
+  .text:0000000180B1CFD4                 mov     rbp, [rsp+68h+var_28]
+  .text:0000000180B1CFD9                 add     rsp, 48h
+  .text:0000000180B1CFDD                 pop     r14
+  .text:0000000180B1CFDF                 pop     r13
+  .text:0000000180B1CFE1                 pop     rsi
+  .text:0000000180B1CFE2                 pop     rbx
+  .text:0000000180B1CFE3                 jmp     sub_1803D9F90
+procedure: |-
+  __int64 sub_180B1CC20()
+  {
+    __int64 v0; // rcx
+    __int64 v1; // rcx
+    unsigned int v2; // ebx
+    _DWORD *v3; // rax
+    __int64 v4; // rcx
+    bool v5; // zf
+    __int64 v6; // rax
+    const char *v7; // rsi
+    char v8; // di
+    unsigned int v9; // ebp
+    unsigned __int8 v10; // r14
+    const char *v11; // r15
+    int v12; // edi
+    unsigned int v13; // r12d
+    int v14; // eax
+    unsigned __int8 v15; // r14
+    int v16; // esi
+    unsigned int v17; // ebx
+    char v18; // bp
+    __int64 v19; // r8
+    __int64 v20; // r9
+    __int64 v21; // rax
+    unsigned int v22; // ebx
+    _DWORD *v23; // rax
+    __int64 v24; // rcx
+    __int64 v25; // rax
+    const char *v26; // rsi
+    char v27; // di
+    unsigned int v28; // ebp
+    unsigned __int8 v29; // r14
+    unsigned __int8 v30; // r13
+    const char *v32; // [rsp+70h] [rbp+8h] BYREF
+    char v33; // [rsp+78h] [rbp+10h] BYREF
+    char v34; // [rsp+80h] [rbp+18h] BYREF
+    char v35; // [rsp+88h] [rbp+20h] BYREF
+
+    sub_1809FB620(3);
+    sub_1809FB620(4);
+    sub_1809FB620(5);
+    LOBYTE(v0) = 1;
+    LOBYTE(v32) = sub_1803D9F90(v0);
+    if ( (unsigned __int8)ThreadInMainThread() )
+      byte_18208D450 = 0;
+    C_BaseEntity_SetInterpolationPhase(0xFFFFFFFFLL);
+    if ( (unsigned __int8)ThreadInMainThread() )
+      byte_18208D450 = 1;
+    LOBYTE(v1) = 1;
+    sub_180A91F70(v1);
+    sub_181187980();
+    if ( qword_182219A88 )
+      sub_18034E060();
+    v2 = 0;
+    v3 = (_DWORD *)(*(__int64 (__fastcall **)(__int64, char *))(*(_QWORD *)g_pEngineClient + 784LL))(
+                     g_pEngineClient,
+                     &v33);
+    v4 = g_pEngineClient;
+    v5 = *v3 == 0;
+    v6 = *(_QWORD *)g_pEngineClient;
+    if ( v5 )
+    {
+      if ( (*(unsigned __int8 (**)(void))(v6 + 808))() )
+      {
+        v7 = v32;
+        v8 = 0;
+        v9 = (unsigned int)v32;
+        v10 = (unsigned __int8)v32;
+        goto LABEL_12;
+      }
+      v4 = g_pEngineClient;
+      v6 = *(_QWORD *)g_pEngineClient;
+    }
+    v7 = "C:\\buildworker\\csgo_rel_win64\\build\\src\\game\\client\\cdll_client_int.cpp";
+    v9 = 2927;
+    v8 = 1;
+    v2 = *(_DWORD *)(*(__int64 (__fastcall **)(__int64, char *, _QWORD))(v6 + 792))(v4, &v34, 0);
+    v10 = (*(__int64 (__fastcall **)(__int64, const char *, __int64, __int64))(*(_QWORD *)g_pEngineClient + 800LL))(
+            g_pEngineClient,
+            "C:\\buildworker\\csgo_rel_win64\\build\\src\\game\\client\\cdll_client_int.cpp",
+            2927,
+            1);
+  LABEL_12:
+    CCSGOInput_CAM_Think(g_pCSGOInput, 0);
+    if ( v8 )
+    {
+      (*(void (__fastcall **)(__int64, char *, _QWORD))(*(_QWORD *)g_pEngineClient + 792LL))(g_pEngineClient, &v33, v2);
+      (*(void (__fastcall **)(__int64, const char *, _QWORD, _QWORD))(*(_QWORD *)g_pEngineClient + 800LL))(
+        g_pEngineClient,
+        v7,
+        v9,
+        v10);
+    }
+    v11 = v32;
+    v12 = 0;
+    v13 = (unsigned int)v32;
+    v14 = 0;
+    v15 = (unsigned __int8)v32;
+    v16 = 0;
+    while ( v14 != 1 )
+    {
+      if ( sub_180C824F0((unsigned int)v16) )
+      {
+        v17 = 0;
+        if ( *(_DWORD *)(*(__int64 (__fastcall **)(__int64, char *))(*(_QWORD *)g_pEngineClient + 784LL))(
+                          g_pEngineClient,
+                          &v33) == v16
+          && (*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)g_pEngineClient + 808LL))(g_pEngineClient) )
+        {
+          v18 = 0;
+        }
+        else
+        {
+          v18 = 1;
+          v11 = "C:\\buildworker\\csgo_rel_win64\\build\\src\\game\\client\\cdll_client_int.cpp";
+          v13 = 2935;
+          if ( v16 >= 0 )
+            v19 = (unsigned int)v16;
+          else
+            v19 = 0;
+          v17 = *(_DWORD *)(*(__int64 (__fastcall **)(__int64, char *, __int64))(*(_QWORD *)g_pEngineClient + 792LL))(
+                             g_pEngineClient,
+                             &v34,
+                             v19);
+          if ( v16 )
+          {
+            v20 = 255;
+            if ( v16 >= 0 )
+              v20 = 1;
+          }
+          else
+          {
+            LOBYTE(v20) = 0;
+          }
+          LOBYTE(v20) = (unsigned __int8)~(_BYTE)v20 >> 7;
+          v15 = (*(__int64 (__fastcall **)(__int64, const char *, __int64, __int64))(*(_QWORD *)g_pEngineClient + 800LL))(
+                  g_pEngineClient,
+                  "C:\\buildworker\\csgo_rel_win64\\build\\src\\game\\client\\cdll_client_int.cpp",
+                  2935,
+                  v20);
+        }
+        v21 = sub_180C824F0((unsigned int)v16);
+        (*(void (__fastcall **)(__int64))(*(_QWORD *)v21 + 16LL))(v21);
+        if ( v18 )
+        {
+          (*(void (__fastcall **)(__int64, char *, _QWORD))(*(_QWORD *)g_pEngineClient + 792LL))(
+            g_pEngineClient,
+            &v35,
+            v17);
+          (*(void (__fastcall **)(__int64, const char *, _QWORD, _QWORD))(*(_QWORD *)g_pEngineClient + 800LL))(
+            g_pEngineClient,
+            v11,
+            v13,
+            v15);
+        }
+      }
+      v14 = v12 + 1;
+      v12 = v14;
+      v16 = v14;
+    }
+    v22 = 0;
+    v23 = (_DWORD *)(*(__int64 (__fastcall **)(__int64, char *))(*(_QWORD *)g_pEngineClient + 784LL))(
+                      g_pEngineClient,
+                      &v33);
+    v24 = g_pEngineClient;
+    v5 = *v23 == 0;
+    v25 = *(_QWORD *)g_pEngineClient;
+    if ( v5 )
+    {
+      if ( (*(unsigned __int8 (**)(void))(v25 + 808))() )
+      {
+        v26 = v32;
+        v27 = 0;
+        v28 = (unsigned int)v32;
+        v29 = (unsigned __int8)v32;
+        goto LABEL_36;
+      }
+      v24 = g_pEngineClient;
+      v25 = *(_QWORD *)g_pEngineClient;
+    }
+    v26 = "C:\\buildworker\\csgo_rel_win64\\build\\src\\game\\client\\cdll_client_int.cpp";
+    v28 = 2942;
+    v27 = 1;
+    v22 = *(_DWORD *)(*(__int64 (__fastcall **)(__int64, char *, _QWORD))(v25 + 792))(v24, &v34, 0);
+    v29 = (*(__int64 (__fastcall **)(__int64, const char *, __int64, __int64))(*(_QWORD *)g_pEngineClient + 800LL))(
+            g_pEngineClient,
+            "C:\\buildworker\\csgo_rel_win64\\build\\src\\game\\client\\cdll_client_int.cpp",
+            2942,
+            1);
+  LABEL_36:
+    sub_180AAF680(0);
+    v30 = (unsigned __int8)v32;
+    if ( v27 )
+    {
+      (*(void (__fastcall **)(__int64, const char **, _QWORD))(*(_QWORD *)g_pEngineClient + 792LL))(
+        g_pEngineClient,
+        &v32,
+        v22);
+      (*(void (__fastcall **)(__int64, const char *, _QWORD, _QWORD))(*(_QWORD *)g_pEngineClient + 800LL))(
+        g_pEngineClient,
+        v26,
+        v28,
+        v29);
+    }
+    (*(void (__fastcall **)(__int64))(*(_QWORD *)g_pViewRender + 32LL))(g_pViewRender);// 32LL = 0x20 = IViewRender_OnRenderStart
+    sub_1810361A0();
+    sub_18102E970();
+    sub_180A94ED0();
+    return sub_1803D9F90(v30);
+  }

@@ -355,7 +355,7 @@ Find the module section (e.g. `server`, `engine`, `networksystem`) and add entri
 
 ### 3b. Symbols Section
 
-For each target function, add a symbol entry under the same module's `symbols:` list (if not already present).
+For each target symbol, add a symbol entry under the same module's `symbols:` list (if not already present).
 
 ```yaml
       # Regular function (Pattern A)
@@ -378,6 +378,28 @@ For each target function, add a symbol entry under the same module's `symbols:` 
         alias:
           - {StructName}::{MemberName}
 ```
+
+#### CRITICAL -- Declare the parent struct for every struct member
+
+For every symbol with `category: structmember`, verify that the same module's `symbols:` list already
+contains its parent struct as a metadata-only declaration:
+
+```yaml
+      - name: {STRUCT_NAME}
+        category: struct
+        # Include platform only when the struct is platform-restricted.
+        platform: {platform}
+```
+
+- If the parent struct is missing, add the declaration immediately before its first struct member.
+- If it already exists, reuse it; do not add a duplicate declaration or narrow its existing platform coverage.
+- Match platform coverage: use the member's `platform` when all members are restricted to that platform;
+  omit `platform` when the struct has members on both Windows and Linux.
+- A `category: struct` entry is metadata-only. Do not add `source_alias`, an `expected_output`, or a
+  separate preprocessor skill for it.
+
+Without this declaration, gamedata config validation fails with
+`'<StructName>' is not a declared struct in this module`.
 
 **Check existing symbols before adding -- do NOT create duplicates.**
 
@@ -530,6 +552,7 @@ Before finishing, verify:
 - [ ] configs/<GAMEVER>.yaml `expected_output` has one entry per target
 - [ ] configs/<GAMEVER>.yaml `expected_input` correctly chains dependencies
 - [ ] configs/<GAMEVER>.yaml `symbols` section has entries for all targets (no duplicates)
+- [ ] Every `structmember` parent has one metadata-only `category: struct` declaration in the same module with compatible platform coverage
 - [ ] Pattern-specific checks pass (see the Checklist section in the chosen pattern reference file)
 - [ ] `uv run ida_analyze_bin.py -debug` passes with 0 failures
 - [ ] Non-MCP unittest command above passes with 0 failures

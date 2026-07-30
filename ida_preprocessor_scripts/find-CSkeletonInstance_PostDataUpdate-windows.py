@@ -4,17 +4,17 @@
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CModelState_SetupJointState",
+    "CSimulationState_SetupJointState",
 ]
 
 TARGET_STRUCT_MEMBER_NAMES = [
     "CSkeletonInstance_m_modelState_m_hModel",
-    "CSkeletonInstance_m_modelState",
+    "CSkeletonInstance_m_modelState_m_simulationState",
 ]
 
 LLM_DECOMPILE = [
     {
-        "symbol_name": "CModelState_SetupJointState",
+        "symbol_name": "CSimulationState_SetupJointState",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
             "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
@@ -36,7 +36,7 @@ LLM_DECOMPILE = [
         },
     },
     {
-        "symbol_name": "CSkeletonInstance_m_modelState",
+        "symbol_name": "CSkeletonInstance_m_modelState_m_simulationState",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
             "references/client/CSkeletonInstance_PostDataUpdate.{platform}.yaml",
@@ -51,7 +51,7 @@ LLM_DECOMPILE = [
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CModelState_SetupJointState",
+        "CSimulationState_SetupJointState",
         [
             "func_name",
             "func_sig",
@@ -72,7 +72,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
         ],
     ),
     (
-        "CSkeletonInstance_m_modelState",
+        "CSkeletonInstance_m_modelState_m_simulationState",
         [
             "struct_name",
             "member_name",

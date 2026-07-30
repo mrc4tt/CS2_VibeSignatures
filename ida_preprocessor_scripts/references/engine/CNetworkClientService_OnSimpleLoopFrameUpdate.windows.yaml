@@ -1,0 +1,250 @@
+func_name: CNetworkClientService_OnSimpleLoopFrameUpdate
+func_va: '0x1801d3220'
+disasm_code: |-
+  .text:00000001801D3220                 mov     rax, rsp
+  .text:00000001801D3223                 push    rbx
+  .text:00000001801D3224                 sub     rsp, 0A0h
+  .text:00000001801D322B                 movaps  xmmword ptr [rax-18h], xmm6
+  .text:00000001801D322F                 xor     r9d, r9d
+  .text:00000001801D3232                 mov     [rax+18h], rdi
+  .text:00000001801D3236                 mov     rdi, rcx
+  .text:00000001801D3239                 mov     rax, [rcx+0A0h]
+  .text:00000001801D3240                 test    rax, rax
+  .text:00000001801D3243                 jz      short loc_1801D3254
+  .text:00000001801D3245                 mov     r8d, [rax+378h]
+  .text:00000001801D324C                 mov     ecx, [rax+37Ch]
+  .text:00000001801D3252                 jmp     short loc_1801D325A
+  .text:00000001801D3254                 mov     r8d, r9d
+  .text:00000001801D3257                 mov     ecx, r9d
+  .text:00000001801D325A                 movups  xmm0, xmmword ptr [rdx]
+  .text:00000001801D325D                 mov     [rsp+0A8h+var_28], ecx
+  .text:00000001801D3264                 sub     ecx, r8d
+  .text:00000001801D3267                 movups  xmm1, xmmword ptr [rdx+10h]
+  .text:00000001801D326B                 mov     [rsp+0A8h+var_20], ecx
+  .text:00000001801D3272                 mov     rcx, rdi
+  .text:00000001801D3275                 movups  [rsp+0A8h+var_58], xmm0
+  .text:00000001801D327A                 mov     [rsp+0A8h+var_30], 101h
+  .text:00000001801D3281                 movsd   xmm0, qword ptr [rdx+20h]
+  .text:00000001801D3286                 lea     rdx, [rsp+0A8h+var_58]
+  .text:00000001801D328B                 movsd   [rsp+0A8h+var_38], xmm0
+  .text:00000001801D3291                 movups  [rsp+0A8h+var_48], xmm1
+  .text:00000001801D3296                 mov     [rsp+0A8h+var_24], r9d
+  .text:00000001801D329E                 mov     [rsp+0A8h+var_1C], r9d
+  .text:00000001801D32A6                 call    CNetworkClientService_OnClientAdvanceTick
+  .text:00000001801D32AB                 mov     rcx, [rdi+0A0h]
+  .text:00000001801D32B2                 movss   xmm6, cs:dword_180584F90
+  .text:00000001801D32BA                 test    rcx, rcx
+  .text:00000001801D32BD                 jz      loc_1801D3415
+  .text:00000001801D32C3                 mov     [rsp+0A8h+arg_8], rsi
+  .text:00000001801D32CB                 call    CNetworkGameClient_CreateMove
+  .text:00000001801D32D0                 mov     rbx, [rdi+0A0h]
+  .text:00000001801D32D7                 mov     rcx, rbx
+  .text:00000001801D32DA                 call    CNetworkGameClient_SendMovePacket
+  .text:00000001801D32DF                 mov     rsi, [rbx+0F0h]
+  .text:00000001801D32E6                 test    rsi, rsi
+  .text:00000001801D32E9                 jz      short loc_1801D3307
+  .text:00000001801D32EB                 mov     rax, [rsi]
+  .text:00000001801D32EE                 mov     rcx, rsi
+  .text:00000001801D32F1                 call    qword ptr [rax+288h]
+  .text:00000001801D32F7                 test    al, al
+  .text:00000001801D32F9                 jnz     short loc_1801D3307
+  .text:00000001801D32FB                 mov     rax, [rsi]
+  .text:00000001801D32FE                 mov     rcx, rsi
+  .text:00000001801D3301                 call    qword ptr [rax+150h]
+  .text:00000001801D3307                 xorps   xmm1, xmm1
+  .text:00000001801D330A                 mov     rcx, rbx
+  .text:00000001801D330D                 call    CNetworkGameClient_SendMove
+  .text:00000001801D3312                 mov     edx, 0FFFFFFFFh
+  .text:00000001801D3317                 lea     rcx, unk_18068DF30
+  .text:00000001801D331E                 call    sub_1803FEF60
+  .text:00000001801D3323                 mov     rsi, [rsp+0A8h+arg_8]
+  .text:00000001801D332B                 test    rax, rax
+  .text:00000001801D332E                 jnz     short loc_1801D333B
+  .text:00000001801D3330                 mov     rax, cs:qword_18068DF38
+  .text:00000001801D3337                 mov     rax, [rax+8]
+  .text:00000001801D333B                 cmp     byte ptr [rax], 0
+  .text:00000001801D333E                 jz      loc_1801D33D2
+  .text:00000001801D3344                 mov     ecx, cs:dword_1808CDB6C
+  .text:00000001801D334A                 mov     edx, 2
+  .text:00000001801D334F                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:00000001801D3355                 test    al, al
+  .text:00000001801D3357                 jz      short loc_1801D33D2
+  .text:00000001801D3359                 cmp     byte ptr [rbx+0D0h], 0
+  .text:00000001801D3360                 mov     eax, [rbx+378h]
+  .text:00000001801D3366                 mov     ecx, [rbx+2CCFA8h]
+  .text:00000001801D336C                 mov     edx, [rbx+2CCF6Ch]
+  .text:00000001801D3372                 mov     r8d, [rbx+2CCF68h]
+  .text:00000001801D3379                 movd    xmm1, eax
+  .text:00000001801D337D                 cvtdq2ps xmm1, xmm1
+  .text:00000001801D3380                 mulss   xmm1, xmm6
+  .text:00000001801D3384                 jnz     short loc_1801D3399
+  .text:00000001801D3386                 movss   xmm0, dword ptr [rbx+2C353Ch]
+  .text:00000001801D338E                 mulss   xmm0, xmm6
+  .text:00000001801D3392                 addss   xmm0, xmm1
+  .text:00000001801D3396                 movaps  xmm1, xmm0
+  .text:00000001801D3399                 mov     r9d, [rbx+37Ch]
+  .text:00000001801D33A0                 mov     [rsp+0A8h+var_68], ecx
+  .text:00000001801D33A4                 mov     ecx, cs:dword_1808CDB6C
+  .text:00000001801D33AA                 mov     [rsp+0A8h+var_70], edx
+  .text:00000001801D33AE                 mov     edx, 2
+  .text:00000001801D33B3                 mov     [rsp+0A8h+var_78], r8d
+  .text:00000001801D33B8                 lea     r8, aS5dC5dT63fSent; "[s%5d c%5d t%6.3f] SentTickSync   cmds "...
+  .text:00000001801D33BF                 cvtps2pd xmm0, xmm1
+  .text:00000001801D33C2                 movsd   [rsp+0A8h+var_80], xmm0
+  .text:00000001801D33C8                 mov     [rsp+0A8h+var_88], eax
+  .text:00000001801D33CC                 call    cs:LoggingSystem_Log
+  .text:00000001801D33D2                 mov     rcx, rbx
+  .text:00000001801D33D5                 call    sub_180065950
+  .text:00000001801D33DA                 mov     rcx, cs:off_180611750
+  .text:00000001801D33E1                 mov     rbx, [rdi+0A0h]
+  .text:00000001801D33E8                 mov     rax, [rcx]
+  .text:00000001801D33EB                 call    qword ptr [rax+58h]
+  .text:00000001801D33EE                 test    al, al
+  .text:00000001801D33F0                 jnz     short loc_1801D3415
+  .text:00000001801D33F2                 mov     rcx, cs:g_pSource2ClientPrediction
+  .text:00000001801D33F9                 test    rcx, rcx
+  .text:00000001801D33FC                 jz      short loc_1801D340B
+  .text:00000001801D33FE                 mov     rax, [rcx]
+  .text:00000001801D3401                 call    qword ptr [rax+0E0h]
+  .text:00000001801D3407                 test    al, al
+  .text:00000001801D3409                 jnz     short loc_1801D3415
+  .text:00000001801D340B                 xor     edx, edx
+  .text:00000001801D340D                 mov     rcx, rbx
+  .text:00000001801D3410                 call    sub_180065C50
+  .text:00000001801D3415                 mov     [rsp+0A8h+arg_0], 1
+  .text:00000001801D3420                 call    sub_180115300
+  .text:00000001801D3425                 mov     rcx, [rdi+0A0h]
+  .text:00000001801D342C                 test    rcx, rcx
+  .text:00000001801D342F                 jz      short loc_1801D343E
+  .text:00000001801D3431                 lea     rdx, [rsp+0A8h+arg_0]
+  .text:00000001801D3439                 call    sub_180065E30
+  .text:00000001801D343E                 lea     rdx, [rsp+0A8h+arg_0]
+  .text:00000001801D3446                 mov     rcx, rdi
+  .text:00000001801D3449                 call    CNetworkClientService_OnClientProcessNetworking
+  .text:00000001801D344E                 mov     rbx, [rdi+0A0h]
+  .text:00000001801D3455                 mov     rdi, [rsp+0A8h+arg_10]
+  .text:00000001801D345D                 test    rbx, rbx
+  .text:00000001801D3460                 jz      short loc_1801D34A8
+  .text:00000001801D3462                 mov     r9d, [rbx+378h]
+  .text:00000001801D3469                 lea     r8, [rbx+90h]
+  .text:00000001801D3470                 mov     dword ptr [rsp+0A8h+var_80], 1
+  .text:00000001801D3478                 lea     rdx, aCBuildworkerCs_9; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:00000001801D347F                 lea     rcx, [rsp+0A8h+var_58]
+  .text:00000001801D3484                 movss   [rsp+0A8h+var_88], xmm6
+  .text:00000001801D348A                 call    sub_18005EBE0
+  .text:00000001801D348F                 lea     rdx, [rbx+3B8h]
+  .text:00000001801D3496                 mov     rcx, rbx
+  .text:00000001801D3499                 call    sub_180091260
+  .text:00000001801D349E                 lea     rcx, [rsp+0A8h+var_58]
+  .text:00000001801D34A3                 call    sub_18005EC80
+  .text:00000001801D34A8                 movaps  xmm6, [rsp+0A8h+var_18]
+  .text:00000001801D34B0                 add     rsp, 0A0h
+  .text:00000001801D34B7                 pop     rbx
+  .text:00000001801D34B8                 retn
+procedure: |-
+  __int64 __fastcall CNetworkClientService_OnSimpleLoopFrameUpdate(__int64 a1, __int128 *a2)
+  {
+    __int64 v3; // rax
+    int v4; // r8d
+    int v5; // ecx
+    __int128 v6; // xmm0
+    __int128 v7; // xmm1
+    __int64 v8; // rcx
+    __int64 v9; // rbx
+    __int64 v10; // rsi
+    _BYTE *v11; // rax
+    float v12; // xmm1_4
+    __int64 v13; // rbx
+    __int64 v14; // rcx
+    __int64 result; // rax
+    __int64 v16; // rbx
+    _OWORD v17[2]; // [rsp+50h] [rbp-58h] BYREF
+    __int64 v18; // [rsp+70h] [rbp-38h]
+    __int16 v19; // [rsp+78h] [rbp-30h]
+    int v20; // [rsp+80h] [rbp-28h]
+    int v21; // [rsp+84h] [rbp-24h]
+    int v22; // [rsp+88h] [rbp-20h]
+    int v23; // [rsp+8Ch] [rbp-1Ch]
+    int v24; // [rsp+B0h] [rbp+8h] BYREF
+
+    v3 = *(_QWORD *)(a1 + 160);
+    if ( v3 )
+    {
+      v4 = *(_DWORD *)(v3 + 888);
+      v5 = *(_DWORD *)(v3 + 892);
+    }
+    else
+    {
+      v4 = 0;
+      v5 = 0;
+    }
+    v6 = *a2;
+    v20 = v5;
+    v7 = a2[1];
+    v22 = v5 - v4;
+    v17[0] = v6;
+    v19 = 257;
+    v18 = *((_QWORD *)a2 + 4);
+    v17[1] = v7;
+    v21 = 0;
+    v23 = 0;
+    CNetworkClientService_OnClientAdvanceTick(a1, v17);
+    v8 = *(_QWORD *)(a1 + 160);
+    if ( v8 )
+    {
+      CNetworkGameClient_CreateMove(v8);
+      v9 = *(_QWORD *)(a1 + 160);
+      CNetworkGameClient_SendMovePacket(v9);
+      v10 = *(_QWORD *)(v9 + 240);
+      if ( v10 && !(*(unsigned __int8 (__fastcall **)(_QWORD))(*(_QWORD *)v10 + 648LL))(*(_QWORD *)(v9 + 240)) )
+        (*(void (__fastcall **)(__int64))(*(_QWORD *)v10 + 336LL))(v10);
+      CNetworkGameClient_SendMove(v9, 0.0);
+      v11 = (_BYTE *)sub_1803FEF60((__int64)&unk_18068DF30, -1);
+      if ( !v11 )
+        v11 = *(_BYTE **)(qword_18068DF38 + 8);
+      if ( *v11 && (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_1808CDB6C, 2) )
+      {
+        v12 = (float)*(int *)(v9 + 888) * 0.015625;
+        if ( !*(_BYTE *)(v9 + 208) )
+          v12 = (float)(*(float *)(v9 + 2897212) * 0.015625) + v12;
+        LoggingSystem_Log(
+          (unsigned int)dword_1808CDB6C,
+          2,
+          "[s%5d c%5d t%6.3f] SentTickSync   cmds %d...%d   seqnum %d\n",
+          *(_DWORD *)(v9 + 892),
+          *(_DWORD *)(v9 + 888),
+          v12,
+          *(_DWORD *)(v9 + 2936680),
+          *(_DWORD *)(v9 + 2936684),
+          *(_DWORD *)(v9 + 2936744));
+      }
+      sub_180065950(v9);
+      v13 = *(_QWORD *)(a1 + 160);
+      if ( !(*(unsigned __int8 (__fastcall **)(__int64 *))(*off_180611750 + 88))(off_180611750)
+        && (!g_pSource2ClientPrediction
+         || !(*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)g_pSource2ClientPrediction + 224LL))(g_pSource2ClientPrediction)) )
+      {
+        sub_180065C50(v13, 0);
+      }
+    }
+    v24 = 1;
+    sub_180115300();
+    v14 = *(_QWORD *)(a1 + 160);
+    if ( v14 )
+      sub_180065E30(v14, &v24);
+    result = CNetworkClientService_OnClientProcessNetworking(a1, (__int64)&v24);
+    v16 = *(_QWORD *)(a1 + 160);
+    if ( v16 )
+    {
+      sub_18005EBE0(
+        (unsigned int)v17,
+        (unsigned int)"C:\\buildworker\\csgo_rel_win64\\build\\src\\engine2\\networkgameclient.cpp:4593",
+        v16 + 144,
+        *(_DWORD *)(v16 + 888),
+        1015021568,
+        1);
+      sub_180091260(v16, (_WORD *)(v16 + 952));
+      return sub_18005EC80((__int64)v17);
+    }
+    return result;
+  }

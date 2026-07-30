@@ -1,0 +1,1156 @@
+func_name: CNetworkClientService_RegisterEventMapInternal
+func_va: '0x1801d1030'
+disasm_code: |-
+  .text:00000001801D1030                 mov     rax, rsp
+  .text:00000001801D1033                 push    rbp
+  .text:00000001801D1034                 push    rbx
+  .text:00000001801D1035                 push    rsi
+  .text:00000001801D1036                 push    r14
+  .text:00000001801D1038                 mov     rbp, rsp
+  .text:00000001801D103B                 sub     rsp, 58h
+  .text:00000001801D103F                 mov     rsi, rdx
+  .text:00000001801D1042                 mov     r14, rcx
+  .text:00000001801D1045                 test    r8d, r8d
+  .text:00000001801D1048                 jnz     loc_1801D16DE
+  .text:00000001801D104E                 mov     r8d, cs:TlsIndex
+  .text:00000001801D1055                 mov     [rax+8], rdi
+  .text:00000001801D1059                 mov     [rax+18h], r12
+  .text:00000001801D105D                 mov     [rax+20h], r13
+  .text:00000001801D1061                 mov     [rax-28h], r15
+  .text:00000001801D1065                 mov     rax, gs:58h
+  .text:00000001801D106E                 mov     ecx, 68h ; 'h'
+  .text:00000001801D1073                 mov     r15, [rax+r8*8]
+  .text:00000001801D1077                 add     r15, rcx
+  .text:00000001801D107A                 mov     eax, [r15]
+  .text:00000001801D107D                 cmp     cs:dword_180913C88, eax
+  .text:00000001801D1083                 jg      loc_1801D19A0
+  .text:00000001801D1089                 lea     rdx, unk_18060F680
+  .text:00000001801D1090                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D1094                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D1099                 mov     rax, cs:qword_180913C94
+  .text:00000001801D10A0                 lea     rdi, unk_180528AFF
+  .text:00000001801D10A7                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D10AB                 bt      eax, 1Eh
+  .text:00000001801D10AF                 jnb     short loc_1801D10BA
+  .text:00000001801D10B1                 lea     r12, qword_180913C94+4
+  .text:00000001801D10B8                 jmp     short loc_1801D10CA
+  .text:00000001801D10BA                 test    eax, 3FFFFFFFh
+  .text:00000001801D10BF                 mov     r12, rdi
+  .text:00000001801D10C2                 cmova   r12, cs:qword_180913C94+4
+  .text:00000001801D10CA                 lea     rax, CNetworkClientService_OnClientAdvanceTick
+  .text:00000001801D10D1                 mov     rcx, rsi
+  .text:00000001801D10D4                 mov     [rbp+var_10], rax
+  .text:00000001801D10D8                 call    sub_180043900
+  .text:00000001801D10DD                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D10E2                 lea     rdx, [rbp+var_18]
+  .text:00000001801D10E6                 xor     r13d, r13d
+  .text:00000001801D10E9                 mov     [rbp+var_18], rax
+  .text:00000001801D10ED                 mov     [rsp+58h+var_30], r13d
+  .text:00000001801D10F2                 mov     r9b, 1
+  .text:00000001801D10F5                 mov     r8d, 1
+  .text:00000001801D10FB                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D1100                 mov     rcx, r14
+  .text:00000001801D1103                 call    RegisterEventListener_Abstract
+  .text:00000001801D1108                 mov     eax, [r15]
+  .text:00000001801D110B                 cmp     cs:dword_180913D98, eax
+  .text:00000001801D1111                 jg      loc_1801D19F7
+  .text:00000001801D1117                 lea     rdx, unk_18060F6F0
+  .text:00000001801D111E                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D1122                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D1127                 mov     rax, cs:qword_180913DA4
+  .text:00000001801D112E                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D1132                 bt      eax, 1Eh
+  .text:00000001801D1136                 jnb     short loc_1801D1141
+  .text:00000001801D1138                 lea     r12, qword_180913DA4+4
+  .text:00000001801D113F                 jmp     short loc_1801D1151
+  .text:00000001801D1141                 test    eax, 3FFFFFFFh
+  .text:00000001801D1146                 mov     r12, rdi
+  .text:00000001801D1149                 cmova   r12, cs:qword_180913DA4+4
+  .text:00000001801D1151                 lea     rax, CNetworkClientService_OnClientPostAdvanceTick
+  .text:00000001801D1158                 mov     rcx, rsi
+  .text:00000001801D115B                 mov     [rbp+var_10], rax
+  .text:00000001801D115F                 call    sub_180043900
+  .text:00000001801D1164                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D1169                 lea     rdx, [rbp+var_18]
+  .text:00000001801D116D                 mov     [rsp+58h+var_30], r13d
+  .text:00000001801D1172                 mov     r9b, 1
+  .text:00000001801D1175                 mov     r8d, 1
+  .text:00000001801D117B                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D1180                 mov     rcx, r14
+  .text:00000001801D1183                 mov     [rbp+var_18], rax
+  .text:00000001801D1187                 call    RegisterEventListener_Abstract
+  .text:00000001801D118C                 mov     eax, [r15]
+  .text:00000001801D118F                 cmp     cs:dword_180913EA8, eax
+  .text:00000001801D1195                 jg      loc_1801D1A4E
+  .text:00000001801D119B                 lea     rdx, unk_18060FD80
+  .text:00000001801D11A2                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D11A6                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D11AB                 mov     rax, cs:qword_180913EB4
+  .text:00000001801D11B2                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D11B6                 bt      eax, 1Eh
+  .text:00000001801D11BA                 jnb     short loc_1801D11C5
+  .text:00000001801D11BC                 lea     r12, qword_180913EB4+4
+  .text:00000001801D11C3                 jmp     short loc_1801D11D5
+  .text:00000001801D11C5                 test    eax, 3FFFFFFFh
+  .text:00000001801D11CA                 mov     r12, rdi
+  .text:00000001801D11CD                 cmova   r12, cs:qword_180913EB4+4
+  .text:00000001801D11D5                 lea     rax, CNetworkClientService_OnClientProcessGameInput
+  .text:00000001801D11DC                 mov     rcx, rsi
+  .text:00000001801D11DF                 mov     [rbp+var_10], rax
+  .text:00000001801D11E3                 call    sub_180043900
+  .text:00000001801D11E8                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D11ED                 lea     rdx, [rbp+var_18]
+  .text:00000001801D11F1                 mov     [rsp+58h+var_30], r13d
+  .text:00000001801D11F6                 mov     r9b, 1
+  .text:00000001801D11F9                 mov     r8d, 1
+  .text:00000001801D11FF                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D1204                 mov     rcx, r14
+  .text:00000001801D1207                 mov     [rbp+var_18], rax
+  .text:00000001801D120B                 call    RegisterEventListener_Abstract
+  .text:00000001801D1210                 mov     eax, [r15]
+  .text:00000001801D1213                 cmp     cs:dword_180913FB8, eax
+  .text:00000001801D1219                 jg      loc_1801D1AA5
+  .text:00000001801D121F                 lea     rdx, unk_18060F760
+  .text:00000001801D1226                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D122A                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D122F                 mov     rax, cs:qword_180913FC4
+  .text:00000001801D1236                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D123A                 bt      eax, 1Eh
+  .text:00000001801D123E                 jnb     short loc_1801D1249
+  .text:00000001801D1240                 lea     r12, qword_180913FC4+4
+  .text:00000001801D1247                 jmp     short loc_1801D1259
+  .text:00000001801D1249                 test    eax, 3FFFFFFFh
+  .text:00000001801D124E                 mov     r12, rdi
+  .text:00000001801D1251                 cmova   r12, cs:qword_180913FC4+4
+  .text:00000001801D1259                 lea     rax, CNetworkClientService_OnClientPollNetworking
+  .text:00000001801D1260                 mov     rcx, rsi
+  .text:00000001801D1263                 mov     [rbp+var_10], rax
+  .text:00000001801D1267                 call    sub_180043900
+  .text:00000001801D126C                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D1271                 lea     rdx, [rbp+var_18]
+  .text:00000001801D1275                 mov     [rsp+58h+var_30], r13d
+  .text:00000001801D127A                 mov     r9b, 1
+  .text:00000001801D127D                 mov     r8d, 1
+  .text:00000001801D1283                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D1288                 mov     rcx, r14
+  .text:00000001801D128B                 mov     [rbp+var_18], rax
+  .text:00000001801D128F                 call    RegisterEventListener_Abstract
+  .text:00000001801D1294                 mov     eax, [r15]
+  .text:00000001801D1297                 cmp     cs:dword_1809140C8, eax
+  .text:00000001801D129D                 jg      loc_1801D1AFC
+  .text:00000001801D12A3                 lea     rdx, unk_18060F7D0
+  .text:00000001801D12AA                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D12AE                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D12B3                 mov     rax, cs:qword_1809140D4
+  .text:00000001801D12BA                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D12BE                 bt      eax, 1Eh
+  .text:00000001801D12C2                 jnb     short loc_1801D12CD
+  .text:00000001801D12C4                 lea     r12, qword_1809140D4+4
+  .text:00000001801D12CB                 jmp     short loc_1801D12DD
+  .text:00000001801D12CD                 test    eax, 3FFFFFFFh
+  .text:00000001801D12D2                 mov     r12, rdi
+  .text:00000001801D12D5                 cmova   r12, cs:qword_1809140D4+4
+  .text:00000001801D12DD                 lea     rax, CNetworkClientService_OnClientProcessNetworking
+  .text:00000001801D12E4                 mov     rcx, rsi
+  .text:00000001801D12E7                 mov     [rbp+var_10], rax
+  .text:00000001801D12EB                 call    sub_180043900
+  .text:00000001801D12F0                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D12F5                 lea     rdx, [rbp+var_18]
+  .text:00000001801D12F9                 mov     [rsp+58h+var_30], r13d
+  .text:00000001801D12FE                 mov     r9b, 1
+  .text:00000001801D1301                 mov     r8d, 1
+  .text:00000001801D1307                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D130C                 mov     rcx, r14
+  .text:00000001801D130F                 mov     [rbp+var_18], rax
+  .text:00000001801D1313                 call    RegisterEventListener_Abstract
+  .text:00000001801D1318                 mov     eax, [r15]
+  .text:00000001801D131B                 cmp     cs:dword_1809141D8, eax
+  .text:00000001801D1321                 jg      loc_1801D1B53
+  .text:00000001801D1327                 lea     rdx, unk_18060F8B0
+  .text:00000001801D132E                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D1332                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D1337                 mov     rax, cs:qword_1809141E4
+  .text:00000001801D133E                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D1342                 bt      eax, 1Eh
+  .text:00000001801D1346                 jnb     short loc_1801D1351
+  .text:00000001801D1348                 lea     r12, qword_1809141E4+4
+  .text:00000001801D134F                 jmp     short loc_1801D1361
+  .text:00000001801D1351                 test    eax, 3FFFFFFFh
+  .text:00000001801D1356                 mov     r12, rdi
+  .text:00000001801D1359                 cmova   r12, cs:qword_1809141E4+4
+  .text:00000001801D1361                 lea     rax, CNetworkClientService_OnClientSimulate
+  .text:00000001801D1368                 mov     rcx, rsi
+  .text:00000001801D136B                 mov     [rbp+var_10], rax
+  .text:00000001801D136F                 call    sub_180043900
+  .text:00000001801D1374                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D1379                 lea     rdx, [rbp+var_18]
+  .text:00000001801D137D                 mov     [rsp+58h+var_30], r13d
+  .text:00000001801D1382                 mov     r9b, 1
+  .text:00000001801D1385                 mov     r8d, 1
+  .text:00000001801D138B                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D1390                 mov     rcx, r14
+  .text:00000001801D1393                 mov     [rbp+var_18], rax
+  .text:00000001801D1397                 call    RegisterEventListener_Abstract
+  .text:00000001801D139C                 mov     eax, [r15]
+  .text:00000001801D139F                 cmp     cs:dword_1809142E8, eax
+  .text:00000001801D13A5                 jg      loc_1801D1BAA
+  .text:00000001801D13AB                 lea     rdx, unk_18060FBC0
+  .text:00000001801D13B2                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D13B6                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D13BB                 mov     rax, cs:qword_1809142F4
+  .text:00000001801D13C2                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D13C6                 bt      eax, 1Eh
+  .text:00000001801D13CA                 jnb     short loc_1801D13D5
+  .text:00000001801D13CC                 lea     r12, qword_1809142F4+4
+  .text:00000001801D13D3                 jmp     short loc_1801D13E5
+  .text:00000001801D13D5                 test    eax, 3FFFFFFFh
+  .text:00000001801D13DA                 mov     r12, rdi
+  .text:00000001801D13DD                 cmova   r12, cs:qword_1809142F4+4
+  .text:00000001801D13E5                 lea     rax, CNetworkClientService_OnClientPauseSimulate
+  .text:00000001801D13EC                 mov     rcx, rsi
+  .text:00000001801D13EF                 mov     [rbp+var_10], rax
+  .text:00000001801D13F3                 call    sub_180043900
+  .text:00000001801D13F8                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D13FD                 lea     rdx, [rbp+var_18]
+  .text:00000001801D1401                 mov     [rsp+58h+var_30], r13d
+  .text:00000001801D1406                 mov     r9b, 1
+  .text:00000001801D1409                 mov     r8d, 1
+  .text:00000001801D140F                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D1414                 mov     rcx, r14
+  .text:00000001801D1417                 mov     [rbp+var_18], rax
+  .text:00000001801D141B                 call    RegisterEventListener_Abstract
+  .text:00000001801D1420                 mov     eax, [r15]
+  .text:00000001801D1423                 cmp     cs:dword_1809143F8, eax
+  .text:00000001801D1429                 jg      loc_1801D1C01
+  .text:00000001801D142F                 lea     rdx, unk_180610090
+  .text:00000001801D1436                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D143A                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D143F                 mov     rax, cs:qword_180914404
+  .text:00000001801D1446                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D144A                 bt      eax, 1Eh
+  .text:00000001801D144E                 jnb     short loc_1801D1459
+  .text:00000001801D1450                 lea     r12, qword_180914404+4
+  .text:00000001801D1457                 jmp     short loc_1801D1469
+  .text:00000001801D1459                 test    eax, 3FFFFFFFh
+  .text:00000001801D145E                 mov     r12, rdi
+  .text:00000001801D1461                 cmova   r12, cs:qword_180914404+4
+  .text:00000001801D1469                 lea     rax, CNetworkClientService_OnClientFrameSimulate
+  .text:00000001801D1470                 mov     rcx, rsi
+  .text:00000001801D1473                 mov     [rbp+var_10], rax
+  .text:00000001801D1477                 call    sub_180043900
+  .text:00000001801D147C                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D1481                 lea     rdx, [rbp+var_18]
+  .text:00000001801D1485                 mov     [rsp+58h+var_30], r13d
+  .text:00000001801D148A                 mov     r9b, 1
+  .text:00000001801D148D                 mov     r8d, 1
+  .text:00000001801D1493                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D1498                 mov     rcx, r14
+  .text:00000001801D149B                 mov     [rbp+var_18], rax
+  .text:00000001801D149F                 call    RegisterEventListener_Abstract
+  .text:00000001801D14A4                 mov     eax, [r15]
+  .text:00000001801D14A7                 cmp     cs:dword_180914508, eax
+  .text:00000001801D14AD                 jg      loc_1801D1C58
+  .text:00000001801D14B3                 lea     rdx, unk_180610100
+  .text:00000001801D14BA                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D14BE                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D14C3                 mov     rax, cs:qword_180914514
+  .text:00000001801D14CA                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D14CE                 bt      eax, 1Eh
+  .text:00000001801D14D2                 jnb     short loc_1801D14DD
+  .text:00000001801D14D4                 lea     r12, qword_180914514+4
+  .text:00000001801D14DB                 jmp     short loc_1801D14ED
+  .text:00000001801D14DD                 test    eax, 3FFFFFFFh
+  .text:00000001801D14E2                 mov     r12, rdi
+  .text:00000001801D14E5                 cmova   r12, cs:qword_180914514+4
+  .text:00000001801D14ED                 lea     rax, CNetworkClientService_OnSimpleLoopFrameUpdate
+  .text:00000001801D14F4                 mov     rcx, rsi
+  .text:00000001801D14F7                 mov     [rbp+var_10], rax
+  .text:00000001801D14FB                 call    sub_180043900
+  .text:00000001801D1500                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D1505                 lea     rdx, [rbp+var_18]
+  .text:00000001801D1509                 mov     [rsp+58h+var_30], r13d
+  .text:00000001801D150E                 mov     r9b, 1
+  .text:00000001801D1511                 mov     r8d, 1
+  .text:00000001801D1517                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D151C                 mov     rcx, r14
+  .text:00000001801D151F                 mov     [rbp+var_18], rax
+  .text:00000001801D1523                 call    RegisterEventListener_Abstract
+  .text:00000001801D1528                 mov     eax, [r15]
+  .text:00000001801D152B                 cmp     cs:dword_180914618, eax
+  .text:00000001801D1531                 jg      loc_1801D1CAF
+  .text:00000001801D1537                 lea     rdx, unk_180610560
+  .text:00000001801D153E                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D1542                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D1547                 mov     rax, cs:qword_180914624
+  .text:00000001801D154E                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D1552                 bt      eax, 1Eh
+  .text:00000001801D1556                 jnb     short loc_1801D1561
+  .text:00000001801D1558                 lea     r12, qword_180914624+4
+  .text:00000001801D155F                 jmp     short loc_1801D1571
+  .text:00000001801D1561                 test    eax, 3FFFFFFFh
+  .text:00000001801D1566                 mov     r12, rdi
+  .text:00000001801D1569                 cmova   r12, cs:qword_180914624+4
+  .text:00000001801D1571                 lea     rax, CNetworkClientService_OnFrameBoundary
+  .text:00000001801D1578                 mov     rcx, rsi
+  .text:00000001801D157B                 mov     [rbp+var_10], rax
+  .text:00000001801D157F                 call    sub_180043900
+  .text:00000001801D1584                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D1589                 lea     rdx, [rbp+var_18]
+  .text:00000001801D158D                 mov     [rsp+58h+var_30], r13d
+  .text:00000001801D1592                 mov     r9b, 1
+  .text:00000001801D1595                 mov     r8d, 1
+  .text:00000001801D159B                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D15A0                 mov     rcx, r14
+  .text:00000001801D15A3                 mov     [rbp+var_18], rax
+  .text:00000001801D15A7                 call    RegisterEventListener_Abstract
+  .text:00000001801D15AC                 mov     eax, [r15]
+  .text:00000001801D15AF                 cmp     cs:dword_180914728, eax
+  .text:00000001801D15B5                 mov     r13, [rsp+58h+arg_18]
+  .text:00000001801D15BD                 jg      loc_1801D1D06
+  .text:00000001801D15C3                 lea     rdx, unk_18060FAE0
+  .text:00000001801D15CA                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D15CE                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D15D3                 mov     rax, cs:qword_180914734
+  .text:00000001801D15DA                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D15DE                 bt      eax, 1Eh
+  .text:00000001801D15E2                 jnb     short loc_1801D15ED
+  .text:00000001801D15E4                 lea     r12, qword_180914734+4
+  .text:00000001801D15EB                 jmp     short loc_1801D15FD
+  .text:00000001801D15ED                 test    eax, 3FFFFFFFh
+  .text:00000001801D15F2                 mov     r12, rdi
+  .text:00000001801D15F5                 cmova   r12, cs:qword_180914734+4
+  .text:00000001801D15FD                 lea     rax, CNetworkClientService_OnServerPostSimulate
+  .text:00000001801D1604                 mov     rcx, rsi
+  .text:00000001801D1607                 mov     [rbp+var_10], rax
+  .text:00000001801D160B                 call    sub_180043900
+  .text:00000001801D1610                 mov     [rsp+58h+var_28], r12
+  .text:00000001801D1615                 lea     rdx, [rbp+var_18]
+  .text:00000001801D1619                 mov     [rsp+58h+var_30], 270Fh
+  .text:00000001801D1621                 mov     r9b, 1
+  .text:00000001801D1624                 mov     r8d, 1
+  .text:00000001801D162A                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D162F                 mov     rcx, r14
+  .text:00000001801D1632                 mov     [rbp+var_18], rax
+  .text:00000001801D1636                 call    RegisterEventListener_Abstract
+  .text:00000001801D163B                 mov     eax, [r15]
+  .text:00000001801D163E                 cmp     cs:dword_180914838, eax
+  .text:00000001801D1644                 mov     r15, [rsp+58h+var_8]
+  .text:00000001801D1649                 mov     r12, [rsp+58h+arg_10]
+  .text:00000001801D1651                 jg      loc_1801D1D5D
+  .text:00000001801D1657                 lea     rdx, unk_1806103A0
+  .text:00000001801D165E                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D1662                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D1667                 mov     rax, cs:qword_180914844
+  .text:00000001801D166E                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D1672                 bt      eax, 1Eh
+  .text:00000001801D1676                 jnb     short loc_1801D1681
+  .text:00000001801D1678                 lea     rdi, qword_180914844+4
+  .text:00000001801D167F                 jmp     short loc_1801D168E
+  .text:00000001801D1681                 test    eax, 3FFFFFFFh
+  .text:00000001801D1686                 cmova   rdi, cs:qword_180914844+4
+  .text:00000001801D168E                 lea     rax, CNetworkClientService_OnServerBeginAsyncPostTickWork
+  .text:00000001801D1695                 mov     rcx, rsi
+  .text:00000001801D1698                 mov     [rbp+var_10], rax
+  .text:00000001801D169C                 call    sub_180043900
+  .text:00000001801D16A1                 mov     [rsp+58h+var_28], rdi
+  .text:00000001801D16A6                 lea     rdx, [rbp+var_18]
+  .text:00000001801D16AA                 mov     [rsp+58h+var_30], 270Fh
+  .text:00000001801D16B2                 mov     r9b, 1
+  .text:00000001801D16B5                 mov     r8d, 1
+  .text:00000001801D16BB                 mov     [rsp+58h+var_38], rbx
+  .text:00000001801D16C0                 mov     rcx, r14
+  .text:00000001801D16C3                 mov     [rbp+var_18], rax
+  .text:00000001801D16C7                 call    RegisterEventListener_Abstract
+  .text:00000001801D16CC                 mov     rdi, [rsp+58h+arg_0]
+  .text:00000001801D16D4                 add     rsp, 58h
+  .text:00000001801D16D8                 pop     r14
+  .text:00000001801D16DA                 pop     rsi
+  .text:00000001801D16DB                 pop     rbx
+  .text:00000001801D16DC                 pop     rbp
+  .text:00000001801D16DD                 retn
+  .text:00000001801D16DE                 lea     rdx, unk_18060F680
+  .text:00000001801D16E5                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D16E9                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D16EE                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D16F2                 lea     rax, CNetworkClientService_OnClientAdvanceTick
+  .text:00000001801D16F9                 mov     rcx, rsi
+  .text:00000001801D16FC                 mov     [rbp+var_10], rax
+  .text:00000001801D1700                 call    sub_180043900
+  .text:00000001801D1705                 mov     r8, rbx
+  .text:00000001801D1708                 mov     [rbp+var_18], rax
+  .text:00000001801D170C                 lea     rdx, [rbp+var_18]
+  .text:00000001801D1710                 mov     rcx, r14
+  .text:00000001801D1713                 call    sub_18013C7E0
+  .text:00000001801D1718                 lea     rdx, unk_18060F6F0
+  .text:00000001801D171F                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D1723                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D1728                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D172C                 lea     rax, CNetworkClientService_OnClientPostAdvanceTick
+  .text:00000001801D1733                 mov     rcx, rsi
+  .text:00000001801D1736                 mov     [rbp+var_10], rax
+  .text:00000001801D173A                 call    sub_180043900
+  .text:00000001801D173F                 mov     r8, rbx
+  .text:00000001801D1742                 mov     [rbp+var_18], rax
+  .text:00000001801D1746                 lea     rdx, [rbp+var_18]
+  .text:00000001801D174A                 mov     rcx, r14
+  .text:00000001801D174D                 call    sub_18013C7E0
+  .text:00000001801D1752                 lea     rdx, unk_18060FD80
+  .text:00000001801D1759                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D175D                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D1762                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D1766                 lea     rax, CNetworkClientService_OnClientProcessGameInput
+  .text:00000001801D176D                 mov     rcx, rsi
+  .text:00000001801D1770                 mov     [rbp+var_10], rax
+  .text:00000001801D1774                 call    sub_180043900
+  .text:00000001801D1779                 mov     r8, rbx
+  .text:00000001801D177C                 mov     [rbp+var_18], rax
+  .text:00000001801D1780                 lea     rdx, [rbp+var_18]
+  .text:00000001801D1784                 mov     rcx, r14
+  .text:00000001801D1787                 call    sub_18013C7E0
+  .text:00000001801D178C                 lea     rdx, unk_18060F760
+  .text:00000001801D1793                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D1797                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D179C                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D17A0                 lea     rax, CNetworkClientService_OnClientPollNetworking
+  .text:00000001801D17A7                 mov     rcx, rsi
+  .text:00000001801D17AA                 mov     [rbp+var_10], rax
+  .text:00000001801D17AE                 call    sub_180043900
+  .text:00000001801D17B3                 mov     r8, rbx
+  .text:00000001801D17B6                 mov     [rbp+var_18], rax
+  .text:00000001801D17BA                 lea     rdx, [rbp+var_18]
+  .text:00000001801D17BE                 mov     rcx, r14
+  .text:00000001801D17C1                 call    sub_18013C7E0
+  .text:00000001801D17C6                 lea     rdx, unk_18060F7D0
+  .text:00000001801D17CD                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D17D1                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D17D6                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D17DA                 lea     rax, CNetworkClientService_OnClientProcessNetworking
+  .text:00000001801D17E1                 mov     rcx, rsi
+  .text:00000001801D17E4                 mov     [rbp+var_10], rax
+  .text:00000001801D17E8                 call    sub_180043900
+  .text:00000001801D17ED                 mov     r8, rbx
+  .text:00000001801D17F0                 mov     [rbp+var_18], rax
+  .text:00000001801D17F4                 lea     rdx, [rbp+var_18]
+  .text:00000001801D17F8                 mov     rcx, r14
+  .text:00000001801D17FB                 call    sub_18013C7E0
+  .text:00000001801D1800                 lea     rdx, unk_18060F8B0
+  .text:00000001801D1807                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D180B                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D1810                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D1814                 lea     rax, CNetworkClientService_OnClientSimulate
+  .text:00000001801D181B                 mov     rcx, rsi
+  .text:00000001801D181E                 mov     [rbp+var_10], rax
+  .text:00000001801D1822                 call    sub_180043900
+  .text:00000001801D1827                 mov     r8, rbx
+  .text:00000001801D182A                 mov     [rbp+var_18], rax
+  .text:00000001801D182E                 lea     rdx, [rbp+var_18]
+  .text:00000001801D1832                 mov     rcx, r14
+  .text:00000001801D1835                 call    sub_18013C7E0
+  .text:00000001801D183A                 lea     rdx, unk_18060FBC0
+  .text:00000001801D1841                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D1845                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D184A                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D184E                 lea     rax, CNetworkClientService_OnClientPauseSimulate
+  .text:00000001801D1855                 mov     rcx, rsi
+  .text:00000001801D1858                 mov     [rbp+var_10], rax
+  .text:00000001801D185C                 call    sub_180043900
+  .text:00000001801D1861                 mov     r8, rbx
+  .text:00000001801D1864                 mov     [rbp+var_18], rax
+  .text:00000001801D1868                 lea     rdx, [rbp+var_18]
+  .text:00000001801D186C                 mov     rcx, r14
+  .text:00000001801D186F                 call    sub_18013C7E0
+  .text:00000001801D1874                 lea     rdx, unk_180610090
+  .text:00000001801D187B                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D187F                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D1884                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D1888                 lea     rax, CNetworkClientService_OnClientFrameSimulate
+  .text:00000001801D188F                 mov     rcx, rsi
+  .text:00000001801D1892                 mov     [rbp+var_10], rax
+  .text:00000001801D1896                 call    sub_180043900
+  .text:00000001801D189B                 mov     r8, rbx
+  .text:00000001801D189E                 mov     [rbp+var_18], rax
+  .text:00000001801D18A2                 lea     rdx, [rbp+var_18]
+  .text:00000001801D18A6                 mov     rcx, r14
+  .text:00000001801D18A9                 call    sub_18013C7E0
+  .text:00000001801D18AE                 lea     rdx, unk_180610100
+  .text:00000001801D18B5                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D18B9                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D18BE                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D18C2                 lea     rax, CNetworkClientService_OnSimpleLoopFrameUpdate
+  .text:00000001801D18C9                 mov     rcx, rsi
+  .text:00000001801D18CC                 mov     [rbp+var_10], rax
+  .text:00000001801D18D0                 call    sub_180043900
+  .text:00000001801D18D5                 mov     r8, rbx
+  .text:00000001801D18D8                 mov     [rbp+var_18], rax
+  .text:00000001801D18DC                 lea     rdx, [rbp+var_18]
+  .text:00000001801D18E0                 mov     rcx, r14
+  .text:00000001801D18E3                 call    sub_18013C7E0
+  .text:00000001801D18E8                 lea     rdx, unk_180610560
+  .text:00000001801D18EF                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D18F3                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D18F8                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D18FC                 lea     rax, CNetworkClientService_OnFrameBoundary
+  .text:00000001801D1903                 mov     rcx, rsi
+  .text:00000001801D1906                 mov     [rbp+var_10], rax
+  .text:00000001801D190A                 call    sub_180043900
+  .text:00000001801D190F                 mov     r8, rbx
+  .text:00000001801D1912                 mov     [rbp+var_18], rax
+  .text:00000001801D1916                 lea     rdx, [rbp+var_18]
+  .text:00000001801D191A                 mov     rcx, r14
+  .text:00000001801D191D                 call    sub_18013C7E0
+  .text:00000001801D1922                 lea     rdx, unk_18060FAE0
+  .text:00000001801D1929                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D192D                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D1932                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D1936                 lea     rax, CNetworkClientService_OnServerPostSimulate
+  .text:00000001801D193D                 mov     rcx, rsi
+  .text:00000001801D1940                 mov     [rbp+var_10], rax
+  .text:00000001801D1944                 call    sub_180043900
+  .text:00000001801D1949                 mov     r8, rbx
+  .text:00000001801D194C                 mov     [rbp+var_18], rax
+  .text:00000001801D1950                 lea     rdx, [rbp+var_18]
+  .text:00000001801D1954                 mov     rcx, r14
+  .text:00000001801D1957                 call    sub_18013C7E0
+  .text:00000001801D195C                 lea     rdx, unk_1806103A0
+  .text:00000001801D1963                 lea     rcx, [rbp+arg_8]
+  .text:00000001801D1967                 call    unknown_libname_12; Microsoft VisualC v7/14 64bit runtime
+  .text:00000001801D196C                 mov     rbx, [rbp+arg_8]
+  .text:00000001801D1970                 lea     rax, CNetworkClientService_OnServerBeginAsyncPostTickWork
+  .text:00000001801D1977                 mov     rcx, rsi
+  .text:00000001801D197A                 mov     [rbp+var_10], rax
+  .text:00000001801D197E                 call    sub_180043900
+  .text:00000001801D1983                 mov     r8, rbx
+  .text:00000001801D1986                 mov     [rbp+var_18], rax
+  .text:00000001801D198A                 lea     rdx, [rbp+var_18]
+  .text:00000001801D198E                 mov     rcx, r14
+  .text:00000001801D1991                 call    sub_18013C7E0
+  .text:00000001801D1996                 add     rsp, 58h
+  .text:00000001801D199A                 pop     r14
+  .text:00000001801D199C                 pop     rsi
+  .text:00000001801D199D                 pop     rbx
+  .text:00000001801D199E                 pop     rbp
+  .text:00000001801D199F                 retn
+  .text:00000001801D19A0                 lea     rcx, dword_180913C88
+  .text:00000001801D19A7                 call    sub_180427558
+  .text:00000001801D19AC                 cmp     cs:dword_180913C88, 0FFFFFFFFh
+  .text:00000001801D19B3                 jnz     loc_1801D1089
+  .text:00000001801D19B9                 lea     r9, aOnclientadvanc; "OnClientAdvanceTick"
+  .text:00000001801D19C0                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D19C7                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D19CE                 lea     rcx, unk_180913C90
+  .text:00000001801D19D5                 call    sub_1800241C0
+  .text:00000001801D19DA                 ; void (__cdecl *)()
+  .text:00000001801D19DA                 lea     rcx, sub_18047DE70; void (__cdecl *)()
+  .text:00000001801D19E1                 call    atexit
+  .text:00000001801D19E6                 lea     rcx, dword_180913C88
+  .text:00000001801D19ED                 call    sub_1804274EC
+  .text:00000001801D19F2                 jmp     loc_1801D1089
+  .text:00000001801D19F7                 lea     rcx, dword_180913D98
+  .text:00000001801D19FE                 call    sub_180427558
+  .text:00000001801D1A03                 cmp     cs:dword_180913D98, 0FFFFFFFFh
+  .text:00000001801D1A0A                 jnz     loc_1801D1117
+  .text:00000001801D1A10                 lea     r9, aOnclientpostad; "OnClientPostAdvanceTick"
+  .text:00000001801D1A17                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1A1E                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1A25                 lea     rcx, unk_180913DA0
+  .text:00000001801D1A2C                 call    sub_1800241C0
+  .text:00000001801D1A31                 ; void (__cdecl *)()
+  .text:00000001801D1A31                 lea     rcx, sub_18047DE60; void (__cdecl *)()
+  .text:00000001801D1A38                 call    atexit
+  .text:00000001801D1A3D                 lea     rcx, dword_180913D98
+  .text:00000001801D1A44                 call    sub_1804274EC
+  .text:00000001801D1A49                 jmp     loc_1801D1117
+  .text:00000001801D1A4E                 lea     rcx, dword_180913EA8
+  .text:00000001801D1A55                 call    sub_180427558
+  .text:00000001801D1A5A                 cmp     cs:dword_180913EA8, 0FFFFFFFFh
+  .text:00000001801D1A61                 jnz     loc_1801D119B
+  .text:00000001801D1A67                 lea     r9, aOnclientproces_1; "OnClientProcessGameInput"
+  .text:00000001801D1A6E                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1A75                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1A7C                 lea     rcx, unk_180913EB0
+  .text:00000001801D1A83                 call    sub_1800241C0
+  .text:00000001801D1A88                 ; void (__cdecl *)()
+  .text:00000001801D1A88                 lea     rcx, sub_18047DE50; void (__cdecl *)()
+  .text:00000001801D1A8F                 call    atexit
+  .text:00000001801D1A94                 lea     rcx, dword_180913EA8
+  .text:00000001801D1A9B                 call    sub_1804274EC
+  .text:00000001801D1AA0                 jmp     loc_1801D119B
+  .text:00000001801D1AA5                 lea     rcx, dword_180913FB8
+  .text:00000001801D1AAC                 call    sub_180427558
+  .text:00000001801D1AB1                 cmp     cs:dword_180913FB8, 0FFFFFFFFh
+  .text:00000001801D1AB8                 jnz     loc_1801D121F
+  .text:00000001801D1ABE                 lea     r9, aOnclientpollne; "OnClientPollNetworking"
+  .text:00000001801D1AC5                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1ACC                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1AD3                 lea     rcx, unk_180913FC0
+  .text:00000001801D1ADA                 call    sub_1800241C0
+  .text:00000001801D1ADF                 ; void (__cdecl *)()
+  .text:00000001801D1ADF                 lea     rcx, sub_18047DE40; void (__cdecl *)()
+  .text:00000001801D1AE6                 call    atexit
+  .text:00000001801D1AEB                 lea     rcx, dword_180913FB8
+  .text:00000001801D1AF2                 call    sub_1804274EC
+  .text:00000001801D1AF7                 jmp     loc_1801D121F
+  .text:00000001801D1AFC                 lea     rcx, dword_1809140C8
+  .text:00000001801D1B03                 call    sub_180427558
+  .text:00000001801D1B08                 cmp     cs:dword_1809140C8, 0FFFFFFFFh
+  .text:00000001801D1B0F                 jnz     loc_1801D12A3
+  .text:00000001801D1B15                 lea     r9, aOnclientproces; "OnClientProcessNetworking"
+  .text:00000001801D1B1C                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1B23                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1B2A                 lea     rcx, unk_1809140D0
+  .text:00000001801D1B31                 call    sub_1800241C0
+  .text:00000001801D1B36                 ; void (__cdecl *)()
+  .text:00000001801D1B36                 lea     rcx, sub_18047DE30; void (__cdecl *)()
+  .text:00000001801D1B3D                 call    atexit
+  .text:00000001801D1B42                 lea     rcx, dword_1809140C8
+  .text:00000001801D1B49                 call    sub_1804274EC
+  .text:00000001801D1B4E                 jmp     loc_1801D12A3
+  .text:00000001801D1B53                 lea     rcx, dword_1809141D8
+  .text:00000001801D1B5A                 call    sub_180427558
+  .text:00000001801D1B5F                 cmp     cs:dword_1809141D8, 0FFFFFFFFh
+  .text:00000001801D1B66                 jnz     loc_1801D1327
+  .text:00000001801D1B6C                 lea     r9, aOnclientsimula; "OnClientSimulate"
+  .text:00000001801D1B73                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1B7A                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1B81                 lea     rcx, unk_1809141E0
+  .text:00000001801D1B88                 call    sub_1800241C0
+  .text:00000001801D1B8D                 ; void (__cdecl *)()
+  .text:00000001801D1B8D                 lea     rcx, sub_18047DE20; void (__cdecl *)()
+  .text:00000001801D1B94                 call    atexit
+  .text:00000001801D1B99                 lea     rcx, dword_1809141D8
+  .text:00000001801D1BA0                 call    sub_1804274EC
+  .text:00000001801D1BA5                 jmp     loc_1801D1327
+  .text:00000001801D1BAA                 lea     rcx, dword_1809142E8
+  .text:00000001801D1BB1                 call    sub_180427558
+  .text:00000001801D1BB6                 cmp     cs:dword_1809142E8, 0FFFFFFFFh
+  .text:00000001801D1BBD                 jnz     loc_1801D13AB
+  .text:00000001801D1BC3                 lea     r9, aOnclientpauses; "OnClientPauseSimulate"
+  .text:00000001801D1BCA                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1BD1                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1BD8                 lea     rcx, unk_1809142F0
+  .text:00000001801D1BDF                 call    sub_1800241C0
+  .text:00000001801D1BE4                 ; void (__cdecl *)()
+  .text:00000001801D1BE4                 lea     rcx, sub_18047DE10; void (__cdecl *)()
+  .text:00000001801D1BEB                 call    atexit
+  .text:00000001801D1BF0                 lea     rcx, dword_1809142E8
+  .text:00000001801D1BF7                 call    sub_1804274EC
+  .text:00000001801D1BFC                 jmp     loc_1801D13AB
+  .text:00000001801D1C01                 lea     rcx, dword_1809143F8
+  .text:00000001801D1C08                 call    sub_180427558
+  .text:00000001801D1C0D                 cmp     cs:dword_1809143F8, 0FFFFFFFFh
+  .text:00000001801D1C14                 jnz     loc_1801D142F
+  .text:00000001801D1C1A                 lea     r9, aOnclientframes; "OnClientFrameSimulate"
+  .text:00000001801D1C21                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1C28                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1C2F                 lea     rcx, unk_180914400
+  .text:00000001801D1C36                 call    sub_1800241C0
+  .text:00000001801D1C3B                 ; void (__cdecl *)()
+  .text:00000001801D1C3B                 lea     rcx, sub_18047DE00; void (__cdecl *)()
+  .text:00000001801D1C42                 call    atexit
+  .text:00000001801D1C47                 lea     rcx, dword_1809143F8
+  .text:00000001801D1C4E                 call    sub_1804274EC
+  .text:00000001801D1C53                 jmp     loc_1801D142F
+  .text:00000001801D1C58                 lea     rcx, dword_180914508
+  .text:00000001801D1C5F                 call    sub_180427558
+  .text:00000001801D1C64                 cmp     cs:dword_180914508, 0FFFFFFFFh
+  .text:00000001801D1C6B                 jnz     loc_1801D14B3
+  .text:00000001801D1C71                 lea     r9, aOnsimpleloopfr; "OnSimpleLoopFrameUpdate"
+  .text:00000001801D1C78                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1C7F                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1C86                 lea     rcx, unk_180914510
+  .text:00000001801D1C8D                 call    sub_1800241C0
+  .text:00000001801D1C92                 ; void (__cdecl *)()
+  .text:00000001801D1C92                 lea     rcx, sub_18047DDF0; void (__cdecl *)()
+  .text:00000001801D1C99                 call    atexit
+  .text:00000001801D1C9E                 lea     rcx, dword_180914508
+  .text:00000001801D1CA5                 call    sub_1804274EC
+  .text:00000001801D1CAA                 jmp     loc_1801D14B3
+  .text:00000001801D1CAF                 lea     rcx, dword_180914618
+  .text:00000001801D1CB6                 call    sub_180427558
+  .text:00000001801D1CBB                 cmp     cs:dword_180914618, 0FFFFFFFFh
+  .text:00000001801D1CC2                 jnz     loc_1801D1537
+  .text:00000001801D1CC8                 lea     r9, aOnframeboundar; "OnFrameBoundary"
+  .text:00000001801D1CCF                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1CD6                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1CDD                 lea     rcx, unk_180914620
+  .text:00000001801D1CE4                 call    sub_1800241C0
+  .text:00000001801D1CE9                 ; void (__cdecl *)()
+  .text:00000001801D1CE9                 lea     rcx, sub_18047DDE0; void (__cdecl *)()
+  .text:00000001801D1CF0                 call    atexit
+  .text:00000001801D1CF5                 lea     rcx, dword_180914618
+  .text:00000001801D1CFC                 call    sub_1804274EC
+  .text:00000001801D1D01                 jmp     loc_1801D1537
+  .text:00000001801D1D06                 lea     rcx, dword_180914728
+  .text:00000001801D1D0D                 call    sub_180427558
+  .text:00000001801D1D12                 cmp     cs:dword_180914728, 0FFFFFFFFh
+  .text:00000001801D1D19                 jnz     loc_1801D15C3
+  .text:00000001801D1D1F                 lea     r9, aOnserverpostsi; "OnServerPostSimulate"
+  .text:00000001801D1D26                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1D2D                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1D34                 lea     rcx, unk_180914730
+  .text:00000001801D1D3B                 call    sub_1800241C0
+  .text:00000001801D1D40                 ; void (__cdecl *)()
+  .text:00000001801D1D40                 lea     rcx, sub_18047DDD0; void (__cdecl *)()
+  .text:00000001801D1D47                 call    atexit
+  .text:00000001801D1D4C                 lea     rcx, dword_180914728
+  .text:00000001801D1D53                 call    sub_1804274EC
+  .text:00000001801D1D58                 jmp     loc_1801D15C3
+  .text:00000001801D1D5D                 lea     rcx, dword_180914838
+  .text:00000001801D1D64                 call    sub_180427558
+  .text:00000001801D1D69                 cmp     cs:dword_180914838, 0FFFFFFFFh
+  .text:00000001801D1D70                 jnz     loc_1801D1657
+  .text:00000001801D1D76                 lea     r9, aOnserverbegina; "OnServerBeginAsyncPostTickWork"
+  .text:00000001801D1D7D                 lea     r8, aCnetworkclient; "CNetworkClientService"
+  .text:00000001801D1D84                 lea     rdx, aSS_5; "%s::%s"
+  .text:00000001801D1D8B                 lea     rcx, unk_180914840
+  .text:00000001801D1D92                 call    sub_1800241C0
+  .text:00000001801D1D97                 ; void (__cdecl *)()
+  .text:00000001801D1D97                 lea     rcx, sub_18047DDC0; void (__cdecl *)()
+  .text:00000001801D1D9E                 call    atexit
+  .text:00000001801D1DA3                 lea     rcx, dword_180914838
+  .text:00000001801D1DAA                 call    sub_1804274EC
+  .text:00000001801D1DAF                 jmp     loc_1801D1657
+procedure: |-
+  void __fastcall CNetworkClientService_RegisterEventMapInternal(__int64 a1, __int64 a2, int a3, __int64 a4)
+  {
+    _DWORD *v6; // r15
+    char *v7; // rdi
+    __int64 v8; // rbx
+    char *v9; // r12
+    __int64 v10; // rdx
+    __int64 v11; // r8
+    __int64 v12; // r9
+    __int64 v13; // rbx
+    char *v14; // r12
+    __int64 v15; // rdx
+    __int64 v16; // r8
+    __int64 v17; // r9
+    __int64 v18; // rbx
+    char *v19; // r12
+    __int64 v20; // rdx
+    __int64 v21; // r8
+    __int64 v22; // r9
+    __int64 v23; // rbx
+    char *v24; // r12
+    __int64 v25; // rdx
+    __int64 v26; // r8
+    __int64 v27; // r9
+    __int64 v28; // rbx
+    char *v29; // r12
+    __int64 v30; // rdx
+    __int64 v31; // r8
+    __int64 v32; // r9
+    __int64 v33; // rbx
+    char *v34; // r12
+    __int64 v35; // rdx
+    __int64 v36; // r8
+    __int64 v37; // r9
+    __int64 v38; // rbx
+    char *v39; // r12
+    __int64 v40; // rdx
+    __int64 v41; // r8
+    __int64 v42; // r9
+    __int64 v43; // rbx
+    char *v44; // r12
+    __int64 v45; // rdx
+    __int64 v46; // r8
+    __int64 v47; // r9
+    __int64 v48; // rbx
+    char *v49; // r12
+    __int64 v50; // rdx
+    __int64 v51; // r8
+    __int64 v52; // r9
+    __int64 v53; // rbx
+    char *v54; // r12
+    __int64 v55; // rdx
+    __int64 v56; // r8
+    __int64 v57; // r9
+    __int64 v58; // rbx
+    char *v59; // r12
+    __int64 v60; // rdx
+    __int64 v61; // r8
+    __int64 v62; // r9
+    __int64 v63; // rbx
+    __int64 v64; // rbx
+    __int64 v65; // rbx
+    __int64 v66; // rbx
+    __int64 v67; // rbx
+    __int64 v68; // rbx
+    __int64 v69; // rbx
+    __int64 v70; // rbx
+    __int64 v71; // rbx
+    __int64 v72; // rbx
+    __int64 v73; // rbx
+    __int64 v74; // rbx
+    __int64 v75; // rbx
+    __int64 v76; // [rsp+40h] [rbp-18h] BYREF
+    __int64 (__fastcall *v77)(); // [rsp+48h] [rbp-10h]
+    __int64 v78; // [rsp+88h] [rbp+30h] BYREF
+
+    if ( a3 )
+    {
+      unknown_libname_12(&v78, &unk_18060F680);
+      v64 = v78;
+      v77 = (__int64 (__fastcall *)())CNetworkClientService_OnClientAdvanceTick;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v64);
+      unknown_libname_12(&v78, &unk_18060F6F0);
+      v65 = v78;
+      v77 = (__int64 (__fastcall *)())CNetworkClientService_OnClientPostAdvanceTick;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v65);
+      unknown_libname_12(&v78, &unk_18060FD80);
+      v66 = v78;
+      v77 = (__int64 (__fastcall *)())CNetworkClientService_OnClientProcessGameInput;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v66);
+      unknown_libname_12(&v78, &unk_18060F760);
+      v67 = v78;
+      v77 = CNetworkClientService_OnClientPollNetworking;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v67);
+      unknown_libname_12(&v78, &unk_18060F7D0);
+      v68 = v78;
+      v77 = CNetworkClientService_OnClientProcessNetworking;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v68);
+      unknown_libname_12(&v78, &unk_18060F8B0);
+      v69 = v78;
+      v77 = CNetworkClientService_OnClientSimulate;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v69);
+      unknown_libname_12(&v78, &unk_18060FBC0);
+      v70 = v78;
+      v77 = CNetworkClientService_OnClientPauseSimulate;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v70);
+      unknown_libname_12(&v78, &unk_180610090);
+      v71 = v78;
+      v77 = CNetworkClientService_OnClientFrameSimulate;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v71);
+      unknown_libname_12(&v78, &unk_180610100);
+      v72 = v78;
+      v77 = CNetworkClientService_OnSimpleLoopFrameUpdate;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v72);
+      unknown_libname_12(&v78, &unk_180610560);
+      v73 = v78;
+      v77 = CNetworkClientService_OnFrameBoundary;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v73);
+      unknown_libname_12(&v78, &unk_18060FAE0);
+      v74 = v78;
+      v77 = CNetworkClientService_OnServerPostSimulate;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v74);
+      unknown_libname_12(&v78, &unk_1806103A0);
+      v75 = v78;
+      v77 = CNetworkClientService_OnServerBeginAsyncPostTickWork;
+      v76 = sub_180043900(a2);
+      sub_18013C7E0(a1, &v76, v75);
+    }
+    else
+    {
+      v6 = (_DWORD *)(*((_QWORD *)NtCurrentTeb()->ThreadLocalStoragePointer + (unsigned int)TlsIndex) + 104LL);
+      if ( dword_180913C88 > *v6 )
+      {
+        sub_180427558(&dword_180913C88, a2, (unsigned int)TlsIndex, a4);
+        if ( dword_180913C88 == -1 )
+        {
+          sub_1800241C0(&unk_180913C90, "%s::%s", "CNetworkClientService", "OnClientAdvanceTick");
+          atexit(sub_18047DE70);
+          sub_1804274EC(&dword_180913C88);
+        }
+      }
+      unknown_libname_12(&v78, &unk_18060F680);
+      v7 = (char *)&unk_180528AFF;
+      v8 = v78;
+      if ( (qword_180913C94 & 0x40000000) != 0 )
+      {
+        v9 = (char *)&qword_180913C94 + 4;
+      }
+      else
+      {
+        v9 = (char *)&unk_180528AFF;
+        if ( (qword_180913C94 & 0x3FFFFFFF) != 0 )
+          v9 = *(char **)((char *)&qword_180913C94 + 4);
+      }
+      v77 = (__int64 (__fastcall *)())CNetworkClientService_OnClientAdvanceTick;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v8, 0, (__int64)v9);
+      if ( dword_180913D98 > *v6 )
+      {
+        sub_180427558(&dword_180913D98, v10, v11, v12);
+        if ( dword_180913D98 == -1 )
+        {
+          sub_1800241C0(&unk_180913DA0, "%s::%s", "CNetworkClientService", "OnClientPostAdvanceTick");
+          atexit(sub_18047DE60);
+          sub_1804274EC(&dword_180913D98);
+        }
+      }
+      unknown_libname_12(&v78, &unk_18060F6F0);
+      v13 = v78;
+      if ( (qword_180913DA4 & 0x40000000) != 0 )
+      {
+        v14 = (char *)&qword_180913DA4 + 4;
+      }
+      else
+      {
+        v14 = (char *)&unk_180528AFF;
+        if ( (qword_180913DA4 & 0x3FFFFFFF) != 0 )
+          v14 = *(char **)((char *)&qword_180913DA4 + 4);
+      }
+      v77 = (__int64 (__fastcall *)())CNetworkClientService_OnClientPostAdvanceTick;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v13, 0, (__int64)v14);
+      if ( dword_180913EA8 > *v6 )
+      {
+        sub_180427558(&dword_180913EA8, v15, v16, v17);
+        if ( dword_180913EA8 == -1 )
+        {
+          sub_1800241C0(&unk_180913EB0, "%s::%s", "CNetworkClientService", "OnClientProcessGameInput");
+          atexit(sub_18047DE50);
+          sub_1804274EC(&dword_180913EA8);
+        }
+      }
+      unknown_libname_12(&v78, &unk_18060FD80);
+      v18 = v78;
+      if ( (qword_180913EB4 & 0x40000000) != 0 )
+      {
+        v19 = (char *)&qword_180913EB4 + 4;
+      }
+      else
+      {
+        v19 = (char *)&unk_180528AFF;
+        if ( (qword_180913EB4 & 0x3FFFFFFF) != 0 )
+          v19 = *(char **)((char *)&qword_180913EB4 + 4);
+      }
+      v77 = (__int64 (__fastcall *)())CNetworkClientService_OnClientProcessGameInput;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v18, 0, (__int64)v19);
+      if ( dword_180913FB8 > *v6 )
+      {
+        sub_180427558(&dword_180913FB8, v20, v21, v22);
+        if ( dword_180913FB8 == -1 )
+        {
+          sub_1800241C0(&unk_180913FC0, "%s::%s", "CNetworkClientService", "OnClientPollNetworking");
+          atexit(sub_18047DE40);
+          sub_1804274EC(&dword_180913FB8);
+        }
+      }
+      unknown_libname_12(&v78, &unk_18060F760);
+      v23 = v78;
+      if ( (qword_180913FC4 & 0x40000000) != 0 )
+      {
+        v24 = (char *)&qword_180913FC4 + 4;
+      }
+      else
+      {
+        v24 = (char *)&unk_180528AFF;
+        if ( (qword_180913FC4 & 0x3FFFFFFF) != 0 )
+          v24 = *(char **)((char *)&qword_180913FC4 + 4);
+      }
+      v77 = CNetworkClientService_OnClientPollNetworking;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v23, 0, (__int64)v24);
+      if ( dword_1809140C8 > *v6 )
+      {
+        sub_180427558(&dword_1809140C8, v25, v26, v27);
+        if ( dword_1809140C8 == -1 )
+        {
+          sub_1800241C0(&unk_1809140D0, "%s::%s", "CNetworkClientService", "OnClientProcessNetworking");
+          atexit(sub_18047DE30);
+          sub_1804274EC(&dword_1809140C8);
+        }
+      }
+      unknown_libname_12(&v78, &unk_18060F7D0);
+      v28 = v78;
+      if ( (qword_1809140D4 & 0x40000000) != 0 )
+      {
+        v29 = (char *)&qword_1809140D4 + 4;
+      }
+      else
+      {
+        v29 = (char *)&unk_180528AFF;
+        if ( (qword_1809140D4 & 0x3FFFFFFF) != 0 )
+          v29 = *(char **)((char *)&qword_1809140D4 + 4);
+      }
+      v77 = CNetworkClientService_OnClientProcessNetworking;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v28, 0, (__int64)v29);
+      if ( dword_1809141D8 > *v6 )
+      {
+        sub_180427558(&dword_1809141D8, v30, v31, v32);
+        if ( dword_1809141D8 == -1 )
+        {
+          sub_1800241C0(&unk_1809141E0, "%s::%s", "CNetworkClientService", "OnClientSimulate");
+          atexit(sub_18047DE20);
+          sub_1804274EC(&dword_1809141D8);
+        }
+      }
+      unknown_libname_12(&v78, &unk_18060F8B0);
+      v33 = v78;
+      if ( (qword_1809141E4 & 0x40000000) != 0 )
+      {
+        v34 = (char *)&qword_1809141E4 + 4;
+      }
+      else
+      {
+        v34 = (char *)&unk_180528AFF;
+        if ( (qword_1809141E4 & 0x3FFFFFFF) != 0 )
+          v34 = *(char **)((char *)&qword_1809141E4 + 4);
+      }
+      v77 = CNetworkClientService_OnClientSimulate;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v33, 0, (__int64)v34);
+      if ( dword_1809142E8 > *v6 )
+      {
+        sub_180427558(&dword_1809142E8, v35, v36, v37);
+        if ( dword_1809142E8 == -1 )
+        {
+          sub_1800241C0(&unk_1809142F0, "%s::%s", "CNetworkClientService", "OnClientPauseSimulate");
+          atexit(sub_18047DE10);
+          sub_1804274EC(&dword_1809142E8);
+        }
+      }
+      unknown_libname_12(&v78, &unk_18060FBC0);
+      v38 = v78;
+      if ( (qword_1809142F4 & 0x40000000) != 0 )
+      {
+        v39 = (char *)&qword_1809142F4 + 4;
+      }
+      else
+      {
+        v39 = (char *)&unk_180528AFF;
+        if ( (qword_1809142F4 & 0x3FFFFFFF) != 0 )
+          v39 = *(char **)((char *)&qword_1809142F4 + 4);
+      }
+      v77 = CNetworkClientService_OnClientPauseSimulate;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v38, 0, (__int64)v39);
+      if ( dword_1809143F8 > *v6 )
+      {
+        sub_180427558(&dword_1809143F8, v40, v41, v42);
+        if ( dword_1809143F8 == -1 )
+        {
+          sub_1800241C0(&unk_180914400, "%s::%s", "CNetworkClientService", "OnClientFrameSimulate");
+          atexit(sub_18047DE00);
+          sub_1804274EC(&dword_1809143F8);
+        }
+      }
+      unknown_libname_12(&v78, &unk_180610090);
+      v43 = v78;
+      if ( (qword_180914404 & 0x40000000) != 0 )
+      {
+        v44 = (char *)&qword_180914404 + 4;
+      }
+      else
+      {
+        v44 = (char *)&unk_180528AFF;
+        if ( (qword_180914404 & 0x3FFFFFFF) != 0 )
+          v44 = *(char **)((char *)&qword_180914404 + 4);
+      }
+      v77 = CNetworkClientService_OnClientFrameSimulate;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v43, 0, (__int64)v44);
+      if ( dword_180914508 > *v6 )
+      {
+        sub_180427558(&dword_180914508, v45, v46, v47);
+        if ( dword_180914508 == -1 )
+        {
+          sub_1800241C0(&unk_180914510, "%s::%s", "CNetworkClientService", "OnSimpleLoopFrameUpdate");
+          atexit(sub_18047DDF0);
+          sub_1804274EC(&dword_180914508);
+        }
+      }
+      unknown_libname_12(&v78, &unk_180610100);
+      v48 = v78;
+      if ( (qword_180914514 & 0x40000000) != 0 )
+      {
+        v49 = (char *)&qword_180914514 + 4;
+      }
+      else
+      {
+        v49 = (char *)&unk_180528AFF;
+        if ( (qword_180914514 & 0x3FFFFFFF) != 0 )
+          v49 = *(char **)((char *)&qword_180914514 + 4);
+      }
+      v77 = CNetworkClientService_OnSimpleLoopFrameUpdate;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v48, 0, (__int64)v49);
+      if ( dword_180914618 > *v6 )
+      {
+        sub_180427558(&dword_180914618, v50, v51, v52);
+        if ( dword_180914618 == -1 )
+        {
+          sub_1800241C0(&unk_180914620, "%s::%s", "CNetworkClientService", "OnFrameBoundary");
+          atexit(sub_18047DDE0);
+          sub_1804274EC(&dword_180914618);
+        }
+      }
+      unknown_libname_12(&v78, &unk_180610560);
+      v53 = v78;
+      if ( (qword_180914624 & 0x40000000) != 0 )
+      {
+        v54 = (char *)&qword_180914624 + 4;
+      }
+      else
+      {
+        v54 = (char *)&unk_180528AFF;
+        if ( (qword_180914624 & 0x3FFFFFFF) != 0 )
+          v54 = *(char **)((char *)&qword_180914624 + 4);
+      }
+      v77 = CNetworkClientService_OnFrameBoundary;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v53, 0, (__int64)v54);
+      if ( dword_180914728 > *v6 )
+      {
+        sub_180427558(&dword_180914728, v55, v56, v57);
+        if ( dword_180914728 == -1 )
+        {
+          sub_1800241C0(&unk_180914730, "%s::%s", "CNetworkClientService", "OnServerPostSimulate");
+          atexit(sub_18047DDD0);
+          sub_1804274EC(&dword_180914728);
+        }
+      }
+      unknown_libname_12(&v78, &unk_18060FAE0);
+      v58 = v78;
+      if ( (qword_180914734 & 0x40000000) != 0 )
+      {
+        v59 = (char *)&qword_180914734 + 4;
+      }
+      else
+      {
+        v59 = (char *)&unk_180528AFF;
+        if ( (qword_180914734 & 0x3FFFFFFF) != 0 )
+          v59 = *(char **)((char *)&qword_180914734 + 4);
+      }
+      v77 = CNetworkClientService_OnServerPostSimulate;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v58, 9999, (__int64)v59);
+      if ( dword_180914838 > *v6 )
+      {
+        sub_180427558(&dword_180914838, v60, v61, v62);
+        if ( dword_180914838 == -1 )
+        {
+          sub_1800241C0(&unk_180914840, "%s::%s", "CNetworkClientService", "OnServerBeginAsyncPostTickWork");
+          atexit(sub_18047DDC0);
+          sub_1804274EC(&dword_180914838);
+        }
+      }
+      unknown_libname_12(&v78, &unk_1806103A0);
+      v63 = v78;
+      if ( (qword_180914844 & 0x40000000) != 0 )
+      {
+        v7 = (char *)&qword_180914844 + 4;
+      }
+      else if ( (qword_180914844 & 0x3FFFFFFF) != 0 )
+      {
+        v7 = *(char **)((char *)&qword_180914844 + 4);
+      }
+      v77 = CNetworkClientService_OnServerBeginAsyncPostTickWork;
+      v76 = sub_180043900(a2);
+      RegisterEventListener_Abstract(a1, (__int64)&v76, 1u, 1u, v63, 9999, (__int64)v7);
+    }
+  }

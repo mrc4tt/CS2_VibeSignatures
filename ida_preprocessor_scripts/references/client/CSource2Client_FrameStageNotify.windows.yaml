@@ -1,0 +1,523 @@
+func_name: CSource2Client_FrameStageNotify
+func_va: '0x180b10ff0'
+disasm_code: |-
+  .text:0000000180B10FF0                 mov     [rsp+arg_10], rbx
+  .text:0000000180B10FF5                 mov     [rsp+arg_18], rbp
+  .text:0000000180B10FFA                 push    rdi
+  .text:0000000180B10FFB                 sub     rsp, 40h
+  .text:0000000180B10FFF                 mov     rdi, rcx
+  .text:0000000180B11002                 xor     ebp, ebp
+  .text:0000000180B11004                 mov     rcx, [rcx+440h]
+  .text:0000000180B1100B                 mov     ebx, edx
+  .text:0000000180B1100D                 test    rcx, rcx
+  .text:0000000180B11010                 jz      short loc_180B11031
+  .text:0000000180B11012                 call    cs:?WaitOrImmediatelyExecute@CThreadedJob@@QEAAXXZ; CThreadedJob::WaitOrImmediatelyExecute(void)
+  .text:0000000180B11018                 mov     rcx, [rdi+440h]
+  .text:0000000180B1101F                 test    rcx, rcx
+  .text:0000000180B11022                 jz      short loc_180B11031
+  .text:0000000180B11024                 mov     rax, [rcx]
+  .text:0000000180B11027                 call    qword ptr [rax+10h]
+  .text:0000000180B1102A                 mov     [rdi+440h], rbp
+  .text:0000000180B11031                 cmp     cs:dword_182090D70, ebx
+  .text:0000000180B11037                 jz      short loc_180B1103F
+  .text:0000000180B11039                 mov     cs:dword_182090D70, ebx
+  .text:0000000180B1103F                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B11046                 mov     rax, [rcx]
+  .text:0000000180B11049                 call    qword ptr [rax+2B0h]
+  .text:0000000180B1104F                 ; switch 10 cases
+  .text:0000000180B1104F                 add     ebx, 0FFFFFFFDh; switch 10 cases
+  .text:0000000180B11052                 mov     cs:byte_1823A0830, al
+  .text:0000000180B11058                 cmp     ebx, 9
+  .text:0000000180B1105B                 ja      def_180B1107A; jumptable 0000000180B1107A default case
+  .text:0000000180B11061                 lea     rdx, cs:180000000h
+  .text:0000000180B11068                 movsxd  rax, ebx
+  .text:0000000180B1106B                 movaps  [rsp+48h+var_18], xmm6
+  .text:0000000180B11070                 mov     ecx, ds:(jpt_180B1107A - 180000000h)[rdx+rax*4]
+  .text:0000000180B11077                 add     rcx, rdx
+  .text:0000000180B1107A                 ; switch jump
+  .text:0000000180B1107A                 jmp     rcx; switch jump
+  .text:0000000180B1107C                 ; jumptable 0000000180B1107A case 12
+  .text:0000000180B1107C                 mov     ecx, 4; jumptable 0000000180B1107A case 12
+  .text:0000000180B11081                 call    sub_180AC0AC0
+  .text:0000000180B11086                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1108D                 lea     rdx, aCBuildworkerCs_56; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180B11094                 xor     r9d, r9d
+  .text:0000000180B11097                 mov     r8d, 0BB7h
+  .text:0000000180B1109D                 mov     rax, [rcx]
+  .text:0000000180B110A0                 call    qword ptr [rax+320h]
+  .text:0000000180B110A6                 call    OnRenderStart
+  .text:0000000180B110AB                 xor     ecx, ecx
+  .text:0000000180B110AD                 call    sub_180AC0AC0
+  .text:0000000180B110B2                 cmp     cs:byte_1823A0830, bpl
+  .text:0000000180B110B9                 jnz     short loc_180B110C8
+  .text:0000000180B110BB                 call    sub_1804EACA0
+  .text:0000000180B110C0                 mov     rcx, rax
+  .text:0000000180B110C3                 call    sub_1804EC880
+  .text:0000000180B110C8                 call    sub_1804EACA0
+  .text:0000000180B110CD                 mov     rcx, rax
+  .text:0000000180B110D0                 call    sub_1804ECB60
+  .text:0000000180B110D5                 jmp     loc_180B11550; jumptable 0000000180B1107A case 11
+  .text:0000000180B110DA                 ; jumptable 0000000180B1107A case 4
+  .text:0000000180B110DA                 mov     rax, cs:gpGlobals; jumptable 0000000180B1107A case 4
+  .text:0000000180B110E1                 mov     ecx, [rax+30h]
+  .text:0000000180B110E4                 mov     [rdi+448h], ecx
+  .text:0000000180B110EA                 mov     ecx, 1
+  .text:0000000180B110EF                 mov     rax, cs:gpGlobals
+  .text:0000000180B110F6                 movss   xmm1, dword ptr [rax+30h]
+  .text:0000000180B110FB                 call    C_BaseEntity_SetInterpolationPhase
+  .text:0000000180B11100                 xor     ecx, ecx
+  .text:0000000180B11102                 call    sub_180A91F70
+  .text:0000000180B11107                 call    cs:ThreadInMainThread
+  .text:0000000180B1110D                 test    al, al
+  .text:0000000180B1110F                 jz      short loc_180B11118
+  .text:0000000180B11111                 mov     cs:byte_18208D450, bpl
+  .text:0000000180B11118                 mov     ecx, 1
+  .text:0000000180B1111D                 call    sub_180AC0AC0
+  .text:0000000180B11122                 mov     rcx, cs:g_pEntitySystem
+  .text:0000000180B11129                 mov     edx, 1
+  .text:0000000180B1112E                 mov     rax, [rcx]
+  .text:0000000180B11131                 call    qword ptr [rax+60h]
+  .text:0000000180B11134                 xor     ecx, ecx
+  .text:0000000180B11136                 call    sub_180AC0AC0
+  .text:0000000180B1113B                 jmp     loc_180B11550; jumptable 0000000180B1107A case 11
+  .text:0000000180B11140                 ; jumptable 0000000180B1107A case 9
+  .text:0000000180B11140                 mov     rax, cs:gpGlobals; jumptable 0000000180B1107A case 9
+  .text:0000000180B11147                 mov     ecx, 1
+  .text:0000000180B1114C                 movss   xmm1, dword ptr [rax+30h]
+  .text:0000000180B11151                 call    C_BaseEntity_SetInterpolationPhase
+  .text:0000000180B11156                 jmp     loc_180B11550; jumptable 0000000180B1107A case 11
+  .text:0000000180B1115B                 ; jumptable 0000000180B1107A case 10
+  .text:0000000180B1115B                 mov     edx, 0FFFFFFFFh; jumptable 0000000180B1107A case 10
+  .text:0000000180B11160                 lea     rcx, unk_18239F600
+  .text:0000000180B11167                 call    sub_181862110
+  .text:0000000180B1116C                 test    rax, rax
+  .text:0000000180B1116F                 jnz     short loc_180B1117C
+  .text:0000000180B11171                 mov     rax, cs:qword_18239F608
+  .text:0000000180B11178                 mov     rax, [rax+8]
+  .text:0000000180B1117C                 cmp     [rax], bpl
+  .text:0000000180B1117F                 jz      loc_180B11550; jumptable 0000000180B1107A case 11
+  .text:0000000180B11185                 mov     ecx, cs:dword_18202B898
+  .text:0000000180B1118B                 mov     [rsp+48h+arg_0], rsi
+  .text:0000000180B11190                 test    ecx, ecx
+  .text:0000000180B11192                 jns     short loc_180B11202
+  .text:0000000180B11194                 mov     ecx, cs:TlsIndex
+  .text:0000000180B1119A                 lea     rax, ??_7CDontUseThisGameSystem@@6B@; const CDontUseThisGameSystem::`vftable'
+  .text:0000000180B111A1                 mov     [rsp+48h+var_28], rax
+  .text:0000000180B111A6                 mov     rax, gs:58h
+  .text:0000000180B111AF                 mov     edx, 68h ; 'h'
+  .text:0000000180B111B4                 mov     [rsp+48h+var_20], rbp
+  .text:0000000180B111B9                 mov     rax, [rax+rcx*8]
+  .text:0000000180B111BD                 mov     eax, [rdx+rax]
+  .text:0000000180B111C0                 cmp     cs:dword_18221A358, eax
+  .text:0000000180B111C6                 jg      loc_180B11565
+  .text:0000000180B111CC                 mov     rax, cs:qword_18221A350
+  .text:0000000180B111D3                 lea     rcx, [rsp+48h+var_28]
+  .text:0000000180B111D8                 mov     rbx, [rsp+48h+var_28]
+  .text:0000000180B111DD                 mov     [rsp+48h+var_28], rax
+  .text:0000000180B111E2                 call    sub_18034647C
+  .text:0000000180B111E7                 lea     rcx, [rsp+48h+var_28]
+  .text:0000000180B111EC                 mov     [rsp+48h+var_28], rbx
+  .text:0000000180B111F1                 mov     cs:dword_18202B898, eax
+  .text:0000000180B111F7                 call    sub_180345AC0
+  .text:0000000180B111FC                 mov     ecx, cs:dword_18202B898
+  .text:0000000180B11202                 lea     r8, [rsp+48h+arg_8]
+  .text:0000000180B11207                 lea     rdx, sub_18034647C
+  .text:0000000180B1120E                 call    sub_180350550
+  .text:0000000180B11213                 mov     rcx, cs:g_pNetworkClientService
+  .text:0000000180B1121A                 mov     rax, [rcx]
+  .text:0000000180B1121D                 call    qword ptr [rax+0B8h]
+  .text:0000000180B11223                 mov     rcx, rax
+  .text:0000000180B11226                 mov     rdx, [rax]
+  .text:0000000180B11229                 call    qword ptr [rdx+40h]
+  .text:0000000180B1122C                 mov     ecx, 58h ; 'X'
+  .text:0000000180B11231                 movd    xmm0, eax
+  .text:0000000180B11235                 mov     rax, cs:g_pThreadPool
+  .text:0000000180B1123C                 cvtdq2ps xmm0, xmm0
+  .text:0000000180B1123F                 mov     rsi, [rax]
+  .text:0000000180B11242                 mulss   xmm0, cs:dword_1819713C8
+  .text:0000000180B1124A                 movaps  xmm6, xmm0
+  .text:0000000180B1124D                 call    sub_180BCB090
+  .text:0000000180B11252                 mov     rbx, rax
+  .text:0000000180B11255                 test    rax, rax
+  .text:0000000180B11258                 jz      short loc_180B112AD
+  .text:0000000180B1125A                 mov     dword ptr [rax+8], 1
+  .text:0000000180B11261                 lea     rcx, [rax+30h]
+  .text:0000000180B11265                 mov     dword ptr [rax+10h], 4
+  .text:0000000180B1126C                 lea     rdx, aClientRestoreS; "Client Restore Server State"
+  .text:0000000180B11273                 mov     [rax+20h], rbp
+  .text:0000000180B11277                 mov     r8d, 20h ; ' '
+  .text:0000000180B1127D                 mov     [rax+28h], rbp
+  .text:0000000180B11281                 mov     word ptr [rax+15h], 2
+  .text:0000000180B11287                 mov     [rax+18h], rbp
+  .text:0000000180B1128B                 lea     rax, ??_7CLambdaJob@?1???$QueueJobWithFlags@V_lambda_1_@?O@??FrameStageNotify@CSource2Client@@UEAAXW4ClientFrameStage_t@@@Z@@IThreadPool@@QEAA?AV?$CSmartPtr@VCThreadedJob@@VCRefCountAccessor@@@@PEBDW4JobPriority_t@@I$$QEAV_lambda_1_@?O@??FrameStageNotify@CSource2Client@@UEAAXW4ClientFrameStage_t@@@Z@@Z@6B@; const `IThreadPool::QueueJobWithFlags<`CSource2Client::FrameStageNotify(ClientFrameStage_t)'::`14'::_lambda_1_>(char const *,JobPriority_t,uint,`CSource2Client::FrameStageNotify(ClientFrameStage_t)'::`14'::_lambda_1_ &&)'::`2'::CLambdaJob::`vftable'
+  .text:0000000180B11292                 mov     [rcx], bpl
+  .text:0000000180B11295                 mov     [rbx], rax
+  .text:0000000180B11298                 movss   dword ptr [rbx+50h], xmm6
+  .text:0000000180B1129D                 mov     byte ptr [rbx+14h], 2
+  .text:0000000180B112A1                 call    cs:_V_strncpy
+  .text:0000000180B112A7                 mov     byte ptr [rbx+16h], 1
+  .text:0000000180B112AB                 jmp     short loc_180B112B0
+  .text:0000000180B112AD                 mov     rbx, rbp
+  .text:0000000180B112B0                 mov     [rbx+18h], rsi
+  .text:0000000180B112B4                 mov     rdx, rbx
+  .text:0000000180B112B7                 mov     rax, [rsi]
+  .text:0000000180B112BA                 mov     rcx, rsi
+  .text:0000000180B112BD                 call    qword ptr [rax+80h]
+  .text:0000000180B112C3                 mov     rcx, [rdi+440h]
+  .text:0000000180B112CA                 mov     rsi, [rsp+48h+arg_0]
+  .text:0000000180B112CF                 test    rcx, rcx
+  .text:0000000180B112D2                 jz      short loc_180B112DA
+  .text:0000000180B112D4                 mov     rax, [rcx]
+  .text:0000000180B112D7                 call    qword ptr [rax+10h]
+  .text:0000000180B112DA                 mov     [rdi+440h], rbx
+  .text:0000000180B112E1                 jmp     loc_180B11550; jumptable 0000000180B1107A case 11
+  .text:0000000180B112E6                 ; jumptable 0000000180B1107A case 5
+  .text:0000000180B112E6                 mov     r9, cs:gpGlobals; jumptable 0000000180B1107A case 5
+  .text:0000000180B112ED                 lea     rdx, aFramenetupdate; "FrameNetUpdate(%.3f %d)"
+  .text:0000000180B112F4                 mov     rcx, [rdi+430h]
+  .text:0000000180B112FB                 movss   xmm2, dword ptr [r9+30h]
+  .text:0000000180B11301                 mov     r9d, [r9+44h]
+  .text:0000000180B11305                 cvtps2pd xmm2, xmm2
+  .text:0000000180B11308                 movq    r8, xmm2
+  .text:0000000180B1130D                 call    cs:?Format@CUtlString@@QEAAHPEBDZZ; CUtlString::Format(char const *,...)
+  .text:0000000180B11313                 mov     rdx, [rdi+430h]
+  .text:0000000180B1131A                 mov     rcx, cs:off_18205ADB0
+  .text:0000000180B11321                 call    sub_18051A550
+  .text:0000000180B11326                 cmp     cs:qword_18238D530, rbp
+  .text:0000000180B1132D                 jz      short loc_180B1137A
+  .text:0000000180B1132F                 mov     edx, 0FFFFFFFFh
+  .text:0000000180B11334                 lea     rcx, unk_182397E20
+  .text:0000000180B1133B                 xorps   xmm6, xmm6
+  .text:0000000180B1133E                 call    sub_181862110
+  .text:0000000180B11343                 test    rax, rax
+  .text:0000000180B11346                 jnz     short loc_180B11353
+  .text:0000000180B11348                 mov     rax, cs:qword_182397E28
+  .text:0000000180B1134F                 mov     rax, [rax+8]
+  .text:0000000180B11353                 cmp     [rax], ebp
+  .text:0000000180B11355                 jle     short loc_180B1136B
+  .text:0000000180B11357                 mov     edx, 0FFFFFFFFh
+  .text:0000000180B1135C                 lea     rcx, unk_18239F658
+  .text:0000000180B11363                 call    sub_180165EE0
+  .text:0000000180B11368                 movaps  xmm6, xmm0
+  .text:0000000180B1136B                 mov     rcx, cs:qword_18238D530
+  .text:0000000180B11372                 movaps  xmm1, xmm6
+  .text:0000000180B11375                 call    sub_1814FA7F0
+  .text:0000000180B1137A                 mov     rcx, cs:g_pSource2ClientPrediction
+  .text:0000000180B11381                 mov     rax, [rcx]
+  .text:0000000180B11384                 call    qword ptr [rax+60h]
+  .text:0000000180B11387                 mov     rax, cs:gpGlobals
+  .text:0000000180B1138E                 mov     ecx, 1
+  .text:0000000180B11393                 movss   xmm1, dword ptr [rax+30h]
+  .text:0000000180B11398                 call    C_BaseEntity_SetInterpolationPhase
+  .text:0000000180B1139D                 mov     ecx, 3
+  .text:0000000180B113A2                 call    sub_180AC0AC0
+  .text:0000000180B113A7                 mov     rcx, cs:g_pSource2ClientPrediction
+  .text:0000000180B113AE                 mov     ebx, eax
+  .text:0000000180B113B0                 mov     rdx, [rcx]
+  .text:0000000180B113B3                 call    qword ptr [rdx+68h]
+  .text:0000000180B113B6                 mov     ecx, ebx
+  .text:0000000180B113B8                 call    sub_180AC0AC0
+  .text:0000000180B113BD                 mov     rcx, rdi
+  .text:0000000180B113C0                 call    sub_180B207E0
+  .text:0000000180B113C5                 mov     rcx, cs:g_pEntitySystem
+  .text:0000000180B113CC                 call    sub_1814F6710
+  .text:0000000180B113D1                 mov     rcx, cs:qword_18238D530
+  .text:0000000180B113D8                 call    sub_180985030
+  .text:0000000180B113DD                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B113E4                 mov     rax, [rcx]
+  .text:0000000180B113E7                 call    qword ptr [rax+128h]
+  .text:0000000180B113ED                 mov     rcx, cs:qword_1822ACE48
+  .text:0000000180B113F4                 mov     edx, eax
+  .text:0000000180B113F6                 call    sub_1803C07F0
+  .text:0000000180B113FB                 xor     ecx, ecx
+  .text:0000000180B113FD                 call    sub_180A91F70
+  .text:0000000180B11402                 call    cs:ThreadInMainThread
+  .text:0000000180B11408                 test    al, al
+  .text:0000000180B1140A                 jz      short loc_180B11413
+  .text:0000000180B1140C                 mov     cs:byte_18208D450, bpl
+  .text:0000000180B11413                 mov     ecx, 1
+  .text:0000000180B11418                 call    sub_180AC0AC0
+  .text:0000000180B1141D                 jmp     loc_180B11550; jumptable 0000000180B1107A case 11
+  .text:0000000180B11422                 ; jumptable 0000000180B1107A case 8
+  .text:0000000180B11422                 mov     cl, 1; jumptable 0000000180B1107A case 8
+  .text:0000000180B11424                 call    sub_180A91F70
+  .text:0000000180B11429                 call    cs:ThreadInMainThread
+  .text:0000000180B1142F                 test    al, al
+  .text:0000000180B11431                 jz      short loc_180B1143A
+  .text:0000000180B11433                 mov     cs:byte_18208D450, 1
+  .text:0000000180B1143A                 mov     ecx, 2
+  .text:0000000180B1143F                 call    sub_180AC0AC0
+  .text:0000000180B11444                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B1144B                 mov     rax, [rcx]
+  .text:0000000180B1144E                 call    qword ptr [rax+128h]
+  .text:0000000180B11454                 mov     rcx, cs:qword_1822ACE48
+  .text:0000000180B1145B                 mov     edx, eax
+  .text:0000000180B1145D                 call    sub_18039FF50
+  .text:0000000180B11462                 xor     ecx, ecx
+  .text:0000000180B11464                 call    sub_180AC0AC0
+  .text:0000000180B11469                 mov     rdx, [rdi+430h]
+  .text:0000000180B11470                 mov     rcx, cs:off_18205ADB0
+  .text:0000000180B11477                 call    sub_18050E9E0
+  .text:0000000180B1147C                 jmp     loc_180B11550; jumptable 0000000180B1107A case 11
+  .text:0000000180B11481                 ; jumptable 0000000180B1107A case 6
+  .text:0000000180B11481                 mov     r9, cs:gpGlobals; jumptable 0000000180B1107A case 6
+  .text:0000000180B11488                 lea     rdx, aFramepostdatau; "FramePostDataUpdate(%.3f %d)"
+  .text:0000000180B1148F                 mov     rcx, [rdi+438h]
+  .text:0000000180B11496                 movss   xmm2, dword ptr [r9+30h]
+  .text:0000000180B1149C                 mov     r9d, [r9+44h]
+  .text:0000000180B114A0                 cvtps2pd xmm2, xmm2
+  .text:0000000180B114A3                 movq    r8, xmm2
+  .text:0000000180B114A8                 call    cs:?Format@CUtlString@@QEAAHPEBDZZ; CUtlString::Format(char const *,...)
+  .text:0000000180B114AE                 mov     rdx, [rdi+438h]
+  .text:0000000180B114B5                 mov     rcx, cs:off_18205ADB0
+  .text:0000000180B114BC                 call    sub_18051A550
+  .text:0000000180B114C1                 jmp     loc_180B11550; jumptable 0000000180B1107A case 11
+  .text:0000000180B114C6                 ; jumptable 0000000180B1107A case 7
+  .text:0000000180B114C6                 call    sub_1804EACA0; jumptable 0000000180B1107A case 7
+  .text:0000000180B114CB                 mov     rcx, rax
+  .text:0000000180B114CE                 call    sub_1804EB840
+  .text:0000000180B114D3                 mov     rdx, [rdi+438h]
+  .text:0000000180B114DA                 mov     rcx, cs:off_18205ADB0
+  .text:0000000180B114E1                 call    sub_18050E9E0
+  .text:0000000180B114E6                 mov     rcx, cs:off_182097E28
+  .text:0000000180B114ED                 call    sub_180B842C0
+  .text:0000000180B114F2                 mov     rcx, cs:qword_182219A88
+  .text:0000000180B114F9                 call    sub_18036EB90
+  .text:0000000180B114FE                 mov     rcx, cs:qword_1823A0840
+  .text:0000000180B11505                 mov     rax, [rcx]
+  .text:0000000180B11508                 call    qword ptr [rax+90h]
+  .text:0000000180B1150E                 mov     ecx, 1
+  .text:0000000180B11513                 call    sub_180AA60C0
+  .text:0000000180B11518                 jmp     short loc_180B11550; jumptable 0000000180B1107A case 11
+  .text:0000000180B1151A                 ; jumptable 0000000180B1107A case 3
+  .text:0000000180B1151A                 mov     rax, cs:gpGlobals; jumptable 0000000180B1107A case 3
+  .text:0000000180B11521                 mov     ecx, 1
+  .text:0000000180B11526                 movss   xmm1, dword ptr [rax+30h]
+  .text:0000000180B1152B                 call    C_BaseEntity_SetInterpolationPhase
+  .text:0000000180B11530                 mov     rcx, cs:g_pEngineClient
+  .text:0000000180B11537                 lea     rdx, aCBuildworkerCs_56; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180B1153E                 xor     r9d, r9d
+  .text:0000000180B11541                 mov     r8d, 0C57h
+  .text:0000000180B11547                 mov     rax, [rcx]
+  .text:0000000180B1154A                 call    qword ptr [rax+320h]
+  .text:0000000180B11550                 ; jumptable 0000000180B1107A case 11
+  .text:0000000180B11550                 movaps  xmm6, [rsp+48h+var_18]; jumptable 0000000180B1107A case 11
+  .text:0000000180B11555                 ; jumptable 0000000180B1107A default case
+  .text:0000000180B11555                 mov     rbx, [rsp+48h+arg_10]; jumptable 0000000180B1107A default case
+  .text:0000000180B1155A                 mov     rbp, [rsp+48h+arg_18]
+  .text:0000000180B1155F                 add     rsp, 40h
+  .text:0000000180B11563                 pop     rdi
+  .text:0000000180B11564                 retn
+  .text:0000000180B11565                 lea     rcx, dword_18221A358
+  .text:0000000180B1156C                 call    sub_1818ABC88
+  .text:0000000180B11571                 cmp     cs:dword_18221A358, 0FFFFFFFFh
+  .text:0000000180B11578                 jnz     loc_180B111CC
+  .text:0000000180B1157E                 mov     rax, cs:off_18202B998
+  .text:0000000180B11585                 lea     rcx, dword_18221A358
+  .text:0000000180B1158C                 mov     cs:qword_18221A350, rax
+  .text:0000000180B11593                 call    sub_1818ABC1C
+  .text:0000000180B11598                 jmp     loc_180B111CC
+procedure: |-
+  void __fastcall CSource2Client_FrameStageNotify(__int64 a1, int a2)
+  {
+    CThreadedJob *v3; // rcx
+    __int64 v5; // rcx
+    void ***v6; // rax
+    float *v7; // rax
+    __int64 v8; // rdx
+    __int64 v9; // r8
+    _BYTE *v10; // rax
+    __int64 v11; // rcx
+    _QWORD *ThreadLocalStoragePointer; // rax
+    __int64 v13; // rbx
+    int v14; // eax
+    __int64 v15; // rax
+    float v16; // xmm0_4
+    __int64 v17; // rax
+    __int64 v18; // rbx
+    __int64 v19; // rcx
+    int *v20; // rax
+    int v21; // ebx
+    unsigned int v22; // eax
+    unsigned int v23; // eax
+    void ***v24; // rax
+    _QWORD v25[2]; // [rsp+20h] [rbp-28h] BYREF
+    char v26; // [rsp+58h] [rbp+10h] BYREF
+
+    v3 = *(CThreadedJob **)(a1 + 1088);
+    if ( v3 )
+    {
+      CThreadedJob::WaitOrImmediatelyExecute(v3);
+      v5 = *(_QWORD *)(a1 + 1088);
+      if ( v5 )
+      {
+        (*(void (__fastcall **)(__int64))(*(_QWORD *)v5 + 16LL))(v5);
+        *(_QWORD *)(a1 + 1088) = 0;
+      }
+    }
+    if ( dword_182090D70 != a2 )
+      dword_182090D70 = a2;
+    byte_1823A0830 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)g_pEngineClient + 688LL))(g_pEngineClient);
+    switch ( a2 )
+    {
+      case 3:
+        C_BaseEntity_SetInterpolationPhase(1u, *((float *)gpGlobals + 12));
+        (*(void (__fastcall **)(__int64, const char *, __int64, _QWORD))(*(_QWORD *)g_pEngineClient + 800LL))(
+          g_pEngineClient,
+          "C:\\buildworker\\csgo_rel_win64\\build\\src\\game\\client\\cdll_client_int.cpp",
+          3159,
+          0);
+        break;
+      case 4:
+        *(_DWORD *)(a1 + 1096) = *((_DWORD *)gpGlobals + 12);
+        C_BaseEntity_SetInterpolationPhase(1u, *((float *)gpGlobals + 12));
+        sub_180A91F70(0);
+        if ( (unsigned __int8)ThreadInMainThread() )
+          byte_18208D450 = 0;
+        sub_180AC0AC0(1);
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)g_pEntitySystem + 96LL))(g_pEntitySystem, 1);
+        sub_180AC0AC0(0);
+        break;
+      case 5:
+        CUtlString::Format(
+          *(CUtlString **)(a1 + 1072),
+          "FrameNetUpdate(%.3f %d)",
+          *((float *)gpGlobals + 12),
+          *((unsigned int *)gpGlobals + 17));
+        sub_18051A550(off_18205ADB0, *(_QWORD *)(a1 + 1072));
+        if ( qword_18238D530 )
+        {
+          v20 = (int *)sub_181862110(&unk_182397E20, 0xFFFFFFFFLL);
+          if ( !v20 )
+            v20 = *(int **)(qword_182397E28 + 8);
+          if ( *v20 > 0 )
+            sub_180165EE0(&unk_18239F658, 0xFFFFFFFFLL);
+          sub_1814FA7F0(qword_18238D530);
+        }
+        (*(void (__fastcall **)(__int64))(*(_QWORD *)g_pSource2ClientPrediction + 96LL))(g_pSource2ClientPrediction);
+        C_BaseEntity_SetInterpolationPhase(1u, *((float *)gpGlobals + 12));
+        v21 = sub_180AC0AC0(3);
+        (*(void (__fastcall **)(__int64))(*(_QWORD *)g_pSource2ClientPrediction + 104LL))(g_pSource2ClientPrediction);
+        sub_180AC0AC0(v21);
+        sub_180B207E0(a1);
+        sub_1814F6710(g_pEntitySystem);
+        sub_180985030(qword_18238D530);
+        v22 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)g_pEngineClient + 296LL))(g_pEngineClient);
+        sub_1803C07F0(qword_1822ACE48, v22);
+        sub_180A91F70(0);
+        if ( (unsigned __int8)ThreadInMainThread() )
+          byte_18208D450 = 0;
+        sub_180AC0AC0(1);
+        break;
+      case 6:
+        CUtlString::Format(
+          *(CUtlString **)(a1 + 1080),
+          "FramePostDataUpdate(%.3f %d)",
+          *((float *)gpGlobals + 12),
+          *((unsigned int *)gpGlobals + 17));
+        sub_18051A550(off_18205ADB0, *(_QWORD *)(a1 + 1080));
+        break;
+      case 7:
+        v24 = sub_1804EACA0();
+        sub_1804EB840(v24);
+        sub_18050E9E0(off_18205ADB0, *(_QWORD *)(a1 + 1080));
+        sub_180B842C0(off_182097E28);
+        sub_18036EB90(qword_182219A88);
+        (*(void (__fastcall **)(__int64))(*(_QWORD *)qword_1823A0840 + 144LL))(qword_1823A0840);
+        sub_180AA60C0(1);
+        break;
+      case 8:
+        sub_180A91F70(1);
+        if ( (unsigned __int8)ThreadInMainThread() )
+          byte_18208D450 = 1;
+        sub_180AC0AC0(2);
+        v23 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)g_pEngineClient + 296LL))(g_pEngineClient);
+        sub_18039FF50(qword_1822ACE48, v23);
+        sub_180AC0AC0(0);
+        sub_18050E9E0(off_18205ADB0, *(_QWORD *)(a1 + 1072));
+        break;
+      case 9:
+        C_BaseEntity_SetInterpolationPhase(1u, *((float *)gpGlobals + 12));
+        break;
+      case 10:
+        v10 = (_BYTE *)sub_181862110(&unk_18239F600, 0xFFFFFFFFLL);
+        if ( !v10 )
+          v10 = *(_BYTE **)(qword_18239F608 + 8);
+        if ( *v10 )
+        {
+          v11 = (unsigned int)dword_18202B898;
+          if ( dword_18202B898 < 0 )
+          {
+            v25[0] = &CDontUseThisGameSystem::`vftable';
+            ThreadLocalStoragePointer = NtCurrentTeb()->ThreadLocalStoragePointer;
+            v25[1] = 0;
+            if ( dword_18221A358 > *(_DWORD *)(ThreadLocalStoragePointer[TlsIndex] + 104LL) )
+            {
+              sub_1818ABC88(&dword_18221A358);
+              if ( dword_18221A358 == -1 )
+              {
+                qword_18221A350 = (__int64)off_18202B998[0];
+                sub_1818ABC1C(&dword_18221A358);
+              }
+            }
+            v13 = v25[0];
+            v25[0] = qword_18221A350;
+            v14 = sub_18034647C(v25);
+            v25[0] = v13;
+            dword_18202B898 = v14;
+            sub_180345AC0(v25);
+            v11 = (unsigned int)dword_18202B898;
+          }
+          sub_180350550(v11, sub_18034647C, &v26);
+          v15 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)g_pNetworkClientService + 184LL))(g_pNetworkClientService);
+          v16 = (float)(*(int (__fastcall **)(__int64))(*(_QWORD *)v15 + 64LL))(v15) * 0.015625;
+          v17 = sub_180BCB090(88);
+          v18 = v17;
+          if ( v17 )
+          {
+            *(_DWORD *)(v17 + 8) = 1;
+            *(_DWORD *)(v17 + 16) = 4;
+            *(_QWORD *)(v17 + 32) = 0;
+            *(_QWORD *)(v17 + 40) = 0;
+            *(_WORD *)(v17 + 21) = 2;
+            *(_QWORD *)(v17 + 24) = 0;
+            *(_BYTE *)(v17 + 48) = 0;
+            *(_QWORD *)v17 = &`Z::QueueJobWithFlags<`CSource2Client::FrameStageNotify'::`14'::_lambda_1_,EAAXW4ClientFrameStage_t>'::`2'::CLambdaJob::`vftable';
+            *(float *)(v17 + 80) = v16;
+            *(_BYTE *)(v17 + 20) = 2;
+            V_strncpy(v17 + 48, "Client Restore Server State", 32);
+            *(_BYTE *)(v18 + 22) = 1;
+          }
+          else
+          {
+            v18 = 0;
+          }
+          *(_QWORD *)(v18 + 24) = g_pThreadPool;
+          (*(void (__fastcall **)(_QWORD, __int64))(*g_pThreadPool + 128LL))(g_pThreadPool, v18);
+          v19 = *(_QWORD *)(a1 + 1088);
+          if ( v19 )
+            (*(void (__fastcall **)(__int64))(*(_QWORD *)v19 + 16LL))(v19);
+          *(_QWORD *)(a1 + 1088) = v18;
+        }
+        break;
+      case 12:
+        sub_180AC0AC0(4);
+        (*(void (__fastcall **)(__int64, const char *, __int64, _QWORD))(*(_QWORD *)g_pEngineClient + 800LL))(
+          g_pEngineClient,
+          "C:\\buildworker\\csgo_rel_win64\\build\\src\\game\\client\\cdll_client_int.cpp",
+          2999,
+          0);
+        OnRenderStart();
+        sub_180AC0AC0(0);
+        if ( !byte_1823A0830 )
+        {
+          v6 = sub_1804EACA0();
+          sub_1804EC880((__int64)v6);
+        }
+        v7 = (float *)sub_1804EACA0();
+        sub_1804ECB60(v7, v8, v9);
+        break;
+      default:
+        return;
+    }
+  }

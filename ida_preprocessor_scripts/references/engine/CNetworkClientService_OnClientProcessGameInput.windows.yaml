@@ -1,0 +1,88 @@
+func_name: CNetworkClientService_OnClientProcessGameInput
+func_va: '0x1801d2ea0'
+disasm_code: |-
+  .text:00000001801D2EA0                 mov     [rsp+arg_8], rbx
+  .text:00000001801D2EA5                 push    rdi
+  .text:00000001801D2EA6                 sub     rsp, 20h
+  .text:00000001801D2EAA                 mov     rbx, [rcx+0A0h]
+  .text:00000001801D2EB1                 mov     rdi, rdx
+  .text:00000001801D2EB4                 test    rbx, rbx
+  .text:00000001801D2EB7                 jz      loc_1801D2F83
+  .text:00000001801D2EBD                 mov     rax, cs:off_180615950
+  .text:00000001801D2EC4                 lea     rdx, [rsp+28h+arg_0]
+  .text:00000001801D2EC9                 lea     rcx, off_180615950
+  .text:00000001801D2ED0                 call    qword ptr [rax+0E8h]
+  .text:00000001801D2ED6                 mov     eax, [rsp+28h+arg_0]
+  .text:00000001801D2EDA                 nop     word ptr [rax+rax+00h]
+  .text:00000001801D2EE0                 cmp     eax, 0FFFFFFFFh
+  .text:00000001801D2EE3                 jz      loc_1801D2F83
+  .text:00000001801D2EE9                 movsxd  rcx, eax
+  .text:00000001801D2EEC                 lea     rdx, [rcx+rcx*2]
+  .text:00000001801D2EF0                 cmp     qword ptr [rbx+rdx*8+0F0h], 0
+  .text:00000001801D2EF9                 jz      short loc_1801D2F58
+  .text:00000001801D2EFB                 cmp     dword ptr [rbx+230h], 6
+  .text:00000001801D2F02                 jl      short loc_1801D2F58
+  .text:00000001801D2F04                 cmp     byte ptr [rbx+29Dh], 0
+  .text:00000001801D2F0B                 mov     r8, cs:g_pSource2Client
+  .text:00000001801D2F12                 mov     rcx, [r8]
+  .text:00000001801D2F15                 mov     r10, [rcx+0B0h] ; 0B0h = ISource2Client_ProcessGameInput
+  .text:00000001801D2F1C                 jnz     short loc_1801D2F44
+  .text:00000001801D2F1E                 movzx   ecx, cs:byte_180611A84
+  .text:00000001801D2F25                 test    cl, cl
+  .text:00000001801D2F27                 jz      short loc_1801D2F3F
+  .text:00000001801D2F29                 cmp     dword ptr cs:qword_180611A70, 0FFFFFFFFh
+  .text:00000001801D2F30                 jnz     short loc_1801D2F3F
+  .text:00000001801D2F32                 test    cl, cl
+  .text:00000001801D2F34                 jz      short loc_1801D2F3F
+  .text:00000001801D2F36                 cmp     dword ptr cs:qword_180611A7C+4, 0FFFFFFFFh
+  .text:00000001801D2F3D                 jg      short loc_1801D2F44
+  .text:00000001801D2F3F                 xor     r9b, r9b
+  .text:00000001801D2F42                 jmp     short loc_1801D2F47
+  .text:00000001801D2F44                 mov     r9b, 1
+  .text:00000001801D2F47                 movss   xmm2, dword ptr [rdi+2Ch]
+  .text:00000001801D2F4C                 mov     edx, eax
+  .text:00000001801D2F4E                 mov     rcx, r8
+  .text:00000001801D2F51                 call    r10
+  .text:00000001801D2F54                 mov     eax, [rsp+28h+arg_0]
+  .text:00000001801D2F58                 mov     rcx, cs:off_180615950
+  .text:00000001801D2F5F                 lea     rdx, [rsp+28h+arg_10]
+  .text:00000001801D2F64                 mov     r8d, eax
+  .text:00000001801D2F67                 mov     r9, [rcx+0F0h]
+  .text:00000001801D2F6E                 lea     rcx, off_180615950
+  .text:00000001801D2F75                 call    r9
+  .text:00000001801D2F78                 mov     eax, [rax]
+  .text:00000001801D2F7A                 mov     [rsp+28h+arg_0], eax
+  .text:00000001801D2F7E                 jmp     loc_1801D2EE0
+  .text:00000001801D2F83                 mov     rbx, [rsp+28h+arg_8]
+  .text:00000001801D2F88                 add     rsp, 20h
+  .text:00000001801D2F8C                 pop     rdi
+  .text:00000001801D2F8D                 retn
+procedure: |-
+  void __fastcall CNetworkClientService_OnClientProcessGameInput(__int64 a1)
+  {
+    __int64 v1; // rbx
+    unsigned int i; // eax
+    unsigned int v3; // [rsp+30h] [rbp+8h] BYREF
+    char v4; // [rsp+40h] [rbp+18h] BYREF
+
+    v1 = *(_QWORD *)(a1 + 160);
+    if ( v1 )
+    {
+      ((void (__fastcall *)(__int64 (__fastcall ***)(), unsigned int *))off_180615950[29])(&off_180615950, &v3);
+      for ( i = v3; i != -1; v3 = i )
+      {
+        if ( *(_QWORD *)(v1 + 24LL * (int)i + 240) )
+        {
+          if ( *(int *)(v1 + 560) >= 6 )
+          {
+            (*(void (__fastcall **)(__int64, _QWORD))(*(_QWORD *)g_pSource2Client + 176LL))(g_pSource2Client, i);// 176LL = 0xB0 = ISource2Client_ProcessGameInput
+            i = v3;
+          }
+        }
+        i = *(_DWORD *)((__int64 (__fastcall *)(__int64 (__fastcall ***)(), char *, _QWORD))off_180615950[30])(
+                         &off_180615950,
+                         &v4,
+                         i);
+      }
+    }
+  }

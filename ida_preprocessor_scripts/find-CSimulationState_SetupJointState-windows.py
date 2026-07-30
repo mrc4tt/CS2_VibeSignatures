@@ -1,48 +1,51 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CModelState_SetupJointState-windows skill."""
+"""Preprocess script for find-CSimulationState_SetupJointState-windows skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = []
 
 TARGET_STRUCT_MEMBER_NAMES = [
-    "CModelState_m_nTotalTransformCount",
-    "CModelState_m_nBoneCount",
-    "CModelState_m_nAttachmentCount",
+    "CSimulationState_m_nTotalTransformCount",
+    "CSimulationState_m_nBoneCount",
+    "CSimulationState_m_nAttachmentCount",
 ]
 
 LLM_DECOMPILE = [
     {
-        "symbol_name": "CModelState_m_nTotalTransformCount",
+        "symbol_name": "CSimulationState_m_nTotalTransformCount",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
-            "references/client/CModelState_SetupJointState.{platform}.yaml",
+            "references/client/CSimulationState_SetupJointState.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "expected_size": 4,
         "dependency_policy": {
-            "CModelState_SetupJointState.{platform}.yaml": "required",
+            "CSimulationState_SetupJointState.{platform}.yaml": "required",
         },
     },
     {
-        "symbol_name": "CModelState_m_nBoneCount",
+        "symbol_name": "CSimulationState_m_nBoneCount",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
-            "references/client/CModelState_SetupJointState.{platform}.yaml",
+            "references/client/CSimulationState_SetupJointState.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "expected_size": 4,
         "dependency_policy": {
-            "CModelState_SetupJointState.{platform}.yaml": "required",
+            "CSimulationState_SetupJointState.{platform}.yaml": "required",
         },
     },
     {
-        "symbol_name": "CModelState_m_nAttachmentCount",
+        "symbol_name": "CSimulationState_m_nAttachmentCount",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
-            "references/client/CModelState_SetupJointState.{platform}.yaml",
+            "references/client/CSimulationState_SetupJointState.{platform}.yaml",
         ],
         "expected_result_sections": ["found_struct_offset"],
+        "expected_size": 4,
         "dependency_policy": {
-            "CModelState_SetupJointState.{platform}.yaml": "required",
+            "CSimulationState_SetupJointState.{platform}.yaml": "required",
         },
     },
 ]
@@ -50,7 +53,7 @@ LLM_DECOMPILE = [
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CModelState_m_nTotalTransformCount",
+        "CSimulationState_m_nTotalTransformCount",
         [
             "struct_name",
             "member_name",
@@ -61,7 +64,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
         ],
     ),
     (
-        "CModelState_m_nBoneCount",
+        "CSimulationState_m_nBoneCount",
         [
             "struct_name",
             "member_name",
@@ -72,7 +75,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
         ],
     ),
     (
-        "CModelState_m_nAttachmentCount",
+        "CSimulationState_m_nAttachmentCount",
         [
             "struct_name",
             "member_name",

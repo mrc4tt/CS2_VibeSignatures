@@ -1,0 +1,30 @@
+func_name: CSource2Client_SetGlobals
+func_va: '0x180b23e40'
+disasm_code: |-
+  .text:0000000180B23E40                 mov     rcx, cs:gpGlobals; read-only previous value, do not select for gpGlobals found_gv
+  .text:0000000180B23E47                 lea     r8, unk_182090D00
+  .text:0000000180B23E4E                 test    rdx, rdx
+  .text:0000000180B23E51                 lea     rax, GlobalVarsWarningFunc
+  .text:0000000180B23E58                 cmovz   rdx, r8
+  .text:0000000180B23E5C                 mov     cs:gpGlobals, rdx; target gpGlobals write, select this instruction for found_gv
+  .text:0000000180B23E63                 mov     [rdx+28h], rax
+  .text:0000000180B23E67                 xor     eax, eax
+  .text:0000000180B23E69                 cmp     rcx, r8
+  .text:0000000180B23E6C                 cmovnz  rax, rcx
+  .text:0000000180B23E70                 retn
+procedure: |-
+  void *__fastcall SetGlobals(__int64 a1, __int64 a2)
+  {
+    void *v2; // rcx
+    void *result; // rax
+
+    v2 = gpGlobals;                       // read-only previous value, do not select for gpGlobals
+    if ( !a2 )
+      a2 = (__int64)&unk_182090D00;
+    gpGlobals = (void *)a2;               // target gpGlobals write, select this assignment
+    *(_QWORD *)(a2 + 40) = GlobalVarsWarningFunc;
+    result = nullptr;
+    if ( v2 != &unk_182090D00 )
+      return v2;
+    return result;
+  }

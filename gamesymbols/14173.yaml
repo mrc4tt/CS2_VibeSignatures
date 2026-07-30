@@ -73,8 +73,8 @@ binaries:
       path: game/bin/win64/vphysics2.dll
       sha256: 6f5aa8c32e30d5369579f0e18bf97ec72e2076d3c06906efbfcc77f0c4111b80
 config_digest_version: 2
-config_sha256: sha256:d515f6fce90e468930aa82d7d8f003ce7d775ccf657098f71ba16852d942339e
-file_count: 3169
+config_sha256: sha256:9b49b169515e2ec490ffc581b843ec9ab28325fefd2a1a86963ce95e1e0ce83a
+file_count: 3204
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -223,6 +223,23 @@ files:
     func_sig: 40 55 53 57 41 56 41 57 48 8B EC 48 81 EC ?? ?? ?? ??
     func_size: '0x26d'
     func_va: '0x1808f0b70'
+  client/CClientInput_CreateMove.windows.yaml:
+    func_name: CClientInput_CreateMove
+    func_rva: '0xb10270'
+    func_size: '0x109'
+    func_va: '0x180b10270'
+    vfunc_index: 8
+    vfunc_offset: '0x40'
+    vfunc_sig: 48 FF 60 40 CC CC 48 89 5C 24 ?? 48 89 7C 24 ??
+    vfunc_sig_allow_across_function_boundary: true
+    vtable_name: CClientInput
+  client/CClientInput_m_viewangles.windows.yaml:
+    member_name: m_viewangles
+    offset: '0x688'
+    offset_sig: F2 0F 11 86 ?? ?? ?? ?? 89 86 ?? ?? ?? ?? C7 86 ?? ?? ?? ?? ?? ?? ?? ??
+    offset_sig_disp: 0
+    size: 8
+    struct_name: CClientInput
   client/CEntityInstance_PreDataUpdate.linux.yaml:
     func_name: CEntityInstance_PreDataUpdate
     vfunc_index: 19
@@ -1137,33 +1154,6 @@ files:
     func_sig: 48 8B C4 48 89 70 ?? 57 48 81 EC ?? ?? ?? ?? 48 83 3D ?? ?? ?? ?? ??
     func_size: '0x370'
     func_va: '0x180bd1da0'
-  client/CModelState_SetupJointState.windows.yaml:
-    func_name: CModelState_SetupJointState
-    func_rva: '0xa59cc0'
-    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 56 57 41 56 48 83 EC ?? 48 8B F1 33 FF
-    func_size: '0x168'
-    func_va: '0x180a59cc0'
-  client/CModelState_m_nAttachmentCount.windows.yaml:
-    member_name: m_nAttachmentCount
-    offset: '0x18'
-    offset_sig: 89 46 ?? 89 56 ?? 0F 84 ?? ?? ?? ??
-    offset_sig_disp: 0
-    size: 4
-    struct_name: CModelState
-  client/CModelState_m_nBoneCount.windows.yaml:
-    member_name: m_nBoneCount
-    offset: '0x14'
-    offset_sig: 48 89 7E ?? 48 8D 6E ??
-    offset_sig_disp: 0
-    size: 8
-    struct_name: CModelState
-  client/CModelState_m_nTotalTransformCount.windows.yaml:
-    member_name: m_nTotalTransformCount
-    offset: '0x10'
-    offset_sig: 48 8D 6E ?? 89 7E ?? 48 85 DB
-    offset_sig_disp: 0
-    size: 4
-    struct_name: CModelState
   client/CNetworkGameClient_OnSource1Source1LegacyGameEvent.linux.yaml:
     func_name: CNetworkGameClient_OnSource1Source1LegacyGameEvent
     func_rva: '0x16d9d20'
@@ -1320,6 +1310,33 @@ files:
     vtable_size: '0x100'
     vtable_symbol: ??_7CPrediction@@6B@
     vtable_va: '0x181b0e760'
+  client/CSimulationState_SetupJointState.windows.yaml:
+    func_name: CSimulationState_SetupJointState
+    func_rva: '0xa59cc0'
+    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 56 57 41 56 48 83 EC ?? 48 8B F1 33 FF
+    func_size: '0x168'
+    func_va: '0x180a59cc0'
+  client/CSimulationState_m_nAttachmentCount.windows.yaml:
+    member_name: m_nAttachmentCount
+    offset: '0x18'
+    offset_sig: 89 46 ?? 89 56 ?? 0F 84 ?? ?? ?? ??
+    offset_sig_disp: 0
+    size: 4
+    struct_name: CSimulationState
+  client/CSimulationState_m_nBoneCount.windows.yaml:
+    member_name: m_nBoneCount
+    offset: '0x14'
+    offset_sig: 48 89 7E ?? 48 8D 6E ??
+    offset_sig_disp: 0
+    size: 4
+    struct_name: CSimulationState
+  client/CSimulationState_m_nTotalTransformCount.windows.yaml:
+    member_name: m_nTotalTransformCount
+    offset: '0x10'
+    offset_sig: 48 8D 6E ?? 89 7E ?? 48 85 DB
+    offset_sig_disp: 0
+    size: 4
+    struct_name: CSimulationState
   client/CSkeletonInstance_PostDataUpdate.linux.yaml:
     func_name: CSkeletonInstance_PostDataUpdate
     func_rva: '0x17cfe30'
@@ -1338,16 +1355,16 @@ files:
     vfunc_index: 25
     vfunc_offset: '0xc8'
     vtable_name: CSkeletonInstance
-  client/CSkeletonInstance_m_modelState.windows.yaml:
-    member_name: m_modelState
-    offset: '0x1c0'
-    struct_name: CSkeletonInstance
   client/CSkeletonInstance_m_modelState_m_hModel.windows.yaml:
     member_name: m_modelState.m_hModel
     offset: '0x1e0'
     offset_sig: 48 39 8E ?? ?? ?? ?? 75 ??
     offset_sig_disp: 0
     size: 8
+    struct_name: CSkeletonInstance
+  client/CSkeletonInstance_m_modelState_m_simulationState.windows.yaml:
+    member_name: m_modelState.m_simulationState
+    offset: '0x1c0'
     struct_name: CSkeletonInstance
   client/CSkeletonInstance_vtable.linux.yaml:
     vtable_class: CSkeletonInstance
@@ -1449,6 +1466,23 @@ files:
     vfunc_index: 0
     vfunc_offset: '0x0'
     vtable_name: CSource2Client_vtable
+  client/CSource2Client_CreateMove.windows.yaml:
+    func_name: CSource2Client_CreateMove
+    func_rva: '0xb10380'
+    func_size: '0xe'
+    func_va: '0x180b10380'
+    vfunc_index: 16
+    vfunc_offset: '0x80'
+    vtable_name: CSource2Client
+  client/CSource2Client_FrameStageNotify.windows.yaml:
+    func_name: CSource2Client_FrameStageNotify
+    func_rva: '0xb10ff0'
+    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 57 48 83 EC ?? 48 8B F9 33 ED
+    func_size: '0x5d8'
+    func_va: '0x180b10ff0'
+    vfunc_index: 36
+    vfunc_offset: '0x120'
+    vtable_name: CSource2Client
   client/CSource2Client_OnDisconnect.linux.yaml:
     func_name: CSource2Client_OnDisconnect
     func_rva: '0x1899260'
@@ -1467,6 +1501,24 @@ files:
     vfunc_index: 130
     vfunc_offset: '0x410'
     vtable_name: CSource2Client
+  client/CSource2Client_ProcessGameInput.windows.yaml:
+    func_name: CSource2Client_ProcessGameInput
+    func_rva: '0xb200a0'
+    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B 01 8B DA 0F 29 74 24 ??
+    func_size: '0xbc'
+    func_va: '0x180b200a0'
+    vfunc_index: 22
+    vfunc_offset: '0xb0'
+    vtable_name: CSource2Client
+  client/CSource2Client_SetGlobals.windows.yaml:
+    func_name: CSource2Client_SetGlobals
+    func_rva: '0xb23e40'
+    func_sig: 48 8B 0D ?? ?? ?? ?? 4C 8D 05 ?? ?? ?? ?? 48 85 D2
+    func_size: '0x31'
+    func_va: '0x180b23e40'
+    vfunc_index: 11
+    vfunc_offset: '0x58'
+    vtable_name: CSource2Client_vtable
   client/CSource2Client_vtable.linux.yaml:
     vtable_class: CSource2Client
     vtable_entries:
@@ -2205,6 +2257,93 @@ files:
     vtable_size: '0xa8'
     vtable_symbol: ??_7CUserMessage_ExtraUserData@@6B@
     vtable_va: '0x181a3a950'
+  client/CViewRender_OnRenderStart.windows.yaml:
+    func_name: CViewRender_OnRenderStart
+    func_rva: '0xbada10'
+    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 56 57 41 56 48 81 EC ?? ?? ?? ?? 4C 8B F1 48 8D 94 24 ?? ?? ?? ??
+    func_size: '0x1f9'
+    func_va: '0x180bada10'
+    vfunc_index: 4
+    vfunc_offset: '0x20'
+    vtable_name: CViewRender
+  client/CViewRender_Render.windows.yaml:
+    func_name: CViewRender_Render
+    func_rva: '0xbb09d0'
+    func_sig: 4C 8B DC 53 55 56 57 48 81 EC ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ??
+    func_size: '0x353'
+    func_va: '0x180bb09d0'
+    vfunc_index: 5
+    vfunc_offset: '0x28'
+    vtable_name: CViewRender_vtable
+  client/CViewRender_vtable.linux.yaml:
+    vtable_class: CViewRender
+    vtable_entries:
+      0: '0x197bf40'
+      1: '0x196bba0'
+      10: '0x1993ee0'
+      11: '0x195f2c0'
+      12: '0x1981410'
+      13: '0x1981520'
+      14: '0x1968c50'
+      15: '0x196a4f0'
+      16: '0x1962000'
+      17: '0x195f2d0'
+      18: '0x197c000'
+      19: '0x197c880'
+      2: '0x195f130'
+      20: '0x195f260'
+      21: '0x195f270'
+      22: '0x195f280'
+      23: '0x195f290'
+      3: '0x195f2a0'
+      4: '0x1981250'
+      5: '0x19932f0'
+      6: '0x1961ff0'
+      7: '0x1965e60'
+      8: '0x1966ac0'
+      9: '0x195f2b0'
+    vtable_numvfunc: 24
+    vtable_rva: '0x43d11b8'
+    vtable_size: '0xc0'
+    vtable_symbol: _ZTV11CViewRender + 0x10
+    vtable_va: '0x43d11b8'
+  client/CViewRender_vtable.windows.yaml:
+    vtable_class: CViewRender
+    vtable_entries:
+      0: '0x180ba87e0'
+      1: '0x180bacd50'
+      10: '0x180bb0ed0'
+      11: '0x180ba26b0'
+      12: '0x180ba6960'
+      13: '0x180ba6860'
+      14: '0x180ba7bd0'
+      15: '0x180ba7a70'
+      16: '0x180ba6a00'
+      17: '0x180ba5fd0'
+      18: '0x180b9e8f0'
+      19: '0x180bb43a0'
+      2: '0x180bacdf0'
+      20: '0x180bae4a0'
+      21: '0x180bae310'
+      22: '0x180bad3f0'
+      3: '0x180bb43c0'
+      4: '0x180bada10'
+      5: '0x180bb09d0'
+      6: '0x180bb0d30'
+      7: '0x180ba6db0'
+      8: '0x180ba22d0'
+      9: '0x180ba7a30'
+    vtable_numvfunc: 23
+    vtable_rva: '0x1b194f0'
+    vtable_size: '0xb8'
+    vtable_symbol: ??_7CViewRender@@6B@
+    vtable_va: '0x181b194f0'
+  client/C_BaseEntity_SetInterpolationPhase.windows.yaml:
+    func_name: C_BaseEntity_SetInterpolationPhase
+    func_rva: '0xac0100'
+    func_sig: 48 8B C4 48 89 58 ?? 48 89 68 ?? 48 89 70 ?? 57 48 81 EC ?? ?? ?? ?? 8B 35 ?? ?? ?? ??
+    func_size: '0x257'
+    func_va: '0x180ac0100'
   client/C_GameRules_ctor.linux.yaml:
     func_name: C_GameRules_ctor
     func_rva: '0x18fae90'
@@ -3433,6 +3572,12 @@ files:
     func_sig_allow_across_function_boundary: true
     func_size: '0x238'
     func_va: '0x180f65110'
+  client/GlobalVarsWarningFunc.windows.yaml:
+    func_name: GlobalVarsWarningFunc
+    func_rva: '0xa59880'
+    func_sig: 40 53 48 83 EC ?? 8B 15 ?? ?? ?? ?? 8B D9
+    func_size: '0xb3'
+    func_va: '0x180a59880'
   client/IEngineServiceMgr_GetActiveLoopClientServerMode.linux.yaml:
     func_name: IEngineServiceMgr_GetActiveLoopClientServerMode
     vfunc_index: 31
@@ -4259,6 +4404,12 @@ files:
     vfunc_index: 1
     vfunc_offset: '0x8'
     vtable_name: INetworkClient
+  client/ISource2Client_FrameStageNotify.windows.yaml:
+    func_name: ISource2Client_FrameStageNotify
+    vfunc_index: 36
+    vfunc_offset: '0x120'
+    vfunc_sig: FF 90 20 01 00 00 E8 ?? ?? ?? ??
+    vtable_name: ISource2Client
   client/IVEngineClient2_ExecuteClientCmd.linux.yaml:
     func_name: IVEngineClient2_ExecuteClientCmd
     vfunc_index: 50
@@ -4288,6 +4439,24 @@ files:
     vfunc_offset: '0x150'
     vfunc_sig: FF 90 50 01 00 00 84 C0 74 ?? 83 FD ??
     vtable_name: IVEngineClient2
+  client/IViewRender_OnRenderStart.windows.yaml:
+    func_name: IViewRender_OnRenderStart
+    vfunc_index: 4
+    vfunc_offset: '0x20'
+    vfunc_sig: FF 50 20 E8 ?? ?? ?? ?? E8 ?? ?? ?? ??
+    vtable_name: IViewRender
+  client/OnRenderStart.windows.yaml:
+    func_name: OnRenderStart
+    func_rva: '0xb1cc20'
+    func_sig: 40 53 56 41 55 41 56 48 83 EC ?? 48 89 7C 24 ??
+    func_size: '0x3c8'
+    func_va: '0x180b1cc20'
+  client/OnServerVoiceData_IsPlayingDemo_Callee.windows.yaml:
+    patch_name: OnServerVoiceData_IsPlayingDemo_Callee
+    patch_rva: '0xaec45d'
+    patch_sig: FF 90 50 01 00 00 84 C0 74 ?? 83 FD ??
+    patch_sig_disp: 0
+    patch_va: '0x180aec45d'
   client/RegisterEventListener_Abstract.linux.yaml:
     func_name: RegisterEventListener_Abstract
     func_rva: '0x16646e0'
@@ -4324,6 +4493,15 @@ files:
     gv_sig: 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 85 C0
     gv_sig_va: '0x180ca37ff'
     gv_va: '0x1823ba790'
+  client/g_ViewMatrix.windows.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: g_ViewMatrix
+    gv_rva: '0x23aa340'
+    gv_sig: 48 8D 0D ?? ?? ?? ?? 48 89 44 24 ?? 48 89 4C 24 ?? 4C 8D 0D ?? ?? ?? ??
+    gv_sig_va: '0x180bada86'
+    gv_va: '0x1823aa340'
   client/g_pAVI.linux.yaml:
     gv_name: g_pAVI
     gv_rva: '0x48ad5b0'
@@ -5302,6 +5480,15 @@ files:
     gv_name: g_pWorldRendererMgr
     gv_rva: '0x25c9548'
     gv_va: '0x1825c9548'
+  client/gpGlobals.windows.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: gpGlobals
+    gv_rva: '0x2090d60'
+    gv_sig: 48 89 15 ?? ?? ?? ?? 48 89 42 ??
+    gv_sig_va: '0x180b23e5c'
+    gv_va: '0x182090d60'
   client/s_pLocalPlayer.linux.yaml:
     gv_inst_disp: 3
     gv_inst_length: 7
@@ -8920,6 +9107,72 @@ files:
     vfunc_index: 33
     vfunc_offset: '0x108'
     vtable_name: CNetworkClientService
+  engine/CNetworkClientService_OnClientAdvanceTick.windows.yaml:
+    func_name: CNetworkClientService_OnClientAdvanceTick
+    func_rva: '0x1d2d10'
+    func_sig: 4C 8B DC 49 89 73 ?? 41 56
+    func_size: '0x187'
+    func_va: '0x1801d2d10'
+  engine/CNetworkClientService_OnClientFrameSimulate.windows.yaml:
+    func_name: CNetworkClientService_OnClientFrameSimulate
+    func_rva: '0x1d34c0'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B D9 33 F6 48 8B 89 ?? ?? ?? ??
+    func_size: '0x20b'
+    func_va: '0x1801d34c0'
+  engine/CNetworkClientService_OnClientPauseSimulate.windows.yaml:
+    func_name: CNetworkClientService_OnClientPauseSimulate
+    func_rva: '0x1d3200'
+    func_sig: 48 8B 89 ?? ?? ?? ?? 48 85 C9 74 ?? 48 8D 91 ?? ?? ?? ??
+    func_size: '0x19'
+    func_va: '0x1801d3200'
+  engine/CNetworkClientService_OnClientPollNetworking.windows.yaml:
+    func_name: CNetworkClientService_OnClientPollNetworking
+    func_rva: '0x1d2f90'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B FA 48 8B D9 E8 ?? ?? ?? ?? 48 8B 8B ?? ?? ?? ??
+    func_size: '0x34'
+    func_va: '0x1801d2f90'
+  engine/CNetworkClientService_OnClientProcessGameInput.windows.yaml:
+    func_name: CNetworkClientService_OnClientProcessGameInput
+    func_rva: '0x1d2ea0'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 99 ?? ?? ?? ?? 48 8B FA 48 85 DB
+    func_size: '0xee'
+    func_va: '0x1801d2ea0'
+  engine/CNetworkClientService_OnClientProcessNetworking.windows.yaml:
+    func_name: CNetworkClientService_OnClientProcessNetworking
+    func_rva: '0x1d2fd0'
+    func_sig: 48 8B C4 41 56 48 83 EC ??
+    func_size: '0x1b3'
+    func_va: '0x1801d2fd0'
+  engine/CNetworkClientService_OnClientSimulate.windows.yaml:
+    func_name: CNetworkClientService_OnClientSimulate
+    func_rva: '0x1d3190'
+    func_sig: 40 53 48 83 EC ?? 48 8B 99 ?? ?? ?? ?? 48 85 DB
+    func_size: '0x66'
+    func_va: '0x1801d3190'
+  engine/CNetworkClientService_OnFrameBoundary.windows.yaml:
+    func_name: CNetworkClientService_OnFrameBoundary
+    func_rva: '0x1d3700'
+    func_sig: 40 53 48 83 EC ?? 80 79 ?? ?? 48 8B D9 0F 84 ?? ?? ?? ?? 48 8B 41 ??
+    func_size: '0x15d'
+    func_va: '0x1801d3700'
+  engine/CNetworkClientService_OnServerBeginAsyncPostTickWork.windows.yaml:
+    func_name: CNetworkClientService_OnServerBeginAsyncPostTickWork
+    func_rva: '0x1d3890'
+    func_sig: 48 83 B9 ?? ?? ?? ?? ?? 74 ?? 48 8B 0D ?? ?? ?? ??
+    func_size: '0x21'
+    func_va: '0x1801d3890'
+  engine/CNetworkClientService_OnServerPostSimulate.windows.yaml:
+    func_name: CNetworkClientService_OnServerPostSimulate
+    func_rva: '0x1d3860'
+    func_sig: 48 83 B9 ?? ?? ?? ?? ?? 74 ?? 80 7A ?? ??
+    func_size: '0x27'
+    func_va: '0x1801d3860'
+  engine/CNetworkClientService_OnSimpleLoopFrameUpdate.windows.yaml:
+    func_name: CNetworkClientService_OnSimpleLoopFrameUpdate
+    func_rva: '0x1d3220'
+    func_sig: 48 8B C4 53 48 81 EC ?? ?? ?? ?? 0F 29 70 ??
+    func_size: '0x299'
+    func_va: '0x1801d3220'
   engine/CNetworkClientService_OnStatus.linux.yaml:
     func_name: CNetworkClientService_OnStatus
     func_rva: '0x4295e0'
@@ -8986,6 +9239,21 @@ files:
     vfunc_index: 51
     vfunc_offset: '0x198'
     vtable_name: CNetworkClientService
+  engine/CNetworkClientService_RegisterEventMap.windows.yaml:
+    func_name: CNetworkClientService_RegisterEventMap
+    func_rva: '0x1ce3e0'
+    func_sig: 48 8B C2 48 8B D1 48 8B C8 E9 42 2C 00 00
+    func_size: '0xe'
+    func_va: '0x1801ce3e0'
+    vfunc_index: 19
+    vfunc_offset: '0x98'
+    vtable_name: CNetworkClientService_vtable
+  engine/CNetworkClientService_RegisterEventMapInternal.windows.yaml:
+    func_name: CNetworkClientService_RegisterEventMapInternal
+    func_rva: '0x1d1030'
+    func_sig: 48 8B C4 55 53 56 41 56 48 8B EC 48 83 EC ?? 48 8B F2 4C 8B F1 45 85 C0 0F 85 90 ?? ?? ??
+    func_size: '0xd84'
+    func_va: '0x1801d1030'
   engine/CNetworkClientService_SendNetMessage.windows.yaml:
     func_name: CNetworkClientService_SendNetMessage
     func_rva: '0x1d5b20'
@@ -9697,6 +9965,15 @@ files:
     vfunc_index: 139
     vfunc_offset: '0x458'
     vtable_name: CNetworkGameClient_vtable
+  engine/CNetworkGameClient_CreateMove.windows.yaml:
+    func_name: CNetworkGameClient_CreateMove
+    func_rva: '0x64500'
+    func_sig: 40 57 48 83 EC ?? 83 B9 ?? ?? ?? ?? ?? 48 8B F9
+    func_size: '0x1e4'
+    func_va: '0x180064500'
+    vfunc_index: 76
+    vfunc_offset: '0x260'
+    vtable_name: CNetworkGameClient
   engine/CNetworkGameClient_DisconnectGame.linux.yaml:
     func_name: CNetworkGameClient_DisconnectGame
     func_rva: '0x4e3900'
@@ -12753,6 +13030,18 @@ files:
     vfunc_offset: '0xf8'
     vfunc_sig: 48 8B 9A F8 00 00 00 E8 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? 0F B6 D0 FF D3 48 8B 0D ?? ?? ?? ?? 4C 8D 05 ?? ?? ?? ?? BA ?? ?? ?? ?? 48 8B 01 FF 10 48 8B 0D ?? ?? ?? ?? 4C 8D 05 ?? ?? ?? ?? BA ?? ?? ?? ?? 48 8B 01 FF 90 ?? ?? ?? ??
     vtable_name: INetworkMessages
+  engine/ISource2Client_CreateMove.windows.yaml:
+    func_name: ISource2Client_CreateMove
+    vfunc_index: 16
+    vfunc_offset: '0x80'
+    vfunc_sig: FF 90 80 00 00 00 48 8B 0D ?? ?? ?? ?? 48 8B 01 FF 50 ?? 84 C0 74 ?? 48 8B 05 ?? ?? ?? ??
+    vtable_name: ISource2Client
+  engine/ISource2Client_ProcessGameInput.windows.yaml:
+    func_name: ISource2Client_ProcessGameInput
+    vfunc_index: 22
+    vfunc_offset: '0xb0'
+    vfunc_sig: 4C 8B 91 B0 00 00 00 75 ?? 0F B6 0D ?? EB 43 00
+    vtable_name: ISource2Client
   engine/ISource2Server_OutOfGameFrameBoundary.linux.yaml:
     func_name: ISource2Server_OutOfGameFrameBoundary
     vfunc_index: 45
@@ -12793,6 +13082,12 @@ files:
     func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 F3 48 81 EC ?? ?? ?? ?? 48 89 DF
     func_size: '0x2a5'
     func_va: '0x3f1a60'
+  engine/RegisterEventListener_Abstract.windows.yaml:
+    func_name: RegisterEventListener_Abstract
+    func_rva: '0x13c900'
+    func_sig: 40 55 53 41 54 41 56
+    func_size: '0x256'
+    func_va: '0x18013c900'
   engine/SetFrameTimeAmnesty.linux.yaml:
     func_name: SetFrameTimeAmnesty
     func_rva: '0x37aa70'
@@ -40125,5 +40420,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14173'
-last_publish_time: '2026-07-29T15:16:07Z'
+last_publish_time: '2026-07-30T14:03:54Z'
 schema_version: 4

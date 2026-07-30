@@ -1,0 +1,11 @@
+func_name: CSource2Client_CreateMove
+func_va: '0x180b10380'
+disasm_code: |-
+  .text:0000000180B10380                 mov     rcx, cs:g_pCSGOInput
+  .text:0000000180B10387                 mov     rax, [rcx]
+  .text:0000000180B1038A                 jmp     qword ptr [rax+40h]  ; 40h = CClientInput_CreateMove
+procedure: |-
+  __int64 CSource2Client_CreateMove()
+  {
+    return (*(__int64 (__fastcall **)(__int64 *))(*g_pCSGOInput + 64))(g_pCSGOInput);// 64 = 0x40 = CClientInput_CreateMove
+  }

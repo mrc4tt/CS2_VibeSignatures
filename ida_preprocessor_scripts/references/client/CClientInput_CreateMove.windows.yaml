@@ -1,0 +1,112 @@
+func_name: CClientInput_CreateMove
+func_va: '0x180b10270'
+disasm_code: |-
+  .text:0000000180B10270                 test    edx, edx
+  .text:0000000180B10272                 jnz     locret_180B10378
+  .text:0000000180B10278                 mov     [rsp+arg_8], rbx
+  .text:0000000180B1027D                 push    rsi
+  .text:0000000180B1027E                 sub     rsp, 30h
+  .text:0000000180B10282                 mov     rsi, rcx
+  .text:0000000180B10285                 mov     [rsp+38h+arg_0], rdi
+  .text:0000000180B1028A                 mov     ecx, edx
+  .text:0000000180B1028C                 mov     ebx, edx
+  .text:0000000180B1028E                 call    sub_180926970
+  .text:0000000180B10293                 mov     rdi, rax
+  .text:0000000180B10296                 test    rax, rax
+  .text:0000000180B10299                 jz      loc_180B10369
+  .text:0000000180B1029F                 mov     rcx, rax
+  .text:0000000180B102A2                 call    sub_1808FE5A0
+  .text:0000000180B102A7                 mov     edx, eax
+  .text:0000000180B102A9                 mov     rcx, rdi
+  .text:0000000180B102AC                 call    sub_180901170
+  .text:0000000180B102B1                 mov     rdi, rax
+  .text:0000000180B102B4                 cmp     [rax+8Ch], bl
+  .text:0000000180B102BA                 jz      short loc_180B102DB
+  .text:0000000180B102BC                 mov     rcx, [rsi]
+  .text:0000000180B102BF                 mov     r8, rax
+  .text:0000000180B102C2                 mov     edx, ebx
+  .text:0000000180B102C4                 mov     r9, [rcx+0D8h]
+  .text:0000000180B102CB                 mov     rcx, rsi
+  .text:0000000180B102CE                 call    r9
+  .text:0000000180B102D1                 test    al, al
+  .text:0000000180B102D3                 jz      short loc_180B102DB
+  .text:0000000180B102D5                 mov     [rdi+8Ch], bl
+  .text:0000000180B102DB                 xor     eax, eax
+  .text:0000000180B102DD                 mov     dword ptr [rdi+94h], 1
+  .text:0000000180B102E7                 mov     [rsi+260h], rax
+  .text:0000000180B102EE                 mov     [rsi+268h], rax
+  .text:0000000180B102F5                 mov     rax, [rdi+60h]
+  .text:0000000180B102F9                 mov     [rsi+250h], rax
+  .text:0000000180B10300                 lea     rax, off_18205A890
+  .text:0000000180B10307                 mov     rcx, [rdi+40h]
+  .text:0000000180B1030B                 test    rcx, rcx
+  .text:0000000180B1030E                 cmovnz  rax, rcx
+  .text:0000000180B10312                 mov     rcx, [rax+40h]
+  .text:0000000180B10316                 lea     rax, off_182062B30
+  .text:0000000180B1031D                 test    rcx, rcx
+  .text:0000000180B10320                 cmovnz  rax, rcx
+  .text:0000000180B10324                 lea     rcx, [rsp+38h+pitchyaw]
+  .text:0000000180B10329                 movss   xmm3, dword ptr [rax+20h]
+  .text:0000000180B1032E                 movss   xmm2, dword ptr [rax+1Ch]
+  .text:0000000180B10333                 movss   xmm1, dword ptr [rax+18h]
+  .text:0000000180B10338                 call    sub_180189D60
+  .text:0000000180B1033D                 movsd   xmm0, [rsp+38h+pitchyaw]
+  .text:0000000180B10343                 mov     edx, ebx
+  .text:0000000180B10345                 mov     eax, [rsp+38h+var_10]
+  .text:0000000180B10349                 mov     rcx, rsi
+  .text:0000000180B1034C                 movsd   qword ptr [rsi+688h], xmm0  ; 688h = CClientInput::m_viewangles (structmember, struct=CClientInput, member=m_viewangles)
+  .text:0000000180B10354                 mov     [rsi+690h], eax  ; 690h = CClientInput::m_viewangles + 8 (structmember, struct=CClientInput, member=m_viewangles)
+  .text:0000000180B1035A                 mov     dword ptr [rsi+694h], 0FFFFFFFFh
+  .text:0000000180B10364                 call    sub_180B03940
+  .text:0000000180B10369                 mov     rdi, [rsp+38h+arg_0]
+  .text:0000000180B1036E                 mov     rbx, [rsp+38h+arg_8]
+  .text:0000000180B10373                 add     rsp, 30h
+  .text:0000000180B10377                 pop     rsi
+  .text:0000000180B10378                 retn
+procedure: |-
+  void __fastcall CClientInput_CreateMove(__int64 a1, int a2)
+  {
+    __int64 v3; // rdi
+    int v4; // eax
+    __int64 v5; // rax
+    __int64 v6; // rdi
+    void ***v7; // rax
+    float *v8; // rcx
+    float *v9; // rax
+    int yaw; // eax
+    __int64 pitchyaw; // [rsp+20h] [rbp-18h] BYREF
+    int v12; // [rsp+28h] [rbp-10h]
+
+    if ( !a2 )
+    {
+      v3 = sub_180926970(0);
+      if ( v3 )
+      {
+        v4 = sub_1808FE5A0();
+        v5 = sub_180901170(v3, v4);
+        v6 = v5;
+        if ( *(_BYTE *)(v5 + 140)
+          && (*(unsigned __int8 (__fastcall **)(__int64, _QWORD, __int64))(*(_QWORD *)a1 + 216LL))(a1, 0, v5) )
+        {
+          *(_BYTE *)(v6 + 140) = 0;
+        }
+        *(_DWORD *)(v6 + 148) = 1;
+        *(_QWORD *)(a1 + 608) = 0;
+        *(_QWORD *)(a1 + 616) = 0;
+        *(_QWORD *)(a1 + 592) = *(_QWORD *)(v6 + 96);
+        v7 = &off_18205A890;                      // CBaseUserCmdPB_vtable
+        if ( *(_QWORD *)(v6 + 64) )
+          v7 = *(void ****)(v6 + 64);
+        v8 = (float *)v7[8];
+        v9 = (float *)&off_182062B30;             // CMsgQAngle_vtable
+        if ( v8 )
+          v9 = v8;
+        sub_180189D60((float *)&pitchyaw, v9[6], v9[7], v9[8]);
+        yaw = v12;
+        *(_QWORD *)(a1 + 0x688) = pitchyaw;       // 1672 = 0x688 = CClientInput::m_viewangles (structmember, struct=CClientInput, member=m_viewangles)
+        *(_DWORD *)(a1 + 0x690) = yaw;             // 1680 = 0x690 = CClientInput::m_viewangles + 8 (structmember, struct=CClientInput, member=m_viewangles)
+        *(_DWORD *)(a1 + 0x694) = -1;
+        sub_180B03940(a1, 0);
+      }
+    }
+  }

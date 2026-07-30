@@ -171,8 +171,8 @@ disasm_code: |-
   .text:0000000180A65315                 lea     rcx, [rsi+180h]
   .text:0000000180A6531C                 call    sub_181642390
   .text:0000000180A65321                 mov     rdx, [rsi+1E0h]
-  .text:0000000180A65328                 lea     rcx, [rsi+1C0h]  ; 1C0h = CSkeletonInstance::m_modelState (structmember, struct=CSkeletonInstance, member=m_modelState)
-  .text:0000000180A6532F                 call    CModelState_SetupJointState
+  .text:0000000180A65328                 lea     rcx, [rsi+1C0h]  ; 1C0h = CSkeletonInstance::m_modelState.m_simulationState (structmember, struct=CSkeletonInstance, member=m_modelState.m_simulationState)
+  .text:0000000180A6532F                 call    CSimulationState_SetupJointState
   .text:0000000180A65334                 mov     rax, [rsi+1E0h]  ; 1E0h = CSkeletonInstance::m_modelState.m_hModel (structmember, struct=CSkeletonInstance, member=m_modelState.m_hModel)
   .text:0000000180A6533B                 test    rax, rax
   .text:0000000180A6533E                 jz      short loc_180A65345
@@ -973,7 +973,7 @@ procedure: |-
                   }
                   sub_181642390((__int64 **)(a1 + 336), *(_QWORD *)(a1 + 480));
                   sub_181642390((__int64 **)(a1 + 384), *(_QWORD *)(a1 + 480));
-                  CModelState_SetupJointState(a1 + 448, *(_QWORD *)(a1 + 480));// 448 = 0x1C0 = CSkeletonInstance::m_modelState (structmember, struct=CSkeletonInstance, member=m_modelState)
+                  CSimulationState_SetupJointState(a1 + 448, *(_QWORD *)(a1 + 480));// 448 = 0x1C0 = CSkeletonInstance::m_modelState.m_simulationState (structmember, struct=CSkeletonInstance, member=m_modelState.m_simulationState)
                   hModel_1 = *(_QWORD *)(a1 + 480);// 480 = 0x1E0 = CSkeletonInstance::m_modelState.m_hModel (structmember, struct=CSkeletonInstance, member=m_modelState.m_hModel)
                   if ( hModel_1 )
                     v25 = *(Concurrency::details::SchedulerBase **)hModel_1;
