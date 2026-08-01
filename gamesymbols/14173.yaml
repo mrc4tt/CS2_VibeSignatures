@@ -73,8 +73,8 @@ binaries:
       path: game/bin/win64/vphysics2.dll
       sha256: 6f5aa8c32e30d5369579f0e18bf97ec72e2076d3c06906efbfcc77f0c4111b80
 config_digest_version: 2
-config_sha256: sha256:9b49b169515e2ec490ffc581b843ec9ab28325fefd2a1a86963ce95e1e0ce83a
-file_count: 3204
+config_sha256: sha256:ce044cdae354155c9f5bc8b8ee60046ed7f568c9a2b197bc7488afbded3f6127
+file_count: 3216
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -12320,6 +12320,24 @@ files:
     vtable_size: '0x278'
     vtable_symbol: ??_7CServerSideClientBase@@6B@
     vtable_va: '0x180545638'
+  engine/CServerSideClient_ActivatePlayer.linux.yaml:
+    func_name: CServerSideClient_ActivatePlayer
+    func_rva: '0x538cb0'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ?? E8 ?? ?? ?? ?? 48 8D 3D ?? ?? ?? ??
+    func_size: '0x1c2'
+    func_va: '0x538cb0'
+    vfunc_index: 62
+    vfunc_offset: '0x1f0'
+    vtable_name: CServerSideClient_vtable
+  engine/CServerSideClient_ActivatePlayer.windows.yaml:
+    func_name: CServerSideClient_ActivatePlayer
+    func_rva: '0xbc8f0'
+    func_sig: 40 53 48 83 EC ?? 48 89 6C 24 ?? 48 8B D9 48 89 74 24 ?? 48 89 7C 24 ??
+    func_size: '0x227'
+    func_va: '0x1800bc8f0'
+    vfunc_index: 60
+    vfunc_offset: '0x1e0'
+    vtable_name: CServerSideClient_vtable
   engine/CServerSideClient_ExecuteStringCommand.linux.yaml:
     func_name: CServerSideClient_ExecuteStringCommand
     func_rva: '0x539920'
@@ -13042,6 +13060,18 @@ files:
     vfunc_offset: '0xb0'
     vfunc_sig: 4C 8B 91 B0 00 00 00 75 ?? 0F B6 0D ?? EB 43 00
     vtable_name: ISource2Client
+  engine/ISource2GameClients_ClientSettingsChanged.linux.yaml:
+    func_name: ISource2GameClients_ClientSettingsChanged
+    vfunc_index: 19
+    vfunc_offset: '0x98'
+    vfunc_sig: FF 90 98 00 00 00 48 8D 3D ?? ?? ?? ?? 31 C0
+    vtable_name: ISource2GameClients
+  engine/ISource2GameClients_ClientSettingsChanged.windows.yaml:
+    func_name: ISource2GameClients_ClientSettingsChanged
+    vfunc_index: 19
+    vfunc_offset: '0x98'
+    vfunc_sig: FF 90 98 00 00 00 48 8D 0D ?? ?? ?? ??
+    vtable_name: ISource2GameClients
   engine/ISource2Server_OutOfGameFrameBoundary.linux.yaml:
     func_name: ISource2Server_OutOfGameFrameBoundary
     vfunc_index: 45
@@ -29930,6 +29960,24 @@ files:
     vtable_size: '0x88'
     vtable_symbol: ??_7CLoadingSpawnGroup@@6B@
     vtable_va: '0x181798e68'
+  server/CLoopModeFactory_CLoopModeGame_CreateLoopMode.linux.yaml:
+    func_name: CLoopModeFactory_CLoopModeGame_CreateLoopMode
+    func_rva: '0x1711720'
+    func_sig: 55 BF 70 04 ?? ??
+    func_size: '0x27'
+    func_va: '0x1711720'
+    vfunc_index: 2
+    vfunc_offset: '0x10'
+    vtable_name: CLoopModeFactory_CLoopModeGame_vtable
+  server/CLoopModeFactory_CLoopModeGame_CreateLoopMode.windows.yaml:
+    func_name: CLoopModeFactory_CLoopModeGame_CreateLoopMode
+    func_rva: '0xbbf660'
+    func_sig: 48 89 74 24 ?? 57 48 83 EC ?? B9 ?? ?? ?? ?? E8 ?? ?? ?? ?? 33 F6
+    func_size: '0x1c8'
+    func_va: '0x180bbf660'
+    vfunc_index: 2
+    vfunc_offset: '0x10'
+    vtable_name: CLoopModeFactory_CLoopModeGame_vtable
   server/CLoopModeFactory_CLoopModeGame_Init.linux.yaml:
     func_name: CLoopModeFactory_CLoopModeGame_Init
     func_rva: '0x172e5b0'
@@ -30248,6 +30296,18 @@ files:
     func_sig: 40 53 48 83 EC ?? 48 8D 0D ?? ?? ?? ?? FF 15 ?? ?? ?? ?? 48 8D 0D ?? ?? ?? ?? FF 15 ?? ?? ?? ??
     func_size: '0xb5'
     func_va: '0x180bbf530'
+  server/CLoopModeGame_ctor.linux.yaml:
+    func_name: CLoopModeGame_ctor
+    func_rva: '0x17113b0'
+    func_sig: 55 48 8D 05 ?? ?? ?? ?? BA ?? ?? ?? ?? 41 B9 ?? ?? ?? ??
+    func_size: '0x370'
+    func_va: '0x17113b0'
+  server/CLoopModeGame_ctor.windows.yaml:
+    func_name: CLoopModeGame_ctor
+    func_rva: '0xbbf660'
+    func_sig: 48 89 74 24 ?? 57 48 83 EC ?? B9 ?? ?? ?? ?? E8 ?? ?? ?? ?? 33 F6
+    func_size: '0x1c8'
+    func_va: '0x180bbf660'
   server/CLoopModeGame_vtable.linux.yaml:
     vtable_class: CLoopModeGame
     vtable_entries:
@@ -35224,6 +35284,24 @@ files:
     vfunc_index: 13
     vfunc_offset: '0x68'
     vtable_name: CSource2GameClients
+  server/CSource2GameClients_ClientSettingsChanged.linux.yaml:
+    func_name: CSource2GameClients_ClientSettingsChanged
+    func_rva: '0x18cd0a0'
+    func_sig: 55 89 F7 48 89 E5 E8 55 ?? ?? ??
+    func_size: '0x22'
+    func_va: '0x18cd0a0'
+    vfunc_index: 19
+    vfunc_offset: '0x98'
+    vtable_name: CSource2GameClients
+  server/CSource2GameClients_ClientSettingsChanged.windows.yaml:
+    func_name: CSource2GameClients_ClientSettingsChanged
+    func_rva: '0xd1ff70'
+    func_sig: 48 83 EC ?? 8B CA E8 F5 AD F1 ??
+    func_size: '0x26'
+    func_va: '0x180d1ff70'
+    vfunc_index: 19
+    vfunc_offset: '0x98'
+    vtable_name: CSource2GameClients
   server/CSource2GameClients_GetBugReportInfo.linux.yaml:
     func_name: CSource2GameClients_GetBugReportInfo
     func_rva: '0x18cf2a0'
@@ -35435,6 +35513,24 @@ files:
     func_va: '0x180d17300'
     vfunc_index: 12
     vfunc_offset: '0x60'
+    vtable_name: CSource2GameEntities
+  server/CSource2GameEntities_ShouldClientReceiveStringTableUserData.linux.yaml:
+    func_name: CSource2GameEntities_ShouldClientReceiveStringTableUserData
+    func_rva: '0x18cfa50'
+    func_sig: 55 48 89 E5 53 48 89 F3 48 83 EC ?? 48 8B 3D ?? ?? ?? ??
+    func_size: '0xa3'
+    func_va: '0x18cfa50'
+    vfunc_index: 15
+    vfunc_offset: '0x78'
+    vtable_name: CSource2GameEntities
+  server/CSource2GameEntities_ShouldClientReceiveStringTableUserData.windows.yaml:
+    func_name: CSource2GameEntities_ShouldClientReceiveStringTableUserData
+    func_rva: '0xd17b80'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 0D ?? ?? ?? ?? 4D 8B D1
+    func_size: '0x93'
+    func_va: '0x180d17b80'
+    vfunc_index: 14
+    vfunc_offset: '0x70'
     vtable_name: CSource2GameEntities
   server/CSource2GameEntities_vtable.linux.yaml:
     vtable_class: CSource2GameEntities
@@ -40420,5 +40516,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14173'
-last_publish_time: '2026-07-30T14:03:54Z'
+last_publish_time: '2026-07-31T12:33:44Z'
 schema_version: 4

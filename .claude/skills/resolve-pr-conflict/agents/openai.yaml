@@ -1,0 +1,5 @@
+interface:
+  display_name: "Resolve PR Conflict"
+  short_description: "Resolve PR conflicts through validated snapshot republish"
+  default_prompt: "Use $resolve-pr-conflict to resolve an open PR conflict, validate and publish the affected snapshot, and\
+    \ push the PR branch without merging the PR."

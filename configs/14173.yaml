@@ -652,6 +652,16 @@ modules:
           - CServerSideClient_ExecuteStringCommand.{platform}.yaml
         expected_input:
           - CServerSideClient_vtable.{platform}.yaml
+      - name: find-CServerSideClient_ActivatePlayer
+        expected_output:
+          - CServerSideClient_ActivatePlayer.{platform}.yaml
+        expected_input:
+          - CServerSideClient_vtable.{platform}.yaml
+      - name: find-CServerSideClient_ActivatePlayer-decompiles
+        expected_output:
+          - ISource2GameClients_ClientSettingsChanged.{platform}.yaml
+        expected_input:
+          - CServerSideClient_ActivatePlayer.{platform}.yaml
       - name: find-CGameResourceService_vtable
         expected_output:
           - CGameResourceService_vtable.{platform}.yaml
@@ -2062,6 +2072,14 @@ modules:
         category: vfunc
         alias:
           - CServerSideClient::ExecuteStringCommand
+      - name: CServerSideClient_ActivatePlayer
+        category: vfunc
+        alias:
+          - CServerSideClient::ActivatePlayer
+      - name: ISource2GameClients_ClientSettingsChanged
+        category: vfunc
+        alias:
+          - ISource2GameClients::ClientSettingsChanged
       - name: CGameResourceService_BuildResourceManifest
         category: func
         alias:
@@ -6128,6 +6146,12 @@ modules:
       - name: find-CBasePlayerController_HandleCommand_JoinTeam
         expected_output:
           - CBasePlayerController_HandleCommand_JoinTeam.{platform}.yaml
+      - name: find-CSource2GameClients_ClientSettingsChanged
+        expected_output:
+          - CSource2GameClients_ClientSettingsChanged.{platform}.yaml
+        expected_input:
+          - CSource2GameClients_vtable.{platform}.yaml
+          - ../engine/ISource2GameClients_ClientSettingsChanged.{platform}.yaml
       - name: find-CSource2GameClients_ClientDisconnect
         expected_output:
           - CSource2GameClients_ClientDisconnect.{platform}.yaml
@@ -7022,6 +7046,11 @@ modules:
       - name: find-CSource2GameEntities_CheckTransmit
         expected_output:
           - CSource2GameEntities_CheckTransmit.{platform}.yaml
+        expected_input:
+          - CSource2GameEntities_vtable.{platform}.yaml
+      - name: find-CSource2GameEntities_ShouldClientReceiveStringTableUserData
+        expected_output:
+          - CSource2GameEntities_ShouldClientReceiveStringTableUserData.{platform}.yaml
         expected_input:
           - CSource2GameEntities_vtable.{platform}.yaml
       - name: find-CCheckTransmitInfo_m_nPlayerSlot
@@ -8061,9 +8090,28 @@ modules:
       - name: find-CLoopModeGame_vtable
         expected_output:
           - CLoopModeGame_vtable.{platform}.yaml
+      - name: find-CLoopModeGame_ctor
+        expected_output:
+          - CLoopModeGame_ctor.{platform}.yaml
       - name: find-CLoopModeFactory_CLoopModeGame_vtable
         expected_output:
           - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
+      - name: find-CLoopModeFactory_CLoopModeGame_CreateLoopMode-noinline
+        optional_output:
+          - CLoopModeFactory_CLoopModeGame_CreateLoopMode.{platform}.yaml
+        expected_input:
+          - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
+        prerequisite:
+          - find-CLoopModeGame_ctor
+      - name: find-CLoopModeFactory_CLoopModeGame_CreateLoopMode-inlined
+        expected_output:
+          - CLoopModeFactory_CLoopModeGame_CreateLoopMode.{platform}.yaml
+        expected_input:
+          - CLoopModeFactory_CLoopModeGame_vtable.{platform}.yaml
+        skip_if_exists:
+          - CLoopModeFactory_CLoopModeGame_CreateLoopMode.{platform}.yaml
+        prerequisite:
+          - find-CLoopModeFactory_CLoopModeGame_CreateLoopMode-noinline
       - name: find-CLoopModeGame_StaticInit
         expected_output:
           - CLoopModeGame_StaticInit.{platform}.yaml
@@ -9195,6 +9243,10 @@ modules:
         category: func
         alias:
           - CBasePlayerController::SetConnectedState
+      - name: CSource2GameClients_ClientSettingsChanged
+        category: vfunc
+        alias:
+          - CSource2GameClients::ClientSettingsChanged
       - name: CSource2GameClients_ClientDisconnect
         category: vfunc
         alias:
@@ -9945,6 +9997,13 @@ modules:
           - ISource2GameEntities::CheckTransmit
           - ISource2GameEntities_CheckTransmit
           - CheckTransmit
+      - name: CSource2GameEntities_ShouldClientReceiveStringTableUserData
+        category: vfunc
+        alias:
+          - CSource2GameEntities::ShouldClientReceiveStringTableUserData
+          - ISource2GameEntities::ShouldClientReceiveStringTableUserData
+          - ISource2GameEntities_ShouldClientReceiveStringTableUserData
+          - ShouldClientReceiveStringTableUserData
       - name: CBaseEntity_EmitSoundFilter
         category: func
         alias:
@@ -11223,6 +11282,10 @@ modules:
         category: func
         alias:
           - CLoopModeGame::StaticInit
+      - name: CLoopModeGame_ctor
+        category: func
+        alias:
+          - CLoopModeGame::CLoopModeGame
       - name: CLoopModeGame_vtable
         category: vtable
       - name: CLoopModeFactory_CLoopModeGame_vtable
@@ -11231,6 +11294,10 @@ modules:
         category: vfunc
         alias:
           - CLoopModeFactory<CLoopModeGame>::Init
+      - name: CLoopModeFactory_CLoopModeGame_CreateLoopMode
+        category: vfunc
+        alias:
+          - CLoopModeFactory<CLoopModeGame>::CreateLoopMode
       - name: CLoopModeFactory_CLoopModeGame_Shutdown
         category: vfunc
         alias:

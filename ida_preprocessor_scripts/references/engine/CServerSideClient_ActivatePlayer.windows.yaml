@@ -1,0 +1,205 @@
+func_name: CServerSideClient_ActivatePlayer
+func_va: '0x1800bc8f0'
+disasm_code: |-
+  .text:00000001800BC8F0                 push    rbx
+  .text:00000001800BC8F2                 sub     rsp, 40h
+  .text:00000001800BC8F6                 mov     [rsp+48h+arg_0], rbp
+  .text:00000001800BC8FB                 mov     rbx, rcx
+  .text:00000001800BC8FE                 mov     [rsp+48h+arg_8], rsi
+  .text:00000001800BC903                 mov     [rsp+48h+arg_10], rdi
+  .text:00000001800BC908                 mov     [rsp+48h+var_10], r14
+  .text:00000001800BC90D                 mov     [rsp+48h+var_18], r15
+  .text:00000001800BC912                 call    sub_1800C43E0
+  .text:00000001800BC917                 lea     rcx, aCserversidecli_4; "CServerSideClient::ActivatePlayer -star"...
+  .text:00000001800BC91E                 call    cs:COM_TimestampedLog
+  .text:00000001800BC924                 mov     rax, [rbx+50h]
+  .text:00000001800BC928                 lea     r14, unk_180528AFF
+  .text:00000001800BC92F                 xor     edi, edi
+  .text:00000001800BC931                 cmp     [rax+131h], dil
+  .text:00000001800BC938                 jnz     short loc_1800BC9A1
+  .text:00000001800BC93A                 lea     rcx, aClientputinser; "ClientPutInServer"
+  .text:00000001800BC941                 call    cs:COM_TimestampedLog
+  .text:00000001800BC947                 mov     rax, cs:g_pSource2GameClients
+  .text:00000001800BC94E                 mov     rcx, [rax]
+  .text:00000001800BC951                 mov     rax, [rbx]
+  .text:00000001800BC954                 mov     r15, [rcx+68h]
+  .text:00000001800BC958                 mov     rcx, rbx
+  .text:00000001800BC95B                 call    qword ptr [rax+88h]
+  .text:00000001800BC961                 mov     ebp, edi
+  .text:00000001800BC963                 test    al, al
+  .text:00000001800BC965                 jnz     short loc_1800BC96E
+  .text:00000001800BC967                 mov     rbp, [rbx+0ABh]
+  .text:00000001800BC96E                 cmp     [rbx+142h], dil
+  .text:00000001800BC975                 jz      short loc_1800BC986
+  .text:00000001800BC977                 mov     r9d, 2
+  .text:00000001800BC97D                 lea     rsi, [rbx+48h]
+  .text:00000001800BC981                 jmp     loc_1800BCA16
+  .text:00000001800BC986                 mov     rax, [rbx]
+  .text:00000001800BC989                 mov     rcx, rbx
+  .text:00000001800BC98C                 call    qword ptr [rax+88h]
+  .text:00000001800BC992                 mov     r9d, edi
+  .text:00000001800BC995                 lea     rsi, [rbx+48h]
+  .text:00000001800BC999                 test    al, al
+  .text:00000001800BC99B                 setnz   r9b
+  .text:00000001800BC99F                 jmp     short loc_1800BCA16
+  .text:00000001800BC9A1                 mov     rcx, cs:g_pSource2GameClients
+  .text:00000001800BC9A8                 lea     rsi, [rbx+48h]
+  .text:00000001800BC9AC                 mov     edx, [rsi]
+  .text:00000001800BC9AE                 mov     rax, [rcx]
+  .text:00000001800BC9B1                 call    qword ptr [rax+0B0h]
+  .text:00000001800BC9B7                 test    al, al
+  .text:00000001800BC9B9                 jnz     short loc_1800BCA35
+  .text:00000001800BC9BB                 lea     rcx, aClientputinser_0; "ClientPutInServer - no player in save g"...
+  .text:00000001800BC9C2                 call    cs:COM_TimestampedLog
+  .text:00000001800BC9C8                 mov     rax, cs:g_pSource2GameClients
+  .text:00000001800BC9CF                 mov     rcx, [rax]
+  .text:00000001800BC9D2                 mov     rax, [rbx]
+  .text:00000001800BC9D5                 mov     r15, [rcx+68h]
+  .text:00000001800BC9D9                 mov     rcx, rbx
+  .text:00000001800BC9DC                 call    qword ptr [rax+88h]
+  .text:00000001800BC9E2                 mov     rbp, rdi
+  .text:00000001800BC9E5                 test    al, al
+  .text:00000001800BC9E7                 jnz     short loc_1800BC9F0
+  .text:00000001800BC9E9                 mov     rbp, [rbx+0ABh]
+  .text:00000001800BC9F0                 cmp     [rbx+142h], dil
+  .text:00000001800BC9F7                 jz      short loc_1800BCA01
+  .text:00000001800BC9F9                 mov     r9d, 2
+  .text:00000001800BC9FF                 jmp     short loc_1800BCA16
+  .text:00000001800BCA01                 mov     rax, [rbx]
+  .text:00000001800BCA04                 mov     rcx, rbx
+  .text:00000001800BCA07                 call    qword ptr [rax+88h]
+  .text:00000001800BCA0D                 test    al, al
+  .text:00000001800BCA0F                 mov     r9d, edi
+  .text:00000001800BCA12                 setnz   r9b
+  .text:00000001800BCA16                 mov     rax, [rbx+40h]
+  .text:00000001800BCA1A                 mov     r8, r14
+  .text:00000001800BCA1D                 mov     edx, [rsi]
+  .text:00000001800BCA1F                 test    rax, rax
+  .text:00000001800BCA22                 mov     rcx, cs:g_pSource2GameClients
+  .text:00000001800BCA29                 cmovnz  r8, rax
+  .text:00000001800BCA2D                 mov     [rsp+48h+var_28], rbp
+  .text:00000001800BCA32                 call    r15
+  .text:00000001800BCA35                 lea     rcx, aClientactive; "ClientActive"
+  .text:00000001800BCA3C                 call    cs:COM_TimestampedLog
+  .text:00000001800BCA42                 mov     rax, cs:g_pSource2GameClients
+  .text:00000001800BCA49                 mov     rcx, [rax]
+  .text:00000001800BCA4C                 mov     rax, [rbx]
+  .text:00000001800BCA4F                 mov     rbp, [rcx+70h]
+  .text:00000001800BCA53                 mov     rcx, rbx
+  .text:00000001800BCA56                 call    qword ptr [rax+88h]
+  .text:00000001800BCA5C                 mov     r15, [rsp+48h+var_18]
+  .text:00000001800BCA61                 test    al, al
+  .text:00000001800BCA63                 jnz     short loc_1800BCA6C
+  .text:00000001800BCA65                 mov     rdi, [rbx+0ABh]
+  .text:00000001800BCA6C                 mov     rax, [rbx+40h]
+  .text:00000001800BCA70                 mov     r8, [rbx+50h]
+  .text:00000001800BCA74                 test    rax, rax
+  .text:00000001800BCA77                 mov     edx, [rsi]
+  .text:00000001800BCA79                 mov     rcx, cs:g_pSource2GameClients
+  .text:00000001800BCA80                 cmovnz  r14, rax
+  .text:00000001800BCA84                 mov     r9, r14
+  .text:00000001800BCA87                 mov     [rsp+48h+var_28], rdi
+  .text:00000001800BCA8C                 movzx   r8d, byte ptr [r8+131h]
+  .text:00000001800BCA94                 call    rbp
+  .text:00000001800BCA96                 lea     rcx, aClientsettings; "ClientSettingsChanged"
+  .text:00000001800BCA9D                 call    cs:COM_TimestampedLog
+  .text:00000001800BCAA3                 mov     rcx, cs:g_pSource2GameClients
+  .text:00000001800BCAAA                 mov     edx, [rsi]
+  .text:00000001800BCAAC                 mov     rax, [rcx]
+  .text:00000001800BCAAF                 call    qword ptr [rax+98h]; 0x98 = 152LL = ISource2GameClients_ClientSettingsChanged
+  .text:00000001800BCAB5                 lea     rcx, aTestscriptmgrC; "TestScriptMgr_CheckPoint(client_connect"...
+  .text:00000001800BCABC                 call    cs:COM_TimestampedLog
+  .text:00000001800BCAC2                 mov     rcx, cs:g_pTestScriptMgr
+  .text:00000001800BCAC9                 mov     r14, [rsp+48h+var_10]
+  .text:00000001800BCACE                 mov     rdi, [rsp+48h+arg_10]
+  .text:00000001800BCAD3                 mov     rsi, [rsp+48h+arg_8]
+  .text:00000001800BCAD8                 mov     rbp, [rsp+48h+arg_0]
+  .text:00000001800BCADD                 test    rcx, rcx
+  .text:00000001800BCAE0                 jz      short loc_1800BCAEF
+  .text:00000001800BCAE2                 mov     rax, [rcx]
+  .text:00000001800BCAE5                 lea     rdx, aClientConnecte; "client_connected"
+  .text:00000001800BCAEC                 call    qword ptr [rax+60h]
+  .text:00000001800BCAEF                 lea     rcx, aCserversidecli_5; "CServerSideClient::ActivatePlayer -end"
+  .text:00000001800BCAF6                 call    cs:COM_TimestampedLog
+  .text:00000001800BCAFC                 mov     rcx, [rbx+50h]
+  .text:00000001800BCB00                 mov     rax, [rcx]
+  .text:00000001800BCB03                 call    qword ptr [rax+0E0h]
+  .text:00000001800BCB09                 movss   dword ptr [rbx+0EECh], xmm0
+  .text:00000001800BCB11                 add     rsp, 40h
+  .text:00000001800BCB15                 pop     rbx
+  .text:00000001800BCB16                 retn
+procedure: |-
+  void __fastcall CServerSideClient_ActivatePlayer(__int64 a1)
+  {
+    void *v2; // r14
+    __int64 v3; // rdi
+    void (__fastcall *v4)(__int64, _QWORD, void *, __int64, __int64); // r15
+    __int64 v5; // rbp
+    __int64 v6; // r9
+    unsigned int *v7; // rsi
+    void *v8; // r8
+    void (__fastcall *v9)(__int64, _QWORD, _QWORD, void *, __int64); // rbp
+
+    sub_1800C43E0();
+    COM_TimestampedLog("CServerSideClient::ActivatePlayer -start");
+    v2 = &unk_180528AFF;
+    v3 = 0;
+    if ( *(_BYTE *)(*(_QWORD *)(a1 + 80) + 305LL) )
+    {
+      v7 = (unsigned int *)(a1 + 72);
+      if ( (*(unsigned __int8 (__fastcall **)(__int64, _QWORD))(*(_QWORD *)g_pSource2GameClients + 176LL))(
+             g_pSource2GameClients,
+             *(unsigned int *)(a1 + 72)) )
+      {
+        goto LABEL_16;
+      }
+      COM_TimestampedLog("ClientPutInServer - no player in save game");
+      v4 = *(void (__fastcall **)(__int64, _QWORD, void *, __int64, __int64))(*(_QWORD *)g_pSource2GameClients + 104LL);
+      v5 = 0;
+      if ( !(*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1) )
+        v5 = *(_QWORD *)(a1 + 171);
+      if ( *(_BYTE *)(a1 + 322) )
+        v6 = 2;
+      else
+        v6 = (*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1) != 0;
+    }
+    else
+    {
+      COM_TimestampedLog("ClientPutInServer");
+      v4 = *(void (__fastcall **)(__int64, _QWORD, void *, __int64, __int64))(*(_QWORD *)g_pSource2GameClients + 104LL);
+      v5 = 0;
+      if ( !(*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1) )
+        v5 = *(_QWORD *)(a1 + 171);
+      if ( *(_BYTE *)(a1 + 322) )
+      {
+        v6 = 2;
+        v7 = (unsigned int *)(a1 + 72);
+      }
+      else
+      {
+        v7 = (unsigned int *)(a1 + 72);
+        v6 = (*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1) != 0;
+      }
+    }
+    v8 = &unk_180528AFF;
+    if ( *(_QWORD *)(a1 + 64) )
+      v8 = *(void **)(a1 + 64);
+    v4(g_pSource2GameClients, *v7, v8, v6, v5);
+  LABEL_16:
+    COM_TimestampedLog("ClientActive");
+    v9 = *(void (__fastcall **)(__int64, _QWORD, _QWORD, void *, __int64))(*(_QWORD *)g_pSource2GameClients + 112LL);
+    if ( !(*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)a1 + 136LL))(a1) )
+      v3 = *(_QWORD *)(a1 + 171);
+    if ( *(_QWORD *)(a1 + 64) )
+      v2 = *(void **)(a1 + 64);
+    v9(g_pSource2GameClients, *v7, *(unsigned __int8 *)(*(_QWORD *)(a1 + 80) + 305LL), v2, v3);
+    COM_TimestampedLog("ClientSettingsChanged");
+    (*(void (__fastcall **)(__int64, _QWORD))(*(_QWORD *)g_pSource2GameClients + 152LL))(g_pSource2GameClients, *v7);// 0x98 = 152LL = ISource2GameClients_ClientSettingsChanged
+    COM_TimestampedLog("TestScriptMgr_CheckPoint(client_connected)");
+    if ( g_pTestScriptMgr )
+      (*(void (__fastcall **)(__int64, const char *))(*(_QWORD *)g_pTestScriptMgr + 96LL))(
+        g_pTestScriptMgr,
+        "client_connected");
+    COM_TimestampedLog("CServerSideClient::ActivatePlayer -end");
+    *(float *)(a1 + 3820) = (*(float (__fastcall **)(_QWORD))(**(_QWORD **)(a1 + 80) + 224LL))(*(_QWORD *)(a1 + 80));
+  }
