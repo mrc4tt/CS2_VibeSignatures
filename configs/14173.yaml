@@ -6152,6 +6152,14 @@ modules:
         expected_input:
           - CSource2GameClients_vtable.{platform}.yaml
           - ../engine/ISource2GameClients_ClientSettingsChanged.{platform}.yaml
+      - name: find-CSource2GameClients_ClientSetupVisibility
+        expected_output:
+          - CSource2GameClients_ClientSetupVisibility.{platform}.yaml
+        expected_input:
+          - CSource2GameClients_vtable.{platform}.yaml
+          - UTIL_PlayerSlotToPlayerController.{platform}.yaml
+          - CBasePlayerController_GetPawn.{platform}.yaml
+          - g_pEntitySystem.{platform}.yaml
       - name: find-CSource2GameClients_ClientDisconnect
         expected_output:
           - CSource2GameClients_ClientDisconnect.{platform}.yaml
@@ -9247,6 +9255,10 @@ modules:
         category: vfunc
         alias:
           - CSource2GameClients::ClientSettingsChanged
+      - name: CSource2GameClients_ClientSetupVisibility
+        category: vfunc
+        alias:
+          - CSource2GameClients::ClientSetupVisibility
       - name: CSource2GameClients_ClientDisconnect
         category: vfunc
         alias:

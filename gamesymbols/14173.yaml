@@ -73,8 +73,8 @@ binaries:
       path: game/bin/win64/vphysics2.dll
       sha256: 6f5aa8c32e30d5369579f0e18bf97ec72e2076d3c06906efbfcc77f0c4111b80
 config_digest_version: 2
-config_sha256: sha256:ce044cdae354155c9f5bc8b8ee60046ed7f568c9a2b197bc7488afbded3f6127
-file_count: 3216
+config_sha256: sha256:32cdf7101bba8b62d09bda31317ebd7597daab41ffa2dfae955dc5145773abbe
+file_count: 3218
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -35302,6 +35302,24 @@ files:
     vfunc_index: 19
     vfunc_offset: '0x98'
     vtable_name: CSource2GameClients
+  server/CSource2GameClients_ClientSetupVisibility.linux.yaml:
+    func_name: CSource2GameClients_ClientSetupVisibility
+    func_rva: '0x18d6c50'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 D3 48 83 EC ??
+    func_size: '0x215'
+    func_va: '0x18d6c50'
+    vfunc_index: 20
+    vfunc_offset: '0xa0'
+    vtable_name: CSource2GameClients_vtable
+  server/CSource2GameClients_ClientSetupVisibility.windows.yaml:
+    func_name: CSource2GameClients_ClientSetupVisibility
+    func_rva: '0xd1ffa0'
+    func_sig: 40 53 41 56 48 83 EC ?? 48 8B 0D ?? ?? ?? ??
+    func_size: '0x148'
+    func_va: '0x180d1ffa0'
+    vfunc_index: 20
+    vfunc_offset: '0xa0'
+    vtable_name: CSource2GameClients_vtable
   server/CSource2GameClients_GetBugReportInfo.linux.yaml:
     func_name: CSource2GameClients_GetBugReportInfo
     func_rva: '0x18cf2a0'
@@ -40516,5 +40534,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14173'
-last_publish_time: '2026-07-31T12:33:44Z'
+last_publish_time: '2026-08-03T07:42:58Z'
 schema_version: 4
