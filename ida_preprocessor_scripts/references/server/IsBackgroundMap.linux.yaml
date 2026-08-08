@@ -1,0 +1,54 @@
+func_name: IsBackgroundMap
+func_va: '0x1716180'
+disasm_code: |-
+  .text:0000000001716180                 mov     rdi, cs:qword_284A170
+  .text:0000000001716187                 push    rbp
+  .text:0000000001716188                 mov     rbp, rsp
+  .text:000000000171618B                 test    rdi, rdi
+  .text:000000000171618E                 jz      short loc_17161AB
+  .text:0000000001716190                 mov     rax, [rdi]
+  .text:0000000001716193                 lea     rdx, sub_17118F0
+  .text:000000000171619A                 ; 0x028 = 40LL = ILoopModeGameSharedState_IsBackgroundMap
+  .text:000000000171619A                 mov     rax, [rax+28h]; 0x028 = 40LL = ILoopModeGameSharedState_IsBackgroundMap
+  .text:000000000171619E                 cmp     rax, rdx
+  .text:00000000017161A1                 jnz     short loc_17161E0
+  .text:00000000017161A3                 movzx   eax, byte ptr [rdi+5Fh]
+  .text:00000000017161A7                 test    al, al
+  .text:00000000017161A9                 jnz     short loc_17161D8
+  .text:00000000017161AB                 lea     rax, g_pNetworkServerService
+  .text:00000000017161B2                 mov     rdi, [rax]
+  .text:00000000017161B5                 mov     rax, [rdi]
+  .text:00000000017161B8                 call    qword ptr [rax+0C0h]
+  .text:00000000017161BE                 mov     rdi, rax
+  .text:00000000017161C1                 xor     eax, eax
+  .text:00000000017161C3                 test    rdi, rdi
+  .text:00000000017161C6                 jz      short loc_17161D8
+  .text:00000000017161C8                 mov     rax, [rdi]
+  .text:00000000017161CB                 pop     rbp
+  .text:00000000017161CC                 ; 0x0D8 = 216LL = INetworkGameServer_IsBackgroundMap
+  .text:00000000017161CC                 mov     rax, [rax+0D8h]; 0x0D8 = 216LL = INetworkGameServer_IsBackgroundMap
+  .text:00000000017161D3                 jmp     rax
+  .text:00000000017161D8                 pop     rbp
+  .text:00000000017161D9                 retn
+  .text:00000000017161E0                 call    rax
+  .text:00000000017161E2                 jmp     short loc_17161A7
+procedure: |-
+  __int64 IsBackgroundMap()
+  {
+    __int64 (__fastcall *v0)(); // rax
+    __int64 result; // rax
+    __int64 v2; // rdi
+
+  if ( !qword_284A170
+    || ((v0 = *(__int64 (__fastcall **)())(*(_QWORD *)qword_284A170 + 40LL), v0 != sub_17118F0) // 0x028 = 40LL = ILoopModeGameSharedState_IsBackgroundMap
+        ? (result = v0())
+        : (result = *(unsigned __int8 *)(qword_284A170 + 95)),
+          !(_BYTE)result) )
+    {
+      v2 = (*(__int64 (__fastcall **)(_QWORD *))(*g_pNetworkServerService + 192LL))(g_pNetworkServerService);
+      result = 0;
+      if ( v2 )
+        return (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v2 + 216LL))(v2);// 0x0D8 = 216LL = INetworkGameServer_IsBackgroundMap
+    }
+    return result;
+  }

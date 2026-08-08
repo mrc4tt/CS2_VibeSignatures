@@ -411,7 +411,7 @@ disasm_code: |-
   .text:0000000000555671                 jz      short loc_555684
   .text:0000000000555673                 mov     rax, [rdi]
   .text:0000000000555676                 movss   xmm0, dword ptr [rbp+var_1A0]
-  .text:000000000055567E                 call    qword ptr [rax+168h]; 0x168 = 360LL = ISource2Server_OutOfGameFrameBoundary
+  .text:000000000055567E                 call    qword ptr [rax+168h]; 0x168 = 360LL = ISource2Server_UpdateWhenNotInGame
   .text:0000000000555684                 mov     rdi, cs:qword_9740D8
   .text:000000000055568B                 test    rdi, rdi
   .text:000000000055568E                 jz      short loc_5556A1
@@ -2411,7 +2411,7 @@ procedure: |-
       v209 = v195;
     }
     if ( g_pSource2Server )
-      (*(void (__fastcall **)(__int64, float))(*(_QWORD *)g_pSource2Server + 360LL))(g_pSource2Server, *(float *)&v196);// 0x168 = 360LL = ISource2Server_OutOfGameFrameBoundary
+      (*(void (__fastcall **)(__int64, float))(*(_QWORD *)g_pSource2Server + 360LL))(g_pSource2Server, *(float *)&v196);// 0x168 = 360LL = ISource2Server_UpdateWhenNotInGame
     if ( qword_9740D8 )
       (*(void (__fastcall **)(__int64, float))(*(_QWORD *)qword_9740D8 + 976LL))(qword_9740D8, *(float *)&v196);
     if ( qword_97BB10 )

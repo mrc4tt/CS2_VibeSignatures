@@ -1,0 +1,212 @@
+func_name: CNetworkGameServerBase_ServerPollNetworking
+func_va: '0x4f3610'
+disasm_code: |-
+  .text:00000000004F3610                 push    rbp
+  .text:00000000004F3611                 mov     rbp, rsp
+  .text:00000000004F3614                 push    rbx
+  .text:00000000004F3615                 mov     rbx, rdi
+  .text:00000000004F3618                 sub     rsp, 8
+  .text:00000000004F361C                 cmp     cs:byte_A30292, 0
+  .text:00000000004F3623                 jnz     loc_4F3700
+  .text:00000000004F3629                 cmp     cs:byte_A30291, 0
+  .text:00000000004F3630                 jnz     short loc_4F3690
+  .text:00000000004F3632                 cmp     dword ptr [rbx+38h], 1
+  .text:00000000004F3636                 jbe     loc_4F36F6
+  .text:00000000004F363C                 mov     rax, [rbx]
+  .text:00000000004F363F                 lea     rdx, sub_4F0FD0
+  .text:00000000004F3646                 ; 0x148 = 328LL = INetworkGameServer_IsChangelevelPending
+  .text:00000000004F3646                 mov     rax, [rax+148h]; 0x148 = 328LL = INetworkGameServer_IsChangelevelPending
+  .text:00000000004F364D                 cmp     rax, rdx
+  .text:00000000004F3650                 jnz     loc_4F37E8
+  .text:00000000004F3656                 movzx   eax, byte ptr [rbx+2B8h]
+  .text:00000000004F365D                 test    al, al
+  .text:00000000004F365F                 jnz     loc_4F36F6
+  .text:00000000004F3665                 lea     rax, g_pNetworkSystem
+  .text:00000000004F366C                 lea     rdx, [rbx+8]
+  .text:00000000004F3670                 mov     esi, [rbx+40h]
+  .text:00000000004F3673                 mov     rbx, [rbp+var_8]
+  .text:00000000004F3677                 mov     rdi, [rax]
+  .text:00000000004F367A                 mov     rax, [rdi]
+  .text:00000000004F367D                 mov     rax, [rax+0A0h]
+  .text:00000000004F3684                 leave
+  .text:00000000004F3685                 jmp     rax
+  .text:00000000004F3690                 lea     rax, g_pNetworkServerService
+  .text:00000000004F3697                 mov     cs:byte_A30291, 0
+  .text:00000000004F369E                 cmp     qword ptr [rax], 0
+  .text:00000000004F36A2                 jz      short loc_4F36C5
+  .text:00000000004F36A4                 lea     rax, off_9D7BB0
+  .text:00000000004F36AB                 mov     rdi, [rax]
+  .text:00000000004F36AE                 call    sub_3F7360
+  .text:00000000004F36B3                 test    rax, rax
+  .text:00000000004F36B6                 jz      short loc_4F36C5
+  .text:00000000004F36B8                 cmp     byte ptr [rax+2BBh], 0
+  .text:00000000004F36BF                 jz      loc_4F37D0
+  .text:00000000004F36C5                 lea     rdi, aSigtermReceive; "SIGTERM received while server hibernati"...
+  .text:00000000004F36CC                 xor     eax, eax
+  .text:00000000004F36CE                 call    sub_2C8A30
+  .text:00000000004F36D3                 lea     rax, g_pHostStateMgr
+  .text:00000000004F36DA                 mov     rdi, [rax]
+  .text:00000000004F36DD                 test    rdi, rdi
+  .text:00000000004F36E0                 jz      loc_4F37F8
+  .text:00000000004F36E6                 mov     rax, [rdi]
+  .text:00000000004F36E9                 call    qword ptr [rax+58h]
+  .text:00000000004F36EC                 cmp     dword ptr [rbx+38h], 1
+  .text:00000000004F36F0                 ja      loc_4F363C
+  .text:00000000004F36F6                 mov     rbx, [rbp+var_8]
+  .text:00000000004F36FA                 leave
+  .text:00000000004F36FB                 retn
+  .text:00000000004F3700                 lea     rdi, aSigintReceived; "SIGINT received\n"
+  .text:00000000004F3707                 xor     eax, eax
+  .text:00000000004F3709                 mov     cs:byte_A30292, 0
+  .text:00000000004F3710                 call    sub_2C8A30
+  .text:00000000004F3715                 lea     rax, g_pNetworkServerService
+  .text:00000000004F371C                 mov     cs:byte_A300E0, 1
+  .text:00000000004F3723                 lea     rdi, aShutdownReques; "Shutdown request received when no netwo"...
+  .text:00000000004F372A                 cmp     qword ptr [rax], 0
+  .text:00000000004F372E                 jz      short loc_4F37A7
+  .text:00000000004F3730                 lea     rax, off_9D7BB0
+  .text:00000000004F3737                 mov     rdi, [rax]
+  .text:00000000004F373A                 call    sub_3F7360
+  .text:00000000004F373F                 lea     rdi, aShutdownReques_0; "Shutdown request received and server do"...
+  .text:00000000004F3746                 test    rax, rax
+  .text:00000000004F3749                 jz      short loc_4F37A9
+  .text:00000000004F374B                 cmp     byte ptr [rax+2BBh], 0
+  .text:00000000004F3752                 jz      short loc_4F377F
+  .text:00000000004F3754                 mov     rdx, [rax]
+  .text:00000000004F3757                 lea     rcx, sub_4F0C80
+  .text:00000000004F375E                 mov     rdx, [rdx+170h]
+  .text:00000000004F3765                 cmp     rdx, rcx
+  .text:00000000004F3768                 jnz     loc_4F3830
+  .text:00000000004F376E                 mov     rax, [rax+398h]
+  .text:00000000004F3775                 cmp     qword ptr [rax], 0
+  .text:00000000004F3779                 jz      loc_4F3840
+  .text:00000000004F377F                 lea     rdi, unk_A30210
+  .text:00000000004F3786                 mov     esi, 0FFFFFFFFh
+  .text:00000000004F378B                 call    sub_5E60F0
+  .text:00000000004F3790                 test    rax, rax
+  .text:00000000004F3793                 jz      loc_4F3818
+  .text:00000000004F3799                 movzx   eax, byte ptr [rax]
+  .text:00000000004F379C                 test    al, al
+  .text:00000000004F379E                 jz      short loc_4F3800
+  .text:00000000004F37A0                 lea     rdi, aShutdownReques_1; "Shutdown request received for a server "...
+  .text:00000000004F37A7                 xor     eax, eax
+  .text:00000000004F37A9                 call    sub_2C8A30
+  .text:00000000004F37AE                 lea     rax, g_pHostStateMgr
+  .text:00000000004F37B5                 mov     rdi, [rax]
+  .text:00000000004F37B8                 test    rdi, rdi
+  .text:00000000004F37BB                 jz      short loc_4F37F8
+  .text:00000000004F37BD                 mov     rax, [rdi]
+  .text:00000000004F37C0                 call    qword ptr [rax+58h]
+  .text:00000000004F37C3                 jmp     loc_4F3629
+  .text:00000000004F37D0                 lea     rdi, aSigtermReceive_0; "SIGTERM received while server was **not"...
+  .text:00000000004F37D7                 xor     eax, eax
+  .text:00000000004F37D9                 call    sub_2C8A30
+  .text:00000000004F37DE                 jmp     loc_4F36D3
+  .text:00000000004F37E8                 mov     rdi, rbx
+  .text:00000000004F37EB                 call    rax
+  .text:00000000004F37ED                 jmp     loc_4F365D
+  .text:00000000004F37F8                 xor     edi, edi
+  .text:00000000004F37FA                 call    sub_2CA480
+  .text:00000000004F37FF                 nop
+  .text:00000000004F3800                 lea     rdi, aShutdownReques_2; "Shutdown request received. Server will "...
+  .text:00000000004F3807                 xor     eax, eax
+  .text:00000000004F3809                 call    sub_2C8A30
+  .text:00000000004F380E                 jmp     loc_4F3629
+  .text:00000000004F3818                 mov     rax, cs:qword_A30218
+  .text:00000000004F381F                 mov     rax, [rax+8]
+  .text:00000000004F3823                 jmp     loc_4F3799
+  .text:00000000004F3830                 mov     rdi, rax
+  .text:00000000004F3833                 call    rdx
+  .text:00000000004F3835                 test    al, al
+  .text:00000000004F3837                 jnz     loc_4F377F
+  .text:00000000004F383D                 nop     dword ptr [rax]
+  .text:00000000004F3840                 lea     rdi, aShutdownReques_3; "Shutdown request received while server "...
+  .text:00000000004F3847                 xor     eax, eax
+  .text:00000000004F3849                 jmp     loc_4F37A9
+procedure: |-
+  void __fastcall CNetworkGameServerBase_ServerPollNetworking(__int64 a1)
+  {
+    __int64 (__fastcall *v2)(); // rax
+    char v3; // al
+    __int64 v4; // rax
+    const char *v5; // rdi
+    __int64 v6; // rax
+    __int64 (__fastcall *v7)(); // rdx
+    _BYTE *v8; // rax
+
+    if ( !byte_A30292 )
+      goto LABEL_2;
+    byte_A30292 = 0;
+    sub_2C8A30("SIGINT received\n");
+    byte_A300E0 = 1;
+    v5 = "Shutdown request received when no network service exists.\n";
+    if ( !g_pNetworkServerService )
+      goto LABEL_24;
+    v6 = sub_3F7360(off_9D7BB0);
+    v5 = "Shutdown request received and server doesn't exist. Shutting down right now\n";
+    if ( !v6 )
+      goto LABEL_24;
+    if ( *(_BYTE *)(v6 + 699) )
+    {
+      v7 = *(__int64 (__fastcall **)())(*(_QWORD *)v6 + 368LL);
+      if ( v7 == sub_4F0C80 )
+      {
+        if ( **(_QWORD **)(v6 + 920) )
+          goto LABEL_20;
+      }
+      else if ( ((unsigned __int8 (__fastcall *)(__int64))v7)(v6) )
+      {
+        goto LABEL_20;
+      }
+      sub_2C8A30("Shutdown request received while server is hibernating. Shutting down right now\n");
+      goto LABEL_25;
+    }
+  LABEL_20:
+    v8 = (_BYTE *)sub_5E60F0(&unk_A30210, 0xFFFFFFFFLL);
+    if ( !v8 )
+      v8 = *(_BYTE **)(qword_A30218 + 8);
+    if ( !*v8 )
+      goto LABEL_30;
+    v5 = "Shutdown request received for a server that will never hibernate. Shutting down right now\n";
+  LABEL_24:
+    sub_2C8A30(v5);
+  LABEL_25:
+    if ( !g_pHostStateMgr )
+      goto LABEL_29;
+    (*(void (__fastcall **)(_QWORD *))(*g_pHostStateMgr + 88LL))(g_pHostStateMgr);
+    while ( 1 )
+    {
+  LABEL_2:
+      if ( !byte_A30291 )
+      {
+        if ( *(_DWORD *)(a1 + 56) <= 1u )
+          return;
+        goto LABEL_4;
+      }
+      byte_A30291 = 0;
+      if ( g_pNetworkServerService && (v4 = sub_3F7360(off_9D7BB0)) != 0 && !*(_BYTE *)(v4 + 699) )
+        sub_2C8A30("SIGTERM received while server was **not** hibernating!  Shutting down even though a game may be in progress!\n");
+      else
+        sub_2C8A30("SIGTERM received while server hibernating.\n");
+      if ( g_pHostStateMgr )
+        break;
+  LABEL_29:
+      sub_2CA480(0);
+  LABEL_30:
+      sub_2C8A30("Shutdown request received. Server will shutdown when empty.\n");
+    }
+    (*(void (__fastcall **)(_QWORD *))(*g_pHostStateMgr + 88LL))(g_pHostStateMgr);
+    if ( *(_DWORD *)(a1 + 56) <= 1u )
+      return;
+  LABEL_4:
+    v2 = *(__int64 (__fastcall **)())(*(_QWORD *)a1 + 328LL);// 0x148 = 328LL = INetworkGameServer_IsChangelevelPending
+    if ( v2 == sub_4F0FD0 )
+      v3 = *(_BYTE *)(a1 + 696);
+    else
+      v3 = ((__int64 (__fastcall *)(__int64))v2)(a1);
+    if ( !v3 )
+      (*(void (__fastcall **)(_QWORD *, _QWORD, __int64))(*g_pNetworkSystem + 160LL))(
+        g_pNetworkSystem,
+        *(unsigned int *)(a1 + 64),
+        a1 + 8);
+  }

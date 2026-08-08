@@ -61,7 +61,8 @@ disasm_code: |-
   .text:000000018058B111                 call    sub_18122C680
   .text:000000018058B116                 mov     rcx, cs:g_engine
   .text:000000018058B11D                 mov     rdx, [rcx]
-  .text:000000018058B120                 mov     r8, [rdx+200h] ; 200h = IVEngineServer2_MakeSpawnGroupActive
+  .text:000000018058B120                 ; 0x200 = 512LL = IVEngineServer2_MakeSpawnGroupActive
+  .text:000000018058B120                 mov     r8, [rdx+200h]; 0x200 = 512LL = IVEngineServer2_MakeSpawnGroupActive
   .text:000000018058B127                 mov     edx, ebx
   .text:000000018058B129                 call    r8
   .text:000000018058B12C                 mov     rdx, rsi
@@ -154,7 +155,7 @@ procedure: |-
       if ( v7 != a2 )
       {
         sub_18122C680(g_pEntitySystem, a2);
-        (*(void (__fastcall **)(__int64, _QWORD))(*(_QWORD *)g_engine + 512LL))(g_engine, a2);// 512LL = 0x200 = IVEngineServer2_MakeSpawnGroupActive
+        (*(void (__fastcall **)(__int64, _QWORD))(*(_QWORD *)g_engine + 512LL))(g_engine, a2);// 0x200 = 512LL = IVEngineServer2_MakeSpawnGroupActive
         v14 = 0;
         v13 = a2;
         v15 = v7;

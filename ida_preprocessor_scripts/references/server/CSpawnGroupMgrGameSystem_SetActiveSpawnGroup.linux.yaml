@@ -35,7 +35,8 @@ disasm_code: |-
   .text:0000000000F285C1                 mov     esi, ebx
   .text:0000000000F285C3                 mov     rdi, [rax]
   .text:0000000000F285C6                 mov     rax, [rdi]
-  .text:0000000000F285C9                 call    qword ptr [rax+200h] ; 200h = IVEngineServer2_MakeSpawnGroupActive
+  .text:0000000000F285C9                 ; 0x200 = 512LL = IVEngineServer2_MakeSpawnGroupActive
+  .text:0000000000F285C9                 call    qword ptr [rax+200h]; 0x200 = 512LL = IVEngineServer2_MakeSpawnGroupActive
   .text:0000000000F285CF                 mov     dword ptr [rbp+var_40], ebx
   .text:0000000000F285D2                 lea     rbx, [rbp+var_38]
   .text:0000000000F285D6                 ; char *
@@ -193,7 +194,7 @@ procedure: |-
       if ( (_DWORD)a2 != (_DWORD)result )
       {
         sub_2115E50(g_pEntitySystem, (unsigned int)a2);
-        (*(void (__fastcall **)(__int64, _QWORD))(*(_QWORD *)g_engine + 512LL))(g_engine, (unsigned int)a2);// 512LL = 0x200 = IVEngineServer2_MakeSpawnGroupActive
+        (*(void (__fastcall **)(__int64, _QWORD))(*(_QWORD *)g_engine + 512LL))(g_engine, (unsigned int)a2);// 0x200 = 512LL = IVEngineServer2_MakeSpawnGroupActive
         LODWORD(v12) = a2;
         v13 = 0;
         v14 = v7;

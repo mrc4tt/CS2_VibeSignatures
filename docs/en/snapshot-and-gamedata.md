@@ -74,7 +74,9 @@ The workflow then strict-packs an actual symbol candidate, compares it with the 
 gamedata/<GAMEVER>/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json
 ```
 
-Two symbols are skipped:
+* Full support
+
+* Two symbols are skipped:
 
 - `GameEventManager`: no longer used by CounterStrikeSharp.
 - `CEntityResourceManifest_AddResource`: rarely changes on game updates.
@@ -85,7 +87,17 @@ Two symbols are skipped:
 gamedata/<GAMEVER>/CS2Fixes/gamedata/cs2fixes.jsonc
 ```
 
-`CCSPlayerPawn_GetMaxSpeed` is skipped because it is not present in `server.dll`.
+* Full support
+
+* `CCSPlayerPawn_GetMaxSpeed` is skipped because it has been inlined into it's caller in `server.dll`.
+
+### [CS2FOW](https://gitlab.com/karola3vax-group/cs2fow)
+
+```text
+gamedata/<GAMEVER>/CS2FOW/gamedata/cs2fow.games.txt
+```
+
+* Full support
 
 ### [swiftlys2](https://github.com/swiftly-solution/swiftlys2)
 
@@ -94,17 +106,23 @@ gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/offsets.jsonc
 gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc
 ```
 
+* Partial support
+
 ### [plugify](https://github.com/untrustedmodders/plugify-plugin-s2sdk)
 
 ```text
 gamedata/<GAMEVER>/plugify-plugin-s2sdk/assets/gamedata.jsonc
 ```
 
+* Partial support
+
 ### [cs2kz-metamod](https://github.com/KZGlobalTeam/cs2kz-metamod)
 
 ```text
 gamedata/<GAMEVER>/cs2kz-metamod/gamedata/cs2kz-core.games.txt
 ```
+
+* Partial support
 
 ### [modsharp](https://github.com/Kxnrl/modsharp-public)
 
@@ -117,8 +135,12 @@ gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/server.games.jsonc
 gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/tier0.games.jsonc
 ```
 
+* Partial support
+
 ### [CS2Surf/Timer](https://github.com/CS2Surf-CN/Timer)
 
 ```text
 gamedata/<GAMEVER>/cs2surf/gamedata/cs2surf-core.games.jsonc
 ```
+
+* Partial support

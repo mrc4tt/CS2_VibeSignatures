@@ -1,0 +1,47 @@
+func_name: CBasePlayerController_IsFakeClient
+func_va: '0x180af9790'
+disasm_code: |-
+  .text:0000000180AF9790                 mov     [rsp+arg_0], rbx
+  .text:0000000180AF9795                 mov     [rsp+arg_10], rsi
+  .text:0000000180AF979A                 push    rdi
+  .text:0000000180AF979B                 sub     rsp, 20h
+  .text:0000000180AF979F                 mov     rbx, rcx
+  .text:0000000180AF97A2                 mov     rcx, cs:g_pNetworkServerService
+  .text:0000000180AF97A9                 mov     rax, [rcx]
+  .text:0000000180AF97AC                 call    qword ptr [rax+0B8h]
+  .text:0000000180AF97B2                 mov     rcx, rbx
+  .text:0000000180AF97B5                 mov     rdi, rax
+  .text:0000000180AF97B8                 mov     rdx, [rax]
+  .text:0000000180AF97BB                 ; 0x1B8 = 440LL = INetworkGameServer_GetClientConnectionType
+  .text:0000000180AF97BB                 mov     rsi, [rdx+1B8h]; 0x1B8 = 440LL = INetworkGameServer_GetClientConnectionType
+  .text:0000000180AF97C2                 lea     rdx, [rsp+28h+arg_8]
+  .text:0000000180AF97C7                 call    sub_1812436E0
+  .text:0000000180AF97CC                 mov     ecx, [rsp+28h+arg_8]
+  .text:0000000180AF97D0                 lea     edx, [rcx-1]
+  .text:0000000180AF97D3                 cmp     ecx, 0FFFFFFFFh
+  .text:0000000180AF97D6                 jnz     short loc_180AF97DD
+  .text:0000000180AF97D8                 mov     edx, 0FFFFFFFFh
+  .text:0000000180AF97DD                 mov     rcx, rdi
+  .text:0000000180AF97E0                 call    rsi
+  .text:0000000180AF97E2                 mov     rbx, [rsp+28h+arg_0]
+  .text:0000000180AF97E7                 and     al, 1
+  .text:0000000180AF97E9                 mov     rsi, [rsp+28h+arg_10]
+  .text:0000000180AF97EE                 add     rsp, 20h
+  .text:0000000180AF97F2                 pop     rdi
+  .text:0000000180AF97F3                 retn
+procedure: |-
+  char __fastcall sub_180AF9790(__int64 a1)
+  {
+    __int64 v2; // rdi
+    __int64 (__fastcall *v3)(__int64, __int64); // rsi
+    __int64 v4; // rdx
+    int v6; // [rsp+38h] [rbp+10h] BYREF
+
+    v2 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)g_pNetworkServerService + 184LL))(g_pNetworkServerService);
+    v3 = *(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)v2 + 440LL);// 0x1B8 = 440LL = INetworkGameServer_GetClientConnectionType
+    sub_1812436E0(a1, &v6);
+    v4 = (unsigned int)(v6 - 1);
+    if ( v6 == -1 )
+      v4 = 0xFFFFFFFFLL;
+    return v3(v2, v4) & 1;
+  }

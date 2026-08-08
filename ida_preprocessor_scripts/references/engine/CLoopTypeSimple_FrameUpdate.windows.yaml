@@ -174,8 +174,8 @@ disasm_code: |-
   .text:000000018023E42D                 jz      short loc_18023E43B
   .text:000000018023E42F                 mov     rax, [rcx]
   .text:000000018023E432                 movaps  xmm1, xmm7
-  .text:000000018023E435                 ; 0x168 = 360LL = ISource2Server_OutOfGameFrameBoundary
-  .text:000000018023E435                 call    qword ptr [rax+168h]; 0x168 = 360LL = ISource2Server_OutOfGameFrameBoundary
+  .text:000000018023E435                 ; 0x168 = 360LL = ISource2Server_UpdateWhenNotInGame
+  .text:000000018023E435                 call    qword ptr [rax+168h]; 0x168 = 360LL = ISource2Server_UpdateWhenNotInGame
   .text:000000018023E43B                 mov     rcx, cs:g_pSource2Client
   .text:000000018023E442                 test    rcx, rcx
   .text:000000018023E445                 jz      short loc_18023E453
@@ -488,7 +488,7 @@ procedure: |-
     v29 = sub_180229780((__int64)v53, a2, v11, v26, 0);
     DispatchEvent(a1, v13, v29, v52);
     if ( g_pSource2Server )
-      (*(void (__fastcall **)(__int64))(*(_QWORD *)g_pSource2Server + 360LL))(g_pSource2Server);// 0x168 = 360LL = ISource2Server_OutOfGameFrameBoundary
+      (*(void (__fastcall **)(__int64))(*(_QWORD *)g_pSource2Server + 360LL))(g_pSource2Server);// 0x168 = 360LL = ISource2Server_UpdateWhenNotInGame
     if ( g_pSource2Client )
       (*(void (__fastcall **)(__int64))(*(_QWORD *)g_pSource2Client + 976LL))(g_pSource2Client);
     if ( g_pSource2Host )

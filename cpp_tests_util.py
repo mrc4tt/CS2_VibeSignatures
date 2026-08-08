@@ -508,6 +508,192 @@ def _normalize_reference_member_name(
     return candidate
 
 
+def _normalize_vtable_owner(value: Any) -> str:
+    owner = str(value or "").strip()
+    if owner.endswith("_vtable"):
+        owner = owner[: -len("_vtable")]
+    return owner
+
+
+def _reference_artifact_name(filename: str, platform: str) -> str:
+    suffix = f".{platform}.yaml"
+    if filename.endswith(suffix):
+        return filename[: -len(suffix)]
+    return Path(filename).stem
+
+
+def _reference_vtable_name(
+    *,
+    payload: Dict[str, Any],
+    filename: str,
+    platform: str,
+) -> str:
+    vtable_name = str(payload.get("vtable_name") or "").strip()
+    if vtable_name:
+        return vtable_name
+
+    if any(key in payload for key in ("vtable_size", "vtable_numvfunc", "vtable_entries")):
+        return _reference_artifact_name(filename, platform)
+
+    return ""
+
+
+def _is_excluded_reference_vtable(
+    *,
+    payload: Dict[str, Any],
+    filename: str,
+    platform: str,
+    exclude_reference_vtables: Sequence[str],
+) -> bool:
+    excluded = {str(name).strip() for name in exclude_reference_vtables if str(name).strip()}
+    if not excluded:
+        return False
+    return _reference_vtable_name(payload=payload, filename=filename, platform=platform) in excluded
+
+
+def _ordered_reference_modules(
+    symbol_store: SymbolStore,
+    requested_modules: Sequence[str],
+) -> List[str]:
+    modules: List[str] = []
+    seen = set()
+    for module in [*requested_modules, *symbol_store.modules]:
+        if module and module not in seen:
+            seen.add(module)
+            modules.append(module)
+    return modules
+
+
+def _match_reference_owner(value: str, owners: Sequence[str]) -> Optional[str]:
+    for owner in sorted(owners, key=len, reverse=True):
+        if value == owner or value.startswith(f"{owner}_"):
+            return owner
+    return None
+
+
+def audit_reference_vfunc_ownership(
+    *,
+    symbol_store: SymbolStore,
+    class_name: str,
+    platform: str,
+    reference_modules: Sequence[str],
+    compiler_section: Optional[Dict[str, Any]],
+    alias_class_names: Sequence[str] = (),
+    reference_vtable_owners: Sequence[str] = (),
+    exclude_reference_vtables: Sequence[str] = (),
+) -> Dict[str, Any]:
+    """Audit every relevant vfunc YAML across all symbol-store modules."""
+    owners = list(dict.fromkeys([class_name, *[name for name in alias_class_names if name]]))
+    allowed_vtable_owners = {
+        owner for owner in (_normalize_vtable_owner(name) for name in [*owners, *reference_vtable_owners]) if owner
+    }
+    modules = _ordered_reference_modules(symbol_store, reference_modules)
+    methods_by_index = compiler_section.get("methods_by_index", {}) if compiler_section else {}
+    files_checked: List[str] = []
+    files_excluded: List[str] = []
+    differences: List[Dict[str, Any]] = []
+
+    for module in modules:
+        for entry in symbol_store.iter_module(module):
+            if not entry.filename.endswith(f".{platform}.yaml"):
+                continue
+
+            payload = entry.payload
+            parsed_index = _parse_int_maybe(payload.get("vfunc_index"))
+            if parsed_index is None:
+                continue
+
+            file_stem = Path(entry.filename).stem
+            func_name = str(payload.get("func_name") or file_stem).strip()
+            file_owner = _match_reference_owner(file_stem, owners)
+            func_owner = _match_reference_owner(func_name, owners)
+            if file_owner is None and func_owner is None:
+                continue
+
+            if _is_excluded_reference_vtable(
+                payload=payload,
+                filename=entry.filename,
+                platform=platform,
+                exclude_reference_vtables=exclude_reference_vtables,
+            ):
+                files_excluded.append(entry.path)
+                continue
+
+            files_checked.append(entry.path)
+            if file_owner != func_owner:
+                differences.append(
+                    {
+                        "type": "reference_owner_mismatch",
+                        "message": (
+                            f"Reference owner mismatch in {entry.path}: "
+                            f"filename owner={file_owner or 'unknown'}, "
+                            f"func_name owner={func_owner or 'unknown'} ({func_name})."
+                        ),
+                        "path": entry.path,
+                    }
+                )
+
+            vtable_name = str(payload.get("vtable_name") or "").strip()
+            vtable_owner = _normalize_vtable_owner(vtable_name)
+            if vtable_owner and vtable_owner not in allowed_vtable_owners:
+                differences.append(
+                    {
+                        "type": "reference_vtable_owner_mismatch",
+                        "message": (
+                            f"Reference vtable owner mismatch in {entry.path}: "
+                            f"vtable_name={vtable_name}, allowed owners="
+                            f"{', '.join(sorted(allowed_vtable_owners))}."
+                        ),
+                        "path": entry.path,
+                    }
+                )
+
+            if compiler_section is None:
+                continue
+
+            compiled = methods_by_index.get(parsed_index)
+            if compiled is None:
+                differences.append(
+                    {
+                        "type": "reference_vfunc_index_missing",
+                        "message": (
+                            f"Reference index {parsed_index} from {entry.path} is missing "
+                            f"in compiler output for '{class_name}'."
+                        ),
+                        "path": entry.path,
+                        "index": parsed_index,
+                    }
+                )
+                continue
+
+            effective_owner = func_owner or file_owner or class_name
+            expected_member = _normalize_reference_member_name(
+                class_name=effective_owner,
+                func_name=func_name,
+                file_stem=file_stem,
+            )
+            actual_member = compiled.get("member_name", "")
+            if expected_member and actual_member and not _reference_member_matches(expected_member, actual_member):
+                differences.append(
+                    {
+                        "type": "reference_vfunc_name_mismatch",
+                        "message": (
+                            f"Reference index {parsed_index} from {entry.path} expects "
+                            f"'{expected_member}', but compiler reports '{actual_member}'."
+                        ),
+                        "path": entry.path,
+                        "index": parsed_index,
+                    }
+                )
+
+    return {
+        "modules_checked": modules,
+        "files_checked": files_checked,
+        "files_excluded": files_excluded,
+        "differences": differences,
+    }
+
+
 def _append_reference_conflict(
     conflicts: List[Dict[str, Any]],
     *,
@@ -533,6 +719,7 @@ def load_merged_reference_vtable_data(
     platform: str,
     reference_modules: Sequence[str],
     alias_class_names: Sequence[str] = (),
+    exclude_reference_vtables: Sequence[str] = (),
 ) -> Optional[Dict[str, Any]]:
     """Load and merge reference YAML info for a class from all modules."""
     class_names_to_try = [class_name] + [n for n in alias_class_names if n]
@@ -540,6 +727,7 @@ def load_merged_reference_vtable_data(
         "mode": "merged",
         "modules": [],
         "files": [],
+        "excluded_files": [],
         "vtable_size": None,
         "vtable_size_raw": None,
         "vtable_size_source": None,
@@ -563,6 +751,15 @@ def load_merged_reference_vtable_data(
                 payload = entry.payload
                 path = entry.path
                 file_stem = Path(entry.filename).stem
+
+                if _is_excluded_reference_vtable(
+                    payload=payload,
+                    filename=entry.filename,
+                    platform=platform,
+                    exclude_reference_vtables=exclude_reference_vtables,
+                ):
+                    merged["excluded_files"].append(path)
+                    continue
 
                 parsed_size = _parse_int_maybe(payload.get("vtable_size"))
                 parsed_numvfunc = _parse_int_maybe(payload.get("vtable_numvfunc"))
@@ -699,6 +896,7 @@ def load_reference_vtable_data(
     platform: str,
     reference_modules: Sequence[str],
     alias_class_names: Sequence[str] = (),
+    exclude_reference_vtables: Sequence[str] = (),
 ) -> Optional[Dict[str, Any]]:
     """
     Load reference YAML info for a class from modules in priority order.
@@ -721,11 +919,22 @@ def load_reference_vtable_data(
             vtable_numvfunc: Optional[int] = None
             reference_functions: Dict[int, Dict[str, str]] = {}
             matched_files: List[str] = []
+            excluded_files: List[str] = []
 
             for entry in entries:
                 payload = entry.payload
                 path = entry.path
                 file_stem = Path(entry.filename).stem
+
+                if _is_excluded_reference_vtable(
+                    payload=payload,
+                    filename=entry.filename,
+                    platform=platform,
+                    exclude_reference_vtables=exclude_reference_vtables,
+                ):
+                    excluded_files.append(path)
+                    continue
+
                 matched_files.append(path)
 
                 if "vtable_size" in payload:
@@ -757,6 +966,7 @@ def load_reference_vtable_data(
                 result = {
                     "module": module,
                     "files": matched_files,
+                    "excluded_files": excluded_files,
                     "vtable_size": vtable_size,
                     "vtable_size_raw": vtable_size_raw,
                     "vtable_numvfunc": vtable_numvfunc,
@@ -969,6 +1179,8 @@ def compare_compiler_vtable_with_yaml(
     reference_modules: Sequence[str],
     pointer_size: int,
     alias_class_names: Sequence[str] = (),
+    reference_vtable_owners: Sequence[str] = (),
+    exclude_reference_vtables: Sequence[str] = (),
     merge_reference_modules: bool = True,
 ) -> Dict[str, Any]:
     """
@@ -985,6 +1197,7 @@ def compare_compiler_vtable_with_yaml(
             platform=platform,
             reference_modules=reference_modules,
             alias_class_names=alias_class_names,
+            exclude_reference_vtables=exclude_reference_vtables,
         )
     else:
         reference = load_reference_vtable_data(
@@ -993,13 +1206,25 @@ def compare_compiler_vtable_with_yaml(
             platform=platform,
             reference_modules=reference_modules,
             alias_class_names=alias_class_names,
+            exclude_reference_vtables=exclude_reference_vtables,
         )
 
     alias_used = reference.get("alias_class_name") if reference else None
     reference_mode = "merged" if merge_reference_modules else "single"
     reference_modules_merged = list(reference.get("modules", [])) if merge_reference_modules and reference else []
     reference_files_merged = list(reference.get("files", [])) if merge_reference_modules and reference else []
+    reference_files_excluded = list(reference.get("excluded_files", [])) if reference else []
     reference_conflicts = list(reference.get("conflicts", [])) if merge_reference_modules and reference else []
+    ownership_audit = audit_reference_vfunc_ownership(
+        symbol_store=symbol_store,
+        class_name=class_name,
+        platform=platform,
+        reference_modules=reference_modules,
+        compiler_section=compiler_section,
+        alias_class_names=alias_class_names,
+        reference_vtable_owners=reference_vtable_owners,
+        exclude_reference_vtables=exclude_reference_vtables,
+    )
 
     report: Dict[str, Any] = {
         "class_name": class_name,
@@ -1011,7 +1236,11 @@ def compare_compiler_vtable_with_yaml(
         "reference_mode": reference_mode,
         "reference_modules_merged": reference_modules_merged,
         "reference_files_merged": reference_files_merged,
+        "reference_files_excluded": reference_files_excluded,
         "reference_conflicts": reference_conflicts,
+        "ownership_modules_checked": ownership_audit["modules_checked"],
+        "ownership_files_checked": ownership_audit["files_checked"],
+        "ownership_files_excluded": ownership_audit["files_excluded"],
         "differences": [],
         "notes": [],
     }
@@ -1024,6 +1253,7 @@ def compare_compiler_vtable_with_yaml(
 
     if reference_conflicts:
         report["differences"].extend(reference_conflicts)
+    report["differences"].extend(ownership_audit["differences"])
 
     compiler_missing = compiler_section is None
     if compiler_missing:
@@ -1114,7 +1344,7 @@ def compare_compiler_vtable_with_yaml(
             )
 
     if not report["differences"]:
-        report["notes"].append("No differences detected for vtable_size/vtable_numvfunc/vfunc_index mapping.")
+        report["notes"].append("No differences detected for vtable layout, vfunc mapping, or reference ownership.")
 
     return report
 
@@ -1141,6 +1371,7 @@ def format_vtable_compare_report(report: Dict[str, Any], *, include_differences:
         else:
             lines.append("Reference modules:")
         lines.append(f"Reference files merged: {len(report.get('reference_files_merged', []))}")
+        lines.append(f"Reference files excluded: {len(report.get('reference_files_excluded', []))}")
         lines.append(f"Reference functions: {report.get('reference_functions_count', 0)}")
         lines.append(f"Reference conflicts found: {len(report.get('reference_conflicts', []))}")
     elif report.get("reference_found"):
@@ -1154,6 +1385,9 @@ def format_vtable_compare_report(report: Dict[str, Any], *, include_differences:
             lines.append(f"Reference module (requested): {', '.join(requested_modules)}; not found")
         else:
             lines.append("Reference module: not found")
+
+    ownership_modules = report.get("ownership_modules_checked", [])
+    lines.append("Ownership modules checked: " + (", ".join(ownership_modules) if ownership_modules else "none"))
 
     if include_differences:
         lines.extend(format_vtable_compare_differences(report))

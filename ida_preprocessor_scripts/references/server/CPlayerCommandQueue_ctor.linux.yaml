@@ -1,0 +1,122 @@
+func_name: CPlayerCommandQueue_ctor
+func_va: '0x199e1c0'
+disasm_code: |-
+  .text:000000000199E1C0                 push    rbp
+  .text:000000000199E1C1                 mov     rbp, rsp
+  .text:000000000199E1C4                 push    r12
+  .text:000000000199E1C6                 mov     r12, rdi
+  .text:000000000199E1C9                 mov     edi, 268h
+  .text:000000000199E1CE                 push    rbx
+  .text:000000000199E1CF                 call    sub_9E5E60
+  .text:000000000199E1D4                 mov     ecx, 28h ; '('
+  .text:000000000199E1D9                 pxor    xmm0, xmm0
+  .text:000000000199E1DD                 xor     edx, edx
+  .text:000000000199E1DF                 mov     rbx, rax
+  .text:000000000199E1E2                 xor     esi, esi
+  .text:000000000199E1E4                 lea     rax, CPlayerCommandQueue_vtable
+  .text:000000000199E1EB                 mov     [rbx+8], r12
+  .text:000000000199E1EF                 mov     [rbx], rax
+  .text:000000000199E1F2                 lea     rdi, [rbx+10h]
+  .text:000000000199E1F6                 xor     eax, eax
+  .text:000000000199E1F8                 rep stosq
+  .text:000000000199E1FB                 mov     rax, cs:qword_8CE280
+  .text:000000000199E202                 movups  xmmword ptr [rbx+158h], xmm0
+  .text:000000000199E209                 lea     rdi, [rbx+1D8h]
+  .text:000000000199E210                 movdqa  xmm0, cs:xmmword_8CC510
+  .text:000000000199E218                 mov     byte ptr [rbx+16Ch], 0
+  .text:000000000199E21F                 mov     qword ptr [rbx+150h], 0
+  .text:000000000199E22A                 movups  xmmword ptr [rbx+1A8h], xmm0
+  .text:000000000199E231                 mov     [rbx+190h], rax
+  .text:000000000199E238                 lea     rax, _ZTV12CUserCmdBase; `vtable for'CUserCmdBase
+  .text:000000000199E23F                 mov     dword ptr [rbx+168h], 0
+  .text:000000000199E249                 mov     dword ptr [rbx+170h], 7FFFFFFFh
+  .text:000000000199E253                 mov     byte ptr [rbx+174h], 0
+  .text:000000000199E25A                 mov     dword ptr [rbx+178h], 0
+  .text:000000000199E264                 add     rax, 10h
+  .text:000000000199E268                 mov     [rbx+1C8h], rax
+  .text:000000000199E26F                 mov     qword ptr [rbx+180h], 0
+  .text:000000000199E27A                 mov     qword ptr [rbx+188h], 0
+  .text:000000000199E285                 mov     qword ptr [rbx+198h], 0
+  .text:000000000199E290                 mov     qword ptr [rbx+1A0h], 0
+  .text:000000000199E29B                 mov     qword ptr [rbx+1B8h], 0
+  .text:000000000199E2A6                 mov     dword ptr [rbx+1C0h], 0
+  .text:000000000199E2B0                 mov     dword ptr [rbx+1D0h], 0
+  .text:000000000199E2BA                 call    sub_13EAC20
+  .text:000000000199E2BF                 lea     rax, off_2387988
+  .text:000000000199E2C6                 mov     [rbx+1C8h], rax
+  .text:000000000199E2CD                 add     rax, 58h ; 'X'
+  .text:000000000199E2D1                 mov     [rbx+1D8h], rax
+  .text:000000000199E2D8                 lea     rdi, [rbx+220h]
+  .text:000000000199E2DF                 call    sub_1057430
+  .text:000000000199E2E4                 lea     rax, off_2387A80
+  .text:000000000199E2EB                 pxor    xmm0, xmm0
+  .text:000000000199E2EF                 mov     qword ptr [rbx+258h], 0
+  .text:000000000199E2FA                 mov     [rbx+1C8h], rax
+  .text:000000000199E301                 add     rax, 58h ; 'X'
+  .text:000000000199E305                 mov     [rbx+1D8h], rax
+  .text:000000000199E30C                 mov     eax, 0FFFFFFFFh
+  .text:000000000199E311                 mov     [rbx+240h], rax
+  .text:000000000199E318                 mov     eax, 1
+  .text:000000000199E31D                 movups  xmmword ptr [rbx+248h], xmm0
+  .text:000000000199E324                 mov     qword ptr [rbx+260h], 0
+  .text:000000000199E32F                 test    byte ptr [r12+669h], 1
+  .text:000000000199E338                 jz      short loc_199E350
+  .text:000000000199E33A                 mov     [rbx+174h], al
+  .text:000000000199E340                 mov     rax, rbx
+  .text:000000000199E343                 pop     rbx
+  .text:000000000199E344                 pop     r12
+  .text:000000000199E346                 pop     rbp
+  .text:000000000199E347                 retn
+  .text:000000000199E350                 mov     rdi, r12
+  .text:000000000199E353                 ; CBasePlayerController_IsFakeClient
+  .text:000000000199E353                 call    sub_15E0CE0; CBasePlayerController_IsFakeClient
+  .text:000000000199E358                 mov     [rbx+174h], al
+  .text:000000000199E35E                 mov     rax, rbx
+  .text:000000000199E361                 pop     rbx
+  .text:000000000199E362                 pop     r12
+  .text:000000000199E364                 pop     rbp
+  .text:000000000199E365                 retn
+procedure: |-
+  __int64 __fastcall CPlayerCommandQueue_ctor(__int64 a1)
+  {
+    __int64 v1; // rbx
+    __m128i si128; // xmm0
+
+    v1 = sub_9E5E60(616);
+    *(_QWORD *)(v1 + 8) = a1;
+    *(_QWORD *)v1 = CPlayerCommandQueue_vtable;
+    memset((void *)(v1 + 16), 0, 0x140u);
+    *(_OWORD *)(v1 + 344) = 0;
+    si128 = _mm_load_si128((const __m128i *)&xmmword_8CC510);
+    *(_BYTE *)(v1 + 364) = 0;
+    *(_QWORD *)(v1 + 336) = 0;
+    *(__m128i *)(v1 + 424) = si128;
+    *(_QWORD *)(v1 + 400) = 0xFFFFFFFFFFFFLL;
+    *(_DWORD *)(v1 + 360) = 0;
+    *(_DWORD *)(v1 + 368) = 0x7FFFFFFF;
+    *(_BYTE *)(v1 + 372) = 0;
+    *(_DWORD *)(v1 + 376) = 0;
+    *(_QWORD *)(v1 + 456) = &unk_24AE288;
+    *(_QWORD *)(v1 + 384) = 0;
+    *(_QWORD *)(v1 + 392) = 0;
+    *(_QWORD *)(v1 + 408) = 0;
+    *(_QWORD *)(v1 + 416) = 0;
+    *(_QWORD *)(v1 + 440) = 0;
+    *(_DWORD *)(v1 + 448) = 0;
+    *(_DWORD *)(v1 + 464) = 0;
+    sub_13EAC20(v1 + 472, 0, 0);
+    *(_QWORD *)(v1 + 456) = off_2387988;
+    *(_QWORD *)(v1 + 472) = off_23879E0;
+    sub_1057430(v1 + 544);
+    *(_QWORD *)(v1 + 600) = 0;
+    *(_QWORD *)(v1 + 456) = off_2387A80;
+    *(_QWORD *)(v1 + 472) = off_2387AD8;
+    *(_QWORD *)(v1 + 576) = 0xFFFFFFFFLL;
+    *(_OWORD *)(v1 + 584) = 0;
+    *(_QWORD *)(v1 + 608) = 0;
+    if ( (*(_BYTE *)(a1 + 1641) & 1) != 0 )
+      *(_BYTE *)(v1 + 372) = 1;
+    else
+      *(_BYTE *)(v1 + 372) = sub_15E0CE0(a1);// CBasePlayerController_IsFakeClient
+    return v1;
+  }

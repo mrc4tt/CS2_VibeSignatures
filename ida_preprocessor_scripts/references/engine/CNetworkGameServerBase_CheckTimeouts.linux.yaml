@@ -1,0 +1,399 @@
+func_name: CNetworkGameServerBase_CheckTimeouts
+func_va: '0x4f9c00'
+disasm_code: |-
+  .text:00000000004F9C00                 movsxd  rax, dword ptr [rdi+248h]
+  .text:00000000004F9C07                 mov     edx, eax
+  .text:00000000004F9C09                 sub     edx, 1
+  .text:00000000004F9C0C                 js      locret_4F9FF0
+  .text:00000000004F9C12                 push    rbp
+  .text:00000000004F9C13                 mov     rbp, rsp
+  .text:00000000004F9C16                 push    r15
+  .text:00000000004F9C18                 push    r14
+  .text:00000000004F9C1A                 push    r13
+  .text:00000000004F9C1C                 lea     r13, sub_4F0CC0
+  .text:00000000004F9C23                 push    r12
+  .text:00000000004F9C25                 mov     r12, rdi
+  .text:00000000004F9C28                 push    rbx
+  .text:00000000004F9C29                 movsxd  rbx, edx
+  .text:00000000004F9C2C                 mov     edx, edx
+  .text:00000000004F9C2E                 sub     rax, rdx
+  .text:00000000004F9C31                 sub     rsp, 138h
+  .text:00000000004F9C38                 shl     rbx, 3
+  .text:00000000004F9C3C                 lea     rax, ds:0FFFFFFFFFFFFFFF0h[rax*8]
+  .text:00000000004F9C44                 mov     [rbp-148h], rax
+  .text:00000000004F9C4B                 nop     dword ptr [rax+rax+00h]
+  .text:00000000004F9C50                 mov     rax, [r12+250h]
+  .text:00000000004F9C58                 mov     r14, [rax+rbx]
+  .text:00000000004F9C5C                 mov     rax, [r14]
+  .text:00000000004F9C5F                 mov     rax, [rax+98h]
+  .text:00000000004F9C66                 cmp     rax, r13
+  .text:00000000004F9C69                 jnz     loc_4F9D68
+  .text:00000000004F9C6F                 movzx   eax, byte ptr [r14+0A0h]
+  .text:00000000004F9C77                 test    al, al
+  .text:00000000004F9C79                 jnz     loc_4F9D40
+  .text:00000000004F9C7F                 mov     rdi, r14
+  .text:00000000004F9C82                 call    sub_523F90
+  .text:00000000004F9C87                 test    al, al
+  .text:00000000004F9C89                 jz      loc_4F9D40
+  .text:00000000004F9C8F                 mov     rdi, r14
+  .text:00000000004F9C92                 call    sub_5256C0
+  .text:00000000004F9C97                 test    al, al
+  .text:00000000004F9C99                 jnz     loc_4F9F00
+  .text:00000000004F9C9F                 mov     r15, [r14+58h]
+  .text:00000000004F9CA3                 test    r15, r15
+  .text:00000000004F9CA6                 jz      loc_4F9D40
+  .text:00000000004F9CAC                 mov     rax, [r15]
+  .text:00000000004F9CAF                 mov     rdi, r15
+  .text:00000000004F9CB2                 call    qword ptr [rax+1C8h]
+  .text:00000000004F9CB8                 test    al, al
+  .text:00000000004F9CBA                 jnz     loc_4F9DE0
+  .text:00000000004F9CC0                 mov     rax, [r12]
+  .text:00000000004F9CC4                 mov     rdi, r12
+  .text:00000000004F9CC7                 call    qword ptr [rax+258h] ; 258h = CNetworkGameServerBase_IsHLTV
+  .text:00000000004F9CCD                 test    al, al
+  .text:00000000004F9CCF                 jnz     short loc_4F9D20
+  .text:00000000004F9CD1                 lea     rax, g_pSource2Server
+  .text:00000000004F9CD8                 mov     rax, [rax]
+  .text:00000000004F9CDB                 test    rax, rax
+  .text:00000000004F9CDE                 jz      short loc_4F9D20
+  .text:00000000004F9CE0                 mov     rdx, [rax]
+  .text:00000000004F9CE3                 mov     rdi, r15
+  .text:00000000004F9CE6                 mov     [rbp-158h], rax
+  .text:00000000004F9CED                 mov     rcx, [r15]
+  .text:00000000004F9CF0                 mov     rdx, [rdx+0C8h]
+  .text:00000000004F9CF7                 mov     [rbp-150h], rdx
+  .text:00000000004F9CFE                 call    qword ptr [rcx+0A0h]
+  .text:00000000004F9D04                 mov     esi, [r14+48h]
+  .text:00000000004F9D08                 mov     rdi, [rbp-158h]
+  .text:00000000004F9D0F                 mov     rdx, [rbp-150h]
+  .text:00000000004F9D16                 call    rdx
+  .text:00000000004F9D18                 test    al, al
+  .text:00000000004F9D1A                 jnz     loc_4F9F38
+  .text:00000000004F9D20                 mov     rax, [r15]
+  .text:00000000004F9D23                 mov     rdi, r15
+  .text:00000000004F9D26                 call    qword ptr [rax+188h]
+  .text:00000000004F9D2C                 test    al, al
+  .text:00000000004F9D2E                 jz      short loc_4F9D78
+  .text:00000000004F9D30                 mov     rax, [r14]
+  .text:00000000004F9D33                 xor     edx, edx
+  .text:00000000004F9D35                 mov     esi, 1Ah
+  .text:00000000004F9D3A                 mov     rdi, r14
+  .text:00000000004F9D3D                 call    qword ptr [rax+40h]
+  .text:00000000004F9D40                 sub     rbx, 8
+  .text:00000000004F9D44                 cmp     [rbp-148h], rbx
+  .text:00000000004F9D4B                 jnz     loc_4F9C50
+  .text:00000000004F9D51                 add     rsp, 138h
+  .text:00000000004F9D58                 pop     rbx
+  .text:00000000004F9D59                 pop     r12
+  .text:00000000004F9D5B                 pop     r13
+  .text:00000000004F9D5D                 pop     r14
+  .text:00000000004F9D5F                 pop     r15
+  .text:00000000004F9D61                 pop     rbp
+  .text:00000000004F9D62                 retn
+  .text:00000000004F9D68                 mov     rdi, r14
+  .text:00000000004F9D6B                 call    rax
+  .text:00000000004F9D6D                 jmp     loc_4F9C77
+  .text:00000000004F9D78                 mov     dword ptr [rbp-140h], 0
+  .text:00000000004F9D82                 mov     rax, [r15]
+  .text:00000000004F9D85                 lea     rsi, [rbp-140h]
+  .text:00000000004F9D8C                 mov     rdi, r15
+  .text:00000000004F9D8F                 call    qword ptr [rax+1E8h]
+  .text:00000000004F9D95                 test    al, al
+  .text:00000000004F9D97                 jz      short loc_4F9D40
+  .text:00000000004F9D99                 mov     esi, [rbp-140h]
+  .text:00000000004F9D9F                 test    esi, esi
+  .text:00000000004F9DA1                 jnz     short loc_4F9DB2
+  .text:00000000004F9DA3                 mov     dword ptr [rbp-140h], 1Eh
+  .text:00000000004F9DAD                 mov     esi, 1Eh
+  .text:00000000004F9DB2                 mov     rax, [r14]
+  .text:00000000004F9DB5                 lea     rdx, aRemoteDisconne; "remote disconnected"
+  .text:00000000004F9DBC                 mov     rdi, r14
+  .text:00000000004F9DBF                 sub     rbx, 8
+  .text:00000000004F9DC3                 call    qword ptr [rax+40h]
+  .text:00000000004F9DC6                 cmp     [rbp-148h], rbx
+  .text:00000000004F9DCD                 jnz     loc_4F9C50
+  .text:00000000004F9DD3                 jmp     loc_4F9D51
+  .text:00000000004F9DE0                 ; _QWORD
+  .text:00000000004F9DE0                 mov     edi, cs:dword_A30294; _QWORD
+  .text:00000000004F9DE6                 ; _QWORD
+  .text:00000000004F9DE6                 mov     esi, 2; _QWORD
+  .text:00000000004F9DEB                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000004F9DF0                 test    al, al
+  .text:00000000004F9DF2                 jz      short loc_4F9E62
+  .text:00000000004F9DF4                 mov     rax, [r15]
+  .text:00000000004F9DF7                 mov     rdi, r15
+  .text:00000000004F9DFA                 call    qword ptr [rax+0A0h]
+  .text:00000000004F9E00                 mov     rdi, r14
+  .text:00000000004F9E03                 cvtss2sd xmm0, xmm0
+  .text:00000000004F9E07                 movsd   qword ptr [rbp-158h], xmm0
+  .text:00000000004F9E0F                 call    CServerSideClientBase_GetNetworkIDString
+  .text:00000000004F9E14                 mov     rdi, r14
+  .text:00000000004F9E17                 mov     r8, [rax]
+  .text:00000000004F9E1A                 lea     rax, src
+  .text:00000000004F9E21                 test    r8, r8
+  .text:00000000004F9E24                 cmovz   r8, rax
+  .text:00000000004F9E28                 mov     [rbp-150h], r8
+  .text:00000000004F9E2F                 call    sub_524D50
+  .text:00000000004F9E34                 ; _QWORD
+  .text:00000000004F9E34                 mov     edi, cs:dword_A30294; _QWORD
+  .text:00000000004F9E3A                 lea     rdx, aChecktimeoutsD; "CheckTimeouts: Disconnecting client: %s"...
+  .text:00000000004F9E41                 ; _QWORD
+  .text:00000000004F9E41                 mov     esi, 2; _QWORD
+  .text:00000000004F9E46                 mov     r8, [rbp-150h]
+  .text:00000000004F9E4D                 mov     rcx, rax
+  .text:00000000004F9E50                 mov     eax, 1
+  .text:00000000004F9E55                 movsd   xmm0, qword ptr [rbp-158h]
+  .text:00000000004F9E5D                 call    _LoggingSystem_Log
+  .text:00000000004F9E62                 mov     rax, [r14]
+  .text:00000000004F9E65                 mov     rdi, r15
+  .text:00000000004F9E68                 mov     rcx, [rax+40h]
+  .text:00000000004F9E6C                 mov     rax, [r15]
+  .text:00000000004F9E6F                 lea     r15, [rbp-140h]
+  .text:00000000004F9E76                 mov     [rbp-150h], rcx
+  .text:00000000004F9E7D                 call    qword ptr [rax+0A0h]
+  .text:00000000004F9E83                 lea     rsi, aNetchanTimeout; "netchan timeout: %.2fs since recv"
+  .text:00000000004F9E8A                 cvtss2sd xmm0, xmm0
+  .text:00000000004F9E8E                 mov     rdi, r15
+  .text:00000000004F9E91                 mov     eax, 1
+  .text:00000000004F9E96                 call    sub_2CF1D0
+  .text:00000000004F9E9B                 test    byte ptr [rbp-139h], 40h
+  .text:00000000004F9EA2                 lea     rdx, [rbp-138h]
+  .text:00000000004F9EA9                 mov     rcx, [rbp-150h]
+  .text:00000000004F9EB0                 jnz     short loc_4F9ECC
+  .text:00000000004F9EB2                 lea     rdx, src
+  .text:00000000004F9EB9                 test    dword ptr [rbp-13Ch], 3FFFFFFFh
+  .text:00000000004F9EC3                 jz      short loc_4F9ECC
+  .text:00000000004F9EC5                 mov     rdx, [rbp-138h]
+  .text:00000000004F9ECC                 mov     esi, 1Dh
+  .text:00000000004F9ED1                 mov     rdi, r14
+  .text:00000000004F9ED4                 sub     rbx, 8
+  .text:00000000004F9ED8                 call    rcx
+  .text:00000000004F9EDA                 ; int
+  .text:00000000004F9EDA                 xor     esi, esi; int
+  .text:00000000004F9EDC                 ; this
+  .text:00000000004F9EDC                 mov     rdi, r15; this
+  .text:00000000004F9EDF                 call    __ZN13CBufferString5PurgeEi; CBufferString::Purge(int)
+  .text:00000000004F9EE4                 cmp     [rbp-148h], rbx
+  .text:00000000004F9EEB                 jnz     loc_4F9C50
+  .text:00000000004F9EF1                 jmp     loc_4F9D51
+  .text:00000000004F9F00                 lea     rsi, aOninvalidsteam; "OnInvalidSteamLogonErrorForClient"
+  .text:00000000004F9F07                 mov     rdi, r14
+  .text:00000000004F9F0A                 sub     rbx, 8
+  .text:00000000004F9F0E                 call    sub_525620
+  .text:00000000004F9F13                 mov     esi, 9
+  .text:00000000004F9F18                 mov     rdi, r14
+  .text:00000000004F9F1B                 call    sub_5269B0
+  .text:00000000004F9F20                 cmp     [rbp-148h], rbx
+  .text:00000000004F9F27                 jnz     loc_4F9C50
+  .text:00000000004F9F2D                 jmp     loc_4F9D51
+  .text:00000000004F9F38                 ; _QWORD
+  .text:00000000004F9F38                 mov     edi, cs:dword_A30294; _QWORD
+  .text:00000000004F9F3E                 ; _QWORD
+  .text:00000000004F9F3E                 mov     esi, 2; _QWORD
+  .text:00000000004F9F43                 call    _LoggingSystem_IsChannelEnabled
+  .text:00000000004F9F48                 test    al, al
+  .text:00000000004F9F4A                 jz      short loc_4F9FBA
+  .text:00000000004F9F4C                 mov     rax, [r15]
+  .text:00000000004F9F4F                 mov     rdi, r15
+  .text:00000000004F9F52                 call    qword ptr [rax+0A0h]
+  .text:00000000004F9F58                 mov     rdi, r14
+  .text:00000000004F9F5B                 cvtss2sd xmm0, xmm0
+  .text:00000000004F9F5F                 movsd   qword ptr [rbp-158h], xmm0
+  .text:00000000004F9F67                 call    CServerSideClientBase_GetNetworkIDString
+  .text:00000000004F9F6C                 mov     rdi, r14
+  .text:00000000004F9F6F                 mov     r8, [rax]
+  .text:00000000004F9F72                 lea     rax, src
+  .text:00000000004F9F79                 test    r8, r8
+  .text:00000000004F9F7C                 cmovz   r8, rax
+  .text:00000000004F9F80                 mov     [rbp-150h], r8
+  .text:00000000004F9F87                 call    sub_524D50
+  .text:00000000004F9F8C                 ; _QWORD
+  .text:00000000004F9F8C                 mov     edi, cs:dword_A30294; _QWORD
+  .text:00000000004F9F92                 lea     rdx, aChecktimeoutsD_0; "CheckTimeouts: Disconnecting client: %s"...
+  .text:00000000004F9F99                 ; _QWORD
+  .text:00000000004F9F99                 mov     esi, 2; _QWORD
+  .text:00000000004F9F9E                 mov     r8, [rbp-150h]
+  .text:00000000004F9FA5                 mov     rcx, rax
+  .text:00000000004F9FA8                 mov     eax, 1
+  .text:00000000004F9FAD                 movsd   xmm0, qword ptr [rbp-158h]
+  .text:00000000004F9FB5                 call    _LoggingSystem_Log
+  .text:00000000004F9FBA                 mov     rax, [r14]
+  .text:00000000004F9FBD                 mov     rdi, r15
+  .text:00000000004F9FC0                 mov     rcx, [rax+40h]
+  .text:00000000004F9FC4                 mov     rax, [r15]
+  .text:00000000004F9FC7                 lea     r15, [rbp-140h]
+  .text:00000000004F9FCE                 mov     [rbp-150h], rcx
+  .text:00000000004F9FD5                 call    qword ptr [rax+0A0h]
+  .text:00000000004F9FDB                 lea     rsi, aServerDecidedT; "server-decided timeout: %.2fs since rec"...
+  .text:00000000004F9FE2                 cvtss2sd xmm0, xmm0
+  .text:00000000004F9FE6                 jmp     loc_4F9E8E
+  .text:00000000004F9FF0                 retn
+procedure: |-
+  __int64 __fastcall CNetworkGameServerBase_CheckTimeouts(__int64 a1, __int64 a2)
+  {
+    __int64 result; // rax
+    __int64 v3; // rdx
+    __int64 v4; // rbx
+    unsigned int *v5; // r14
+    __int64 (__fastcall *v6)(); // rax
+    __int64 v7; // r15
+    const bool *v8; // r8
+    __int64 v9; // rax
+    const char *v10; // rsi
+    int v11; // edx
+    int v12; // ecx
+    int v13; // r8d
+    int v14; // r9d
+    double v15; // xmm0_8
+    const bool *v16; // rdx
+    const bool *v17; // r8
+    __int64 v18; // rax
+    _QWORD *v19; // [rsp-160h] [rbp-160h]
+    double v20; // [rsp-160h] [rbp-160h]
+    double v21; // [rsp-160h] [rbp-160h]
+    unsigned __int8 (__fastcall *v22)(_QWORD *, _QWORD); // [rsp-158h] [rbp-158h]
+    const bool *v23; // [rsp-158h] [rbp-158h]
+    void (__fastcall *v24)(unsigned int *, __int64, const bool *); // [rsp-158h] [rbp-158h]
+    const bool *v25; // [rsp-158h] [rbp-158h]
+    __int64 v26; // [rsp-150h] [rbp-150h]
+    unsigned int v27; // [rsp-148h] [rbp-148h] BYREF
+    int v28; // [rsp-144h] [rbp-144h]
+    const bool *v29; // [rsp-140h] [rbp-140h] BYREF
+
+    result = *(int *)(a1 + 584);
+    LODWORD(v3) = *(_DWORD *)(a1 + 584) - 1;
+    if ( (int)v3 >= 0 )
+    {
+      v3 = (unsigned int)v3;
+      v4 = 8LL * (int)v3;
+      v26 = 8 * (result - (unsigned int)v3) - 16;
+      while ( 1 )
+      {
+        while ( 1 )
+        {
+          while ( 1 )
+          {
+            v5 = *(unsigned int **)(*(_QWORD *)(a1 + 592) + v4);
+            v6 = *(__int64 (__fastcall **)())(*(_QWORD *)v5 + 152LL);
+            if ( v6 == sub_4F0CC0 )
+              result = *((unsigned __int8 *)v5 + 160);
+            else
+              result = ((__int64 (__fastcall *)(_QWORD))v6)(*(_QWORD *)(*(_QWORD *)(a1 + 592) + v4));
+            if ( (_BYTE)result )
+              goto LABEL_15;
+            result = sub_523F90(v5, a2, v3);
+            if ( !(_BYTE)result )
+              goto LABEL_15;
+            result = sub_5256C0(v5);
+            if ( !(_BYTE)result )
+              break;
+            v4 -= 8;
+            sub_525620(v5, "OnInvalidSteamLogonErrorForClient");
+            a2 = 9;
+            result = sub_5269B0(v5, 9);
+            if ( v26 == v4 )
+              return result;
+          }
+          v7 = *((_QWORD *)v5 + 11);
+          if ( v7 )
+            break;
+  LABEL_15:
+          v4 -= 8;
+          if ( v26 == v4 )
+            return result;
+        }
+        if ( (*(unsigned __int8 (__fastcall **)(_QWORD))(*(_QWORD *)v7 + 456LL))(*((_QWORD *)v5 + 11)) )
+          break;
+        if ( !(*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)a1 + 600LL))(a1) // 600LL = 0x258 = CNetworkGameServerBase_IsHLTV
+          && g_pSource2Server
+          && (v19 = g_pSource2Server,
+              v22 = *(unsigned __int8 (__fastcall **)(_QWORD *, _QWORD))(*g_pSource2Server + 200LL),
+              (*(void (__fastcall **)(__int64))(*(_QWORD *)v7 + 160LL))(v7),
+              v22(v19, v5[18])) )
+        {
+          if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_A30294, 2) )
+          {
+            v21 = (*(float (__fastcall **)(__int64))(*(_QWORD *)v7 + 160LL))(v7);
+            v17 = *(const bool **)CServerSideClientBase_GetNetworkIDString((__int64)v5, 2);
+            if ( !v17 )
+              v17 = &src;
+            v25 = v17;
+            v18 = sub_524D50(v5);
+            LoggingSystem_Log(
+              (unsigned int)dword_A30294,
+              2,
+              "CheckTimeouts: Disconnecting client: %s %s, after a server-decided timeout of %0.2fs with no acks received\n",
+              v18,
+              v25,
+              v21);
+          }
+          v24 = *(void (__fastcall **)(unsigned int *, __int64, const bool *))(*(_QWORD *)v5 + 64LL);
+          v10 = "server-decided timeout: %.2fs since recv";
+          v15 = (*(float (__fastcall **)(__int64))(*(_QWORD *)v7 + 160LL))(v7);
+  LABEL_28:
+          sub_2CF1D0((unsigned int)&v27, (_DWORD)v10, v11, v12, v13, v14, v15);
+          v16 = (const bool *)&v29;
+          if ( (v28 & 0x40000000) == 0 )
+          {
+            v16 = &src;
+            if ( (v28 & 0x3FFFFFFF) != 0 )
+              v16 = v29;
+          }
+          v4 -= 8;
+          v24(v5, 29, v16);
+          a2 = 0;
+          result = CBufferString::Purge((CBufferString *)&v27, 0);
+          if ( v26 == v4 )
+            return result;
+        }
+        else
+        {
+          if ( (*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)v7 + 392LL))(v7) )
+          {
+            a2 = 26;
+            result = (*(__int64 (__fastcall **)(unsigned int *, __int64, _QWORD))(*(_QWORD *)v5 + 64LL))(v5, 26, 0);
+            goto LABEL_15;
+          }
+          v27 = 0;
+          a2 = (__int64)&v27;
+          result = (*(__int64 (__fastcall **)(__int64, unsigned int *))(*(_QWORD *)v7 + 488LL))(v7, &v27);
+          if ( !(_BYTE)result )
+            goto LABEL_15;
+          a2 = v27;
+          if ( !v27 )
+          {
+            v27 = 30;
+            a2 = 30;
+          }
+          v4 -= 8;
+          result = (*(__int64 (__fastcall **)(unsigned int *, __int64, const char *))(*(_QWORD *)v5 + 64LL))(
+                     v5,
+                     a2,
+                     "remote disconnected");
+          if ( v26 == v4 )
+            return result;
+        }
+      }
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_A30294, 2) )
+      {
+        v20 = (*(float (__fastcall **)(__int64))(*(_QWORD *)v7 + 160LL))(v7);
+        v8 = *(const bool **)CServerSideClientBase_GetNetworkIDString((__int64)v5, 2);
+        if ( !v8 )
+          v8 = &src;
+        v23 = v8;
+        v9 = sub_524D50(v5);
+        LoggingSystem_Log(
+          (unsigned int)dword_A30294,
+          2,
+          "CheckTimeouts: Disconnecting client: %s %s, after a netchan-decided timeout of %0.2fs with no acks received\n",
+          v9,
+          v23,
+          v20);
+      }
+      v24 = *(void (__fastcall **)(unsigned int *, __int64, const bool *))(*(_QWORD *)v5 + 64LL);
+      v10 = "netchan timeout: %.2fs since recv";
+      v15 = (*(float (__fastcall **)(__int64))(*(_QWORD *)v7 + 160LL))(v7);
+      goto LABEL_28;
+    }
+    return result;
+  }

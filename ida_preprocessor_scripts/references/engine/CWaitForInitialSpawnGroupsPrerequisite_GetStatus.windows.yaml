@@ -1,0 +1,71 @@
+func_name: CWaitForInitialSpawnGroupsPrerequisite_GetStatus
+func_va: '0x1801dcdf0'
+disasm_code: |-
+  .text:00000001801DCDF0                 mov     [rsp+arg_0], rbx
+  .text:00000001801DCDF5                 mov     [rsp+arg_8], rbp
+  .text:00000001801DCDFA                 mov     [rsp+arg_10], rsi
+  .text:00000001801DCDFF                 push    rdi
+  .text:00000001801DCE00                 sub     rsp, 20h
+  .text:00000001801DCE04                 mov     rsi, cs:qword_18090DA50
+  .text:00000001801DCE0B                 mov     rbp, rcx
+  .text:00000001801DCE0E                 test    rsi, rsi
+  .text:00000001801DCE11                 jz      short loc_1801DCE48
+  .text:00000001801DCE13                 movsxd  rdi, dword ptr [rcx+10h]
+  .text:00000001801DCE17                 test    rdi, rdi
+  .text:00000001801DCE1A                 jle     short loc_1801DCE48
+  .text:00000001801DCE1C                 xor     ebx, ebx
+  .text:00000001801DCE1E                 xchg    ax, ax
+  .text:00000001801DCE20                 mov     rax, [rsi]
+  .text:00000001801DCE23                 mov     rcx, rsi
+  .text:00000001801DCE26                 ; 0x128 = 296LL = INetworkGameServer_GetSpawnGroupLoadingStatus
+  .text:00000001801DCE26                 mov     r8, [rax+128h]; 0x128 = 296LL = INetworkGameServer_GetSpawnGroupLoadingStatus
+  .text:00000001801DCE2D                 mov     rax, [rbp+18h]
+  .text:00000001801DCE31                 mov     edx, [rax+rbx*4]
+  .text:00000001801DCE34                 call    r8
+  .text:00000001801DCE37                 test    eax, eax
+  .text:00000001801DCE39                 jz      short loc_1801DCE69
+  .text:00000001801DCE3B                 cmp     eax, 2
+  .text:00000001801DCE3E                 jz      short loc_1801DCE62
+  .text:00000001801DCE40                 inc     rbx
+  .text:00000001801DCE43                 cmp     rbx, rdi
+  .text:00000001801DCE46                 jl      short loc_1801DCE20
+  .text:00000001801DCE48                 mov     eax, 1
+  .text:00000001801DCE4D                 mov     rbx, [rsp+28h+arg_0]
+  .text:00000001801DCE52                 mov     rbp, [rsp+28h+arg_8]
+  .text:00000001801DCE57                 mov     rsi, [rsp+28h+arg_10]
+  .text:00000001801DCE5C                 add     rsp, 20h
+  .text:00000001801DCE60                 pop     rdi
+  .text:00000001801DCE61                 retn
+  .text:00000001801DCE62                 mov     eax, 2
+  .text:00000001801DCE67                 jmp     short loc_1801DCE4D
+  .text:00000001801DCE69                 xor     eax, eax
+  .text:00000001801DCE6B                 jmp     short loc_1801DCE4D
+procedure: |-
+  __int64 __fastcall sub_1801DCDF0(__int64 a1)
+  {
+    __int64 v1; // rsi
+    __int64 v3; // rdi
+    __int64 v4; // rbx
+    int v5; // eax
+
+    v1 = qword_18090DA50;
+    if ( !qword_18090DA50 )
+      return 1;
+    v3 = *(int *)(a1 + 16);
+    if ( v3 <= 0 )
+      return 1;
+    v4 = 0;
+    while ( 1 )
+    {
+      v5 = (*(__int64 (__fastcall **)(__int64, _QWORD))(*(_QWORD *)v1 + 296LL))(// 0x128 = 296LL = INetworkGameServer_GetSpawnGroupLoadingStatus
+             v1,
+             *(unsigned int *)(*(_QWORD *)(a1 + 24) + 4 * v4));
+      if ( !v5 )
+        break;
+      if ( v5 == 2 )
+        return 2;
+      if ( ++v4 >= v3 )
+        return 1;
+    }
+    return 0;
+  }

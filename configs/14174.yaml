@@ -616,19 +616,63 @@ modules:
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
           - INetworkGameServer_GetMaxClients.{platform}.yaml
+      - name: find-CNetworkGameServerBase_GetClassBaseline
+        expected_output:
+          - CNetworkGameServerBase_GetClassBaseline.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
+      - name: find-CSteam3Server_SendUpdatedServerDetails
+        expected_output:
+          - CSteam3Server_SendUpdatedServerDetails.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_ActivateServer.{platform}.yaml
+      - name: find-CSteam3Server_SendUpdatedServerDetails-decompiles
+        expected_output:
+          - CNetworkGameServerBase_GetMapName.{platform}.yaml
+          - CNetworkGameServerBase_GetHostName.{platform}.yaml
+        expected_input:
+          - CSteam3Server_SendUpdatedServerDetails.{platform}.yaml
       - name: find-CNetworkGameServerBase_ServerPollNetworking
         expected_output:
           - CNetworkGameServerBase_ServerPollNetworking.{platform}.yaml
         expected_input:
           - CNetworkGameServer_vtable.{platform}.yaml
+      - name: find-INetworkGameServer_IsChangelevelPending
+        expected_output:
+          - INetworkGameServer_IsChangelevelPending.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
+          - CNetworkGameServerBase_ServerPollNetworking.{platform}.yaml
+      - name: find-CNetworkGameServerBase_IsChangelevelPending
+        expected_output:
+          - CNetworkGameServerBase_IsChangelevelPending.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_vtable.{platform}.yaml
+          - INetworkGameServer_IsChangelevelPending.{platform}.yaml
       - name: find-CNetworkGameServerBase_SetMaxClients
         expected_output:
           - CNetworkGameServerBase_SetMaxClients.{platform}.yaml
         expected_input:
           - CNetworkGameServer_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_FillKV3ServerInfo
+        expected_output:
+          - CNetworkGameServerBase_FillKV3ServerInfo.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
       - name: find-CNetworkGameServerBase_CheckTimeouts
         expected_output:
           - CNetworkGameServerBase_CheckTimeouts.{platform}.yaml
+      - name: find-CNetworkGameServerBase_CheckTimeouts-decompiles
+        expected_output:
+          - CNetworkGameServerBase_IsHLTV.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_CheckTimeouts.{platform}.yaml
+          - CNetworkGameServerBase_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_GetPassword
+        expected_output:
+          - CNetworkGameServerBase_GetPassword.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_vtable.{platform}.yaml
       - name: find-CNetworkGameServerBase_OnKickById
         expected_output:
           - CNetworkGameServerBase_OnKickById.{platform}.yaml
@@ -638,6 +682,17 @@ modules:
       - name: find-CServerSideClient_vtable
         expected_output:
           - CServerSideClient_vtable.{platform}.yaml
+      - name: find-CServerSideClient_ctor
+        expected_output:
+          - CServerSideClient_ctor.{platform}.yaml
+        expected_input:
+          - CServerSideClient_vtable.{platform}.yaml
+      - name: find-CNetworkGameServer_CreateNewClient
+        expected_output:
+          - CNetworkGameServer_CreateNewClient.{platform}.yaml
+        expected_input:
+          - CServerSideClient_ctor.{platform}.yaml
+          - CNetworkGameServer_vtable.{platform}.yaml
       - name: find-CSVCMsg_PeerList_t_vtable
         expected_output:
           - CSVCMsg_PeerList_t_vtable.{platform}.yaml
@@ -817,6 +872,28 @@ modules:
           - CNetworkGameServerBase_IsSaveRestoreAllowed.{platform}.yaml
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
+      - name: find-CNetworkGameServer_IsPausable_OfflineCheck
+        optional_output:
+          - CNetworkGameServer_IsPausable_OfflineCheck.{platform}.yaml
+        skip_if_exists:
+          - CNetworkGameServer_IsPausable.{platform}.yaml
+      - name: find-CNetworkGameServer_IsPausable-noinline
+        optional_output:
+          - CNetworkGameServer_IsPausable.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
+          - CNetworkGameServerBase_ConnectClient.{platform}.yaml
+        prerequisite:
+          - find-CNetworkGameServer_IsPausable_OfflineCheck
+      - name: find-CNetworkGameServer_IsPausable-inlined
+        expected_output:
+          - CNetworkGameServer_IsPausable.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
+        skip_if_exists:
+          - CNetworkGameServer_IsPausable.{platform}.yaml
+        prerequisite:
+          - find-CNetworkGameServer_IsPausable-noinline
       - name: find-CNetworkGameServerBase_Init
         expected_output:
           - CNetworkGameServerBase_Init.{platform}.yaml
@@ -849,6 +926,11 @@ modules:
           - CNetworkGameServerBase_BroadcastPrintf.{platform}.yaml
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
+      - name: find-CNetworkGameServerBase_BroadcastEntityVoice
+        expected_output:
+          - CNetworkGameServerBase_BroadcastEntityVoice.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
       - name: find-CNetworkGameServerBase_WriteDeltaEntities
         expected_output:
           - CNetworkGameServerBase_WriteDeltaEntities.{platform}.yaml
@@ -1124,6 +1206,28 @@ modules:
           - CGameClientConnectPrerequisite_ctor.{platform}.yaml
         expected_input:
           - CGameClientConnectPrerequisite_vtable.{platform}.yaml
+      - name: find-CNetworkClientSpawnGroupCreatePrerequisites_vtable
+        expected_output:
+          - CNetworkClientSpawnGroupCreatePrerequisites_vtable.{platform}.yaml
+      - name: find-CNetworkClientSpawnGroupCreatePrerequisites_GetStatus
+        expected_output:
+          - CNetworkClientSpawnGroupCreatePrerequisites_GetStatus.{platform}.yaml
+        expected_input:
+          - CNetworkClientSpawnGroupCreatePrerequisites_vtable.{platform}.yaml
+      - name: find-CWaitForInitialSpawnGroupsPrerequisite_vtable
+        expected_output:
+          - CWaitForInitialSpawnGroupsPrerequisite_vtable.{platform}.yaml
+      - name: find-CWaitForInitialSpawnGroupsPrerequisite_GetStatus
+        expected_output:
+          - CWaitForInitialSpawnGroupsPrerequisite_GetStatus.{platform}.yaml
+        expected_input:
+          - CNetworkClientSpawnGroupCreatePrerequisites_GetStatus.{platform}.yaml
+          - CWaitForInitialSpawnGroupsPrerequisite_vtable.{platform}.yaml
+      - name: find-INetworkGameServer_GetSpawnGroupLoadingStatus
+        expected_output:
+          - INetworkGameServer_GetSpawnGroupLoadingStatus.{platform}.yaml
+        expected_input:
+          - CWaitForInitialSpawnGroupsPrerequisite_GetStatus.{platform}.yaml
       - name: find-CNetworkClientService_AddClientPrerequisites
         expected_output:
           - CNetworkClientService_AddClientPrerequisites.{platform}.yaml
@@ -1206,6 +1310,12 @@ modules:
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
           - INetworkGameServer_ServerPostSimulate.{platform}.yaml
+      - name: find-CNetworkGameServer_ServerPostSimulate
+        expected_output:
+          - CNetworkGameServer_ServerPostSimulate.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_vtable.{platform}.yaml
+          - CNetworkGameServerBase_ServerPostSimulate.{platform}.yaml
       - name: find-INetworkGameServer_ServerAdvanceTick
         expected_output:
           - INetworkGameServer_ServerAdvanceTick.{platform}.yaml
@@ -1217,6 +1327,11 @@ modules:
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
           - INetworkGameServer_ServerAdvanceTick.{platform}.yaml
+      - name: find-INetworkGameServer_GetTime
+        expected_output:
+          - INetworkGameServer_GetTime.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_ServerAdvanceTick.{platform}.yaml
       - name: find-INetworkGameServer_ServerProcessNetworking
         expected_output:
           - INetworkGameServer_ServerProcessNetworking.{platform}.yaml
@@ -1239,6 +1354,11 @@ modules:
         expected_input:
           - CNetworkGameServerBase_vtable.{platform}.yaml
           - INetworkGameServer_GetTimescale.{platform}.yaml
+      - name: find-INetworkGameServer_GetServerNetworkAddress
+        expected_output:
+          - INetworkGameServer_GetServerNetworkAddress.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_Init.{platform}.yaml
       - name: find-ISource2Server_PreWorldUpdate
         expected_output:
           - ISource2Server_PreWorldUpdate.{platform}.yaml
@@ -1900,9 +2020,9 @@ modules:
         expected_input:
           - CLoopTypeSimple_vtable.{platform}.yaml
           - CLoopTypeBase_FrameUpdate.{platform}.yaml
-      - name: find-ISource2Server_OutOfGameFrameBoundary
+      - name: find-ISource2Server_UpdateWhenNotInGame
         expected_output:
-          - ISource2Server_OutOfGameFrameBoundary.{platform}.yaml
+          - ISource2Server_UpdateWhenNotInGame.{platform}.yaml
         expected_input:
           - CLoopTypeSimple_FrameUpdate.{platform}.yaml
       - name: find-SetInfo_CommandHandler
@@ -1944,6 +2064,17 @@ modules:
       - name: find-CServerSideClientBase_vtable
         expected_output:
           - CServerSideClientBase_vtable.{platform}.yaml
+      - name: find-CServerSideClientBase_SendServerInfo
+        expected_output:
+          - CServerSideClientBase_SendServerInfo.{platform}.yaml
+        expected_input:
+          - CServerSideClientBase_vtable.{platform}.yaml
+      - name: find-CServerSideClientBase_SendServerInfo-decompiles
+        expected_output:
+          - CNetworkGameServerBase_FillServerInfo.{platform}.yaml
+        expected_input:
+          - CServerSideClientBase_SendServerInfo.{platform}.yaml
+          - CNetworkGameServerBase_vtable.{platform}.yaml
       - name: find-CDelayedCall2_CServerSideClientBase_UpdateAcknowledgedFramecountCall_vtable
         expected_output:
           - CDelayedCall2_CServerSideClientBase_UpdateAcknowledgedFramecountCall_vtable.{platform}.yaml
@@ -2067,6 +2198,14 @@ modules:
         category: vtable
       - name: CSVCMsg_PeerList_t_vtable
         category: vtable
+      - name: CServerSideClient_ctor
+        category: func
+        alias:
+          - CServerSideClient::CServerSideClient
+      - name: CNetworkGameServer_CreateNewClient
+        category: vfunc
+        alias:
+          - CNetworkGameServer::CreateNewClient
       - name: CServerSideClient_IsHearingClient
         category: vfunc
         alias:
@@ -2157,6 +2296,10 @@ modules:
           - CNetworkGameServerBase::ConnectClient
       - name: CNetworkGameServerBase_vtable
         category: vtable
+      - name: CNetworkGameServerBase_GetClientConnectionType
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::GetClientConnectionType
       - name: CNetworkGameServerBase_ServerSimulateInternal
         category: func
         platform: linux
@@ -2170,6 +2313,14 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::ServerPollNetworking
+      - name: INetworkGameServer_IsChangelevelPending
+        category: vfunc
+        alias:
+          - INetworkGameServer::IsChangelevelPending
+      - name: CNetworkGameServerBase_IsChangelevelPending
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::IsChangelevelPending
       - name: CNetworkGameServerBase_BroadcastMessage
         category: vfunc
         alias:
@@ -2178,6 +2329,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::BroadcastPrintf
+      - name: CNetworkGameServerBase_BroadcastEntityVoice
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::BroadcastEntityVoice
       - name: CNetworkGameServerBase_WriteDeltaEntities
         category: func
         alias:
@@ -2255,6 +2410,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::IsSaveRestoreAllowed
+      - name: CNetworkGameServer_IsPausable
+        category: vfunc
+        alias:
+          - CNetworkGameServer::IsPausable
       - name: CNetworkGameServerBase_Init
         category: vfunc
         alias:
@@ -2292,14 +2451,42 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::GetMaxClients
+      - name: CNetworkGameServerBase_GetClassBaseline
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::GetClassBaseline
+      - name: CSteam3Server_SendUpdatedServerDetails
+        category: func
+        alias:
+          - CSteam3Server::SendUpdatedServerDetails
+      - name: CNetworkGameServerBase_GetMapName
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::GetMapName
+      - name: CNetworkGameServerBase_GetHostName
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::GetHostName
       - name: CNetworkGameServerBase_SetMaxClients
         category: vfunc
         alias:
           - CNetworkGameServerBase::SetMaxClients
+      - name: CNetworkGameServerBase_FillKV3ServerInfo
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::FillKV3ServerInfo
       - name: CNetworkGameServerBase_CheckTimeouts
         category: func
         alias:
           - CNetworkGameServerBase::CheckTimeouts
+      - name: CNetworkGameServerBase_IsHLTV
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::IsHLTV
+      - name: CNetworkGameServerBase_GetPassword
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::GetPassword
       - name: CNetworkGameServerBase_OnKickById
         category: func
         alias:
@@ -2708,6 +2895,22 @@ modules:
         category: func
         alias:
           - CGameClientConnectPrerequisite::CGameClientConnectPrerequisite
+      - name: CNetworkClientSpawnGroupCreatePrerequisites_vtable
+        category: vtable
+      - name: CNetworkClientSpawnGroupCreatePrerequisites_GetStatus
+        category: vfunc
+        alias:
+          - CNetworkClientSpawnGroupCreatePrerequisites::GetStatus
+      - name: CWaitForInitialSpawnGroupsPrerequisite_vtable
+        category: vtable
+      - name: CWaitForInitialSpawnGroupsPrerequisite_GetStatus
+        category: vfunc
+        alias:
+          - CWaitForInitialSpawnGroupsPrerequisite::GetStatus
+      - name: INetworkGameServer_GetSpawnGroupLoadingStatus
+        category: vfunc
+        alias:
+          - INetworkGameServer::GetSpawnGroupLoadingStatus
       - name: CNetworkClientService_AddClientPrerequisites
         category: vfunc
         alias:
@@ -2806,6 +3009,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::ServerPostSimulate
+      - name: CNetworkGameServer_ServerPostSimulate
+        category: vfunc
+        alias:
+          - CNetworkGameServer::ServerPostSimulate
       - name: INetworkGameServer_ServerAdvanceTick
         category: vfunc
         alias:
@@ -2814,6 +3021,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::ServerAdvanceTick
+      - name: INetworkGameServer_GetTime
+        category: vfunc
+        alias:
+          - INetworkGameServer::GetTime
       - name: INetworkGameServer_ServerProcessNetworking
         category: vfunc
         alias:
@@ -2830,15 +3041,19 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServerBase::GetTimescale
+      - name: INetworkGameServer_GetServerNetworkAddress
+        category: vfunc
+        alias:
+          - INetworkGameServer::GetServerNetworkAddress
       - name: ISource2Server_PreWorldUpdate
         category: vfunc
         alias:
           - ISource2Server::PreWorldUpdate
         shared: true
-      - name: ISource2Server_OutOfGameFrameBoundary
+      - name: ISource2Server_UpdateWhenNotInGame
         category: vfunc
         alias:
-          - ISource2Server::OutOfGameFrameBoundary
+          - ISource2Server::UpdateWhenNotInGame
       - name: INetworkMessages_SetIsForServer
         category: vfunc
         alias:
@@ -3260,6 +3475,14 @@ modules:
           - CHLTVBroadcast::RecordSnapshot
       - name: CServerSideClientBase_vtable
         category: vtable
+      - name: CServerSideClientBase_SendServerInfo
+        category: vfunc
+        alias:
+          - CServerSideClientBase::SendServerInfo
+      - name: CNetworkGameServerBase_FillServerInfo
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::FillServerInfo
       - name: CDelayedCall2_CServerSideClientBase_UpdateAcknowledgedFramecountCall_vtable
         category: vtable
       - name: CServerSideClientBase_ProcessTick
@@ -3323,10 +3546,10 @@ modules:
         category: vfunc
         alias:
           - CNetworkGameServer::GetPlayerNetworkIDString
-      - name: CNetworkGameServerBase_RemoveClientFromGame
+      - name: CNetworkGameServer_RemoveClientFromGame
         category: vfunc
         alias:
-          - CNetworkGameServerBase::RemoveClientFromGame
+          - CNetworkGameServer::RemoveClientFromGame
       - name: CEngineServer_GetPlayerNetworkIDString
         category: vfunc
         alias:
@@ -5742,6 +5965,9 @@ modules:
       - name: find-CSource2Server_vtable
         expected_output:
           - CSource2Server_vtable.{platform}.yaml
+      - name: find-CUserMessageServerFrameTime_t_vtable
+        expected_output:
+          - CUserMessageServerFrameTime_t_vtable.{platform}.yaml
       - name: find-CSource2Server_vtable2
         expected_output:
           - CSource2Server_vtable2.{platform}.yaml
@@ -5752,17 +5978,17 @@ modules:
           - CSource2Server_OnStreamEntitiesFromFileCompleted.{platform}.yaml
         expected_input:
           - CSource2Server_vtable2.{platform}.yaml
-      - name: find-CSource2Server_OutOfGameFrameBoundary
+      - name: find-CSource2Server_UpdateWhenNotInGame
         expected_output:
-          - CSource2Server_OutOfGameFrameBoundary.{platform}.yaml
+          - CSource2Server_UpdateWhenNotInGame.{platform}.yaml
         expected_input:
           - CSource2Server_vtable.{platform}.yaml
-          - ../engine/ISource2Server_OutOfGameFrameBoundary.{platform}.yaml
+          - ../engine/ISource2Server_UpdateWhenNotInGame.{platform}.yaml
       - name: find-IGameSystem_OnOutOfGameFrameBoundary
         expected_output:
           - IGameSystem_OnOutOfGameFrameBoundary.{platform}.yaml
         expected_input:
-          - CSource2Server_OutOfGameFrameBoundary.{platform}.yaml
+          - CSource2Server_UpdateWhenNotInGame.{platform}.yaml
           - IGameSystem_vtable.{platform}.yaml
       - name: find-CSource2GameEntities_vtable
         expected_output:
@@ -5782,6 +6008,24 @@ modules:
       - name: find-CGameEntitySystem_vtable
         expected_output:
           - CGameEntitySystem_vtable.{platform}.yaml
+      - name: find-CGameEventManager_vtable
+        expected_output:
+          - CGameEventManager_vtable.{platform}.yaml
+      - name: find-CChicken_vtable
+        expected_output:
+          - CChicken_vtable.{platform}.yaml
+      - name: find-CChicken_Event_Killed
+        expected_output:
+          - CChicken_Event_Killed.{platform}.yaml
+        expected_input:
+          - CChicken_vtable.{platform}.yaml
+      - name: find-CChicken_Event_Killed-decompiles
+        expected_output:
+          - CBaseEntity_EmitSound.{platform}.yaml
+          - CBaseModelEntity_FindBone.{platform}.yaml
+          - DispatchParticleEffect2.{platform}.yaml
+        expected_input:
+          - CChicken_Event_Killed.{platform}.yaml
       - name: find-CGameRules_vtable
         expected_output:
           - CGameRules_vtable.{platform}.yaml
@@ -5980,9 +6224,15 @@ modules:
           - CBasePlayerPawn_OnTakeDamage_Alive.{platform}.yaml
           - CBasePlayerPawn_OnTakeDamage_Dying.{platform}.yaml
           - CBasePlayerPawn_OnTakeDamage_Dead.{platform}.yaml
+          - DecalPlacementInfo_ctor.{platform}.yaml
         expected_input:
           - CBasePlayerPawn_OnTakeDamage.{platform}.yaml
           - CBasePlayerPawn_vtable.{platform}.yaml
+      - name: find-DecalPlacementInfo_ctor-decompiles
+        expected_output:
+          - CBaseModelEntity_GetBoneTransform.{platform}.yaml
+        expected_input:
+          - DecalPlacementInfo_ctor.{platform}.yaml
       - name: find-CCSPlayerPawn_OnTakeDamage
         expected_output:
           - CCSPlayerPawn_OnTakeDamage.{platform}.yaml
@@ -5998,14 +6248,59 @@ modules:
       - name: find-CFlashbangProjectile_vtable
         expected_output:
           - CFlashbangProjectile_vtable.{platform}.yaml
+      - name: find-CSmokeGrenadeProjectile_vtable
+        expected_output:
+          - CSmokeGrenadeProjectile_vtable.{platform}.yaml
       - name: find-CFlashbangProjectile_Spawn
         expected_output:
           - CFlashbangProjectile_Spawn.{platform}.yaml
         expected_input:
           - CFlashbangProjectile_vtable.{platform}.yaml
+      - name: find-CFlashbangProjectile_Detonate
+        expected_output:
+          - CFlashbangProjectile_Detonate.{platform}.yaml
+        expected_input:
+          - CFlashbangProjectile_vtable.{platform}.yaml
+      - name: find-CSmokeGrenadeProjectile_Detonate
+        expected_output:
+          - CSmokeGrenadeProjectile_Detonate.{platform}.yaml
+        expected_input:
+          - CSmokeGrenadeProjectile_vtable.{platform}.yaml
+          - CFlashbangProjectile_Detonate.{platform}.yaml
       - name: find-CSmokeGrenadeProjectile_Create
         expected_output:
           - CSmokeGrenadeProjectile_Create.{platform}.yaml
+      - name: find-SmokeVolume_GetSmokeDensityInLine_Lambda1_operator_call
+        expected_output:
+          - SmokeVolume_GetSmokeDensityInLine_Lambda1_operator_call.{platform}.yaml
+      - name: find-CSmokeGrenadeProjectile_Detonate-decompiles
+        expected_output:
+          - SmokeVolume_BuildSmokeSimulation.{platform}.yaml
+          - CSmokeGrenadeProjectile_m_SmokeVolume.{platform}.yaml
+        expected_input:
+          - CSmokeGrenadeProjectile_Detonate.{platform}.yaml
+      # Linux de-inlines the center-origin/start-time initialization out of
+      # SmokeVolume::BuildSmokeSimulation, so expose the shared helper first.
+      - name: find-SmokeVolume_BuildSmokeSimulation_Initialize-linux
+        platform: linux
+        expected_output:
+          - SmokeVolume_BuildSmokeSimulation_Initialize.{platform}.yaml
+        expected_input:
+          - SmokeVolume_BuildSmokeSimulation.{platform}.yaml
+      - name: find-SmokeVolume_BuildSmokeSimulation-decompiles
+        expected_output:
+          - SmokeVolume_m_vecCenterOrigin.{platform}.yaml
+          - SmokeVolume_m_pStorage.{platform}.yaml
+          - SmokeVolume_m_flStartTime.{platform}.yaml
+        expected_input_windows:
+          - SmokeVolume_BuildSmokeSimulation.{platform}.yaml
+        expected_input_linux:
+          - SmokeVolume_BuildSmokeSimulation_Initialize.{platform}.yaml
+      - name: find-SmokeVolume_GetSmokeDensityInLine_Lambda1_operator_call-decompiles
+        expected_output:
+          - SmokeVolume_m_nFrame.{platform}.yaml
+        expected_input:
+          - SmokeVolume_GetSmokeDensityInLine_Lambda1_operator_call.{platform}.yaml
       - name: find-SV_Kill_SmokeGrenade_CommandHandler
         expected_output:
           - SV_Kill_SmokeGrenade_CommandHandler.{platform}.yaml
@@ -6441,6 +6736,17 @@ modules:
           - CSource2Server_ApplyGameSettings.{platform}.yaml
         expected_input:
           - CSource2Server_vtable.{platform}.yaml
+      - name: find-CSource2Server_GetEntityReport
+        expected_output:
+          - CSource2Server_GetEntityReport.{platform}.yaml
+        expected_input:
+          - CSource2Server_vtable.{platform}.yaml
+      - name: find-CSource2Server_BroadcastServerFrameTime
+        expected_output:
+          - CSource2Server_BroadcastServerFrameTime.{platform}.yaml
+        expected_input:
+          - CSource2Server_vtable.{platform}.yaml
+          - CUserMessageServerFrameTime_t_vtable.{platform}.yaml
       - name: find-CSource2Server_WriteSignonMessages
         expected_output:
           - CSource2Server_WriteSignonMessages.{platform}.yaml
@@ -7073,9 +7379,21 @@ modules:
           - CSource2GameEntities_ShouldClientReceiveStringTableUserData.{platform}.yaml
         expected_input:
           - CSource2GameEntities_vtable.{platform}.yaml
-      - name: find-CCheckTransmitInfo_m_nPlayerSlot
+      - name: find-IsBackgroundMap
+        expected_output:
+          - IsBackgroundMap.{platform}.yaml
+        expected_input:
+          - CSource2GameEntities_ShouldClientReceiveStringTableUserData.{platform}.yaml
+      - name: find-IsBackgroundMap-decompiles
+        expected_output:
+          - INetworkGameServer_IsBackgroundMap.{platform}.yaml
+          - ILoopModeGameSharedState_IsBackgroundMap.{platform}.yaml
+        expected_input:
+          - IsBackgroundMap.{platform}.yaml
+      - name: find-CSource2GameEntities_CheckTransmit-decompiles
         expected_output:
           - CCheckTransmitInfo_m_nPlayerSlot.{platform}.yaml
+          - CCheckTransmitInfo_m_bFullUpdate.{platform}.yaml
         expected_input:
           - CSource2GameEntities_CheckTransmit.{platform}.yaml
       - name: find-CBaseEntity_EmitSoundFilter
@@ -7730,6 +8048,11 @@ modules:
           - CSpawnGroupMgrGameSystem_SetActiveSpawnGroup.{platform}.yaml
         expected_input:
           - CSpawnGroupMgrGameSystem_vtable.{platform}.yaml
+      - name: find-CSpawnGroupMgrGameSystem_SetActiveSpawnGroup-decompiles
+        expected_output:
+          - IVEngineServer2_MakeSpawnGroupActive.{platform}.yaml
+        expected_input:
+          - CSpawnGroupMgrGameSystem_SetActiveSpawnGroup.{platform}.yaml
       - name: find-CSpawnGroupMgrGameSystem_UnloadSpawnGroup
         expected_output:
           - CSpawnGroupMgrGameSystem_UnloadSpawnGroup.{platform}.yaml
@@ -8308,6 +8631,16 @@ modules:
           - CPlayerCommandQueue_ctor.{platform}.yaml
         expected_input:
           - CPlayerCommandQueue_vtable.{platform}.yaml
+      - name: find-CBasePlayerController_IsFakeClient
+        expected_output:
+          - CBasePlayerController_IsFakeClient.{platform}.yaml
+        expected_input:
+          - CPlayerCommandQueue_ctor.{platform}.yaml
+      - name: find-INetworkGameServer_GetClientConnectionType
+        expected_output:
+          - INetworkGameServer_GetClientConnectionType.{platform}.yaml
+        expected_input:
+          - CBasePlayerController_IsFakeClient.{platform}.yaml
       - name: find-CEntitySaveRestoreBlockHandler_vtable
         expected_output:
           - CEntitySaveRestoreBlockHandler_vtable.{platform}.yaml
@@ -8631,6 +8964,8 @@ modules:
     symbols:
       - name: CSource2Server_vtable
         category: vtable
+      - name: CUserMessageServerFrameTime_t_vtable
+        category: vtable
       - name: CSource2Server_vtable2
         category: vtable
       - name: CSource2Server_OnStreamEntitiesFromFileCompleted
@@ -8641,10 +8976,10 @@ modules:
         category: vfunc
         alias:
           - CSource2Server::PreWorldUpdate
-      - name: CSource2Server_OutOfGameFrameBoundary
+      - name: CSource2Server_UpdateWhenNotInGame
         category: vfunc
         alias:
-          - CSource2Server::OutOfGameFrameBoundary
+          - CSource2Server::UpdateWhenNotInGame
       - name: CSource2GameEntities_vtable
         category: vtable
       - name: CSource2GameClients_vtable
@@ -9068,6 +9403,14 @@ modules:
         category: vfunc
         alias:
           - CBasePlayerPawn::OnTakeDamage_Dead
+      - name: DecalPlacementInfo_ctor
+        category: func
+        alias:
+          - DecalPlacementInfo::DecalPlacementInfo
+      - name: CBaseModelEntity_GetBoneTransform
+        category: func
+        alias:
+          - CBaseModelEntity::GetBoneTransform
       - name: CBasePlayerPawn_OnTakeDamage
         category: vfunc
         alias:
@@ -9087,14 +9430,71 @@ modules:
       - name: CFlashbangProjectile_vtable
         category: vtable
         shared: true
+      - name: CSmokeGrenadeProjectile_vtable
+        category: vtable
       - name: CFlashbangProjectile_Spawn
         category: vfunc
         alias:
           - CFlashbangProjectile::Spawn
+      - name: CFlashbangProjectile_Detonate
+        category: vfunc
+        alias:
+          - CFlashbangProjectile::Detonate
+      - name: CSmokeGrenadeProjectile_Detonate
+        category: vfunc
+        alias:
+          - CSmokeGrenadeProjectile::Detonate
       - name: CSmokeGrenadeProjectile_Create
         category: func
         alias:
           - CSmokeGrenadeProjectile::Create
+      - name: CSmokeGrenadeProjectile
+        category: struct
+      - name: CSmokeGrenadeProjectile_m_SmokeVolume
+        category: structmember
+        struct: CSmokeGrenadeProjectile
+        member: m_SmokeVolume
+        alias:
+          - CSmokeGrenadeProjectile::m_SmokeVolume
+      - name: SmokeVolume_BuildSmokeSimulation
+        category: func
+        alias:
+          - SmokeVolume::BuildSmokeSimulation
+      - name: SmokeVolume_BuildSmokeSimulation_Initialize
+        category: func
+        platform: linux
+        alias:
+          - sub_1402310
+      - name: SmokeVolume
+        category: struct
+      - name: SmokeVolume_m_vecCenterOrigin
+        category: structmember
+        struct: SmokeVolume
+        member: m_vecCenterOrigin
+        alias:
+          - SmokeVolume::m_vecCenterOrigin
+      - name: SmokeVolume_m_pStorage
+        category: structmember
+        struct: SmokeVolume
+        member: m_pStorage
+        alias:
+          - SmokeVolume::m_pStorage
+      - name: SmokeVolume_m_flStartTime
+        category: structmember
+        struct: SmokeVolume
+        member: m_flStartTime
+        alias:
+          - SmokeVolume::m_flStartTime
+      - name: SmokeVolume_GetSmokeDensityInLine_Lambda1_operator_call
+        category: func
+        alias:
+          - SmokeVolume::GetSmokeDensityInLine::<lambda_1>::operator()
+      - name: SmokeVolume_m_nFrame
+        category: structmember
+        struct: SmokeVolume
+        member: m_nFrame
+        alias:
+          - SmokeVolume::m_nFrame
       - name: SV_Kill_SmokeGrenade_CommandHandler
         category: func
       - name: CEntitySystem_QueueDestroyEntity
@@ -9550,6 +9950,14 @@ modules:
         category: vfunc
         alias:
           - CSource2Server::ApplyGameSettings
+      - name: CSource2Server_GetEntityReport
+        category: vfunc
+        alias:
+          - CSource2Server::GetEntityReport
+      - name: CSource2Server_BroadcastServerFrameTime
+        category: vfunc
+        alias:
+          - CSource2Server::BroadcastServerFrameTime
       - name: CSource2Server_WriteSignonMessages
         category: vfunc
         alias:
@@ -10032,6 +10440,20 @@ modules:
           - ISource2GameEntities::ShouldClientReceiveStringTableUserData
           - ISource2GameEntities_ShouldClientReceiveStringTableUserData
           - ShouldClientReceiveStringTableUserData
+      - name: IsBackgroundMap
+        category: func
+      - name: INetworkGameServer_IsBackgroundMap
+        category: vfunc
+        alias:
+          - INetworkGameServer::IsBackgroundMap
+      - name: ILoopModeGameSharedState_IsBackgroundMap
+        category: vfunc
+        alias:
+          - ILoopModeGameSharedState::IsBackgroundMap
+      - name: CNetworkGameServerBase_IsBackgroundMap
+        category: vfunc
+        alias:
+          - CNetworkGameServerBase::IsBackgroundMap
       - name: CBaseEntity_EmitSoundFilter
         category: func
         alias:
@@ -10530,6 +10952,24 @@ modules:
         category: vtable
       - name: CGameEntitySystem_vtable
         category: vtable
+      - name: CGameEventManager_vtable
+        category: vtable
+      - name: CChicken_vtable
+        category: vtable
+      - name: CChicken_Event_Killed
+        category: vfunc
+        alias:
+          - CChicken::Event_Killed
+      - name: CBaseEntity_EmitSound
+        category: func
+        alias:
+          - CBaseEntity::EmitSound
+      - name: CBaseModelEntity_FindBone
+        category: func
+        alias:
+          - CBaseModelEntity::FindBone
+      - name: DispatchParticleEffect2
+        category: func
       - name: CGameEntitySystem_OnAddEntity
         category: vfunc
         alias:
@@ -10803,6 +11243,12 @@ modules:
         alias:
           - CCheckTransmitInfo::m_nPlayerSlot
           - CheckTransmitPlayerSlot
+      - name: CCheckTransmitInfo_m_bFullUpdate
+        category: structmember
+        struct: CCheckTransmitInfo
+        member: m_bFullUpdate
+        alias:
+          - CCheckTransmitInfo::m_bFullUpdate
       - name: CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup
         category: func
         alias:
@@ -10905,6 +11351,10 @@ modules:
         category: vfunc
         alias:
           - CSpawnGroupMgrGameSystem::SetActiveSpawnGroup
+      - name: IVEngineServer2_MakeSpawnGroupActive
+        category: vfunc
+        alias:
+          - IVEngineServer2::MakeSpawnGroupActive
       - name: CSpawnGroupMgrGameSystem_UnloadSpawnGroup
         category: vfunc
         alias:
@@ -11452,6 +11902,15 @@ modules:
         category: func
         alias:
           - CPlayerCommandQueue::CPlayerCommandQueue
+      - name: CBasePlayerController_IsFakeClient
+        category: func
+        alias:
+          - CBasePlayerController::IsFakeClient
+          - IsFakeClient
+      - name: INetworkGameServer_GetClientConnectionType
+        category: vfunc
+        alias:
+          - INetworkGameServer::GetClientConnectionType
       - name: CNavPhysicsInterface_vtable
         category: vtable
       - name: ConnectInterfaces
@@ -12069,9 +12528,9 @@ modules:
       # Discovered as the CNetworkGameServer_vtable entry that BOTH calls
       # CServerSideClientBase_GetNetworkIDString and references g_pSource2GameClients (the
       # xref_funcs + xref_gvs + vtable intersection uniquely selects it, no excludes needed).
-      - name: find-CNetworkGameServerBase_RemoveClientFromGame
+      - name: find-CNetworkGameServer_RemoveClientFromGame
         expected_output:
-          - CNetworkGameServerBase_RemoveClientFromGame.{platform}.yaml
+          - CNetworkGameServer_RemoveClientFromGame.{platform}.yaml
         expected_input:
           - CServerSideClientBase_GetNetworkIDString.{platform}.yaml
           - CNetworkGameServer_vtable.{platform}.yaml
@@ -12098,6 +12557,18 @@ modules:
         expected_input:
           - CNetworkClientService_vtable.{platform}.yaml
           - INetworkClientService_IsConnecting.{platform}.yaml
+      - name: find-CNetworkGameServerBase_IsBackgroundMap
+        expected_output:
+          - CNetworkGameServerBase_IsBackgroundMap.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_vtable.{platform}.yaml
+          - ../server/INetworkGameServer_IsBackgroundMap.{platform}.yaml
+      - name: find-CNetworkGameServerBase_GetClientConnectionType
+        expected_output:
+          - CNetworkGameServerBase_GetClientConnectionType.{platform}.yaml
+        expected_input:
+          - CNetworkGameServerBase_vtable.{platform}.yaml
+          - ../server/INetworkGameServer_GetClientConnectionType.{platform}.yaml
   - name: client  # Execute Shutdown-dependent client skills after engine2.dll generates ILoopModeFactory_Shutdown
     path_windows: game/csgo/bin/win64/client.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libclient.so
@@ -12494,6 +12965,8 @@ cpp_tests:
     merge_reference_modules: false  # Avoid stale duplicate INetworkGameServer_ClientUpdate at index 58
   - name: CNetworkGameServerBase_MSVC
     symbol: CNetworkGameServerBase
+    reference_vtable_owners:
+      - CNetworkGameServer
     cpp: cpp_tests/inetworkgameserver.cpp
     headers:
       - hl2sdk_cs2/public/iserver.h  # Used by the fix-cppheaders SKILL
@@ -12541,3 +13014,32 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - client  # bin/{gamever}/client/CGameEventManager_*.{platform}.yaml
+  - name: ISource2Server_MSVC
+    symbol: ISource2Server
+    alias_symbols:
+      - CSource2Server
+    exclude_reference_vtables:
+      - CSource2Server_vtable2
+    cpp: cpp_tests/isource2server.cpp
+    headers:
+      - hl2sdk_cs2/public/eiface.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin/{gamever}/engine/ISource2Server_*.{platform}.yaml
+      - server  # bin/{gamever}/server/CSource2Server_*.{platform}.yaml

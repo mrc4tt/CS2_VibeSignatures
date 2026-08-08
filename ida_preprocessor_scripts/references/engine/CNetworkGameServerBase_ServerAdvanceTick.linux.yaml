@@ -1,0 +1,187 @@
+func_name: CNetworkGameServerBase_ServerAdvanceTick
+func_va: '0x4f21e0'
+disasm_code: |-
+  .text:00000000004F21E0                 push    rbp
+  .text:00000000004F21E1                 mov     rbp, rsp
+  .text:00000000004F21E4                 push    r12
+  .text:00000000004F21E6                 mov     r12, rsi
+  .text:00000000004F21E9                 push    rbx
+  .text:00000000004F21EA                 mov     rbx, rdi
+  .text:00000000004F21ED                 sub     rsp, 10h
+  .text:00000000004F21F1                 cmp     byte ptr [rdi+2BBh], 0
+  .text:00000000004F21F8                 jnz     short loc_4F2204
+  .text:00000000004F21FA                 cmp     byte ptr [rsi+28h], 0
+  .text:00000000004F21FE                 jnz     loc_4F22F8
+  .text:00000000004F2204                 lea     rax, g_pSoundOpSystem
+  .text:00000000004F220B                 mov     rax, [rax]
+  .text:00000000004F220E                 test    rax, rax
+  .text:00000000004F2211                 jz      short loc_4F2221
+  .text:00000000004F2213                 lea     rdi, [rax+8]
+  .text:00000000004F2217                 mov     rax, [rax+8]
+  .text:00000000004F221B                 call    qword ptr [rax+130h]
+  .text:00000000004F2221                 mov     eax, [rbx+38h]
+  .text:00000000004F2224                 cmp     eax, 1
+  .text:00000000004F2227                 jbe     loc_4F22E8
+  .text:00000000004F222D                 cmp     eax, 4
+  .text:00000000004F2230                 jz      short loc_4F2236
+  .text:00000000004F2232                 add     dword ptr [rbx+44h], 1
+  .text:00000000004F2236                 mov     rax, [rbx]
+  .text:00000000004F2239                 lea     rdx, sub_4F0D50
+  .text:00000000004F2240                 ; 0x0E0 = 224LL = INetworkGameServer_GetTime
+  .text:00000000004F2240                 mov     rax, [rax+0E0h]; 0x0E0 = 224LL = INetworkGameServer_GetTime
+  .text:00000000004F2247                 cmp     rax, rdx
+  .text:00000000004F224A                 jnz     loc_4F23F0
+  .text:00000000004F2250                 pxor    xmm0, xmm0
+  .text:00000000004F2254                 cvtsi2ss xmm0, dword ptr [rbx+44h]
+  .text:00000000004F2259                 movss   xmm1, cs:dword_26A1EC
+  .text:00000000004F2261                 mulss   xmm0, xmm1
+  .text:00000000004F2265                 movss   [rbp+var_18], xmm1
+  .text:00000000004F226A                 movss   [rbp+var_14], xmm0
+  .text:00000000004F226F                 call    sub_2C9630
+  .text:00000000004F2274                 movss   xmm0, [rbp+var_14]
+  .text:00000000004F2279                 mov     dword ptr [rbx+0A8h], 0
+  .text:00000000004F2283                 movss   xmm1, [rbp+var_18]
+  .text:00000000004F2288                 mov     [rbx+0B0h], rax
+  .text:00000000004F228F                 movss   dword ptr [rbx+88h], xmm0
+  .text:00000000004F2297                 mulss   xmm0, cs:dword_26A0D8
+  .text:00000000004F229F                 addss   xmm0, cs:dword_26A084
+  .text:00000000004F22A7                 movss   dword ptr [rbx+8Ch], xmm1
+  .text:00000000004F22AF                 mov     esi, [rbx+44h]
+  .text:00000000004F22B2                 cvttss2si edx, xmm0
+  .text:00000000004F22B6                 mov     [rbx+9Ch], edx
+  .text:00000000004F22BC                 mov     eax, [r12+30h]
+  .text:00000000004F22C1                 xor     edx, edx
+  .text:00000000004F22C3                 mov     [rbx+6Ch], eax
+  .text:00000000004F22C6                 mov     eax, [r12+34h]
+  .text:00000000004F22CB                 mov     [rbx+70h], eax
+  .text:00000000004F22CE                 lea     rax, off_9D8298
+  .text:00000000004F22D5                 mov     rdi, [rax]
+  .text:00000000004F22D8                 add     rsp, 10h
+  .text:00000000004F22DC                 pop     rbx
+  .text:00000000004F22DD                 pop     r12
+  .text:00000000004F22DF                 pop     rbp
+  .text:00000000004F22E0                 jmp     sub_58F490
+  .text:00000000004F22E8                 add     rsp, 10h
+  .text:00000000004F22EC                 pop     rbx
+  .text:00000000004F22ED                 pop     r12
+  .text:00000000004F22EF                 pop     rbp
+  .text:00000000004F22F0                 retn
+  .text:00000000004F22F8                 xor     edi, edi
+  .text:00000000004F22FA                 call    GetFrameTimeAmnesty
+  .text:00000000004F22FF                 test    rax, rax
+  .text:00000000004F2302                 jnz     loc_4F2204
+  .text:00000000004F2308                 movd    xmm1, dword ptr [rbx+458h]
+  .text:00000000004F2310                 movd    eax, xmm1
+  .text:00000000004F2314                 test    eax, eax
+  .text:00000000004F2316                 jz      short loc_4F236D
+  .text:00000000004F2318                 movsxd  rax, dword ptr [r12+34h]
+  .text:00000000004F231D                 pxor    xmm2, xmm2
+  .text:00000000004F2321                 movdqu  xmm3, xmmword ptr [rbx+4B8h]
+  .text:00000000004F2329                 movq    xmm0, rax
+  .text:00000000004F232E                 mov     eax, 1
+  .text:00000000004F2333                 pinsrq  xmm0, rax, 1
+  .text:00000000004F233A                 paddq   xmm0, xmm3
+  .text:00000000004F233E                 movups  xmmword ptr [rbx+4B8h], xmm0
+  .text:00000000004F2345                 movd    xmm0, dword ptr [r12+34h]
+  .text:00000000004F234C                 pmaxsd  xmm0, xmm2
+  .text:00000000004F2351                 pcmpeqd xmm2, xmm2
+  .text:00000000004F2355                 paddd   xmm1, xmm2
+  .text:00000000004F2359                 pminsd  xmm0, xmm1
+  .text:00000000004F235E                 movd    eax, xmm0
+  .text:00000000004F2362                 cdqe
+  .text:00000000004F2364                 add     qword ptr [rbx+rax*8+460h], 1
+  .text:00000000004F236D                 mov     eax, [rbx+4C8h]
+  .text:00000000004F2373                 test    eax, eax
+  .text:00000000004F2375                 jz      loc_4F2204
+  .text:00000000004F237B                 call    sub_37A990
+  .text:00000000004F2380                 pxor    xmm1, xmm1
+  .text:00000000004F2384                 pcmpeqd xmm2, xmm2
+  .text:00000000004F2388                 movss   xmm0, cs:dword_269ED4
+  .text:00000000004F2390                 mulss   xmm0, dword ptr [rax+4]
+  .text:00000000004F2395                 add     qword ptr [rbx+6C0h], 1
+  .text:00000000004F239D                 cvtss2sd xmm1, xmm0
+  .text:00000000004F23A1                 addsd   xmm1, qword ptr [rbx+6B8h]
+  .text:00000000004F23A9                 movsd   qword ptr [rbx+6B8h], xmm1
+  .text:00000000004F23B1                 movaps  xmm1, xmm0
+  .text:00000000004F23B4                 movd    xmm0, dword ptr [rbx+4C8h]
+  .text:00000000004F23BC                 roundss xmm1, xmm1, 0Ah
+  .text:00000000004F23C2                 cvttss2si eax, xmm1
+  .text:00000000004F23C6                 paddd   xmm0, xmm2
+  .text:00000000004F23CA                 pxor    xmm2, xmm2
+  .text:00000000004F23CE                 movd    xmm1, eax
+  .text:00000000004F23D2                 pmaxsd  xmm1, xmm2
+  .text:00000000004F23D7                 pminsd  xmm0, xmm1
+  .text:00000000004F23DC                 movd    eax, xmm0
+  .text:00000000004F23E0                 cdqe
+  .text:00000000004F23E2                 add     qword ptr [rbx+rax*8+4D0h], 1
+  .text:00000000004F23EB                 jmp     loc_4F2204
+  .text:00000000004F23F0                 mov     rdi, rbx
+  .text:00000000004F23F3                 call    rax
+  .text:00000000004F23F5                 movss   xmm1, cs:dword_26A1EC
+  .text:00000000004F23FD                 jmp     loc_4F2265
+procedure: |-
+  __int64 __fastcall CNetworkGameServerBase_ServerAdvanceTick(__int64 a1, __int64 a2, __m128i a3)
+  {
+    __int64 result; // rax
+    __int64 (__fastcall *v5)(); // rax
+    __int64 v6; // rax
+    __int64 v7; // rsi
+    __m128i v8; // xmm1
+    int v9; // eax
+    __m128 v10; // xmm0
+    int v11; // eax
+
+    if ( !*(_BYTE *)(a1 + 699) && *(_BYTE *)(a2 + 40) && !GetFrameTimeAmnesty(0) )
+    {
+      v8 = _mm_cvtsi32_si128(*(_DWORD *)(a1 + 1112));
+      if ( _mm_cvtsi128_si32(v8) )
+      {
+        *(__m128i *)(a1 + 1208) = _mm_add_epi64(
+                                    _mm_insert_epi64((__m128i)(unsigned __int64)*(int *)(a2 + 52), 1, 1),
+                                    _mm_loadu_si128((const __m128i *)(a1 + 1208)));
+        a3 = _mm_min_epi32(
+               _mm_max_epi32(_mm_cvtsi32_si128(*(_DWORD *)(a2 + 52)), (__m128i)0LL),
+               _mm_add_epi32(v8, (__m128i)-1LL));
+        v9 = _mm_cvtsi128_si32(a3);
+        ++*(_QWORD *)(a1 + 8LL * v9 + 1120);
+      }
+      if ( *(_DWORD *)(a1 + 1224) )
+      {
+        v10 = (__m128)0x447A0000u;
+        v10.m128_f32[0] = 1000.0 * *(float *)(sub_37A990(0) + 4);
+        ++*(_QWORD *)(a1 + 1728);
+        *(double *)(a1 + 1720) = v10.m128_f32[0] + *(double *)(a1 + 1720);
+        a3 = _mm_min_epi32(
+               _mm_add_epi32(_mm_cvtsi32_si128(*(_DWORD *)(a1 + 1224)), (__m128i)-1LL),
+               _mm_max_epi32(_mm_cvtsi32_si128((int)_mm_round_ss(v10, v10, 10).m128_f32[0]), (__m128i)0LL));
+        v11 = _mm_cvtsi128_si32(a3);
+        ++*(_QWORD *)(a1 + 8LL * v11 + 1232);
+      }
+    }
+    if ( g_pSoundOpSystem )
+      (*(void (__fastcall **)(_QWORD *, double))(g_pSoundOpSystem[1] + 304LL))(
+        g_pSoundOpSystem + 1,
+        *(double *)a3.m128i_i64);
+    result = *(unsigned int *)(a1 + 56);
+    if ( (unsigned int)result > 1 )
+    {
+      if ( (_DWORD)result != 4 )
+        ++*(_DWORD *)(a1 + 68);
+      v5 = *(__int64 (__fastcall **)())(*(_QWORD *)a1 + 224LL);// 0x0E0 = 224LL = INetworkGameServer_GetTime
+      if ( v5 == sub_4F0D50 )
+        *(float *)a3.m128i_i32 = (float)*(int *)(a1 + 68) * 0.015625;
+      else
+        ((void (__fastcall *)(__int64, double))v5)(a1, *(double *)a3.m128i_i64);
+      v6 = sub_2C9630();
+      *(_DWORD *)(a1 + 168) = 0;
+      *(_QWORD *)(a1 + 176) = v6;
+      *(_DWORD *)(a1 + 136) = a3.m128i_i32[0];
+      *(_DWORD *)(a1 + 140) = 1015021568;
+      v7 = *(unsigned int *)(a1 + 68);
+      *(_DWORD *)(a1 + 156) = (int)(float)((float)(*(float *)a3.m128i_i32 * 64.0) + 0.5);
+      *(_DWORD *)(a1 + 108) = *(_DWORD *)(a2 + 48);
+      *(_DWORD *)(a1 + 112) = *(_DWORD *)(a2 + 52);
+      return sub_58F490(off_9D8298, v7, 0);
+    }
+    return result;
+  }

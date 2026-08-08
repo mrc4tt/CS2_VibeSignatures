@@ -1,0 +1,367 @@
+func_name: SmokeVolume_GetSmokeDensityInLine_Lambda1_operator_call
+func_va: '0x180956970'
+disasm_code: |-
+  .text:0000000180956970                 mov     r11, rsp
+  .text:0000000180956973                 push    rbx
+  .text:0000000180956974                 push    rbp
+  .text:0000000180956975                 push    rdi
+  .text:0000000180956976                 push    r14
+  .text:0000000180956978                 push    r15
+  .text:000000018095697A                 sub     rsp, 60h
+  .text:000000018095697E                 mov     rbp, [rcx+18h]
+  .text:0000000180956982                 mov     eax, r8d
+  .text:0000000180956985                 and     eax, 3Fh
+  .text:0000000180956988                 movaps  [rsp+88h+var_48], xmm6
+  .text:000000018095698D                 movzx   r9d, al
+  .text:0000000180956991                 mov     rbx, rdx
+  .text:0000000180956994                 mov     eax, r8d
+  .text:0000000180956997                 mov     r14, rcx
+  .text:000000018095699A                 mov     rdi, [rbp+70h]
+  .text:000000018095699E                 xorps   xmm6, xmm6
+  .text:00000001809569A1                 shr     rax, 6
+  .text:00000001809569A5                 mov     r10d, r8d
+  .text:00000001809569A8                 mov     r15d, r8d
+  .text:00000001809569AB                 mov     rax, [rdi+rax*8+8]
+  .text:00000001809569B0                 bt      rax, r9
+  .text:00000001809569B4                 jnb     loc_180956C49
+  .text:00000001809569BA                 mov     eax, r10d
+  .text:00000001809569BD                 mov     [r11+10h], rsi
+  .text:00000001809569C1                 and     eax, 9249249h
+  .text:00000001809569C6                 mov     [r11-30h], r12
+  .text:00000001809569CA                 mov     ecx, eax
+  .text:00000001809569CC                 mov     [r11-38h], r13
+  .text:00000001809569D0                 shr     ecx, 2
+  .text:00000001809569D3                 lea     rbx, c_SmokeVolumeBytes
+  .text:00000001809569DA                 xor     ecx, eax
+  .text:00000001809569DC                 movaps  [rsp+88h+var_58], xmm7
+  .text:00000001809569E1                 movss   xmm7, cs:dword_181615230
+  .text:00000001809569E9                 and     ecx, 30C30C3h
+  .text:00000001809569EF                 mov     r9d, ecx
+  .text:00000001809569F2                 mov     eax, r10d
+  .text:00000001809569F5                 shr     eax, 1
+  .text:00000001809569F7                 xorps   xmm1, xmm1
+  .text:00000001809569FA                 and     eax, 9249249h
+  .text:00000001809569FF                 shr     r9d, 4
+  .text:0000000180956A03                 xor     r9d, ecx
+  .text:0000000180956A06                 shr     r10d, 2
+  .text:0000000180956A0A                 mov     ecx, eax
+  .text:0000000180956A0C                 movss   dword ptr [r11+18h], xmm1
+  .text:0000000180956A12                 shr     ecx, 2
+  .text:0000000180956A15                 and     r10d, 9249249h
+  .text:0000000180956A1C                 xor     ecx, eax
+  .text:0000000180956A1E                 and     r9d, 300F00Fh
+  .text:0000000180956A25                 and     ecx, 30C30C3h
+  .text:0000000180956A2B                 mov     eax, r10d
+  .text:0000000180956A2E                 shr     eax, 2
+  .text:0000000180956A31                 mov     r8d, ecx
+  .text:0000000180956A34                 xor     eax, r10d
+  .text:0000000180956A37                 shr     r8d, 4
+  .text:0000000180956A3B                 and     eax, 30C30C3h
+  .text:0000000180956A40                 xor     r8d, ecx
+  .text:0000000180956A43                 mov     ecx, eax
+  .text:0000000180956A45                 and     r8d, 300F00Fh
+  .text:0000000180956A4C                 shr     ecx, 4
+  .text:0000000180956A4F                 mov     esi, 6
+  .text:0000000180956A54                 xor     ecx, eax
+  .text:0000000180956A56                 mov     eax, r8d
+  .text:0000000180956A59                 shl     eax, 8
+  .text:0000000180956A5C                 and     ecx, 300F00Fh
+  .text:0000000180956A62                 xor     eax, r8d
+  .text:0000000180956A65                 mov     edx, ecx
+  .text:0000000180956A67                 and     eax, 0FF00h
+  .text:0000000180956A6C                 shl     edx, 8
+  .text:0000000180956A6F                 xor     edx, ecx
+  .text:0000000180956A71                 and     edx, 0FF00h
+  .text:0000000180956A77                 shl     edx, 8
+  .text:0000000180956A7A                 or      edx, eax
+  .text:0000000180956A7C                 mov     eax, r9d
+  .text:0000000180956A7F                 shr     eax, 8
+  .text:0000000180956A82                 xor     eax, r9d
+  .text:0000000180956A85                 movzx   eax, al
+  .text:0000000180956A88                 or      edx, eax
+  .text:0000000180956A8A                 mov     [rsp+88h+var_5C], edx
+  .text:0000000180956A8E                 movzx   r12d, byte ptr [rsp+88h+var_5C+2]
+  .text:0000000180956A94                 movzx   r13d, byte ptr [rsp+88h+var_5C+1]
+  .text:0000000180956A9A                 nop     word ptr [rax+rax+00h]
+  .text:0000000180956AA0                 movzx   eax, r12b
+  .text:0000000180956AA4                 add     al, [rbx+4]
+  .text:0000000180956AA7                 movzx   ecx, al
+  .text:0000000180956AAA                 movzx   eax, r13b
+  .text:0000000180956AAE                 add     al, [rbx]
+  .text:0000000180956AB0                 movzx   edx, al
+  .text:0000000180956AB3                 movzx   eax, byte ptr [rsp+88h+var_5C]
+  .text:0000000180956AB8                 add     al, [rbx-4]
+  .text:0000000180956ABB                 movzx   r9d, al
+  .text:0000000180956ABF                 mov     eax, ecx
+  .text:0000000180956AC1                 shl     eax, 8
+  .text:0000000180956AC4                 xor     eax, ecx
+  .text:0000000180956AC6                 and     eax, 300F00Fh
+  .text:0000000180956ACB                 mov     r10d, eax
+  .text:0000000180956ACE                 shl     r10d, 4
+  .text:0000000180956AD2                 xor     r10d, eax
+  .text:0000000180956AD5                 mov     eax, edx
+  .text:0000000180956AD7                 shl     eax, 10h
+  .text:0000000180956ADA                 and     r10d, 30C30C3h
+  .text:0000000180956AE1                 bswap   eax
+  .text:0000000180956AE3                 xor     eax, edx
+  .text:0000000180956AE5                 and     eax, 300F00Fh
+  .text:0000000180956AEA                 mov     r8d, eax
+  .text:0000000180956AED                 lea     ecx, ds:0[r10*4]
+  .text:0000000180956AF5                 shl     r8d, 4
+  .text:0000000180956AF9                 xor     ecx, r10d
+  .text:0000000180956AFC                 xor     r8d, eax
+  .text:0000000180956AFF                 and     ecx, 9249249h
+  .text:0000000180956B05                 and     r8d, 30C30C3h
+  .text:0000000180956B0C                 mov     eax, r9d
+  .text:0000000180956B0F                 shl     eax, 10h
+  .text:0000000180956B12                 bswap   eax
+  .text:0000000180956B14                 xor     eax, r9d
+  .text:0000000180956B17                 and     eax, 300F00Fh
+  .text:0000000180956B1C                 mov     edx, eax
+  .text:0000000180956B1E                 shl     edx, 4
+  .text:0000000180956B21                 xor     edx, eax
+  .text:0000000180956B23                 lea     eax, ds:0[r8*4]
+  .text:0000000180956B2B                 xor     eax, r8d
+  .text:0000000180956B2E                 and     edx, 30C30C3h
+  .text:0000000180956B34                 and     eax, 9249249h
+  .text:0000000180956B39                 lea     ecx, [rax+rcx*2]
+  .text:0000000180956B3C                 lea     eax, ds:0[rdx*4]
+  .text:0000000180956B43                 xor     eax, edx
+  .text:0000000180956B45                 and     eax, 9249249h
+  .text:0000000180956B4A                 lea     r9d, [rax+rcx*2]
+  .text:0000000180956B4E                 cmp     r9d, 8000h
+  .text:0000000180956B55                 jnb     loc_180956C13
+  .text:0000000180956B5B                 movsxd  r8, dword ptr [rbp+0ECh]  ; 0ECh = SmokeVolume::m_nFrame (structmember, struct=SmokeVolume, member=m_nFrame)
+  .text:0000000180956B62                 mov     edx, r9d
+  .text:0000000180956B65                 mov     rax, r8
+  .text:0000000180956B68                 shl     rax, 9
+  .text:0000000180956B6C                 and     r9d, 3Fh
+  .text:0000000180956B70                 shr     rdx, 6
+  .text:0000000180956B74                 add     rdx, rax
+  .text:0000000180956B77                 movzx   ecx, r9b
+  .text:0000000180956B7B                 mov     rax, [rdi+rdx*8+1008h]
+  .text:0000000180956B83                 bt      rax, rcx
+  .text:0000000180956B87                 jnb     loc_180956C13
+  .text:0000000180956B8D                 shl     r8, 0Fh
+  .text:0000000180956B91                 lea     rdx, [rsp+88h+arg_18]
+  .text:0000000180956B99                 add     r8, r15
+  .text:0000000180956B9C                 mov     [rsp+88h+arg_0], 3F800000h
+  .text:0000000180956BA7                 add     r8, r8
+  .text:0000000180956BAA                 mov     [rsp+88h+arg_18], 0
+  .text:0000000180956BB5                 lea     rcx, [rsp+88h+var_68]
+  .text:0000000180956BBA                 movss   xmm0, dword ptr [rdi+r8*8+3008h]
+  .text:0000000180956BC4                 lea     r8, [rsp+88h+arg_0]
+  .text:0000000180956BCC                 divss   xmm0, xmm7
+  .text:0000000180956BD0                 movss   [rsp+88h+var_68], xmm0
+  .text:0000000180956BD6                 call    sub_1801829D0
+  .text:0000000180956BDB                 comiss  xmm6, xmm0
+  .text:0000000180956BDE                 jbe     short loc_180956BE5
+  .text:0000000180956BE0                 movaps  xmm0, xmm6
+  .text:0000000180956BE3                 jmp     short loc_180956BE9
+  .text:0000000180956BE5                 subss   xmm0, xmm6
+  .text:0000000180956BE9                 lea     rdx, [rsp+88h+arg_0]
+  .text:0000000180956BF1                 movss   [rsp+88h+arg_0], xmm0
+  .text:0000000180956BFA                 lea     rcx, [rsp+88h+arg_10]
+  .text:0000000180956C02                 call    sub_18017F460
+  .text:0000000180956C07                 movss   [rsp+88h+arg_10], xmm0
+  .text:0000000180956C10                 movaps  xmm1, xmm0
+  .text:0000000180956C13                 add     rbx, 0Ch
+  .text:0000000180956C17                 sub     rsi, 1
+  .text:0000000180956C1B                 jnz     loc_180956AA0
+  .text:0000000180956C21                 mov     rax, [r14+8]
+  .text:0000000180956C25                 movaps  xmm7, [rsp+88h+var_58]
+  .text:0000000180956C2A                 mov     r13, [rsp+88h+var_38]
+  .text:0000000180956C2F                 mov     r12, [rsp+88h+var_30]
+  .text:0000000180956C34                 addss   xmm1, dword ptr [rax]
+  .text:0000000180956C38                 mov     rsi, [rsp+88h+arg_8]
+  .text:0000000180956C40                 movss   dword ptr [rax], xmm1
+  .text:0000000180956C44                 jmp     loc_180956CF0
+  .text:0000000180956C49                 movsxd  rax, dword ptr [rbp+0ECh]  ; 0ECh = SmokeVolume::m_nFrame (structmember, struct=SmokeVolume, member=m_nFrame)
+  .text:0000000180956C50                 lea     r8, [rsp+88h+arg_10]
+  .text:0000000180956C58                 shl     rax, 0Fh
+  .text:0000000180956C5C                 lea     rdx, [rsp+88h+arg_0]
+  .text:0000000180956C64                 add     rax, r15
+  .text:0000000180956C67                 mov     [rsp+88h+arg_10], 3F800000h
+  .text:0000000180956C72                 add     rax, rax
+  .text:0000000180956C75                 mov     [rsp+88h+arg_0], 0
+  .text:0000000180956C80                 lea     rcx, [rsp+88h+arg_18]
+  .text:0000000180956C88                 movss   xmm0, dword ptr [rdi+rax*8+3008h]
+  .text:0000000180956C91                 divss   xmm0, cs:dword_181615230
+  .text:0000000180956C99                 movss   [rsp+88h+arg_18], xmm0
+  .text:0000000180956CA2                 call    sub_1801829D0
+  .text:0000000180956CA7                 comiss  xmm6, xmm0
+  .text:0000000180956CAA                 jbe     short loc_180956CB1
+  .text:0000000180956CAC                 xorps   xmm0, xmm0
+  .text:0000000180956CAF                 jmp     short loc_180956CB5
+  .text:0000000180956CB1                 subss   xmm0, xmm6
+  .text:0000000180956CB5                 mov     rax, [r14+8]
+  .text:0000000180956CB9                 addss   xmm0, dword ptr [rax]
+  .text:0000000180956CBD                 movss   dword ptr [rax], xmm0
+  .text:0000000180956CC1                 mov     rax, [r14+10h]
+  .text:0000000180956CC5                 cmp     qword ptr [rax], 0
+  .text:0000000180956CC9                 jz      short loc_180956CF0
+  .text:0000000180956CCB                 mov     rax, [r14]
+  .text:0000000180956CCE                 cmp     byte ptr [rax], 0
+  .text:0000000180956CD1                 jnz     short loc_180956CF0
+  .text:0000000180956CD3                 comiss  xmm0, xmm6
+  .text:0000000180956CD6                 jbe     short loc_180956CF0
+  .text:0000000180956CD8                 mov     byte ptr [rax], 1
+  .text:0000000180956CDB                 mov     rax, [r14+10h]
+  .text:0000000180956CDF                 movsd   xmm0, qword ptr [rbx]
+  .text:0000000180956CE3                 mov     rcx, [rax]
+  .text:0000000180956CE6                 movsd   qword ptr [rcx], xmm0
+  .text:0000000180956CEA                 mov     eax, [rbx+8]
+  .text:0000000180956CED                 mov     [rcx+8], eax
+  .text:0000000180956CF0                 movaps  xmm6, [rsp+88h+var_48]
+  .text:0000000180956CF5                 mov     al, 1
+  .text:0000000180956CF7                 add     rsp, 60h
+  .text:0000000180956CFB                 pop     r15
+  .text:0000000180956CFD                 pop     r14
+  .text:0000000180956CFF                 pop     rdi
+  .text:0000000180956D00                 pop     rbp
+  .text:0000000180956D01                 pop     rbx
+  .text:0000000180956D02                 retn
+procedure: |-
+  char __fastcall SmokeVolume_GetSmokeDensityInLine_Lambda1_operator_call(__int64 a1, __int64 a2, unsigned int a3)
+  {
+    __int64 v3; // rbp
+    __int64 v6; // rdi
+    __int64 v7; // r15
+    __int64 v8; // rax
+    _BYTE *v9; // rbx
+    unsigned int v10; // r9d
+    float v11; // xmm1_4
+    unsigned int v12; // r10d
+    unsigned int v13; // r8d
+    __int64 v14; // rsi
+    char v15; // r12
+    char v16; // r13
+    int v17; // r10d
+    unsigned __int32 v18; // eax
+    int v19; // r8d
+    unsigned __int32 v20; // eax
+    unsigned int v21; // r9d
+    __int64 v22; // rax
+    __int64 v23; // r8
+    double v24; // xmm0_8
+    float v25; // xmm0_4
+    __int64 v26; // rax
+    double v27; // xmm0_8
+    float v28; // xmm0_4
+    float *v29; // rax
+    float v30; // xmm0_4
+    __int64 v31; // rcx
+    float v33[3]; // [rsp+20h] [rbp-68h] BYREF
+    int v34; // [rsp+2Ch] [rbp-5Ch]
+    int v35; // [rsp+90h] [rbp+8h] BYREF
+    float v36; // [rsp+A0h] [rbp+18h] BYREF
+    float v37; // [rsp+A8h] [rbp+20h] BYREF
+
+    v3 = *(_QWORD *)(a1 + 24);
+    v6 = *(_QWORD *)(v3 + 112);
+    v7 = a3;
+    v8 = *(_QWORD *)(v6 + 8 * ((unsigned __int64)a3 >> 6) + 8);
+    if ( _bittest64(&v8, a3 & 0x3F) )
+    {
+      v9 = &c_SmokeVolumeBytes;
+      v10 = (a3 & 0x9249249 ^ ((a3 & 0x9249249) >> 2)) & 0x30C30C3;
+      v11 = 0.0;
+      v36 = 0.0;
+      v12 = (a3 >> 2) & 0x9249249;
+      v13 = (((a3 >> 1)
+            & 0x9249249
+            ^ (((a3 >> 1) & 0x9249249) >> 2))
+           & 0x30C30C3
+           ^ ((((a3 >> 1) & 0x9249249 ^ (((a3 >> 1) & 0x9249249) >> 2)) & 0x30C30C3) >> 4))
+          & 0x300F00F;
+      v14 = 6;
+      v34 = ((unsigned __int8)v10
+           ^ (unsigned __int8)(v10 >> 4))
+          & 0xF
+          ^ (unsigned __int8)((unsigned __int16)((v10 ^ (v10 >> 4)) & 0xF00F) >> 8)
+          | ((unsigned __int16)v13 ^ (unsigned __int16)((_WORD)v13 << 8)) & 0xFF00
+          | ((((((unsigned __int16)v12
+               ^ (unsigned __int16)(v12 >> 2))
+              & 0x30C3
+              ^ (unsigned __int16)(((v12 ^ (v12 >> 2)) & 0x30C30C3) >> 4))
+             & 0xF00F
+             ^ (unsigned __int16)(((((unsigned __int16)v12
+                                   ^ (unsigned __int16)(v12 >> 2))
+                                  & 0x30C3
+                                  ^ (unsigned __int16)(((v12 ^ (v12 >> 2)) & 0x30C30C3) >> 4))
+                                 & 0xF00F) << 8))
+            & 0xFF00) << 8);
+      v15 = BYTE2(v34);
+      v16 = (unsigned __int16)((v13 ^ ((_WORD)v13 << 8)) & 0xFF00
+                             | ((((((unsigned __int16)v12
+                                  ^ (unsigned __int16)(v12 >> 2))
+                                 & 0x30C3
+                                 ^ (unsigned __int16)(((v12 ^ (v12 >> 2)) & 0x30C30C3) >> 4))
+                                & 0xF00F
+                                ^ (unsigned __int16)(((((unsigned __int16)v12
+                                                      ^ (unsigned __int16)(v12 >> 2))
+                                                     & 0x30C3
+                                                     ^ (unsigned __int16)(((v12 ^ (v12 >> 2)) & 0x30C30C3) >> 4))
+                                                    & 0xF00F) << 8))
+                               & 0xFF00) << 8)) >> 8;
+      do
+      {
+        v17 = (((unsigned __int8)(v9[4] + v15)
+              ^ ((unsigned __int8)(v9[4] + v15) << 8))
+             & 0x300F00F
+             ^ (16 * (((unsigned __int8)(v9[4] + v15) ^ ((unsigned __int8)(v9[4] + v15) << 8)) & 0x300F00F)))
+            & 0x30C30C3;
+        v18 = ((unsigned __int8)(*v9 + v16) ^ _byteswap_ulong((unsigned __int8)(*v9 + v16) << 16)) & 0x300F00F;
+        v19 = (v18 ^ (16 * v18)) & 0x30C30C3;
+        v20 = ((unsigned __int8)(*(v9 - 4) + v34) ^ _byteswap_ulong((unsigned __int8)(*(v9 - 4) + v34) << 16)) & 0x300F00F;
+        v21 = (((v20 ^ (16 * v20)) & 0x30C30C3 ^ (4 * ((v20 ^ (16 * v20)) & 0x30C30C3))) & 0x9249249)
+            + 2 * (((v19 ^ (4 * v19)) & 0x9249249) + 2 * ((v17 ^ (4 * v17)) & 0x9249249));
+        if ( v21 < 0x8000 )
+        {
+          v22 = *(_QWORD *)(v6 + 8 * (((__int64)*(int *)(v3 + 236) << 9) + ((unsigned __int64)v21 >> 6)) + 4104);  // 236 = 0xEC = SmokeVolume::m_nFrame (structmember, struct=SmokeVolume, member=m_nFrame)
+          if ( _bittest64(&v22, v21 & 0x3F) )
+          {
+            v23 = v7 + ((__int64)*(int *)(v3 + 236) << 15);  // 236 = 0xEC = SmokeVolume::m_nFrame (structmember, struct=SmokeVolume, member=m_nFrame)
+            v35 = 1065353216;
+            v37 = 0.0;
+            v33[0] = *(float *)(v6 + 16 * v23 + 12296) / 50.0;
+            v24 = sub_1801829D0(v33, &v37, &v35);
+            if ( *(float *)&v24 >= 0.0 )
+              v25 = *(float *)&v24 - 0.0;
+            else
+              v25 = 0.0;
+            v35 = LODWORD(v25);
+            v36 = sub_18017F460(&v36, &v35);
+            v11 = v36;
+          }
+        }
+        v9 += 12;
+        --v14;
+      }
+      while ( v14 );
+      **(float **)(a1 + 8) = v11 + **(float **)(a1 + 8);
+    }
+    else
+    {
+      v26 = a3 + ((__int64)*(int *)(v3 + 236) << 15);  // 236 = 0xEC = SmokeVolume::m_nFrame (structmember, struct=SmokeVolume, member=m_nFrame)
+      v36 = 1.0;
+      v35 = 0;
+      v37 = *(float *)(v6 + 16 * v26 + 12296) / 50.0;
+      v27 = sub_1801829D0(&v37, &v35, &v36);
+      if ( *(float *)&v27 >= 0.0 )
+        v28 = *(float *)&v27 - 0.0;
+      else
+        v28 = 0.0;
+      v29 = *(float **)(a1 + 8);
+      v30 = v28 + *v29;
+      *v29 = v30;
+      if ( **(_QWORD **)(a1 + 16) && !**(_BYTE **)a1 && v30 > 0.0 )
+      {
+        **(_BYTE **)a1 = 1;
+        v31 = **(_QWORD **)(a1 + 16);
+        *(_QWORD *)v31 = *(_QWORD *)a2;
+        *(_DWORD *)(v31 + 8) = *(_DWORD *)(a2 + 8);
+      }
+    }
+    return 1;
+  }

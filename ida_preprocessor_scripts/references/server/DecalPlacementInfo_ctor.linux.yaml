@@ -1,0 +1,563 @@
+func_name: DecalPlacementInfo_ctor
+func_va: '0xec3630'
+disasm_code: |-
+  .text:0000000000EC3630                 mov     rax, 0FFFFFFFF00000000h
+  .text:0000000000EC363A                 push    rbp
+  .text:0000000000EC363B                 pxor    xmm0, xmm0
+  .text:0000000000EC363F                 mov     rbp, rsp
+  .text:0000000000EC3642                 push    r15
+  .text:0000000000EC3644                 push    r14
+  .text:0000000000EC3646                 mov     r14, r9
+  .text:0000000000EC3649                 push    r13
+  .text:0000000000EC364B                 mov     r13, rcx
+  .text:0000000000EC364E                 push    r12
+  .text:0000000000EC3650                 mov     r12, rdx
+  .text:0000000000EC3653                 push    rbx
+  .text:0000000000EC3654                 mov     rbx, rdi
+  .text:0000000000EC3657                 sub     rsp, 38h
+  .text:0000000000EC365B                 mov     [rdi+28h], rax
+  .text:0000000000EC365F                 mov     eax, 0BF800000h
+  .text:0000000000EC3664                 mov     qword ptr [rdi], 0
+  .text:0000000000EC366B                 movups  xmmword ptr [rdi+8], xmm0
+  .text:0000000000EC366F                 movups  xmmword ptr [rdi+18h], xmm0
+  .text:0000000000EC3673                 mov     qword ptr [rdi+30h], 0FFFFFFFFFFFFFFFFh
+  .text:0000000000EC367B                 mov     [rdi+38h], rax
+  .text:0000000000EC367F                 mov     qword ptr [rdi+40h], 0
+  .text:0000000000EC3687                 mov     qword ptr [rdi+48h], 0
+  .text:0000000000EC368F                 mov     qword ptr [rdi+50h], 0
+  .text:0000000000EC3697                 mov     dword ptr [rdi+58h], 0
+  .text:0000000000EC369E                 mov     rdi, rsi
+  .text:0000000000EC36A1                 test    rsi, rsi
+  .text:0000000000EC36A4                 jz      loc_EC3B50
+  .text:0000000000EC36AA                 mov     [rbx], rdi
+  .text:0000000000EC36AD                 mov     [rbx+30h], r8d
+  .text:0000000000EC36B1                 mov     rax, [rdi]
+  .text:0000000000EC36B4                 call    qword ptr [rax+1A8h]
+  .text:0000000000EC36BA                 mov     rdi, [rbx]
+  .text:0000000000EC36BD                 lea     rdx, sub_A27CE0
+  .text:0000000000EC36C4                 mov     r15, rax
+  .text:0000000000EC36C7                 mov     rax, [rdi]
+  .text:0000000000EC36CA                 mov     rax, [rax+558h]
+  .text:0000000000EC36D1                 cmp     rax, rdx
+  .text:0000000000EC36D4                 jnz     loc_EC3A68
+  .text:0000000000EC36DA                 ; a3
+  .text:0000000000EC36DA                 mov     edx, [rbx+30h]; a3
+  .text:0000000000EC36DD                 test    edx, edx
+  .text:0000000000EC36DF                 js      loc_EC3A72
+  .text:0000000000EC36E5                 test    r15, r15
+  .text:0000000000EC36E8                 jz      loc_EC3A72
+  .text:0000000000EC36EE                 ; a1
+  .text:0000000000EC36EE                 lea     rdi, [rbp+a1]; a1
+  .text:0000000000EC36F2                 ; a2
+  .text:0000000000EC36F2                 mov     rsi, r15; a2
+  .text:0000000000EC36F5                 call    CBaseModelEntity_GetBoneTransform
+  .text:0000000000EC36FA                 movss   xmm2, dword ptr [rbp+a1]
+  .text:0000000000EC36FF                 movss   xmm10, dword ptr [rbp+a1+4]
+  .text:0000000000EC3705                 movss   xmm9, dword ptr [rbp+a1+8]
+  .text:0000000000EC370B                 movss   xmm7, dword ptr [rbp+a1+0Ch]
+  .text:0000000000EC3710                 movaps  xmm1, [rbp+var_40]
+  .text:0000000000EC3714                 lea     rax, unk_863D40
+  .text:0000000000EC371B                 pxor    xmm4, xmm4
+  .text:0000000000EC371F                 movaps  xmm8, xmm2
+  .text:0000000000EC3723                 pxor    xmm13, xmm13
+  .text:0000000000EC3728                 unpcklps xmm8, xmm2
+  .text:0000000000EC372C                 movaps  xmm3, xmmword ptr [rax]
+  .text:0000000000EC372F                 lea     rax, unk_863D70
+  .text:0000000000EC3736                 mulps   xmm3, xmm1
+  .text:0000000000EC3739                 movaps  xmm0, xmm3
+  .text:0000000000EC373C                 dpps    xmm0, xmm3, 0FFh
+  .text:0000000000EC3742                 sqrtps  xmm0, xmm0
+  .text:0000000000EC3745                 cmpeqps xmm4, xmm0
+  .text:0000000000EC3749                 andps   xmm4, xmmword ptr [rax]
+  .text:0000000000EC374C                 orps    xmm0, xmm4
+  .text:0000000000EC374F                 divps   xmm3, xmm0
+  .text:0000000000EC3752                 movaps  xmm4, xmm10
+  .text:0000000000EC3756                 movaps  xmm0, xmm9
+  .text:0000000000EC375A                 unpcklps xmm4, xmm2
+  .text:0000000000EC375D                 unpcklps xmm0, xmm2
+  .text:0000000000EC3760                 movlhps xmm0, xmm4
+  .text:0000000000EC3763                 movaps  xmm4, xmm10
+  .text:0000000000EC3767                 unpcklps xmm4, xmm9
+  .text:0000000000EC376B                 movlhps xmm4, xmm8
+  .text:0000000000EC376F                 unpcklps xmm9, xmm13
+  .text:0000000000EC3773                 unpcklps xmm2, xmm10
+  .text:0000000000EC3777                 movlhps xmm2, xmm9
+  .text:0000000000EC377B                 movaps  xmm6, xmm3
+  .text:0000000000EC377E                 movaps  xmm5, xmm3
+  .text:0000000000EC3781                 shufps  xmm6, xmm3, 9
+  .text:0000000000EC3785                 shufps  xmm5, xmm3, 12h
+  .text:0000000000EC3789                 mulps   xmm0, xmm6
+  .text:0000000000EC378C                 shufps  xmm3, xmm3, 0FFh
+  .text:0000000000EC3790                 mulps   xmm4, xmm5
+  .text:0000000000EC3793                 subps   xmm0, xmm4
+  .text:0000000000EC3796                 addps   xmm0, xmm0
+  .text:0000000000EC3799                 movaps  xmm4, xmm0
+  .text:0000000000EC379C                 movaps  xmm8, xmm0
+  .text:0000000000EC37A0                 shufps  xmm4, xmm0, 12h
+  .text:0000000000EC37A4                 shufps  xmm8, xmm0, 9
+  .text:0000000000EC37A9                 mulps   xmm0, xmm3
+  .text:0000000000EC37AC                 mulps   xmm8, xmm5
+  .text:0000000000EC37B0                 mulps   xmm4, xmm6
+  .text:0000000000EC37B3                 addps   xmm0, xmm2
+  .text:0000000000EC37B6                 movss   xmm2, dword ptr cs:qword_8CCD78
+  .text:0000000000EC37BE                 subps   xmm4, xmm8
+  .text:0000000000EC37C2                 pxor    xmm8, xmm8
+  .text:0000000000EC37C7                 ucomiss xmm7, xmm2
+  .text:0000000000EC37CA                 addps   xmm0, xmm4
+  .text:0000000000EC37CD                 jp      loc_EC3AA0
+  .text:0000000000EC37D3                 jnz     loc_EC3AA0
+  .text:0000000000EC37D9                 movaps  xmm2, xmm0
+  .text:0000000000EC37DC                 movaps  xmm12, xmm8
+  .text:0000000000EC37E0                 movaps  xmm10, xmm8
+  .text:0000000000EC37E4                 shufps  xmm2, xmm0, 55h ; 'U'
+  .text:0000000000EC37E8                 subss   xmm12, xmm2
+  .text:0000000000EC37ED                 movaps  xmm2, xmm8
+  .text:0000000000EC37F1                 movss   xmm8, dword ptr cs:qword_8CCD78
+  .text:0000000000EC37FA                 subss   xmm10, xmm0
+  .text:0000000000EC37FF                 unpckhps xmm0, xmm0
+  .text:0000000000EC3802                 subss   xmm2, xmm0
+  .text:0000000000EC3806                 shufps  xmm8, xmm8, 0
+  .text:0000000000EC380B                 movss   xmm11, dword ptr [r12+4]
+  .text:0000000000EC3812                 movss   xmm4, dword ptr [r12]
+  .text:0000000000EC3818                 movss   xmm9, dword ptr [r12+8]
+  .text:0000000000EC381F                 insertps xmm10, xmm10, 0Eh
+  .text:0000000000EC3826                 movlhps xmm4, xmm11
+  .text:0000000000EC382A                 movaps  xmm11, xmm9
+  .text:0000000000EC382E                 insertps xmm2, xmm2, 0Eh
+  .text:0000000000EC3834                 lea     rax, unk_863D30
+  .text:0000000000EC383B                 movaps  xmm0, xmm4
+  .text:0000000000EC383E                 shufps  xmm11, xmm4, 0A0h
+  .text:0000000000EC3843                 shufps  xmm11, xmm4, 2
+  .text:0000000000EC3848                 insertps xmm7, xmm7, 0Eh
+  .text:0000000000EC384E                 mulps   xmm11, xmm5
+  .text:0000000000EC3852                 shufps  xmm0, xmm4, 20h ; ' '
+  .text:0000000000EC3856                 shufps  xmm4, xmm9, 88h
+  .text:0000000000EC385B                 pinsrd  xmm0, dword ptr [r12+8], 0
+  .text:0000000000EC3864                 mulps   xmm0, xmm6
+  .text:0000000000EC3867                 pxor    xmm14, xmm14
+  .text:0000000000EC386C                 xorps   xmm1, xmmword ptr [rax]
+  .text:0000000000EC386F                 subps   xmm0, xmm11
+  .text:0000000000EC3873                 insertps xmm11, xmm12, 0Eh
+  .text:0000000000EC387A                 movlhps xmm10, xmm11
+  .text:0000000000EC387E                 shufps  xmm10, xmm2, 88h
+  .text:0000000000EC3883                 insertps xmm10, xmm7, 30h ; '0'
+  .text:0000000000EC388A                 addps   xmm0, xmm0
+  .text:0000000000EC388D                 movaps  xmm2, xmm0
+  .text:0000000000EC3890                 shufps  xmm2, xmm0, 12h
+  .text:0000000000EC3894                 mulps   xmm2, xmm6
+  .text:0000000000EC3897                 movaps  xmm6, xmm0
+  .text:0000000000EC389A                 shufps  xmm6, xmm0, 9
+  .text:0000000000EC389E                 mulps   xmm0, xmm3
+  .text:0000000000EC38A1                 movss   xmm3, dword ptr [r13+8]
+  .text:0000000000EC38A7                 mulps   xmm5, xmm6
+  .text:0000000000EC38AA                 addps   xmm0, xmm4
+  .text:0000000000EC38AD                 movaps  xmm4, xmm1
+  .text:0000000000EC38B0                 dpps    xmm4, xmm1, 0FFh
+  .text:0000000000EC38B6                 subps   xmm2, xmm5
+  .text:0000000000EC38B9                 movss   xmm5, dword ptr [r13+4]
+  .text:0000000000EC38BF                 movaps  xmm7, xmm5
+  .text:0000000000EC38C2                 addps   xmm0, xmm2
+  .text:0000000000EC38C5                 movss   xmm2, dword ptr [r13+0]
+  .text:0000000000EC38CB                 sqrtps  xmm4, xmm4
+  .text:0000000000EC38CE                 unpcklps xmm7, xmm2
+  .text:0000000000EC38D1                 mulps   xmm0, xmm8
+  .text:0000000000EC38D5                 movaps  xmm8, xmm2
+  .text:0000000000EC38D9                 unpcklps xmm8, xmm2
+  .text:0000000000EC38DD                 divps   xmm1, xmm4
+  .text:0000000000EC38E0                 addps   xmm0, xmm10
+  .text:0000000000EC38E4                 movss   dword ptr [rbx+8], xmm0
+  .text:0000000000EC38E9                 extractps dword ptr [rbx+0Ch], xmm0, 1
+  .text:0000000000EC38F0                 extractps dword ptr [rbx+10h], xmm0, 2
+  .text:0000000000EC38F7                 pxor    xmm0, xmm0
+  .text:0000000000EC38FB                 cmpeqps xmm0, xmm4
+  .text:0000000000EC38FF                 blendvps xmm1, cs:xmmword_267CF00
+  .text:0000000000EC3908                 movaps  xmm0, xmm3
+  .text:0000000000EC390B                 unpcklps xmm0, xmm2
+  .text:0000000000EC390E                 movlhps xmm0, xmm7
+  .text:0000000000EC3911                 movaps  xmm7, xmm5
+  .text:0000000000EC3914                 movaps  xmm6, xmm1
+  .text:0000000000EC3917                 movaps  xmm4, xmm1
+  .text:0000000000EC391A                 unpcklps xmm7, xmm3
+  .text:0000000000EC391D                 movlhps xmm7, xmm8
+  .text:0000000000EC3921                 shufps  xmm6, xmm1, 9
+  .text:0000000000EC3925                 shufps  xmm4, xmm1, 12h
+  .text:0000000000EC3929                 mulps   xmm0, xmm6
+  .text:0000000000EC392C                 shufps  xmm1, xmm1, 0FFh
+  .text:0000000000EC3930                 unpcklps xmm3, xmm14
+  .text:0000000000EC3934                 mulps   xmm7, xmm4
+  .text:0000000000EC3937                 unpcklps xmm2, xmm5
+  .text:0000000000EC393A                 movlhps xmm2, xmm3
+  .text:0000000000EC393D                 subps   xmm0, xmm7
+  .text:0000000000EC3940                 addps   xmm0, xmm0
+  .text:0000000000EC3943                 movaps  xmm7, xmm0
+  .text:0000000000EC3946                 movaps  xmm8, xmm0
+  .text:0000000000EC394A                 shufps  xmm7, xmm0, 12h
+  .text:0000000000EC394E                 shufps  xmm8, xmm0, 9
+  .text:0000000000EC3953                 mulps   xmm7, xmm6
+  .text:0000000000EC3956                 mulps   xmm8, xmm4
+  .text:0000000000EC395A                 mulps   xmm0, xmm1
+  .text:0000000000EC395D                 subps   xmm7, xmm8
+  .text:0000000000EC3961                 addps   xmm0, xmm2
+  .text:0000000000EC3964                 addps   xmm0, xmm7
+  .text:0000000000EC3967                 movss   dword ptr [rbx+14h], xmm0
+  .text:0000000000EC396C                 shufps  xmm0, xmm0, 0E9h
+  .text:0000000000EC3970                 movq    qword ptr [rbx+18h], xmm0
+  .text:0000000000EC3975                 test    r14, r14
+  .text:0000000000EC3978                 jz      loc_EC3AF0
+  .text:0000000000EC397E                 movss   xmm7, dword ptr [r14+4]
+  .text:0000000000EC3984                 lea     rdi, [rbx+14h]
+  .text:0000000000EC3988                 movss   xmm5, dword ptr [r14+8]
+  .text:0000000000EC398E                 movss   xmm2, dword ptr [r14]
+  .text:0000000000EC3993                 movaps  xmm3, xmm7
+  .text:0000000000EC3996                 movaps  xmm0, xmm5
+  .text:0000000000EC3999                 unpcklps xmm3, xmm2
+  .text:0000000000EC399C                 movaps  xmm8, xmm2
+  .text:0000000000EC39A0                 unpcklps xmm0, xmm2
+  .text:0000000000EC39A3                 movlhps xmm0, xmm3
+  .text:0000000000EC39A6                 unpcklps xmm8, xmm2
+  .text:0000000000EC39AA                 mulps   xmm0, xmm6
+  .text:0000000000EC39AD                 movaps  xmm3, xmm7
+  .text:0000000000EC39B0                 unpcklps xmm2, xmm7
+  .text:0000000000EC39B3                 unpcklps xmm3, xmm5
+  .text:0000000000EC39B6                 movlhps xmm3, xmm8
+  .text:0000000000EC39BA                 unpcklps xmm5, xmm14
+  .text:0000000000EC39BE                 movlhps xmm2, xmm5
+  .text:0000000000EC39C1                 mulps   xmm3, xmm4
+  .text:0000000000EC39C4                 subps   xmm0, xmm3
+  .text:0000000000EC39C7                 addps   xmm0, xmm0
+  .text:0000000000EC39CA                 mulps   xmm1, xmm0
+  .text:0000000000EC39CD                 movaps  xmm3, xmm0
+  .text:0000000000EC39D0                 shufps  xmm3, xmm0, 12h
+  .text:0000000000EC39D4                 mulps   xmm3, xmm6
+  .text:0000000000EC39D7                 movaps  xmm6, xmm0
+  .text:0000000000EC39DA                 shufps  xmm6, xmm0, 9
+  .text:0000000000EC39DE                 mulps   xmm4, xmm6
+  .text:0000000000EC39E1                 addps   xmm1, xmm2
+  .text:0000000000EC39E4                 subps   xmm3, xmm4
+  .text:0000000000EC39E7                 addps   xmm1, xmm3
+  .text:0000000000EC39EA                 movq    qword ptr [rbx+20h], xmm1
+  .text:0000000000EC39EF                 extractps dword ptr [rbx+28h], xmm1, 2
+  .text:0000000000EC39F6                 call    sub_1D1F830
+  .text:0000000000EC39FB                 pxor    xmm5, xmm5
+  .text:0000000000EC39FF                 ucomiss xmm0, xmm5
+  .text:0000000000EC3A02                 jp      short loc_EC3A1A
+  .text:0000000000EC3A04                 jnz     short loc_EC3A1A
+  .text:0000000000EC3A06                 mov     rax, cs:qword_7B5148
+  .text:0000000000EC3A0D                 mov     [rbx+14h], rax
+  .text:0000000000EC3A11                 mov     eax, cs:dword_7B5150
+  .text:0000000000EC3A17                 mov     [rbx+1Ch], eax
+  .text:0000000000EC3A1A                 lea     rdi, [rbx+20h]
+  .text:0000000000EC3A1E                 call    sub_1D1F830
+  .text:0000000000EC3A23                 movaps  xmm1, xmm0
+  .text:0000000000EC3A26                 pxor    xmm0, xmm0
+  .text:0000000000EC3A2A                 ucomiss xmm1, xmm0
+  .text:0000000000EC3A2D                 jp      short loc_EC3A45
+  .text:0000000000EC3A2F                 jnz     short loc_EC3A45
+  .text:0000000000EC3A31                 mov     rax, cs:qword_7B5148
+  .text:0000000000EC3A38                 mov     [rbx+20h], rax
+  .text:0000000000EC3A3C                 mov     eax, cs:dword_7B5150
+  .text:0000000000EC3A42                 mov     [rbx+28h], eax
+  .text:0000000000EC3A45                 add     rsp, 38h
+  .text:0000000000EC3A49                 mov     rcx, rbx
+  .text:0000000000EC3A4C                 mov     rdx, r13
+  .text:0000000000EC3A4F                 pop     rbx
+  .text:0000000000EC3A50                 mov     rsi, r12
+  .text:0000000000EC3A53                 mov     rdi, r15
+  .text:0000000000EC3A56                 pop     r12
+  .text:0000000000EC3A58                 pop     r13
+  .text:0000000000EC3A5A                 pop     r14
+  .text:0000000000EC3A5C                 pop     r15
+  .text:0000000000EC3A5E                 pop     rbp
+  .text:0000000000EC3A5F                 jmp     sub_EC2FF0
+  .text:0000000000EC3A68                 call    rax
+  .text:0000000000EC3A6A                 test    al, al
+  .text:0000000000EC3A6C                 jz      loc_EC36DA
+  .text:0000000000EC3A72                 mov     rdi, [rbx]
+  .text:0000000000EC3A75                 call    sub_D341C0
+  .text:0000000000EC3A7A                 movss   xmm2, dword ptr [rax]
+  .text:0000000000EC3A7E                 movss   xmm10, dword ptr [rax+4]
+  .text:0000000000EC3A84                 movss   xmm9, dword ptr [rax+8]
+  .text:0000000000EC3A8A                 movss   xmm7, dword ptr [rax+0Ch]
+  .text:0000000000EC3A8F                 movaps  xmm1, xmmword ptr [rax+10h]
+  .text:0000000000EC3A93                 mov     dword ptr [rbx+30h], 0FFFFFFFFh
+  .text:0000000000EC3A9A                 jmp     loc_EC3714
+  .text:0000000000EC3AA0                 pxor    xmm4, xmm4
+  .text:0000000000EC3AA4                 ucomiss xmm7, xmm4
+  .text:0000000000EC3AA7                 jp      short loc_EC3AAF
+  .text:0000000000EC3AA9                 jz      loc_EC3B40
+  .text:0000000000EC3AAF                 divss   xmm2, xmm7
+  .text:0000000000EC3AB3                 movaps  xmm7, xmm2
+  .text:0000000000EC3AB6                 movaps  xmm8, xmm7
+  .text:0000000000EC3ABA                 pxor    xmm2, xmm2
+  .text:0000000000EC3ABE                 movaps  xmm10, xmm2
+  .text:0000000000EC3AC2                 movaps  xmm12, xmm2
+  .text:0000000000EC3AC6                 shufps  xmm8, xmm8, 0
+  .text:0000000000EC3ACB                 mulps   xmm0, xmm8
+  .text:0000000000EC3ACF                 movaps  xmm4, xmm0
+  .text:0000000000EC3AD2                 subss   xmm10, xmm0
+  .text:0000000000EC3AD7                 shufps  xmm4, xmm0, 55h ; 'U'
+  .text:0000000000EC3ADB                 unpckhps xmm0, xmm0
+  .text:0000000000EC3ADE                 subss   xmm12, xmm4
+  .text:0000000000EC3AE3                 subss   xmm2, xmm0
+  .text:0000000000EC3AE7                 jmp     loc_EC380B
+  .text:0000000000EC3AF0                 mov     rax, cs:qword_8CF4E0
+  .text:0000000000EC3AF7                 mov     dword ptr [rbx+28h], 7F7FFFFFh
+  .text:0000000000EC3AFE                 lea     rdi, [rbx+14h]
+  .text:0000000000EC3B02                 mov     [rbx+20h], rax
+  .text:0000000000EC3B06                 call    sub_1D1F830
+  .text:0000000000EC3B0B                 pxor    xmm5, xmm5
+  .text:0000000000EC3B0F                 ucomiss xmm0, xmm5
+  .text:0000000000EC3B12                 jp      loc_EC3A45
+  .text:0000000000EC3B18                 jnz     loc_EC3A45
+  .text:0000000000EC3B1E                 mov     rax, cs:qword_7B5148
+  .text:0000000000EC3B25                 mov     [rbx+14h], rax
+  .text:0000000000EC3B29                 mov     eax, cs:dword_7B5150
+  .text:0000000000EC3B2F                 mov     [rbx+1Ch], eax
+  .text:0000000000EC3B32                 jmp     loc_EC3A45
+  .text:0000000000EC3B40                 movss   xmm7, cs:dword_8CDAB0
+  .text:0000000000EC3B48                 jmp     loc_EC3AB6
+  .text:0000000000EC3B50                 mov     [rbp+var_54], r8d
+  .text:0000000000EC3B54                 call    sub_178CAC0
+  .text:0000000000EC3B59                 mov     r8d, [rbp+var_54]
+  .text:0000000000EC3B5D                 mov     rdi, rax
+  .text:0000000000EC3B60                 jmp     loc_EC36AA
+procedure: |-
+  __int64 __fastcall DecalPlacementInfo_ctor(
+          __int64 *a1,
+          __int64 a2,
+          unsigned int *a3,
+          unsigned int *a4,
+          int a5,
+          unsigned int *a6)
+  {
+    __int64 v10; // rdi
+    __int64 v11; // r15
+    __int64 (__fastcall *v12)(); // rax
+    int v13; // edx
+    __m128 v14; // xmm2
+    __m128 v15; // xmm10
+    __m128 v16; // xmm9
+    __m128 v17; // xmm7
+    __m128 v18; // xmm1
+    __m128 v19; // xmm3
+    __m128 v20; // xmm0
+    __m128 v21; // xmm3
+    __m128 v22; // xmm6
+    __m128 v23; // xmm5
+    __m128 v24; // xmm3
+    __m128 v25; // xmm0
+    __m128 v26; // xmm0
+    __m128 v27; // xmm4
+    __m128 v28; // xmm8
+    __m128 v29; // xmm0
+    __m128 v30; // xmm2
+    __m128 v31; // xmm0
+    __m128 v32; // xmm12
+    __m128 v33; // xmm10
+    __m128 v34; // xmm2
+    __m128 v35; // xmm8
+    __m128 v36; // xmm4
+    __m128 v37; // xmm11
+    __m128 v38; // xmm1
+    __m128 v39; // xmm0
+    __m128 inserted; // xmm10
+    __m128 v41; // xmm0
+    __m128 v42; // xmm2
+    __m128 v43; // xmm6
+    __m128 v44; // xmm0
+    __m128 v45; // xmm3
+    __m128 v46; // xmm2
+    __m128 v47; // xmm5
+    __m128 v48; // xmm0
+    __m128 v49; // xmm2
+    __m128 v50; // xmm4
+    __m128 v51; // xmm0
+    __m128 v52; // xmm1
+    __m128 v53; // xmm6
+    __m128 v54; // xmm4
+    __m128 v55; // xmm1
+    __m128 v56; // xmm0
+    __m128 v57; // xmm0
+    __m128 v58; // xmm0
+    __int64 v59; // xmm0_8
+    __m128 v60; // xmm7
+    __m128 v61; // xmm5
+    __m128 v62; // xmm2
+    __m128 v63; // xmm0
+    __m128 v64; // xmm0
+    __m128 v65; // xmm1
+    float v66; // xmm1_4
+    __m128 *v68; // rax
+    __m128 v69; // xmm0
+    __int64 v70; // rax
+    int v71; // [rsp+Ch] [rbp-54h]
+    __m128i a1a; // [rsp+10h] [rbp-50h] BYREF
+    __m128 v73; // [rsp+20h] [rbp-40h]
+
+    a1[5] = 0xFFFFFFFF00000000LL;
+    *a1 = 0;
+    *(_OWORD *)(a1 + 1) = 0;
+    *(_OWORD *)(a1 + 3) = 0;
+    a1[6] = -1;
+    a1[7] = 3212836864LL;
+    a1[8] = 0;
+    a1[9] = 0;
+    a1[10] = 0;
+    *((_DWORD *)a1 + 22) = 0;
+    v10 = a2;
+    if ( !a2 )
+    {
+      v71 = a5;
+      v70 = sub_178CAC0();
+      a5 = v71;
+      v10 = v70;
+    }
+    *a1 = v10;
+    *((_DWORD *)a1 + 12) = a5;
+    v11 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v10 + 424LL))(v10);
+    v12 = *(__int64 (__fastcall **)())(*(_QWORD *)*a1 + 1368LL);
+    if ( (v12 == sub_A27CE0 || !(unsigned __int8)v12()) && (v13 = *((_DWORD *)a1 + 12), v13 >= 0) && v11 )
+    {
+      CBaseModelEntity_GetBoneTransform(&a1a, v11, v13);
+      v14 = (__m128)a1a.m128i_u32[0];
+      v15 = (__m128)a1a.m128i_u32[1];
+      v16 = (__m128)a1a.m128i_u32[2];
+      v17 = (__m128)a1a.m128i_u32[3];
+      v18 = v73;
+    }
+    else
+    {
+      v68 = (__m128 *)sub_D341C0(*a1);
+      v14 = (__m128)v68->m128_u32[0];
+      v15 = (__m128)v68->m128_u32[1];
+      v16 = (__m128)v68->m128_u32[2];
+      v17 = (__m128)v68->m128_u32[3];
+      v18 = v68[1];
+      *((_DWORD *)a1 + 12) = -1;
+    }
+    v19 = _mm_mul_ps(unk_863D40, v18);
+    v20 = _mm_sqrt_ps(_mm_dp_ps(v19, v19, 255));
+    v21 = _mm_div_ps(v19, _mm_or_ps(v20, _mm_and_ps(_mm_cmpeq_ps((__m128)0LL, v20), unk_863D70)));
+    v22 = _mm_shuffle_ps(v21, v21, 9);
+    v23 = _mm_shuffle_ps(v21, v21, 18);
+    v24 = _mm_shuffle_ps(v21, v21, 255);
+    v25 = _mm_sub_ps(
+            _mm_mul_ps(_mm_movelh_ps(_mm_unpacklo_ps(v16, v14), _mm_unpacklo_ps(v15, v14)), v22),
+            _mm_mul_ps(_mm_movelh_ps(_mm_unpacklo_ps(v15, v16), _mm_unpacklo_ps(v14, v14)), v23));
+    v26 = _mm_add_ps(v25, v25);
+    v27 = _mm_shuffle_ps(v26, v26, 18);
+    v28 = _mm_shuffle_ps(v26, v26, 9);
+    v29 = _mm_add_ps(_mm_mul_ps(v26, v24), _mm_movelh_ps(_mm_unpacklo_ps(v14, v15), _mm_unpacklo_ps(v16, (__m128)0LL)));
+    v30 = (__m128)0x3F800000u;
+    v31 = _mm_add_ps(v29, _mm_sub_ps(_mm_mul_ps(v27, v22), _mm_mul_ps(v28, v23)));
+    if ( v17.m128_f32[0] == 1.0 )
+    {
+      v32 = 0;
+      v33 = 0;
+      v32.m128_f32[0] = 0.0 - _mm_shuffle_ps(v31, v31, 85).m128_f32[0];
+      v34 = 0;
+      v33.m128_f32[0] = 0.0 - v31.m128_f32[0];
+      v34.m128_f32[0] = 0.0 - _mm_unpackhi_ps(v31, v31).m128_f32[0];
+      v35 = _mm_shuffle_ps((__m128)0x3F800000u, (__m128)0x3F800000u, 0);
+    }
+    else
+    {
+      if ( v17.m128_f32[0] == 0.0 )
+      {
+        v17 = (__m128)0x4B000000u;
+      }
+      else
+      {
+        v30.m128_f32[0] = 1.0 / v17.m128_f32[0];
+        v17 = v30;
+      }
+      v34 = 0;
+      v33 = 0;
+      v32 = 0;
+      v35 = _mm_shuffle_ps(v17, v17, 0);
+      v69 = _mm_mul_ps(v31, v35);
+      v33.m128_f32[0] = 0.0 - v69.m128_f32[0];
+      v32.m128_f32[0] = 0.0 - _mm_shuffle_ps(v69, v69, 85).m128_f32[0];
+      v34.m128_f32[0] = 0.0 - _mm_unpackhi_ps(v69, v69).m128_f32[0];
+    }
+    v36 = _mm_movelh_ps((__m128)*a3, (__m128)a3[1]);
+    v37 = _mm_mul_ps(_mm_shuffle_ps(_mm_shuffle_ps((__m128)a3[2], v36, 160), v36, 2), v23);
+    v38 = _mm_xor_ps(v18, unk_863D30);
+    v39 = _mm_sub_ps(_mm_mul_ps((__m128)_mm_insert_epi32((__m128i)_mm_shuffle_ps(v36, v36, 32), a3[2], 0), v22), v37);
+    inserted = _mm_insert_ps(
+                 _mm_shuffle_ps(
+                   _mm_movelh_ps(_mm_insert_ps(v33, v33, 14), _mm_insert_ps(v37, v32, 14)),
+                   _mm_insert_ps(v34, v34, 14),
+                   136),
+                 _mm_insert_ps(v17, v17, 14),
+                 48);
+    v41 = _mm_add_ps(v39, v39);
+    v42 = _mm_mul_ps(_mm_shuffle_ps(v41, v41, 18), v22);
+    v43 = _mm_shuffle_ps(v41, v41, 9);
+    v44 = _mm_mul_ps(v41, v24);
+    v45 = (__m128)a4[2];
+    v46 = _mm_sub_ps(v42, _mm_mul_ps(v23, v43));
+    v47 = (__m128)a4[1];
+    v48 = _mm_add_ps(_mm_add_ps(v44, _mm_shuffle_ps(v36, (__m128)a3[2], 136)), v46);
+    v49 = (__m128)*a4;
+    v50 = _mm_sqrt_ps(_mm_dp_ps(v38, v38, 255));
+    v51 = _mm_add_ps(_mm_mul_ps(v48, v35), inserted);
+    *((_DWORD *)a1 + 2) = v51.m128_i32[0];
+    *((_DWORD *)a1 + 3) = _mm_extract_ps(v51, 1);
+    *((_DWORD *)a1 + 4) = _mm_extract_ps(v51, 2);
+    v52 = _mm_blendv_ps(_mm_div_ps(v38, v50), (__m128)xmmword_267CF00, _mm_cmpeq_ps((__m128)0LL, v50));
+    v53 = _mm_shuffle_ps(v52, v52, 9);
+    v54 = _mm_shuffle_ps(v52, v52, 18);
+    v55 = _mm_shuffle_ps(v52, v52, 255);
+    v56 = _mm_sub_ps(
+            _mm_mul_ps(_mm_movelh_ps(_mm_unpacklo_ps(v45, v49), _mm_unpacklo_ps(v47, v49)), v53),
+            _mm_mul_ps(_mm_movelh_ps(_mm_unpacklo_ps(v47, v45), _mm_unpacklo_ps(v49, v49)), v54));
+    v57 = _mm_add_ps(v56, v56);
+    v58 = _mm_add_ps(
+            _mm_add_ps(_mm_mul_ps(v57, v55), _mm_movelh_ps(_mm_unpacklo_ps(v49, v47), _mm_unpacklo_ps(v45, (__m128)0LL))),
+            _mm_sub_ps(_mm_mul_ps(_mm_shuffle_ps(v57, v57, 18), v53), _mm_mul_ps(_mm_shuffle_ps(v57, v57, 9), v54)));
+    *((_DWORD *)a1 + 5) = v58.m128_i32[0];
+    v59 = _mm_shuffle_ps(v58, v58, 233).m128_u64[0];
+    a1[3] = v59;
+    if ( a6 )
+    {
+      v60 = (__m128)a6[1];
+      v61 = (__m128)a6[2];
+      v62 = (__m128)*a6;
+      v63 = _mm_sub_ps(
+              _mm_mul_ps(_mm_movelh_ps(_mm_unpacklo_ps(v61, v62), _mm_unpacklo_ps(v60, v62)), v53),
+              _mm_mul_ps(_mm_movelh_ps(_mm_unpacklo_ps(v60, v61), _mm_unpacklo_ps(v62, v62)), v54));
+      v64 = _mm_add_ps(v63, v63);
+      v65 = _mm_add_ps(
+              _mm_add_ps(
+                _mm_mul_ps(v55, v64),
+                _mm_movelh_ps(_mm_unpacklo_ps(v62, v60), _mm_unpacklo_ps(v61, (__m128)0LL))),
+              _mm_sub_ps(_mm_mul_ps(_mm_shuffle_ps(v64, v64, 18), v53), _mm_mul_ps(v54, _mm_shuffle_ps(v64, v64, 9))));
+      a1[4] = v65.m128_u64[0];
+      *((_DWORD *)a1 + 10) = _mm_extract_ps(v65, 2);
+      if ( sub_1D1F830((char *)a1 + 20) == 0.0 )
+      {
+        *(__int64 *)((char *)a1 + 20) = 0;
+        *((_DWORD *)a1 + 7) = 0;
+      }
+      v66 = sub_1D1F830(a1 + 4);
+      v59 = 0;
+      if ( v66 == 0.0 )
+      {
+        a1[4] = 0;
+        *((_DWORD *)a1 + 10) = 0;
+      }
+    }
+    else
+    {
+      *((_DWORD *)a1 + 10) = 2139095039;
+      a1[4] = 0x7F7FFFFF7F7FFFFFLL;
+      *(float *)&v59 = sub_1D1F830((char *)a1 + 20);
+      if ( *(float *)&v59 == 0.0 )
+      {
+        *(__int64 *)((char *)a1 + 20) = 0;
+        *((_DWORD *)a1 + 7) = 0;
+      }
+    }
+    return sub_EC2FF0(v11, a3, a4, a1, *(double *)&v59);
+  }

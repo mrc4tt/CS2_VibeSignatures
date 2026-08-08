@@ -1,0 +1,93 @@
+func_name: CNetworkGameServerBase_ServerPollNetworking
+func_va: '0x1800b49c0'
+disasm_code: |-
+  .text:00000001800B49C0                 push    rbx
+  .text:00000001800B49C2                 sub     rsp, 20h
+  .text:00000001800B49C6                 cmp     cs:byte_18068B2CD, 0
+  .text:00000001800B49CD                 mov     rbx, rcx
+  .text:00000001800B49D0                 jz      short loc_1800B49EB
+  .text:00000001800B49D2                 lea     rcx, aSigintReceived; "SIGINT received\n"
+  .text:00000001800B49D9                 mov     cs:byte_18068B2CD, 0
+  .text:00000001800B49E0                 call    cs:Warning
+  .text:00000001800B49E6                 call    sub_1800B00D0
+  .text:00000001800B49EB                 cmp     cs:byte_18068B2CE, 0
+  .text:00000001800B49F2                 jz      short loc_1800B4A40
+  .text:00000001800B49F4                 cmp     cs:g_pNetworkServerService, 0
+  .text:00000001800B49FC                 mov     cs:byte_18068B2CE, 0
+  .text:00000001800B4A03                 jz      short loc_1800B4A21
+  .text:00000001800B4A05                 mov     rax, cs:qword_18090DA50
+  .text:00000001800B4A0C                 test    rax, rax
+  .text:00000001800B4A0F                 jz      short loc_1800B4A21
+  .text:00000001800B4A11                 cmp     byte ptr [rax+2BBh], 0
+  .text:00000001800B4A18                 lea     rcx, aSigtermReceive; "SIGTERM received while server was **not"...
+  .text:00000001800B4A1F                 jz      short loc_1800B4A28
+  .text:00000001800B4A21                 lea     rcx, aSigtermReceive_0; "SIGTERM received while server hibernati"...
+  .text:00000001800B4A28                 call    cs:Warning
+  .text:00000001800B4A2E                 mov     rcx, cs:g_pHostStateMgr
+  .text:00000001800B4A35                 test    rcx, rcx
+  .text:00000001800B4A38                 jz      short loc_1800B4A82
+  .text:00000001800B4A3A                 mov     rax, [rcx]
+  .text:00000001800B4A3D                 call    qword ptr [rax+58h]
+  .text:00000001800B4A40                 cmp     dword ptr [rbx+38h], 1
+  .text:00000001800B4A44                 jbe     short loc_1800B4A7C
+  .text:00000001800B4A46                 mov     rax, [rbx]
+  .text:00000001800B4A49                 mov     rcx, rbx
+  .text:00000001800B4A4C                 ; 0x148 = 328LL = INetworkGameServer_IsChangelevelPending
+  .text:00000001800B4A4C                 call    qword ptr [rax+148h]; 0x148 = 328LL = INetworkGameServer_IsChangelevelPending
+  .text:00000001800B4A52                 test    al, al
+  .text:00000001800B4A54                 jnz     short loc_1800B4A7C
+  .text:00000001800B4A56                 mov     rcx, cs:g_pNetworkSystem
+  .text:00000001800B4A5D                 lea     r8, [rbx+8]
+  .text:00000001800B4A61                 xor     edx, edx
+  .text:00000001800B4A63                 test    rbx, rbx
+  .text:00000001800B4A66                 mov     rax, [rcx]
+  .text:00000001800B4A69                 cmovz   r8, rdx
+  .text:00000001800B4A6D                 mov     edx, [rbx+40h]
+  .text:00000001800B4A70                 add     rsp, 20h
+  .text:00000001800B4A74                 pop     rbx
+  .text:00000001800B4A75                 jmp     qword ptr [rax+0A0h]
+  .text:00000001800B4A7C                 add     rsp, 20h
+  .text:00000001800B4A80                 pop     rbx
+  .text:00000001800B4A81                 retn
+  .text:00000001800B4A82                 call    sub_180436170
+procedure: |-
+  void __fastcall CNetworkGameServerBase_ServerPollNetworking(_DWORD *a1)
+  {
+    const char *v2; // rcx
+    _DWORD *v3; // r8
+
+    if ( byte_18068B2CD )
+    {
+      byte_18068B2CD = 0;
+      Warning("SIGINT received\n");
+      sub_1800B00D0();
+    }
+    if ( byte_18068B2CE )
+    {
+      byte_18068B2CE = 0;
+      if ( !g_pNetworkServerService
+        || !qword_18090DA50
+        || (v2 = "SIGTERM received while server was **not** hibernating!  Shutting down even though a game may be in progress!\n",
+            *(_BYTE *)(qword_18090DA50 + 699)) )
+      {
+        v2 = "SIGTERM received while server hibernating.\n";
+      }
+      Warning(v2);
+      if ( !g_pHostStateMgr )
+      {
+        sub_180436170();
+        JUMPOUT(0x1800B4A87LL);
+      }
+      (*(void (__fastcall **)(__int64))(*(_QWORD *)g_pHostStateMgr + 88LL))(g_pHostStateMgr);
+    }
+    if ( a1[14] > 1u && !(*(unsigned __int8 (__fastcall **)(_DWORD *))(*(_QWORD *)a1 + 328LL))(a1) )// 0x148 = 328LL = INetworkGameServer_IsChangelevelPending
+    {
+      v3 = a1 + 2;
+      if ( !a1 )
+        v3 = nullptr;
+      (*(void (__fastcall **)(__int64, _QWORD, _DWORD *))(*(_QWORD *)g_pNetworkSystem + 160LL))(
+        g_pNetworkSystem,
+        (unsigned int)a1[16],
+        v3);
+    }
+  }

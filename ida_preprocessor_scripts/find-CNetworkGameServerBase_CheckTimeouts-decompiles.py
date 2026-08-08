@@ -1,33 +1,35 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-ISource2Server_OutOfGameFrameBoundary skill."""
+"""Preprocess script for find-CNetworkGameServerBase_CheckTimeouts-decompiles skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
+
 TARGET_FUNCTION_NAMES = [
-    "ISource2Server_OutOfGameFrameBoundary",
+    "CNetworkGameServerBase_IsHLTV",
 ]
 
 LLM_DECOMPILE = [
     {
-        "symbol_name": "ISource2Server_OutOfGameFrameBoundary",
+        "symbol_name": "CNetworkGameServerBase_IsHLTV",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
-            "references/engine/CLoopTypeSimple_FrameUpdate.{platform}.yaml",
+            "references/engine/CNetworkGameServerBase_CheckTimeouts.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
         "dependency_policy": {
-            "CLoopTypeSimple_FrameUpdate.{platform}.yaml": "required",
+            "CNetworkGameServerBase_CheckTimeouts.{platform}.yaml": "required",
         },
     },
 ]
 
 FUNC_VTABLE_RELATIONS = [
-    ("ISource2Server_OutOfGameFrameBoundary", "ISource2Server"),
+    # (func_name, vtable_class)
+    ("CNetworkGameServerBase_IsHLTV", "CNetworkGameServerBase"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     (
-        "ISource2Server_OutOfGameFrameBoundary",
+        "CNetworkGameServerBase_IsHLTV",
         [
             "func_name",
             "vfunc_sig",
@@ -50,7 +52,7 @@ async def preprocess_skill(
     llm_config=None,
     debug=False,
 ):
-    """Reuse previous gamever func_sig to locate target function(s) and write YAML."""
+    """Locate CNetworkGameServerBase_IsHLTV from CheckTimeouts via LLM decompile."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,

@@ -1,0 +1,434 @@
+func_name: CChicken_Event_Killed
+func_va: '0x180336b70'
+disasm_code: |-
+  .text:0000000180336B70                 mov     rax, rsp
+  .text:0000000180336B73                 push    rbp
+  .text:0000000180336B74                 push    rdi
+  .text:0000000180336B75                 push    r14
+  .text:0000000180336B77                 lea     rbp, [rax-0C8h]
+  .text:0000000180336B7E                 sub     rsp, 1B0h
+  .text:0000000180336B85                 mov     [rax+18h], rsi
+  .text:0000000180336B89                 lea     r8, aChickenDeath; "Chicken.Death"
+  .text:0000000180336B90                 mov     [rax+20h], r15
+  .text:0000000180336B94                 mov     r14, rdx
+  .text:0000000180336B97                 xor     r15d, r15d
+  .text:0000000180336B9A                 movaps  xmmword ptr [rax-28h], xmm6
+  .text:0000000180336B9E                 mov     qword ptr [rsp+1C0h+var_190], r15
+  .text:0000000180336BA3                 lea     rdx, [rsp+70h]
+  .text:0000000180336BA8                 mov     byte ptr [rsp+1C0h+var_198], 1
+  .text:0000000180336BAD                 xorps   xmm3, xmm3
+  .text:0000000180336BB0                 mov     [rsp+1C0h+var_1A0], r15
+  .text:0000000180336BB5                 mov     rdi, rcx
+  .text:0000000180336BB8                 xorps   xmm6, xmm6
+  .text:0000000180336BBB                 call    CBaseEntity_EmitSound
+  .text:0000000180336BC0                 lea     rdx, aPelvis; "pelvis"
+  .text:0000000180336BC7                 mov     rcx, rdi
+  .text:0000000180336BCA                 call    CBaseModelEntity_FindBone
+  .text:0000000180336BCF                 mov     edx, eax
+  .text:0000000180336BD1                 lea     r9, [rbp+0C0h+var_138]
+  .text:0000000180336BD5                 lea     r8, [rsp+1C0h+var_160]
+  .text:0000000180336BDA                 mov     rcx, rdi
+  .text:0000000180336BDD                 call    sub_180AEF020
+  .text:0000000180336BE2                 mov     rax, [r14]
+  .text:0000000180336BE5                 test    byte ptr [rax+4Ch], 8
+  .text:0000000180336BE9                 jz      short loc_180336C24
+  .text:0000000180336BEB                 movsd   xmm0, [rbp+0C0h+var_138]
+  .text:0000000180336BF0                 lea     r8, [rsp+1C0h+var_180]
+  .text:0000000180336BF5                 mov     eax, [rbp+0C0h+var_130]
+  .text:0000000180336BF8                 lea     rdx, [rsp+1C0h+var_170]
+  .text:0000000180336BFD                 movsd   [rsp+1C0h+var_180], xmm0
+  .text:0000000180336C03                 lea     rcx, aParticlesCritt; "particles/critters/chicken/chicken_roas"...
+  .text:0000000180336C0A                 movsd   xmm0, [rsp+1C0h+var_160]
+  .text:0000000180336C10                 mov     dword ptr [rsp+1C0h+var_178], eax
+  .text:0000000180336C14                 mov     eax, dword ptr [rsp+1C0h+var_158]
+  .text:0000000180336C18                 movsd   [rsp+1C0h+var_170], xmm0
+  .text:0000000180336C1E                 mov     dword ptr [rsp+1C0h+var_168], eax
+  .text:0000000180336C22                 jmp     short loc_180336C6D
+  .text:0000000180336C24                 xorps   xmm3, xmm3
+  .text:0000000180336C27                 lea     rcx, [rsp+70h]
+  .text:0000000180336C2C                 xorps   xmm2, xmm2
+  .text:0000000180336C2F                 xorps   xmm1, xmm1
+  .text:0000000180336C32                 call    sub_1801C2430
+  .text:0000000180336C37                 lea     r8, [rsp+1C0h+var_170]
+  .text:0000000180336C3C                 lea     rdx, [rsp+1C0h+var_180]
+  .text:0000000180336C41                 lea     rcx, aParticlesCritt_0; "particles/critters/chicken/chicken_gone"...
+  .text:0000000180336C48                 movsd   xmm0, qword ptr [rax]
+  .text:0000000180336C4C                 mov     eax, [rax+8]
+  .text:0000000180336C4F                 movsd   [rsp+1C0h+var_170], xmm0
+  .text:0000000180336C55                 movsd   xmm0, [rsp+1C0h+var_160]
+  .text:0000000180336C5B                 mov     dword ptr [rsp+1C0h+var_168], eax
+  .text:0000000180336C5F                 mov     eax, dword ptr [rsp+1C0h+var_158]
+  .text:0000000180336C63                 movsd   [rsp+1C0h+var_180], xmm0
+  .text:0000000180336C69                 mov     dword ptr [rsp+1C0h+var_178], eax
+  .text:0000000180336C6D                 mov     byte ptr [rsp+1C0h+var_188], r15b
+  .text:0000000180336C72                 xor     r9d, r9d
+  .text:0000000180336C75                 mov     qword ptr [rsp+1C0h+var_190], r15
+  .text:0000000180336C7A                 mov     dword ptr [rsp+1C0h+var_198], 0FFFFFFFFh
+  .text:0000000180336C82                 mov     byte ptr [rsp+1C0h+var_1A0], r15b
+  .text:0000000180336C87                 call    DispatchParticleEffect2
+  .text:0000000180336C8C                 mov     rcx, cs:g_pGameRules
+  .text:0000000180336C93                 test    rcx, rcx
+  .text:0000000180336C96                 jz      short loc_180336CF7
+  .text:0000000180336C98                 call    sub_1808DEEF0
+  .text:0000000180336C9D                 test    al, al
+  .text:0000000180336C9F                 jz      short loc_180336CF7
+  .text:0000000180336CA1                 mov     eax, dword ptr [rsp+1C0h+var_158]
+  .text:0000000180336CA5                 lea     r8, [rsp+1C0h+var_170]
+  .text:0000000180336CAA                 xorps   xmm0, xmm0
+  .text:0000000180336CAD                 mov     byte ptr [rsp+1C0h+var_188], r15b
+  .text:0000000180336CB2                 unpcklps xmm0, xmm6
+  .text:0000000180336CB5                 lea     rdx, [rsp+1C0h+var_180]
+  .text:0000000180336CBA                 movsd   [rsp+1C0h+var_170], xmm0
+  .text:0000000180336CC0                 lea     rcx, aWeaponConfetti; "weapon_confetti_omni"
+  .text:0000000180336CC7                 movsd   xmm0, [rsp+1C0h+var_160]
+  .text:0000000180336CCD                 xor     r9d, r9d
+  .text:0000000180336CD0                 mov     qword ptr [rsp+1C0h+var_190], r15
+  .text:0000000180336CD5                 mov     dword ptr [rsp+1C0h+var_198], 0FFFFFFFFh
+  .text:0000000180336CDD                 movsd   [rsp+1C0h+var_180], xmm0
+  .text:0000000180336CE3                 movss   dword ptr [rsp+1C0h+var_168], xmm6
+  .text:0000000180336CE9                 mov     dword ptr [rsp+1C0h+var_178], eax
+  .text:0000000180336CED                 mov     byte ptr [rsp+1C0h+var_1A0], r15b
+  .text:0000000180336CF2                 call    DispatchParticleEffect2
+  .text:0000000180336CF7                 mov     rdx, [rdi+10h]
+  .text:0000000180336CFB                 lea     rcx, [rbp+0C0h+arg_0]
+  .text:0000000180336D02                 mov     [rsp+1C0h+arg_8], rbx
+  .text:0000000180336D0A                 mov     edx, [rdx+38h]
+  .text:0000000180336D0D                 call    sub_1808CA090
+  .text:0000000180336D12                 lea     rdx, [rdi+3074h]
+  .text:0000000180336D19                 lea     rcx, [rbp+0C0h+arg_0]
+  .text:0000000180336D20                 call    sub_1802143E0
+  .text:0000000180336D25                 mov     edx, [rdi+0F78h]
+  .text:0000000180336D2B                 movaps  xmm6, xmm0
+  .text:0000000180336D2E                 mov     rcx, cs:g_pEntityList
+  .text:0000000180336D35                 cmp     edx, 0FFFFFFFFh
+  .text:0000000180336D38                 jz      loc_180336EA8
+  .text:0000000180336D3E                 test    rcx, rcx
+  .text:0000000180336D41                 jz      loc_180336EA8
+  .text:0000000180336D47                 cmp     edx, 0FFFFFFFEh
+  .text:0000000180336D4A                 jz      short loc_180336D7C
+  .text:0000000180336D4C                 mov     eax, edx
+  .text:0000000180336D4E                 and     eax, 7FFFh
+  .text:0000000180336D53                 mov     r8d, eax
+  .text:0000000180336D56                 shr     rax, 9
+  .text:0000000180336D5A                 mov     r9, [rcx+rax*8]
+  .text:0000000180336D5E                 test    r9, r9
+  .text:0000000180336D61                 jz      short loc_180336D7C
+  .text:0000000180336D63                 and     r8d, 1FFh
+  .text:0000000180336D6A                 imul    rax, r8, 70h ; 'p'
+  .text:0000000180336D6E                 add     rax, r9
+  .text:0000000180336D71                 jz      short loc_180336D7C
+  .text:0000000180336D73                 cmp     [rax+10h], edx
+  .text:0000000180336D76                 cmovnz  rax, r15
+  .text:0000000180336D7A                 jmp     short loc_180336D7F
+  .text:0000000180336D7C                 mov     rax, r15
+  .text:0000000180336D7F                 test    rax, rax
+  .text:0000000180336D82                 jz      loc_180336EA8
+  .text:0000000180336D88                 cmp     [rax], r15
+  .text:0000000180336D8B                 jz      loc_180336EA8
+  .text:0000000180336D91                 test    rcx, rcx
+  .text:0000000180336D94                 jz      short loc_180336DD8
+  .text:0000000180336D96                 cmp     edx, 0FFFFFFFEh
+  .text:0000000180336D99                 jz      short loc_180336DCB
+  .text:0000000180336D9B                 mov     eax, edx
+  .text:0000000180336D9D                 and     eax, 7FFFh
+  .text:0000000180336DA2                 mov     r8d, eax
+  .text:0000000180336DA5                 shr     rax, 9
+  .text:0000000180336DA9                 mov     r9, [rcx+rax*8]
+  .text:0000000180336DAD                 test    r9, r9
+  .text:0000000180336DB0                 jz      short loc_180336DCB
+  .text:0000000180336DB2                 and     r8d, 1FFh
+  .text:0000000180336DB9                 imul    rax, r8, 70h ; 'p'
+  .text:0000000180336DBD                 add     rax, r9
+  .text:0000000180336DC0                 jz      short loc_180336DCB
+  .text:0000000180336DC2                 cmp     [rax+10h], edx
+  .text:0000000180336DC5                 cmovnz  rax, r15
+  .text:0000000180336DC9                 jmp     short loc_180336DCE
+  .text:0000000180336DCB                 mov     rax, r15
+  .text:0000000180336DCE                 test    rax, rax
+  .text:0000000180336DD1                 jz      short loc_180336DD8
+  .text:0000000180336DD3                 mov     rbx, [rax]
+  .text:0000000180336DD6                 jmp     short loc_180336DDB
+  .text:0000000180336DD8                 mov     rbx, r15
+  .text:0000000180336DDB                 lea     rcx, [rsp+70h]
+  .text:0000000180336DE0                 call    sub_180C0A250
+  .text:0000000180336DE5                 lea     rax, ??_7CSingleUserRecipientFilter@@6B@; const CSingleUserRecipientFilter::`vftable'
+  .text:0000000180336DEC                 mov     rcx, rbx
+  .text:0000000180336DEF                 mov     [rsp+70h], rax
+  .text:0000000180336DF4                 call    j_UTIL_GetPlayerControllerForEntity
+  .text:0000000180336DF9                 mov     rdx, rax
+  .text:0000000180336DFC                 lea     rcx, [rsp+70h]
+  .text:0000000180336E01                 call    sub_180C0B1B0
+  .text:0000000180336E06                 lea     rcx, [rsp+70h]
+  .text:0000000180336E0B                 call    sub_180C10BF0
+  .text:0000000180336E10                 movss   xmm0, cs:dword_1815E5670
+  .text:0000000180336E18                 lea     rcx, [rbp+0C0h+var_128]
+  .text:0000000180336E1C                 comiss  xmm0, xmm6
+  .text:0000000180336E1F                 jbe     short loc_180336E3B
+  .text:0000000180336E21                 xorps   xmm2, xmm2
+  .text:0000000180336E24                 lea     rdx, a1f; "%.1f"
+  .text:0000000180336E2B                 cvtss2sd xmm2, xmm6
+  .text:0000000180336E2F                 movq    r8, xmm2
+  .text:0000000180336E34                 call    sub_18014BEE0
+  .text:0000000180336E39                 jmp     short loc_180336E4C
+  .text:0000000180336E3B                 cvttss2si r8d, xmm6
+  .text:0000000180336E40                 lea     rdx, aD; "%d"
+  .text:0000000180336E47                 call    sub_18014BEE0
+  .text:0000000180336E4C                 mov     ecx, [rax+4]
+  .text:0000000180336E4F                 bt      ecx, 1Eh
+  .text:0000000180336E53                 jnb     short loc_180336E5B
+  .text:0000000180336E55                 lea     r9, [rax+8]
+  .text:0000000180336E59                 jmp     short loc_180336E70
+  .text:0000000180336E5B                 test    ecx, 3FFFFFFFh
+  .text:0000000180336E61                 jbe     short loc_180336E69
+  .text:0000000180336E63                 mov     r9, [rax+8]
+  .text:0000000180336E67                 jmp     short loc_180336E70
+  .text:0000000180336E69                 lea     r9, byte_1815E09A0
+  .text:0000000180336E70                 mov     qword ptr [rsp+1C0h+var_190], r15
+  .text:0000000180336E75                 lea     r8, aPetKilled; "#Pet_Killed"
+  .text:0000000180336E7C                 mov     [rsp+1C0h+var_198], r15
+  .text:0000000180336E81                 lea     rcx, [rsp+70h]
+  .text:0000000180336E86                 mov     edx, 3
+  .text:0000000180336E8B                 mov     [rsp+1C0h+var_1A0], r15
+  .text:0000000180336E90                 call    UTIL_ClientPrintFilter
+  .text:0000000180336E95                 xor     edx, edx
+  .text:0000000180336E97                 lea     rcx, [rbp+0C0h+var_128]
+  .text:0000000180336E9B                 call    cs:?Purge@CBufferString@@QEAAXH@Z; CBufferString::Purge(int)
+  .text:0000000180336EA1                 mov     rcx, cs:g_pEntityList
+  .text:0000000180336EA8                 mov     edx, [rdi+0F78h]
+  .text:0000000180336EAE                 movaps  xmm6, [rsp+1C0h+var_28+8]
+  .text:0000000180336EB6                 cmp     edx, 0FFFFFFFFh
+  .text:0000000180336EB9                 jz      loc_180336F53
+  .text:0000000180336EBF                 test    rcx, rcx
+  .text:0000000180336EC2                 jz      loc_180336F53
+  .text:0000000180336EC8                 cmp     edx, 0FFFFFFFEh
+  .text:0000000180336ECB                 jz      short loc_180336EFD
+  .text:0000000180336ECD                 mov     eax, edx
+  .text:0000000180336ECF                 and     eax, 7FFFh
+  .text:0000000180336ED4                 mov     r8d, eax
+  .text:0000000180336ED7                 shr     rax, 9
+  .text:0000000180336EDB                 mov     r9, [rcx+rax*8]
+  .text:0000000180336EDF                 test    r9, r9
+  .text:0000000180336EE2                 jz      short loc_180336EFD
+  .text:0000000180336EE4                 and     r8d, 1FFh
+  .text:0000000180336EEB                 imul    rax, r8, 70h ; 'p'
+  .text:0000000180336EEF                 add     rax, r9
+  .text:0000000180336EF2                 jz      short loc_180336EFD
+  .text:0000000180336EF4                 cmp     [rax+10h], edx
+  .text:0000000180336EF7                 cmovnz  rax, r15
+  .text:0000000180336EFB                 jmp     short loc_180336F00
+  .text:0000000180336EFD                 mov     rax, r15
+  .text:0000000180336F00                 test    rax, rax
+  .text:0000000180336F03                 jz      short loc_180336F53
+  .text:0000000180336F05                 cmp     [rax], r15
+  .text:0000000180336F08                 jz      short loc_180336F53
+  .text:0000000180336F0A                 lea     rdx, [rbp+0C0h+arg_0]
+  .text:0000000180336F11                 lea     rcx, [rdi+3078h]
+  .text:0000000180336F18                 call    sub_180C39720
+  .text:0000000180336F1D                 lea     rcx, [rdi+3078h]
+  .text:0000000180336F24                 call    sub_18024AC20
+  .text:0000000180336F29                 cmp     dword ptr [rdi+0F78h], 0FFFFFFFFh
+  .text:0000000180336F30                 jz      short loc_180336F53
+  .text:0000000180336F32                 mov     edx, 0FFFFFFFFh
+  .text:0000000180336F37                 lea     rcx, [rdi+0F78h]
+  .text:0000000180336F3E                 mov     r8d, 0FFFFFFFFh
+  .text:0000000180336F44                 call    sub_18033D4C0
+  .text:0000000180336F49                 mov     dword ptr [rdi+0F78h], 0FFFFFFFFh
+  .text:0000000180336F53                 mov     rcx, cs:g_pGameRules
+  .text:0000000180336F5A                 mov     r15, [rsp+1C0h+arg_18]
+  .text:0000000180336F62                 mov     rsi, [rsp+1C0h+arg_10]
+  .text:0000000180336F6A                 mov     rbx, [rsp+1C0h+arg_8]
+  .text:0000000180336F72                 test    rcx, rcx
+  .text:0000000180336F75                 jz      short loc_180336F82
+  .text:0000000180336F77                 mov     r8, r14
+  .text:0000000180336F7A                 mov     rdx, rdi
+  .text:0000000180336F7D                 call    sub_1808C5DB0
+  .text:0000000180336F82                 mov     rdx, r14
+  .text:0000000180336F85                 mov     rcx, rdi
+  .text:0000000180336F88                 call    sub_180B3F470
+  .text:0000000180336F8D                 add     rsp, 1B0h
+  .text:0000000180336F94                 pop     r14
+  .text:0000000180336F96                 pop     rdi
+  .text:0000000180336F97                 pop     rbp
+  .text:0000000180336F98                 retn
+procedure: |-
+  __int64 __fastcall CChicken_Event_Killed(__int64 a1, __int64 a2, __int64 a3, int a4)
+  {
+    unsigned int v6; // eax
+    unsigned __int64 *v7; // r8
+    unsigned __int64 *v8; // rdx
+    const char *v9; // rcx
+    __int64 v10; // rax
+    unsigned __int64 v11; // xmm0_8
+    float v12; // xmm0_4
+    int v13; // edx
+    __int64 v14; // rcx
+    __int64 v15; // r9
+    __int64 v16; // rax
+    __int64 v17; // r9
+    __int64 *v18; // rax
+    __int64 v19; // rbx
+    __int64 PlayerControllerForEntity; // rax
+    __int64 v21; // rax
+    int v22; // ecx
+    char *v23; // r9
+    int v24; // edx
+    __int64 v25; // r9
+    __int64 v26; // rax
+    char v28; // [rsp+40h] [rbp-C8h]
+    __int64 v29; // [rsp+40h] [rbp-C8h]
+    unsigned __int64 v30; // [rsp+48h] [rbp-C0h] BYREF
+    __int64 v31; // [rsp+50h] [rbp-B8h]
+    unsigned __int64 v32; // [rsp+58h] [rbp-B0h] BYREF
+    __int64 v33; // [rsp+60h] [rbp-A8h]
+    unsigned __int64 v34; // [rsp+68h] [rbp-A0h] BYREF
+    __int64 v35; // [rsp+70h] [rbp-98h]
+    _QWORD v36[3]; // [rsp+78h] [rbp-90h] BYREF
+    unsigned __int64 v37; // [rsp+90h] [rbp-78h] BYREF
+    int v38; // [rsp+98h] [rbp-70h]
+    _BYTE v39[256]; // [rsp+A0h] [rbp-68h] BYREF
+    char v40; // [rsp+1D8h] [rbp+D0h] BYREF
+
+    CBaseEntity_EmitSound(a1, (unsigned int)v36, (unsigned int)"Chicken.Death", a4, 0, 1, 0);
+    v6 = CBaseModelEntity_FindBone(a1, "pelvis");
+    sub_180AEF020(a1, v6, &v34, &v37);
+    if ( (*(_BYTE *)(*(_QWORD *)a2 + 76LL) & 8) != 0 )
+    {
+      v7 = &v30;
+      v8 = &v32;
+      v30 = v37;
+      v9 = "particles/critters/chicken/chicken_roasted.vpcf";
+      LODWORD(v31) = v38;
+      v32 = v34;
+      LODWORD(v33) = v35;
+    }
+    else
+    {
+      v10 = sub_1801C2430(v36);
+      v7 = &v32;
+      v8 = &v30;
+      v9 = "particles/critters/chicken/chicken_gone.vpcf";
+      v11 = *(_QWORD *)v10;
+      LODWORD(v10) = *(_DWORD *)(v10 + 8);
+      v32 = v11;
+      LODWORD(v33) = v10;
+      v30 = v34;
+      LODWORD(v31) = v35;
+    }
+    v28 = 0;
+    DispatchParticleEffect2((_DWORD)v9, (_DWORD)v8, (_DWORD)v7, 0, 0, -1, 0, v28, v30, v31, v32, v33);
+    if ( g_pGameRules && (unsigned __int8)sub_1808DEEF0() )
+    {
+      LOBYTE(v29) = 0;
+      v32 = _mm_unpacklo_ps((__m128)0LL, (__m128)0LL).m128_u64[0];
+      LODWORD(v33) = 0;
+      LODWORD(v31) = v35;
+      DispatchParticleEffect2(
+        (unsigned int)"weapon_confetti_omni",
+        (unsigned int)&v30,
+        (unsigned int)&v32,
+        0,
+        0,
+        -1,
+        0,
+        v29,
+        v34,
+        v31,
+        v32,
+        v33);
+    }
+    sub_1808CA090(&v40, *(unsigned int *)(*(_QWORD *)(a1 + 16) + 56LL));
+    v12 = sub_1802143E0(&v40, a1 + 12404);
+    v13 = *(_DWORD *)(a1 + 3960);
+    v14 = g_pEntityList;
+    if ( v13 != -1 && g_pEntityList )
+    {
+      if ( v13 != -2
+        && (v15 = *(_QWORD *)(g_pEntityList + 8 * ((unsigned __int64)(v13 & 0x7FFF) >> 9))) != 0
+        && (v16 = v15 + 112LL * (v13 & 0x1FF)) != 0 )
+      {
+        if ( *(_DWORD *)(v16 + 16) != v13 )
+          v16 = 0;
+      }
+      else
+      {
+        v16 = 0;
+      }
+      if ( v16 && *(_QWORD *)v16 )
+      {
+        if ( !g_pEntityList )
+          goto LABEL_28;
+        if ( v13 != -2
+          && (v17 = *(_QWORD *)(g_pEntityList + 8 * ((unsigned __int64)(v13 & 0x7FFF) >> 9))) != 0
+          && (v18 = (__int64 *)(v17 + 112LL * (v13 & 0x1FF))) != nullptr )
+        {
+          if ( *((_DWORD *)v18 + 4) != v13 )
+            v18 = nullptr;
+        }
+        else
+        {
+          v18 = nullptr;
+        }
+        if ( v18 )
+          v19 = *v18;
+        else
+  LABEL_28:
+          v19 = 0;
+        sub_180C0A250(v36);
+        v36[0] = &CSingleUserRecipientFilter::`vftable';
+        PlayerControllerForEntity = j_UTIL_GetPlayerControllerForEntity(v19);
+        sub_180C0B1B0(v36, PlayerControllerForEntity);
+        sub_180C10BF0(v36);
+        if ( v12 >= 1.0 )
+          v21 = sub_18014BEE0(v39, "%d", (int)v12);
+        else
+          v21 = sub_18014BEE0(v39, "%.1f", v12);
+        v22 = *(_DWORD *)(v21 + 4);
+        if ( (v22 & 0x40000000) != 0 )
+        {
+          v23 = (char *)(v21 + 8);
+        }
+        else if ( (v22 & 0x3FFFFFFF) != 0 )
+        {
+          v23 = *(char **)(v21 + 8);
+        }
+        else
+        {
+          v23 = byte_1815E09A0;
+        }
+        UTIL_ClientPrintFilter((__int64)v36, 3, (__int64)"#Pet_Killed", (__int64)v23, 0, 0, 0);
+        CBufferString::Purge((CBufferString *)v39, 0);
+        v14 = g_pEntityList;
+      }
+    }
+    v24 = *(_DWORD *)(a1 + 3960);
+    if ( v24 != -1 && v14 )
+    {
+      if ( v24 != -2
+        && (v25 = *(_QWORD *)(v14 + 8 * ((unsigned __int64)(v24 & 0x7FFF) >> 9))) != 0
+        && (v26 = v25 + 112LL * (v24 & 0x1FF)) != 0 )
+      {
+        if ( *(_DWORD *)(v26 + 16) != v24 )
+          v26 = 0;
+      }
+      else
+      {
+        v26 = 0;
+      }
+      if ( v26 )
+      {
+        if ( *(_QWORD *)v26 )
+        {
+          sub_180C39720(a1 + 12408, &v40);
+          sub_18024AC20(a1 + 12408);
+          if ( *(_DWORD *)(a1 + 3960) != -1 )
+          {
+            sub_18033D4C0(a1 + 3960, 0xFFFFFFFFLL, 0xFFFFFFFFLL);
+            *(_DWORD *)(a1 + 3960) = -1;
+          }
+        }
+      }
+    }
+    if ( g_pGameRules )
+      sub_1808C5DB0(g_pGameRules, a1, a2);
+    return sub_180B3F470(a1, a2);
+  }

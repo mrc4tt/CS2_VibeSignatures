@@ -46,7 +46,7 @@ disasm_code: |-
   .text:0000000180A8A6EB                 movss   [rsp+98h+var_64], xmm1
   .text:0000000180A8A6F1                 movss   [rsp+98h+var_68], xmm0
   .text:0000000180A8A6F7                 mov     [rsp+98h+var_78], 0FFFFFFFFh
-  .text:0000000180A8A6FF                 call    sub_1804DF350
+  .text:0000000180A8A6FF                 call    DecalPlacementInfo_ctor
   .text:0000000180A8A704                 mov     rax, [rdi]
   .text:0000000180A8A707                 lea     rcx, aImpactRtwound; "Impact.RtWound"
   .text:0000000180A8A70E                 cmp     byte ptr [rax+84h], 0
@@ -115,7 +115,7 @@ procedure: |-
           v12[2] = -v5[13];
           v12[1] = v7;
           v12[0] = -v6;
-          sub_1804DF350((unsigned int)v13, (_DWORD)a1, (_DWORD)v5 + 20, (unsigned int)v12, -1, 0);
+          DecalPlacementInfo_ctor((unsigned int)v13, (_DWORD)a1, (_DWORD)v5 + 20, (unsigned int)v12, -1, 0);
           v13[64] = *(_BYTE *)(*(_QWORD *)a2 + 132LL) == 0;
           GlobalSymbol = MakeGlobalSymbol("Impact.RtWound");
           sub_1804E52C0(qword_181D8C058, nullptr, &GlobalSymbol, (__int64)v13);

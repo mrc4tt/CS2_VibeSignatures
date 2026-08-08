@@ -1,0 +1,48 @@
+func_name: IsBackgroundMap
+func_va: '0x180bdf6e0'
+disasm_code: |-
+  .text:0000000180BDF6E0                 sub     rsp, 28h
+  .text:0000000180BDF6E4                 mov     rcx, cs:qword_181FC69C0
+  .text:0000000180BDF6EB                 test    rcx, rcx
+  .text:0000000180BDF6EE                 jz      short loc_180BDF701
+  .text:0000000180BDF6F0                 mov     rax, [rcx]
+  .text:0000000180BDF6F3                 ; 0x028 = 40LL = ILoopModeGameSharedState_IsBackgroundMap
+  .text:0000000180BDF6F3                 call    qword ptr [rax+28h]; 0x028 = 40LL = ILoopModeGameSharedState_IsBackgroundMap
+  .text:0000000180BDF6F6                 test    al, al
+  .text:0000000180BDF6F8                 jz      short loc_180BDF701
+  .text:0000000180BDF6FA                 mov     al, 1
+  .text:0000000180BDF6FC                 add     rsp, 28h
+  .text:0000000180BDF700                 retn
+  .text:0000000180BDF701                 mov     rcx, cs:g_pNetworkServerService
+  .text:0000000180BDF708                 mov     rax, [rcx]
+  .text:0000000180BDF70B                 call    qword ptr [rax+0B8h]
+  .text:0000000180BDF711                 test    rax, rax
+  .text:0000000180BDF714                 jz      short loc_180BDF72C
+  .text:0000000180BDF716                 mov     rdx, [rax]
+  .text:0000000180BDF719                 mov     rcx, rax
+  .text:0000000180BDF71C                 ; 0x0D8 = 216LL = INetworkGameServer_IsBackgroundMap
+  .text:0000000180BDF71C                 call    qword ptr [rdx+0D8h]; 0x0D8 = 216LL = INetworkGameServer_IsBackgroundMap
+  .text:0000000180BDF722                 test    al, al
+  .text:0000000180BDF724                 setnz   al
+  .text:0000000180BDF727                 add     rsp, 28h
+  .text:0000000180BDF72B                 retn
+  .text:0000000180BDF72C                 add     rsp, 28h
+  .text:0000000180BDF730                 retn
+procedure: |-
+  char sub_180BDF6E0()
+  {
+    __int64 v0; // rax
+
+  if ( qword_181FC69C0
+    && (*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)qword_181FC69C0 + 40LL))(qword_181FC69C0) ) // 0x028 = 40LL = ILoopModeGameSharedState_IsBackgroundMap
+    {
+      LOBYTE(v0) = 1;
+    }
+    else
+    {
+      v0 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)g_pNetworkServerService + 184LL))(g_pNetworkServerService);
+      if ( v0 )
+        LOBYTE(v0) = (*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)v0 + 216LL))(v0) != 0;// 0x0D8 = 216LL = INetworkGameServer_IsBackgroundMap
+    }
+    return v0;
+  }

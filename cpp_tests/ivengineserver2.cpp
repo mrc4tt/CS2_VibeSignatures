@@ -11,6 +11,10 @@ class CCheckTransmitInfo;
 class CSharedEdictChangeInfo;
 class IServerEntity;
 struct edict_t;
+struct ChangeAccessorFieldPathIndex_t
+{
+	int32 m_Value;
+};
 
 #include <entity2/entityidentity.h>
 #include <eiface.h>

@@ -2,6 +2,15 @@
 
 **Use when:** target is a **struct member offset** (not a function), discovered by decompiling a known predecessor function.
 
+## Decide Whether to Emit `size`
+
+Use the instruction selected for `offset_sig` to decide whether `size` belongs in
+`GENERATE_YAML_DESIRED_FIELDS`:
+
+- For a member read/write with a natural operand width (such as `mov`, `movss`, or `cmp`), include `size`.
+- For `lea reg, [base+offset]`, omit `size`. It identifies the offset of an embedded member by computing its
+  address; it does not read or write the member and cannot establish its extent.
+
 ## Template
 
 ```python
@@ -31,7 +40,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "struct_name",
             "member_name",
             "offset",
-            "size",
+            # This template assumes a `lea` locator. Add "size" for a real memory access.
             "offset_sig",
             "offset_sig_disp",
         ],
@@ -80,7 +89,8 @@ Multiple access sites for the same field all need the same annotation — the LL
 
 - Uses `TARGET_STRUCT_MEMBER_NAMES` instead of `TARGET_FUNCTION_NAMES`
 - Passes `struct_member_names=` instead of `func_names=` to `preprocess_common_skill`
-- YAML fields are struct-specific: `struct_name, member_name, offset, size, offset_sig, offset_sig_disp`
+- YAML fields are struct-specific: `struct_name, member_name, offset, offset_sig, offset_sig_disp`; add `size`
+  only when the locating instruction is a non-`lea` memory access
 - No `FUNC_VTABLE_RELATIONS`
 - configs/<GAMEVER>.yaml symbol category is `structmember` (not `func` or `vfunc`)
 
@@ -90,6 +100,7 @@ Multiple access sites for the same field all need the same annotation — the LL
 - [ ] `LLM_DECOMPILE` reference path points to the correct predecessor function YAML
 - [ ] `preprocess_skill` signature includes `llm_config=None`
 - [ ] `preprocess_common_skill` call passes `struct_member_names=`, `llm_decompile_specs=`, and `llm_config=`
+- [ ] A `lea` locator omits `size`; a member read/write locator includes it
 - [ ] No `FUNC_VTABLE_RELATIONS` (struct member, not virtual function)
 - [ ] configs/<GAMEVER>.yaml symbol category is `structmember`
 - [ ] configs/<GAMEVER>.yaml `expected_input` includes the predecessor YAML

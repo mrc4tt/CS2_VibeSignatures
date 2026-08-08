@@ -41,6 +41,7 @@ and stop if that file does not exist. Never fall back to another game version.
 - Run from the repository root and require an `origin` remote plus successful `gh auth status`.
 - Never commit directly to `main`, force-push, amend an existing commit, or use `git add -A` / `git add .`.
 - Preserve unrelated untracked files and never stage them.
+- **Never impose a 64-second execution timeout** on candidate preparation, C++ validation, or candidate publication. When a command may outlive the interactive timeout, start it as a background task and poll its log and exit status until it finishes.
 - Require zero unstaged tracked changes at invocation. This forbids partially staged paths and prevents the
   formatter from absorbing unrelated work.
 - In `staged-delivery`, treat the initial staged path list as immutable authorization. Do not add other source,

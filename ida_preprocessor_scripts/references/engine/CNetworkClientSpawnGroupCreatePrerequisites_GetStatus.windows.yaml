@@ -1,0 +1,556 @@
+func_name: CNetworkClientSpawnGroupCreatePrerequisites_GetStatus
+func_va: '0x18005da30'
+disasm_code: |-
+  .text:000000018005DA30                 mov     rax, rsp
+  .text:000000018005DA33                 push    rbp
+  .text:000000018005DA34                 push    rsi
+  .text:000000018005DA35                 push    r12
+  .text:000000018005DA37                 push    r13
+  .text:000000018005DA39                 push    r14
+  .text:000000018005DA3B                 sub     rsp, 70h
+  .text:000000018005DA3F                 movaps  xmmword ptr [rax-48h], xmm7
+  .text:000000018005DA43                 mov     rsi, rcx
+  .text:000000018005DA46                 movaps  xmmword ptr [rax-58h], xmm8
+  .text:000000018005DA4B                 movaps  xmm7, xmm1
+  .text:000000018005DA4E                 movsd   xmm8, cs:qword_180585100
+  .text:000000018005DA57                 xor     ebp, ebp
+  .text:000000018005DA59                 movaps  xmmword ptr [rax-68h], xmm9
+  .text:000000018005DA5E                 mov     r14d, 0FFFFh
+  .text:000000018005DA64                 movsd   xmm9, cs:qword_180585200
+  .text:000000018005DA6D                 mov     r13d, 7FFFh
+  .text:000000018005DA73                 mov     [rax+8], rbx
+  .text:000000018005DA77                 mov     [rax+10h], rdi
+  .text:000000018005DA7B                 mov     [rax+18h], r15
+  .text:000000018005DA7F                 movaps  xmmword ptr [rax-38h], xmm6
+  .text:000000018005DA83                 nop     dword ptr [rax+00h]
+  .text:000000018005DA87                 nop     word ptr [rax+rax+00000000h]
+  .text:000000018005DA90                 movzx   r12d, word ptr [rsi+28h]
+  .text:000000018005DA95                 cmp     r12w, r14w
+  .text:000000018005DA99                 jz      loc_18005DE4B
+  .text:000000018005DA9F                 ucomisd xmm7, xmm9
+  .text:000000018005DAA4                 jp      short loc_18005DAA8
+  .text:000000018005DAA6                 jz      short loc_18005DAB8
+  .text:000000018005DAA8                 call    cs:Plat_FloatTime
+  .text:000000018005DAAE                 comisd  xmm0, xmm7
+  .text:000000018005DAB2                 jnb     loc_18005DE47
+  .text:000000018005DAB8                 mov     rdi, rbp
+  .text:000000018005DABB                 test    [rsi+1Ah], r13w
+  .text:000000018005DAC0                 jz      short loc_18005DAC6
+  .text:000000018005DAC2                 mov     rdi, [rsi+20h]
+  .text:000000018005DAC6                 lea     r15, [r12+r12*4]
+  .text:000000018005DACA                 lea     rbx, [rdi+r15*8]
+  .text:000000018005DACE                 cmp     [rdi+r15*8+18h], bpl
+  .text:000000018005DAD3                 jnz     short loc_18005DAEB
+  .text:000000018005DAD5                 mov     byte ptr [rdi+r15*8+18h], 1
+  .text:000000018005DADB                 mov     [rbx+10h], ebp
+  .text:000000018005DADE                 rdtsc
+  .text:000000018005DAE0                 shl     rdx, 20h
+  .text:000000018005DAE4                 or      rax, rdx
+  .text:000000018005DAE7                 mov     [rbx+8], rax
+  .text:000000018005DAEB                 mov     r14, [rdi+r15*8]
+  .text:000000018005DAEF                 movaps  xmm1, xmm7
+  .text:000000018005DAF2                 mov     rcx, r14
+  .text:000000018005DAF5                 mov     rax, [r14]
+  .text:000000018005DAF8                 ; 0x18 = 24LL = CWaitForInitialSpawnGroupsPrerequisite_GetStatus
+  .text:000000018005DAF8                 call    qword ptr [rax+18h]; 0x18 = 24LL = CWaitForInitialSpawnGroupsPrerequisite_GetStatus
+  .text:000000018005DAFB                 mov     ecx, eax
+  .text:000000018005DAFD                 test    eax, eax
+  .text:000000018005DAFF                 jz      loc_18005DE47
+  .text:000000018005DB05                 sub     ecx, 1
+  .text:000000018005DB08                 jnz     loc_18005DD14
+  .text:000000018005DB0E                 rdtsc
+  .text:000000018005DB10                 shl     rdx, 20h
+  .text:000000018005DB14                 or      rax, rdx
+  .text:000000018005DB17                 sub     rax, [rbx+8]
+  .text:000000018005DB1B                 mov     [rbx+8], rax
+  .text:000000018005DB1F                 mov     rax, [rsi]
+  .text:000000018005DB22                 mov     r13, [rax+38h]
+  .text:000000018005DB26                 cmp     [rsi+48h], bpl
+  .text:000000018005DB2A                 jz      loc_18005DBBE
+  .text:000000018005DB30                 call    cs:Plat_CPUTickFrequency
+  .text:000000018005DB36                 mov     rcx, rax
+  .text:000000018005DB39                 xorps   xmm0, xmm0
+  .text:000000018005DB3C                 test    rax, rax
+  .text:000000018005DB3F                 js      short loc_18005DB48
+  .text:000000018005DB41                 cvtsi2sd xmm0, rax
+  .text:000000018005DB46                 jmp     short loc_18005DB5A
+  .text:000000018005DB48                 shr     rax, 1
+  .text:000000018005DB4B                 and     ecx, 1
+  .text:000000018005DB4E                 or      rax, rcx
+  .text:000000018005DB51                 cvtsi2sd xmm0, rax
+  .text:000000018005DB56                 addsd   xmm0, xmm0
+  .text:000000018005DB5A                 mov     rcx, [rbx+8]
+  .text:000000018005DB5E                 movaps  xmm1, xmm8
+  .text:000000018005DB62                 xorps   xmm6, xmm6
+  .text:000000018005DB65                 divsd   xmm1, xmm0
+  .text:000000018005DB69                 test    rcx, rcx
+  .text:000000018005DB6C                 js      short loc_18005DB75
+  .text:000000018005DB6E                 cvtsi2sd xmm6, rcx
+  .text:000000018005DB73                 jmp     short loc_18005DB8A
+  .text:000000018005DB75                 mov     rax, rcx
+  .text:000000018005DB78                 and     ecx, 1
+  .text:000000018005DB7B                 shr     rax, 1
+  .text:000000018005DB7E                 or      rax, rcx
+  .text:000000018005DB81                 cvtsi2sd xmm6, rax
+  .text:000000018005DB86                 addsd   xmm6, xmm6
+  .text:000000018005DB8A                 mov     rax, [rsi]
+  .text:000000018005DB8D                 mov     rcx, rsi
+  .text:000000018005DB90                 mulsd   xmm6, xmm1
+  .text:000000018005DB94                 call    qword ptr [rax+20h]
+  .text:000000018005DB97                 mov     rdx, [r14]
+  .text:000000018005DB9A                 mov     rcx, r14
+  .text:000000018005DB9D                 mov     rbx, rax
+  .text:000000018005DBA0                 call    qword ptr [rdx+20h]
+  .text:000000018005DBA3                 mov     r9, rbx
+  .text:000000018005DBA6                 movsd   [rsp+98h+var_78], xmm6
+  .text:000000018005DBAC                 mov     r8, rax
+  .text:000000018005DBAF                 lea     rdx, aPsSatisfiedSIn; "PS_SATISFIED %s in sequence for %s [%.3"...
+  .text:000000018005DBB6                 mov     rcx, rsi
+  .text:000000018005DBB9                 call    r13
+  .text:000000018005DBBC                 jmp     short loc_18005DC3D
+  .text:000000018005DBBE                 call    cs:Plat_CPUTickFrequency
+  .text:000000018005DBC4                 mov     rcx, rax
+  .text:000000018005DBC7                 xorps   xmm0, xmm0
+  .text:000000018005DBCA                 test    rax, rax
+  .text:000000018005DBCD                 js      short loc_18005DBD6
+  .text:000000018005DBCF                 cvtsi2sd xmm0, rax
+  .text:000000018005DBD4                 jmp     short loc_18005DBE8
+  .text:000000018005DBD6                 shr     rax, 1
+  .text:000000018005DBD9                 and     ecx, 1
+  .text:000000018005DBDC                 or      rax, rcx
+  .text:000000018005DBDF                 cvtsi2sd xmm0, rax
+  .text:000000018005DBE4                 addsd   xmm0, xmm0
+  .text:000000018005DBE8                 mov     rcx, [rbx+8]
+  .text:000000018005DBEC                 movaps  xmm1, xmm8
+  .text:000000018005DBF0                 xorps   xmm6, xmm6
+  .text:000000018005DBF3                 divsd   xmm1, xmm0
+  .text:000000018005DBF7                 test    rcx, rcx
+  .text:000000018005DBFA                 js      short loc_18005DC03
+  .text:000000018005DBFC                 cvtsi2sd xmm6, rcx
+  .text:000000018005DC01                 jmp     short loc_18005DC18
+  .text:000000018005DC03                 mov     rax, rcx
+  .text:000000018005DC06                 and     ecx, 1
+  .text:000000018005DC09                 shr     rax, 1
+  .text:000000018005DC0C                 or      rax, rcx
+  .text:000000018005DC0F                 cvtsi2sd xmm6, rax
+  .text:000000018005DC14                 addsd   xmm6, xmm6
+  .text:000000018005DC18                 mov     rax, [r14]
+  .text:000000018005DC1B                 mov     rcx, r14
+  .text:000000018005DC1E                 mulsd   xmm6, xmm1
+  .text:000000018005DC22                 call    qword ptr [rax+20h]
+  .text:000000018005DC25                 movaps  xmm3, xmm6
+  .text:000000018005DC28                 lea     rdx, aSCompletedIn3f; "%s completed in %.3f msec\n"
+  .text:000000018005DC2F                 mov     r8, rax
+  .text:000000018005DC32                 movq    r9, xmm6
+  .text:000000018005DC37                 mov     rcx, rsi
+  .text:000000018005DC3A                 call    r13
+  .text:000000018005DC3D                 lea     rcx, [rsi+30h]
+  .text:000000018005DC41                 call    sub_18005E1A0
+  .text:000000018005DC46                 movzx   edx, ax
+  .text:000000018005DC49                 mov     r14d, 0FFFFh
+  .text:000000018005DC4F                 cmp     dx, r14w
+  .text:000000018005DC53                 jz      loc_18005DCDC
+  .text:000000018005DC59                 lea     rcx, [rsi+30h]
+  .text:000000018005DC5D                 call    sub_18005E420
+  .text:000000018005DC62                 mov     r13d, 7FFFh
+  .text:000000018005DC68                 mov     rcx, rbp
+  .text:000000018005DC6B                 test    [rsi+32h], r13w
+  .text:000000018005DC70                 jz      short loc_18005DC76
+  .text:000000018005DC72                 mov     rcx, [rsi+38h]
+  .text:000000018005DC76                 lea     r9, [rdx+rdx*4]
+  .text:000000018005DC7A                 mov     [rcx+r9*8+22h], r14w
+  .text:000000018005DC80                 movzx   eax, word ptr [rsi+42h]
+  .text:000000018005DC84                 mov     [rcx+r9*8+20h], ax
+  .text:000000018005DC8A                 mov     [rsi+42h], dx
+  .text:000000018005DC8E                 cmp     ax, r14w
+  .text:000000018005DC92                 jnz     short loc_18005DC9A
+  .text:000000018005DC94                 mov     [rsi+40h], dx
+  .text:000000018005DC98                 jmp     short loc_18005DCB2
+  .text:000000018005DC9A                 mov     r8, rbp
+  .text:000000018005DC9D                 test    [rsi+32h], r13w
+  .text:000000018005DCA2                 jz      short loc_18005DCA8
+  .text:000000018005DCA4                 mov     r8, [rsi+38h]
+  .text:000000018005DCA8                 lea     rcx, [rax+rax*4]
+  .text:000000018005DCAC                 mov     [r8+rcx*8+22h], dx
+  .text:000000018005DCB2                 inc     word ptr [rsi+46h]
+  .text:000000018005DCB6                 mov     rax, rbp
+  .text:000000018005DCB9                 test    [rsi+32h], r13w
+  .text:000000018005DCBE                 jz      short loc_18005DCC4
+  .text:000000018005DCC0                 mov     rax, [rsi+38h]
+  .text:000000018005DCC4                 movups  xmm0, xmmword ptr [rdi+r15*8]
+  .text:000000018005DCC9                 movups  xmmword ptr [rax+r9*8], xmm0
+  .text:000000018005DCCE                 movups  xmm1, xmmword ptr [rdi+r15*8+10h]
+  .text:000000018005DCD4                 movups  xmmword ptr [rax+r9*8+10h], xmm1
+  .text:000000018005DCDA                 jmp     short loc_18005DCE2
+  .text:000000018005DCDC                 mov     r13d, 7FFFh
+  .text:000000018005DCE2                 movzx   edx, r12w
+  .text:000000018005DCE6                 lea     rcx, [rsi+18h]
+  .text:000000018005DCEA                 call    sub_18005E420
+  .text:000000018005DCEF                 mov     rdx, rbp
+  .text:000000018005DCF2                 test    [rsi+1Ah], r13w
+  .text:000000018005DCF7                 jz      short loc_18005DCFD
+  .text:000000018005DCF9                 mov     rdx, [rsi+20h]
+  .text:000000018005DCFD                 movzx   eax, word ptr [rsi+2Ch]
+  .text:000000018005DD01                 lea     rcx, [r12+r12*4]
+  .text:000000018005DD05                 mov     [rdx+rcx*8+22h], ax
+  .text:000000018005DD0A                 mov     [rsi+2Ch], r12w
+  .text:000000018005DD0F                 jmp     loc_18005DA90
+  .text:000000018005DD14                 cmp     ecx, 1
+  .text:000000018005DD17                 jz      short loc_18005DD27
+  .text:000000018005DD19                 lea     rcx, aCsequentialpre; "CSequentialPrerequisite:  Bogus Prerequ"...
+  .text:000000018005DD20                 call    cs:Plat_FatalError
+  .text:000000018005DD26                 ; Trap to Debugger
+  .text:000000018005DD26                 int     3; Trap to Debugger
+  .text:000000018005DD27                 cmp     [rsi+48h], bpl
+  .text:000000018005DD2B                 jz      short loc_18005DD55
+  .text:000000018005DD2D                 mov     rdi, [rsi]
+  .text:000000018005DD30                 mov     rcx, rsi
+  .text:000000018005DD33                 call    qword ptr [rdi+20h]
+  .text:000000018005DD36                 mov     rdx, [r14]
+  .text:000000018005DD39                 mov     rcx, r14
+  .text:000000018005DD3C                 mov     rbx, rax
+  .text:000000018005DD3F                 call    qword ptr [rdx+20h]
+  .text:000000018005DD42                 mov     r9, rbx
+  .text:000000018005DD45                 lea     rdx, aPsFailedSInSeq; "PS_FAILED %s in sequence for %s\n"
+  .text:000000018005DD4C                 mov     r8, rax
+  .text:000000018005DD4F                 mov     rcx, rsi
+  .text:000000018005DD52                 call    qword ptr [rdi+38h]
+  .text:000000018005DD55                 movzx   eax, word ptr [rsi+28h]
+  .text:000000018005DD59                 mov     r15d, 0FFFFh
+  .text:000000018005DD5F                 cmp     ax, r15w
+  .text:000000018005DD63                 jz      short loc_18005DDB6
+  .text:000000018005DD65                 lea     rbx, [rsi+20h]
+  .text:000000018005DD69                 nop     dword ptr [rax+00000000h]
+  .text:000000018005DD70                 mov     rdi, rbp
+  .text:000000018005DD73                 test    [rsi+1Ah], r13w
+  .text:000000018005DD78                 jz      short loc_18005DD7D
+  .text:000000018005DD7A                 mov     rdi, [rbx]
+  .text:000000018005DD7D                 movzx   eax, ax
+  .text:000000018005DD80                 lea     r14, [rax+rax*4]
+  .text:000000018005DD84                 mov     rcx, [rdi+r14*8]
+  .text:000000018005DD88                 test    rcx, rcx
+  .text:000000018005DD8B                 jz      short loc_18005DD97
+  .text:000000018005DD8D                 mov     rax, [rcx]
+  .text:000000018005DD90                 call    qword ptr [rax+10h]
+  .text:000000018005DD93                 mov     [rdi+r14*8], rbp
+  .text:000000018005DD97                 test    [rsi+1Ah], r13w
+  .text:000000018005DD9C                 jnz     short loc_18005DDA7
+  .text:000000018005DD9E                 mov     rax, rbp
+  .text:000000018005DDA1                 lea     rbx, [rsi+20h]
+  .text:000000018005DDA5                 jmp     short loc_18005DDAA
+  .text:000000018005DDA7                 mov     rax, [rbx]
+  .text:000000018005DDAA                 movzx   eax, word ptr [rax+r14*8+22h]
+  .text:000000018005DDB0                 cmp     ax, r15w
+  .text:000000018005DDB4                 jnz     short loc_18005DD70
+  .text:000000018005DDB6                 cmp     [rsi+18h], bp
+  .text:000000018005DDBA                 jz      short loc_18005DE36
+  .text:000000018005DDBC                 movzx   r8d, word ptr [rsi+28h]
+  .text:000000018005DDC1                 cmp     r8w, r15w
+  .text:000000018005DDC5                 jz      short loc_18005DE1D
+  .text:000000018005DDC7                 nop     word ptr [rax+rax+00000000h]
+  .text:000000018005DDD0                 movzx   ecx, r8w
+  .text:000000018005DDD4                 lea     rcx, [rcx+rcx*4]
+  .text:000000018005DDD8                 shl     rcx, 3
+  .text:000000018005DDDC                 test    [rsi+1Ah], r13w
+  .text:000000018005DDE1                 jnz     short loc_18005DDEC
+  .text:000000018005DDE3                 movzx   eax, word ptr [rcx+22h]
+  .text:000000018005DDE7                 mov     rdx, rbp
+  .text:000000018005DDEA                 jmp     short loc_18005DDF9
+  .text:000000018005DDEC                 mov     rax, [rsi+20h]
+  .text:000000018005DDF0                 mov     rdx, [rsi+20h]
+  .text:000000018005DDF4                 movzx   eax, word ptr [rcx+rax+22h]
+  .text:000000018005DDF9                 mov     [rdx+rcx+20h], r8w
+  .text:000000018005DDFF                 movzx   r9d, ax
+  .text:000000018005DE03                 cmp     ax, r15w
+  .text:000000018005DE07                 jz      short loc_18005DE14
+  .text:000000018005DE09                 mov     [rdx+rcx+22h], ax
+  .text:000000018005DE0E                 movzx   r8d, ax
+  .text:000000018005DE12                 jmp     short loc_18005DDD0
+  .text:000000018005DE14                 movzx   eax, word ptr [rsi+2Ch]
+  .text:000000018005DE18                 mov     [rdx+rcx+22h], ax
+  .text:000000018005DE1D                 movzx   eax, word ptr [rsi+28h]
+  .text:000000018005DE21                 cmp     ax, r15w
+  .text:000000018005DE25                 jz      short loc_18005DE2B
+  .text:000000018005DE27                 mov     [rsi+2Ch], ax
+  .text:000000018005DE2B                 mov     dword ptr [rsi+28h], 0FFFFFFFFh
+  .text:000000018005DE32                 mov     [rsi+2Eh], bp
+  .text:000000018005DE36                 mov     r8, [rsi]
+  .text:000000018005DE39                 mov     ebp, 2
+  .text:000000018005DE3E                 mov     edx, ebp
+  .text:000000018005DE40                 mov     rcx, rsi
+  .text:000000018005DE43                 call    qword ptr [r8+30h]
+  .text:000000018005DE47                 mov     eax, ebp
+  .text:000000018005DE49                 jmp     short loc_18005DE7E
+  .text:000000018005DE4B                 cmp     [rsi+48h], bpl
+  .text:000000018005DE4F                 jz      short loc_18005DE6A
+  .text:000000018005DE51                 mov     rbx, [rsi]
+  .text:000000018005DE54                 mov     rcx, rsi
+  .text:000000018005DE57                 call    qword ptr [rbx+20h]
+  .text:000000018005DE5A                 lea     rdx, aOnstatusfinish; "OnStatusFinished for %s\n"
+  .text:000000018005DE61                 mov     rcx, rsi
+  .text:000000018005DE64                 mov     r8, rax
+  .text:000000018005DE67                 call    qword ptr [rbx+38h]
+  .text:000000018005DE6A                 mov     r8, [rsi]
+  .text:000000018005DE6D                 mov     edx, 1
+  .text:000000018005DE72                 mov     rcx, rsi
+  .text:000000018005DE75                 call    qword ptr [r8+30h]
+  .text:000000018005DE79                 mov     eax, 1
+  .text:000000018005DE7E                 movaps  xmm6, [rsp+98h+var_38]
+  .text:000000018005DE83                 mov     r15, [rsp+98h+arg_10]
+  .text:000000018005DE8B                 mov     rdi, [rsp+98h+arg_8]
+  .text:000000018005DE93                 mov     rbx, [rsp+98h+arg_0]
+  .text:000000018005DE9B                 movaps  xmm7, [rsp+98h+var_48]
+  .text:000000018005DEA0                 movaps  xmm8, [rsp+98h+var_58]
+  .text:000000018005DEA6                 movaps  xmm9, [rsp+98h+var_68]
+  .text:000000018005DEAC                 add     rsp, 70h
+  .text:000000018005DEB0                 pop     r14
+  .text:000000018005DEB2                 pop     r13
+  .text:000000018005DEB4                 pop     r12
+  .text:000000018005DEB6                 pop     rsi
+  .text:000000018005DEB7                 pop     rbp
+  .text:000000018005DEB8                 retn
+procedure: |-
+  __int64 __fastcall sub_18005DA30(__int64 a1, __int64 a2)
+  {
+    double v2; // xmm1_8
+    __int64 v3; // rsi
+    unsigned int v4; // ebp
+    __int64 v5; // r12
+    __int64 v6; // rdi
+    __int64 v7; // rbx
+    __int64 v8; // r14
+    int v9; // ecx
+    __int64 v10; // rcx
+    unsigned __int64 v11; // rax
+    void (*v12)(__int64, const char *, ...); // r13
+    __int64 v13; // rax
+    double v14; // xmm0_8
+    __int64 v15; // rcx
+    double v16; // xmm6_8
+    __int64 v17; // rax
+    __int64 v18; // rbx
+    __int64 v19; // rax
+    __int64 v20; // rax
+    double v21; // xmm0_8
+    __int64 v22; // rcx
+    double v23; // xmm6_8
+    __int64 v24; // rax
+    __int64 v25; // rax
+    __int64 v26; // rdx
+    __int64 v27; // rcx
+    __int64 v28; // r9
+    __int64 v29; // rax
+    __int64 v30; // r8
+    __int64 v31; // rax
+    __int64 v32; // rdi
+    __int64 v33; // rbx
+    __int64 v34; // rax
+    unsigned __int16 v35; // ax
+    __int64 *v36; // rbx
+    __int64 v37; // rdi
+    __int64 v38; // r14
+    __int64 v39; // rcx
+    __int64 v40; // rax
+    unsigned __int16 v41; // r8
+    __int64 v42; // rcx
+    unsigned __int16 v43; // ax
+    __int64 v44; // rdx
+    __int16 v45; // ax
+    __int64 v47; // rbx
+    __int64 v48; // rax
+
+    v3 = a1;
+    v4 = 0;
+    while ( 1 )
+    {
+      v5 = *(unsigned __int16 *)(v3 + 40);
+      if ( (_WORD)v5 == 0xFFFF )
+        break;
+      if ( v2 != 1.797693134862316e308 && Plat_FloatTime(a1, a2) >= v2 )
+        return v4;
+      v6 = 0;
+      if ( (*(_WORD *)(v3 + 26) & 0x7FFF) != 0 )
+        v6 = *(_QWORD *)(v3 + 32);
+      v7 = v6 + 40 * v5;
+      if ( !*(_BYTE *)(v7 + 24) )
+      {
+        *(_BYTE *)(v6 + 40 * v5 + 24) = 1;
+        *(_DWORD *)(v7 + 16) = 0;
+        *(_QWORD *)(v7 + 8) = __rdtsc();
+      }
+      v8 = *(_QWORD *)(v6 + 40 * v5);
+      v9 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v8 + 24LL))(v8);// 0x18 = 24LL = CWaitForInitialSpawnGroupsPrerequisite_GetStatus
+      if ( !v9 )
+        return v4;
+      v10 = (unsigned int)(v9 - 1);
+      if ( (_DWORD)v10 )
+      {
+        if ( (_DWORD)v10 != 1 )
+        {
+          Plat_FatalError("CSequentialPrerequisite:  Bogus PrerequisiteStatus_t detected!");
+          __debugbreak();
+        }
+        if ( *(_BYTE *)(v3 + 72) )
+        {
+          v32 = *(_QWORD *)v3;
+          v33 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v3 + 32LL))(v3);
+          v34 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v8 + 32LL))(v8);
+          (*(void (**)(__int64, const char *, ...))(v32 + 56))(v3, "PS_FAILED %s in sequence for %s\n", v34, v33);
+        }
+        v35 = *(_WORD *)(v3 + 40);
+        if ( v35 != 0xFFFF )
+        {
+          v36 = (__int64 *)(v3 + 32);
+          do
+          {
+            v37 = 0;
+            if ( (*(_WORD *)(v3 + 26) & 0x7FFF) != 0 )
+              v37 = *v36;
+            v38 = 5LL * v35;
+            v39 = *(_QWORD *)(v37 + 40LL * v35);
+            if ( v39 )
+            {
+              (*(void (__fastcall **)(__int64))(*(_QWORD *)v39 + 16LL))(v39);
+              *(_QWORD *)(v37 + 8 * v38) = 0;
+            }
+            if ( (*(_WORD *)(v3 + 26) & 0x7FFF) != 0 )
+            {
+              v40 = *v36;
+            }
+            else
+            {
+              v40 = 0;
+              v36 = (__int64 *)(v3 + 32);
+            }
+            v35 = *(_WORD *)(v40 + 8 * v38 + 34);
+          }
+          while ( v35 != 0xFFFF );
+        }
+        if ( *(_WORD *)(v3 + 24) )
+        {
+          v41 = *(_WORD *)(v3 + 40);
+          if ( v41 != 0xFFFF )
+          {
+            while ( 1 )
+            {
+              v42 = 40LL * v41;
+              if ( (*(_WORD *)(v3 + 26) & 0x7FFF) != 0 )
+              {
+                v44 = *(_QWORD *)(v3 + 32);
+                v43 = *(_WORD *)(v42 + v44 + 34);
+              }
+              else
+              {
+                v43 = *(_WORD *)(40LL * v41 + 0x22);
+                v44 = 0;
+              }
+              *(_WORD *)(v44 + v42 + 32) = v41;
+              if ( v43 == 0xFFFF )
+                break;
+              *(_WORD *)(v44 + v42 + 34) = v43;
+              v41 = v43;
+            }
+            *(_WORD *)(v44 + v42 + 34) = *(_WORD *)(v3 + 44);
+          }
+          v45 = *(_WORD *)(v3 + 40);
+          if ( v45 != -1 )
+            *(_WORD *)(v3 + 44) = v45;
+          *(_DWORD *)(v3 + 40) = -1;
+          *(_WORD *)(v3 + 46) = 0;
+        }
+        v4 = 2;
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)v3 + 48LL))(v3, 2);
+        return v4;
+      }
+      v11 = __rdtsc();
+      *(_QWORD *)(v7 + 8) = (((unsigned __int64)HIDWORD(v11) << 32) | (unsigned int)v11) - *(_QWORD *)(v7 + 8);
+      v12 = *(void (**)(__int64, const char *, ...))(*(_QWORD *)v3 + 56LL);
+      if ( *(_BYTE *)(v3 + 72) )
+      {
+        v13 = Plat_CPUTickFrequency(v10);
+        if ( v13 < 0 )
+          v14 = (double)(int)(v13 & 1 | ((unsigned __int64)v13 >> 1))
+              + (double)(int)(v13 & 1 | ((unsigned __int64)v13 >> 1));
+        else
+          v14 = (double)(int)v13;
+        v15 = *(_QWORD *)(v7 + 8);
+        if ( v15 < 0 )
+        {
+          v17 = *(_QWORD *)(v7 + 8) & 1LL | (*(_QWORD *)(v7 + 8) >> 1);
+          v16 = (double)(int)v17 + (double)(int)v17;
+        }
+        else
+        {
+          v16 = (double)(int)v15;
+        }
+        v18 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v3 + 32LL))(v3);
+        v19 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v8 + 32LL))(v8);
+        v12(v3, "PS_SATISFIED %s in sequence for %s [%.3f msec]\n", v19, v18, v16 * (1000.0 / v14));
+      }
+      else
+      {
+        v20 = Plat_CPUTickFrequency(v10);
+        if ( v20 < 0 )
+          v21 = (double)(int)(v20 & 1 | ((unsigned __int64)v20 >> 1))
+              + (double)(int)(v20 & 1 | ((unsigned __int64)v20 >> 1));
+        else
+          v21 = (double)(int)v20;
+        v22 = *(_QWORD *)(v7 + 8);
+        if ( v22 < 0 )
+        {
+          v24 = *(_QWORD *)(v7 + 8) & 1LL | (*(_QWORD *)(v7 + 8) >> 1);
+          v23 = (double)(int)v24 + (double)(int)v24;
+        }
+        else
+        {
+          v23 = (double)(int)v22;
+        }
+        v25 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v8 + 32LL))(v8);
+        v12(v3, "%s completed in %.3f msec\n", v25, v23 * (1000.0 / v21));
+      }
+      if ( (unsigned __int16)sub_18005E1A0(v3 + 48) != 0xFFFF )
+      {
+        sub_18005E420(v3 + 48);
+        v27 = 0;
+        if ( (*(_WORD *)(v3 + 50) & 0x7FFF) != 0 )
+          v27 = *(_QWORD *)(v3 + 56);
+        v28 = 5 * v26;
+        *(_WORD *)(v27 + 8 * v28 + 34) = -1;
+        v29 = *(unsigned __int16 *)(v3 + 66);
+        *(_WORD *)(v27 + 8 * v28 + 32) = v29;
+        *(_WORD *)(v3 + 66) = v26;
+        if ( (_WORD)v29 == 0xFFFF )
+        {
+          *(_WORD *)(v3 + 64) = v26;
+        }
+        else
+        {
+          v30 = 0;
+          if ( (*(_WORD *)(v3 + 50) & 0x7FFF) != 0 )
+            v30 = *(_QWORD *)(v3 + 56);
+          *(_WORD *)(v30 + 40 * v29 + 34) = v26;
+        }
+        ++*(_WORD *)(v3 + 70);
+        v31 = 0;
+        if ( (*(_WORD *)(v3 + 50) & 0x7FFF) != 0 )
+          v31 = *(_QWORD *)(v3 + 56);
+        *(_OWORD *)(v31 + 40 * v26) = *(_OWORD *)(v6 + 40 * v5);
+        *(_OWORD *)(v31 + 40 * v26 + 16) = *(_OWORD *)(v6 + 40 * v5 + 16);
+      }
+      sub_18005E420(v3 + 24);
+      a2 = 0;
+      if ( (*(_WORD *)(v3 + 26) & 0x7FFF) != 0 )
+        a2 = *(_QWORD *)(v3 + 32);
+      a1 = 5 * v5;
+      *(_WORD *)(a2 + 40 * v5 + 34) = *(_WORD *)(v3 + 44);
+      *(_WORD *)(v3 + 44) = v5;
+    }
+    if ( *(_BYTE *)(v3 + 72) )
+    {
+      v47 = *(_QWORD *)v3;
+      v48 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v3 + 32LL))(v3);
+      (*(void (**)(__int64, const char *, ...))(v47 + 56))(v3, "OnStatusFinished for %s\n", v48);
+    }
+    (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)v3 + 48LL))(v3, 1);
+    return 1;
+  }

@@ -1,0 +1,83 @@
+func_name: CSource2GameEntities_ShouldClientReceiveStringTableUserData
+func_va: '0x18d4890'
+disasm_code: |-
+  .text:00000000018D4890                 push    rbp
+  .text:00000000018D4891                 mov     rbp, rsp
+  .text:00000000018D4894                 push    rbx
+  .text:00000000018D4895                 mov     rbx, rsi
+  .text:00000000018D4898                 sub     rsp, 18h
+  .text:00000000018D489C                 mov     rdi, cs:g_pGameRules
+  .text:00000000018D48A3                 test    rdi, rdi
+  .text:00000000018D48A6                 jz      short loc_18D48E8
+  .text:00000000018D48A8                 mov     rax, [rdi]
+  .text:00000000018D48AB                 lea     rsi, sub_12E79E0
+  .text:00000000018D48B2                 mov     rax, [rax+310h]
+  .text:00000000018D48B9                 cmp     rax, rsi
+  .text:00000000018D48BC                 jnz     short loc_18D48D0
+  .text:00000000018D48BE                 mov     rbx, [rbp+var_8]
+  .text:00000000018D48C2                 mov     eax, 1
+  .text:00000000018D48C7                 leave
+  .text:00000000018D48C8                 retn
+  .text:00000000018D48D0                 mov     esi, [rcx+240h]
+  .text:00000000018D48D6                 mov     ecx, edx
+  .text:00000000018D48D8                 mov     rdx, rbx
+  .text:00000000018D48DB                 mov     rbx, [rbp+var_8]
+  .text:00000000018D48DF                 leave
+  .text:00000000018D48E0                 jmp     rax
+  .text:00000000018D48E8                 mov     [rbp+var_14], edx
+  .text:00000000018D48EB                 ; IsBackgroundMap
+  .text:00000000018D48EB                 call    sub_1716180; IsBackgroundMap
+  .text:00000000018D48F0                 test    al, al
+  .text:00000000018D48F2                 jnz     short loc_18D48BE
+  .text:00000000018D48F4                 mov     edi, cs:dword_286CD00
+  .text:00000000018D48FA                 mov     esi, 3
+  .text:00000000018D48FF                 call    sub_9F0A20
+  .text:00000000018D4904                 test    al, al
+  .text:00000000018D4906                 jz      short loc_18D48BE
+  .text:00000000018D4908                 mov     rax, [rbx]
+  .text:00000000018D490B                 mov     rdi, rbx
+  .text:00000000018D490E                 call    qword ptr [rax+10h]
+  .text:00000000018D4911                 mov     r8d, [rbp+var_14]
+  .text:00000000018D4915                 lea     rdx, aShouldclientre; "ShouldClientReceiveStringTableUserData "...
+  .text:00000000018D491C                 mov     esi, 3
+  .text:00000000018D4921                 mov     edi, cs:dword_286CD00
+  .text:00000000018D4927                 mov     rcx, rax
+  .text:00000000018D492A                 xor     eax, eax
+  .text:00000000018D492C                 call    sub_9EFEF0
+  .text:00000000018D4931                 jmp     short loc_18D48BE
+procedure: |-
+  __int64 __fastcall CSource2GameEntities_ShouldClientReceiveStringTableUserData(
+          __int64 a1,
+          __int64 a2,
+          unsigned int a3,
+          __int64 a4)
+  {
+    __int64 (__fastcall *v4)(); // rax
+    const char *v6; // rax
+
+    if ( !g_pGameRules )
+    {
+      if ( !(unsigned __int8)sub_1716180() )      // IsBackgroundMap
+      {
+        if ( (unsigned __int8)sub_9F0A20((unsigned int)dword_286CD00, 3) )
+        {
+          v6 = (const char *)(*(__int64 (__fastcall **)(__int64))(*(_QWORD *)a2 + 16LL))(a2);
+          sub_9EFEF0(
+            (unsigned int)dword_286CD00,
+            3,
+            "ShouldClientReceiveStringTableUserData called with nullptr GameRules() on table %s, string %d\n",
+            v6,
+            a3);
+        }
+      }
+      return 1;
+    }
+    v4 = *(__int64 (__fastcall **)())(*(_QWORD *)g_pGameRules + 784LL);
+    if ( v4 == sub_12E79E0 )
+      return 1;
+    return ((__int64 (__fastcall *)(__int64, _QWORD, __int64, _QWORD))v4)(
+             g_pGameRules,
+             *(unsigned int *)(a4 + 576),
+             a2,
+             a3);
+  }

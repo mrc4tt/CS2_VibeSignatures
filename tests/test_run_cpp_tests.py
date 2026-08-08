@@ -191,6 +191,246 @@ class TestCompareVtableWithYaml(unittest.TestCase):
 
         self.assertEqual([], report["differences"])
 
+    def test_audits_vfunc_references_from_unconfigured_snapshot_modules(self) -> None:
+        compiler_output = "VFTable indices for 'ITest' (1 entry).\n   0 | void ITest::First() [pure]\n"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            config = root / "config.yaml"
+            bindir = root / "bin"
+            gamever = "14167"
+            write_config(
+                config,
+                [
+                    module(
+                        "engine",
+                        [skill("find-engine", ["ITest_First.{platform}.yaml"])],
+                        linux=False,
+                    ),
+                    module(
+                        "server",
+                        [skill("find-server", ["ITest_WrongOwner.{platform}.yaml"])],
+                        linux=False,
+                    ),
+                ],
+            )
+            engine_dir = bindir / gamever / "engine"
+            engine_dir.mkdir(parents=True)
+            (engine_dir / "ITest_First.windows.yaml").write_text(
+                "func_name: ITest_First\nvtable_name: ITest\nvfunc_index: 0\n",
+                encoding="utf-8",
+            )
+            write_binary(engine_dir / "engine.dll")
+            server_dir = bindir / gamever / "server"
+            server_dir.mkdir(parents=True)
+            (server_dir / "ITest_WrongOwner.windows.yaml").write_text(
+                "func_name: ITest_WrongOwner\nvtable_name: ITest\nvfunc_index: 64\n",
+                encoding="utf-8",
+            )
+            write_binary(server_dir / "server.dll")
+            snapshot = root / "candidate.yaml"
+            pack_snapshot(gamever, bindir, config, snapshot)
+            store = SnapshotSymbolStore.open(snapshot, expected_game_version=gamever, config_path=config)
+
+            report = cpp_tests_util.compare_compiler_vtable_with_yaml(
+                class_name="ITest",
+                compiler_output=compiler_output,
+                symbol_store=store,
+                platform="windows",
+                reference_modules=["engine"],
+                merge_reference_modules=False,
+                pointer_size=8,
+            )
+
+        self.assertEqual("engine", report["reference_module"])
+        self.assertEqual(["engine", "server"], report["ownership_modules_checked"])
+        self.assertIn(
+            "reference_vfunc_index_missing",
+            [item["type"] for item in report["differences"]],
+        )
+
+    def test_reports_reference_vtable_owner_mismatch(self) -> None:
+        compiler_output = "VFTable indices for 'ITest' (1 entry).\n   0 | void ITest::First() [pure]\n"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            module_dir = Path(temp_dir) / "14167" / "server"
+            module_dir.mkdir(parents=True)
+            (module_dir / "ITest_First.windows.yaml").write_text(
+                "func_name: ITest_First\nvtable_name: WrongOwner\nvfunc_index: 0\n",
+                encoding="utf-8",
+            )
+
+            report = cpp_tests_util.compare_compiler_vtable_with_yaml(
+                class_name="ITest",
+                compiler_output=compiler_output,
+                symbol_store=DirectorySymbolStore(temp_dir, "14167"),
+                platform="windows",
+                reference_modules=["server"],
+                pointer_size=8,
+            )
+
+        self.assertIn(
+            "reference_vtable_owner_mismatch",
+            [item["type"] for item in report["differences"]],
+        )
+
+    def test_reports_filename_and_func_name_owner_mismatch(self) -> None:
+        compiler_output = "VFTable indices for 'ITest' (1 entry).\n   0 | void ITest::First() [pure]\n"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            module_dir = Path(temp_dir) / "14167" / "server"
+            module_dir.mkdir(parents=True)
+            (module_dir / "ITest_First.windows.yaml").write_text(
+                "func_name: WrongOwner_First\nvtable_name: ITest\nvfunc_index: 0\n",
+                encoding="utf-8",
+            )
+
+            report = cpp_tests_util.compare_compiler_vtable_with_yaml(
+                class_name="ITest",
+                compiler_output=compiler_output,
+                symbol_store=DirectorySymbolStore(temp_dir, "14167"),
+                platform="windows",
+                reference_modules=["server"],
+                pointer_size=8,
+            )
+
+        self.assertIn(
+            "reference_owner_mismatch",
+            [item["type"] for item in report["differences"]],
+        )
+
+    def test_accepts_explicit_reference_vtable_owner(self) -> None:
+        compiler_output = "VFTable indices for 'ITest' (1 entry).\n   0 | void ITest::First() [pure]\n"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            module_dir = Path(temp_dir) / "14167" / "server"
+            module_dir.mkdir(parents=True)
+            (module_dir / "ITest_First.windows.yaml").write_text(
+                "func_name: ITest_First\nvtable_name: CConcrete_vtable\nvfunc_index: 0\n",
+                encoding="utf-8",
+            )
+
+            report = cpp_tests_util.compare_compiler_vtable_with_yaml(
+                class_name="ITest",
+                compiler_output=compiler_output,
+                symbol_store=DirectorySymbolStore(temp_dir, "14167"),
+                platform="windows",
+                reference_modules=["server"],
+                reference_vtable_owners=["CConcrete"],
+                pointer_size=8,
+            )
+
+        self.assertEqual([], report["differences"])
+
+    def test_excludes_configured_reference_vtable_from_merge_and_ownership_audit(self) -> None:
+        compiler_output = "VFTable indices for 'ITest' (1 entry).\n   0 | void ITest::First() [pure]\n"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir) / "14167"
+            engine_dir = root / "engine"
+            engine_dir.mkdir(parents=True)
+            (engine_dir / "ITest_First.windows.yaml").write_text(
+                "func_name: ITest_First\nvtable_name: ITest\nvfunc_index: 0\n",
+                encoding="utf-8",
+            )
+
+            server_dir = root / "server"
+            server_dir.mkdir(parents=True)
+            (server_dir / "CConcrete_First.windows.yaml").write_text(
+                "func_name: CConcrete_First\nvtable_name: CConcrete\nvfunc_index: 0\n",
+                encoding="utf-8",
+            )
+            (server_dir / "CConcrete_Secondary.windows.yaml").write_text(
+                "func_name: CConcrete_Secondary\nvtable_name: CConcrete_vtable2\nvfunc_index: 0\n",
+                encoding="utf-8",
+            )
+            (server_dir / "CConcrete_vtable.windows.yaml").write_text(
+                "vtable_size: '0x8'\nvtable_numvfunc: 1\n",
+                encoding="utf-8",
+            )
+            (server_dir / "CConcrete_vtable2.windows.yaml").write_text(
+                "vtable_size: '0x10'\nvtable_numvfunc: 2\n",
+                encoding="utf-8",
+            )
+
+            symbol_store = DirectorySymbolStore(temp_dir, "14167")
+            unfiltered_report = cpp_tests_util.compare_compiler_vtable_with_yaml(
+                class_name="ITest",
+                compiler_output=compiler_output,
+                symbol_store=symbol_store,
+                platform="windows",
+                reference_modules=["engine", "server"],
+                alias_class_names=["CConcrete"],
+                pointer_size=8,
+            )
+            filtered_report = cpp_tests_util.compare_compiler_vtable_with_yaml(
+                class_name="ITest",
+                compiler_output=compiler_output,
+                symbol_store=symbol_store,
+                platform="windows",
+                reference_modules=["engine", "server"],
+                alias_class_names=["CConcrete"],
+                exclude_reference_vtables=["CConcrete_vtable2"],
+                pointer_size=8,
+            )
+
+        self.assertIn(
+            "reference_conflict_vfunc_name",
+            [item["type"] for item in unfiltered_report["differences"]],
+        )
+        self.assertIn(
+            "reference_conflict_vtable_size",
+            [item["type"] for item in unfiltered_report["differences"]],
+        )
+        self.assertEqual([], filtered_report["differences"])
+        self.assertCountEqual(
+            [
+                "server/CConcrete_Secondary.windows.yaml",
+                "server/CConcrete_vtable2.windows.yaml",
+            ],
+            filtered_report["reference_files_excluded"],
+        )
+        self.assertEqual(
+            ["server/CConcrete_Secondary.windows.yaml"],
+            filtered_report["ownership_files_excluded"],
+        )
+
+
+class TestCompileAndCompareConfig(unittest.TestCase):
+    @patch.object(run_cpp_tests, "compare_compiler_vtable_with_yaml")
+    @patch.object(run_cpp_tests.subprocess, "run")
+    def test_passes_excluded_reference_vtables_to_vtable_compare(
+        self,
+        mock_run,
+        mock_compare,
+    ) -> None:
+        mock_run.return_value = argparse.Namespace(returncode=0, stdout="", stderr="")
+        mock_compare.return_value = {
+            "class_name": "ITest",
+            "platform": "windows",
+            "differences": [],
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "test.cpp").write_text("int main() { return 0; }\n", encoding="utf-8")
+            result = run_cpp_tests.compile_and_compare(
+                test_item={
+                    "name": "ITest_MSVC",
+                    "symbol": "ITest",
+                    "alias_symbols": ["CConcrete"],
+                    "exclude_reference_vtables": ["CConcrete_vtable2"],
+                    "cpp": "test.cpp",
+                    "target": "x86_64-pc-windows-msvc",
+                    "additional_compiler_options": ["fdump-vtable-layouts"],
+                    "reference_modules": ["engine", "server"],
+                },
+                args=argparse.Namespace(clang="clang++", std="c++20"),
+                config_dir=root,
+                symbol_store=object(),
+            )
+
+        self.assertEqual("ok", result["status"])
+        self.assertEqual(
+            ["CConcrete_vtable2"],
+            mock_compare.call_args.kwargs["exclude_reference_vtables"],
+        )
+
 
 class TestParseRecordLayouts(unittest.TestCase):
     def test_parses_struct_member_offsets_from_record_layout(self) -> None:
@@ -262,6 +502,47 @@ class TestCompareRecordLayoutWithYaml(unittest.TestCase):
 
 
 class TestMainExitStatus(unittest.TestCase):
+    @patch.object(run_cpp_tests, "open_snapshot_store")
+    @patch.object(run_cpp_tests, "run_one_test")
+    @patch.object(run_cpp_tests, "probe_target_support")
+    @patch.object(run_cpp_tests, "get_default_target_triple")
+    @patch.object(run_cpp_tests, "parse_config")
+    @patch.object(run_cpp_tests, "parse_args")
+    def test_returns_failure_when_no_targets_are_runnable(
+        self,
+        mock_parse_args,
+        mock_parse_config,
+        mock_get_default_target_triple,
+        mock_probe_target_support,
+        mock_run_one_test,
+        mock_open_snapshot_store,
+    ) -> None:
+        mock_parse_args.return_value = argparse.Namespace(
+            configyaml="configs/14174.yaml",
+            snapshot="candidate.yaml",
+            gamever="14174",
+            clang="clang++",
+            std="c++20",
+            debug=False,
+        )
+        mock_parse_config.return_value = [
+            {
+                "name": "UnsupportedLayout",
+                "symbol": "IUnsupportedLayout",
+                "cpp": "test.cpp",
+                "target": "x86_64-pc-windows-msvc",
+            }
+        ]
+        mock_get_default_target_triple.return_value = "x86_64-unknown-linux-gnu"
+        mock_probe_target_support.return_value = {"supported": False, "output": "unsupported target"}
+        mock_open_snapshot_store.return_value.candidate_sha256 = "sha256:test"
+        mock_open_snapshot_store.return_value.game_version = "14174"
+        mock_open_snapshot_store.return_value.file_count = 1
+        mock_open_snapshot_store.return_value.config_sha256 = "sha256:config"
+
+        self.assertEqual(1, run_cpp_tests.main())
+        mock_run_one_test.assert_not_called()
+
     @patch.object(run_cpp_tests, "open_snapshot_store")
     @patch.object(run_cpp_tests, "run_one_test")
     @patch.object(run_cpp_tests, "probe_target_support")

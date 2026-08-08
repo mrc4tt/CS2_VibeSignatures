@@ -74,7 +74,9 @@ PR CI 使用可信的 base snapshot 执行 restore 和 targeted invalidation。b
 gamedata/<GAMEVER>/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json
 ```
 
-跳过两个符号：
+* 完整支持，所有符号均支持自动更新
+
+* 跳过两个符号：
 
 - `GameEventManager`：CounterStrikeSharp 已不再使用。
 - `CEntityResourceManifest_AddResource`：游戏更新时极少变化。
@@ -85,7 +87,17 @@ gamedata/<GAMEVER>/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/
 gamedata/<GAMEVER>/CS2Fixes/gamedata/cs2fixes.jsonc
 ```
 
-跳过 `CCSPlayerPawn_GetMaxSpeed`，因为它并不存在于 `server.dll` 中。
+* 完整支持，所有符号均支持自动更新
+
+* 跳过 `CCSPlayerPawn_GetMaxSpeed`，因为在 `server.dll` 中被内联进了它的唯一调用者。
+
+### [CS2FOW](https://gitlab.com/karola3vax-group/cs2fow)
+
+```text
+gamedata/<GAMEVER>/CS2FOW/gamedata/cs2fow.games.txt
+```
+
+* 完整支持，所有符号均支持自动更新
 
 ### [swiftlys2](https://github.com/swiftly-solution/swiftlys2)
 
@@ -94,17 +106,23 @@ gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/offsets.jsonc
 gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc
 ```
 
+* 仅限部分支持
+
 ### [plugify](https://github.com/untrustedmodders/plugify-plugin-s2sdk)
 
 ```text
 gamedata/<GAMEVER>/plugify-plugin-s2sdk/assets/gamedata.jsonc
 ```
 
+* 仅限部分支持
+
 ### [cs2kz-metamod](https://github.com/KZGlobalTeam/cs2kz-metamod)
 
 ```text
 gamedata/<GAMEVER>/cs2kz-metamod/gamedata/cs2kz-core.games.txt
 ```
+
+* 仅限部分支持
 
 ### [modsharp](https://github.com/Kxnrl/modsharp-public)
 
@@ -117,8 +135,12 @@ gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/server.games.jsonc
 gamedata/<GAMEVER>/modsharp-public/.asset/gamedata/tier0.games.jsonc
 ```
 
+* 仅限部分支持
+
 ### [CS2Surf/Timer](https://github.com/CS2Surf-CN/Timer)
 
 ```text
 gamedata/<GAMEVER>/cs2surf/gamedata/cs2surf-core.games.jsonc
 ```
+
+* 仅限部分支持

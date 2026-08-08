@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CBaseEntity_OnTakeDamage_Alive-AND-Dying-AND-Dead skill."""
+"""Preprocess script for find-CBasePlayerPawn_OnTakeDamage-decompiles skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
@@ -7,6 +7,7 @@ TARGET_FUNCTION_NAMES = [
     "CBasePlayerPawn_OnTakeDamage_Alive",
     "CBasePlayerPawn_OnTakeDamage_Dying",
     "CBasePlayerPawn_OnTakeDamage_Dead",
+    "DecalPlacementInfo_ctor",
 ]
 
 LLM_DECOMPILE = [
@@ -39,6 +40,17 @@ LLM_DECOMPILE = [
             "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
         ],
         "expected_result_sections": ["found_vcall"],
+        "dependency_policy": {
+            "CBasePlayerPawn_OnTakeDamage.{platform}.yaml": "required",
+        },
+    },
+    {
+        "symbol_name": "DecalPlacementInfo_ctor",
+        "prompt_path": "prompt/call_llm_decompile.md",
+        "reference_yaml_paths": [
+            "references/server/CBasePlayerPawn_OnTakeDamage.{platform}.yaml",
+        ],
+        "expected_result_sections": ["found_call"],
         "dependency_policy": {
             "CBasePlayerPawn_OnTakeDamage.{platform}.yaml": "required",
         },
@@ -85,6 +97,16 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "vfunc_index",
             "vtable_name",
             "vfunc_sig_allow_across_function_boundary:true",
+        ],
+    ),
+    (
+        "DecalPlacementInfo_ctor",
+        [
+            "func_name",
+            "func_sig",
+            "func_va",
+            "func_rva",
+            "func_size",
         ],
     ),
 ]

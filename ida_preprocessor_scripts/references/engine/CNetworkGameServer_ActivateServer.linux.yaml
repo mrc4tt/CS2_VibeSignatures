@@ -1,0 +1,209 @@
+func_name: CNetworkGameServer_ActivateServer
+func_va: '0x5100c0'
+disasm_code: |-
+  .text:00000000005100C0                 push    rbp
+  .text:00000000005100C1                 xor     eax, eax
+  .text:00000000005100C3                 mov     rbp, rsp
+  .text:00000000005100C6                 push    r12
+  .text:00000000005100C8                 push    rbx
+  .text:00000000005100C9                 mov     rbx, rdi
+  .text:00000000005100CC                 lea     rdi, aCnetworkgamese_4; "CNetworkGameServer::ActivateServer"
+  .text:00000000005100D3                 call    sub_2CA1C0
+  .text:00000000005100D8                 call    sub_5D5580
+  .text:00000000005100DD                 mov     esi, 0Bh
+  .text:00000000005100E2                 xor     edx, edx
+  .text:00000000005100E4                 mov     rdi, rax
+  .text:00000000005100E7                 call    sub_5D5A80
+  .text:00000000005100EC                 mov     rax, cs:qword_A30308
+  .text:00000000005100F3                 mov     dword ptr [rbx+38h], 3
+  .text:00000000005100FA                 lea     rsi, aUnknown_0; "unknown"
+  .text:0000000000510101                 mov     byte ptr [rbx+2740h], 0
+  .text:0000000000510108                 test    rax, rax
+  .text:000000000051010B                 jz      short loc_510117
+  .text:000000000051010D                 test    byte ptr [rax+31h], 4
+  .text:0000000000510111                 jz      loc_510250
+  .text:0000000000510117                 lea     rdi, [rbx+160h]
+  .text:000000000051011E                 call    sub_2C8ED0
+  .text:0000000000510123                 mov     rax, [rbx]
+  .text:0000000000510126                 lea     rdx, sub_4F0BD0
+  .text:000000000051012D                 mov     rax, [rax+178h]
+  .text:0000000000510134                 cmp     rax, rdx
+  .text:0000000000510137                 jnz     loc_510300
+  .text:000000000051013D                 movzx   eax, byte ptr [rbx+455h]
+  .text:0000000000510144                 lea     r12, dword_A30294
+  .text:000000000051014B                 mov     esi, 2
+  .text:0000000000510150                 mov     edi, [r12]
+  .text:0000000000510154                 test    al, al
+  .text:0000000000510156                 jz      loc_510220
+  .text:000000000051015C                 call    sub_2C9B50
+  .text:0000000000510161                 test    al, al
+  .text:0000000000510163                 jnz     loc_5102D0
+  .text:0000000000510169                 mov     rdi, [rbx+158h]
+  .text:0000000000510170                 test    rdi, rdi
+  .text:0000000000510173                 jz      short loc_510182
+  .text:0000000000510175                 call    sub_2CA790
+  .text:000000000051017A                 test    eax, eax
+  .text:000000000051017C                 jg      loc_510280
+  .text:0000000000510182                 lea     rdi, aActivatesteamg; "ActivateSteamGameServer(start)"
+  .text:0000000000510189                 xor     eax, eax
+  .text:000000000051018B                 call    sub_2CA1C0
+  .text:0000000000510190                 mov     rdi, rbx
+  .text:0000000000510193                 call    sub_50BBF0
+  .text:0000000000510198                 lea     rdi, aActivatesteamg_0; "ActivateSteamGameServer(finished)"
+  .text:000000000051019F                 xor     eax, eax
+  .text:00000000005101A1                 call    sub_2CA1C0
+  .text:00000000005101A6                 mov     rdi, rbx
+  .text:00000000005101A9                 call    CNetworkGameServerBase_StartHLTVMaster
+  .text:00000000005101AE                 lea     rbx, g_pNetworkServerService
+  .text:00000000005101B5                 mov     rdi, [rbx]
+  .text:00000000005101B8                 mov     rax, [rdi]
+  .text:00000000005101BB                 call    qword ptr [rax+138h]
+  .text:00000000005101C1                 test    al, al
+  .text:00000000005101C3                 jz      short loc_5101D1
+  .text:00000000005101C5                 mov     rdi, [rbx]
+  .text:00000000005101C8                 mov     rax, [rdi]
+  .text:00000000005101CB                 call    qword ptr [rax+130h]
+  .text:00000000005101D1                 call    sub_575B00
+  .text:00000000005101D6                 xor     esi, esi
+  .text:00000000005101D8                 mov     rdi, rax
+  .text:00000000005101DB                 call    CSteam3Server_SendUpdatedServerDetails
+  .text:00000000005101E0                 lea     rbx, g_pSource2Server
+  .text:00000000005101E7                 mov     rdi, [rbx]
+  .text:00000000005101EA                 mov     rax, [rdi]
+  .text:00000000005101ED                 call    qword ptr [rax+0B8h]
+  .text:00000000005101F3                 test    rax, rax
+  .text:00000000005101F6                 jz      short loc_51020D
+  .text:00000000005101F8                 mov     rdi, [rbx]
+  .text:00000000005101FB                 mov     rax, [rdi]
+  .text:00000000005101FE                 call    qword ptr [rax+0B8h]
+  .text:0000000000510204                 mov     rdi, rax
+  .text:0000000000510207                 mov     rax, [rax]
+  .text:000000000051020A                 call    qword ptr [rax+10h]
+  .text:000000000051020D                 pop     rbx
+  .text:000000000051020E                 mov     eax, 1
+  .text:0000000000510213                 pop     r12
+  .text:0000000000510215                 pop     rbp
+  .text:0000000000510216                 retn
+  .text:0000000000510220                 call    sub_2C9B50
+  .text:0000000000510225                 test    al, al
+  .text:0000000000510227                 jz      loc_510169
+  .text:000000000051022D                 mov     edi, [r12]
+  .text:0000000000510231                 lea     rdx, aSvGameStarted; "SV:  Game started\n"
+  .text:0000000000510238                 mov     esi, 2
+  .text:000000000051023D                 xor     eax, eax
+  .text:000000000051023F                 call    sub_2C8BC0
+  .text:0000000000510244                 jmp     loc_510169
+  .text:0000000000510250                 lea     rdi, unk_A30300
+  .text:0000000000510257                 mov     esi, 0FFFFFFFFh
+  .text:000000000051025C                 call    sub_5E60F0
+  .text:0000000000510261                 test    rax, rax
+  .text:0000000000510264                 jz      loc_510310
+  .text:000000000051026A                 mov     rsi, [rax]
+  .text:000000000051026D                 lea     rax, unk_27CC16
+  .text:0000000000510274                 test    rsi, rsi
+  .text:0000000000510277                 cmovz   rsi, rax
+  .text:000000000051027B                 jmp     loc_510117
+  .text:0000000000510280                 mov     edi, [r12]
+  .text:0000000000510284                 mov     esi, 2
+  .text:0000000000510289                 call    sub_2C9B50
+  .text:000000000051028E                 test    al, al
+  .text:0000000000510290                 jz      loc_510182
+  .text:0000000000510296                 mov     edi, [r12]
+  .text:000000000051029A                 lea     rax, unk_27CC16
+  .text:00000000005102A1                 mov     esi, 2
+  .text:00000000005102A6                 mov     rcx, [rbx+158h]
+  .text:00000000005102AD                 lea     rdx, aSvAddonS; "SV:  addon='%s'\n"
+  .text:00000000005102B4                 test    rcx, rcx
+  .text:00000000005102B7                 cmovz   rcx, rax
+  .text:00000000005102BB                 xor     eax, eax
+  .text:00000000005102BD                 call    sub_2C8BC0
+  .text:00000000005102C2                 jmp     loc_510182
+  .text:00000000005102D0                 mov     rax, [rbx]
+  .text:00000000005102D3                 mov     rdi, rbx
+  .text:00000000005102D6                 call    qword ptr [rax+60h]
+  .text:00000000005102D9                 mov     edi, [r12]
+  .text:00000000005102DD                 lea     rdx, aSvIPlayerServe; "SV:  %i player server started\n"
+  .text:00000000005102E4                 mov     esi, 2
+  .text:00000000005102E9                 mov     ecx, eax
+  .text:00000000005102EB                 xor     eax, eax
+  .text:00000000005102ED                 call    sub_2C8BC0
+  .text:00000000005102F2                 jmp     loc_510169
+  .text:0000000000510300                 mov     rdi, rbx
+  .text:0000000000510303                 call    rax
+  .text:0000000000510305                 jmp     loc_510144
+  .text:0000000000510310                 mov     rax, cs:qword_A30308
+  .text:0000000000510317                 mov     rax, [rax+8]
+  .text:000000000051031B                 jmp     loc_51026A
+procedure: |-
+  __int64 __fastcall CNetworkGameServer_ActivateServer(_QWORD *a1, __int64 a2)
+  {
+    __int64 v3; // rdx
+    __int64 v4; // rax
+    __int64 v5; // rax
+    const char *v6; // rsi
+    __int64 (__fastcall *v7)(); // rax
+    char v8; // al
+    __int64 v9; // rdi
+    __int64 v10; // rax
+    __int64 v11; // rax
+    const char **v13; // rax
+    void *v14; // rcx
+    int v15; // eax
+
+    sub_2CA1C0("CNetworkGameServer::ActivateServer");
+    v4 = sub_5D5580("CNetworkGameServer::ActivateServer", a2, v3);
+    sub_5D5A80(v4, 11, 0);
+    v5 = qword_A30308;
+    *((_DWORD *)a1 + 14) = 3;
+    v6 = "unknown";
+    *((_BYTE *)a1 + 10048) = 0;
+    if ( v5 && (*(_BYTE *)(v5 + 49) & 4) == 0 )
+    {
+      v13 = (const char **)sub_5E60F0(&unk_A30300, 0xFFFFFFFFLL);
+      if ( !v13 )
+        v13 = *(const char ***)(qword_A30308 + 8);
+      v6 = *v13;
+      if ( !*v13 )
+        v6 = (const char *)&unk_27CC16;
+    }
+    sub_2C8ED0(a1 + 44, v6);
+    v7 = *(__int64 (__fastcall **)())(*a1 + 376LL);
+    if ( v7 == sub_4F0BD0 )
+      v8 = *((_BYTE *)a1 + 1109);
+    else
+      v8 = ((__int64 (__fastcall *)(_QWORD *))v7)(a1);
+    if ( v8 )
+    {
+      if ( (unsigned __int8)sub_2C9B50((unsigned int)dword_A30294, 2) )
+      {
+        v15 = (*(__int64 (__fastcall **)(_QWORD *))(*a1 + 96LL))(a1);
+        sub_2C8BC0((unsigned int)dword_A30294, 2, "SV:  %i player server started\n", v15);
+      }
+    }
+    else if ( (unsigned __int8)sub_2C9B50((unsigned int)dword_A30294, 2) )
+    {
+      sub_2C8BC0((unsigned int)dword_A30294, 2, "SV:  Game started\n");
+    }
+    v9 = a1[43];
+    if ( v9 && (int)sub_2CA790(v9) > 0 && (unsigned __int8)sub_2C9B50((unsigned int)dword_A30294, 2) )
+    {
+      v14 = (void *)a1[43];
+      if ( !v14 )
+        v14 = &unk_27CC16;
+      sub_2C8BC0((unsigned int)dword_A30294, 2, "SV:  addon='%s'\n", v14);
+    }
+    sub_2CA1C0("ActivateSteamGameServer(start)");
+    sub_50BBF0(a1);
+    sub_2CA1C0("ActivateSteamGameServer(finished)");
+    CNetworkGameServerBase_StartHLTVMaster((__int64)a1);
+    if ( (*(unsigned __int8 (__fastcall **)(_QWORD *))(*g_pNetworkServerService + 312LL))(g_pNetworkServerService) )
+      (*(void (__fastcall **)(_QWORD *))(*g_pNetworkServerService + 304LL))(g_pNetworkServerService);
+    v10 = sub_575B00();
+    CSteam3Server_SendUpdatedServerDetails(v10, 0);
+    if ( (*(__int64 (__fastcall **)(_QWORD *))(*g_pSource2Server + 184LL))(g_pSource2Server) )
+    {
+      v11 = (*(__int64 (__fastcall **)(_QWORD *))(*g_pSource2Server + 184LL))(g_pSource2Server);
+      (*(void (__fastcall **)(__int64))(*(_QWORD *)v11 + 16LL))(v11);
+    }
+    return 1;
+  }

@@ -1,0 +1,164 @@
+func_name: CPlayerCommandQueue_ctor
+func_va: '0x180dacef0'
+disasm_code: |-
+  .text:0000000180DACEF0                 mov     [rsp+arg_8], rbp
+  .text:0000000180DACEF5                 mov     [rsp+arg_10], rsi
+  .text:0000000180DACEFA                 push    rdi
+  .text:0000000180DACEFB                 sub     rsp, 20h
+  .text:0000000180DACEFF                 mov     rbp, rcx
+  .text:0000000180DACF02                 mov     ecx, 270h
+  .text:0000000180DACF07                 call    sub_180EACC70
+  .text:0000000180DACF0C                 mov     rsi, rax
+  .text:0000000180DACF0F                 test    rax, rax
+  .text:0000000180DACF12                 jz      loc_180DAD0BF
+  .text:0000000180DACF18                 lea     rax, CPlayerCommandQueue_vtable
+  .text:0000000180DACF1F                 mov     [rsp+28h+arg_0], rbx
+  .text:0000000180DACF24                 mov     [rsi], rax
+  .text:0000000180DACF27                 lea     rbx, [rsi+10h]
+  .text:0000000180DACF2B                 mov     [rsi+8], rbp
+  .text:0000000180DACF2F                 mov     edi, 14h
+  .text:0000000180DACF34                 mov     rcx, rbx
+  .text:0000000180DACF37                 call    unknown_libname_287; Microsoft VisualC v7/14 64bit runtime
+  .text:0000000180DACF3C                 add     rbx, 10h
+  .text:0000000180DACF40                 sub     rdi, 1
+  .text:0000000180DACF44                 jnz     short loc_180DACF34
+  .text:0000000180DACF46                 mov     [rsi+150h], rdi
+  .text:0000000180DACF4D                 lea     rax, ??_7CUserCmdBase@@6B@; const CUserCmdBase::`vftable'
+  .text:0000000180DACF54                 mov     [rsi+158h], rdi
+  .text:0000000180DACF5B                 lea     rcx, [rsi+1D8h]
+  .text:0000000180DACF62                 mov     [rsi+160h], rdi
+  .text:0000000180DACF69                 xor     r8d, r8d
+  .text:0000000180DACF6C                 mov     [rsi+168h], edi
+  .text:0000000180DACF72                 xor     edx, edx
+  .text:0000000180DACF74                 mov     [rsi+16Ch], dil
+  .text:0000000180DACF7B                 mov     dword ptr [rsi+170h], 7FFFFFFFh
+  .text:0000000180DACF85                 mov     [rsi+174h], dil
+  .text:0000000180DACF8C                 mov     [rsi+178h], edi
+  .text:0000000180DACF92                 mov     [rsi+180h], edi
+  .text:0000000180DACF98                 mov     [rsi+188h], rdi
+  .text:0000000180DACF9F                 mov     dword ptr [rsi+190h], 0FFFFFFFFh
+  .text:0000000180DACFA9                 mov     qword ptr [rsi+194h], 0FFFFh
+  .text:0000000180DACFB4                 mov     [rsi+19Ch], edi
+  .text:0000000180DACFBA                 mov     [rsi+1A0h], rdi
+  .text:0000000180DACFC1                 mov     qword ptr [rsi+1A8h], 0FFFFFFFFFFFFFFFFh
+  .text:0000000180DACFCC                 mov     dword ptr [rsi+1B0h], 0FFFFFFFFh
+  .text:0000000180DACFD6                 mov     [rsi+1B4h], edi
+  .text:0000000180DACFDC                 mov     [rsi+1B8h], rdi
+  .text:0000000180DACFE3                 mov     [rsi+1C0h], edi
+  .text:0000000180DACFE9                 mov     [rsi+1C8h], rax
+  .text:0000000180DACFF0                 mov     [rsi+1D0h], edi
+  .text:0000000180DACFF6                 call    sub_180943680
+  .text:0000000180DACFFB                 lea     rax, ??_7?$CUserCmdBaseHost@VCSGOUserCmdPB@@@@6B@; const CUserCmdBaseHost<CSGOUserCmdPB>::`vftable'
+  .text:0000000180DAD002                 mov     [rsi+1C8h], rax
+  .text:0000000180DAD009                 lea     rcx, [rsi+220h]
+  .text:0000000180DAD010                 lea     rax, ??_7?$CUserCmdBaseHost@VCSGOUserCmdPB@@@@6B@_0; const CUserCmdBaseHost<CSGOUserCmdPB>::`vftable'
+  .text:0000000180DAD017                 mov     [rsi+1D8h], rax
+  .text:0000000180DAD01E                 call    sub_180658CA0
+  .text:0000000180DAD023                 mov     rbx, [rsp+28h+arg_0]
+  .text:0000000180DAD028                 lea     rax, ??_7CUserCmd@@6B@; const CUserCmd::`vftable'
+  .text:0000000180DAD02F                 mov     [rsi+1C8h], rax
+  .text:0000000180DAD036                 lea     rax, ??_7CUserCmd@@6B@_0; const CUserCmd::`vftable'
+  .text:0000000180DAD03D                 mov     [rsi+1D8h], rax
+  .text:0000000180DAD044                 xor     eax, eax
+  .text:0000000180DAD046                 mov     dword ptr [rsi+240h], 0FFFFFFFFh
+  .text:0000000180DAD050                 mov     [rsi+248h], edi
+  .text:0000000180DAD056                 mov     [rsi+250h], rdi
+  .text:0000000180DAD05D                 mov     [rsi+258h], rdi
+  .text:0000000180DAD064                 mov     [rsi+260h], rax
+  .text:0000000180DAD06B                 mov     [rsi+268h], rdi
+  .text:0000000180DAD072                 mov     eax, [rbp+388h]
+  .text:0000000180DAD078                 shr     eax, 8
+  .text:0000000180DAD07B                 test    al, 1
+  .text:0000000180DAD07D                 jnz     short loc_180DAD0A4
+  .text:0000000180DAD07F                 mov     rcx, rbp
+  .text:0000000180DAD082                 ; CBasePlayerController_IsFakeClient
+  .text:0000000180DAD082                 call    sub_180AF9790; CBasePlayerController_IsFakeClient
+  .text:0000000180DAD087                 test    al, al
+  .text:0000000180DAD089                 jnz     short loc_180DAD0A4
+  .text:0000000180DAD08B                 mov     [rsi+174h], al
+  .text:0000000180DAD091                 mov     rax, rsi
+  .text:0000000180DAD094                 mov     rbp, [rsp+28h+arg_8]
+  .text:0000000180DAD099                 mov     rsi, [rsp+28h+arg_10]
+  .text:0000000180DAD09E                 add     rsp, 20h
+  .text:0000000180DAD0A2                 pop     rdi
+  .text:0000000180DAD0A3                 retn
+  .text:0000000180DAD0A4                 mov     al, 1
+  .text:0000000180DAD0A6                 mov     [rsi+174h], al
+  .text:0000000180DAD0AC                 mov     rax, rsi
+  .text:0000000180DAD0AF                 mov     rbp, [rsp+28h+arg_8]
+  .text:0000000180DAD0B4                 mov     rsi, [rsp+28h+arg_10]
+  .text:0000000180DAD0B9                 add     rsp, 20h
+  .text:0000000180DAD0BD                 pop     rdi
+  .text:0000000180DAD0BE                 retn
+  .text:0000000180DAD0BF                 mov     rbp, [rsp+28h+arg_8]
+  .text:0000000180DAD0C4                 xor     edi, edi
+  .text:0000000180DAD0C6                 mov     rsi, [rsp+28h+arg_10]
+  .text:0000000180DAD0CB                 mov     eax, edi
+  .text:0000000180DAD0CD                 add     rsp, 20h
+  .text:0000000180DAD0D1                 pop     rdi
+  .text:0000000180DAD0D2                 retn
+procedure: |-
+  __int64 __fastcall CPlayerCommandQueue_ctor(__int64 a1)
+  {
+    __int64 v2; // rsi
+    __int64 v3; // rbx
+    __int64 v4; // rdi
+
+    v2 = sub_180EACC70(624);
+    if ( !v2 )
+      return 0;
+    *(_QWORD *)v2 = &CPlayerCommandQueue_vtable;
+    v3 = v2 + 16;
+    *(_QWORD *)(v2 + 8) = a1;
+    v4 = 20;
+    do
+    {
+      unknown_libname_287(v3);
+      v3 += 16;
+      --v4;
+    }
+    while ( v4 );
+    *(_QWORD *)(v2 + 336) = 0;
+    *(_QWORD *)(v2 + 344) = 0;
+    *(_QWORD *)(v2 + 352) = 0;
+    *(_DWORD *)(v2 + 360) = 0;
+    *(_BYTE *)(v2 + 364) = 0;
+    *(_DWORD *)(v2 + 368) = 0x7FFFFFFF;
+    *(_BYTE *)(v2 + 372) = 0;
+    *(_DWORD *)(v2 + 376) = 0;
+    *(_DWORD *)(v2 + 384) = 0;
+    *(_QWORD *)(v2 + 392) = 0;
+    *(_DWORD *)(v2 + 400) = -1;
+    *(_QWORD *)(v2 + 404) = 0xFFFF;
+    *(_DWORD *)(v2 + 412) = 0;
+    *(_QWORD *)(v2 + 416) = 0;
+    *(_QWORD *)(v2 + 424) = -1;
+    *(_DWORD *)(v2 + 432) = -1;
+    *(_DWORD *)(v2 + 436) = 0;
+    *(_QWORD *)(v2 + 440) = 0;
+    *(_DWORD *)(v2 + 448) = 0;
+    *(_QWORD *)(v2 + 456) = &CUserCmdBase::`vftable';
+    *(_DWORD *)(v2 + 464) = 0;
+    sub_180943680(v2 + 472, 0, 0);
+    *(_QWORD *)(v2 + 456) = &CUserCmdBaseHost<CSGOUserCmdPB>::`vftable';
+    *(_QWORD *)(v2 + 472) = &CUserCmdBaseHost<CSGOUserCmdPB>::`vftable';
+    sub_180658CA0(v2 + 544);
+    *(_QWORD *)(v2 + 456) = &CUserCmd::`vftable';
+    *(_QWORD *)(v2 + 472) = &CUserCmd::`vftable';
+    *(_DWORD *)(v2 + 576) = -1;
+    *(_DWORD *)(v2 + 584) = 0;
+    *(_QWORD *)(v2 + 592) = 0;
+    *(_QWORD *)(v2 + 600) = 0;
+    *(_QWORD *)(v2 + 608) = 0;
+    *(_QWORD *)(v2 + 616) = 0;
+    if ( (*(_DWORD *)(a1 + 904) & 0x100) != 0 || (unsigned __int8)sub_180AF9790(a1) )// CBasePlayerController_IsFakeClient
+    {
+      *(_BYTE *)(v2 + 372) = 1;
+      return v2;
+    }
+    else
+    {
+      *(_BYTE *)(v2 + 372) = 0;
+      return v2;
+    }
+  }

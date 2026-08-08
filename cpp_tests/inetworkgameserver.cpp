@@ -27,10 +27,8 @@ private:
 class bf_read;
 enum NetChannelBufType_t : int8 {};
 
-// Forward declarations for types added to inetworkserializer.h in hl2sdk_cs2 update
+// Forward declaration used by inetworkserializer.h.
 class CPlayerBitVec;
-typedef void *(*SchemaClassManipulatorFn_t)(int, void *);
-typedef void *(*SchemaCollectionManipulatorFn_t)(int, void *, int, int);
 
 #include <bitvec.h>
 #include <playerslot.h>

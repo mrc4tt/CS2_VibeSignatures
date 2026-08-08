@@ -241,6 +241,12 @@ FUNC_XREFS = [
 
 Struct member offsets can also be **mixed into** a function-finding script when they are discovered from the same function via signature matching (not LLM_DECOMPILE). Add `TARGET_STRUCT_MEMBER_NAMES` alongside `TARGET_FUNCTION_NAMES` and pass `struct_member_names=` to `preprocess_common_skill`:
 
+**Choose `size` from the locating instruction, not from the member name.** Include `size` only when the annotated
+instruction reads or writes the member and therefore has a natural operand width (for example, `mov`, `movss`, or
+`cmp`). When the locating instruction is `lea reg, [base+offset]`, it only computes the address of an embedded
+member; omit `size` from `GENERATE_YAML_DESIRED_FIELDS`. A `lea` result can identify a member offset but cannot
+reliably establish the member's extent.
+
 ```python
 TARGET_FUNCTION_NAMES = [
     "SomeFunction",
@@ -252,7 +258,8 @@ TARGET_STRUCT_MEMBER_NAMES = [
 
 GENERATE_YAML_DESIRED_FIELDS = [
     ("SomeFunction", ["func_name", "func_sig", "func_va", "func_rva", "func_size"]),
-    ("SomeStruct_m_someField", ["struct_name", "member_name", "offset", "size", "offset_sig", "offset_sig_disp"]),
+    # This target is located by `lea`; add "size" only for a real memory access.
+    ("SomeStruct_m_someField", ["struct_name", "member_name", "offset", "offset_sig", "offset_sig_disp"]),
 ]
 
 # In preprocess_skill:
@@ -299,7 +306,7 @@ Pure slot-only output (`func_name, vtable_name, vfunc_offset, vfunc_index` with 
 | Helper module | `preprocess_common_skill` | `preprocess_common_skill` | `preprocess_common_skill` | `preprocess_common_skill` | `preprocess_common_skill` | `preprocess_common_skill` | `preprocess_registerconcommand_skill` | `preprocess_ordinal_vtable_via_mcp` | `py_eval` + `write_func_yaml` (custom) | `preprocess_igamesystem_dispatch_skill` | `preprocess_igamesystem_slot_dispatch_skill` (from `_igamesystem_slot_dispatch_common`) | `preprocess_indirect_vcall_target_skill` (from `_indirect_vcall_target_common`) |
 | Target list | `TARGET_FUNCTION_NAMES` | `TARGET_FUNCTION_NAMES` | `TARGET_FUNCTION_NAMES` | `TARGET_FUNCTION_NAMES` | `TARGET_STRUCT_MEMBER_NAMES` | (none -- defined in INHERIT_VFUNCS) | `TARGET_FUNCTION_NAMES` | `TARGET_CLASS_NAME` (single string) | `TARGET_FUNC_NAME` + `PREDECESSOR_STEM` (module-level constants) | `TARGET_SPECS` (list of dicts with `target_name`, `rename_to`, optional `dispatch_rank`) | `TARGET_SPECS` (list of dicts with `target_name`, `vtable_name`, optional `dispatch_rank`) | `SOURCE_FUNCTION_NAME` + `TARGET_FUNCTION_NAME` + `VTABLE_CLASS` (module-level constants) |
 | preprocess param | `func_names=` | `func_names=` | `func_names=` | `func_names=` | `struct_member_names=` | `inherit_vfuncs=` | `command_name=`, `help_string=` | `class_name=`, `ordinal=` | (custom: reads YAML, calls `py_eval`) | `source_yaml_stem=`, `target_specs=`, `via_internal_wrapper=`, `multi_order=` | `dispatcher_yaml_stem=`, `target_specs=`, `multi_order=`, `expected_dispatch_count=` | `source_yaml_stem=`, `target_name=`, `vtable_name=` |
-| YAML fields | func_name, func_sig, func_va, func_rva, func_size | Same + vtable_name, vfunc_offset, vfunc_index | **vfunc_sig ALWAYS required**. Standard: func_name, func_va, func_rva, func_size, vfunc_sig, vfunc_offset, vfunc_index, vtable_name. Slim (not a downstream predecessor): func_name, vfunc_sig, vfunc_offset, vfunc_index, vtable_name | func_name, func_sig, func_va, func_rva, func_size | struct_name, member_name, offset, size, offset_sig, offset_sig_disp | Standard: func_name, func_va, func_rva, func_size, func_sig, vtable_name, vfunc_offset, vfunc_index; Slot-only: func_name, vtable_name, vfunc_offset, vfunc_index | func_name, func_sig, func_va, func_rva, func_size | (vtable YAML via write_vtable_yaml) | func_name, vtable_name, vfunc_offset, vfunc_index | func_name, func_va, func_rva, func_size, func_sig, vtable_name, vfunc_offset, vfunc_index | func_name, vtable_name, vfunc_offset, vfunc_index | func_name, vtable_name, vfunc_offset, vfunc_index |
+| YAML fields | func_name, func_sig, func_va, func_rva, func_size | Same + vtable_name, vfunc_offset, vfunc_index | **vfunc_sig ALWAYS required**. Standard: func_name, func_va, func_rva, func_size, vfunc_sig, vfunc_offset, vfunc_index, vtable_name. Slim (not a downstream predecessor): func_name, vfunc_sig, vfunc_offset, vfunc_index, vtable_name | func_name, func_sig, func_va, func_rva, func_size | struct_name, member_name, offset, offset_sig, offset_sig_disp; add size only for a non-`lea` memory access | Standard: func_name, func_va, func_rva, func_size, func_sig, vtable_name, vfunc_offset, vfunc_index; Slot-only: func_name, vtable_name, vfunc_offset, vfunc_index | func_name, func_sig, func_va, func_rva, func_size | (vtable YAML via write_vtable_yaml) | func_name, vtable_name, vfunc_offset, vfunc_index | func_name, func_va, func_rva, func_size, func_sig, vtable_name, vfunc_offset, vfunc_index | func_name, vtable_name, vfunc_offset, vfunc_index | func_name, vtable_name, vfunc_offset, vfunc_index |
 | config category | `func` | `vfunc` | `vfunc` | `func` | `structmember` | `vfunc` | `func` | `vtable` | `vfunc` | `vfunc` | `vfunc` | `vfunc` |
 
 ---
@@ -549,6 +556,7 @@ Before finishing, verify:
 
 - [ ] Preprocessor script file name matches the `name` field in configs/<GAMEVER>.yaml skill entry
 - [ ] `GENERATE_YAML_DESIRED_FIELDS` uses correct field set for the pattern
+- [ ] A struct member located by `lea` omits `size`; a non-`lea` memory access includes it
 - [ ] configs/<GAMEVER>.yaml `expected_output` has one entry per target
 - [ ] configs/<GAMEVER>.yaml `expected_input` correctly chains dependencies
 - [ ] configs/<GAMEVER>.yaml `symbols` section has entries for all targets (no duplicates)

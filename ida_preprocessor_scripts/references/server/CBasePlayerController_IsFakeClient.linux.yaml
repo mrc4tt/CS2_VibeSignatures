@@ -1,0 +1,46 @@
+func_name: CBasePlayerController_IsFakeClient
+func_va: '0x15e0ce0'
+disasm_code: |-
+  .text:00000000015E0CE0                 push    rbp
+  .text:00000000015E0CE1                 mov     rbp, rsp
+  .text:00000000015E0CE4                 push    r13
+  .text:00000000015E0CE6                 push    r12
+  .text:00000000015E0CE8                 mov     r12, rdi
+  .text:00000000015E0CEB                 push    rbx
+  .text:00000000015E0CEC                 sub     rsp, 8
+  .text:00000000015E0CF0                 lea     rax, g_pNetworkServerService
+  .text:00000000015E0CF7                 mov     rdi, [rax]
+  .text:00000000015E0CFA                 mov     rax, [rdi]
+  .text:00000000015E0CFD                 call    qword ptr [rax+0C0h]
+  .text:00000000015E0D03                 mov     rdi, r12
+  .text:00000000015E0D06                 mov     rbx, rax
+  .text:00000000015E0D09                 mov     rax, [rax]
+  .text:00000000015E0D0C                 ; 0x1B8 = 440LL = INetworkGameServer_GetClientConnectionType
+  .text:00000000015E0D0C                 mov     r13, [rax+1B8h]; 0x1B8 = 440LL = INetworkGameServer_GetClientConnectionType
+  .text:00000000015E0D13                 call    sub_2109F30
+  .text:00000000015E0D18                 mov     rdi, rbx
+  .text:00000000015E0D1B                 mov     esi, eax
+  .text:00000000015E0D1D                 xor     eax, eax
+  .text:00000000015E0D1F                 cmp     esi, 0FFFFFFFFh
+  .text:00000000015E0D22                 setnz   al
+  .text:00000000015E0D25                 sub     esi, eax
+  .text:00000000015E0D27                 call    r13
+  .text:00000000015E0D2A                 add     rsp, 8
+  .text:00000000015E0D2E                 pop     rbx
+  .text:00000000015E0D2F                 and     eax, 1
+  .text:00000000015E0D32                 pop     r12
+  .text:00000000015E0D34                 pop     r13
+  .text:00000000015E0D36                 pop     rbp
+  .text:00000000015E0D37                 retn
+procedure: |-
+  __int64 __fastcall CBasePlayerController_IsFakeClient(__int64 a1)
+  {
+    __int64 v1; // rbx
+    __int64 (__fastcall *v2)(__int64, _QWORD); // r13
+    int v3; // eax
+
+    v1 = (*(__int64 (__fastcall **)(_QWORD *))(*g_pNetworkServerService + 192LL))(g_pNetworkServerService);
+    v2 = *(__int64 (__fastcall **)(__int64, _QWORD))(*(_QWORD *)v1 + 440LL);// 0x1B8 = 440LL = INetworkGameServer_GetClientConnectionType
+    v3 = sub_2109F30(a1);
+    return v2(v1, v3 - (unsigned int)(v3 != -1)) & 1;
+  }

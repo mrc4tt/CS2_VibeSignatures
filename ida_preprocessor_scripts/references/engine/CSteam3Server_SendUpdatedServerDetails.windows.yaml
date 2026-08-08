@@ -1,0 +1,223 @@
+func_name: CSteam3Server_SendUpdatedServerDetails
+func_va: '0x1800f9fb0'
+disasm_code: |-
+  .text:00000001800F9FB0                 push    rbp
+  .text:00000001800F9FB2                 push    r14
+  .text:00000001800F9FB4                 sub     rsp, 48h
+  .text:00000001800F9FB8                 mov     rbp, rcx
+  .text:00000001800F9FBB                 movzx   r14d, dl
+  .text:00000001800F9FBF                 lea     rcx, off_18060E650
+  .text:00000001800F9FC6                 call    cs:SteamInternal_ContextInit
+  .text:00000001800F9FCC                 cmp     qword ptr [rax], 0
+  .text:00000001800F9FD0                 jz      loc_1800FA182
+  .text:00000001800F9FD6                 cmp     dword ptr [rbp+0A0h], 1
+  .text:00000001800F9FDD                 jl      loc_1800FA182
+  .text:00000001800F9FE3                 mov     [rsp+58h+arg_8], rsi
+  .text:00000001800F9FE8                 mov     rsi, cs:qword_18090DA50
+  .text:00000001800F9FEF                 test    rsi, rsi
+  .text:00000001800F9FF2                 jz      loc_1800FA17D
+  .text:00000001800F9FF8                 mov     [rsp+58h+arg_0], rbx
+  .text:00000001800F9FFD                 lea     r9, [rsp+58h+arg_10]
+  .text:00000001800FA002                 lea     r8, [rsp+58h+arg_18]
+  .text:00000001800FA007                 mov     [rsp+58h+var_18], rdi
+  .text:00000001800FA00C                 lea     rdx, [rsp+58h+var_38]
+  .text:00000001800FA011                 mov     rcx, rsi
+  .text:00000001800FA014                 call    sub_1800B1BC0
+  .text:00000001800FA019                 lea     rcx, off_18060E650
+  .text:00000001800FA020                 call    cs:SteamInternal_ContextInit
+  .text:00000001800FA026                 mov     edx, [rsp+58h+arg_10]
+  .text:00000001800FA02A                 mov     rcx, [rax]
+  .text:00000001800FA02D                 mov     rax, [rcx]
+  .text:00000001800FA030                 call    qword ptr [rax+68h]
+  .text:00000001800FA033                 lea     rcx, off_18060E650
+  .text:00000001800FA03A                 call    cs:SteamInternal_ContextInit
+  .text:00000001800FA040                 mov     edx, [rsp+58h+arg_18]
+  .text:00000001800FA044                 mov     rcx, [rax]
+  .text:00000001800FA047                 mov     rax, [rcx]
+  .text:00000001800FA04A                 call    qword ptr [rax+60h]
+  .text:00000001800FA04D                 lea     rcx, off_18060E650
+  .text:00000001800FA054                 call    cs:SteamInternal_ContextInit
+  .text:00000001800FA05A                 mov     edx, 0FFFFFFFFh
+  .text:00000001800FA05F                 lea     rcx, unk_1808CC750
+  .text:00000001800FA066                 mov     rbx, [rax]
+  .text:00000001800FA069                 mov     rax, [rbx]
+  .text:00000001800FA06C                 mov     rdi, [rax+0B8h]
+  .text:00000001800FA073                 call    sub_1803FEF60
+  .text:00000001800FA078                 test    rax, rax
+  .text:00000001800FA07B                 jnz     short loc_1800FA088
+  .text:00000001800FA07D                 mov     rax, cs:qword_1808CC758
+  .text:00000001800FA084                 mov     rax, [rax+8]
+  .text:00000001800FA088                 mov     ecx, [rax]
+  .text:00000001800FA08A                 lea     rdx, [rsp+58h+var_34]
+  .text:00000001800FA08F                 call    cs:V_Int32ToString_Unsafe
+  .text:00000001800FA095                 lea     rdx, [rsp+58h+var_34]
+  .text:00000001800FA09A                 mov     rcx, rbx
+  .text:00000001800FA09D                 call    rdi
+  .text:00000001800FA09F                 lea     rcx, off_18060E650
+  .text:00000001800FA0A6                 call    cs:SteamInternal_ContextInit
+  .text:00000001800FA0AC                 mov     rcx, rsi
+  .text:00000001800FA0AF                 mov     rdi, [rax]
+  .text:00000001800FA0B2                 mov     rax, [rdi]
+  .text:00000001800FA0B5                 mov     rbx, [rax+70h]
+  .text:00000001800FA0B9                 mov     rax, [rsi]
+  .text:00000001800FA0BC                 ; 0x218 = 536LL = CNetworkGameServerBase_GetHostName
+  .text:00000001800FA0BC                 call    qword ptr [rax+218h]; 0x218 = 536LL = CNetworkGameServerBase_GetHostName
+  .text:00000001800FA0C2                 mov     rdx, rax
+  .text:00000001800FA0C5                 mov     rcx, rdi
+  .text:00000001800FA0C8                 call    rbx
+  .text:00000001800FA0CA                 lea     rcx, off_18060E650
+  .text:00000001800FA0D1                 call    cs:SteamInternal_ContextInit
+  .text:00000001800FA0D7                 mov     rcx, rsi
+  .text:00000001800FA0DA                 mov     rdi, [rax]
+  .text:00000001800FA0DD                 mov     rax, [rdi]
+  .text:00000001800FA0E0                 mov     rbx, [rax+78h]
+  .text:00000001800FA0E4                 mov     rax, [rsi]
+  .text:00000001800FA0E7                 ; 0x0C8 = 200LL = CNetworkGameServerBase_GetMapName
+  .text:00000001800FA0E7                 call    qword ptr [rax+0C8h]; 0x0C8 = 200LL = CNetworkGameServerBase_GetMapName
+  .text:00000001800FA0ED                 mov     rdx, rax
+  .text:00000001800FA0F0                 mov     rcx, rdi
+  .text:00000001800FA0F3                 call    rbx
+  .text:00000001800FA0F5                 cmp     cs:g_pSource2Server, 0
+  .text:00000001800FA0FD                 mov     rdi, [rsp+58h+var_18]
+  .text:00000001800FA102                 mov     rbx, [rsp+58h+arg_0]
+  .text:00000001800FA107                 jz      short loc_1800FA17D
+  .text:00000001800FA109                 mov     rcx, rbp
+  .text:00000001800FA10C                 call    sub_1800F8750
+  .text:00000001800FA111                 mov     r9, rax
+  .text:00000001800FA114                 mov     edx, [rax+4]
+  .text:00000001800FA117                 mov     r8d, edx
+  .text:00000001800FA11A                 and     r8d, 0F00000h
+  .text:00000001800FA121                 jbe     short loc_1800FA17D
+  .text:00000001800FA123                 cmp     r8d, 0B00000h
+  .text:00000001800FA12A                 jnb     short loc_1800FA17D
+  .text:00000001800FA12C                 mov     ecx, edx
+  .text:00000001800FA12E                 sar     ecx, 18h
+  .text:00000001800FA131                 dec     ecx
+  .text:00000001800FA133                 cmp     ecx, 3
+  .text:00000001800FA136                 ja      short loc_1800FA17D
+  .text:00000001800FA138                 cmp     r8d, 100000h
+  .text:00000001800FA13F                 jnz     short loc_1800FA18A
+  .text:00000001800FA141                 cmp     dword ptr [rax], 0
+  .text:00000001800FA144                 jz      short loc_1800FA17D
+  .text:00000001800FA146                 mov     eax, edx
+  .text:00000001800FA148                 and     eax, 0FFFFFh
+  .text:00000001800FA14D                 cmp     eax, 1
+  .text:00000001800FA150                 jnz     short loc_1800FA17D
+  .text:00000001800FA152                 and     edx, 0F00000h
+  .text:00000001800FA158                 cmp     edx, 300000h
+  .text:00000001800FA15E                 jnz     short loc_1800FA166
+  .text:00000001800FA160                 cmp     dword ptr [r9], 0
+  .text:00000001800FA164                 jz      short loc_1800FA17D
+  .text:00000001800FA166                 mov     rcx, cs:g_pSource2Server
+  .text:00000001800FA16D                 xor     r8d, r8d
+  .text:00000001800FA170                 movzx   edx, r14b
+  .text:00000001800FA174                 mov     rax, [rcx]
+  .text:00000001800FA177                 call    qword ptr [rax+220h]
+  .text:00000001800FA17D                 mov     rsi, [rsp+58h+arg_8]
+  .text:00000001800FA182                 add     rsp, 48h
+  .text:00000001800FA186                 pop     r14
+  .text:00000001800FA188                 pop     rbp
+  .text:00000001800FA189                 retn
+  .text:00000001800FA18A                 cmp     r8d, 700000h
+  .text:00000001800FA191                 jnz     short loc_1800FA152
+  .text:00000001800FA193                 cmp     dword ptr [rax], 0
+  .text:00000001800FA196                 jz      short loc_1800FA17D
+  .text:00000001800FA198                 test    edx, 0FFFFFh
+  .text:00000001800FA19E                 jz      short loc_1800FA166
+  .text:00000001800FA1A0                 mov     rsi, [rsp+58h+arg_8]
+  .text:00000001800FA1A5                 add     rsp, 48h
+  .text:00000001800FA1A9                 pop     r14
+  .text:00000001800FA1AB                 pop     rbp
+  .text:00000001800FA1AC                 retn
+procedure: |-
+  __int64 __fastcall sub_1800F9FB0(__int64 a1, unsigned __int8 a2)
+  {
+    __int64 result; // rax
+    __int64 v5; // rsi
+    _QWORD *v6; // rax
+    _QWORD *v7; // rax
+    __int64 v8; // rax
+    __int64 v9; // rbx
+    void (__fastcall *v10)(__int64, _BYTE *); // rdi
+    unsigned int *v11; // rax
+    __int64 v12; // rax
+    __int64 v13; // rdi
+    void (__fastcall *v14)(__int64, __int64); // rbx
+    __int64 v15; // rax
+    __int64 v16; // rax
+    __int64 v17; // rdi
+    __int64 (__fastcall *v18)(__int64, __int64); // rbx
+    __int64 v19; // rax
+    _DWORD *v20; // r9
+    int v21; // edx
+    unsigned int v22; // r8d
+    _BYTE v23[4]; // [rsp+20h] [rbp-38h] BYREF
+    _BYTE v24[28]; // [rsp+24h] [rbp-34h] BYREF
+    unsigned int v25; // [rsp+70h] [rbp+18h] BYREF
+    unsigned int v26; // [rsp+78h] [rbp+20h] BYREF
+
+    result = SteamInternal_ContextInit(&off_18060E650);
+    if ( !*(_QWORD *)result )
+      return result;
+    if ( *(int *)(a1 + 160) < 1 )
+      return result;
+    v5 = qword_18090DA50;
+    if ( !qword_18090DA50 )
+      return result;
+    sub_1800B1BC0(qword_18090DA50, v23, &v26, &v25);
+    v6 = (_QWORD *)SteamInternal_ContextInit(&off_18060E650);
+    (*(void (__fastcall **)(_QWORD, _QWORD))(*(_QWORD *)*v6 + 104LL))(*v6, v25);
+    v7 = (_QWORD *)SteamInternal_ContextInit(&off_18060E650);
+    (*(void (__fastcall **)(_QWORD, _QWORD))(*(_QWORD *)*v7 + 96LL))(*v7, v26);
+    v8 = SteamInternal_ContextInit(&off_18060E650);
+    v9 = *(_QWORD *)v8;
+    v10 = *(void (__fastcall **)(__int64, _BYTE *))(**(_QWORD **)v8 + 184LL);
+    v11 = (unsigned int *)sub_1803FEF60(&unk_1808CC750, 0xFFFFFFFFLL);
+    if ( !v11 )
+      v11 = *(unsigned int **)(qword_1808CC758 + 8);
+    V_Int32ToString_Unsafe(*v11, v24);
+    v10(v9, v24);
+    v12 = SteamInternal_ContextInit(&off_18060E650);
+    v13 = *(_QWORD *)v12;
+    v14 = *(void (__fastcall **)(__int64, __int64))(**(_QWORD **)v12 + 112LL);
+    v15 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v5 + 536LL))(v5);// 0x218 = 536LL = CNetworkGameServerBase_GetHostName
+    v14(v13, v15);
+    v16 = SteamInternal_ContextInit(&off_18060E650);
+    v17 = *(_QWORD *)v16;
+    v18 = *(__int64 (__fastcall **)(__int64, __int64))(**(_QWORD **)v16 + 120LL);
+    v19 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v5 + 200LL))(v5);// 0x0C8 = 200LL = CNetworkGameServerBase_GetMapName
+    result = v18(v17, v19);
+    if ( !g_pSource2Server )
+      return result;
+    result = sub_1800F8750(a1);
+    v20 = (_DWORD *)result;
+    v21 = *(_DWORD *)(result + 4);
+    v22 = v21 & 0xF00000;
+    if ( (v21 & 0xF00000) == 0 || v22 >= 0xB00000 || (unsigned int)((v21 >> 24) - 1) > 3 )
+      return result;
+    if ( v22 == 0x100000 )
+    {
+      if ( !*(_DWORD *)result )
+        return result;
+      result = v21 & 0xFFFFF;
+      if ( (_DWORD)result != 1 )
+        return result;
+    }
+    else if ( v22 == 7340032 )
+    {
+      if ( *(_DWORD *)result && (v21 & 0xFFFFF) == 0 )
+        return (*(__int64 (__fastcall **)(__int64, _QWORD, _QWORD, _DWORD *))(*(_QWORD *)g_pSource2Server + 544LL))(
+                 g_pSource2Server,
+                 a2,
+                 0,
+                 v20);
+      return result;
+    }
+    if ( (v21 & 0xF00000) != 0x300000 || *v20 )
+      return (*(__int64 (__fastcall **)(__int64, _QWORD, _QWORD, _DWORD *))(*(_QWORD *)g_pSource2Server + 544LL))(
+               g_pSource2Server,
+               a2,
+               0,
+               v20);
+    return result;
+  }

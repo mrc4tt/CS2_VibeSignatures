@@ -1,28 +1,33 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CNetworkGameServerBase_RemoveClientFromGame skill."""
+"""Preprocess script for find-CNetworkGameServer_IsPausable-inlined skill.
+
+Deinline-fix chain, link 3/3.  Resolves ``CNetworkGameServer_IsPausable`` (a vfunc of
+``CNetworkGameServer_vtable``) directly from the ``"offline"`` + ``"System/network"`` VProf
+string references.  This applies when the offline/network-session check helper is inlined into
+the vfunc so the strings live inside the vfunc body (e.g. Windows 14174).  Because the inlined
+``offline`` / ``System/network`` intersection also matches a standalone sibling function, the
+``CNetworkGameServer_vtable`` relation is load-bearing here: only the vfunc is a vtable member,
+so the string-cap-vtable intersection collapses to it.  It is the fallback for the
+``find-CNetworkGameServer_IsPausable-noinline`` path (which handles the de-inlined case) and
+is skipped whenever ``CNetworkGameServer_IsPausable.{platform}.yaml`` already exists.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CNetworkGameServerBase_RemoveClientFromGame",
+    "CNetworkGameServer_IsPausable",
 ]
 
 FUNC_XREFS = [
     {
-        "func_name": "CNetworkGameServerBase_RemoveClientFromGame",
-        "xref_strings": [],
-        # gv_va auto-loaded from g_pSource2GameClients.{platform}.yaml. Among the
-        # CNetworkGameServer_vtable entries that call CServerSideClientBase_GetNetworkIDString
-        # (RemoveClientFromGame, GetPlayerNetworkIDString, and ConnectClient on Linux), only
-        # RemoveClientFromGame also references g_pSource2GameClients -- so the
-        # xref_funcs + xref_gvs + vtable intersection collapses to it with no excludes.
-        "xref_gvs": [
-            "g_pSource2GameClients",
+        "func_name": "CNetworkGameServer_IsPausable",
+        "xref_strings": [
+            "FULLMATCH:offline",
+            "FULLMATCH:System/network",
         ],
+        "xref_gvs": [],
         "xref_signatures": [],
-        "xref_funcs": [
-            "CServerSideClientBase_GetNetworkIDString",
-        ],
+        "xref_funcs": [],
         "exclude_funcs": [],
         "exclude_strings": [],
         "exclude_gvs": [],
@@ -32,13 +37,13 @@ FUNC_XREFS = [
 
 FUNC_VTABLE_RELATIONS = [
     # (func_name, vtable_class)
-    ("CNetworkGameServerBase_RemoveClientFromGame", "CNetworkGameServer_vtable"),
+    ("CNetworkGameServer_IsPausable", "CNetworkGameServer_vtable"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CNetworkGameServerBase_RemoveClientFromGame",
+        "CNetworkGameServer_IsPausable",
         [
             "func_name",
             "func_va",

@@ -1,28 +1,27 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CSource2Server_OutOfGameFrameBoundary skill."""
+"""Preprocess script for find-CNetworkGameServerBase_IsBackgroundMap skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
 INHERIT_VFUNCS = [
     # (target_func_name, inherit_vtable_class, base_vfunc_name, generate_func_sig)
     (
-        "CSource2Server_OutOfGameFrameBoundary",
-        "CSource2Server",
-        "../engine/ISource2Server_OutOfGameFrameBoundary",
-        True,
+        "CNetworkGameServerBase_IsBackgroundMap",
+        "CNetworkGameServerBase",
+        "../server/INetworkGameServer_IsBackgroundMap",
+        False,
     ),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CSource2Server_OutOfGameFrameBoundary",
+        "CNetworkGameServerBase_IsBackgroundMap",
         [
             "func_name",
             "func_va",
             "func_rva",
             "func_size",
-            "func_sig",
             "vtable_name",
             "vfunc_offset",
             "vfunc_index",
@@ -41,7 +40,7 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Reuse old func_sig first; fallback to vtable index + generated signature when needed."""
+    """Resolve IsBackgroundMap by the inherited INetworkGameServer vfunc slot without a func_sig."""
     _ = skill_name
 
     return await preprocess_common_skill(

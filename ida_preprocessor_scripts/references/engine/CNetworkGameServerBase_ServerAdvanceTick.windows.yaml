@@ -1,0 +1,279 @@
+func_name: CNetworkGameServerBase_ServerAdvanceTick
+func_va: '0x1800b4740'
+disasm_code: |-
+  .text:00000001800B4740                 mov     [rsp+arg_8], rbx
+  .text:00000001800B4745                 mov     [rsp+arg_10], rbp
+  .text:00000001800B474A                 mov     [rsp+arg_18], rsi
+  .text:00000001800B474F                 push    rdi
+  .text:00000001800B4750                 sub     rsp, 60h
+  .text:00000001800B4754                 xor     edi, edi
+  .text:00000001800B4756                 mov     rbp, rdx
+  .text:00000001800B4759                 mov     rsi, rcx
+  .text:00000001800B475C                 cmp     [rcx+2BBh], dil
+  .text:00000001800B4763                 jnz     loc_1800B48E0
+  .text:00000001800B4769                 cmp     [rdx+28h], dil
+  .text:00000001800B476D                 jz      loc_1800B48E0
+  .text:00000001800B4773                 call    cs:__imp_GetCurrentThreadId
+  .text:00000001800B4779                 cmp     cs:dword_18060F4A8, eax
+  .text:00000001800B477F                 mov     edx, eax
+  .text:00000001800B4781                 jnz     short loc_1800B478F
+  .text:00000001800B4783                 movzx   ecx, cs:word_18060F4A4
+  .text:00000001800B478A                 inc     cx
+  .text:00000001800B478D                 jmp     short loc_1800B47CA
+  .text:00000001800B478F                 mov     eax, cs:dword_18060F4A0
+  .text:00000001800B4795                 nop
+  .text:00000001800B4796                 test    eax, eax
+  .text:00000001800B4798                 jnz     short loc_1800B47B6
+  .text:00000001800B479A                 mov     ecx, 3
+  .text:00000001800B479F                 lock cmpxchg cs:dword_18060F4A0, ecx
+  .text:00000001800B47A7                 jnz     short loc_1800B47B6
+  .text:00000001800B47A9                 mov     ecx, 1
+  .text:00000001800B47AE                 mov     cs:dword_18060F4A8, edx
+  .text:00000001800B47B4                 jmp     short loc_1800B47CA
+  .text:00000001800B47B6                 lea     rcx, dword_18060F4A0
+  .text:00000001800B47BD                 call    cs:?AcquireLock@CAtomicMutex@@AEAAXI@Z; CAtomicMutex::AcquireLock(uint)
+  .text:00000001800B47C3                 movzx   ecx, cs:word_18060F4A4
+  .text:00000001800B47CA                 cmp     cs:dword_18090E1E8, edi
+  .text:00000001800B47D0                 jle     short loc_1800B4824
+  .text:00000001800B47D2                 mov     rax, cs:qword_180918D30
+  .text:00000001800B47D9                 lea     rbx, unk_180528AFF
+  .text:00000001800B47E0                 test    rax, rax
+  .text:00000001800B47E3                 cmovnz  rbx, rax
+  .text:00000001800B47E7                 sub     cx, 1
+  .text:00000001800B47EB                 mov     cs:word_18060F4A4, cx
+  .text:00000001800B47F2                 jnz     short loc_1800B4819
+  .text:00000001800B47F4                 mov     cs:dword_18060F4A8, edi
+  .text:00000001800B47FA                 mov     eax, 0FFFFFFFDh
+  .text:00000001800B47FF                 lock xadd cs:dword_18060F4A0, eax
+  .text:00000001800B4807                 add     eax, 0FFFFFFFDh
+  .text:00000001800B480A                 jz      short loc_1800B4819
+  .text:00000001800B480C                 lea     rcx, dword_18060F4A0
+  .text:00000001800B4813                 call    cs:?ThreadAtomicNotifyOne@@YAXPEBI@Z; ThreadAtomicNotifyOne(uint const *)
+  .text:00000001800B4819                 test    rbx, rbx
+  .text:00000001800B481C                 jnz     loc_1800B48E0
+  .text:00000001800B4822                 jmp     short loc_1800B4856
+  .text:00000001800B4824                 sub     cx, 1
+  .text:00000001800B4828                 mov     cs:word_18060F4A4, cx
+  .text:00000001800B482F                 jnz     short loc_1800B4856
+  .text:00000001800B4831                 mov     cs:dword_18060F4A8, edi
+  .text:00000001800B4837                 mov     eax, 0FFFFFFFDh
+  .text:00000001800B483C                 lock xadd cs:dword_18060F4A0, eax
+  .text:00000001800B4844                 add     eax, 0FFFFFFFDh
+  .text:00000001800B4847                 jz      short loc_1800B4856
+  .text:00000001800B4849                 lea     rcx, dword_18060F4A0
+  .text:00000001800B4850                 call    cs:?ThreadAtomicNotifyOne@@YAXPEBI@Z; ThreadAtomicNotifyOne(uint const *)
+  .text:00000001800B4856                 mov     ecx, [rsi+458h]
+  .text:00000001800B485C                 test    ecx, ecx
+  .text:00000001800B485E                 jz      short loc_1800B488C
+  .text:00000001800B4860                 movsxd  rax, dword ptr [rbp+38h]
+  .text:00000001800B4864                 add     [rsi+4B8h], rax
+  .text:00000001800B486B                 inc     qword ptr [rsi+4C0h]
+  .text:00000001800B4872                 mov     eax, [rbp+38h]
+  .text:00000001800B4875                 dec     ecx
+  .text:00000001800B4877                 test    eax, eax
+  .text:00000001800B4879                 cmovle  eax, edi
+  .text:00000001800B487C                 cmp     eax, ecx
+  .text:00000001800B487E                 cmovl   ecx, eax
+  .text:00000001800B4881                 movsxd  rax, ecx
+  .text:00000001800B4884                 inc     qword ptr [rsi+rax*8+460h]
+  .text:00000001800B488C                 mov     ebx, [rsi+4C8h]
+  .text:00000001800B4892                 test    ebx, ebx
+  .text:00000001800B4894                 jz      short loc_1800B48E0
+  .text:00000001800B4896                 movss   xmm0, cs:dword_18091195C
+  .text:00000001800B489E                 mulss   xmm0, cs:dword_18058517C
+  .text:00000001800B48A6                 inc     qword ptr [rsi+6C0h]
+  .text:00000001800B48AD                 dec     ebx
+  .text:00000001800B48AF                 cvtps2pd xmm1, xmm0
+  .text:00000001800B48B2                 addsd   xmm1, qword ptr [rsi+6B8h]
+  .text:00000001800B48BA                 movsd   qword ptr [rsi+6B8h], xmm1
+  .text:00000001800B48C2                 call    sub_1804410CC
+  .text:00000001800B48C7                 cvttss2si eax, xmm0
+  .text:00000001800B48CB                 test    eax, eax
+  .text:00000001800B48CD                 cmovle  eax, edi
+  .text:00000001800B48D0                 cmp     eax, ebx
+  .text:00000001800B48D2                 cmovl   ebx, eax
+  .text:00000001800B48D5                 movsxd  rax, ebx
+  .text:00000001800B48D8                 inc     qword ptr [rsi+rax*8+4D0h]
+  .text:00000001800B48E0                 mov     rcx, cs:g_pSoundOpSystem
+  .text:00000001800B48E7                 test    rcx, rcx
+  .text:00000001800B48EA                 jz      short loc_1800B48FA
+  .text:00000001800B48EC                 mov     rax, [rcx+8]
+  .text:00000001800B48F0                 add     rcx, 8
+  .text:00000001800B48F4                 call    qword ptr [rax+130h]
+  .text:00000001800B48FA                 mov     eax, [rsi+38h]
+  .text:00000001800B48FD                 cmp     eax, 1
+  .text:00000001800B4900                 jbe     loc_1800B499E
+  .text:00000001800B4906                 cmp     eax, 4
+  .text:00000001800B4909                 jz      short loc_1800B490E
+  .text:00000001800B490B                 inc     dword ptr [rsi+44h]
+  .text:00000001800B490E                 mov     rax, [rsi]
+  .text:00000001800B4911                 mov     rcx, rsi
+  .text:00000001800B4914                 ; 0x0E0 = 224LL = INetworkGameServer_GetTime
+  .text:00000001800B4914                 call    qword ptr [rax+0E0h]; 0x0E0 = 224LL = INetworkGameServer_GetTime
+  .text:00000001800B491A                 movss   xmm1, cs:dword_180584F90
+  .text:00000001800B4922                 lea     r8, [rsi+58h]
+  .text:00000001800B4926                 movaps  xmm3, xmm0
+  .text:00000001800B4929                 mov     [rsp+68h+var_40], edi
+  .text:00000001800B492D                 lea     rdx, aCBuildworkerCs_22; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:00000001800B4934                 movss   [rsp+68h+var_48], xmm1
+  .text:00000001800B493A                 lea     rcx, [rsp+68h+var_38]
+  .text:00000001800B493F                 call    sub_18005EB40
+  .text:00000001800B4944                 mov     eax, [rbp+34h]
+  .text:00000001800B4947                 mov     [rsi+6Ch], eax
+  .text:00000001800B494A                 mov     eax, [rbp+38h]
+  .text:00000001800B494D                 mov     [rsi+70h], eax
+  .text:00000001800B4950                 cmp     cs:dword_1806126D8, edi
+  .text:00000001800B4956                 mov     esi, [rsi+44h]
+  .text:00000001800B4959                 mov     cs:dword_1806126D0, esi
+  .text:00000001800B495F                 jle     short loc_1800B4994
+  .text:00000001800B4961                 mov     rbx, rdi
+  .text:00000001800B4964                 nop     dword ptr [rax+00h]
+  .text:00000001800B4968                 nop     dword ptr [rax+rax+00000000h]
+  .text:00000001800B4970                 mov     rax, cs:qword_1806126E0
+  .text:00000001800B4977                 xor     r8d, r8d
+  .text:00000001800B497A                 mov     edx, esi
+  .text:00000001800B497C                 mov     rcx, [rbx+rax]
+  .text:00000001800B4980                 mov     rax, [rcx]
+  .text:00000001800B4983                 call    qword ptr [rax+20h]
+  .text:00000001800B4986                 inc     edi
+  .text:00000001800B4988                 lea     rbx, [rbx+8]
+  .text:00000001800B498C                 cmp     edi, cs:dword_1806126D8
+  .text:00000001800B4992                 jl      short loc_1800B4970
+  .text:00000001800B4994                 lea     rcx, [rsp+68h+var_38]
+  .text:00000001800B4999                 call    sub_18005EC80
+  .text:00000001800B499E                 lea     r11, [rsp+68h+var_8]
+  .text:00000001800B49A3                 mov     rbx, [r11+18h]
+  .text:00000001800B49A7                 mov     rbp, [r11+20h]
+  .text:00000001800B49AB                 mov     rsi, [r11+28h]
+  .text:00000001800B49AF                 mov     rsp, r11
+  .text:00000001800B49B2                 pop     rdi
+  .text:00000001800B49B3                 retn
+procedure: |-
+  __int64 __fastcall CNetworkGameServerBase_ServerAdvanceTick(__int64 a1, __int64 a2)
+  {
+    int v2; // edi
+    DWORD CurrentThreadId; // eax
+    __int64 v6; // rdx
+    __int16 v7; // cx
+    void *v8; // rbx
+    __int64 v9; // rcx
+    int v10; // eax
+    int v11; // ebx
+    float v12; // xmm0_4
+    int v13; // ebx
+    int v14; // eax
+    __int64 result; // rax
+    int v16; // r9d
+    unsigned int v17; // esi
+    __int64 v18; // rbx
+    _BYTE v19[48]; // [rsp+30h] [rbp-38h] BYREF
+
+    v2 = 0;
+    if ( *(_BYTE *)(a1 + 699) || !*(_BYTE *)(a2 + 40) )
+      goto LABEL_32;
+    CurrentThreadId = GetCurrentThreadId();
+    v6 = CurrentThreadId;
+    if ( dword_18060F4A8 == CurrentThreadId )
+    {
+      v7 = word_18060F4A4 + 1;
+    }
+    else if ( dword_18060F4A0 || _InterlockedCompareExchange(&dword_18060F4A0, 3, 0) )
+    {
+      CAtomicMutex::AcquireLock((CAtomicMutex *)&dword_18060F4A0, CurrentThreadId);
+      v7 = word_18060F4A4;
+    }
+    else
+    {
+      v7 = 1;
+      dword_18060F4A8 = CurrentThreadId;
+    }
+    if ( dword_18090E1E8 <= 0 )
+    {
+      word_18060F4A4 = v7 - 1;
+      if ( v7 == 1 )
+      {
+        dword_18060F4A8 = 0;
+        if ( _InterlockedExchangeAdd(&dword_18060F4A0, 0xFFFFFFFD) != 3 )
+          ThreadAtomicNotifyOne((const unsigned int *)&dword_18060F4A0);
+      }
+      goto LABEL_20;
+    }
+    v8 = &unk_180528AFF;
+    if ( qword_180918D30 )
+      v8 = (void *)qword_180918D30;
+    word_18060F4A4 = v7 - 1;
+    if ( v7 == 1 )
+    {
+      dword_18060F4A8 = 0;
+      if ( _InterlockedExchangeAdd(&dword_18060F4A0, 0xFFFFFFFD) != 3 )
+        ThreadAtomicNotifyOne((const unsigned int *)&dword_18060F4A0);
+    }
+    if ( !v8 )
+    {
+  LABEL_20:
+      v9 = *(unsigned int *)(a1 + 1112);
+      if ( (_DWORD)v9 )
+      {
+        *(_QWORD *)(a1 + 1208) += *(int *)(a2 + 56);
+        ++*(_QWORD *)(a1 + 1216);
+        v10 = *(_DWORD *)(a2 + 56);
+        v9 = (unsigned int)(v9 - 1);
+        if ( v10 <= 0 )
+          v10 = 0;
+        if ( v10 < (int)v9 )
+          v9 = (unsigned int)v10;
+        ++*(_QWORD *)(a1 + 8LL * (int)v9 + 1120);
+      }
+      v11 = *(_DWORD *)(a1 + 1224);
+      if ( v11 )
+      {
+        v12 = *(float *)&dword_18091195C * 1000.0;
+        ++*(_QWORD *)(a1 + 1728);
+        v13 = v11 - 1;
+        *(double *)(a1 + 1720) = v12 + *(double *)(a1 + 1720);
+        v14 = (int)sub_1804410CC(v9, v6);
+        if ( v14 <= 0 )
+          v14 = 0;
+        if ( v14 < v13 )
+          v13 = v14;
+        ++*(_QWORD *)(a1 + 8LL * v13 + 1232);
+      }
+    }
+  LABEL_32:
+    if ( g_pSoundOpSystem )
+      (*(void (__fastcall **)(__int64))(*(_QWORD *)(g_pSoundOpSystem + 8) + 304LL))(g_pSoundOpSystem + 8);
+    result = *(unsigned int *)(a1 + 56);
+    if ( (unsigned int)result > 1 )
+    {
+      if ( (_DWORD)result != 4 )
+        ++*(_DWORD *)(a1 + 68);
+      (*(void (__fastcall **)(__int64))(*(_QWORD *)a1 + 224LL))(a1);// 0x0E0 = 224LL = INetworkGameServer_GetTime
+      sub_18005EB40(
+        (unsigned int)v19,
+        (unsigned int)"C:\\buildworker\\csgo_rel_win64\\build\\src\\engine2\\networkgameserverbase.cpp:5698",
+        a1 + 88,
+        v16,
+        1015021568,
+        0);
+      *(_DWORD *)(a1 + 108) = *(_DWORD *)(a2 + 52);
+      *(_DWORD *)(a1 + 112) = *(_DWORD *)(a2 + 56);
+      v17 = *(_DWORD *)(a1 + 68);
+      dword_1806126D0 = v17;
+      if ( dword_1806126D8 > 0 )
+      {
+        v18 = 0;
+        do
+        {
+          (*(void (__fastcall **)(_QWORD, _QWORD, _QWORD))(**(_QWORD **)(v18 + qword_1806126E0) + 32LL))(
+            *(_QWORD *)(v18 + qword_1806126E0),
+            v17,
+            0);
+          ++v2;
+          v18 += 8;
+        }
+        while ( v2 < dword_1806126D8 );
+      }
+      return sub_18005EC80(v19);
+    }
+    return result;
+  }

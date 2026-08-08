@@ -1,0 +1,73 @@
+func_name: CSource2GameEntities_ShouldClientReceiveStringTableUserData
+func_va: '0x180d1d7e0'
+disasm_code: |-
+  .text:0000000180D1D7E0                 mov     [rsp+arg_0], rbx
+  .text:0000000180D1D7E5                 push    rdi
+  .text:0000000180D1D7E6                 sub     rsp, 30h
+  .text:0000000180D1D7EA                 mov     rcx, cs:g_pGameRules
+  .text:0000000180D1D7F1                 mov     r10, r9
+  .text:0000000180D1D7F4                 mov     edi, r8d
+  .text:0000000180D1D7F7                 mov     rbx, rdx
+  .text:0000000180D1D7FA                 test    rcx, rcx
+  .text:0000000180D1D7FD                 jnz     short loc_180D1D852
+  .text:0000000180D1D7FF                 ; IsBackgroundMap
+  .text:0000000180D1D7FF                 call    sub_180BDF6E0; IsBackgroundMap
+  .text:0000000180D1D804                 test    al, al
+  .text:0000000180D1D806                 jnz     short loc_180D1D845
+  .text:0000000180D1D808                 mov     ecx, cs:dword_181FE50B8
+  .text:0000000180D1D80E                 mov     edx, 3
+  .text:0000000180D1D813                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180D1D819                 test    al, al
+  .text:0000000180D1D81B                 jz      short loc_180D1D845
+  .text:0000000180D1D81D                 mov     rax, [rbx]
+  .text:0000000180D1D820                 mov     rcx, rbx
+  .text:0000000180D1D823                 call    qword ptr [rax+8]
+  .text:0000000180D1D826                 mov     ecx, cs:dword_181FE50B8
+  .text:0000000180D1D82C                 lea     r8, aShouldclientre; "ShouldClientReceiveStringTableUserData "...
+  .text:0000000180D1D833                 mov     r9, rax
+  .text:0000000180D1D836                 mov     [rsp+38h+var_18], edi
+  .text:0000000180D1D83A                 mov     edx, 3
+  .text:0000000180D1D83F                 call    cs:LoggingSystem_Log
+  .text:0000000180D1D845                 mov     al, 1
+  .text:0000000180D1D847                 mov     rbx, [rsp+38h+arg_0]
+  .text:0000000180D1D84C                 add     rsp, 30h
+  .text:0000000180D1D850                 pop     rdi
+  .text:0000000180D1D851                 retn
+  .text:0000000180D1D852                 mov     rax, [rcx]
+  .text:0000000180D1D855                 mov     r9d, edi
+  .text:0000000180D1D858                 mov     edx, [r10+240h]
+  .text:0000000180D1D85F                 mov     r8, rbx
+  .text:0000000180D1D862                 mov     rbx, [rsp+38h+arg_0]
+  .text:0000000180D1D867                 add     rsp, 30h
+  .text:0000000180D1D86B                 pop     rdi
+  .text:0000000180D1D86C                 jmp     qword ptr [rax+308h]
+procedure: |-
+  char __fastcall CSource2GameEntities_ShouldClientReceiveStringTableUserData(
+          __int64 a1,
+          __int64 a2,
+          unsigned int a3,
+          __int64 a4)
+  {
+    const char *v6; // rax
+
+    if ( g_pGameRules )
+      return (*(char (__fastcall **)(__int64, _QWORD, __int64, _QWORD))(*(_QWORD *)g_pGameRules + 776LL))(
+               g_pGameRules,
+               *(unsigned int *)(a4 + 576),
+               a2,
+               a3);
+    if ( !(unsigned __int8)sub_180BDF6E0() )      // IsBackgroundMap
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_181FE50B8, 3) )
+      {
+        v6 = (const char *)(*(__int64 (__fastcall **)(__int64))(*(_QWORD *)a2 + 8LL))(a2);
+        LoggingSystem_Log(
+          (unsigned int)dword_181FE50B8,
+          3,
+          "ShouldClientReceiveStringTableUserData called with nullptr GameRules() on table %s, string %d\n",
+          v6,
+          a3);
+      }
+    }
+    return 1;
+  }

@@ -1,0 +1,134 @@
+func_name: SmokeVolume_BuildSmokeSimulation_Initialize
+func_va: '0x1402310'
+disasm_code: |-
+  .text:0000000001402310                 push    rbp
+  .text:0000000001402311                 mov     rbp, rsp
+  .text:0000000001402314                 push    r15
+  .text:0000000001402316                 movd    r15d, xmm0
+  .text:000000000140231B                 push    r14
+  .text:000000000140231D                 push    r13
+  .text:000000000140231F                 push    r12
+  .text:0000000001402321                 mov     r12, rdi
+  .text:0000000001402324                 push    rbx
+  .text:0000000001402325                 sub     rsp, 8
+  .text:0000000001402329                 mov     byte ptr [rdi], 1
+  .text:000000000140232C                 mov     rax, [rsi]
+  .text:000000000140232F                 mov     [rdi+0D4h], rax  ; 0D4h = SmokeVolume::m_vecCenterOrigin (structmember, struct=SmokeVolume, member=m_vecCenterOrigin)
+  .text:0000000001402336                 mov     eax, [rsi+8]
+  .text:0000000001402339                 mov     [rdi+0DCh], eax  ; 0DCh = SmokeVolume::m_vecCenterOrigin + 8 (structmember, struct=SmokeVolume, member=m_vecCenterOrigin)
+  .text:000000000140233F                 ; _QWORD
+  .text:000000000140233F                 mov     rdi, [rdi+70h]; _QWORD
+  .text:0000000001402343                 test    rdi, rdi
+  .text:0000000001402346                 jz      short loc_1402352
+  .text:0000000001402348                 ; _QWORD
+  .text:0000000001402348                 mov     esi, 10B010h; _QWORD
+  .text:000000000140234D                 call    __ZdlPvm; operator delete(void *,ulong)
+  .text:0000000001402352                 ; _QWORD
+  .text:0000000001402352                 mov     edi, 10B010h; _QWORD
+  .text:0000000001402357                 call    __Znwm; operator new(ulong)
+  .text:000000000140235C                 pxor    xmm0, xmm0
+  .text:0000000001402360                 mov     r13, rax
+  .text:0000000001402363                 lea     rbx, [r13+83008h]
+  .text:000000000140236A                 lea     rax, [rax+3008h]
+  .text:0000000001402371                 nop     word ptr [rax+rax+00000000h]
+  .text:000000000140237C                 nop     dword ptr [rax+00h]
+  .text:0000000001402380                 movups  xmmword ptr [rax], xmm0
+  .text:0000000001402383                 add     rax, 20h ; ' '
+  .text:0000000001402387                 movups  xmmword ptr [rax-10h], xmm0
+  .text:000000000140238B                 cmp     rbx, rax
+  .text:000000000140238E                 jnz     short loc_1402380
+  .text:0000000001402390                 lea     rax, [r13+103008h]
+  .text:0000000001402397                 pxor    xmm0, xmm0
+  .text:000000000140239B                 nop     dword ptr [rax+rax+00h]
+  .text:00000000014023A0                 movups  xmmword ptr [rbx], xmm0
+  .text:00000000014023A3                 add     rbx, 20h ; ' '
+  .text:00000000014023A7                 movups  xmmword ptr [rbx-10h], xmm0
+  .text:00000000014023AB                 cmp     rbx, rax
+  .text:00000000014023AE                 jnz     short loc_14023A0
+  .text:00000000014023B0                 lea     r14, [r13+8]
+  .text:00000000014023B4                 ; n
+  .text:00000000014023B4                 mov     edx, 2000h; n
+  .text:00000000014023B9                 ; c
+  .text:00000000014023B9                 xor     esi, esi; c
+  .text:00000000014023BB                 ; s
+  .text:00000000014023BB                 lea     rdi, [r13+1008h]; s
+  .text:00000000014023C2                 call    _memset
+  .text:00000000014023C7                 ; s
+  .text:00000000014023C7                 mov     rdi, r14; s
+  .text:00000000014023CA                 ; n
+  .text:00000000014023CA                 mov     edx, 1000h; n
+  .text:00000000014023CF                 ; c
+  .text:00000000014023CF                 xor     esi, esi; c
+  .text:00000000014023D1                 call    _memset
+  .text:00000000014023D6                 ; s
+  .text:00000000014023D6                 mov     rdi, rbx; s
+  .text:00000000014023D9                 ; n
+  .text:00000000014023D9                 mov     edx, 8000h; n
+  .text:00000000014023DE                 ; c
+  .text:00000000014023DE                 xor     esi, esi; c
+  .text:00000000014023E0                 call    _memset
+  .text:00000000014023E5                 ; src
+  .text:00000000014023E5                 mov     rsi, [r12+18h]; src
+  .text:00000000014023EA                 ; dest
+  .text:00000000014023EA                 mov     rdi, r14; dest
+  .text:00000000014023ED                 mov     [r12+70h], r13  ; 70h = SmokeVolume::m_pStorage (structmember, struct=SmokeVolume, member=m_pStorage)
+  .text:00000000014023F2                 mov     byte ptr ds:stru_10B008.r_offset[r13], 0
+  .text:00000000014023FA                 ; n
+  .text:00000000014023FA                 mov     edx, 1000h; n
+  .text:00000000014023FF                 call    _memcpy
+  .text:0000000001402404                 mov     [r12+0Ch], r15d  ; 0Ch = SmokeVolume::m_flStartTime (structmember, struct=SmokeVolume, member=m_flStartTime)
+  .text:0000000001402409                 xor     edi, edi
+  .text:000000000140240B                 call    sub_12FD050
+  .text:0000000001402410                 movss   dword ptr [r12+4], xmm0
+  .text:0000000001402417                 add     rsp, 8
+  .text:000000000140241B                 pop     rbx
+  .text:000000000140241C                 pop     r12
+  .text:000000000140241E                 pop     r13
+  .text:0000000001402420                 pop     r14
+  .text:0000000001402422                 pop     r15
+  .text:0000000001402424                 pop     rbp
+  .text:0000000001402425                 retn
+procedure: |-
+  void __fastcall sub_1402310(__int64 a1, __int64 a2, __m128i a3)
+  {
+    int v3; // r15d
+    __int64 v5; // rdi
+    __int64 v6; // r13
+    _OWORD *v7; // rbx
+    _OWORD *v8; // rax
+    const void *v9; // rsi
+
+    v3 = _mm_cvtsi128_si32(a3);
+    *(_BYTE *)a1 = 1;
+    *(_QWORD *)(a1 + 212) = *(_QWORD *)a2;  // 212 = 0xD4 = SmokeVolume::m_vecCenterOrigin (structmember, struct=SmokeVolume, member=m_vecCenterOrigin)
+    *(_DWORD *)(a1 + 220) = *(_DWORD *)(a2 + 8);  // 220 = 0xDC = SmokeVolume::m_vecCenterOrigin + 8 (structmember, struct=SmokeVolume, member=m_vecCenterOrigin)
+    v5 = *(_QWORD *)(a1 + 112);
+    if ( v5 )
+      operator delete(v5, 1093648);
+    v6 = operator new(1093648);
+    v7 = (_OWORD *)(v6 + 536584);
+    v8 = (_OWORD *)(v6 + 12296);
+    do
+    {
+      *v8 = 0;
+      v8 += 2;
+      *(v8 - 1) = 0;
+    }
+    while ( v7 != v8 );
+    do
+    {
+      *v7 = 0;
+      v7 += 2;
+      *(v7 - 1) = 0;
+    }
+    while ( v7 != (_OWORD *)(v6 + 1060872) );
+    memset((void *)(v6 + 4104), 0, 0x2000u);
+    memset((void *)(v6 + 8), 0, 0x1000u);
+    memset(v7, 0, 0x8000u);
+    v9 = *(const void **)(a1 + 24);
+    *(_QWORD *)(a1 + 112) = v6; // 112 = 0x70 = SmokeVolume::m_pStorage (structmember, struct=SmokeVolume, member=m_pStorage)
+    *((_BYTE *)&stru_10B008.r_offset + v6) = 0;
+    memcpy((void *)(v6 + 8), v9, 0x1000u);
+    *(_DWORD *)(a1 + 12) = v3;  // 12 = 0xC = SmokeVolume::m_flStartTime (structmember, struct=SmokeVolume, member=m_flStartTime)
+    *(float *)(a1 + 4) = sub_12FD050(0);
+  }

@@ -1,37 +1,35 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CCheckTransmitInfo_m_nPlayerSlot skill."""
+"""Preprocess script for find-SmokeVolume_BuildSmokeSimulation_Initialize-linux skill."""
 
 from ida_analyze_util import preprocess_common_skill
 
-TARGET_STRUCT_MEMBER_NAMES = [
-    "CCheckTransmitInfo_m_nPlayerSlot",
+TARGET_FUNCTION_NAMES = [
+    "SmokeVolume_BuildSmokeSimulation_Initialize",
 ]
 
 LLM_DECOMPILE = [
     {
-        "symbol_name": "CCheckTransmitInfo_m_nPlayerSlot",
+        "symbol_name": "SmokeVolume_BuildSmokeSimulation_Initialize",
         "prompt_path": "prompt/call_llm_decompile.md",
         "reference_yaml_paths": [
-            "references/server/CSource2GameEntities_CheckTransmit.{platform}.yaml",
+            "references/server/SmokeVolume_BuildSmokeSimulation.{platform}.yaml",
         ],
-        "expected_result_sections": ["found_struct_offset"],
+        "expected_result_sections": ["found_call"],
         "dependency_policy": {
-            "CSource2GameEntities_CheckTransmit.{platform}.yaml": "required",
+            "SmokeVolume_BuildSmokeSimulation.{platform}.yaml": "required",
         },
     },
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
-    # (symbol_name, generate_yaml_fields)
     (
-        "CCheckTransmitInfo_m_nPlayerSlot",
+        "SmokeVolume_BuildSmokeSimulation_Initialize",
         [
-            "struct_name",
-            "member_name",
-            "offset",
-            "size",
-            "offset_sig",
-            "offset_sig_disp",
+            "func_name",
+            "func_sig",
+            "func_va",
+            "func_rva",
+            "func_size",
         ],
     ),
 ]
@@ -48,7 +46,7 @@ async def preprocess_skill(
     llm_config=None,
     debug=False,
 ):
-    """Reuse previous gamever offset_sig to locate target struct offset and write YAML."""
+    """Locate Linux's de-inlined SmokeVolume initialization helper."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -56,7 +54,7 @@ async def preprocess_skill(
         new_binary_dir=new_binary_dir,
         platform=platform,
         image_base=image_base,
-        struct_member_names=TARGET_STRUCT_MEMBER_NAMES,
+        func_names=TARGET_FUNCTION_NAMES,
         llm_decompile_specs=LLM_DECOMPILE,
         llm_config=llm_config,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,

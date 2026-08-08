@@ -1,0 +1,479 @@
+func_name: SmokeVolume_BuildSmokeSimulation
+func_va: '0x1809599d0'
+disasm_code: |-
+  .text:00000001809599D0                 mov     [rsp-8+arg_0], rbx
+  .text:00000001809599D5                 mov     [rsp-8+arg_10], rsi
+  .text:00000001809599DA                 mov     [rsp-8+arg_18], rdi
+  .text:00000001809599DF                 mov     [rsp-8+arg_8], rdx
+  .text:00000001809599E4                 push    rbp
+  .text:00000001809599E5                 push    r14
+  .text:00000001809599E7                 push    r15
+  .text:00000001809599E9                 lea     rbp, [rsp-60h]
+  .text:00000001809599EE                 sub     rsp, 160h
+  .text:00000001809599F5                 movsd   xmm0, qword ptr [r8]
+  .text:00000001809599FA                 mov     r14, r9
+  .text:00000001809599FD                 mov     eax, [r8+8]
+  .text:0000000180959A01                 mov     r10, r8
+  .text:0000000180959A04                 movsd   [rsp+170h+var_140], xmm0
+  .text:0000000180959A0A                 mov     rdi, rcx
+  .text:0000000180959A0D                 mov     [rsp+170h+var_138], eax
+  .text:0000000180959A11                 mov     esi, 7FFFh
+  .text:0000000180959A16                 test    rdx, rdx
+  .text:0000000180959A19                 jz      short loc_180959A4C
+  .text:0000000180959A1B                 mov     rax, [rdx+10h]
+  .text:0000000180959A1F                 test    rax, rax
+  .text:0000000180959A22                 jz      short loc_180959A4C
+  .text:0000000180959A24                 mov     edx, [rax+10h]
+  .text:0000000180959A27                 mov     ecx, esi
+  .text:0000000180959A29                 mov     eax, [rax+30h]
+  .text:0000000180959A2C                 mov     r8d, edx
+  .text:0000000180959A2F                 and     eax, 1
+  .text:0000000180959A32                 shr     r8d, 0Fh
+  .text:0000000180959A36                 sub     r8d, eax
+  .text:0000000180959A39                 mov     eax, edx
+  .text:0000000180959A3B                 and     eax, esi
+  .text:0000000180959A3D                 shl     r8d, 0Fh
+  .text:0000000180959A41                 cmp     edx, 0FFFFFFFFh
+  .text:0000000180959A44                 cmovnz  ecx, eax
+  .text:0000000180959A47                 or      r8d, ecx
+  .text:0000000180959A4A                 jmp     short loc_180959A52
+  .text:0000000180959A4C                 ; a3
+  .text:0000000180959A4C                 mov     r8d, 0FFFFFFFFh; a3
+  .text:0000000180959A52                 mov     [rdi+6Ch], r8d
+  .text:0000000180959A56                 lea     rax, ??_7?$_Func_impl_no_alloc@V_lambda_1_@?1??BuildSmokeSimulation@SmokeVolume@@QEAAXPEAVCSmokeGrenadeProjectile@@AEBVVectorWS@@AEAV?$CFixedSizeCircularBuffer@VVectorWS@@$0BA@H@@M@Z@_NAEBUAABB_t@@@std@@6B@; const std::_Func_impl_no_alloc<`SmokeVolume::BuildSmokeSimulation(CSmokeGrenadeProjectile *,VectorWS const &,CFixedSizeCircularBuffer<VectorWS,16,int> &,float)'::`2'::_lambda_1_,bool,AABB_t const &>::`vftable'
+  .text:0000000180959A5D                 ; a4
+  .text:0000000180959A5D                 movss   xmm3, cs:a4; a4
+  .text:0000000180959A65                 ; a1
+  .text:0000000180959A65                 lea     rcx, [rdi+10h]; a1
+  .text:0000000180959A69                 movss   xmm2, cs:dword_1817426E8
+  .text:0000000180959A71                 ; a2
+  .text:0000000180959A71                 mov     rdx, r10; a2
+  .text:0000000180959A74                 mov     [rsp+170h+var_130], rax
+  .text:0000000180959A79                 lea     rax, [rsp+170h+var_140]
+  .text:0000000180959A7E                 mov     [rsp+170h+var_128], rax
+  .text:0000000180959A83                 lea     rax, [rbp+70h+arg_8]
+  .text:0000000180959A8A                 mov     [rsp+170h+var_120], rax
+  .text:0000000180959A8F                 lea     rax, [rsp+170h+var_130]
+  .text:0000000180959A94                 mov     [rsp+170h+var_F8], rax
+  .text:0000000180959A99                 lea     rax, [rsp+170h+var_130]
+  .text:0000000180959A9E                 mov     [rsp+170h+var_150], rax
+  .text:0000000180959AA3                 call    sub_180959DF0
+  .text:0000000180959AA8                 mov     rcx, [rsp+170h+var_F8]
+  .text:0000000180959AAD                 test    rcx, rcx
+  .text:0000000180959AB0                 jz      short loc_180959AC3
+  .text:0000000180959AB2                 mov     rax, [rcx]
+  .text:0000000180959AB5                 lea     rdx, [rsp+170h+var_130]
+  .text:0000000180959ABA                 cmp     rcx, rdx
+  .text:0000000180959ABD                 setnz   dl
+  .text:0000000180959AC0                 call    qword ptr [rax+20h]
+  .text:0000000180959AC3                 movsd   xmm0, [rsp+170h+var_140]
+  .text:0000000180959AC9                 mov     edx, 10B010h
+  .text:0000000180959ACE                 mov     eax, [rsp+170h+var_138]
+  .text:0000000180959AD2                 mov     rcx, [rdi+70h]
+  .text:0000000180959AD6                 movsd   qword ptr [rdi+0D4h], xmm0  ; 0D4h = SmokeVolume::m_vecCenterOrigin (structmember, struct=SmokeVolume, member=m_vecCenterOrigin)
+  .text:0000000180959ADE                 mov     [rdi+0DCh], eax  ; 0DCh = SmokeVolume::m_vecCenterOrigin + 8 (structmember, struct=SmokeVolume, member=m_vecCenterOrigin)
+  .text:0000000180959AE4                 mov     byte ptr [rdi], 1
+  .text:0000000180959AE7                 call    sub_180EACCD0
+  .text:0000000180959AEC                 ; Size
+  .text:0000000180959AEC                 mov     ecx, 10B010h; Size
+  .text:0000000180959AF1                 call    malloc
+  .text:0000000180959AF6                 xor     r15d, r15d
+  .text:0000000180959AF9                 mov     rbx, rax
+  .text:0000000180959AFC                 test    rax, rax
+  .text:0000000180959AFF                 jz      short loc_180959B61
+  .text:0000000180959B01                 lea     rcx, [rax+3008h]
+  .text:0000000180959B08                 mov     edx, 10h
+  .text:0000000180959B0D                 lea     r9, unknown_libname_178; Microsoft VisualC v7/14 64bit runtime
+  .text:0000000180959B14                 mov     r8d, 10000h
+  .text:0000000180959B1A                 call    sub_180139B60
+  .text:0000000180959B1F                 ; void *
+  .text:0000000180959B1F                 lea     rcx, [rbx+1008h]; void *
+  .text:0000000180959B26                 ; Val
+  .text:0000000180959B26                 xor     edx, edx; Val
+  .text:0000000180959B28                 ; Size
+  .text:0000000180959B28                 mov     r8d, 2000h; Size
+  .text:0000000180959B2E                 call    memset
+  .text:0000000180959B33                 ; void *
+  .text:0000000180959B33                 lea     rcx, [rbx+8]; void *
+  .text:0000000180959B37                 ; Val
+  .text:0000000180959B37                 xor     edx, edx; Val
+  .text:0000000180959B39                 ; Size
+  .text:0000000180959B39                 mov     r8d, 1000h; Size
+  .text:0000000180959B3F                 call    memset
+  .text:0000000180959B44                 ; void *
+  .text:0000000180959B44                 lea     rcx, [rbx+103008h]; void *
+  .text:0000000180959B4B                 ; Val
+  .text:0000000180959B4B                 xor     edx, edx; Val
+  .text:0000000180959B4D                 ; Size
+  .text:0000000180959B4D                 mov     r8d, 8000h; Size
+  .text:0000000180959B53                 call    memset
+  .text:0000000180959B58                 mov     [rbx+10B008h], r15b
+  .text:0000000180959B5F                 jmp     short loc_180959B64
+  .text:0000000180959B61                 mov     rbx, r15
+  .text:0000000180959B64                 ; Src
+  .text:0000000180959B64                 mov     rdx, [rdi+18h]; Src
+  .text:0000000180959B68                 ; void *
+  .text:0000000180959B68                 lea     rcx, [rbx+8]; void *
+  .text:0000000180959B6C                 ; Size
+  .text:0000000180959B6C                 mov     r8d, 1000h; Size
+  .text:0000000180959B72                 mov     [rdi+70h], rbx  ; 70h = SmokeVolume::m_pStorage (structmember, struct=SmokeVolume, member=m_pStorage)
+  .text:0000000180959B76                 call    memcpy
+  .text:0000000180959B7B                 movss   xmm0, [rbp+70h+arg_20]
+  .text:0000000180959B83                 lea     rcx, [rbp+70h+arg_20]
+  .text:0000000180959B8A                 mov     edx, r15d
+  .text:0000000180959B8D                 movss   dword ptr [rdi+0Ch], xmm0  ; 0Ch = SmokeVolume::m_flStartTime (structmember, struct=SmokeVolume, member=m_flStartTime)
+  .text:0000000180959B92                 call    sub_1808CA090
+  .text:0000000180959B97                 mov     rcx, rax
+  .text:0000000180959B9A                 call    sub_18018F5B0
+  .text:0000000180959B9F                 movss   dword ptr [rdi+4], xmm0
+  .text:0000000180959BA4                 mov     edx, [rdi+6Ch]
+  .text:0000000180959BA7                 cmp     edx, 0FFFFFFFFh
+  .text:0000000180959BAA                 jz      short loc_180959C22
+  .text:0000000180959BAC                 mov     r8, cs:g_pEntityList
+  .text:0000000180959BB3                 test    r8, r8
+  .text:0000000180959BB6                 jz      short loc_180959C22
+  .text:0000000180959BB8                 cmp     edx, 0FFFFFFFEh
+  .text:0000000180959BBB                 jz      short loc_180959BE8
+  .text:0000000180959BBD                 mov     eax, edx
+  .text:0000000180959BBF                 and     eax, esi
+  .text:0000000180959BC1                 mov     ecx, eax
+  .text:0000000180959BC3                 shr     rax, 9
+  .text:0000000180959BC7                 mov     r9, [r8+rax*8]
+  .text:0000000180959BCB                 test    r9, r9
+  .text:0000000180959BCE                 jz      short loc_180959BE8
+  .text:0000000180959BD0                 and     ecx, 1FFh
+  .text:0000000180959BD6                 imul    rax, rcx, 70h ; 'p'
+  .text:0000000180959BDA                 add     rax, r9
+  .text:0000000180959BDD                 jz      short loc_180959BE8
+  .text:0000000180959BDF                 cmp     [rax+10h], edx
+  .text:0000000180959BE2                 cmovnz  rax, r15
+  .text:0000000180959BE6                 jmp     short loc_180959BEB
+  .text:0000000180959BE8                 mov     rax, r15
+  .text:0000000180959BEB                 test    rax, rax
+  .text:0000000180959BEE                 jz      short loc_180959C22
+  .text:0000000180959BF0                 mov     rcx, [rax]
+  .text:0000000180959BF3                 test    rcx, rcx
+  .text:0000000180959BF6                 jz      short loc_180959C22
+  .text:0000000180959BF8                 mov     rcx, [rcx+10h]
+  .text:0000000180959BFC                 test    rcx, rcx
+  .text:0000000180959BFF                 jz      short loc_180959C22
+  .text:0000000180959C01                 mov     edx, [rcx+10h]
+  .text:0000000180959C04                 mov     eax, edx
+  .text:0000000180959C06                 mov     ecx, [rcx+30h]
+  .text:0000000180959C09                 and     ecx, 1
+  .text:0000000180959C0C                 shr     eax, 0Fh
+  .text:0000000180959C0F                 sub     eax, ecx
+  .text:0000000180959C11                 mov     ecx, edx
+  .text:0000000180959C13                 and     ecx, esi
+  .text:0000000180959C15                 shl     eax, 0Fh
+  .text:0000000180959C18                 cmp     edx, 0FFFFFFFFh
+  .text:0000000180959C1B                 cmovnz  esi, ecx
+  .text:0000000180959C1E                 or      eax, esi
+  .text:0000000180959C20                 jmp     short loc_180959C27
+  .text:0000000180959C22                 mov     eax, 0FFFFFFFFh
+  .text:0000000180959C27                 movups  xmm0, xmmword ptr [r14+8]
+  .text:0000000180959C2C                 mov     ecx, [r14+0C8h]
+  .text:0000000180959C33                 lea     rdx, [rbp+70h+var_E0]
+  .text:0000000180959C37                 movups  xmm1, xmmword ptr [r14+18h]
+  .text:0000000180959C3C                 mov     [rbp+70h+var_F0], rdi
+  .text:0000000180959C40                 movups  xmmword ptr [rdx], xmm0
+  .text:0000000180959C43                 movups  xmm0, xmmword ptr [r14+28h]
+  .text:0000000180959C48                 movups  xmmword ptr [rdx+10h], xmm1
+  .text:0000000180959C4C                 movups  xmm1, xmmword ptr [r14+38h]
+  .text:0000000180959C51                 movups  xmmword ptr [rdx+20h], xmm0
+  .text:0000000180959C55                 movups  xmm0, xmmword ptr [r14+48h]
+  .text:0000000180959C5A                 movups  xmmword ptr [rdx+30h], xmm1
+  .text:0000000180959C5E                 movups  xmm1, xmmword ptr [r14+58h]
+  .text:0000000180959C63                 movups  xmmword ptr [rdx+40h], xmm0
+  .text:0000000180959C67                 movups  xmm0, xmmword ptr [r14+68h]
+  .text:0000000180959C6C                 movups  xmmword ptr [rdx+50h], xmm1
+  .text:0000000180959C70                 movups  xmm1, xmmword ptr [r14+88h]
+  .text:0000000180959C78                 movups  xmmword ptr [rdx+60h], xmm0
+  .text:0000000180959C7C                 movups  xmm0, xmmword ptr [r14+78h]
+  .text:0000000180959C81                 movups  xmmword ptr [rdx+70h], xmm0
+  .text:0000000180959C85                 movups  xmm0, xmmword ptr [r14+98h]
+  .text:0000000180959C8D                 movups  xmmword ptr [rdx+80h], xmm1
+  .text:0000000180959C94                 movups  xmm1, xmmword ptr [r14+0A8h]
+  .text:0000000180959C9C                 movups  xmmword ptr [rdx+90h], xmm0
+  .text:0000000180959CA3                 movups  xmm0, xmmword ptr [r14+0B8h]
+  .text:0000000180959CAB                 movups  xmmword ptr [rdx+0A0h], xmm1
+  .text:0000000180959CB2                 movups  xmmword ptr [rdx+0B0h], xmm0
+  .text:0000000180959CB9                 mov     [rbp+70h+var_20], ecx
+  .text:0000000180959CBC                 mov     ecx, [r14+0CCh]
+  .text:0000000180959CC3                 mov     [rbp+70h+var_1C], ecx
+  .text:0000000180959CC6                 ; Size
+  .text:0000000180959CC6                 mov     ecx, 200h; Size
+  .text:0000000180959CCB                 mov     [rbp+70h+var_18], eax
+  .text:0000000180959CCE                 call    malloc
+  .text:0000000180959CD3                 mov     rsi, rax
+  .text:0000000180959CD6                 test    rax, rax
+  .text:0000000180959CD9                 jz      loc_180959DB3
+  .text:0000000180959CDF                 mov     rcx, rax
+  .text:0000000180959CE2                 call    sub_181525C70
+  .text:0000000180959CE7                 lea     rcx, [rsi+130h]
+  .text:0000000180959CEE                 lea     rax, ??_7?$CCoJobLambda@V_lambda_2_@?1??BuildSmokeSimulation@SmokeVolume@@QEAAXPEAVCSmokeGrenadeProjectile@@AEBVVectorWS@@AEAV?$CFixedSizeCircularBuffer@VVectorWS@@$0BA@H@@M@Z@@@6B@; const CCoJobLambda<`SmokeVolume::BuildSmokeSimulation(CSmokeGrenadeProjectile *,VectorWS const &,CFixedSizeCircularBuffer<VectorWS,16,int> &,float)'::`2'::_lambda_2_>::`vftable'
+  .text:0000000180959CF5                 mov     [rsi], rax
+  .text:0000000180959CF8                 mov     rax, [rbp+70h+var_F0]
+  .text:0000000180959CFC                 mov     [rsi+120h], rax
+  .text:0000000180959D03                 lea     rax, ??_7?$CFixedSizeCircularBuffer@VVectorWS@@$0BA@H@@6B@; const CFixedSizeCircularBuffer<VectorWS,16,int>::`vftable'
+  .text:0000000180959D0A                 mov     [rsi+128h], rax
+  .text:0000000180959D11                 lea     rax, [rbp+70h+var_E0]
+  .text:0000000180959D15                 movups  xmm0, xmmword ptr [rax]
+  .text:0000000180959D18                 movups  xmmword ptr [rcx], xmm0
+  .text:0000000180959D1B                 movups  xmm1, xmmword ptr [rax+10h]
+  .text:0000000180959D1F                 movups  xmmword ptr [rcx+10h], xmm1
+  .text:0000000180959D23                 movups  xmm0, xmmword ptr [rax+20h]
+  .text:0000000180959D27                 movups  xmmword ptr [rcx+20h], xmm0
+  .text:0000000180959D2B                 movups  xmm1, xmmword ptr [rax+30h]
+  .text:0000000180959D2F                 movups  xmmword ptr [rcx+30h], xmm1
+  .text:0000000180959D33                 movups  xmm0, xmmword ptr [rax+40h]
+  .text:0000000180959D37                 movups  xmmword ptr [rcx+40h], xmm0
+  .text:0000000180959D3B                 movups  xmm1, xmmword ptr [rax+50h]
+  .text:0000000180959D3F                 movups  xmmword ptr [rcx+50h], xmm1
+  .text:0000000180959D43                 movups  xmm0, xmmword ptr [rax+60h]
+  .text:0000000180959D47                 movups  xmmword ptr [rcx+60h], xmm0
+  .text:0000000180959D4B                 movups  xmm1, xmmword ptr [rax+70h]
+  .text:0000000180959D4F                 movups  xmmword ptr [rcx+70h], xmm1
+  .text:0000000180959D53                 movups  xmm0, xmmword ptr [rax+80h]
+  .text:0000000180959D5A                 movups  xmmword ptr [rcx+80h], xmm0
+  .text:0000000180959D61                 movups  xmm1, xmmword ptr [rax+90h]
+  .text:0000000180959D68                 movups  xmmword ptr [rcx+90h], xmm1
+  .text:0000000180959D6F                 movups  xmm0, xmmword ptr [rax+0A0h]
+  .text:0000000180959D76                 movups  xmmword ptr [rcx+0A0h], xmm0
+  .text:0000000180959D7D                 movups  xmm1, xmmword ptr [rax+0B0h]
+  .text:0000000180959D84                 mov     eax, [rbp+70h+var_20]
+  .text:0000000180959D87                 mov     [rsi+1F0h], eax
+  .text:0000000180959D8D                 mov     eax, [rbp+70h+var_1C]
+  .text:0000000180959D90                 mov     [rsi+1F4h], eax
+  .text:0000000180959D96                 mov     eax, [rbp+70h+var_18]
+  .text:0000000180959D99                 movups  xmmword ptr [rcx+0B0h], xmm1
+  .text:0000000180959DA0                 mov     [rsi+1F8h], eax
+  .text:0000000180959DA6                 lea     rax, aBuildsmokevolu; "buildSmokeVolume"
+  .text:0000000180959DAD                 mov     [rsi+40h], rax
+  .text:0000000180959DB1                 jmp     short loc_180959DB6
+  .text:0000000180959DB3                 mov     rsi, r15
+  .text:0000000180959DB6                 mov     rbx, [rsi+8]
+  .text:0000000180959DBA                 mov     rcx, rsi
+  .text:0000000180959DBD                 call    sub_181526C20
+  .text:0000000180959DC2                 lea     r11, [rsp+170h+var_10]
+  .text:0000000180959DCA                 mov     [rdi+0F8h], rbx
+  .text:0000000180959DD1                 mov     rbx, [r11+20h]
+  .text:0000000180959DD5                 mov     rsi, [r11+30h]
+  .text:0000000180959DD9                 mov     rdi, [r11+38h]
+  .text:0000000180959DDD                 mov     rsp, r11
+  .text:0000000180959DE0                 pop     r15
+  .text:0000000180959DE2                 pop     r14
+  .text:0000000180959DE4                 pop     rbp
+  .text:0000000180959DE5                 retn
+procedure: |-
+  __int64 __fastcall SmokeVolume_BuildSmokeSimulation(
+          __int64 pSmokeVolume,
+          __int64 pSmokeGrenadeProj,
+          float *vecStartOrigin,
+          __int64 a4,
+          int a5)
+  {
+    int v6; // eax
+    int v9; // esi
+    __int64 v10; // rax
+    unsigned int v11; // edx
+    int v12; // ecx
+    __int64 v13; // r8
+    _QWORD *v14; // rdx
+    int v15; // eax
+    __int64 v16; // rcx
+    __int64 v17; // rax
+    _BYTE *v18; // rbx
+    const void *v19; // rdx
+    _DWORD *v20; // rax
+    int v21; // edx
+    __int64 v22; // r9
+    _DWORD *v23; // rax
+    __int64 v24; // rcx
+    unsigned int v25; // edx
+    int v26; // eax
+    __int128 v27; // xmm0
+    int v28; // ecx
+    __int128 v29; // xmm1
+    __int128 v30; // xmm0
+    __int128 v31; // xmm1
+    __int128 v32; // xmm0
+    __int128 v33; // xmm1
+    __int128 v34; // xmm0
+    __int128 v35; // xmm1
+    __int128 v36; // xmm0
+    __int128 v37; // xmm1
+    __int128 v38; // xmm0
+    __int64 v39; // rax
+    __int64 v40; // rsi
+    __int128 v41; // xmm1
+    int v42; // eax
+    __int64 v43; // rbx
+    __int64 result; // rax
+    __int64 v45; // [rsp+30h] [rbp-D0h] BYREF
+    int v46; // [rsp+38h] [rbp-C8h]
+    _QWORD v47[7]; // [rsp+40h] [rbp-C0h] BYREF
+    _QWORD *v48; // [rsp+78h] [rbp-88h]
+    __int64 v49; // [rsp+80h] [rbp-80h]
+    __int128 v50; // [rsp+90h] [rbp-70h]
+    __int128 v51; // [rsp+A0h] [rbp-60h]
+    __int128 v52; // [rsp+B0h] [rbp-50h]
+    __int128 v53; // [rsp+C0h] [rbp-40h]
+    __int128 v54; // [rsp+D0h] [rbp-30h]
+    __int128 v55; // [rsp+E0h] [rbp-20h]
+    __int128 v56; // [rsp+F0h] [rbp-10h]
+    __int128 v57; // [rsp+100h] [rbp+0h]
+    __int128 v58; // [rsp+110h] [rbp+10h]
+    __int128 v59; // [rsp+120h] [rbp+20h]
+    __int128 v60; // [rsp+130h] [rbp+30h]
+    __int128 v61; // [rsp+140h] [rbp+40h]
+    int v62; // [rsp+150h] [rbp+50h]
+    int v63; // [rsp+154h] [rbp+54h]
+    int v64; // [rsp+158h] [rbp+58h]
+    __int64 v65; // [rsp+188h] [rbp+88h] BYREF
+
+    v65 = pSmokeGrenadeProj;
+    v6 = *((_DWORD *)vecStartOrigin + 2);
+    v45 = *(_QWORD *)vecStartOrigin;
+    v46 = v6;
+    v9 = 0x7FFF;
+    if ( pSmokeGrenadeProj && (v10 = *(_QWORD *)(pSmokeGrenadeProj + 16)) != 0 )
+    {
+      v11 = *(_DWORD *)(v10 + 16);
+      v12 = 0x7FFF;
+      if ( v11 != -1 )
+        v12 = v11 & 0x7FFF;
+      v13 = v12 | (((v11 >> 15) - (*(_DWORD *)(v10 + 48) & 1)) << 15);
+    }
+    else
+    {
+      v13 = 0xFFFFFFFFLL;
+    }
+    *(_DWORD *)(pSmokeVolume + 108) = v13;
+    v47[0] = ___7___Func_impl_no_alloc_V_lambda_1___1__BuildSmokeSimulation_SmokeVolume__QEAAXPEAVCSmokeGrenadeProjectile__AEBVVectorWS__AEAV__CFixedSizeCircularBuffer_VVectorWS___0BA_H__M_Z__NAEBUAABB_t___std__6B_;
+    v47[1] = &v45;
+    v47[2] = &v65;
+    v48 = v47;
+    sub_180959DF0((unsigned int *)(pSmokeVolume + 16), (__int64)vecStartOrigin, v13, 20.0);
+    if ( v48 )
+    {
+      v14 = v47;
+      LOBYTE(v14) = v48 != v47;
+      (*(void (__fastcall **)(_QWORD *, _QWORD *))(*v48 + 32LL))(v48, v14);
+    }
+    v15 = v46;
+    v16 = *(_QWORD *)(pSmokeVolume + 112);
+    *(_QWORD *)(pSmokeVolume + 212) = v45;        // 212 = 0xD4 = SmokeVolume::m_vecCenterOrigin (structmember, struct=SmokeVolume, member=m_vecCenterOrigin)
+    *(_DWORD *)(pSmokeVolume + 220) = v15;        // 220 = 0xDC = SmokeVolume::m_vecCenterOrigin + 8 (structmember, struct=SmokeVolume, member=m_vecCenterOrigin)
+    *(_BYTE *)pSmokeVolume = 1;
+    sub_180EACCD0(v16);
+    v17 = malloc(1093648);
+    v18 = (_BYTE *)v17;
+    if ( v17 )
+    {
+      sub_180139B60(v17 + 12296, 16, 0x10000, (__int64 (__fastcall *)(__int64))unknown_libname_178);
+      memset(v18 + 4104, 0, 0x2000u);
+      memset(v18 + 8, 0, 0x1000u);
+      memset(v18 + 1060872, 0, 0x8000u);
+      v18[1093640] = 0;
+    }
+    else
+    {
+      v18 = nullptr;
+    }
+    v19 = *(const void **)(pSmokeVolume + 24);
+    *(_QWORD *)(pSmokeVolume + 112) = v18;        // 112 = 0x70 = SmokeVolume::m_pStorage (structmember, struct=SmokeVolume, member=m_pStorage)
+    memcpy(v18 + 8, v19, 0x1000u);
+    *(_DWORD *)(pSmokeVolume + 12) = a5;          // 12 = 0xC = SmokeVolume::m_flStartTime (structmember, struct=SmokeVolume, member=m_flStartTime)
+    v20 = sub_1808CA090(&a5, 0);
+    *(float *)(pSmokeVolume + 4) = sub_18018F5B0(v20);
+    v21 = *(_DWORD *)(pSmokeVolume + 108);
+    if ( v21 == -1 || !g_pEntityList )
+      goto LABEL_27;
+    if ( v21 != -2
+      && (v22 = *(_QWORD *)(g_pEntityList + 8 * ((unsigned __int64)(v21 & 0x7FFF) >> 9))) != 0
+      && (v23 = (_DWORD *)(v22 + 112LL * (v21 & 0x1FF))) != nullptr )
+    {
+      if ( v23[4] != v21 )
+        v23 = nullptr;
+    }
+    else
+    {
+      v23 = nullptr;
+    }
+    if ( v23 && *(_QWORD *)v23 && (v24 = *(_QWORD *)(*(_QWORD *)v23 + 16LL)) != 0 )
+    {
+      v25 = *(_DWORD *)(v24 + 16);
+      if ( v25 != -1 )
+        v9 = v25 & 0x7FFF;
+      v26 = v9 | (((v25 >> 15) - (*(_DWORD *)(v24 + 48) & 1)) << 15);
+    }
+    else
+    {
+  LABEL_27:
+      v26 = -1;
+    }
+    v27 = *(_OWORD *)(a4 + 8);
+    v28 = *(_DWORD *)(a4 + 200);
+    v29 = *(_OWORD *)(a4 + 24);
+    v49 = pSmokeVolume;
+    v50 = v27;
+    v30 = *(_OWORD *)(a4 + 40);
+    v51 = v29;
+    v31 = *(_OWORD *)(a4 + 56);
+    v52 = v30;
+    v32 = *(_OWORD *)(a4 + 72);
+    v53 = v31;
+    v33 = *(_OWORD *)(a4 + 88);
+    v54 = v32;
+    v34 = *(_OWORD *)(a4 + 104);
+    v55 = v33;
+    v35 = *(_OWORD *)(a4 + 136);
+    v56 = v34;
+    v57 = *(_OWORD *)(a4 + 120);
+    v36 = *(_OWORD *)(a4 + 152);
+    v58 = v35;
+    v37 = *(_OWORD *)(a4 + 168);
+    v59 = v36;
+    v38 = *(_OWORD *)(a4 + 184);
+    v60 = v37;
+    v61 = v38;
+    v62 = v28;
+    v63 = *(_DWORD *)(a4 + 204);
+    v64 = v26;
+    v39 = malloc(512);
+    v40 = v39;
+    if ( v39 )
+    {
+      sub_181525C70(v39);
+      *(_QWORD *)v40 = ___7__CCoJobLambda_V_lambda_2___1__BuildSmokeSimulation_SmokeVolume__QEAAXPEAVCSmokeGrenadeProjectile__AEBVVectorWS__AEAV__CFixedSizeCircularBuffer_VVectorWS___0BA_H__M_Z___6B_;
+      *(_QWORD *)(v40 + 288) = v49;
+      *(_QWORD *)(v40 + 296) = &CFixedSizeCircularBuffer<VectorWS,16,int>::`vftable';
+      *(_OWORD *)(v40 + 304) = v50;
+      *(_OWORD *)(v40 + 320) = v51;
+      *(_OWORD *)(v40 + 336) = v52;
+      *(_OWORD *)(v40 + 352) = v53;
+      *(_OWORD *)(v40 + 368) = v54;
+      *(_OWORD *)(v40 + 384) = v55;
+      *(_OWORD *)(v40 + 400) = v56;
+      *(_OWORD *)(v40 + 416) = v57;
+      *(_OWORD *)(v40 + 432) = v58;
+      *(_OWORD *)(v40 + 448) = v59;
+      *(_OWORD *)(v40 + 464) = v60;
+      v41 = v61;
+      *(_DWORD *)(v40 + 496) = v62;
+      *(_DWORD *)(v40 + 500) = v63;
+      v42 = v64;
+      *(_OWORD *)(v40 + 480) = v41;
+      *(_DWORD *)(v40 + 504) = v42;
+      *(_QWORD *)(v40 + 64) = "buildSmokeVolume";
+    }
+    else
+    {
+      v40 = 0;
+    }
+    v43 = *(_QWORD *)(v40 + 8);
+    result = sub_181526C20(v40);
+    *(_QWORD *)(pSmokeVolume + 248) = v43;
+    return result;
+  }
