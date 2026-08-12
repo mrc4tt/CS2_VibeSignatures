@@ -38,7 +38,6 @@ import inspect
 import json
 import logging
 import os
-import re
 import signal
 import posixpath
 import socket
@@ -2802,6 +2801,55 @@ def wait_for_port_release(host, port, timeout=MCP_SHUTDOWN_TIMEOUT, retry_interv
     return True
 
 
+def _terminate_process_group(process, port=None, host=DEFAULT_HOST):
+    """Kill a start_new_session=True supervisor together with its IDA children.
+
+    idalib-mcp is spawned in its own session, so signalling only the supervisor pid
+    can leave the analysis child alive and holding the MCP port. Signal the whole
+    process group instead, then wait for the port to be released.
+    """
+    if process is None:
+        return
+
+    pgid = None
+    if hasattr(os, "getpgid"):
+        try:
+            pgid = os.getpgid(process.pid)
+        except OSError:
+            pgid = None
+
+    signals = [(signal.SIGTERM, 10)]
+    if hasattr(signal, "SIGKILL"):
+        signals.append((signal.SIGKILL, 5))
+
+    for sig, timeout in signals:
+        if process.poll() is not None:
+            break
+        try:
+            if pgid is not None and hasattr(os, "killpg"):
+                os.killpg(pgid, sig)
+            elif sig == signal.SIGTERM:
+                process.terminate()
+            else:
+                process.kill()
+        except OSError:
+            break
+        try:
+            process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            continue
+
+    if process.poll() is None:
+        try:
+            process.kill()
+            process.wait(timeout=5)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+
+    if port is not None:
+        wait_for_port_release(host, port)
+
+
 def start_idalib_mcp(
     binary_path,
     host=DEFAULT_HOST,
@@ -4259,139 +4307,9 @@ def main():
         reporter.flush()
         reporter.close()
 
-        # Filter modules if specified
-        if module_filter is not None and module_name not in module_filter:
-            print(f"\nModule '{module_name}': Not in filter list, skipping")
-            continue
+    _print_summary(totals)
 
-        if not skills and not vcall_targets:
-            print(f"\nModule '{module_name}': No skills or vcall_finder targets defined, skipping")
-            continue
-
-        all_vcall_objects.update(vcall_targets)
-
-        print(f"\n{'=' * 60}")
-        print(f"Module: {module_name}")
-        print(f"Skills: {len(skills)}")
-        if vcall_targets:
-            print(f"VCall targets: {len(vcall_targets)}")
-        print(f"{'=' * 60}")
-
-        for platform in platforms:
-            path_key = f"path_{platform}"
-            module_path = module.get(path_key)
-
-            if not module_path:
-                print(f"\n  Platform {platform}: No path defined, skipping")
-                total_skip += len(skills) + len(vcall_targets)
-                continue
-
-            # Build binary path
-            binary_path = get_binary_path(bin_dir, gamever, module_name, module_path)
-
-            print(f"\n  Platform: {platform}")
-            print(f"  Binary: {binary_path}")
-
-            # Check if binary exists
-            if not os.path.exists(binary_path):
-                print(f"  Error: Binary file not found: {binary_path}")
-                print("  Hint: Run download_bin.py first to download binaries")
-                total_skip += len(skills) + len(vcall_targets)
-                continue
-
-            # Compute old binary dir for signature reuse
-            old_binary_dir = None
-            if oldgamever:
-                old_binary_path = get_binary_path(bin_dir, oldgamever, module_name, module_path)
-                candidate_dir = os.path.dirname(old_binary_path)
-                if os.path.isdir(candidate_dir):
-                    old_binary_dir = candidate_dir
-                elif debug:
-                    print(f"  Old version directory not found: {candidate_dir}")
-
-            # Process binary
-            success, fail, skip = process_binary(
-                binary_path,
-                skills,
-                agent,
-                DEFAULT_HOST,
-                DEFAULT_PORT,
-                ida_args,
-                platform,
-                debug,
-                max_retries=args.maxretry,
-                old_binary_dir=old_binary_dir,
-                gamever=gamever,
-                module_name=module_name,
-                vcall_targets=vcall_targets,
-                llm_model=args.llm_model,
-                llm_apikey=args.llm_apikey,
-                llm_baseurl=args.llm_baseurl,
-                llm_temperature=args.llm_temperature,
-                llm_effort=args.llm_effort,
-                llm_fake_as=args.llm_fake_as,
-                rename=args.rename,
-            )
-            total_success += success
-            total_fail += fail
-            total_skip += skip
-            # Continue with remaining modules even if this binary had failures;
-            # all failures are tallied in total_fail and shown in the summary.
-
-        if abort_processing:
-            break
-
-    if args.vcall_finder_filter and all_vcall_objects and not abort_processing:
-        print("\nRunning vcall_finder LLM aggregation")
-        for object_name in sorted(all_vcall_objects):
-            print(f"  Aggregating vcall_finder: {object_name}")
-            try:
-                aggregate_kwargs = {
-                    "base_dir": "vcall_finder",
-                    "gamever": gamever,
-                    "object_name": object_name,
-                    "model": args.llm_model,
-                    "api_key": args.llm_apikey,
-                    "base_url": args.llm_baseurl,
-                    "temperature": args.llm_temperature,
-                    "debug": debug,
-                }
-                aggregate_signature = inspect.signature(aggregate_vcall_results_for_object)
-                if "effort" in aggregate_signature.parameters:
-                    aggregate_kwargs["effort"] = args.llm_effort
-                if "fake_as" in aggregate_signature.parameters:
-                    aggregate_kwargs["fake_as"] = args.llm_fake_as
-
-                stats = aggregate_vcall_results_for_object(
-                    **aggregate_kwargs,
-                )
-                aggregation_status = stats["status"]
-                if aggregation_status == "success":
-                    total_success += 1
-                elif aggregation_status == "failed":
-                    total_fail += 1
-                else:
-                    total_skip += 1
-
-                if debug or stats["failed"]:
-                    print(
-                        "    vcall_finder aggregation summary: "
-                        f"status={aggregation_status}, "
-                        f"processed={stats['processed']}, failed={stats['failed']}"
-                    )
-            except Exception as exc:
-                total_fail += 1
-                print(f"  Failed to aggregate {object_name}: {exc}")
-
-    # Summary
-    print(f"\n{'=' * 60}")
-    print("Summary")
-    print(f"{'=' * 60}")
-    print(f"  Successful: {total_success}")
-    print(f"  Failed: {total_fail}")
-    print(f"  Skipped: {total_skip}")
-
-    if total_fail > 0:
+    if totals[1] > 0:
         sys.exit(1)
 
 

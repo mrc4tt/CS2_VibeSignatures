@@ -1,5 +1,5 @@
 ---
-name: find-CBaseModelEntity_SetModel-AND-CBaseEntity_SetGravityScale
+name: find-CFlashbangProjectile_Spawn-decompiles
 description: |
   Find and identify the CBaseModelEntity_SetModel and CBaseEntity_SetGravityScale functions in CS2 binary using
   IDA Pro MCP. Use this skill when reverse engineering CS2 server.dll / libserver.so to locate the model-assignment
@@ -14,6 +14,14 @@ disable-model-invocation: true
 
 Locate `CBaseModelEntity_SetModel` and `CBaseEntity_SetGravityScale` in CS2 `server.dll` / `libserver.so` using
 IDA Pro MCP tools.
+
+## Preconditions — never overwrite an existing output
+
+This skill runs only as the fallback after the preprocessor fails, and the preprocessor may already have written
+some outputs before failing. **Before doing any work, check `bin/<gamever>/server/` for each output YAML and skip
+every target whose file already exists.** Only produce the missing ones. Overwriting is a regression, not a
+refresh: a 14174b run of this skill clobbered a correct `CBaseEntity_SetGravityScale.linux.yaml`
+(`0xd4e870`, size `0x35b`) with the wrong adjacent wrapper described below.
 
 ## Method
 
@@ -51,6 +59,28 @@ immediately following its own padding — the sibling candidate's next function 
 > followed by `55` (a new function's `push rbp`), matching the reference exactly through the last byte.
 > `CBaseEntity_SetGravityScale` at `0x15d94f0` (size `0x2c`, adjacent) — its padding is followed by `48 8B 47 10
 > ...`, which disagrees with the reference's trailing `55` and correctly disqualifies it as the `SetModel` match.
+
+### 2b. Adjudicate with xrefs — THIS is the load-bearing test, not the tail bytes
+
+The step-2 tail-byte test is **not build-stable** and must never be used alone. On 14174b it silently picked the
+wrong function on Windows: the 14174-era reference signature (trailing `... CC*15 48 8B 01`) matched at rva
+`0xb101c0`, while the true `SetModel` had moved to rva `0xb122a0` (trailing `... CC*15 48 89 5C 24`). Both were
+unique matches; only one was the right function.
+
+Run this on every surviving candidate:
+
+```text
+mcp__ida-pro-mcp__xrefs_to addrs=["<cand1>","<cand2>"]
+```
+
+`CBaseModelEntity::SetModel` has **many code xrefs (~20+)**, and among them are always
+`CFlashbangProjectile_Spawn` (this skill's own preprocessor anchor) and `ScriptBinding_CBaseModelEntity_SetModel`.
+The decoy sibling has **only data xrefs** (typically 2), one of them from `CBaseModelEntity_GetScriptDescInternal`
+— it is a script-desc table entry with no code callers at all. Pick the candidate with the code xrefs; if
+`CFlashbangProjectile_Spawn` is not among them, you have the wrong function.
+
+> 14174b ground truth — Linux: `0x15dfd00` (22 code xrefs) vs decoy `0x15dfd30` (2 data xrefs).
+> Windows: `0x180b122a0` (22 code xrefs) vs decoy `0x180b101c0` (2 data xrefs).
 
 ### 3. Confirm via Decompile
 
@@ -106,12 +136,17 @@ steps 1-4. Repeat for `CBaseEntity_SetGravityScale`.
 
 ### CBaseEntity_SetGravityScale
 
-- **Purpose**: Presumed to set an entity's gravity scale multiplier; **not independently confirmed with ground
-  truth this session** — identified only as the byte-adjacent sibling wrapper with the same code shape as
-  `SetModel`, rejected as the `SetModel` match specifically because its trailing bytes disagree with the reference
-  signature (see step 2).
+- **DO NOT identify this as the wrapper adjacent to `SetModel`.** That earlier guess was wrong. The byte-adjacent
+  sibling (`0x15d94f0` on 14168, `0x15dfd30` on 14174b) is a `0x2c`-byte forwarder that is *some other* setter —
+  it is **not** `CBaseEntity::SetGravityScale`. Step 2's tail-byte test only tells you which candidate is
+  `SetModel`; it says nothing about what the rejected candidate is.
+- **Purpose**: Sets an entity's gravity scale multiplier.
 - **Binary**: `server.dll` / `libserver.so`
-- **Status**: best-effort location only (`0x15d94f0` on the Linux 14168 reference build); treat as unverified.
+- **Actual shape**: a large function (~`0x35b` bytes on Linux 14174/14174b), whose body opens with a float compare
+  against a member (`comiss xmm0, [rdi+0x6DC]`-style) rather than a singleton vcall + tail-jump. Linux 14174b
+  ground truth: `0xd4e870`, `func_size 0x35b`.
+- **Preferred source**: `find-CBaseEntity_RegisteredScriptFuncs` resolves it authoritatively through the VScript
+  function-registration table. If that skill already wrote the YAML, leave it alone (see Preconditions).
 
 ## Discovery Strategy
 

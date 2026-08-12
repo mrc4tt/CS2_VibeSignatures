@@ -40,6 +40,12 @@ GENERATE_YAML_DESIRED_FIELDS = [
         [
             "func_name",
             "func_sig",
+            # Function body is only 0x2c/0x31 bytes with a generic prologue, so a
+            # body-only signature is not unique and the generator falls back to
+            # un-wildcarding RIP-relative displacement bytes -- which break on
+            # every rebuild. Crossing the boundary keeps the displacement fully
+            # wildcarded and reaches padding + the next function head instead.
+            "func_sig_allow_across_function_boundary:true",
             "func_va",
             "func_rva",
             "func_size",
@@ -50,6 +56,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
         [
             "func_name",
             "func_sig",
+            "func_sig_allow_across_function_boundary:true",
             "func_va",
             "func_rva",
             "func_size",

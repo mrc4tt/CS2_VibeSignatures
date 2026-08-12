@@ -22,7 +22,7 @@ using IDA Pro MCP tools.
 **ALWAYS** Use SKILL `/get-func-from-yaml` with `func_name=CNetChan_ParseNetMessageShowFilter`.
 
 If the skill returns an error, **STOP** and report to user (this skill depends on the sibling skill
-`find-CNetChan_ParseNetMessageShowFilter-AND-g_pLoggingChannel` having already run).
+`find-CNetChan_ParseMessagesDemoInternal-decompiles` having already run).
 
 Otherwise, extract:
 - `func_va` of `CNetChan_ParseNetMessageShowFilter`

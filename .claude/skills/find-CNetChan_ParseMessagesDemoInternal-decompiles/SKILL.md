@@ -1,5 +1,5 @@
 ---
-name: find-CNetChan_ParseNetMessageShowFilter-AND-g_pLoggingChannel
+name: find-CNetChan_ParseMessagesDemoInternal-decompiles
 description: |
   Find and identify the CNetChan_ParseNetMessageShowFilter function and the g_pLoggingChannel global variable
   in CS2 binary using IDA Pro MCP. Use this skill when reverse engineering CS2 networksystem.dll or
