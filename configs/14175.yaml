@@ -6230,6 +6230,11 @@ modules:
           - CBaseEntity_UpdateOnRemove.{platform}.yaml
         expected_input:
           - CBaseEntity_vtable.{platform}.yaml
+      - name: find-CBaseEntity_ModifyOrAppendCriteria
+        expected_output:
+          - CBaseEntity_ModifyOrAppendCriteria.{platform}.yaml
+        expected_input:
+          - CBaseEntity_vtable.{platform}.yaml
       - name: find-CEntityInstance_OnRestore
         expected_output:
           - CEntityInstance_OnRestore.{platform}.yaml
@@ -6896,6 +6901,16 @@ modules:
           - g_networkstringtable.{platform}.yaml
           - g_pGameTypes.{platform}.yaml
         expected_input:
+          - CSource2Server_Connect.{platform}.yaml
+      - name: find-GlobalVarsWarningFunc
+        expected_output:
+          - GlobalVarsWarningFunc.{platform}.yaml
+      - name: find-CSource2Server_SetGlobals
+        expected_output:
+          - CSource2Server_SetGlobals.{platform}.yaml
+        expected_input:
+          - GlobalVarsWarningFunc.{platform}.yaml
+          - CSource2Server_vtable.{platform}.yaml
           - CSource2Server_Connect.{platform}.yaml
       - name: find-IAppSystem_Connect
         expected_output:
@@ -9306,6 +9321,10 @@ modules:
         category: vfunc
         alias:
           - CBaseEntity::UpdateOnRemove
+      - name: CBaseEntity_ModifyOrAppendCriteria
+        category: vfunc
+        alias:
+          - CBaseEntity::ModifyOrAppendCriteria
       - name: CEntityInstance_OnRestore
         category: vfunc
         alias:

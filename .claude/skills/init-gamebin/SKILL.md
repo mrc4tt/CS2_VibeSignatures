@@ -1,6 +1,7 @@
 ---
 name: init-gamebin
 description: Initialize this repository's local game binaries and per-binary BinSync auto-recovery sidecars for an exact GAMEVER from download.yaml or its latest entry, then delegate symbol YAML restoration to restore-from-snapshot. Use only when explicitly asked to initialize or restore gamebin/bin state for a CS2 game version.
+disable-model-invocation: true
 ---
 
 # Initialize Game Binaries
@@ -23,15 +24,37 @@ YAML locally in this skill.
    Wait for an explicit version before continuing.
 3. Reject values absent from `download.yaml`; do not guess or silently use latest.
 
+## Decide BinSync
+
+BinSync recovery is opt-in. Decide whether to enable it before preparing binaries:
+
+1. Probe availability from the owning repository root:
+
+   ```powershell
+   uv run init_gamebin.py check-binsync
+   ```
+
+2. If the probe exits 1 (unavailable), tell the user BinSync initialization is skipped and why
+   (`BinSync unavailable: <reason>`), then proceed to preparation **without** enabling BinSync.
+3. If the probe exits 0 (available), **ask** the user whether to enable BinSync and wait for an
+   explicit yes/no. Never enable BinSync without explicit consent, and never skip the probe.
+   - Yes → prepare with `--binsync enable`.
+   - No → prepare with `--binsync skip` (or omit the flag).
+
 ## Prepare Binaries
 
-Run from the owning repository root:
+Run from the owning repository root with the BinSync decision applied:
 
 ```powershell
-uv run init_gamebin.py prepare <GAMEVER-or-latest>
+uv run init_gamebin.py prepare <GAMEVER-or-latest> --binsync <enable|skip>
 ```
 
-The script checks existing binaries, downloads and non-overwritingly merges `gamebin-<GAMEVER>.7z` when needed, and uses
+Never pass `--create-missing-binsync-remotes` from this manual skill flow. That mutating option is reserved for the
+trusted `build-on-self-runner` workflow.
+
+Without `--binsync`, BinSync is skipped and never probed. `--binsync enable` probes first and **fails**
+(instead of skipping) when the environment cannot run BinSync. The script checks existing binaries,
+downloads and non-overwritingly merges `gamebin-<GAMEVER>.7z` when needed, and uses
 the Steam depot fallback only for a missing Release asset. After every configured Windows and Linux binary exists, it:
 
 1. Resolves targets in first-seen config order, Windows before Linux, and deduplicates repeated real binary paths.
@@ -39,11 +62,12 @@ the Steam depot fallback only for a missing Release asset. After every configure
    and GitHub remote/default-branch/`binary_hash` state.
 3. Uses `gh` to read public repositories without requiring `HLND2T` organization permissions. Only an explicit HTTP 404
    is treated as missing; every other API failure stops the command.
-4. Creates a missing `HLND2T/CS2_VibeSignatures_binsync_<GAMEVER>_<MODULE_FILENAME>` repository as public. Creation
-   requires an authenticated `gh` user with permission to create repositories in `HLND2T`.
-5. Restores a newly created or empty remote from every local `binsync/*` branch when a valid unlocked
+4. Requires the `HLND2T/CS2_VibeSignatures_binsync_<GAMEVER>_<MODULE_FILENAME>` repository to already exist during this
+   manual skill flow; a missing remote stops the command with a clear reason. Only the trusted build workflow passes
+   the explicit repository-creation option.
+5. Restores a previously empty remote from every local `binsync/*` branch when a valid unlocked
    `<MODULE_FILENAME>.bsproj` exists. Otherwise it creates the standard BinSync `Root commit`, `binsync/__root__`, and
-   `binsync/<OS_USER>` branches. It sets the default branch only for a newly created or previously empty repository.
+   `binsync/<OS_USER>` branches. It sets the default branch only for a previously empty repository.
 6. Writes `<MODULE_FILENAME>.binsync.json` only after the remote validates successfully. The sidecar uses the current OS
    user as a fallback, the canonical HTTPS remote, explicit `<MODULE_FILENAME>.bsproj`, the binary MD5,
    `force_user: false`, and `auto_clone: true`.
