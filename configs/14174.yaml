@@ -9126,10 +9126,6 @@ modules:
         category: vfunc
         alias:
           - CGameSystemReallocatingFactory<CSource2EntitySystem>::Init
-      - name: CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
-        category: vfunc
-        alias:
-          - CGameSystemReallocatingFactory<CSource2EntitySystem>::CreateGameSystem
       - name: IGameSystemFactory_Init
         category: vfunc
         alias:
