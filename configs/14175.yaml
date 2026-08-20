@@ -1285,6 +1285,35 @@ modules:
           - CNetworkServerService_DisconnectGameNow.{platform}.yaml
         expected_input:
           - CNetworkServerService_vtable.{platform}.yaml
+      - name: find-CNetworkGameServer_WriteClassInfosAndSerializesToBuffer
+        expected_output:
+          - CNetworkGameServer_WriteClassInfosAndSerializesToBuffer.{platform}.yaml
+      - name: find-INetworkServerService_GetServerSerializersCRC
+        expected_output:
+          - INetworkServerService_GetServerSerializersCRC.{platform}.yaml
+        expected_input:
+          - CNetworkGameServer_WriteClassInfosAndSerializesToBuffer.{platform}.yaml
+          - CNetworkServerService_vtable.{platform}.yaml
+      - name: find-CSteam3ServerS1_InitGameServer
+        expected_output:
+          - CSteam3ServerS1_InitGameServer.{platform}.yaml
+      - name: find-INetworkServerService_IsActiveInGame
+        expected_output:
+          - INetworkServerService_IsActiveInGame.{platform}.yaml
+        expected_input:
+          - CSteam3ServerS1_InitGameServer.{platform}.yaml
+          - CNetworkServerService_vtable.{platform}.yaml
+      - name: find-CNetworkGameClientBase__ProcessNetworking
+        expected_output:
+          - CNetworkGameClientBase__ProcessNetworking.{platform}.yaml
+        expected_input:
+          - CNetworkGameClient_vtable.{platform}.yaml
+      - name: find-INetworkServerService_IsServerRunning
+        expected_output:
+          - INetworkServerService_IsServerRunning.{platform}.yaml
+        expected_input:
+          - CNetworkGameClientBase__ProcessNetworking.{platform}.yaml
+          - CNetworkServerService_vtable.{platform}.yaml
       - name: find-CNetworkServerService_OnEventMapCallbacks-engine
         expected_output:
           - CNetworkServerService_OnServerAdvanceTick.{platform}.yaml
@@ -2683,6 +2712,10 @@ modules:
           - CMsgSource2NetworkFlowQuality::PrintStats
       - name: CNetworkGameClient_vtable
         category: vtable
+      - name: CNetworkGameClientBase__ProcessNetworking
+        category: vfunc
+        alias:
+          - CNetworkGameClientBase::ProcessNetworking
       - name: CNetworkGameClient_CreateMove
         category: vfunc
         platform: windows
@@ -2974,6 +3007,42 @@ modules:
           - CNetworkClientService::AllocateRemoteConnectionClient
       - name: CNetworkServerService_vtable
         category: vtable
+      - name: CNetworkGameServer_WriteClassInfosAndSerializesToBuffer
+        category: func
+        alias:
+          - CNetworkGameServer::WriteClassInfosAndSerializesToBuffer
+      - name: INetworkServerService_GetServerSerializersCRC
+        category: vfunc
+        alias:
+          - INetworkServerService::GetServerSerializersCRC
+      - name: CNetworkServerService_GetServerSerializersCRC
+        category: vfunc
+        alias:
+          - CNetworkServerService::GetServerSerializersCRC
+      - name: CSteam3ServerS1_InitGameServer
+        category: func
+        alias:
+          - CSteam3ServerS1::InitGameServer
+      - name: INetworkServerService_IsActiveInGame
+        category: vfunc
+        alias:
+          - INetworkServerService::IsActiveInGame
+      - name: INetworkServerService_IsServerRunning
+        category: vfunc
+        alias:
+          - INetworkServerService::IsServerRunning
+      - name: CNetworkServerService_SetGameSpawnGroupMgr
+        category: vfunc
+        alias:
+          - CNetworkServerService::SetGameSpawnGroupMgr
+      - name: CNetworkServerService_AddServerPrerequisites
+        category: vfunc
+        alias:
+          - CNetworkServerService::AddServerPrerequisites
+      - name: CNetworkServerService_SetFinalSimulationTickThisFrame
+        category: vfunc
+        alias:
+          - CNetworkServerService::SetFinalSimulationTickThisFrame
       - name: CNetworkServerService_Init
         category: vfunc
         alias:
@@ -6308,6 +6377,16 @@ modules:
         expected_input:
           - CBasePlayerPawn_vtable.{platform}.yaml
           - CBaseEntity_OnTakeDamage.{platform}.yaml
+      - name: find-CBasePlayerPawn_PrePhysicsSimulate
+        expected_output:
+          - CBasePlayerPawn_PrePhysicsSimulate.{platform}.yaml
+        expected_input:
+          - CBasePlayerPawn_vtable.{platform}.yaml
+      - name: find-CBasePlayerPawn_PhysicsSimulate
+        expected_output:
+          - CBasePlayerPawn_PhysicsSimulate.{platform}.yaml
+        expected_input:
+          - CBasePlayerPawn_vtable.{platform}.yaml
       - name: find-CBasePlayerPawn_OnTakeDamage-decompiles
         expected_output:
           - CBasePlayerPawn_OnTakeDamage_Alive.{platform}.yaml
@@ -6334,6 +6413,11 @@ modules:
           - CBasePlayerPawn_OnTakeDamage_Alive.{platform}.yaml
           - CBasePlayerPawn_OnTakeDamage_Dying.{platform}.yaml
           - CBasePlayerPawn_OnTakeDamage_Dead.{platform}.yaml
+      - name: find-CCSPlayerPawn_CreatePlayerPawnServices
+        expected_output:
+          - CCSPlayerPawn_CreatePlayerPawnServices.{platform}.yaml
+        expected_input:
+          - CCSPlayerPawn_vtable.{platform}.yaml
       - name: find-CFlashbangProjectile_vtable
         expected_output:
           - CFlashbangProjectile_vtable.{platform}.yaml
@@ -6417,6 +6501,22 @@ modules:
       - name: find-CBaseModelEntity_SetRenderAttribute
         expected_output:
           - CBaseModelEntity_SetRenderAttribute.{platform}.yaml
+      - name: find-CBaseModelEntity_vtable
+        expected_output:
+          - CBaseModelEntity_vtable.{platform}.yaml
+      - name: find-CBaseModelEntity_DamageDecal
+        expected_output:
+          - CBaseModelEntity_DamageDecal.{platform}.yaml
+        expected_input:
+          - CBaseModelEntity_vtable.{platform}.yaml
+      - name: find-CBreakable_vtable
+        expected_output:
+          - CBreakable_vtable.{platform}.yaml
+      - name: find-CBreakable_DamageDecal
+        expected_output:
+          - CBreakable_DamageDecal.{platform}.yaml
+        expected_input:
+          - CBreakable_vtable.{platform}.yaml
       - name: find-CBaseEntity_GetScriptDescInternal
         expected_output:
           - CBaseEntity_GetScriptDescInternal.{platform}.yaml
@@ -6998,6 +7098,11 @@ modules:
       - name: find-CGameRules_ClientSettingsChanged
         expected_output:
           - CGameRules_ClientSettingsChanged.{platform}.yaml
+        expected_input:
+          - CGameRules_vtable.{platform}.yaml
+      - name: find-CGameRules_SetGamePaused
+        expected_output:
+          - CGameRules_SetGamePaused.{platform}.yaml
         expected_input:
           - CGameRules_vtable.{platform}.yaml
       - name: find-CGameRulesGameSystem_OnGameInit
@@ -7856,6 +7961,15 @@ modules:
       - name: find-CPhysicsGameSystem_ProcessContactEvents
         expected_output:
           - CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml
+      - name: find-PhysCollisionDust
+        expected_output:
+          - PhysCollisionDust.{platform}.yaml
+      - name: find-CBaseEntity_VPhysicsCollision
+        expected_output:
+          - CBaseEntity_VPhysicsCollision.{platform}.yaml
+        expected_input:
+          - PhysCollisionDust.{platform}.yaml
+          - CBaseEntity_vtable.{platform}.yaml
       - name: find-CPhysicsGameSystem_ProcessContactEvents-decompiles
         expected_output:
           - IVPhys2World_GetTouchingList.{platform}.yaml
@@ -8610,6 +8724,9 @@ modules:
       - name: find-CLoopModeGame_RegisterEventMapInternal-server
         expected_output:
           - CLoopModeGame_RegisterEventMapInternal.{platform}.yaml
+      - name: find-CLoopModeGame_dtor
+        expected_output:
+          - CLoopModeGame_dtor.{platform}.yaml
       - name: find-CLoopModeGame_OnEventMapCallbacks-server
         expected_output:
           - RegisterEventListener_Abstract.{platform}.yaml
@@ -8622,6 +8739,12 @@ modules:
           - CLoopModeGame_OnFrameBoundary.{platform}.yaml
         expected_input:
           - CLoopModeGame_RegisterEventMapInternal.{platform}.yaml
+      - name: find-CLoopModeGame_RegisterEventMap
+        expected_output:
+          - CLoopModeGame_RegisterEventMap.{platform}.yaml
+        expected_input:
+          - CLoopModeGame_RegisterEventMapInternal.{platform}.yaml
+          - CLoopModeGame_vtable.{platform}.yaml
       - name: find-IGameSystem_OnServerAdvanceTick
         expected_output:
           - IGameSystem_OnServerAdvanceTick.{platform}.yaml
@@ -8677,9 +8800,9 @@ modules:
           - CLoopModeGame_LoopInitInternal.{platform}.yaml
       - name: find-CLoopModeGame_LoopInit-decompiles
         expected_output:
-          - CNetworkServerService_SetGameSpawnGroupMgr.{platform}.yaml
-          - CNetworkServerService_AddServerPrerequisites.{platform}.yaml
-          - CNetworkServerService_SetFinalSimulationTickThisFrame.{platform}.yaml
+          - INetworkServerService_SetGameSpawnGroupMgr.{platform}.yaml
+          - INetworkServerService_AddServerPrerequisites.{platform}.yaml
+          - INetworkServerService_SetFinalSimulationTickThisFrame.{platform}.yaml
         expected_input_windows:
           - CLoopModeGame_LoopInit.{platform}.yaml
         expected_input_linux:
@@ -9519,6 +9642,14 @@ modules:
         category: vtable
       - name: CBasePlayerPawn_vtable
         category: vtable
+      - name: CBasePlayerPawn_PrePhysicsSimulate
+        category: vfunc
+        alias:
+          - CBasePlayerPawn::PrePhysicsSimulate
+      - name: CBasePlayerPawn_PhysicsSimulate
+        category: vfunc
+        alias:
+          - CBasePlayerPawn::PhysicsSimulate
       - name: CCSPlayerPawn_vtable
         category: vtable
       - name: CCSPlayerPawnBase_vtable
@@ -9573,6 +9704,18 @@ modules:
         category: func
         alias:
           - CBaseModelEntity::GetBoneTransform
+      - name: CBaseModelEntity_vtable
+        category: vtable
+      - name: CBaseModelEntity_DamageDecal
+        category: vfunc
+        alias:
+          - CBaseModelEntity::DamageDecal
+      - name: CBreakable_vtable
+        category: vtable
+      - name: CBreakable_DamageDecal
+        category: vfunc
+        alias:
+          - CBreakable::DamageDecal
       - name: CBasePlayerPawn_OnTakeDamage
         category: vfunc
         alias:
@@ -9581,6 +9724,10 @@ modules:
         category: vfunc
         alias:
           - CCSPlayerPawn::OnTakeDamage_Alive
+      - name: CCSPlayerPawn_CreatePlayerPawnServices
+        category: vfunc
+        alias:
+          - CCSPlayerPawn::CreatePlayerPawnServices
       - name: CCSPlayerPawn_OnTakeDamage_Dying
         category: vfunc
         alias:
@@ -10084,6 +10231,10 @@ modules:
         category: vfunc
         alias:
           - CGameRules::ClientSettingsChanged
+      - name: CGameRules_SetGamePaused
+        category: vfunc
+        alias:
+          - CGameRules::SetGamePaused
       - name: CGameRulesGameSystem_OnGameInit
         category: vfunc
         alias:
@@ -11262,6 +11413,12 @@ modules:
         category: func
         alias:
           - CPhysicsGameSystem::ProcessContactEvents
+      - name: PhysCollisionDust
+        category: func
+      - name: CBaseEntity_VPhysicsCollision
+        category: vfunc
+        alias:
+          - CBaseEntity::VPhysicsCollision
       - name: CBaseEntity_VPhysicsStartTouch
         category: func
         alias:
@@ -11445,18 +11602,18 @@ modules:
         category: vfunc
         alias:
           - CEngineServer::UnloadSpawnGroup
-      - name: CNetworkServerService_SetGameSpawnGroupMgr
+      - name: INetworkServerService_SetGameSpawnGroupMgr
         category: vfunc
         alias:
-          - CNetworkServerService::SetGameSpawnGroupMgr
-      - name: CNetworkServerService_AddServerPrerequisites
+          - INetworkServerService::SetGameSpawnGroupMgr
+      - name: INetworkServerService_AddServerPrerequisites
         category: vfunc
         alias:
-          - CNetworkServerService::AddServerPrerequisites
-      - name: CNetworkServerService_SetFinalSimulationTickThisFrame
+          - INetworkServerService::AddServerPrerequisites
+      - name: INetworkServerService_SetFinalSimulationTickThisFrame
         category: vfunc
         alias:
-          - CNetworkServerService::SetFinalSimulationTickThisFrame
+          - INetworkServerService::SetFinalSimulationTickThisFrame
       - name: CSpawnGroupMgrGameSystem_GetSpawnGroups
         category: func
         alias:
@@ -12003,6 +12160,14 @@ modules:
         category: func
         alias:
           - CLoopModeGame::RegisterEventMapInternal
+      - name: CLoopModeGame_RegisterEventMap
+        category: vfunc
+        alias:
+          - CLoopModeGame::RegisterEventMap
+      - name: CLoopModeGame_dtor
+        category: func
+        alias:
+          - CLoopModeGame::~CLoopModeGame
       - name: RegisterEventListener_Abstract
         category: func
       - name: CLoopModeGame_OnServerAdvanceTick
@@ -12391,6 +12556,30 @@ modules:
         expected_input:
           - CEngineClient_vtable.{platform}.yaml
           - ../client/IVEngineClient2_IsPlayingDemo.{platform}.yaml
+      - name: find-CNetworkServerService_SetGameSpawnGroupMgr
+        expected_output:
+          - CNetworkServerService_SetGameSpawnGroupMgr.{platform}.yaml
+        expected_input:
+          - CNetworkServerService_vtable.{platform}.yaml
+          - ../server/INetworkServerService_SetGameSpawnGroupMgr.{platform}.yaml
+      - name: find-CNetworkServerService_AddServerPrerequisites
+        expected_output:
+          - CNetworkServerService_AddServerPrerequisites.{platform}.yaml
+        expected_input:
+          - CNetworkServerService_vtable.{platform}.yaml
+          - ../server/INetworkServerService_AddServerPrerequisites.{platform}.yaml
+      - name: find-CNetworkServerService_SetFinalSimulationTickThisFrame
+        expected_output:
+          - CNetworkServerService_SetFinalSimulationTickThisFrame.{platform}.yaml
+        expected_input:
+          - CNetworkServerService_vtable.{platform}.yaml
+          - ../server/INetworkServerService_SetFinalSimulationTickThisFrame.{platform}.yaml
+      - name: find-CNetworkServerService_GetServerSerializersCRC
+        expected_output:
+          - CNetworkServerService_GetServerSerializersCRC.{platform}.yaml
+        expected_input:
+          - CNetworkServerService_vtable.{platform}.yaml
+          - INetworkServerService_GetServerSerializersCRC.{platform}.yaml
       - name: find-INetworkGameClient_SendStringCmd
         expected_output:
           - INetworkGameClient_SendStringCmd.{platform}.yaml
@@ -13229,3 +13418,52 @@ cpp_tests:
     reference_modules:
       - engine  # bin/{gamever}/engine/ISource2Server_*.{platform}.yaml
       - server  # bin/{gamever}/server/CSource2Server_*.{platform}.yaml
+  - name: INetworkServerService_MSVC
+    symbol: INetworkServerService
+    alias_symbols:
+      - CNetworkServerService
+    cpp: cpp_tests/inetworkserverservice.cpp
+    headers:
+      - hl2sdk_cs2/public/iserver.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin/{gamever}/engine/CNetworkServerService_*.{platform}.yaml
+      - server  # bin/{gamever}/server/CNetworkServerService_*.{platform}.yaml
+  - name: ICommandLine_MSVC
+    symbol: ICommandLine
+    cpp: cpp_tests/icommandline.cpp
+    headers:
+      - hl2sdk_cs2/public/tier0/icommandline.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    # No reference_modules yet: ICommandLine has no binary reference YAMLs
+    # (tier0/vstdlib is not an analyzed module). Compile-only validation.
