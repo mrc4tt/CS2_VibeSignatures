@@ -121,7 +121,7 @@ binaries:
       sha256: '40505bf09c2c0942a0abc8a48048b578baf585bc18abc197bde023225ce58dbb'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:a405a9993acdfc4cb20bddbfd1587ed46ad34086dd8da63831b7ea4995649fba
+config_sha256: sha256:8511b6bfa4257691e0003c672cb50d81523e75324c01015a2df8619c310f5faa
 file_count: 3421
 files:
   SDL3/SDL_GetMouse.windows.yaml:
@@ -3680,7 +3680,7 @@ files:
     func_name: IGameSystemFactory_CreateGameSystem
     vfunc_index: 3
     vfunc_offset: '0x18'
-    vfunc_sig: FF 50 18 49 8B 7D ?? C6 05 ?? 11 6B 03 ??
+    vfunc_sig: FF 50 18 49 8B 7D ?? C6 05 ?? ?? ?? ?? ??
     vtable_name: IGameSystemFactory
   client/IGameSystemFactory_CreateGameSystem.windows.yaml:
     func_name: IGameSystemFactory_CreateGameSystem
@@ -18711,10 +18711,11 @@ files:
     func_va: '0x180b10270'
   server/CBaseModelEntity_SetModel.linux.yaml:
     func_name: CBaseModelEntity_SetModel
-    func_rva: '0x1543750'
-    func_sig: 55 48 89 E5 53 48 89 FB 48 83 EC ?? 48 8D 05 FD ?? ?? ?? 48 8B 38
-    func_size: '0x61'
-    func_va: '0x1543750'
+    func_rva: '0x15dfe80'
+    func_sig: 55 48 89 E5 53 48 89 FB 48 83 EC ?? 48 8D 05 7D ?? ?? ?? 48 8B 38 48 8B 07 FF 50 ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x2c'
+    func_va: '0x15dfe80'
   server/CBaseModelEntity_SetModel.windows.yaml:
     func_name: CBaseModelEntity_SetModel
     func_rva: '0xb12300'
@@ -19309,7 +19310,7 @@ files:
   server/CBasePlayerController_GetPawn.linux.yaml:
     func_name: CBasePlayerController_GetPawn
     func_rva: '0x15e2500'
-    func_sig: 8B 8F C0 07 ?? ?? 83 F9 ?? 74 ?? 48 8B 35 CE C8 09 01
+    func_sig: 8B 8F C0 07 00 00 83 F9 FF 74 45 48 8B 35 ?? ?? ?? ?? 48 85 F6
     func_size: '0x56'
     func_va: '0x15e2500'
   server/CBasePlayerController_GetPawn.windows.yaml:
@@ -22292,7 +22293,7 @@ files:
   server/CCSBot_Idle.linux.yaml:
     func_name: CCSBot_Idle
     func_rva: '0xc0e1b0'
-    func_sig: 48 8B 05 D9 03 ?? ??
+    func_sig: 48 8B 05 ?? ?? ?? ?? 48 8D B7 10 02 00 00 48 89 87 C8 05 00 00 E9
     func_size: '0x1a'
     func_va: '0xc0e1b0'
   server/CCSBot_Idle.windows.yaml:
@@ -22892,7 +22893,7 @@ files:
     func_name: CCSPlayerController_ResourceDataThink
     func_rva: '0x14f7240'
     func_sig: 55 48 89 E5 53 48 89 FB 48 83 EC ?? 83 87 ?? ?? ?? ?? ??
-    func_size: '0x4a'
+    func_size: '0x54'
     func_va: '0x14f7240'
   server/CCSPlayerController_ResourceDataThink.windows.yaml:
     func_name: CCSPlayerController_ResourceDataThink
@@ -31230,7 +31231,7 @@ files:
   server/CGameEntitySystem_m_iNetworkedEntCount.linux.yaml:
     member_name: m_iNetworkedEntCount
     offset: '0x20a0'
-    offset_sig: 83 87 ?? ?? ?? ?? ?? 48 85 F6 74 ?? 49 63 86 ?? ?? ?? ??
+    offset_sig: 83 87 ?? ?? 00 00 ?? 48 85 F6
     offset_sig_allow_across_function_boundary: true
     offset_sig_disp: 0
     size: 4
@@ -33282,10 +33283,10 @@ files:
     vtable_va: '0x1817a57d8'
   server/CLoopModeRegistry_UnregisterLoopModes.linux.yaml:
     func_name: CLoopModeRegistry_UnregisterLoopModes
-    func_rva: '0x203f0a0'
-    func_sig: 55 48 89 E5 41 54 53 48 8B 1D 2A ?? ?? ?? 48 85 DB 74 ?? 4C 8D 25 FE 20 ?? ??
-    func_size: '0x43'
-    func_va: '0x203f0a0'
+    func_rva: '0x1af03c0'
+    func_sig: 55 48 89 E5 41 54 53 48 8B 1D 8A ?? ?? ??
+    func_size: '0x71'
+    func_va: '0x1af03c0'
   server/CLoopModeRegistry_UnregisterLoopModes.windows.yaml:
     func_name: CLoopModeRegistry_UnregisterLoopModes
     func_rva: '0x1214d60'
@@ -44536,5 +44537,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14175'
-last_publish_time: '2026-08-19T07:05:36Z'
+last_publish_time: '2026-08-20T12:26:07Z'
 schema_version: 5
