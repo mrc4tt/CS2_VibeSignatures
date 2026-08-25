@@ -29,7 +29,7 @@ from release_workflow_lib.manifests import (
     verify_tracked_outputs,
 )
 from gamesymbol_snapshot_lib.operations import load_snapshot_context
-from release_workflow_lib.staging import load_indexed_pending, verify_snapshot_binaries
+from release_workflow_lib.staging import is_recoverable_analysis_path, load_indexed_pending, verify_snapshot_binaries
 
 COMPLETION_SCHEMA_VERSION = 1
 COMPLETION_FIELDS = {
@@ -62,6 +62,15 @@ def _git_output(arguments: list[str]) -> str:
     if result.returncode != 0:
         raise ReleaseWorkflowError(result.stderr.strip() or f"git {' '.join(arguments)} failed")
     return result.stdout.strip()
+
+
+def _is_ancestor(ancestor: str, descendant: str) -> bool:
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", ancestor, descendant],
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode == 0
 
 
 def verify_output_pr(
@@ -130,8 +139,8 @@ def verify_promotion(
     head_parents = _git_output(["rev-list", "--parents", "-n", "1", event_head_sha]).split()
     if len(head_parents) != 2 or head_parents[1] != pending["source_sha"]:
         raise ReleaseWorkflowError("generated-output commit is not directly based on SOURCE_SHA")
-    if base_parent_sha != pending["source_sha"]:
-        raise ReleaseWorkflowError("merge first parent must exactly match SOURCE_SHA")
+    if not _is_ancestor(pending["source_sha"], base_parent_sha):
+        raise ReleaseWorkflowError("merge first parent must descend from SOURCE_SHA")
     paths = [
         line for line in _git_output(["diff", "--name-only", base_parent_sha, merge_sha, "--"]).splitlines() if line
     ]
@@ -262,6 +271,10 @@ def promote_bin(*, persisted_root: Path, stage_dir: Path, gamever: str, build_id
     if (pending.get("gamever"), pending.get("build_id")) != (gamever, build_id):
         raise ReleaseWorkflowError("promotion request does not match private pending manifest")
     expected_files = pending.get("bin_files", [])
+    for entry in expected_files:
+        path = entry.get("path") if isinstance(entry, dict) else None
+        if isinstance(path, str) and is_recoverable_analysis_path(Path(path)):
+            raise ReleaseWorkflowError(f"staged bin inventory contains recoverable analysis state: {path}")
     expected_hash = pending.get("bin_manifest_sha256")
     if verify_inventory(source, expected_files) != expected_hash:
         raise ReleaseWorkflowError("staged bin failed verification before promotion")

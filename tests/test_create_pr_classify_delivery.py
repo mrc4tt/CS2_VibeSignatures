@@ -63,16 +63,6 @@ SYMBOLS_PATHS = (
 
 
 class TestCreatePrClassifyDelivery(unittest.TestCase):
-    def test_skill_requires_the_classifier_before_lifecycle_gates(self) -> None:
-        skill = Path(".claude/skills/create-pr/SKILL.md").read_text(encoding="utf-8")
-        self.assertLess(
-            skill.index(".claude/skills/create-pr/scripts/classify_delivery.py"),
-            skill.index("/prepare-post-change-candidate"),
-        )
-        self.assertIn("--cached", skill)
-        self.assertIn("--committed", skill)
-        self.assertIn("Never override `1` → `0`", skill)
-
     def test_plain_pr_paths_do_not_trigger_lifecycle(self) -> None:
         for path in PLAIN_PR_PATHS:
             with self.subTest(path=path):

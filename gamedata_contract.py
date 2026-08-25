@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import inspect
+import json
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -20,6 +21,7 @@ from release_workflow_lib.hashing import (
 MODULE_DIRECTORY_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 GAMEVER_RE = re.compile(r"\d+[a-z]?\Z")
 ALLOWED_OUTPUT_SUFFIXES = {".json", ".jsonc", ".txt"}
+METADATA_SUFFIX = ".metadata.json"
 RESERVED_MODULE_DIRECTORIES = {"completed", "cleanup-trash", "locks", "pr-index"}
 SUPPORTED_GENERATOR_API_VERSIONS = {1, 2}
 
@@ -235,8 +237,21 @@ def generator_contract_sha256(modules: list[GeneratorModule]) -> str:
     return sha256_bytes(canonical_json_bytes({"schema_version": 1, "modules": records}))
 
 
-def expected_inventory_paths(modules: list[GeneratorModule], gamever: str) -> list[str]:
-    return sorted(f"gamedata/{gamever}/{module.directory}/{path}" for module in modules for path in module.output_paths)
+def metadata_companion_path(output_path: str) -> str:
+    """Return the sibling metadata path for a declared gamedata output path."""
+    return output_path + METADATA_SUFFIX
+
+
+def expected_inventory_paths(
+    modules: list[GeneratorModule], gamever: str, *, include_metadata: bool = True
+) -> list[str]:
+    paths: list[str] = []
+    for module in modules:
+        for path in module.output_paths:
+            paths.append(f"gamedata/{gamever}/{module.directory}/{path}")
+            if include_metadata:
+                paths.append(f"gamedata/{gamever}/{module.directory}/{metadata_companion_path(path)}")
+    return sorted(paths)
 
 
 def prefixed_output_inventory(output_root: str | Path, gamever: str) -> list[dict]:
@@ -259,7 +274,12 @@ def validate_output_tree(output_root: str | Path, gamever: str, modules: list[Ge
     if not root.is_dir():
         raise GamedataContractError(f"versioned gamedata output is missing: {root}")
     reject_reparse_points(root)
-    expected = sorted(f"{module.directory}/{path}" for module in modules for path in module.output_paths)
+    expected: list[str] = []
+    for module in modules:
+        for path in module.output_paths:
+            expected.append(f"{module.directory}/{path}")
+            expected.append(f"{module.directory}/{metadata_companion_path(path)}")
+    expected = sorted(expected)
     actual_inventory = sorted(file_inventory(root), key=lambda item: item["path"])
     actual = [item["path"] for item in actual_inventory]
     if actual != expected:
@@ -271,6 +291,20 @@ def validate_output_tree(output_root: str | Path, gamever: str, modules: list[Ge
         if extra:
             details.append("undeclared=" + ",".join(extra))
         raise GamedataContractError("versioned gamedata tree violates OUTPUT_PATHS: " + "; ".join(details))
+
+    from gamedata_metadata import validate_file_metadata
+
+    for module in modules:
+        for output_path in module.output_paths:
+            payload_path = root / module.directory / PurePosixPath(output_path)
+            metadata_path = root / module.directory / PurePosixPath(metadata_companion_path(output_path))
+            rel_path = f"{module.directory}/{output_path}"
+            try:
+                payload_text = payload_path.read_text(encoding="utf-8")
+                metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                validate_file_metadata(metadata, after_text=payload_text, rel_path=rel_path, gamever=gamever)
+            except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+                raise GamedataContractError(f"invalid gamedata metadata companion {rel_path}: {exc}") from exc
     return prefixed_output_inventory(root, gamever)
 
 

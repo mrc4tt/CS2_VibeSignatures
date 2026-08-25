@@ -1,10 +1,9 @@
-import { createHash } from 'node:crypto'
 import { readFile, readdir, stat } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import type { Plugin } from 'vite'
 import { parse } from 'yaml'
+import { compareGameVersions, GAME_VERSION_PATTERN, isObject, sendBytes, sendJson, sha256Bytes } from './staticAssetPluginUtils'
 
-const GAME_VERSION_PATTERN = /^\d{4,10}[a-z]?$/
 const SNAPSHOT_FILE_PATTERN = /^(\d{4,10}[a-z]?)\.yaml$/
 const SYMBOL_PATH_PATTERN = /^([^/]+)\/([^/]+)\.(windows|linux)\.yaml$/
 
@@ -81,8 +80,8 @@ export interface EncodedGameSymbolAsset {
 interface CachedDataset {
   mtimeMs: number
   size: number
-  configMtimeMs: number
-  configSize: number
+  metadataMtimeMs: number
+  metadataSize: number
   dataset: GameSymbolDataset
 }
 
@@ -135,10 +134,6 @@ export function attachAliasesToDataset(dataset: GameSymbolDataset, aliasIndex: C
     return { ...record, aliases }
   })
   return changed ? { ...dataset, records } : dataset
-}
-
-function isObject(value: unknown): value is JsonObject {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 function requiredString(value: unknown, field: string, source: string): string {
@@ -283,18 +278,9 @@ export function normalizeGameSymbolSnapshot(raw: unknown, expectedGameVersion: s
   }
 }
 
-function compareGameVersions(left: string, right: string): number {
-  const leftMatch = /^(\d+)([a-z]?)$/.exec(left)
-  const rightMatch = /^(\d+)([a-z]?)$/.exec(right)
-  if (!leftMatch || !rightMatch) return right.localeCompare(left)
-  const numberDifference = Number(rightMatch[1]) - Number(leftMatch[1])
-  if (numberDifference !== 0) return numberDifference
-  return rightMatch[2].localeCompare(leftMatch[2])
-}
-
 export function encodeGameSymbolAsset(dataset: GameSymbolDataset): EncodedGameSymbolAsset {
   const bytes = Buffer.from(JSON.stringify(dataset), 'utf8')
-  const sha256 = createHash('sha256').update(bytes).digest('hex')
+  const sha256 = sha256Bytes(bytes)
   return {
     dataset,
     bytes,
@@ -321,7 +307,7 @@ export function createGameSymbolIndex(assets: EncodedGameSymbolAsset[]): GameSym
   }
 }
 
-export function gameSymbolsPlugin(symbolsDirectory: string, configsDirectory?: string): Plugin {
+export function gameSymbolsPlugin(symbolsDirectory: string): Plugin {
   const cache = new Map<string, CachedDataset>()
 
   async function snapshotFiles(): Promise<string[]> {
@@ -336,41 +322,39 @@ export function gameSymbolsPlugin(symbolsDirectory: string, configsDirectory?: s
     const fileName = basename(filePath)
     const match = SNAPSHOT_FILE_PATTERN.exec(fileName)
     if (!match) throw new Error(`Invalid gamesymbol snapshot filename: ${fileName}`)
-    const configPath = configsDirectory ? join(configsDirectory, `${match[1]}.yaml`) : undefined
+    const metadataPath = join(symbolsDirectory, `${match[1]}.metadata.yaml`)
 
-    let configStat = { mtimeMs: 0, size: 0 }
-    if (configPath) {
-      try {
-        const cs = await stat(configPath)
-        configStat = { mtimeMs: cs.mtimeMs, size: cs.size }
-      } catch {
-        configStat = { mtimeMs: 0, size: 0 }
-      }
+    let metadataStat = { mtimeMs: 0, size: 0 }
+    try {
+      const ms = await stat(metadataPath)
+      metadataStat = { mtimeMs: ms.mtimeMs, size: ms.size }
+    } catch {
+      metadataStat = { mtimeMs: 0, size: 0 }
     }
 
     const cached = cache.get(filePath)
     if (
       cached?.mtimeMs === fileStat.mtimeMs && cached.size === fileStat.size
-      && cached.configMtimeMs === configStat.mtimeMs && cached.configSize === configStat.size
+      && cached.metadataMtimeMs === metadataStat.mtimeMs && cached.metadataSize === metadataStat.size
     ) return cached.dataset
 
     const raw = parse(await readFile(filePath, 'utf8')) as unknown
     let dataset = normalizeGameSymbolSnapshot(raw, match[1], filePath)
 
-    if (configPath && (configStat.mtimeMs !== 0 || configStat.size !== 0)) {
+    if (metadataStat.mtimeMs !== 0 || metadataStat.size !== 0) {
       try {
-        const configRaw = parse(await readFile(configPath, 'utf8')) as unknown
-        dataset = attachAliasesToDataset(dataset, buildConfigAliasIndex(configRaw, configPath))
+        const metadataRaw = parse(await readFile(metadataPath, 'utf8')) as unknown
+        dataset = attachAliasesToDataset(dataset, buildConfigAliasIndex(metadataRaw, metadataPath))
       } catch {
-        // config missing/invalid is non-fatal: keep unaliased dataset
+        // metadata missing/invalid is non-fatal: keep unaliased dataset
       }
     }
 
     cache.set(filePath, {
       mtimeMs: fileStat.mtimeMs,
       size: fileStat.size,
-      configMtimeMs: configStat.mtimeMs,
-      configSize: configStat.size,
+      metadataMtimeMs: metadataStat.mtimeMs,
+      metadataSize: metadataStat.size,
       dataset,
     })
     return dataset
@@ -384,23 +368,10 @@ export function gameSymbolsPlugin(symbolsDirectory: string, configsDirectory?: s
     return (await loadAll()).map(encodeGameSymbolAsset)
   }
 
-  function sendBytes(response: import('node:http').ServerResponse, bytes: Uint8Array): void {
-    response.statusCode = 200
-    response.setHeader('Content-Type', 'application/json; charset=utf-8')
-    response.setHeader('Cache-Control', 'no-cache')
-    response.setHeader('Content-Length', bytes.byteLength)
-    response.end(bytes)
-  }
-
-  function sendJson(response: import('node:http').ServerResponse, value: unknown): void {
-    sendBytes(response, Buffer.from(JSON.stringify(value), 'utf8'))
-  }
-
   return {
     name: 'gamesymbol-assets',
     configureServer(server) {
       server.watcher.add(symbolsDirectory)
-      if (configsDirectory) server.watcher.add(configsDirectory)
       server.middlewares.use(async (request, response, next) => {
         const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
         if (pathname.endsWith('/gamesymbols/index.json')) {
@@ -433,12 +404,10 @@ export function gameSymbolsPlugin(symbolsDirectory: string, configsDirectory?: s
     async buildStart() {
       const files = await snapshotFiles()
       files.forEach((filePath) => this.addWatchFile(filePath))
-      if (configsDirectory) {
-        files.forEach((filePath) => {
-          const match = SNAPSHOT_FILE_PATTERN.exec(basename(filePath))
-          if (match) this.addWatchFile(join(configsDirectory, `${match[1]}.yaml`))
-        })
-      }
+      files.forEach((filePath) => {
+        const match = SNAPSHOT_FILE_PATTERN.exec(basename(filePath))
+        if (match) this.addWatchFile(join(symbolsDirectory, `${match[1]}.metadata.yaml`))
+      })
     },
     async generateBundle() {
       const files = await snapshotFiles()
