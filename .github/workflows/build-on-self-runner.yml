@@ -20,14 +20,14 @@ on:
     types: [build-on-self-runner]
 permissions:
   actions: read
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 concurrency:
   group: release-build-${{ github.repository }}-${{ inputs.gamever || github.event.client_payload.gamever }}
   cancel-in-progress: false
 jobs:
   preflight:
-    if: github.repository == 'HLND2T/CS2_VibeSignatures' || github.repository == 'hzqst/CS2_VibeSignatures'
+    if: github.repository == 'HLND2T/CS2_VibeSignatures'
     runs-on: ubuntu-latest
     outputs:
       gamever: ${{ steps.resolve.outputs.gamever }}
@@ -138,6 +138,7 @@ jobs:
           ref: ${{ needs.preflight.outputs.source_sha }}
           fetch-depth: 0
           submodules: false
+          token: ${{ secrets.HLND2T_GH_TOKEN }}
       - name: Compute submodule cache key
         id: submodule-cache-key
         working-directory: ${{ github.workspace }}
@@ -180,9 +181,10 @@ jobs:
         run: |
           if ([string]::IsNullOrWhiteSpace($env:PERSISTED_WORKSPACE)) { throw "PERSISTED_WORKSPACE is not configured." }
           $workspace = [IO.Path]::GetFullPath("${{ github.workspace }}")
-          $depotTarget = [IO.Path]::GetFullPath((Join-Path $env:PERSISTED_WORKSPACE "cs2_depot"))
+          # Isolate the depot per GAMEVER so concurrent runs never share a download tree.
+          $depotTarget = [IO.Path]::GetFullPath((Join-Path $env:PERSISTED_WORKSPACE "cs2_depot\$env:GAMEVER"))
           $depotLink = Join-Path $workspace "cs2_depot"
-          New-Item -ItemType Directory -Path $depotTarget -Force | Out-Null
+          [System.IO.Directory]::CreateDirectory($depotTarget) | Out-Null
           if (Test-Path -LiteralPath $depotLink) {
             $item = Get-Item -LiteralPath $depotLink -Force
             if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "cs2_depot must be a link." }
@@ -486,7 +488,7 @@ jobs:
       - name: Create immutable generated-output branch and PR
         id: create-output-pr
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.HLND2T_GH_TOKEN }}
         shell: pwsh
         run: |
           git add -- "release-manifests/$env:GAMEVER.json"

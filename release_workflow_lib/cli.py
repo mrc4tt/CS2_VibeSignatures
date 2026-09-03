@@ -25,6 +25,7 @@ from release_workflow_lib.staging import (
     stage_build,
     write_pr_index,
 )
+from release_workflow_lib.promote_staged_yaml import promote_staged_yaml
 from release_workflow_lib.sync_accepted_bin import sync_accepted_bin
 from release_workflow_lib.validation import invalidate_republish, prepare_oldgamever_baseline, validate_build_input
 
@@ -92,6 +93,7 @@ def _add_verification_parsers(commands) -> None:
     verify_pr.add_argument("--repository", required=True)
     verify_pr.add_argument("--head-repository", required=True)
     verify_pr.add_argument("--author", required=True)
+    verify_pr.add_argument("--author-association", required=True)
     verify_pr.add_argument("--branch", required=True)
     verify_pr.add_argument("--base-sha", required=True)
     verify_pr.add_argument("--head-sha", required=True)
@@ -102,6 +104,7 @@ def _add_verification_parsers(commands) -> None:
     promote.add_argument("--repository", required=True)
     promote.add_argument("--head-repository", required=True)
     promote.add_argument("--author", required=True)
+    promote.add_argument("--author-association", required=True)
     promote.add_argument("--branch", required=True)
     promote.add_argument("--base-branch", required=True)
     promote.add_argument("--default-branch", required=True)
@@ -181,6 +184,10 @@ def _add_promotion_parsers(commands) -> None:
     sync_bin.add_argument("--repo-root", default=".")
     sync_bin.add_argument("--persisted-root", required=True)
     sync_bin.add_argument("--gamever", required=True)
+
+    promote_yaml = commands.add_parser("promote-staged-yaml")
+    promote_yaml.add_argument("--persisted-root", required=True)
+    promote_yaml.add_argument("--pr-number", required=True, type=int)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -270,6 +277,7 @@ def _run_verification(args) -> object:
             repository=args.repository,
             head_repository=args.head_repository,
             author=args.author,
+            author_association=args.author_association,
             branch=args.branch,
             base_sha=args.base_sha,
             head_sha=args.head_sha,
@@ -281,6 +289,7 @@ def _run_verification(args) -> object:
             repository=args.repository,
             head_repository=args.head_repository,
             author=args.author,
+            author_association=args.author_association,
             branch=args.branch,
             base_branch=args.base_branch,
             default_branch=args.default_branch,
@@ -370,6 +379,11 @@ def _run_promotion(args) -> object:
             repo_root=args.repo_root,
             persisted_root=args.persisted_root,
             gamever=args.gamever,
+        )
+    if args.command == "promote-staged-yaml":
+        return promote_staged_yaml(
+            persisted_root=args.persisted_root,
+            pr_number=args.pr_number,
         )
     return _UNHANDLED
 

@@ -1705,6 +1705,9 @@ def _parse_config_skill(skill, module_name):
         "optional_input": skill.get("optional_input", []) or [],
         "optional_input_windows": skill.get("optional_input_windows", []) or [],
         "optional_input_linux": skill.get("optional_input_linux", []) or [],
+        "alternative_output": skill.get("alternative_output", []) or [],
+        "alternative_output_windows": skill.get("alternative_output_windows", []) or [],
+        "alternative_output_linux": skill.get("alternative_output_linux", []) or [],
         "skip_if_exists": skill.get("skip_if_exists", []) or [],
         "prerequisite": skill.get("prerequisite", []) or [],
         "max_retries": skill.get("max_retries"),
@@ -2913,7 +2916,6 @@ def wait_for_port_release(host, port, timeout=MCP_SHUTDOWN_TIMEOUT, retry_interv
         time.sleep(max(0.0, retry_interval))
     return True
 
-
 def _terminate_process_group(process, port=None, host=DEFAULT_HOST):
     """Kill a start_new_session=True supervisor together with its IDA children.
 
@@ -2961,7 +2963,11 @@ def _terminate_process_group(process, port=None, host=DEFAULT_HOST):
 
     if port is not None:
         wait_for_port_release(host, port)
-
+def _allocate_local_port(host: str = DEFAULT_HOST) -> int:
+    """Reserve a free local port by binding an ephemeral socket, then release it."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind((host, 0))
+        return int(sock.getsockname()[1])
 
 def start_idalib_mcp(
     binary_path,
@@ -3104,7 +3110,7 @@ def process_binary(
             optional legacy 'prerequisite', and optional 'max_retries' keys
         agent: Agent type ("claude" or "codex")
         host: MCP server host
-        port: MCP server port
+        port: MCP server port (None to allocate a free port dynamically)
         ida_args: Additional arguments for idalib-mcp
         platform: Platform name (e.g., "windows", "linux")
         debug: Enable debug output
@@ -3313,6 +3319,10 @@ def process_binary(
         )
 
     # Start idalib-mcp
+    if port is None:
+        port = _allocate_local_port(host)
+        if debug:
+            print(f"  Allocated dynamic MCP port {host}:{port}")
     process = start_idalib_mcp(binary_path, host, port, ida_args, debug)
     if process is None:
         post_process_failure = 1 if startup_post_process_yaml_items else 0
@@ -3840,6 +3850,7 @@ def process_binary(
             _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.AGENT_FALLBACK)
             progress_callback = _build_agent_progress_callback(reporting, job_id, skill_name)
 
+            mcp_url = f"http://{host}:{port}/mcp"
             if run_skill(
                 skill_name,
                 agent,
@@ -3848,6 +3859,7 @@ def process_binary(
                 max_retries=skill_max_retries,
                 agent_model=agent_model,
                 progress_callback=progress_callback,
+                mcp_url=mcp_url,
             ):
                 optional_output_generated = any(os.path.exists(path) for path in optional_outputs)
                 if not required_outputs and optional_outputs and not optional_output_generated:
@@ -4245,7 +4257,7 @@ def _invoke_process_binary(
         module["skills"],
         args.agent,
         DEFAULT_HOST,
-        DEFAULT_PORT,
+        None,
         args.ida_args,
         platform,
         args.debug,

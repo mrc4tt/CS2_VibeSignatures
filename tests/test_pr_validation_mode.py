@@ -106,6 +106,15 @@ class TestClassifyPaths(unittest.TestCase):
         self.assertEqual("light", result.mode)
         self.assertTrue(result.force_light)
 
+    def test_future_artifact_root_can_be_recognized(self) -> None:
+        rules = pvm.parse_rules(
+            {"schema_version": 1, "rules": [{"paths": ["bin_artifacts/**"], "reason": "artifact truth"}]}
+        )
+
+        result = pvm.classify_paths(["bin_artifacts/14178/server/Foo.windows.yaml"], rules)
+
+        self.assertEqual("full", result.mode)
+
 
 class TestParseChangedPaths(unittest.TestCase):
     def test_rename_keeps_both_sides(self) -> None:
@@ -129,6 +138,42 @@ class TestParseChangedPaths(unittest.TestCase):
         change = pvm.parse_changed_paths(b"R100\x00gamesymbols/old.yaml\x00gamesymbols/new.yaml\x00")[0]
         paths = [path for path in (change.old_path, change.new_path) if path]
         self.assertEqual("full", pvm.classify_paths(paths, rules).mode)
+
+
+class TestChangedConfigGamever(unittest.TestCase):
+    def test_modified_outdated_config_is_rejected_with_latest_path(self) -> None:
+        changes = [ChangedPath("M", "configs/14176.yaml", "configs/14176.yaml")]
+
+        with self.assertRaisesRegex(
+            pvm.PrValidationModeError,
+            r"configs/14176\.yaml.*configs/14177\.yaml",
+        ):
+            pvm.validate_changed_config_gamever(changes, "14177")
+
+    def test_modified_latest_config_is_allowed(self) -> None:
+        changes = [ChangedPath("M", "configs/14177.yaml", "configs/14177.yaml")]
+
+        pvm.validate_changed_config_gamever(changes, "14177")
+
+    def test_deleting_outdated_config_is_allowed(self) -> None:
+        changes = [ChangedPath("D", "configs/14176.yaml", None)]
+
+        pvm.validate_changed_config_gamever(changes, "14177")
+
+    def test_renaming_outdated_config_to_latest_is_allowed(self) -> None:
+        changes = [ChangedPath("R", "configs/14176.yaml", "configs/14177.yaml")]
+
+        pvm.validate_changed_config_gamever(changes, "14177")
+
+    def test_resolution_rejects_outdated_config_change(self) -> None:
+        changes = [ChangedPath("M", "configs/14176.yaml", "configs/14176.yaml")]
+        with (
+            mock.patch("pr_validation_mode.load_rules_from_ref", return_value=_load_sample_rules()),
+            mock.patch("pr_validation_mode.changed_paths", return_value=changes),
+            mock.patch("pr_validation_mode.latest_gamever", return_value="14177"),
+            self.assertRaisesRegex(pvm.PrValidationModeError, r"configs/14176\.yaml.*configs/14177\.yaml"),
+        ):
+            pvm.resolve_validation_mode(Path("."), "a" * 40, "HEAD")
 
 
 class TestCli(unittest.TestCase):
