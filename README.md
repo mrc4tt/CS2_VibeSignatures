@@ -1,6 +1,6 @@
 # CS2 VibeSignatures
 
-[中文文档](README_CN.md) | [GUI](https://hlnd2t.github.io/CS2_VibeSignatures/)
+[中文文档](README_CN.md) | [GUI](https://mrc4tt.github.io/CS2_VibeSignatures/)
 
 CS2 VibeSignatures generates CS2 signatures and offsets, updates HL2SDK_CS2 C++ headers through Agent skills and MCP calls, and produces versioned downstream gamedata.
 
