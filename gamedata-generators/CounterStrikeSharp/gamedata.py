@@ -21,6 +21,7 @@ MODULE_ENABLED = True
 GAMEDATA_PATH = "config/addons/counterstrikesharp/gamedata/gamedata.json"
 OUTPUT_PATHS = (GAMEDATA_PATH,)
 
+<<<<<<< HEAD
 # Upstream download sources: (raw_url, relative_dest_path)
 # Fork source: mrc4tt/CounterStrikeSharp (private). The GitHub contents API returns the raw
 # file when requested with Accept: application/vnd.github.raw, and works for private repos with
@@ -33,6 +34,11 @@ DOWNLOAD_SOURCES = [
         GAMEDATA_PATH,
     ),
 ]
+=======
+# Source-owned upstream baseline; provenance is recorded in templates/upstream.json.
+DOWNLOAD_SOURCES = ()
+STATIC_SOURCES = (("templates/gamedata.json", GAMEDATA_PATH),)
+>>>>>>> upstream/main
 
 
 def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
