@@ -9987,7 +9987,9 @@ modules:
         alias:
           - BotProfile::LookAngleDampingAttacking
       - name: CEntityIdentity_EHandle
-        category: vfunc
+        category: structmember
+        struct: CEntityIdentity
+        member: EHandle
         alias:
           - CEntityIdentity::EHandle
       - name: CCSPlayer_MovementServices_Pawn
@@ -9995,11 +9997,15 @@ modules:
         alias:
           - CCSPlayer_MovementServices::Pawn
       - name: CMoveData_Velocity
-        category: vfunc
+        category: structmember
+        struct: CMoveData
+        member: Velocity
         alias:
           - CMoveData::Velocity
       - name: CMoveData_AbsOrigin
-        category: vfunc
+        category: structmember
+        struct: CMoveData
+        member: AbsOrigin
         alias:
           - CMoveData::AbsOrigin
       - name: vtidx_PlayerRunCommand
@@ -10043,7 +10049,9 @@ modules:
         alias:
           - GameResourceServiceServer::m_pEntitySystem
       - name: CEntityIdentity_Size
-        category: vfunc
+        category: structmember
+        struct: CEntityIdentity
+        member: Size
         alias:
           - CEntityIdentity::Size
       - name: CEntityIdentity_m_pInstance

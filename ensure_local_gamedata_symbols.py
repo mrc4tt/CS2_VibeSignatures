@@ -86,6 +86,9 @@ def load_seed_specs():
             cls, _, method = key.partition("::")
             if method.startswith("m_"):
                 specs.append((symbol_name, "structmember", cls, method, alias))
+            elif cls in ("CEntityIdentity", "CMoveData") and method:
+                # layout-holder-klasser: offset-entries er structmembers (agent-verificeret 14178b)
+                specs.append((symbol_name, "structmember", cls, method, alias))
             elif symbol_name.startswith("BotProfile_") and symbol_name[len("BotProfile_"):] in BOTPROFILE_MEMBERS:
                 # BotProfile er en non-polymorphic POD - offset-entries er structmembers
                 # (IDA-verificeret 14178b: m_attackDelay +0x5C; Bot-Improver reference).
