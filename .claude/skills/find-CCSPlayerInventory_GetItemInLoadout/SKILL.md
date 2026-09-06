@@ -48,7 +48,9 @@ NEVER include vfunc_index, vfunc_offset, vfunc_sig or vtable_name — this is a 
 
 1. Decompile the candidate and confirm the behavior matches the purpose above (not a caller or callee).
 2. Confirm uniqueness: the generated pattern must match exactly one location in the loaded binary.
-3. Values are per-platform — analyze BOTH server.dll and libserver.so and write one file per platform.
+3. Produce ONLY the output file(s) listed in this skill's expected outputs, for the binary
+   loaded in THIS session (one platform per run). NEVER open or analyze the other platform's
+   binary — each platform is produced in its own dedicated run.
 
 Prefer deterministic anchors first (RTTI / vtable / schema-network offsets); fall back to string anchors,
 then caller/callee cross-checks. If a candidate cannot be confirmed, report the shortlist instead of
