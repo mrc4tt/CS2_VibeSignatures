@@ -10044,7 +10044,9 @@ modules:
         alias:
           - CNetworkGameServerBase::m_Clients
       - name: CBasePlayerController_FakeClientFlags
-        category: vfunc
+        category: structmember
+        struct: CBaseEntity
+        member: m_fFlags
         alias:
           - CBasePlayerController::FakeClientFlags
       - name: CServerSideClient_m_UserIDString
