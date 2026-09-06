@@ -1,0 +1,5 @@
+func_name: CCSPlayerInventory_SendInventoryUpdateEvent
+func_va: '0x1b0ead0'
+func_rva: '0x1b0ead0'
+func_size: '0x14'
+func_sig: 31 C0 83 7F ?? ?? 75 ?? 48 8B 47 ?? 48 89 C7

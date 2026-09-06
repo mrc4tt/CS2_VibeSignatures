@@ -1,4 +1,4 @@
-func_name: CCSPlayer_WeaponServices_DropWeapon
+func_name: UpdateItemView
 func_va: '0x1815575bc'
 func_rva: '0x15575bc'
 func_size: '0x3d'
