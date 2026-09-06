@@ -6468,9 +6468,6 @@ modules:
       - name: find-CCSBot_EquipPistol
         expected_output:
           - CCSBot_EquipPistol.{platform}.yaml
-      - name: find-CCSPlayer_WeaponServices_GetSlot
-        expected_output:
-          - CCSPlayer_WeaponServices_GetSlot.{platform}.yaml
       - name: find-CCSBot_Update
         expected_output:
           - CCSBot_Update.{platform}.yaml
@@ -9882,10 +9879,6 @@ modules:
         category: func
         alias:
           - CCSBot::EquipPistol
-      - name: CCSPlayer_WeaponServices_GetSlot
-        category: func
-        alias:
-          - CCSPlayer_WeaponServices::GetSlot
       - name: CCSBot_Update
         category: func
         alias:
@@ -11133,6 +11126,7 @@ modules:
       - name: CCSPlayer_WeaponServices_Weapon_GetSlot
         category: func
         alias:
+          - CCSPlayer_WeaponServices::GetSlot
           - CCSPlayer_WeaponServices_Weapon_GetSlot
       - name: CCSPlayerController_ChangeTeam
         category: vfunc

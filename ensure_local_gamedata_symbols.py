@@ -42,6 +42,9 @@ SKILLS_DIR = ".claude/skills"
 ALIAS_OVERRIDES = {
     "CCSPlayerController_HandleCommandJoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
     "CCSPlayerController_HandleCommand_JoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
+    # IDA-verified 14178b: matchzy's GetSlot sig targets the same function upstream
+    # analyzes as CCSPlayer_WeaponServices_Weapon_GetSlot (pseudocode confirmed).
+    "CCSPlayer_WeaponServices::GetSlot": "CCSPlayer_WeaponServices_Weapon_GetSlot",
 }
 
 
