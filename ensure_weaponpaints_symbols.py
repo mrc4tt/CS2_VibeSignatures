@@ -80,6 +80,7 @@ def symbol_entry_block(symbol_name, category, struct, alias):
     lines = [f"      - name: {symbol_name}", f"        category: {category}"]
     if category == "structmember":
         lines.append(f"        struct: {struct}")
+        lines.append(f"        member: {symbol_name.rsplit('_', 1)[-1]}")
     if alias:
         lines.append("        alias:")
         lines.append(f"          - {alias}")

@@ -1,0 +1,254 @@
+{
+  "entries": [
+    {
+      "changes": [
+        {
+          "after": "40 53 55 41 56 48 81 EC ? ? ? ? 0F 29 74 24 ?",
+          "before": "40 53 55 41 56 48 81 EC ? ? ? ? 0F 29 74 24",
+          "line": 5,
+          "path": [
+            "CAttributeList::SetOrAddAttributeValueByName",
+            "signatures",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6
+      ],
+      "name": "CAttributeList::SetOrAddAttributeValueByName",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 55 41 56 48 83 EC ? 48 83 79 ? ?",
+          "before": "40 55 41 56 48 83 EC ? 48 83 79",
+          "line": 47,
+          "path": [
+            "CCSPlayer_ItemServices::SetWearables",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 83 EC ? 48 8B 5F ? 48 85 DB",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 83 EC 68 48 8B 5F 38",
+          "line": 48,
+          "path": [
+            "CCSPlayer_ItemServices::SetWearables",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        46,
+        47,
+        48
+      ],
+      "name": "CCSPlayer_ItemServices::SetWearables",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        85,
+        86
+      ],
+      "name": "CCSPlayer_WeaponServices::DropWeapon",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        67,
+        68
+      ],
+      "name": "CCSPlayerController_InventoryServices::m_pInventory",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 83 EC ? 83 FA ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 83 EC 18 83 FA 38",
+          "line": 20,
+          "path": [
+            "CCSPlayerInventory::GetItemInLoadout",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        18,
+        19,
+        20
+      ],
+      "name": "CCSPlayerInventory::GetItemInLoadout",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        73,
+        74
+      ],
+      "name": "CCSPlayerInventory::m_pSOCache",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "83 79 ? ? 0F 10 49 ?",
+          "before": "83 79 ? ? 0F 10 49",
+          "line": 40,
+          "path": [
+            "CCSPlayerInventory::SendInventoryUpdateEvent",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "31 C0 83 7F ? ? 75 ? 48 8B 47 ? 48 89 C7",
+          "before": "31 C0 83 7F 18 01 75 ?",
+          "line": 41,
+          "path": [
+            "CCSPlayerInventory::SendInventoryUpdateEvent",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        39,
+        40,
+        41
+      ],
+      "name": "CCSPlayerInventory::SendInventoryUpdateEvent",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 56 41 55 4C 8D AF ? ? ? ? 41 54 53 48 89 FB",
+          "before": "55 48 89 E5 41 56 41 55 4C 8D AF C8 08 00 00 41 54 53",
+          "line": 55,
+          "path": [
+            "CCSPlayerPawn::SetModelFromClass",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        53,
+        54,
+        55
+      ],
+      "name": "CCSPlayerPawn::SetModelFromClass",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 8B 8F ? ? ? ? 83 F9 ? 0F 84 ? ? ? ? 48 8B 35 ? ? ? ? 48 85 F6 0F 84 ? ? ? ? 83 F9 ? 0F 84 ? ? ? ? 0F B7 87 ? ? 00 00 48 89 C2 48 C1 EA ? 83 E2 ? 48 8B 14 D6 48 85 D2 0F 84 ? ? ? ? 25 ? ? ? ? 48 6B C0 ? 48 01 D0 3B 48 ? 0F 85 ? ? ? ? 4C 8B 28",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC 28 8B 8F 90 0E 00 00",
+          "line": 62,
+          "path": [
+            "CCSPlayerPawn::SetModelFromLoadout",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        60,
+        61,
+        62
+      ],
+      "name": "CCSPlayerPawn::SetModelFromLoadout",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        25,
+        26,
+        27
+      ],
+      "name": "CEconItemView::CEconItemView",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 48 8B 7F ? 48 85 FF 74 ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC 58 48 8B 7F 60",
+          "line": 34,
+          "path": [
+            "CEconItemView::operator=",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        32,
+        33,
+        34
+      ],
+      "name": "CEconItemView::operator=",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        79,
+        80
+      ],
+      "name": "CGCClientSharedObjectCache::m_Owner",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 54 24 ? 48 89 4C 24 ? 53 57 48 81 EC ? ? ? ?",
+          "before": "48 89 54 24 ? 48 89 4C 24 ? 53 57 48 81 EC",
+          "line": 12,
+          "path": [
+            "UpdateItemView",
+            "signatures",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        11,
+        12,
+        13
+      ],
+      "name": "UpdateItemView",
+      "updated": true
+    }
+  ],
+  "file": "weaponpaints/gamedata/weaponpaints.json",
+  "gamever": "14178",
+  "schema_version": 2,
+  "summary": {
+    "covered": 13,
+    "total": 13,
+    "updated": 8
+  }
+}

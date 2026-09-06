@@ -2541,6 +2541,7 @@ modules:
       - name: CGameResourceService_m_pEntitySystem
         category: structmember
         struct: CGameResourceService
+        member: CGameResourceService
         member: m_pEntitySystem
         alias:
           - GameEntitySystem
@@ -9687,16 +9688,19 @@ modules:
       - name: CCSPlayerController_InventoryServices_m_pInventory
         category: structmember
         struct: CCSPlayerController_InventoryServices
+        member: m_pInventory
         alias:
           - CCSPlayerController_InventoryServices::m_pInventory
       - name: CCSPlayerInventory_m_pSOCache
         category: structmember
         struct: CCSPlayerInventory
+        member: m_pSOCache
         alias:
           - CCSPlayerInventory::m_pSOCache
       - name: CGCClientSharedObjectCache_m_Owner
         category: structmember
         struct: CGCClientSharedObjectCache
+        member: m_Owner
         alias:
           - CGCClientSharedObjectCache::m_Owner
       - name: CSource2Server_vtable
@@ -9891,30 +9895,35 @@ modules:
       - name: CEntityInstance_m_pEntity
         category: structmember
         struct: CEntityInstance
+        member: CEntityInstance
         member: m_pEntity
         alias:
           - CEntityInstance::m_pEntity
       - name: CEntityInstance_m_hPrivateScope
         category: structmember
         struct: CEntityInstance
+        member: CEntityInstance
         member: m_hPrivateScope
         alias:
           - CEntityInstance::m_hPrivateScope
       - name: CEntityInstance_m_CScriptComponent
         category: structmember
         struct: CEntityInstance
+        member: CEntityInstance
         member: m_CScriptComponent
         alias:
           - CEntityInstance::m_CScriptComponent
       - name: CEntityInstance_m_pKeyValues
         category: structmember
         struct: CEntityInstance
+        member: CEntityInstance
         member: m_pKeyValues
         alias:
           - CEntityInstance::m_pKeyValues
       - name: CEntityInstance_m_iszPrivateVScripts
         category: structmember
         struct: CEntityInstance
+        member: CEntityInstance
         member: m_iszPrivateVScripts
         alias:
           - CEntityInstance::m_iszPrivateVScripts
@@ -10031,18 +10040,21 @@ modules:
       - name: CEntitySystem_m_nSuppressDormancyChangeCount
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_nSuppressDormancyChangeCount
         alias:
           - CEntitySystem::m_nSuppressDormancyChangeCount
       - name: CEntitySystem_m_nExecuteQueuedCreationDepth
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_nExecuteQueuedCreationDepth
         alias:
           - CEntitySystem::m_nExecuteQueuedCreationDepth
       - name: CEntitySystem_m_queuedDormancyChanges
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_queuedDormancyChanges
         alias:
           - CEntitySystem::m_queuedDormancyChanges
@@ -10258,6 +10270,7 @@ modules:
       - name: CSmokeGrenadeProjectile_m_SmokeVolume
         category: structmember
         struct: CSmokeGrenadeProjectile
+        member: CSmokeGrenadeProjectile
         member: m_SmokeVolume
         alias:
           - CSmokeGrenadeProjectile::m_SmokeVolume
@@ -10275,18 +10288,21 @@ modules:
       - name: SmokeVolume_m_vecCenterOrigin
         category: structmember
         struct: SmokeVolume
+        member: SmokeVolume
         member: m_vecCenterOrigin
         alias:
           - SmokeVolume::m_vecCenterOrigin
       - name: SmokeVolume_m_pStorage
         category: structmember
         struct: SmokeVolume
+        member: SmokeVolume
         member: m_pStorage
         alias:
           - SmokeVolume::m_pStorage
       - name: SmokeVolume_m_flStartTime
         category: structmember
         struct: SmokeVolume
+        member: SmokeVolume
         member: m_flStartTime
         alias:
           - SmokeVolume::m_flStartTime
@@ -10297,6 +10313,7 @@ modules:
       - name: SmokeVolume_m_nFrame
         category: structmember
         struct: SmokeVolume
+        member: SmokeVolume
         member: m_nFrame
         alias:
           - SmokeVolume::m_nFrame
@@ -10313,6 +10330,7 @@ modules:
       - name: CEntitySystem_m_nExecuteQueuedDeletionDepth
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_nExecuteQueuedDeletionDepth
         alias:
           - CEntitySystem::m_nExecuteQueuedDeletionDepth
@@ -10921,10 +10939,12 @@ modules:
       - name: CEntitySystem_m_entClassesByCPPClassname
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_entClassesByCPPClassname
       - name: CEntitySystem_m_entClassesByClassname
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_entClassesByClassname
       - name: CEntitySystem_CreateEntityByName
         category: func
@@ -10983,30 +11003,35 @@ modules:
       - name: CEntitySystem_m_EntityList
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_EntityList
         alias:
           - CEntitySystem::m_EntityList
       - name: CEntitySystem_m_entityNames
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_entityNames
         alias:
           - CEntitySystem::m_entityNames
       - name: CEntitySystem_m_entityComponentHelpers
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_entityComponentHelpers
         alias:
           - CEntitySystem::m_entityComponentHelpers
       - name: CEntitySystem_m_DataDescKeyUnserializers
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_DataDescKeyUnserializers
         alias:
           - CEntitySystem::m_DataDescKeyUnserializers
       - name: CEntitySystem_m_EntityPostSpawnCallback
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_EntityPostSpawnCallback
         alias:
           - CEntitySystem::m_EntityPostSpawnCallback
@@ -11084,6 +11109,7 @@ modules:
       - name: CBaseEntity_m_NetworkTransmitComponent
         category: structmember
         struct: CBaseEntity
+        member: CBaseEntity
         member: m_NetworkTransmitComponent
         alias:
           - CBaseEntity::m_NetworkTransmitComponent
@@ -11096,6 +11122,7 @@ modules:
       - name: CNetworkTransmitComponent_m_nStateFlags
         category: structmember
         struct: CNetworkTransmitComponent
+        member: CNetworkTransmitComponent
         member: m_nStateFlags
         alias:
           - CNetworkTransmitComponent::m_nStateFlags
@@ -11169,6 +11196,7 @@ modules:
       - name: CEntitySystem_m_EntityKeyValuesAllocator
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_EntityKeyValuesAllocator
       - name: CEntityKeyValuesAllocator_GetTempBuffer
         category: func
@@ -11177,6 +11205,7 @@ modules:
       - name: CEntitySystem_m_vSpawnOriginOffset
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_vSpawnOriginOffset
       - name: CEntityKeyValues_LoadFromContext
         category: func
@@ -11189,6 +11218,7 @@ modules:
       - name: CEntitySystem_m_nEntityKeyValuesAllocatorRefCount
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_nEntityKeyValuesAllocatorRefCount
         alias:
           - CEntitySystem::m_nEntityKeyValuesAllocatorRefCount
@@ -11762,6 +11792,7 @@ modules:
       - name: CEntitySystem_m_EventQueue
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_EventQueue
         alias:
           - CEntitySystem::m_EventQueue
@@ -11804,14 +11835,17 @@ modules:
       - name: CGameEntitySystem_m_iNetworkedEntCount
         category: structmember
         struct: CGameEntitySystem
+        member: CGameEntitySystem
         member: m_iNetworkedEntCount
       - name: CGameEntitySystem_m_iNonNetworkedSavedEntCount
         category: structmember
         struct: CGameEntitySystem
+        member: CGameEntitySystem
         member: m_iNonNetworkedSavedEntCount
       - name: CGameEntitySystem_m_entityListeners
         category: structmember
         struct: CGameEntitySystem
+        member: CGameEntitySystem
         member: m_entityListeners
       - name: CGameEntitySystem_BuildResourceManifest_ManifestNameOrGroupName
         category: vfunc
@@ -11820,6 +11854,7 @@ modules:
       - name: CEntitySystem_m_pCurrentManifest
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_pCurrentManifest
       - name: CGameEntitySystem_BuildResourceManifest_KeyValuesVectors
         category: vfunc
@@ -12001,6 +12036,7 @@ modules:
       - name: CBaseAnimGraph_m_skeletonInstance
         category: structmember
         struct: CBaseAnimGraph
+        member: CBaseAnimGraph
         member: m_skeletonInstance
         alias:
           - CBaseAnimGraph::m_skeletonInstance
@@ -12015,6 +12051,7 @@ modules:
       - name: CSkeletonInstance_m_animationController
         category: structmember
         struct: CSkeletonInstance
+        member: CSkeletonInstance
         member: m_animationController
         alias:
           - CSkeletonInstance::m_animationController
@@ -12070,6 +12107,7 @@ modules:
       - name: CCheckTransmitInfo_m_nPlayerSlot
         category: structmember
         struct: CCheckTransmitInfo
+        member: CCheckTransmitInfo
         member: m_nPlayerSlot
         alias:
           - CCheckTransmitInfo::m_nPlayerSlot
@@ -12077,6 +12115,7 @@ modules:
       - name: CCheckTransmitInfo_m_bFullUpdate
         category: structmember
         struct: CCheckTransmitInfo
+        member: CCheckTransmitInfo
         member: m_bFullUpdate
         alias:
           - CCheckTransmitInfo::m_bFullUpdate
@@ -12315,6 +12354,7 @@ modules:
       - name: CEntitySystem_m_Accessors
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_Accessors
       - name: CEntitySystem_CreateEntitySystem
         category: func
@@ -12356,6 +12396,7 @@ modules:
       - name: CGameEntitySystem_m_pEntity2Networkables
         category: structmember
         struct: CGameEntitySystem
+        member: CGameEntitySystem
         member: m_pEntity2Networkables
         alias:
           - CGameEntitySystem::m_pEntity2Networkables
@@ -12367,64 +12408,76 @@ modules:
       - name: CEntitySystem_m_sEntSystemName
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_sEntSystemName
       - name: CEntitySystem_m_eNetworkSerializationMode
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_eNetworkSerializationMode
       - name: CEntitySystem_m_Symbols
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_Symbols
         alias:
           - CEntitySystem::m_Symbols
       - name: CEntitySystem_m_pNetworkFieldChangedEventQueue
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_pNetworkFieldChangedEventQueue
         alias:
           - CEntitySystem::m_pNetworkFieldChangedEventQueue
       - name: CEntitySystem_m_pNetworkFieldScratchData
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_pNetworkFieldScratchData
         alias:
           - CEntitySystem::m_pNetworkFieldScratchData
       - name: CEntitySystem_m_pFieldChangeLimitSpew
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_pFieldChangeLimitSpew
         alias:
           - CEntitySystem::m_pFieldChangeLimitSpew
       - name: CEntitySystem_m_ComponentUnserializerInfoAllocator
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_Symbols
         alias:
           - CEntitySystem::m_ComponentUnserializerInfoAllocator
       - name: CEntitySystem_m_EntityMaterialAttributes
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_EntityMaterialAttributes
         alias:
           - CEntitySystem::m_EntityMaterialAttributes
       - name: CEntitySystem_m_flChangeCallbackSpewThreshold
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_flChangeCallbackSpewThreshold
         alias:
           - CEntitySystem::m_flChangeCallbackSpewThreshold
       - name: CEntitySystem_m_nSuppressDestroyImmediateCount
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_nSuppressDestroyImmediateCount
       - name: CEntitySystem_m_nSuppressAutoDeletionExecutionCount
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_nSuppressAutoDeletionExecutionCount
       - name: CEntitySystem_m_bEnableAutoDeletionExecution
         category: structmember
         struct: CEntitySystem
+        member: CEntitySystem
         member: m_bEnableAutoDeletionExecution
       - name: CEntitySystem_ClearEntityDatabase
         category: vfunc

@@ -1,34 +1,4 @@
 #!/usr/bin/env python3
-<<<<<<< HEAD
-"""Preprocess script for find-CNetworkMessages_dtor skill.
-
-Virtual function (last vtable slots). Primary path reuses the previous gamever's
-func_sig / vfunc metadata to relocate. Fallback: the destructor writes its own
-class vtable pointer, so xref the CNetworkMessages vtable global to recover it.
-FUNC_VTABLE_RELATIONS supplies the vtable_name metadata for the output YAML.
-"""
-
-import os
-
-try:
-    import yaml
-except ImportError:
-    yaml = None
-
-from ida_analyze_util import preprocess_common_skill
-
-TARGET_FUNCTION_NAMES = [
-    "CNetworkMessages_dtor",
-]
-
-FUNC_VTABLE_RELATIONS = [
-    # (func_name, vtable_class)
-    ("CNetworkMessages_dtor", "CNetworkMessages"),
-]
-
-GENERATE_YAML_DESIRED_FIELDS = [
-    # (symbol_name, generate_yaml_fields)
-=======
 """Deterministic preprocessor for the CNetworkMessages destructor vfunc."""
 
 import os
@@ -41,22 +11,14 @@ TARGET_FUNCTION_NAMES = ["CNetworkMessages_dtor"]
 VTABLE_CLASS = "CNetworkMessages"
 
 GENERATE_YAML_DESIRED_FIELDS = [
->>>>>>> upstream/main
     (
         "CNetworkMessages_dtor",
         [
             "func_name",
-<<<<<<< HEAD
-            "func_sig",
-            "func_va",
-            "func_rva",
-            "func_size",
-=======
             "func_va",
             "func_rva",
             "func_size",
             "func_sig",
->>>>>>> upstream/main
             "vtable_name",
             "vfunc_offset",
             "vfunc_index",
@@ -65,22 +27,6 @@ GENERATE_YAML_DESIRED_FIELDS = [
 ]
 
 
-<<<<<<< HEAD
-def _read_vtable_va(yaml_path):
-    """Read vtable_va from a vtable YAML file, returning it as a hex string or None."""
-    if yaml is None:
-        return None
-    try:
-        with open(yaml_path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-        if isinstance(data, dict):
-            va = data.get("vtable_va")
-            if va:
-                return str(va)
-    except Exception:
-        pass
-    return None
-=======
 def _resolve_destructor_slot(vtable_payload, platform):
     if not isinstance(vtable_payload, dict) or vtable_payload.get("vtable_class") != VTABLE_CLASS:
         return None
@@ -114,7 +60,6 @@ def _resolve_target_output(expected_outputs, new_binary_dir, platform):
         if Path(path).name == expected_basename and Path(path).resolve().parent == module_root
     ]
     return matches[0] if len(matches) == 1 else None
->>>>>>> upstream/main
 
 
 async def preprocess_skill(
@@ -127,48 +72,6 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-<<<<<<< HEAD
-    """Reuse old func_sig/vfunc metadata first; fallback to vtable-ptr xref."""
-    _ = skill_name
-
-    # Fallback anchor: the dtor writes *this = CNetworkMessages_vtable, so it
-    # references the vtable global. On Linux that reference points at the
-    # _ZTV symbol = vtable_va - 0x10; on Windows it is the vtable_va directly.
-    func_xrefs = None
-    vtable_yaml_path = os.path.join(new_binary_dir, "CNetworkMessages_vtable.%s.yaml" % platform)
-    vtable_va = _read_vtable_va(vtable_yaml_path)
-    if vtable_va:
-        xref_va = vtable_va if platform == "windows" else hex(int(vtable_va, 16) - 0x10)
-        func_xrefs = [
-            {
-                "func_name": "CNetworkMessages_dtor",
-                "xref_strings": [],
-                "xref_gvs": [xref_va],
-                "xref_signatures": [],
-                "xref_funcs": [],
-                "exclude_funcs": [],
-                "exclude_strings": [],
-                "exclude_gvs": [],
-                "exclude_signatures": [],
-            },
-        ]
-    elif debug:
-        print("    Preprocess: CNetworkMessages_vtable vtable_va not found, relying on func_sig reuse only")
-
-    return await preprocess_common_skill(
-        session=session,
-        expected_outputs=expected_outputs,
-        old_yaml_map=old_yaml_map,
-        new_binary_dir=new_binary_dir,
-        platform=platform,
-        image_base=image_base,
-        func_names=TARGET_FUNCTION_NAMES,
-        func_xrefs=func_xrefs,
-        func_vtable_relations=FUNC_VTABLE_RELATIONS,
-        generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
-        debug=debug,
-    )
-=======
     """Resolve the ABI destructor slot and emit a freshly generated func_sig."""
     _ = skill_name, old_yaml_map
     target_output = _resolve_target_output(expected_outputs, new_binary_dir, platform)
@@ -220,4 +123,3 @@ async def preprocess_skill(
     }
     write_func_yaml(target_output, payload)
     return True
->>>>>>> upstream/main
