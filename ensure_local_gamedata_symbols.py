@@ -37,6 +37,13 @@ SEEDS = [
 
 SKILLS_DIR = ".claude/skills"
 
+# Renamed engine symbols: old gamedata keys map to the canonical analyzed symbol via
+# config aliases instead of separate analysis tasks.
+ALIAS_OVERRIDES = {
+    "CCSPlayerController_HandleCommandJoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
+    "CCSPlayerController_HandleCommand_JoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
+}
+
 
 def newest_config():
     candidates = glob.glob("configs/*.yaml")
@@ -56,7 +63,7 @@ def load_seed_specs():
         with open(seed, "r", encoding="utf-8") as f:
             gamedata = json.load(f)
         for key, entry in gamedata.items():
-            symbol_name = key.replace("::", "_")
+            symbol_name = ALIAS_OVERRIDES.get(key, key.replace("::", "_"))
             alias = key if key != symbol_name else None
             if "signatures" in entry:
                 specs.append((symbol_name, "func", None, None, alias))

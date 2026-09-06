@@ -6428,9 +6428,6 @@ modules:
       - name: find-CEntitySystem_m_EntityList
         expected_output:
           - CEntitySystem_m_EntityList.{platform}.yaml
-      - name: find-CCSPlayerController_HandleCommandJoinTeam
-        expected_output:
-          - CCSPlayerController_HandleCommandJoinTeam.{platform}.yaml
       - name: find-CCSGameRules_PostCleanUp
         expected_output:
           - CCSGameRules_PostCleanUp.{platform}.yaml
@@ -6539,9 +6536,6 @@ modules:
       - name: find-CBaseIssue_CountPotentialVoters
         expected_output:
           - CBaseIssue_CountPotentialVoters.{platform}.yaml
-      - name: find-CCSPlayerController_HandleCommand_JoinTeam
-        expected_output:
-          - CCSPlayerController_HandleCommand_JoinTeam.{platform}.yaml
       - name: find-MpHumanTeam_ApplyRestriction
         expected_output:
           - MpHumanTeam_ApplyRestriction.{platform}.yaml
@@ -9848,8 +9842,6 @@ modules:
         category: struct
       - name: GameResourceServiceServer
         category: struct
-      - name: CCSPlayerController_HandleCommandJoinTeam
-        category: func
       - name: CCSGameRules_PostCleanUp
         category: func
       - name: CHEGrenadeProjectile_Create
@@ -9986,10 +9978,6 @@ modules:
         category: func
         alias:
           - CBaseIssue::CountPotentialVoters
-      - name: CCSPlayerController_HandleCommand_JoinTeam
-        category: func
-        alias:
-          - CCSPlayerController::HandleCommand_JoinTeam
       - name: MpHumanTeam_ApplyRestriction
         category: func
       - name: CNetworkGameServer_PackEntities
@@ -10942,6 +10930,8 @@ modules:
       - name: CBasePlayerController_HandleCommand_JoinTeam
         category: func
         alias:
+          - CCSPlayerController_HandleCommand_JoinTeam
+          - CCSPlayerController_HandleCommandJoinTeam
           - CBasePlayerController::HandleCommand_JoinTeam
       - name: CBasePlayerController_SetPlayerName
         category: func

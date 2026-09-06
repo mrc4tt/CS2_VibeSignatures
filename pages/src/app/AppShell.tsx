@@ -40,7 +40,7 @@ export function AppShell() {
       <Header className="app-header">
         <a href="https://github.com/mrc4tt/CS2_VibeSignatures" target="_blank" rel="noopener noreferrer" className="app-brand">
           <DashboardOutlined />
-          <Typography.Text strong>CS2 VibeSignatures</Typography.Text>
+          <Typography.Text strong>CS2 VibeSignatures - Forked</Typography.Text>
         </a>
         <Tabs
           className="app-nav"
