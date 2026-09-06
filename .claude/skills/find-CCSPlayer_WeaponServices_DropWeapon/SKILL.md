@@ -30,6 +30,23 @@ aborts. Therefore:
 3. \`func_sig\` MUST start at \`func_va\` (the true function head — verify with IDA's function start).
 4. Only then write the YAML. A mismatch is always a bug in YOUR output, never in the pipeline.
 
+
+## Struct-member alternative (choose the TRUTHFUL schema)
+
+If investigation shows the target is NOT a vtable slot but a plain struct member of a
+non-polymorphic class (no RTTI/vtable exists for the class), emit the structmember schema
+instead:
+
+```yaml
+struct_name: <owning class name>
+member_name: <member name>
+offset: "<hex byte offset as string>"
+size: <member size in bytes, decimal>
+offset_sig: "<short byte pattern of an instruction touching the offset>"
+```
+
+A truthful structmember artifact is always accepted; a guessed vfunc artifact is not.
+
 ## Output schema (STRICT)
 
 Write the YAML file `CCSPlayer_WeaponServices_DropWeapon.{platform}.yaml` with EXACTLY these fields — no more, no fewer.

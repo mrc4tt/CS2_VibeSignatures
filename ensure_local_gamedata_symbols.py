@@ -123,9 +123,11 @@ def write_skill(symbol_name, category, struct, alias):
         )
     elif category == "vfunc":
         kind_hint = (
-            f"This is a VIRTUAL function - resolve the {display} vtable via RTTI and identify the\n"
-            f"slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots\n"
-            f"commonly differ between platforms - never assume identical indices."
+            f"This gamedata entry is stored as an OFFSET. Determine TRUTHFULLY which of the two\n"
+            f"it is: (a) a vtable slot of a POLYMORPHIC class (RTTI/vtable present) -> emit the\n"
+            f"vfunc schema, or (b) a plain struct member of a NON-POLYMORPHIC class (no RTTI/vtable;\n"
+            f"e.g. config-style POD structs like BotProfile) -> emit the structmember schema.\n"
+            f"Never guess: if no vtable exists for the class, it is case (b)."
         )
         output = (
             "Write the YAML file `<symbol>.{platform}.yaml` with EXACTLY these fields:\n"

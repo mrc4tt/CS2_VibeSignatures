@@ -1,17 +1,17 @@
 ---
-name: find-CCSBot_Profile
+name: find-CCSPlayer_WeaponServices_Weapon_GetSlot
 description: |
-  Locate CCSBot::Profile in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
-  signature or offset for the local gamedata entry "CCSBot::Profile" (symbol CCSBot_Profile). This is a VIRTUAL function - resolve the CCSBot::Profile vtable via RTTI and identify the
-slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
-commonly differ between platforms - never assume identical indices.
-  Trigger: CCSBot_Profile, CCSBot::Profile
+  Locate CCSPlayer_WeaponServices::GetSlot in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
+  signature or offset for the local gamedata entry "CCSPlayer_WeaponServices::GetSlot" (symbol CCSPlayer_WeaponServices_Weapon_GetSlot). This is a non-virtual function - emit a byte signature (func_sig), not an offset.
+Locate it via cross-references, distinctive constants/strings in its body, or callers
+of related symbols; verify by decompilation before committing to a candidate.
+  Trigger: CCSPlayer_WeaponServices_Weapon_GetSlot, CCSPlayer_WeaponServices::GetSlot
 disable-model-invocation: true
 ---
 
-# Find CCSBot_Profile
+# Find CCSPlayer_WeaponServices_Weapon_GetSlot
 
-Target: `CCSBot::Profile` (vfunc) in the CS2 server module.
+Target: `CCSPlayer_WeaponServices::GetSlot` (func) in the CS2 server module.
 
 > Do NOT anchor on raw byte patterns from older releases - they shift. Use anchors only to *locate*
 > the function, then generate a fresh minimal-unique function-head signature with relocated bytes
@@ -20,9 +20,9 @@ Target: `CCSBot::Profile` (vfunc) in the CS2 server module.
 
 ## Method
 
-This is a VIRTUAL function - resolve the CCSBot::Profile vtable via RTTI and identify the
-slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
-commonly differ between platforms - never assume identical indices.
+This is a non-virtual function - emit a byte signature (func_sig), not an offset.
+Locate it via cross-references, distinctive constants/strings in its body, or callers
+of related symbols; verify by decompilation before committing to a candidate.
 
 ## Mandatory self-check before emitting
 
@@ -36,23 +36,6 @@ aborts. Therefore:
 3. `func_sig` MUST start at `func_va` (the true function head).
 4. Only then write the YAML. A mismatch is always a bug in YOUR output, never in the pipeline.
 
-
-## Struct-member alternative (choose the TRUTHFUL schema)
-
-If investigation shows the target is NOT a vtable slot but a plain struct member of a
-non-polymorphic class (no RTTI/vtable exists for the class), emit the structmember schema
-instead:
-
-```yaml
-struct_name: <owning class name>
-member_name: <member name>
-offset: "<hex byte offset as string>"
-size: <member size in bytes, decimal>
-offset_sig: "<short byte pattern of an instruction touching the offset>"
-```
-
-A truthful structmember artifact is always accepted; a guessed vfunc artifact is not.
-
 ## Output schema (STRICT)
 
 Write the YAML file `<symbol>.{platform}.yaml` with EXACTLY these fields:
@@ -61,11 +44,9 @@ func_name: <SYMBOL_NAME>
 func_va: "<hex virtual address>"
 func_rva: "<hex rva>"
 func_size: "<hex size>"
-vtable_name: <owning class RTTI name>
-vfunc_offset: "<hex vtable byte offset>"
-vfunc_index: <decimal slot index>
+func_sig: "<byte pattern, ?? wildcards, function head, minimal-unique>"
 ```
-NEVER include func_sig.
+NEVER include vfunc_index, vfunc_offset, vfunc_sig or vtable_name.
 
 ## Verification
 
