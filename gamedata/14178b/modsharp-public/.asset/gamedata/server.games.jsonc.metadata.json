@@ -1,10 +1,36 @@
 {
   "entries": [
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 89 F3 48 83 EC ? F3 0F 11 85 ? ? ? ?",
+          "before": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 89 F3 48 83 EC 78 F3 0F 11 85 ? ? ? ?",
+          "line": 5,
+          "path": [
+            "Addresses",
+            "CAttributeList::SetOrAddAttributeValueByName",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F8 8B DA 48 8B F1 83 FA ?",
+          "before": "40 53 55 41 56 48 81 EC ? ? ? ? 0F 29 74 24 70",
+          "line": 6,
+          "path": [
+            "Addresses",
+            "CAttributeList::SetOrAddAttributeValueByName",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6
+      ],
       "name": "CAttributeList::SetOrAddAttributeValueByName",
-      "updated": false
+      "updated": true
     },
     {
       "covered": false,
@@ -884,8 +910,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        1132,
+        1133
+      ],
       "name": "CCSPlayerInventory::GetItemInLoadout",
       "updated": false
     },
@@ -1767,8 +1796,8 @@
   "gamever": "14178b",
   "schema_version": 2,
   "summary": {
-    "covered": 47,
+    "covered": 49,
     "total": 207,
-    "updated": 19
+    "updated": 20
   }
 }

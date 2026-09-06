@@ -12,20 +12,17 @@ bin
 vcall_finder
 .codex/skills
 .agents/skills
-<<<<<<< HEAD
+
+# Local fork scripts and files (git-ignored by design)
 *.sh
 libtier0.so
-hm
 libtier0.so.*
-libtier0.so
 hm
 clear_ida_db.sh
 pop.sh
 update_css_gamedata.sh
 gamedatatest.json
-=======
 
 # Basic Memory knowledge base (memory.db, config, logs stay local)
 memory/*.db*
 memory/config.json
->>>>>>> upstream/main
