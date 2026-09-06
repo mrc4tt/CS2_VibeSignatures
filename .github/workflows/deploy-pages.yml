@@ -21,6 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    # Build from THIS repo's gamedata/ + gamesymbols/ (fork-local data), satisfying the
+    # upstream pages app's PAGES_RELEASE_INPUT_ROOT gate without release staging.
+    env:
+      PAGES_RELEASE_INPUT_ROOT: ${{ github.workspace }}
     defaults:
       run:
         working-directory: pages
