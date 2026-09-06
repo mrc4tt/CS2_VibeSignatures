@@ -11,8 +11,8 @@ import ida_kernwin
 import ida_segment
 import idautils
 
-CLASS_NAME = "CCSPlayer_WeaponServices"
-SLOT = 31          # linux: 31, windows: 30 (matchzy gamedata)
+CLASS_NAME = "CCSPlayer_WeaponServices"   # default - spoerges ved koersel
+SLOT = 31          # default - spoerges ved koersel (linux: 31, windows: 30)
 SYMBOL = "CCSPlayer_WeaponServices_SelectItem"
 
 ns = {"__name__": "cs2vibe_vtable_finder"}
@@ -38,6 +38,13 @@ def is_code(ea):
     return bool(seg and (seg.perm & ida_segment.SEGPERM_EXEC))
 
 def main():
+    global CLASS_NAME, SLOT, SYMBOL
+    CLASS_NAME = ida_kernwin.ask_str(CLASS_NAME, 0, "Class name (vtable ejer):") or CLASS_NAME
+    SLOT = ida_kernwin.ask_long(SLOT, "vfunc slot index (0-based fra vtable-start):")
+    if SLOT is None:
+        return
+    SYMBOL = ida_kernwin.ask_str(SYMBOL, 1, "Output symbol-navn (YAML-filnavn):") or SYMBOL
+
     # 1. typeinfo name-string: _ZTS = length-prefixed class name
     ts = f"{len(CLASS_NAME)}{CLASS_NAME}".encode()
     ts_eas = find_bytes(ts)

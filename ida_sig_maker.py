@@ -310,9 +310,78 @@ def emit_vfunc_from_cursor(symbol, vtable_name, vfunc_index):
     emit_vfunc_yaml(func_ea, symbol, vtable_name, vfunc_index)
 
 
+def emit_structmember_from_cursor(struct_name, member_name, size=4):
+    """Cursor paa en instruktion der tilgaer memberet (fx mov eax, [r13+0x5C]).
+    Laeser displacement'en og skriver structmember-YAML."""
+    import ida_ua
+    ea = ida_kernwin.get_screen_ea()
+    insn = ida_ua.insn_t()
+    if ida_ua.decode_insn(insn, ea) <= 0:
+        print("[sig_maker] kan ikke dekode instruktion under cursor.")
+        return
+    offset = None
+    raw = ida_bytes.get_bytes(ea, insn.size) or b""
+    for op in insn.ops:
+        if op.type == ida_ua.o_displ and op.offb != -1:
+            offset = op.addr & 0xFFFFFFFF
+            if offset >= 0x80000000:
+                offset -= 0x100000000
+            break
+    if offset is None or offset <= 0:
+        print("[sig_maker] ingen positiv displacement under cursor - placér cursor paa member-adgang.")
+        return
+    offset_sig = " ".join(f"{b:02X}" for b in raw)
+    yaml_block = (
+        f"struct_name: {struct_name}\n"
+        f"member_name: {member_name}\n"
+        f"offset: '{hex(offset)}'\n"
+        f"size: {size}\n"
+        f"offset_sig: {offset_sig}\n"
+    )
+    target = detect_target()
+    if target:
+        for out_dir in target["dirs"]:
+            out_path = os.path.join(out_dir, f"{struct_name}_{member_name}.{target['platform']}.yaml")
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(yaml_block)
+            print(f"[sig_maker] written: {out_path}")
+        print(f"[sig_maker] structmember {struct_name}.{member_name} = {hex(offset)} ({offset})")
+        print(yaml_block)
+    else:
+        print("[sig_maker] YAML blok (paste manuelt):")
+        print(yaml_block)
+
+
+class _StructMemberAction(ida_kernwin.action_handler_t):
+    def activate(self, ctx):
+        struct_name = ida_kernwin.ask_str("CServerSideClient", 0, "Struct/class navn:")
+        member_name = ida_kernwin.ask_str("m_member", 1, "Member navn (fx m_NetChannel):")
+        if not struct_name or not member_name:
+            return
+        emit_structmember_from_cursor(struct_name, member_name)
+        return 1
+
+    def update(self, ctx):
+        return ida_kernwin.AST_ENABLE_ALWAYS
+
+
+ACTION_ID_SM = "cs2vibe:struct_member"
+try:
+    ida_kernwin.unregister_action(ACTION_ID_SM)
+except Exception:
+    pass
+_desc_sm = ida_kernwin.action_desc_t(
+    ACTION_ID_SM, "CS2 struct member emitter", _StructMemberAction(), "Ctrl-Alt-M",
+    "Cursor paa member-adgangsinstruktion -> structmember YAML", -1,
+)
+ida_kernwin.register_action(_desc_sm)
+ida_kernwin.attach_action_to_menu("Edit/Plugins/CS2 struct member emitter", ACTION_ID_SM)
+
 register_action()
 
 if __name__ == "__main__":
+    main()
+
     main()
 
 if __name__ == "__main__":
