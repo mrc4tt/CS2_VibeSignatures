@@ -98,4 +98,32 @@ def main():
         print("[vtable] Windows-side: gentag i server.dll-IDB og saet SLOT = 30.")
         return
 
-main()
+class _VtableFinderAction(ida_kernwin.action_handler_t):
+    def activate(self, ctx):
+        main()
+        return 1
+
+    def update(self, ctx):
+        return ida_kernwin.AST_ENABLE_ALWAYS
+
+
+ACTION_ID = "cs2vibe:vtable_finder"
+
+
+def register_action():
+    try:
+        ida_kernwin.unregister_action(ACTION_ID)
+    except Exception:
+        pass
+    desc = ida_kernwin.action_desc_t(
+        ACTION_ID, "CS2 vtable finder", _VtableFinderAction(), "Ctrl-Alt-V",
+        "Find vtable via RTTI og emit vfunc YAML", -1,
+    )
+    ida_kernwin.register_action(desc)
+    ida_kernwin.attach_action_to_menu("Edit/Plugins/CS2 vtable finder", ACTION_ID)
+
+
+register_action()
+
+if __name__ == "__main__":
+    main()
