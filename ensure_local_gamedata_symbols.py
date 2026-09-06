@@ -69,7 +69,7 @@ def newest_config():
 
 
 def load_seed_specs():
-    """Derive (symbol_name, category, struct, member, alias) for every seed entry."""
+    """Derive (symbol_name, category, struct, member, alias, lib) for every seed entry."""
     specs = []
     for seed in SEEDS:
         if not os.path.exists(seed):
@@ -80,22 +80,23 @@ def load_seed_specs():
         for key, entry in gamedata.items():
             symbol_name = ALIAS_OVERRIDES.get(key, key.replace("::", "_"))
             alias = key if key != symbol_name else None
+            lib = (entry.get("signatures", {}) or {}).get("library") or entry.get("library")
             if "signatures" in entry:
-                specs.append((symbol_name, "func", None, None, alias))
+                specs.append((symbol_name, "func", None, None, alias, lib))
                 continue
             cls, _, method = key.partition("::")
             if method.startswith("m_"):
-                specs.append((symbol_name, "structmember", cls, method, alias))
+                specs.append((symbol_name, "structmember", cls, method, alias, lib))
             elif cls in ("CEntityIdentity", "CMoveData") and method:
                 # layout-holder-klasser: offset-entries er structmembers (agent-verificeret 14178b)
-                specs.append((symbol_name, "structmember", cls, method, alias))
+                specs.append((symbol_name, "structmember", cls, method, alias, lib))
             elif symbol_name.startswith("BotProfile_") and symbol_name[len("BotProfile_"):] in BOTPROFILE_MEMBERS:
                 # BotProfile er en non-polymorphic POD - offset-entries er structmembers
                 # (IDA-verificeret 14178b: m_attackDelay +0x5C; Bot-Improver reference).
                 specs.append((symbol_name, "structmember", "BotProfile",
-                              BOTPROFILE_MEMBERS[symbol_name[len("BotProfile_"):]], alias))
+                              BOTPROFILE_MEMBERS[symbol_name[len("BotProfile_"):]], alias, lib))
             else:
-                specs.append((symbol_name, "vfunc", None, None, alias))
+                specs.append((symbol_name, "vfunc", None, None, alias, lib))
     return specs
 
 
@@ -234,53 +235,65 @@ aborts. Therefore:
         f.write(body)
 
 
+LIB_MODULE = {"server": "server", "engine2": "engine", "engine": "engine", "client": "client"}
+ENGINE_CLASSES = ("CNetworkGameServerBase", "CNetworkGameServer")
+
+
+def module_for(lib, symbol_name):
+    if lib and lib in LIB_MODULE:
+        return LIB_MODULE[lib]
+    if symbol_name.startswith(ENGINE_CLASSES):
+        return "engine"
+    return "server"
+
+
 def inject(text, config_path, specs):
-    module_match = re.search(r"^  - name: server$", text, re.M)
-    if not module_match:
-        sys.exit(f"error: {config_path}: no 'server' module found")
-    next_module = re.search(r"^  - name: (?!server$)", text[module_match.start() + 1:], re.M)
-    block_end = module_match.start() + 1 + next_module.start() if next_module else len(text)
-    block = text[module_match.start():block_end]
+    """Inject specs into the module matching each symbol's library (server/engine/...)."""
+    module_matches = list(re.finditer(r"^  - name: ([\w]+)", text, re.M))
+    blocks = []  # (name, block_text, start, end)
+    for i, m in enumerate(module_matches):
+        end = module_matches[i + 1].start() if i + 1 < len(module_matches) else len(text)
+        blocks.append((m.group(1), text[m.start():end], m.start(), end))
 
-    skills_match = re.search(r"^    skills:\n", block, re.M)
-    symbols_match = re.search(r"^    symbols:\n", block, re.M)
-    if not skills_match or not symbols_match:
-        sys.exit(f"error: {config_path}: server module lacks skills:/symbols: sections")
-
-    new_tasks = []
-    new_symbols = []
-    needed_structs = set()
-    new_skills = []
-    for symbol_name, category, struct, member, alias in specs:
-        symbol_present = f"- name: {symbol_name}\n" in block
-        task_present = f"- name: find-{symbol_name}\n" in block
-        if symbol_present and task_present:
+    new_tasks, new_symbols, new_structs, touched = {}, {}, {}, set()
+    for symbol_name, category, struct, member, alias, lib in specs:
+        module = module_for(lib, symbol_name)
+        block_text = next(btext for name, btext, s, e in blocks if name == module)
+        if f"- name: {symbol_name}\n" in block_text:
             continue
-        if not task_present:
-            new_tasks.append(find_task_block(symbol_name))
-            # a task without a skill can never run - ensure one exists
-            write_skill(symbol_name, category, struct, alias)
-            new_skills.append(symbol_name)
-        if not symbol_present:
-            new_symbols.append(symbol_entry_block(symbol_name, category, struct, member, alias))
-            if struct and f"- name: {struct}\n" not in block:
-                needed_structs.add(struct)
+        new_tasks.setdefault(module, []).append(find_task_block(symbol_name))
+        new_symbols.setdefault(module, []).append(symbol_entry_block(symbol_name, category, struct, member, alias))
+        if struct and f"- name: {struct}\n" not in block_text:
+            new_structs.setdefault(module, []).append(struct)
+        write_skill(symbol_name, category, struct, alias)
+        touched.add(module)
 
-    if not new_tasks:
+    if not touched:
         print(f"  already present: {config_path}")
         return text
 
-    struct_blocks = [struct_entry_block(s) for s in sorted(needed_structs)]
-    patched = (
-        block[: skills_match.end()]
-        + "".join(new_tasks)
-        + block[skills_match.end(): symbols_match.end()]
-        + "".join(struct_blocks)
-        + "".join(new_symbols)
-        + block[symbols_match.end():]
-    )
-    print(f"  injected {len(new_tasks)} task(s) + {len(new_symbols)} symbol(s) + {len(struct_blocks)} struct(s) + {len(new_skills)} skill(s)")
-    return text[: module_match.start()] + patched + text[block_end:]
+    result = text
+    for module in sorted(touched):
+        btext, m_start, m_end = next((bt, s, e) for name, bt, s, e in blocks if name == module)
+        block = result[m_start:m_end]
+        skills_match = re.search(r"^    skills:\n", block, re.M)
+        symbols_match = re.search(r"^    symbols:\n", block, re.M)
+        if not skills_match or not symbols_match:
+            print(f"  warning: module {module} mangler skills:/symbols: - skipper")
+            continue
+        struct_blocks = [struct_entry_block(s) for s in sorted(new_structs.get(module, []))]
+        block = (
+            block[: skills_match.end()]
+            + "".join(new_tasks[module])
+            + block[skills_match.end(): symbols_match.end()]
+            + "".join(struct_blocks)
+            + "".join(new_symbols[module])
+            + block[symbols_match.end():]
+        )
+        result = result[:m_start] + block + result[m_end:]
+        print(f"  {module}: +{len(new_tasks[module])} task(s), +{len(new_symbols[module])} symbol(s)")
+
+    return result
 
 
 def main():

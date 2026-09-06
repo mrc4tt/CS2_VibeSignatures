@@ -700,6 +700,12 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-CNetworkGameServer_PackEntities
+        expected_output:
+          - CNetworkGameServer_PackEntities.{platform}.yaml
+      - name: find-CNetworkGameServerBase_m_Clients
+        expected_output:
+          - CNetworkGameServerBase_m_Clients.{platform}.yaml
       - name: find-CNetworkGameServer_vtable
         expected_output:
           - CNetworkGameServer_vtable.{platform}.yaml
@@ -2501,6 +2507,18 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
+      - name: CNetworkGameServerBase
+        category: struct
+      - name: CNetworkGameServer_PackEntities
+        category: func
+        alias:
+          - CNetworkGameServer::PackEntities
+      - name: CNetworkGameServerBase_m_Clients
+        category: structmember
+        struct: CNetworkGameServerBase
+        member: m_Clients
+        alias:
+          - CNetworkGameServerBase::m_Clients
       - name: CNetworkGameServer_vtable
         category: vtable
       - name: CServerSideClient_vtable
@@ -6422,6 +6440,12 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CCSPlayer_WeaponServices_Weapon_GetSlot
+        expected_output:
+          - CCSPlayer_WeaponServices_Weapon_GetSlot.{platform}.yaml
+      - name: find-CCSPlayerController_HandleCommand_JoinTeam
+        expected_output:
+          - CCSPlayerController_HandleCommand_JoinTeam.{platform}.yaml
       - name: find-UTIL_Remove
         expected_output:
           - UTIL_Remove.{platform}.yaml
@@ -6536,9 +6560,6 @@ modules:
       - name: find-MpHumanTeam_ApplyRestriction
         expected_output:
           - MpHumanTeam_ApplyRestriction.{platform}.yaml
-      - name: find-CNetworkGameServer_PackEntities
-        expected_output:
-          - CNetworkGameServer_PackEntities.{platform}.yaml
       - name: find-CCSGameRules_SameMapTeardown
         expected_output:
           - CCSGameRules_SameMapTeardown.{platform}.yaml
@@ -6560,9 +6581,6 @@ modules:
       - name: find-CBaseEntity_m_iTeamNum
         expected_output:
           - CBaseEntity_m_iTeamNum.{platform}.yaml
-      - name: find-CNetworkGameServerBase_m_Clients
-        expected_output:
-          - CNetworkGameServerBase_m_Clients.{platform}.yaml
       - name: find-CBasePlayerController_FakeClientFlags
         expected_output:
           - CBasePlayerController_FakeClientFlags.{platform}.yaml
@@ -9831,6 +9849,10 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CCSPlayerController_HandleCommand_JoinTeam
+        category: func
+        alias:
+          - CCSPlayerController::HandleCommand_JoinTeam
       - name: CEntityIdentity
         category: struct
       - name: CNetworkGameServerBase
@@ -10003,10 +10025,6 @@ modules:
           - CBaseIssue::CountPotentialVoters
       - name: MpHumanTeam_ApplyRestriction
         category: func
-      - name: CNetworkGameServer_PackEntities
-        category: func
-        alias:
-          - CNetworkGameServer::PackEntities
       - name: CCSGameRules_SameMapTeardown
         category: func
         alias:
@@ -10045,10 +10063,6 @@ modules:
         member: m_iTeamNum
         alias:
           - CBaseEntity::m_iTeamNum
-      - name: CNetworkGameServerBase_m_Clients
-        category: structmember
-        struct: CNetworkGameServerBase
-        member: m_Clients
         alias:
           - CNetworkGameServerBase::m_Clients
       - name: CBasePlayerController_FakeClientFlags
