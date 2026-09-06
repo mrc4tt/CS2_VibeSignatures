@@ -220,14 +220,19 @@ def inject(text, config_path, specs):
     needed_structs = set()
     new_skills = []
     for symbol_name, category, struct, member, alias in specs:
-        if f"- name: {symbol_name}\n" in block:
+        symbol_present = f"- name: {symbol_name}\n" in block
+        task_present = f"- name: find-{symbol_name}\n" in block
+        if symbol_present and task_present:
             continue
-        new_tasks.append(find_task_block(symbol_name))
-        new_symbols.append(symbol_entry_block(symbol_name, category, struct, member, alias))
-        if struct and f"- name: {struct}\n" not in block:
-            needed_structs.add(struct)
-        write_skill(symbol_name, category, struct, alias)
-        new_skills.append(symbol_name)
+        if not task_present:
+            new_tasks.append(find_task_block(symbol_name))
+            # a task without a skill can never run - ensure one exists
+            write_skill(symbol_name, category, struct, alias)
+            new_skills.append(symbol_name)
+        if not symbol_present:
+            new_symbols.append(symbol_entry_block(symbol_name, category, struct, member, alias))
+            if struct and f"- name: {struct}\n" not in block:
+                needed_structs.add(struct)
 
     if not new_tasks:
         print(f"  already present: {config_path}")

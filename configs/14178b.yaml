@@ -6444,6 +6444,12 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-UTIL_Remove
+        expected_output:
+          - UTIL_Remove.{platform}.yaml
+      - name: find-CEntitySystem_m_EntityList
+        expected_output:
+          - CEntitySystem_m_EntityList.{platform}.yaml
       - name: find-CCSPlayerController_HandleCommandJoinTeam
         expected_output:
           - CCSPlayerController_HandleCommandJoinTeam.{platform}.yaml
