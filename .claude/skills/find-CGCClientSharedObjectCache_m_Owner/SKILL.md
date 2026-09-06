@@ -18,6 +18,18 @@ Target: `CGCClientSharedObjectCache::m_Owner` (structmember) in the CS2 server m
 
 This is a STRUCT MEMBER OFFSET (schema netvar). Resolve the CGCClientSharedObjectCache class layout; m_Owner holds the owning SteamID64 (CSteamID) of the cache. Cross-check: constructors of CGCClientSharedObjectCache store the owner id passed from the inventory service; the offset is small (early member region).
 
+## Mandatory self-check before emitting (func artifacts)
+
+The pipeline re-reads the bytes at your \`func_va\` and deterministically regenerates \`func_sig\` from
+them — if your \`func_sig\` does not match those bytes EXACTLY (with \`??\` matching anything), the run
+aborts. Therefore:
+
+1. After picking the function, read the actual bytes at \`func_va\` via the IDA MCP (get-bytes/disasm).
+2. Derive \`func_sig\` FROM those bytes: keep stable opcode bytes literally, wildcard relocated/
+   variable operands (displacements, immediates, stack sizes) as \`??\`.
+3. \`func_sig\` MUST start at \`func_va\` (the true function head — verify with IDA's function start).
+4. Only then write the YAML. A mismatch is always a bug in YOUR output, never in the pipeline.
+
 ## Output schema (STRICT)
 
 Write the YAML file `CGCClientSharedObjectCache_m_Owner.{platform}.yaml` with EXACTLY these fields — no more, no fewer.

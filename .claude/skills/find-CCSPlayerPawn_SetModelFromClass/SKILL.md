@@ -18,6 +18,18 @@ Target: `CCSPlayerPawn::SetModelFromClass` (func) in the CS2 server module, both
 
 Shortlist via callers of CBaseModelEntity::SetModel inside pawn model-selection code: this variant takes the pawn's class model. The body resolves a cached model precache handle from the player class and calls SetModel. Distinguish from SetModelFromLoadout by the ABSENCE of loadout/inventory item lookups in the call chain.
 
+## Mandatory self-check before emitting (func artifacts)
+
+The pipeline re-reads the bytes at your \`func_va\` and deterministically regenerates \`func_sig\` from
+them — if your \`func_sig\` does not match those bytes EXACTLY (with \`??\` matching anything), the run
+aborts. Therefore:
+
+1. After picking the function, read the actual bytes at \`func_va\` via the IDA MCP (get-bytes/disasm).
+2. Derive \`func_sig\` FROM those bytes: keep stable opcode bytes literally, wildcard relocated/
+   variable operands (displacements, immediates, stack sizes) as \`??\`.
+3. \`func_sig\` MUST start at \`func_va\` (the true function head — verify with IDA's function start).
+4. Only then write the YAML. A mismatch is always a bug in YOUR output, never in the pipeline.
+
 ## Output schema (STRICT)
 
 Write the YAML file `CCSPlayerPawn_SetModelFromClass.{platform}.yaml` with EXACTLY these fields — no more, no fewer.

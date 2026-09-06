@@ -18,6 +18,18 @@ Target: `CEconItemView::CEconItemView` (func) in the CS2 server module, both `se
 
 This is the CONSTRUCTOR of CEconItemView. Shortlist via allocation sites: callers of operator-new whose result is immediately stored with the CEconItemView vtable (RTTI), followed by zeroing and initialization of definition-index/quantity/attribute-list fields. Distinguish from subobject constructors of derived classes by the vtable identity.
 
+## Mandatory self-check before emitting (func artifacts)
+
+The pipeline re-reads the bytes at your \`func_va\` and deterministically regenerates \`func_sig\` from
+them — if your \`func_sig\` does not match those bytes EXACTLY (with \`??\` matching anything), the run
+aborts. Therefore:
+
+1. After picking the function, read the actual bytes at \`func_va\` via the IDA MCP (get-bytes/disasm).
+2. Derive \`func_sig\` FROM those bytes: keep stable opcode bytes literally, wildcard relocated/
+   variable operands (displacements, immediates, stack sizes) as \`??\`.
+3. \`func_sig\` MUST start at \`func_va\` (the true function head — verify with IDA's function start).
+4. Only then write the YAML. A mismatch is always a bug in YOUR output, never in the pipeline.
+
 ## Output schema (STRICT)
 
 Write the YAML file `CEconItemView_CEconItemView.{platform}.yaml` with EXACTLY these fields — no more, no fewer.

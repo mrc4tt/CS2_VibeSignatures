@@ -1,0 +1,5 @@
+func_name: CCSPlayerPawn_SetModelFromLoadout
+func_va: '0x1801c8ef0'
+func_rva: '0x1c8ef0'
+func_size: '0x36b'
+func_sig: 40 56 57 41 54 48 83 EC ?? 48 8B F9 45 33 E4

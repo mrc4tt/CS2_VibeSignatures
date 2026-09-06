@@ -18,6 +18,18 @@ Target: `CCSPlayer_ItemServices::SetWearables` (func) in the CS2 server module, 
 
 VIRTUAL function, but WeaponPaints consumes it as a byte signature. Resolve the CCSPlayer_ItemServices vtable via RTTI to locate the slot, then generate a function-head byte signature of the resolved function. The body copies wearable item handles into the pawn's wearable array (m_Item wearables netvar array) and marks state changed.
 
+## Mandatory self-check before emitting (func artifacts)
+
+The pipeline re-reads the bytes at your \`func_va\` and deterministically regenerates \`func_sig\` from
+them — if your \`func_sig\` does not match those bytes EXACTLY (with \`??\` matching anything), the run
+aborts. Therefore:
+
+1. After picking the function, read the actual bytes at \`func_va\` via the IDA MCP (get-bytes/disasm).
+2. Derive \`func_sig\` FROM those bytes: keep stable opcode bytes literally, wildcard relocated/
+   variable operands (displacements, immediates, stack sizes) as \`??\`.
+3. \`func_sig\` MUST start at \`func_va\` (the true function head — verify with IDA's function start).
+4. Only then write the YAML. A mismatch is always a bug in YOUR output, never in the pipeline.
+
 ## Output schema (STRICT)
 
 Write the YAML file `CCSPlayer_ItemServices_SetWearables.{platform}.yaml` with EXACTLY these fields — no more, no fewer.

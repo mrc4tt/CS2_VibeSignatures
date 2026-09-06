@@ -6421,6 +6421,42 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CAttributeList_SetOrAddAttributeValueByName
+        expected_output:
+          - CAttributeList_SetOrAddAttributeValueByName.{platform}.yaml
+      - name: find-UpdateItemView
+        expected_output:
+          - UpdateItemView.{platform}.yaml
+      - name: find-CCSPlayerInventory_GetItemInLoadout
+        expected_output:
+          - CCSPlayerInventory_GetItemInLoadout.{platform}.yaml
+      - name: find-CEconItemView_CEconItemView
+        expected_output:
+          - CEconItemView_CEconItemView.{platform}.yaml
+      - name: find-CEconItemView_operator=
+        expected_output:
+          - CEconItemView_operator=.{platform}.yaml
+      - name: find-CCSPlayerInventory_SendInventoryUpdateEvent
+        expected_output:
+          - CCSPlayerInventory_SendInventoryUpdateEvent.{platform}.yaml
+      - name: find-CCSPlayer_ItemServices_SetWearables
+        expected_output:
+          - CCSPlayer_ItemServices_SetWearables.{platform}.yaml
+      - name: find-CCSPlayerPawn_SetModelFromClass
+        expected_output:
+          - CCSPlayerPawn_SetModelFromClass.{platform}.yaml
+      - name: find-CCSPlayerPawn_SetModelFromLoadout
+        expected_output:
+          - CCSPlayerPawn_SetModelFromLoadout.{platform}.yaml
+      - name: find-CCSPlayerController_InventoryServices_m_pInventory
+        expected_output:
+          - CCSPlayerController_InventoryServices_m_pInventory.{platform}.yaml
+      - name: find-CCSPlayerInventory_m_pSOCache
+        expected_output:
+          - CCSPlayerInventory_m_pSOCache.{platform}.yaml
+      - name: find-CGCClientSharedObjectCache_m_Owner
+        expected_output:
+          - CGCClientSharedObjectCache_m_Owner.{platform}.yaml
       - name: find-CSource2Server_vtable
         expected_output:
           - CSource2Server_vtable.{platform}.yaml
@@ -9608,6 +9644,61 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CCSPlayerController_InventoryServices
+        category: struct
+      - name: CCSPlayerInventory
+        category: struct
+      - name: CGCClientSharedObjectCache
+        category: struct
+      - name: CAttributeList_SetOrAddAttributeValueByName
+        category: func
+        alias:
+          - CAttributeList::SetOrAddAttributeValueByName
+      - name: UpdateItemView
+        category: func
+      - name: CCSPlayerInventory_GetItemInLoadout
+        category: func
+        alias:
+          - CCSPlayerInventory::GetItemInLoadout
+      - name: CEconItemView_CEconItemView
+        category: func
+        alias:
+          - CEconItemView::CEconItemView
+      - name: CEconItemView_operator=
+        category: func
+        alias:
+          - CEconItemView::operator=
+      - name: CCSPlayerInventory_SendInventoryUpdateEvent
+        category: func
+        alias:
+          - CCSPlayerInventory::SendInventoryUpdateEvent
+      - name: CCSPlayer_ItemServices_SetWearables
+        category: func
+        alias:
+          - CCSPlayer_ItemServices::SetWearables
+      - name: CCSPlayerPawn_SetModelFromClass
+        category: func
+        alias:
+          - CCSPlayerPawn::SetModelFromClass
+      - name: CCSPlayerPawn_SetModelFromLoadout
+        category: func
+        alias:
+          - CCSPlayerPawn::SetModelFromLoadout
+      - name: CCSPlayerController_InventoryServices_m_pInventory
+        category: structmember
+        struct: CCSPlayerController_InventoryServices
+        alias:
+          - CCSPlayerController_InventoryServices::m_pInventory
+      - name: CCSPlayerInventory_m_pSOCache
+        category: structmember
+        struct: CCSPlayerInventory
+        alias:
+          - CCSPlayerInventory::m_pSOCache
+      - name: CGCClientSharedObjectCache_m_Owner
+        category: structmember
+        struct: CGCClientSharedObjectCache
+        alias:
+          - CGCClientSharedObjectCache::m_Owner
       - name: CSource2Server_vtable
         category: vtable
       - name: CSource2Server_GetAllServerClasses

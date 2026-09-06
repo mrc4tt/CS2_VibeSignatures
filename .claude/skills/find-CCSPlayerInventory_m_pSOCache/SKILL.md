@@ -18,6 +18,18 @@ Target: `CCSPlayerInventory::m_pSOCache` (structmember) in the CS2 server module
 
 This is a STRUCT MEMBER OFFSET (schema netvar). Resolve the CCSPlayerInventory class layout via the schema system; m_pSOCache is the CGCClientSharedObjectCache pointer member. Cross-check: CCSPlayerInventory methods load this pointer and pass it to CGCClientSharedObjectCache methods (the GetItemInLoadout shortlist is a strong caller-side witness).
 
+## Mandatory self-check before emitting (func artifacts)
+
+The pipeline re-reads the bytes at your \`func_va\` and deterministically regenerates \`func_sig\` from
+them — if your \`func_sig\` does not match those bytes EXACTLY (with \`??\` matching anything), the run
+aborts. Therefore:
+
+1. After picking the function, read the actual bytes at \`func_va\` via the IDA MCP (get-bytes/disasm).
+2. Derive \`func_sig\` FROM those bytes: keep stable opcode bytes literally, wildcard relocated/
+   variable operands (displacements, immediates, stack sizes) as \`??\`.
+3. \`func_sig\` MUST start at \`func_va\` (the true function head — verify with IDA's function start).
+4. Only then write the YAML. A mismatch is always a bug in YOUR output, never in the pipeline.
+
 ## Output schema (STRICT)
 
 Write the YAML file `CCSPlayerInventory_m_pSOCache.{platform}.yaml` with EXACTLY these fields — no more, no fewer.

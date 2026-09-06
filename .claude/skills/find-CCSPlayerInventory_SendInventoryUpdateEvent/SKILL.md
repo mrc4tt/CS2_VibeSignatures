@@ -18,6 +18,18 @@ Target: `CCSPlayerInventory::SendInventoryUpdateEvent` (func) in the CS2 server 
 
 Shortlist via functions constructing the inventory-full-update usermessage/event around m_pSOCache contents for the owning controller. The body packs the SO cache snapshot and sends it via the GC/usermessage path. Cross-check with callers in inventory-dirty flows (weapon paint mutations).
 
+## Mandatory self-check before emitting (func artifacts)
+
+The pipeline re-reads the bytes at your \`func_va\` and deterministically regenerates \`func_sig\` from
+them — if your \`func_sig\` does not match those bytes EXACTLY (with \`??\` matching anything), the run
+aborts. Therefore:
+
+1. After picking the function, read the actual bytes at \`func_va\` via the IDA MCP (get-bytes/disasm).
+2. Derive \`func_sig\` FROM those bytes: keep stable opcode bytes literally, wildcard relocated/
+   variable operands (displacements, immediates, stack sizes) as \`??\`.
+3. \`func_sig\` MUST start at \`func_va\` (the true function head — verify with IDA's function start).
+4. Only then write the YAML. A mismatch is always a bug in YOUR output, never in the pipeline.
+
 ## Output schema (STRICT)
 
 Write the YAML file `CCSPlayerInventory_SendInventoryUpdateEvent.{platform}.yaml` with EXACTLY these fields — no more, no fewer.
