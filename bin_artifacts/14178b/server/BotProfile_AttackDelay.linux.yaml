@@ -1,0 +1,5 @@
+struct_name: BotProfile
+member_name: AttackDelay
+offset: "0x5C"
+size: 4
+offset_sig: "F3 41 0F 11 44 24 5C E9 ?? ?? ?? ?? 48"

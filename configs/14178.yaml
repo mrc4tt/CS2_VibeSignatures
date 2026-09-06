@@ -9888,51 +9888,75 @@ modules:
         alias:
           - CCSBot::Profile
       - name: BotProfile_Aggression
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_aggression
         alias:
           - BotProfile::Aggression
       - name: BotProfile_Skill
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_skill
         alias:
           - BotProfile::Skill
       - name: BotProfile_Teamwork
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_teamwork
         alias:
           - BotProfile::Teamwork
       - name: BotProfile_WeaponPref
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_weaponPreference
         alias:
           - BotProfile::WeaponPref
       - name: BotProfile_WeaponPrefCount
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_weaponPreferenceCount
         alias:
           - BotProfile::WeaponPrefCount
       - name: BotProfile_Cost
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_cost
         alias:
           - BotProfile::Cost
       - name: BotProfile_Difficulty
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_difficultyFlags
         alias:
           - BotProfile::Difficulty
       - name: BotProfile_ReactionTime
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_reactionTime
         alias:
           - BotProfile::ReactionTime
       - name: BotProfile_AttackDelay
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_attackDelay
         alias:
           - BotProfile::AttackDelay
       - name: BotProfile_LookAngleMaxAccelAttacking
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_lookAngleMaxAccelAttacking
         alias:
           - BotProfile::LookAngleMaxAccelAttacking
       - name: BotProfile_LookAngleStiffnessAttacking
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_lookAngleStiffnessAttacking
         alias:
           - BotProfile::LookAngleStiffnessAttacking
       - name: BotProfile_LookAngleDampingAttacking
-        category: vfunc
+        category: structmember
+        struct: BotProfile
+        member: m_lookAngleDampingAttacking
         alias:
           - BotProfile::LookAngleDampingAttacking
       - name: CEntityIdentity_EHandle

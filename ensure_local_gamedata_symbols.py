@@ -37,6 +37,18 @@ SEEDS = [
 
 SKILLS_DIR = ".claude/skills"
 
+# BotProfile er en non-polymorphic POD (ingen vtable) - offset-entries er structmembers.
+# Member-navne fra Bot-Improver referencegamedata (IDA-verificeret 14178b: POD, win==linux).
+BOTPROFILE_MEMBERS = {
+    "Aggression": "m_aggression", "Skill": "m_skill", "Teamwork": "m_teamwork",
+    "WeaponPref": "m_weaponPreference", "WeaponPrefCount": "m_weaponPreferenceCount",
+    "Cost": "m_cost", "Difficulty": "m_difficultyFlags", "ReactionTime": "m_reactionTime",
+    "AttackDelay": "m_attackDelay",
+    "LookAngleMaxAccelAttacking": "m_lookAngleMaxAccelAttacking",
+    "LookAngleStiffnessAttacking": "m_lookAngleStiffnessAttacking",
+    "LookAngleDampingAttacking": "m_lookAngleDampingAttacking",
+}
+
 # Renamed engine symbols: old gamedata keys map to the canonical analyzed symbol via
 # config aliases instead of separate analysis tasks.
 ALIAS_OVERRIDES = {
@@ -74,6 +86,11 @@ def load_seed_specs():
             cls, _, method = key.partition("::")
             if method.startswith("m_"):
                 specs.append((symbol_name, "structmember", cls, method, alias))
+            elif symbol_name.startswith("BotProfile_") and symbol_name[len("BotProfile_"):] in BOTPROFILE_MEMBERS:
+                # BotProfile er en non-polymorphic POD - offset-entries er structmembers
+                # (IDA-verificeret 14178b: m_attackDelay +0x5C; Bot-Improver reference).
+                specs.append((symbol_name, "structmember", "BotProfile",
+                              BOTPROFILE_MEMBERS[symbol_name[len("BotProfile_"):]], alias))
             else:
                 specs.append((symbol_name, "vfunc", None, None, alias))
     return specs

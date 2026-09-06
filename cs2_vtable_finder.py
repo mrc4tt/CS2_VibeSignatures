@@ -68,13 +68,24 @@ def main():
                 pos = blob.find(ts_ea.to_bytes(8, "little"), pos + 1)
         print(f"[vtable] (raa pointer-scan) _ZTI kandidater: {len(ztis)}")
 
-    # 3. data-references to each _ZTI -> vtable typeinfo slots
+    # 3. find vtable typeinfo slots: qwords equal to a _ZTI pointer, located in
+    #    non-executable segments (.data.rel.ro). Raw scan - immune to missing xrefs.
     vtable_starts = set()
     for zti in ztis:
-        for site in idautils.DataRefsTo(zti):
-            vtable_starts.add(site + 8)  # typeinfo ptr ligger paa slot -1
+        needle = zti.to_bytes(8, "little")
+        for seg_ea in idautils.Segments():
+            seg = ida_segment.getseg(seg_ea)
+            if not seg or (seg.perm & ida_segment.SEGPERM_EXEC):
+                continue
+            blob = ida_bytes.get_bytes(seg.start_ea, seg.end_ea - seg.start_ea)
+            if not blob or needle not in blob:
+                continue
+            pos = blob.find(needle)
+            while pos != -1:
+                vtable_starts.add(seg.start_ea + pos + 8)  # typeinfo ptr = slot -1
+                pos = blob.find(needle, pos + 1)
     if not vtable_starts:
-        print("[vtable] ingen data-refs til _ZTI - proev Options > General > markere 'offsets' eller koor auto-analysen.")
+        print("[vtable] ingen qword-pointere til _ZTI fundet i data-segmenter.")
         return
 
     print(f"[vtable] kandidater: {[hex(v) for v in sorted(vtable_starts)]}")
