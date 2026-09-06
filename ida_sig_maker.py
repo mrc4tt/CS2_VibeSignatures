@@ -260,7 +260,62 @@ def emit_yaml(func_ea, symbol):
         print(yaml_block)
 
 
+def emit_vfunc_yaml(func_ea, symbol, vtable_name, vfunc_index):
+    """Write a vfunc-schema YAML (vtable slot) for a virtual function.
+    Cursor workflow: navigate to the VTABLE SLOT ENTRY (the qword holding the
+    function pointer) in IDA and use the driver's cursor variant."""
+    if not ida_funcs.get_func(func_ea):
+        if not ida_funcs.add_func(func_ea):
+            print(f"[sig_maker] could not create function at {hex(func_ea)}")
+            return
+    func = ida_funcs.get_func(func_ea)
+    vfunc_offset = vfunc_index * 8
+    yaml_block = (
+        f"func_name: {symbol}\n"
+        f"func_va: '{hex(func_ea)}'\n"
+        f"func_rva: '{hex(func_ea - ida_nalt.get_imagebase())}'\n"
+        f"func_size: '{hex(func.size())}'\n"
+        f"vtable_name: {vtable_name}\n"
+        f"vfunc_offset: '{hex(vfunc_offset)}'\n"
+        f"vfunc_index: {vfunc_index}\n"
+    )
+    target = detect_target()
+    if target:
+        for out_dir in target["dirs"]:
+            out_path = os.path.join(out_dir, f"{symbol}.{target['platform']}.yaml")
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(yaml_block)
+            print(f"[sig_maker] written: {out_path}")
+        print(f"[sig_maker] vfunc {symbol} (slot {vfunc_index}) -> {target['platform']}")
+        print(yaml_block)
+    else:
+        print("[sig_maker] input path outside bin/<GAMEVER> - YAML blok:")
+        print(yaml_block)
+
+
+def emit_vfunc_from_cursor(symbol, vtable_name, vfunc_index):
+    """Cursor must be ON the vtable slot entry (the qword containing the function
+    pointer). Reads the pointer, derives vtable start from slot index, emits YAML."""
+    import ida_bytes as _b
+    slot_ea = ida_kernwin.get_screen_ea()
+    if slot_ea == ida_idaapi.BADADDR:
+        print("[sig_maker] placér cursor på vtable-slot-entry foerst.")
+        return
+    func_ea = _b.get_qword(slot_ea)
+    if func_ea == ida_idaapi.BADADDR or func_ea == 0:
+        print(f"[sig_maker] slot-entry {hex(slot_ea)} indeholder ikke en gyldig pointer.")
+        return
+    vtable_start = slot_ea - 8 * vfunc_index
+    print(f"[sig_maker] slot {vfunc_index} @ {hex(slot_ea)} -> func {hex(func_ea)} (vtable start {hex(vtable_start)})")
+    emit_vfunc_yaml(func_ea, symbol, vtable_name, vfunc_index)
+
+
 register_action()
 
 if __name__ == "__main__":
+    main()
+
+if __name__ == "__main__":
+    main()
+
     main()
