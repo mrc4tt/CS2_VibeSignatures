@@ -6447,9 +6447,6 @@ modules:
       - name: find-CCSPlayer_WeaponServices_Weapon_GetSlot
         expected_output:
           - CCSPlayer_WeaponServices_Weapon_GetSlot.{platform}.yaml
-      - name: find-CCSPlayerController_HandleCommand_JoinTeam
-        expected_output:
-          - CCSPlayerController_HandleCommand_JoinTeam.{platform}.yaml
       - name: find-UTIL_Remove
         expected_output:
           - UTIL_Remove.{platform}.yaml
@@ -9861,10 +9858,6 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
-      - name: CCSPlayerController_HandleCommand_JoinTeam
-        category: func
-        alias:
-          - CCSPlayerController::HandleCommand_JoinTeam
       - name: CEntityIdentity
         category: struct
       - name: CNetworkGameServerBase
