@@ -169,6 +169,7 @@ def main():
         return
 
     done, skipped = [], []
+    emitted = {}  # func_ea -> symbol (guard: samme funktion under to navne = naesten altid en fejl)
     for i, symbol in enumerate(symbols, 1):
         answer = ida_kernwin.ask_yn(
             1,
@@ -206,7 +207,18 @@ def main():
                 skipped.append(symbol)
                 continue
             func_ea = ida_funcs.get_func(cursor).start_ea
+        if func_ea in emitted:
+            answer = ida_kernwin.ask_yn(
+                0,
+                f"VA {hex(func_ea)} er ALLEREDE emitteret som '{emitted[func_ea]}'.\n"
+                f"Er '{symbol}' den SAMME funktion (rename - der laves alias i stedet)?",
+            )
+            if answer != 1:
+                print(f"[sig_maker] {symbol}: samme VA som {emitted[func_ea]} - skipped (flyt cursor!)")
+                skipped.append(symbol)
+                continue
         emit_yaml(func_ea, symbol)
+        emitted[func_ea] = symbol
         done.append(symbol)
 
     print("=" * 60)
