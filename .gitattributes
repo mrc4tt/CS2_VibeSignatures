@@ -4,3 +4,6 @@ configs/*.yaml -text
 /binary_locks/README.md text eol=lf
 gamedata-generators/** text eol=lf
 /gamedata-generators/**/templates/* -text -eol -whitespace
+
+# Local fork customizations — always keep OUR version on merges
+.github/workflows/deploy-pages.yml merge=ours
