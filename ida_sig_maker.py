@@ -187,9 +187,25 @@ def main():
 
         func_ea = get_target_ea()
         if func_ea is None:
-            print(f"[sig_maker] no function under cursor for '{symbol}' - skipped")
-            skipped.append(symbol)
-            continue
+            cursor = ida_kernwin.get_screen_ea()
+            if cursor == ida_idaapi.BADADDR:
+                print(f"[sig_maker] no function under cursor for '{symbol}' - skipped")
+                skipped.append(symbol)
+                continue
+            answer = ida_kernwin.ask_yn(
+                1,
+                f"No IDA function is defined at the cursor ({hex(cursor)}).\n"
+                f"Create a function here and continue with '{symbol}'?",
+            )
+            if answer != 1:
+                print(f"[sig_maker] no function under cursor for '{symbol}' - skipped")
+                skipped.append(symbol)
+                continue
+            if not ida_funcs.add_func(cursor):
+                print(f"[sig_maker] could not create a function at {hex(cursor)} - skipped")
+                skipped.append(symbol)
+                continue
+            func_ea = ida_funcs.get_func(cursor).start_ea
         emit_yaml(func_ea, symbol)
         done.append(symbol)
 
