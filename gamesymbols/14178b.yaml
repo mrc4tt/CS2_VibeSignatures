@@ -121,7 +121,7 @@ binaries:
       sha256: 'e39313a48f591f3a141c121a59e499715502e6bdb6bd7e830dd983338131a0d6'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:4a524d62475bf5f0c6b5cc5a839d5fb27eb1e047035e4b11e2006257a9d029ba
+config_sha256: sha256:935817dab3507156d754661583f090330d011d3fdd477e84d71d4dc1c02c66b8
 file_count: 3546
 files:
   SDL3/SDL_GetMouse.windows.yaml:
