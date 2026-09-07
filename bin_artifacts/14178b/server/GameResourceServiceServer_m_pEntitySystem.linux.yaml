@@ -1,0 +1,4 @@
+struct_name: GameResourceServiceServer
+member_name: m_pEntitySystem
+offset: '0x50'
+size: 8

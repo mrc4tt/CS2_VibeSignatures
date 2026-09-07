@@ -10,7 +10,7 @@ import ida_idaapi
 
 _SCRIPTS = ["ida_sig_maker.py", "cs2_vtable_finder.py"]
 _DIRS = [
-    "/home/mikkel/CS2_VibeSignatures",
+    "/root/CS2_VibeSignatures",
     os.path.dirname(os.path.abspath(__file__)),
 ]
 _NS = {}

@@ -1,0 +1,4 @@
+struct_name: CServerSideClient
+member_name: m_pAttachedTo
+offset: '0x90'
+size: 8

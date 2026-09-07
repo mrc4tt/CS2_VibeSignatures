@@ -16,7 +16,7 @@ SLOT = 31          # default - spoerges ved koersel (linux: 31, windows: 30)
 SYMBOL = "CCSPlayer_WeaponServices_SelectItem"
 
 ns = {"__name__": "cs2vibe_vtable_finder"}
-exec(open("/home/mikkel/CS2_VibeSignatures/ida_sig_maker.py").read(), ns)
+exec(open("/root/CS2_VibeSignatures/ida_sig_maker.py").read(), ns)
 
 def find_bytes(needle):
     hits = []

@@ -1,0 +1,4 @@
+struct_name: CServerSideClient
+member_name: m_UserIDString
+offset: '0x38'
+size: 8

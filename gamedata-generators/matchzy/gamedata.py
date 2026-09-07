@@ -19,7 +19,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from gamedata_utils import convert_sig_to_css, normalize_func_name_colons_to_underscore
 
-# Seed source: local plugin repo /home/mikkel/customGIT/matchzy/gamedata/matchzy.json
+# Seed source: local plugin repo /root/customGIT/matchzy/gamedata/matchzy.json
 # (git.miksen.me/mikkel/matchzy). Refresh: cp from the clone after pulling.
 
 # Module metadata
