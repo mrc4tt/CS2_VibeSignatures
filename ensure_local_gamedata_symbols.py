@@ -127,9 +127,11 @@ def write_skill(symbol_name, category, struct, alias):
     display = alias or symbol_name
     if category == "func":
         kind_hint = (
-            f"This is a non-virtual function - emit a byte signature (func_sig), not an offset.\n"
-            f"Locate it via cross-references, distinctive constants/strings in its body, or callers\n"
-            f"of related symbols; verify by decompilation before committing to a candidate."
+            f"The gamedata consumer stores a BYTE SIGNATURE for this entry - ALWAYS emit the func\n"
+            f"schema (func_sig), never vfunc fields. The function may be virtual; locating it via\n"
+            f"the owning class vtable (RTTI) is a fine strategy, but once found, read its head bytes\n"
+            f"and emit func_sig. Locate via cross-references, distinctive constants/strings, callers\n"
+            f"of related symbols, or vtable slots; verify by decompilation before committing."
         )
         output = (
             "Write the YAML file `<symbol>.{platform}.yaml` with EXACTLY these fields:\n"
