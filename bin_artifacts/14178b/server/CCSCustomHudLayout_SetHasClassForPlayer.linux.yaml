@@ -1,0 +1,4 @@
+func_name: CCSCustomHudLayout_SetHasClassForPlayer
+func_va: '0x13128b0'
+func_rva: '0x13128b0'
+func_sig: 49 89 CD 45 89 C6 E8 ? ? ? ? 84 C0

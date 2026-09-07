@@ -56,7 +56,7 @@ def elf_off_to_va_map(blob):
     e_phentsize, e_phnum = struct.unpack_from("<HH", blob, 54)
     segs = []
     for i in range(e_phnum):
-        off = i * e_phentsize
+        off = e_phoff + i * e_phentsize
         p_type = struct.unpack_from("<I", blob, off)[0]
         p_offset, p_vaddr, _, p_filesz = struct.unpack_from("<QQQQ", blob, off + 8)
         if p_type == 1:
