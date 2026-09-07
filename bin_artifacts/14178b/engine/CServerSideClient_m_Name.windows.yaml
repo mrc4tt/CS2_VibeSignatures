@@ -1,0 +1,5 @@
+struct_name: CServerSideClient
+member_name: m_Name
+offset: '0x40'
+size: 8
+offset_sig: 48 83 C1 40 FF 15 ?? ?? ?? ?? 48 8B 43 40
