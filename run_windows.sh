@@ -142,7 +142,7 @@ LLM_ARGS=()
 [ -n "${LLM_APIKEY:-}" ] && LLM_ARGS+=(-llm_apikey "$LLM_APIKEY")
 [ -n "${LLM_MODEL:-}" ] && LLM_ARGS+=(-llm_model "$LLM_MODEL")
 [ -n "${LLM_BASEURL:-}" ] && LLM_ARGS+=(-llm_baseurl "$LLM_BASEURL")
-uv run ida_analyze_bin.py -gamever "$NEW_VER" -oldgamever "$OLD_VER" -platform windows "${EXTRA_ANALYZE[@]} ${LLM_ARGS[@]+"${LLM_ARGS[@]}"}"
+uv run ida_analyze_bin.py -gamever "$NEW_VER" -oldgamever "$OLD_VER" -platform windows "${EXTRA_ANALYZE[@]}" ${LLM_ARGS[@]+"${LLM_ARGS[@]}"}
 
 # Publish analysis artifacts (bin/<ver>/<module>/*.yaml -> bin_artifacts/<ver>/...) so
 # signature reuse, snapshot pack/restore and future baselines survive local bin/ cleanup.
