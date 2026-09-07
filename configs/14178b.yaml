@@ -9994,11 +9994,15 @@ modules:
         alias:
           - BuyState::OnUpdate
       - name: BuyState_InitialDelay
-        category: vfunc
+        category: structmember
+        struct: BuyState
+        member: m_isInitialDelay
         alias:
           - BuyState::InitialDelay
       - name: BuyState_DoneBuying
-        category: vfunc
+        category: structmember
+        struct: BuyState
+        member: m_doneBuying
         alias:
           - BuyState::DoneBuying
       - name: CCSBot_UpdateLookAngles

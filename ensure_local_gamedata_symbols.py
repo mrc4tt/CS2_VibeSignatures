@@ -40,6 +40,10 @@ SKILLS_DIR = ".claude/skills"
 
 # BotProfile er en non-polymorphic POD (ingen vtable) - offset-entries er structmembers.
 # Member-navne fra Bot-Improver referencegamedata (IDA-verificeret 14178b: POD, win==linux).
+BUYSTATE_MEMBERS = {
+    "DoneBuying": "m_doneBuying",
+    "InitialDelay": "m_isInitialDelay",
+}
 BOTPROFILE_MEMBERS = {
     "Aggression": "m_aggression", "Skill": "m_skill", "Teamwork": "m_teamwork",
     "WeaponPref": "m_weaponPreference", "WeaponPrefCount": "m_weaponPreferenceCount",
@@ -95,6 +99,11 @@ def load_seed_specs():
             cls, _, method = key.partition("::")
             if method.startswith("m_"):
                 specs.append((symbol_name, "structmember", cls, method, alias, lib))
+            elif symbol_name.startswith("BuyState_") and symbol_name[len("BuyState_"):] in BUYSTATE_MEMBERS:
+                # BuyState er en non-polymorphic POD - offset-entries er structmembers
+                # (kilde-kommentarer: m_doneBuying / m_isInitialDelay).
+                specs.append((symbol_name, "structmember", "BuyState",
+                              BUYSTATE_MEMBERS[symbol_name[len("BuyState_"):]], alias, lib))
             elif cls in ("CEntityIdentity", "CMoveData") and method:
                 # layout-holder-klasser: offset-entries er structmembers (agent-verificeret 14178b)
                 specs.append((symbol_name, "structmember", cls, method, alias, lib))
