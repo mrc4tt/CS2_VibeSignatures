@@ -700,6 +700,54 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-CServerSideClient_SetName
+        expected_output:
+          - CServerSideClient_SetName.{platform}.yaml
+      - name: find-CServerSideClient_m_UserIDString
+        expected_output:
+          - CServerSideClient_m_UserIDString.{platform}.yaml
+      - name: find-CServerSideClient_m_Name
+        expected_output:
+          - CServerSideClient_m_Name.{platform}.yaml
+      - name: find-CServerSideClient_m_nClientSlot
+        expected_output:
+          - CServerSideClient_m_nClientSlot.{platform}.yaml
+      - name: find-CServerSideClient_m_nEntityIndex
+        expected_output:
+          - CServerSideClient_m_nEntityIndex.{platform}.yaml
+      - name: find-CServerSideClient_m_Server
+        expected_output:
+          - CServerSideClient_m_Server.{platform}.yaml
+      - name: find-CServerSideClient_m_NetChannel
+        expected_output:
+          - CServerSideClient_m_NetChannel.{platform}.yaml
+      - name: find-CServerSideClient_m_nConnectionTypeFlags
+        expected_output:
+          - CServerSideClient_m_nConnectionTypeFlags.{platform}.yaml
+      - name: find-CServerSideClient_m_nSignonState
+        expected_output:
+          - CServerSideClient_m_nSignonState.{platform}.yaml
+      - name: find-CServerSideClient_m_pAttachedTo
+        expected_output:
+          - CServerSideClient_m_pAttachedTo.{platform}.yaml
+      - name: find-CServerSideClient_m_bFakePlayer
+        expected_output:
+          - CServerSideClient_m_bFakePlayer.{platform}.yaml
+      - name: find-CServerSideClient_m_UserID
+        expected_output:
+          - CServerSideClient_m_UserID.{platform}.yaml
+      - name: find-CServerSideClient_m_SteamID
+        expected_output:
+          - CServerSideClient_m_SteamID.{platform}.yaml
+      - name: find-CServerSideClient_m_SteamIDMirror
+        expected_output:
+          - CServerSideClient_m_SteamIDMirror.{platform}.yaml
+      - name: find-CServerSideClient_m_bIsHLTV
+        expected_output:
+          - CServerSideClient_m_bIsHLTV.{platform}.yaml
+      - name: find-GameResourceServiceServer_m_pEntitySystem
+        expected_output:
+          - GameResourceServiceServer_m_pEntitySystem.{platform}.yaml
       - name: find-CNetworkGameServer_PackEntities
         expected_output:
           - CNetworkGameServer_PackEntities.{platform}.yaml
@@ -2513,6 +2561,70 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
+      - name: CServerSideClient_SetName
+        category: func
+      - name: CServerSideClient_m_UserIDString
+        category: structmember
+        struct: CServerSideClient
+        member: m_UserIDString
+      - name: CServerSideClient_m_Name
+        category: structmember
+        struct: CServerSideClient
+        member: m_Name
+      - name: CServerSideClient_m_nClientSlot
+        category: structmember
+        struct: CServerSideClient
+        member: m_nClientSlot
+      - name: CServerSideClient_m_nEntityIndex
+        category: structmember
+        struct: CServerSideClient
+        member: m_nEntityIndex
+      - name: CServerSideClient_m_Server
+        category: structmember
+        struct: CServerSideClient
+        member: m_Server
+      - name: CServerSideClient_m_NetChannel
+        category: structmember
+        struct: CServerSideClient
+        member: m_NetChannel
+      - name: CServerSideClient_m_nConnectionTypeFlags
+        category: structmember
+        struct: CServerSideClient
+        member: m_nConnectionTypeFlags
+      - name: CServerSideClient_m_nSignonState
+        category: structmember
+        struct: CServerSideClient
+        member: m_nSignonState
+      - name: CServerSideClient_m_pAttachedTo
+        category: structmember
+        struct: CServerSideClient
+        member: m_pAttachedTo
+      - name: CServerSideClient_m_bFakePlayer
+        category: structmember
+        struct: CServerSideClient
+        member: m_bFakePlayer
+      - name: CServerSideClient_m_UserID
+        category: structmember
+        struct: CServerSideClient
+        member: m_UserID
+      - name: CServerSideClient_m_SteamID
+        category: structmember
+        struct: CServerSideClient
+        member: m_SteamID
+      - name: CServerSideClient_m_SteamIDMirror
+        category: structmember
+        struct: CServerSideClient
+        member: m_SteamIDMirror
+      - name: CServerSideClient_m_bIsHLTV
+        category: structmember
+        struct: CServerSideClient
+        member: m_bIsHLTV
+      - name: GameResourceServiceServer_m_pEntitySystem
+        category: structmember
+        struct: GameResourceServiceServer
+        member: m_pEntitySystem
+      - name: CServerSideClient
+        category: struct
       - name: CNetworkGameServerBase
         category: struct
       - name: CNetworkGameServer_PackEntities
@@ -6585,12 +6697,6 @@ modules:
       - name: find-CCSGameRules_SameMapTeardown
         expected_output:
           - CCSGameRules_SameMapTeardown.{platform}.yaml
-      - name: find-CServerSideClient_SetName
-        expected_output:
-          - CServerSideClient_SetName.{platform}.yaml
-      - name: find-GameResourceServiceServer_m_pEntitySystem
-        expected_output:
-          - GameResourceServiceServer_m_pEntitySystem.{platform}.yaml
       - name: find-CEntityIdentity_Size
         expected_output:
           - CEntityIdentity_Size.{platform}.yaml
@@ -6606,48 +6712,6 @@ modules:
       - name: find-CBasePlayerController_FakeClientFlags
         expected_output:
           - CBasePlayerController_FakeClientFlags.{platform}.yaml
-      - name: find-CServerSideClient_m_UserIDString
-        expected_output:
-          - CServerSideClient_m_UserIDString.{platform}.yaml
-      - name: find-CServerSideClient_m_Name
-        expected_output:
-          - CServerSideClient_m_Name.{platform}.yaml
-      - name: find-CServerSideClient_m_nClientSlot
-        expected_output:
-          - CServerSideClient_m_nClientSlot.{platform}.yaml
-      - name: find-CServerSideClient_m_nEntityIndex
-        expected_output:
-          - CServerSideClient_m_nEntityIndex.{platform}.yaml
-      - name: find-CServerSideClient_m_Server
-        expected_output:
-          - CServerSideClient_m_Server.{platform}.yaml
-      - name: find-CServerSideClient_m_NetChannel
-        expected_output:
-          - CServerSideClient_m_NetChannel.{platform}.yaml
-      - name: find-CServerSideClient_m_nConnectionTypeFlags
-        expected_output:
-          - CServerSideClient_m_nConnectionTypeFlags.{platform}.yaml
-      - name: find-CServerSideClient_m_nSignonState
-        expected_output:
-          - CServerSideClient_m_nSignonState.{platform}.yaml
-      - name: find-CServerSideClient_m_pAttachedTo
-        expected_output:
-          - CServerSideClient_m_pAttachedTo.{platform}.yaml
-      - name: find-CServerSideClient_m_bFakePlayer
-        expected_output:
-          - CServerSideClient_m_bFakePlayer.{platform}.yaml
-      - name: find-CServerSideClient_m_UserID
-        expected_output:
-          - CServerSideClient_m_UserID.{platform}.yaml
-      - name: find-CServerSideClient_m_SteamID
-        expected_output:
-          - CServerSideClient_m_SteamID.{platform}.yaml
-      - name: find-CServerSideClient_m_SteamIDMirror
-        expected_output:
-          - CServerSideClient_m_SteamIDMirror.{platform}.yaml
-      - name: find-CServerSideClient_m_bIsHLTV
-        expected_output:
-          - CServerSideClient_m_bIsHLTV.{platform}.yaml
       - name: find-CAttributeList_SetOrAddAttributeValueByName
         expected_output:
           - CAttributeList_SetOrAddAttributeValueByName.{platform}.yaml
@@ -9883,8 +9947,6 @@ modules:
         category: struct
       - name: CServerSideClient
         category: struct
-      - name: GameResourceServiceServer
-        category: struct
       - name: CCSGameRules_PostCleanUp
         category: func
       - name: CHEGrenadeProjectile_Create
@@ -10057,10 +10119,6 @@ modules:
         category: vfunc
         alias:
           - CServerSideClient::SetName
-      - name: GameResourceServiceServer_m_pEntitySystem
-        category: structmember
-        struct: GameResourceServiceServer
-        member: m_pEntitySystem
         alias:
           - GameResourceServiceServer::m_pEntitySystem
       - name: CEntityIdentity_Size
@@ -10095,88 +10153,32 @@ modules:
         member: m_fFlags
         alias:
           - CBasePlayerController::FakeClientFlags
-      - name: CServerSideClient_m_UserIDString
-        category: structmember
-        struct: CServerSideClient
-        member: m_UserIDString
         alias:
           - CServerSideClient::m_UserIDString
-      - name: CServerSideClient_m_Name
-        category: structmember
-        struct: CServerSideClient
-        member: m_Name
         alias:
           - CServerSideClient::m_Name
-      - name: CServerSideClient_m_nClientSlot
-        category: structmember
-        struct: CServerSideClient
-        member: m_nClientSlot
         alias:
           - CServerSideClient::m_nClientSlot
-      - name: CServerSideClient_m_nEntityIndex
-        category: structmember
-        struct: CServerSideClient
-        member: m_nEntityIndex
         alias:
           - CServerSideClient::m_nEntityIndex
-      - name: CServerSideClient_m_Server
-        category: structmember
-        struct: CServerSideClient
-        member: m_Server
         alias:
           - CServerSideClient::m_Server
-      - name: CServerSideClient_m_NetChannel
-        category: structmember
-        struct: CServerSideClient
-        member: m_NetChannel
         alias:
           - CServerSideClient::m_NetChannel
-      - name: CServerSideClient_m_nConnectionTypeFlags
-        category: structmember
-        struct: CServerSideClient
-        member: m_nConnectionTypeFlags
         alias:
           - CServerSideClient::m_nConnectionTypeFlags
-      - name: CServerSideClient_m_nSignonState
-        category: structmember
-        struct: CServerSideClient
-        member: m_nSignonState
         alias:
           - CServerSideClient::m_nSignonState
-      - name: CServerSideClient_m_pAttachedTo
-        category: structmember
-        struct: CServerSideClient
-        member: m_pAttachedTo
         alias:
           - CServerSideClient::m_pAttachedTo
-      - name: CServerSideClient_m_bFakePlayer
-        category: structmember
-        struct: CServerSideClient
-        member: m_bFakePlayer
         alias:
           - CServerSideClient::m_bFakePlayer
-      - name: CServerSideClient_m_UserID
-        category: structmember
-        struct: CServerSideClient
-        member: m_UserID
         alias:
           - CServerSideClient::m_UserID
-      - name: CServerSideClient_m_SteamID
-        category: structmember
-        struct: CServerSideClient
-        member: m_SteamID
         alias:
           - CServerSideClient::m_SteamID
-      - name: CServerSideClient_m_SteamIDMirror
-        category: structmember
-        struct: CServerSideClient
-        member: m_SteamIDMirror
         alias:
           - CServerSideClient::m_SteamIDMirror
-      - name: CServerSideClient_m_bIsHLTV
-        category: structmember
-        struct: CServerSideClient
-        member: m_bIsHLTV
         alias:
           - CServerSideClient::m_bIsHLTV
       - name: CCSPlayerController_InventoryServices

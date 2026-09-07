@@ -236,7 +236,10 @@ aborts. Therefore:
 
 
 LIB_MODULE = {"server": "server", "engine2": "engine", "engine": "engine", "client": "client"}
-ENGINE_CLASSES = ("CNetworkGameServerBase", "CNetworkGameServer")
+ENGINE_CLASSES = (
+    "CNetworkGameServerBase", "CNetworkGameServer", "CServerSideClient",
+    "CServerSideClientBase", "GameResourceServiceServer", "CGameEntitySystem",
+)
 
 
 def module_for(lib, symbol_name):
