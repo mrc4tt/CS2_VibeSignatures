@@ -6544,6 +6544,24 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CCSCustomHudLayout_SetDialogVariableString
+        expected_output:
+          - CCSCustomHudLayout_SetDialogVariableString.{platform}.yaml
+      - name: find-CCSCustomHudLayout_SetDialogVariableStringForPlayer
+        expected_output:
+          - CCSCustomHudLayout_SetDialogVariableStringForPlayer.{platform}.yaml
+      - name: find-CCSCustomHudLayout_SetHasClass
+        expected_output:
+          - CCSCustomHudLayout_SetHasClass.{platform}.yaml
+      - name: find-CCSCustomHudLayout_SetHasClassForPlayer
+        expected_output:
+          - CCSCustomHudLayout_SetHasClassForPlayer.{platform}.yaml
+      - name: find-CCSPointScript_OnCustomHudClicked
+        expected_output:
+          - CCSPointScript_OnCustomHudClicked.{platform}.yaml
+      - name: find-CCSCustomHudLayout_SetInputCaptureEnabled
+        expected_output:
+          - CCSCustomHudLayout_SetInputCaptureEnabled.{platform}.yaml
       - name: find-CCSPlayer_WeaponServices_Weapon_GetSlot
         expected_output:
           - CCSPlayer_WeaponServices_Weapon_GetSlot.{platform}.yaml
@@ -9905,6 +9923,18 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CCSCustomHudLayout_SetDialogVariableString
+        category: func
+      - name: CCSCustomHudLayout_SetDialogVariableStringForPlayer
+        category: func
+      - name: CCSCustomHudLayout_SetHasClass
+        category: func
+      - name: CCSCustomHudLayout_SetHasClassForPlayer
+        category: func
+      - name: CCSPointScript_OnCustomHudClicked
+        category: func
+      - name: CCSCustomHudLayout_SetInputCaptureEnabled
+        category: func
       - name: CCSPlayerController_HandleCommand_JoinTeam
         category: func
         alias:
