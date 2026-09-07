@@ -113,6 +113,13 @@ else
     echo "==> Baseline bin/${OLD_VER} already hydrated"
 fi
 
+# Analyzer-version guard: en forældet ida_analyze_bin.py (fx efter delvis pull) giver
+# kun kryptiske argparse-fejl - fejl tidligt og tydeligt i stedet.
+grep -q '"-skip_error"' ida_analyze_bin.py 2>/dev/null || {
+    echo "❌ ida_analyze_bin.py er forældet (mangler -skip_error). Koer: git pull / git checkout -- ida_analyze_bin.py"
+    exit 1
+}
+
 # Reap stale idalib-mcp supervisors + IDB locks (left by interrupted prior runs or
 # concurrent scripts). A stale session holding libserver.so makes windows skills fail
 # with "only libserver.so is open" errors.
