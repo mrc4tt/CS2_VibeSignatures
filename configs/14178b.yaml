@@ -2562,7 +2562,7 @@ modules:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
       - name: CServerSideClient_SetName
-        category: func
+        category: vfunc
       - name: CServerSideClient_m_UserIDString
         category: structmember
         struct: CServerSideClient
