@@ -2,4 +2,4 @@ struct_name: CServerSideClient
 member_name: m_nClientSlot
 offset: '0x48'
 size: 4
-offset_sig: 48 63 4B 48
+offset_sig: 39 77 48

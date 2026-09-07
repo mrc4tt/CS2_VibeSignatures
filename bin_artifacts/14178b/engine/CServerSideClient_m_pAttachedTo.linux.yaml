@@ -2,3 +2,4 @@ struct_name: CServerSideClient
 member_name: m_pAttachedTo
 offset: '0x90'
 size: 8
+offset_sig: 48 C7 87 90 00 00 00 00 00 00 00 C6

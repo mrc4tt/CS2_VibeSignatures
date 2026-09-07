@@ -1,0 +1,7 @@
+func_name: CServerSideClient_SetName
+func_va: '0x520740'
+func_rva: '0x520740'
+func_size: '0xbe'
+vtable_name: CServerSideClient
+vfunc_offset: '0x1f8'
+vfunc_index: 63

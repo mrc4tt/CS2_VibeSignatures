@@ -1,0 +1,5 @@
+struct_name: CServerSideClient
+member_name: m_NetChannel
+offset: '0x58'
+size: 8
+offset_sig: 49 89 5F 58 45 88 67 60

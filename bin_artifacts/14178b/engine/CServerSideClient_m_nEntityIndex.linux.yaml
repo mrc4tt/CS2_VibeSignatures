@@ -2,4 +2,4 @@ struct_name: CServerSideClient
 member_name: m_nEntityIndex
 offset: '0x4c'
 size: 4
-offset_sig: 83 7B 4C 02
+offset_sig: 89 ?? 4C 48 8B ?? F8 C9 E9
