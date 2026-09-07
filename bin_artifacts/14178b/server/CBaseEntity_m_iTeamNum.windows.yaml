@@ -1,0 +1,5 @@
+struct_name: CBaseEntity
+member_name: m_iTeamNum
+offset: '0x344'
+size: 1
+offset_sig: 0F B6 86 44 03 00 00 2C ?? 3C ?? 76 ??

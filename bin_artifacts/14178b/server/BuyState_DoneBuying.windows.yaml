@@ -1,0 +1,5 @@
+struct_name: BuyState
+member_name: m_doneBuying
+offset: '0x18'
+size: 1
+offset_sig: 80 79 18 00 74 5E

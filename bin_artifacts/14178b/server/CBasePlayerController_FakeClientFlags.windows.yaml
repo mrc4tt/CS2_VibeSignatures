@@ -1,0 +1,5 @@
+struct_name: CBaseEntity
+member_name: m_fFlags
+offset: '0x388'
+size: 4
+offset_sig: F7 81 88 03 00 00 00 01 00 00
