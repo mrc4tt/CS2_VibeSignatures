@@ -52,6 +52,9 @@ BOTPROFILE_MEMBERS = {
 # Renamed engine symbols: old gamedata keys map to the canonical analyzed symbol via
 # config aliases instead of separate analysis tasks.
 ALIAS_OVERRIDES = {
+    # bot-hider bruger GameResourceServiceServer; upstream analyserer klassen som
+    # CGameResourceService (engine-modulet, linux 0x50 / windows 0x58).
+    "GameResourceServiceServer::m_pEntitySystem": "CGameResourceService_m_pEntitySystem",
     "CCSPlayerController_HandleCommandJoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
     "CCSPlayerController_HandleCommand_JoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
     # IDA-verified 14178b: matchzy's GetSlot sig targets the same function upstream
@@ -78,6 +81,10 @@ def load_seed_specs():
         with open(seed, "r", encoding="utf-8") as f:
             gamedata = json.load(f)
         for key, entry in gamedata.items():
+            if key in ALIAS_OVERRIDES:
+                # alias: kanon-symbolet er allerede i configen (upstream-ejet) -
+                # generatoren resolver via aliaset, ingen separat injektion noedvendig
+                continue
             symbol_name = ALIAS_OVERRIDES.get(key, key.replace("::", "_"))
             alias = key if key != symbol_name else None
             lib = (entry.get("signatures", {}) or {}).get("library") or entry.get("library")
@@ -240,7 +247,7 @@ aborts. Therefore:
 LIB_MODULE = {"server": "server", "engine2": "engine", "engine": "engine", "client": "client"}
 ENGINE_CLASSES = (
     "CNetworkGameServerBase", "CNetworkGameServer", "CServerSideClient",
-    "CServerSideClientBase", "GameResourceServiceServer", "CGameEntitySystem",
+    "CServerSideClientBase", "CGameEntitySystem",
 )
 
 

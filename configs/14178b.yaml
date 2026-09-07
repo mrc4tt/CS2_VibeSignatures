@@ -745,9 +745,6 @@ modules:
       - name: find-CServerSideClient_m_bIsHLTV
         expected_output:
           - CServerSideClient_m_bIsHLTV.{platform}.yaml
-      - name: find-GameResourceServiceServer_m_pEntitySystem
-        expected_output:
-          - GameResourceServiceServer_m_pEntitySystem.{platform}.yaml
       - name: find-CNetworkGameServer_PackEntities
         expected_output:
           - CNetworkGameServer_PackEntities.{platform}.yaml
@@ -2619,10 +2616,6 @@ modules:
         category: structmember
         struct: CServerSideClient
         member: m_bIsHLTV
-      - name: GameResourceServiceServer_m_pEntitySystem
-        category: structmember
-        struct: GameResourceServiceServer
-        member: m_pEntitySystem
       - name: CServerSideClient
         category: struct
       - name: CNetworkGameServerBase
@@ -2677,10 +2670,9 @@ modules:
       - name: CGameResourceService_m_pEntitySystem
         category: structmember
         struct: CGameResourceService
-        member: CGameResourceService
         member: m_pEntitySystem
         alias:
-          - GameEntitySystem
+          - GameResourceServiceServer::m_pEntitySystem
       - name: CGameResourceService_vtable
         category: vtable
       - name: CGameResourceService_LoadGameResourceManifestNamed
@@ -10119,8 +10111,6 @@ modules:
         category: vfunc
         alias:
           - CServerSideClient::SetName
-        alias:
-          - GameResourceServiceServer::m_pEntitySystem
       - name: CEntityIdentity_Size
         category: structmember
         struct: CEntityIdentity
