@@ -3,8 +3,8 @@ name: find-BuyState_OnUpdate
 description: |
   Locate BuyState::OnUpdate in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "BuyState::OnUpdate" (symbol BuyState_OnUpdate). This is a non-virtual function - emit a byte signature (func_sig), not an offset.
-Locate it via cross-references, distinctive constants/strings in its body, or callers
-of related symbols; verify by decompilation before committing to a candidate.
+  Locate it via cross-references, distinctive constants/strings in its body, or callers
+  of related symbols; verify by decompilation before committing to a candidate.
   Trigger: BuyState_OnUpdate, BuyState::OnUpdate
 disable-model-invocation: true
 ---

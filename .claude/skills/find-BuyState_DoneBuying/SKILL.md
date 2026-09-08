@@ -1,75 +1,40 @@
 ---
 name: find-BuyState_DoneBuying
 description: |
-  Locate BuyState::DoneBuying in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
-  signature or offset for the local gamedata entry "BuyState::DoneBuying" (symbol BuyState_DoneBuying). This is a VIRTUAL function - resolve the BuyState::DoneBuying vtable via RTTI and identify the
-slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
-commonly differ between platforms - never assume identical indices.
+  Locate BuyState::m_doneBuying, exposed as BuyState::DoneBuying, in the loaded CS2
+  server binary. Emit a structmember offset, never a function or vtable slot.
   Trigger: BuyState_DoneBuying, BuyState::DoneBuying
 disable-model-invocation: true
 ---
 
 # Find BuyState_DoneBuying
 
-Target: `BuyState::DoneBuying` (vfunc) in the CS2 server module.
+Target: the one-byte BuyState member `m_doneBuying`. The configured category is
+`structmember`. Keep this skill as fallback until the preprocessor is verified
+in the actual Windows/Linux binaries.
 
-> Do NOT anchor on raw byte patterns from older releases - they shift. Use anchors only to *locate*
-> the function, then generate a fresh minimal-unique function-head signature with relocated bytes
-> wildcarded. Produce ONLY the output file(s) listed in this skill's expected outputs, for the binary
-> loaded in THIS session (one platform per run). NEVER open or analyze the other platform's binary.
+Inspect verified BuyState behavior code and trace the relevant member accesses
+back to the BuyState object. `BuyState_OnUpdate` is a candidate inspection point,
+not a proven dependency: verify its identity and the member's behavioral role
+before using it. Do not assume an old offset or infer identity from a byte-sized
+comparison alone. Distinguish this flag from the other BuyState flags and timers.
 
-## Method
+Read the actual displacement and verify its base object, access size and control
+flow. Generate a unique instruction signature for this access; for an anchor
+before the access include `offset_sig_disp`. Check the match in the loaded binary.
+Only analyze and write the requested platform. If identity or uniqueness cannot
+be established, report failure without guessed output.
 
-This is a VIRTUAL function - resolve the BuyState::DoneBuying vtable via RTTI and identify the
-slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
-commonly differ between platforms - never assume identical indices.
-
-## Mandatory self-check before emitting
-
-The pipeline re-reads the bytes at your `func_va` and deterministically regenerates `func_sig` from
-them - if your `func_sig` does not match those bytes EXACTLY (with `??` matching anything), the run
-aborts. Therefore:
-
-1. After picking the function, read the actual bytes at `func_va` via the IDA MCP.
-2. Derive `func_sig` FROM those bytes: keep stable opcode bytes literally, wildcard relocated or
-   variable operands as `??`.
-3. `func_sig` MUST start at `func_va` (the true function head).
-4. Only then write the YAML. A mismatch is always a bug in YOUR output, never in the pipeline.
-
-
-## Struct-member alternative (choose the TRUTHFUL schema)
-
-If investigation shows the target is NOT a vtable slot but a plain struct member of a
-non-polymorphic class (no RTTI/vtable exists for the class), emit the structmember schema
-instead:
+Replace the complete expected `BuyState_DoneBuying.{platform}.yaml` under the
+caller-provided artifact directory with:
 
 ```yaml
-struct_name: <owning class name>
-member_name: <member name>
-offset: "<hex byte offset as string>"
-size: <member size in bytes, decimal>
-offset_sig: "<short byte pattern of an instruction touching the offset>"
+struct_name: BuyState
+member_name: m_doneBuying
+offset: '<verified byte offset in hex>'
+size: 1
+offset_sig: '<unique signature of the verified member access>'
 ```
 
-A truthful structmember artifact is always accepted; a guessed vfunc artifact is not.
-
-## Output schema (STRICT)
-
-Write the YAML file `<symbol>.{platform}.yaml` with EXACTLY these fields:
-```yaml
-func_name: <SYMBOL_NAME>
-func_va: "<hex virtual address>"
-func_rva: "<hex rva>"
-func_size: "<hex size>"
-vtable_name: <owning class RTTI name>
-vfunc_offset: "<hex vtable byte offset>"
-vfunc_index: <decimal slot index>
-```
-NEVER include func_sig.
-
-## Verification
-
-1. Decompile the candidate and confirm the behavior matches the purpose above (not a caller or callee).
-2. Confirm uniqueness: the generated pattern must match exactly one location in the loaded binary.
-3. If a candidate cannot be confirmed, report the shortlist instead of guessing - a skipped symbol is
-   safer than a wrong signature.
+Optional: `offset_sig_disp` for a backward-expanded anchor. Never emit `func_*`,
+`vfunc_*` or `vtable_*`. Central runtime validation/canonicalization is mandatory.
