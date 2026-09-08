@@ -269,6 +269,41 @@ def module_for(lib, symbol_name):
     return "server"
 
 
+def repair_missing_structs(text):
+    """Ensure every structmember's struct is declared (category: struct) in its module.
+
+    Manual vfunc->structmember reclassifications bypass inject()'s struct tracking;
+    update_gamedata refuses configs where a structmember references an undeclared
+    struct. This pass self-heals any such state.
+    """
+    mm = list(re.finditer(r"^  - name: (\w+)", text, re.M))
+    result = text
+    added = 0
+    for i, m in enumerate(mm):
+        end = mm[i + 1].start() if i + 1 < len(mm) else len(text)
+        block = result[m.start():end] if i == 0 else None
+    # process bottom-up so offsets stay valid
+    blocks = []
+    for i, m in enumerate(mm):
+        end = mm[i + 1].start() if i + 1 < len(mm) else len(result)
+        blocks.append((m.group(1), m.start(), end))
+    for mod, start, end in reversed(blocks):
+        block = result[start:end]
+        members = re.findall(r"^      - name: (\S+)\n        category: structmember\n        struct: (\S+)", block, re.M)
+        structs = set(re.findall(r"^      - name: (\S+)\n        category: struct\n", block, re.M))
+        missing = sorted({s for _, s in members if s not in structs})
+        if not missing:
+            continue
+        sm = re.search(r"^    symbols:\n", block, re.M)
+        if not sm:
+            continue
+        decls = "".join(f"      - name: {s}\n        category: struct\n" for s in missing)
+        block = block[:sm.end()] + decls + block[sm.end():]
+        result = result[:start] + block + result[end:]
+        added += len(missing)
+    return result, added
+
+
 def inject(text, config_path, specs):
     """Inject specs into the module matching each symbol's library (server/engine/...)."""
     module_matches = list(re.finditer(r"^  - name: ([\w]+)", text, re.M))
@@ -333,8 +368,11 @@ def main():
     with open(config_path, "r", encoding="utf-8") as f:
         text = f.read()
 
-    patched = inject(text, config_path, specs)
-    if patched == text:
+    patched, repaired = repair_missing_structs(text)
+    if repaired:
+        print(f"  repaired: {repaired} missing struct declaration(s)")
+    patched = inject(patched, config_path, specs)
+    if patched == text and not repaired:
         return
 
     with open(config_path, "w", encoding="utf-8") as f:

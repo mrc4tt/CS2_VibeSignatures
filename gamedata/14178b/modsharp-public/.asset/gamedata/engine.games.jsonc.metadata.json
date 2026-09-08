@@ -208,8 +208,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        155,
+        156
+      ],
       "name": "CServerSideClient::m_Name",
       "updated": false
     },
@@ -220,8 +223,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        167,
+        168
+      ],
       "name": "CServerSideClient::m_NetChannel",
       "updated": false
     },
@@ -268,8 +274,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        225,
+        226
+      ],
       "name": "CServerSideClient::SetName",
       "updated": false
     },
@@ -296,7 +305,7 @@
   "gamever": "14178b",
   "schema_version": 2,
   "summary": {
-    "covered": 5,
+    "covered": 8,
     "total": 38,
     "updated": 2
   }

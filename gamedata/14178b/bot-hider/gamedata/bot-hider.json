@@ -10,32 +10,32 @@
   "CCSBotManager::MaintainBotQuota": {
     "signatures": {
       "library": "server",
-      "windows": "40 55 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F1 FF 15",
-      "linux": "55 31 F6 48 89 E5 41 57 41 56 49 89 FE 31 FF 41 55 41 54 53 48 83 EC 28"
+      "windows": "40 55 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F1",
+      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
     },
     "comment": "runs the bot quota pass"
   },
   "CBaseIssue::CountPotentialVoters": {
     "signatures": {
       "library": "server",
-      "windows": "48 89 5C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 48 8B 05",
-      "linux": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 31 DB 48 83 EC ? 4C 8D 2D ? ? ? ? 49 8B 45 ? 44 8B 60 ? 45 85 E4 0F 8E ? ? ? ? C7 45 ? ? ? ? ? 31 FF E8 ? ? ? ? 48 89 C2"
+      "windows": "48 89 5C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 48 8B 05 ? ? ? ?",
+      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
     },
     "comment": "counts eligible voters"
   },
   "CCSPlayerController::HandleCommand_JoinTeam": {
     "signatures": {
       "library": "server",
-      "windows": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D",
-      "linux": "55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC"
+      "windows": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D ? ? ? ?",
+      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
     },
     "comment": "handles player team join requests"
   },
   "MpHumanTeam_ApplyRestriction": {
     "signatures": {
       "library": "server",
-      "windows": "40 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? BA",
-      "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? E8 ? ? ? ? 89 C3"
+      "windows": "40 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? BA ? ? ? ?",
+      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
     },
     "comment": "applies the human team restriction"
   },
@@ -50,8 +50,8 @@
   "CCSGameRules::SameMapTeardown": {
     "signatures": {
       "library": "server",
-      "windows": "41 3B DD 0F 84 99 00 00 00 41 8B 80 88 03 00 00 49 8B C8 C1 E8 08 A8 01 74 44",
-      "linux": "4C 8D BD 90 EE FF FF 31 F6 C7 85 90 EE FF FF 00 00 00 00 4C 89 FF E8 ? ? ? ? 49 8B 06 48 8D BD C0 EE FF FF"
+      "windows": "41 3B DD 0F 84 ? ? ? ? 41 8B 80 88 03 00 00 49 8B C8 C1 E8 08 A8 01 74 ?",
+      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
     },
     "offsets": {
       "windows": -43,
@@ -69,7 +69,7 @@
   "GameResourceServiceServer::m_pEntitySystem": {
     "offsets": {
       "windows": 88,
-      "linux": 88
+      "linux": 80
     },
     "comment": "resolves the game entity system"
   },
@@ -104,21 +104,21 @@
   "CBaseEntity::m_iTeamNum": {
     "offsets": {
       "windows": 836,
-      "linux": 836
+      "linux": 1572
     },
     "comment": "reads the current controller team"
   },
   "CNetworkGameServerBase::m_Clients": {
     "offsets": {
-      "windows": 584,
-      "linux": 584
+      "windows": 836,
+      "linux": 1572
     },
     "comment": "CUtlVector<CServerSideClient*> base offset"
   },
   "CBasePlayerController::FakeClientFlags": {
     "offsets": {
       "windows": 904,
-      "linux": 904
+      "linux": 1640
     },
     "comment": "controller fakeclient flags"
   },
@@ -215,8 +215,8 @@
   },
   "CServerSideClient::m_bIsHLTV": {
     "offsets": {
-      "windows": 322,
-      "linux": 322
+      "windows": 904,
+      "linux": 1640
     },
     "comment": "SourceTV flag"
   }

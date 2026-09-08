@@ -280,11 +280,8 @@
       "updated": false
     },
     {
-      "covered": true,
-      "covered_lines": [
-        282,
-        283
-      ],
+      "covered": false,
+      "covered_lines": [],
       "name": "GameEntitySystem",
       "updated": false
     },
@@ -646,7 +643,7 @@
   "gamever": "14178b",
   "schema_version": 2,
   "summary": {
-    "covered": 23,
+    "covered": 22,
     "total": 64,
     "updated": 9
   }

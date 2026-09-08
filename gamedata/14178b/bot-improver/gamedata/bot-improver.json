@@ -233,12 +233,5 @@
       "linux": 39
     },
     "comment": "CCSPlayer_MovementServices vtable index."
-  },
-  "vtidx::DropWeapon": {
-    "offsets": {
-      "windows": 28,
-      "linux": 29
-    },
-    "comment": "CCSPlayer_WeaponServices::DropWeapon vtable index"
   }
 }

@@ -9923,6 +9923,12 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: BotProfile
+        category: struct
+      - name: BuyState
+        category: struct
+      - name: CMoveData
+        category: struct
       - name: CCSCustomHudLayout_SetDialogVariableString
         category: func
       - name: CCSCustomHudLayout_SetDialogVariableStringForPlayer

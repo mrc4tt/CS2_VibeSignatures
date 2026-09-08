@@ -526,38 +526,6 @@
       "updated": false
     },
     {
-      "changes": [
-        {
-          "after": 28,
-          "before": 24,
-          "line": 239,
-          "path": [
-            "vtidx::DropWeapon",
-            "offsets",
-            "windows"
-          ]
-        },
-        {
-          "after": 29,
-          "before": 25,
-          "line": 240,
-          "path": [
-            "vtidx::DropWeapon",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
-      "covered": true,
-      "covered_lines": [
-        239,
-        240,
-        242
-      ],
-      "name": "vtidx::DropWeapon",
-      "updated": true
-    },
-    {
       "covered": true,
       "covered_lines": [
         232,
@@ -578,12 +546,12 @@
       "updated": false
     }
   ],
-  "file": "bot-controller/gamedata/bot-controller.json",
+  "file": "bot-improver/gamedata/bot-improver.json",
   "gamever": "14178b",
   "schema_version": 2,
   "summary": {
-    "covered": 33,
-    "total": 33,
-    "updated": 13
+    "covered": 32,
+    "total": 32,
+    "updated": 12
   }
 }

@@ -241,8 +241,12 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        325,
+        326,
+        327
+      ],
       "name": "CCSBotManager::MaintainBotQuota",
       "updated": false
     },
@@ -441,11 +445,8 @@
       "updated": false
     },
     {
-      "covered": true,
-      "covered_lines": [
-        4,
-        5
-      ],
+      "covered": false,
+      "covered_lines": [],
       "name": "GameEntitySystem",
       "updated": false
     },
