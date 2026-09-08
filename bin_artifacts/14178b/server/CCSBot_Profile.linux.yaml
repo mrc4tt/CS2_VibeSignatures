@@ -1,5 +1,0 @@
-struct_name: CCSBot
-member_name: m_profile
-offset: '0xf8'
-size: 8
-offset_sig: 48 89 BB F8 00 00 00
