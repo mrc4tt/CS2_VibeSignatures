@@ -121,8 +121,8 @@ binaries:
       sha256: 'e39313a48f591f3a141c121a59e499715502e6bdb6bd7e830dd983338131a0d6'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:97da8157524e27c6d3ec05c22c36e2ddad4ba44b840b2ea2773e3c2f34157bce
-file_count: 3678
+config_sha256: sha256:f54d4058ada5d968fd8a59a2c97e7eae59abfca8a38676bf8ca027a0d69edd23
+file_count: 3713
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -624,7 +624,7 @@ files:
   client/CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.linux.yaml:
     func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
     func_rva: '0x1693a40'
-    func_sig: 55 BE ?? ?? ?? ?? 48 89 E5 53 48 83 EC ?? 48 8B 05 5B AA E8 ??
+    func_sig: 55 BE ?? ?? ?? ?? 48 89 E5 53 48 83 EC ?? 48 8B 05 13 13 E9 ??
     func_size: '0x64'
     func_va: '0x1693a40'
     vfunc_index: 3
@@ -633,7 +633,7 @@ files:
   client/CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.windows.yaml:
     func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
     func_rva: '0x97a470'
-    func_sig: 40 53 48 83 EC ?? 48 8B 05 23 45 FF ??
+    func_sig: 40 53 48 83 EC ?? 48 8B 05 6B 74 FF ??
     func_size: '0x56'
     func_va: '0x18097a470'
     vfunc_index: 3
@@ -6594,6 +6594,24 @@ files:
     vfunc_index: 80
     vfunc_offset: '0x280'
     vtable_name: CEngineServer_vtable
+  engine/CEngineServer_GetPlayerNetInfo.linux.yaml:
+    func_name: CEngineServer_GetPlayerNetInfo
+    func_rva: '0x518420'
+    func_sig: 48 8D 05 ?? ?? ?? ?? 55 48 89 E5 41 54 53 48 63 DE 48 8B 38 E8 ?? ?? ?? ?? 48 85 C0 74 ?? 85 DB 78 ?? 48 89 C7 49 89 C4 E8 ?? ?? ?? ?? 39 D8 7E ?? 41 39 9C 24 ?? ?? ?? ?? 7E ?? 49 8B 84 24 ?? ?? ?? ?? 48 8B 04 D8 48 85 C0 74 ?? 5B 48 8B 40 ??
+    func_size: '0x5f'
+    func_va: '0x518420'
+    vfunc_index: 41
+    vfunc_offset: '0x148'
+    vtable_name: CEngineServer
+  engine/CEngineServer_GetPlayerNetInfo.windows.yaml:
+    func_name: CEngineServer_GetPlayerNetInfo
+    func_rva: '0xa05c0'
+    func_sig: 48 8B 05 ?? ?? ?? ?? 48 85 C0 74 ?? 85 D2 78 ?? 3B 90 ?? ?? ?? ?? 7D ?? 48 8B 80 ?? ?? ?? ?? 48 63 CA 48 8B 04 C8 48 85 C0 74 ?? 48 8B 40 ??
+    func_size: '0x33'
+    func_va: '0x1800a05c0'
+    vfunc_index: 41
+    vfunc_offset: '0x148'
+    vtable_name: CEngineServer
   engine/CEngineServer_GetPlayerNetworkIDString.linux.yaml:
     func_name: CEngineServer_GetPlayerNetworkIDString
     func_rva: '0x5198b0'
@@ -6763,7 +6781,7 @@ files:
   engine/CEngineServer_ServerCommand.windows.yaml:
     func_name: CEngineServer_ServerCommand
     func_rva: '0xa06a0'
-    func_sig: 48 8B 0D 51 88 5E ??
+    func_sig: 48 8B 0D A1 87 5E ??
     func_size: '0x1c'
     func_va: '0x1800a06a0'
     vfunc_index: 45
@@ -7109,28 +7127,40 @@ files:
     vtable_name: CEngineServiceMgr
   engine/CEngineServiceMgr_GetAddonCount.linux.yaml:
     func_name: CEngineServiceMgr_GetAddonCount
+    func_rva: '0x364710'
+    func_sig: 8B 87 28 02 00 ?? C3
+    func_size: '0x7'
+    func_va: '0x364710'
     vfunc_index: 39
     vfunc_offset: '0x138'
-    vfunc_sig: FF 90 38 01 00 00 F3 0F 10 45 ??
     vtable_name: CEngineServiceMgr
   engine/CEngineServiceMgr_GetAddonCount.windows.yaml:
     func_name: CEngineServiceMgr_GetAddonCount
+    func_rva: '0x2138a0'
+    func_sig: 8B 81 28 02 00 ?? C3
+    func_size: '0x7'
+    func_va: '0x1802138a0'
     vfunc_index: 39
     vfunc_offset: '0x138'
-    vfunc_sig: FF 90 38 01 00 00 85 C0
     vtable_name: CEngineServiceMgr
   engine/CEngineServiceMgr_GetEngineWindow.linux.yaml:
     func_name: CEngineServiceMgr_GetEngineWindow
+    func_rva: '0x3644f0'
+    func_sig: 48 8B 05 89 01 68 ??
+    func_size: '0x8'
+    func_va: '0x3644f0'
     vfunc_index: 18
     vfunc_offset: '0x90'
-    vfunc_sig: FF 90 90 00 00 00 48 89 DF 48 89 C6
-    vtable_name: CEngineServiceMgr_vtable
+    vtable_name: CEngineServiceMgr
   engine/CEngineServiceMgr_GetEngineWindow.windows.yaml:
     func_name: CEngineServiceMgr_GetEngineWindow
+    func_rva: '0x20fb80'
+    func_sig: 48 8B 05 31 1D 70 ??
+    func_size: '0x8'
+    func_va: '0x18020fb80'
     vfunc_index: 18
     vfunc_offset: '0x90'
-    vfunc_sig: FF 90 90 00 00 00 48 8B D0 49 8B CF
-    vtable_name: CEngineServiceMgr_vtable
+    vtable_name: CEngineServiceMgr
   engine/CEngineServiceMgr_GetEventDispatcher.linux.yaml:
     func_name: CEngineServiceMgr_GetEventDispatcher
     func_rva: '0x364540'
@@ -7152,20 +7182,20 @@ files:
   engine/CEngineServiceMgr_OnFrameRenderingFinished.linux.yaml:
     func_name: CEngineServiceMgr_OnFrameRenderingFinished
     func_rva: '0x3651d0'
+    func_sig: 48 8D 05 ?? ?? ?? ?? 48 8B 00 48 85 C0 74 ?? F2 0F 10 90 ?? ?? ?? ??
     func_size: '0xa6'
     func_va: '0x3651d0'
     vfunc_index: 36
     vfunc_offset: '0x120'
-    vfunc_sig: FF 90 20 01 00 00 48 8D 05 ?? ?? ?? ?? 4C 89 EE
     vtable_name: CEngineServiceMgr
   engine/CEngineServiceMgr_OnFrameRenderingFinished.windows.yaml:
     func_name: CEngineServiceMgr_OnFrameRenderingFinished
     func_rva: '0x212ce0'
+    func_sig: 40 53 48 83 EC ?? 48 8B 05 ?? ?? ?? ?? 48 8B DA 48 85 C0
     func_size: '0x67'
     func_va: '0x180212ce0'
     vfunc_index: 36
     vfunc_offset: '0x120'
-    vfunc_sig: FF 90 20 01 00 00 E9 ?? ?? ?? ?? 8B 86 ?? ?? ?? ??
     vtable_name: CEngineServiceMgr
   engine/CEngineServiceMgr_PrintStatus.linux.yaml:
     func_name: CEngineServiceMgr_PrintStatus
@@ -7623,15 +7653,21 @@ files:
     vtable_va: '0x180573b08'
   engine/CGameResourceService_AllocGameResourceManifest.linux.yaml:
     func_name: CGameResourceService_AllocGameResourceManifest
-    vfunc_index: 44
-    vfunc_offset: '0x160'
-    vfunc_sig: 48 8B 80 60 01 00 00 48 39 D0 0F 85 ?? ?? ?? ?? 4C 8D BF ?? ?? ?? ??
+    func_rva: '0x3c6950'
+    func_sig: 55 48 89 E5 41 56 44 0F B6 F1
+    func_size: '0x159'
+    func_va: '0x3c6950'
+    vfunc_index: 38
+    vfunc_offset: '0x130'
     vtable_name: CGameResourceService
   engine/CGameResourceService_AllocGameResourceManifest.windows.yaml:
     func_name: CGameResourceService_AllocGameResourceManifest
-    vfunc_index: 44
-    vfunc_offset: '0x160'
-    vfunc_sig: FF 90 60 01 00 00 4C 8B F8 80 78 ?? ??
+    func_rva: '0x1ae010'
+    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 83 79 ?? ??
+    func_size: '0x72'
+    func_va: '0x1801ae010'
+    vfunc_index: 38
+    vfunc_offset: '0x130'
     vtable_name: CGameResourceService
   engine/CGameResourceService_AppendToGameResourceManifest.linux.yaml:
     func_name: CGameResourceService_AppendToGameResourceManifest
@@ -9652,6 +9688,18 @@ files:
     vfunc_index: 3
     vfunc_offset: '0x18'
     vtable_name: CNetworkClientSpawnGroupCreatePrerequisites_vtable
+  engine/CNetworkClientSpawnGroupCreatePrerequisites_Init.linux.yaml:
+    func_name: CNetworkClientSpawnGroupCreatePrerequisites_Init
+    func_rva: '0x4ed250'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ?? ?? ?? ?? 48 8B 47 ?? 4C 8B 68 ??
+    func_size: '0x19b'
+    func_va: '0x4ed250'
+  engine/CNetworkClientSpawnGroupCreatePrerequisites_Init.windows.yaml:
+    func_name: CNetworkClientSpawnGroupCreatePrerequisites_Init
+    func_rva: '0x5c420'
+    func_sig: 4C 8B DC 53 48 81 EC ?? ?? ?? ?? 48 8B 41 ??
+    func_size: '0x126'
+    func_va: '0x18005c420'
   engine/CNetworkClientSpawnGroupCreatePrerequisites_vtable.linux.yaml:
     vtable_class: CNetworkClientSpawnGroupCreatePrerequisites
     vtable_entries:
@@ -12742,6 +12790,18 @@ files:
     func_sig: 4C 89 44 24 ?? 48 89 54 24 ?? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ??
     func_size: '0x7db'
     func_va: '0x1800b83f0'
+  engine/CNetworkStringTableClient_ParseUpdate.linux.yaml:
+    func_name: CNetworkStringTableClient_ParseUpdate
+    func_rva: '0x596b70'
+    func_sig: 55 48 89 E5 41 57 49 89 FF 41 56 49 89 F6 41 55 41 54
+    func_size: '0xeda'
+    func_va: '0x596b70'
+  engine/CNetworkStringTableClient_ParseUpdate.windows.yaml:
+    func_name: CNetworkStringTableClient_ParseUpdate
+    func_rva: '0x109ad0'
+    func_sig: 48 89 5C 24 ?? 44 89 44 24 ?? 48 89 4C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ??
+    func_size: '0x967'
+    func_va: '0x180109ad0'
   engine/CNetworkStringTableContainer_DirectUpdate.linux.yaml:
     func_name: CNetworkStringTableContainer_DirectUpdate
     func_rva: '0x596250'
@@ -13809,6 +13869,18 @@ files:
     func_sig: 40 56 41 56 48 81 EC ?? ?? ?? ?? 44 0F B6 F2
     func_size: '0x48c'
     func_va: '0x1800f8210'
+  engine/CSteam3ServerS1_ShutdownGameServer.linux.yaml:
+    func_name: CSteam3ServerS1_ShutdownGameServer
+    func_rva: '0x577870'
+    func_sig: 55 48 89 E5 41 55 41 54 4C 8D 25 ?? ?? ?? ?? 53 48 89 FB 4C 89 E7 48 83 EC ?? E8 ?? ?? ?? ?? 48 83 38 ?? 0F 84 ?? ?? ?? ?? 8B 93 ?? ?? ?? ??
+    func_size: '0x29c'
+    func_va: '0x577870'
+  engine/CSteam3ServerS1_ShutdownGameServer.windows.yaml:
+    func_name: CSteam3ServerS1_ShutdownGameServer
+    func_rva: '0xf86a0'
+    func_sig: 40 53 48 83 EC ?? 48 8B D9 48 8D 0D ?? ?? ?? ?? FF 15 ?? ?? ?? ?? 48 83 38 ?? 0F 84 ?? ?? ?? ?? 83 BB ?? ?? ?? ?? ?? 0F 8C ?? ?? ?? ?? 8B 0D ?? ?? ?? ??
+    func_size: '0x192'
+    func_va: '0x1800f86a0'
   engine/CSteam3Server_SendUpdatedServerDetails.linux.yaml:
     func_name: CSteam3Server_SendUpdatedServerDetails
     func_rva: '0x577db0'
@@ -13892,6 +13964,12 @@ files:
     func_sig: 41 57 48 83 EC ?? 8B 05 ?? ?? ?? ?? 4C 8B F9
     func_size: '0x1bc'
     func_va: '0x1803fe7e0'
+  engine/ConnectSocketToAddressList.windows.yaml:
+    func_name: ConnectSocketToAddressList
+    func_rva: '0x57910'
+    func_sig: 40 56 41 57 48 83 EC ?? 48 89 5C 24 ??
+    func_size: '0x2cd'
+    func_va: '0x180057910'
   engine/Demo_PauseAtServerTick_CommandHandler.linux.yaml:
     func_name: Demo_PauseAtServerTick_CommandHandler
     func_rva: '0x48f730'
@@ -13944,6 +14022,42 @@ files:
     vfunc_index: 4
     vfunc_offset: '0x20'
     vtable_name: IAppSystem
+  engine/IEngineServiceMgr_GetAddonCount.linux.yaml:
+    func_name: IEngineServiceMgr_GetAddonCount
+    vfunc_index: 39
+    vfunc_offset: '0x138'
+    vfunc_sig: FF 90 38 01 00 00 F3 0F 10 45 ??
+    vtable_name: IEngineServiceMgr
+  engine/IEngineServiceMgr_GetAddonCount.windows.yaml:
+    func_name: IEngineServiceMgr_GetAddonCount
+    vfunc_index: 39
+    vfunc_offset: '0x138'
+    vfunc_sig: FF 90 38 01 00 00 85 C0
+    vtable_name: IEngineServiceMgr
+  engine/IEngineServiceMgr_GetEngineWindow.linux.yaml:
+    func_name: IEngineServiceMgr_GetEngineWindow
+    vfunc_index: 18
+    vfunc_offset: '0x90'
+    vfunc_sig: FF 90 90 00 00 00 48 89 DF 48 89 C6
+    vtable_name: IEngineServiceMgr
+  engine/IEngineServiceMgr_GetEngineWindow.windows.yaml:
+    func_name: IEngineServiceMgr_GetEngineWindow
+    vfunc_index: 18
+    vfunc_offset: '0x90'
+    vfunc_sig: FF 90 90 00 00 00 48 8B D0 49 8B CF
+    vtable_name: IEngineServiceMgr
+  engine/IEngineServiceMgr_OnFrameRenderingFinished.linux.yaml:
+    func_name: IEngineServiceMgr_OnFrameRenderingFinished
+    vfunc_index: 36
+    vfunc_offset: '0x120'
+    vfunc_sig: FF 90 20 01 00 00 48 8D 05 ?? ?? ?? ?? 4C 89 EE
+    vtable_name: IEngineServiceMgr
+  engine/IEngineServiceMgr_OnFrameRenderingFinished.windows.yaml:
+    func_name: IEngineServiceMgr_OnFrameRenderingFinished
+    vfunc_index: 36
+    vfunc_offset: '0x120'
+    vfunc_sig: FF 90 20 01 00 00 E9 ?? ?? ?? ?? 8B 86 ?? ?? ?? ??
+    vtable_name: IEngineServiceMgr
   engine/IEngineService_GetName.linux.yaml:
     func_name: IEngineService_GetName
     vfunc_index: 12
@@ -13980,6 +14094,18 @@ files:
     vfunc_index: 1
     vfunc_offset: '0x8'
     vtable_name: IEntityResourceManifestBuilder
+  engine/IGameResourceService_AllocGameResourceManifest.linux.yaml:
+    func_name: IGameResourceService_AllocGameResourceManifest
+    vfunc_index: 38
+    vfunc_offset: '0x130'
+    vfunc_sig: 4C 8B B8 30 01 00 00 41 0F BE 85 ?? 00 00 00
+    vtable_name: IGameResourceService
+  engine/IGameResourceService_AllocGameResourceManifest.windows.yaml:
+    func_name: IGameResourceService_AllocGameResourceManifest
+    vfunc_index: 38
+    vfunc_offset: '0x130'
+    vfunc_sig: 48 8B AA 30 01 00 00
+    vtable_name: IGameResourceService
   engine/ILoopModeFactory_GetLoopModeType.linux.yaml:
     func_name: ILoopModeFactory_GetLoopModeType
     vfunc_index: 4
@@ -14336,6 +14462,96 @@ files:
     vfunc_offset: '0xe8'
     vfunc_sig: FF 90 E8 00 00 00 8B 8F ?? ?? ?? ??
     vtable_name: CNetworkServerService_vtable
+  engine/INetworkSystem_BufferToBufferDecompress.linux.yaml:
+    func_name: INetworkSystem_BufferToBufferDecompress
+    vfunc_index: 31
+    vfunc_offset: '0xf8'
+    vfunc_sig: FF 90 F8 00 00 00 8B 95 ?? ?? ?? ?? 8B 85 ?? ?? ?? ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_BufferToBufferDecompress.windows.yaml:
+    func_name: INetworkSystem_BufferToBufferDecompress
+    vfunc_index: 31
+    vfunc_offset: '0xf8'
+    vfunc_sig: FF 90 F8 00 00 00 8B 74 24 ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_CloseSocket.windows.yaml:
+    func_name: INetworkSystem_CloseSocket
+    vfunc_index: 17
+    vfunc_offset: '0x88'
+    vfunc_sig: FF 90 88 00 00 00 48 8B 5C 24 ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_ConnectSocket.windows.yaml:
+    func_name: INetworkSystem_ConnectSocket
+    vfunc_index: 15
+    vfunc_offset: '0x78'
+    vfunc_sig: FF 50 78 84 C0 75 ?? 40 32 ED
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_EnableLoopbackBetweenSockets.windows.yaml:
+    func_name: INetworkSystem_EnableLoopbackBetweenSockets
+    vfunc_index: 18
+    vfunc_offset: '0x90'
+    vfunc_sig: FF 90 90 00 00 00 84 C0 74 ?? 48 8B 0D ?? ?? ?? ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_InitNetworkSystem.linux.yaml:
+    func_name: INetworkSystem_InitNetworkSystem
+    vfunc_index: 51
+    vfunc_offset: '0x198'
+    vfunc_sig: 48 8B 80 98 01 00 00 48 81 C4 ?? ?? ?? ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_InitNetworkSystem.windows.yaml:
+    func_name: INetworkSystem_InitNetworkSystem
+    vfunc_index: 51
+    vfunc_offset: '0x198'
+    vfunc_sig: FF 90 98 01 00 00 48 81 C4 ?? ?? ?? ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_OpenSocket.linux.yaml:
+    func_name: INetworkSystem_OpenSocket
+    vfunc_index: 14
+    vfunc_offset: '0x70'
+    vfunc_sig: FF 50 70 84 C0 0F 84 ?? ?? ?? ?? 48 83 C4 ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_OpenSocket.windows.yaml:
+    func_name: INetworkSystem_OpenSocket
+    vfunc_index: 14
+    vfunc_offset: '0x70'
+    vfunc_sig: FF 50 70 84 C0 0F 85 ?? ?? ?? ?? E8 ?? ?? ?? ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_PollSocket.windows.yaml:
+    func_name: INetworkSystem_PollSocket
+    vfunc_index: 20
+    vfunc_offset: '0xa0'
+    vfunc_sig: 48 FF A0 A0 00 00 00 48 83 C4 ?? 5B
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_PrintNetworkStats.linux.yaml:
+    func_name: INetworkSystem_PrintNetworkStats
+    vfunc_index: 25
+    vfunc_offset: '0xc8'
+    vfunc_sig: FF 90 C8 00 00 00 48 8D 05 ?? ?? ?? ?? 48 8B 38 48 8B 07 FF 90 ?? ?? ?? ?? 49 8B 7D ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_PrintNetworkStats.windows.yaml:
+    func_name: INetworkSystem_PrintNetworkStats
+    vfunc_index: 25
+    vfunc_offset: '0xc8'
+    vfunc_sig: FF 90 C8 00 00 00 48 8B 0D ?? ?? ?? ?? 48 8B 01 FF 90 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_RemoveNetChannel.windows.yaml:
+    func_name: INetworkSystem_RemoveNetChannel
+    vfunc_index: 23
+    vfunc_offset: '0xb8'
+    vfunc_sig: FF 90 B8 00 00 00 48 8B 05 ?? ?? ?? ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_ShutdownGameServer.linux.yaml:
+    func_name: INetworkSystem_ShutdownGameServer
+    vfunc_index: 12
+    vfunc_offset: '0x60'
+    vfunc_sig: FF 50 60 81 BB ?? ?? ?? ?? ?? ?? ?? ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_ShutdownGameServer.windows.yaml:
+    func_name: INetworkSystem_ShutdownGameServer
+    vfunc_index: 12
+    vfunc_offset: '0x60'
+    vfunc_sig: FF 50 60 33 FF F7 83 ?? ?? ?? ?? ?? ?? ?? ??
+    vtable_name: INetworkSystem
   engine/ISource2Client_CreateMove.windows.yaml:
     func_name: ISource2Client_CreateMove
     vfunc_index: 16
@@ -14443,12 +14659,30 @@ files:
     func_sig: 48 89 5C 24 ?? 56 57 41 56 48 81 EC ?? ?? ?? ?? 45 0F B6 F0
     func_size: '0x3b1'
     func_va: '0x1802041f0'
+  engine/InitSteamLogin.linux.yaml:
+    func_name: InitSteamLogin
+    func_rva: '0x34bfc0'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 53 89 FB 48 81 EC ?? ?? ?? ??
+    func_size: '0x37a'
+    func_va: '0x34bfc0'
+  engine/InitSteamLogin.windows.yaml:
+    func_name: InitSteamLogin
+    func_rva: '0x2033f0'
+    func_sig: 48 8B C4 48 81 EC ?? ?? ?? ?? 48 89 58 ?? 48 89 78 ??
+    func_size: '0x4de'
+    func_va: '0x1802033f0'
   engine/IsMapValid.linux.yaml:
     func_name: IsMapValid
     func_rva: '0x3f2860'
     func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 F3 48 81 EC ?? ?? ?? ?? 48 89 DF
     func_size: '0x2a5'
     func_va: '0x3f2860'
+  engine/ParseNetadrList.windows.yaml:
+    func_name: ParseNetadrList
+    func_rva: '0x57100'
+    func_sig: 48 8B C4 44 88 40 ?? 55 53
+    func_size: '0x542'
+    func_va: '0x180057100'
   engine/RegisterEventListener_Abstract.windows.yaml:
     func_name: RegisterEventListener_Abstract
     func_rva: '0x13cb50'
@@ -16544,7 +16778,7 @@ files:
     func_va: '0x2c5020'
     vfunc_index: 31
     vfunc_offset: '0xf8'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_BufferToBufferDecompress.windows.yaml:
     func_name: CNetworkSystem_BufferToBufferDecompress
     func_rva: '0xf2670'
@@ -16553,7 +16787,7 @@ files:
     func_va: '0x1800f2670'
     vfunc_index: 31
     vfunc_offset: '0xf8'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_CloseAllSockets.linux.yaml:
     func_name: CNetworkSystem_CloseAllSockets
     func_rva: '0x2d9f80'
@@ -16587,7 +16821,7 @@ files:
     func_va: '0x1800f15b0'
     vfunc_index: 17
     vfunc_offset: '0x88'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_CloseSocketInternal.linux.yaml:
     func_name: CNetworkSystem_CloseSocketInternal
     func_rva: '0x2d9a80'
@@ -16611,7 +16845,7 @@ files:
     func_va: '0x1800f1070'
     vfunc_index: 15
     vfunc_offset: '0x78'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_EnableLoopbackBetweenSockets.linux.yaml:
     func_name: CNetworkSystem_EnableLoopbackBetweenSockets
     func_rva: '0x2dc3c0'
@@ -16629,7 +16863,7 @@ files:
     func_va: '0x1800f1a90'
     vfunc_index: 18
     vfunc_offset: '0x90'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_InitGameServer.linux.yaml:
     func_name: CNetworkSystem_InitGameServer
     func_rva: '0x2c6380'
@@ -16656,7 +16890,7 @@ files:
     func_va: '0x2dc8e0'
     vfunc_index: 51
     vfunc_offset: '0x198'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_InitNetworkSystem.windows.yaml:
     func_name: CNetworkSystem_InitNetworkSystem
     func_rva: '0xec6b0'
@@ -16665,7 +16899,7 @@ files:
     func_va: '0x1800ec6b0'
     vfunc_index: 51
     vfunc_offset: '0x198'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_OpenSocket.linux.yaml:
     func_name: CNetworkSystem_OpenSocket
     func_rva: '0x2cf5c0'
@@ -16674,7 +16908,7 @@ files:
     func_va: '0x2cf5c0'
     vfunc_index: 14
     vfunc_offset: '0x70'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_OpenSocket.windows.yaml:
     func_name: CNetworkSystem_OpenSocket
     func_rva: '0xf0290'
@@ -16683,7 +16917,7 @@ files:
     func_va: '0x1800f0290'
     vfunc_index: 14
     vfunc_offset: '0x70'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_PollSocket.linux.yaml:
     func_name: CNetworkSystem_PollSocket
     func_rva: '0x2dd600'
@@ -16701,7 +16935,7 @@ files:
     func_va: '0x1800ef2d0'
     vfunc_index: 20
     vfunc_offset: '0xa0'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_PrintNetworkStats.linux.yaml:
     func_name: CNetworkSystem_PrintNetworkStats
     func_rva: '0x2ceb10'
@@ -16710,7 +16944,7 @@ files:
     func_va: '0x2ceb10'
     vfunc_index: 25
     vfunc_offset: '0xc8'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_PrintNetworkStats.windows.yaml:
     func_name: CNetworkSystem_PrintNetworkStats
     func_rva: '0xf19a0'
@@ -16719,7 +16953,7 @@ files:
     func_va: '0x1800f19a0'
     vfunc_index: 25
     vfunc_offset: '0xc8'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_RemoveNetChannel.linux.yaml:
     func_name: CNetworkSystem_RemoveNetChannel
     func_rva: '0x2de5e0'
@@ -16737,7 +16971,7 @@ files:
     func_va: '0x1800eebe0'
     vfunc_index: 23
     vfunc_offset: '0xb8'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_RemoveNetChannelByAddress.linux.yaml:
     func_name: CNetworkSystem_RemoveNetChannelByAddress
     func_rva: '0x2de930'
@@ -16776,7 +17010,7 @@ files:
     func_va: '0x2d9de0'
     vfunc_index: 12
     vfunc_offset: '0x60'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_ShutdownGameServer.windows.yaml:
     func_name: CNetworkSystem_ShutdownGameServer
     func_rva: '0xed500'
@@ -16785,7 +17019,7 @@ files:
     func_va: '0x1800ed500'
     vfunc_index: 12
     vfunc_offset: '0x60'
-    vtable_name: CNetworkSystem_vtable
+    vtable_name: CNetworkSystem
   networksystem/CNetworkSystem_vtable.linux.yaml:
     vtable_class: CNetworkSystem
     vtable_entries:
@@ -17563,7 +17797,7 @@ files:
   server/CBaseEntity_GetEyeAngles.linux.yaml:
     func_name: CBaseEntity_GetEyeAngles
     func_rva: '0xa31320'
-    func_sig: 55 48 89 E5 48 83 EC ?? E8 73 61 30 00
+    func_sig: 55 48 89 E5 48 83 EC ?? E8 33 5A 31 00
     func_size: '0x1e'
     func_va: '0xa31320'
     vfunc_index: 187
@@ -17572,7 +17806,7 @@ files:
   server/CBaseEntity_GetEyeAngles.windows.yaml:
     func_name: CBaseEntity_GetEyeAngles
     func_rva: '0x151de0'
-    func_sig: 40 53 48 83 EC ?? 48 8B DA E8 32 A8 26 00
+    func_sig: 40 53 48 83 EC ?? 48 8B DA E8 D2 9D 27 00
     func_size: '0x25'
     func_va: '0x180151de0'
     vfunc_index: 188
@@ -17795,7 +18029,7 @@ files:
   server/CBaseEntity_Precache.linux.yaml:
     func_name: CBaseEntity_Precache
     func_rva: '0xd93670'
-    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ?? E8 94 7D ?? ??
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ?? E8 94 31 ?? ??
     func_size: '0x204'
     func_va: '0xd93670'
     vfunc_index: 8
@@ -28387,18 +28621,6 @@ files:
     func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 49 8B F8 8B DA 48 8B F1 83 FA ??
     func_size: '0x3d'
     func_va: '0x1815575bc'
-  server/CEngineServer_GetPlayerNetInfo.linux.yaml:
-    func_name: CEngineServer_GetPlayerNetInfo
-    vfunc_index: 41
-    vfunc_offset: '0x148'
-    vfunc_sig: 4C 8B A8 48 01 00 00
-    vtable_name: CEngineServer
-  server/CEngineServer_GetPlayerNetInfo.windows.yaml:
-    func_name: CEngineServer_GetPlayerNetInfo
-    vfunc_index: 41
-    vfunc_offset: '0x148'
-    vfunc_sig: 48 8B B1 48 01 00 00 48 8B 4F ??
-    vtable_name: CEngineServer
   server/CEngineServer_UnloadSpawnGroup.linux.yaml:
     func_name: CEngineServer_UnloadSpawnGroup
     vfunc_index: 60
@@ -29517,7 +29739,7 @@ files:
   server/CEntitySaveRestoreBlockHandler_PostRestore.windows.yaml:
     func_name: CEntitySaveRestoreBlockHandler_PostRestore
     func_rva: '0xb7d3e0'
-    func_sig: 48 8B 0D 29 A3 46 ??
+    func_sig: 48 8B 0D F9 2E 47 ??
     func_size: '0xe'
     func_va: '0x180b7d3e0'
     vfunc_index: 8
@@ -40599,7 +40821,7 @@ files:
   server/CSource2GameClients_ClientSetConVarUserInfoSet.windows.yaml:
     func_name: CSource2GameClients_ClientSetConVarUserInfoSet
     func_rva: '0xd47c20'
-    func_sig: 8B CA 49 8B D0 E9 46 BA DD FF
+    func_sig: 8B CA 49 8B D0 E9 66 BA DD FF
     func_size: '0xa'
     func_va: '0x180d47c20'
     vfunc_index: 18
@@ -41073,7 +41295,7 @@ files:
   server/CSource2Server_GetAllServerClasses.linux.yaml:
     func_name: CSource2Server_GetAllServerClasses
     func_rva: '0x18fceb0'
-    func_sig: 48 8D 05 99 6E ?? ?? 48 8B 00
+    func_sig: 48 8D 05 D9 B5 ?? ?? 48 8B 00
     func_size: '0x17'
     func_va: '0x18fceb0'
     vfunc_index: 29
@@ -41082,7 +41304,7 @@ files:
   server/CSource2Server_GetAllServerClasses.windows.yaml:
     func_name: CSource2Server_GetAllServerClasses
     func_rva: '0xd3dda0'
-    func_sig: 48 8B 05 D9 8D ?? ?? 48 8B 88 E0 ?? ?? ??
+    func_sig: 48 8B 05 39 25 ?? ?? 48 8B 88 E0 ?? ?? ??
     func_size: '0x15'
     func_va: '0x180d3dda0'
     vfunc_index: 29
@@ -44076,6 +44298,18 @@ files:
     vfunc_offset: '0x228'
     vfunc_sig: 48 8B 99 28 02 00 00 48 8B CE E8 ?? ?? ?? ?? 8B 44 24 ??
     vtable_name: IVEngineServer2
+  server/IVEngineServer2_GetPlayerNetInfo.linux.yaml:
+    func_name: IVEngineServer2_GetPlayerNetInfo
+    vfunc_index: 41
+    vfunc_offset: '0x148'
+    vfunc_sig: 4C 8B A8 48 01 00 00
+    vtable_name: IVEngineServer2
+  server/IVEngineServer2_GetPlayerNetInfo.windows.yaml:
+    func_name: IVEngineServer2_GetPlayerNetInfo
+    vfunc_index: 41
+    vfunc_offset: '0x148'
+    vfunc_sig: 48 8B B1 48 01 00 00 48 8B 4F ??
+    vtable_name: IVEngineServer2
   server/IVEngineServer2_GetServerGlobals.linux.yaml:
     func_name: IVEngineServer2_GetServerGlobals
     vfunc_index: 75
@@ -46304,5 +46538,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: 14178b
-last_publish_time: '2026-09-08T04:11:25Z'
+last_publish_time: '2026-09-08T08:09:56Z'
 schema_version: 5
