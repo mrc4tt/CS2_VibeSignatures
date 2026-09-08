@@ -1,0 +1,18 @@
+func_name: CLoopModeGame_LoopInit
+func_va: '0x1757750'
+disasm_code: |-
+  .text:0000000001757750                 mov     byte ptr [rdi+6Eh], 0
+  .text:0000000001757754                 test    rsi, rsi
+  .text:0000000001757757                 jz      short loc_1757760
+  .text:0000000001757759                 jmp     sub_1756090
+  .text:0000000001757760                 xor     eax, eax
+  .text:0000000001757762                 retn
+procedure: |-
+  __int64 __fastcall sub_1757750(__int64 a1, __int64 a2)
+  {
+    *(_BYTE *)(a1 + 110) = 0;
+    if ( a2 )
+      return sub_1756090();
+    else
+      return 0;
+  }

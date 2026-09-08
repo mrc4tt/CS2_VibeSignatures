@@ -1,0 +1,163 @@
+func_name: Demo_PauseAtServerTick_CommandHandler
+func_va: '0x48f730'
+disasm_code: |-
+  .text:000000000048F730                 push    rbp
+  .text:000000000048F731                 mov     rbp, rsp
+  .text:000000000048F734                 push    r13
+  .text:000000000048F736                 push    r12
+  .text:000000000048F738                 mov     r12, rsi
+  .text:000000000048F73B                 push    rbx
+  .text:000000000048F73C                 sub     rsp, 18h
+  .text:000000000048F740                 lea     rax, off_9D9DE0
+  .text:000000000048F747                 mov     rdi, [rax]
+  .text:000000000048F74A                 call    sub_414770
+  .text:000000000048F74F                 mov     rdi, cs:qword_A2EC70
+  .text:000000000048F756                 cmp     rdi, cs:off_9DA108
+  .text:000000000048F75D                 jnz     short loc_48F7A8
+  .text:000000000048F75F                 lea     rdx, sub_471730
+  .text:000000000048F766                 mov     rbx, rax
+  .text:000000000048F769                 mov     rax, [rdi]
+  .text:000000000048F76C                 mov     rax, [rax+60h]
+  .text:000000000048F770                 cmp     rax, rdx
+  .text:000000000048F773                 jnz     loc_48F810
+  .text:000000000048F779                 movzx   eax, byte ptr [rdi+11E8h]
+  .text:000000000048F780                 cmp     al, 1
+  .text:000000000048F782                 jnz     short loc_48F7A8
+  .text:000000000048F784                 test    rbx, rbx
+  .text:000000000048F787                 jz      short loc_48F7A8
+  .text:000000000048F789                 mov     rax, cs:off_9DA108
+  .text:000000000048F790                 cmp     byte ptr [rax+185Dh], 0
+  .text:000000000048F797                 jz      short loc_48F7E0
+  .text:000000000048F799                 add     rsp, 18h
+  .text:000000000048F79D                 pop     rbx
+  .text:000000000048F79E                 pop     r12
+  .text:000000000048F7A0                 pop     r13
+  .text:000000000048F7A2                 pop     rbp
+  .text:000000000048F7A3                 retn
+  .text:000000000048F7A8                 mov     edi, cs:dword_A30B80
+  .text:000000000048F7AE                 mov     esi, 3
+  .text:000000000048F7B3                 call    sub_2C7E60
+  .text:000000000048F7B8                 test    al, al
+  .text:000000000048F7BA                 jz      short loc_48F799
+  .text:000000000048F7BC                 lea     rdx, aErrorNotCurren; "Error - Not currently playing back a de"...
+  .text:000000000048F7C3                 mov     edi, cs:dword_A30B80
+  .text:000000000048F7C9                 add     rsp, 18h
+  .text:000000000048F7CD                 mov     esi, 3
+  .text:000000000048F7D2                 xor     eax, eax
+  .text:000000000048F7D4                 pop     rbx
+  .text:000000000048F7D5                 pop     r12
+  .text:000000000048F7D7                 pop     r13
+  .text:000000000048F7D9                 pop     rbp
+  .text:000000000048F7DA                 jmp     sub_2C9800
+  .text:000000000048F7E0                 cmp     dword ptr [r12+438h], 1
+  .text:000000000048F7E9                 jg      short loc_48F820
+  .text:000000000048F7EB                 mov     edi, cs:dword_A30B80
+  .text:000000000048F7F1                 mov     esi, 3
+  .text:000000000048F7F6                 call    sub_2C7E60
+  .text:000000000048F7FB                 test    al, al
+  .text:000000000048F7FD                 jz      short loc_48F799
+  .text:000000000048F7FF                 lea     rdx, aMissingInvalid; "Missing/invalid pause tick number.\n"
+  .text:000000000048F806                 jmp     short loc_48F7C3
+  .text:000000000048F810                 call    rax
+  .text:000000000048F812                 jmp     loc_48F780
+  .text:000000000048F820                 mov     rax, [r12+440h]
+  .text:000000000048F828                 mov     rdi, [rax+8]
+  .text:000000000048F82C                 call    sub_2C9130
+  .text:000000000048F831                 pxor    xmm1, xmm1
+  .text:000000000048F835                 comiss  xmm1, xmm0
+  .text:000000000048F838                 ja      short loc_48F7EB
+  .text:000000000048F83A                 cvttss2si r12d, xmm0
+  .text:000000000048F83F                 mov     r13, cs:off_9DA108
+  .text:000000000048F846                 cmp     r12d, [rbx+388h]
+  .text:000000000048F84D                 jle     short loc_48F880
+  .text:000000000048F84F                 pxor    xmm1, xmm1
+  .text:000000000048F853                 cvtsi2ss xmm1, r12d
+  .text:000000000048F858                 mov     esi, r12d
+  .text:000000000048F85B                 lea     rdi, [rbp+var_28]
+  .text:000000000048F85F                 subss   xmm0, xmm1
+  .text:000000000048F863                 call    sub_84FD30
+  .text:000000000048F868                 mov     rax, [rbp+var_28]
+  .text:000000000048F86C                 mov     [r13+1ECh], rax
+  .text:000000000048F873                 jmp     loc_48F799
+  .text:000000000048F880                 movss   xmm0, dword ptr cs:xmmword_2683B0
+  .text:000000000048F888                 mov     rdi, r13
+  .text:000000000048F88B                 call    sub_48F060
+  .text:000000000048F890                 mov     edi, cs:dword_A30B80
+  .text:000000000048F896                 mov     esi, 3
+  .text:000000000048F89B                 call    sub_2C7E60
+  .text:000000000048F8A0                 test    al, al
+  .text:000000000048F8A2                 jz      loc_48F799
+  .text:000000000048F8A8                 mov     edi, cs:dword_A30B80
+  .text:000000000048F8AE                 mov     ecx, r12d
+  .text:000000000048F8B1                 mov     esi, 3
+  .text:000000000048F8B6                 xor     eax, eax
+  .text:000000000048F8B8                 mov     r8d, [rbx+388h]
+  .text:000000000048F8BF                 add     rsp, 18h
+  .text:000000000048F8C3                 pop     rbx
+  .text:000000000048F8C4                 lea     rdx, aDesiredPauseTi; "Desired pause tick %d is not in the fut"...
+  .text:000000000048F8CB                 pop     r12
+  .text:000000000048F8CD                 pop     r13
+  .text:000000000048F8CF                 pop     rbp
+  .text:000000000048F8D0                 jmp     sub_2C9800
+procedure: |-
+  void *__fastcall sub_48F730(__int64 a1, __int64 a2)
+  {
+    __int64 v2; // rax
+    __int64 v3; // rbx
+    __int64 (__fastcall *v4)(); // rax
+    char v5; // al
+    void *result; // rax
+    float v7; // xmm0_4
+    int v8; // r12d
+    char *v9; // r13
+    void *v10; // [rsp+8h] [rbp-28h] BYREF
+
+    v2 = sub_414770(off_9D9DE0);
+    if ( (_UNKNOWN *)qword_A2EC70 == off_9DA108
+      && ((v3 = v2, v4 = *(__int64 (__fastcall **)())(*(_QWORD *)qword_A2EC70 + 96LL), v4 != sub_471730)
+        ? (v5 = v4())
+        : (v5 = *(_BYTE *)(qword_A2EC70 + 4584)),
+          v5 == 1 && v3) )
+    {
+      result = off_9DA108;
+      if ( !*((_BYTE *)off_9DA108 + 6237) )
+      {
+        if ( *(int *)(a2 + 1080) <= 1 || (v7 = sub_2C9130(*(_QWORD *)(*(_QWORD *)(a2 + 1088) + 8LL)), v7 < 0.0) )
+        {
+          result = (void *)sub_2C7E60((unsigned int)dword_A30B80, 3);
+          if ( (_BYTE)result )
+            return (void *)sub_2C9800((unsigned int)dword_A30B80, 3, "Missing/invalid pause tick number.\n");
+        }
+        else
+        {
+          v8 = (int)v7;
+          v9 = (char *)off_9DA108;
+          if ( (int)v7 <= *(_DWORD *)(v3 + 904) )
+          {
+            sub_48F060(off_9DA108, -1.0);
+            result = (void *)sub_2C7E60((unsigned int)dword_A30B80, 3);
+            if ( (_BYTE)result )
+              return (void *)sub_2C9800(
+                               (unsigned int)dword_A30B80,
+                               3,
+                               "Desired pause tick %d is not in the future.  The current tick is %d.  Pausing playback immediately.\n",
+                               v8,
+                               *(_DWORD *)(v3 + 904));
+          }
+          else
+          {
+            sub_84FD30(&v10, (unsigned int)v8, v7 - (float)v8);
+            result = v10;
+            *(_QWORD *)(v9 + 492) = v10;
+          }
+        }
+      }
+    }
+    else
+    {
+      result = (void *)sub_2C7E60((unsigned int)dword_A30B80, 3);
+      if ( (_BYTE)result )
+        return (void *)sub_2C9800((unsigned int)dword_A30B80, 3, "Error - Not currently playing back a demo.\n");
+    }
+    return result;
+  }

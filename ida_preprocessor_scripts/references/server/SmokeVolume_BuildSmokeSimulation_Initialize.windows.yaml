@@ -1,0 +1,25 @@
+func_name: SmokeVolume_BuildSmokeSimulation_Initialize
+func_va: '0x1402310'
+disasm_code: |-
+  .text:0000000001402310                 push    rbp
+  .text:0000000001402311                 mov     rbp, rsp
+  .text:0000000001402314                 push    rbx
+  .text:0000000001402315                 mov     rbx, rdi
+  .text:0000000001402318                 sub     rsp, 8
+  .text:000000000140231C                 call    sub_D43B20
+  .text:0000000001402321                 lea     rdi, [rbx+0A50h]
+  .text:0000000001402328                 mov     rsi, rax
+  .text:000000000140232B                 call    sub_D4CA90
+  .text:0000000001402330                 mov     rdi, rbx
+  .text:0000000001402333                 mov     rbx, [rbp+var_8]
+  .text:0000000001402337                 leave
+  .text:0000000001402338                 jmp     sub_16530D0
+procedure: |-
+  __int64 __fastcall sub_1402310(__int64 a1)
+  {
+    __int64 v1; // rax
+
+    v1 = sub_D43B20();
+    sub_D4CA90(a1 + 2640, v1);
+    return sub_16530D0(a1);
+  }

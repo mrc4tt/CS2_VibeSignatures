@@ -1,0 +1,448 @@
+func_name: CInputService_ProcessConVar
+func_va: '0x3ee950'
+disasm_code: |-
+  .text:00000000003EE8D0                 movq    xmm0, cs:off_9A1AB0; "inputservice.cpp"
+  .text:00000000003EE8D8                 mov     rcx, r12
+  .text:00000000003EE8DB                 mov     [rbp+var_D68], 125Ch
+  .text:00000000003EE8E5                 lea     rdx, aProcessconvar; "ProcessConVar"
+  .text:00000000003EE8EC                 pinsrq  xmm0, rdx, 1
+  .text:00000000003EE8F3                 movzx   edx, [rbp+var_D64]
+  .text:00000000003EE8FA                 lea     rbx, aFalse; "false"
+  .text:00000000003EE901                 movaps  [rbp+var_D80], xmm0
+  .text:00000000003EE908                 mov     [rbp+var_D70], rbx
+  .text:00000000003EE90F                 lea     rdi, [rbp+var_D80]
+  .text:00000000003EE916                 lea     rsi, aFailedToParseI_0; "Failed to parse input ConVar '%s' from "...
+  .text:00000000003EE91D                 and     edx, 0FFFFFF80h
+  .text:00000000003EE920                 or      edx, 14h
+  .text:00000000003EE923                 mov     [rbp+var_D64], dl
+  .text:00000000003EE929                 mov     rdx, [rax]
+  .text:00000000003EE92C                 xor     eax, eax
+  .text:00000000003EE92E                 call    sub_2C8EB0
+  .text:00000000003EE933                 test    al, al
+  .text:00000000003EE935                 jz      loc_3EEC87
+  .text:00000000003EE93B                 ; Trap to Debugger
+  .text:00000000003EE93B                 int     3; Trap to Debugger
+  .text:00000000003EE93C                 jmp     loc_3EEC87
+  .text:00000000003EE950                 push    rbp
+  .text:00000000003EE951                 mov     rbp, rsp
+  .text:00000000003EE954                 push    r15
+  .text:00000000003EE956                 push    r14
+  .text:00000000003EE958                 push    r13
+  .text:00000000003EE95A                 push    r12
+  .text:00000000003EE95C                 mov     r12, r8
+  .text:00000000003EE95F                 push    rbx
+  .text:00000000003EE960                 sub     rsp, 0D58h
+  .text:00000000003EE967                 mov     rax, [rcx+8]
+  .text:00000000003EE96B                 test    rax, rax
+  .text:00000000003EE96E                 jz      loc_3EEBD0
+  .text:00000000003EE974                 test    byte ptr [rax+31h], 4
+  .text:00000000003EE978                 jnz     loc_3EEBD0
+  .text:00000000003EE97E                 mov     [rbp+var_D4C], edx
+  .text:00000000003EE984                 mov     r13d, edx
+  .text:00000000003EE987                 movsd   xmm0, cs:qword_26A388
+  .text:00000000003EE98F                 mov     rbx, rcx
+  .text:00000000003EE992                 lea     rax, off_9A1A50
+  .text:00000000003EE999                 mov     [rbp+var_D50], esi
+  .text:00000000003EE99F                 mov     r14, rdi
+  .text:00000000003EE9A2                 mov     esi, 0FFFFFFFFh
+  .text:00000000003EE9A7                 lea     rdx, [rbp+var_D20]
+  .text:00000000003EE9AE                 mov     [rbp+var_D60], rax
+  .text:00000000003EE9B5                 mov     rax, 8000000000000200h
+  .text:00000000003EE9BF                 mov     [rbp+var_D30], rdx
+  .text:00000000003EE9C6                 lea     rdx, [rbp+var_B08]
+  .text:00000000003EE9CD                 mov     [rbp+var_D28], rax
+  .text:00000000003EE9D4                 lea     rcx, [rbp+var_8F0]
+  .text:00000000003EE9DB                 mov     [rbp+var_B10], rax
+  .text:00000000003EE9E2                 mov     [rbp+var_B18], rdx
+  .text:00000000003EE9E9                 mov     rdx, 8000000000000040h
+  .text:00000000003EE9F3                 mov     [rbp+var_6C0], rax
+  .text:00000000003EE9FA                 mov     [rbp+var_4A8], rax
+  .text:00000000003EEA01                 lea     rax, [rbp+var_4A0]
+  .text:00000000003EEA08                 mov     [rbp+var_D58], rdi
+  .text:00000000003EEA0F                 lea     rdi, [rbp+var_60]
+  .text:00000000003EEA13                 mov     [rbp+var_8F8], rdx
+  .text:00000000003EEA1A                 mov     [rbp+var_900], rcx
+  .text:00000000003EEA21                 lea     rcx, [rbp+var_6B8]
+  .text:00000000003EEA28                 mov     [rbp+var_4B0], rax
+  .text:00000000003EEA2F                 lea     rax, [rbp+var_288]
+  .text:00000000003EEA36                 mov     [rbp+var_290], rdx
+  .text:00000000003EEA3D                 mov     edx, 0FFFFFFFFh
+  .text:00000000003EEA42                 mov     [rbp+var_D48], r8
+  .text:00000000003EEA49                 movsd   [rbp+var_6E8], xmm0
+  .text:00000000003EEA51                 mov     [rbp+var_6C8], rcx
+  .text:00000000003EEA58                 mov     [rbp+var_298], rax
+  .text:00000000003EEA5F                 movsd   [rbp+var_80], xmm0
+  .text:00000000003EEA64                 mov     [rbp+var_D40], 0
+  .text:00000000003EEA6F                 mov     [rbp+var_908], 0
+  .text:00000000003EEA79                 mov     [rbp+var_6F0], 0
+  .text:00000000003EEA80                 mov     [rbp+var_D38], 200h
+  .text:00000000003EEA8A                 mov     [rbp+var_B20], 200h
+  .text:00000000003EEA94                 mov     [rbp+var_D20], 0
+  .text:00000000003EEA9B                 mov     [rbp+var_6E0], 0
+  .text:00000000003EEAA6                 mov     [rbp+var_6D8], 0
+  .text:00000000003EEAB1                 mov     [rbp+var_2A0], 0
+  .text:00000000003EEABB                 mov     [rbp+var_88], 0
+  .text:00000000003EEAC2                 mov     [rbp+var_78], 0
+  .text:00000000003EEACA                 mov     [rbp+var_6D0], 200h
+  .text:00000000003EEAD4                 mov     [rbp+var_4B8], 200h
+  .text:00000000003EEADE                 mov     [rbp+var_6B8], 0
+  .text:00000000003EEAE5                 mov     [rbp+var_70], 0
+  .text:00000000003EEAED                 mov     [rbp+var_68], 0FFFFh
+  .text:00000000003EEAF5                 call    sub_5E7BE0
+  .text:00000000003EEAFA                 mov     r15, [rbp+var_D48]
+  .text:00000000003EEB01                 mov     [rbp+var_50], 0
+  .text:00000000003EEB09                 mov     [rbp+var_48], 0
+  .text:00000000003EEB11                 mov     [rbp+var_40], 0
+  .text:00000000003EEB19                 mov     [rbp+var_38], 0
+  .text:00000000003EEB1D                 cmp     dword ptr [r15+438h], 1
+  .text:00000000003EEB25                 jz      loc_3EECD8
+  .text:00000000003EEB2B                 mov     rax, [rbx+8]
+  .text:00000000003EEB2F                 mov     rax, [rax+30h]
+  .text:00000000003EEB33                 test    ah, 40h
+  .text:00000000003EEB36                 jnz     loc_3EECB8
+  .text:00000000003EEB3C                 test    ah, 20h
+  .text:00000000003EEB3F                 jz      loc_3EEC30
+  .text:00000000003EEB45                 lea     rax, unk_C74060
+  .text:00000000003EEB4C                 mov     rdi, [rax]
+  .text:00000000003EEB4F                 mov     rax, [rdi]
+  .text:00000000003EEB52                 call    qword ptr [rax+108h]
+  .text:00000000003EEB58                 test    al, al
+  .text:00000000003EEB5A                 jz      loc_3EEC30
+  .text:00000000003EEB60                 lea     rax, unk_C74050
+  .text:00000000003EEB67                 mov     rdi, [rax]
+  .text:00000000003EEB6A                 mov     rax, [rdi]
+  .text:00000000003EEB6D                 call    qword ptr [rax+0F0h]
+  .text:00000000003EEB73                 test    al, al
+  .text:00000000003EEB75                 jnz     loc_3EEC30
+  .text:00000000003EEB7B                 lea     rax, qword_A2EC70
+  .text:00000000003EEB82                 mov     rdi, [rax]
+  .text:00000000003EEB85                 mov     rax, [rdi]
+  .text:00000000003EEB88                 call    qword ptr [rax+60h]
+  .text:00000000003EEB8B                 test    al, al
+  .text:00000000003EEB8D                 jnz     loc_3EEC30
+  .text:00000000003EEB93                 mov     rax, [rbx+8]
+  .text:00000000003EEB97                 lea     rdi, aCanTChangeRepl; "Can't change replicated ConVar %s from "...
+  .text:00000000003EEB9E                 mov     rsi, [rax]
+  .text:00000000003EEBA1                 xor     eax, eax
+  .text:00000000003EEBA3                 call    sub_2C99A0
+  .text:00000000003EEBA8                 nop     dword ptr [rax+rax+00000000h]
+  .text:00000000003EEBB0                 lea     rdi, [rbp+var_D60]
+  .text:00000000003EEBB7                 call    sub_3EE490
+  .text:00000000003EEBBC                 add     rsp, 0D58h
+  .text:00000000003EEBC3                 pop     rbx
+  .text:00000000003EEBC4                 pop     r12
+  .text:00000000003EEBC6                 pop     r13
+  .text:00000000003EEBC8                 pop     r14
+  .text:00000000003EEBCA                 pop     r15
+  .text:00000000003EEBCC                 pop     rbp
+  .text:00000000003EEBCD                 retn
+  .text:00000000003EEBD0                 mov     rbx, cs:LOG_CONSOLE_ptr
+  .text:00000000003EEBD7                 mov     esi, 3
+  .text:00000000003EEBDC                 mov     edi, [rbx]
+  .text:00000000003EEBDE                 call    sub_2C7E60
+  .text:00000000003EEBE3                 test    al, al
+  .text:00000000003EEBE5                 jz      short loc_3EEBBC
+  .text:00000000003EEBE7                 mov     esi, [r12+438h]
+  .text:00000000003EEBEF                 lea     rcx, unk_27CD96
+  .text:00000000003EEBF6                 test    esi, esi
+  .text:00000000003EEBF8                 jle     short loc_3EEC05
+  .text:00000000003EEBFA                 mov     rax, [r12+440h]
+  .text:00000000003EEC02                 mov     rcx, [rax]
+  .text:00000000003EEC05                 mov     edi, [rbx]
+  .text:00000000003EEC07                 add     rsp, 0D58h
+  .text:00000000003EEC0E                 mov     esi, 3
+  .text:00000000003EEC13                 xor     eax, eax
+  .text:00000000003EEC15                 pop     rbx
+  .text:00000000003EEC16                 lea     rdx, aUnknownConvarS; "Unknown convar '%s'!\n"
+  .text:00000000003EEC1D                 pop     r12
+  .text:00000000003EEC1F                 pop     r13
+  .text:00000000003EEC21                 pop     r14
+  .text:00000000003EEC23                 pop     r15
+  .text:00000000003EEC25                 pop     rbp
+  .text:00000000003EEC26                 jmp     sub_2C9800
+  .text:00000000003EEC30                 cmp     dword ptr [r15+438h], 2
+  .text:00000000003EEC38                 jz      short loc_3EECA8
+  .text:00000000003EEC3A                 movsxd  rax, dword ptr [r15]
+  .text:00000000003EEC3D                 lea     r12, unk_27CD96
+  .text:00000000003EEC44                 test    eax, eax
+  .text:00000000003EEC46                 jz      short loc_3EEC4F
+  .text:00000000003EEC48                 add     rax, [r15+10h]
+  .text:00000000003EEC4C                 mov     r12, rax
+  .text:00000000003EEC4F                 mov     rdx, r12
+  .text:00000000003EEC52                 mov     esi, r13d
+  .text:00000000003EEC55                 mov     rdi, rbx
+  .text:00000000003EEC58                 call    sub_5E8AB0
+  .text:00000000003EEC5D                 test    al, al
+  .text:00000000003EEC5F                 jnz     short loc_3EEC87
+  .text:00000000003EEC61                 cmp     byte ptr [r14+3EC97h], 0
+  .text:00000000003EEC69                 mov     rax, [rbx+8]
+  .text:00000000003EEC6D                 jnz     loc_3EE8D0
+  .text:00000000003EEC73                 mov     rsi, [rax]
+  .text:00000000003EEC76                 lea     rdi, aFailedToParseI_0; "Failed to parse input ConVar '%s' from "...
+  .text:00000000003EEC7D                 mov     rdx, r12
+  .text:00000000003EEC80                 xor     eax, eax
+  .text:00000000003EEC82                 call    sub_2C9FF0
+  .text:00000000003EEC87                 lea     rbx, [rbp+var_D60]
+  .text:00000000003EEC8E                 mov     rdi, rbx
+  .text:00000000003EEC91                 call    sub_3EDFE0
+  .text:00000000003EEC96                 mov     rdi, rbx
+  .text:00000000003EEC99                 call    sub_3EE490
+  .text:00000000003EEC9E                 jmp     loc_3EEBBC
+  .text:00000000003EECA8                 mov     rax, [r15+440h]
+  .text:00000000003EECAF                 mov     r12, [rax+8]
+  .text:00000000003EECB3                 jmp     short loc_3EEC4F
+  .text:00000000003EECB8                 call    sub_588730
+  .text:00000000003EECBD                 test    al, al
+  .text:00000000003EECBF                 jz      loc_3EED70
+  .text:00000000003EECC5                 mov     rax, [rbx+8]
+  .text:00000000003EECC9                 mov     rax, [rax+30h]
+  .text:00000000003EECCD                 jmp     loc_3EEB3C
+  .text:00000000003EECD8                 lea     r12, [rbp+var_D80]
+  .text:00000000003EECDF                 mov     esi, 0FFFFFFFFh
+  .text:00000000003EECE4                 mov     rdi, rbx
+  .text:00000000003EECE7                 mov     qword ptr [rbp+var_D80+8], 0
+  .text:00000000003EECF2                 mov     rax, 0C000000800000000h
+  .text:00000000003EECFC                 mov     rdx, r12
+  .text:00000000003EECFF                 mov     qword ptr [rbp+var_D80], rax
+  .text:00000000003EED06                 call    sub_5E81F0
+  .text:00000000003EED0B                 lea     rdx, [rbp+var_D80+8]
+  .text:00000000003EED12                 test    byte ptr [rbp+var_D80+7], 40h
+  .text:00000000003EED19                 jnz     short loc_3EED35
+  .text:00000000003EED1B                 lea     rdx, unk_27CD96
+  .text:00000000003EED22                 test    dword ptr [rbp+var_D80+4], 3FFFFFFFh
+  .text:00000000003EED2C                 jz      short loc_3EED35
+  .text:00000000003EED2E                 mov     rdx, qword ptr [rbp+var_D80+8]
+  .text:00000000003EED35                 mov     ecx, [r15+438h]
+  .text:00000000003EED3C                 lea     rsi, unk_27CD96
+  .text:00000000003EED43                 test    ecx, ecx
+  .text:00000000003EED45                 jle     short loc_3EED51
+  .text:00000000003EED47                 mov     rax, [r15+440h]
+  .text:00000000003EED4E                 mov     rsi, [rax]
+  .text:00000000003EED51                 lea     rdi, aSS_8; "%s = %s\n"
+  .text:00000000003EED58                 xor     eax, eax
+  .text:00000000003EED5A                 call    sub_2C99A0
+  .text:00000000003EED5F                 xor     esi, esi
+  .text:00000000003EED61                 mov     rdi, r12
+  .text:00000000003EED64                 call    sub_2C8B60
+  .text:00000000003EED69                 jmp     loc_3EEBB0
+  .text:00000000003EED70                 call    sub_588C40
+  .text:00000000003EED75                 test    al, al
+  .text:00000000003EED77                 jnz     loc_3EECC5
+  .text:00000000003EED7D                 lea     rax, qword_A2EC70
+  .text:00000000003EED84                 mov     rdi, [rax]
+  .text:00000000003EED87                 mov     rax, [rdi]
+  .text:00000000003EED8A                 call    qword ptr [rax+60h]
+  .text:00000000003EED8D                 test    al, al
+  .text:00000000003EED8F                 jnz     loc_3EECC5
+  .text:00000000003EED95                 mov     rbx, cs:LOG_CONSOLE_ptr
+  .text:00000000003EED9C                 mov     esi, 3
+  .text:00000000003EEDA1                 mov     edi, [rbx]
+  .text:00000000003EEDA3                 call    sub_2C7E60
+  .text:00000000003EEDA8                 test    al, al
+  .text:00000000003EEDAA                 jz      loc_3EEBB0
+  .text:00000000003EEDB0                 mov     eax, [r12+438h]
+  .text:00000000003EEDB8                 lea     rcx, unk_27CD96
+  .text:00000000003EEDBF                 test    eax, eax
+  .text:00000000003EEDC1                 jle     short loc_3EEDCE
+  .text:00000000003EEDC3                 mov     rax, [r12+440h]
+  .text:00000000003EEDCB                 mov     rcx, [rax]
+  .text:00000000003EEDCE                 mov     edi, [rbx]
+  .text:00000000003EEDD0                 lea     rdx, aSvConvarSIsChe; "SV: Convar '%s' is cheat protected, cha"...
+  .text:00000000003EEDD7                 mov     esi, 3
+  .text:00000000003EEDDC                 xor     eax, eax
+  .text:00000000003EEDDE                 call    sub_2C9800
+  .text:00000000003EEDE3                 jmp     loc_3EEBB0
+procedure: |-
+  __int64 __fastcall sub_3EE950(__int64 a1, int a2, unsigned int a3, __int64 a4, int *a5)
+  {
+    __int64 v6; // rax
+    int *v9; // r15
+    __int64 v10; // rax
+    __int64 result; // rax
+    const char *v12; // rcx
+    __int64 v13; // rax
+    const char *v14; // r12
+    const char **v15; // rax
+    const char *v16; // rdx
+    const char *v17; // rsi
+    const char *v18; // rcx
+    __m128i inserted; // [rsp+0h] [rbp-D80h] BYREF
+    const char *v20; // [rsp+10h] [rbp-D70h]
+    int v21; // [rsp+18h] [rbp-D68h]
+    char v22; // [rsp+1Ch] [rbp-D64h]
+    _QWORD v23[2]; // [rsp+20h] [rbp-D60h] BYREF
+    int v24; // [rsp+30h] [rbp-D50h]
+    unsigned int v25; // [rsp+34h] [rbp-D4Ch]
+    int *v26; // [rsp+38h] [rbp-D48h]
+    __int64 v27; // [rsp+40h] [rbp-D40h]
+    int v28; // [rsp+48h] [rbp-D38h]
+    char *v29; // [rsp+50h] [rbp-D30h]
+    unsigned __int64 v30; // [rsp+58h] [rbp-D28h]
+    char v31; // [rsp+60h] [rbp-D20h] BYREF
+    int v32; // [rsp+260h] [rbp-B20h]
+    char *v33; // [rsp+268h] [rbp-B18h]
+    unsigned __int64 v34; // [rsp+270h] [rbp-B10h]
+    char v35; // [rsp+278h] [rbp-B08h] BYREF
+    int v36; // [rsp+478h] [rbp-908h]
+    _BYTE *v37; // [rsp+480h] [rbp-900h]
+    unsigned __int64 v38; // [rsp+488h] [rbp-8F8h]
+    _BYTE v39[520]; // [rsp+490h] [rbp-8F0h] BYREF
+    __int64 v40; // [rsp+698h] [rbp-6E8h]
+    __int64 v41; // [rsp+6A0h] [rbp-6E0h]
+    __int64 v42; // [rsp+6A8h] [rbp-6D8h]
+    int v43; // [rsp+6B0h] [rbp-6D0h]
+    char *v44; // [rsp+6B8h] [rbp-6C8h]
+    unsigned __int64 v45; // [rsp+6C0h] [rbp-6C0h]
+    char v46; // [rsp+6C8h] [rbp-6B8h] BYREF
+    int v47; // [rsp+8C8h] [rbp-4B8h]
+    char *v48; // [rsp+8D0h] [rbp-4B0h]
+    unsigned __int64 v49; // [rsp+8D8h] [rbp-4A8h]
+    char v50; // [rsp+8E0h] [rbp-4A0h] BYREF
+    int v51; // [rsp+AE0h] [rbp-2A0h]
+    _BYTE *v52; // [rsp+AE8h] [rbp-298h]
+    unsigned __int64 v53; // [rsp+AF0h] [rbp-290h]
+    _BYTE v54[520]; // [rsp+AF8h] [rbp-288h] BYREF
+    __int64 v55; // [rsp+D00h] [rbp-80h]
+    __int64 v56; // [rsp+D08h] [rbp-78h]
+    __int64 v57; // [rsp+D10h] [rbp-70h]
+    __int64 v58; // [rsp+D18h] [rbp-68h]
+    _BYTE v59[16]; // [rsp+D20h] [rbp-60h] BYREF
+    __int64 v60; // [rsp+D30h] [rbp-50h]
+    __int64 v61; // [rsp+D38h] [rbp-48h]
+    __int64 v62; // [rsp+D40h] [rbp-40h]
+    char v63; // [rsp+D48h] [rbp-38h]
+
+    v6 = *(_QWORD *)(a4 + 8);
+    if ( !v6 || (*(_BYTE *)(v6 + 49) & 4) != 0 )
+    {
+      result = sub_2C7E60(LOG_CONSOLE, 3);
+      if ( (_BYTE)result )
+      {
+        v12 = (const char *)&unk_27CD96;
+        if ( a5[270] > 0 )
+          v12 = (const char *)**((_QWORD **)a5 + 136);
+        return sub_2C9800(LOG_CONSOLE, 3, "Unknown convar '%s'!\n", v12);
+      }
+    }
+    else
+    {
+      v25 = a3;
+      v24 = a2;
+      v23[0] = off_9A1A50;
+      v29 = &v31;
+      v30 = 0x8000000000000200LL;
+      v34 = 0x8000000000000200LL;
+      v33 = &v35;
+      v45 = 0x8000000000000200LL;
+      v49 = 0x8000000000000200LL;
+      v23[1] = a1;
+      v38 = 0x8000000000000040LL;
+      v37 = v39;
+      v48 = &v50;
+      v53 = 0x8000000000000040LL;
+      v26 = a5;
+      v40 = 0x7FF8000000000000LL;
+      v44 = &v46;
+      v52 = v54;
+      v55 = 0x7FF8000000000000LL;
+      v27 = 0;
+      v36 = 0;
+      v39[512] = 0;
+      v28 = 512;
+      v32 = 512;
+      v31 = 0;
+      v41 = 0;
+      v42 = 0;
+      v51 = 0;
+      v54[512] = 0;
+      v56 = 0;
+      v43 = 512;
+      v47 = 512;
+      v46 = 0;
+      v57 = 0;
+      v58 = 0xFFFF;
+      sub_5E7BE0(v59, 0xFFFFFFFFLL, 0xFFFFFFFFLL);
+      v9 = v26;
+      v60 = 0;
+      v61 = 0;
+      v62 = 0;
+      v63 = 0;
+      if ( v26[270] == 1 )
+      {
+        inserted = (__m128i)0xC000000800000000LL;
+        sub_5E81F0(a4, 0xFFFFFFFFLL, &inserted);
+        v16 = &inserted.m128i_i8[8];
+        if ( (inserted.m128i_i8[7] & 0x40) == 0 )
+        {
+          v16 = (const char *)&unk_27CD96;
+          if ( (inserted.m128i_i32[1] & 0x3FFFFFFF) != 0 )
+            v16 = (const char *)inserted.m128i_i64[1];
+        }
+        v17 = (const char *)&unk_27CD96;
+        if ( v9[270] > 0 )
+          v17 = (const char *)**((_QWORD **)v9 + 136);
+        sub_2C99A0("%s = %s\n", v17, v16);
+        sub_2C8B60(&inserted, 0);
+        return sub_3EE490(v23);
+      }
+      v10 = *(_QWORD *)(*(_QWORD *)(a4 + 8) + 48LL);
+      if ( (v10 & 0x4000) != 0 )
+      {
+        if ( !(unsigned __int8)sub_588730()
+          && !(unsigned __int8)sub_588C40()
+          && !(*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)qword_A2EC70 + 96LL))(qword_A2EC70) )
+        {
+          if ( (unsigned __int8)sub_2C7E60(LOG_CONSOLE, 3) )
+          {
+            v18 = (const char *)&unk_27CD96;
+            if ( a5[270] > 0 )
+              v18 = (const char *)**((_QWORD **)a5 + 136);
+            sub_2C9800(LOG_CONSOLE, 3, "SV: Convar '%s' is cheat protected, change ignored.\n", v18);
+          }
+          return sub_3EE490(v23);
+        }
+        v10 = *(_QWORD *)(*(_QWORD *)(a4 + 8) + 48LL);
+      }
+      if ( (v10 & 0x2000) != 0
+        && (*(unsigned __int8 (__fastcall **)(_QWORD *))(*qword_C74060 + 264LL))(qword_C74060)
+        && !(*(unsigned __int8 (__fastcall **)(_QWORD *))(*qword_C74050 + 240LL))(qword_C74050)
+        && !(*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)qword_A2EC70 + 96LL))(qword_A2EC70) )
+      {
+        sub_2C99A0(
+          "Can't change replicated ConVar %s from console of client, only server operator can change its value\n",
+          **(const char ***)(a4 + 8));
+        return sub_3EE490(v23);
+      }
+      if ( v26[270] == 2 )
+      {
+        v14 = *(const char **)(*((_QWORD *)v26 + 136) + 8LL);
+      }
+      else
+      {
+        v13 = *v26;
+        v14 = (const char *)&unk_27CD96;
+        if ( (_DWORD)v13 )
+          v14 = (const char *)(*((_QWORD *)v26 + 2) + v13);
+      }
+      if ( !(unsigned __int8)sub_5E8AB0(a4, a3, v14) )
+      {
+        v15 = *(const char ***)(a4 + 8);
+        if ( *(_BYTE *)(a1 + 257175) )
+        {
+          v21 = 4700;
+          inserted = _mm_insert_epi64(_mm_loadl_epi64((const __m128i *)&off_9A1AB0), (signed __int64)"ProcessConVar", 1);
+          v20 = "false";
+          v22 = v22 & 0x80 | 0x14;
+          if ( (unsigned __int8)sub_2C8EB0(&inserted, "Failed to parse input ConVar '%s' from string '%s'\n", *v15, v14) )
+            __debugbreak();
+        }
+        else
+        {
+          sub_2C9FF0("Failed to parse input ConVar '%s' from string '%s'\n", *v15, v14);
+        }
+      }
+      sub_3EDFE0(v23);
+      return sub_3EE490(v23);
+    }
+    return result;
+  }
