@@ -75,3 +75,22 @@ Normal local authoring writes tracked `bin_artifacts`; trusted PR/Release valida
 ## Callers
 - Direct CLI invocation: `uv run ida_analyze_bin.py -gamever 14141 ...`
 - Batch/script wrappers: the Windows workflow examples in `README.md` invoke this script
+
+- [fact] Since the base-inherited-selected bridge (2026-09-06) `ida_analyze_bin.py` supports `-selected_execution <manifest>` (mutually exclusive with `-force_all` / `-skill` / `-vcall_finder` / `-rename` / `-skip_error`, requires both platforms): fail-closed manifest loading (digest domain `source-artifact-selected-execution-manifest:v1`, config_sha256 binding), seeded-root validation requiring the GAMEVER subtree to hold exactly the inherited whitelist (checkout-external, no reparse points), stable-node-id skill filtering with same-session prerequisite completeness enforcement, and a dedicated execution report type `source2-selected-execution:v1` (schema 1) that binds plan/manifest/paths/initial seeded inventory and never claims inherited bytes as executed evidence. In selected mode planned nodes skip the existing-output/skip_if_exists early-exits exactly like force_all.
+
+## Gotcha: probe scripts must not reset the IDB string list
+
+- 触发信号: local `force_all`/string-xref skills suddenly report `empty candidate set for string xref: FULLMATCH:<short>` for 4-char anchors (`none`, `rate`) while CI passes; strings-list probe shows `min_len_seen: 5`.
+- 根因 / 约束: `idautils.Strings()` (constructor) and `.setup()` without args rebuild the string list with IDA's default `minlen=5`; idalib-mcp saves the IDB on exit, so a read-only-looking probe persists the reset and drops every 4-char string from the list. The repo enumerator (`_build_ida_strings_enumerator_py_lines`) guards setup behind a `$CS2VIBE_STRING_SETUP_STATE` netnode and only re-setups when `CS2VIBE_STRING_MIN_LENGTH` is set.
+- 正确做法: in ad-hoc probes use `idautils.Strings(default_setup=False)` (or explicit `setup(minlen=4)`) and never bare `Strings()`. To repair a polluted warm IDB, run once with `CS2VIBE_STRING_MIN_LENGTH=4` in the environment (`.env` is loaded via `load_dotenv()`), which performs the netnode-guarded setup and writes the state back.
+- 验证方式: py_eval counting `idautils.Strings()` entries and the minimal observed length; `FULLMATCH:none`/`FULLMATCH:rate` xref skills succeed again.
+- 适用范围: any local IDA MCP probing against warm IDBs under `bin/<GAMEVER>/`, plus `find-*` skills anchored on strings shorter than 5 chars.
+
+
+## Issue #937: finalization belongs inside the Agent attempt
+
+- Trigger: Agent exits successfully and creates YAML, but canonicalization rejects conflicting vfunc_index/vfunc_offset after run_skill has already exhausted its own scope; the old caller aborted the full execution without a repair attempt.
+- Root cause/constraint: file existence/Agent exit status are insufficient success criteria. Finalization previously ran after run_skill returned.
+- Correct practice: process_binary supplies output_validator to agent_runner.run_skill. Each attempt validates produced artifacts before success; path-specific errors are added to the resumed Agent prompt with an explicit instruction not to skip invalid existing files. CLI and validation failures share one maxretry budget. The callback also checks interrupted/failed attempts. Protected prior-producer output modifications raise NonRetryableOutputError and stop further attempts. Preserve optional-output absence; record successful production evidence only after validated success. Never silently choose which conflicting metadata field is correct.
+- Validation: 2026-09-08 real Claude fallback rebuilt CBaseEntity_GetChangeAccessorPathInfo_1.linux.yaml byte-for-byte. In a separate isolated fault injection, the first generated vfunc_index was deliberately incremented; canonicalization rejected it, the second of three permitted Agent attempts repaired it, and the final file matched Git (sha256 3a7d5f62b7393e520c60cad1d25a01302fa7ddbf193b9d7dc4b9e8e044c8b79d). Unit tests cover cross-Agent feedback transport, shared budget exhaustion, protected writes including timeout, and analyzer success evidence.
+- Scope: Agent-skill fallback output validation. Deterministic preprocessor finalization and protected-output policy remain separate gates.
