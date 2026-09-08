@@ -31,11 +31,14 @@ BINARIES = {"linux": "libserver.so / libengine2.so", "windows": "server.dll / en
 
 
 def module_blocks(text):
+    """Accumulate blocks per module — configs legitimately contain repeated
+    module sections (upstream re-run blocks); last-block-wins would hide the
+    first block's tasks from the report."""
     mm = list(re.finditer(r"^  - name: (\w+)", text, re.M))
     out = {}
     for i, m in enumerate(mm):
         end = mm[i + 1].start() if i + 1 < len(mm) else len(text)
-        out[m.group(1)] = text[m.start():end]
+        out[m.group(1)] = out.get(m.group(1), "") + "\n" + text[m.start():end]
     return out
 
 
