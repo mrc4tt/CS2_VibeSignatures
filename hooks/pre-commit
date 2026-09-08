@@ -1,0 +1,18 @@
+#!/bin/bash
+# Blokerer commit'er der sletter .claude/skills-filer (dot-commit-beskyttelse).
+# Bevidst sletning: FORCE_SKILL_DELETE=1 git commit ...
+deleted=$(git diff --cached --name-only --diff-filter=D -- '.claude/skills/' | wc -l)
+if [ "$deleted" -gt 0 ] && [ "${FORCE_SKILL_DELETE:-0}" != "1" ]; then
+    echo "❌ Commit sletter $deleted fil(er) i .claude/skills/."
+    echo "   Bevidst? Koer igen med:  FORCE_SKILL_DELETE=1 git commit ..."
+    echo "   Slettede:"
+    git diff --cached --name-only --diff-filter=D -- '.claude/skills/' | head -5
+    exit 1
+fi
+# Samme vagt for tool-scripts (tidligere dot-commit-tab: missing_report.py)
+tools_deleted=$(git diff --cached --name-only --diff-filter=D -- '*.py' '*.sh' | \
+    grep -vE "^(bin|cs2_depot|obj)/" | wc -l)
+if [ "$tools_deleted" -gt 3 ] && [ "${FORCE_SKILL_DELETE:-0}" != "1" ]; then
+    echo "⚠️  Commit sletter $tools_deleted .py/.sh-filer - bevidst? (FORCE_SKILL_DELETE=1 for at tvinge)"
+    exit 1
+fi
