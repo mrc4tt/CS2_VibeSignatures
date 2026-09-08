@@ -4585,6 +4585,7 @@ modules:
       - name: find-SendViolationReport
         expected_output:
           - SendViolationReport.{platform}.yaml
+        platform: windows
       - name: find-OnRenderStart
         expected_output:
           - OnRenderStart.{platform}.yaml
