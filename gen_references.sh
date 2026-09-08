@@ -39,7 +39,11 @@ while read -r r; do
     engine)  bin="bin/$GAMEVER/engine/libengine2.so";;
     server)  bin="bin/$GAMEVER/server/libserver.so";;
     client)  bin="bin/$GAMEVER/client/libclient.so";;
-    SDL3)    bin="bin/$GAMEVER/SDL3/libSDL3.so.0";;
+    SDL3)         bin="bin/$GAMEVER/SDL3/libSDL3.so.0";;
+    scenesystem)  bin="bin/$GAMEVER/scenesystem/libscenesystem.so";;
+    networksystem) bin="bin/$GAMEVER/networksystem/libnetworksystem.so";;
+    matchmaking)  bin="bin/$GAMEVER/matchmaking/libmatchmaking.so";;
+    vphysics2)    bin="bin/$GAMEVER/vphysics2/libvphysics2.so";;
     *)       bin="";;
   esac
   if [ -z "$bin" ]; then
