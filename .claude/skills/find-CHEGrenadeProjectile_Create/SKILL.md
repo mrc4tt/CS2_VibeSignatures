@@ -20,6 +20,16 @@ offset). It is found via the entity classname string `"hegrenade_projectile"` it
 (passed to the entity-create path when spawning the projectile). The RTTI/class string
 `"CHEGrenadeProjectile"` is a **different** referencer and must be excluded.
 
+## Concrete anchors for THIS target (use these first)
+
+- `FULLMATCH:weapon_hegrenade`
+
+## KNOWN CONTAMINATION WARNING
+
+VA 0x20c2700 (BuyState_OnUpdate) has WRONGLY been emitted for this target before.
+It is NOT this function. If your best candidate is 0x20c2700, you have NOT found
+the target - keep searching or report the shortlist instead of guessing.
+
 ## Method
 
 ### 1. Reuse previous signature (fast path)

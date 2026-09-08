@@ -22,6 +22,16 @@ another large function — so a pure string anchor is **not** unique. It is foun
 
 **Primary resolution = decompile the ResetRound predecessor and pick the entity-cleanup callee.**
 
+## Concrete anchors for THIS target (use these first)
+
+- `xrefs fra/kaldt af TerminateRound (kendt sig i CSSharp gamedata); post-round cleanup`
+
+## KNOWN CONTAMINATION WARNING
+
+VA 0x20c2700 (BuyState_OnUpdate) has WRONGLY been emitted for this target before.
+It is NOT this function. If your best candidate is 0x20c2700, you have NOT found
+the target - keep searching or report the shortlist instead of guessing.
+
 ## Method
 
 ### 1. Reuse previous signature (fast path)

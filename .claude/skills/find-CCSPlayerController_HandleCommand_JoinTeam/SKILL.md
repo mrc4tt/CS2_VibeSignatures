@@ -18,6 +18,16 @@ Target: `CCSPlayerController::HandleCommand_JoinTeam` (func) in the CS2 server m
 > wildcarded. Produce ONLY the output file(s) listed in this skill's expected outputs, for the binary
 > loaded in THIS session (one platform per run). NEVER open or analyze the other platform's binary.
 
+## Concrete anchors for THIS target (use these first)
+
+- `FULLMATCH:HandleCommand_JoinTeam - MEN se canonical-note: CBasePlayerController_HandleCommand_JoinTeam (VA 0x1556670) er allerede analyseret - emit kun hvis denne specifikke task virkelig kraver en separat artefakt`
+
+## KNOWN CONTAMINATION WARNING
+
+VA 0x20c2700 (BuyState_OnUpdate) has WRONGLY been emitted for this target before.
+It is NOT this function. If your best candidate is 0x20c2700, you have NOT found
+the target - keep searching or report the shortlist instead of guessing.
+
 ## Method
 
 This is a non-virtual function - emit a byte signature (func_sig), not an offset.
