@@ -89,6 +89,9 @@ fi
 # don't inherit, so inject them into configs/${NEW_VER}.yaml (idempotent per
 # symbol; warns and skips if the config is absent).
 uv run ensure_local_gamedata_symbols.py -config "configs/${NEW_VER}.yaml"
+# Agent-fallback skills for ALLE tasks (upstream preprocessor-only inkl.) - goer
+# nye gamevers selvhelbredende uden upstream-afhaengighed.
+uv run ensure_agent_fallback_skills.py -config "configs/${NEW_VER}.yaml"
 
 # 3. Run pipeline
 echo "==> Downloading depot..."
