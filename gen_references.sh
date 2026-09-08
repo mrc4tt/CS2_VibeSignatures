@@ -14,6 +14,16 @@ cd "$(dirname "$0")"
 GAMEVER="${1:-14178b}"
 LOG="refs_gen_$(date +%Y%m%d_%H%M%S).log"
 
+# Auto-reap: en efterlevende idalib-mcp paa port 13337 faar alle koersler til at
+# fejle oejeblikkeligt. Dræb og vent før start (med mindre NO_REAP=1).
+if [ "${NO_REAP:-0}" != "1" ] && ss -tln 2>/dev/null | grep -q ':13337 '; then
+    echo "[reap] port 13337 optaget - dræber staale idalib-mcpprocesser"
+    pkill -9 -f 'ida_pro_mcp\.idalib_server' 2>/dev/null || true
+    pkill -9 -f 'idalib-mcp --unsafe' 2>/dev/null || true
+    sleep 2
+    ss -tln 2>/dev/null | grep -q ':13337 ' && { echo "❌ porten er stadig optaget af en anden proces - undersoeg: ss -tlnp | grep 13337"; exit 1; }
+fi
+
 # byg mangler-listen (samme tjek som missing-check kommandoen)
 MISSING=$(grep -h "references/" ida_preprocessor_scripts/find-*-decompiles.py | \
   grep -oP 'references/\S+?\.yaml' | sort -u | while read -r; do :; done
