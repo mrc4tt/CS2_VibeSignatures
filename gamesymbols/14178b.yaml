@@ -121,8 +121,8 @@ binaries:
       sha256: 'e39313a48f591f3a141c121a59e499715502e6bdb6bd7e830dd983338131a0d6'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:f54d4058ada5d968fd8a59a2c97e7eae59abfca8a38676bf8ca027a0d69edd23
-file_count: 3713
+config_sha256: sha256:277ddbdd8e0f0ed56ed7b3baa2d18b7b59a6f0a3a806011fe33e6ddaca87774e
+file_count: 3711
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -17475,7 +17475,7 @@ files:
   server/BuyState_DoneBuying.linux.yaml:
     member_name: m_doneBuying
     offset: '0x18'
-    offset_sig: 41 80 7C 24 18 00 74 45
+    offset_sig: 41 80 7C 24 18 00 74 ?? 4C 8D 25 ?? ?? ?? ??
     size: 1
     struct_name: BuyState
   server/BuyState_DoneBuying.windows.yaml:
@@ -17487,7 +17487,7 @@ files:
   server/BuyState_InitialDelay.linux.yaml:
     member_name: m_isInitialDelay
     offset: '0x8'
-    offset_sig: 80 7F 08 00 74 2C
+    offset_sig: 80 7F 08 00 74 ?? 48 8D 05 ?? ?? ?? ??
     size: 1
     struct_name: BuyState
   server/BuyState_InitialDelay.windows.yaml:
@@ -23769,8 +23769,8 @@ files:
     func_va: '0x1802d9710'
   server/CCSBot_Profile.linux.yaml:
     member_name: m_profile
-    offset: '0xf8'
-    offset_sig: 48 89 BB F8 00 00 00
+    offset: '0x8'
+    offset_sig: 49 C7 46 08 00 00 00 00 8D 50 01
     size: 8
     struct_name: CCSBot
   server/CCSBot_Profile.windows.yaml:
@@ -24403,18 +24403,6 @@ files:
     func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B FA E8 ?? ?? ?? ?? 48 8B D8
     func_size: '0x40'
     func_va: '0x180a59d30'
-  server/CCSPlayerController_HandleCommand_JoinTeam.linux.yaml:
-    func_name: CCSPlayerController_HandleCommand_JoinTeam
-    func_rva: '0x1556670'
-    func_sig: 55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ?? ?? ?? ??
-    func_size: '0xee8'
-    func_va: '0x1556670'
-  server/CCSPlayerController_HandleCommand_JoinTeam.windows.yaml:
-    func_name: CCSPlayerController_HandleCommand_JoinTeam
-    func_rva: '0xa40b80'
-    func_sig: 48 89 5C 24 ?? 44 88 44 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 3D ?? ?? ?? ??
-    func_size: '0xb67'
-    func_va: '0x180a40b80'
   server/CCSPlayerController_InitialSpawn.linux.yaml:
     func_name: CCSPlayerController_InitialSpawn
     func_rva: '0x1555a50'
@@ -26182,8 +26170,7 @@ files:
   server/CCSPlayerPawn_SetEyeAngles.linux.yaml:
     func_name: CCSPlayerPawn_SetEyeAngles
     func_rva: '0x1830020'
-    func_sig: 55 48 89 E5 41 57 49 89 FF 48 89 F7 41 56 41 55 41 54 53 48 81 EC ?? ?? ?? ?? E8 ?? ?? ?? ??
-    func_size: '0x40d'
+    func_sig: 55 48 89 E5 41 57 49 89 FF 48 89 F7 41 56 41 55 41 54 53 48 81 EC B8 00
     func_va: '0x1830020'
   server/CCSPlayerPawn_SetEyeAngles.windows.yaml:
     func_name: CCSPlayerPawn_SetEyeAngles
@@ -46538,5 +46525,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: 14178b
-last_publish_time: '2026-09-08T12:43:21Z'
+last_publish_time: '2026-09-08T15:50:03Z'
 schema_version: 5
