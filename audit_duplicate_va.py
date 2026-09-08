@@ -23,18 +23,22 @@ for d in (f"bin/{a.gamever}", f"bin_artifacts/{a.gamever}"):
         text = open(f).read()
         va = re.search(r"func_va: '?(0x[0-9a-f]+)'?", text)
         sig = re.search(r"func_sig: (.+)", text)
+        size = re.search(r"func_size: '?(0x[0-9a-f]+)'?", text)
         if va:
             va_map[va.group(1)].append((os.path.basename(f).rsplit(".", 2)[0],
-                                        " ".join(sig.group(1).split()) if sig else ""))
+                                        " ".join(sig.group(1).split()) if sig else "",
+                                        size.group(1) if size else ""))
 
 suspects = 0
 for va, entries in sorted(va_map.items()):
-    names = list(dict.fromkeys(n for n, _ in entries))  # unique pr. navn
+    names = list(dict.fromkeys(n for n, _, _ in entries))  # unique pr. navn
     if len(names) < 2:
         continue
-    sigs = {s for _, s in entries if s}
-    verdict = "OK (alias-par, samme sig)" if len(sigs) <= 1 and len(names) <= 2 else "SUSPEKT"
-    if verdict != "OK (alias-par, samme sig)":
+    sigs = {s for _, s, _ in entries if s}
+    sizes = {z for _, _, z in entries if z}
+    same_function = len(sigs) <= 1 or (len(sizes) == 1 and len(names) <= 2)
+    verdict = "OK (alias-par)" if same_function and len(names) <= 2 else "SUSPEKT"
+    if verdict != "OK (alias-par)":
         suspects += 1
     print(f"{va} [{verdict}]: {names}")
 
