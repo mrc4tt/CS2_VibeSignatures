@@ -1,0 +1,5 @@
+func_name: CDemoPlayer_Pause
+func_va: '0x48f060'
+func_rva: '0x48f060'
+func_size: '0x1a3'
+func_sig: 55 0F 28 C8 66 0F EF C0 48 89 E5 41 56

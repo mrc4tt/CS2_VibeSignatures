@@ -1,0 +1,5 @@
+func_name: CSource2Client_SetGlobals
+func_va: '0x18acdf0'
+func_rva: '0x18acdf0'
+func_size: '0x31'
+func_sig: 48 8B 05 ?? ?? ?? ?? 48 8D 15 ?? ?? ?? ?? 31 C9

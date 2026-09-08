@@ -1,0 +1,5 @@
+func_name: CClientInput_CreateMove
+func_va: '0x18ea760'
+func_rva: '0x18ea760'
+func_size: '0x1d12'
+func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ?? ?? ?? ?? 89 95 ?? ?? ?? ?? 85 F6

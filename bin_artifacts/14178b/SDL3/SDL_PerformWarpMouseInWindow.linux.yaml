@@ -1,0 +1,5 @@
+func_name: SDL_PerformWarpMouseInWindow
+func_va: "0x82110"
+func_rva: "0x82110"
+func_size: "0x88"
+func_sig: 48 85 FF 74 ?? F6 47 ?? ?? 75 ?? 80 3D

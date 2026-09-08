@@ -1,0 +1,5 @@
+func_name: CSource2Client_FrameStageNotify
+func_va: '0x18e7ca0'
+func_rva: '0x18e7ca0'
+func_size: '0x6a2'
+func_sig: 55 48 89 E5 41 56 41 55 41 54 49 89 FC 53 89 F3 48 83 EC ?? 48 8B BF

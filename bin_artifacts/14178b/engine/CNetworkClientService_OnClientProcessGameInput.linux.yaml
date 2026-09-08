@@ -1,0 +1,5 @@
+func_name: CNetworkClientService_OnClientProcessGameInput
+func_va: '0x426130'
+func_rva: '0x426130'
+func_size: '0x19'
+func_sig: 48 8B BF A0 00 ?? ?? 48 85 FF 74 0C E9 1F AD 0B ??
