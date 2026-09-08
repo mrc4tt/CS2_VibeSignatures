@@ -3,6 +3,18 @@ modules:
     path_windows: game/bin/win64/SDL3.dll
     path_linux: game/bin/linuxsteamrt64/libSDL3.so.0
     skills:
+      - name: find-SDL_SetRelativeMouseMode
+        expected_output:
+          - SDL_SetRelativeMouseMode.{platform}.yaml
+      - name: find-SDL_PreInitMouse
+        expected_output:
+          - SDL_PreInitMouse.{platform}.yaml
+      - name: find-SDL_PerformWarpMouseInWindow
+        expected_output:
+          - SDL_PerformWarpMouseInWindow.{platform}.yaml
+      - name: find-SDL_MouseWarpEmulationChanged
+        expected_output:
+          - SDL_MouseWarpEmulationChanged.{platform}.yaml
       - name: find-SDL_PreInitMouse-windows
         expected_output:
           - SDL_PreInitMouse.{platform}.yaml
@@ -49,6 +61,14 @@ modules:
           - SDL_Mouse_WarpMouse.{platform}.yaml  # 30h     bool (*WarpMouse)(void *window, float x, float y);
         platform: windows
     symbols:
+      - name: SDL_SetRelativeMouseMode
+        category: func
+      - name: SDL_PreInitMouse
+        category: func
+      - name: SDL_PerformWarpMouseInWindow
+        category: func
+      - name: SDL_MouseWarpEmulationChanged
+        category: func
       - name: SDL_PreInitMouse
         category: func
         platform: windows
@@ -630,6 +650,27 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-CServerSideClientBase_SetConVarUserInfo
+        expected_output:
+          - CServerSideClientBase_SetConVarUserInfo.{platform}.yaml
+      - name: find-CNetworkGameClient_CreateMove
+        expected_output:
+          - CNetworkGameClient_CreateMove.{platform}.yaml
+      - name: find-CNetworkClientService_OnSimpleLoopFrameUpdate
+        expected_output:
+          - CNetworkClientService_OnSimpleLoopFrameUpdate.{platform}.yaml
+      - name: find-CNetworkClientService_OnClientProcessGameInput
+        expected_output:
+          - CNetworkClientService_OnClientProcessGameInput.{platform}.yaml
+      - name: find-CLoopTypeBase_LoadDependentServices
+        expected_output:
+          - CLoopTypeBase_LoadDependentServices.{platform}.yaml
+      - name: find-CInputService_IsClientOnlyCommandAllowed
+        expected_output:
+          - CInputService_IsClientOnlyCommandAllowed.{platform}.yaml
+      - name: find-CDemoPlayer_Pause
+        expected_output:
+          - CDemoPlayer_Pause.{platform}.yaml
       - name: find-CServerSideClient_SetName
         expected_output:
           - CServerSideClient_SetName.{platform}.yaml
@@ -2570,6 +2611,20 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
+      - name: CServerSideClientBase_SetConVarUserInfo
+        category: func
+      - name: CNetworkGameClient_CreateMove
+        category: func
+      - name: CNetworkClientService_OnSimpleLoopFrameUpdate
+        category: func
+      - name: CNetworkClientService_OnClientProcessGameInput
+        category: func
+      - name: CLoopTypeBase_LoadDependentServices
+        category: func
+      - name: CInputService_IsClientOnlyCommandAllowed
+        category: func
+      - name: CDemoPlayer_Pause
+        category: func
       - name: CServerSideClient_SetName
         category: vfunc
       - name: CServerSideClient_m_UserIDString
@@ -4527,6 +4582,18 @@ modules:
     path_windows: game/csgo/bin/win64/client.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libclient.so
     skills:
+      - name: find-SendViolationReport
+        expected_output:
+          - SendViolationReport.{platform}.yaml
+      - name: find-OnRenderStart
+        expected_output:
+          - OnRenderStart.{platform}.yaml
+      - name: find-CLoopModeGame_Shutdown
+        expected_output:
+          - CLoopModeGame_Shutdown.{platform}.yaml
+      - name: find-CClientInput_CreateMove
+        expected_output:
+          - CClientInput_CreateMove.{platform}.yaml
       - name: find-IGameSystem_vtable
         expected_output:
           - IGameSystem_vtable.{platform}.yaml
@@ -5405,6 +5472,14 @@ modules:
         expected_input:
           - GameStateAPI_RegisterAPIs.{platform}.yaml
     symbols:
+      - name: SendViolationReport
+        category: func
+      - name: OnRenderStart
+        category: func
+      - name: CLoopModeGame_Shutdown
+        category: func
+      - name: CClientInput_CreateMove
+        category: func
       - name: CLoopModeGame_RegisterEventMapInternal
         category: func
         alias:
@@ -6656,6 +6731,9 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount
+        expected_output:
+          - CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount.{platform}.yaml
       - name: find-CCSCustomHudLayout_SetDialogVariableString
         expected_output:
           - CCSCustomHudLayout_SetDialogVariableString.{platform}.yaml
@@ -10037,6 +10115,8 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount
+        category: func
       - name: BotProfile
         category: struct
       - name: BuyState

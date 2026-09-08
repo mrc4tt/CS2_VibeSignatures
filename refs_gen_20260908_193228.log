@@ -1,0 +1,447 @@
+[19:32:30] Manglende referencer: 27 — log: refs_gen_20260908_193228.log
+[19:32:30] START references/client/CClientInput_CreateMove.linux.yaml (bin: bin/14178b/client/libclient.so)
+  Starting idalib-mcp: idalib-mcp --unsafe --host 127.0.0.1 --port 13337 bin/14178b/client/libclient.so
+  Waiting for MCP server on 127.0.0.1:13337...
+  MCP server port is ready
+Analysis config: /home/mikkel/CS2_VibeSignatures/configs/14178b.yaml
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 877, in <module>
+  |     raise SystemExit(main())
+  |                      ^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 867, in main
+  |     output_path = asyncio.run(run_reference_generation(args))
+  |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+  |     return runner.run(main)
+  |            ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+  |     return self._loop.run_until_complete(task)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+  |     return future.result()
+  |            ^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 821, in run_reference_generation
+  |     async with session_manager as session:
+  |                ^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 740, in autostart_mcp_session
+  |     async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 289, in open_ida_mcp_session
+  |     async with AsyncExitStack() as stack:
+  |                ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 754, in __aexit__
+  |     raise exc_details[1]
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 248, in _open_raw_ida_mcp_session
+  |     async with AsyncExitStack() as stack:
+  |                ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 754, in __aexit__
+  |     raise exc_details[1]
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 647, in streamable_http_client
+  |     async with anyio.create_task_group() as tg:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 670, in streamable_http_client
+    |     yield (
+    |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+    |     cb_suppress = await cb(*exc_details)
+    |                   ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 238, in __aexit__
+    |     return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+    |     raise BaseExceptionGroup(
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 265, in _open_raw_ida_mcp_session
+      |     yield raw_session
+      |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 327, in open_ida_mcp_session
+      |     yield DatabaseBoundSession(raw_session, binding)
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 741, in autostart_mcp_session
+      |     yield session
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 837, in run_reference_generation
+      |     func_va = await resolve_func_va(
+      |               ^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 454, in resolve_func_va
+      |     return await find_function_addr_by_names(
+      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 420, in find_function_addr_by_names
+      |     raise ReferenceGenerationError("unable to locate function address via IDA")
+      | ReferenceGenerationError: unable to locate function address via IDA
+      +------------------------------------
+[19:32:40] FAIL references/client/CClientInput_CreateMove.linux.yaml  (detaljer i refs_gen_20260908_193228.log)
+[19:32:40] START references/client/CLoopModeGame_Shutdown.windows.yaml (bin: bin/14178b/client/libclient.so)
+  Starting idalib-mcp: idalib-mcp --unsafe --host 127.0.0.1 --port 13337 bin/14178b/client/libclient.so
+  Waiting for MCP server on 127.0.0.1:13337...
+  MCP server port is ready
+Analysis config: /home/mikkel/CS2_VibeSignatures/configs/14178b.yaml
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 877, in <module>
+  |     raise SystemExit(main())
+  |                      ^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 867, in main
+  |     output_path = asyncio.run(run_reference_generation(args))
+  |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+  |     return runner.run(main)
+  |            ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+  |     return self._loop.run_until_complete(task)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+  |     return future.result()
+  |            ^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 821, in run_reference_generation
+  |     async with session_manager as session:
+  |                ^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 740, in autostart_mcp_session
+  |     async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 289, in open_ida_mcp_session
+  |     async with AsyncExitStack() as stack:
+  |                ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 754, in __aexit__
+  |     raise exc_details[1]
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 248, in _open_raw_ida_mcp_session
+  |     async with AsyncExitStack() as stack:
+  |                ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 754, in __aexit__
+  |     raise exc_details[1]
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 647, in streamable_http_client
+  |     async with anyio.create_task_group() as tg:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 670, in streamable_http_client
+    |     yield (
+    |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+    |     cb_suppress = await cb(*exc_details)
+    |                   ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 238, in __aexit__
+    |     return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+    |     raise BaseExceptionGroup(
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 265, in _open_raw_ida_mcp_session
+      |     yield raw_session
+      |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 327, in open_ida_mcp_session
+      |     yield DatabaseBoundSession(raw_session, binding)
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 741, in autostart_mcp_session
+      |     yield session
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 837, in run_reference_generation
+      |     func_va = await resolve_func_va(
+      |               ^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 449, in resolve_func_va
+      |     candidate_names = load_symbol_aliases(
+      |                       ^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 327, in load_symbol_aliases
+      |     raise ReferenceGenerationError(f"symbol '{func_name}' not found in module '{module}' within {config_path}")
+      | ReferenceGenerationError: symbol 'CLoopModeGame_Shutdown' not found in module 'client' within /home/mikkel/CS2_VibeSignatures/configs/14178b.yaml
+      +------------------------------------
+[19:32:51] FAIL references/client/CLoopModeGame_Shutdown.windows.yaml  (detaljer i refs_gen_20260908_193228.log)
+[19:32:51] START references/client/CSource2Client_CreateMove.linux.yaml (bin: bin/14178b/client/libclient.so)
+  Starting idalib-mcp: idalib-mcp --unsafe --host 127.0.0.1 --port 13337 bin/14178b/client/libclient.so
+  Waiting for MCP server on 127.0.0.1:13337...
+  MCP server port is ready
+Analysis config: /home/mikkel/CS2_VibeSignatures/configs/14178b.yaml
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 877, in <module>
+  |     raise SystemExit(main())
+  |                      ^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 867, in main
+  |     output_path = asyncio.run(run_reference_generation(args))
+  |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+  |     return runner.run(main)
+  |            ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+  |     return self._loop.run_until_complete(task)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+  |     return future.result()
+  |            ^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 821, in run_reference_generation
+  |     async with session_manager as session:
+  |                ^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 740, in autostart_mcp_session
+  |     async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 289, in open_ida_mcp_session
+  |     async with AsyncExitStack() as stack:
+  |                ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 754, in __aexit__
+  |     raise exc_details[1]
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 248, in _open_raw_ida_mcp_session
+  |     async with AsyncExitStack() as stack:
+  |                ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 754, in __aexit__
+  |     raise exc_details[1]
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 647, in streamable_http_client
+  |     async with anyio.create_task_group() as tg:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 670, in streamable_http_client
+    |     yield (
+    |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+    |     cb_suppress = await cb(*exc_details)
+    |                   ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 238, in __aexit__
+    |     return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+    |     raise BaseExceptionGroup(
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 265, in _open_raw_ida_mcp_session
+      |     yield raw_session
+      |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 327, in open_ida_mcp_session
+      |     yield DatabaseBoundSession(raw_session, binding)
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 741, in autostart_mcp_session
+      |     yield session
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 837, in run_reference_generation
+      |     func_va = await resolve_func_va(
+      |               ^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 454, in resolve_func_va
+      |     return await find_function_addr_by_names(
+      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 420, in find_function_addr_by_names
+      |     raise ReferenceGenerationError("unable to locate function address via IDA")
+      | ReferenceGenerationError: unable to locate function address via IDA
+      +------------------------------------
+[19:33:00] FAIL references/client/CSource2Client_CreateMove.linux.yaml  (detaljer i refs_gen_20260908_193228.log)
+[19:33:00] START references/client/CSource2Client_FrameStageNotify.linux.yaml (bin: bin/14178b/client/libclient.so)
+  Starting idalib-mcp: idalib-mcp --unsafe --host 127.0.0.1 --port 13337 bin/14178b/client/libclient.so
+  Waiting for MCP server on 127.0.0.1:13337...
+  MCP server port is ready
+Analysis config: /home/mikkel/CS2_VibeSignatures/configs/14178b.yaml
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 877, in <module>
+  |     raise SystemExit(main())
+  |                      ^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 867, in main
+  |     output_path = asyncio.run(run_reference_generation(args))
+  |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+  |     return runner.run(main)
+  |            ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+  |     return self._loop.run_until_complete(task)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+  |     return future.result()
+  |            ^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 821, in run_reference_generation
+  |     async with session_manager as session:
+  |                ^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 740, in autostart_mcp_session
+  |     async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 289, in open_ida_mcp_session
+  |     async with AsyncExitStack() as stack:
+  |                ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 754, in __aexit__
+  |     raise exc_details[1]
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 248, in _open_raw_ida_mcp_session
+  |     async with AsyncExitStack() as stack:
+  |                ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 754, in __aexit__
+  |     raise exc_details[1]
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 647, in streamable_http_client
+  |     async with anyio.create_task_group() as tg:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 670, in streamable_http_client
+    |     yield (
+    |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+    |     cb_suppress = await cb(*exc_details)
+    |                   ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 238, in __aexit__
+    |     return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+    |     raise BaseExceptionGroup(
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 265, in _open_raw_ida_mcp_session
+      |     yield raw_session
+      |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 327, in open_ida_mcp_session
+      |     yield DatabaseBoundSession(raw_session, binding)
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 741, in autostart_mcp_session
+      |     yield session
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 837, in run_reference_generation
+      |     func_va = await resolve_func_va(
+      |               ^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 454, in resolve_func_va
+      |     return await find_function_addr_by_names(
+      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 420, in find_function_addr_by_names
+      |     raise ReferenceGenerationError("unable to locate function address via IDA")
+      | ReferenceGenerationError: unable to locate function address via IDA
+      +------------------------------------
+[19:33:10] FAIL references/client/CSource2Client_FrameStageNotify.linux.yaml  (detaljer i refs_gen_20260908_193228.log)
+[19:33:10] START references/client/CSource2Client_ProcessGameInput.linux.yaml (bin: bin/14178b/client/libclient.so)
+  Starting idalib-mcp: idalib-mcp --unsafe --host 127.0.0.1 --port 13337 bin/14178b/client/libclient.so
+  Waiting for MCP server on 127.0.0.1:13337...
+  MCP server port is ready
+Analysis config: /home/mikkel/CS2_VibeSignatures/configs/14178b.yaml
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 877, in <module>
+  |     raise SystemExit(main())
+  |                      ^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 867, in main
+  |     output_path = asyncio.run(run_reference_generation(args))
+  |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+  |     return runner.run(main)
+  |            ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+  |     return self._loop.run_until_complete(task)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+  |     return future.result()
+  |            ^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 821, in run_reference_generation
+  |     async with session_manager as session:
+  |                ^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 740, in autostart_mcp_session
+  |     async with open_ida_mcp_session(host, port, **session_kwargs) as session:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 289, in open_ida_mcp_session
+  |     async with AsyncExitStack() as stack:
+  |                ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 754, in __aexit__
+  |     raise exc_details[1]
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 248, in _open_raw_ida_mcp_session
+  |     async with AsyncExitStack() as stack:
+  |                ^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 754, in __aexit__
+  |     raise exc_details[1]
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 647, in streamable_http_client
+  |     async with anyio.create_task_group() as tg:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/client/streamable_http.py", line 670, in streamable_http_client
+    |     yield (
+    |   File "/home/mikkel/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 737, in __aexit__
+    |     cb_suppress = await cb(*exc_details)
+    |                   ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/mcp/shared/session.py", line 238, in __aexit__
+    |     return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/mikkel/CS2_VibeSignatures/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+    |     raise BaseExceptionGroup(
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 265, in _open_raw_ida_mcp_session
+      |     yield raw_session
+      |   File "/home/mikkel/CS2_VibeSignatures/ida_mcp_session.py", line 327, in open_ida_mcp_session
+      |     yield DatabaseBoundSession(raw_session, binding)
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 741, in autostart_mcp_session
+      |     yield session
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 837, in run_reference_generation
+      |     func_va = await resolve_func_va(
+      |               ^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 454, in resolve_func_va
+      |     return await find_function_addr_by_names(
+      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/home/mikkel/CS2_VibeSignatures/generate_reference_yaml.py", line 420, in find_function_addr_by_names
+      |     raise ReferenceGenerationError("unable to locate function address via IDA")
+      | ReferenceGenerationError: unable to locate function address via IDA
+      +------------------------------------
+[19:33:19] FAIL references/client/CSource2Client_ProcessGameInput.linux.yaml  (detaljer i refs_gen_20260908_193228.log)
+[19:33:19] START references/client/CSource2Client_SetGlobals.linux.yaml (bin: bin/14178b/client/libclient.so)
