@@ -6674,9 +6674,6 @@ modules:
       - name: find-CCSCustomHudLayout_SetInputCaptureEnabled
         expected_output:
           - CCSCustomHudLayout_SetInputCaptureEnabled.{platform}.yaml
-      - name: find-CCSPlayerController_HandleCommand_JoinTeam
-        expected_output:
-          - CCSPlayerController_HandleCommand_JoinTeam.{platform}.yaml
       - name: find-CCSPlayer_WeaponServices_Weapon_GetSlot
         expected_output:
           - CCSPlayer_WeaponServices_Weapon_GetSlot.{platform}.yaml
