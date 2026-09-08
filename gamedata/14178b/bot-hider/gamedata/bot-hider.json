@@ -11,7 +11,7 @@
     "signatures": {
       "library": "server",
       "windows": "40 55 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F1",
-      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
+      "linux": "55 31 F6 48 89 E5 41 57 41 56 49 89 FE"
     },
     "comment": "runs the bot quota pass"
   },
@@ -19,15 +19,15 @@
     "signatures": {
       "library": "server",
       "windows": "48 89 5C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 48 8B 05 ? ? ? ?",
-      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
+      "linux": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 31 DB 48 83 EC ? 4C 8D 2D ? ? ? ? 49 8B 45 ? 44 8B 60 ? 45 85 E4 0F 8E ? ? ? ? C7 45 ? ? ? ? ? 31 FF E8 ? ? ? ? 48 89 C2"
     },
     "comment": "counts eligible voters"
   },
   "CCSPlayerController::HandleCommand_JoinTeam": {
     "signatures": {
       "library": "server",
-      "windows": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D ? ? ? ?",
-      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
+      "windows": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D",
+      "linux": "55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC"
     },
     "comment": "handles player team join requests"
   },
@@ -35,7 +35,7 @@
     "signatures": {
       "library": "server",
       "windows": "40 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? BA ? ? ? ?",
-      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
+      "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? E8 ? ? ? ? 89 C3"
     },
     "comment": "applies the human team restriction"
   },
@@ -51,7 +51,7 @@
     "signatures": {
       "library": "server",
       "windows": "41 3B DD 0F 84 ? ? ? ? 41 8B 80 88 03 00 00 49 8B C8 C1 E8 08 A8 01 74 ?",
-      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
+      "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ? ? ? ? E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 83 BB ? ? ? ? ?"
     },
     "offsets": {
       "windows": -43,

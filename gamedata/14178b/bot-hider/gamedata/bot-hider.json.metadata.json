@@ -33,16 +33,6 @@
             "signatures",
             "windows"
           ]
-        },
-        {
-          "after": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?",
-          "before": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 31 DB 48 83 EC ? 4C 8D 2D ? ? ? ? 49 8B 45 ? 44 8B 60 ? 45 85 E4 0F 8E ? ? ? ? C7 45 ? ? ? ? ? 31 FF E8 ? ? ? ? 48 89 C2",
-          "line": 22,
-          "path": [
-            "CBaseIssue::CountPotentialVoters",
-            "signatures",
-            "linux"
-          ]
         }
       ],
       "covered": true,
@@ -90,7 +80,7 @@
           ]
         },
         {
-          "after": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?",
+          "after": "55 31 F6 48 89 E5 41 57 41 56 49 89 FE",
           "before": "55 31 F6 48 89 E5 41 57 41 56 49 89 FE 31 FF 41 55 41 54 53 48 83 EC 28",
           "line": 14,
           "path": [
@@ -123,7 +113,7 @@
           ]
         },
         {
-          "after": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?",
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ? ? ? ? E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 83 BB ? ? ? ? ?",
           "before": "4C 8D BD 90 EE FF FF 31 F6 C7 85 90 EE FF FF 00 00 00 00 4C 89 FF E8 ? ? ? ? 49 8B 06 48 8D BD C0 EE FF FF",
           "line": 54,
           "path": [
@@ -146,28 +136,6 @@
       "updated": true
     },
     {
-      "changes": [
-        {
-          "after": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D ? ? ? ?",
-          "before": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D",
-          "line": 29,
-          "path": [
-            "CCSPlayerController::HandleCommand_JoinTeam",
-            "signatures",
-            "windows"
-          ]
-        },
-        {
-          "after": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?",
-          "before": "55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC",
-          "line": 30,
-          "path": [
-            "CCSPlayerController::HandleCommand_JoinTeam",
-            "signatures",
-            "linux"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         28,
@@ -176,7 +144,7 @@
         32
       ],
       "name": "CCSPlayerController::HandleCommand_JoinTeam",
-      "updated": true
+      "updated": false
     },
     {
       "covered": true,
@@ -466,16 +434,6 @@
             "signatures",
             "windows"
           ]
-        },
-        {
-          "after": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?",
-          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? E8 ? ? ? ? 89 C3",
-          "line": 38,
-          "path": [
-            "MpHumanTeam_ApplyRestriction",
-            "signatures",
-            "linux"
-          ]
         }
       ],
       "covered": true,
@@ -518,6 +476,6 @@
   "summary": {
     "covered": 30,
     "total": 30,
-    "updated": 11
+    "updated": 10
   }
 }

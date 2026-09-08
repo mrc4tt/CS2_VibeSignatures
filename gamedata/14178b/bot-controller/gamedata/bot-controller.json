@@ -3,7 +3,7 @@
     "signatures": {
       "library": "server",
       "windows": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B F9 84 D2",
-      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
+      "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 40 84 F6 75 ?"
     },
     "comment": "bot picks and equips its best weapon."
   },
@@ -11,7 +11,7 @@
     "signatures": {
       "library": "server",
       "windows": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B D9 84 D2",
-      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
+      "linux": "55 48 89 E5 53 48 89 FB 48 83 EC ? 40 84 F6 75 ? F3 0F 10 8F ? ? ? ?"
     },
     "comment": "bot switches to its pistol secondary"
   },
@@ -35,7 +35,7 @@
     "signatures": {
       "library": "server",
       "windows": "40 55 56 57 41 54 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ?",
-      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
+      "linux": "55 48 8D 05 ? ? ? ? 48 8D 35 ? ? ? ? 48 89 E5 41 57 41 56 41 55 4C 8D AD ? ? ? ? 41 54 4C 89 EA 53 48 89 FB 48 81 EC ? ? ? ?"
     },
     "comment": "Per-tick decision entry; PathFollower + look-around + reaction + weapon"
   },
@@ -73,7 +73,7 @@
     "signatures": {
       "library": "server",
       "windows": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F8 8B DA 48 8B F1 83 FA ?",
-      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
+      "linux": "55 48 8D 05 ? ? ? ? 48 8D 35 ? ? ? ? 48 89 E5 41 55 4C 8D 6D ?"
     },
     "comment": "Spring-smooths view to m_lookPitch/m_lookYaw"
   },
@@ -81,7 +81,7 @@
     "signatures": {
       "library": "server",
       "windows": "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B DA 48 8B F1 48 8D 55 ?",
-      "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 83 EC ? 48 3B 15 ? ? ? ?"
+      "linux": "55 48 89 E5 41 57 49 89 FF 48 89 F7 41 56 41 55 41 54 53 48 81 EC B8 00"
     },
     "comment": "Engine eye-angle"
   },
