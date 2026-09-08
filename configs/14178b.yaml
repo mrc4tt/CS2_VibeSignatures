@@ -10018,7 +10018,9 @@ modules:
         alias:
           - CBasePlayerController::OnSimulateUserCommands
       - name: CCSBot_Profile
-        category: vfunc
+        category: structmember
+        struct: CCSBot
+        member: m_profile
         alias:
           - CCSBot::Profile
       - name: BotProfile_Aggression

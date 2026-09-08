@@ -1,0 +1,5 @@
+struct_name: CEntityIdentity
+member_name: Size
+offset: '0x70'
+size: 112
+offset_sig: 48 6B D0 70 48 03 D1

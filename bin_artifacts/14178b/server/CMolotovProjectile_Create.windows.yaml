@@ -1,0 +1,5 @@
+func_name: CMolotovProjectile_Create
+func_va: '0x18097e0a0'
+func_rva: '0x97e0a0'
+func_size: '0x8b9'
+func_sig: 48 8B C4 48 89 58 ?? 4C 89 40 ?? 48 89 48 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ??

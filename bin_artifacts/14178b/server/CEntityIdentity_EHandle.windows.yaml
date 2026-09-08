@@ -1,0 +1,5 @@
+struct_name: CEntityIdentity
+member_name: EHandle
+offset: '0x10'
+size: 4
+offset_sig: C7 46 10 FF FF FF FF 48 8D 4E 14

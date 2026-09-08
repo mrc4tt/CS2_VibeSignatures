@@ -1,0 +1,5 @@
+struct_name: CMoveData
+member_name: m_vecAbsOrigin
+offset: '0xc8'
+size: 12
+offset_sig: 48 8D 96 C8 00 00 00 49 8B CE E8 ?? ?? ?? ?? 48 8D 56 38
