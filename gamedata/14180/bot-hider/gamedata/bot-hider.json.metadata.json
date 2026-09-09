@@ -1,0 +1,433 @@
+{
+  "entries": [
+    {
+      "changes": [
+        {
+          "after": 1572,
+          "before": 836,
+          "line": 107,
+          "path": [
+            "CBaseEntity::m_iTeamNum",
+            "offsets",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        106,
+        107,
+        109
+      ],
+      "name": "CBaseEntity::m_iTeamNum",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 48 8B 05 ? ? ? ?",
+          "before": "48 89 5C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 48 8B 05",
+          "line": 21,
+          "path": [
+            "CBaseIssue::CountPotentialVoters",
+            "signatures",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        20,
+        21,
+        22,
+        24
+      ],
+      "name": "CBaseIssue::CountPotentialVoters",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": 251,
+          "before": 904,
+          "line": 121,
+          "path": [
+            "CBasePlayerController::FakeClientFlags",
+            "offsets",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        120,
+        121,
+        123
+      ],
+      "name": "CBasePlayerController::FakeClientFlags",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 55 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F1",
+          "before": "40 55 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F1 FF 15",
+          "line": 13,
+          "path": [
+            "CCSBotManager::MaintainBotQuota",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 31 F6 48 89 E5 41 57 41 56 49 89 FE",
+          "before": "55 31 F6 48 89 E5 41 57 41 56 49 89 FE 31 FF 41 55 41 54 53 48 83 EC 28",
+          "line": 14,
+          "path": [
+            "CCSBotManager::MaintainBotQuota",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        12,
+        13,
+        14,
+        16
+      ],
+      "name": "CCSBotManager::MaintainBotQuota",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "41 3B DD 0F 84 ? ? ? ? 41 8B 80 88 03 00 00 49 8B C8 C1 E8 08 A8 01 74 ?",
+          "before": "41 3B DD 0F 84 99 00 00 00 41 8B 80 88 03 00 00 49 8B C8 C1 E8 08 A8 01 74 44",
+          "line": 53,
+          "path": [
+            "CCSGameRules::SameMapTeardown",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ? ? ? ? E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 83 BB",
+          "before": "4C 8D BD 90 EE FF FF 31 F6 C7 85 90 EE FF FF 00 00 00 00 4C 89 FF E8 ? ? ? ? 49 8B 06 48 8D BD C0 EE FF FF",
+          "line": 54,
+          "path": [
+            "CCSGameRules::SameMapTeardown",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        52,
+        53,
+        54,
+        57,
+        58,
+        60
+      ],
+      "name": "CCSGameRules::SameMapTeardown",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        28,
+        29,
+        30,
+        32
+      ],
+      "name": "CCSPlayerController::HandleCommand_JoinTeam",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        99,
+        100,
+        102
+      ],
+      "name": "CEntityIdentity::m_designerName",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        92,
+        93,
+        95
+      ],
+      "name": "CEntityIdentity::m_pInstance",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        85,
+        86,
+        88
+      ],
+      "name": "CEntityIdentity::Size",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        78,
+        79,
+        81
+      ],
+      "name": "CEntitySystem::m_EntityList",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        44,
+        45,
+        46,
+        48
+      ],
+      "name": "CNetworkGameServer::PackEntities",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        113,
+        114,
+        116
+      ],
+      "name": "CNetworkGameServerBase::m_Clients",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        190,
+        191,
+        193
+      ],
+      "name": "CServerSideClient::m_bFakePlayer",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": 104,
+          "before": 322,
+          "line": 219,
+          "path": [
+            "CServerSideClient::m_bIsHLTV",
+            "offsets",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        218,
+        219,
+        221
+      ],
+      "name": "CServerSideClient::m_bIsHLTV",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        134,
+        135,
+        137
+      ],
+      "name": "CServerSideClient::m_Name",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        141,
+        142,
+        144
+      ],
+      "name": "CServerSideClient::m_nClientSlot",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        169,
+        170,
+        172
+      ],
+      "name": "CServerSideClient::m_nConnectionTypeFlags",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        148,
+        149,
+        151
+      ],
+      "name": "CServerSideClient::m_nEntityIndex",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        162,
+        163,
+        165
+      ],
+      "name": "CServerSideClient::m_NetChannel",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        176,
+        177,
+        179
+      ],
+      "name": "CServerSideClient::m_nSignonState",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        183,
+        184,
+        186
+      ],
+      "name": "CServerSideClient::m_pAttachedTo",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        155,
+        156,
+        158
+      ],
+      "name": "CServerSideClient::m_Server",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        204,
+        205,
+        207
+      ],
+      "name": "CServerSideClient::m_SteamID",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        211,
+        212,
+        214
+      ],
+      "name": "CServerSideClient::m_SteamIDMirror",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        197,
+        198,
+        200
+      ],
+      "name": "CServerSideClient::m_UserID",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        127,
+        128,
+        130
+      ],
+      "name": "CServerSideClient::m_UserIDString",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        64,
+        65,
+        67
+      ],
+      "name": "CServerSideClient::SetName",
+      "updated": false
+    },
+    {
+      "covered": false,
+      "covered_lines": [],
+      "name": "GameResourceServiceServer::m_pEntitySystem",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "40 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? BA ? ? ? ?",
+          "before": "40 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? BA",
+          "line": 37,
+          "path": [
+            "MpHumanTeam_ApplyRestriction",
+            "signatures",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        36,
+        37,
+        38,
+        40
+      ],
+      "name": "MpHumanTeam_ApplyRestriction",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 FE 48 85 FF",
+          "before": "48 89 FE 48 85 FF 74 ? 48 8D 05 ? ? ? ? 48",
+          "line": 6,
+          "path": [
+            "UTIL_Remove",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6,
+        8
+      ],
+      "name": "UTIL_Remove",
+      "updated": true
+    }
+  ],
+  "file": "bot-hider/gamedata/bot-hider.json",
+  "gamever": "14180",
+  "schema_version": 2,
+  "summary": {
+    "covered": 29,
+    "total": 30,
+    "updated": 8
+  }
+}
