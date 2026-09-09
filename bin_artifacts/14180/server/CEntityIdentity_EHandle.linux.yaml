@@ -1,0 +1,5 @@
+func_name: CEntityIdentity_EHandle
+func_va: '0x21433e9'
+func_rva: '0x21433e9'
+func_size: '0x0'
+func_sig: 66 81 48 10 FF 7F 39 8F 68 02 00 00
