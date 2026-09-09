@@ -1,0 +1,5 @@
+struct_name: BotProfile
+member_name: m_cost
+offset: '0x48'
+size: 4
+offset_sig: 48 C7 44 24 48 00 00 00

@@ -1,0 +1,5 @@
+func_name: BotProfile_ReactionTime
+func_va: '0x18001056f'
+func_rva: '0x1056f'
+func_size: '0x0'
+func_sig: 7E 6F 9D 58 00 00 00

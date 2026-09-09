@@ -1,0 +1,5 @@
+func_name: CServerSideClient_m_UserIDString
+func_va: '0x1800c2453'
+func_rva: '0xc2453'
+func_size: '0x0'
+func_sig: 48 83 7F 38 00 48 8D 4F 38 74 06 FF 15 ?? ?? ?? ?? 48 8D 4F

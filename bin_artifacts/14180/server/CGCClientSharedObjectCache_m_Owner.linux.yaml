@@ -1,0 +1,5 @@
+func_name: CGCClientSharedObjectCache_m_Owner
+func_va: '0x22b739b'
+func_rva: '0x22b739b'
+func_size: '0x0'
+func_sig: 48 8D 05 ?? ?? ?? ?? 4C 89 63 28

@@ -630,8 +630,6 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
-<<<<<<< HEAD
-=======
       - name: find-CNetworkGameServer_PackEntities
         expected_output:
           - CNetworkGameServer_PackEntities.{platform}.yaml
@@ -683,7 +681,6 @@ modules:
       - name: find-CServerSideClient_m_bIsHLTV
         expected_output:
           - CServerSideClient_m_bIsHLTV.{platform}.yaml
->>>>>>> 2a47d8315c8e9e4dde20403a3088f926df2f87ac
       - name: find-CNetworkGameServer_vtable
         expected_output:
           - CNetworkGameServer_vtable.{platform}.yaml
@@ -2573,8 +2570,6 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
-<<<<<<< HEAD
-=======
       - name: CNetworkGameServerBase
         category: struct
       - name: CServerSideClient
@@ -2703,7 +2698,6 @@ modules:
         member: m_bIsHLTV
         alias:
           - CServerSideClient::m_bIsHLTV
->>>>>>> 2a47d8315c8e9e4dde20403a3088f926df2f87ac
       - name: CNetworkGameServer_vtable
         category: vtable
       - name: CServerSideClient_vtable
@@ -6718,8 +6712,6 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
-<<<<<<< HEAD
-=======
       - name: find-CAttributeList_SetOrAddAttributeValueByName
         expected_output:
           - CAttributeList_SetOrAddAttributeValueByName.{platform}.yaml
@@ -6861,9 +6853,6 @@ modules:
       - name: find-CBaseIssue_CountPotentialVoters
         expected_output:
           - CBaseIssue_CountPotentialVoters.{platform}.yaml
-      - name: find-CCSPlayerController_HandleCommand_JoinTeam
-        expected_output:
-          - CCSPlayerController_HandleCommand_JoinTeam.{platform}.yaml
       - name: find-MpHumanTeam_ApplyRestriction
         expected_output:
           - MpHumanTeam_ApplyRestriction.{platform}.yaml
@@ -6903,7 +6892,6 @@ modules:
       - name: find-CCSCustomHudLayout_SetInputCaptureEnabled
         expected_output:
           - CCSCustomHudLayout_SetInputCaptureEnabled.{platform}.yaml
->>>>>>> 2a47d8315c8e9e4dde20403a3088f926df2f87ac
       - name: find-CSource2Server_vtable
         expected_output:
           - CSource2Server_vtable.{platform}.yaml
@@ -10096,8 +10084,6 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
-<<<<<<< HEAD
-=======
       - name: BotProfile
         category: struct
       - name: BotProfile
@@ -10412,7 +10398,6 @@ modules:
         category: func
       - name: CCSCustomHudLayout_SetInputCaptureEnabled
         category: func
->>>>>>> 2a47d8315c8e9e4dde20403a3088f926df2f87ac
       - name: CSource2Server_vtable
         category: vtable
       - name: CSource2Server_GetAllServerClasses

@@ -1,0 +1,5 @@
+func_name: vtidx_PlayerRunCommand
+func_va: '0x180aa4350'
+func_rva: '0xaa4350'
+func_size: '0x3f'
+func_sig: 48 89 5C 24 08 57 48 83 EC 20 48 8B DA 48 8B F9 E8 4B A8 18 00 48 85 C0

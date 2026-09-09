@@ -1,0 +1,5 @@
+func_name: CBasePlayerController_FakeClientFlags
+func_va: '0x180b06985'
+func_rva: '0xb06985'
+func_size: '0x0'
+func_sig: F7 81 88 03 00 00 00 01 00 00

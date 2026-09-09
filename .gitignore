@@ -26,3 +26,10 @@ gamedatatest.json
 # Basic Memory knowledge base (memory.db, config, logs stay local)
 memory/*.db*
 memory/config.json
+
+# Genererede arbejdsfiler (missing-report, run-logs, alias-kandidater)
+missing_*.txt
+refs_gen_*.log
+skill_hunt_*.log
+hunt_*.log
+alias_candidates_*.json

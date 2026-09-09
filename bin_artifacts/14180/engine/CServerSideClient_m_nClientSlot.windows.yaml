@@ -1,0 +1,5 @@
+func_name: CServerSideClient_m_nClientSlot
+func_va: '0x1800c1af4'
+func_rva: '0xc1af4'
+func_size: '0x0'
+func_sig: 44 89 41 48 41 FF C0

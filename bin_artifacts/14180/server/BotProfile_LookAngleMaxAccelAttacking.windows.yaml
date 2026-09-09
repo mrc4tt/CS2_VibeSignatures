@@ -1,0 +1,5 @@
+func_name: BotProfile_LookAngleMaxAccelAttacking
+func_va: '0x180184b92'
+func_rva: '0x184b92'
+func_size: '0x0'
+func_sig: 67 20 BA 78 00 00 00

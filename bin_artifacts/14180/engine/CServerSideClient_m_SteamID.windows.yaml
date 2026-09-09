@@ -1,0 +1,5 @@
+func_name: CServerSideClient_m_SteamID
+func_va: '0x1800c827e'
+func_rva: '0xc827e'
+func_size: '0x0'
+func_sig: 48 8B ?? AB 00 00 00 48 89 ?? C3 00 00 00
