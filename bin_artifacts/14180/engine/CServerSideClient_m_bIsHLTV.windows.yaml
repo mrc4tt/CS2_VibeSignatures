@@ -1,0 +1,5 @@
+func_name: CServerSideClient_m_bIsHLTV
+func_va: '0x1800ba920'
+func_rva: '0xba920'
+func_size: '0x0'
+func_sig: 0F B6 41 68 C3

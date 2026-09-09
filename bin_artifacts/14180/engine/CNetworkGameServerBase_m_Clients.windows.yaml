@@ -1,0 +1,5 @@
+func_name: CNetworkGameServerBase_m_Clients
+func_va: '0x1800abf1d'
+func_rva: '0xabf1d'
+func_size: '0x0'
+func_sig: 8B 81 48 02 00 00 4C 8B F1 83 E8 01

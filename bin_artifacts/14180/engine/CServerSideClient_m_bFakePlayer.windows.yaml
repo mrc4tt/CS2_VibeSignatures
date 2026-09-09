@@ -1,0 +1,5 @@
+func_name: CServerSideClient_m_bFakePlayer
+func_va: '0x1800ba900'
+func_rva: '0xba900'
+func_size: '0x0'
+func_sig: 0F B6 81 A0 00 00 00
