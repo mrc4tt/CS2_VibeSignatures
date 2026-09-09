@@ -1,0 +1,5 @@
+func_name: SC_DumpWorld_CommandHandler
+func_va: '0x294900'
+func_rva: '0x294900'
+func_size: '0x330'
+func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 8D B5 ?? ?? ?? ??

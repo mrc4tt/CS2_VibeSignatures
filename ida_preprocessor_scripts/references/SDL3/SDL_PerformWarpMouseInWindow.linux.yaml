@@ -1,0 +1,57 @@
+func_name: SDL_PerformWarpMouseInWindow
+func_va: '0x82110'
+disasm_code: |-
+  .text:0000000000082110                 test    rdi, rdi
+  .text:0000000000082113                 jz      short loc_82150
+  .text:0000000000082115                 test    byte ptr [rdi+48h], 40h
+  .text:0000000000082119                 jnz     short locret_8215C
+  .text:000000000008211B                 cmp     cs:byte_2FF1A1, 0
+  .text:0000000000082122                 mov     cs:byte_2FF1A0, 0
+  .text:0000000000082129                 movss   cs:dword_2FF180, xmm0
+  .text:0000000000082131                 movss   cs:dword_2FF184, xmm1
+  .text:0000000000082139                 jnz     short loc_82160
+  .text:000000000008213B                 mov     rax, cs:qword_2FF110
+  .text:0000000000082142                 test    rax, rax
+  .text:0000000000082145                 jz      short loc_8216E
+  .text:0000000000082147                 jmp     rax
+  .text:0000000000082150                 mov     rdi, cs:qword_2FF168
+  .text:0000000000082157                 test    rdi, rdi
+  .text:000000000008215A                 jnz     short loc_82115
+  .text:000000000008215C                 retn
+  .text:0000000000082160                 test    sil, sil
+  .text:0000000000082163                 jnz     short loc_8216E
+  .text:0000000000082165                 cmp     cs:byte_2FF1A2, 0
+  .text:000000000008216C                 jz      short loc_82180
+  .text:000000000008216E                 mov     rsi, rdi
+  .text:0000000000082171                 xor     ecx, ecx
+  .text:0000000000082173                 xor     edx, edx
+  .text:0000000000082175                 xor     edi, edi
+  .text:0000000000082177                 jmp     sub_81360
+  .text:0000000000082180                 mov     cs:byte_2FF1A0, 1
+  .text:0000000000082187                 movss   dword ptr cs:qword_2FF170, xmm0
+  .text:000000000008218F                 movss   dword ptr cs:qword_2FF170+4, xmm1
+  .text:0000000000082197                 retn
+procedure: |-
+  __int64 __fastcall sub_82110(__int64 a1, char a2, float a3, float a4)
+  {
+    __int64 result; // rax
+
+    if ( (a1 || (a1 = qword_2FF168) != 0) && (*(_BYTE *)(a1 + 72) & 0x40) == 0 )
+    {
+      byte_2FF1A0 = 0;
+      dword_2FF180 = LODWORD(a3);
+      dword_2FF184 = LODWORD(a4);
+      if ( !byte_2FF1A1 )
+      {
+        if ( qword_2FF110 )
+          return qword_2FF110();
+        return sub_81360(0, a1, 0, 0);
+      }
+      if ( a2 || byte_2FF1A2 )
+        return sub_81360(0, a1, 0, 0);
+      byte_2FF1A0 = 1;
+      *(float *)&qword_2FF170 = a3;
+      *((float *)&qword_2FF170 + 1) = a4;
+    }
+    return result;
+  }

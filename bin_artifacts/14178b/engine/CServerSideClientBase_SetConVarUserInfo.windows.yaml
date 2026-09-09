@@ -1,0 +1,5 @@
+func_name: CServerSideClientBase_SetConVarUserInfo
+func_va: '0x1800c3070'
+func_rva: '0xc3070'
+func_size: '0xb5'
+func_sig: 48 85 D2 0F 84 ?? ?? ?? ?? 48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 49 8B D8

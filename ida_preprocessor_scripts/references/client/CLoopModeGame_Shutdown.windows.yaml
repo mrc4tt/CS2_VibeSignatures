@@ -1,0 +1,97 @@
+func_name: CLoopModeGame_Shutdown
+func_va: '0x180a0dbe0'
+disasm_code: |-
+  .text:0000000180A0DBE0                 push    rbx
+  .text:0000000180A0DBE2                 sub     rsp, 20h
+  .text:0000000180A0DBE6                 cmp     byte ptr [rcx+6Eh], 0
+  .text:0000000180A0DBEA                 mov     rbx, rcx
+  .text:0000000180A0DBED                 jnz     short loc_180A0DC1A
+  .text:0000000180A0DBEF                 mov     rax, cs:off_1820AF5F0
+  .text:0000000180A0DBF6                 mov     ecx, 1
+  .text:0000000180A0DBFB                 movss   xmm1, dword ptr [rax+30h]
+  .text:0000000180A0DC00                 call    sub_180AD4290
+  .text:0000000180A0DC05                 mov     rcx, cs:qword_1825EAA00
+  .text:0000000180A0DC0C                 mov     edx, 36h ; '6'
+  .text:0000000180A0DC11                 mov     rax, [rcx]
+  .text:0000000180A0DC14                 call    qword ptr [rax+0D8h]
+  .text:0000000180A0DC1A                 cmp     byte ptr [rbx+6Ch], 0
+  .text:0000000180A0DC1E                 jnz     loc_180A0DCA6
+  .text:0000000180A0DC24                 mov     rcx, cs:qword_1822CC468
+  .text:0000000180A0DC2B                 test    rcx, rcx
+  .text:0000000180A0DC2E                 jz      short loc_180A0DC35
+  .text:0000000180A0DC30                 call    sub_1803D7170
+  .text:0000000180A0DC35                 cmp     dword ptr [rbx+468h], 3
+  .text:0000000180A0DC3C                 jl      short loc_180A0DC43
+  .text:0000000180A0DC3E                 call    sub_18036A590
+  .text:0000000180A0DC43                 mov     rcx, cs:qword_1823AD958
+  .text:0000000180A0DC4A                 xor     edx, edx
+  .text:0000000180A0DC4C                 mov     rax, [rcx]
+  .text:0000000180A0DC4F                 call    qword ptr [rax+60h]
+  .text:0000000180A0DC52                 cmp     dword ptr [rbx+468h], 2
+  .text:0000000180A0DC59                 jl      short loc_180A0DC60
+  .text:0000000180A0DC5B                 call    sub_18036A680
+  .text:0000000180A0DC60                 mov     rcx, [rbx+60h]
+  .text:0000000180A0DC64                 test    rcx, rcx
+  .text:0000000180A0DC67                 jz      short loc_180A0DC7E
+  .text:0000000180A0DC69                 mov     rax, [rcx]
+  .text:0000000180A0DC6C                 lea     rdx, aCloopmodegameS_1; "--CLoopModeGame::SetWorldSession"
+  .text:0000000180A0DC73                 call    qword ptr [rax+8]
+  .text:0000000180A0DC76                 mov     qword ptr [rbx+60h], 0
+  .text:0000000180A0DC7E                 cmp     dword ptr [rbx+468h], 1
+  .text:0000000180A0DC85                 jl      short loc_180A0DC8C
+  .text:0000000180A0DC87                 call    sub_180369DA0
+  .text:0000000180A0DC8C                 xor     edx, edx
+  .text:0000000180A0DC8E                 mov     rcx, rbx
+  .text:0000000180A0DC91                 call    sub_180A11C30
+  .text:0000000180A0DC96                 mov     rcx, cs:qword_1823AE920
+  .text:0000000180A0DC9D                 mov     rax, [rcx]
+  .text:0000000180A0DCA0                 call    qword ptr [rax+0B8h]
+  .text:0000000180A0DCA6                 mov     rcx, [rbx+8]
+  .text:0000000180A0DCAA                 test    rcx, rcx
+  .text:0000000180A0DCAD                 jz      short loc_180A0DCBD
+  .text:0000000180A0DCAF                 mov     rax, [rcx]
+  .text:0000000180A0DCB2                 call    qword ptr [rax+10h]
+  .text:0000000180A0DCB5                 mov     qword ptr [rbx+8], 0
+  .text:0000000180A0DCBD                 add     rsp, 20h
+  .text:0000000180A0DCC1                 pop     rbx
+  .text:0000000180A0DCC2                 retn
+procedure: |-
+  __int64 __fastcall sub_180A0DBE0(__int64 a1)
+  {
+    __int64 result; // rax
+    __int64 v3; // rcx
+    __int64 v4; // rcx
+
+    if ( !*(_BYTE *)(a1 + 110) )
+    {
+      sub_180AD4290(1);
+      result = (*(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)qword_1825EAA00 + 216LL))(qword_1825EAA00, 54);
+    }
+    if ( !*(_BYTE *)(a1 + 108) )
+    {
+      if ( qword_1822CC468 )
+        sub_1803D7170();
+      if ( *(int *)(a1 + 1128) >= 3 )
+        sub_18036A590();
+      (*(void (__fastcall **)(__int64, _QWORD))(*(_QWORD *)qword_1823AD958 + 96LL))(qword_1823AD958, 0);
+      if ( *(int *)(a1 + 1128) >= 2 )
+        sub_18036A680();
+      v3 = *(_QWORD *)(a1 + 96);
+      if ( v3 )
+      {
+        (*(void (__fastcall **)(__int64, const char *))(*(_QWORD *)v3 + 8LL))(v3, "--CLoopModeGame::SetWorldSession");
+        *(_QWORD *)(a1 + 96) = 0;
+      }
+      if ( *(int *)(a1 + 1128) >= 1 )
+        sub_180369DA0();
+      sub_180A11C30(a1, 0);
+      result = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)qword_1823AE920 + 184LL))(qword_1823AE920);
+    }
+    v4 = *(_QWORD *)(a1 + 8);
+    if ( v4 )
+    {
+      result = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)v4 + 16LL))(v4);
+      *(_QWORD *)(a1 + 8) = 0;
+    }
+    return result;
+  }

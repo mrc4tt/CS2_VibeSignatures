@@ -1,0 +1,482 @@
+func_name: CInputService_IsClientOnlyCommandAllowed
+func_va: '0x1801c3ab0'
+disasm_code: |-
+  .text:00000001801C3AB0                 ; CInputService::ProcessConVar. On Windows this build fully inlines CInputService::IsClientOnlyCommandAllowed (no standalone func exists; Linux keeps it out-of-line at 0x586cb0). The inlined copy at 0x1801c3d24 (g_pNetworkServerService->IsServerRunning+0xE8 ? +0xC8 : g_pNetworkClientService->IsPutInServer+0x108, inverted) gates the FCVAR_CHEAT path. Artifact CInputService_IsClientOnlyCommandAllowed.windows.yaml therefore points at this host function per the repo's ProcessConVar-decompiles mapping.
+  .text:00000001801C3AB0                 mov     [rsp-8+arg_0], rbx; CInputService::ProcessConVar. On Windows this build fully inlines CInputService::IsClientOnlyCommandAllowed (no standalone func exists; Linux keeps it out-of-line at 0x586cb0). The inlined copy at 0x1801c3d24 (g_pNetworkServerService->IsServerRunning+0xE8 ? +0xC8 : g_pNetworkClientService->IsPutInServer+0x108, inverted) gates the FCVAR_CHEAT path. Artifact CInputService_IsClientOnlyCommandAllowed.windows.yaml therefore points at this host function per the repo's ProcessConVar-decompiles mapping.
+  .text:00000001801C3AB5                 mov     [rsp-8+arg_8], rsi
+  .text:00000001801C3ABA                 mov     [rsp-8+arg_10], rdi
+  .text:00000001801C3ABF                 push    rbp
+  .text:00000001801C3AC0                 push    r12
+  .text:00000001801C3AC2                 push    r13
+  .text:00000001801C3AC4                 push    r14
+  .text:00000001801C3AC6                 push    r15
+  .text:00000001801C3AC8                 lea     rbp, [rsp-0CC0h]
+  .text:00000001801C3AD0                 sub     rsp, 0DC0h
+  .text:00000001801C3AD7                 mov     r15, [rbp+0CE0h+arg_20]
+  .text:00000001801C3ADE                 lea     rdi, unk_180528B3F
+  .text:00000001801C3AE5                 mov     r13d, edx
+  .text:00000001801C3AE8                 mov     rsi, r9
+  .text:00000001801C3AEB                 xor     edx, edx
+  .text:00000001801C3AED                 mov     ebx, r8d
+  .text:00000001801C3AF0                 cmp     cs:dword_18060F4B0, 5
+  .text:00000001801C3AF7                 mov     r12, rcx
+  .text:00000001801C3AFA                 jbe     loc_1801C3BE1
+  .text:00000001801C3B00                 cmp     [r15+438h], edx
+  .text:00000001801C3B07                 jz      short loc_1801C3B0F
+  .text:00000001801C3B09                 mov     rcx, [r15+10h]
+  .text:00000001801C3B0D                 jmp     short loc_1801C3B12
+  .text:00000001801C3B0F                 mov     rcx, rdi
+  .text:00000001801C3B12                 mov     [rbp+0CE0h+var_D58], 7
+  .text:00000001801C3B1A                 lea     rax, aConvar; "ConVar"
+  .text:00000001801C3B21                 mov     [rbp+0CE0h+var_D60], rax
+  .text:00000001801C3B25                 test    rcx, rcx
+  .text:00000001801C3B28                 jz      short loc_1801C3B3D
+  .text:00000001801C3B2A                 mov     rax, 0FFFFFFFFFFFFFFFFh
+  .text:00000001801C3B31                 inc     rax
+  .text:00000001801C3B34                 cmp     [rcx+rax], dl
+  .text:00000001801C3B37                 jnz     short loc_1801C3B31
+  .text:00000001801C3B39                 inc     eax
+  .text:00000001801C3B3B                 jmp     short loc_1801C3B45
+  .text:00000001801C3B3D                 mov     rcx, rdi
+  .text:00000001801C3B40                 mov     eax, 1
+  .text:00000001801C3B45                 mov     [rsp+0DE0h+var_D68], eax
+  .text:00000001801C3B49                 xor     r9d, r9d
+  .text:00000001801C3B4C                 movzx   eax, cs:word_1805B3F73
+  .text:00000001801C3B53                 xor     r8d, r8d
+  .text:00000001801C3B56                 mov     dword ptr [rsp+0DE0h+var_DB0+4], eax
+  .text:00000001801C3B5A                 mov     rax, cs:off_18060F4B8
+  .text:00000001801C3B61                 mov     [rsp+0DE0h+var_D90], rax
+  .text:00000001801C3B66                 mov     [rsp+0DE0h+var_D70], rcx
+  .text:00000001801C3B6B                 lea     rcx, unk_1805B3DB0
+  .text:00000001801C3B72                 mov     [rsp+0DE0h+var_D64], edx
+  .text:00000001801C3B76                 mov     [rsp+0DE0h+var_DA8], rdx
+  .text:00000001801C3B7B                 lea     rdx, [rsp+0DE0h+var_DB0]
+  .text:00000001801C3B80                 mov     dword ptr [rsp+0DE0h+var_DB0], 0B000000h
+  .text:00000001801C3B88                 movzx   eax, word ptr [rax]
+  .text:00000001801C3B8B                 mov     [rsp+0DE0h+var_D88], eax
+  .text:00000001801C3B8F                 lea     rax, unk_1805B3F7D
+  .text:00000001801C3B96                 mov     [rsp+0DE0h+var_D80], rax
+  .text:00000001801C3B9B                 lea     rax, unk_1805B45AB
+  .text:00000001801C3BA2                 sub     eax, ecx
+  .text:00000001801C3BA4                 mov     [rsp+0DE0h+var_D84], 2
+  .text:00000001801C3BAC                 mov     rcx, cs:qword_18060F4D0
+  .text:00000001801C3BB3                 mov     [rsp+0DE0h+var_D78], 1Fh
+  .text:00000001801C3BBB                 mov     [rsp+0DE0h+var_D74], 1
+  .text:00000001801C3BC3                 mov     [rbp+0CE0h+arg_18], eax
+  .text:00000001801C3BC9                 lea     rax, [rsp+0DE0h+var_D90]
+  .text:00000001801C3BCE                 mov     [rsp+0DE0h+var_DB8], rax
+  .text:00000001801C3BD3                 mov     [rsp+0DE0h+var_DC0], 4
+  .text:00000001801C3BDB                 call    cs:Plat_EventWriteTransfer
+  .text:00000001801C3BE1                 mov     rax, [rsi+8]
+  .text:00000001801C3BE5                 test    rax, rax
+  .text:00000001801C3BE8                 jz      loc_1801C3EF3
+  .text:00000001801C3BEE                 mov     eax, [rax+30h]
+  .text:00000001801C3BF1                 bt      rax, 0Ah
+  .text:00000001801C3BF6                 jb      loc_1801C3EF3
+  .text:00000001801C3BFC                 lea     rax, ??_7CPipedCommandLogRedirector@@6B@; const CPipedCommandLogRedirector::`vftable'
+  .text:00000001801C3C03                 mov     [rbp+0CE0h+var_D48], r12
+  .text:00000001801C3C07                 lea     rcx, [rbp+0CE0h+var_D30]
+  .text:00000001801C3C0B                 mov     [rbp+0CE0h+var_D50], rax
+  .text:00000001801C3C0F                 mov     [rbp+0CE0h+var_D40], r13d
+  .text:00000001801C3C13                 mov     [rbp+0CE0h+var_D3C], ebx
+  .text:00000001801C3C16                 mov     [rbp+0CE0h+var_D38], r15
+  .text:00000001801C3C1A                 call    sub_1800441A0
+  .text:00000001801C3C1F                 lea     rcx, [rbp+0CE0h+var_6C8]
+  .text:00000001801C3C26                 call    sub_1800441A0
+  .text:00000001801C3C2B                 xor     r13d, r13d
+  .text:00000001801C3C2E                 mov     [rbp+0CE0h+var_58], 0FFFFh
+  .text:00000001801C3C39                 mov     edx, 0FFFFFFFFh
+  .text:00000001801C3C3E                 mov     [rbp+0CE0h+var_60], r13
+  .text:00000001801C3C45                 mov     r8d, 0FFFFFFFFh
+  .text:00000001801C3C4B                 lea     rcx, [rbp+0CE0h+var_50]
+  .text:00000001801C3C52                 call    sub_1803FEB90
+  .text:00000001801C3C57                 mov     r14, [rbp+0CE0h+var_D38]
+  .text:00000001801C3C5B                 mov     [rbp+0CE0h+var_38], r13
+  .text:00000001801C3C62                 mov     [rbp+0CE0h+var_30], r13
+  .text:00000001801C3C69                 mov     [rbp+0CE0h+var_40], r13d
+  .text:00000001801C3C70                 mov     [rbp+0CE0h+var_28], r13b
+  .text:00000001801C3C77                 cmp     dword ptr [r14+438h], 1
+  .text:00000001801C3C7F                 jnz     loc_1801C3D06
+  .text:00000001801C3C85                 lea     r8, [rsp+0DE0h+var_DB0]
+  .text:00000001801C3C8A                 mov     dword ptr [rsp+0DE0h+var_DB0+4], 0C0000008h
+  .text:00000001801C3C92                 mov     edx, 0FFFFFFFFh
+  .text:00000001801C3C97                 mov     dword ptr [rsp+0DE0h+var_DB0], r13d
+  .text:00000001801C3C9C                 mov     rcx, rsi
+  .text:00000001801C3C9F                 mov     [rsp+0DE0h+var_DA8], r13
+  .text:00000001801C3CA4                 call    sub_1803FF330
+  .text:00000001801C3CA9                 mov     eax, dword ptr [rsp+0DE0h+var_DB0+4]
+  .text:00000001801C3CAD                 bt      eax, 1Eh
+  .text:00000001801C3CB1                 jnb     short loc_1801C3CBA
+  .text:00000001801C3CB3                 lea     r8, [rsp+0DE0h+var_DA8]
+  .text:00000001801C3CB8                 jmp     short loc_1801C3CC8
+  .text:00000001801C3CBA                 test    eax, 3FFFFFFFh
+  .text:00000001801C3CBF                 mov     r8, rdi
+  .text:00000001801C3CC2                 cmova   r8, [rsp+0DE0h+var_DA8]
+  .text:00000001801C3CC8                 cmp     [r14+438h], r13d
+  .text:00000001801C3CCF                 jle     short loc_1801C3CDB
+  .text:00000001801C3CD1                 mov     rax, [r14+440h]
+  .text:00000001801C3CD8                 mov     rdi, [rax]
+  .text:00000001801C3CDB                 mov     rdx, rdi
+  .text:00000001801C3CDE                 lea     rcx, aSS_9; "%s = %s\n"
+  .text:00000001801C3CE5                 call    cs:?ConMsg@@YAXPEBDZZ; ConMsg(char const *,...)
+  .text:00000001801C3CEB                 xor     edx, edx
+  .text:00000001801C3CED                 lea     rcx, [rsp+0DE0h+var_DB0]
+  .text:00000001801C3CF2                 call    cs:?Purge@CBufferString@@QEAAXH@Z; CBufferString::Purge(int)
+  .text:00000001801C3CF8                 lea     rcx, [rbp+0CE0h+var_D50]
+  .text:00000001801C3CFC                 call    sub_1801C3050
+  .text:00000001801C3D01                 jmp     loc_1801C3F3D
+  .text:00000001801C3D06                 mov     rax, [rsi+8]
+  .text:00000001801C3D0A                 mov     ecx, [rax+30h]
+  .text:00000001801C3D0D                 shr     rcx, 0Eh
+  .text:00000001801C3D11                 test    cl, 1
+  .text:00000001801C3D14                 jz      loc_1801C3DCA
+  .text:00000001801C3D1A                 mov     rcx, cs:qword_180688E10
+  .text:00000001801C3D21                 mov     rax, [rcx]
+  .text:00000001801C3D24                 ; INLINED body of CInputService::IsClientOnlyCommandAllowed (this build has no standalone function; Linux counterpart calls clientSvc->IsPutInServer out-of-line). serverSvc->IsServerRunning(0xE8) ? serverSvc->vfunc(0xC8) : clientSvc->IsPutInServer(0x108); result inverted at the FCVAR_CHEAT gate. Same inline also exists in ProcessCommand (0x1801c3757), OnGameOverlayActivated (0x180053d1a), 0x18009d869, 0x1800aba73, 0x18012f409.
+  .text:00000001801C3D24                 call    qword ptr [rax+0E8h]; INLINED body of CInputService::IsClientOnlyCommandAllowed (this build has no standalone function; Linux counterpart calls clientSvc->IsPutInServer out-of-line). serverSvc->IsServerRunning(0xE8) ? serverSvc->vfunc(0xC8) : clientSvc->IsPutInServer(0x108); result inverted at the FCVAR_CHEAT gate. Same inline also exists in ProcessCommand (0x1801c3757), OnGameOverlayActivated (0x180053d1a), 0x18009d869, 0x1800aba73, 0x18012f409.
+  .text:00000001801C3D2A                 test    al, al
+  .text:00000001801C3D2C                 jz      short loc_1801C3D40
+  .text:00000001801C3D2E                 mov     rcx, cs:qword_180688E10
+  .text:00000001801C3D35                 mov     rax, [rcx]
+  .text:00000001801C3D38                 call    qword ptr [rax+0C8h]
+  .text:00000001801C3D3E                 jmp     short loc_1801C3D50
+  .text:00000001801C3D40                 mov     rcx, cs:qword_180688E00
+  .text:00000001801C3D47                 mov     rax, [rcx]
+  .text:00000001801C3D4A                 call    qword ptr [rax+108h]
+  .text:00000001801C3D50                 test    al, al
+  .text:00000001801C3D52                 setz    al
+  .text:00000001801C3D55                 test    al, al
+  .text:00000001801C3D57                 jnz     short loc_1801C3DCA
+  .text:00000001801C3D59                 call    sub_180104830
+  .text:00000001801C3D5E                 test    al, al
+  .text:00000001801C3D60                 jnz     short loc_1801C3DCA
+  .text:00000001801C3D62                 mov     rcx, cs:off_180611750
+  .text:00000001801C3D69                 mov     rax, [rcx]
+  .text:00000001801C3D6C                 call    qword ptr [rax+58h]
+  .text:00000001801C3D6F                 test    al, al
+  .text:00000001801C3D71                 jnz     short loc_1801C3DCA
+  .text:00000001801C3D73                 mov     rcx, cs:LOG_CONSOLE
+  .text:00000001801C3D7A                 mov     edx, 3
+  .text:00000001801C3D7F                 mov     ecx, [rcx]
+  .text:00000001801C3D81                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:00000001801C3D87                 test    al, al
+  .text:00000001801C3D89                 jz      short loc_1801C3DBC
+  .text:00000001801C3D8B                 cmp     [r15+438h], r13d
+  .text:00000001801C3D92                 jle     short loc_1801C3D9E
+  .text:00000001801C3D94                 mov     rax, [r15+440h]
+  .text:00000001801C3D9B                 mov     rdi, [rax]
+  .text:00000001801C3D9E                 mov     rcx, cs:LOG_CONSOLE
+  .text:00000001801C3DA5                 lea     r8, aSvConvarSIsChe; "SV: Convar '%s' is cheat protected, cha"...
+  .text:00000001801C3DAC                 mov     r9, rdi
+  .text:00000001801C3DAF                 mov     edx, 3
+  .text:00000001801C3DB4                 mov     ecx, [rcx]
+  .text:00000001801C3DB6                 call    cs:LoggingSystem_Log
+  .text:00000001801C3DBC                 lea     rcx, [rbp+0CE0h+var_D50]
+  .text:00000001801C3DC0                 call    sub_1801C3050
+  .text:00000001801C3DC5                 jmp     loc_1801C3F3D
+  .text:00000001801C3DCA                 mov     rax, [rsi+8]
+  .text:00000001801C3DCE                 mov     ecx, [rax+30h]
+  .text:00000001801C3DD1                 shr     rcx, 0Dh
+  .text:00000001801C3DD5                 test    cl, 1
+  .text:00000001801C3DD8                 jz      short loc_1801C3E35
+  .text:00000001801C3DDA                 mov     rcx, cs:qword_180688E00
+  .text:00000001801C3DE1                 mov     rax, [rcx]
+  .text:00000001801C3DE4                 call    qword ptr [rax+100h]
+  .text:00000001801C3DEA                 test    al, al
+  .text:00000001801C3DEC                 jz      short loc_1801C3E35
+  .text:00000001801C3DEE                 mov     rcx, cs:qword_180688E10
+  .text:00000001801C3DF5                 mov     rax, [rcx]
+  .text:00000001801C3DF8                 call    qword ptr [rax+0E8h]
+  .text:00000001801C3DFE                 test    al, al
+  .text:00000001801C3E00                 jnz     short loc_1801C3E35
+  .text:00000001801C3E02                 mov     rcx, cs:off_180611750
+  .text:00000001801C3E09                 mov     rax, [rcx]
+  .text:00000001801C3E0C                 call    qword ptr [rax+58h]
+  .text:00000001801C3E0F                 test    al, al
+  .text:00000001801C3E11                 jnz     short loc_1801C3E35
+  .text:00000001801C3E13                 mov     rdx, [rsi+8]
+  .text:00000001801C3E17                 lea     rcx, aCanTChangeRepl; "Can't change replicated ConVar %s from "...
+  .text:00000001801C3E1E                 mov     rdx, [rdx]
+  .text:00000001801C3E21                 call    cs:?ConMsg@@YAXPEBDZZ; ConMsg(char const *,...)
+  .text:00000001801C3E27                 lea     rcx, [rbp+0CE0h+var_D50]
+  .text:00000001801C3E2B                 call    sub_1801C3050
+  .text:00000001801C3E30                 jmp     loc_1801C3F3D
+  .text:00000001801C3E35                 cmp     dword ptr [r14+438h], 2
+  .text:00000001801C3E3D                 jnz     short loc_1801C3E4C
+  .text:00000001801C3E3F                 mov     rax, [r14+440h]
+  .text:00000001801C3E46                 mov     rdi, [rax+8]
+  .text:00000001801C3E4A                 jmp     short loc_1801C3E5A
+  .text:00000001801C3E4C                 movsxd  rax, dword ptr [r14]
+  .text:00000001801C3E4F                 test    eax, eax
+  .text:00000001801C3E51                 jz      short loc_1801C3E5A
+  .text:00000001801C3E53                 mov     rdi, rax
+  .text:00000001801C3E56                 add     rdi, [r14+10h]
+  .text:00000001801C3E5A                 mov     r8, rdi
+  .text:00000001801C3E5D                 mov     edx, ebx
+  .text:00000001801C3E5F                 mov     rcx, rsi
+  .text:00000001801C3E62                 call    sub_180400120
+  .text:00000001801C3E67                 test    al, al
+  .text:00000001801C3E69                 jnz     short loc_1801C3EDF
+  .text:00000001801C3E6B                 mov     rdx, [rsi+8]
+  .text:00000001801C3E6F                 cmp     [r12+3EC4Fh], r13b
+  .text:00000001801C3E77                 jz      short loc_1801C3ECC
+  .text:00000001801C3E79                 lea     rax, aCBuildworkerCs_41; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:00000001801C3E80                 mov     [rsp+0DE0h+var_D98], 125Ch
+  .text:00000001801C3E88                 mov     [rsp+0DE0h+var_DB0], rax
+  .text:00000001801C3E8D                 lea     rcx, [rsp+0DE0h+var_DB0]
+  .text:00000001801C3E92                 lea     rax, aCinputserviceP; "CInputService::ProcessConVar"
+  .text:00000001801C3E99                 mov     [rsp+0DE0h+var_D94], 14h
+  .text:00000001801C3EA1                 mov     [rsp+0DE0h+var_DA8], rax
+  .text:00000001801C3EA6                 mov     r9, rdi
+  .text:00000001801C3EA9                 lea     rax, aFalse; "false"
+  .text:00000001801C3EB0                 mov     [rsp+0DE0h+var_DA0], rax
+  .text:00000001801C3EB5                 mov     r8, [rdx]
+  .text:00000001801C3EB8                 lea     rdx, aFailedToParseI_0; "Failed to parse input ConVar '%s' from "...
+  .text:00000001801C3EBF                 call    cs:?Assert_ConditionFailed@@YA_NAEBU_AssertCompileTimeConstantStruct_t@@PEBDZZ; Assert_ConditionFailed(_AssertCompileTimeConstantStruct_t const &,char const *,...)
+  .text:00000001801C3EC5                 test    al, al
+  .text:00000001801C3EC7                 jz      short loc_1801C3EDF
+  .text:00000001801C3EC9                 ; Trap to Debugger
+  .text:00000001801C3EC9                 int     3; Trap to Debugger
+  .text:00000001801C3ECA                 jmp     short loc_1801C3EDF
+  .text:00000001801C3ECC                 mov     rdx, [rdx]
+  .text:00000001801C3ECF                 lea     rcx, aFailedToParseI_0; "Failed to parse input ConVar '%s' from "...
+  .text:00000001801C3ED6                 mov     r8, rdi
+  .text:00000001801C3ED9                 call    cs:Warning
+  .text:00000001801C3EDF                 lea     rcx, [rbp+0CE0h+var_D50]
+  .text:00000001801C3EE3                 call    sub_1801C3150
+  .text:00000001801C3EE8                 lea     rcx, [rbp+0CE0h+var_D50]
+  .text:00000001801C3EEC                 call    sub_1801C3050
+  .text:00000001801C3EF1                 jmp     short loc_1801C3F3D
+  .text:00000001801C3EF3                 mov     rcx, cs:LOG_CONSOLE
+  .text:00000001801C3EFA                 mov     edx, 3
+  .text:00000001801C3EFF                 mov     ecx, [rcx]
+  .text:00000001801C3F01                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:00000001801C3F07                 test    al, al
+  .text:00000001801C3F09                 jz      short loc_1801C3F3D
+  .text:00000001801C3F0B                 cmp     dword ptr [r15+438h], 0
+  .text:00000001801C3F13                 jle     short loc_1801C3F1F
+  .text:00000001801C3F15                 mov     rax, [r15+440h]
+  .text:00000001801C3F1C                 mov     rdi, [rax]
+  .text:00000001801C3F1F                 mov     rcx, cs:LOG_CONSOLE
+  .text:00000001801C3F26                 lea     r8, aUnknownConvarS; "Unknown convar '%s'!\n"
+  .text:00000001801C3F2D                 mov     r9, rdi
+  .text:00000001801C3F30                 mov     edx, 3
+  .text:00000001801C3F35                 mov     ecx, [rcx]
+  .text:00000001801C3F37                 call    cs:LoggingSystem_Log
+  .text:00000001801C3F3D                 mov     rcx, rsi
+  .text:00000001801C3F40                 call    _guard_check_icall_nop
+  .text:00000001801C3F45                 lea     r11, [rsp+0DE0h+var_20]
+  .text:00000001801C3F4D                 mov     rbx, [r11+30h]
+  .text:00000001801C3F51                 mov     rsi, [r11+38h]
+  .text:00000001801C3F55                 mov     rdi, [r11+40h]
+  .text:00000001801C3F59                 mov     rsp, r11
+  .text:00000001801C3F5C                 pop     r15
+  .text:00000001801C3F5E                 pop     r14
+  .text:00000001801C3F60                 pop     r13
+  .text:00000001801C3F62                 pop     r12
+  .text:00000001801C3F64                 pop     rbp
+  .text:00000001801C3F65                 retn
+procedure: |-
+  // CInputService::ProcessConVar. On Windows this build fully inlines CInputService::IsClientOnlyCommandAllowed (no standalone func exists; Linux keeps it out-of-line at 0x586cb0). The inlined copy at 0x1801c3d24 (g_pNetworkServerService->IsServerRunning+0xE8 ? +0xC8 : g_pNetworkClientService->IsPutInServer+0x108, inverted) gates the FCVAR_CHEAT path. Artifact CInputService_IsClientOnlyCommandAllowed.windows.yaml therefore points at this host function per the repo's ProcessConVar-decompiles mapping.
+  double __fastcall sub_1801C3AB0(__int64 a1, int a2, unsigned int a3, __int64 a4, __int64 a5)
+  {
+    const char *v5; // rdi
+    _BYTE *v10; // rcx
+    __int64 v11; // rax
+    int v12; // eax
+    __int64 v13; // rax
+    int *v14; // r14
+    const char *v15; // r8
+    char v16; // al
+    double result; // xmm0_8
+    __int64 v18; // rax
+    const char **v19; // rdx
+    unsigned __int64 v20; // [rsp+30h] [rbp-D0h] BYREF
+    _QWORD v21[2]; // [rsp+38h] [rbp-C8h] BYREF
+    int v22; // [rsp+48h] [rbp-B8h]
+    int v23; // [rsp+4Ch] [rbp-B4h]
+    void *v24; // [rsp+50h] [rbp-B0h] BYREF
+    int v25; // [rsp+58h] [rbp-A8h]
+    int v26; // [rsp+5Ch] [rbp-A4h]
+    void *v27; // [rsp+60h] [rbp-A0h]
+    int v28; // [rsp+68h] [rbp-98h]
+    int v29; // [rsp+6Ch] [rbp-94h]
+    _BYTE *v30; // [rsp+70h] [rbp-90h]
+    int v31; // [rsp+78h] [rbp-88h]
+    int v32; // [rsp+7Ch] [rbp-84h]
+    const char *v33; // [rsp+80h] [rbp-80h]
+    __int64 v34; // [rsp+88h] [rbp-78h]
+    _QWORD v35[2]; // [rsp+90h] [rbp-70h] BYREF
+    int v36; // [rsp+A0h] [rbp-60h]
+    unsigned int v37; // [rsp+A4h] [rbp-5Ch]
+    __int64 v38; // [rsp+A8h] [rbp-58h]
+    _BYTE v39[1640]; // [rsp+B0h] [rbp-50h] BYREF
+    _BYTE v40[1640]; // [rsp+718h] [rbp+618h] BYREF
+    __int64 v41; // [rsp+D80h] [rbp+C80h]
+    __int64 v42; // [rsp+D88h] [rbp+C88h]
+    _BYTE v43[16]; // [rsp+D90h] [rbp+C90h] BYREF
+    int v44; // [rsp+DA0h] [rbp+CA0h]
+    __int64 v45; // [rsp+DA8h] [rbp+CA8h]
+    __int64 v46; // [rsp+DB0h] [rbp+CB0h]
+    char v47; // [rsp+DB8h] [rbp+CB8h]
+
+    v5 = (const char *)&unk_180528B3F;
+    if ( (unsigned int)dword_18060F4B0 > 5 )
+    {
+      if ( *(_DWORD *)(a5 + 1080) )
+        v10 = *(_BYTE **)(a5 + 16);
+      else
+        v10 = &unk_180528B3F;
+      v34 = 7;
+      v33 = "ConVar";
+      if ( v10 )
+      {
+        v11 = -1;
+        do
+          ++v11;
+        while ( v10[v11] );
+        v12 = v11 + 1;
+      }
+      else
+      {
+        v10 = &unk_180528B3F;
+        v12 = 1;
+      }
+      v31 = v12;
+      v24 = off_18060F4B8;
+      v30 = v10;
+      v32 = 0;
+      v21[0] = 0;
+      v20 = 0x50B000000LL;
+      v25 = *(unsigned __int16 *)off_18060F4B8;
+      v27 = &unk_1805B3F7D;
+      v26 = 2;
+      v28 = 31;
+      v29 = 1;
+      ((void (__fastcall *)(__int64, unsigned __int64 *, _QWORD, _QWORD, int, void **))Plat_EventWriteTransfer)(
+        qword_18060F4D0,
+        &v20,
+        0,
+        0,
+        4,
+        &v24);
+    }
+    v13 = *(_QWORD *)(a4 + 8);
+    if ( !v13 || (*(_DWORD *)(v13 + 48) & 0x400LL) != 0 )
+    {
+      if ( (unsigned __int8)LoggingSystem_IsChannelEnabled(LOG_CONSOLE, 3) )
+      {
+        if ( *(int *)(a5 + 1080) > 0 )
+          v5 = **(const char ***)(a5 + 1088);
+        return LoggingSystem_Log(LOG_CONSOLE, 3, "Unknown convar '%s'!\n", v5);
+      }
+    }
+    else
+    {
+      v35[1] = a1;
+      v35[0] = &CPipedCommandLogRedirector::`vftable';
+      v36 = a2;
+      v37 = a3;
+      v38 = a5;
+      sub_1800441A0(v39);
+      sub_1800441A0(v40);
+      v42 = 0xFFFF;
+      v41 = 0;
+      sub_1803FEB90(v43, 0xFFFFFFFFLL, 0xFFFFFFFFLL);
+      v14 = (int *)v38;
+      v45 = 0;
+      v46 = 0;
+      v44 = 0;
+      v47 = 0;
+      if ( *(_DWORD *)(v38 + 1080) == 1 )
+      {
+        v20 = 0xC000000800000000uLL;
+        v21[0] = 0;
+        sub_1803FF330(a4, 0xFFFFFFFFLL, &v20);
+        if ( (v20 & 0x4000000000000000LL) != 0 )
+        {
+          v15 = (const char *)v21;
+        }
+        else
+        {
+          v15 = (const char *)&unk_180528B3F;
+          if ( (v20 & 0x3FFFFFFF00000000LL) != 0 )
+            v15 = (const char *)v21[0];
+        }
+        if ( v14[270] > 0 )
+          v5 = (const char *)**((_QWORD **)v14 + 136);
+        ConMsg("%s = %s\n", v5, v15);
+        CBufferString::Purge((CBufferString *)&v20, 0);
+        sub_1801C3050(v35);
+      }
+      else if ( (*(_DWORD *)(*(_QWORD *)(a4 + 8) + 48LL) & 0x4000LL) == 0
+             || (!(*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)qword_180688E10 + 232LL))(qword_180688E10)
+               ? (v16 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)qword_180688E00 + 264LL))(qword_180688E00))
+               : (v16 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)qword_180688E10 + 200LL))(qword_180688E10)),
+                 !v16
+              || (unsigned __int8)sub_180104830()
+              || (*(unsigned __int8 (__fastcall **)(__int64 *))(*off_180611750 + 88))(off_180611750)) )// INLINED body of CInputService::IsClientOnlyCommandAllowed (this build has no standalone function; Linux counterpart calls clientSvc->IsPutInServer out-of-line). serverSvc->IsServerRunning(0xE8) ? serverSvc->vfunc(0xC8) : clientSvc->IsPutInServer(0x108); result inverted at the FCVAR_CHEAT gate. Same inline also exists in ProcessCommand (0x1801c3757), OnGameOverlayActivated (0x180053d1a), 0x18009d869, 0x1800aba73, 0x18012f409.
+      {
+        if ( (*(_DWORD *)(*(_QWORD *)(a4 + 8) + 48LL) & 0x2000LL) == 0
+          || !(*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)qword_180688E00 + 256LL))(qword_180688E00)
+          || (*(unsigned __int8 (__fastcall **)(__int64))(*(_QWORD *)qword_180688E10 + 232LL))(qword_180688E10)
+          || (*(unsigned __int8 (__fastcall **)(__int64 *))(*off_180611750 + 88))(off_180611750) )
+        {
+          if ( v14[270] == 2 )
+          {
+            v5 = *(const char **)(*((_QWORD *)v14 + 136) + 8LL);
+          }
+          else
+          {
+            v18 = *v14;
+            if ( (_DWORD)v18 )
+              v5 = (const char *)(*((_QWORD *)v14 + 2) + v18);
+          }
+          if ( !(unsigned __int8)sub_180400120(a4, a3, v5) )
+          {
+            v19 = *(const char ***)(a4 + 8);
+            if ( *(_BYTE *)(a1 + 257103) )
+            {
+              v22 = 4700;
+              v20 = (unsigned __int64)"C:\\buildworker\\csgo_rel_win64\\build\\src\\engine2\\inputservice.cpp";
+              v23 = 20;
+              v21[0] = "CInputService::ProcessConVar";
+              v21[1] = "false";
+              if ( Assert_ConditionFailed(
+                     (const struct _AssertCompileTimeConstantStruct_t *)&v20,
+                     "Failed to parse input ConVar '%s' from string '%s'\n",
+                     *v19,
+                     v5) )
+              {
+                __debugbreak();
+              }
+            }
+            else
+            {
+              Warning("Failed to parse input ConVar '%s' from string '%s'\n", *v19, v5);
+            }
+          }
+          sub_1801C3150(v35);
+          sub_1801C3050(v35);
+        }
+        else
+        {
+          ConMsg(
+            "Can't change replicated ConVar %s from console of client, only server operator can change its value\n",
+            **(const char ***)(a4 + 8));
+          sub_1801C3050(v35);
+        }
+      }
+      else
+      {
+        if ( (unsigned __int8)LoggingSystem_IsChannelEnabled(LOG_CONSOLE, 3) )
+        {
+          if ( *(int *)(a5 + 1080) > 0 )
+            v5 = **(const char ***)(a5 + 1088);
+          result = LoggingSystem_Log(LOG_CONSOLE, 3, "SV: Convar '%s' is cheat protected, change ignored.\n", v5);
+        }
+        sub_1801C3050(v35);
+      }
+    }
+    return result;
+  }

@@ -1,0 +1,265 @@
+func_name: CNetworkGameClient_OnPreserveEntity
+func_va: '0x499020'
+disasm_code: |-
+  .text:0000000000498FCE                 movq    xmm0, cs:off_9AD6F8; "cl_ents_parse.cpp"
+  .text:0000000000498FD6                 lea     rax, aOnpreserveenti; "OnPreserveEntity"
+  .text:0000000000498FDD                 mov     dword ptr [rbp+var_78], 3FCh
+  .text:0000000000498FE4                 lea     rdi, [rbp+var_90]
+  .text:0000000000498FEB                 pinsrq  xmm0, rax, 1
+  .text:0000000000498FF2                 lea     rax, aPclass; "pClass"
+  .text:0000000000498FF9                 movaps  [rbp+var_90], xmm0
+  .text:0000000000499000                 mov     [rbp+var_80], rax
+  .text:0000000000499004                 movzx   eax, byte ptr [rbp+var_78+4]
+  .text:0000000000499008                 and     eax, 0FFFFFF80h
+  .text:000000000049900B                 or      eax, 16h
+  .text:000000000049900E                 mov     byte ptr [rbp+var_78+4], al
+  .text:0000000000499011                 call    sub_2C7C10
+  .text:0000000000499020                 push    rbp
+  .text:0000000000499021                 mov     rbp, rsp
+  .text:0000000000499024                 push    r15
+  .text:0000000000499026                 push    r14
+  .text:0000000000499028                 push    r13
+  .text:000000000049902A                 push    r12
+  .text:000000000049902C                 mov     r12, rdi
+  .text:000000000049902F                 push    rbx
+  .text:0000000000499030                 lea     rdi, unk_A30EF0
+  .text:0000000000499037                 mov     rbx, rsi
+  .text:000000000049903A                 mov     esi, 0FFFFFFFFh
+  .text:000000000049903F                 sub     rsp, 0C8h
+  .text:0000000000499046                 call    sub_5E8170
+  .text:000000000049904B                 test    rax, rax
+  .text:000000000049904E                 jz      loc_499128
+  .text:0000000000499054                 movzx   eax, byte ptr [rax]
+  .text:0000000000499057                 test    al, al
+  .text:0000000000499059                 jnz     short loc_499070
+  .text:000000000049905B                 add     rsp, 0C8h
+  .text:0000000000499062                 pop     rbx
+  .text:0000000000499063                 pop     r12
+  .text:0000000000499065                 pop     r13
+  .text:0000000000499067                 pop     r14
+  .text:0000000000499069                 pop     r15
+  .text:000000000049906B                 pop     rbp
+  .text:000000000049906C                 retn
+  .text:0000000000499070                 mov     esi, [rbx+30h]
+  .text:0000000000499073                 xor     eax, eax
+  .text:0000000000499075                 mov     ecx, 0Ch
+  .text:000000000049907A                 lea     rdi, [rbp+var_F0]
+  .text:0000000000499081                 rep stosq
+  .text:0000000000499084                 lea     rdx, [rbp+var_F0]
+  .text:000000000049908B                 mov     ecx, 1
+  .text:0000000000499090                 mov     rdi, r12
+  .text:0000000000499093                 mov     [rbp+var_9C], 0FFFFFFFFFFFFFFFFh
+  .text:000000000049909E                 call    sub_498BB0
+  .text:00000000004990A3                 test    al, al
+  .text:00000000004990A5                 jz      loc_4991F9
+  .text:00000000004990AB                 mov     rax, [rbp+var_F0]
+  .text:00000000004990B2                 test    rax, rax
+  .text:00000000004990B5                 jz      loc_498FCE
+  .text:00000000004990BB                 cmp     byte ptr [rax+33h], 0
+  .text:00000000004990BF                 jnz     short loc_49905B
+  .text:00000000004990C1                 movsxd  r12, dword ptr [rbx+0C0h]
+  .text:00000000004990C8                 mov     r14d, [rbx+30h]
+  .text:00000000004990CC                 cmp     r12d, 3FFFh
+  .text:00000000004990D3                 jg      loc_499265
+  .text:00000000004990D9                 mov     edi, [rbx+0D0h]
+  .text:00000000004990DF                 cmp     r12d, edi
+  .text:00000000004990E2                 jz      short loc_499140
+  .text:00000000004990E4                 mov     rax, [rbx+0C8h]
+  .text:00000000004990EB                 mov     edx, r12d
+  .text:00000000004990EE                 add     edx, 1
+  .text:00000000004990F1                 mov     [rbx+0C0h], edx
+  .text:00000000004990F7                 mov     dword ptr [rax+r12*8], 0FFFFFFFFh
+  .text:00000000004990FF                 mov     rax, [rbx+0C8h]
+  .text:0000000000499106                 lea     rax, [rax+r12*8]
+  .text:000000000049910A                 test    rax, rax
+  .text:000000000049910D                 jz      loc_49905B
+  .text:0000000000499113                 mov     [rax], r14d
+  .text:0000000000499116                 mov     dword ptr [rax+4], 4
+  .text:000000000049911D                 jmp     loc_49905B
+  .text:0000000000499128                 mov     rax, cs:qword_A30EF8
+  .text:000000000049912F                 mov     rax, [rax+8]
+  .text:0000000000499133                 jmp     loc_499054
+  .text:0000000000499140                 mov     esi, [rbx+0D4h]
+  .text:0000000000499146                 cmp     esi, 3FFFFFFFh
+  .text:000000000049914C                 jbe     short loc_49915C
+  .text:000000000049914E                 mov     eax, esi
+  .text:0000000000499150                 and     eax, 0C0000000h
+  .text:0000000000499155                 cmp     eax, 80000000h
+  .text:000000000049915A                 jnz     short loc_4990E4
+  .text:000000000049915C                 lea     r15d, [rdi+1]
+  .text:0000000000499160                 and     esi, 3FFFFFFFh
+  .text:0000000000499166                 mov     ecx, 8
+  .text:000000000049916B                 mov     edx, r15d
+  .text:000000000049916E                 call    sub_2C9950
+  .text:0000000000499173                 mov     r13d, eax
+  .text:0000000000499176                 cmp     r15d, eax
+  .text:0000000000499179                 jg      short loc_4991E0
+  .text:000000000049917B                 movsxd  rcx, dword ptr [rbx+0D0h]
+  .text:0000000000499182                 movsxd  rdx, r13d
+  .text:0000000000499185                 xor     esi, esi
+  .text:0000000000499187                 shl     rdx, 3
+  .text:000000000049918B                 mov     rdi, [rbx+0C8h]
+  .text:0000000000499192                 shl     rcx, 3
+  .text:0000000000499196                 cmp     dword ptr [rbx+0D4h], 3FFFFFFFh
+  .text:00000000004991A0                 setbe   sil
+  .text:00000000004991A4                 call    sub_2C85B0
+  .text:00000000004991A9                 mov     edx, [rbx+0D4h]
+  .text:00000000004991AF                 mov     [rbx+0C8h], rax
+  .text:00000000004991B6                 cmp     edx, 3FFFFFFFh
+  .text:00000000004991BC                 jbe     short loc_4991CA
+  .text:00000000004991BE                 and     edx, 3FFFFFFFh
+  .text:00000000004991C4                 mov     [rbx+0D4h], edx
+  .text:00000000004991CA                 mov     edx, [rbx+0C0h]
+  .text:00000000004991D0                 mov     [rbx+0D0h], r13d
+  .text:00000000004991D7                 jmp     loc_4990EE
+  .text:00000000004991E0                 lea     eax, [r13+r15+0]
+  .text:00000000004991E5                 mov     r13d, eax
+  .text:00000000004991E8                 shr     r13d, 1Fh
+  .text:00000000004991EC                 add     r13d, eax
+  .text:00000000004991EF                 sar     r13d, 1
+  .text:00000000004991F2                 cmp     r15d, r13d
+  .text:00000000004991F5                 jg      short loc_4991E0
+  .text:00000000004991F7                 jmp     short loc_49917B
+  .text:00000000004991F9                 call    sub_2C83E0
+  .text:00000000004991FE                 xor     edx, edx
+  .text:0000000000499200                 xor     edi, edi
+  .text:0000000000499202                 pxor    xmm0, xmm0
+  .text:0000000000499206                 lea     rcx, aOnpreserveenti_0; "onpreserveentity"
+  .text:000000000049920D                 or      eax, 2
+  .text:0000000000499210                 mov     [rbp+var_38], rdx
+  .text:0000000000499214                 xor     edx, edx
+  .text:0000000000499216                 mov     dword ptr [rbp+var_90+8], eax
+  .text:000000000049921C                 lea     rsi, [rbp+var_90]
+  .text:0000000000499223                 xor     eax, eax
+  .text:0000000000499225                 mov     dword ptr [rbp+var_90+0Ch], eax
+  .text:000000000049922B                 movzx   eax, byte ptr [rbp+var_80]
+  .text:000000000049922F                 mov     qword ptr [rbp+var_90], rcx
+  .text:0000000000499236                 movups  [rbp+var_78], xmm0
+  .text:000000000049923A                 movups  [rbp+var_68], xmm0
+  .text:000000000049923E                 and     eax, 0FFFFFF80h
+  .text:0000000000499241                 movups  [rbp+var_58], xmm0
+  .text:0000000000499245                 or      eax, 40h
+  .text:0000000000499248                 movups  [rbp+var_48], xmm0
+  .text:000000000049924C                 mov     byte ptr [rbp+var_80], al
+  .text:000000000049924F                 call    sub_2C7DB0
+  .text:0000000000499254                 mov     esi, [rbx+30h]
+  .text:0000000000499257                 lea     rdi, aOnpreserveenti_1; "OnPreserveEntity: missing client entity"...
+  .text:000000000049925E                 xor     eax, eax
+  .text:0000000000499260                 call    sub_2C9E50
+  .text:0000000000499265                 lea     rdi, aCpostdataupdat; "CPostDataUpdateCallList::AddPostDataUpd"...
+  .text:000000000049926C                 xor     eax, eax
+  .text:000000000049926E                 call    sub_2C9E50
+procedure: |-
+  __int64 __fastcall CNetworkGameClient_OnPreserveEntity(__int64 a1, __int64 a2)
+  {
+    unsigned __int8 *v3; // rax
+    __int64 result; // rax
+    __int64 v5; // rsi
+    __int64 v6; // r12
+    int v7; // r14d
+    __int64 v8; // rdi
+    __int64 v9; // rax
+    int v10; // edx
+    unsigned int v11; // esi
+    int v12; // r15d
+    int v13; // r13d
+    unsigned int v14; // edx
+    unsigned int v15; // eax
+    _QWORD v16[12]; // [rsp+0h] [rbp-F0h] BYREF
+    __m128i inserted; // [rsp+60h] [rbp-90h] BYREF
+    const char *v18; // [rsp+70h] [rbp-80h]
+    __int128 v19; // [rsp+78h] [rbp-78h]
+    __int128 v20; // [rsp+88h] [rbp-68h]
+    __int128 v21; // [rsp+98h] [rbp-58h]
+    __int128 v22; // [rsp+A8h] [rbp-48h]
+    __int64 v23; // [rsp+B8h] [rbp-38h]
+
+    v3 = (unsigned __int8 *)sub_5E8170(&unk_A30EF0, 0xFFFFFFFFLL);
+    if ( !v3 )
+      v3 = *(unsigned __int8 **)(qword_A30EF8 + 8);
+    result = *v3;
+    if ( (_BYTE)result )
+    {
+      v5 = *(unsigned int *)(a2 + 48);
+      memset(v16, 0, sizeof(v16));
+      *(_QWORD *)((char *)&v16[10] + 4) = -1;
+      if ( (unsigned __int8)sub_498BB0(a1, v5, v16, 1) )
+      {
+        result = v16[0];
+        if ( !v16[0] )
+        {
+          LODWORD(v19) = 1020;
+          inserted = _mm_insert_epi64(
+                       _mm_loadl_epi64((const __m128i *)&off_9AD6F8),
+                       (signed __int64)"OnPreserveEntity",
+                       1);
+          v18 = "pClass";
+          BYTE4(v19) = BYTE4(v19) & 0x80 | 0x16;
+          sub_2C7C10(&inserted);
+          JUMPOUT(0x499016);
+        }
+        if ( *(_BYTE *)(v16[0] + 51LL) )
+          return result;
+        v6 = *(int *)(a2 + 192);
+        v7 = *(_DWORD *)(a2 + 48);
+        if ( (int)v6 <= 0x3FFF )
+        {
+          v8 = *(unsigned int *)(a2 + 208);
+          if ( (_DWORD)v6 == (_DWORD)v8
+            && ((v11 = *(_DWORD *)(a2 + 212), v11 <= 0x3FFFFFFF) || (v11 & 0xC0000000) == 0x80000000) )
+          {
+            v12 = v8 + 1;
+            v13 = sub_2C9950(v8, v11 & 0x3FFFFFFF, (unsigned int)(v8 + 1), 8);
+            if ( (int)v8 + 1 > v13 )
+            {
+              do
+                v13 = (v13 + v12) / 2;
+              while ( v12 > v13 );
+            }
+            v9 = sub_2C85B0(
+                   *(_QWORD *)(a2 + 200),
+                   *(_DWORD *)(a2 + 212) <= 0x3FFFFFFFu,
+                   8LL * v13,
+                   8LL * *(int *)(a2 + 208));
+            v14 = *(_DWORD *)(a2 + 212);
+            *(_QWORD *)(a2 + 200) = v9;
+            if ( v14 > 0x3FFFFFFF )
+              *(_DWORD *)(a2 + 212) = v14 & 0x3FFFFFFF;
+            v10 = *(_DWORD *)(a2 + 192);
+            *(_DWORD *)(a2 + 208) = v13;
+          }
+          else
+          {
+            v9 = *(_QWORD *)(a2 + 200);
+            v10 = *(_DWORD *)(a2 + 192);
+          }
+          *(_DWORD *)(a2 + 192) = v10 + 1;
+          *(_DWORD *)(v9 + 8 * v6) = -1;
+          result = *(_QWORD *)(a2 + 200) + 8 * v6;
+          if ( result )
+          {
+            *(_DWORD *)result = v7;
+            *(_DWORD *)(result + 4) = 4;
+          }
+          return result;
+        }
+      }
+      else
+      {
+        v15 = sub_2C83E0();
+        v23 = 0;
+        inserted.m128i_i64[1] = v15 | 2LL;
+        inserted.m128i_i64[0] = (__int64)"onpreserveentity";
+        v19 = 0;
+        v20 = 0;
+        v21 = 0;
+        v22 = 0;
+        LOBYTE(v18) = (unsigned __int8)v18 & 0x80 | 0x40;
+        sub_2C7DB0(0, &inserted, 0);
+        sub_2C9E50("OnPreserveEntity: missing client entity %d.\n", *(_DWORD *)(a2 + 48));
+      }
+      sub_2C9E50("CPostDataUpdateCallList::AddPostDataUpdateCall: overflowed m_PostDataUpdateCalls");
+      JUMPOUT(0x499273);
+    }
+    return result;
+  }
