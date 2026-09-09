@@ -36,7 +36,11 @@ def main():
                     missing.add((sym, mod))
 
     # 2. filter: kun dem uden eksisterende base-task
-    todo = [(s, m) for s, m in sorted(missing) if f"- name: find-{s}\n" not in text]
+    # spring over hvis baade task OG symbol allerede deklareret (upstream erklærer ofte
+    # symbolet via en platform-begraenset task — da skal vi kun evt. tilføje tasken,
+    # aldrig et nyt symbol-entry)
+    todo = [(s, m) for s, m in sorted(missing)
+            if f"- name: find-{s}\n" not in text or f"- name: {s}\n" not in text]
     if not todo:
         print("  ingen taskloese reference-maal — alt dækket")
         return
