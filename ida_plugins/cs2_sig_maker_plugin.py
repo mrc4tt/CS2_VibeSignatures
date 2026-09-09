@@ -8,9 +8,9 @@ Install: place this file in ~/.idapro/plugins/ and restart IDA.
 import os
 import ida_idaapi
 
-_SCRIPTS = ["ida_sig_maker.py", "cs2_vtable_finder.py"]
+_SCRIPTS = ["ida_sig_maker.py", "cs2_vtable_finder.py", "ida_auto_hunt.py"]
 _DIRS = [
-    "/root/CS2_VibeSignatures",
+    "/home/mikkel/CS2_VibeSignatures",
     os.path.dirname(os.path.abspath(__file__)),
 ]
 _NS = {}
