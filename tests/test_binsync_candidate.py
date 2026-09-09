@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import struct
 import subprocess
 import tempfile
@@ -104,6 +105,7 @@ class BinSyncCandidateTests(unittest.TestCase):
         binsync_repo.mkdir()
         binary_md5 = preparation["binary_inventory"]["server"]["windows"]["md5"]
         init_gamebin.initialize_minimal_binsync_repo(binsync_repo, binary_md5, repo_name, "TestUser")
+        self.seed_commit = self._git(binsync_repo, "rev-parse", "binsync/TestUser")
         self._git(binsync_repo, "remote", "add", "origin", f"https://github.com/HLND2T/{repo_name}")
         self._git(binsync_repo, "switch", "binsync/TestUser")
         (binsync_repo / "metadata.toml").write_text('user = "TestUser"\nversion = "5.15.3"\n', encoding="utf-8")
@@ -152,6 +154,40 @@ class BinSyncCandidateTests(unittest.TestCase):
                 actions_artifact_name=f"binsync-candidate-123-1-{preparation['source_sha']}-1",
             )
 
+    def test_build_reads_raw_origin_despite_insteadof_rewrite(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_root = Path(temporary)
+            root = temporary_root / "repo"
+            root.mkdir()
+            _source_sha, preparation, binsync_repo = self._repository(root)
+            destination = temporary_root / "candidate"
+
+            # A system-level insteadOf rewrite (the git cache proxy from issue
+            # #927) makes `git remote get-url` return the proxy URL; the
+            # canonical origin check must read the raw stored URL instead. A
+            # runner may already define its own proxy host, so assert a rewrite
+            # is active without pinning the host that wins the insteadOf match.
+            rewritten = self._git(
+                binsync_repo,
+                "-c",
+                "url.http://127.0.0.1:8080/.insteadOf=https://github.com/",
+                "remote",
+                "get-url",
+                "origin",
+            )
+            self.assertNotEqual("https://github.com/HLND2T/CS2_VibeSignatures_binsync_1_server.dll", rewritten)
+            with patch.dict(
+                os.environ,
+                {
+                    "GIT_CONFIG_COUNT": "1",
+                    "GIT_CONFIG_KEY_0": "url.http://127.0.0.1:8080/.insteadOf",
+                    "GIT_CONFIG_VALUE_0": "https://github.com/",
+                },
+            ):
+                manifest = self._build(root, preparation, destination)
+
+            self.assertEqual(1, len(manifest["repositories"]))
+
     def test_builds_canonical_self_contained_candidate_and_hosted_verifies(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             temporary_root = Path(temporary)
@@ -160,7 +196,12 @@ class BinSyncCandidateTests(unittest.TestCase):
             source_sha, preparation, _binsync_repo = self._repository(root)
             destination = temporary_root / "candidate"
 
-            manifest = self._build(root, preparation, destination)
+            manifest = self._build(
+                root,
+                preparation,
+                destination,
+                remote_heads={"refs/heads/binsync/TestUser": self.seed_commit},
+            )
             verified = candidate.verify_candidate(
                 candidate_root=destination,
                 repo_root=root,
@@ -191,7 +232,10 @@ class BinSyncCandidateTests(unittest.TestCase):
                 ["refs/heads/binsync/TestUser", "refs/heads/binsync/__root__"],
                 sorted(item["ref"] for item in manifest["repositories"][0]["refs"]),
             )
-            self.assertTrue(all(item["relationship"] == "create" for item in manifest["repositories"][0]["refs"]))
+            self.assertEqual(
+                {"refs/heads/binsync/__root__": "create", "refs/heads/binsync/TestUser": "fast-forward"},
+                {item["ref"]: item["relationship"] for item in manifest["repositories"][0]["refs"]},
+            )
             user_ref = next(item for item in manifest["repositories"][0]["refs"] if item["ref"] != candidate.ROOT_REF)
             self.assertEqual(1, len(user_ref["new_commits"]))
             projection = manifest["source_projection"]
