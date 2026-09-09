@@ -1,0 +1,4 @@
+func_name: CCSNavArea_IsValidNavMesh
+func_va: '0x180d3de20'
+func_rva: '0xd3de20'
+func_sig: 48 83 3D ? ? ? ? ? 0F 95 C0 C3 CC CC CC CC C2

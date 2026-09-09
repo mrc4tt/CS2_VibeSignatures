@@ -2,6 +2,7 @@ func_name: IGameSystem_OnServerPreBeginAsyncPostTickWork
 func_va: '0x18015aac0'
 func_rva: '0x15aac0'
 func_size: '0x3'
+func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 33 C0 C3 CC CC CC CC CC
 vtable_name: IGameSystem
 vfunc_offset: '0x148'
 vfunc_index: 41

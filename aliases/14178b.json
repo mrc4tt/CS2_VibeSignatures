@@ -1,0 +1,25 @@
+{
+ "_description": "Canonical alias map for 14178b: plugin gamedata key -> CS2_VibeSignatures symbol. Auto-detected entries from detect_aliases.py + curated renames. Trackers should read renames from this file instead of local maps. Regenerate per gamever.",
+ "curated": {
+  "GameEntitySystem": "CGameResourceService_m_pEntitySystem",
+  "CheckTransmitPlayerSlot": "CCheckTransmitInfo_m_nPlayerSlot",
+  "CTakeDamageInfo_HitGroup": "CTakeDamageInfo_HitGroupInfo",
+  "ISource2GameEntities::CheckTransmit": "CSource2GameEntities_CheckTransmit",
+  "SetStateChanged": "CEntityInstance_NetworkStateChanged",
+  "CheckTransmit": "CSource2GameEntities_CheckTransmit",
+  "CCSPlayerPawnBase_PostThink": "CCSPlayerPawn_PostThink",
+  "CCSPlayerController_HandleCommandJoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
+  "CCSPlayerController_HandleCommand_JoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
+  "CCSPlayer_WeaponServices::GetSlot": "CCSPlayer_WeaponServices_Weapon_GetSlot",
+  "GameResourceServiceServer::m_pEntitySystem": "CGameResourceService_m_pEntitySystem"
+ },
+ "detected": {
+  "linux": [],
+  "windows": []
+ },
+ "_notes": {
+  "GameEventManager_93_93": "DEAD ENTRY \u2014 no GetOffset(\"GameEventManager\") consumer exists in CounterStrikeSharp src (verified by grep; only CBaseEntity/CCollisionComponent/CheckTransmit/SetStateChanged consume offsets). Event manager is obtained via CGameEventManager::Init signature detour (globals.cpp). Trackers should mark legacy-unused, not hunt an artifact.",
+  "CEntityResourceManifest_AddResource": "linux vfunc_index 0 / windows 2 \u2014 MSVC deleting-dtor pair accounts for the +2 shift. vtables: linux 0x9a0c88 (relocation-walk via Alloc-ctor lea), windows 0x18056f568 (full RTTI chain: type descriptor -> COL 0x1805a85e8 -> vtable).",
+  "vfunc_func_sig_residual": "49 vfunc records carry no func_va (unresolvable offline) + a family of near-identical thunk overloads (e.g. OnTakeDamage_Dead/Alive) that need wildcard-aware sig generation \u2014 future IDA work."
+ }
+}

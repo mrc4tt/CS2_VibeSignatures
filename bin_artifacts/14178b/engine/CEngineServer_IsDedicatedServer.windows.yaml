@@ -2,6 +2,7 @@ func_name: CEngineServer_IsDedicatedServer
 func_va: '0x18009ff80'
 func_rva: '0x9ff80'
 func_size: '0x5'
+func_sig: E9 2B 5D 37 00 CC CC CC CC CC CC CC CC CC CC CC
 vtable_name: CEngineServer
 vfunc_offset: '0x110'
 vfunc_index: 34

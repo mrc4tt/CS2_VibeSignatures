@@ -2,6 +2,7 @@ func_name: CServerSideClient_SetName
 func_va: '0x520740'
 func_rva: '0x520740'
 func_size: '0xbe'
+func_sig: 55 48 89 E5 41 55 41 54 4C 8D 25 47 C6 D5 FF 53
 vtable_name: CServerSideClient
 vfunc_offset: '0x1f8'
 vfunc_index: 63

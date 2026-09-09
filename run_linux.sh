@@ -116,6 +116,22 @@ else
     echo "==> Baseline bin/${OLD_VER} already hydrated"
 fi
 
+# Agent auto-selection: eksplicit CS2VIBE_AGENT (bashrc/-kald) vinder; ellers
+# auto-detect foerste installerede CLI (claude > opencode > codex).
+if [ -z "${CS2VIBE_AGENT:-}" ]; then
+    for a in claude opencode codex; do
+        if command -v "$a" >/dev/null 2>&1; then
+            export CS2VIBE_AGENT="$a"
+            echo "==> Agent auto-valgt: $a (saet CS2VIBE_AGENT for at tvinge en anden)"
+            break
+        fi
+    done
+fi
+if [ -z "${CS2VIBE_AGENT:-}" ]; then
+    echo "❌ Ingen agent-CLI fundet (claude/opencode/codex) — installer en, eller: export CS2VIBE_AGENT=<navn>"
+    exit 1
+fi
+
 # Analyzer-version guard: en forældet ida_analyze_bin.py (fx efter delvis pull) giver
 # kun kryptiske argparse-fejl - fejl tidligt og tydeligt i stedet.
 grep -q '"-skip_error"' ida_analyze_bin.py 2>/dev/null || {

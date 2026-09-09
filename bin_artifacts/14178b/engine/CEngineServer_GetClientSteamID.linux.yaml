@@ -2,6 +2,7 @@ func_name: CEngineServer_GetClientSteamID
 func_va: '0x516930'
 func_rva: '0x516930'
 func_size: '0x10f'
+func_sig: 48 8D 05 79 33 4C 00 55 48 89 E5 41 54 53 48 63
 vtable_name: CEngineServer
 vfunc_offset: '0x228'
 vfunc_index: 69

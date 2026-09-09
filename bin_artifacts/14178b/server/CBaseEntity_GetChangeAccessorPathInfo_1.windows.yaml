@@ -2,6 +2,7 @@ func_name: CBaseEntity_GetChangeAccessorPathInfo_1
 func_va: '0x180152e90'
 func_rva: '0x152e90'
 func_size: '0x9'
+func_sig: 48 83 C1 38 E9 07 00 00 00 CC CC CC CC CC CC CC
 vtable_name: CBaseEntity
 vfunc_offset: '0x130'
 vfunc_index: 38

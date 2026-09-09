@@ -2,6 +2,7 @@ func_name: IGameSystem_OnSpawnGroupUncache
 func_va: '0x18015cb40'
 func_rva: '0x15cb40'
 func_size: '0x3'
+func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 81
 vtable_name: IGameSystem
 vfunc_offset: '0x70'
 vfunc_index: 14

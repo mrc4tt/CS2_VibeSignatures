@@ -2,6 +2,7 @@ func_name: CNetworkGameServerBase_IsBackgroundMap
 func_va: '0x4f1df0'
 func_rva: '0x4f1df0'
 func_size: '0x8'
+func_sig: 0F B6 87 40 02 00 00 C3 CC CC CC CC CC CC CC CC
 vtable_name: CNetworkGameServerBase
 vfunc_offset: '0xd8'
 vfunc_index: 27

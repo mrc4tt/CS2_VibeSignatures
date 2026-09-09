@@ -2,6 +2,7 @@ func_name: CCSPlayerPawn_OnTakeDamage_Dying
 func_va: '0x18015ab30'
 func_rva: '0x15ab30'
 func_size: '0x3'
+func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 8B 81 D8 03 00 00 C3
 vtable_name: CCSPlayerPawn
 vfunc_offset: '0x7f0'
 vfunc_index: 254

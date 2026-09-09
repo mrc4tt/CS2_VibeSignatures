@@ -2,6 +2,7 @@ func_name: CEngineClient_IsPlayingDemo
 func_va: '0x4e7700'
 func_rva: '0x4e7700'
 func_size: '0x40'
+func_sig: 55 48 89 E5 53 48 83 EC 08 48 8D 1D D0 26 4F 00
 vtable_name: CEngineClient
 vfunc_offset: '0x150'
 vfunc_index: 42
