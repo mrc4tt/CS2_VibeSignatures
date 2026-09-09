@@ -38,4 +38,22 @@ deploy "$OUT_ROOT/weaponpaints/gamedata/weaponpaints.json" \
 deploy "$OUT_ROOT/matchzy/gamedata/matchzy.json" \
        "$HOME/customGIT/matchzy/gamedata/matchzy.json"
 
-echo "==> Done. Commit the updates inside each plugin repo."
+# CounterStrikeSharp fork (deployed by update_css_gamedata.sh, commit here)
+CSS_REPO="$HOME/CounterStrikeSharp"
+if [ -d "$CSS_REPO/.git" ]; then
+    cd "$CSS_REPO"
+    # ignorer .bak-filer
+    echo "*.bak.*" >> .gitignore 2>/dev/null
+    sort -u .gitignore -o .gitignore
+    if git diff --quiet -- configs/ && ! git ls-files --others --exclude-standard | grep -q .; then
+        echo "  = unchanged: $CSS_REPO"
+    else
+        git add configs/ .gitignore
+        git commit -m "gamedata: $GAMEVER (auto-generated from CS2_VibeSignatures)"
+        git push origin main 2>/dev/null || git push origin master 2>/dev/null || echo "  ⚠️ push fejlede — koer manuelt: cd $CSS_REPO && git push"
+        echo "  ✔ deployed: $CSS_REPO → github.com/mrc4tt/CounterStrikeSharp"
+    fi
+    cd - > /dev/null
+fi
+
+echo "==> Done. All plugin repos updated."
