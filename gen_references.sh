@@ -55,17 +55,20 @@ while read -r r; do
   mod="${rel%%/*}"
   name="$(basename "$r" | sed 's/\.\(linux\|windows\)\.yaml//')"
   plat="$(basename "$r" | grep -oP 'linux|windows')"
-  case "$mod" in
-    engine)  bin="bin/$GAMEVER/engine/libengine2.so";;
-    server)  bin="bin/$GAMEVER/server/libserver.so";;
-    client)  bin="bin/$GAMEVER/client/libclient.so";;
-    SDL3)         bin="bin/$GAMEVER/SDL3/libSDL3.so.0";;
-    scenesystem)  bin="bin/$GAMEVER/scenesystem/libscenesystem.so";;
-    networksystem) bin="bin/$GAMEVER/networksystem/libnetworksystem.so";;
-    matchmaking)  bin="bin/$GAMEVER/matchmaking/libmatchmaking.so";;
-    vphysics2)    bin="bin/$GAMEVER/vphysics2/libvphysics2.so";;
-    *)       bin="";;
-  esac
+  # platform-bevidst binary-map (.windows-referencer SKAL eksporteres fra .dll,
+  # linux-referencer fra .so — at blande dem fejler altid paa VA/eksport)
+  declare -A BIN_LINUX=( [engine]=libengine2.so [server]=libserver.so [client]=libclient.so \
+    [SDL3]=libSDL3.so.0 [scenesystem]=libscenesystem.so [networksystem]=libnetworksystem.so \
+    [matchmaking]=libmatchmaking.so [vphysics2]=libvphysics2.so )
+  declare -A BIN_WIN=( [engine]=engine2.dll [server]=server.dll [client]=client.dll \
+    [SDL3]=SDL3.dll [scenesystem]=scenesystem.dll [networksystem]=networksystem.dll \
+    [matchmaking]=matchmaking.dll [vphysics2]=vphysics2.dll )
+  if [ "$plat" = "windows" ]; then
+    bin="bin/$GAMEVER/$mod/${BIN_WIN[$mod]:-}"
+  else
+    bin="bin/$GAMEVER/$mod/${BIN_LINUX[$mod]:-}"
+  fi
+  [ -z "${bin##*/}" ] && bin=""
   if [ -z "$bin" ]; then
     echo "[$(date +%H:%M:%S)] SKIP (ukendt modul): $r" | tee -a "$LOG"; skip=$((skip+1)); continue
   fi
