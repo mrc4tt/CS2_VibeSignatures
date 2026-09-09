@@ -26,9 +26,19 @@ fi
 
 # byg mangler-listen (samme tjek som missing-check kommandoen)
 MISSING=$(grep -h "references/" ida_preprocessor_scripts/find-*-decompiles.py | \
-  grep -oP 'references/\S+?\.yaml' | sort -u | while read -r; do :; done
-  grep -h "references/" ida_preprocessor_scripts/find-*-decompiles.py | \
   grep -oP 'references/\S+?\.yaml' | sort -u | while read r; do
+    # ekspander {module_name}-placeholder via symbolets eksisterende artefakt
+    if [[ "$r" == *'{module_name}'* ]]; then
+      sym="$(basename "$r" | sed 's/\.{platform\}\.yaml$//')"
+      mod="$(find bin/$GAMEVER bin_artifacts/$GAMEVER -maxdepth 2 \
+             -name "${sym}.linux.yaml" -o -name "${sym}.windows.yaml" 2>/dev/null \
+             | head -1 | cut -d/ -f3)"
+      if [ -n "$mod" ]; then
+        r="${r/\{module_name\}/$mod}"
+      else
+        continue
+      fi
+    fi
     for p in linux windows; do
       f="ida_preprocessor_scripts/${r/\{platform\}/$p}"
       [ -f "$f" ] || echo "${r/\{platform\}/$p}"
