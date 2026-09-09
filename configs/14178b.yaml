@@ -69,9 +69,6 @@ modules:
         category: func
       - name: SDL_MouseWarpEmulationChanged
         category: func
-      - name: SDL_PreInitMouse
-        category: func
-        platform: windows
       - name: SDL_QuitMouse
         category: func
         platform: windows
@@ -93,12 +90,6 @@ modules:
         platform: windows
         struct: SDL_Mouse
         member: cursor_visible
-      - name: SDL_MouseWarpEmulationChanged
-        category: func
-        platform: windows
-      - name: SDL_SetRelativeMouseMode
-        category: func
-        platform: windows
       - name: SDL_Mouse_warp_emulation_active
         category: structmember
         platform: windows
@@ -114,9 +105,6 @@ modules:
         platform: windows
         struct: SDL_Mouse
         member: SetRelativeMouseMode
-      - name: SDL_PerformWarpMouseInWindow
-        category: func
-        platform: windows
       - name: SDL_Mouse_focus
         category: structmember
         platform: windows
@@ -2609,20 +2597,6 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
-      - name: CServerSideClientBase_SetConVarUserInfo
-        category: func
-      - name: CNetworkGameClient_CreateMove
-        category: func
-      - name: CNetworkClientService_OnSimpleLoopFrameUpdate
-        category: func
-      - name: CNetworkClientService_OnClientProcessGameInput
-        category: func
-      - name: CLoopTypeBase_LoadDependentServices
-        category: func
-      - name: CInputService_IsClientOnlyCommandAllowed
-        category: func
-      - name: CDemoPlayer_Pause
-        category: func
       - name: CServerSideClient_SetName
         category: vfunc
       - name: CServerSideClient_m_UserIDString
@@ -5476,8 +5450,6 @@ modules:
         category: func
       - name: CLoopModeGame_Shutdown
         category: func
-      - name: CClientInput_CreateMove
-        category: func
       - name: CLoopModeGame_RegisterEventMapInternal
         category: func
         alias:
@@ -5774,9 +5746,6 @@ modules:
         platform: windows
         alias:
           - CSource2Client::FrameStageNotify
-      - name: OnRenderStart
-        category: func
-        platform: windows
       - name: IViewRender_OnRenderStart
         category: vfunc
         platform: windows
@@ -6020,9 +5989,6 @@ modules:
           - CSimulationState::m_nAttachmentCount
       - name: CUserMessage_ExtraUserData_vtable
         category: vtable
-      - name: SendViolationReport
-        category: func
-        platform: windows
       - name: IVEngineClient2_GetNetworkClient
         category: vfunc
         platform: windows
@@ -10112,8 +10078,6 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
-      - name: CUtlVectorEmbeddedNetworkVar_CSPerRoundStats_t_NetworkVar_m_perRoundStats_SetCount
-        category: func
       - name: BotProfile
         category: struct
       - name: BuyState
