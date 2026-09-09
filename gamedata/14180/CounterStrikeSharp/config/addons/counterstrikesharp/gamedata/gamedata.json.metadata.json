@@ -278,9 +278,7 @@
       "covered_lines": [
         330,
         331,
-        332,
-        335,
-        336
+        332
       ],
       "name": "CCSCustomHudLayout_SetHasClassForPlayer",
       "updated": true
@@ -290,7 +288,7 @@
         {
           "after": "40 57 48 83 EC ? 41 0F B6 F8",
           "before": "",
-          "line": 349,
+          "line": 345,
           "path": [
             "CCSCustomHudLayout_SetInputCaptureEnabled",
             "signatures",
@@ -300,7 +298,7 @@
         {
           "after": "3B B7 ? ? ? ? 0F 8D ? ? ? ? 55",
           "before": "3B B7 90 07 00 00 0F 8D ? ? ? ? 55 48 89 E5 41 55 41 54 41 89 D4 53 48 63 DE 48 69 DB A0 01 00 00",
-          "line": 350,
+          "line": 346,
           "path": [
             "CCSCustomHudLayout_SetInputCaptureEnabled",
             "signatures",
@@ -310,9 +308,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        348,
-        349,
-        350
+        344,
+        345,
+        346
       ],
       "name": "CCSCustomHudLayout_SetInputCaptureEnabled",
       "updated": true
@@ -456,7 +454,7 @@
         {
           "after": "4C 89 4C 24 ? 55 53 41 54",
           "before": "",
-          "line": 342,
+          "line": 338,
           "path": [
             "CCSPointScript_OnCustomHudClicked",
             "signatures",
@@ -466,9 +464,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        341,
-        342,
-        343
+        337,
+        338,
+        339
       ],
       "name": "CCSPointScript_OnCustomHudClicked",
       "updated": true
