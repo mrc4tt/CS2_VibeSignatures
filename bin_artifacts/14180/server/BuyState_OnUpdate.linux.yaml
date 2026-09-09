@@ -1,0 +1,5 @@
+func_name: BuyState_OnUpdate
+func_va: '0xca9140'
+func_rva: '0xca9140'
+func_size: '0x1213'
+func_sig: 48 8D 05 ?? ?? ?? ?? 48 8B 00 80 B8 ?? 01 00 00 ??

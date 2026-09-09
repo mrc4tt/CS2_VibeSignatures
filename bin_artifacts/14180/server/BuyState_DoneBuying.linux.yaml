@@ -1,0 +1,5 @@
+struct_name: BuyState
+member_name: m_doneBuying
+offset: '0x18'
+size: 1
+offset_sig: 41 80 7C 24 18 00 74 ?? 4C 8D 25 ?? ?? ?? ??
