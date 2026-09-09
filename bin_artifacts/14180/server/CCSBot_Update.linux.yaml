@@ -1,0 +1,5 @@
+func_name: CCSBot_Update
+func_va: '0xc27930'
+func_rva: '0xc27930'
+func_size: '0x0'
+func_sig: 55 48 8D 05 E0 D9 D6 FF 48 8D 35 81 C5 99 01 48
