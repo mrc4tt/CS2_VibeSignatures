@@ -88,20 +88,28 @@ def sig_to_data_mask(sig):
 
 
 def unique_search(data, mask):
+    """Wildcard pattern scan via Python regex over segment bytes — immune to the
+    bin_search binding quirks that vary across IDA 9 builds (same fix as
+    ida_sig_maker)."""
+    import re as _re
+    rx = _re.compile(b"".join(
+        b"." if m == 0 else _re.escape(bytes([d]))
+        for d, m in zip(data, mask)
+    ), _re.DOTALL)
     hits = []
     for seg_ea in idautils.Segments():
         seg = ida_segment.getseg(seg_ea)
         if not seg or not (seg.perm & ida_segment.SEGPERM_EXEC):
             continue
-        ea = seg.start_ea
-        while ea < seg.end_ea:
-            ea = ida_bytes.bin_search(ea, seg.end_ea, data, mask, len(data), 1)  # 1 = BIN_SEARCH_FORWARD
-            if ea == idc.BADADDR:
-                break
-            hits.append(ea)
+        blob = ida_bytes.get_bytes(seg.start_ea, seg.end_ea - seg.start_ea)
+        if not blob:
+            continue
+        pos = rx.search(blob)
+        while pos:
+            hits.append(seg.start_ea + pos.start())
             if len(hits) > 1:
                 return hits
-            ea += 1
+            pos = rx.search(blob, pos.start() + 1)
     return hits
 
 
