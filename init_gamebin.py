@@ -23,7 +23,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from analysis_config import AnalysisConfigError, resolve_analysis_config  # noqa: E402
-from release_workflow_lib.binary_cache import verify_source_binary_root  # noqa: E402
+from release_workflow_lib.binary_cache import load_source_binary_lock, verify_source_binary_root  # noqa: E402
 from release_workflow_lib.errors import ReleaseWorkflowError  # noqa: E402
 from release_workflow_lib.hashing import (  # noqa: E402
     canonical_json_bytes,
@@ -40,6 +40,15 @@ DOWNLOAD_TIMEOUT = (30, 300)
 COPY_BUFFER_SIZE = 1024 * 1024
 GITHUB_OWNER = "HLND2T"
 BINSYNC_ROOT_BRANCH = "binsync/__root__"
+BINSYNC_USER_TREE_FILES = (
+    "comments.toml",
+    "enums.toml",
+    "global_vars.toml",
+    "patches.toml",
+    "segments.toml",
+    "typedefs.toml",
+)
+BINSYNC_METADATA_VERSION = "5.15.4"
 BINSYNC_SIDECAR_REQUIRED_FIELDS = frozenset({"user", "remote", "repo_path", "expected_md5", "force_user", "auto_clone"})
 BINSYNC_SIDECAR_OPTIONAL_FIELDS = frozenset({"auto_sync_all"})
 BINSYNC_SIDECAR_FIELDS = BINSYNC_SIDECAR_REQUIRED_FIELDS | BINSYNC_SIDECAR_OPTIONAL_FIELDS
@@ -196,12 +205,16 @@ def binsync_user(root: Path) -> str:
     return user
 
 
-def iter_configured_binaries(root: Path, gamever: str, config_path: Path):
+def iter_configured_binaries(root: Path, gamever: str, config_path: Path, *, require_existing: bool = True):
     """Yield ``(module_name, platform, binary_path)`` for every configured binary.
 
     Order is first-seen across modules, then ``windows`` before ``linux`` within
     each module. Duplicate real paths are skipped and cross-platform filename
     collisions are rejected, exactly like :func:`configured_binary_paths`.
+
+    ``require_existing=False`` enumerates from the config alone, so callers that
+    only need the configured names (the BinSync availability probe) work before
+    the binaries have been downloaded.
     """
     document = load_yaml_document(config_path, "analysis config")
     modules = document.get("modules")
@@ -238,7 +251,7 @@ def iter_configured_binaries(root: Path, gamever: str, config_path: Path):
                 binary_path.relative_to(gamever_root)
             except ValueError as exc:
                 raise InitGamebinError(f"configured binary escapes bin/{gamever}: {binary_path}") from exc
-            if not binary_path.is_file():
+            if require_existing and not binary_path.is_file():
                 raise InitGamebinError(f"configured binary is missing after preparation: {binary_path}")
 
             path_key = os.path.normcase(str(binary_path))
@@ -264,9 +277,14 @@ def configured_binary_paths(root: Path, gamever: str, config_path: Path) -> list
     return [binary_path for _module, _platform, binary_path in iter_configured_binaries(root, gamever, config_path)]
 
 
+def binsync_repo_name(gamever: str, binary_name: str) -> str:
+    """Return the canonical per-binary BinSync repository name."""
+    return f"CS2_VibeSignatures_binsync_{gamever}_{binary_name}"
+
+
 def expected_sidecar(binary_path: Path, binary_md5: str, gamever: str, user: str) -> tuple[str, str, Path, dict]:
     """Build the canonical remote, local repo path, and strict sidecar object."""
-    repo_name = f"CS2_VibeSignatures_binsync_{gamever}_{binary_path.name}"
+    repo_name = binsync_repo_name(gamever, binary_path.name)
     remote_url = f"https://github.com/{GITHUB_OWNER}/{repo_name}"
     relative_repo_path = f"{binary_path.name}.bsproj"
     repo_path = binary_path.parent / relative_repo_path
@@ -354,7 +372,19 @@ def validate_local_binsync_repo(repo_path: Path, binary_md5: str, repo_name: str
         raise InitGamebinError(
             f"local BinSync repo binary_hash mismatch for {repo_path}: expected {binary_md5}, got {stored_hash}"
         )
-    origin = git_output(["git", "remote", "get-url", "origin"], repo_path, f"reading origin from {repo_path}")
+    # Read the raw configured URL: `git remote get-url` expands url.*.insteadOf
+    # rewrites (e.g. the git cache proxy from issue #927), so a canonical origin
+    # would no longer compare equal under such a rewrite.
+    origin_result = run_command(
+        ["git", "config", "--get", "remote.origin.url"],
+        repo_path,
+        allowed=(0, 1),
+        capture=True,
+        label=f"reading origin from {repo_path}",
+    )
+    origin = origin_result.stdout.strip()
+    if not origin:
+        raise InitGamebinError(f"local BinSync repo has no origin remote: {repo_path}")
     normalized = normalize_github_remote(origin)
     expected = (GITHUB_OWNER.casefold(), repo_name.casefold())
     if normalized != expected:
@@ -376,11 +406,23 @@ def is_http_404(result) -> bool:
     return result.returncode != 0 and re.search(r"\bHTTP\s+404\b", command_detail(result), re.IGNORECASE) is not None
 
 
-def probe_binsync(root: Path) -> tuple[bool, str]:
+def probe_binsync(
+    root: Path,
+    config_path: Path | None = None,
+    gamever: str | None = None,
+    *,
+    require_remotes: bool = True,
+) -> tuple[bool, str]:
     """Probe whether BinSync initialization can run in this environment.
 
     Returns (True, "") when usable, or (False, reason) when unavailable.
     Never raises and never modifies anything.
+
+    Without a ``gamever`` this only checks the environment (gh, auth, API,
+    organization access). With one it additionally requires every configured
+    per-binary remote repository to exist and be public, so callers can skip
+    BinSync instead of failing later in the preflight. ``require_remotes=False``
+    keeps the environment-only check for callers that may create the remotes.
     """
     if shutil.which("gh") is None:
         return False, "GitHub CLI (gh) is not installed or not on PATH"
@@ -427,6 +469,35 @@ def probe_binsync(root: Path) -> tuple[bool, str]:
         )
     if org.stdout.strip().casefold() != GITHUB_OWNER.casefold():
         return False, (f"authenticated GitHub account does not have access to the {GITHUB_OWNER} organization")
+    if gamever is None or not require_remotes:
+        return True, ""
+    if config_path is None:
+        try:
+            config_path = resolve_analysis_config(gamever, repo_root=root)
+        except AnalysisConfigError as exc:
+            return False, str(exc)
+    missing = []
+    non_public = []
+    try:
+        targets = list(iter_configured_binaries(root, gamever, config_path, require_existing=False))
+    except InitGamebinError as exc:
+        return False, str(exc)
+    for _module, _platform, binary_path in targets:
+        repo_name = binsync_repo_name(gamever, binary_path.name)
+        try:
+            repository = gh_api(root, f"repos/{GITHUB_OWNER}/{repo_name}", allow_404=True)
+        except InitGamebinError as exc:
+            return False, f"cannot query BinSync remote {GITHUB_OWNER}/{repo_name}: {exc}"
+        if repository is None:
+            missing.append(f"{GITHUB_OWNER}/{repo_name}")
+        elif not isinstance(repository, dict):
+            return False, f"GitHub returned invalid repository metadata for {GITHUB_OWNER}/{repo_name}"
+        elif repository.get("private") is not False:
+            non_public.append(f"{GITHUB_OWNER}/{repo_name}")
+    if missing:
+        return False, f"BinSync remote repositories are missing: {', '.join(missing)}"
+    if non_public:
+        return False, f"BinSync remote repositories are not public: {', '.join(non_public)}"
     return True, ""
 
 
@@ -610,7 +681,12 @@ def push_local_binsync_history(repo_path: Path) -> None:
 
 
 def initialize_minimal_binsync_repo(repo_path: Path, binary_md5: str, repo_name: str, user: str) -> None:
-    """Create the same local root and user branches as BinSync Client(init_repo=True)."""
+    """Create the local root and user branches a publishable BinSync repo needs.
+
+    The headless export connects with ``init_repo=False``, so the standard BinSync
+    files must already exist on the user branch; BinSync itself writes them empty
+    when it initializes a repository.
+    """
     run_command(["git", "init"], repo_path, capture=True, label=f"initializing {repo_name}")
     try:
         (repo_path / ".gitignore").write_text(".git/*\n", encoding="utf-8")
@@ -639,9 +715,37 @@ def initialize_minimal_binsync_repo(repo_path: Path, binary_md5: str, repo_name:
         label=f"creating {BINSYNC_ROOT_BRANCH} for {repo_name}",
     )
     run_command(
-        ["git", "branch", f"binsync/{user}"],
+        ["git", "switch", "--create", f"binsync/{user}"],
         repo_path,
         label=f"creating binsync/{user} for {repo_name}",
+    )
+    try:
+        for name in BINSYNC_USER_TREE_FILES:
+            (repo_path / name).write_text("", encoding="utf-8")
+        (repo_path / "metadata.toml").write_text(
+            f'user = "{user}"\nversion = "{BINSYNC_METADATA_VERSION}"\n', encoding="utf-8"
+        )
+    except OSError as exc:
+        raise InitGamebinError(f"unable to write the BinSync user files for {repo_name}: {exc}") from exc
+    run_command(
+        ["git", "add", *BINSYNC_USER_TREE_FILES, "metadata.toml"],
+        repo_path,
+        label=f"staging the BinSync user files for {repo_name}",
+    )
+    run_command(
+        [
+            "git",
+            "-c",
+            f"user.name={user}",
+            "-c",
+            f"user.email={user}@binsync.local",
+            "commit",
+            "-m",
+            "Generic BS Commit",
+        ],
+        repo_path,
+        capture=True,
+        label=f"creating the BinSync user commit for {repo_name}",
     )
 
 
@@ -794,6 +898,81 @@ def prepare_binsync_projects(
         user,
         allow_remote_creation=allow_remote_creation,
     )
+
+
+def ensure_binsync_remotes(
+    root: Path,
+    requested: str,
+    *,
+    user: str | None = None,
+    dry_run: bool = False,
+) -> dict:
+    """Create and initialize missing BinSync remotes from the tracked binary lock.
+
+    Trusted CI provisions a GAMEVER whose Release (and therefore binary tree) does
+    not exist yet; the source binary lock already carries the authoritative
+    per-module md5, so no binary download is required. Already-valid remotes are
+    left untouched.
+    """
+    versions = load_versions(root / "download.yaml")
+    gamever = select_version(requested, versions)
+    try:
+        config_path = resolve_analysis_config(gamever, repo_root=root)
+    except AnalysisConfigError as exc:
+        raise InitGamebinError(str(exc)) from exc
+    try:
+        lock_document = load_source_binary_lock(root, gamever).document
+    except ReleaseWorkflowError as exc:
+        raise InitGamebinError(f"unable to load the source binary lock for {gamever}: {exc}") from exc
+    locked_binaries = lock_document.get("binaries")
+    if not isinstance(locked_binaries, dict):
+        raise InitGamebinError(f"source binary lock for {gamever} has no binaries mapping")
+    user = user or binsync_user(root)
+    summary = {"targets": 0, "verified": 0, "created": 0, "initialized": 0, "planned": 0}
+    planned = []
+    for module_name, platform, binary_path in iter_configured_binaries(
+        root, gamever, config_path, require_existing=False
+    ):
+        summary["targets"] += 1
+        module_entry = locked_binaries.get(module_name)
+        platform_entry = module_entry.get(platform) if isinstance(module_entry, dict) else None
+        binary_md5 = platform_entry.get("md5") if isinstance(platform_entry, dict) else None
+        if not isinstance(binary_md5, str) or not binary_md5:
+            raise InitGamebinError(f"source binary lock for {gamever} has no {platform} md5 for module {module_name}")
+        repo_name, remote_url, repo_path, sidecar_data = expected_sidecar(binary_path, binary_md5, gamever, user)
+        remote_state = inspect_remote(root, repo_name, binary_md5)
+        if remote_state.status == "valid":
+            summary["verified"] += 1
+            continue
+        if dry_run:
+            planned.append(f"{GITHUB_OWNER}/{repo_name} ({remote_state.status})")
+            summary["planned"] += 1
+            continue
+        if remote_state.status == "missing":
+            create_public_remote(root, repo_name)
+            summary["created"] += 1
+        plan = BinSyncPlan(
+            binary_path=binary_path,
+            binary_md5=binary_md5,
+            repo_name=repo_name,
+            remote_url=remote_url,
+            repo_path=repo_path,
+            sidecar_path=Path(f"{binary_path}.binsync.json"),
+            sidecar_data=sidecar_data,
+            sidecar_exists=False,
+            local_repo_exists=False,
+            local_repo_locked=False,
+            remote_state=remote_state,
+        )
+        initialize_minimal_binsync_remote(root, plan, user)
+        set_remote_default_branch(root, repo_name)
+        summary["initialized"] += 1
+        provisioned = inspect_remote(root, repo_name, binary_md5)
+        if provisioned.status != "valid":
+            raise InitGamebinError(
+                f"BinSync remote {GITHUB_OWNER}/{repo_name} is {provisioned.status} after provisioning"
+            )
+    return {"gamever": gamever, "user": user, "summary": summary, "planned": planned}
 
 
 def download_release_asset(url: str, destination: Path) -> bool:
@@ -1068,7 +1247,12 @@ def prepare(
         raise InitGamebinError(f"configured binaries do not match the source binary lock: {exc}") from exc
     binsync = None
     if binsync_mode == "enable":
-        available, reason = probe_binsync(root)
+        available, reason = probe_binsync(
+            root,
+            config_path,
+            gamever,
+            require_remotes=not allow_remote_creation,
+        )
         if not available:
             raise InitGamebinError(f"BinSync initialization is unavailable and was requested: {reason}")
         binsync = prepare_binsync_projects(
@@ -1100,7 +1284,12 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("versions", help="List GAMEVER values from download.yaml")
-    commands.add_parser("check-binsync", help="Probe whether BinSync initialization is available")
+    check_parser = commands.add_parser("check-binsync", help="Probe whether BinSync initialization is available")
+    check_parser.add_argument(
+        "gamever",
+        nargs="?",
+        help="Exact GAMEVER from download.yaml, or latest; also requires every per-module remote to exist",
+    )
     prepare_parser = commands.add_parser("prepare", help="Prepare configured binaries")
     prepare_parser.add_argument("gamever", help="Exact GAMEVER from download.yaml, or latest")
     prepare_parser.add_argument(
@@ -1114,18 +1303,49 @@ def main(argv=None) -> int:
         action="store_true",
         help="Create missing public BinSync repositories in HLND2T (trusted CI only)",
     )
+    ensure_parser = commands.add_parser(
+        "ensure-binsync-remotes",
+        help="Create and initialize missing BinSync remotes from the tracked binary lock",
+    )
+    ensure_parser.add_argument("gamever", help="Exact GAMEVER from download.yaml, or latest")
+    ensure_parser.add_argument(
+        "--user",
+        help="BinSync user for the initialized branches (default: current OS user)",
+    )
+    ensure_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Report missing remotes without creating or initializing them",
+    )
     args = parser.parse_args(argv)
     try:
         root = repository_root()
         if args.command == "versions":
             print_versions(load_versions(root / "download.yaml"))
         elif args.command == "check-binsync":
-            available, reason = probe_binsync(root)
+            gamever = config_path = None
+            if args.gamever is not None:
+                gamever = select_version(args.gamever, load_versions(root / "download.yaml"))
+                config_path = resolve_analysis_config(gamever, repo_root=root)
+            available, reason = probe_binsync(root, config_path, gamever)
             if available:
                 print("BinSync available")
                 return 0
             print(f"BinSync unavailable: {reason}")
             return 1
+        elif args.command == "ensure-binsync-remotes":
+            result = ensure_binsync_remotes(root, args.gamever, user=args.user, dry_run=args.dry_run)
+            summary = result["summary"]
+            print(f"Selected GAMEVER: {result['gamever']}")
+            print(f"BinSync user: {result['user']}")
+            for planned in result["planned"]:
+                print(f"Would provision {planned}")
+            print(
+                "BinSync remotes: "
+                f"{summary['targets']} targets, {summary['verified']} verified, "
+                f"{summary['created']} created, {summary['initialized']} initialized, "
+                f"{summary['planned']} planned"
+            )
         else:
             result = prepare(
                 root,

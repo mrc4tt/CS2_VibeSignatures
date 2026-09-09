@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import contextlib
 import copy
+import io
 import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import binsync_candidate
@@ -14,7 +17,7 @@ from gamesymbol_metadata import generate_metadata
 from gamesymbol_snapshot_lib.codec import canonical_snapshot_bytes
 from gamesymbol_snapshot_lib.config import load_contract
 from gamesymbol_snapshot_lib.operations import build_actual_document
-from release_workflow_lib.hashing import sha256_file
+from release_workflow_lib.hashing import file_inventory, sha256_file
 from tests import test_binsync_candidate as candidate_tests
 from tests.test_gamedata_candidate import GamedataCandidateFixture
 from tests import test_release_artifact_rebuild as rebuild_tests
@@ -181,6 +184,143 @@ class ReleaseBundleTests(unittest.TestCase):
             mutable_sdk["cpp_sdk"] = {"ref": "cs2-1", "sha": manifest["cpp_sdk"]["sha"]}
             with self.assertRaisesRegex(release_bundle.ReleaseBundleError, "immutable source gitlink"):
                 release_bundle.validate_release_manifest(mutable_sdk)
+
+    def test_builds_and_hosted_verifies_tracked_artifact_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_root = Path(temporary)
+            root, preparation, _binsync_root, inputs = self._fixture(temporary_root)
+            binding_path = temporary_root / "tracked-artifact-binding.json"
+            binding_path.write_bytes(
+                rebuild._canonical_json_bytes(rebuild.bind_tracked_artifacts(repo_root=root, preparation=preparation))
+            )
+            bundle_root = temporary_root / "release-bundle"
+            producer_contract = {"files": [], "digest": "sha256:" + "c" * 64}
+
+            with (
+                patch.object(release_bundle, "guard_candidate", return_value=inputs["gamedata_evidence"]),
+                patch.object(release_bundle, "_sdk_inventory", return_value=inputs["sdk_inventory"]),
+                patch.object(release_bundle, "_copy_sdk", side_effect=self._copy_sdk_fixture),
+                patch.object(release_bundle, "_producer_contract", return_value=producer_contract),
+                patch.object(release_bundle, "discover_generator_modules", return_value=[object()]),
+                patch.object(release_bundle, "generator_contract_sha256", return_value="a" * 64),
+                patch.object(
+                    release_bundle,
+                    "validate_output_tree",
+                    return_value=inputs["gamedata_evidence"]["files"],
+                ),
+                patch.object(release_bundle, "gamedata_manifest_sha256", return_value="b" * 64),
+                patch.object(release_bundle, "_verify_gamedata_reproducibility"),
+            ):
+                manifest = release_bundle.build_release_bundle(
+                    repo_root=root,
+                    bundle_root=bundle_root,
+                    repository="HLND2T/CS2_VibeSignatures",
+                    release_version="1",
+                    build_id=preparation["source_sha"],
+                    preparation=Path(preparation["actual_artifact_root"]).parent / "release-rebuild-preparation.json",
+                    rebuild_verification=None,
+                    tracked_binding=binding_path,
+                    snapshot=inputs["snapshot"],
+                    metadata=inputs["metadata"],
+                    gamedata_candidate_root=inputs["gamedata_candidate"],
+                    gamedata_session=temporary_root / "gamedata.session.json",
+                    cpp_validation_log=inputs["cpp_log"],
+                    binsync_candidate_root=inputs["binsync_root"],
+                    ida_runtime_identity="IDA 9.2",
+                    warm_idb_generation="generation-1",
+                    warm_idb_cache_key="cache-key-1",
+                    actions_artifact_name=f"release-bundle-{preparation['source_sha']}-1",
+                    cpp_sdk_ref=release_bundle.CPP_SDK_REF,
+                    cpp_sdk_sha=preparation["sdk_gitlink_sha"],
+                )
+                self.assertEqual("tracked", manifest["full_rebuild"]["binding_mode"])
+                verified = release_bundle.verify_release_bundle(
+                    bundle_root=bundle_root,
+                    repo_root=root,
+                    expected_source_sha=preparation["source_sha"],
+                    expected_game_version="1",
+                    expected_release_version="1",
+                    expected_build_id=preparation["source_sha"],
+                    expected_actions_artifact_name=f"release-bundle-{preparation['source_sha']}-1",
+                    expected_binsync_candidate_digest=inputs["binsync_manifest"]["publication_digest"],
+                    expected_binsync_target_state_digest=binsync_candidate.publication_target_state(
+                        inputs["binsync_manifest"]
+                    )["target_state_digest"],
+                )
+            self.assertEqual(preparation["source_sha"], verified["source_sha"])
+            release_bundle.validate_release_manifest(manifest)
+
+    def test_build_requires_exactly_one_source_binding(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(release_bundle.ReleaseBundleError, "exactly one"):
+                release_bundle.build_release_bundle(
+                    repo_root=temporary,
+                    bundle_root=Path(temporary) / "bundle",
+                    repository="HLND2T/CS2_VibeSignatures",
+                    release_version="1",
+                    build_id="a" * 40,
+                    preparation="prep.json",
+                    rebuild_verification="verify.json",
+                    snapshot="snap.yaml",
+                    metadata="meta.yaml",
+                    gamedata_candidate_root="gd",
+                    gamedata_session="gd.json",
+                    cpp_validation_log="cpp.log",
+                    binsync_candidate_root="bs",
+                    ida_runtime_identity="IDA 9.2",
+                    warm_idb_generation="g",
+                    warm_idb_cache_key="c",
+                    actions_artifact_name=f"release-bundle-{'a' * 40}-1",
+                    cpp_sdk_ref=release_bundle.CPP_SDK_REF,
+                    cpp_sdk_sha="5" * 40,
+                    tracked_binding="binding.json",
+                )
+
+    def test_file_inventory_orders_by_normalized_path_string(self) -> None:
+        # Windows Path ordering is case-insensitive, so it would put
+        # CounterStrikeSharp before CS2FOW and break every string-sorted consumer.
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "CS2FOW").mkdir()
+            (root / "CS2FOW" / "a.txt").write_text("a", encoding="utf-8")
+            (root / "CounterStrikeSharp").mkdir()
+            (root / "CounterStrikeSharp" / "b.txt").write_text("b", encoding="utf-8")
+
+            self.assertEqual(
+                ["CS2FOW/a.txt", "CounterStrikeSharp/b.txt"],
+                [item["path"] for item in file_inventory(root)],
+            )
+
+    def test_gamedata_reproducibility_keeps_stdout_a_json_contract(self) -> None:
+        # The hosted verifier parses this command's stdout as JSON, so generator
+        # chatter must never reach it.
+        manifest = {
+            "game_version": "1",
+            "build_id": "a" * 40,
+            "snapshot": {"path": "gamesymbols/1.yaml"},
+            "gamedata": {"files": [], "generator_contract_sha256": "b" * 64, "manifest_sha256": "c" * 64},
+        }
+        difference = SimpleNamespace(matches=True, added=[], missing=[], modified=[])
+
+        def noisy_build(**_kwargs):
+            print("generator chatter")
+            return {"generator_contract_sha256": "b" * 64, "gamedata_manifest_sha256": "c" * 64}
+
+        with tempfile.TemporaryDirectory() as temporary:
+            bundle_root = Path(temporary)
+            (bundle_root / "gamesymbols").mkdir()
+            (bundle_root / "gamesymbols" / "1.yaml").write_text("", encoding="utf-8")
+            output = io.StringIO()
+            with (
+                patch.object(release_bundle, "build_gamedata_candidate", side_effect=noisy_build),
+                patch.object(release_bundle, "compare_gamedata_inventory", return_value=difference),
+                contextlib.redirect_stdout(output),
+            ):
+                release_bundle._verify_gamedata_reproducibility(
+                    repo_root=bundle_root, bundle_root=bundle_root, manifest=manifest
+                )
+
+            self.assertEqual("", output.getvalue())
 
     def test_verify_rejects_public_asset_tamper(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

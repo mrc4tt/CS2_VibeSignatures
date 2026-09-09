@@ -32,7 +32,11 @@ def _gh(arguments: list[str], *, allowed=(0,)) -> subprocess.CompletedProcess:
         raise ReleasePublishError(f"unable to run GitHub CLI: {exc}") from exc
     if result.returncode not in allowed:
         detail = (result.stderr or result.stdout).strip()
-        raise ReleasePublishError(detail or f"gh {' '.join(arguments)} failed with exit {result.returncode}")
+        raise ReleasePublishError(
+            f"gh {' '.join(arguments)} failed: {detail}"
+            if detail
+            else f"gh {' '.join(arguments)} failed with exit {result.returncode}"
+        )
     return result
 
 
@@ -42,7 +46,9 @@ def _gh_json(arguments: list[str], *, allow_404: bool = False) -> dict | None:
         detail = (result.stderr or result.stdout).strip()
         if allow_404 and re.search(r"\bHTTP\s+404\b", detail, re.IGNORECASE):
             return None
-        raise ReleasePublishError(detail or f"gh {' '.join(arguments)} failed")
+        raise ReleasePublishError(
+            f"gh {' '.join(arguments)} failed: {detail}" if detail else f"gh {' '.join(arguments)} failed"
+        )
     try:
         value = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
@@ -78,7 +84,22 @@ def _create_tag(repository: str, tag: str, source_sha: str) -> None:
 
 
 def _release_state(repository: str, tag: str) -> dict | None:
-    return _gh_json(["api", f"repos/{repository}/releases/tags/{tag}"], allow_404=True)
+    # The by-tag endpoint never returns draft releases, so fall back to the
+    # release list (which does) before concluding a draft is missing.
+    state = _gh_json(["api", f"repos/{repository}/releases/tags/{tag}"], allow_404=True)
+    if state is not None:
+        return state
+    result = _gh(["api", f"repos/{repository}/releases?per_page=100"])
+    try:
+        releases = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise ReleasePublishError("GitHub CLI returned invalid JSON") from exc
+    if not isinstance(releases, list) or any(not isinstance(item, dict) for item in releases):
+        raise ReleasePublishError("GitHub CLI returned a non-list response")
+    matches = [item for item in releases if item.get("tag_name") == tag]
+    if len(matches) > 1:
+        raise ReleasePublishError(f"multiple GitHub Releases declare tag {tag}")
+    return matches[0] if matches else None
 
 
 def _create_draft_release(repository: str, tag: str, source_sha: str, title: str, notes: str) -> None:

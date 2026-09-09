@@ -230,12 +230,60 @@ def force_push_selected(
     )
 
 
+AUTO_NAME_PREFIXES = ("sub_", "loc_", "unk_", "nullsub_", "unknown_", "j_sub_", "j_loc_")
+
+
+def _is_auto_name(name: str) -> bool:
+    return not name or name.startswith(AUTO_NAME_PREFIXES)
+
+
+def apply_manifest_names(manifest: dict) -> int:
+    """Promote bare code and rename IDA-auto symbols to their canonical names.
+
+    The export publishes whatever names the IDB holds, and IDA auto-analysis can
+    leave a valid ``.text`` thunk undefined and name symbols ``sub_``/``loc_``/
+    ``unk_``. Promote the manifest addresses, then rename only auto-named symbols:
+    a name the analysis already set is left untouched.
+    """
+    import ida_funcs
+    import idaapi
+    import idc
+
+    names = manifest.get("names") or {}
+    renamed = 0
+    for kind, is_function in (("functions", True), ("globals", False)):
+        for address in manifest.get(kind, []):
+            if is_function and ida_funcs.get_func(address) is None:
+                try:
+                    idaapi.add_func(address)
+                except Exception:
+                    pass
+            name = names.get(str(address))
+            if not isinstance(name, str) or not name:
+                continue
+            try:
+                current = idc.get_name(address) or ""
+            except Exception:
+                continue
+            if not _is_auto_name(current):
+                continue
+            try:
+                if idc.set_name(address, name, idc.SN_NOWARN):
+                    renamed += 1
+            except Exception:
+                continue
+    if renamed:
+        _log.info("Applied %d canonical symbol name(s) before the BinSync export.", renamed)
+    return renamed
+
+
 def load_manifest(artifacts_file: str) -> dict[str, list]:
-    """Load a push manifest ``{"functions": [...], "globals": [...]}`` (addrs in lifted/RVA form)."""
+    """Load a push manifest (addresses in lifted/RVA form, plus canonical names)."""
     data = json.loads(pathlib.Path(artifacts_file).read_text(encoding="utf-8"))
     return {
         "functions": list(data.get("functions", [])),
         "globals": list(data.get("globals", [])),
+        "names": dict(data.get("names", {})),
     }
 
 
@@ -273,25 +321,35 @@ def _remote_heads(remote: str) -> dict[str, str]:
 
 
 @contextlib.contextmanager
-def local_only_remote(repo: pathlib.Path, remote: str):
-    """Redirect BinSync's mandatory push to a temporary bare sink and prove no remote drift."""
+def local_only_remote(repo: pathlib.Path, remote: str, *, bootstrap_local_init: bool = False):
+    """Redirect BinSync's mandatory push to a temporary bare sink and prove no remote drift.
+
+    ``bootstrap_local_init`` serves new-GAMEVER bootstrap validation, where the
+    canonical remote may not exist yet: the sink is cloned from the local
+    repository itself and the canonical remote is never queried.
+    """
     if not TRUSTED_REMOTE_RE.fullmatch(remote):
         raise SystemExit(f"local-only BinSync export requires a canonical public remote: {remote!r}")
-    original = _git(["remote", "get-url", "origin"], cwd=repo)
+    # Read the raw configured URL: `git remote get-url` expands url.*.insteadOf
+    # rewrites (e.g. the git cache proxy from issue #927), so a canonical origin
+    # would no longer compare equal under such a rewrite.
+    original = _git(["config", "--get", "remote.origin.url"], cwd=repo)
     if original != remote:
         raise SystemExit(f"local BinSync origin differs from the canonical remote: {repo}")
-    before = _remote_heads(remote)
+    sink_source = str(repo) if bootstrap_local_init else remote
+    before = None if bootstrap_local_init else _remote_heads(remote)
     with tempfile.TemporaryDirectory(prefix="binsync-local-sink-") as temporary:
         sink = pathlib.Path(temporary) / "sink.git"
-        _git(["clone", "--bare", "--no-tags", remote, str(sink)])
+        _git(["clone", "--bare", "--no-tags", sink_source, str(sink)])
         _git(["remote", "set-url", "origin", str(sink)], cwd=repo)
         try:
             yield
         finally:
             _git(["remote", "set-url", "origin", remote], cwd=repo)
-            after = _remote_heads(remote)
-            if after != before:
-                raise SystemExit(f"local-only BinSync export changed remote refs for {remote}")
+            if not bootstrap_local_init:
+                after = _remote_heads(remote)
+                if after != before:
+                    raise SystemExit(f"local-only BinSync export changed remote refs for {remote}")
 
 
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -309,6 +367,14 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         "--local-only",
         action="store_true",
         help="Commit through an isolated local bare sink and prove the canonical remote did not change.",
+    )
+    parser.add_argument(
+        "--bootstrap-local-init",
+        action="store_true",
+        help=(
+            "With --local-only --push: build the local sink from the local repository itself instead of the "
+            "canonical remote, which may not exist yet for a new GAMEVER bootstrap."
+        ),
     )
     parser.add_argument("--user", help="Override the BinSync user identity.")
     parser.add_argument("--repo", help="Override the local BinSync repo path (default <binary>.bsproj).")
@@ -367,6 +433,8 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("direct BinSync remote publication is disabled; use the protected bundle publisher")
     if args.local_only and (not args.push or remote is None or not repo.is_dir()):
         raise SystemExit("--local-only requires --push, an existing local repo, and a canonical remote")
+    if args.bootstrap_local_init and not (args.push and args.local_only):
+        raise SystemExit("--bootstrap-local-init requires --push --local-only")
 
     def export() -> None:
         controller = build_controller(binary_path)
@@ -390,6 +458,7 @@ def main(argv: list[str] | None = None) -> int:
                 if not args.push:
                     _log.info("Dry run: nothing committed/pushed. Re-run with --push to apply.")
                 else:
+                    apply_manifest_names(manifest)
                     force_push_selected(controller, func_addrs, global_addrs, use_decompilation=args.use_decompilation)
                     _log.info("Local BinSync commit complete." if args.local_only else "Force push complete.")
             else:
@@ -404,7 +473,7 @@ def main(argv: list[str] | None = None) -> int:
             controller.shutdown()
 
     if args.local_only:
-        with local_only_remote(repo, remote):
+        with local_only_remote(repo, remote, bootstrap_local_init=args.bootstrap_local_init):
             export()
     else:
         export()

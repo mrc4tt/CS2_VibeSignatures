@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import os
 import re
@@ -34,9 +35,11 @@ from gamesymbol_snapshot_lib.config import SnapshotConfigError, load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotMismatchError
 from gamesymbol_snapshot_lib.operations import collect_actual_files, load_snapshot_for_contract
 from release_artifact_rebuild import (
+    TRACKED_BINDING_MODE,
     ReleaseArtifactRebuildError,
     load_release_rebuild_preparation,
     load_release_rebuild_verification,
+    load_tracked_artifact_binding,
 )
 from release_workflow_lib.errors import ReleaseWorkflowError
 from release_workflow_lib.hashing import (
@@ -302,7 +305,7 @@ def build_release_bundle(
     release_version: str,
     build_id: str,
     preparation: str | Path,
-    rebuild_verification: str | Path,
+    rebuild_verification: str | Path | None,
     snapshot: str | Path,
     metadata: str | Path,
     gamedata_candidate_root: str | Path,
@@ -315,6 +318,7 @@ def build_release_bundle(
     actions_artifact_name: str,
     cpp_sdk_ref: str,
     cpp_sdk_sha: str,
+    tracked_binding: str | Path | None = None,
 ) -> dict:
     """Assemble deterministic public payloads and a canonical Release manifest."""
     repo_root = Path(repo_root).resolve()
@@ -325,9 +329,18 @@ def build_release_bundle(
         raise ReleaseBundleError(f"Release bundle root must be fresh: {bundle_root}")
     if not ARTIFACT_NAME_RE.fullmatch(actions_artifact_name):
         raise ReleaseBundleError("Release Actions Artifact name is invalid")
+    if (rebuild_verification is None) == (tracked_binding is None):
+        raise ReleaseBundleError(
+            "Release bundle requires exactly one of rebuild verification or tracked artifact binding"
+        )
     try:
         preparation_document = load_release_rebuild_preparation(preparation)
-        verification = load_release_rebuild_verification(rebuild_verification)
+        if tracked_binding is not None:
+            binding = load_tracked_artifact_binding(tracked_binding)
+            binding_mode = TRACKED_BINDING_MODE
+        else:
+            binding = load_release_rebuild_verification(rebuild_verification)
+            binding_mode = "rebuild"
     except ReleaseArtifactRebuildError as exc:
         raise ReleaseBundleError(str(exc)) from exc
     source_sha = preparation_document["source_sha"]
@@ -337,14 +350,19 @@ def build_release_bundle(
     if str(_git(repo_root, "rev-parse", "HEAD")).lower() != source_sha:
         raise ReleaseBundleError("Release bundle checkout does not match the immutable source SHA")
     if (
-        verification["source_sha"] != source_sha
-        or verification["game_version"] != game_version
-        or verification["preparation_sha256"] != preparation_document["preparation_sha256"]
-        or verification["artifact_inventory_sha256"] != preparation_document["expected_artifact_inventory_sha256"]
+        binding["source_sha"] != source_sha
+        or binding["game_version"] != game_version
+        or binding["preparation_sha256"] != preparation_document["preparation_sha256"]
+        or binding["artifact_inventory_sha256"] != preparation_document["expected_artifact_inventory_sha256"]
     ):
-        raise ReleaseBundleError("Release rebuild verification does not bind the preparation")
+        raise ReleaseBundleError("Release source binding does not bind the preparation")
 
-    actual_artifact_root = Path(preparation_document["actual_artifact_root"])
+    if binding_mode == TRACKED_BINDING_MODE:
+        actual_artifact_root = repo_root / "bin_artifacts"
+        require_tracked = True
+    else:
+        actual_artifact_root = Path(preparation_document["actual_artifact_root"])
+        require_tracked = False
     config_path = repo_root / "configs" / f"{game_version}.yaml"
     try:
         artifact_inventory = build_game_artifact_inventory(
@@ -352,7 +370,7 @@ def build_release_bundle(
             config_path=config_path,
             game_version=game_version,
             artifact_root=actual_artifact_root,
-            require_tracked=False,
+            require_tracked=require_tracked,
         )
         contract = load_contract(
             config_path,
@@ -485,7 +503,7 @@ def build_release_bundle(
         "ida_runtime_identity": ida_runtime_identity,
         "warm_idb_generation": warm_idb_generation,
         "warm_idb_cache_key": warm_idb_cache_key,
-        "full_rebuild": verification,
+        "full_rebuild": binding,
         "snapshot": {
             "path": public_paths[0],
             "sha256": sha256_file(snapshot_target),
@@ -556,15 +574,17 @@ def _verify_gamedata_reproducibility(*, repo_root: Path, bundle_root: Path, mani
         candidate_root = temporary_root / "candidate"
         session_path = temporary_root / "session.json"
         try:
-            evidence = build_gamedata_candidate(
-                gamever=game_version,
-                build_id=manifest["build_id"],
-                snapshot=snapshot,
-                analysis_config=repo_root / "configs" / f"{game_version}.yaml",
-                modules_dir=repo_root / "gamedata-generators",
-                candidate_root=candidate_root,
-                session_path=session_path,
-            )
+            # The generators print diagnostics; keep stdout a pure JSON contract.
+            with contextlib.redirect_stdout(sys.stderr):
+                evidence = build_gamedata_candidate(
+                    gamever=game_version,
+                    build_id=manifest["build_id"],
+                    snapshot=snapshot,
+                    analysis_config=repo_root / "configs" / f"{game_version}.yaml",
+                    modules_dir=repo_root / "gamedata-generators",
+                    candidate_root=candidate_root,
+                    session_path=session_path,
+                )
             difference = compare_gamedata_inventory(
                 session=evidence,
                 expected_files=manifest["gamedata"]["files"],
@@ -655,18 +675,22 @@ def validate_release_manifest(manifest: dict) -> None:
         raise ReleaseBundleError("Release C++ validation evidence digest is invalid")
     full_rebuild = manifest.get("full_rebuild")
     if not isinstance(full_rebuild, dict):
-        raise ReleaseBundleError("Release full-rebuild evidence is invalid")
+        raise ReleaseBundleError("Release source binding evidence is invalid")
+    binding_mode = full_rebuild.get("binding_mode", "rebuild")
+    if binding_mode not in {"rebuild", TRACKED_BINDING_MODE}:
+        raise ReleaseBundleError("Release source binding mode is invalid")
     unsigned_rebuild = dict(full_rebuild)
     verification_digest = unsigned_rebuild.pop("verification_sha256", None)
-    if verification_digest != _release_rebuild_digest("rebuild-verification", unsigned_rebuild):
-        raise ReleaseBundleError("Release full-rebuild evidence digest mismatch")
+    binding_label = "tracked-artifact-binding" if binding_mode == TRACKED_BINDING_MODE else "rebuild-verification"
+    if verification_digest != _release_rebuild_digest(binding_label, unsigned_rebuild):
+        raise ReleaseBundleError("Release source binding evidence digest mismatch")
     if (
         full_rebuild.get("source_sha") != manifest.get("source_sha")
         or full_rebuild.get("game_version") != manifest.get("game_version")
         or full_rebuild.get("artifact_inventory_sha256") != manifest.get("artifact_inventory_sha256")
         or full_rebuild.get("binary_lock_sha256") != manifest.get("binary_lock_sha256")
     ):
-        raise ReleaseBundleError("Release full-rebuild evidence identity mismatch")
+        raise ReleaseBundleError("Release source binding evidence identity mismatch")
     binsync = manifest.get("binsync")
     if not isinstance(binsync, dict) or not DIGEST_RE.fullmatch(str(binsync.get("candidate_publication_digest", ""))):
         raise ReleaseBundleError("Release BinSync candidate identity is invalid")
@@ -946,7 +970,11 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument("--release-version", required=True)
     build.add_argument("--build-id", required=True)
     build.add_argument("--preparation", required=True)
-    build.add_argument("--rebuild-verification", required=True)
+    build.add_argument("--rebuild-verification")
+    build.add_argument(
+        "--tracked-binding",
+        help="Tracked source-owned artifact binding (manual no-rebuild path); exclusive with --rebuild-verification",
+    )
     build.add_argument("--snapshot", required=True)
     build.add_argument("--metadata", required=True)
     build.add_argument("--gamedata-candidate-root", required=True)
@@ -984,6 +1012,7 @@ def main(argv=None) -> int:
                 build_id=args.build_id,
                 preparation=args.preparation,
                 rebuild_verification=args.rebuild_verification,
+                tracked_binding=args.tracked_binding,
                 snapshot=args.snapshot,
                 metadata=args.metadata,
                 gamedata_candidate_root=args.gamedata_candidate_root,
