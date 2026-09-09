@@ -1,0 +1,20 @@
+{
+ "_description": "Canonical alias map for 14178b: plugin gamedata key -> CS2_VibeSignatures symbol. Auto-detected entries from detect_aliases.py + curated renames. Trackers should read renames from this file instead of local maps. Regenerate per gamever.",
+ "curated": {
+  "GameEntitySystem": "CGameResourceService_m_pEntitySystem",
+  "CheckTransmitPlayerSlot": "CCheckTransmitInfo_m_nPlayerSlot",
+  "CTakeDamageInfo_HitGroup": "CTakeDamageInfo_HitGroupInfo",
+  "ISource2GameEntities::CheckTransmit": "CSource2GameEntities_CheckTransmit",
+  "SetStateChanged": "CEntityInstance_NetworkStateChanged",
+  "CheckTransmit": "CSource2GameEntities_CheckTransmit",
+  "CCSPlayerPawnBase_PostThink": "CCSPlayerPawn_PostThink",
+  "CCSPlayerController_HandleCommandJoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
+  "CCSPlayerController_HandleCommand_JoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
+  "CCSPlayer_WeaponServices::GetSlot": "CCSPlayer_WeaponServices_Weapon_GetSlot",
+  "GameResourceServiceServer::m_pEntitySystem": "CGameResourceService_m_pEntitySystem"
+ },
+ "detected": {
+  "linux": [],
+  "windows": []
+ }
+}
