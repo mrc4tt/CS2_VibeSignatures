@@ -79,7 +79,6 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: pages-current-build
-          overwrite: true
           path: pages/dist
       - name: Prepare append-only snapshot archive
         id: snapshot-archive
@@ -170,7 +169,6 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: pages-static-asset-verification
-          overwrite: true
           path: ${{ runner.temp }}/pages-verification
       - id: deployment
         uses: actions/deploy-pages@v5
