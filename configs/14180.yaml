@@ -6853,9 +6853,6 @@ modules:
       - name: find-CBaseIssue_CountPotentialVoters
         expected_output:
           - CBaseIssue_CountPotentialVoters.{platform}.yaml
-      - name: find-CCSPlayerController_HandleCommand_JoinTeam
-        expected_output:
-          - CCSPlayerController_HandleCommand_JoinTeam.{platform}.yaml
       - name: find-MpHumanTeam_ApplyRestriction
         expected_output:
           - MpHumanTeam_ApplyRestriction.{platform}.yaml
