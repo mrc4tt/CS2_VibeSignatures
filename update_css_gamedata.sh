@@ -155,34 +155,4 @@ with open(inst_p, "w", encoding="utf-8") as f:
 print("[update_css] wrote %s" % inst_p)
 PY
 
-# --- 6. merge css-extras into CSSharp install gamedata.json ---
-# css-extras symbols (HUD, community additions) belong in CSSharp's own gamedata.json
-# alongside the upstream symbols — they are consumed by CSSharp plugins directly.
-CSS_EXTRAS="$REPO/gamedata/$GAMEVER/css-extras/gamedata/css-extras.json"
-if [ -f "$CSS_EXTRAS" ] && [ -f "$INSTALL_GD" ]; then
-    log "css-extras merge -> $INSTALL_GD"
-    python3 - "$CSS_EXTRAS" "$INSTALL_GD" <<'PYMERGE'
-import json, sys, shutil, datetime
-extras_p, inst_p = sys.argv[1], sys.argv[2]
-extras = json.load(open(extras_p))
-inst = json.load(open(inst_p))
-added, updated = [], []
-for k, v in extras.items():
-    if k not in inst:
-        inst[k] = v
-        added.append(k)
-    elif inst[k] != v:
-        inst[k] = v
-        updated.append(k)
-if added or updated:
-    shutil.copy2(inst_p, inst_p + ".bak." + datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-    json.dump(inst, open(inst_p, "w"), indent=2)
-    open(inst_p, "a").write("\n")
-    print(f"[update_css] css-extras: added={len(added)}, updated={len(updated)}")
-    for k in added: print(f"  + {k}")
-else:
-    print("[update_css] css-extras: no changes")
-PYMERGE
-fi
-
 log "done."

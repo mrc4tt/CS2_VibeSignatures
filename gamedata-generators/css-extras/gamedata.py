@@ -26,7 +26,7 @@ from gamedata_utils import convert_sig_to_css, normalize_func_name_colons_to_und
 
 # Module metadata
 MODULE_NAME = "css-extras"
-MODULE_ENABLED = True
+MODULE_ENABLED = False  # merged into CounterStrikeSharp template — no separate output needed
 
 # Relative path to the gamedata file within the module output directory
 GAMEDATA_PATH = "gamedata/css-extras.json"

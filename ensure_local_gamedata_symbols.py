@@ -33,7 +33,6 @@ SEEDS = [
     "gamedata-generators/matchzy/gamedata/matchzy.json",
     "gamedata-generators/bot-controller/gamedata/bot-controller.json",
     "gamedata-generators/bot-hider/gamedata/bot-hider.json",
-    "gamedata-generators/css-extras/gamedata/css-extras.json",
 ]
 
 SKILLS_DIR = ".claude/skills"
