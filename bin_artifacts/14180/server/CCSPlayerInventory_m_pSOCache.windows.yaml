@@ -1,0 +1,5 @@
+func_name: CCSPlayerInventory_m_pSOCache
+func_va: '0x180f3589b'
+func_rva: '0xf3589b'
+func_size: '0x0'
+func_sig: 48 89 7B 68 48 85 FF

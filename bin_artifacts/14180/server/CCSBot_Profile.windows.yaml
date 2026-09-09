@@ -1,0 +1,5 @@
+func_name: CCSBot_Profile
+func_va: '0x1802ca53d'
+func_rva: '0x2ca53d'
+func_size: '0x0'
+func_sig: 48 89 47 08 66 C7 87

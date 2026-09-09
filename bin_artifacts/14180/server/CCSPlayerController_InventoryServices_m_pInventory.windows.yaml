@@ -1,0 +1,5 @@
+func_name: CCSPlayerController_InventoryServices_m_pInventory
+func_va: '0x180ae76a0'
+func_rva: '0xae76a0'
+func_size: '0x0'
+func_sig: 48 83 C1 70 E9 D7 EC 44 00

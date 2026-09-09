@@ -1,0 +1,5 @@
+func_name: CEntityIdentity_m_pInstance
+func_va: '0x1812421b2'
+func_rva: '0x12421b2'
+func_size: '0x0'
+func_sig: 48 83 38 00 74 74

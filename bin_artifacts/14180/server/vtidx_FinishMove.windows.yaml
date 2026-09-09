@@ -1,0 +1,5 @@
+func_name: vtidx_FinishMove
+func_va: '0x180a87c10'
+func_rva: '0xa87c10'
+func_size: '0xde'
+func_sig: 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 0F 29 74 24 20 49 8B F0 48

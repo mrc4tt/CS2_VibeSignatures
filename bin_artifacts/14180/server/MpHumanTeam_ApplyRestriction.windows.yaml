@@ -1,0 +1,5 @@
+func_name: MpHumanTeam_ApplyRestriction
+func_va: '0x1809113c0'
+func_rva: '0x9113c0'
+func_size: '0x458'
+func_sig: 40 55 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? BA ?? ?? ?? ??
