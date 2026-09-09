@@ -69,6 +69,11 @@ while read -r r; do
   if [ -z "$bin" ]; then
     echo "[$(date +%H:%M:%S)] SKIP (ukendt modul): $r" | tee -a "$LOG"; skip=$((skip+1)); continue
   fi
+  # platform-artefakt-tjek: uden artefakt kan func_va aldrig resolves (fx
+  # Windows-eksklusive funktioner paa linux eller endnu ikke jagede platforme)
+  if ! ls bin/"$GAMEVER"/"$mod"/"$name"."$plat".yaml bin_artifacts/"$GAMEVER"/"$mod"/"$name"."$plat".yaml >/dev/null 2>&1; then
+    echo "[$(date +%H:%M:%S)] SKIP (ingen $plat-artefakt — jagt platformen foerst): $r" | tee -a "$LOG"; skip=$((skip+1)); continue
+  fi
   echo "[$(date +%H:%M:%S)] START $r (bin: $bin)" | tee -a "$LOG"
   if uv run generate_reference_yaml.py -gamever "$GAMEVER" -module "$mod" -platform "$plat" \
        -func_name "$name" -auto_start_mcp -binary "$bin" >> "$LOG" 2>&1; then
