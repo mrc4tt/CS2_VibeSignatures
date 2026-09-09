@@ -331,10 +331,6 @@
       "windows": "",
       "linux": "49 89 CD 45 89 C6 E8 ? ? ? ? 84 C0"
     },
-    "offsets": {
-      "windows": 0,
-      "linux": -64
-    }
   },
   "CCSPointScript_OnCustomHudClicked": {
     "signatures": {
