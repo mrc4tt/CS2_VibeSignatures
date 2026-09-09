@@ -1,0 +1,587 @@
+func_name: CDemoPlayer_StartPlayback
+func_va: '0x4879e0'
+disasm_code: |-
+  .text:0000000000487942                 movq    xmm0, cs:off_9AD070; "cl_demo.cpp"
+  .text:000000000048794A                 lea     rax, aStartplayback; "StartPlayback"
+  .text:0000000000487951                 mov     [rbp+var_38], 0DDEh
+  .text:0000000000487958                 lea     rdi, [rbp+var_50]
+  .text:000000000048795C                 pinsrq  xmm0, rax, 1
+  .text:0000000000487963                 lea     rax, aPclient; "pClient"
+  .text:000000000048796A                 movaps  [rbp+var_50], xmm0
+  .text:000000000048796E                 mov     [rbp+var_40], rax
+  .text:0000000000487972                 movzx   eax, [rbp+var_34]
+  .text:0000000000487976                 and     eax, 0FFFFFF80h
+  .text:0000000000487979                 or      eax, 14h
+  .text:000000000048797C                 mov     [rbp+var_34], al
+  .text:000000000048797F                 call    sub_2C8170
+  .text:0000000000487984                 test    al, al
+  .text:0000000000487986                 jz      short loc_487989
+  .text:0000000000487988                 ; Trap to Debugger
+  .text:0000000000487988                 int     3; Trap to Debugger
+  .text:0000000000487989                 mov     edi, cs:dword_A30B80
+  .text:000000000048798F                 mov     esi, 3
+  .text:0000000000487994                 call    sub_2C7E60
+  .text:0000000000487999                 mov     rcx, [rbp+var_68]
+  .text:000000000048799D                 mov     r13, [rbp+var_60]
+  .text:00000000004879A1                 mov     r15d, eax
+  .text:00000000004879A4                 test    al, al
+  .text:00000000004879A6                 jz      loc_487AD8
+  .text:00000000004879AC                 test    rcx, rcx
+  .text:00000000004879AF                 jz      short loc_4879D2
+  .text:00000000004879B1                 mov     edi, cs:dword_A30B80
+  .text:00000000004879B7                 mov     esi, 3
+  .text:00000000004879BC                 xor     eax, eax
+  .text:00000000004879BE                 xor     r15d, r15d
+  .text:00000000004879C1                 lea     rdx, aCanTPlayBackNo; "can't play back, no CNetworkGameClient "...
+  .text:00000000004879C8                 call    sub_2C9800
+  .text:00000000004879CD                 jmp     loc_487AD8
+  .text:00000000004879D2                 lea     rcx, unk_27CD96
+  .text:00000000004879D9                 jmp     short loc_4879B1
+  .text:00000000004879E0                 push    rbp
+  .text:00000000004879E1                 mov     rbp, rsp
+  .text:00000000004879E4                 push    r15
+  .text:00000000004879E6                 mov     r15d, edx
+  .text:00000000004879E9                 push    r14
+  .text:00000000004879EB                 lea     r14, [rbp+var_68]
+  .text:00000000004879EF                 push    r13
+  .text:00000000004879F1                 lea     r13, [rbp+var_69]
+  .text:00000000004879F5                 push    r12
+  .text:00000000004879F7                 push    rbx
+  .text:00000000004879F8                 mov     rbx, rdi
+  .text:00000000004879FB                 sub     rsp, 68h
+  .text:00000000004879FF                 mov     [rbp+var_58], rdi
+  .text:0000000000487A03                 mov     qword ptr [rdi+1B0h], 0FFFFFFFFFFFFFFFFh
+  .text:0000000000487A0E                 mov     rdi, r14
+  .text:0000000000487A11                 mov     [rbp+var_7C], edx
+  .text:0000000000487A14                 mov     [rbp+var_78], rcx
+  .text:0000000000487A18                 mov     [rbp+var_69], 1
+  .text:0000000000487A1C                 mov     [rbp+var_60], r13
+  .text:0000000000487A20                 mov     [rbp+var_68], 0
+  .text:0000000000487A28                 call    sub_2C7D90
+  .text:0000000000487A2D                 mov     edi, cs:dword_A30B80
+  .text:0000000000487A33                 mov     esi, 2
+  .text:0000000000487A38                 call    sub_2C7E60
+  .text:0000000000487A3D                 test    al, al
+  .text:0000000000487A3F                 jz      short loc_487A81
+  .text:0000000000487A41                 mov     r8, [rbp+var_68]
+  .text:0000000000487A45                 lea     rax, unk_27CD96
+  .text:0000000000487A4C                 mov     esi, 2
+  .text:0000000000487A51                 mov     edi, cs:dword_A30B80
+  .text:0000000000487A57                 lea     rcx, aDemo_0; "demo"
+  .text:0000000000487A5E                 lea     rdx, aPlayingSFromS; "playing %s from '%s'\n"
+  .text:0000000000487A65                 test    r8, r8
+  .text:0000000000487A68                 cmovz   r8, rax
+  .text:0000000000487A6C                 test    r15b, r15b
+  .text:0000000000487A6F                 lea     rax, aTimedemo; "timedemo"
+  .text:0000000000487A76                 cmovnz  rcx, rax
+  .text:0000000000487A7A                 xor     eax, eax
+  .text:0000000000487A7C                 call    sub_2C9800
+  .text:0000000000487A81                 cmp     [rbp+var_78], 0
+  .text:0000000000487A86                 jz      short loc_487A9C
+  .text:0000000000487A88                 mov     edi, cs:dword_A30B80
+  .text:0000000000487A8E                 call    sub_2C8550
+  .text:0000000000487A93                 cmp     eax, 2
+  .text:0000000000487A96                 jg      loc_487D30
+  .text:0000000000487A9C                 lea     rax, off_9D9DE0
+  .text:0000000000487AA3                 mov     rdi, [rax]
+  .text:0000000000487AA6                 call    sub_414770
+  .text:0000000000487AAB                 mov     r12, rax
+  .text:0000000000487AAE                 test    rax, rax
+  .text:0000000000487AB1                 jz      loc_487942
+  .text:0000000000487AB7                 call    sub_2C9240
+  .text:0000000000487ABC                 mov     edi, 1
+  .text:0000000000487AC1                 call    sub_2C8670
+  .text:0000000000487AC6                 mov     rsi, r14
+  .text:0000000000487AC9                 mov     rdi, rbx
+  .text:0000000000487ACC                 call    sub_478C40
+  .text:0000000000487AD1                 test    al, al
+  .text:0000000000487AD3                 jnz     short loc_487B08
+  .text:0000000000487AD5                 xor     r15d, r15d
+  .text:0000000000487AD8                 cmp     [rbp+var_68], 0
+  .text:0000000000487ADD                 jz      short loc_487AE7
+  .text:0000000000487ADF                 mov     rdi, r14
+  .text:0000000000487AE2                 call    sub_2C8E90
+  .text:0000000000487AE7                 cmp     byte ptr [r13+0], 0
+  .text:0000000000487AEC                 jnz     loc_487CF0
+  .text:0000000000487AF2                 lea     rsp, [rbp-28h]
+  .text:0000000000487AF6                 mov     eax, r15d
+  .text:0000000000487AF9                 pop     rbx
+  .text:0000000000487AFA                 pop     r12
+  .text:0000000000487AFC                 pop     r13
+  .text:0000000000487AFE                 pop     r14
+  .text:0000000000487B00                 pop     r15
+  .text:0000000000487B02                 pop     rbp
+  .text:0000000000487B03                 retn
+  .text:0000000000487B08                 mov     rsi, r14
+  .text:0000000000487B0B                 mov     rdi, rbx
+  .text:0000000000487B0E                 call    sub_4836B0
+  .text:0000000000487B13                 test    al, al
+  .text:0000000000487B15                 jz      short loc_487AD5
+  .text:0000000000487B17                 mov     rdi, rbx
+  .text:0000000000487B1A                 call    sub_479830
+  .text:0000000000487B1F                 mov     r15d, eax
+  .text:0000000000487B22                 test    al, al
+  .text:0000000000487B24                 jz      short loc_487AD5
+  .text:0000000000487B26                 mov     eax, [rbx+0D8h]
+  .text:0000000000487B2C                 cmp     byte ptr [rbp+var_7C], 0
+  .text:0000000000487B30                 mov     [rbx+1B8h], eax
+  .text:0000000000487B36                 jnz     loc_487DB0
+  .text:0000000000487B3C                 lea     rax, qword_C74060
+  .text:0000000000487B43                 mov     byte ptr [rbx+11E8h], 1
+  .text:0000000000487B4A                 mov     byte ptr [rbx+11EAh], 0
+  .text:0000000000487B51                 mov     dword ptr [r12+240h], 2
+  .text:0000000000487B5D                 mov     rdi, [rax]
+  .text:0000000000487B60                 mov     rax, [rdi]
+  .text:0000000000487B63                 call    qword ptr [rax+1C8h]
+  .text:0000000000487B69                 xor     esi, esi
+  .text:0000000000487B6B                 mov     rdi, r12
+  .text:0000000000487B6E                 mov     [rbx+1BCh], eax
+  .text:0000000000487B74                 call    sub_4BB940
+  .text:0000000000487B79                 sub     rsp, 8
+  .text:0000000000487B7D                 xor     edx, edx
+  .text:0000000000487B7F                 xor     ecx, ecx
+  .text:0000000000487B81                 lea     r8, aDemo_1; "DEMO"
+  .text:0000000000487B88                 mov     r13, rax
+  .text:0000000000487B8B                 mov     r9d, 2
+  .text:0000000000487B91                 lea     rax, qword_C74200
+  .text:0000000000487B98                 mov     rdi, [rax]
+  .text:0000000000487B9B                 lea     rax, dword_9D9A5C
+  .text:0000000000487BA2                 mov     esi, [rax]
+  .text:0000000000487BA4                 mov     rax, [rdi]
+  .text:0000000000487BA7                 push    1
+  .text:0000000000487BA9                 call    qword ptr [rax+0B0h]
+  .text:0000000000487BAF                 mov     rdi, rax
+  .text:0000000000487BB2                 mov     [r13+0], rax
+  .text:0000000000487BB6                 pop     rax
+  .text:0000000000487BB7                 pop     rdx
+  .text:0000000000487BB8                 test    rdi, rdi
+  .text:0000000000487BBB                 jz      loc_487F20
+  .text:0000000000487BC1                 mov     rax, [rdi]
+  .text:0000000000487BC4                 xor     esi, esi
+  .text:0000000000487BC6                 mov     [rbp+var_69], 0
+  .text:0000000000487BCA                 movss   xmm0, dword ptr cs:xmmword_2683B0
+  .text:0000000000487BD2                 call    qword ptr [rax+1C0h]
+  .text:0000000000487BD8                 lea     rax, dword_9D9A5C
+  .text:0000000000487BDF                 mov     rdi, r12
+  .text:0000000000487BE2                 mov     eax, [rax]
+  .text:0000000000487BE4                 mov     [r12+24Ch], eax
+  .text:0000000000487BEC                 mov     rsi, [r13+0]
+  .text:0000000000487BF0                 lea     r13, [rbp+var_50]
+  .text:0000000000487BF4                 call    sub_4B6600
+  .text:0000000000487BF9                 mov     rdi, r12
+  .text:0000000000487BFC                 call    sub_4BC2B0
+  .text:0000000000487C01                 lea     rax, qword_C74200
+  .text:0000000000487C08                 mov     rdi, [rax]
+  .text:0000000000487C0B                 mov     rax, [rdi]
+  .text:0000000000487C0E                 call    qword ptr [rax+0D8h]
+  .text:0000000000487C14                 movzx   eax, byte ptr [rbp+var_7C]
+  .text:0000000000487C18                 mov     rsi, r14
+  .text:0000000000487C1B                 mov     rdi, r13
+  .text:0000000000487C1E                 cvtsd2ss xmm0, xmm0
+  .text:0000000000487C22                 movss   dword ptr [r12+260h], xmm0
+  .text:0000000000487C2C                 mov     dword ptr [rbx+1D4h], 0FFFFFFFFh
+  .text:0000000000487C36                 mov     byte ptr [rbx+1859h], 0
+  .text:0000000000487C3D                 mov     [rbx+185Ah], al
+  .text:0000000000487C43                 mov     rax, qword ptr cs:xmmword_2694D0
+  .text:0000000000487C4A                 mov     [rbx+1E0h], rax
+  .text:0000000000487C51                 mov     rax, qword ptr cs:unk_2696E8
+  .text:0000000000487C58                 mov     [rbx+1C8h], rax
+  .text:0000000000487C5F                 call    sub_2C8400
+  .text:0000000000487C64                 cmp     byte ptr [rbx+1858h], 0
+  .text:0000000000487C6B                 jz      short loc_487C8C
+  .text:0000000000487C6D                 mov     edi, cs:dword_A30B80
+  .text:0000000000487C73                 mov     esi, 2
+  .text:0000000000487C78                 call    sub_2C7E60
+  .text:0000000000487C7D                 test    al, al
+  .text:0000000000487C7F                 jnz     loc_487EA0
+  .text:0000000000487C85                 mov     byte ptr [rbx+1858h], 0
+  .text:0000000000487C8C                 mov     rdi, rbx
+  .text:0000000000487C8F                 call    sub_479AD0
+  .text:0000000000487C94                 mov     rdx, [rbp+var_78]
+  .text:0000000000487C98                 mov     rsi, r13
+  .text:0000000000487C9B                 mov     rdi, rbx
+  .text:0000000000487C9E                 call    sub_480750
+  .text:0000000000487CA3                 mov     rdx, [rbp+var_78]
+  .text:0000000000487CA7                 mov     rdi, rbx
+  .text:0000000000487CAA                 mov     rsi, r13
+  .text:0000000000487CAD                 call    sub_4877C0
+  .text:0000000000487CB2                 lea     rax, unk_C74318
+  .text:0000000000487CB9                 mov     rdi, [rax]
+  .text:0000000000487CBC                 test    rdi, rdi
+  .text:0000000000487CBF                 jz      short loc_487CCE
+  .text:0000000000487CC1                 mov     rax, [rdi]
+  .text:0000000000487CC4                 lea     rsi, aDemoplaybackst; "DemoPlaybackStarted"
+  .text:0000000000487CCB                 call    qword ptr [rax+60h]
+  .text:0000000000487CCE                 mov     rdi, r12
+  .text:0000000000487CD1                 call    sub_4D7440
+  .text:0000000000487CD6                 cmp     qword ptr [rbp+var_50], 0
+  .text:0000000000487CDB                 jz      short loc_487CE5
+  .text:0000000000487CDD                 mov     rdi, r13
+  .text:0000000000487CE0                 call    sub_2C8E90
+  .text:0000000000487CE5                 mov     r13, [rbp+var_60]
+  .text:0000000000487CE9                 jmp     loc_487AD8
+  .text:0000000000487CF0                 mov     rax, [rbp+var_58]
+  .text:0000000000487CF4                 lea     rdi, [rax+20h]
+  .text:0000000000487CF8                 call    sub_2D2D10
+  .text:0000000000487CFD                 mov     rdi, cs:off_9DA100
+  .text:0000000000487D04                 lea     rdx, sub_473400
+  .text:0000000000487D0B                 mov     rax, [rdi]
+  .text:0000000000487D0E                 mov     rax, [rax]
+  .text:0000000000487D11                 cmp     rax, rdx
+  .text:0000000000487D14                 jnz     short loc_487D80
+  .text:0000000000487D16                 mov     dword ptr [rdi+8], 0FFFFFFFFh
+  .text:0000000000487D1D                 mov     byte ptr [rdi+28h], 0
+  .text:0000000000487D21                 jmp     loc_487AF2
+  .text:0000000000487D30                 mov     edi, cs:dword_A30B80
+  .text:0000000000487D36                 mov     esi, 2
+  .text:0000000000487D3B                 call    sub_2C7E60
+  .text:0000000000487D40                 test    al, al
+  .text:0000000000487D42                 jnz     short loc_487D90
+  .text:0000000000487D44                 mov     rax, cs:_ZTV37CKeyValuesDumpContextToLoggingChannel_ptr
+  .text:0000000000487D4B                 lea     rsi, [rbp+var_50]
+  .text:0000000000487D4F                 xor     edx, edx
+  .text:0000000000487D51                 mov     dword ptr [rbp+var_50+0Ch], 2
+  .text:0000000000487D58                 mov     rdi, [rbp+var_78]
+  .text:0000000000487D5C                 add     rax, 10h
+  .text:0000000000487D60                 mov     qword ptr [rbp+var_50], rax
+  .text:0000000000487D64                 mov     eax, cs:dword_A30B80
+  .text:0000000000487D6A                 mov     dword ptr [rbp+var_50+8], eax
+  .text:0000000000487D6D                 call    sub_2C8E30
+  .text:0000000000487D72                 jmp     loc_487A9C
+  .text:0000000000487D80                 xor     esi, esi
+  .text:0000000000487D82                 call    rax
+  .text:0000000000487D84                 jmp     loc_487AF2
+  .text:0000000000487D90                 mov     edi, cs:dword_A30B80
+  .text:0000000000487D96                 lea     rdx, aDemoPlaybackOp; "Demo playback options:\n"
+  .text:0000000000487D9D                 mov     esi, 2
+  .text:0000000000487DA2                 xor     eax, eax
+  .text:0000000000487DA4                 call    sub_2C9800
+  .text:0000000000487DA9                 jmp     short loc_487D44
+  .text:0000000000487DB0                 lea     rdi, unk_A30B30
+  .text:0000000000487DB7                 mov     esi, 0FFFFFFFFh
+  .text:0000000000487DBC                 call    sub_5E8170
+  .text:0000000000487DC1                 test    rax, rax
+  .text:0000000000487DC4                 jz      loc_487F10
+  .text:0000000000487DCA                 mov     rdi, [rax]
+  .text:0000000000487DCD                 lea     rax, unk_27CD96
+  .text:0000000000487DD4                 test    rdi, rdi
+  .text:0000000000487DD7                 cmovz   rdi, rax
+  .text:0000000000487DDB                 xor     esi, esi
+  .text:0000000000487DDD                 xor     ecx, ecx
+  .text:0000000000487DDF                 xor     edx, edx
+  .text:0000000000487DE1                 call    sub_479E10
+  .text:0000000000487DE6                 mov     esi, 0FFFFFFFFh
+  .text:0000000000487DEB                 lea     rdi, unk_A30B20
+  .text:0000000000487DF2                 mov     r13d, eax
+  .text:0000000000487DF5                 call    sub_5E8170
+  .text:0000000000487DFA                 test    rax, rax
+  .text:0000000000487DFD                 jz      loc_487EF8
+  .text:0000000000487E03                 mov     rdi, [rax]
+  .text:0000000000487E06                 xor     ecx, ecx
+  .text:0000000000487E08                 xor     edx, edx
+  .text:0000000000487E0A                 xor     esi, esi
+  .text:0000000000487E0C                 test    rdi, rdi
+  .text:0000000000487E0F                 jz      loc_487EC8
+  .text:0000000000487E15                 mov     [rbp+var_88], rdi
+  .text:0000000000487E1C                 call    sub_479E10
+  .text:0000000000487E21                 mov     rdi, [rbp+var_88]
+  .text:0000000000487E28                 test    eax, eax
+  .text:0000000000487E2A                 js      loc_487EDA
+  .text:0000000000487E30                 mov     esi, 2Bh ; '+'
+  .text:0000000000487E35                 mov     dword ptr [rbp+var_88], eax
+  .text:0000000000487E3B                 mov     [rbp+var_90], rdi
+  .text:0000000000487E42                 call    sub_2CAD10
+  .text:0000000000487E47                 mov     edx, dword ptr [rbp+var_88]
+  .text:0000000000487E4D                 test    rax, rax
+  .text:0000000000487E50                 jz      short loc_487E68
+  .text:0000000000487E52                 mov     rdi, [rbp+var_90]
+  .text:0000000000487E59                 xor     edx, edx
+  .text:0000000000487E5B                 xor     ecx, ecx
+  .text:0000000000487E5D                 xor     esi, esi
+  .text:0000000000487E5F                 call    sub_479E10
+  .text:0000000000487E64                 lea     edx, [rax+r13]
+  .text:0000000000487E68                 cmp     r13d, 63h ; 'c'
+  .text:0000000000487E6C                 jle     short loc_487E7F
+  .text:0000000000487E6E                 lea     eax, [r13-64h]
+  .text:0000000000487E72                 mov     byte ptr [rbx+185Bh], 1
+  .text:0000000000487E79                 mov     [rbx+1D8h], eax
+  .text:0000000000487E7F                 test    edx, edx
+  .text:0000000000487E81                 jle     short loc_487E91
+  .text:0000000000487E83                 cmp     edx, [rbx+1D8h]
+  .text:0000000000487E89                 jle     short loc_487E91
+  .text:0000000000487E8B                 mov     [rbx+1DCh], edx
+  .text:0000000000487E91                 xor     edi, edi
+  .text:0000000000487E93                 call    sub_2C8070
+  .text:0000000000487E98                 jmp     loc_487B3C
+  .text:0000000000487EA0                 mov     edi, cs:dword_A30B80
+  .text:0000000000487EA6                 lea     rcx, aFalse; "false"
+  .text:0000000000487EAD                 mov     esi, 2
+  .text:0000000000487EB2                 xor     eax, eax
+  .text:0000000000487EB4                 lea     rdx, aCdemoplayerSet; "CDemoPlayer::SetIgnorePacketsForResourc"...
+  .text:0000000000487EBB                 call    sub_2C9800
+  .text:0000000000487EC0                 jmp     loc_487C85
+  .text:0000000000487EC8                 lea     rdi, unk_27CD96
+  .text:0000000000487ECF                 call    sub_479E10
+  .text:0000000000487ED4                 mov     edx, eax
+  .text:0000000000487ED6                 test    eax, eax
+  .text:0000000000487ED8                 jns     short loc_487E68
+  .text:0000000000487EDA                 cmp     r13d, 63h ; 'c'
+  .text:0000000000487EDE                 jle     short loc_487E91
+  .text:0000000000487EE0                 lea     eax, [r13-64h]
+  .text:0000000000487EE4                 mov     byte ptr [rbx+185Bh], 1
+  .text:0000000000487EEB                 mov     [rbx+1D8h], eax
+  .text:0000000000487EF1                 jmp     short loc_487E91
+  .text:0000000000487EF8                 mov     rax, cs:qword_A30B28
+  .text:0000000000487EFF                 mov     rax, [rax+8]
+  .text:0000000000487F03                 jmp     loc_487E03
+  .text:0000000000487F10                 mov     rax, cs:qword_A30B38
+  .text:0000000000487F17                 mov     rax, [rax+8]
+  .text:0000000000487F1B                 jmp     loc_487DCA
+  .text:0000000000487F20                 mov     edi, cs:dword_A30B80
+  .text:0000000000487F26                 mov     esi, 3
+  .text:0000000000487F2B                 call    sub_2C7E60
+  .text:0000000000487F30                 mov     r13, [rbp+var_60]
+  .text:0000000000487F34                 test    al, al
+  .text:0000000000487F36                 jz      short loc_487F63
+  .text:0000000000487F38                 mov     rcx, [rbp+var_68]
+  .text:0000000000487F3C                 lea     rax, unk_27CD96
+  .text:0000000000487F43                 mov     esi, 3
+  .text:0000000000487F48                 mov     edi, cs:dword_A30B80
+  .text:0000000000487F4E                 lea     rdx, aCdemoplayerSta_3; "CDemoPlayer::StartPlayback: failed to c"...
+  .text:0000000000487F55                 test    rcx, rcx
+  .text:0000000000487F58                 cmovz   rcx, rax
+  .text:0000000000487F5C                 xor     eax, eax
+  .text:0000000000487F5E                 call    sub_2C9800
+  .text:0000000000487F63                 xor     r15d, r15d
+  .text:0000000000487F66                 jmp     loc_487AD8
+procedure: |-
+  __int64 __fastcall sub_4879E0(__int64 a1, __int64 a2, char a3, __int64 a4)
+  {
+    unsigned int v4; // eax
+    const char *v5; // rcx
+    char *v7; // r13
+    void *v9; // r8
+    const char *v10; // rcx
+    __int64 v11; // r12
+    unsigned int v12; // r15d
+    __int64 **v14; // r13
+    __int64 *v15; // rdi
+    __int64 v16; // rax
+    float v17; // xmm0_4
+    __int64 *v18; // rdi
+    __int64 (__fastcall *v19)(); // rax
+    void **v20; // rax
+    void *v21; // rdi
+    int v22; // r13d
+    __int64 *v23; // rax
+    __int64 v24; // rdi
+    int v25; // eax
+    __int64 v26; // rax
+    int v27; // edx
+    char v28; // al
+    void *v29; // rcx
+    __int64 v30; // [rsp-8h] [rbp-98h]
+    int v31; // [rsp+8h] [rbp-88h]
+    char v34; // [rsp+27h] [rbp-69h] BYREF
+    void *v35; // [rsp+28h] [rbp-68h] BYREF
+    char *v36; // [rsp+30h] [rbp-60h]
+    __int64 v37; // [rsp+38h] [rbp-58h]
+    __m128i inserted; // [rsp+40h] [rbp-50h] BYREF
+    const char *v39; // [rsp+50h] [rbp-40h]
+    int v40; // [rsp+58h] [rbp-38h]
+    char v41; // [rsp+5Ch] [rbp-34h]
+
+    v7 = &v34;
+    v37 = a1;
+    *(_QWORD *)(a1 + 432) = -1;
+    v34 = 1;
+    v36 = &v34;
+    v35 = 0;
+    sub_2C7D90(&v35, a2);
+    if ( (unsigned __int8)sub_2C7E60((unsigned int)dword_A30B80, 2) )
+    {
+      v9 = v35;
+      v10 = "demo";
+      if ( !v35 )
+        v9 = &unk_27CD96;
+      if ( a3 )
+        v10 = "timedemo";
+      sub_2C9800((unsigned int)dword_A30B80, 2, "playing %s from '%s'\n", v10, v9);
+    }
+    if ( a4 && (int)sub_2C8550((unsigned int)dword_A30B80) > 2 )
+    {
+      if ( (unsigned __int8)sub_2C7E60((unsigned int)dword_A30B80, 2) )
+        sub_2C9800((unsigned int)dword_A30B80, 2, "Demo playback options:\n");
+      inserted.m128i_i64[0] = (__int64)&`vtable for'CKeyValuesDumpContextToLoggingChannel + 16;
+      inserted.m128i_i64[1] = (unsigned int)dword_A30B80 | 0x200000000LL;
+      sub_2C8E30(a4, &inserted, 0);
+    }
+    v11 = sub_414770(off_9D9DE0);
+    if ( v11 )
+    {
+      sub_2C9240();
+      sub_2C8670(1);
+      if ( !(unsigned __int8)sub_478C40(a1, &v35)
+        || !(unsigned __int8)sub_4836B0(a1, &v35)
+        || (v12 = sub_479830(a1), !(_BYTE)v12) )
+      {
+        v12 = 0;
+        goto LABEL_12;
+      }
+      *(_DWORD *)(a1 + 440) = *(_DWORD *)(a1 + 216);
+      if ( !a3 )
+        goto LABEL_19;
+      v20 = (void **)sub_5E8170(&unk_A30B30, 0xFFFFFFFFLL);
+      if ( !v20 )
+        v20 = *(void ***)(qword_A30B38 + 8);
+      v21 = *v20;
+      if ( !*v20 )
+        v21 = &unk_27CD96;
+      v22 = sub_479E10(v21, 0, 0, 0);
+      v23 = (__int64 *)sub_5E8170(&unk_A30B20, 0xFFFFFFFFLL);
+      if ( !v23 )
+        v23 = *(__int64 **)(qword_A30B28 + 8);
+      v24 = *v23;
+      if ( *v23 )
+      {
+        v25 = sub_479E10(v24, 0, 0, 0);
+        if ( v25 >= 0 )
+        {
+          v31 = v25;
+          v26 = sub_2CAD10(v24, 43);
+          v27 = v31;
+          if ( v26 )
+            v27 = sub_479E10(v24, 0, 0, 0) + v22;
+          goto LABEL_45;
+        }
+      }
+      else
+      {
+        v27 = sub_479E10(&unk_27CD96, 0, 0, 0);
+        if ( v27 >= 0 )
+        {
+  LABEL_45:
+          if ( v22 > 99 )
+          {
+            *(_BYTE *)(a1 + 6235) = 1;
+            *(_DWORD *)(a1 + 472) = v22 - 100;
+          }
+          if ( v27 > 0 && v27 > *(_DWORD *)(a1 + 472) )
+            *(_DWORD *)(a1 + 476) = v27;
+  LABEL_50:
+          sub_2C8070(0);
+  LABEL_19:
+          *(_BYTE *)(a1 + 4584) = 1;
+          *(_BYTE *)(a1 + 4586) = 0;
+          *(_DWORD *)(v11 + 576) = 2;
+          *(_DWORD *)(a1 + 444) = (*(__int64 (__fastcall **)(_QWORD *))(*qword_C74060 + 456LL))(qword_C74060);
+          v14 = (__int64 **)sub_4BB940(v11, 0);
+          v15 = (__int64 *)(*(__int64 (__fastcall **)(_QWORD *, _QWORD, _QWORD, _QWORD, const char *, __int64, __int64))(*qword_C74200 + 176LL))(
+                             qword_C74200,
+                             (unsigned int)dword_9D9A5C,
+                             0,
+                             0,
+                             "DEMO",
+                             2,
+                             1);
+          *v14 = v15;
+          if ( v15 )
+          {
+            v16 = *v15;
+            v34 = 0;
+            (*(void (__fastcall **)(__int64 *, _QWORD, __int64, float))(v16 + 448))(v15, 0, v30, -1.0);
+            *(_DWORD *)(v11 + 588) = dword_9D9A5C;
+            sub_4B6600(v11, *v14);
+            sub_4BC2B0(v11);
+            v17 = (*(double (__fastcall **)(_QWORD *))(*qword_C74200 + 216LL))(qword_C74200);
+            *(float *)(v11 + 608) = v17;
+            *(_DWORD *)(a1 + 468) = -1;
+            *(_BYTE *)(a1 + 6233) = 0;
+            *(_BYTE *)(a1 + 6234) = a3;
+            *(_QWORD *)(a1 + 480) = 0xFFFFFFFFLL;
+            *(_QWORD *)(a1 + 456) = unk_2696E8;
+            sub_2C8400(&inserted, &v35);
+            if ( *(_BYTE *)(a1 + 6232) )
+            {
+              if ( (unsigned __int8)sub_2C7E60((unsigned int)dword_A30B80, 2) )
+                sub_2C9800(
+                  (unsigned int)dword_A30B80,
+                  2,
+                  "CDemoPlayer::SetIgnorePacketsForResourceLoading(%s)\n",
+                  "false");
+              *(_BYTE *)(a1 + 6232) = 0;
+            }
+            sub_479AD0(a1);
+            sub_480750(a1, &inserted, a4);
+            sub_4877C0(a1, &inserted, a4);
+            if ( qword_C74318 )
+              (*(void (__fastcall **)(_QWORD *, const char *))(*qword_C74318 + 96LL))(qword_C74318, "DemoPlaybackStarted");
+            sub_4D7440(v11);
+            if ( inserted.m128i_i64[0] )
+              sub_2C8E90(&inserted);
+            v7 = v36;
+          }
+          else
+          {
+            v28 = sub_2C7E60((unsigned int)dword_A30B80, 3);
+            v7 = v36;
+            if ( v28 )
+            {
+              v29 = v35;
+              if ( !v35 )
+                v29 = &unk_27CD96;
+              sub_2C9800(
+                (unsigned int)dword_A30B80,
+                3,
+                "CDemoPlayer::StartPlayback: failed to create demo net channel for '%s'\n",
+                v29);
+            }
+            v12 = 0;
+          }
+          goto LABEL_12;
+        }
+      }
+      if ( v22 > 99 )
+      {
+        *(_BYTE *)(a1 + 6235) = 1;
+        *(_DWORD *)(a1 + 472) = v22 - 100;
+      }
+      goto LABEL_50;
+    }
+    v40 = 3550;
+    inserted = _mm_insert_epi64(_mm_loadl_epi64((const __m128i *)&off_9AD070), (signed __int64)"StartPlayback", 1);
+    v39 = "pClient";
+    v41 = v41 & 0x80 | 0x14;
+    if ( (unsigned __int8)sub_2C8170(&inserted) )
+      __debugbreak();
+    v4 = sub_2C7E60((unsigned int)dword_A30B80, 3);
+    v5 = (const char *)v35;
+    v7 = v36;
+    v12 = v4;
+    if ( (_BYTE)v4 )
+    {
+      if ( !v35 )
+        v5 = (const char *)&unk_27CD96;
+      v12 = 0;
+      sub_2C9800((unsigned int)dword_A30B80, 3, "can't play back, no CNetworkGameClient for demo '%s'\n", v5);
+    }
+  LABEL_12:
+    if ( v35 )
+      sub_2C8E90(&v35);
+    if ( *v7 )
+    {
+      sub_2D2D10(v37 + 32);
+      v18 = off_9DA100;
+      v19 = *(__int64 (__fastcall **)())*off_9DA100;
+      if ( v19 == sub_473400 )
+      {
+        *((_DWORD *)off_9DA100 + 2) = -1;
+        *((_BYTE *)v18 + 40) = 0;
+      }
+      else
+      {
+        ((void (__fastcall *)(__int64 *, _QWORD))v19)(off_9DA100, 0);
+      }
+    }
+    return v12;
+  }
