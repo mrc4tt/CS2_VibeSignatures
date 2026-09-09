@@ -1172,6 +1172,7 @@ modules:
         expected_input:
           - CDemoPlayer_vtable.{platform}.yaml
       - name: find-CDemoPlayer_StartPlayback
+        platform: windows
         expected_output:
           - CDemoPlayer_StartPlayback.{platform}.yaml
         expected_input:
