@@ -1,0 +1,146 @@
+func_name: OnRenderStart
+func_va: '0x199f790'
+disasm_code: |-
+  .text:000000000199F790                 push    rbp
+  .text:000000000199F791                 mov     rbp, rsp
+  .text:000000000199F794                 push    r13
+  .text:000000000199F796                 push    r12
+  .text:000000000199F798                 lea     r12, [rbp+var_60]
+  .text:000000000199F79C                 push    rbx
+  .text:000000000199F79D                 mov     rbx, rdi
+  .text:000000000199F7A0                 lea     r13, [rbx+10h]
+  .text:000000000199F7A4                 sub     rsp, 58h
+  .text:000000000199F7A8                 lea     rax, qword_4821138
+  .text:000000000199F7AF                 mov     rdi, [rax]
+  .text:000000000199F7B2                 mov     rax, [rdi]
+  .text:000000000199F7B5                 call    qword ptr [rax+310h]
+  .text:000000000199F7BB                 xor     ecx, ecx
+  .text:000000000199F7BD                 mov     edx, 131h
+  .text:000000000199F7C2                 mov     rdi, r12
+  .text:000000000199F7C5                 lea     rsi, aViewCpp; "./view.cpp"
+  .text:000000000199F7CC                 mov     r8d, eax
+  .text:000000000199F7CF                 mov     r9d, 1
+  .text:000000000199F7D5                 call    sub_18BFC10
+  .text:000000000199F7DA                 xor     esi, esi
+  .text:000000000199F7DC                 mov     rdi, rbx
+  .text:000000000199F7DF                 call    sub_199E600
+  .text:000000000199F7E4                 mov     rdi, r12
+  .text:000000000199F7E7                 call    sub_18BFD90
+  .text:000000000199F7EC                 lea     rax, qword_4647798
+  .text:000000000199F7F3                 mov     r9, r12
+  .text:000000000199F7F6                 mov     byte ptr [rbx+12F0h], 1
+  .text:000000000199F7FD                 lea     r8, dword_482E080
+  .text:000000000199F804                 mov     rsi, r13
+  .text:000000000199F807                 lea     rcx, unk_482E0C0
+  .text:000000000199F80E                 lea     rdx, unk_482E100
+  .text:000000000199F815                 mov     rdi, [rax]
+  .text:000000000199F818                 call    sub_F83E90
+  .text:000000000199F81D                 test    byte ptr [rbx+561h], 2
+  .text:000000000199F824                 jz      loc_199F920
+  .text:000000000199F82A                 movss   xmm2, dword ptr [rbx+4E4h]
+  .text:000000000199F832                 mov     rax, [rbx+4B0h]
+  .text:000000000199F839                 mov     rdi, r13
+  .text:000000000199F83C                 movss   xmm0, dword ptr [rbx+4D4h]
+  .text:000000000199F844                 movaps  xmm1, xmm0
+  .text:000000000199F847                 movss   xmm0, dword ptr [rbx+4A8h]
+  .text:000000000199F84F                 insertps xmm1, dword ptr [rbx+4D8h], 10h
+  .text:000000000199F859                 mov     [rbx+10h], rax
+  .text:000000000199F85D                 mov     eax, [rbx+4B8h]
+  .text:000000000199F863                 unpcklps xmm0, xmm2
+  .text:000000000199F866                 movlhps xmm0, xmm1
+  .text:000000000199F869                 movups  xmmword ptr [rbx+28h], xmm0
+  .text:000000000199F86D                 movaps  xmm0, cs:xmmword_AFE850
+  .text:000000000199F874                 mov     [rbx+18h], eax
+  .text:000000000199F877                 mov     rax, [rbx+4C8h]
+  .text:000000000199F87E                 movaps  xmmword ptr [rbx+180h], xmm0
+  .text:000000000199F885                 mov     [rbx+1Ch], rax
+  .text:000000000199F889                 mov     eax, [rbx+4D0h]
+  .text:000000000199F88F                 mov     [rbx+24h], eax
+  .text:000000000199F892                 mov     rax, qword ptr cs:xmmword_AFE850
+  .text:000000000199F899                 mov     [rbx+38h], rax
+  .text:000000000199F89D                 call    sub_2626F60
+  .text:000000000199F8A2                 mov     rax, [rbx+4B0h]
+  .text:000000000199F8A9                 lea     rsi, [rbx+4C8h]
+  .text:000000000199F8B0                 movss   xmm1, dword ptr [rbx+4B8h]
+  .text:000000000199F8B8                 lea     rdi, [rbp+var_70]
+  .text:000000000199F8BC                 movss   xmm0, dword ptr [rbx+4D4h]
+  .text:000000000199F8C4                 lea     rdx, unk_482B670
+  .text:000000000199F8CB                 movss   [rbp+var_68], xmm1
+  .text:000000000199F8D0                 movss   xmm3, dword ptr [rbx+4E4h]
+  .text:000000000199F8D8                 movss   xmm2, dword ptr [rbx+4A8h]
+  .text:000000000199F8E0                 mov     [rbp+var_70], rax
+  .text:000000000199F8E4                 movss   xmm1, dword ptr [rbx+4D8h]
+  .text:000000000199F8EC                 call    sub_233BDB0
+  .text:000000000199F8F1                 lea     rax, off_458E058
+  .text:000000000199F8F8                 mov     rax, [rax]
+  .text:000000000199F8FB                 mov     eax, [rax+4]
+  .text:000000000199F8FE                 mov     byte ptr [rbx+12F0h], 0
+  .text:000000000199F905                 mov     cs:dword_482B660, eax
+  .text:000000000199F90B                 add     rsp, 58h
+  .text:000000000199F90F                 pop     rbx
+  .text:000000000199F910                 pop     r12
+  .text:000000000199F912                 pop     r13
+  .text:000000000199F914                 pop     rbp
+  .text:000000000199F915                 retn
+  .text:000000000199F920                 pxor    xmm2, xmm2
+  .text:000000000199F924                 pxor    xmm0, xmm0
+  .text:000000000199F928                 cvtsi2ss xmm2, dword ptr [rbx+440h]
+  .text:000000000199F930                 cvtsi2ss xmm0, dword ptr [rbx+448h]
+  .text:000000000199F938                 divss   xmm2, xmm0
+  .text:000000000199F93C                 jmp     loc_199F832
+procedure: |-
+  __int64 __fastcall sub_199F790(__int64 a1)
+  {
+    unsigned int v1; // eax
+    __m128 v2; // xmm2
+    __m128 v3; // xmm0
+    __m128 inserted; // xmm1
+    int v5; // eax
+    __int64 v6; // rax
+    __int64 v7; // rax
+    float v8; // xmm3_4
+    float v9; // xmm2_4
+    __int64 result; // rax
+    __int64 v11; // [rsp+0h] [rbp-70h] BYREF
+    int v12; // [rsp+8h] [rbp-68h]
+    _BYTE v13[96]; // [rsp+10h] [rbp-60h] BYREF
+
+    v1 = (*(__int64 (__fastcall **)(__int64))(*(_QWORD *)qword_4821138 + 784LL))(qword_4821138);
+    sub_18BFC10(v13, "./view.cpp", 305, 0, v1, 1);
+    sub_199E600(a1, 0);
+    sub_18BFD90(v13);
+    *(_BYTE *)(a1 + 4848) = 1;
+    sub_F83E90(qword_4647798, a1 + 16, &unk_482E100, &unk_482E0C0, &dword_482E080, v13);
+    if ( (*(_BYTE *)(a1 + 1377) & 2) != 0 )
+    {
+      v2 = (__m128)*(unsigned int *)(a1 + 1252);
+    }
+    else
+    {
+      v2 = 0;
+      v2.m128_f32[0] = (float)*(int *)(a1 + 1088) / (float)*(int *)(a1 + 1096);
+    }
+    v3 = (__m128)*(unsigned int *)(a1 + 1192);
+    inserted = _mm_insert_ps((__m128)*(unsigned int *)(a1 + 1236), (__m128)*(unsigned int *)(a1 + 1240), 16);
+    *(_QWORD *)(a1 + 16) = *(_QWORD *)(a1 + 1200);
+    v5 = *(_DWORD *)(a1 + 1208);
+    *(__m128 *)(a1 + 40) = _mm_movelh_ps(_mm_unpacklo_ps(v3, v2), inserted);
+    *(_DWORD *)(a1 + 24) = v5;
+    v6 = *(_QWORD *)(a1 + 1224);
+    *(_OWORD *)(a1 + 384) = xmmword_AFE850;
+    *(_QWORD *)(a1 + 28) = v6;
+    *(_DWORD *)(a1 + 36) = *(_DWORD *)(a1 + 1232);
+    *(_QWORD *)(a1 + 56) = 0xBF800000BF800000LL;
+    sub_2626F60(a1 + 16);
+    v7 = *(_QWORD *)(a1 + 1200);
+    v3.m128_i32[0] = *(_DWORD *)(a1 + 1236);
+    v12 = *(_DWORD *)(a1 + 1208);
+    v8 = *(float *)(a1 + 1252);
+    v9 = *(float *)(a1 + 1192);
+    v11 = v7;
+    sub_233BDB0(&v11, a1 + 1224, &unk_482B670, v3.m128_f32[0], *(float *)(a1 + 1240), v9, v8);
+    result = *((unsigned int *)off_458E058 + 1);
+    *(_BYTE *)(a1 + 4848) = 0;
+    dword_482B660 = result;
+    return result;
+  }

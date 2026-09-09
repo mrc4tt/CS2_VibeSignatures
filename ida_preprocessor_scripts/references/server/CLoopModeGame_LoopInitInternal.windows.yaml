@@ -1,0 +1,2141 @@
+func_name: CLoopModeGame_LoopInitInternal
+func_va: '0x180c019a0'
+disasm_code: |-
+  .text:0000000180C019A0                 mov     [rsp-8+arg_10], r8
+  .text:0000000180C019A5                 mov     [rsp-8+arg_8], rdx
+  .text:0000000180C019AA                 mov     [rsp-8+arg_0], rcx
+  .text:0000000180C019AF                 push    rbp
+  .text:0000000180C019B0                 push    rbx
+  .text:0000000180C019B1                 push    rsi
+  .text:0000000180C019B2                 push    rdi
+  .text:0000000180C019B3                 push    r12
+  .text:0000000180C019B5                 push    r13
+  .text:0000000180C019B7                 push    r14
+  .text:0000000180C019B9                 push    r15
+  .text:0000000180C019BB                 lea     rbp, [rsp-0B8h]
+  .text:0000000180C019C3                 sub     rsp, 1B8h
+  .text:0000000180C019CA                 xor     r15d, r15d
+  .text:0000000180C019CD                 mov     rdi, rdx
+  .text:0000000180C019D0                 mov     [rbp+0F0h+var_130], r15d
+  .text:0000000180C019D4                 mov     r13, rcx
+  .text:0000000180C019D7                 mov     [rcx+6Eh], r15b
+  .text:0000000180C019DB                 test    rdx, rdx
+  .text:0000000180C019DE                 jz      loc_180C0286E
+  .text:0000000180C019E4                 lea     rdx, aMode; "mode"
+  .text:0000000180C019EB                 mov     rcx, rdi
+  .text:0000000180C019EE                 call    cs:?FindKey@KeyValues@@QEBAPEBV1@PEBD@Z; KeyValues::FindKey(char const *)
+  .text:0000000180C019F4                 lea     rsi, byte_181603998
+  .text:0000000180C019FB                 test    rax, rax
+  .text:0000000180C019FE                 jz      short loc_180C01A17
+  .text:0000000180C01A00                 xor     r9d, r9d
+  .text:0000000180C01A03                 xor     r8d, r8d
+  .text:0000000180C01A06                 mov     rdx, rsi
+  .text:0000000180C01A09                 mov     rcx, rax
+  .text:0000000180C01A0C                 call    cs:?Internal_GetString@CKeyValues_Data@@IEAAPEBDPEBDPEAD_K@Z; CKeyValues_Data::Internal_GetString(char const *,char *,unsigned __int64)
+  .text:0000000180C01A12                 mov     rbx, rax
+  .text:0000000180C01A15                 jmp     short loc_180C01A1A
+  .text:0000000180C01A17                 mov     rbx, rsi
+  .text:0000000180C01A1A                 lea     rdx, aListenserver; "listenserver"
+  .text:0000000180C01A21                 mov     rcx, rbx
+  .text:0000000180C01A24                 call    cs:V_stricmp_fast
+  .text:0000000180C01A2A                 test    eax, eax
+  .text:0000000180C01A2C                 jnz     short loc_180C01A38
+  .text:0000000180C01A2E                 mov     dword ptr [r13+68h], 3
+  .text:0000000180C01A36                 jmp     short loc_180C01A72
+  .text:0000000180C01A38                 lea     rdx, aDedicated; "dedicated"
+  .text:0000000180C01A3F                 mov     rcx, rbx
+  .text:0000000180C01A42                 call    cs:V_stricmp_fast
+  .text:0000000180C01A48                 test    eax, eax
+  .text:0000000180C01A4A                 jnz     short loc_180C01A56
+  .text:0000000180C01A4C                 mov     dword ptr [r13+68h], 1
+  .text:0000000180C01A54                 jmp     short loc_180C01A72
+  .text:0000000180C01A56                 lea     rdx, aRemoteclient; "remoteclient"
+  .text:0000000180C01A5D                 mov     rcx, rbx
+  .text:0000000180C01A60                 call    cs:V_stricmp_fast
+  .text:0000000180C01A66                 test    eax, eax
+  .text:0000000180C01A68                 jnz     short loc_180C01A72
+  .text:0000000180C01A6A                 mov     dword ptr [r13+68h], 2
+  .text:0000000180C01A72                 mov     eax, [r13+68h]
+  .text:0000000180C01A76                 movzx   ecx, al
+  .text:0000000180C01A79                 and     cl, 1
+  .text:0000000180C01A7C                 cmp     eax, 2
+  .text:0000000180C01A7F                 mov     byte ptr [rbp+0F0h+arg_18], cl
+  .text:0000000180C01A85                 setnz   cl
+  .text:0000000180C01A88                 call    sub_18051E8F0
+  .text:0000000180C01A8D                 lea     rdx, aLevelname; "levelname"
+  .text:0000000180C01A94                 mov     rcx, rdi
+  .text:0000000180C01A97                 call    cs:?FindKey@KeyValues@@QEBAPEBV1@PEBD@Z; KeyValues::FindKey(char const *)
+  .text:0000000180C01A9D                 test    rax, rax
+  .text:0000000180C01AA0                 jz      short loc_180C01AB6
+  .text:0000000180C01AA2                 xor     r9d, r9d
+  .text:0000000180C01AA5                 xor     r8d, r8d
+  .text:0000000180C01AA8                 mov     rdx, rsi
+  .text:0000000180C01AAB                 mov     rcx, rax
+  .text:0000000180C01AAE                 call    cs:?Internal_GetString@CKeyValues_Data@@IEAAPEBDPEBDPEAD_K@Z; CKeyValues_Data::Internal_GetString(char const *,char *,unsigned __int64)
+  .text:0000000180C01AB4                 jmp     short loc_180C01AB9
+  .text:0000000180C01AB6                 mov     rax, rsi
+  .text:0000000180C01AB9                 mov     rdx, rax
+  .text:0000000180C01ABC                 mov     [rsp+1F0h+var_1B0], r15
+  .text:0000000180C01AC1                 lea     rcx, [rsp+1F0h+var_1B0]
+  .text:0000000180C01AC6                 call    cs:?Set@CUtlString@@QEAAXPEBD@Z; CUtlString::Set(char const *)
+  .text:0000000180C01ACC                 lea     rdx, aSavegame; "savegame"
+  .text:0000000180C01AD3                 mov     rcx, rdi
+  .text:0000000180C01AD6                 call    cs:?FindKey@KeyValues@@QEBAPEBV1@PEBD@Z; KeyValues::FindKey(char const *)
+  .text:0000000180C01ADC                 test    rax, rax
+  .text:0000000180C01ADF                 jz      short loc_180C01AF5
+  .text:0000000180C01AE1                 xor     r9d, r9d
+  .text:0000000180C01AE4                 xor     r8d, r8d
+  .text:0000000180C01AE7                 mov     rdx, rsi
+  .text:0000000180C01AEA                 mov     rcx, rax
+  .text:0000000180C01AED                 call    cs:?Internal_GetString@CKeyValues_Data@@IEAAPEBDPEBDPEAD_K@Z; CKeyValues_Data::Internal_GetString(char const *,char *,unsigned __int64)
+  .text:0000000180C01AF3                 jmp     short loc_180C01AF8
+  .text:0000000180C01AF5                 mov     rax, rsi
+  .text:0000000180C01AF8                 mov     rdx, rax
+  .text:0000000180C01AFB                 mov     [rsp+1F0h+var_1A0], r15
+  .text:0000000180C01B00                 lea     rcx, [rsp+1F0h+var_1A0]
+  .text:0000000180C01B05                 call    cs:?Set@CUtlString@@QEAAXPEBD@Z; CUtlString::Set(char const *)
+  .text:0000000180C01B0B                 lea     rdx, aLandmarkname; "landmarkname"
+  .text:0000000180C01B12                 mov     rcx, rdi
+  .text:0000000180C01B15                 call    cs:?FindKey@KeyValues@@QEBAPEBV1@PEBD@Z; KeyValues::FindKey(char const *)
+  .text:0000000180C01B1B                 test    rax, rax
+  .text:0000000180C01B1E                 jz      short loc_180C01B34
+  .text:0000000180C01B20                 xor     r9d, r9d
+  .text:0000000180C01B23                 xor     r8d, r8d
+  .text:0000000180C01B26                 mov     rdx, rsi
+  .text:0000000180C01B29                 mov     rcx, rax
+  .text:0000000180C01B2C                 call    cs:?Internal_GetString@CKeyValues_Data@@IEAAPEBDPEBDPEAD_K@Z; CKeyValues_Data::Internal_GetString(char const *,char *,unsigned __int64)
+  .text:0000000180C01B32                 jmp     short loc_180C01B37
+  .text:0000000180C01B34                 mov     rax, rsi
+  .text:0000000180C01B37                 mov     rdx, rax
+  .text:0000000180C01B3A                 mov     [rsp+1F0h+var_190], r15
+  .text:0000000180C01B3F                 lea     rcx, [rsp+1F0h+var_190]
+  .text:0000000180C01B44                 call    cs:?Set@CUtlString@@QEAAXPEBD@Z; CUtlString::Set(char const *)
+  .text:0000000180C01B4A                 lea     rdx, aPreviouslevel; "previouslevel"
+  .text:0000000180C01B51                 mov     rcx, rdi
+  .text:0000000180C01B54                 call    cs:?FindKey@KeyValues@@QEBAPEBV1@PEBD@Z; KeyValues::FindKey(char const *)
+  .text:0000000180C01B5A                 test    rax, rax
+  .text:0000000180C01B5D                 jz      short loc_180C01B73
+  .text:0000000180C01B5F                 xor     r9d, r9d
+  .text:0000000180C01B62                 xor     r8d, r8d
+  .text:0000000180C01B65                 mov     rdx, rsi
+  .text:0000000180C01B68                 mov     rcx, rax
+  .text:0000000180C01B6B                 call    cs:?Internal_GetString@CKeyValues_Data@@IEAAPEBDPEBDPEAD_K@Z; CKeyValues_Data::Internal_GetString(char const *,char *,unsigned __int64)
+  .text:0000000180C01B71                 jmp     short loc_180C01B76
+  .text:0000000180C01B73                 mov     rax, rsi
+  .text:0000000180C01B76                 mov     rdx, rax
+  .text:0000000180C01B79                 mov     [rsp+1F0h+var_180], r15
+  .text:0000000180C01B7E                 lea     rcx, [rsp+1F0h+var_180]
+  .text:0000000180C01B83                 call    cs:?Set@CUtlString@@QEAAXPEBD@Z; CUtlString::Set(char const *)
+  .text:0000000180C01B89                 xor     r8d, r8d
+  .text:0000000180C01B8C                 lea     rdx, aLoadmap; "loadmap"
+  .text:0000000180C01B93                 mov     rcx, rdi
+  .text:0000000180C01B96                 call    cs:?GetInt@KeyValues@@QEBAHPEBDH@Z; KeyValues::GetInt(char const *,int)
+  .text:0000000180C01B9C                 xor     r8d, r8d
+  .text:0000000180C01B9F                 lea     rdx, aChangelevel_0; "changelevel"
+  .text:0000000180C01BA6                 mov     rcx, rdi
+  .text:0000000180C01BA9                 mov     ebx, eax
+  .text:0000000180C01BAB                 call    cs:?GetInt@KeyValues@@QEBAHPEBDH@Z; KeyValues::GetInt(char const *,int)
+  .text:0000000180C01BB1                 mov     rdx, [rsp+1F0h+var_180]
+  .text:0000000180C01BB6                 test    eax, eax
+  .text:0000000180C01BB8                 mov     rcx, [rsp+1F0h+var_190]
+  .text:0000000180C01BBD                 mov     r9d, eax
+  .text:0000000180C01BC0                 setnz   [rsp+1F0h+var_188]
+  .text:0000000180C01BC5                 mov     dword ptr [rbp+0F0h+var_160], eax
+  .text:0000000180C01BC8                 test    rdx, rdx
+  .text:0000000180C01BCB                 jz      short loc_180C01C02
+  .text:0000000180C01BCD                 mov     r8, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C01BD4                 inc     r8
+  .text:0000000180C01BD7                 cmp     [rdx+r8], r15b
+  .text:0000000180C01BDB                 jnz     short loc_180C01BD4
+  .text:0000000180C01BDD                 test    r8d, r8d
+  .text:0000000180C01BE0                 jle     short loc_180C01C02
+  .text:0000000180C01BE2                 test    rcx, rcx
+  .text:0000000180C01BE5                 jz      short loc_180C01C02
+  .text:0000000180C01BE7                 mov     rax, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C01BEE                 xchg    ax, ax
+  .text:0000000180C01BF0                 inc     rax
+  .text:0000000180C01BF3                 cmp     [rcx+rax], r15b
+  .text:0000000180C01BF7                 jnz     short loc_180C01BF0
+  .text:0000000180C01BF9                 test    eax, eax
+  .text:0000000180C01BFB                 jle     short loc_180C01C02
+  .text:0000000180C01BFD                 mov     r12b, 1
+  .text:0000000180C01C00                 jmp     short loc_180C01C05
+  .text:0000000180C01C02                 xor     r12b, r12b
+  .text:0000000180C01C05                 test    ebx, ebx
+  .text:0000000180C01C07                 mov     [rsp+1F0h+var_1A8], r12b
+  .text:0000000180C01C0C                 setz    al
+  .text:0000000180C01C0F                 mov     [r13+6Ch], al
+  .text:0000000180C01C13                 test    ebx, ebx
+  .text:0000000180C01C15                 jnz     short loc_180C01C58
+  .text:0000000180C01C17                 test    rdx, rdx
+  .text:0000000180C01C1A                 jz      short loc_180C01C2C
+  .text:0000000180C01C1C                 lea     rcx, [rsp+1F0h+var_180]
+  .text:0000000180C01C21                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C01C27                 mov     rcx, [rsp+1F0h+var_190]
+  .text:0000000180C01C2C                 test    rcx, rcx
+  .text:0000000180C01C2F                 jz      short loc_180C01C3C
+  .text:0000000180C01C31                 lea     rcx, [rsp+1F0h+var_190]
+  .text:0000000180C01C36                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C01C3C                 cmp     [rsp+1F0h+var_1A0], r15
+  .text:0000000180C01C41                 jz      short loc_180C01C4E
+  .text:0000000180C01C43                 lea     rcx, [rsp+1F0h+var_1A0]
+  .text:0000000180C01C48                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C01C4E                 cmp     [rsp+1F0h+var_1B0], r15
+  .text:0000000180C01C53                 jmp     loc_180C02C71
+  .text:0000000180C01C58                 cmp     dword ptr [r13+68h], 2
+  .text:0000000180C01C5D                 mov     r14, r15
+  .text:0000000180C01C60                 mov     [rbp+0F0h+var_140], r15
+  .text:0000000180C01C64                 mov     [rbp+0F0h+var_138], r15
+  .text:0000000180C01C68                 mov     [rbp+0F0h+var_148], r15d
+  .text:0000000180C01C6C                 mov     [rbp+0F0h+var_170], r15
+  .text:0000000180C01C70                 mov     [rbp+0F0h+var_168], r15
+  .text:0000000180C01C74                 mov     [rsp+1F0h+var_178], r15d
+  .text:0000000180C01C79                 mov     [rsp+1F0h+var_198], r15
+  .text:0000000180C01C7E                 jz      loc_180C02091
+  .text:0000000180C01C84                 mov     rdx, [rsp+1F0h+var_1A0]
+  .text:0000000180C01C89                 test    rdx, rdx
+  .text:0000000180C01C8C                 jz      loc_180C0201A
+  .text:0000000180C01C92                 mov     rax, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C01C99                 nop     dword ptr [rax+00000000h]
+  .text:0000000180C01CA0                 inc     rax
+  .text:0000000180C01CA3                 cmp     [rdx+rax], r14b
+  .text:0000000180C01CA7                 jnz     short loc_180C01CA0
+  .text:0000000180C01CA9                 test    eax, eax
+  .text:0000000180C01CAB                 jle     loc_180C0201A
+  .text:0000000180C01CB1                 test    r9d, r9d
+  .text:0000000180C01CB4                 jnz     short loc_180C01CE3
+  .text:0000000180C01CB6                 mov     rcx, cs:qword_1821D10A8
+  .text:0000000180C01CBD                 lea     r8, [rsp+1F0h+var_198]
+  .text:0000000180C01CC2                 movzx   r9d, byte ptr [rbp+0F0h+arg_18]
+  .text:0000000180C01CCA                 mov     [rsp+1F0h+var_1C8], r8
+  .text:0000000180C01CCF                 lea     r8, [rbp+0F0h+var_148]
+  .text:0000000180C01CD3                 mov     dword ptr [rsp+1F0h+var_1D0], r14d
+  .text:0000000180C01CD8                 mov     rax, [rcx]
+  .text:0000000180C01CDB                 call    qword ptr [rax+1A0h]
+  .text:0000000180C01CE1                 jmp     short loc_180C01D5B
+  .text:0000000180C01CE3                 lea     rcx, [rbp+0F0h+var_148]
+  .text:0000000180C01CE7                 call    sub_180B98650
+  .text:0000000180C01CEC                 mov     rcx, [rsp+1F0h+var_1B0]
+  .text:0000000180C01CF1                 mov     rbx, rax
+  .text:0000000180C01CF4                 test    rcx, rcx
+  .text:0000000180C01CF7                 jz      short loc_180C01D0B
+  .text:0000000180C01CF9                 mov     r8, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C01D00                 inc     r8
+  .text:0000000180C01D03                 cmp     [rcx+r8], r14b
+  .text:0000000180C01D07                 jnz     short loc_180C01D00
+  .text:0000000180C01D09                 jmp     short loc_180C01D0E
+  .text:0000000180C01D0B                 xor     r8d, r8d
+  .text:0000000180C01D0E                 test    rcx, rcx
+  .text:0000000180C01D11                 mov     rdx, rsi
+  .text:0000000180C01D14                 cmovnz  rdx, rcx
+  .text:0000000180C01D18                 lea     rcx, [rax+30h]
+  .text:0000000180C01D1C                 call    cs:?SetDirect@CUtlString@@QEAAXPEBDH@Z; CUtlString::SetDirect(char const *,int)
+  .text:0000000180C01D22                 mov     rax, [rsp+1F0h+var_1A0]
+  .text:0000000180C01D27                 lea     rcx, [rbx+40h]
+  .text:0000000180C01D2B                 test    rax, rax
+  .text:0000000180C01D2E                 jz      short loc_180C01D42
+  .text:0000000180C01D30                 mov     r8, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C01D37                 inc     r8
+  .text:0000000180C01D3A                 cmp     [rax+r8], r14b
+  .text:0000000180C01D3E                 jnz     short loc_180C01D37
+  .text:0000000180C01D40                 jmp     short loc_180C01D45
+  .text:0000000180C01D42                 xor     r8d, r8d
+  .text:0000000180C01D45                 test    rax, rax
+  .text:0000000180C01D48                 mov     rdx, rsi
+  .text:0000000180C01D4B                 cmovnz  rdx, rax
+  .text:0000000180C01D4F                 call    cs:?SetDirect@CUtlString@@QEAAXPEBDH@Z; CUtlString::SetDirect(char const *,int)
+  .text:0000000180C01D55                 mov     word ptr [rbx+50h], 1
+  .text:0000000180C01D5B                 mov     eax, [rbp+0F0h+var_148]
+  .text:0000000180C01D5E                 test    eax, eax
+  .text:0000000180C01D60                 jnz     loc_180C01E24
+  .text:0000000180C01D66                 lea     rcx, [rsp+1F0h+var_178]
+  .text:0000000180C01D6B                 call    sub_180BF57F0
+  .text:0000000180C01D70                 mov     r14, [rbp+0F0h+var_170]
+  .text:0000000180C01D74                 movsxd  rcx, eax
+  .text:0000000180C01D77                 lea     rdx, [rcx+rcx*4]
+  .text:0000000180C01D7B                 mov     rcx, rsi
+  .text:0000000180C01D7E                 shl     rdx, 5
+  .text:0000000180C01D82                 add     rdx, r14
+  .text:0000000180C01D85                 mov     byte ptr [rdx+90h], 1
+  .text:0000000180C01D8C                 mov     [rdx+98h], r12b
+  .text:0000000180C01D93                 mov     dword ptr [rdx+8Ch], 42B40000h
+  .text:0000000180C01D9D                 movaps  xmm0, cs:xmmword_181651660
+  .text:0000000180C01DA4                 movups  xmmword ptr [rdx+40h], xmm0
+  .text:0000000180C01DA8                 movaps  xmm1, cs:xmmword_181651670
+  .text:0000000180C01DAF                 movups  xmmword ptr [rdx+50h], xmm1
+  .text:0000000180C01DB3                 movaps  xmm0, cs:xmmword_181651680
+  .text:0000000180C01DBA                 movups  xmmword ptr [rdx+60h], xmm0
+  .text:0000000180C01DBE                 mov     rax, [rsp+1F0h+var_1B0]
+  .text:0000000180C01DC3                 test    rax, rax
+  .text:0000000180C01DC6                 cmovnz  rcx, rax
+  .text:0000000180C01DCA                 lea     rax, aMapload; "mapload"
+  .text:0000000180C01DD1                 mov     [rdx+18h], rax
+  .text:0000000180C01DD5                 mov     [rdx], rcx
+  .text:0000000180C01DD8                 mov     edx, 1
+  .text:0000000180C01DDD                 mov     ecx, cs:dword_181F670F0
+  .text:0000000180C01DE3                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180C01DE9                 test    al, al
+  .text:0000000180C01DEB                 jz      loc_180C0208C
+  .text:0000000180C01DF1                 mov     rax, [rsp+1F0h+var_1A0]
+  .text:0000000180C01DF6                 lea     r8, aSaveFileSExpec; "save file '%s' expected to have a singl"...
+  .text:0000000180C01DFD                 mov     ecx, cs:dword_181F670F0
+  .text:0000000180C01E03                 test    rax, rax
+  .text:0000000180C01E06                 mov     r9, rsi
+  .text:0000000180C01E09                 mov     edx, 1
+  .text:0000000180C01E0E                 cmovnz  r9, rax
+  .text:0000000180C01E12                 mov     eax, [rbp+0F0h+var_148]
+  .text:0000000180C01E15                 mov     dword ptr [rsp+1F0h+var_1D0], eax
+  .text:0000000180C01E19                 call    cs:LoggingSystem_Log
+  .text:0000000180C01E1F                 jmp     loc_180C0208C
+  .text:0000000180C01E24                 xor     r12d, r12d
+  .text:0000000180C01E27                 test    eax, eax
+  .text:0000000180C01E29                 jle     loc_180C02091
+  .text:0000000180C01E2F                 mov     r13, [rbp+0F0h+arg_8]
+  .text:0000000180C01E36                 xor     ebx, ebx
+  .text:0000000180C01E38                 nop     dword ptr [rax+rax+00000000h]
+  .text:0000000180C01E40                 mov     rdi, [rbp+0F0h+var_140]
+  .text:0000000180C01E44                 lea     rcx, [rsp+1F0h+var_178]
+  .text:0000000180C01E49                 call    sub_180BF57F0
+  .text:0000000180C01E4E                 mov     r14, [rbp+0F0h+var_170]
+  .text:0000000180C01E52                 movsxd  rcx, eax
+  .text:0000000180C01E55                 movzx   eax, [rsp+1F0h+var_1A8]
+  .text:0000000180C01E5A                 lea     rdx, [rcx+rcx*4]
+  .text:0000000180C01E5E                 mov     rcx, rsi
+  .text:0000000180C01E61                 shl     rdx, 5
+  .text:0000000180C01E65                 add     rdx, r14
+  .text:0000000180C01E68                 mov     byte ptr [rdx+90h], 1
+  .text:0000000180C01E6F                 mov     [rdx+98h], al
+  .text:0000000180C01E75                 mov     dword ptr [rdx+8Ch], 42B40000h
+  .text:0000000180C01E7F                 movaps  xmm0, cs:xmmword_181651660
+  .text:0000000180C01E86                 movups  xmmword ptr [rdx+40h], xmm0
+  .text:0000000180C01E8A                 movaps  xmm1, cs:xmmword_181651670
+  .text:0000000180C01E91                 movups  xmmword ptr [rdx+50h], xmm1
+  .text:0000000180C01E95                 movaps  xmm0, cs:xmmword_181651680
+  .text:0000000180C01E9C                 movups  xmmword ptr [rdx+60h], xmm0
+  .text:0000000180C01EA0                 mov     rax, [rdi+rbx+30h]
+  .text:0000000180C01EA5                 test    rax, rax
+  .text:0000000180C01EA8                 cmovnz  rcx, rax
+  .text:0000000180C01EAC                 mov     [rdx], rcx
+  .text:0000000180C01EAF                 mov     rcx, rsi
+  .text:0000000180C01EB2                 mov     rax, [rdi+rbx+48h]
+  .text:0000000180C01EB7                 test    rax, rax
+  .text:0000000180C01EBA                 cmovnz  rcx, rax
+  .text:0000000180C01EBE                 mov     [rdx+10h], rcx
+  .text:0000000180C01EC2                 movups  xmm0, xmmword ptr [rdi+rbx]
+  .text:0000000180C01EC6                 movups  xmmword ptr [rdx+40h], xmm0
+  .text:0000000180C01ECA                 movups  xmm1, xmmword ptr [rdi+rbx+10h]
+  .text:0000000180C01ECF                 movups  xmmword ptr [rdx+50h], xmm1
+  .text:0000000180C01ED3                 movups  xmm0, xmmword ptr [rdi+rbx+20h]
+  .text:0000000180C01ED8                 movups  xmmword ptr [rdx+60h], xmm0
+  .text:0000000180C01EDC                 movzx   eax, byte ptr [rdi+rbx+52h]
+  .text:0000000180C01EE1                 mov     [rdx+99h], al
+  .text:0000000180C01EE7                 test    al, al
+  .text:0000000180C01EE9                 jnz     loc_180C01FF9
+  .text:0000000180C01EEF                 lea     r15, [rdx+78h]
+  .text:0000000180C01EF3                 mov     rdx, [rdi+rbx+40h]
+  .text:0000000180C01EF8                 test    rdx, rdx
+  .text:0000000180C01EFB                 jz      short loc_180C01F10
+  .text:0000000180C01EFD                 mov     r8, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C01F04                 inc     r8
+  .text:0000000180C01F07                 cmp     byte ptr [rdx+r8], 0
+  .text:0000000180C01F0C                 jnz     short loc_180C01F04
+  .text:0000000180C01F0E                 jmp     short loc_180C01F16
+  .text:0000000180C01F10                 xor     r8d, r8d
+  .text:0000000180C01F13                 mov     rdx, rsi
+  .text:0000000180C01F16                 mov     rcx, r15
+  .text:0000000180C01F19                 call    cs:?SetDirect@CUtlString@@QEAAXPEBDH@Z; CUtlString::SetDirect(char const *,int)
+  .text:0000000180C01F1F                 mov     rax, [rsp+1F0h+var_1B0]
+  .text:0000000180C01F24                 test    rax, rax
+  .text:0000000180C01F27                 jz      short loc_180C01F3D
+  .text:0000000180C01F29                 mov     rcx, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C01F30                 inc     rcx
+  .text:0000000180C01F33                 cmp     byte ptr [rax+rcx], 0
+  .text:0000000180C01F37                 jnz     short loc_180C01F30
+  .text:0000000180C01F39                 test    ecx, ecx
+  .text:0000000180C01F3B                 jnz     short loc_180C01F8C
+  .text:0000000180C01F3D                 mov     rdx, [rdi+rbx+30h]
+  .text:0000000180C01F42                 test    rdx, rdx
+  .text:0000000180C01F45                 jz      short loc_180C01F5C
+  .text:0000000180C01F47                 mov     r8, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C01F4E                 xchg    ax, ax
+  .text:0000000180C01F50                 inc     r8
+  .text:0000000180C01F53                 cmp     byte ptr [rdx+r8], 0
+  .text:0000000180C01F58                 jnz     short loc_180C01F50
+  .text:0000000180C01F5A                 jmp     short loc_180C01F62
+  .text:0000000180C01F5C                 xor     r8d, r8d
+  .text:0000000180C01F5F                 mov     rdx, rsi
+  .text:0000000180C01F62                 lea     rcx, [rsp+1F0h+var_1B0]
+  .text:0000000180C01F67                 call    cs:?SetDirect@CUtlString@@QEAAXPEBDH@Z; CUtlString::SetDirect(char const *,int)
+  .text:0000000180C01F6D                 mov     rax, [rsp+1F0h+var_1B0]
+  .text:0000000180C01F72                 lea     rdx, aLevelname; "levelname"
+  .text:0000000180C01F79                 test    rax, rax
+  .text:0000000180C01F7C                 mov     r8, rsi
+  .text:0000000180C01F7F                 mov     rcx, r13
+  .text:0000000180C01F82                 cmovnz  r8, rax
+  .text:0000000180C01F86                 call    cs:?SetString@KeyValues@@QEAAXPEBD0@Z; KeyValues::SetString(char const *,char const *)
+  .text:0000000180C01F8C                 mov     ecx, cs:dword_181F670F0
+  .text:0000000180C01F92                 mov     edx, 1
+  .text:0000000180C01F97                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180C01F9D                 test    al, al
+  .text:0000000180C01F9F                 jz      short loc_180C01FF9
+  .text:0000000180C01FA1                 mov     rax, [r15]
+  .text:0000000180C01FA4                 lea     r9, aLoading; "loading"
+  .text:0000000180C01FAB                 test    rax, rax
+  .text:0000000180C01FAE                 lea     r8, aSSHlSFromSaveF; "%s %s.HL%s from save file on %s\n"
+  .text:0000000180C01FB5                 mov     rcx, rsi
+  .text:0000000180C01FB8                 mov     edx, 1
+  .text:0000000180C01FBD                 cmovnz  rcx, rax
+  .text:0000000180C01FC1                 cmp     dword ptr [rbp+0F0h+var_160], 0
+  .text:0000000180C01FC5                 lea     rax, aTransitioning; "transitioning"
+  .text:0000000180C01FCC                 cmovnz  r9, rax
+  .text:0000000180C01FD0                 lea     rax, aServer_3; "server"
+  .text:0000000180C01FD7                 mov     [rsp+1F0h+var_1C0], rax
+  .text:0000000180C01FDC                 lea     rax, a1_0; "1"
+  .text:0000000180C01FE3                 mov     [rsp+1F0h+var_1C8], rax
+  .text:0000000180C01FE8                 mov     [rsp+1F0h+var_1D0], rcx
+  .text:0000000180C01FED                 mov     ecx, cs:dword_181F670F0
+  .text:0000000180C01FF3                 call    cs:LoggingSystem_Log
+  .text:0000000180C01FF9                 inc     r12d
+  .text:0000000180C01FFC                 add     rbx, 60h ; '`'
+  .text:0000000180C02000                 cmp     r12d, [rbp+0F0h+var_148]
+  .text:0000000180C02004                 jl      loc_180C01E40
+  .text:0000000180C0200A                 mov     r13, [rbp+0F0h+arg_0]
+  .text:0000000180C02011                 mov     rdi, [rbp+0F0h+arg_8]
+  .text:0000000180C02018                 jmp     short loc_180C0208C
+  .text:0000000180C0201A                 lea     rcx, [rsp+1F0h+var_178]
+  .text:0000000180C0201F                 call    sub_180BF57F0
+  .text:0000000180C02024                 mov     r14, [rbp+0F0h+var_170]
+  .text:0000000180C02028                 movsxd  rcx, eax
+  .text:0000000180C0202B                 lea     rdx, [rcx+rcx*4]
+  .text:0000000180C0202F                 mov     rcx, rsi
+  .text:0000000180C02032                 shl     rdx, 5
+  .text:0000000180C02036                 add     rdx, r14
+  .text:0000000180C02039                 mov     byte ptr [rdx+90h], 1
+  .text:0000000180C02040                 mov     [rdx+98h], r12b
+  .text:0000000180C02047                 mov     dword ptr [rdx+8Ch], 42B40000h
+  .text:0000000180C02051                 movaps  xmm0, cs:xmmword_181651660
+  .text:0000000180C02058                 movups  xmmword ptr [rdx+40h], xmm0
+  .text:0000000180C0205C                 movaps  xmm1, cs:xmmword_181651670
+  .text:0000000180C02063                 movups  xmmword ptr [rdx+50h], xmm1
+  .text:0000000180C02067                 movaps  xmm0, cs:xmmword_181651680
+  .text:0000000180C0206E                 movups  xmmword ptr [rdx+60h], xmm0
+  .text:0000000180C02072                 mov     rax, [rsp+1F0h+var_1B0]
+  .text:0000000180C02077                 test    rax, rax
+  .text:0000000180C0207A                 cmovnz  rcx, rax
+  .text:0000000180C0207E                 lea     rax, aMapload; "mapload"
+  .text:0000000180C02085                 mov     [rdx+18h], rax
+  .text:0000000180C02089                 mov     [rdx], rcx
+  .text:0000000180C0208C                 mov     r15d, [rsp+1F0h+var_178]
+  .text:0000000180C02091                 cmp     byte ptr [rbp+0F0h+arg_18], 0
+  .text:0000000180C02098                 jz      loc_180C0221B
+  .text:0000000180C0209E                 mov     rcx, cs:qword_1821D0E10
+  .text:0000000180C020A5                 mov     rax, [rcx]
+  .text:0000000180C020A8                 call    qword ptr [rax+0B0h]
+  .text:0000000180C020AE                 test    al, al
+  .text:0000000180C020B0                 jnz     loc_180C0221B
+  .text:0000000180C020B6                 mov     rax, [rsp+1F0h+var_1B0]
+  .text:0000000180C020BB                 lea     rdx, aError; "error"
+  .text:0000000180C020C2                 test    rax, rax
+  .text:0000000180C020C5                 mov     rcx, rsi
+  .text:0000000180C020C8                 cmovnz  rcx, rax
+  .text:0000000180C020CC                 call    cs:V_stricmp_fast
+  .text:0000000180C020D2                 test    eax, eax
+  .text:0000000180C020D4                 jnz     loc_180C0221B
+  .text:0000000180C020DA                 mov     ecx, cs:dword_182011538
+  .text:0000000180C020E0                 mov     edx, 3
+  .text:0000000180C020E5                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180C020EB                 test    al, al
+  .text:0000000180C020ED                 jz      short loc_180C02107
+  .text:0000000180C020EF                 mov     ecx, cs:dword_182011538
+  .text:0000000180C020F5                 lea     r8, aLoopinitInErro; "LoopInit:  in \"error\" map - disconnec"...
+  .text:0000000180C020FC                 mov     edx, 3
+  .text:0000000180C02101                 call    cs:LoggingSystem_Log
+  .text:0000000180C02107                 mov     rcx, cs:qword_1821D1110
+  .text:0000000180C0210E                 mov     edx, 40h ; '@'
+  .text:0000000180C02113                 mov     rax, [rcx]
+  .text:0000000180C02116                 mov     r9, [rax+0E0h]
+  .text:0000000180C0211D                 mov     rax, [rsp+1F0h+var_1B0]
+  .text:0000000180C02122                 test    rax, rax
+  .text:0000000180C02125                 cmovnz  rsi, rax
+  .text:0000000180C02129                 mov     r8, rsi
+  .text:0000000180C0212C                 call    r9
+  .text:0000000180C0212F                 lea     rax, aCBuildworkerCs_47; "C:\\buildworker\\csgo_rel_win64\\build"...
+  .text:0000000180C02136                 mov     [rbp+0F0h+var_78], 28Ch
+  .text:0000000180C0213D                 mov     [rbp+0F0h+var_90], rax
+  .text:0000000180C02141                 lea     r12, aCloopmodegameL; "CLoopModeGame::LoopInit"
+  .text:0000000180C02148                 lea     rax, aFalse; "false"
+  .text:0000000180C0214F                 mov     [rbp+0F0h+var_88], r12
+  .text:0000000180C02153                 lea     rdx, aErrorMap; "Error map!"
+  .text:0000000180C0215A                 mov     [rbp+0F0h+var_80], rax
+  .text:0000000180C0215E                 lea     rcx, [rbp+0F0h+var_90]
+  .text:0000000180C02162                 mov     [rbp+0F0h+var_74], 14h
+  .text:0000000180C02169                 call    cs:?Assert_ConditionFailed@@YA_NAEBU_AssertCompileTimeConstantStruct_t@@PEBDZZ; Assert_ConditionFailed(_AssertCompileTimeConstantStruct_t const &,char const *,...)
+  .text:0000000180C0216F                 test    al, al
+  .text:0000000180C02171                 jz      short loc_180C02174
+  .text:0000000180C02173                 ; Trap to Debugger
+  .text:0000000180C02173                 int     3; Trap to Debugger
+  .text:0000000180C02174                 cmp     [rsp+1F0h+var_198], 0
+  .text:0000000180C0217A                 jz      short loc_180C02187
+  .text:0000000180C0217C                 lea     rcx, [rsp+1F0h+var_198]
+  .text:0000000180C02181                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02187                 lea     eax, [r15-1]
+  .text:0000000180C0218B                 movsxd  rdi, eax
+  .text:0000000180C0218E                 test    eax, eax
+  .text:0000000180C02190                 js      short loc_180C021CE
+  .text:0000000180C02192                 lea     rbx, [rdi+rdi*4]
+  .text:0000000180C02196                 shl     rbx, 5
+  .text:0000000180C0219A                 add     rbx, 70h ; 'p'
+  .text:0000000180C0219E                 add     rbx, r14
+  .text:0000000180C021A1                 cmp     qword ptr [rbx+8], 0
+  .text:0000000180C021A6                 lea     rcx, [rbx+8]
+  .text:0000000180C021AA                 jz      short loc_180C021B2
+  .text:0000000180C021AC                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C021B2                 cmp     qword ptr [rbx], 0
+  .text:0000000180C021B6                 jz      short loc_180C021C1
+  .text:0000000180C021B8                 mov     rcx, rbx
+  .text:0000000180C021BB                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C021C1                 sub     rbx, 0A0h
+  .text:0000000180C021C8                 sub     rdi, 1
+  .text:0000000180C021CC                 jns     short loc_180C021A1
+  .text:0000000180C021CE                 test    dword ptr [rbp+0F0h+var_168+4], 0C0000000h
+  .text:0000000180C021D5                 jnz     loc_180C02819
+  .text:0000000180C021DB                 test    r14, r14
+  .text:0000000180C021DE                 jz      loc_180C02819
+  .text:0000000180C021E4                 mov     rax, cs:g_pMemAlloc
+  .text:0000000180C021EB                 mov     rdx, r14
+  .text:0000000180C021EE                 mov     rcx, [rax]
+  .text:0000000180C021F1                 mov     rax, [rcx]
+  .text:0000000180C021F4                 call    qword ptr [rax+18h]
+  .text:0000000180C021F7                 xor     r14d, r14d
+  .text:0000000180C021FA                 test    r14, r14
+  .text:0000000180C021FD                 jz      loc_180C02819
+  .text:0000000180C02203                 mov     rax, cs:g_pMemAlloc
+  .text:0000000180C0220A                 mov     edx, r14d
+  .text:0000000180C0220D                 mov     rcx, [rax]
+  .text:0000000180C02210                 mov     rax, [rcx]
+  .text:0000000180C02213                 call    qword ptr [rax+18h]
+  .text:0000000180C02216                 jmp     loc_180C02819
+  .text:0000000180C0221B                 mov     ecx, 28h ; '('
+  .text:0000000180C02220                 call    sub_180ECEA00
+  .text:0000000180C02225                 mov     rcx, rax
+  .text:0000000180C02228                 test    rax, rax
+  .text:0000000180C0222B                 jz      short loc_180C0225E
+  .text:0000000180C0222D                 xor     edx, edx
+  .text:0000000180C0222F                 mov     [rax+8], rdx
+  .text:0000000180C02233                 mov     [rax+14h], rdx
+  .text:0000000180C02237                 mov     [rax+1Ch], rdx
+  .text:0000000180C0223B                 mov     [rax+24h], edx
+  .text:0000000180C0223E                 lea     rax, ??_7CResourceManifestPrerequisite@@6B@; const CResourceManifestPrerequisite::`vftable'
+  .text:0000000180C02245                 mov     r14, [rbp+0F0h+var_170]
+  .text:0000000180C02249                 mov     r15d, [rsp+1F0h+var_178]
+  .text:0000000180C0224E                 mov     [rcx], rax
+  .text:0000000180C02251                 mov     [rcx+18h], rdx
+  .text:0000000180C02255                 mov     [rcx+20h], rdx
+  .text:0000000180C02259                 mov     [rcx+10h], edx
+  .text:0000000180C0225C                 jmp     short loc_180C02260
+  .text:0000000180C0225E                 xor     ecx, ecx
+  .text:0000000180C02260                 mov     [r13+8], rcx
+  .text:0000000180C02264                 mov     rax, [rcx]
+  .text:0000000180C02267                 call    qword ptr [rax+8]
+  .text:0000000180C0226A                 mov     rcx, [rbp+0F0h+arg_10]
+  .text:0000000180C02271                 mov     rdx, [r13+8]
+  .text:0000000180C02275                 mov     rax, [rcx]
+  .text:0000000180C02278                 call    qword ptr [rax]
+  .text:0000000180C0227A                 mov     rcx, cs:qword_1821D1108
+  .text:0000000180C02281                 mov     rax, [rcx]
+  .text:0000000180C02284                 call    qword ptr [rax+0B8h]
+  .text:0000000180C0228A                 cmp     byte ptr [rbp+0F0h+arg_18], 0
+  .text:0000000180C02291                 lea     rbx, [r13+8]
+  .text:0000000180C02295                 jz      loc_180C02966
+  .text:0000000180C0229B                 mov     rcx, cs:qword_1821D10A0
+  .text:0000000180C022A2                 lea     rdx, aDefaultsession; "defaultSession"
+  .text:0000000180C022A9                 mov     r9, [r13+8]
+  .text:0000000180C022AD                 mov     r8, rsi
+  .text:0000000180C022B0                 mov     rax, [rcx]
+  .text:0000000180C022B3                 mov     r10, [rax+68h]
+  .text:0000000180C022B7                 mov     rax, [rsp+1F0h+var_1B0]
+  .text:0000000180C022BC                 test    rax, rax
+  .text:0000000180C022BF                 cmovnz  r8, rax
+  .text:0000000180C022C3                 call    r10
+  .text:0000000180C022C6                 mov     rcx, [r13+60h]
+  .text:0000000180C022CA                 mov     rbx, rax
+  .text:0000000180C022CD                 cmp     rax, rcx
+  .text:0000000180C022D0                 jz      short loc_180C02315
+  .text:0000000180C022D2                 test    rcx, rcx
+  .text:0000000180C022D5                 jz      short loc_180C022E5
+  .text:0000000180C022D7                 mov     r8, [rcx]
+  .text:0000000180C022DA                 lea     rdx, aCloopmodegameS_1; "--CLoopModeGame::SetWorldSession"
+  .text:0000000180C022E1                 call    qword ptr [r8+8]
+  .text:0000000180C022E5                 mov     [r13+60h], rbx
+  .text:0000000180C022E9                 test    rbx, rbx
+  .text:0000000180C022EC                 jz      short loc_180C02315
+  .text:0000000180C022EE                 mov     rax, [rbx]
+  .text:0000000180C022F1                 lea     rdx, aCloopmodegameS_2; "++CLoopModeGame::SetWorldSession"
+  .text:0000000180C022F8                 mov     rcx, rbx
+  .text:0000000180C022FB                 call    qword ptr [rax]
+  .text:0000000180C022FD                 call    sub_181550B90
+  .text:0000000180C02302                 test    al, al
+  .text:0000000180C02304                 jnz     short loc_180C02315
+  .text:0000000180C02306                 mov     rcx, [r13+60h]
+  .text:0000000180C0230A                 xor     edx, edx
+  .text:0000000180C0230C                 mov     rax, [rcx]
+  .text:0000000180C0230F                 call    qword ptr [rax+0F0h]
+  .text:0000000180C02315                 mov     rax, [rbx]
+  .text:0000000180C02318                 lea     rdx, aCloopmodegameL_0; "--CLoopModeGame::LoopInit"
+  .text:0000000180C0231F                 mov     rcx, rbx
+  .text:0000000180C02322                 call    qword ptr [rax+8]
+  .text:0000000180C02325                 xor     r8d, r8d
+  .text:0000000180C02328                 lea     rcx, [rbp+0F0h+var_120]
+  .text:0000000180C0232C                 xor     edx, edx
+  .text:0000000180C0232E                 call    sub_180804540
+  .text:0000000180C02333                 or      [rbp+0F0h+var_110], 20h
+  .text:0000000180C02337                 lea     rax, ??_7?$CBaseCmdKeyValues@VCSVCMsg_GameSessionConfiguration@@@@6B@; const CBaseCmdKeyValues<CSVCMsg_GameSessionConfiguration>::`vftable'
+  .text:0000000180C0233E                 test    byte ptr [rbp+0F0h+var_118], 1
+  .text:0000000180C02342                 mov     [rbp+0F0h+var_120], rax
+  .text:0000000180C02346                 mov     [rbp+0F0h+var_B0], 0
+  .text:0000000180C0234E                 jz      short loc_180C0235D
+  .text:0000000180C02350                 mov     rax, [rbp+0F0h+var_118]
+  .text:0000000180C02354                 and     rax, 0FFFFFFFFFFFFFFFCh
+  .text:0000000180C02358                 mov     rdx, [rax]
+  .text:0000000180C0235B                 jmp     short loc_180C02365
+  .text:0000000180C0235D                 mov     rdx, [rbp+0F0h+var_118]
+  .text:0000000180C02361                 and     rdx, 0FFFFFFFFFFFFFFFCh
+  .text:0000000180C02365                 lea     rcx, [rbp+0F0h+var_E0]
+  .text:0000000180C02369                 call    sub_180FFED40
+  .text:0000000180C0236E                 mov     qword ptr [rax+10h], 0
+  .text:0000000180C02376                 cmp     qword ptr [rax+18h], 0Fh
+  .text:0000000180C0237B                 jbe     short loc_180C02380
+  .text:0000000180C0237D                 mov     rax, [rax]
+  .text:0000000180C02380                 mov     byte ptr [rax], 0
+  .text:0000000180C02383                 lea     r8, [rbp+0F0h+var_120]
+  .text:0000000180C02387                 mov     rcx, cs:qword_181FEF0C0
+  .text:0000000180C0238E                 lea     rax, ??_7GameSessionConfiguration_t@@6B@; const GameSessionConfiguration_t::`vftable'
+  .text:0000000180C02395                 mov     [rbp+0F0h+var_120], rax
+  .text:0000000180C02399                 mov     rdx, rdi
+  .text:0000000180C0239C                 mov     rax, [rcx]
+  .text:0000000180C0239F                 call    qword ptr [rax+0A8h]
+  .text:0000000180C023A5                 test    al, al
+  .text:0000000180C023A7                 jnz     loc_180C02447
+  .text:0000000180C023AD                 mov     rbx, [rbp+0F0h+var_B0]
+  .text:0000000180C023B1                 lea     rax, ??_7?$CBaseCmdKeyValues@VCSVCMsg_GameSessionConfiguration@@@@6B@; const CBaseCmdKeyValues<CSVCMsg_GameSessionConfiguration>::`vftable'
+  .text:0000000180C023B8                 mov     [rbp+0F0h+var_120], rax
+  .text:0000000180C023BC                 test    rbx, rbx
+  .text:0000000180C023BF                 jz      short loc_180C023DB
+  .text:0000000180C023C1                 mov     rcx, rbx
+  .text:0000000180C023C4                 call    cs:??1KeyValues@@QEAA@XZ; KeyValues::~KeyValues(void)
+  .text:0000000180C023CA                 mov     rcx, rbx
+  .text:0000000180C023CD                 call    cs:??3KeyValues@@SAXPEAX@Z; KeyValues::operator delete(void *)
+  .text:0000000180C023D3                 mov     [rbp+0F0h+var_B0], 0
+  .text:0000000180C023DB                 lea     rcx, [rbp+0F0h+var_120]
+  .text:0000000180C023DF                 call    sub_180804B20
+  .text:0000000180C023E4                 cmp     [rsp+1F0h+var_198], 0
+  .text:0000000180C023EA                 jz      short loc_180C023F7
+  .text:0000000180C023EC                 lea     rcx, [rsp+1F0h+var_198]
+  .text:0000000180C023F1                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C023F7                 lea     eax, [r15-1]
+  .text:0000000180C023FB                 movsxd  rdi, eax
+  .text:0000000180C023FE                 test    eax, eax
+  .text:0000000180C02400                 js      loc_180C021CE
+  .text:0000000180C02406                 lea     rbx, [rdi+rdi*4]
+  .text:0000000180C0240A                 shl     rbx, 5
+  .text:0000000180C0240E                 add     rbx, 70h ; 'p'
+  .text:0000000180C02412                 add     rbx, r14
+  .text:0000000180C02415                 cmp     qword ptr [rbx+8], 0
+  .text:0000000180C0241A                 lea     rcx, [rbx+8]
+  .text:0000000180C0241E                 jz      short loc_180C02426
+  .text:0000000180C02420                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02426                 cmp     qword ptr [rbx], 0
+  .text:0000000180C0242A                 jz      short loc_180C02435
+  .text:0000000180C0242C                 mov     rcx, rbx
+  .text:0000000180C0242F                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02435                 sub     rbx, 0A0h
+  .text:0000000180C0243C                 sub     rdi, 1
+  .text:0000000180C02440                 jns     short loc_180C02415
+  .text:0000000180C02442                 jmp     loc_180C021CE
+  .text:0000000180C02447                 movzx   eax, [rbp+0F0h+var_C5]
+  .text:0000000180C0244B                 mov     rdx, [rbp+0F0h+var_D8]
+  .text:0000000180C0244F                 mov     [r13+6Dh], al
+  .text:0000000180C02453                 and     rdx, 0FFFFFFFFFFFFFFFCh
+  .text:0000000180C02457                 movzx   eax, [rbp+0F0h+var_C6]
+  .text:0000000180C0245B                 mov     [r13+6Fh], al
+  .text:0000000180C0245F                 movzx   eax, [rbp+0F0h+var_B2]
+  .text:0000000180C02463                 mov     [r13+70h], al
+  .text:0000000180C02467                 cmp     qword ptr [rdx+18h], 0Fh
+  .text:0000000180C0246C                 jbe     short loc_180C02471
+  .text:0000000180C0246E                 mov     rdx, [rdx]
+  .text:0000000180C02471                 lea     rcx, [r13+80h]
+  .text:0000000180C02478                 call    cs:?Set@CUtlString@@QEAAXPEBD@Z; CUtlString::Set(char const *)
+  .text:0000000180C0247E                 mov     rdx, [rbp+0F0h+var_F8]
+  .text:0000000180C02482                 and     rdx, 0FFFFFFFFFFFFFFFCh
+  .text:0000000180C02486                 cmp     qword ptr [rdx+18h], 0Fh
+  .text:0000000180C0248B                 jbe     short loc_180C02490
+  .text:0000000180C0248D                 mov     rdx, [rdx]
+  .text:0000000180C02490                 lea     rcx, [r13+88h]
+  .text:0000000180C02497                 call    cs:?Set@CUtlString@@QEAAXPEBD@Z; CUtlString::Set(char const *)
+  .text:0000000180C0249D                 mov     rcx, cs:qword_182160A80
+  .text:0000000180C024A4                 test    rcx, rcx
+  .text:0000000180C024A7                 jz      short loc_180C024BA
+  .text:0000000180C024A9                 movzx   eax, [rbp+0F0h+var_C7]
+  .text:0000000180C024AD                 mov     [rcx+0BDDh], al
+  .text:0000000180C024B3                 mov     byte ptr [rcx+0BDEh], 0
+  .text:0000000180C024BA                 mov     rcx, cs:qword_1821D1120
+  .text:0000000180C024C1                 lea     rdx, [rbp+0F0h+var_120]
+  .text:0000000180C024C5                 mov     r9, rsi
+  .text:0000000180C024C8                 mov     r8, rbx
+  .text:0000000180C024CB                 mov     rax, [rcx]
+  .text:0000000180C024CE                 mov     r10, [rax+0D0h]
+  .text:0000000180C024D5                 mov     rax, [rsp+1F0h+var_1B0]
+  .text:0000000180C024DA                 test    rax, rax
+  .text:0000000180C024DD                 cmovnz  r9, rax
+  .text:0000000180C024E1                 call    r10
+  .text:0000000180C024E4                 mov     rcx, cs:qword_1821D1120
+  .text:0000000180C024EB                 lea     rdx, [rbp+0F0h+var_50]
+  .text:0000000180C024F2                 mov     rax, [rcx]
+  .text:0000000180C024F5                 call    qword ptr [rax+100h]
+  .text:0000000180C024FB                 mov     rcx, rax
+  .text:0000000180C024FE                 xor     edx, edx
+  .text:0000000180C02500                 call    cs:?ToString@netadr_t@@QEBAPEBD_N@Z; netadr_t::ToString(bool)
+  .text:0000000180C02506                 or      [rbp+0F0h+var_110], 10h
+  .text:0000000180C0250A                 test    byte ptr [rbp+0F0h+var_118], 1
+  .text:0000000180C0250E                 jz      short loc_180C0251D
+  .text:0000000180C02510                 mov     rcx, [rbp+0F0h+var_118]
+  .text:0000000180C02514                 and     rcx, 0FFFFFFFFFFFFFFFCh
+  .text:0000000180C02518                 mov     rbx, [rcx]
+  .text:0000000180C0251B                 jmp     short loc_180C02525
+  .text:0000000180C0251D                 mov     rbx, [rbp+0F0h+var_118]
+  .text:0000000180C02521                 and     rbx, 0FFFFFFFFFFFFFFFCh
+  .text:0000000180C02525                 xorps   xmm0, xmm0
+  .text:0000000180C02528                 xorps   xmm1, xmm1
+  .text:0000000180C0252B                 movups  [rbp+0F0h+var_70], xmm0
+  .text:0000000180C02532                 mov     r8, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C02539                 movdqu  [rbp+0F0h+var_60], xmm1
+  .text:0000000180C02541                 inc     r8
+  .text:0000000180C02544                 cmp     byte ptr [rax+r8], 0
+  .text:0000000180C02549                 jnz     short loc_180C02541
+  .text:0000000180C0254B                 mov     rdx, rax
+  .text:0000000180C0254E                 lea     rcx, [rbp+0F0h+var_70]
+  .text:0000000180C02555                 call    sub_18014AE10
+  .text:0000000180C0255A                 mov     r8, rbx
+  .text:0000000180C0255D                 lea     rdx, [rbp+0F0h+var_70]
+  .text:0000000180C02564                 lea     rcx, [rbp+0F0h+var_E8]
+  .text:0000000180C02568                 call    sub_180FFEF20
+  .text:0000000180C0256D                 mov     rdx, qword ptr [rbp+0F0h+var_60+8]
+  .text:0000000180C02574                 cmp     rdx, 0Fh
+  .text:0000000180C02578                 jbe     short loc_180C025AE
+  .text:0000000180C0257A                 mov     rcx, qword ptr [rbp+0F0h+var_70]
+  .text:0000000180C02581                 inc     rdx
+  .text:0000000180C02584                 mov     rax, rcx
+  .text:0000000180C02587                 cmp     rdx, 1000h
+  .text:0000000180C0258E                 jb      short loc_180C025A9
+  .text:0000000180C02590                 mov     rcx, [rcx-8]
+  .text:0000000180C02594                 add     rdx, 27h ; '''
+  .text:0000000180C02598                 sub     rax, rcx
+  .text:0000000180C0259B                 add     rax, 0FFFFFFFFFFFFFFF8h
+  .text:0000000180C0259F                 cmp     rax, 1Fh
+  .text:0000000180C025A3                 ja      loc_180C02C85
+  .text:0000000180C025A9                 call    sub_180ECEA60
+  .text:0000000180C025AE                 mov     rax, [rsp+1F0h+var_198]
+  .text:0000000180C025B3                 test    rax, rax
+  .text:0000000180C025B6                 jz      loc_180C0272D
+  .text:0000000180C025BC                 mov     rcx, 0FFFFFFFFFFFFFFFFh
+  .text:0000000180C025C3                 inc     rcx
+  .text:0000000180C025C6                 cmp     byte ptr [rax+rcx], 0
+  .text:0000000180C025CA                 jnz     short loc_180C025C3
+  .text:0000000180C025CC                 test    ecx, ecx
+  .text:0000000180C025CE                 jle     loc_180C0272D
+  .text:0000000180C025D4                 xor     eax, eax
+  .text:0000000180C025D6                 lea     rdx, [rbp+0F0h+var_A0]
+  .text:0000000180C025DA                 lea     rcx, [rbp+0F0h+var_158]
+  .text:0000000180C025DE                 mov     [rbp+0F0h+var_158], eax
+  .text:0000000180C025E1                 mov     [rbp+0F0h+var_150], rax
+  .text:0000000180C025E5                 call    sub_180BDDB60
+  .text:0000000180C025EA                 cmp     [rbp+0F0h+var_150], 0
+  .text:0000000180C025EF                 mov     rbx, rax
+  .text:0000000180C025F2                 mov     rdi, [rax]
+  .text:0000000180C025F5                 jz      short loc_180C02601
+  .text:0000000180C025F7                 lea     rcx, [rbp+0F0h+var_150]
+  .text:0000000180C025FB                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02601                 mov     [rbp+0F0h+var_150], rdi
+  .text:0000000180C02605                 mov     qword ptr [rbx], 0
+  .text:0000000180C0260C                 cmp     [rbp+0F0h+var_A0], 0
+  .text:0000000180C02611                 jz      short loc_180C0261D
+  .text:0000000180C02613                 lea     rcx, [rbp+0F0h+var_A0]
+  .text:0000000180C02617                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C0261D                 mov     rax, [rsp+1F0h+var_198]
+  .text:0000000180C02622                 lea     rcx, [rbp+0F0h+var_158]
+  .text:0000000180C02626                 test    rax, rax
+  .text:0000000180C02629                 mov     rdx, rsi
+  .text:0000000180C0262C                 cmovnz  rdx, rax
+  .text:0000000180C02630                 call    sub_180BB1A00
+  .text:0000000180C02635                 test    al, al
+  .text:0000000180C02637                 jz      loc_180C0271C
+  .text:0000000180C0263D                 mov     rax, cs:qword_181FF02E0
+  .text:0000000180C02644                 lea     rdx, [rbp+0F0h+var_158]
+  .text:0000000180C02648                 mov     rcx, [rax+20D8h]
+  .text:0000000180C0264F                 mov     rax, [rcx]
+  .text:0000000180C02652                 call    qword ptr [rax+0F0h]
+  .text:0000000180C02658                 mov     rax, cs:qword_181FF02E0
+  .text:0000000180C0265F                 lea     r8, [rsp+1F0h+var_198]
+  .text:0000000180C02664                 lea     rdx, [rbp+0F0h+var_160]
+  .text:0000000180C02668                 mov     rcx, [rax+20D8h]
+  .text:0000000180C0266F                 mov     rax, [rcx]
+  .text:0000000180C02672                 call    qword ptr [rax+108h]
+  .text:0000000180C02678                 mov     ecx, cs:dword_181FEF254
+  .text:0000000180C0267E                 mov     edx, 2
+  .text:0000000180C02683                 call    cs:LoggingSystem_IsChannelEnabled
+  .text:0000000180C02689                 test    al, al
+  .text:0000000180C0268B                 jz      short loc_180C026F3
+  .text:0000000180C0268D                 mov     rax, [rbp+0F0h+var_160]
+  .text:0000000180C02691                 lea     rdx, [rbp+0F0h+var_98]
+  .text:0000000180C02695                 test    rax, rax
+  .text:0000000180C02698                 lea     rcx, [rbp+0F0h+var_158]
+  .text:0000000180C0269C                 mov     rdi, rsi
+  .text:0000000180C0269F                 mov     rbx, rsi
+  .text:0000000180C026A2                 cmovnz  rdi, rax
+  .text:0000000180C026A6                 mov     rax, [rsp+1F0h+var_198]
+  .text:0000000180C026AB                 test    rax, rax
+  .text:0000000180C026AE                 cmovnz  rbx, rax
+  .text:0000000180C026B2                 call    sub_180BDDB60
+  .text:0000000180C026B7                 mov     r9d, [rbp+0F0h+var_158]
+  .text:0000000180C026BB                 lea     r8, aEtRestoringGam; "ET:  Restoring game at %u %s : '%s'\nET"...
+  .text:0000000180C026C2                 mov     [rsp+1F0h+var_1C0], rdi
+  .text:0000000180C026C7                 mov     edx, 2
+  .text:0000000180C026CC                 mov     [rsp+1F0h+var_1C8], rbx
+  .text:0000000180C026D1                 mov     rcx, [rax]
+  .text:0000000180C026D4                 test    rcx, rcx
+  .text:0000000180C026D7                 cmovnz  rsi, rcx
+  .text:0000000180C026DB                 mov     ecx, cs:dword_181FEF254
+  .text:0000000180C026E1                 mov     [rsp+1F0h+var_1D0], rsi
+  .text:0000000180C026E6                 call    cs:LoggingSystem_Log
+  .text:0000000180C026EC                 mov     eax, 1
+  .text:0000000180C026F1                 jmp     short loc_180C026F6
+  .text:0000000180C026F3                 mov     eax, [rbp+0F0h+var_130]
+  .text:0000000180C026F6                 test    al, 1
+  .text:0000000180C026F8                 jz      short loc_180C0270B
+  .text:0000000180C026FA                 cmp     [rbp+0F0h+var_98], 0
+  .text:0000000180C026FF                 jz      short loc_180C0270B
+  .text:0000000180C02701                 lea     rcx, [rbp+0F0h+var_98]
+  .text:0000000180C02705                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C0270B                 cmp     [rbp+0F0h+var_160], 0
+  .text:0000000180C02710                 jz      short loc_180C0271C
+  .text:0000000180C02712                 lea     rcx, [rbp+0F0h+var_160]
+  .text:0000000180C02716                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C0271C                 cmp     [rbp+0F0h+var_150], 0
+  .text:0000000180C02721                 jz      short loc_180C0272D
+  .text:0000000180C02723                 lea     rcx, [rbp+0F0h+var_150]
+  .text:0000000180C02727                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C0272D                 mov     edx, 1
+  .text:0000000180C02732                 mov     rcx, r13
+  .text:0000000180C02735                 call    sub_180C08040
+  .text:0000000180C0273A                 mov     rcx, r13
+  .text:0000000180C0273D                 call    sub_180BF5410
+  .text:0000000180C02742                 mov     rcx, cs:qword_181FEF0C0
+  .text:0000000180C02749                 lea     rdx, [rbp+0F0h+var_120]
+  .text:0000000180C0274D                 mov     rax, [rcx]
+  .text:0000000180C02750                 call    qword ptr [rax+0B0h]
+  .text:0000000180C02756                 test    al, al
+  .text:0000000180C02758                 jnz     short loc_180C02768
+  .text:0000000180C0275A                 lea     rcx, aLevelinitworld; "LevelInitWorld failed!\n"
+  .text:0000000180C02761                 call    cs:Plat_FatalError
+  .text:0000000180C02767                 ; Trap to Debugger
+  .text:0000000180C02767                 int     3; Trap to Debugger
+  .text:0000000180C02768                 lea     rcx, [rbp+0F0h+arg_0]
+  .text:0000000180C0276F                 call    sub_180C47E10
+  .text:0000000180C02774                 mov     edx, 2
+  .text:0000000180C02779                 mov     rcx, r13
+  .text:0000000180C0277C                 call    sub_180C08040
+  .text:0000000180C02781                 mov     rdi, [rbp+0F0h+arg_10]
+  .text:0000000180C02788                 lea     rcx, [rbp+0F0h+var_120]
+  .text:0000000180C0278C                 mov     rdx, rdi
+  .text:0000000180C0278F                 call    sub_180528770
+  .text:0000000180C02794                 test    al, al
+  .text:0000000180C02796                 jz      short loc_180C027B9
+  .text:0000000180C02798                 mov     edx, 3
+  .text:0000000180C0279D                 mov     rcx, r13
+  .text:0000000180C027A0                 call    sub_180C08040
+  .text:0000000180C027A5                 mov     rdx, rdi
+  .text:0000000180C027A8                 lea     rcx, [rbp+0F0h+var_120]
+  .text:0000000180C027AC                 call    sub_180528D30
+  .text:0000000180C027B1                 test    al, al
+  .text:0000000180C027B3                 jnz     loc_180C02884
+  .text:0000000180C027B9                 lea     rcx, [rbp+0F0h+arg_0]
+  .text:0000000180C027C0                 call    sub_180C489C0
+  .text:0000000180C027C5                 mov     rbx, [rbp+0F0h+var_B0]
+  .text:0000000180C027C9                 lea     rax, ??_7?$CBaseCmdKeyValues@VCSVCMsg_GameSessionConfiguration@@@@6B@; const CBaseCmdKeyValues<CSVCMsg_GameSessionConfiguration>::`vftable'
+  .text:0000000180C027D0                 mov     [rbp+0F0h+var_120], rax
+  .text:0000000180C027D4                 test    rbx, rbx
+  .text:0000000180C027D7                 jz      short loc_180C027F3
+  .text:0000000180C027D9                 mov     rcx, rbx
+  .text:0000000180C027DC                 call    cs:??1KeyValues@@QEAA@XZ; KeyValues::~KeyValues(void)
+  .text:0000000180C027E2                 mov     rcx, rbx
+  .text:0000000180C027E5                 call    cs:??3KeyValues@@SAXPEAX@Z; KeyValues::operator delete(void *)
+  .text:0000000180C027EB                 mov     [rbp+0F0h+var_B0], 0
+  .text:0000000180C027F3                 lea     rcx, [rbp+0F0h+var_120]
+  .text:0000000180C027F7                 call    sub_180804B20
+  .text:0000000180C027FC                 cmp     [rsp+1F0h+var_198], 0
+  .text:0000000180C02802                 jz      short loc_180C0280F
+  .text:0000000180C02804                 lea     rcx, [rsp+1F0h+var_198]
+  .text:0000000180C02809                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C0280F                 lea     rcx, [rsp+1F0h+var_178]
+  .text:0000000180C02814                 call    sub_180BF41B0
+  .text:0000000180C02819                 lea     rcx, [rbp+0F0h+var_148]
+  .text:0000000180C0281D                 call    sub_18054EBF0
+  .text:0000000180C02822                 cmp     [rsp+1F0h+var_180], 0
+  .text:0000000180C02828                 jz      short loc_180C02835
+  .text:0000000180C0282A                 lea     rcx, [rsp+1F0h+var_180]
+  .text:0000000180C0282F                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02835                 cmp     [rsp+1F0h+var_190], 0
+  .text:0000000180C0283B                 jz      short loc_180C02848
+  .text:0000000180C0283D                 lea     rcx, [rsp+1F0h+var_190]
+  .text:0000000180C02842                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02848                 cmp     [rsp+1F0h+var_1A0], 0
+  .text:0000000180C0284E                 jz      short loc_180C0285B
+  .text:0000000180C02850                 lea     rcx, [rsp+1F0h+var_1A0]
+  .text:0000000180C02855                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C0285B                 cmp     [rsp+1F0h+var_1B0], 0
+  .text:0000000180C02861                 jz      short loc_180C0286E
+  .text:0000000180C02863                 lea     rcx, [rsp+1F0h+var_1B0]
+  .text:0000000180C02868                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C0286E                 xor     al, al
+  .text:0000000180C02870                 add     rsp, 1B8h
+  .text:0000000180C02877                 pop     r15
+  .text:0000000180C02879                 pop     r14
+  .text:0000000180C0287B                 pop     r13
+  .text:0000000180C0287D                 pop     r12
+  .text:0000000180C0287F                 pop     rdi
+  .text:0000000180C02880                 pop     rsi
+  .text:0000000180C02881                 pop     rbx
+  .text:0000000180C02882                 pop     rbp
+  .text:0000000180C02883                 retn
+  .text:0000000180C02884                 mov     rcx, cs:qword_181FEF0C0
+  .text:0000000180C0288B                 lea     rdx, [rbp+0F0h+var_120]
+  .text:0000000180C0288F                 mov     r8, rdi
+  .text:0000000180C02892                 mov     rax, [rcx]
+  .text:0000000180C02895                 call    qword ptr [rax+0C8h]
+  .text:0000000180C0289B                 lea     rcx, [rbp+0F0h+arg_0]
+  .text:0000000180C028A2                 test    al, al
+  .text:0000000180C028A4                 jz      loc_180C027C0
+  .text:0000000180C028AA                 call    sub_180C489C0
+  .text:0000000180C028AF                 mov     rcx, cs:qword_1821D1120
+  .text:0000000180C028B6                 mov     rdx, cs:qword_181F02D08
+  .text:0000000180C028BD                 mov     rax, [rcx]
+  .text:0000000180C028C0                 call    qword ptr [rax+0D8h]
+  .text:0000000180C028C6                 xor     ebx, ebx
+  .text:0000000180C028C8                 test    r15d, r15d
+  .text:0000000180C028CB                 jle     short loc_180C02904
+  .text:0000000180C028CD                 nop     dword ptr [rax]
+  .text:0000000180C028D0                 mov     rcx, cs:qword_182012050
+  .text:0000000180C028D7                 mov     rax, [rcx]
+  .text:0000000180C028DA                 mov     r8, [rax+1E0h]
+  .text:0000000180C028E1                 movsxd  rax, ebx
+  .text:0000000180C028E4                 lea     rdx, [rax+rax*4]
+  .text:0000000180C028E8                 shl     rdx, 5
+  .text:0000000180C028EC                 add     rdx, r14
+  .text:0000000180C028EF                 call    r8
+  .text:0000000180C028F2                 test    ebx, ebx
+  .text:0000000180C028F4                 jnz     short loc_180C028FD
+  .text:0000000180C028F6                 mov     [r13+430h], eax
+  .text:0000000180C028FD                 inc     ebx
+  .text:0000000180C028FF                 cmp     ebx, r15d
+  .text:0000000180C02902                 jl      short loc_180C028D0
+  .text:0000000180C02904                 mov     rcx, cs:qword_1821D1120
+  .text:0000000180C0290B                 lea     r8, aGamesessionman_0; "GameSessionManifest"
+  .text:0000000180C02912                 movzx   edx, [rsp+1F0h+var_188]
+  .text:0000000180C02917                 mov     r9, rdi
+  .text:0000000180C0291A                 mov     byte ptr [rsp+1F0h+var_1D0], dl
+  .text:0000000180C0291E                 lea     rdx, [rbp+0F0h+var_120]
+  .text:0000000180C02922                 mov     rax, [rcx]
+  .text:0000000180C02925                 call    qword ptr [rax+0E0h]
+  .text:0000000180C0292B                 mov     rbx, [rbp+0F0h+var_B0]
+  .text:0000000180C0292F                 lea     rax, ??_7?$CBaseCmdKeyValues@VCSVCMsg_GameSessionConfiguration@@@@6B@; const CBaseCmdKeyValues<CSVCMsg_GameSessionConfiguration>::`vftable'
+  .text:0000000180C02936                 mov     [rbp+0F0h+var_120], rax
+  .text:0000000180C0293A                 test    rbx, rbx
+  .text:0000000180C0293D                 jz      short loc_180C02959
+  .text:0000000180C0293F                 mov     rcx, rbx
+  .text:0000000180C02942                 call    cs:??1KeyValues@@QEAA@XZ; KeyValues::~KeyValues(void)
+  .text:0000000180C02948                 mov     rcx, rbx
+  .text:0000000180C0294B                 call    cs:??3KeyValues@@SAXPEAX@Z; KeyValues::operator delete(void *)
+  .text:0000000180C02951                 mov     [rbp+0F0h+var_B0], 0
+  .text:0000000180C02959                 lea     rcx, [rbp+0F0h+var_120]
+  .text:0000000180C0295D                 call    sub_180804B20
+  .text:0000000180C02962                 lea     rbx, [r13+8]
+  .text:0000000180C02966                 mov     rcx, cs:qword_1821D0EF0
+  .text:0000000180C0296D                 lea     r12, aCloopmodegameL; "CLoopModeGame::LoopInit"
+  .text:0000000180C02974                 mov     rdi, [r13+8]
+  .text:0000000180C02978                 lea     rdx, aLoopmodegamest; "LoopModeGameStartup"
+  .text:0000000180C0297F                 mov     r9, r12
+  .text:0000000180C02982                 mov     byte ptr [rsp+1F0h+var_1D0], 0FFh
+  .text:0000000180C02987                 mov     r8b, 1
+  .text:0000000180C0298A                 mov     rax, [rcx]
+  .text:0000000180C0298D                 call    qword ptr [rax+0A0h]
+  .text:0000000180C02993                 mov     [rbp+0F0h+arg_18], rax
+  .text:0000000180C0299A                 test    rax, rax
+  .text:0000000180C0299D                 jz      loc_180C02A7D
+  .text:0000000180C029A3                 mov     ecx, [rdi+10h]
+  .text:0000000180C029A6                 mov     dword ptr [rbp+0F0h+arg_0], ecx
+  .text:0000000180C029AC                 cmp     ecx, [rdi+20h]
+  .text:0000000180C029AF                 jnz     loc_180C02A68
+  .text:0000000180C029B5                 mov     eax, [rdi+24h]
+  .text:0000000180C029B8                 and     eax, 0C0000000h
+  .text:0000000180C029BD                 jz      short loc_180C029CA
+  .text:0000000180C029BF                 cmp     eax, 80000000h
+  .text:0000000180C029C4                 jnz     loc_180C02A68
+  .text:0000000180C029CA                 mov     ecx, [rdi+20h]
+  .text:0000000180C029CD                 cmp     ecx, 7FFFFFFEh
+  .text:0000000180C029D3                 jle     short loc_180C029E0
+  .text:0000000180C029D5                 mov     edx, 1
+  .text:0000000180C029DA                 call    cs:UtlVectorMemory_FailedAllocation
+  .text:0000000180C029E0                 mov     ecx, [rdi+20h]
+  .text:0000000180C029E3                 mov     r9d, 8
+  .text:0000000180C029E9                 mov     edx, [rdi+24h]
+  .text:0000000180C029EC                 and     edx, 3FFFFFFFh
+  .text:0000000180C029F2                 lea     esi, [rcx+1]
+  .text:0000000180C029F5                 mov     r8d, esi
+  .text:0000000180C029F8                 call    cs:UtlVectorMemory_CalcNewAllocationCount
+  .text:0000000180C029FE                 mov     ebx, eax
+  .text:0000000180C02A00                 cmp     eax, esi
+  .text:0000000180C02A02                 jge     short loc_180C02A22
+  .text:0000000180C02A04                 test    eax, eax
+  .text:0000000180C02A06                 jnz     short loc_180C02A14
+  .text:0000000180C02A08                 cmp     esi, 0FFFFFFFFh
+  .text:0000000180C02A0B                 jg      short loc_180C02A14
+  .text:0000000180C02A0D                 mov     ebx, 0FFFFFFFFh
+  .text:0000000180C02A12                 jmp     short loc_180C02A22
+  .text:0000000180C02A14                 lea     eax, [rbx+rsi]
+  .text:0000000180C02A17                 cdq
+  .text:0000000180C02A18                 sub     eax, edx
+  .text:0000000180C02A1A                 sar     eax, 1
+  .text:0000000180C02A1C                 mov     ebx, eax
+  .text:0000000180C02A1E                 cmp     eax, esi
+  .text:0000000180C02A20                 jl      short loc_180C02A14
+  .text:0000000180C02A22                 movsxd  r9, dword ptr [rdi+20h]
+  .text:0000000180C02A26                 mov     rcx, [rdi+18h]
+  .text:0000000180C02A2A                 shl     r9, 3
+  .text:0000000180C02A2E                 test    dword ptr [rdi+24h], 0C0000000h
+  .text:0000000180C02A35                 movsxd  r8, ebx
+  .text:0000000180C02A38                 setz    dl
+  .text:0000000180C02A3B                 shl     r8, 3
+  .text:0000000180C02A3F                 call    cs:UtlVectorMemory_Alloc
+  .text:0000000180C02A45                 mov     [rdi+18h], rax
+  .text:0000000180C02A49                 mov     eax, [rdi+24h]
+  .text:0000000180C02A4C                 test    eax, 0C0000000h
+  .text:0000000180C02A51                 jz      short loc_180C02A5B
+  .text:0000000180C02A53                 and     eax, 3FFFFFFFh
+  .text:0000000180C02A58                 mov     [rdi+24h], eax
+  .text:0000000180C02A5B                 mov     ecx, dword ptr [rbp+0F0h+arg_0]
+  .text:0000000180C02A61                 mov     [rdi+20h], ebx
+  .text:0000000180C02A64                 lea     rbx, [r13+8]
+  .text:0000000180C02A68                 inc     dword ptr [rdi+10h]
+  .text:0000000180C02A6B                 mov     rax, [rdi+18h]
+  .text:0000000180C02A6F                 mov     rdx, [rbp+0F0h+arg_18]
+  .text:0000000180C02A76                 movsxd  rcx, ecx
+  .text:0000000180C02A79                 mov     [rax+rcx*8], rdx
+  .text:0000000180C02A7D                 mov     rcx, cs:qword_1821D0EF0
+  .text:0000000180C02A84                 lea     rdx, aLoopmodegameSe; "LoopModeGame_server"
+  .text:0000000180C02A8B                 mov     rdi, [rbx]
+  .text:0000000180C02A8E                 mov     r9, r12
+  .text:0000000180C02A91                 mov     r8b, 1
+  .text:0000000180C02A94                 mov     byte ptr [rsp+1F0h+var_1D0], 0FFh
+  .text:0000000180C02A99                 mov     rax, [rcx]
+  .text:0000000180C02A9C                 call    qword ptr [rax+0A8h]
+  .text:0000000180C02AA2                 mov     r13, rax
+  .text:0000000180C02AA5                 test    rax, rax
+  .text:0000000180C02AA8                 jz      loc_180C02B68
+  .text:0000000180C02AAE                 movsxd  r12, dword ptr [rdi+10h]
+  .text:0000000180C02AB2                 cmp     r12d, [rdi+20h]
+  .text:0000000180C02AB6                 jnz     loc_180C02B5D
+  .text:0000000180C02ABC                 test    dword ptr [rdi+24h], 40000000h
+  .text:0000000180C02AC3                 jnz     loc_180C02B5D
+  .text:0000000180C02AC9                 mov     ecx, [rdi+20h]
+  .text:0000000180C02ACC                 cmp     ecx, 7FFFFFFEh
+  .text:0000000180C02AD2                 jle     short loc_180C02ADF
+  .text:0000000180C02AD4                 mov     edx, 1
+  .text:0000000180C02AD9                 call    cs:UtlVectorMemory_FailedAllocation
+  .text:0000000180C02ADF                 mov     ecx, [rdi+20h]
+  .text:0000000180C02AE2                 mov     r9d, 8
+  .text:0000000180C02AE8                 mov     edx, [rdi+24h]
+  .text:0000000180C02AEB                 and     edx, 3FFFFFFFh
+  .text:0000000180C02AF1                 lea     esi, [rcx+1]
+  .text:0000000180C02AF4                 mov     r8d, esi
+  .text:0000000180C02AF7                 call    cs:UtlVectorMemory_CalcNewAllocationCount
+  .text:0000000180C02AFD                 mov     ebx, eax
+  .text:0000000180C02AFF                 cmp     eax, esi
+  .text:0000000180C02B01                 jge     short loc_180C02B21
+  .text:0000000180C02B03                 test    eax, eax
+  .text:0000000180C02B05                 jnz     short loc_180C02B13
+  .text:0000000180C02B07                 cmp     esi, 0FFFFFFFFh
+  .text:0000000180C02B0A                 jg      short loc_180C02B13
+  .text:0000000180C02B0C                 mov     ebx, 0FFFFFFFFh
+  .text:0000000180C02B11                 jmp     short loc_180C02B21
+  .text:0000000180C02B13                 lea     eax, [rbx+rsi]
+  .text:0000000180C02B16                 cdq
+  .text:0000000180C02B17                 sub     eax, edx
+  .text:0000000180C02B19                 sar     eax, 1
+  .text:0000000180C02B1B                 mov     ebx, eax
+  .text:0000000180C02B1D                 cmp     eax, esi
+  .text:0000000180C02B1F                 jl      short loc_180C02B13
+  .text:0000000180C02B21                 movsxd  r9, dword ptr [rdi+20h]
+  .text:0000000180C02B25                 mov     rcx, [rdi+18h]
+  .text:0000000180C02B29                 shl     r9, 3
+  .text:0000000180C02B2D                 test    dword ptr [rdi+24h], 0C0000000h
+  .text:0000000180C02B34                 movsxd  r8, ebx
+  .text:0000000180C02B37                 setz    dl
+  .text:0000000180C02B3A                 shl     r8, 3
+  .text:0000000180C02B3E                 call    cs:UtlVectorMemory_Alloc
+  .text:0000000180C02B44                 mov     [rdi+18h], rax
+  .text:0000000180C02B48                 mov     eax, [rdi+24h]
+  .text:0000000180C02B4B                 test    eax, 0C0000000h
+  .text:0000000180C02B50                 jz      short loc_180C02B5A
+  .text:0000000180C02B52                 and     eax, 3FFFFFFFh
+  .text:0000000180C02B57                 mov     [rdi+24h], eax
+  .text:0000000180C02B5A                 mov     [rdi+20h], ebx
+  .text:0000000180C02B5D                 inc     dword ptr [rdi+10h]
+  .text:0000000180C02B60                 mov     rax, [rdi+18h]
+  .text:0000000180C02B64                 mov     [rax+r12*8], r13
+  .text:0000000180C02B68                 mov     rcx, cs:qword_181FEF0C0
+  .text:0000000180C02B6F                 test    rcx, rcx
+  .text:0000000180C02B72                 jz      short loc_180C02B8B
+  .text:0000000180C02B74                 mov     rax, [rcx]
+  .text:0000000180C02B77                 mov     r8, [rbp+0F0h+arg_10]
+  .text:0000000180C02B7E                 mov     rdx, [rbp+0F0h+arg_8]
+  .text:0000000180C02B85                 call    qword ptr [rax+90h]
+  .text:0000000180C02B8B                 cmp     [rsp+1F0h+var_198], 0
+  .text:0000000180C02B91                 jz      short loc_180C02B9E
+  .text:0000000180C02B93                 lea     rcx, [rsp+1F0h+var_198]
+  .text:0000000180C02B98                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02B9E                 lea     eax, [r15-1]
+  .text:0000000180C02BA2                 movsxd  rdi, eax
+  .text:0000000180C02BA5                 test    eax, eax
+  .text:0000000180C02BA7                 js      short loc_180C02BED
+  .text:0000000180C02BA9                 lea     rbx, [rdi+rdi*4]
+  .text:0000000180C02BAD                 shl     rbx, 5
+  .text:0000000180C02BB1                 add     rbx, 70h ; 'p'
+  .text:0000000180C02BB5                 add     rbx, r14
+  .text:0000000180C02BB8                 nop     dword ptr [rax+rax+00000000h]
+  .text:0000000180C02BC0                 cmp     qword ptr [rbx+8], 0
+  .text:0000000180C02BC5                 lea     rcx, [rbx+8]
+  .text:0000000180C02BC9                 jz      short loc_180C02BD1
+  .text:0000000180C02BCB                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02BD1                 cmp     qword ptr [rbx], 0
+  .text:0000000180C02BD5                 jz      short loc_180C02BE0
+  .text:0000000180C02BD7                 mov     rcx, rbx
+  .text:0000000180C02BDA                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02BE0                 sub     rbx, 0A0h
+  .text:0000000180C02BE7                 sub     rdi, 1
+  .text:0000000180C02BEB                 jns     short loc_180C02BC0
+  .text:0000000180C02BED                 test    dword ptr [rbp+0F0h+var_168+4], 0C0000000h
+  .text:0000000180C02BF4                 jnz     short loc_180C02C29
+  .text:0000000180C02BF6                 test    r14, r14
+  .text:0000000180C02BF9                 jz      short loc_180C02C29
+  .text:0000000180C02BFB                 mov     rax, cs:g_pMemAlloc
+  .text:0000000180C02C02                 mov     rdx, r14
+  .text:0000000180C02C05                 mov     rcx, [rax]
+  .text:0000000180C02C08                 mov     rax, [rcx]
+  .text:0000000180C02C0B                 call    qword ptr [rax+18h]
+  .text:0000000180C02C0E                 xor     r14d, r14d
+  .text:0000000180C02C11                 test    r14, r14
+  .text:0000000180C02C14                 jz      short loc_180C02C29
+  .text:0000000180C02C16                 mov     rax, cs:g_pMemAlloc
+  .text:0000000180C02C1D                 mov     edx, r14d
+  .text:0000000180C02C20                 mov     rcx, [rax]
+  .text:0000000180C02C23                 mov     rax, [rcx]
+  .text:0000000180C02C26                 call    qword ptr [rax+18h]
+  .text:0000000180C02C29                 lea     rcx, [rbp+0F0h+var_148]
+  .text:0000000180C02C2D                 call    sub_18054EBF0
+  .text:0000000180C02C32                 cmp     [rsp+1F0h+var_180], 0
+  .text:0000000180C02C38                 jz      short loc_180C02C45
+  .text:0000000180C02C3A                 lea     rcx, [rsp+1F0h+var_180]
+  .text:0000000180C02C3F                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02C45                 cmp     [rsp+1F0h+var_190], 0
+  .text:0000000180C02C4B                 jz      short loc_180C02C58
+  .text:0000000180C02C4D                 lea     rcx, [rsp+1F0h+var_190]
+  .text:0000000180C02C52                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02C58                 cmp     [rsp+1F0h+var_1A0], 0
+  .text:0000000180C02C5E                 jz      short loc_180C02C6B
+  .text:0000000180C02C60                 lea     rcx, [rsp+1F0h+var_1A0]
+  .text:0000000180C02C65                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02C6B                 cmp     [rsp+1F0h+var_1B0], 0
+  .text:0000000180C02C71                 jz      short loc_180C02C7E
+  .text:0000000180C02C73                 lea     rcx, [rsp+1F0h+var_1B0]
+  .text:0000000180C02C78                 call    cs:?FreeMemoryBlock@CUtlString@@AEAAXXZ; CUtlString::FreeMemoryBlock(void)
+  .text:0000000180C02C7E                 mov     al, 1
+  .text:0000000180C02C80                 jmp     loc_180C02870
+  .text:0000000180C02C85                 call    _invalid_parameter_noinfo_noreturn
+procedure: |-
+  char __fastcall CLoopModeGame_LoopInitInternal(__int64 a1, KeyValues *a2, void (__fastcall ***a3)(_QWORD, _QWORD))
+  {
+    int v3; // r15d
+    KeyValues *v4; // rdi
+    __int64 v5; // r13
+    CKeyValues_Data *Key; // rax
+    char *v7; // rsi
+    char *String; // rbx
+    int v9; // eax
+    CKeyValues_Data *v10; // rax
+    const char *v11; // rax
+    CKeyValues_Data *v12; // rax
+    const char *v13; // rax
+    CKeyValues_Data *v14; // rax
+    const char *v15; // rax
+    CKeyValues_Data *v16; // rax
+    const char *v17; // rax
+    int Int; // ebx
+    unsigned int v19; // eax
+    __int64 v20; // r8
+    __int64 v21; // rdx
+    __int64 v22; // rcx
+    __int64 v23; // r9
+    __int64 v24; // rax
+    char v25; // r12
+    bool v26; // zf
+    __int64 v27; // r14
+    __int64 v28; // rax
+    __int64 v29; // rax
+    __int64 v30; // rbx
+    __int64 v31; // r8
+    const char *v32; // rdx
+    __int64 v33; // r8
+    const char *v34; // rdx
+    int v35; // eax
+    char *v36; // rcx
+    __int64 v37; // rdx
+    char *v38; // r9
+    int v39; // r12d
+    KeyValues *v40; // r13
+    __int64 v41; // rbx
+    __int64 v42; // rdi
+    int v43; // eax
+    __int64 v44; // rcx
+    __int64 v45; // rdx
+    char *v46; // rcx
+    char *v47; // rcx
+    char v48; // al
+    CUtlString *v49; // r15
+    const char *v50; // rdx
+    __int64 v51; // r8
+    __int64 v52; // rcx
+    const char *v53; // rdx
+    __int64 v54; // r8
+    const char *v55; // r8
+    const char *v56; // r9
+    char *v57; // rcx
+    int v58; // eax
+    char *v59; // rcx
+    char *v60; // rcx
+    __int64 v61; // rdi
+    __int64 v62; // rbx
+    __int64 v63; // rax
+    __int64 v64; // rcx
+    __int64 v65; // r8
+    __int64 *v66; // rbx
+    char *v67; // r8
+    __int64 v68; // rax
+    __int64 v69; // rcx
+    __int64 v70; // rbx
+    unsigned __int64 v71; // rdx
+    _QWORD *v72; // rax
+    KeyValues *v73; // rbx
+    __int64 v74; // rdi
+    __int64 v75; // rbx
+    __int64 v76; // rdx
+    unsigned __int64 v77; // rdx
+    const char *v78; // rdx
+    char *v79; // r9
+    netadr_t *v80; // rax
+    const char *v81; // rax
+    unsigned __int64 v82; // rbx
+    __int64 v83; // r8
+    __int64 v84; // rcx
+    __int64 v85; // rdx
+    __int64 v86; // rcx
+    __int64 *v87; // rbx
+    __int64 v88; // rdi
+    char *v89; // rdx
+    char *v90; // rdi
+    char *v91; // rbx
+    char **v92; // rax
+    char v93; // al
+    void (__fastcall ***v94)(_QWORD, _QWORD); // rdi
+    KeyValues *v95; // rbx
+    int i; // ebx
+    int v98; // eax
+    KeyValues *v99; // rbx
+    __int64 v100; // rdi
+    __int64 v101; // r8
+    int v102; // ecx
+    __int64 v103; // rcx
+    __int64 v104; // rcx
+    int v105; // esi
+    int v106; // eax
+    __int64 v107; // rdx
+    int v108; // ebx
+    int v109; // eax
+    __int64 v110; // rdi
+    __int64 v111; // r13
+    __int64 v112; // r12
+    __int64 v113; // rcx
+    __int64 v114; // rcx
+    int v115; // esi
+    int v116; // eax
+    __int64 v117; // rdx
+    int v118; // ebx
+    int v119; // eax
+    __int64 v120; // rdi
+    __int64 v121; // rbx
+    __int64 v122; // [rsp+20h] [rbp-E0h]
+    int v123; // [rsp+20h] [rbp-E0h]
+    char *v124; // [rsp+40h] [rbp-C0h] BYREF
+    char v125; // [rsp+48h] [rbp-B8h]
+    char *v126; // [rsp+50h] [rbp-B0h] BYREF
+    char *v127; // [rsp+58h] [rbp-A8h] BYREF
+    __int64 v128; // [rsp+60h] [rbp-A0h] BYREF
+    bool v129; // [rsp+68h] [rbp-98h]
+    __int64 v130; // [rsp+70h] [rbp-90h] BYREF
+    int v131; // [rsp+78h] [rbp-88h] BYREF
+    __int64 v132; // [rsp+80h] [rbp-80h]
+    __int64 v133; // [rsp+88h] [rbp-78h]
+    char *v134; // [rsp+90h] [rbp-70h] BYREF
+    unsigned int v135; // [rsp+98h] [rbp-68h] BYREF
+    __int64 v136; // [rsp+A0h] [rbp-60h] BYREF
+    int v137; // [rsp+A8h] [rbp-58h] BYREF
+    __int64 v138; // [rsp+B0h] [rbp-50h]
+    __int64 v139; // [rsp+B8h] [rbp-48h]
+    int v140; // [rsp+C0h] [rbp-40h]
+    void **v141; // [rsp+D0h] [rbp-30h] BYREF
+    __int64 v142; // [rsp+D8h] [rbp-28h]
+    int v143; // [rsp+E0h] [rbp-20h]
+    __int64 v144; // [rsp+F8h] [rbp-8h]
+    _BYTE v145[8]; // [rsp+108h] [rbp+8h] BYREF
+    _BYTE v146[8]; // [rsp+110h] [rbp+10h] BYREF
+    __int64 v147; // [rsp+118h] [rbp+18h]
+    unsigned __int8 v148; // [rsp+129h] [rbp+29h]
+    char v149; // [rsp+12Ah] [rbp+2Ah]
+    char v150; // [rsp+12Bh] [rbp+2Bh]
+    char v151; // [rsp+13Eh] [rbp+3Eh]
+    KeyValues *v152; // [rsp+140h] [rbp+40h]
+    __int64 v153; // [rsp+150h] [rbp+50h] BYREF
+    __int64 v154; // [rsp+158h] [rbp+58h] BYREF
+    _QWORD v155[3]; // [rsp+160h] [rbp+60h] BYREF
+    int v156; // [rsp+178h] [rbp+78h]
+    int v157; // [rsp+17Ch] [rbp+7Ch]
+    __int128 v158; // [rsp+180h] [rbp+80h] BYREF
+    __int128 v159; // [rsp+190h] [rbp+90h]
+    _BYTE v160[80]; // [rsp+1A0h] [rbp+A0h] BYREF
+    __int64 v161; // [rsp+200h] [rbp+100h] BYREF
+    KeyValues *v162; // [rsp+208h] [rbp+108h]
+    void (__fastcall ***v163)(_QWORD, _QWORD); // [rsp+210h] [rbp+110h]
+    __int64 v164; // [rsp+218h] [rbp+118h]
+
+    v163 = a3;
+    v162 = a2;
+    v161 = a1;
+    v3 = 0;
+    v4 = a2;
+    v140 = 0;
+    v5 = a1;
+    *(_BYTE *)(a1 + 110) = 0;
+    if ( !a2 )
+      return 0;
+    Key = KeyValues::FindKey(a2, "mode");
+    v7 = byte_181603998;
+    if ( Key )
+      String = (char *)CKeyValues_Data::Internal_GetString(Key, byte_181603998, 0, 0);
+    else
+      String = byte_181603998;
+    if ( (unsigned int)V_stricmp_fast(String, "listenserver") )
+    {
+      if ( (unsigned int)V_stricmp_fast(String, "dedicated") )
+      {
+        if ( !(unsigned int)V_stricmp_fast(String, "remoteclient") )
+          *(_DWORD *)(v5 + 104) = 2;
+      }
+      else
+      {
+        *(_DWORD *)(v5 + 104) = 1;
+      }
+    }
+    else
+    {
+      *(_DWORD *)(v5 + 104) = 3;
+    }
+    v9 = *(_DWORD *)(v5 + 104);
+    LOBYTE(v164) = v9 & 1;
+    sub_18051E8F0(v9 != 2);
+    v10 = KeyValues::FindKey(v4, "levelname");
+    if ( v10 )
+      v11 = CKeyValues_Data::Internal_GetString(v10, byte_181603998, 0, 0);
+    else
+      v11 = byte_181603998;
+    v124 = 0;
+    CUtlString::Set((CUtlString *)&v124, v11);
+    v12 = KeyValues::FindKey(v4, "savegame");
+    if ( v12 )
+      v13 = CKeyValues_Data::Internal_GetString(v12, byte_181603998, 0, 0);
+    else
+      v13 = byte_181603998;
+    v126 = 0;
+    CUtlString::Set((CUtlString *)&v126, v13);
+    v14 = KeyValues::FindKey(v4, "landmarkname");
+    if ( v14 )
+      v15 = CKeyValues_Data::Internal_GetString(v14, byte_181603998, 0, 0);
+    else
+      v15 = byte_181603998;
+    v128 = 0;
+    CUtlString::Set((CUtlString *)&v128, v15);
+    v16 = KeyValues::FindKey(v4, "previouslevel");
+    if ( v16 )
+      v17 = CKeyValues_Data::Internal_GetString(v16, byte_181603998, 0, 0);
+    else
+      v17 = byte_181603998;
+    v130 = 0;
+    CUtlString::Set((CUtlString *)&v130, v17);
+    Int = KeyValues::GetInt(v4, "loadmap", 0);
+    v19 = KeyValues::GetInt(v4, "changelevel", 0);
+    v21 = v130;
+    v22 = v128;
+    v23 = v19;
+    v129 = v19 != 0;
+    LODWORD(v134) = v19;
+    if ( !v130 )
+      goto LABEL_32;
+    v20 = -1;
+    do
+      ++v20;
+    while ( *(_BYTE *)(v130 + v20) );
+    if ( (int)v20 <= 0 )
+      goto LABEL_32;
+    if ( !v128 )
+      goto LABEL_32;
+    v24 = -1;
+    do
+      ++v24;
+    while ( *(_BYTE *)(v128 + v24) );
+    if ( (int)v24 > 0 )
+      v25 = 1;
+    else
+  LABEL_32:
+      v25 = 0;
+    v125 = v25;
+    *(_BYTE *)(v5 + 108) = Int == 0;
+    if ( Int )
+    {
+      v26 = *(_DWORD *)(v5 + 104) == 2;
+      v27 = 0;
+      v138 = 0;
+      v139 = 0;
+      v137 = 0;
+      v132 = 0;
+      v133 = 0;
+      v131 = 0;
+      v127 = 0;
+      if ( v26 )
+        goto LABEL_106;
+      if ( !v126 )
+        goto LABEL_102;
+      v28 = -1;
+      do
+        ++v28;
+      while ( v126[v28] );
+      if ( (int)v28 > 0 )
+      {
+        if ( (_DWORD)v23 )
+        {
+          v29 = sub_180B98650(&v137);
+          v30 = v29;
+          if ( v124 )
+          {
+            v31 = -1;
+            do
+              ++v31;
+            while ( v124[v31] );
+          }
+          else
+          {
+            LODWORD(v31) = 0;
+          }
+          v32 = byte_181603998;
+          if ( v124 )
+            v32 = v124;
+          CUtlString::SetDirect((CUtlString *)(v29 + 48), v32, v31);
+          if ( v126 )
+          {
+            v33 = -1;
+            do
+              ++v33;
+            while ( v126[v33] );
+          }
+          else
+          {
+            LODWORD(v33) = 0;
+          }
+          v34 = byte_181603998;
+          if ( v126 )
+            v34 = v126;
+          CUtlString::SetDirect((CUtlString *)(v30 + 64), v34, v33);
+          *(_WORD *)(v30 + 80) = 1;
+        }
+        else
+        {
+          (*(void (__fastcall **)(__int64, char *, int *, _QWORD, _DWORD, char **))(*(_QWORD *)qword_1821D10A8 + 416LL))(
+            qword_1821D10A8,
+            v126,
+            &v137,
+            (unsigned __int8)v164,
+            0,
+            &v127);
+        }
+        if ( v137 )
+        {
+          v39 = 0;
+          if ( v137 <= 0 )
+            goto LABEL_106;
+          v40 = v162;
+          v41 = 0;
+          do
+          {
+            v42 = v138;
+            v43 = sub_180BF57F0(&v131, v21, v20, v23);
+            v27 = v132;
+            v44 = v43;
+            LOBYTE(v43) = v125;
+            v45 = 5 * v44;
+            v46 = byte_181603998;
+            v21 = v132 + 32 * v45;
+            *(_BYTE *)(v21 + 144) = 1;
+            *(_BYTE *)(v21 + 152) = v43;
+            *(_DWORD *)(v21 + 140) = 1119092736;
+            *(_OWORD *)(v21 + 64) = xmmword_181651660;
+            *(_OWORD *)(v21 + 80) = xmmword_181651670;
+            *(_OWORD *)(v21 + 96) = xmmword_181651680;
+            if ( *(_QWORD *)(v42 + v41 + 48) )
+              v46 = *(char **)(v42 + v41 + 48);
+            *(_QWORD *)v21 = v46;
+            v47 = byte_181603998;
+            if ( *(_QWORD *)(v42 + v41 + 72) )
+              v47 = *(char **)(v42 + v41 + 72);
+            *(_QWORD *)(v21 + 16) = v47;
+            *(_OWORD *)(v21 + 64) = *(_OWORD *)(v42 + v41);
+            *(_OWORD *)(v21 + 80) = *(_OWORD *)(v42 + v41 + 16);
+            *(_OWORD *)(v21 + 96) = *(_OWORD *)(v42 + v41 + 32);
+            v48 = *(_BYTE *)(v42 + v41 + 82);
+            *(_BYTE *)(v21 + 153) = v48;
+            if ( !v48 )
+            {
+              v49 = (CUtlString *)(v21 + 120);
+              v50 = *(const char **)(v42 + v41 + 64);
+              if ( v50 )
+              {
+                v51 = -1;
+                do
+                  ++v51;
+                while ( v50[v51] );
+              }
+              else
+              {
+                LODWORD(v51) = 0;
+                v50 = byte_181603998;
+              }
+              CUtlString::SetDirect(v49, v50, v51);
+              if ( !v124 )
+                goto LABEL_86;
+              v52 = -1;
+              do
+                ++v52;
+              while ( v124[v52] );
+              if ( !(_DWORD)v52 )
+              {
+  LABEL_86:
+                v53 = *(const char **)(v42 + v41 + 48);
+                if ( v53 )
+                {
+                  v54 = -1;
+                  do
+                    ++v54;
+                  while ( v53[v54] );
+                }
+                else
+                {
+                  LODWORD(v54) = 0;
+                  v53 = byte_181603998;
+                }
+                CUtlString::SetDirect((CUtlString *)&v124, v53, v54);
+                v55 = byte_181603998;
+                if ( v124 )
+                  v55 = v124;
+                KeyValues::SetString(v40, "levelname", v55);
+              }
+              if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_181F670F0, 1) )
+              {
+                v56 = "loading";
+                v57 = byte_181603998;
+                if ( *(_QWORD *)v49 )
+                  v57 = *(char **)v49;
+                if ( (_DWORD)v134 )
+                  v56 = "transitioning";
+                LoggingSystem_Log(
+                  (unsigned int)dword_181F670F0,
+                  1,
+                  "%s %s.HL%s from save file on %s\n",
+                  v56,
+                  v57,
+                  "1",
+                  "server");
+              }
+            }
+            ++v39;
+            v41 += 96;
+          }
+          while ( v39 < v137 );
+          v5 = v161;
+          v4 = v162;
+        }
+        else
+        {
+          v35 = sub_180BF57F0(&v131, v21, v20, v23);
+          v27 = v132;
+          v36 = byte_181603998;
+          v37 = v132 + 160LL * v35;
+          *(_BYTE *)(v37 + 144) = 1;
+          *(_BYTE *)(v37 + 152) = v25;
+          *(_DWORD *)(v37 + 140) = 1119092736;
+          *(_OWORD *)(v37 + 64) = xmmword_181651660;
+          *(_OWORD *)(v37 + 80) = xmmword_181651670;
+          *(_OWORD *)(v37 + 96) = xmmword_181651680;
+          if ( v124 )
+            v36 = v124;
+          *(_QWORD *)(v37 + 24) = "mapload";
+          *(_QWORD *)v37 = v36;
+          if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_181F670F0, 1) )
+          {
+            v38 = byte_181603998;
+            if ( v126 )
+              v38 = v126;
+            LODWORD(v122) = v137;
+            LoggingSystem_Log(
+              (unsigned int)dword_181F670F0,
+              1,
+              "save file '%s' expected to have a single entry [%d]. Loading base level.",
+              v38,
+              v122);
+          }
+        }
+      }
+      else
+      {
+  LABEL_102:
+        v58 = sub_180BF57F0(&v131, v126, v20, v23);
+        v27 = v132;
+        v59 = byte_181603998;
+        v21 = v132 + 160LL * v58;
+        *(_BYTE *)(v21 + 144) = 1;
+        *(_BYTE *)(v21 + 152) = v25;
+        *(_DWORD *)(v21 + 140) = 1119092736;
+        *(_OWORD *)(v21 + 64) = xmmword_181651660;
+        *(_OWORD *)(v21 + 80) = xmmword_181651670;
+        *(_OWORD *)(v21 + 96) = xmmword_181651680;
+        if ( v124 )
+          v59 = v124;
+        *(_QWORD *)(v21 + 24) = "mapload";
+        *(_QWORD *)v21 = v59;
+      }
+      v3 = v131;
+  LABEL_106:
+      if ( (_BYTE)v164
+        && !(*(unsigned __int8 (__fastcall **)(__int64, __int64, __int64, __int64))(*(_QWORD *)qword_1821D0E10 + 176LL))(
+              qword_1821D0E10,
+              v21,
+              v20,
+              v23) )
+      {
+        v60 = byte_181603998;
+        if ( v124 )
+          v60 = v124;
+        if ( !(unsigned int)V_stricmp_fast(v60, "error") )
+        {
+          if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_182011538, 3) )
+            LoggingSystem_Log((unsigned int)dword_182011538, 3, "LoopInit:  in \"error\" map - disconnecting...\n");
+          if ( v124 )
+            v7 = v124;
+          (*(void (__fastcall **)(__int64, __int64, char *))(*(_QWORD *)qword_1821D1110 + 224LL))(qword_1821D1110, 64, v7);
+          v156 = 652;
+          v155[0] = "C:\\buildworker\\csgo_rel_win64\\build\\src\\game\\shared\\loopmodegame.cpp";
+          v155[1] = "CLoopModeGame::LoopInit";
+          v155[2] = "false";
+          v157 = 20;
+          if ( Assert_ConditionFailed((const struct _AssertCompileTimeConstantStruct_t *)v155, "Error map!") )
+            __debugbreak();
+          if ( v127 )
+            CUtlString::FreeMemoryBlock((CUtlString *)&v127);
+          v61 = v3 - 1;
+          if ( v3 - 1 >= 0 )
+          {
+            v62 = v27 + 160LL * (v3 - 1) + 112;
+            do
+            {
+              if ( *(_QWORD *)(v62 + 8) )
+                CUtlString::FreeMemoryBlock((CUtlString *)(v62 + 8));
+              if ( *(_QWORD *)v62 )
+                CUtlString::FreeMemoryBlock((CUtlString *)v62);
+              v62 -= 160;
+              --v61;
+            }
+            while ( v61 >= 0 );
+          }
+  LABEL_126:
+          if ( (v133 & 0xC000000000000000uLL) == 0 && v27 )
+            (*(void (__fastcall **)(_QWORD, __int64))(*g_pMemAlloc + 24LL))(g_pMemAlloc, v27);
+  LABEL_212:
+          sub_18054EBF0(&v137);
+          if ( v130 )
+            CUtlString::FreeMemoryBlock((CUtlString *)&v130);
+          if ( v128 )
+            CUtlString::FreeMemoryBlock((CUtlString *)&v128);
+          if ( v126 )
+            CUtlString::FreeMemoryBlock((CUtlString *)&v126);
+          if ( v124 )
+            CUtlString::FreeMemoryBlock((CUtlString *)&v124);
+          return 0;
+        }
+      }
+      v63 = sub_180ECEA00(40);
+      v64 = v63;
+      if ( v63 )
+      {
+        *(_QWORD *)(v63 + 8) = 0;
+        *(_QWORD *)(v63 + 20) = 0;
+        *(_QWORD *)(v63 + 28) = 0;
+        *(_DWORD *)(v63 + 36) = 0;
+        v27 = v132;
+        v3 = v131;
+        *(_QWORD *)v63 = &CResourceManifestPrerequisite::`vftable';
+        *(_QWORD *)(v63 + 24) = 0;
+        *(_QWORD *)(v63 + 32) = 0;
+        *(_DWORD *)(v63 + 16) = 0;
+      }
+      else
+      {
+        v64 = 0;
+      }
+      *(_QWORD *)(v5 + 8) = v64;
+      (*(void (__fastcall **)(__int64))(*(_QWORD *)v64 + 8LL))(v64);
+      (**v163)(v163, *(_QWORD *)(v5 + 8));
+      (*(void (__fastcall **)(__int64))(*(_QWORD *)qword_1821D1108 + 184LL))(qword_1821D1108);
+      v66 = (__int64 *)(v5 + 8);
+      if ( (_BYTE)v164 )
+      {
+        v67 = byte_181603998;
+        if ( v124 )
+          v67 = v124;
+        v68 = (*(__int64 (__fastcall **)(__int64, const char *, char *, _QWORD))(*(_QWORD *)qword_1821D10A0 + 104LL))(
+                qword_1821D10A0,
+                "defaultSession",
+                v67,
+                *(_QWORD *)(v5 + 8));
+        v69 = *(_QWORD *)(v5 + 96);
+        v70 = v68;
+        if ( v68 != v69 )
+        {
+          if ( v69 )
+            (*(void (__fastcall **)(__int64, const char *))(*(_QWORD *)v69 + 8LL))(
+              v69,
+              "--CLoopModeGame::SetWorldSession");
+          *(_QWORD *)(v5 + 96) = v70;
+          if ( v70 )
+          {
+            (**(void (__fastcall ***)(__int64, const char *))v70)(v70, "++CLoopModeGame::SetWorldSession");
+            if ( !(unsigned __int8)sub_181550B90() )
+              (*(void (__fastcall **)(_QWORD, _QWORD))(**(_QWORD **)(v5 + 96) + 240LL))(*(_QWORD *)(v5 + 96), 0);
+          }
+        }
+        (*(void (__fastcall **)(__int64, const char *))(*(_QWORD *)v70 + 8LL))(v70, "--CLoopModeGame::LoopInit");
+        sub_180804540(&v141, 0, 0);
+        v143 |= 0x20u;
+        v141 = &CBaseCmdKeyValues<CSVCMsg_GameSessionConfiguration>::`vftable';
+        v152 = 0;
+        if ( (v142 & 1) != 0 )
+          v71 = *(_QWORD *)(v142 & 0xFFFFFFFFFFFFFFFCuLL);
+        else
+          v71 = v142 & 0xFFFFFFFFFFFFFFFCuLL;
+        v72 = (_QWORD *)sub_180FFED40(v146, v71);
+        v72[2] = 0;
+        if ( v72[3] > 0xFu )
+          v72 = (_QWORD *)*v72;
+        *(_BYTE *)v72 = 0;
+        v141 = &GameSessionConfiguration_t::`vftable';
+        if ( !(*(unsigned __int8 (__fastcall **)(__int64, KeyValues *, void ***))(*(_QWORD *)qword_181FEF0C0 + 168LL))(
+                qword_181FEF0C0,
+                v4,
+                &v141) )
+        {
+          v73 = v152;
+          v141 = &CBaseCmdKeyValues<CSVCMsg_GameSessionConfiguration>::`vftable';
+          if ( v152 )
+          {
+            KeyValues::~KeyValues(v152);
+            KeyValues::operator delete(v73);
+            v152 = 0;
+          }
+          sub_180804B20(&v141);
+          if ( v127 )
+            CUtlString::FreeMemoryBlock((CUtlString *)&v127);
+          v74 = v3 - 1;
+          if ( v3 - 1 >= 0 )
+          {
+            v75 = v27 + 160LL * (v3 - 1) + 112;
+            do
+            {
+              if ( *(_QWORD *)(v75 + 8) )
+                CUtlString::FreeMemoryBlock((CUtlString *)(v75 + 8));
+              if ( *(_QWORD *)v75 )
+                CUtlString::FreeMemoryBlock((CUtlString *)v75);
+              v75 -= 160;
+              --v74;
+            }
+            while ( v74 >= 0 );
+          }
+          goto LABEL_126;
+        }
+        v76 = v147;
+        *(_BYTE *)(v5 + 109) = v150;
+        v77 = v76 & 0xFFFFFFFFFFFFFFFCuLL;
+        *(_BYTE *)(v5 + 111) = v149;
+        *(_BYTE *)(v5 + 112) = v151;
+        if ( *(_QWORD *)(v77 + 24) > 0xFu )
+          v77 = *(_QWORD *)v77;
+        CUtlString::Set((CUtlString *)(v5 + 128), (const char *)v77);
+        v78 = (const char *)(v144 & 0xFFFFFFFFFFFFFFFCuLL);
+        if ( *(_QWORD *)((v144 & 0xFFFFFFFFFFFFFFFCuLL) + 24) > 0xFu )
+          v78 = *(const char **)v78;
+        CUtlString::Set((CUtlString *)(v5 + 136), v78);
+        if ( qword_182160A80 )
+          *(_WORD *)(qword_182160A80 + 3037) = v148;
+        v79 = byte_181603998;
+        if ( v124 )
+          v79 = v124;
+        (*(void (__fastcall **)(__int64, void ***, __int64, char *))(*(_QWORD *)qword_1821D1120 + 208LL))(
+          qword_1821D1120,
+          &v141,
+          v70,
+          v79);
+        v80 = (netadr_t *)(*(__int64 (__fastcall **)(__int64, _BYTE *))(*(_QWORD *)qword_1821D1120 + 256LL))(
+                            qword_1821D1120,
+                            v160);
+        v81 = netadr_t::ToString(v80, 0);
+        v143 |= 0x10u;
+        if ( (v142 & 1) != 0 )
+          v82 = *(_QWORD *)(v142 & 0xFFFFFFFFFFFFFFFCuLL);
+        else
+          v82 = v142 & 0xFFFFFFFFFFFFFFFCuLL;
+        v158 = 0;
+        v83 = -1;
+        v159 = 0;
+        do
+          ++v83;
+        while ( v81[v83] );
+        sub_18014AE10(&v158, v81);
+        sub_180FFEF20(v145, &v158, v82);
+        if ( *((_QWORD *)&v159 + 1) > 0xFu )
+        {
+          v84 = v158;
+          v85 = *((_QWORD *)&v159 + 1) + 1LL;
+          if ( (unsigned __int64)(*((_QWORD *)&v159 + 1) + 1LL) >= 0x1000 )
+          {
+            v84 = *(_QWORD *)(v158 - 8);
+            v85 = *((_QWORD *)&v159 + 1) + 40LL;
+            if ( (unsigned __int64)(v158 - v84 - 8) > 0x1F )
+              invalid_parameter_noinfo_noreturn();
+          }
+          sub_180ECEA60(v84, v85);
+        }
+        if ( v127 )
+        {
+          v86 = -1;
+          do
+            ++v86;
+          while ( v127[v86] );
+          if ( (int)v86 > 0 )
+          {
+            v135 = 0;
+            v136 = 0;
+            v87 = (__int64 *)sub_180BDDB60(&v135, &v153);
+            v88 = *v87;
+            if ( v136 )
+              CUtlString::FreeMemoryBlock((CUtlString *)&v136);
+            v136 = v88;
+            *v87 = 0;
+            if ( v153 )
+              CUtlString::FreeMemoryBlock((CUtlString *)&v153);
+            v89 = byte_181603998;
+            if ( v127 )
+              v89 = v127;
+            if ( (unsigned __int8)sub_180BB1A00(&v135, v89) )
+            {
+              (*(void (__fastcall **)(_QWORD, unsigned int *))(**(_QWORD **)(qword_181FF02E0 + 8408) + 240LL))(
+                *(_QWORD *)(qword_181FF02E0 + 8408),
+                &v135);
+              (*(void (__fastcall **)(_QWORD, char **, char **))(**(_QWORD **)(qword_181FF02E0 + 8408) + 264LL))(
+                *(_QWORD *)(qword_181FF02E0 + 8408),
+                &v134,
+                &v127);
+              if ( (unsigned __int8)LoggingSystem_IsChannelEnabled((unsigned int)dword_181FEF254, 2) )
+              {
+                v90 = byte_181603998;
+                v91 = byte_181603998;
+                if ( v134 )
+                  v90 = v134;
+                if ( v127 )
+                  v91 = v127;
+                v92 = (char **)sub_180BDDB60(&v135, &v154);
+                if ( *v92 )
+                  v7 = *v92;
+                LoggingSystem_Log(
+                  (unsigned int)dword_181FEF254,
+                  2,
+                  "ET:  Restoring game at %u %s : '%s'\nET:  '%s'\n",
+                  v135,
+                  v7,
+                  v91,
+                  v90);
+                v93 = 1;
+              }
+              else
+              {
+                v93 = v140;
+              }
+              if ( (v93 & 1) != 0 && v154 )
+                CUtlString::FreeMemoryBlock((CUtlString *)&v154);
+              if ( v134 )
+                CUtlString::FreeMemoryBlock((CUtlString *)&v134);
+            }
+            if ( v136 )
+              CUtlString::FreeMemoryBlock((CUtlString *)&v136);
+          }
+        }
+        sub_180C08040(v5, 1);
+        sub_180BF5410(v5);
+        if ( !(*(unsigned __int8 (__fastcall **)(__int64, void ***))(*(_QWORD *)qword_181FEF0C0 + 176LL))(
+                qword_181FEF0C0,
+                &v141) )
+        {
+          Plat_FatalError("LevelInitWorld failed!\n");
+          __debugbreak();
+        }
+        sub_180C47E10(&v161);
+        sub_180C08040(v5, 2);
+        v94 = v163;
+        if ( !(unsigned __int8)sub_180528770(&v141, v163)
+          || (sub_180C08040(v5, 3), !(unsigned __int8)sub_180528D30(&v141, v94))
+          || !(*(unsigned __int8 (__fastcall **)(__int64, void ***, void (__fastcall ***)(_QWORD, _QWORD)))(*(_QWORD *)qword_181FEF0C0 + 200LL))(
+                qword_181FEF0C0,
+                &v141,
+                v94) )
+        {
+          sub_180C489C0(&v161);
+          v95 = v152;
+          v141 = &CBaseCmdKeyValues<CSVCMsg_GameSessionConfiguration>::`vftable';
+          if ( v152 )
+          {
+            KeyValues::~KeyValues(v152);
+            KeyValues::operator delete(v95);
+            v152 = 0;
+          }
+          sub_180804B20(&v141);
+          if ( v127 )
+            CUtlString::FreeMemoryBlock((CUtlString *)&v127);
+          sub_180BF41B0(&v131);
+          goto LABEL_212;
+        }
+        sub_180C489C0(&v161);
+        (*(void (__fastcall **)(__int64, __int64))(*(_QWORD *)qword_1821D1120 + 216LL))(qword_1821D1120, qword_181F02D08);
+        for ( i = 0; i < v3; ++i )
+        {
+          v98 = (*(__int64 (__fastcall **)(__int64, __int64))(*(_QWORD *)qword_182012050 + 480LL))(
+                  qword_182012050,
+                  v27 + 160LL * i);
+          if ( !i )
+            *(_DWORD *)(v5 + 1072) = v98;
+        }
+        LOBYTE(v122) = v129;
+        (*(void (__fastcall **)(__int64, void ***, const char *, void (__fastcall ***)(_QWORD, _QWORD), _DWORD))(*(_QWORD *)qword_1821D1120 + 224LL))(
+          qword_1821D1120,
+          &v141,
+          "GameSessionManifest",
+          v94,
+          v122);
+        v99 = v152;
+        v141 = &CBaseCmdKeyValues<CSVCMsg_GameSessionConfiguration>::`vftable';
+        if ( v152 )
+        {
+          KeyValues::~KeyValues(v152);
+          KeyValues::operator delete(v99);
+          v152 = 0;
+        }
+        sub_180804B20(&v141);
+        v66 = (__int64 *)(v5 + 8);
+      }
+      v100 = *(_QWORD *)(v5 + 8);
+      LOBYTE(v122) = -1;
+      LOBYTE(v65) = 1;
+      v164 = (*(__int64 (__fastcall **)(__int64, const char *, __int64, const char *, _DWORD))(*(_QWORD *)qword_1821D0EF0
+                                                                                             + 160LL))(
+               qword_1821D0EF0,
+               "LoopModeGameStartup",
+               v65,
+               "CLoopModeGame::LoopInit",
+               v122);
+      if ( v164 )
+      {
+        v102 = *(_DWORD *)(v100 + 16);
+        LODWORD(v161) = v102;
+        if ( v102 == *(_DWORD *)(v100 + 32)
+          && ((*(_DWORD *)(v100 + 36) & 0xC0000000) == 0 || (*(_DWORD *)(v100 + 36) & 0xC0000000) == 0x80000000) )
+        {
+          v103 = *(unsigned int *)(v100 + 32);
+          if ( (_DWORD)v103 == 0x7FFFFFFF )
+            UtlVectorMemory_FailedAllocation(v103, 1);
+          v104 = *(unsigned int *)(v100 + 32);
+          v105 = v104 + 1;
+          v106 = UtlVectorMemory_CalcNewAllocationCount(
+                   v104,
+                   *(_DWORD *)(v100 + 36) & 0x3FFFFFFF,
+                   (unsigned int)(v104 + 1),
+                   8);
+          v108 = v106;
+          if ( v106 < v105 )
+          {
+            if ( v106 || v105 > -1 )
+            {
+              do
+              {
+                v107 = (unsigned int)((v108 + v105) >> 31);
+                v108 = (v108 + v105) / 2;
+              }
+              while ( v108 < v105 );
+            }
+            else
+            {
+              v108 = -1;
+            }
+          }
+          LOBYTE(v107) = (*(_DWORD *)(v100 + 36) & 0xC0000000) == 0;
+          *(_QWORD *)(v100 + 24) = UtlVectorMemory_Alloc(
+                                     *(_QWORD *)(v100 + 24),
+                                     v107,
+                                     8LL * v108,
+                                     8LL * *(int *)(v100 + 32));
+          v109 = *(_DWORD *)(v100 + 36);
+          if ( (v109 & 0xC0000000) != 0 )
+            *(_DWORD *)(v100 + 36) = v109 & 0x3FFFFFFF;
+          v102 = v161;
+          *(_DWORD *)(v100 + 32) = v108;
+          v66 = (__int64 *)(v5 + 8);
+        }
+        ++*(_DWORD *)(v100 + 16);
+        *(_QWORD *)(*(_QWORD *)(v100 + 24) + 8LL * v102) = v164;
+      }
+      v110 = *v66;
+      LOBYTE(v101) = 1;
+      LOBYTE(v123) = -1;
+      v111 = (*(__int64 (__fastcall **)(__int64, const char *, __int64, const char *, int))(*(_QWORD *)qword_1821D0EF0
+                                                                                          + 168LL))(
+               qword_1821D0EF0,
+               "LoopModeGame_server",
+               v101,
+               "CLoopModeGame::LoopInit",
+               v123);
+      if ( v111 )
+      {
+        v112 = *(int *)(v110 + 16);
+        if ( (_DWORD)v112 == *(_DWORD *)(v110 + 32) && (*(_DWORD *)(v110 + 36) & 0x40000000) == 0 )
+        {
+          v113 = *(unsigned int *)(v110 + 32);
+          if ( (_DWORD)v113 == 0x7FFFFFFF )
+            UtlVectorMemory_FailedAllocation(v113, 1);
+          v114 = *(unsigned int *)(v110 + 32);
+          v115 = v114 + 1;
+          v116 = UtlVectorMemory_CalcNewAllocationCount(
+                   v114,
+                   *(_DWORD *)(v110 + 36) & 0x3FFFFFFF,
+                   (unsigned int)(v114 + 1),
+                   8);
+          v118 = v116;
+          if ( v116 < v115 )
+          {
+            if ( v116 || v115 > -1 )
+            {
+              do
+              {
+                v117 = (unsigned int)((v118 + v115) >> 31);
+                v118 = (v118 + v115) / 2;
+              }
+              while ( v118 < v115 );
+            }
+            else
+            {
+              v118 = -1;
+            }
+          }
+          LOBYTE(v117) = (*(_DWORD *)(v110 + 36) & 0xC0000000) == 0;
+          *(_QWORD *)(v110 + 24) = UtlVectorMemory_Alloc(
+                                     *(_QWORD *)(v110 + 24),
+                                     v117,
+                                     8LL * v118,
+                                     8LL * *(int *)(v110 + 32));
+          v119 = *(_DWORD *)(v110 + 36);
+          if ( (v119 & 0xC0000000) != 0 )
+            *(_DWORD *)(v110 + 36) = v119 & 0x3FFFFFFF;
+          *(_DWORD *)(v110 + 32) = v118;
+        }
+        ++*(_DWORD *)(v110 + 16);
+        *(_QWORD *)(*(_QWORD *)(v110 + 24) + 8 * v112) = v111;
+      }
+      if ( qword_181FEF0C0 )
+        (*(void (__fastcall **)(__int64, KeyValues *, void (__fastcall ***)(_QWORD, _QWORD)))(*(_QWORD *)qword_181FEF0C0
+                                                                                            + 144LL))(
+          qword_181FEF0C0,
+          v162,
+          v163);
+      if ( v127 )
+        CUtlString::FreeMemoryBlock((CUtlString *)&v127);
+      v120 = v3 - 1;
+      if ( v3 - 1 >= 0 )
+      {
+        v121 = v27 + 160LL * (v3 - 1) + 112;
+        do
+        {
+          if ( *(_QWORD *)(v121 + 8) )
+            CUtlString::FreeMemoryBlock((CUtlString *)(v121 + 8));
+          if ( *(_QWORD *)v121 )
+            CUtlString::FreeMemoryBlock((CUtlString *)v121);
+          v121 -= 160;
+          --v120;
+        }
+        while ( v120 >= 0 );
+      }
+      if ( (v133 & 0xC000000000000000uLL) == 0 && v27 )
+        (*(void (__fastcall **)(_QWORD, __int64))(*g_pMemAlloc + 24LL))(g_pMemAlloc, v27);
+      sub_18054EBF0(&v137);
+      if ( v130 )
+        CUtlString::FreeMemoryBlock((CUtlString *)&v130);
+      if ( v128 )
+        CUtlString::FreeMemoryBlock((CUtlString *)&v128);
+      if ( v126 )
+        CUtlString::FreeMemoryBlock((CUtlString *)&v126);
+      v26 = v124 == 0;
+      goto LABEL_279;
+    }
+    if ( v21 )
+    {
+      CUtlString::FreeMemoryBlock((CUtlString *)&v130);
+      v22 = v128;
+    }
+    if ( v22 )
+      CUtlString::FreeMemoryBlock((CUtlString *)&v128);
+    if ( v126 )
+      CUtlString::FreeMemoryBlock((CUtlString *)&v126);
+    v26 = v124 == 0;
+  LABEL_279:
+    if ( !v26 )
+      CUtlString::FreeMemoryBlock((CUtlString *)&v124);
+    return 1;
+  }

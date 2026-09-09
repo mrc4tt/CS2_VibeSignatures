@@ -1,0 +1,103 @@
+func_name: SDL_PreInitMouse
+func_va: '0x819b0'
+disasm_code: |-
+  .text:00000000000819B0                 push    r12
+  .text:00000000000819B2                 lea     r12, qword_2FF0E0
+  .text:00000000000819B9                 xor     eax, eax
+  .text:00000000000819BB                 mov     ecx, 27h ; '''
+  .text:00000000000819C0                 mov     rdi, r12
+  .text:00000000000819C3                 mov     rdx, r12
+  .text:00000000000819C6                 lea     rsi, sub_81010
+  .text:00000000000819CD                 mov     cs:byte_2FF0C1, 1
+  .text:00000000000819D4                 rep stosq
+  .text:00000000000819D7                 lea     rdi, aSdlMouseDouble; "SDL_MOUSE_DOUBLE_CLICK_TIME"
+  .text:00000000000819DE                 call    sub_3CF90
+  .text:00000000000819E3                 mov     rdx, r12
+  .text:00000000000819E6                 lea     rsi, sub_80FE0
+  .text:00000000000819ED                 lea     rdi, aSdlMouseDouble_0; "SDL_MOUSE_DOUBLE_CLICK_RADIUS"
+  .text:00000000000819F4                 call    sub_3CF90
+  .text:00000000000819F9                 mov     rdx, r12
+  .text:00000000000819FC                 lea     rsi, sub_811A0
+  .text:0000000000081A03                 lea     rdi, aSdlMouseNormal; "SDL_MOUSE_NORMAL_SPEED_SCALE"
+  .text:0000000000081A0A                 call    sub_3CF90
+  .text:0000000000081A0F                 mov     rdx, r12
+  .text:0000000000081A12                 lea     rsi, sub_81150
+  .text:0000000000081A19                 lea     rdi, aSdlMouseRelati; "SDL_MOUSE_RELATIVE_SPEED_SCALE"
+  .text:0000000000081A20                 call    sub_3CF90
+  .text:0000000000081A25                 mov     rdx, r12
+  .text:0000000000081A28                 lea     rsi, sub_810C0
+  .text:0000000000081A2F                 lea     rdi, aSdlMouseRelati_0; "SDL_MOUSE_RELATIVE_SYSTEM_SCALE"
+  .text:0000000000081A36                 call    sub_3CF90
+  .text:0000000000081A3B                 mov     rdx, r12
+  .text:0000000000081A3E                 lea     rsi, sub_810A0
+  .text:0000000000081A45                 lea     rdi, aSdlMouseRelati_1; "SDL_MOUSE_RELATIVE_MODE_CENTER"
+  .text:0000000000081A4C                 call    sub_3CF90
+  .text:0000000000081A51                 mov     rdx, r12
+  .text:0000000000081A54                 lea     rsi, sub_829A0
+  .text:0000000000081A5B                 lea     rdi, aSdlMouseEmulat; "SDL_MOUSE_EMULATE_WARP_WITH_RELATIVE"
+  .text:0000000000081A62                 call    sub_3CF90
+  .text:0000000000081A67                 mov     rdx, r12
+  .text:0000000000081A6A                 lea     rsi, sub_81080
+  .text:0000000000081A71                 lea     rdi, aSdlTouchMouseE; "SDL_TOUCH_MOUSE_EVENTS"
+  .text:0000000000081A78                 call    sub_3CF90
+  .text:0000000000081A7D                 mov     rdx, r12
+  .text:0000000000081A80                 lea     rsi, sub_810E0
+  .text:0000000000081A87                 lea     rdi, aSdlMouseTouchE; "SDL_MOUSE_TOUCH_EVENTS"
+  .text:0000000000081A8E                 call    sub_3CF90
+  .text:0000000000081A93                 mov     rdx, r12
+  .text:0000000000081A96                 lea     rsi, sub_81060
+  .text:0000000000081A9D                 lea     rdi, aSdlPenMouseEve; "SDL_PEN_MOUSE_EVENTS"
+  .text:0000000000081AA4                 call    sub_3CF90
+  .text:0000000000081AA9                 mov     rdx, r12
+  .text:0000000000081AAC                 lea     rsi, sub_822F0
+  .text:0000000000081AB3                 lea     rdi, aSdlMouseAutoCa; "SDL_MOUSE_AUTO_CAPTURE"
+  .text:0000000000081ABA                 call    sub_3CF90
+  .text:0000000000081ABF                 mov     rdx, r12
+  .text:0000000000081AC2                 lea     rsi, sub_81040
+  .text:0000000000081AC9                 lea     rdi, aSdlMouseRelati_2; "SDL_MOUSE_RELATIVE_WARP_MOTION"
+  .text:0000000000081AD0                 call    sub_3CF90
+  .text:0000000000081AD5                 mov     rdx, r12
+  .text:0000000000081AD8                 lea     rsi, sub_826B0
+  .text:0000000000081ADF                 lea     rdi, aSdlMouseRelati_3; "SDL_MOUSE_RELATIVE_CURSOR_VISIBLE"
+  .text:0000000000081AE6                 call    sub_3CF90
+  .text:0000000000081AEB                 mov     rdx, r12
+  .text:0000000000081AEE                 lea     rsi, sub_80FB0
+  .text:0000000000081AF5                 lea     rdi, aSdlMouseIntege; "SDL_MOUSE_INTEGER_MODE"
+  .text:0000000000081AFC                 call    sub_3CF90
+  .text:0000000000081B01                 xor     r9d, r9d
+  .text:0000000000081B04                 mov     esi, 1
+  .text:0000000000081B09                 xor     edi, edi
+  .text:0000000000081B0B                 lea     r8, sub_3C7E0
+  .text:0000000000081B12                 lea     rcx, sub_3C7A0
+  .text:0000000000081B19                 mov     cs:byte_2FF1D0, 0
+  .text:0000000000081B20                 lea     rdx, sub_3C790
+  .text:0000000000081B27                 mov     cs:byte_2FF208, 1
+  .text:0000000000081B2E                 call    sub_3C110
+  .text:0000000000081B33                 pop     r12
+  .text:0000000000081B35                 mov     cs:qword_2FF0C8, rax
+  .text:0000000000081B3C                 mov     eax, 1
+  .text:0000000000081B41                 retn
+procedure: |-
+  __int64 sub_819B0()
+  {
+    byte_2FF0C1 = 1;
+    memset(&qword_2FF0E0, 0, 0x138u);
+    sub_3CF90("SDL_MOUSE_DOUBLE_CLICK_TIME", sub_81010, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_DOUBLE_CLICK_RADIUS", sub_80FE0, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_NORMAL_SPEED_SCALE", sub_811A0, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_RELATIVE_SPEED_SCALE", sub_81150, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_RELATIVE_SYSTEM_SCALE", sub_810C0, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_RELATIVE_MODE_CENTER", sub_810A0, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_EMULATE_WARP_WITH_RELATIVE", sub_829A0, &qword_2FF0E0);
+    sub_3CF90("SDL_TOUCH_MOUSE_EVENTS", sub_81080, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_TOUCH_EVENTS", sub_810E0, &qword_2FF0E0);
+    sub_3CF90("SDL_PEN_MOUSE_EVENTS", sub_81060, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_AUTO_CAPTURE", sub_822F0, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_RELATIVE_WARP_MOTION", sub_81040, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_RELATIVE_CURSOR_VISIBLE", sub_826B0, &qword_2FF0E0);
+    sub_3CF90("SDL_MOUSE_INTEGER_MODE", sub_80FB0, &qword_2FF0E0);
+    byte_2FF1D0 = 0;
+    byte_2FF208 = 1;
+    qword_2FF0C8 = sub_3C110(0, 1, sub_3C790, sub_3C7A0, sub_3C7E0, 0);
+    return 1;
+  }

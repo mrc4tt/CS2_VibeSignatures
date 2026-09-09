@@ -1,0 +1,28 @@
+func_name: CSource2Client_SetGlobals
+func_va: '0x18acdf0'
+disasm_code: |-
+  .text:00000000018ACDF0                 mov     rax, cs:off_458E058
+  .text:00000000018ACDF7                 lea     rdx, unk_458E060
+  .text:00000000018ACDFE                 xor     ecx, ecx
+  .text:00000000018ACE00                 cmp     rax, rdx
+  .text:00000000018ACE03                 cmovz   rax, rcx
+  .text:00000000018ACE07                 test    rsi, rsi
+  .text:00000000018ACE0A                 cmovz   rsi, rdx
+  .text:00000000018ACE0E                 lea     rdx, sub_17B8F40
+  .text:00000000018ACE15                 mov     cs:off_458E058, rsi
+  .text:00000000018ACE1C                 mov     [rsi+28h], rdx
+  .text:00000000018ACE20                 retn
+procedure: |-
+  void *__fastcall sub_18ACDF0(__int64 a1, void *a2)
+  {
+    void *result; // rax
+
+    result = off_458E058;
+    if ( off_458E058 == &unk_458E060 )
+      result = 0;
+    if ( !a2 )
+      a2 = &unk_458E060;
+    off_458E058 = a2;
+    *((_QWORD *)a2 + 5) = sub_17B8F40;
+    return result;
+  }

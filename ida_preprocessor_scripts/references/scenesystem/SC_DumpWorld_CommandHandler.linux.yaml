@@ -1,0 +1,289 @@
+func_name: SC_DumpWorld_CommandHandler
+func_va: '0x294900'
+disasm_code: |-
+  .text:0000000000294900                 push    rbp
+  .text:0000000000294901                 mov     rbp, rsp
+  .text:0000000000294904                 push    r15
+  .text:0000000000294906                 push    r14
+  .text:0000000000294908                 push    r13
+  .text:000000000029490A                 push    r12
+  .text:000000000029490C                 mov     r12, rsi
+  .text:000000000029490F                 push    rbx
+  .text:0000000000294910                 lea     rsi, [rbp+var_170]
+  .text:0000000000294917                 sub     rsp, 198h
+  .text:000000000029491E                 lea     rbx, qword_AD2180
+  .text:0000000000294925                 mov     [rbp+var_170], 0
+  .text:0000000000294930                 mov     [rbp+var_168], 0
+  .text:000000000029493B                 mov     [rbp+var_160], 0
+  .text:0000000000294946                 mov     rdi, [rbx]
+  .text:0000000000294949                 mov     rax, [rdi]
+  .text:000000000029494C                 call    qword ptr [rax+300h]
+  .text:0000000000294952                 cmp     dword ptr [r12+438h], 2
+  .text:000000000029495B                 jz      short loc_2949A0
+  .text:000000000029495D                 cmp     dword ptr [rbp+var_160+4], 3FFFFFFFh
+  .text:0000000000294967                 mov     dword ptr [rbp+var_170], 0
+  .text:0000000000294971                 ja      short loc_29498F
+  .text:0000000000294973                 mov     rsi, [rbp+var_168]
+  .text:000000000029497A                 test    rsi, rsi
+  .text:000000000029497D                 jz      short loc_29498F
+  .text:000000000029497F                 mov     rax, cs:g_pMemAlloc_ptr
+  .text:0000000000294986                 mov     rdi, [rax]
+  .text:0000000000294989                 mov     rax, [rdi]
+  .text:000000000029498C                 call    qword ptr [rax+20h]
+  .text:000000000029498F                 lea     rsp, [rbp-28h]
+  .text:0000000000294993                 pop     rbx
+  .text:0000000000294994                 pop     r12
+  .text:0000000000294996                 pop     r13
+  .text:0000000000294998                 pop     r14
+  .text:000000000029499A                 pop     r15
+  .text:000000000029499C                 pop     rbp
+  .text:000000000029499D                 retn
+  .text:00000000002949A0                 mov     rax, [r12+440h]
+  .text:00000000002949A8                 mov     rdi, [rax+8]
+  .text:00000000002949AC                 call    sub_1DFEB0
+  .text:00000000002949B1                 mov     r12d, eax
+  .text:00000000002949B4                 test    eax, eax
+  .text:00000000002949B6                 js      short loc_29495D
+  .text:00000000002949B8                 cmp     eax, dword ptr [rbp+var_170]
+  .text:00000000002949BE                 jge     short loc_29495D
+  .text:00000000002949C0                 mov     rdx, [rbp+var_168]
+  .text:00000000002949C7                 cdqe
+  .text:00000000002949C9                 lea     rsi, [rbp+var_150]
+  .text:00000000002949D0                 mov     r13, [rdx+rax*8]
+  .text:00000000002949D4                 mov     [rbp+var_150], 0
+  .text:00000000002949DF                 mov     [rbp+var_148], 0
+  .text:00000000002949EA                 mov     [rbp+var_140], 0
+  .text:00000000002949F5                 mov     rax, [r13+0]
+  .text:00000000002949F9                 mov     rdi, r13
+  .text:00000000002949FC                 call    qword ptr [rax+38h]
+  .text:00000000002949FF                 mov     edi, cs:dword_A381C8
+  .text:0000000000294A05                 mov     esi, 2
+  .text:0000000000294A0A                 call    sub_1DF710
+  .text:0000000000294A0F                 test    al, al
+  .text:0000000000294A11                 jz      short loc_294A4E
+  .text:0000000000294A13                 mov     rax, [r13+0]
+  .text:0000000000294A17                 mov     rdi, r13
+  .text:0000000000294A1A                 mov     r14d, dword ptr [rbp+var_150]
+  .text:0000000000294A21                 call    qword ptr [rax+50h]
+  .text:0000000000294A24                 sub     rsp, 8
+  .text:0000000000294A28                 mov     ecx, r12d
+  .text:0000000000294A2B                 mov     r8, r13
+  .text:0000000000294A2E                 push    r14
+  .text:0000000000294A30                 mov     edi, cs:dword_A381C8
+  .text:0000000000294A36                 mov     r9, rax
+  .text:0000000000294A39                 mov     esi, 2
+  .text:0000000000294A3E                 lea     rdx, aDumpingSceneWo; "-- Dumping Scene World %d: 0x%p '%s': %"...
+  .text:0000000000294A45                 xor     eax, eax
+  .text:0000000000294A47                 call    sub_1DFF50
+  .text:0000000000294A4C                 pop     rdx
+  .text:0000000000294A4D                 pop     rcx
+  .text:0000000000294A4E                 mov     eax, dword ptr [rbp+var_150]
+  .text:0000000000294A54                 test    eax, eax
+  .text:0000000000294A56                 jle     loc_294B2F
+  .text:0000000000294A5C                 lea     rax, [rbp+var_17C]
+  .text:0000000000294A63                 xor     r14d, r14d
+  .text:0000000000294A66                 mov     [rbp+var_1B8], rax
+  .text:0000000000294A6D                 lea     rax, [rbp+var_188]
+  .text:0000000000294A74                 mov     r12, r14
+  .text:0000000000294A77                 mov     [rbp+var_1B0], rax
+  .text:0000000000294A7E                 lea     rax, [rbp+var_130]
+  .text:0000000000294A85                 mov     [rbp+var_198], rax
+  .text:0000000000294A8C                 nop     dword ptr [rax+00h]
+  .text:0000000000294A90                 mov     rax, [rbp+var_148]
+  .text:0000000000294A97                 mov     rdi, [rbx]
+  .text:0000000000294A9A                 mov     rcx, [rbp+var_1B8]
+  .text:0000000000294AA1                 mov     rdx, [rbp+var_1B0]
+  .text:0000000000294AA8                 mov     r13, [rax+r12*8]
+  .text:0000000000294AAC                 mov     rax, [rdi]
+  .text:0000000000294AAF                 mov     rsi, r13
+  .text:0000000000294AB2                 mov     r15, [r13+10h]
+  .text:0000000000294AB6                 mov     r14, [r13+70h]
+  .text:0000000000294ABA                 call    qword ptr [rax+0F0h]
+  .text:0000000000294AC0                 mov     rdi, [rbx]
+  .text:0000000000294AC3                 mov     ecx, 100h
+  .text:0000000000294AC8                 movss   xmm2, dword ptr [r13+2Ch]
+  .text:0000000000294ACE                 movss   xmm3, dword ptr [r13+3Ch]
+  .text:0000000000294AD4                 movss   xmm4, dword ptr [r13+4Ch]
+  .text:0000000000294ADA                 movss   [rbp+var_19C], xmm2
+  .text:0000000000294AE2                 mov     rax, [rdi]
+  .text:0000000000294AE5                 movss   [rbp+var_1A0], xmm3
+  .text:0000000000294AED                 movzx   esi, byte ptr [r13+8Bh]
+  .text:0000000000294AF5                 movss   [rbp+var_1A4], xmm4
+  .text:0000000000294AFD                 mov     rdx, [rbp+var_198]
+  .text:0000000000294B04                 call    qword ptr [rax+318h]
+  .text:0000000000294B0A                 mov     edi, cs:dword_A381C8
+  .text:0000000000294B10                 mov     esi, 2
+  .text:0000000000294B15                 call    sub_1DF710
+  .text:0000000000294B1A                 test    al, al
+  .text:0000000000294B1C                 jnz     short loc_294B70
+  .text:0000000000294B1E                 add     r12, 1
+  .text:0000000000294B22                 cmp     dword ptr [rbp+var_150], r12d
+  .text:0000000000294B29                 jg      loc_294A90
+  .text:0000000000294B2F                 cmp     dword ptr [rbp+var_140+4], 3FFFFFFFh
+  .text:0000000000294B39                 mov     dword ptr [rbp+var_150], 0
+  .text:0000000000294B43                 ja      loc_29495D
+  .text:0000000000294B49                 mov     rsi, [rbp+var_148]
+  .text:0000000000294B50                 test    rsi, rsi
+  .text:0000000000294B53                 jz      loc_29495D
+  .text:0000000000294B59                 mov     rax, cs:g_pMemAlloc_ptr
+  .text:0000000000294B60                 mov     rdi, [rax]
+  .text:0000000000294B63                 mov     rax, [rdi]
+  .text:0000000000294B66                 call    qword ptr [rax+20h]
+  .text:0000000000294B69                 jmp     loc_29495D
+  .text:0000000000294B70                 sub     rsp, 8
+  .text:0000000000294B74                 pxor    xmm0, xmm0
+  .text:0000000000294B78                 pxor    xmm1, xmm1
+  .text:0000000000294B7C                 mov     ecx, r12d
+  .text:0000000000294B7F                 mov     r8, r13
+  .text:0000000000294B82                 mov     esi, 2
+  .text:0000000000294B87                 mov     eax, 8
+  .text:0000000000294B8C                 cvtss2sd xmm0, [rbp+var_19C]
+  .text:0000000000294B94                 push    r14
+  .text:0000000000294B96                 pxor    xmm7, xmm7
+  .text:0000000000294B9A                 pxor    xmm6, xmm6
+  .text:0000000000294B9E                 pxor    xmm5, xmm5
+  .text:0000000000294BA2                 push    r15
+  .text:0000000000294BA4                 pxor    xmm4, xmm4
+  .text:0000000000294BA8                 pxor    xmm3, xmm3
+  .text:0000000000294BAC                 pxor    xmm2, xmm2
+  .text:0000000000294BB0                 sub     rsp, 8
+  .text:0000000000294BB4                 cvtss2sd xmm1, [rbp+var_174]
+  .text:0000000000294BBC                 add     r12, 1
+  .text:0000000000294BC0                 movsd   [rsp+1E0h+var_1E0], xmm1
+  .text:0000000000294BC5                 mov     r9, [rbp+var_198]
+  .text:0000000000294BCC                 lea     rdx, aObject4d0xPCla; "Object %4d: 0x%p, class=%20s, origin=(%"...
+  .text:0000000000294BD3                 pxor    xmm1, xmm1
+  .text:0000000000294BD7                 mov     edi, cs:dword_A381C8
+  .text:0000000000294BDD                 cvtss2sd xmm7, [rbp+var_178]
+  .text:0000000000294BE5                 cvtss2sd xmm6, [rbp+var_17C]
+  .text:0000000000294BED                 cvtss2sd xmm5, [rbp+var_180]
+  .text:0000000000294BF5                 cvtss2sd xmm4, [rbp+var_184]
+  .text:0000000000294BFD                 cvtss2sd xmm3, [rbp+var_188]
+  .text:0000000000294C05                 cvtss2sd xmm2, [rbp+var_1A4]
+  .text:0000000000294C0D                 cvtss2sd xmm1, [rbp+var_1A0]
+  .text:0000000000294C15                 call    sub_1DFF50
+  .text:0000000000294C1A                 add     rsp, 20h
+  .text:0000000000294C1E                 cmp     dword ptr [rbp+var_150], r12d
+  .text:0000000000294C25                 jg      loc_294A90
+  .text:0000000000294C2B                 jmp     loc_294B2F
+procedure: |-
+  __int64 __fastcall SC_DumpWorld_CommandHandler(__int64 a1, __int64 a2)
+  {
+    __int64 result; // rax
+    int v3; // r12d
+    const void *v4; // r13
+    int v5; // r14d
+    const char *v6; // rax
+    __int64 v7; // r12
+    __int64 v8; // r13
+    const void *v9; // r15
+    __int64 v10; // r14
+    int v11; // ecx
+    float v12; // [rsp+3Ch] [rbp-1A4h]
+    float v13; // [rsp+40h] [rbp-1A0h]
+    float v14; // [rsp+44h] [rbp-19Ch]
+    float v15[3]; // [rsp+58h] [rbp-188h] BYREF
+    float v16[3]; // [rsp+64h] [rbp-17Ch] BYREF
+    __int64 v17; // [rsp+70h] [rbp-170h] BYREF
+    __int64 v18; // [rsp+78h] [rbp-168h]
+    __int64 v19; // [rsp+80h] [rbp-160h]
+    __int64 v20; // [rsp+90h] [rbp-150h] BYREF
+    __int64 v21; // [rsp+98h] [rbp-148h]
+    __int64 v22; // [rsp+A0h] [rbp-140h]
+    char v23[304]; // [rsp+B0h] [rbp-130h] BYREF
+
+    v17 = 0;
+    v18 = 0;
+    v19 = 0;
+    result = (*(__int64 (__fastcall **)(_QWORD *, __int64 *))(*qword_AD2180 + 768LL))(qword_AD2180, &v17);
+    if ( *(_DWORD *)(a2 + 1080) == 2 )
+    {
+      result = sub_1DFEB0(*(_QWORD *)(*(_QWORD *)(a2 + 1088) + 8LL));
+      v3 = result;
+      if ( (int)result >= 0 && (int)result < (int)v17 )
+      {
+        v4 = *(const void **)(v18 + 8LL * (int)result);
+        v20 = 0;
+        v21 = 0;
+        v22 = 0;
+        (*(void (__fastcall **)(const void *, __int64 *))(*(_QWORD *)v4 + 56LL))(v4, &v20);
+        if ( (unsigned __int8)sub_1DF710((unsigned int)dword_A381C8, 2) )
+        {
+          v5 = v20;
+          v6 = (const char *)(*(__int64 (__fastcall **)(const void *))(*(_QWORD *)v4 + 80LL))(v4);
+          sub_1DFF50(
+            (unsigned int)dword_A381C8,
+            2,
+            "-- Dumping Scene World %d: 0x%p '%s': %d objects --\n",
+            v3,
+            v4,
+            v6,
+            v5);
+        }
+        result = (unsigned int)v20;
+        if ( (int)v20 > 0 )
+        {
+          v7 = 0;
+          do
+          {
+            while ( 1 )
+            {
+              v8 = *(_QWORD *)(v21 + 8 * v7);
+              v9 = *(const void **)(v8 + 16);
+              v10 = *(_QWORD *)(v8 + 112);
+              (*(void (__fastcall **)(_QWORD *, __int64, float *, float *))(*qword_AD2180 + 240LL))(
+                qword_AD2180,
+                v8,
+                v15,
+                v16);
+              v14 = *(float *)(v8 + 44);
+              v13 = *(float *)(v8 + 60);
+              v12 = *(float *)(v8 + 76);
+              (*(void (__fastcall **)(_QWORD *, _QWORD, char *, __int64))(*qword_AD2180 + 792LL))(
+                qword_AD2180,
+                *(unsigned __int8 *)(v8 + 139),
+                v23,
+                256);
+              result = sub_1DF710((unsigned int)dword_A381C8, 2);
+              if ( (_BYTE)result )
+                break;
+              if ( (int)v20 <= (int)++v7 )
+                goto LABEL_14;
+            }
+            v11 = v7++;
+            result = sub_1DFF50(
+                       (unsigned int)dword_A381C8,
+                       2,
+                       "Object %4d: 0x%p, class=%20s, origin=(%13g,%13g,%13g), bounds=(%13g,%13g,%13g):(%13g,%13g,%13g), de"
+                       "sc=0x%p, flags=0x%016llX\n",
+                       v11,
+                       (const void *)v8,
+                       v23,
+                       v14,
+                       v13,
+                       v12,
+                       v15[0],
+                       v15[1],
+                       v15[2],
+                       v16[0],
+                       v16[1],
+                       v16[2],
+                       v9,
+                       v10);
+          }
+          while ( (int)v20 > (int)v7 );
+        }
+  LABEL_14:
+        LODWORD(v20) = 0;
+        if ( HIDWORD(v22) <= 0x3FFFFFFF && v21 )
+          result = (*(__int64 (__fastcall **)(_QWORD *))(*g_pMemAlloc + 32LL))(g_pMemAlloc);
+      }
+    }
+    LODWORD(v17) = 0;
+    if ( HIDWORD(v19) <= 0x3FFFFFFF )
+    {
+      if ( v18 )
+        return (*(__int64 (__fastcall **)(_QWORD *))(*g_pMemAlloc + 32LL))(g_pMemAlloc);
+    }
+    return result;
+  }

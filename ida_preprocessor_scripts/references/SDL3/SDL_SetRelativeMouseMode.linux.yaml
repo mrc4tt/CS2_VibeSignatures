@@ -1,0 +1,115 @@
+func_name: SDL_SetRelativeMouseMode
+func_va: '0x828b0'
+disasm_code: |-
+  .text:00000000000828B0                 push    r12
+  .text:00000000000828B2                 push    rbp
+  .text:00000000000828B3                 push    rbx
+  .text:00000000000828B4                 mov     ebx, edi
+  .text:00000000000828B6                 call    sub_7F310
+  .text:00000000000828BB                 mov     rbp, rax
+  .text:00000000000828BE                 test    bl, bl
+  .text:00000000000828C0                 jnz     short loc_828C9
+  .text:00000000000828C2                 mov     cs:byte_2FF1A6, 0
+  .text:00000000000828C9                 cmp     cs:byte_2FF1A1, bl
+  .text:00000000000828CF                 jz      short loc_82918
+  .text:00000000000828D1                 mov     rax, cs:qword_2FF120
+  .text:00000000000828D8                 test    rax, rax
+  .text:00000000000828DB                 jz      loc_82990
+  .text:00000000000828E1                 movzx   edi, bl
+  .text:00000000000828E4                 call    rax ; qword_2FF120
+  .text:00000000000828E6                 mov     r12d, eax
+  .text:00000000000828E9                 test    al, al
+  .text:00000000000828EB                 jz      short loc_8290B
+  .text:00000000000828ED                 mov     cs:byte_2FF1A1, bl
+  .text:00000000000828F3                 test    bl, bl
+  .text:00000000000828F5                 jnz     short loc_82930
+  .text:00000000000828F7                 test    rbp, rbp
+  .text:00000000000828FA                 jnz     short loc_82960
+  .text:00000000000828FC                 call    sub_82630
+  .text:0000000000082901                 mov     edi, 400h
+  .text:0000000000082906                 call    sub_7DB50
+  .text:000000000008290B                 mov     eax, r12d
+  .text:000000000008290E                 pop     rbx
+  .text:000000000008290F                 pop     rbp
+  .text:0000000000082910                 pop     r12
+  .text:0000000000082912                 retn
+  .text:0000000000082918                 mov     r12d, 1
+  .text:000000000008291E                 pop     rbx
+  .text:000000000008291F                 pop     rbp
+  .text:0000000000082920                 mov     eax, r12d
+  .text:0000000000082923                 pop     r12
+  .text:0000000000082925                 retn
+  .text:0000000000082930                 call    sub_82630
+  .text:0000000000082935                 test    rbp, rbp
+  .text:0000000000082938                 jz      short loc_82901
+  .text:000000000008293A                 mov     rdi, rbp
+  .text:000000000008293D                 call    sub_826D0
+  .text:0000000000082942                 mov     rdi, rbp
+  .text:0000000000082945                 call    sub_15C760
+  .text:000000000008294A                 xor     edi, edi
+  .text:000000000008294C                 call    sub_821D0
+  .text:0000000000082951                 test    bl, bl
+  .text:0000000000082953                 jnz     short loc_82901
+  .text:0000000000082955                 jmp     short loc_828FC
+  .text:0000000000082960                 mov     rdi, rbp
+  .text:0000000000082963                 call    sub_15C760
+  .text:0000000000082968                 movss   xmm1, dword ptr cs:qword_2FF170+4
+  .text:0000000000082970                 mov     esi, 1
+  .text:0000000000082975                 mov     rdi, rbp
+  .text:0000000000082978                 movss   xmm0, dword ptr cs:qword_2FF170
+  .text:0000000000082980                 call    sub_82110
+  .text:0000000000082985                 jmp     short loc_8294A
+  .text:0000000000082990                 pop     rbx
+  .text:0000000000082991                 lea     rdi, aThatOperationI; "That operation is not supported"
+  .text:0000000000082998                 pop     rbp
+  .text:0000000000082999                 pop     r12
+  .text:000000000008299B                 jmp     sub_3BB30
+procedure: |-
+  __int64 __fastcall sub_828B0(unsigned __int8 a1, int a2, __int64 a3, __int64 a4, __int64 a5, __int64 a6, char a7)
+  {
+    int v7; // edx
+    int v8; // ecx
+    __int64 v9; // rbp
+    int v10; // r8d
+    int v11; // r9d
+    unsigned int v12; // r12d
+
+    v9 = sub_7F310();
+    if ( !a1 )
+      byte_2FF1A6 = 0;
+    if ( byte_2FF1A1 == a1 )
+      return 1;
+    if ( qword_2FF120 )
+    {
+      v12 = qword_2FF120(a1);
+      if ( !(_BYTE)v12 )
+        return v12;
+      byte_2FF1A1 = a1;
+      if ( a1 )
+      {
+        sub_82630();
+        if ( !v9 )
+          goto LABEL_9;
+        sub_826D0(v9);
+        sub_15C760(v9);
+      }
+      else
+      {
+        if ( !v9 )
+        {
+  LABEL_8:
+          sub_82630();
+  LABEL_9:
+          sub_7DB50(1024);
+          return v12;
+        }
+        sub_15C760(v9);
+        sub_82110(v9, 1, *(float *)&qword_2FF170, *((float *)&qword_2FF170 + 1));
+      }
+      sub_821D0(0);
+      if ( a1 )
+        goto LABEL_9;
+      goto LABEL_8;
+    }
+    return sub_3BB30((unsigned int)"That operation is not supported", a2, v7, v8, v10, v11, a7);
+  }

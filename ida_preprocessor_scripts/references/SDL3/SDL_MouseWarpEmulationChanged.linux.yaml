@@ -1,0 +1,20 @@
+func_name: SDL_MouseWarpEmulationChanged
+func_va: '0x81040'
+disasm_code: |-
+  .text:0000000000081040                 push    rbx
+  .text:0000000000081041                 xor     esi, esi
+  .text:0000000000081043                 mov     rbx, rdi
+  .text:0000000000081046                 mov     rdi, rcx
+  .text:0000000000081049                 call    sub_3CE50
+  .text:000000000008104E                 mov     [rbx+0C2h], al
+  .text:0000000000081054                 pop     rbx
+  .text:0000000000081055                 retn
+procedure: |-
+  __int64 __fastcall sub_81040(__int64 a1, __int64 a2, __int64 a3, __int64 a4)
+  {
+    __int64 result; // rax
+
+    result = sub_3CE50(a4, 0);
+    *(_BYTE *)(a1 + 194) = result;
+    return result;
+  }

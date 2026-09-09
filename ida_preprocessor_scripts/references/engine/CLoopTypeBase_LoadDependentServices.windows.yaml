@@ -1,0 +1,286 @@
+func_name: CLoopTypeBase_LoadDependentServices
+func_va: '0x18021c910'
+disasm_code: |-
+  .text:000000018021C910                 mov     rax, rsp
+  .text:000000018021C913                 mov     [rax+8], rcx
+  .text:000000018021C917                 push    rbx
+  .text:000000018021C918                 push    rdi
+  .text:000000018021C919                 sub     rsp, 78h
+  .text:000000018021C91D                 xor     r10d, r10d
+  .text:000000018021C920                 mov     [rax-20h], rsi
+  .text:000000018021C924                 mov     edx, r10d
+  .text:000000018021C927                 mov     [rax-60h], r10
+  .text:000000018021C92B                 mov     ebx, r10d
+  .text:000000018021C92E                 mov     rdi, rcx
+  .text:000000018021C931                 mov     [rax-58h], ebx
+  .text:000000018021C934                 mov     r8d, r10d
+  .text:000000018021C937                 mov     [rax+10h], edx
+  .text:000000018021C93A                 mov     esi, r10d
+  .text:000000018021C93D                 movsxd  r9, dword ptr [rcx+30h]
+  .text:000000018021C941                 mov     [rax-54h], edx
+  .text:000000018021C944                 mov     [rax-68h], r10d
+  .text:000000018021C948                 mov     [rsp+88h+arg_18], r9
+  .text:000000018021C950                 test    r9, r9
+  .text:000000018021C953                 jle     loc_18021CAD4
+  .text:000000018021C959                 mov     [rax-38h], r14
+  .text:000000018021C95D                 mov     [rax-40h], r15
+  .text:000000018021C961                 mov     r15d, r10d
+  .text:000000018021C964                 mov     [rax-18h], rbp
+  .text:000000018021C968                 mov     [rax-28h], r12
+  .text:000000018021C96C                 mov     [rax-30h], r13
+  .text:000000018021C970                 mov     rax, [rdi+38h]
+  .text:000000018021C974                 mov     r14, [rax+r15*8]
+  .text:000000018021C978                 mov     eax, r10d
+  .text:000000018021C97B                 test    esi, esi
+  .text:000000018021C97D                 jle     short loc_18021C99B
+  .text:000000018021C97F                 mov     rcx, r8
+  .text:000000018021C982                 cmp     [rcx], r14
+  .text:000000018021C985                 jz      short loc_18021C993
+  .text:000000018021C987                 inc     eax
+  .text:000000018021C989                 add     rcx, 28h ; '('
+  .text:000000018021C98D                 cmp     eax, esi
+  .text:000000018021C98F                 jl      short loc_18021C982
+  .text:000000018021C991                 jmp     short loc_18021C99B
+  .text:000000018021C993                 test    eax, eax
+  .text:000000018021C995                 jns     loc_18021CAAB
+  .text:000000018021C99B                 movsxd  r13, esi
+  .text:000000018021C99E                 cmp     r13d, ebx
+  .text:000000018021C9A1                 jnz     loc_18021CA81
+  .text:000000018021C9A7                 mov     ebp, edx
+  .text:000000018021C9A9                 and     ebp, 0C0000000h
+  .text:000000018021C9AF                 test    ebp, 7FFFFFFFh
+  .text:000000018021C9B5                 jnz     loc_18021CA81
+  .text:000000018021C9BB                 movsxd  r12, ebx
+  .text:000000018021C9BE                 cmp     r12, 7FFFFFFEh
+  .text:000000018021C9C5                 jle     short loc_18021C9DB
+  .text:000000018021C9C7                 mov     edx, 1
+  .text:000000018021C9CC                 mov     ecx, ebx
+  .text:000000018021C9CE                 call    cs:UtlVectorMemory_FailedAllocation
+  .text:000000018021C9D4                 mov     edx, [rsp+88h+arg_8]
+  .text:000000018021C9DB                 mov     eax, edx
+  .text:000000018021C9DD                 lea     edi, [rbx+1]
+  .text:000000018021C9E0                 and     eax, 3FFFFFFFh
+  .text:000000018021C9E5                 mov     r9d, 28h ; '('
+  .text:000000018021C9EB                 mov     edx, eax
+  .text:000000018021C9ED                 mov     [rsp+88h+arg_10], eax
+  .text:000000018021C9F4                 mov     r8d, edi
+  .text:000000018021C9F7                 mov     ecx, ebx
+  .text:000000018021C9F9                 call    cs:UtlVectorMemory_CalcNewAllocationCount
+  .text:000000018021C9FF                 mov     ebx, eax
+  .text:000000018021CA01                 cmp     eax, edi
+  .text:000000018021CA03                 jge     short loc_18021CA23
+  .text:000000018021CA05                 test    eax, eax
+  .text:000000018021CA07                 jnz     short loc_18021CA15
+  .text:000000018021CA09                 cmp     edi, 0FFFFFFFFh
+  .text:000000018021CA0C                 jg      short loc_18021CA15
+  .text:000000018021CA0E                 mov     ebx, 0FFFFFFFFh
+  .text:000000018021CA13                 jmp     short loc_18021CA23
+  .text:000000018021CA15                 lea     eax, [rbx+rdi]
+  .text:000000018021CA18                 cdq
+  .text:000000018021CA19                 sub     eax, edx
+  .text:000000018021CA1B                 sar     eax, 1
+  .text:000000018021CA1D                 mov     ebx, eax
+  .text:000000018021CA1F                 cmp     eax, edi
+  .text:000000018021CA21                 jl      short loc_18021CA15
+  .text:000000018021CA23                 mov     rcx, [rsp+88h+var_60]
+  .text:000000018021CA28                 lea     r9, [r12+r12*4]
+  .text:000000018021CA2C                 movsxd  rax, ebx
+  .text:000000018021CA2F                 shl     r9, 3
+  .text:000000018021CA33                 lea     r8, [rax+rax*4]
+  .text:000000018021CA37                 shl     r8, 3
+  .text:000000018021CA3B                 test    ebp, ebp
+  .text:000000018021CA3D                 setz    dl
+  .text:000000018021CA40                 call    cs:UtlVectorMemory_Alloc
+  .text:000000018021CA46                 mov     edx, [rsp+88h+arg_8]
+  .text:000000018021CA4D                 test    ebp, ebp
+  .text:000000018021CA4F                 mov     rdi, [rsp+88h+arg_0]
+  .text:000000018021CA57                 mov     r8, rax
+  .text:000000018021CA5A                 cmovnz  edx, [rsp+88h+arg_10]
+  .text:000000018021CA62                 xor     r10d, r10d
+  .text:000000018021CA65                 mov     r9, [rsp+88h+arg_18]
+  .text:000000018021CA6D                 mov     [rsp+88h+arg_8], edx
+  .text:000000018021CA74                 mov     [rsp+88h+var_54], edx
+  .text:000000018021CA78                 mov     [rsp+88h+var_60], rax
+  .text:000000018021CA7D                 mov     [rsp+88h+var_58], ebx
+  .text:000000018021CA81                 inc     esi
+  .text:000000018021CA83                 lea     rcx, ds:0[r13*4]
+  .text:000000018021CA8B                 add     rcx, r13
+  .text:000000018021CA8E                 mov     [r8+rcx*8+18h], r10
+  .text:000000018021CA93                 mov     qword ptr [r8+rcx*8+20h], 0
+  .text:000000018021CA9C                 mov     [r8+rcx*8+10h], r10d
+  .text:000000018021CAA1                 mov     [r8+rcx*8], r14
+  .text:000000018021CAA5                 mov     byte ptr [r8+rcx*8+8], 0
+  .text:000000018021CAAB                 inc     r15
+  .text:000000018021CAAE                 cmp     r15, r9
+  .text:000000018021CAB1                 jl      loc_18021C970
+  .text:000000018021CAB7                 mov     r15, [rsp+88h+var_40]
+  .text:000000018021CABC                 mov     r14, [rsp+88h+var_38]
+  .text:000000018021CAC1                 mov     r13, [rsp+88h+var_30]
+  .text:000000018021CAC6                 mov     r12, [rsp+88h+var_28]
+  .text:000000018021CACB                 mov     rbp, [rsp+88h+var_18]
+  .text:000000018021CAD0                 mov     [rsp+88h+var_68], esi
+  .text:000000018021CAD4                 lea     rdx, [rsp+88h+var_68]
+  .text:000000018021CAD9                 call    sub_18021C000
+  .text:000000018021CADE                 mov     rsi, [rsp+88h+var_20]
+  .text:000000018021CAE3                 test    al, al
+  .text:000000018021CAE5                 jz      short loc_18021CB29
+  .text:000000018021CAE7                 lea     rdx, [rsp+88h+var_68]
+  .text:000000018021CAEC                 call    sub_18021C230
+  .text:000000018021CAF1                 test    al, al
+  .text:000000018021CAF3                 jz      short loc_18021CB29
+  .text:000000018021CAF5                 lea     rdx, [rsp+88h+var_68]
+  .text:000000018021CAFA                 mov     rcx, rdi
+  .text:000000018021CAFD                 call    sub_18021C4C0
+  .text:000000018021CB02                 test    al, al
+  .text:000000018021CB04                 jz      short loc_18021CB29
+  .text:000000018021CB06                 lea     rdx, [rsp+88h+var_68]
+  .text:000000018021CB0B                 mov     rcx, rdi
+  .text:000000018021CB0E                 call    sub_18021C760
+  .text:000000018021CB13                 lea     rcx, [rsp+88h+var_68]
+  .text:000000018021CB18                 mov     bl, 1
+  .text:000000018021CB1A                 call    sub_18021D0A0
+  .text:000000018021CB1F                 movzx   eax, bl
+  .text:000000018021CB22                 add     rsp, 78h
+  .text:000000018021CB26                 pop     rdi
+  .text:000000018021CB27                 pop     rbx
+  .text:000000018021CB28                 retn
+  .text:000000018021CB29                 xor     bl, bl
+  .text:000000018021CB2B                 lea     rcx, [rsp+88h+var_68]
+  .text:000000018021CB30                 call    sub_18021D0A0
+  .text:000000018021CB35                 movzx   eax, bl
+  .text:000000018021CB38                 add     rsp, 78h
+  .text:000000018021CB3C                 pop     rdi
+  .text:000000018021CB3D                 pop     rbx
+  .text:000000018021CB3E                 retn
+procedure: |-
+  __int64 __fastcall sub_18021C910(__int64 a1)
+  {
+    int v1; // edx
+    int v2; // ebx
+    __int64 v3; // rdi
+    __int64 v4; // r8
+    int v5; // esi
+    __int64 v6; // r9
+    __int64 i; // r15
+    __int64 v8; // r14
+    int v9; // eax
+    __int64 v10; // r13
+    unsigned int v11; // ebp
+    __int64 v12; // r12
+    int v13; // edi
+    int v14; // eax
+    __int64 v15; // rdx
+    __int64 v16; // rax
+    __int64 v17; // rcx
+    int v19; // [rsp+20h] [rbp-68h] BYREF
+    __int64 v20; // [rsp+28h] [rbp-60h]
+    int v21; // [rsp+30h] [rbp-58h]
+    int v22; // [rsp+34h] [rbp-54h]
+    __int64 v23; // [rsp+90h] [rbp+8h]
+    int v24; // [rsp+98h] [rbp+10h]
+    int v25; // [rsp+A0h] [rbp+18h]
+    __int64 v26; // [rsp+A8h] [rbp+20h]
+
+    v23 = a1;
+    v1 = 0;
+    v20 = 0;
+    v2 = 0;
+    v3 = a1;
+    v21 = 0;
+    v4 = 0;
+    v24 = 0;
+    v5 = 0;
+    v6 = *(int *)(a1 + 48);
+    v22 = 0;
+    v19 = 0;
+    v26 = v6;
+    if ( v6 > 0 )
+    {
+      for ( i = 0; i < v6; ++i )
+      {
+        v8 = *(_QWORD *)(*(_QWORD *)(v3 + 56) + 8 * i);
+        v9 = 0;
+        if ( v5 <= 0 )
+          goto LABEL_9;
+        a1 = v4;
+        while ( *(_QWORD *)a1 != v8 )
+        {
+          ++v9;
+          a1 += 40;
+          if ( v9 >= v5 )
+            goto LABEL_9;
+        }
+        if ( v9 < 0 )
+        {
+  LABEL_9:
+          v10 = v5;
+          if ( v5 == v2 )
+          {
+            v11 = v1 & 0xC0000000;
+            if ( (v1 & 0x40000000) == 0 )
+            {
+              v12 = v2;
+              if ( v2 > 2147483646LL )
+              {
+                UtlVectorMemory_FailedAllocation((unsigned int)v2, 1);
+                v1 = v24;
+              }
+              v13 = v2 + 1;
+              v25 = v1 & 0x3FFFFFFF;
+              v14 = UtlVectorMemory_CalcNewAllocationCount((unsigned int)v2, v1 & 0x3FFFFFFF, (unsigned int)(v2 + 1), 40);
+              v2 = v14;
+              if ( v14 < v13 )
+              {
+                if ( v14 || v13 > -1 )
+                {
+                  do
+                  {
+                    v15 = (unsigned int)((v2 + v13) >> 31);
+                    v2 = (v2 + v13) / 2;
+                  }
+                  while ( v2 < v13 );
+                }
+                else
+                {
+                  v2 = -1;
+                }
+              }
+              LOBYTE(v15) = v11 == 0;
+              v16 = UtlVectorMemory_Alloc(v20, v15, 40LL * v2, 40 * v12);
+              v1 = v24;
+              v3 = v23;
+              v4 = v16;
+              if ( v11 )
+                v1 = v25;
+              v6 = v26;
+              v24 = v1;
+              v22 = v1;
+              v20 = v16;
+              v21 = v2;
+            }
+          }
+          ++v5;
+          a1 = 5 * v10;
+          *(_QWORD *)(v4 + 8 * a1 + 24) = 0;
+          *(_QWORD *)(v4 + 8 * a1 + 32) = 0;
+          *(_DWORD *)(v4 + 8 * a1 + 16) = 0;
+          *(_QWORD *)(v4 + 8 * a1) = v8;
+          *(_BYTE *)(v4 + 8 * a1 + 8) = 0;
+        }
+      }
+      v19 = v5;
+    }
+    if ( (unsigned __int8)sub_18021C000(a1, &v19, v4)
+      && (unsigned __int8)sub_18021C230(v17, &v19)
+      && (unsigned __int8)sub_18021C4C0(v3, &v19) )
+    {
+      sub_18021C760(v3, &v19);
+      sub_18021D0A0(&v19);
+      return 1;
+    }
+    else
+    {
+      sub_18021D0A0(&v19);
+      return 0;
+    }
+  }
