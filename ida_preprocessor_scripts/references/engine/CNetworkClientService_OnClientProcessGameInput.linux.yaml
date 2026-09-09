@@ -1,0 +1,19 @@
+func_name: CNetworkClientService_OnClientProcessGameInput
+func_va: '0x426130'
+disasm_code: |-
+  .text:0000000000426130                 mov     rdi, [rdi+0A0h]
+  .text:0000000000426137                 test    rdi, rdi
+  .text:000000000042613A                 jz      short locret_426148
+  .text:000000000042613C                 jmp     sub_4E0E60
+  .text:0000000000426148                 retn
+procedure: |-
+  __int64 __fastcall sub_426130(__int64 a1, __int64 a2)
+  {
+    __int64 v2; // rdi
+    __int64 result; // rax
+
+    v2 = *(_QWORD *)(a1 + 160);
+    if ( v2 )
+      return sub_4E0E60(v2, a2);
+    return result;
+  }
