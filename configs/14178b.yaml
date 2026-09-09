@@ -165,7 +165,6 @@ modules:
       - name: find-SC_DumpWorld_CommandHandler
         expected_output:
           - SC_DumpWorld_CommandHandler.{platform}.yaml
-        platform: windows
       - name: find-SC_DumpWorld_CommandHandler-decompiles
         expected_output:
           - ISceneSystem_GetWorldsInfo.{platform}.yaml
@@ -1173,7 +1172,6 @@ modules:
         expected_input:
           - CDemoPlayer_vtable.{platform}.yaml
       - name: find-CDemoPlayer_StartPlayback
-        platform: windows
         expected_output:
           - CDemoPlayer_StartPlayback.{platform}.yaml
         expected_input:
@@ -1673,7 +1671,6 @@ modules:
         expected_input:
           - CNetworkGameClient_vtable.{platform}.yaml
       - name: find-CNetworkGameClient_OnPreserveEntity
-        platform: windows
         expected_output:
           - CNetworkGameClient_OnPreserveEntity.{platform}.yaml
         expected_input:
@@ -4674,7 +4671,6 @@ modules:
         expected_input:
           - CLoopModeGame_RegisterEventMap.{platform}.yaml
       - name: find-CLoopModeGame_LoopInitInternal
-        platform: linux
         expected_output:
           - CLoopModeGame_LoopInitInternal.{platform}.yaml
       - name: find-CLoopModeGame_LoopInit
@@ -9659,7 +9655,6 @@ modules:
         expected_output:
           - CLoopModeGame_ReceivedServerInfo.{platform}.yaml
       - name: find-CLoopModeGame_LoopInitInternal
-        platform: linux
         expected_output:
           - CLoopModeGame_LoopInitInternal.{platform}.yaml
       - name: find-CLoopModeGame_LoopInit
