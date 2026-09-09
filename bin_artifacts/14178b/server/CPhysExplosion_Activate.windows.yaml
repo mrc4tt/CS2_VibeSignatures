@@ -2,6 +2,7 @@ func_name: CPhysExplosion_Activate
 func_va: '0x180dcc7d0'
 func_rva: '0xdcc7d0'
 func_size: '0x38'
+func_sig: 40 53 48 83 EC 20 48 8B D9 E8 92 74 EA FF 80 BB
 vtable_name: CPhysExplosion
 vfunc_offset: '0x68'
 vfunc_index: 13

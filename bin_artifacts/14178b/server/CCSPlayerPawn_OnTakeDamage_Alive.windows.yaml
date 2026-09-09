@@ -2,6 +2,7 @@ func_name: CCSPlayerPawn_OnTakeDamage_Alive
 func_va: '0x180a9da90'
 func_rva: '0xa9da90'
 func_size: '0x2e'
+func_sig: 48 89 5C 24 08 57 48 83 EC 20 48 8B DA 48 8B F9 E8 3B 8B 08 00 48 8B 8F
 vtable_name: CCSPlayerPawn
 vfunc_offset: '0x7e0'
 vfunc_index: 252

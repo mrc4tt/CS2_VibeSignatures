@@ -2,6 +2,7 @@ func_name: IGameSystem_OnClientPostAdvanceTick
 func_va: '0x180153a70'
 func_rva: '0x153a70'
 func_size: '0x3'
+func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC 20 48 8D 05 77 F6 82
 vtable_name: IGameSystem
 vfunc_offset: '0x140'
 vfunc_index: 40

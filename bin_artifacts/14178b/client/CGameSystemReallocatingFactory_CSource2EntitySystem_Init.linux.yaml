@@ -2,6 +2,7 @@ func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_Init
 func_va: '0x1711900'
 func_rva: '0x1711900'
 func_size: '0x10'
+func_sig: 55 48 89 E5 E8 D7 FB FF FF B8 01 00 00 00 5D C3
 vtable_name: CGameSystemReallocatingFactory_CSource2EntitySystem_vtable
 vfunc_offset: '0x0'
 vfunc_index: 0

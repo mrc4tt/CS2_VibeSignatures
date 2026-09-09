@@ -2,6 +2,7 @@ func_name: CBtActionCoordinatedBuy_Update
 func_va: '0x1803068b0'
 func_rva: '0x3068b0'
 func_size: '0x695'
+func_sig: 48 89 4C 24 08 55 48 81 EC F0 00 00 00 48 8B E9
 vtable_name: CBtActionCoordinatedBuy
 vfunc_offset: '0x18'
 vfunc_index: 3

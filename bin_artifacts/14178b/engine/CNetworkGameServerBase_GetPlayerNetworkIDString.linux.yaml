@@ -2,6 +2,7 @@ func_name: CNetworkGameServerBase_GetPlayerNetworkIDString
 func_va: '0x519650'
 func_rva: '0x519650'
 func_size: '0x8'
+func_sig: 48 8D 05 0D 2B D5 FF C3 CC CC CC CC CC CC CC CC
 vtable_name: CNetworkGameServerBase_vtable
 vfunc_offset: '0x230'
 vfunc_index: 70

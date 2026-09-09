@@ -2,6 +2,7 @@ func_name: CEntityInstance_Connect
 func_va: '0x181264ce0'
 func_rva: '0x1264ce0'
 func_size: '0x8'
+func_sig: C6 05 1A BF EF 00 01 C3 CC CC CC CC CC CC CC CC
 vtable_name: CEntityInstance
 vfunc_offset: '0x28'
 vfunc_index: 5

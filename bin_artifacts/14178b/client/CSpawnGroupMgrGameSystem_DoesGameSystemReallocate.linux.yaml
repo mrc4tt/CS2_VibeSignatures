@@ -2,6 +2,7 @@ func_name: CSpawnGroupMgrGameSystem_DoesGameSystemReallocate
 func_va: '0xf60630'
 func_rva: '0xf60630'
 func_size: '0xd'
+func_sig: 48 8B 3D F1 7D 5E 03 48 8B 07 FF 60 40 CC CC CC
 vtable_name: CSpawnGroupMgrGameSystem_vtable2
 vfunc_offset: '0x1f0'
 vfunc_index: 62

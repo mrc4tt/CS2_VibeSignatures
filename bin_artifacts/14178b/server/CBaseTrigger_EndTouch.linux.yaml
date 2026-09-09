@@ -2,6 +2,7 @@ func_name: CBaseTrigger_EndTouch
 func_va: '0xd3b490'
 func_rva: '0xd3b490'
 func_size: '0x11'
+func_sig: 48 85 F6 74 0B E9 D6 FC FF FF 66 0F 1F 44 00 00
 vtable_name: CBaseTrigger
 vfunc_offset: '0x4a8'
 vfunc_index: 149

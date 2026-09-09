@@ -2,6 +2,7 @@ func_name: CGameMoney_GetDataDescMap
 func_va: '0xba6da0'
 func_rva: '0xba6da0'
 func_size: '0x8'
+func_sig: 48 8D 05 D9 B1 A1 01 C3 CC CC CC CC CC CC CC CC
 vtable_name: CGameMoney_vtable
 vfunc_offset: '0x160'
 vfunc_index: 44

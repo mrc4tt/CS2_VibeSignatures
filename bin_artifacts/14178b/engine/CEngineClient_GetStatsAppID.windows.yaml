@@ -2,6 +2,7 @@ func_name: CEngineClient_GetStatsAppID
 func_va: '0x180075a70'
 func_rva: '0x75a70'
 func_size: '0x7'
+func_sig: 8B 05 12 BE 89 00 C3 CC CC CC CC CC CC CC CC CC
 vtable_name: CEngineClient_vtable
 vfunc_offset: '0x78'
 vfunc_index: 15

@@ -2,6 +2,7 @@ func_name: CSceneEntity_GetScriptDesc
 func_va: '0x1a8a950'
 func_rva: '0x1a8a950'
 func_size: '0x15'
+func_sig: 48 8B 05 71 30 E5 00 48 85 C0 74 04 C3 0F 1F 00
 vtable_name: CSceneEntity
 vfunc_offset: '0x18'
 vfunc_index: 3
