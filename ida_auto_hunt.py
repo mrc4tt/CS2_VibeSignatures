@@ -207,7 +207,7 @@ def run():
     for s, how in solved:
         print(f"  ✓ AUTO  {s} — {how}")
     for s, why in queue:
-        print(f"  ✗ KØ   {s} ({why}) — brug Ctrl-Alt-S batch")
+        print(f"  ✗ KØ   {s} ({why}) — brug Ctrl-Alt-D batch")
     print("=" * 66)
     print(f"[auto_hunt] husk: git add bin_artifacts/{gamever}/{module}")
 

@@ -30,7 +30,7 @@ Vigtigst: **bin/ er utracked** — efter pull altid: `cp -ru bin_artifacts/<VER>
 uv run missing_report.py -gamever <VER>          # kun ★SEED-rækker = dit arbejde
 uv run audit_duplicate_va.py -gamever <VER>      # 0 suspekte klynger påkrævet
 ```
-★SEED-residu → manuel IDA-jagt (PC): Ctrl-Alt-S (funcs) / Ctrl-Alt-V (vtables) /
+★SEED-residu → manuel IDA-jagt (PC): Ctrl-Alt-D (funcs) / Ctrl-Alt-V (vtables) /
 Ctrl-Alt-M (structmembers). Alternativ headless enkelt-skill:
 ```bash
 uv run ida_analyze_bin.py -gamever <VER> -platform linux -oldgamever <FORRIGE> -skill find-X

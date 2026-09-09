@@ -152,7 +152,7 @@ def register_action():
     except Exception:
         pass
     desc = ida_kernwin.action_desc_t(
-        ACTION_ID, "CS2 sig maker", _SigMakerAction(), "Ctrl-Alt-S",
+        ACTION_ID, "CS2 sig maker", _SigMakerAction(), "Ctrl-Alt-D",
         "CS2_VibeSignatures signature/YAML maker", -1,
     )
     ida_kernwin.register_action(desc)
