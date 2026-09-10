@@ -61,7 +61,11 @@ def _load_pe(blob):
     for i in range(nsec):
         off = opt + size_opt + i * 40
         vaddr, rawsize, rawptr = struct.unpack_from("<III", blob, off + 12)
-        segs.append((rawptr, base + vaddr, rawsize, 0x80000000))
+        characteristics = struct.unpack_from("<I", blob, off + 36)[0]
+        # normalise to the ELF PF_X convention (bit 0) that scan_sig tests, so a
+        # hardcoded 0x80000000 no longer makes every PE section non-executable
+        flags = 0x1 if characteristics & 0x20000000 else 0x0
+        segs.append((rawptr, base + vaddr, rawsize, flags))
     return blob, {"type": "pe", "segs": segs, "base": base}
 
 
@@ -183,7 +187,13 @@ def baseline_artifact(repo, module, symbol, platform, gamever):
             cands.append((ver, p))
     if not cands:
         return None, None
-    cands.sort(key=lambda c: (len(c[0]), c[0]))
+    # gamever as a number plus the optional letter suffix - sorting on string
+    # length instead makes 14178b (6 chars) outrank 14181 (5 chars)
+    def sort_key(cand):
+        m = re.fullmatch(r"(\d+)([a-z]?)", cand[0])
+        return (int(m.group(1)), m.group(2)) if m else (-1, cand[0])
+
+    cands.sort(key=sort_key)
     return cands[-1]
 
 
@@ -208,13 +218,62 @@ def strat_relocation(repo, gamever, module, symbol, platform, blob, info):
     if not sig:
         return None, f"baseline {ver} uden sig"
     hits = scan_sig(blob, info, sig)
-    if len(hits) == 1:
-        va = hits[0]
-        text = (f"func_name: {symbol}\nfunc_va: '{hex(va)}'\nfunc_rva: '{hex(va - info['base'])}'\n"
-                f"func_size: '0x0'\nfunc_sig: {sig}\n")
-        emit(repo, gamever, module, symbol, platform, text)
-        return True, f"reloc {ver} @ {hex(va)}"
-    return None, f"baseline {ver}: {len(hits)} hits"
+    if len(hits) != 1:
+        return None, f"baseline {ver}: {len(hits)} hits"
+    va = hits[0]
+    text = relocated_artifact_text(symbol, f, sig, va, blob, info)
+    emit(repo, gamever, module, symbol, platform, text)
+    return True, f"reloc {ver} @ {hex(va)}"
+
+
+def _validated_func_size(blob, info, va, baseline_size):
+    """Carry the baseline size only if it still lands on a function boundary.
+
+    Sizes are stable across a gamever bump, but writing an unverified number is
+    worse than writing none - so it is confirmed against the bytes at the new VA
+    (last byte a ret/jmp tail, next byte padding or a fresh function head).
+    """
+    if not baseline_size:
+        return "0x0"
+    try:
+        size = int(str(baseline_size), 16)
+    except ValueError:
+        return "0x0"
+    off = va_to_off(info, va)
+    if off is None or size <= 0 or off + size >= len(blob):
+        return "0x0"
+    last, nxt = blob[off + size - 1], blob[off + size]
+    if nxt in (0xCC, 0x90) or last in (0xC3, 0xE9, 0xEB):
+        return hex(size)
+    return "0x0"
+
+
+def relocated_artifact_text(symbol, f, sig, va, blob, info):
+    """Render the relocated artifact in the SAME schema as its baseline.
+
+    Emitting a func_* payload for a structmember baseline is what produced the
+    corrupted BotProfile/CCSBot_Profile windows artifacts (func_name + func_size
+    0x0 carrying an offset_sig), which canonical_symbol_yaml_bytes rejects.
+    """
+    if f.get("struct_name") and f.get("member_name"):
+        text = (f"struct_name: {f['struct_name']}\nmember_name: {f['member_name']}\n"
+                f"offset: '{f.get('offset')}'\n")
+        if f.get("size") is not None:
+            text += f"size: {f['size']}\n"
+        text += f"offset_sig: {sig}\n"
+        for extra in ("offset_sig_disp", "offset_sig_max_match", "offset_sig_allow_across_function_boundary"):
+            if f.get(extra) is not None:
+                text += f"{extra}: {f[extra]}\n"
+        return text
+
+    size = _validated_func_size(blob, info, va, f.get("func_size"))
+    text = (f"func_name: {symbol}\nfunc_va: '{hex(va)}'\nfunc_rva: '{hex(va - info['base'])}'\n"
+            f"func_size: '{size}'\nfunc_sig: {sig}\n")
+    if f.get("vtable_name") and f.get("vfunc_index") is not None:
+        idx = int(f["vfunc_index"])
+        text += (f"vtable_name: {f['vtable_name']}\nvfunc_offset: '{hex(idx * 8)}'\n"
+                 f"vfunc_index: {idx}\n")
+    return text
 
 
 def strat_vtable(repo, gamever, module, symbol, platform, blob, info, rel):

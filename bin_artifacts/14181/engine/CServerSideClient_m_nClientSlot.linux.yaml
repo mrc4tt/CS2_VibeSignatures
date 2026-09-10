@@ -1,0 +1,5 @@
+struct_name: CServerSideClient
+member_name: m_nClientSlot
+offset: '0x48'
+size: 4
+offset_sig: 89 57 48 4C 8D A3 EC 00 00 00

@@ -1,0 +1,5 @@
+func_name: CServerSideClient_m_NetChannel
+func_va: '0x1800c59f1'
+func_rva: '0xc59f1'
+func_size: '0x0'
+func_sig: 4D 89 7E 58 45 88 66 60

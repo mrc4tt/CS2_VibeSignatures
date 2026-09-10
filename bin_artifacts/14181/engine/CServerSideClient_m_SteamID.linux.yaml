@@ -1,0 +1,5 @@
+struct_name: CServerSideClient
+member_name: m_SteamID
+offset: '0xab'
+size: 8
+offset_sig: 0F B6 87 A0 00 00 00 84 C0 75 6B 48 8B 83 AB 00 00 00 C7 45 D4 01 00 00 00 48

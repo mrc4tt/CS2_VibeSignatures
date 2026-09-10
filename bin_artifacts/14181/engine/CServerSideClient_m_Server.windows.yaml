@@ -1,0 +1,5 @@
+func_name: CServerSideClient_m_Server
+func_va: '0x1800c2477'
+func_rva: '0xc2477'
+func_size: '0x0'
+func_sig: 48 89 51 50 33 D2 4C 89 71 58

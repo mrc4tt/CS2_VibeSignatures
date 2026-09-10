@@ -1,0 +1,5 @@
+func_name: CMoveData_Velocity
+func_va: '0x15b4e56'
+func_rva: '0x15b4e56'
+func_size: '0x0'
+func_sig: 41 C7 44 24 38 00 00 00 00 41 BE 01 00 00 00 41 8B 44 24 3C

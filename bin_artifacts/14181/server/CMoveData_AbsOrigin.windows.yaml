@@ -1,0 +1,5 @@
+func_name: CMoveData_AbsOrigin
+func_va: '0x180a8f57f'
+func_rva: '0xa8f57f'
+func_size: '0x0'
+func_sig: 48 8D 96 C8 00 00 00 49 8B CE E8 ?? ?? ?? ?? 48 8D 56 38

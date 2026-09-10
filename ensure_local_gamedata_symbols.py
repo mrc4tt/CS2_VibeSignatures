@@ -53,6 +53,17 @@ BOTPROFILE_MEMBERS = {
     "LookAngleDampingAttacking": "m_lookAngleDampingAttacking",
 }
 
+# Fork-owned category decisions. Upstream declares some offset-entries as vfunc
+# even though the class is a non-polymorphic POD, and sync_upstream.sh resolves
+# config conflicts in upstream's favour - so these get re-asserted after every
+# merge instead of being skipped as "already present".
+CATEGORY_DECISIONS = {
+    # Every CCSBot_Profile artifact on both platforms is structmember-shaped
+    # (CCSBot::m_profile, offset 0x8, size 8; windows write is "mov [rdi+8], rax").
+    # As vfunc, generation takes the vfunc path for a structmember payload.
+    "CCSBot_Profile": ("structmember", "CCSBot", "m_profile"),
+}
+
 # Renamed engine symbols: old gamedata keys map to the canonical analyzed symbol via
 # config aliases instead of separate analysis tasks.
 ALIAS_OVERRIDES = {
@@ -281,6 +292,47 @@ def module_for(lib, symbol_name):
     return "server"
 
 
+def enforce_category_decisions(text):
+    """Re-assert CATEGORY_DECISIONS on symbols already declared in the config.
+
+    inject() skips any symbol whose name is already present, so a symbol declared
+    with the wrong category stays wrong - and an upstream merge reintroduces it
+    because sync_upstream.sh takes upstream's side on config conflicts.
+    """
+    changed = 0
+    result = text
+    for name, (category, struct, member) in CATEGORY_DECISIONS.items():
+        pattern = re.compile(
+            r"^      - name: " + re.escape(name) + r"\n"
+            r"((?:        \S[^\n]*\n|          [^\n]*\n)*)",
+            re.M,
+        )
+        for m in reversed(list(pattern.finditer(result))):
+            attrs = m.group(1)
+            # keep the alias block (and anything else that is not category/struct/member)
+            kept, skipping = [], False
+            for line in attrs.splitlines(keepends=True):
+                if line.startswith("        "):
+                    key = line.strip().split(":", 1)[0]
+                    skipping = key in ("category", "struct", "member")
+                    if skipping:
+                        continue
+                elif skipping:
+                    continue  # nested list under a dropped key
+                kept.append(line)
+            rebuilt = f"        category: {category}\n"
+            if struct:
+                rebuilt += f"        struct: {struct}\n"
+            if member:
+                rebuilt += f"        member: {member}\n"
+            rebuilt += "".join(kept)
+            if rebuilt == attrs:
+                continue
+            result = result[:m.start()] + f"      - name: {name}\n" + rebuilt + result[m.end():]
+            changed += 1
+    return result, changed
+
+
 def repair_missing_structs(text):
     """Ensure every structmember's struct is declared (category: struct) in its module.
 
@@ -380,11 +432,14 @@ def main():
     with open(config_path, "r", encoding="utf-8") as f:
         text = f.read()
 
-    patched, repaired = repair_missing_structs(text)
+    patched, reclassified = enforce_category_decisions(text)
+    if reclassified:
+        print(f"  re-asserted: {reclassified} fork-owned category decision(s)")
+    patched, repaired = repair_missing_structs(patched)
     if repaired:
         print(f"  repaired: {repaired} missing struct declaration(s)")
     patched = inject(patched, config_path, specs)
-    if patched == text and not repaired:
+    if patched == text and not repaired and not reclassified:
         return
 
     with open(config_path, "w", encoding="utf-8") as f:

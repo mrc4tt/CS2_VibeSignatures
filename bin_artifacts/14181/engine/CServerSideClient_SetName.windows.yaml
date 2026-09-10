@@ -1,0 +1,5 @@
+func_name: CServerSideClient_SetName
+func_va: '0x1800c4cd0'
+func_rva: '0xc4cd0'
+func_size: '0xd9'
+func_sig: 48 89 5C 24 10 48 89 74 24 18 57 48 83 EC 30 48 8B D9 48 83 C1 40 FF 15

@@ -1,0 +1,5 @@
+func_name: CAttributeList_SetOrAddAttributeValueByName
+func_va: '0x180f544b0'
+func_rva: '0xf544b0'
+func_size: '0x287'
+func_sig: 40 53 55 41 56 48 81 EC ?? ?? ?? ?? 0F 29 74 24 ??

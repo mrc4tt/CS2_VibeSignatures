@@ -1,0 +1,5 @@
+func_name: BuyState_DoneBuying
+func_va: '0x18032f676'
+func_rva: '0x32f676'
+func_size: '0x0'
+func_sig: 80 79 18 00 74 5E

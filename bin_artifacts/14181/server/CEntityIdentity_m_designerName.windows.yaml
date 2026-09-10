@@ -1,0 +1,5 @@
+func_name: CEntityIdentity_m_designerName
+func_va: '0x18126f4e4'
+func_rva: '0x126f4e4'
+func_size: '0x0'
+func_sig: 48 8B 41 20 4C 8B CA 48 85 C0

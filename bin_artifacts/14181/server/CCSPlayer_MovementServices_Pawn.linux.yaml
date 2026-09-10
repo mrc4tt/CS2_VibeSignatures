@@ -1,0 +1,7 @@
+func_name: CCSPlayer_MovementServices_Pawn
+func_va: '0x17982c0'
+func_rva: '0x17982c0'
+func_size: '0x5a'
+vtable_name: CCSPlayer_MovementServices
+vfunc_offset: '0xa8'
+vfunc_index: 21

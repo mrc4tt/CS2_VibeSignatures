@@ -62,7 +62,9 @@ for va, entries in sorted(va_map.items()):
     if len(names) < 2:
         continue
     sigs = [s for _, s, _ in entries if s]
-    sizes = {z for _, _, z in entries if z}
+    # func_size '0x0' is the "size unknown" convention, not a real size - comparing
+    # a known size against an unknown one is not a disagreement
+    sizes = {z for _, _, z in entries if z and int(str(z), 16) != 0}
     # alias pairs are generated independently, so the same function often comes
     # out with different wildcarding ("48 83 EC ??" vs "48 83 EC 50"). Compare
     # wildcard-tolerantly; a differing concrete byte is a real disagreement.

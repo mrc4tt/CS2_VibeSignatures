@@ -1,0 +1,5 @@
+func_name: CServerSideClient_m_pAttachedTo
+func_va: '0x1800c250a'
+func_rva: '0xc250a'
+func_size: '0x0'
+func_sig: 4C 89 B1 90 00 00 00

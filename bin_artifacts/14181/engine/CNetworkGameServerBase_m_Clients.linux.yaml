@@ -1,0 +1,5 @@
+struct_name: CNetworkGameServerBase
+member_name: m_Clients
+offset: '0x248'
+size: 24
+offset_sig: 48 63 87 48 02 00 00 89 C2

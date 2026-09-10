@@ -2,4 +2,4 @@ func_name: CCSCustomHudLayout_SetHasClass
 func_va: '0x1312340'
 func_rva: '0x1312340'
 func_size: '0x0'
-func_sig: 55 48 89 E5 41 57 49 89 D7 41 56 48 8D 55 ? 41 55 41 54 49 89 FC 53 48 83 EC 48
+func_sig: 55 48 89 E5 41 57 49 89 D7 41 56 48 8D 55 ?? 41 55 41 54 49 89 FC 53 48 83 EC 48

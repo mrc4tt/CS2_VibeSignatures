@@ -1,4 +1,4 @@
 func_name: CCSNavArea_IsValidNavMesh
 func_va: '0x18fd010'
 func_rva: '0x18fd010'
-func_sig: 48 8D 05 ? ? ? ? 48 83 38 ? 0F 95 C0 C3
+func_sig: 48 8D 05 ?? ?? ?? ?? 48 83 38 ?? 0F 95 C0 C3

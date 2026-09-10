@@ -1,0 +1,5 @@
+func_name: CServerSideClient_m_SteamIDMirror
+func_va: '0x1800cb092'
+func_rva: '0xcb092'
+func_size: '0x0'
+func_sig: 48 89 9F B3 00 00 00

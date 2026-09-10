@@ -1,0 +1,5 @@
+func_name: CNetworkGameServer_PackEntities
+func_va: '0x1800e77a0'
+func_rva: '0xe77a0'
+func_size: '0xa91'
+func_sig: 48 8B C4 55 53 57 41 54

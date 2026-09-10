@@ -1,0 +1,5 @@
+func_name: CEntityIdentity_Size
+func_va: '0x18124935e'
+func_rva: '0x124935e'
+func_size: '0x0'
+func_sig: 48 6B D0 70 48 03 D1

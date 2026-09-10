@@ -1,0 +1,6 @@
+func_name: CDecoyProjectile_Create
+func_va: '0x1441b40'
+func_rva: '0x1441b40'
+func_size: '0x689'
+func_sig: 55 4C 89 C1 48 89 E5 41 57 45 89 CF 41 56 49 89 FE 41 55 49 89 D5 48 89 F2 48 89 FE 41 54 48 8D 3D ?? ?? ?? ?? 4D
+  89 C4 53 48 83 EC ?? E8 ?? ?? ?? ?? 45 31 C0
