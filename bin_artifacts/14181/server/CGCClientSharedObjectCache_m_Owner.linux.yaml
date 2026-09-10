@@ -1,5 +1,5 @@
-func_name: CGCClientSharedObjectCache_m_Owner
-func_va: '0x22bf01b'
-func_rva: '0x22bf01b'
-func_size: '0x0'
-func_sig: 48 8D 05 ?? ?? ?? ?? 4C 89 63 28
+struct_name: CGCClientSharedObjectCache
+member_name: m_Owner
+offset: '0x28'
+size: 8
+offset_sig: 48 8D 05 ?? ?? ?? ?? 4C 89 63 28

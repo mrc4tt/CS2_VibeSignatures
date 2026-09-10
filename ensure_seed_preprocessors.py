@@ -3,14 +3,19 @@
 
 For every symbol that has an artifact in a previous gamever but NO preprocessor
 script in ida_preprocessor_scripts/, this tool generates a thin relocation
-preprocessor (the same pattern as upstream's find-CBasePlayerController_
-HandleCommand_JoinTeam.py). The preprocessor takes the old sig, searches the
-new binary, and writes the artifact — deterministic, free, seconds.
+preprocessor. The preprocessor takes the old artifact, searches the new binary
+and writes the new one - deterministic, free, seconds.
+
+The category comes from the ANALYSIS CONFIG, which is authoritative. Sniffing it
+out of the artifact instead (as this tool used to) produced preprocessors whose
+schema disagreed with the config - struct members emitted as functions and a
+vfunc emitted as a struct member.
 
 Usage:
   uv run ensure_seed_preprocessors.py                          # newest gamever
   uv run ensure_seed_preprocessors.py -config configs/14181.yaml
   uv run ensure_seed_preprocessors.py -module server           # specific module
+  uv run ensure_seed_preprocessors.py -force                   # rewrite auto-generated ones
 """
 
 import argparse
@@ -20,24 +25,35 @@ import re
 
 import yaml
 
+from source_artifact_schema import SYMBOL_ARTIFACT_FIELD_ORDER
+
+MARKER = "auto-generated"
+
+# preprocess_common_skill dispatches per target kind; func_names also covers
+# vfunc (preprocess_func_sig_via_mcp falls back to vfunc_sig internally).
+CATEGORY_KWARG = {
+    "func": "func_names",
+    "vfunc": "func_names",
+    "gv": "gv_names",
+    "patch": "patch_names",
+    "structmember": "struct_member_names",
+    "vtable": "vtable_class_names",
+}
+
 TEMPLATE = '''#!/usr/bin/env python3
-"""Preprocess script for find-{symbol} skill (auto-generated)."""
+"""Preprocess script for find-@SYMBOL@ skill (@MARKER@, @CATEGORY@)."""
 
 from ida_analyze_util import preprocess_common_skill
 
-TARGET_FUNCTION_NAMES = [
-    "{symbol}",
+TARGETS = [
+    "@TARGET@",
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
     (
-        "{symbol}",
+        "@SYMBOL@",
         [
-            "func_name",
-            "func_sig",
-            "func_va",
-            "func_rva",
-            "func_size",
+@FIELDS@
         ],
     ),
 ]
@@ -53,7 +69,7 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Reuse previous gamever func_sig to locate target function and write YAML."""
+    """Relocate the previous gamever's @CATEGORY@ artifact onto this build."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -61,122 +77,170 @@ async def preprocess_skill(
         new_binary_dir=new_binary_dir,
         platform=platform,
         image_base=image_base,
-        func_names=TARGET_FUNCTION_NAMES,
+        @KWARG@=TARGETS,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )
 '''
 
-# symboler med structmember-artefakter faar en anden skabelon (ingen func-sig)
-STRUCT_TEMPLATE = '''#!/usr/bin/env python3
-"""Preprocess script for find-{symbol} skill (auto-generated, structmember)."""
 
-from ida_analyze_util import preprocess_gen_struct_member_via_mcp
-
-TARGET_FUNCTION_NAMES = [
-    "{symbol}",
-]
+def _gamever_sort_key(text):
+    """Gamever as a number plus its optional letter suffix (14181 > 14178b)."""
+    m = re.fullmatch(r"(\d+)([a-z]?)", text)
+    return (int(m.group(1)), m.group(2)) if m else (-1, text)
 
 
-async def preprocess_skill(
-    session,
-    skill_name,
-    expected_outputs,
-    old_yaml_map,
-    new_binary_dir,
-    platform,
-    image_base,
-    debug=False,
-):
-    """Reuse previous gamever struct member offset to locate and write YAML."""
-    return await preprocess_gen_struct_member_via_mcp(
-        session=session,
-        expected_outputs=expected_outputs,
-        old_yaml_map=old_yaml_map,
-        new_binary_dir=new_binary_dir,
-        platform=platform,
-        image_base=image_base,
-        target_name="{symbol}",
-        debug=debug,
-    )
-'''
+def newest_config():
+    numeric = [c for c in glob.glob("configs/*.yaml") if re.fullmatch(r"configs/\d+[a-z]?\.yaml", c)]
+    return max(numeric, key=lambda p: _gamever_sort_key(os.path.basename(p)[:-5])) if numeric else None
 
 
-def _gamever_sort_key(path):
-    # gamever first as a number, then the optional letter suffix - sorting on
-    # path length instead makes 14178b (19 chars) outrank 14181 (18 chars)
-    m = re.fullmatch(r"configs/(\d+)([a-z]?)\.yaml", path)
-    return (int(m.group(1)), m.group(2))
+def existing_preprocessor(pp_dir, short):
+    """A platform-suffixed or staged variant counts as covered."""
+    for suffix in ("", "-linux", "-windows", "-decompiles", "-inlined", "-noinline"):
+        path = os.path.join(pp_dir, f"find-{short}{suffix}.py")
+        if os.path.exists(path):
+            return path
+    return None
+
+
+def newest_baseline(module, short, gamever):
+    """Newest artifact for this symbol in any OTHER gamever, either platform."""
+    found = {}
+    for directory in glob.glob(f"bin_artifacts/*/{module}"):
+        version = os.path.basename(os.path.dirname(directory))
+        if version == gamever:
+            continue
+        for platform in ("linux", "windows"):
+            path = os.path.join(directory, f"{short}.{platform}.yaml")
+            if os.path.exists(path):
+                found.setdefault(version, []).append(path)
+    if not found:
+        return None, []
+    version = max(found, key=_gamever_sort_key)
+    return version, sorted(found[version])
+
+
+def desired_fields(paths, category):
+    """Canonically ordered fields actually present in the baseline artifacts."""
+    present = set()
+    for path in paths:
+        try:
+            doc = yaml.safe_load(open(path, encoding="utf-8")) or {}
+        except Exception:
+            continue
+        if isinstance(doc, dict):
+            present.update(doc.keys())
+    order = SYMBOL_ARTIFACT_FIELD_ORDER.get(category, ())
+    return [field for field in order if field in present]
+
+
+def target_name(paths, category, short):
+    """vtable targets are addressed by class name, everything else by symbol."""
+    if category != "vtable":
+        return short
+    for path in paths:
+        try:
+            doc = yaml.safe_load(open(path, encoding="utf-8")) or {}
+        except Exception:
+            continue
+        if isinstance(doc, dict) and doc.get("vtable_class"):
+            return str(doc["vtable_class"])
+    return short
+
+
+def render(short, category, fields, target):
+    body = "\n".join(f'            "{field}",' for field in fields)
+    return (TEMPLATE
+            .replace("@SYMBOL@", short)
+            .replace("@TARGET@", target)
+            .replace("@CATEGORY@", category)
+            .replace("@KWARG@", CATEGORY_KWARG[category])
+            .replace("@FIELDS@", body)
+            .replace("@MARKER@", MARKER))
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("-config", help="analysis config (default: newest)")
     ap.add_argument("-module", help="only this module")
+    ap.add_argument("-force", action="store_true",
+                    help="also rewrite existing auto-generated scripts (never hand-written ones)")
     args = ap.parse_args()
 
-    config_path = args.config
-    if not config_path:
-        numeric = [c for c in glob.glob("configs/*.yaml") if re.fullmatch(r"configs/\d+[a-z]?\.yaml", c)]
-        config_path = max(numeric, key=_gamever_sort_key) if numeric else None
+    config_path = args.config or newest_config()
     if not config_path or not os.path.exists(config_path):
-        print("  ingen config — springer over"); return
+        print("  ingen config - springer over")
+        return
 
     gamever = os.path.basename(config_path).replace(".yaml", "")
-    cfg = yaml.safe_load(open(config_path))
+    cfg = yaml.safe_load(open(config_path, encoding="utf-8"))
+    categories = {
+        symbol["name"]: symbol.get("category", "func")
+        for module in cfg.get("modules", [])
+        for symbol in module.get("symbols", [])
+    }
 
-    # find alle tasks uden preprocessor-script
     pp_dir = "ida_preprocessor_scripts"
-    generated = 0
-    skipped = 0
+    generated = rewritten = skipped = 0
+    unsupported, no_baseline, undeclared = [], [], []
 
     for module in cfg.get("modules", []):
         mod_name = module.get("name", "?")
         if args.module and mod_name != args.module:
             continue
-
-        # find baseline-artefakter for dette modul i aeldre gamevers
         for task in module.get("skills", []):
             name = task.get("name", "")
             if not name.startswith("find-"):
                 continue
             short = name[len("find-"):]
             if short.endswith(("-decompiles", "-inlined", "-noinline")):
-                continue  # mellemtrin — ikke basiske symboler
+                continue  # staged intermediates, not base symbols
 
-            pp_path = os.path.join(pp_dir, f"find-{short}.py")
-            if os.path.exists(pp_path):
-                skipped += 1
+            existing = existing_preprocessor(pp_dir, short)
+            hand_written = False
+            if existing:
+                hand_written = MARKER not in open(existing, encoding="utf-8").read()
+                if hand_written or not args.force:
+                    skipped += 1
+                    continue
+
+            category = categories.get(short)
+            if category is None:
+                undeclared.append(short)
+                continue
+            if category not in CATEGORY_KWARG:
+                unsupported.append((short, category))
                 continue
 
-            # har vi en baseline fra en anden gamever?
-            has_baseline = False
-            is_struct = False
-            for d in glob.glob(f"bin_artifacts/*/{mod_name}"):
-                ver = os.path.basename(os.path.dirname(d))
-                if ver == gamever:
-                    continue
-                p = os.path.join(d, f"{short}.linux.yaml")
-                if os.path.exists(p):
-                    has_baseline = True
-                    content = open(p).read()
-                    is_struct = "struct_name:" in content and "func_sig:" not in content
-                    break
+            version, paths = newest_baseline(mod_name, short, gamever)
+            if not paths:
+                no_baseline.append(short)
+                continue
+            fields = desired_fields(paths, category)
+            if not fields:
+                no_baseline.append(short)
+                continue
 
-            if not has_baseline:
-                continue  # kan ikke relocat'e uden baseline
+            path = existing or os.path.join(pp_dir, f"find-{short}.py")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(render(short, category, fields, target_name(paths, category, short)))
+            if existing:
+                rewritten += 1
+                print(f"  ~ {os.path.basename(path)} ({category}, {mod_name}, baseline {version})")
+            else:
+                generated += 1
+                print(f"  + {os.path.basename(path)} ({category}, {mod_name}, baseline {version})")
 
-            template = STRUCT_TEMPLATE if is_struct else TEMPLATE
-            script = template.format(symbol=short)
-            with open(pp_path, "w") as f:
-                f.write(script)
-            generated += 1
-            kind = "structmember" if is_struct else "func"
-            print(f"  + find-{short}.py ({kind}, {mod_name})")
-
-    print(f"\n  preprocessors genereret: {generated} | havde allerede: {skipped}")
-    if generated:
-        print(f"  → næste run_linux/run_windows bruger dem automatisk (sekunder, 0 tokens)")
+    print(f"\n  genereret: {generated} | omskrevet: {rewritten} | havde allerede: {skipped}")
+    if no_baseline:
+        print(f"  uden baseline (kan ikke relocates): {len(no_baseline)}")
+    if undeclared:
+        print(f"  find-task uden symbol-erklaering i configen: {len(undeclared)} -> {undeclared[:5]}")
+    if unsupported:
+        print(f"  kategori uden relocation-skabelon: {unsupported[:5]}")
+    if generated or rewritten:
+        print("  -> naeste run_linux/run_windows bruger dem automatisk (sekunder, 0 tokens)")
 
 
 if __name__ == "__main__":

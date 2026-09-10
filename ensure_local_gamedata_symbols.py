@@ -53,6 +53,21 @@ BOTPROFILE_MEMBERS = {
     "LookAngleDampingAttacking": "m_lookAngleDampingAttacking",
 }
 
+# Symbols this fork carries that upstream does not. sync_upstream.sh resolves
+# config conflicts in upstream's favour, so an upstream merge silently DROPS them
+# from the newest config - it did exactly that to all six CustomHud entries on
+# 14181, whose artifacts then packed as "undeclared symbol YAML" and shipped
+# nowhere. Re-injected on every run, like the seed symbols.
+FORK_OWNED_SYMBOLS = [
+    # (symbol_name, category, lib)
+    ("CCSCustomHudLayout_SetDialogVariableString", "func", None),
+    ("CCSCustomHudLayout_SetDialogVariableStringForPlayer", "func", None),
+    ("CCSCustomHudLayout_SetHasClass", "func", None),
+    ("CCSCustomHudLayout_SetHasClassForPlayer", "func", None),
+    ("CCSCustomHudLayout_SetInputCaptureEnabled", "func", None),
+    ("CCSPointScript_OnCustomHudClicked", "func", None),
+]
+
 # Fork-owned category decisions. Upstream declares some offset-entries as vfunc
 # even though the class is a non-polymorphic POD, and sync_upstream.sh resolves
 # config conflicts in upstream's favour - so these get re-asserted after every
@@ -402,7 +417,10 @@ def inject(text, config_path, specs):
         if not skills_match or not symbols_match:
             print(f"  warning: module {module} mangler skills:/symbols: - skipper")
             continue
-        struct_blocks = [struct_entry_block(s) for s in sorted(new_structs.get(module, []))]
+        # dict.fromkeys: one declaration per struct, not one per member - appending
+        # per spec emitted 12 identical BotProfile entries (one for each member),
+        # which update_gamedata rejects as "duplicate symbol in module stage N"
+        struct_blocks = [struct_entry_block(s) for s in sorted(dict.fromkeys(new_structs.get(module, [])))]
         block = (
             block[: skills_match.end()]
             + "".join(new_tasks[module])
@@ -428,6 +446,7 @@ def main():
         return
 
     specs = load_seed_specs()
+    specs += [(name, category, None, None, None, lib) for name, category, lib in FORK_OWNED_SYMBOLS]
 
     with open(config_path, "r", encoding="utf-8") as f:
         text = f.read()

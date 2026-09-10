@@ -2574,32 +2574,6 @@ modules:
         category: struct
       - name: CServerSideClient
         category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
-      - name: CServerSideClient
-        category: struct
       - name: CNetworkGameServer_PackEntities
         category: func
         alias:
@@ -6712,6 +6686,24 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CCSCustomHudLayout_SetDialogVariableString
+        expected_output:
+          - CCSCustomHudLayout_SetDialogVariableString.{platform}.yaml
+      - name: find-CCSCustomHudLayout_SetDialogVariableStringForPlayer
+        expected_output:
+          - CCSCustomHudLayout_SetDialogVariableStringForPlayer.{platform}.yaml
+      - name: find-CCSCustomHudLayout_SetHasClass
+        expected_output:
+          - CCSCustomHudLayout_SetHasClass.{platform}.yaml
+      - name: find-CCSCustomHudLayout_SetHasClassForPlayer
+        expected_output:
+          - CCSCustomHudLayout_SetHasClassForPlayer.{platform}.yaml
+      - name: find-CCSCustomHudLayout_SetInputCaptureEnabled
+        expected_output:
+          - CCSCustomHudLayout_SetInputCaptureEnabled.{platform}.yaml
+      - name: find-CCSPointScript_OnCustomHudClicked
+        expected_output:
+          - CCSPointScript_OnCustomHudClicked.{platform}.yaml
       - name: find-CAttributeList_SetOrAddAttributeValueByName
         expected_output:
           - CAttributeList_SetOrAddAttributeValueByName.{platform}.yaml
@@ -10069,33 +10061,21 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CCSCustomHudLayout_SetDialogVariableString
+        category: func
+      - name: CCSCustomHudLayout_SetDialogVariableStringForPlayer
+        category: func
+      - name: CCSCustomHudLayout_SetHasClass
+        category: func
+      - name: CCSCustomHudLayout_SetHasClassForPlayer
+        category: func
+      - name: CCSCustomHudLayout_SetInputCaptureEnabled
+        category: func
+      - name: CCSPointScript_OnCustomHudClicked
+        category: func
       - name: CCSBot
         category: struct
       - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BotProfile
-        category: struct
-      - name: BuyState
         category: struct
       - name: BuyState
         category: struct
@@ -10105,15 +10085,7 @@ modules:
         category: struct
       - name: CEntityIdentity
         category: struct
-      - name: CEntityIdentity
-        category: struct
-      - name: CEntityIdentity
-        category: struct
-      - name: CEntityIdentity
-        category: struct
       - name: CGCClientSharedObjectCache
-        category: struct
-      - name: CMoveData
         category: struct
       - name: CMoveData
         category: struct
@@ -13083,7 +13055,7 @@ modules:
       - name: CEntitySystem_m_ComponentUnserializerInfoAllocator
         category: structmember
         struct: CEntitySystem
-        member: m_Symbols
+        member: m_ComponentUnserializerInfoAllocator
         alias:
           - CEntitySystem::m_ComponentUnserializerInfoAllocator
       - name: CEntitySystem_m_EntityMaterialAttributes

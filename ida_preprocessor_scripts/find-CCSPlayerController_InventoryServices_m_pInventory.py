@@ -1,10 +1,24 @@
 #!/usr/bin/env python3
 """Preprocess script for find-CCSPlayerController_InventoryServices_m_pInventory skill (auto-generated, structmember)."""
 
-from ida_analyze_util import preprocess_gen_struct_member_via_mcp
+from ida_analyze_util import preprocess_common_skill
 
-TARGET_FUNCTION_NAMES = [
+TARGETS = [
     "CCSPlayerController_InventoryServices_m_pInventory",
+]
+
+GENERATE_YAML_DESIRED_FIELDS = [
+    (
+        "CCSPlayerController_InventoryServices_m_pInventory",
+        [
+            "struct_name",
+            "member_name",
+            "offset",
+            "size",
+            "offset_sig",
+            "offset_sig_allow_across_function_boundary",
+        ],
+    ),
 ]
 
 
@@ -18,14 +32,15 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Reuse previous gamever struct member offset to locate and write YAML."""
-    return await preprocess_gen_struct_member_via_mcp(
+    """Relocate the previous gamever's structmember artifact onto this build."""
+    return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
         old_yaml_map=old_yaml_map,
         new_binary_dir=new_binary_dir,
         platform=platform,
         image_base=image_base,
-        target_name="CCSPlayerController_InventoryServices_m_pInventory",
+        struct_member_names=TARGETS,
+        generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )

@@ -1,5 +1,5 @@
-func_name: CEntityIdentity_m_pInstance
-func_va: '0x181249ae2'
-func_rva: '0x1249ae2'
-func_size: '0x0'
-func_sig: 48 83 38 00 74 74
+struct_name: CEntityIdentity
+member_name: m_pInstance
+offset: '0x0'
+size: 8
+offset_sig: 48 83 38 00 74 74

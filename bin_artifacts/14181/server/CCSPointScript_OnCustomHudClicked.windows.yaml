@@ -1,0 +1,5 @@
+func_name: CCSPointScript_OnCustomHudClicked
+func_va: '0x18025b0a0'
+func_rva: '0x25b0a0'
+func_size: '0x2e9'
+func_sig: 4C 89 4C 24 ?? 55 53 41 54

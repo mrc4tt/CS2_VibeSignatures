@@ -1,0 +1,5 @@
+func_name: CCSCustomHudLayout_SetInputCaptureEnabled
+func_va: '0x1808adb50'
+func_rva: '0x8adb50'
+func_size: '0x51'
+func_sig: 40 57 48 83 EC ?? 41 0F B6 F8

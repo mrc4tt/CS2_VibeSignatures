@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CNetworkGameServerBase_m_Clients skill (auto-generated)."""
+"""Preprocess script for find-CNetworkGameServerBase_m_Clients skill (auto-generated, structmember)."""
 
 from ida_analyze_util import preprocess_common_skill
 
-TARGET_FUNCTION_NAMES = [
+TARGETS = [
     "CNetworkGameServerBase_m_Clients",
 ]
 
@@ -11,11 +11,11 @@ GENERATE_YAML_DESIRED_FIELDS = [
     (
         "CNetworkGameServerBase_m_Clients",
         [
-            "func_name",
-            "func_sig",
-            "func_va",
-            "func_rva",
-            "func_size",
+            "struct_name",
+            "member_name",
+            "offset",
+            "size",
+            "offset_sig",
         ],
     ),
 ]
@@ -31,7 +31,7 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Reuse previous gamever func_sig to locate target function and write YAML."""
+    """Relocate the previous gamever's structmember artifact onto this build."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -39,7 +39,7 @@ async def preprocess_skill(
         new_binary_dir=new_binary_dir,
         platform=platform,
         image_base=image_base,
-        func_names=TARGET_FUNCTION_NAMES,
+        struct_member_names=TARGETS,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )

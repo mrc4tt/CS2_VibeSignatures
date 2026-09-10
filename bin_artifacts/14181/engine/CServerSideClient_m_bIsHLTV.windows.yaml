@@ -1,5 +1,5 @@
-func_name: CServerSideClient_m_bIsHLTV
-func_va: '0x1800bb290'
-func_rva: '0xbb290'
-func_size: '0x0'
-func_sig: 0F B6 41 68 C3
+struct_name: CServerSideClient
+member_name: m_bIsHLTV
+offset: '0x68'
+size: 1
+offset_sig: 0F B6 41 68 C3

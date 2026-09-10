@@ -1,5 +1,5 @@
-func_name: CServerSideClient_m_bFakePlayer
-func_va: '0x1800bb270'
-func_rva: '0xbb270'
-func_size: '0x0'
-func_sig: 0F B6 81 A0 00 00 00
+struct_name: CServerSideClient
+member_name: m_bFakePlayer
+offset: '0xa0'
+size: 1
+offset_sig: 0F B6 81 A0 00 00 00

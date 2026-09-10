@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CCSBotManager_MaintainBotQuota skill (auto-generated)."""
+"""Preprocess script for find-CCSBotManager_MaintainBotQuota skill (auto-generated, func)."""
 
 from ida_analyze_util import preprocess_common_skill
 
-TARGET_FUNCTION_NAMES = [
+TARGETS = [
     "CCSBotManager_MaintainBotQuota",
 ]
 
@@ -12,10 +12,10 @@ GENERATE_YAML_DESIRED_FIELDS = [
         "CCSBotManager_MaintainBotQuota",
         [
             "func_name",
-            "func_sig",
             "func_va",
             "func_rva",
             "func_size",
+            "func_sig",
         ],
     ),
 ]
@@ -31,7 +31,7 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Reuse previous gamever func_sig to locate target function and write YAML."""
+    """Relocate the previous gamever's func artifact onto this build."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -39,7 +39,7 @@ async def preprocess_skill(
         new_binary_dir=new_binary_dir,
         platform=platform,
         image_base=image_base,
-        func_names=TARGET_FUNCTION_NAMES,
+        func_names=TARGETS,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )

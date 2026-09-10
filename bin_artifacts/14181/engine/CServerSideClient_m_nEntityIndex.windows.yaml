@@ -1,5 +1,5 @@
-func_name: CServerSideClient_m_nEntityIndex
-func_va: '0x1800bd7d4'
-func_rva: '0xbd7d4'
-func_size: '0x0'
-func_sig: 89 ?? 4C 48 8B 5C 24 30
+struct_name: CServerSideClient
+member_name: m_nEntityIndex
+offset: '0x4c'
+size: 4
+offset_sig: 89 ?? 4C 48 8B 5C 24 30
