@@ -127,6 +127,16 @@ class EndsCleanTerminatorTests(unittest.TestCase):
         body = b"\x55\x48\x89\xE5\xC3" + b"\x55"
         self.assertFalse(va.ends_clean(self._blob(body), _fake_info(), 0x1100, 3))
 
+    def test_end_on_a_call_at_a_16_byte_boundary_is_clean(self):
+        # a fatal path ends on a call to a noreturn helper; the next function
+        # starts at the usual boundary (PrecacheGeneric.linux is shaped this way)
+        body = b"\x90" * 11 + b"\xE8\x00\x00\x00\x00" + b"\x55"
+        self.assertTrue(va.ends_clean(self._blob(body), _fake_info(), 0x1100, 16))
+
+    def test_end_on_a_call_off_the_boundary_is_not_clean(self):
+        body = b"\x90" * 10 + b"\xE8\x00\x00\x00\x00" + b"\x55"
+        self.assertFalse(va.ends_clean(self._blob(body), _fake_info(), 0x1100, 15))
+
     def test_padding_after_the_end_is_accepted_without_disassembly(self):
         body = b"\x55\x48\x89\xE5" + b"\xCC"
         self.assertTrue(va.ends_clean(self._blob(body), _fake_info(), 0x1100, 4))

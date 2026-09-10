@@ -199,8 +199,16 @@ def ends_clean(blob, info, va, size):
         if ins.address + ins.size > end:
             return False                  # the boundary cuts an instruction in half
         last = ins
-    return last is not None and last.address + last.size == end \
-        and last.mnemonic in TERMINATORS
+    if last is None or last.address + last.size != end:
+        return False
+    if last.mnemonic in TERMINATORS:
+        return True
+    # A fatal path can end on a call: the compiler knows the callee never
+    # returns, so the body just stops and the next function starts at the usual
+    # 16-byte boundary. CEngineServer_PrecacheGeneric.linux (0x60, last insn
+    # "call 0x2cac70") and CSpawnGroupMgrGameSystem_AllocateSpawnGroup.linux
+    # (0x6e0, last insn "call 0xf1c930") are both correct and shaped this way.
+    return end % 16 == 0
 
 
 def data_sections(info):
@@ -242,7 +250,10 @@ def check_sig_field(rec, blob, info, field, sig, claim_va, out, pedantic=False):
         elif len(vas) > 1:
             out.warn(rec, f"{field} matches {len(vas)} places, "
                           f"{[hex(v) for v in vas[:4]]}")
-    elif len(vas) > 1:
+    elif len(vas) > 1 and (field != "vfunc_sig" or out.pedantic):
+        # A vfunc_sig records where a slot is CALLED and the payload is the
+        # index, so repeats are expected: INetworkMessages::GetLoggingChannel is
+        # called four times inside one function. Only report it when asked.
         out.warn(rec, f"{field} matches {len(vas)} places, {[hex(v) for v in vas[:4]]}")
 
     anchor = claim_va if claim_va in vas else vas[0]
