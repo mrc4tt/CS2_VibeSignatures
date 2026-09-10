@@ -177,10 +177,22 @@ FORK_OWNED_REMOVALS = [
     # skips the payload), and no gamever in ten has ever had them - the skill says
     # so outright: "No patch_bytes field is generated because this skill
     # identifies the callee call site; the downstream consumer decides how that
-    # call instruction is patched." No generator consumes it either. The find-task
-    # and the artifact stay, so the call-site locator survives in the snapshot and
-    # a future consumer can re-declare the symbol with the bytes it wants.
-    ("OnServerVoiceData_IsPlayingDemo_Callee", "client", "locator only, patch_bytes deliberately absent"),
+    # call instruction is patched." No generator consumes it either.
+    #
+    # A headless IDA pass settled what the patch would even be for. The site gates
+    # this, in C_ServerVoiceHandler::OnServerVoiceData:
+    #     if (IsPlayingDemo()) {
+    #         if (slot == -1) goto play;
+    #         if (!bittest(mask, slot)) return;   // drop this slot's voice
+    #     }
+    # and the mask is two convars stitched into 64 bits - tv_listen_voice_indices
+    # (low) and tv_listen_voice_indices_h (high), confirmed by their registration
+    # sites and by the debug string "Voice slot %llu bc: %s heard: %s bitSet: %s".
+    # So the behaviour is already runtime-configurable: setting those convars does
+    # what neutralising the call would, without patching bytes. The patch has no
+    # reason to exist, which is why the declaration is retired here. The find-task
+    # and the artifact stay, so the call-site locator survives in the snapshot.
+    ("OnServerVoiceData_IsPlayingDemo_Callee", "client", "gate is convar-driven (tv_listen_voice_indices)"),
     # 14178b declares it in both engine and server; the artifact only ever lives in
     # engine, and upstream dropped the server copy from 14180 onward
     ("CServerSideClient_SetName", "server", "stray duplicate; the artifact lives in engine"),
