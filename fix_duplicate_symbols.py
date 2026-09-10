@@ -24,6 +24,13 @@ import re
 import yaml
 
 
+def _gamever_sort_key(path):
+    # gamever first as a number, then the optional letter suffix - sorting on
+    # path length instead makes 14178b (19 chars) outrank 14181 (18 chars)
+    m = re.fullmatch(r"configs/(\d+)([a-z]?)\.yaml", path)
+    return (int(m.group(1)), m.group(2))
+
+
 def fix(path):
     lines = open(path).readlines()
 
@@ -87,7 +94,7 @@ def main():
     else:
         numeric = [c for c in glob.glob("configs/*.yaml") if re.fullmatch(r"configs/\d+[a-z]?\.yaml", c)]
         if numeric:
-            fix(max(numeric, key=lambda p: (len(p), p)))
+            fix(max(numeric, key=_gamever_sort_key))
 
 
 if __name__ == "__main__":

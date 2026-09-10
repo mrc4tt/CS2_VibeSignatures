@@ -72,7 +72,14 @@ def newest_config():
     numeric = [c for c in candidates if re.fullmatch(r"configs/\d+[a-z]?\.yaml", c)]
     if not numeric:
         return None
-    return max(numeric, key=lambda p: (len(p), p))
+
+    def sort_key(path):
+        # gamever first as a number, then the optional letter suffix - sorting on
+        # path length instead makes 14178b (19 chars) outrank 14181 (18 chars)
+        m = re.fullmatch(r"configs/(\d+)([a-z]?)\.yaml", path)
+        return (int(m.group(1)), m.group(2))
+
+    return max(numeric, key=sort_key)
 
 
 def load_seed_specs():

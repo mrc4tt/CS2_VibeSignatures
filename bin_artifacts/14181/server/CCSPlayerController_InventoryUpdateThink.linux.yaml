@@ -2,3 +2,4 @@ func_name: CCSPlayerController_InventoryUpdateThink
 func_va: '0x150c220'
 func_rva: '0x150c220'
 func_size: '0xc'
+func_sig: 48 8B BF C0 0A 00 ??

@@ -102,6 +102,13 @@ async def preprocess_skill(
 '''
 
 
+def _gamever_sort_key(path):
+    # gamever first as a number, then the optional letter suffix - sorting on
+    # path length instead makes 14178b (19 chars) outrank 14181 (18 chars)
+    m = re.fullmatch(r"configs/(\d+)([a-z]?)\.yaml", path)
+    return (int(m.group(1)), m.group(2))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("-config", help="analysis config (default: newest)")
@@ -111,7 +118,7 @@ def main():
     config_path = args.config
     if not config_path:
         numeric = [c for c in glob.glob("configs/*.yaml") if re.fullmatch(r"configs/\d+[a-z]?\.yaml", c)]
-        config_path = max(numeric, key=lambda p: (len(p), p)) if numeric else None
+        config_path = max(numeric, key=_gamever_sort_key) if numeric else None
     if not config_path or not os.path.exists(config_path):
         print("  ingen config — springer over"); return
 
