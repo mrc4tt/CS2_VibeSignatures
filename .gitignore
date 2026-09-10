@@ -36,3 +36,6 @@ alias_candidates_*.json
 
 # sync_upstream.sh backups of untracked files replaced by upstream
 .sync_backup/
+
+# detect_aliases output (regenereres pr. kørsel)
+alias_candidates_*.json

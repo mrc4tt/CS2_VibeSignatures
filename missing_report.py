@@ -9,7 +9,10 @@ local gamedata consumers) are starred; upstream's long tail is counted.
 Config-declared SYMBOLS count as expected artifacts too, not only find-tasks.
 A symbol declared without a task is never hunted, so it used to be invisible
 here while gamedata generation still asked for it and logged missing_yaml -
-that gap hid 28 symbols on 14181. Those rows are marked "ingen find-task".
+that gap hid 28 symbols on 14181. Those rows are marked "ingen find-task" and
+are PRINTED ONLY: they stay out of missing_<plat>_<ver>.txt, because auto_hunt
+reads that file and a commented-out find-task means the symbol was disabled on
+purpose, not forgotten.
 
 Usage:
   uv run missing_report.py -gamever 14178b              # begge platforme, SEED-fokus
@@ -124,6 +127,13 @@ def main():
         with open(outfile, "w") as f:
             for mod in sorted(entries):
                 for t, fn, sd, notask in expected[platform][mod]:
+                    # Symbol-derived rows are REPORTED but never written here.
+                    # auto_hunt consumes this file, and a symbol whose find-task
+                    # is commented out is deliberately disabled ("We don't need
+                    # it anymore") - feeding it to the hunter recreates
+                    # artifacts the project dropped on purpose.
+                    if notask:
+                        continue
                     if f"{mod}/{fn}" not in have:
                         f.write(f"{mod}/{t} -> {fn}\n")
         print(f"liste gemt: {outfile}")
