@@ -155,7 +155,7 @@ echo "==> Running IDA analysis..."
 SKIP_ERRORS="${SKIP_ERRORS:-1}"
 [ "$SKIP_ERRORS" = "1" ] && EXTRA_ANALYZE=(-skip_error) || EXTRA_ANALYZE=()
 
-# Optional LLM for LLM_DECOMPILE preprocessing (OpenAI Responses API):
+# Optional LLM for LLM_DECOMPILE preprocessing (OpenAI-compatible chat.completions):
 # export LLM_APIKEY=sk-...   (+ LLM_MODEL / LLM_BASEURL hvis ikke OpenAI-default)
 LLM_ARGS=()
 [ -n "${LLM_APIKEY:-}" ] && LLM_ARGS+=(-llm_apikey "$LLM_APIKEY")

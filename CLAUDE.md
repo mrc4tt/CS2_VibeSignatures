@@ -33,8 +33,12 @@ pipeline stage, and it does not auto-sync after a `git pull`.
 
 **Where a symbol comes from.** A config entry names a symbol; a `find-<Symbol>` task declares
 that it should exist. Recovery is attempted in this order, cheapest first:
-1. `ida_preprocessor_scripts/find-<task>.py` — a deterministic relocation from the previous
-   gamever's baseline (no LLM, no agent). One file per config **task** name.
+1. `ida_preprocessor_scripts/find-<task>.py` — one file per config **task** name. Two kinds:
+   the majority are pure deterministic relocation from the previous gamever's baseline (free —
+   no LLM, no agent), while 283 of them also declare an `LLM_DECOMPILE` list (462 specs total).
+   Those specs are a **fallback**: they only fire when the deterministic part cannot resolve the
+   symbol, and they need an API key (see AGENT SETUP). With no key the call fails soft and the
+   symbol drops to step 3.
 2. `auto_hunt_headless.py` — five strategies in pure Python (reloc, vtable, seed-sig, sibling,
    string-anchor); runs on the server with no IDA.
 3. The IDA-side auto-hunt (Ctrl-Alt-H) and the agent-driven finder skills in `.claude/skills/`.
@@ -283,7 +287,17 @@ refuses duplicate keys — do not work around it.
 
 - **Local PC**: `CS2VIBE_AGENT=claude` (Max 5x, Sonnet default)
 - **Server**: `CS2VIBE_AGENT=opencode` (z.ai coding plan, glm-5.3-flash)
-- **LLM_DECOMPILE**: needs `CS2VIBE_LLM_APIKEY`. The default path is OpenAI-compatible
-  `chat.completions` (`ida_llm_utils.call_llm_text`), so z.ai and similar providers work.
-  The `/responses` endpoint is only used by the opt-in `fake_as="codex"` path
+- **LLM_DECOMPILE** (pay-per-token, separate from the agent subscriptions above):
+  `run_linux.sh` / `run_windows.sh` read `LLM_APIKEY`, `LLM_MODEL`, `LLM_BASEURL` and pass them as
+  `-llm_apikey` / `-llm_model` / `-llm_baseurl`; if unset, `ida_analyze_bin.py` falls back to
+  `CS2VIBE_LLM_APIKEY`, `CS2VIBE_LLM_MODEL`, `CS2VIBE_LLM_BASEURL`. Default model is `gpt-4o`
+  (`DEFAULT_LLM_MODEL`) — set it explicitly rather than inheriting that.
+  The transport is OpenAI-compatible `chat.completions` (`ida_llm_utils.call_llm_text`), so z.ai
+  and any compatible provider work; the `/responses` endpoint is only used by the opt-in
+  `fake_as="codex"` path.
+  Cost shape: one call sends the prompt (4.3 KB) plus the reference YAML blocks
+  (`ida_preprocessor_scripts/references/`, median 12.5 KB, p90 53 KB) plus the target blocks —
+  roughly 10k input tokens median, ~30k at p90, and a few hundred output tokens. Validation
+  failures retry, so budget ~1.3 calls per spec. Nothing is metered in-repo; there is no token
+  accounting
 - Agent auto-select: if CS2VIBE_AGENT unset, scripts pick first installed CLI
