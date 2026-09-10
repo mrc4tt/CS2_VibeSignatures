@@ -121,8 +121,8 @@ binaries:
       sha256: 'd3a76f86ed6d005620484134882efecb965702ca88b2bcbd8b3411fa17033045'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:6554c3c7885b01cde3a9572021d402e30a86c5f1658be55d235ed74ba33d3927
-file_count: 3718
+config_sha256: sha256:97cbafa0d9f1299f8dc93aa225b2006c03313a1470f4d91e9fd425e421c6e98e
+file_count: 3720
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -42368,6 +42368,18 @@ files:
     offset_sig_disp: 0
     size: 8
     struct_name: CTakeDamageInfo
+  server/CTakeDamageInfo_ctor.linux.yaml:
+    func_name: CTakeDamageInfo_ctor
+    func_rva: '0x1add9c0'
+    func_sig: 49 BB ?? ?? ?? ?? ?? ?? ?? ?? 55 48 89 E5 48 83 EC 10 4C 8D 15 ?? ?? ?? ??
+    func_size: '0x70d'
+    func_va: '0x1add9c0'
+  server/CTakeDamageInfo_ctor.windows.yaml:
+    func_name: CTakeDamageInfo_ctor
+    func_rva: '0xea5600'
+    func_sig: 48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 60 45 33 F6
+    func_size: '0x168'
+    func_va: '0x180ea5600'
   server/CTakeDamageInfo_vtable.linux.yaml:
     vtable_class: CTakeDamageInfo
     vtable_entries:
@@ -46567,5 +46579,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T09:52:19Z'
+last_publish_time: '2026-09-10T10:12:09Z'
 schema_version: 5

@@ -7960,6 +7960,9 @@ modules:
           - IGameSystem_OnGamePreShutdown.{platform}.yaml
         expected_input:
           - IGameSystem_LoopPreShutdownAllSystems.{platform}.yaml
+      - name: find-CTakeDamageInfo_ctor
+        expected_output:
+          - CTakeDamageInfo_ctor.{platform}.yaml
       - name: find-CTakeDamageInfo_GetWeaponName
         expected_output:
           - CTakeDamageInfo_GetWeaponName.{platform}.yaml
@@ -11544,6 +11547,10 @@ modules:
         category: func
       - name: CTakeDamageInfo
         category: struct
+      - name: CTakeDamageInfo_ctor
+        category: func
+        alias:
+          - CTakeDamageInfo
       - name: CTakeDamageInfo_GetWeaponName
         category: func
       - name: FireBullets

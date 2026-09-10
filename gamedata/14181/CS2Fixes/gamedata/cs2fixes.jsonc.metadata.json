@@ -706,6 +706,28 @@
       "updated": true
     },
     {
+      "changes": [
+        {
+          "after": "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 60 45 33 F6",
+          "before": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 45 33 F6 48 C7 41",
+          "line": 228,
+          "path": [
+            "Signatures",
+            "CTakeDamageInfo",
+            "windows"
+          ]
+        },
+        {
+          "after": "49 BB ? ? ? ? ? ? ? ? 55 48 89 E5 48 83 EC 10 4C 8D 15 ? ? ? ?",
+          "before": "49 BB ? ? ? ? ? ? ? ? 55 48 89 E5 48 83 EC ? 4C 8D 15",
+          "line": 229,
+          "path": [
+            "Signatures",
+            "CTakeDamageInfo",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         227,
@@ -713,7 +735,7 @@
         229
       ],
       "name": "CTakeDamageInfo",
-      "updated": false
+      "updated": true
     },
     {
       "changes": [
@@ -1250,6 +1272,6 @@
   "summary": {
     "covered": 69,
     "total": 75,
-    "updated": 32
+    "updated": 33
   }
 }
