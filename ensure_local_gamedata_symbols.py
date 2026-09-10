@@ -129,6 +129,12 @@ ALIAS_OVERRIDES = {
 
 # Fork-owned OBSOLETE tasks: declarations for artifacts that turned out to be wrong.
 FORK_OWNED_OBSOLETE_TASKS = [
+    # Superseded by find-CEntityResourceManifest_AddResource, which declares both
+    # platforms now that the windows index is verified. The linux-only task was
+    # correct while only that half was settled; leaving both in place declares the
+    # same artifact twice.
+    ("find-CEntityResourceManifest_AddResource-linux", "engine",
+     "superseded by the both-platform task"),
     # (task_name, module, why)
     # CNetChan has no RTTI in engine2 on either platform, so the single match a
     # 7-byte signature found there was a false positive.
@@ -295,17 +301,24 @@ FORK_OWNED_MOVES = [
 FORK_OWNED_OPTIONAL_TASKS = [
     # (task_name, module, artifact_path)
     # CEntityResourceManifest::AddResource is an OFFSETS entry in CounterStrikeSharp
-    # (linux 0, windows 2) and CSS core reads it through GetOffset, so a missing
-    # reference is a real gap. The linux half is settled: the Itanium RTTI resolves
-    # CEntityResourceManifest to one vtable of 12 slots, and slots 0-2 are the three
-    # default-argument thunks of AddResource, all tail-jumping to one implementation
-    # - so slot 0 is the index CSS names. The windows half is NOT declared on
-    # purpose: engine2.dll carries no RTTI for the class, and a structural search for
-    # the table returned 171 equally-good candidates, so the index cannot be verified
-    # against that module's own vtable. Rule 13 forbids copying it, and CSS's own
-    # value (2, the usual MSVC deleting-dtor shift) keeps shipping untouched.
-    ("find-CEntityResourceManifest_AddResource-linux", "engine",
-     "CEntityResourceManifest_AddResource.linux.yaml"),
+    # (linux 0, windows 2) that CSS core reads through GetOffset. Both halves are now
+    # verified against their own platform's own vtable, as rule 13 requires.
+    #
+    # linux:   Itanium RTTI -> one 12-slot vtable at 0x9a4000.
+    # windows: MSVC RTTI -> .?AVCEntityResourceManifest@@ at 0x180629b18, its
+    #          TypeDescriptor at -0x10, one CompleteObjectLocator at 0x1805a9dd0,
+    #          vftable at 0x1805708a8 - also 12 slots, so there is no dtor-pair shift
+    #          for this class.
+    #
+    # Slots 0-2 are the three default-argument overloads of AddResource on both
+    # platforms, all reaching one implementation (linux tail-jumps to 0x3ce5c0,
+    # windows calls 0x1801ada00). The pairing is fixed by the defaulting ladder, not
+    # by the usual MSVC shift: the maximally-defaulted overload - the one taking only
+    # the resource name - is linux slot 0 (xor r8d/r9d/ecx/edx) and windows slot 2
+    # (xor r9d, [rsp+0x20]=0, xor r8d). GCC and MSVC emit the overloads in opposite
+    # order, which is exactly why the indices are 0 and 2.
+    ("find-CEntityResourceManifest_AddResource", "engine",
+     "CEntityResourceManifest_AddResource.{platform}.yaml"),
     ("find-INetworkSystem_CloseSocket-linux", "engine", "INetworkSystem_CloseSocket.linux.yaml"),
     ("find-INetworkSystem_EnableLoopbackBetweenSockets-linux", "engine",
      "INetworkSystem_EnableLoopbackBetweenSockets.linux.yaml"),

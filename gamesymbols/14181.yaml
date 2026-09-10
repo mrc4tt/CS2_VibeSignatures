@@ -121,8 +121,8 @@ binaries:
       sha256: 'd3a76f86ed6d005620484134882efecb965702ca88b2bcbd8b3411fa17033045'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:9007d1115129a33f200a843caa7436bdd7d142db162f51ff6940814eb4d94c2d
-file_count: 3756
+config_sha256: sha256:14fe4969fc3907edf85e057977cd25c2ef9db3b131ef93f56a0fa822b6f3f5ae
+file_count: 3757
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -7686,6 +7686,13 @@ files:
     func_va: '0x3cfee0'
     vfunc_index: 0
     vfunc_offset: '0x0'
+    vtable_name: CEntityResourceManifest
+  engine/CEntityResourceManifest_AddResource.windows.yaml:
+    func_name: CEntityResourceManifest_AddResource
+    func_rva: '0x1ae5c0'
+    func_va: '0x1801ae5c0'
+    vfunc_index: 2
+    vfunc_offset: '0x10'
     vtable_name: CEntityResourceManifest
   engine/CGameClientConnectPrerequisite_ctor.linux.yaml:
     func_name: CGameClientConnectPrerequisite_ctor
@@ -46952,5 +46959,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T19:03:58Z'
+last_publish_time: '2026-09-10T19:18:27Z'
 schema_version: 5

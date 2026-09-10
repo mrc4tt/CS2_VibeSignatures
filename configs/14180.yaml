@@ -624,9 +624,9 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
-      - name: find-CEntityResourceManifest_AddResource-linux
+      - name: find-CEntityResourceManifest_AddResource
         optional_output:
-          - CEntityResourceManifest_AddResource.linux.yaml
+          - CEntityResourceManifest_AddResource.{platform}.yaml
       - name: find-ConnectSocketToAddressList-linux
         optional_output:
           - ConnectSocketToAddressList.linux.yaml
