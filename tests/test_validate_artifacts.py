@@ -23,8 +23,13 @@ def _fake_info(base=0, text=(0, 0x1000, 0x1000), data=(0x2000, 0x3000, 0x1000)):
 
 class ParseSigTests(unittest.TestCase):
     def test_wildcard_spellings_all_parse(self):
-        for tok in ("?", "??", "2A", "*"):
+        for tok in ("?", "??"):
             self.assertEqual(va.parse_sig(f"48 {tok} C0"), [0x48, None, 0xC0])
+
+    def test_2a_is_a_literal_byte_not_a_wildcard(self):
+        # cs2kz gamedata writes \x2A for a wildcard, but an artifact spells it
+        # "??"; treating 2A as a wildcard invented multi-match reports
+        self.assertEqual(va.parse_sig("48 2A C0"), [0x48, 0x2A, 0xC0])
 
     def test_non_hex_is_rejected(self):
         self.assertIsNone(va.parse_sig("48 ZZ C0"))

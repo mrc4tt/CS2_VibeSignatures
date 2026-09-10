@@ -66,7 +66,11 @@ def parse_sig(sig):
     """Signature text -> list of ints, with None for a wildcard byte."""
     out = []
     for tok in str(sig).split():
-        if tok in ("?", "??", "2A", "*"):
+        # Artifact YAML spells a wildcard "??" (and upstream sometimes "?").
+        # "2A" is NOT a wildcard here even though cs2kz gamedata writes \x2A for
+        # one - in an artifact it is the literal byte 0x2A, and treating it as a
+        # wildcard invented multi-match reports.
+        if tok in ("?", "??"):
             out.append(None)
         else:
             try:
