@@ -5840,9 +5840,6 @@ modules:
         category: vfunc
         alias:
           - IVEngineClient2::IsPlayingDemo
-      - name: OnServerVoiceData_IsPlayingDemo_Callee
-        category: patch
-        platform: windows
       - name: IVEngineClient2_ExecuteClientCmd
         category: vfunc
         alias:

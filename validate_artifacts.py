@@ -524,9 +524,14 @@ def check_patch(rec, d, blob, info, out):
     va = _hexint(d.get("patch_va"))
     if d.get("patch_sig"):
         check_sig_field(rec, blob, info, "patch_sig", d["patch_sig"], va, out, out.pedantic)
-    if not d.get("patch_bytes"):
-        out.warn(rec, "patch artifact has no patch_bytes - gamedata generation "
-                      "reports patch_yaml_missing_or_invalid for it")
+    if not d.get("patch_bytes") and out.pedantic:
+        # Not a defect on its own: a patch artifact without patch_bytes is a
+        # call-site LOCATOR, and generation simply skips such a payload. It only
+        # matters when the config still declares the symbol, which the config -
+        # not the artifact - decides, so this is informational.
+        out.warn(rec, "patch artifact has no patch_bytes, so it ships nothing - "
+                      "fine for a locator, a warning only if the symbol is still "
+                      "declared for gamedata")
 
 
 CHECKS = {

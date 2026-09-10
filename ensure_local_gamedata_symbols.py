@@ -156,6 +156,14 @@ FORK_OWNED_REMOVALS = [
     # on the commented-out find-ShowHudHint task). Kept as a downstream alias on the
     # canonical symbol via ALIAS_OVERRIDES, so the old gamedata key still resolves.
     ("ShowHudHint", "server", "refactored into CEnvHudHint_API_ShowHudHint"),
+    # A patch symbol ships nothing without patch_bytes (_load_standard_platform
+    # skips the payload), and no gamever in ten has ever had them - the skill says
+    # so outright: "No patch_bytes field is generated because this skill
+    # identifies the callee call site; the downstream consumer decides how that
+    # call instruction is patched." No generator consumes it either. The find-task
+    # and the artifact stay, so the call-site locator survives in the snapshot and
+    # a future consumer can re-declare the symbol with the bytes it wants.
+    ("OnServerVoiceData_IsPlayingDemo_Callee", "client", "locator only, patch_bytes deliberately absent"),
 ]
 
 # Fork-owned symbol MOVES between module blocks. Upstream declares the symbol under a
