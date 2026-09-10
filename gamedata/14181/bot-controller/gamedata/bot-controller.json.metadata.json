@@ -407,10 +407,27 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 53 89 F3 48 83 EC ? 48 63 77 ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 53 89 F3 48 83 EC ? 48 63 77",
+          "line": 30,
+          "path": [
+            "CCSPlayer_WeaponServices::GetSlot",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        28,
+        29,
+        30,
+        32
+      ],
       "name": "CCSPlayer_WeaponServices::GetSlot",
-      "updated": false
+      "updated": true
     },
     {
       "changes": [
@@ -533,8 +550,8 @@
   "gamever": "14181",
   "schema_version": 2,
   "summary": {
-    "covered": 32,
+    "covered": 33,
     "total": 33,
-    "updated": 11
+    "updated": 12
   }
 }

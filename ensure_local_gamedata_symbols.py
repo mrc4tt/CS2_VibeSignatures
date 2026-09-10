@@ -348,6 +348,43 @@ def enforce_category_decisions(text):
     return result, changed
 
 
+def enforce_alias_overrides(text):
+    """Ensure every ALIAS_OVERRIDES key is an alias on its canonical symbol.
+
+    load_seed_specs() skips these keys on the assumption that the canonical
+    symbol already carries the alias, which is how the generator resolves the
+    plugin's gamedata key. An upstream merge dropped all four from 14180 and
+    14181, so e.g. "CCSPlayer_WeaponServices::GetSlot" resolved to "no matching
+    YAML data" and shipped a stale signature even though the artifact was there.
+    """
+    added = 0
+    lines = text.split("\n")
+    for key, canon in ALIAS_OVERRIDES.items():
+        # locate the canonical symbol entry and the extent of its attributes
+        try:
+            start = next(i for i, l in enumerate(lines) if l == f"      - name: {canon}")
+        except StopIteration:
+            continue
+        end = start + 1
+        while end < len(lines) and (lines[end].startswith("        ") or lines[end].startswith("          ")):
+            end += 1
+        block = lines[start:end]
+        if any(l.strip() == f"- {key}" for l in block):
+            continue
+        alias_at = next((i for i, l in enumerate(block) if l == "        alias:"), None)
+        if alias_at is None:
+            block.append("        alias:")
+            block.append(f"          - {key}")
+        else:
+            insert = alias_at + 1
+            while insert < len(block) and block[insert].startswith("          - "):
+                insert += 1
+            block.insert(insert, f"          - {key}")
+        lines[start:end] = block
+        added += 1
+    return "\n".join(lines), added
+
+
 def repair_missing_structs(text):
     """Ensure every structmember's struct is declared (category: struct) in its module.
 
@@ -454,11 +491,14 @@ def main():
     patched, reclassified = enforce_category_decisions(text)
     if reclassified:
         print(f"  re-asserted: {reclassified} fork-owned category decision(s)")
+    patched, aliased = enforce_alias_overrides(patched)
+    if aliased:
+        print(f"  re-asserted: {aliased} alias-override mapping(s)")
     patched, repaired = repair_missing_structs(patched)
     if repaired:
         print(f"  repaired: {repaired} missing struct declaration(s)")
     patched = inject(patched, config_path, specs)
-    if patched == text and not repaired and not reclassified:
+    if patched == text and not repaired and not reclassified and not aliased:
         return
 
     with open(config_path, "w", encoding="utf-8") as f:

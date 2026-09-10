@@ -2715,6 +2715,7 @@ modules:
         member: m_pEntitySystem
         alias:
           - GameEntitySystem
+          - GameResourceServiceServer::m_pEntitySystem
       - name: CGameResourceService_vtable
         category: vtable
       - name: CGameResourceService_LoadGameResourceManifestNamed
@@ -11092,6 +11093,8 @@ modules:
         category: func
         alias:
           - CBasePlayerController::HandleCommand_JoinTeam
+          - CCSPlayerController_HandleCommandJoinTeam
+          - CCSPlayerController_HandleCommand_JoinTeam
       - name: CBasePlayerController_SetPlayerName
         category: func
         alias:
@@ -11269,6 +11272,7 @@ modules:
         category: func
         alias:
           - CCSPlayer_WeaponServices_Weapon_GetSlot
+          - CCSPlayer_WeaponServices::GetSlot
       - name: CCSPlayerController_ChangeTeam
         category: vfunc
         alias:

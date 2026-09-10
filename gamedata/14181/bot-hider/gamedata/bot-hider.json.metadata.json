@@ -434,10 +434,26 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 80,
+          "before": 88,
+          "line": 72,
+          "path": [
+            "GameResourceServiceServer::m_pEntitySystem",
+            "offsets",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        71,
+        72,
+        74
+      ],
       "name": "GameResourceServiceServer::m_pEntitySystem",
-      "updated": false
+      "updated": true
     },
     {
       "changes": [
@@ -490,8 +506,8 @@
   "gamever": "14181",
   "schema_version": 2,
   "summary": {
-    "covered": 29,
+    "covered": 30,
     "total": 30,
-    "updated": 10
+    "updated": 11
   }
 }
