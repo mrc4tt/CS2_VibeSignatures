@@ -372,6 +372,26 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": "48 8B C4 48 89 70 18 48 89 78 20 55 41 54",
+          "before": "48 89 5C 24 ? 57 48 83 EC ? 48 8B FA 48 8B D9 45 84 C0 75",
+          "line": 351,
+          "path": [
+            "CCSPlayer_MovementServices::FullWalkMove",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB E8 ? ? ? ? 84 C0 0F 84 2E 01 00 00",
+          "before": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 84 D2",
+          "line": 352,
+          "path": [
+            "CCSPlayer_MovementServices::FullWalkMove",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         350,
@@ -379,7 +399,7 @@
         352
       ],
       "name": "CCSPlayer_MovementServices::FullWalkMove",
-      "updated": false
+      "updated": true
     },
     {
       "covered": false,
@@ -851,6 +871,6 @@
   "summary": {
     "covered": 31,
     "total": 68,
-    "updated": 21
+    "updated": 22
   }
 }

@@ -1,0 +1,5 @@
+func_name: CCSPlayer_MovementServices_FullWalkMove
+func_va: '0x180ab4820'
+func_rva: '0xab4820'
+func_size: '0x0'
+func_sig: 48 8B C4 48 89 70 18 48 89 78 20 55 41 54
