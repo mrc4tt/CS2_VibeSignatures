@@ -154,11 +154,6 @@ FORK_OWNED_PLATFORM_PINS = [
     # order!"). So slot 23 is a disconnect notification on the legacy game-UI
     # interface, not RemoveNetChannel.
     #
-    # The symbol ships nothing and no generator consumes it, so upstream's windows
-    # artifact is left alone rather than relabelled, and linux stops being reported
-    # as missing.
-    ("INetworkSystem_RemoveNetChannel", "engine", "windows",
-     "no linux call site; windows receiver is an engine service, not INetworkSystem"),
     # windows-only in every gamever that has it (14172 onward); upstream added the
     # pin itself from 14180, so this only backports it to 14178b
     ("SendViolationReport", "client", "windows", "no linux artifact in any gamever"),
@@ -214,6 +209,30 @@ FORK_OWNED_REMOVALS = [
     ("CNetworkMessages_GetNetworkGroupCount", "networksystem", "never hunted, never shipped"),
     ("CNetworkMessages_GetNetworkGroupName", "networksystem", "never hunted, never shipped"),
     ("CNetworkMessages_GetNetworkGroupColor", "networksystem", "never hunted, never shipped"),
+    # Two symbols claimed the single downstream "ClientPrint" key: this one by its own
+    # name, and ClientPrintToController through alias: [ClientPrint]. Emission order
+    # decided the winner, which is rule 15. CounterStrikeSharp is the only consumer and
+    # its delegate settles which one is correct:
+    #     MemoryFunctionVoid<IntPtr, HudDestination, string, IntPtr x4> ClientPrintFunc
+    #         = new(GameData.GetSignature("ClientPrint"));
+    # Argument 1 is the controller pointer (ClientPrintAll drops exactly that argument),
+    # and ClientPrintToController.windows opens with 48 85 C9 0F 84 - test rcx,rcx; je -
+    # the null check on that pointer. So the value already shipping is the right one, and
+    # retiring THIS declaration makes the winner deterministic without changing a byte
+    # downstream. The find-task and both artifacts stay, so the function keeps its locator.
+    ("ClientPrint", "server", "key belongs to ClientPrintToController (CSS delegate takes the controller first)"),
+    # Upstream labels engine vfunc slot 0xb8 on the receiver at 0x180613ca8
+    # INetworkSystem::RemoveNetChannel. A headless IDA pass read the registration
+    # verbatim - (**v136)(v136, "LegacyGameUI001", qword_180613CA8) - and the slot map
+    # around it (11 ActivateGameUI, 17 OnLevelLoadingStarted, 18 DisableLoadingPlaque,
+    # 21 Map Load Complete, 23 client disconnect) is ILegacyGameUI, not INetworkSystem.
+    # The label is therefore wrong, there is no linux counterpart to hunt, and no
+    # generator consumes a RemoveNetChannel key at all. The real data already exists as
+    # CNetworkSystem_RemoveNetChannel (+ _ByAddress) in networksystem on both platforms.
+    # Retired instead of relabelled: upstream's windows artifact stays untouched as a
+    # locator, and this stops the linux half being reported as missing forever.
+    # Replaces the earlier platform: windows pin, which only hid half the problem.
+    ("INetworkSystem_RemoveNetChannel", "engine", "mislabelled ILegacyGameUI slot; real data is CNetworkSystem_RemoveNetChannel"),
 ]
 
 # Fork-owned symbol MOVES between module blocks. Upstream declares the symbol under a

@@ -4102,11 +4102,6 @@ modules:
         category: vfunc
         alias:
           - INetworkSystem::PollSocket
-      - name: INetworkSystem_RemoveNetChannel
-        category: vfunc
-        platform: windows
-        alias:
-          - INetworkSystem::RemoveNetChannel
       - name: INetworkSystem_PrintNetworkStats
         category: vfunc
         alias:
@@ -11851,8 +11846,6 @@ modules:
       - name: Host_Say
         category: func
       - name: NetworkStateChanged
-        category: func
-      - name: ClientPrint
         category: func
       - name: UTIL_ClientPrintFilter
         category: func

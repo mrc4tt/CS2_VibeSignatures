@@ -12,7 +12,8 @@
 #          Analysis runs the whole `server` module, but -oldgamever reuse
 #          makes unchanged symbols ~free (direct MCP match, no agent/LLM).
 # Deploy:  MERGE into the install file (regenerated values win per key,
-#          install-only symbols are preserved), with a timestamped backup.
+#          install-only symbols are preserved). No backup file is written: the
+#          install gamedata is tracked in git, so `git show HEAD:<path>` is the backup.
 #
 # Usage:
 #   ./update_css_gamedata.sh [GAMEVER] [OLDGAMEVER]
@@ -117,9 +118,13 @@ uv run update_gamedata.py -gamever="$GAMEVER" -snapshot="$SNAPSHOT" -outputdir="
 [ -f "$DIST_GD" ] || die "dist gamedata not produced: $DIST_GD"
 
 # --- 4. merge dist -> install (preserve install-only symbols) + diff -------
-BACKUP="$INSTALL_GD.bak.$(date +%Y%m%d_%H%M%S)"
-log "backup install -> $BACKUP"
-cp -p "$INSTALL_GD" "$BACKUP"
+# No .bak: $INSTALL_GD is tracked in the CounterStrikeSharp repo, so the pre-merge
+# version is `git show HEAD:$INSTALL_REL`. Uncommitted edits are the exception, so
+# say so before the merge rewrites them in place.
+if git -C "$CSS_INSTALL" rev-parse --git-dir >/dev/null 2>&1 \
+   && ! git -C "$CSS_INSTALL" diff --quiet -- "$INSTALL_REL" 2>/dev/null; then
+    log "WARNING: $INSTALL_REL has uncommitted changes - the merge rewrites them in place"
+fi
 
 DRYRUN="${DRYRUN:-0}" python3 - "$DIST_GD" "$INSTALL_GD" <<'PY'
 import json, os, sys

@@ -27,7 +27,13 @@ deploy() {  # deploy <dist-file> <target-file>
         echo "  = unchanged: $target"
         return
     fi
-    cp -p "$target" "$target.bak.$(date +%Y%m%d_%H%M%S)" 2>/dev/null || true
+    # No .bak: every target here is tracked in its plugin repo, so the previous
+    # version is one `git show HEAD:<path>` away. Warn only if the target has
+    # uncommitted edits, because those are the one thing git cannot give back.
+    if [ -f "$target" ] && git -C "$(dirname "$target")" rev-parse --git-dir >/dev/null 2>&1 \
+       && ! git -C "$(dirname "$target")" diff --quiet -- "$target" 2>/dev/null; then
+        echo "  ⚠️  overwriting uncommitted changes in $target (not recoverable from git)"
+    fi
     cp -p "$dist" "$target"
     echo "  ✔ deployed: $target"
 }
@@ -42,13 +48,10 @@ deploy "$OUT_ROOT/matchzy/gamedata/matchzy.json" \
 CSS_REPO="$HOME/CounterStrikeSharp"
 if [ -d "$CSS_REPO/.git" ]; then
     cd "$CSS_REPO"
-    # ignorer .bak-filer
-    echo "*.bak.*" >> .gitignore 2>/dev/null
-    sort -u .gitignore -o .gitignore
     if git diff --quiet -- configs/ && ! git ls-files --others --exclude-standard | grep -q .; then
         echo "  = unchanged: $CSS_REPO"
     else
-        git add configs/ .gitignore
+        git add configs/
         git commit -m "gamedata: $GAMEVER (auto-generated from CS2_VibeSignatures)"
         git push origin main 2>/dev/null || git push origin master 2>/dev/null || echo "  ⚠️ push fejlede — koer manuelt: cd $CSS_REPO && git push"
         echo "  ✔ deployed: $CSS_REPO → github.com/mrc4tt/CounterStrikeSharp"
