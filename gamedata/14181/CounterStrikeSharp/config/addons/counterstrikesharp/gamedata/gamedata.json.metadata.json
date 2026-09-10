@@ -421,13 +421,27 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        302,
+        303,
+        304
+      ],
       "name": "CCSNavArea_IsValidNavMesh",
       "updated": false
     },
     {
       "changes": [
+        {
+          "after": "44 89 44 24 18 48 89 54 24 10 48 89 4C 24 08 55 53 56 57 41 55 41 56 41 57 48 8B EC",
+          "before": "44 89 44 24 ? 48 89 54 24 ? 48 89 4C 24 ? 55 53 56 57 41 55 41 56 41 57 48 8B EC",
+          "line": 87,
+          "path": [
+            "CCSPlayer_ItemServices_CanAcquire",
+            "signatures",
+            "windows"
+          ]
+        },
         {
           "after": "55 48 89 E5 41 57 41 56 41 55 49 89 CD 41 54 49 89 FC 53 48 89 F3 48 83 EC ?",
           "before": "55 48 89 E5 41 57 41 56 41 55 49 89 CD 41 54 49 89 FC 53 48 89 F3 48 83 EC",
@@ -476,6 +490,28 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": "48 89 5C 24 10 48 89 6C 24 18 56 57 41 54 41 56 41 57 48 83 EC 40 48 8B 01 48 8B FA",
+          "before": "48 89 5C 24 ? 48 89 6C 24 ? 56 57 41 54 41 56 41 57 48 83 EC ? 48 8B 01 48 8B FA",
+          "line": 80,
+          "path": [
+            "CCSPlayer_WeaponServices_CanUse",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 8D 15 ? ? ? ? 48 89 E5 41 55 41 54 49 89 FC 53 48 89 F3 48 83 EC 08 48 8B 07",
+          "before": "55 48 8D 15 ? ? ? ? 48 89 E5 41 55 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 07 48 8B 80",
+          "line": 81,
+          "path": [
+            "CCSPlayer_WeaponServices_CanUse",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         79,
@@ -483,7 +519,7 @@
         81
       ],
       "name": "CCSPlayer_WeaponServices_CanUse",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -991,8 +1027,8 @@
   "gamever": "14181",
   "schema_version": 2,
   "summary": {
-    "covered": 48,
+    "covered": 49,
     "total": 52,
-    "updated": 28
+    "updated": 29
   }
 }

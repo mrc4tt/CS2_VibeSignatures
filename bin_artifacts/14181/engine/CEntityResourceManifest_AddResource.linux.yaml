@@ -1,0 +1,6 @@
+func_name: CEntityResourceManifest_AddResource
+func_va: '0x3cfee0'
+func_rva: '0x3cfee0'
+vtable_name: CEntityResourceManifest
+vfunc_offset: '0x0'
+vfunc_index: 0

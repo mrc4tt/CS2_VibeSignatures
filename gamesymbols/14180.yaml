@@ -121,8 +121,8 @@ binaries:
       sha256: 'e39313a48f591f3a141c121a59e499715502e6bdb6bd7e830dd983338131a0d6'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:010d46e9fef1f0adf985e2e2f2e45b0d5f9489d64c157f21d96b522426c8e414
-file_count: 3751
+config_sha256: sha256:be92caa283fd82aed093028d154ec7a8ec8c3f2146bfa4382c4a523c932e3f6d
+file_count: 3753
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -24386,6 +24386,16 @@ files:
     vtable_size: '0x418'
     vtable_symbol: ??_7CCSGameRules@@6B@
     vtable_va: '0x181745fa8'
+  server/CCSNavArea_IsValidNavMesh.linux.yaml:
+    func_name: CCSNavArea_IsValidNavMesh
+    func_rva: '0x18fd010'
+    func_sig: 48 8D 05 ?? ?? ?? ?? 48 83 38 ?? 0F 95 C0 C3
+    func_va: '0x18fd010'
+  server/CCSNavArea_IsValidNavMesh.windows.yaml:
+    func_name: CCSNavArea_IsValidNavMesh
+    func_rva: '0xd3de20'
+    func_sig: 48 83 3D ?? ?? ?? ?? ?? 0F 95 C0 C3 CC CC CC CC C2
+    func_va: '0x180d3de20'
   server/CCSPlayerController_AddedToEntityDatabase.linux.yaml:
     func_name: CCSPlayerController_AddedToEntityDatabase
     func_rva: '0x1851ec0'
@@ -46777,5 +46787,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14180'
-last_publish_time: '2026-09-10T15:06:51Z'
+last_publish_time: '2026-09-10T18:41:02Z'
 schema_version: 5

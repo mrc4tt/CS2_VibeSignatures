@@ -391,8 +391,12 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        302,
+        303,
+        304
+      ],
       "name": "CCSNavArea_IsValidNavMesh",
       "updated": false
     },
@@ -936,7 +940,7 @@
   "gamever": "14178b",
   "schema_version": 2,
   "summary": {
-    "covered": 47,
+    "covered": 48,
     "total": 52,
     "updated": 27
   }

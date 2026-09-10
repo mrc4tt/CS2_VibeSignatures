@@ -68,6 +68,11 @@ FORK_OWNED_SYMBOLS = [
     ("CCSPointScript_OnCustomHudClicked", "func", None, None),
     # CS2Fixes' gamedata asks for this under the alias; upstream declares neither
     ("CTakeDamageInfo_ctor", "func", None, "CTakeDamageInfo"),
+    # CounterStrikeSharp ships this signature and the cs2-signatures tracker had no
+    # reference for it: the artifacts existed only on 14178b and no task declared
+    # them, so gamesymbol_snapshot dropped them as undeclared. Relocated to 14181
+    # (linux 0x1904cd0, windows 0x180d452d0, both a unique wildcarded match).
+    ("CCSNavArea_IsValidNavMesh", "func", None, None),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
@@ -284,6 +289,18 @@ FORK_OWNED_MOVES = [
 # path REQUIRED and pack then fails with "Missing required symbol YAML".
 FORK_OWNED_OPTIONAL_TASKS = [
     # (task_name, module, artifact_path)
+    # CEntityResourceManifest::AddResource is an OFFSETS entry in CounterStrikeSharp
+    # (linux 0, windows 2) and CSS core reads it through GetOffset, so a missing
+    # reference is a real gap. The linux half is settled: the Itanium RTTI resolves
+    # CEntityResourceManifest to one vtable of 12 slots, and slots 0-2 are the three
+    # default-argument thunks of AddResource, all tail-jumping to one implementation
+    # - so slot 0 is the index CSS names. The windows half is NOT declared on
+    # purpose: engine2.dll carries no RTTI for the class, and a structural search for
+    # the table returned 171 equally-good candidates, so the index cannot be verified
+    # against that module's own vtable. Rule 13 forbids copying it, and CSS's own
+    # value (2, the usual MSVC deleting-dtor shift) keeps shipping untouched.
+    ("find-CEntityResourceManifest_AddResource-linux", "engine",
+     "CEntityResourceManifest_AddResource.linux.yaml"),
     ("find-INetworkSystem_CloseSocket-linux", "engine", "INetworkSystem_CloseSocket.linux.yaml"),
     ("find-INetworkSystem_EnableLoopbackBetweenSockets-linux", "engine",
      "INetworkSystem_EnableLoopbackBetweenSockets.linux.yaml"),
