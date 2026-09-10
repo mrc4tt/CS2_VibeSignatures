@@ -14551,7 +14551,7 @@ files:
     func_name: INetworkSystem_ConnectSocket
     vfunc_index: 15
     vfunc_offset: '0x78'
-    vfunc_sig: FF 50 78 84 C0 0F 84 ?? ?? ?? ?? 48 C7 85 58 FC FF FF 00 00 00 00
+    vfunc_sig: FF 50 78 84 C0 0F 84 ?? ?? ?? ?? 48 8B 85 30 FF FF FF
     vtable_name: INetworkSystem
   engine/INetworkSystem_ConnectSocket.windows.yaml:
     func_name: INetworkSystem_ConnectSocket
@@ -46801,5 +46801,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T12:55:38Z'
+last_publish_time: '2026-09-10T13:12:42Z'
 schema_version: 5

@@ -2,4 +2,4 @@ func_name: INetworkSystem_ConnectSocket
 vtable_name: INetworkSystem
 vfunc_offset: '0x78'
 vfunc_index: 15
-vfunc_sig: FF 50 78 84 C0 0F 84 ?? ?? ?? ?? 48 C7 85 58 FC FF FF 00 00 00 00
+vfunc_sig: FF 50 78 84 C0 0F 84 ?? ?? ?? ?? 48 8B 85 30 FF FF FF
