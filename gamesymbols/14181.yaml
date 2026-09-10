@@ -20745,10 +20745,12 @@ files:
     vtable_name: CBasePlayerController
   server/CBasePlayerController_FakeClientFlags.windows.yaml:
     func_name: CBasePlayerController_FakeClientFlags
-    func_rva: '0xb0e155'
-    func_sig: F7 81 88 03 00 00 00 01 00 00
-    func_size: '0x0'
-    func_va: '0x180b0e155'
+    func_rva: '0xb18ed0'
+    func_size: '0x3'
+    func_va: '0x180b18ed0'
+    vfunc_index: 250
+    vfunc_offset: '0x7d0'
+    vtable_name: CBasePlayerController
   server/CBasePlayerController_GetPawn.linux.yaml:
     func_name: CBasePlayerController_GetPawn
     func_rva: '0x1616080'
@@ -24088,10 +24090,10 @@ files:
     func_va: '0x13deac0'
   server/CCSGameRules_SameMapTeardown.windows.yaml:
     func_name: CCSGameRules_SameMapTeardown
-    func_rva: '0x8ed070'
-    func_sig: 41 3B DD 0F 84 ?? ?? ?? ?? 41 8B 80 88 03 00 00 49 8B C8 C1 E8 08 A8 01 74 ??
-    func_size: '0x0'
-    func_va: '0x1808ed070'
+    func_rva: '0x8eb750'
+    func_sig: 48 8B C4 55 41 57 48 8D A8 48 FC FF FF 48 81 EC A8 04 00 00 80 3D ?? ?? ?? ?? 00
+    func_size: '0x1e80'
+    func_va: '0x1808eb750'
   server/CCSGameRules_TerminateRound.linux.yaml:
     func_name: CCSGameRules_TerminateRound
     func_rva: '0x13d6f10'
@@ -46801,5 +46803,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T13:12:42Z'
+last_publish_time: '2026-09-10T13:44:41Z'
 schema_version: 5

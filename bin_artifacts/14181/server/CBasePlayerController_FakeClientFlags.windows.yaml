@@ -1,5 +1,7 @@
 func_name: CBasePlayerController_FakeClientFlags
-func_va: '0x180b0e155'
-func_rva: '0xb0e155'
-func_size: '0x0'
-func_sig: F7 81 88 03 00 00 00 01 00 00
+func_va: '0x180b18ed0'
+func_rva: '0xb18ed0'
+func_size: '0x3'
+vtable_name: CBasePlayerController
+vfunc_offset: '0x7d0'
+vfunc_index: 250

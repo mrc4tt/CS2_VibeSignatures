@@ -58,6 +58,16 @@
     {
       "changes": [
         {
+          "after": 250,
+          "before": 904,
+          "line": 120,
+          "path": [
+            "CBasePlayerController::FakeClientFlags",
+            "offsets",
+            "windows"
+          ]
+        },
+        {
           "after": 251,
           "before": 904,
           "line": 121,
@@ -113,7 +123,7 @@
     {
       "changes": [
         {
-          "after": "41 3B DD 0F 84 ? ? ? ? 41 8B 80 88 03 00 00 49 8B C8 C1 E8 08 A8 01 74 ?",
+          "after": "48 8B C4 55 41 57 48 8D A8 48 FC FF FF 48 81 EC A8 04 00 00 80 3D ? ? ? ? 00",
           "before": "41 3B DD 0F 84 99 00 00 00 41 8B 80 88 03 00 00 49 8B C8 C1 E8 08 A8 01 74 44",
           "line": 53,
           "path": [

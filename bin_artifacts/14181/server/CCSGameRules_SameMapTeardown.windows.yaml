@@ -1,5 +1,5 @@
 func_name: CCSGameRules_SameMapTeardown
-func_va: '0x1808ed070'
-func_rva: '0x8ed070'
-func_size: '0x0'
-func_sig: 41 3B DD 0F 84 ?? ?? ?? ?? 41 8B 80 88 03 00 00 49 8B C8 C1 E8 08 A8 01 74 ??
+func_va: '0x1808eb750'
+func_rva: '0x8eb750'
+func_size: '0x1e80'
+func_sig: 48 8B C4 55 41 57 48 8D A8 48 FC FF FF 48 81 EC A8 04 00 00 80 3D ?? ?? ?? ?? 00

@@ -50,7 +50,7 @@
   "CCSGameRules::SameMapTeardown": {
     "signatures": {
       "library": "server",
-      "windows": "41 3B DD 0F 84 ? ? ? ? 41 8B 80 88 03 00 00 49 8B C8 C1 E8 08 A8 01 74 ?",
+      "windows": "48 8B C4 55 41 57 48 8D A8 48 FC FF FF 48 81 EC A8 04 00 00 80 3D ? ? ? ? 00",
       "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ? ? ? ? E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 83 BB ? ? ? ? ?"
     },
     "offsets": {
@@ -117,7 +117,7 @@
   },
   "CBasePlayerController::FakeClientFlags": {
     "offsets": {
-      "windows": 904,
+      "windows": 250,
       "linux": 251
     },
     "comment": "controller fakeclient flags"
