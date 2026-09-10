@@ -641,6 +641,9 @@ modules:
       - name: find-INetworkSystem_CloseSocket-linux
         optional_output:
           - INetworkSystem_CloseSocket.linux.yaml
+      - name: find-INetworkSystem_EnableLoopbackBetweenSockets-linux
+        optional_output:
+          - INetworkSystem_EnableLoopbackBetweenSockets.linux.yaml
       - name: find-INetworkSystem_ConnectSocket-linux
         optional_output:
           - INetworkSystem_ConnectSocket.linux.yaml
@@ -6721,6 +6724,9 @@ modules:
       - name: find-CEnvHudHint_API_ShowHudHint-binding
         optional_output:
           - CEnvHudHint_API_ShowHudHint.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_WaterMove-verified
+        optional_output:
+          - CCSPlayer_MovementServices_WaterMove.{platform}.yaml
       - name: find-IGameSystemFactory_SetGlobalPtr
         optional_output:
           - IGameSystemFactory_SetGlobalPtr.{platform}.yaml

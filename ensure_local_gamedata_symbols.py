@@ -181,6 +181,8 @@ FORK_OWNED_MOVES = [
 FORK_OWNED_OPTIONAL_TASKS = [
     # (task_name, module, artifact_path)
     ("find-INetworkSystem_CloseSocket-linux", "engine", "INetworkSystem_CloseSocket.linux.yaml"),
+    ("find-INetworkSystem_EnableLoopbackBetweenSockets-linux", "engine",
+     "INetworkSystem_EnableLoopbackBetweenSockets.linux.yaml"),
     ("find-INetworkSystem_ConnectSocket-linux", "engine", "INetworkSystem_ConnectSocket.linux.yaml"),
     ("find-INetworkSystem_PollSocket-linux", "engine", "INetworkSystem_PollSocket.linux.yaml"),
     ("find-ConnectSocketToAddressList-linux", "engine", "ConnectSocketToAddressList.linux.yaml"),
@@ -192,6 +194,8 @@ FORK_OWNED_OPTIONAL_TASKS = [
      "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.{platform}.yaml"),
     ("find-CEnvHudHint_API_ShowHudHint-binding", "server",
      "CEnvHudHint_API_ShowHudHint.{platform}.yaml"),
+    ("find-CCSPlayer_MovementServices_WaterMove-verified", "server",
+     "CCSPlayer_MovementServices_WaterMove.{platform}.yaml"),
     # cross-module relocations: the symbol is declared for this module too, but only
     # the other module was ever analysed, so the artifact had no declaring task here
     ("find-g_pGameEntitySystem", "client", "g_pGameEntitySystem.{platform}.yaml"),

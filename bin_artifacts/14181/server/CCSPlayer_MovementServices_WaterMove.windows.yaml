@@ -1,0 +1,5 @@
+func_name: CCSPlayer_MovementServices_WaterMove
+func_va: '0x180ab5860'
+func_rva: '0xab5860'
+func_size: '0xa4e'
+func_sig: 48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 4C 89 60 20 55 41 56 41 57 48 8D A8 B8 FE FF FF

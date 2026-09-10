@@ -2,7 +2,7 @@ func_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSy
 func_va: '0xf1fc70'
 func_rva: '0xf1fc70'
 func_size: '0x7f'
-func_sig: 48 85 F6 74 70 55 48 8D 0D ?? ?? ?? ?? 48 89 E5 41 54 53 48 8B 46 F8 4C 8D 66 F8
+func_sig: 48 85 F6 74 ?? 55 48 8D 0D ?? ?? ?? ?? 48 89 E5 41 54 53 48 8B 46 F8 4C 8D 66 F8
 vtable_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
 vfunc_offset: '0x20'
 vfunc_index: 4
