@@ -110,8 +110,8 @@
   },
   "CNetworkGameServerBase::m_Clients": {
     "offsets": {
-      "windows": 836,
-      "linux": 1572
+      "windows": 584,
+      "linux": 584
     },
     "comment": "CUtlVector<CServerSideClient*> base offset"
   },
@@ -215,8 +215,8 @@
   },
   "CServerSideClient::m_bIsHLTV": {
     "offsets": {
-      "windows": 904,
-      "linux": 1640
+      "windows": 104,
+      "linux": 104
     },
     "comment": "SourceTV flag"
   }

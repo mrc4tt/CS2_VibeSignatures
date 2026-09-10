@@ -2626,58 +2626,86 @@ modules:
         category: structmember
         struct: CServerSideClient
         member: m_UserIDString
+        alias:
+          - CServerSideClient::m_UserIDString
       - name: CServerSideClient_m_Name
         category: structmember
         struct: CServerSideClient
         member: m_Name
+        alias:
+          - CServerSideClient::m_Name
       - name: CServerSideClient_m_nClientSlot
         category: structmember
         struct: CServerSideClient
         member: m_nClientSlot
+        alias:
+          - CServerSideClient::m_nClientSlot
       - name: CServerSideClient_m_nEntityIndex
         category: structmember
         struct: CServerSideClient
         member: m_nEntityIndex
+        alias:
+          - CServerSideClient::m_nEntityIndex
       - name: CServerSideClient_m_Server
         category: structmember
         struct: CServerSideClient
         member: m_Server
+        alias:
+          - CServerSideClient::m_Server
       - name: CServerSideClient_m_NetChannel
         category: structmember
         struct: CServerSideClient
         member: m_NetChannel
+        alias:
+          - CServerSideClient::m_NetChannel
       - name: CServerSideClient_m_nConnectionTypeFlags
         category: structmember
         struct: CServerSideClient
         member: m_nConnectionTypeFlags
+        alias:
+          - CServerSideClient::m_nConnectionTypeFlags
       - name: CServerSideClient_m_nSignonState
         category: structmember
         struct: CServerSideClient
         member: m_nSignonState
+        alias:
+          - CServerSideClient::m_nSignonState
       - name: CServerSideClient_m_pAttachedTo
         category: structmember
         struct: CServerSideClient
         member: m_pAttachedTo
+        alias:
+          - CServerSideClient::m_pAttachedTo
       - name: CServerSideClient_m_bFakePlayer
         category: structmember
         struct: CServerSideClient
         member: m_bFakePlayer
+        alias:
+          - CServerSideClient::m_bFakePlayer
       - name: CServerSideClient_m_UserID
         category: structmember
         struct: CServerSideClient
         member: m_UserID
+        alias:
+          - CServerSideClient::m_UserID
       - name: CServerSideClient_m_SteamID
         category: structmember
         struct: CServerSideClient
         member: m_SteamID
+        alias:
+          - CServerSideClient::m_SteamID
       - name: CServerSideClient_m_SteamIDMirror
         category: structmember
         struct: CServerSideClient
         member: m_SteamIDMirror
+        alias:
+          - CServerSideClient::m_SteamIDMirror
       - name: CServerSideClient_m_bIsHLTV
         category: structmember
         struct: CServerSideClient
         member: m_bIsHLTV
+        alias:
+          - CServerSideClient::m_bIsHLTV
       - name: CServerSideClient
         category: struct
       - name: CNetworkGameServerBase
@@ -10379,42 +10407,12 @@ modules:
         member: m_iTeamNum
         alias:
           - CBaseEntity::m_iTeamNum
-        alias:
-          - CNetworkGameServerBase::m_Clients
       - name: CBasePlayerController_FakeClientFlags
         category: structmember
         struct: CBaseEntity
         member: m_fFlags
         alias:
           - CBasePlayerController::FakeClientFlags
-        alias:
-          - CServerSideClient::m_UserIDString
-        alias:
-          - CServerSideClient::m_Name
-        alias:
-          - CServerSideClient::m_nClientSlot
-        alias:
-          - CServerSideClient::m_nEntityIndex
-        alias:
-          - CServerSideClient::m_Server
-        alias:
-          - CServerSideClient::m_NetChannel
-        alias:
-          - CServerSideClient::m_nConnectionTypeFlags
-        alias:
-          - CServerSideClient::m_nSignonState
-        alias:
-          - CServerSideClient::m_pAttachedTo
-        alias:
-          - CServerSideClient::m_bFakePlayer
-        alias:
-          - CServerSideClient::m_UserID
-        alias:
-          - CServerSideClient::m_SteamID
-        alias:
-          - CServerSideClient::m_SteamIDMirror
-        alias:
-          - CServerSideClient::m_bIsHLTV
       - name: CCSPlayerController_InventoryServices
         category: struct
       - name: CCSPlayerInventory
@@ -10665,35 +10663,30 @@ modules:
       - name: CEntityInstance_m_pEntity
         category: structmember
         struct: CEntityInstance
-        member: CEntityInstance
         member: m_pEntity
         alias:
           - CEntityInstance::m_pEntity
       - name: CEntityInstance_m_hPrivateScope
         category: structmember
         struct: CEntityInstance
-        member: CEntityInstance
         member: m_hPrivateScope
         alias:
           - CEntityInstance::m_hPrivateScope
       - name: CEntityInstance_m_CScriptComponent
         category: structmember
         struct: CEntityInstance
-        member: CEntityInstance
         member: m_CScriptComponent
         alias:
           - CEntityInstance::m_CScriptComponent
       - name: CEntityInstance_m_pKeyValues
         category: structmember
         struct: CEntityInstance
-        member: CEntityInstance
         member: m_pKeyValues
         alias:
           - CEntityInstance::m_pKeyValues
       - name: CEntityInstance_m_iszPrivateVScripts
         category: structmember
         struct: CEntityInstance
-        member: CEntityInstance
         member: m_iszPrivateVScripts
         alias:
           - CEntityInstance::m_iszPrivateVScripts
@@ -10810,21 +10803,18 @@ modules:
       - name: CEntitySystem_m_nSuppressDormancyChangeCount
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_nSuppressDormancyChangeCount
         alias:
           - CEntitySystem::m_nSuppressDormancyChangeCount
       - name: CEntitySystem_m_nExecuteQueuedCreationDepth
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_nExecuteQueuedCreationDepth
         alias:
           - CEntitySystem::m_nExecuteQueuedCreationDepth
       - name: CEntitySystem_m_queuedDormancyChanges
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_queuedDormancyChanges
         alias:
           - CEntitySystem::m_queuedDormancyChanges
@@ -11040,7 +11030,6 @@ modules:
       - name: CSmokeGrenadeProjectile_m_SmokeVolume
         category: structmember
         struct: CSmokeGrenadeProjectile
-        member: CSmokeGrenadeProjectile
         member: m_SmokeVolume
         alias:
           - CSmokeGrenadeProjectile::m_SmokeVolume
@@ -11058,21 +11047,18 @@ modules:
       - name: SmokeVolume_m_vecCenterOrigin
         category: structmember
         struct: SmokeVolume
-        member: SmokeVolume
         member: m_vecCenterOrigin
         alias:
           - SmokeVolume::m_vecCenterOrigin
       - name: SmokeVolume_m_pStorage
         category: structmember
         struct: SmokeVolume
-        member: SmokeVolume
         member: m_pStorage
         alias:
           - SmokeVolume::m_pStorage
       - name: SmokeVolume_m_flStartTime
         category: structmember
         struct: SmokeVolume
-        member: SmokeVolume
         member: m_flStartTime
         alias:
           - SmokeVolume::m_flStartTime
@@ -11083,7 +11069,6 @@ modules:
       - name: SmokeVolume_m_nFrame
         category: structmember
         struct: SmokeVolume
-        member: SmokeVolume
         member: m_nFrame
         alias:
           - SmokeVolume::m_nFrame
@@ -11100,7 +11085,6 @@ modules:
       - name: CEntitySystem_m_nExecuteQueuedDeletionDepth
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_nExecuteQueuedDeletionDepth
         alias:
           - CEntitySystem::m_nExecuteQueuedDeletionDepth
@@ -11700,12 +11684,10 @@ modules:
       - name: CEntitySystem_m_entClassesByCPPClassname
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_entClassesByCPPClassname
       - name: CEntitySystem_m_entClassesByClassname
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_entClassesByClassname
       - name: CEntitySystem_CreateEntityByName
         category: func
@@ -11764,35 +11746,30 @@ modules:
       - name: CEntitySystem_m_EntityList
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_EntityList
         alias:
           - CEntitySystem::m_EntityList
       - name: CEntitySystem_m_entityNames
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_entityNames
         alias:
           - CEntitySystem::m_entityNames
       - name: CEntitySystem_m_entityComponentHelpers
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_entityComponentHelpers
         alias:
           - CEntitySystem::m_entityComponentHelpers
       - name: CEntitySystem_m_DataDescKeyUnserializers
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_DataDescKeyUnserializers
         alias:
           - CEntitySystem::m_DataDescKeyUnserializers
       - name: CEntitySystem_m_EntityPostSpawnCallback
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_EntityPostSpawnCallback
         alias:
           - CEntitySystem::m_EntityPostSpawnCallback
@@ -11870,7 +11847,6 @@ modules:
       - name: CBaseEntity_m_NetworkTransmitComponent
         category: structmember
         struct: CBaseEntity
-        member: CBaseEntity
         member: m_NetworkTransmitComponent
         alias:
           - CBaseEntity::m_NetworkTransmitComponent
@@ -11883,7 +11859,6 @@ modules:
       - name: CNetworkTransmitComponent_m_nStateFlags
         category: structmember
         struct: CNetworkTransmitComponent
-        member: CNetworkTransmitComponent
         member: m_nStateFlags
         alias:
           - CNetworkTransmitComponent::m_nStateFlags
@@ -11957,7 +11932,6 @@ modules:
       - name: CEntitySystem_m_EntityKeyValuesAllocator
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_EntityKeyValuesAllocator
       - name: CEntityKeyValuesAllocator_GetTempBuffer
         category: func
@@ -11966,7 +11940,6 @@ modules:
       - name: CEntitySystem_m_vSpawnOriginOffset
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_vSpawnOriginOffset
       - name: CEntityKeyValues_LoadFromContext
         category: func
@@ -11979,7 +11952,6 @@ modules:
       - name: CEntitySystem_m_nEntityKeyValuesAllocatorRefCount
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_nEntityKeyValuesAllocatorRefCount
         alias:
           - CEntitySystem::m_nEntityKeyValuesAllocatorRefCount
@@ -12557,7 +12529,6 @@ modules:
       - name: CEntitySystem_m_EventQueue
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_EventQueue
         alias:
           - CEntitySystem::m_EventQueue
@@ -12600,17 +12571,14 @@ modules:
       - name: CGameEntitySystem_m_iNetworkedEntCount
         category: structmember
         struct: CGameEntitySystem
-        member: CGameEntitySystem
         member: m_iNetworkedEntCount
       - name: CGameEntitySystem_m_iNonNetworkedSavedEntCount
         category: structmember
         struct: CGameEntitySystem
-        member: CGameEntitySystem
         member: m_iNonNetworkedSavedEntCount
       - name: CGameEntitySystem_m_entityListeners
         category: structmember
         struct: CGameEntitySystem
-        member: CGameEntitySystem
         member: m_entityListeners
       - name: CGameEntitySystem_BuildResourceManifest_ManifestNameOrGroupName
         category: vfunc
@@ -12619,7 +12587,6 @@ modules:
       - name: CEntitySystem_m_pCurrentManifest
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_pCurrentManifest
       - name: CGameEntitySystem_BuildResourceManifest_KeyValuesVectors
         category: vfunc
@@ -12801,7 +12768,6 @@ modules:
       - name: CBaseAnimGraph_m_skeletonInstance
         category: structmember
         struct: CBaseAnimGraph
-        member: CBaseAnimGraph
         member: m_skeletonInstance
         alias:
           - CBaseAnimGraph::m_skeletonInstance
@@ -12816,7 +12782,6 @@ modules:
       - name: CSkeletonInstance_m_animationController
         category: structmember
         struct: CSkeletonInstance
-        member: CSkeletonInstance
         member: m_animationController
         alias:
           - CSkeletonInstance::m_animationController
@@ -12872,7 +12837,6 @@ modules:
       - name: CCheckTransmitInfo_m_nPlayerSlot
         category: structmember
         struct: CCheckTransmitInfo
-        member: CCheckTransmitInfo
         member: m_nPlayerSlot
         alias:
           - CCheckTransmitInfo::m_nPlayerSlot
@@ -12880,7 +12844,6 @@ modules:
       - name: CCheckTransmitInfo_m_bFullUpdate
         category: structmember
         struct: CCheckTransmitInfo
-        member: CCheckTransmitInfo
         member: m_bFullUpdate
         alias:
           - CCheckTransmitInfo::m_bFullUpdate
@@ -13118,7 +13081,6 @@ modules:
       - name: CEntitySystem_m_Accessors
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_Accessors
       - name: CEntitySystem_CreateEntitySystem
         category: func
@@ -13160,7 +13122,6 @@ modules:
       - name: CGameEntitySystem_m_pEntity2Networkables
         category: structmember
         struct: CGameEntitySystem
-        member: CGameEntitySystem
         member: m_pEntity2Networkables
         alias:
           - CGameEntitySystem::m_pEntity2Networkables
@@ -13172,38 +13133,32 @@ modules:
       - name: CEntitySystem_m_sEntSystemName
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_sEntSystemName
       - name: CEntitySystem_m_eNetworkSerializationMode
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_eNetworkSerializationMode
       - name: CEntitySystem_m_Symbols
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_Symbols
         alias:
           - CEntitySystem::m_Symbols
       - name: CEntitySystem_m_pNetworkFieldChangedEventQueue
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_pNetworkFieldChangedEventQueue
         alias:
           - CEntitySystem::m_pNetworkFieldChangedEventQueue
       - name: CEntitySystem_m_pNetworkFieldScratchData
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_pNetworkFieldScratchData
         alias:
           - CEntitySystem::m_pNetworkFieldScratchData
       - name: CEntitySystem_m_pFieldChangeLimitSpew
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_pFieldChangeLimitSpew
         alias:
           - CEntitySystem::m_pFieldChangeLimitSpew
@@ -13216,31 +13171,26 @@ modules:
       - name: CEntitySystem_m_EntityMaterialAttributes
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_EntityMaterialAttributes
         alias:
           - CEntitySystem::m_EntityMaterialAttributes
       - name: CEntitySystem_m_flChangeCallbackSpewThreshold
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_flChangeCallbackSpewThreshold
         alias:
           - CEntitySystem::m_flChangeCallbackSpewThreshold
       - name: CEntitySystem_m_nSuppressDestroyImmediateCount
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_nSuppressDestroyImmediateCount
       - name: CEntitySystem_m_nSuppressAutoDeletionExecutionCount
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_nSuppressAutoDeletionExecutionCount
       - name: CEntitySystem_m_bEnableAutoDeletionExecution
         category: structmember
         struct: CEntitySystem
-        member: CEntitySystem
         member: m_bEnableAutoDeletionExecution
       - name: CEntitySystem_ClearEntityDatabase
         category: vfunc

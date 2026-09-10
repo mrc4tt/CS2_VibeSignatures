@@ -9,9 +9,45 @@ from gamedata_symbol_config import downstream_aliases, source_candidate_names
 from gamesymbol_store import SymbolStore
 
 
+class _StrictLoader(yaml.SafeLoader):
+    """SafeLoader that refuses a duplicate mapping key.
+
+    YAML keeps the LAST of two identical keys and drops the first without a
+    word, which has silently corrupted this config twice: 14178b declared
+    "member: CEntitySystem" then "member: m_Symbols" on
+    CEntitySystem_m_ComponentUnserializerInfoAllocator, so the member was looked
+    up as m_Symbols and never found; and CBaseEntity_m_iTeamNum declared
+    "alias:" twice, losing CBaseEntity::m_iTeamNum and claiming
+    CNetworkGameServerBase::m_Clients instead. Both surfaced only as downstream
+    symptoms, which is why the loader now refuses them outright.
+    """
+
+
+def _no_duplicate_keys(loader, node, deep=False):
+    mapping = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in mapping:
+            raise yaml.constructor.ConstructorError(
+                "while constructing a mapping", node.start_mark,
+                f"duplicate key {key!r} - YAML would silently keep only the last",
+                key_node.start_mark,
+            )
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_StrictLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _no_duplicate_keys
+)
+
+
 def load_config(config_path):
     """
     Load and parse one YAML config file.
+
+    Duplicate mapping keys are rejected rather than silently collapsed - see
+    _StrictLoader for the two defects that motivated it.
 
     Args:
         config_path: Path to the config file
@@ -20,7 +56,7 @@ def load_config(config_path):
         Dictionary containing config data
     """
     with open(config_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        return yaml.load(f, Loader=_StrictLoader)
 
 
 def merge_configs(base_config, extra_config):

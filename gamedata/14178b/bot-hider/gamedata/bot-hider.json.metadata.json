@@ -220,28 +220,6 @@
       "updated": false
     },
     {
-      "changes": [
-        {
-          "after": 836,
-          "before": 584,
-          "line": 113,
-          "path": [
-            "CNetworkGameServerBase::m_Clients",
-            "offsets",
-            "windows"
-          ]
-        },
-        {
-          "after": 1572,
-          "before": 584,
-          "line": 114,
-          "path": [
-            "CNetworkGameServerBase::m_Clients",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         113,
@@ -249,7 +227,7 @@
         116
       ],
       "name": "CNetworkGameServerBase::m_Clients",
-      "updated": true
+      "updated": false
     },
     {
       "covered": true,
@@ -264,7 +242,7 @@
     {
       "changes": [
         {
-          "after": 904,
+          "after": 104,
           "before": 322,
           "line": 218,
           "path": [
@@ -274,7 +252,7 @@
           ]
         },
         {
-          "after": 1640,
+          "after": 104,
           "before": 322,
           "line": 219,
           "path": [
@@ -498,6 +476,6 @@
   "summary": {
     "covered": 30,
     "total": 30,
-    "updated": 11
+    "updated": 10
   }
 }
