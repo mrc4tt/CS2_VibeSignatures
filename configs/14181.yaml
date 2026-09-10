@@ -624,9 +624,12 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
-      - name: find-CEntityResourceManifest_AddResource
+      - name: find-CEntityResourceManifest_AddResource-windows
         optional_output:
-          - CEntityResourceManifest_AddResource.{platform}.yaml
+          - CEntityResourceManifest_AddResource.windows.yaml
+      - name: find-CEntityResourceManifest_AddResource-linux
+        optional_output:
+          - CEntityResourceManifest_AddResource.linux.yaml
       - name: find-INetworkSystem_CloseSocket-linux
         optional_output:
           - INetworkSystem_CloseSocket.linux.yaml
@@ -6694,9 +6697,6 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
-      - name: find-GiveNamedItem2
-        expected_output:
-          - GiveNamedItem2.{platform}.yaml
       - name: find-CCSNavArea_IsValidNavMesh
         expected_output:
           - CCSNavArea_IsValidNavMesh.{platform}.yaml
@@ -10115,8 +10115,6 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
-      - name: GiveNamedItem2
-        category: func
       - name: CCSNavArea_IsValidNavMesh
         category: func
       - name: CCSCustomHudLayout_SetDialogVariableString

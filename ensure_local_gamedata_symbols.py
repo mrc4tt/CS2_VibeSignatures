@@ -73,11 +73,6 @@ FORK_OWNED_SYMBOLS = [
     # them, so gamesymbol_snapshot dropped them as undeclared. Relocated to 14181
     # (linux 0x1904cd0, windows 0x180d452d0, both a unique wildcarded match).
     ("CCSNavArea_IsValidNavMesh", "func", None, None),
-    # cs2-retakes-allocator ships this signature and the tracker had no reference:
-    # like IsValidNavMesh, the artifacts existed only on 14178b with no task to
-    # declare them. Relocated to 14181 (linux 0x1566a80, windows 0x180a92c80) and
-    # 14180 (0x155eec0 / 0x180a8b4b0), both a unique boundary-checked match.
-    ("GiveNamedItem2", "func", None, None),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
@@ -129,12 +124,19 @@ ALIAS_OVERRIDES = {
 
 # Fork-owned OBSOLETE tasks: declarations for artifacts that turned out to be wrong.
 FORK_OWNED_OBSOLETE_TASKS = [
-    # Superseded by find-CEntityResourceManifest_AddResource, which declares both
-    # platforms now that the windows index is verified. The linux-only task was
-    # correct while only that half was settled; leaving both in place declares the
-    # same artifact twice.
-    ("find-CEntityResourceManifest_AddResource-linux", "engine",
-     "superseded by the both-platform task"),
+    # The GiveNamedItem2 records were withdrawn: 0x1566a70 is the function the
+    # binary itself names CCSPlayer_ItemServices_GiveNamedItem, which this repo
+    # already analyses, while the records filed under GiveNamedItem2 pointed at
+    # sub_1566A80 - an adjacent unnamed overload forwarding to the same
+    # implementation with a different default-argument set. Keeping a record whose
+    # NAME is the plugin key but whose ADDRESS is a sibling overload is the
+    # ClientPrint trap; the plugin key is aliased to the named symbol instead.
+    ("find-GiveNamedItem2", "server", "name belongs to CCSPlayer_ItemServices_GiveNamedItem"),
+    # A single {platform} declaration task was wrong for this table: these are bare
+    # declaration tasks and the name must say which platform the artifact was made
+    # for, so the two per-platform entries replace it.
+    ("find-CEntityResourceManifest_AddResource", "engine",
+     "replaced by the -linux and -windows declaration tasks"),
     # (task_name, module, why)
     # CNetChan has no RTTI in engine2 on either platform, so the single match a
     # 7-byte signature found there was a false positive.
@@ -225,6 +227,7 @@ FORK_OWNED_REMOVALS = [
     ("CNetworkMessages_GetNetworkGroupCount", "networksystem", "never hunted, never shipped"),
     ("CNetworkMessages_GetNetworkGroupName", "networksystem", "never hunted, never shipped"),
     ("CNetworkMessages_GetNetworkGroupColor", "networksystem", "never hunted, never shipped"),
+    ("GiveNamedItem2", "server", "address is a sibling overload; the name belongs to CCSPlayer_ItemServices_GiveNamedItem"),
     # Two symbols claimed the single downstream "ClientPrint" key: this one by its own
     # name, and ClientPrintToController through alias: [ClientPrint]. Emission order
     # decided the winner, which is rule 15. A headless IDA pass over libserver.so
@@ -300,6 +303,14 @@ FORK_OWNED_MOVES = [
 # path REQUIRED and pack then fails with "Missing required symbol YAML".
 FORK_OWNED_OPTIONAL_TASKS = [
     # (task_name, module, artifact_path)
+    # One entry per platform, not one {platform} entry: every task in this table is a
+    # bare DECLARATION task - no preprocessor, no platform: key - existing only so
+    # gamesymbol_snapshot does not drop the artifact as undeclared. The name says
+    # which platform the artifact was actually produced for, and the path is that
+    # platform's literal filename. (Upstream's real hunting tasks are the other
+    # shape: a platform: key on the task plus X.{platform}.yaml in the output, where
+    # {platform} is expanded to the platform being analysed.)
+    #
     # CEntityResourceManifest::AddResource is an OFFSETS entry in CounterStrikeSharp
     # (linux 0, windows 2) that CSS core reads through GetOffset. Both halves are now
     # verified against their own platform's own vtable, as rule 13 requires.
@@ -317,8 +328,10 @@ FORK_OWNED_OPTIONAL_TASKS = [
     # the resource name - is linux slot 0 (xor r8d/r9d/ecx/edx) and windows slot 2
     # (xor r9d, [rsp+0x20]=0, xor r8d). GCC and MSVC emit the overloads in opposite
     # order, which is exactly why the indices are 0 and 2.
-    ("find-CEntityResourceManifest_AddResource", "engine",
-     "CEntityResourceManifest_AddResource.{platform}.yaml"),
+    ("find-CEntityResourceManifest_AddResource-linux", "engine",
+     "CEntityResourceManifest_AddResource.linux.yaml"),
+    ("find-CEntityResourceManifest_AddResource-windows", "engine",
+     "CEntityResourceManifest_AddResource.windows.yaml"),
     ("find-INetworkSystem_CloseSocket-linux", "engine", "INetworkSystem_CloseSocket.linux.yaml"),
     ("find-INetworkSystem_EnableLoopbackBetweenSockets-linux", "engine",
      "INetworkSystem_EnableLoopbackBetweenSockets.linux.yaml"),

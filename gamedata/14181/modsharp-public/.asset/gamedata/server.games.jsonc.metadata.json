@@ -842,6 +842,28 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": "45 31 C9 45 31 C0 31 C9 31 D2 E9 ? ? ? ? CC 55 45 31 C9",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? 48 89 BD ? ? ? ? 89 95 ? ? ? ? 48 89 8D ? ? ? ? 44 89 85",
+          "line": 312,
+          "path": [
+            "Addresses",
+            "CCSPlayer_ItemServices::GiveNamedItem",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 83 EC 38 48 C7 44 24 28 00 00 00 00 45 33 C9 45 33 C0 C6 44 24 20 00 E8 ? ? ? ? 48 83 C4 38 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 83 EC 38",
+          "before": "48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 20 44 89 44 24 18",
+          "line": 313,
+          "path": [
+            "Addresses",
+            "CCSPlayer_ItemServices::GiveNamedItem",
+            "windows"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         311,
@@ -852,7 +874,7 @@
         1105
       ],
       "name": "CCSPlayer_ItemServices::GiveNamedItem",
-      "updated": false
+      "updated": true
     },
     {
       "covered": false,
@@ -1940,6 +1962,6 @@
   "summary": {
     "covered": 54,
     "total": 207,
-    "updated": 26
+    "updated": 27
   }
 }

@@ -121,8 +121,8 @@ binaries:
       sha256: 'e39313a48f591f3a141c121a59e499715502e6bdb6bd7e830dd983338131a0d6'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:ed755455f0ef056031c29dbbaf254a8f843549f63aa2eee91fe4046c71a68bcd
-file_count: 3755
+config_sha256: sha256:f5962c29a21830d516a1539bd4bcb8b42bdc3cd1041799f28ac176097f7d72b5
+file_count: 3753
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -43480,16 +43480,6 @@ files:
     func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 44 89 44 24 ??
     func_size: '0x735'
     func_va: '0x180a7b990'
-  server/GiveNamedItem2.linux.yaml:
-    func_name: GiveNamedItem2
-    func_rva: '0x155eec0'
-    func_sig: 55 45 31 C9 44 0F B6 C2 31 C9 48 89 E5 31 D2 E8
-    func_va: '0x155eec0'
-  server/GiveNamedItem2.windows.yaml:
-    func_name: GiveNamedItem2
-    func_rva: '0xa8b4b0'
-    func_sig: 48 83 EC 38 48 C7 44 24 28 00 00 00 00 45 33 C9 44 88 44 24 20 45 33 C0 E8 ?? ?? ?? ??
-    func_va: '0x180a8b4b0'
   server/GlobalVarsWarningFunc.linux.yaml:
     func_name: GlobalVarsWarningFunc
     func_rva: '0x17b8830'
@@ -46797,5 +46787,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14180'
-last_publish_time: '2026-09-10T19:19:25Z'
+last_publish_time: '2026-09-10T19:37:48Z'
 schema_version: 5

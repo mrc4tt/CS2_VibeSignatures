@@ -121,8 +121,8 @@ binaries:
       sha256: 'd3a76f86ed6d005620484134882efecb965702ca88b2bcbd8b3411fa17033045'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:14fe4969fc3907edf85e057977cd25c2ef9db3b131ef93f56a0fa822b6f3f5ae
-file_count: 3757
+config_sha256: sha256:812a69d9a0abd3d5f4794802acbf1dea0999a0c7f57b3fc3d2657340f53504c5
+file_count: 3755
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -27337,6 +27337,7 @@ files:
   server/CCSPlayer_ItemServices_GiveNamedItem.linux.yaml:
     func_name: CCSPlayer_ItemServices_GiveNamedItem
     func_rva: '0x1566a70'
+    func_sig: 45 31 C9 45 31 C0 31 C9 31 D2 E9 ?? ?? ?? ?? CC 55 45 31 C9
     func_size: '0xf'
     func_va: '0x1566a70'
     vfunc_index: 24
@@ -27346,6 +27347,7 @@ files:
   server/CCSPlayer_ItemServices_GiveNamedItem.windows.yaml:
     func_name: CCSPlayer_ItemServices_GiveNamedItem
     func_rva: '0xa92cb0'
+    func_sig: 48 83 EC 38 48 C7 44 24 28 00 00 00 00 45 33 C9 45 33 C0 C6 44 24 20 00 E8 ?? ?? ?? ?? 48 83 C4 38 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 83 EC 38
     func_size: '0x22'
     func_va: '0x180a92cb0'
     vfunc_index: 23
@@ -43633,16 +43635,6 @@ files:
     func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 44 89 44 24 ??
     func_size: '0x735'
     func_va: '0x180a83160'
-  server/GiveNamedItem2.linux.yaml:
-    func_name: GiveNamedItem2
-    func_rva: '0x1566a80'
-    func_sig: 55 45 31 C9 44 0F B6 C2 31 C9 48 89 E5 31 D2 E8
-    func_va: '0x1566a80'
-  server/GiveNamedItem2.windows.yaml:
-    func_name: GiveNamedItem2
-    func_rva: '0xa92c80'
-    func_sig: 48 83 EC 38 48 C7 44 24 28 00 00 00 00 45 33 C9 44 88 44 24 20 45 33 C0 E8 ?? ?? ?? ??
-    func_va: '0x180a92c80'
   server/GlobalVarsWarningFunc.linux.yaml:
     func_name: GlobalVarsWarningFunc
     func_rva: '0x17c03f0'
@@ -46959,5 +46951,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T19:18:27Z'
+last_publish_time: '2026-09-10T19:36:54Z'
 schema_version: 5

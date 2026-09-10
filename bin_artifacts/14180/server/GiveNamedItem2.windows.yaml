@@ -1,4 +1,0 @@
-func_name: GiveNamedItem2
-func_va: '0x180a8b4b0'
-func_rva: '0xa8b4b0'
-func_sig: 48 83 EC 38 48 C7 44 24 28 00 00 00 00 45 33 C9 44 88 44 24 20 45 33 C0 E8 ?? ?? ?? ??
