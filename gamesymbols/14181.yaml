@@ -122,7 +122,7 @@ binaries:
       size: 4592280
 config_digest_version: 2
 config_sha256: sha256:6554c3c7885b01cde3a9572021d402e30a86c5f1658be55d235ed74ba33d3927
-file_count: 3717
+file_count: 3718
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -7107,6 +7107,12 @@ files:
     vtable_size: '0x3d0'
     vtable_symbol: CEngineServer_vtable
     vtable_va: '0x180540310'
+  engine/CEngineServiceMgr_DeactivateLoop.linux.yaml:
+    func_name: CEngineServiceMgr_DeactivateLoop
+    func_rva: '0x368e80'
+    func_sig: 55 48 89 E5 41 57 49 89 FF 41 56 48 8D 45 ?? 41 55 48 89 C7
+    func_size: '0x135'
+    func_va: '0x368e80'
   engine/CEngineServiceMgr_DeactivateLoop.windows.yaml:
     func_name: CEngineServiceMgr_DeactivateLoop
     func_rva: '0x211570'
@@ -23882,7 +23888,7 @@ files:
     func_name: CCSCustomHudLayout_SetDialogVariableStringForPlayer
     func_rva: '0x8ad0a0'
     func_sig: 40 53 56 57 48 83 EC 20 48 63 DA 49 8B F1 49 8B C0 48 8B F9 3B 99 B8 04 00 00 7D 5E 48 89 6C 24 50 4C 8D 44 24 40 33 ED 48 8B D0 66 89 6C 24 40 E8 6B 1B FF FF 84 C0 74
-    func_size: '0x0'
+    func_size: '0x82'
     func_va: '0x1808ad0a0'
   server/CCSCustomHudLayout_SetHasClass.linux.yaml:
     func_name: CCSCustomHudLayout_SetHasClass
@@ -23906,7 +23912,7 @@ files:
     func_name: CCSCustomHudLayout_SetHasClassForPlayer
     func_rva: '0x8adac0'
     func_sig: 40 53 56 57 48 83 EC 20 48 63 DA 49 8B F1 49 8B C0 48 8B F9 3B 99 B8 04 00 00 7D 5E 48 89 6C 24 50 4C 8D 44 24 40 33 ED 48 8B D0 66 89 6C 24 40 E8 4B 11 FF FF 84 C0 74
-    func_size: '0x0'
+    func_size: '0x82'
     func_va: '0x1808adac0'
   server/CCSCustomHudLayout_SetInputCaptureEnabled.linux.yaml:
     func_name: CCSCustomHudLayout_SetInputCaptureEnabled
@@ -27344,7 +27350,7 @@ files:
     func_name: CCSPlayer_MovementServices_FullWalkMove
     func_rva: '0xab4820'
     func_sig: 48 8B C4 48 89 70 18 48 89 78 20 55 41 54
-    func_size: '0x0'
+    func_size: '0x103f'
     func_va: '0x180ab4820'
   server/CCSPlayer_MovementServices_FullWalkMove_SpeedClamp.linux.yaml:
     patch_bytes: 66 0F 1F 44 00 00
@@ -27366,7 +27372,7 @@ files:
     func_name: CCSPlayer_MovementServices_Pawn
     func_rva: '0xc35500'
     func_sig: 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B F2 48 8B F9 E8 F6 07
-    func_size: '0x0'
+    func_size: '0x2f'
     func_va: '0x180c35500'
   server/CCSPlayer_MovementServices_ProcessMovement.linux.yaml:
     func_name: CCSPlayer_MovementServices_ProcessMovement
@@ -28622,7 +28628,7 @@ files:
     func_name: CDecoyProjectile_Create
     func_rva: '0x985350'
     func_sig: 48 8B C4 55 56 48 81 EC 58 01 00 00 48 89 58 08
-    func_size: '0x0'
+    func_size: '0x511'
     func_va: '0x180985350'
   server/CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup.linux.yaml:
     func_name: CDedicatedServerWorkshopManager_SwitchToWorkshopMapGroup
@@ -44845,7 +44851,7 @@ files:
     func_name: UpdateItemView
     func_rva: '0x1b93d30'
     func_sig: 55 49 89 F0 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 81 EC ?? ?? ?? ??
-    func_size: '0x0'
+    func_size: '0x4bf'
     func_va: '0x1b93d30'
   server/UpdateItemView.windows.yaml:
     func_name: UpdateItemView
@@ -46561,5 +46567,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T09:33:36Z'
+last_publish_time: '2026-09-10T09:52:19Z'
 schema_version: 5

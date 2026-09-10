@@ -28,10 +28,51 @@ SNAPSHOT = "gamesymbols/{gamever}.yaml"
 
 
 def covered_names(gamever):
+    """Every gamedata key the snapshot can already satisfy.
+
+    Reading only func_name missed two whole groups and produced false
+    "intet fund" rows: artifacts that are not functions (structmember, gv,
+    patch, vtable carry no func_name), and keys the config resolves through an
+    ALIAS onto a covered symbol - which is exactly how
+    "CCSPlayer_WeaponServices::GetSlot" reaches
+    CCSPlayer_WeaponServices_Weapon_GetSlot.
+    """
+    import re as _re
     import yaml
     snap = yaml.safe_load(open(SNAPSHOT.format(gamever=gamever)))
-    return {e["func_name"] for e in (snap.get("files") or {}).values()
-            if isinstance(e, dict) and "func_name" in e}
+    files = snap.get("files") or {}
+
+    covered = set()
+    # symbol name from each artifact path: <module>/<Symbol>.<platform>.yaml
+    for key in files:
+        base = os.path.basename(str(key))
+        m = _re.fullmatch(r"(.+)\.(?:linux|windows)\.yaml", base)
+        if m:
+            covered.add(m.group(1))
+    # plus the identity fields, for any category that carries one
+    for entry in files.values():
+        if not isinstance(entry, dict):
+            continue
+        for field in ("func_name", "gv_name", "patch_name", "vtable_class"):
+            if isinstance(entry.get(field), str):
+                covered.add(entry[field])
+
+    # config aliases: a key is satisfied when its canonical symbol is covered
+    cfg_path = f"configs/{gamever}.yaml"
+    if os.path.exists(cfg_path):
+        cfg = yaml.safe_load(open(cfg_path)) or {}
+        for module in cfg.get("modules", []) or []:
+            for sym in module.get("symbols", []) or []:
+                if not isinstance(sym, dict):
+                    continue
+                name = sym.get("name")
+                if not isinstance(name, str) or name not in covered:
+                    continue
+                for alias in sym.get("alias") or []:
+                    if isinstance(alias, str):
+                        covered.add(alias)
+                        covered.add(alias.replace("::", "_"))
+    return covered
 
 
 def analyzed_index(artifactdir, platform):

@@ -3,6 +3,16 @@
     {
       "changes": [
         {
+          "after": 2800,
+          "before": 836,
+          "line": 106,
+          "path": [
+            "CBaseEntity::m_iTeamNum",
+            "offsets",
+            "windows"
+          ]
+        },
+        {
           "after": 1572,
           "before": 836,
           "line": 107,
@@ -222,6 +232,16 @@
         {
           "after": 104,
           "before": 322,
+          "line": 218,
+          "path": [
+            "CServerSideClient::m_bIsHLTV",
+            "offsets",
+            "windows"
+          ]
+        },
+        {
+          "after": 104,
+          "before": 322,
           "line": 219,
           "path": [
             "CServerSideClient::m_bIsHLTV",
@@ -350,6 +370,18 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": 187,
+          "before": 56,
+          "line": 127,
+          "path": [
+            "CServerSideClient::m_UserIDString",
+            "offsets",
+            "windows"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         127,
@@ -357,7 +389,7 @@
         130
       ],
       "name": "CServerSideClient::m_UserIDString",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -370,10 +402,26 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 80,
+          "before": 88,
+          "line": 72,
+          "path": [
+            "GameResourceServiceServer::m_pEntitySystem",
+            "offsets",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        71,
+        72,
+        74
+      ],
       "name": "GameResourceServiceServer::m_pEntitySystem",
-      "updated": false
+      "updated": true
     },
     {
       "changes": [
@@ -426,8 +474,8 @@
   "gamever": "14180",
   "schema_version": 2,
   "summary": {
-    "covered": 29,
+    "covered": 30,
     "total": 30,
-    "updated": 8
+    "updated": 10
   }
 }

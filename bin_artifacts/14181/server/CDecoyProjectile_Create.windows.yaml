@@ -1,5 +1,5 @@
 func_name: CDecoyProjectile_Create
 func_va: '0x180985350'
 func_rva: '0x985350'
-func_size: '0x0'
+func_size: '0x511'
 func_sig: 48 8B C4 55 56 48 81 EC 58 01 00 00 48 89 58 08

@@ -69,7 +69,7 @@
   "GameResourceServiceServer::m_pEntitySystem": {
     "offsets": {
       "windows": 88,
-      "linux": 88
+      "linux": 80
     },
     "comment": "resolves the game entity system"
   },
@@ -103,7 +103,7 @@
   },
   "CBaseEntity::m_iTeamNum": {
     "offsets": {
-      "windows": 836,
+      "windows": 2800,
       "linux": 1572
     },
     "comment": "reads the current controller team"
@@ -124,7 +124,7 @@
   },
   "CServerSideClient::m_UserIDString": {
     "offsets": {
-      "windows": 56,
+      "windows": 187,
       "linux": 56
     },
     "comment": "user id string"
@@ -215,7 +215,7 @@
   },
   "CServerSideClient::m_bIsHLTV": {
     "offsets": {
-      "windows": 322,
+      "windows": 104,
       "linux": 104
     },
     "comment": "SourceTV flag"

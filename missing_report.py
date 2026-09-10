@@ -6,6 +6,11 @@ synthesized filenames), checks bin/ + bin_artifacts/ for each expected file,
 and groups the gaps per module with the IDB to hunt in. Seed symbols (the
 local gamedata consumers) are starred; upstream's long tail is counted.
 
+Config-declared SYMBOLS count as expected artifacts too, not only find-tasks.
+A symbol declared without a task is never hunted, so it used to be invisible
+here while gamedata generation still asked for it and logged missing_yaml -
+that gap hid 28 symbols on 14181. Those rows are marked "ingen find-task".
+
 Usage:
   uv run missing_report.py -gamever 14178b              # begge platforme, SEED-fokus
   uv run missing_report.py -gamever 14178b -all         # alt i detaljer
@@ -61,7 +66,27 @@ def main():
                     if not isinstance(out, str):
                         continue
                     fname = out.replace("{platform}", plat)
-                    expected.setdefault(plat, {}).setdefault(mod, []).append((short, fname, short in seed_names))
+                    expected.setdefault(plat, {}).setdefault(mod, []).append(
+                        (short, fname, short in seed_names, False))
+
+    # symbols without a find-task: declared, never hunted, still demanded by
+    # the gamedata generators
+    for module in cfg.get("modules", []):
+        mod = module.get("name", "?")
+        for sym in module.get("symbols", []):
+            if not isinstance(sym, dict):
+                continue
+            name = sym.get("name")
+            if not isinstance(name, str) or not name.strip() or sym.get("category") == "struct":
+                continue
+            sym_platforms = ([sym["platform"]] if sym.get("platform") in ("linux", "windows")
+                             else ["linux", "windows"])
+            for plat in sym_platforms:
+                fname = f"{name}.{plat}.yaml"
+                bucket = expected.setdefault(plat, {}).setdefault(mod, [])
+                if any(existing == fname for _, existing, _, _ in bucket):
+                    continue
+                bucket.append((name, fname, name in seed_names, True))
 
     for platform in ([args.platform] if args.platform else ["linux", "windows"]):
         print(f"\n{'=' * 70}\n{platform.upper()}  —  jagt-IDB: {BINARIES[platform]}   (gamever {args.gamever})\n{'=' * 70}")
@@ -71,30 +96,34 @@ def main():
                 rel = os.path.relpath(f, d)
                 have.add(f"{os.path.dirname(rel)}/{os.path.basename(rel)}")
         entries = expected.get(platform, {})
-        grand = grand_seed = 0
+        grand = grand_seed = grand_notask = 0
         for mod in sorted(entries):
-            rows = [(t, fn, s) for t, fn, s in entries[mod] if f"{mod}/{fn}" not in have]
+            rows = [r for r in entries[mod] if f"{mod}/{r[1]}" not in have]
             if not rows:
                 print(f"\n[{mod}]  komplett ✓")
                 continue
             seed_rows = [r for r in rows if r[2]]
-            grand += len(rows); grand_seed += len(seed_rows)
+            notask_rows = [r for r in rows if r[3]]
+            grand += len(rows); grand_seed += len(seed_rows); grand_notask += len(notask_rows)
             if args.all:
                 print(f"\n[{mod}]  {len(rows)} manglende:")
-                for t, fn, s in rows:
-                    mark = "  ★SEED" if s else ""
+                for t, fn, sd, notask in rows:
+                    mark = "  ★SEED" if sd else ""
+                    mark += "  [ingen find-task]" if notask else ""
                     note = "" if fn.startswith(t + ".") else f"   (fil: {fn})"
                     print(f"    {t}{mark}{note}")
             else:
-                print(f"\n[{mod}]  {len(rows)} manglende  ({len(seed_rows)} ★SEED, {len(rows) - len(seed_rows)} upstream)")
-                for t, fn, s in seed_rows:
+                print(f"\n[{mod}]  {len(rows)} manglende  ({len(seed_rows)} ★SEED, "
+                      f"{len(notask_rows)} uden find-task, {len(rows) - len(seed_rows)} upstream)")
+                for t, fn, sd, notask in seed_rows:
                     note = "" if fn.startswith(t + ".") else f"   (fil: {fn})"
-                    print(f"    {t}  ★SEED{note}")
-        print(f"\n--- {platform}: {grand} manglende i alt ({grand_seed} ★SEED)")
+                    print(f"    {t}  ★SEED{'  [ingen find-task]' if notask else ''}{note}")
+        print(f"\n--- {platform}: {grand} manglende i alt ({grand_seed} ★SEED, "
+              f"{grand_notask} uden find-task)")
         outfile = f"missing_{platform}_{args.gamever}.txt"
         with open(outfile, "w") as f:
             for mod in sorted(entries):
-                for t, fn, s in expected[platform][mod]:
+                for t, fn, sd, notask in expected[platform][mod]:
                     if f"{mod}/{fn}" not in have:
                         f.write(f"{mod}/{t} -> {fn}\n")
         print(f"liste gemt: {outfile}")
