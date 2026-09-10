@@ -2,16 +2,16 @@
 name: find-CLoopModeGame_ctor
 description: |
   Agent fallback for CLoopModeGame_ctor (auto-generated, category: func). Locate
-  CLoopModeGame_ctor in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CLoopModeGame::CLoopModeGame in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CLoopModeGame_ctor, CLoopModeGame_ctor
+  Trigger: CLoopModeGame_ctor, CLoopModeGame::CLoopModeGame
 disable-model-invocation: true
 ---
 
 # Find CLoopModeGame_ctor
 
-Target: `CLoopModeGame_ctor` (func) in the module loaded in THIS session.
+Target: `CLoopModeGame::CLoopModeGame` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CLoopModeGame_ctor.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

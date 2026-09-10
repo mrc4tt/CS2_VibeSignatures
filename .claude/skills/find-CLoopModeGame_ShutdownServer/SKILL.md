@@ -2,16 +2,16 @@
 name: find-CLoopModeGame_ShutdownServer
 description: |
   Agent fallback for CLoopModeGame_ShutdownServer (auto-generated, category: func). Locate
-  CLoopModeGame_ShutdownServer in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CLoopModeGame::ShutdownServer in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CLoopModeGame_ShutdownServer, CLoopModeGame_ShutdownServer
+  Trigger: CLoopModeGame_ShutdownServer, CLoopModeGame::ShutdownServer
 disable-model-invocation: true
 ---
 
 # Find CLoopModeGame_ShutdownServer
 
-Target: `CLoopModeGame_ShutdownServer` (func) in the module loaded in THIS session.
+Target: `CLoopModeGame::ShutdownServer` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CLoopModeGame_ShutdownServer.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

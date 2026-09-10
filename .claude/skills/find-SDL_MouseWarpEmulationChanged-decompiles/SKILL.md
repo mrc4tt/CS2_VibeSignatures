@@ -2,16 +2,16 @@
 name: find-SDL_MouseWarpEmulationChanged-decompiles
 description: |
   Agent fallback for SDL_MouseWarpEmulationChanged-decompiles (auto-generated, category: func). Locate
-  SDL_MouseWarpEmulationChanged-decompiles in the CS2 SDL3 module via IDA Pro MCP and emit a fresh,
+  SDL_MouseWarpEmulationChanged in the CS2 SDL3 module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: SDL_MouseWarpEmulationChanged-decompiles, SDL_MouseWarpEmulationChanged-decompiles
+  Trigger: SDL_MouseWarpEmulationChanged-decompiles, SDL_MouseWarpEmulationChanged
 disable-model-invocation: true
 ---
 
 # Find SDL_MouseWarpEmulationChanged-decompiles
 
-Target: `SDL_MouseWarpEmulationChanged-decompiles` (func) in the module loaded in THIS session.
+Target: `SDL_MouseWarpEmulationChanged` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `SDL_MouseWarpEmulationChanged.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CEntityInstance_vdtor
 description: |
   Agent fallback for CEntityInstance_vdtor (auto-generated, category: vfunc). Locate
-  CEntityInstance_vdtor in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CEntityInstance::~CEntityInstance (virtual) in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CEntityInstance_vdtor, CEntityInstance_vdtor
+  Trigger: CEntityInstance_vdtor, CEntityInstance::~CEntityInstance (virtual)
 disable-model-invocation: true
 ---
 
 # Find CEntityInstance_vdtor
 
-Target: `CEntityInstance_vdtor` (vfunc) in the module loaded in THIS session.
+Target: `CEntityInstance::~CEntityInstance (virtual)` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEntityInstance_vdtor.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

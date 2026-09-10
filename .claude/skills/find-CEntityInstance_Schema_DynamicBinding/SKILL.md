@@ -2,16 +2,16 @@
 name: find-CEntityInstance_Schema_DynamicBinding
 description: |
   Agent fallback for CEntityInstance_Schema_DynamicBinding (auto-generated, category: vfunc). Locate
-  CEntityInstance_Schema_DynamicBinding in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CEntityInstance::Schema_DynamicBinding in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CEntityInstance_Schema_DynamicBinding, CEntityInstance_Schema_DynamicBinding
+  Trigger: CEntityInstance_Schema_DynamicBinding, CEntityInstance::Schema_DynamicBinding
 disable-model-invocation: true
 ---
 
 # Find CEntityInstance_Schema_DynamicBinding
 
-Target: `CEntityInstance_Schema_DynamicBinding` (vfunc) in the module loaded in THIS session.
+Target: `CEntityInstance::Schema_DynamicBinding` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEntityInstance_Schema_DynamicBinding.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

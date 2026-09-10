@@ -2,16 +2,16 @@
 name: find-CNetworkClientService_ReceivedServerInfo
 description: |
   Agent fallback for CNetworkClientService_ReceivedServerInfo (auto-generated, category: vfunc). Locate
-  CNetworkClientService_ReceivedServerInfo in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkClientService::ReceivedServerInfo in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkClientService_ReceivedServerInfo, CNetworkClientService_ReceivedServerInfo
+  Trigger: CNetworkClientService_ReceivedServerInfo, CNetworkClientService::ReceivedServerInfo
 disable-model-invocation: true
 ---
 
 # Find CNetworkClientService_ReceivedServerInfo
 
-Target: `CNetworkClientService_ReceivedServerInfo` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkClientService::ReceivedServerInfo` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkClientService_ReceivedServerInfo.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

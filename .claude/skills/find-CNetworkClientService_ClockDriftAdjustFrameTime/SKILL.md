@@ -2,16 +2,16 @@
 name: find-CNetworkClientService_ClockDriftAdjustFrameTime
 description: |
   Agent fallback for CNetworkClientService_ClockDriftAdjustFrameTime (auto-generated, category: vfunc). Locate
-  CNetworkClientService_ClockDriftAdjustFrameTime in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkClientService::ClockDriftAdjustFrameTime in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkClientService_ClockDriftAdjustFrameTime, CNetworkClientService_ClockDriftAdjustFrameTime
+  Trigger: CNetworkClientService_ClockDriftAdjustFrameTime, CNetworkClientService::ClockDriftAdjustFrameTime
 disable-model-invocation: true
 ---
 
 # Find CNetworkClientService_ClockDriftAdjustFrameTime
 
-Target: `CNetworkClientService_ClockDriftAdjustFrameTime` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkClientService::ClockDriftAdjustFrameTime` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkClientService_ClockDriftAdjustFrameTime.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,7 +2,7 @@
 name: find-CEntityInstance_vtable
 description: |
   Agent fallback for CEntityInstance_vtable (auto-generated, category: func). Locate
-  CEntityInstance_vtable in the CS2 client module via IDA Pro MCP and emit a fresh,
+  CEntityInstance_vtable in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
   Trigger: CEntityInstance_vtable, CEntityInstance_vtable
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEntityInstance_vtable.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

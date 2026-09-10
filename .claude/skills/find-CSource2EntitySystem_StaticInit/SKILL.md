@@ -2,16 +2,16 @@
 name: find-CSource2EntitySystem_StaticInit
 description: |
   Agent fallback for CSource2EntitySystem_StaticInit (auto-generated, category: func). Locate
-  CSource2EntitySystem_StaticInit in the CS2 client module via IDA Pro MCP and emit a fresh,
+  CSource2EntitySystem::StaticInit in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CSource2EntitySystem_StaticInit, CSource2EntitySystem_StaticInit
+  Trigger: CSource2EntitySystem_StaticInit, CSource2EntitySystem::StaticInit
 disable-model-invocation: true
 ---
 
 # Find CSource2EntitySystem_StaticInit
 
-Target: `CSource2EntitySystem_StaticInit` (func) in the module loaded in THIS session.
+Target: `CSource2EntitySystem::StaticInit` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CSource2EntitySystem_StaticInit.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

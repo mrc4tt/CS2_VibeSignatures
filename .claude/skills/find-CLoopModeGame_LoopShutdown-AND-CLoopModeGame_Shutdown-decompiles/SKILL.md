@@ -2,16 +2,16 @@
 name: find-CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown-decompiles
 description: |
   Agent fallback for CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown-decompiles (auto-generated, category: func). Locate
-  CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown-decompiles in the CS2 client module via IDA Pro MCP and emit a fresh,
+  CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown-decompiles, CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown-decompiles
+  Trigger: CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown-decompiles, CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown
 disable-model-invocation: true
 ---
 
 # Find CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown-decompiles
 
-Target: `CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown-decompiles` (func) in the module loaded in THIS session.
+Target: `CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CLoopModeGame_LoopShutdown-AND-CLoopModeGame_Shutdown.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

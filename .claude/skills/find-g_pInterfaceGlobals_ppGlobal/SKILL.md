@@ -2,7 +2,7 @@
 name: find-g_pInterfaceGlobals_ppGlobal
 description: |
   Agent fallback for g_pInterfaceGlobals_ppGlobal (auto-generated, category: func). Locate
-  g_pInterfaceGlobals_ppGlobal in the CS2 client module via IDA Pro MCP and emit a fresh,
+  g_pInterfaceGlobals_ppGlobal in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
   Trigger: g_pInterfaceGlobals_ppGlobal, g_pInterfaceGlobals_ppGlobal
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `g_pInterfaceGlobals_ppGlobal.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

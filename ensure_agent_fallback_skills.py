@@ -20,7 +20,8 @@ import os
 import re
 
 SKILLS_DIR = ".claude/skills"
-SUFFIXES = ("-decompiles", "-inlined", "-noinline", "-engine", "-server", "-linux", "-windows")
+SUFFIXES = ("-decompiles", "-inlined", "-noinline", "-engine", "-server", "-linux", "-windows",
+            "-client", "-local", "-binding", "-verified", "-impl", "-deinlined")
 
 TEMPLATE = '''---
 name: find-{task}
@@ -55,7 +56,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{{platform}}.yaml` with EXACTLY these fields:
+Write `{artifact}.{{platform}}.yaml` with EXACTLY these fields:
 
 {schema}
 
@@ -130,6 +131,8 @@ def newest_config():
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("-config", help="analysis config (default: newest)")
+    ap.add_argument("-force", action="store_true",
+                    help="also rewrite existing AUTO-GENERATED skills (never hand-written ones)")
     args = ap.parse_args()
     cfg_path = args.config or newest_config()
     if not cfg_path or not os.path.exists(cfg_path):
@@ -150,15 +153,46 @@ def main():
             short = task_name[len("find-"):]
             skill_path = os.path.join(SKILLS_DIR, task_name, "SKILL.md")
             if os.path.exists(skill_path):
-                continue
+                if not args.force:
+                    continue
+                if "auto-generated" not in open(skill_path, encoding="utf-8").read():
+                    continue        # hand-written: never touched
 
             entry = symbols.get(short)
+            target = short
             if entry is None:
                 base = short
                 for suf in SUFFIXES:
                     if base.endswith(suf):
                         base = base[: -len(suf)]
                 entry = symbols.get(base)
+                if entry is not None:
+                    target = base
+                elif "-" in short:
+                    # any single trailing role suffix, not just the known list:
+                    # find-CEnvHudHint_API_ShowHudHint-binding targets the symbol
+                    # CEnvHudHint_API_ShowHudHint, and naming the target
+                    # "...-binding" told the agent to find and write a symbol that
+                    # does not exist
+                    stem = short.rsplit("-", 1)[0]
+                    if stem in symbols:
+                        entry = symbols[stem]
+                        target = stem
+                else:
+                    target = base
+            # An artifact is ALWAYS <symbol>.<platform>.yaml - a task's role suffix
+            # is never part of it. So the target must not keep one even when no
+            # symbol is declared to confirm the stem, which is how 47 skills came to
+            # tell an agent to write e.g. CEngineServer_GetSteamUniverse-linux.yaml.
+            # gentaget, ikke én gang: "CloseSocket-inlined-linux" har to suffikser
+            changed = True
+            while changed:
+                changed = False
+                for suf in SUFFIXES:
+                    if target.endswith(suf):
+                        target = target[: -len(suf)]
+                        changed = True
+                        break
             category = (entry or {}).get("category") or "func"
             if category not in METHODS:
                 category = "func"
@@ -172,10 +206,16 @@ def main():
             elif aliases:
                 display = aliases[0]
             else:
-                display = short
+                display = target
 
             schema = {"func": FUNC_SCHEMA, "vfunc": VFUNC_SCHEMA, "structmember": MEMBER_SCHEMA}[category]
-            body = TEMPLATE.format(task=short, display=display, category=category,
+            # task = identiteten (name:, overskrift, Trigger) og SKAL matche mappen;
+            # display = det symbol agenten skal finde og skrive
+            # artifact = filnavnets stamme, ALTID symbolnavnet (aldrig aliaset og
+            # aldrig taskens rolle-suffiks) - "<task>.{platform}.yaml" var literal
+            # prosa og lod agenten gaette
+            body = TEMPLATE.format(task=short, display=display, artifact=target,
+                                   category=category,
                                    module=mod_name, method=METHODS[category], schema=schema)
             os.makedirs(os.path.dirname(skill_path), exist_ok=True)
             with open(skill_path, "w", encoding="utf-8") as f:

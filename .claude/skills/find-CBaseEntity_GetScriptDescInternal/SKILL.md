@@ -2,16 +2,16 @@
 name: find-CBaseEntity_GetScriptDescInternal
 description: |
   Agent fallback for CBaseEntity_GetScriptDescInternal (auto-generated, category: func). Locate
-  CBaseEntity_GetScriptDescInternal in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CBaseEntity::GetScriptDescInternal in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CBaseEntity_GetScriptDescInternal, CBaseEntity_GetScriptDescInternal
+  Trigger: CBaseEntity_GetScriptDescInternal, CBaseEntity::GetScriptDescInternal
 disable-model-invocation: true
 ---
 
 # Find CBaseEntity_GetScriptDescInternal
 
-Target: `CBaseEntity_GetScriptDescInternal` (func) in the module loaded in THIS session.
+Target: `CBaseEntity::GetScriptDescInternal` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CBaseEntity_GetScriptDescInternal.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

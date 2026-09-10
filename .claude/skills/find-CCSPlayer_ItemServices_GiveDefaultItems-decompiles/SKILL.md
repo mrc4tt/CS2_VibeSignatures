@@ -2,16 +2,16 @@
 name: find-CCSPlayer_ItemServices_GiveDefaultItems-decompiles
 description: |
   Agent fallback for CCSPlayer_ItemServices_GiveDefaultItems-decompiles (auto-generated, category: func). Locate
-  CCSPlayer_ItemServices_GiveDefaultItems-decompiles in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CCSPlayer_ItemServices::GiveDefaultItems in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CCSPlayer_ItemServices_GiveDefaultItems-decompiles, CCSPlayer_ItemServices_GiveDefaultItems-decompiles
+  Trigger: CCSPlayer_ItemServices_GiveDefaultItems-decompiles, CCSPlayer_ItemServices::GiveDefaultItems
 disable-model-invocation: true
 ---
 
 # Find CCSPlayer_ItemServices_GiveDefaultItems-decompiles
 
-Target: `CCSPlayer_ItemServices_GiveDefaultItems-decompiles` (func) in the module loaded in THIS session.
+Target: `CCSPlayer_ItemServices::GiveDefaultItems` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CCSPlayer_ItemServices_GiveDefaultItems.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

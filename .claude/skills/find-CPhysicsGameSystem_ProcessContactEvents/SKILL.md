@@ -2,16 +2,16 @@
 name: find-CPhysicsGameSystem_ProcessContactEvents
 description: |
   Agent fallback for CPhysicsGameSystem_ProcessContactEvents (auto-generated, category: func). Locate
-  CPhysicsGameSystem_ProcessContactEvents in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CPhysicsGameSystem::ProcessContactEvents in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CPhysicsGameSystem_ProcessContactEvents, CPhysicsGameSystem_ProcessContactEvents
+  Trigger: CPhysicsGameSystem_ProcessContactEvents, CPhysicsGameSystem::ProcessContactEvents
 disable-model-invocation: true
 ---
 
 # Find CPhysicsGameSystem_ProcessContactEvents
 
-Target: `CPhysicsGameSystem_ProcessContactEvents` (func) in the module loaded in THIS session.
+Target: `CPhysicsGameSystem::ProcessContactEvents` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CPhysicsGameSystem_ProcessContactEvents.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

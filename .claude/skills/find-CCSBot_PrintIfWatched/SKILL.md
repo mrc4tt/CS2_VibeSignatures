@@ -2,16 +2,16 @@
 name: find-CCSBot_PrintIfWatched
 description: |
   Agent fallback for CCSBot_PrintIfWatched (auto-generated, category: func). Locate
-  CCSBot_PrintIfWatched in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CCSBot::PrintIfWatched in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CCSBot_PrintIfWatched, CCSBot_PrintIfWatched
+  Trigger: CCSBot_PrintIfWatched, CCSBot::PrintIfWatched
 disable-model-invocation: true
 ---
 
 # Find CCSBot_PrintIfWatched
 
-Target: `CCSBot_PrintIfWatched` (func) in the module loaded in THIS session.
+Target: `CCSBot::PrintIfWatched` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CCSBot_PrintIfWatched.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

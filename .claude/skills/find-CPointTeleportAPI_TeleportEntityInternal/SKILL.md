@@ -2,16 +2,16 @@
 name: find-CPointTeleportAPI_TeleportEntityInternal
 description: |
   Agent fallback for CPointTeleportAPI_TeleportEntityInternal (auto-generated, category: func). Locate
-  CPointTeleportAPI_TeleportEntityInternal in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CPointTeleportAPI::TeleportEntityInternal in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CPointTeleportAPI_TeleportEntityInternal, CPointTeleportAPI_TeleportEntityInternal
+  Trigger: CPointTeleportAPI_TeleportEntityInternal, CPointTeleportAPI::TeleportEntityInternal
 disable-model-invocation: true
 ---
 
 # Find CPointTeleportAPI_TeleportEntityInternal
 
-Target: `CPointTeleportAPI_TeleportEntityInternal` (func) in the module loaded in THIS session.
+Target: `CPointTeleportAPI::TeleportEntityInternal` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CPointTeleportAPI_TeleportEntityInternal.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CSpawnGroupMgrGameSystem_SpawnGroupSpawnEntitiesInternal
 description: |
   Agent fallback for CSpawnGroupMgrGameSystem_SpawnGroupSpawnEntitiesInternal (auto-generated, category: func). Locate
-  CSpawnGroupMgrGameSystem_SpawnGroupSpawnEntitiesInternal in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CSpawnGroupMgrGameSystem::SpawnGroupSpawnEntitiesInternal in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CSpawnGroupMgrGameSystem_SpawnGroupSpawnEntitiesInternal, CSpawnGroupMgrGameSystem_SpawnGroupSpawnEntitiesInternal
+  Trigger: CSpawnGroupMgrGameSystem_SpawnGroupSpawnEntitiesInternal, CSpawnGroupMgrGameSystem::SpawnGroupSpawnEntitiesInternal
 disable-model-invocation: true
 ---
 
 # Find CSpawnGroupMgrGameSystem_SpawnGroupSpawnEntitiesInternal
 
-Target: `CSpawnGroupMgrGameSystem_SpawnGroupSpawnEntitiesInternal` (func) in the module loaded in THIS session.
+Target: `CSpawnGroupMgrGameSystem::SpawnGroupSpawnEntitiesInternal` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CSpawnGroupMgrGameSystem_SpawnGroupSpawnEntitiesInternal.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

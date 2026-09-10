@@ -2,16 +2,16 @@
 name: find-CBaseEntity_NetworkStateChanged-noinline
 description: |
   Agent fallback for CBaseEntity_NetworkStateChanged-noinline (auto-generated, category: vfunc). Locate
-  CBaseEntity_NetworkStateChanged-noinline in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CBaseEntity::NetworkStateChanged in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CBaseEntity_NetworkStateChanged-noinline, CBaseEntity_NetworkStateChanged-noinline
+  Trigger: CBaseEntity_NetworkStateChanged-noinline, CBaseEntity::NetworkStateChanged
 disable-model-invocation: true
 ---
 
 # Find CBaseEntity_NetworkStateChanged-noinline
 
-Target: `CBaseEntity_NetworkStateChanged-noinline` (vfunc) in the module loaded in THIS session.
+Target: `CBaseEntity::NetworkStateChanged` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CBaseEntity_NetworkStateChanged.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

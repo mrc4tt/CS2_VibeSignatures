@@ -2,16 +2,16 @@
 name: find-CLoopTypeBase_DeactivateLoop
 description: |
   Agent fallback for CLoopTypeBase_DeactivateLoop (auto-generated, category: vfunc). Locate
-  CLoopTypeBase_DeactivateLoop in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CLoopTypeBase::DeactivateLoop in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CLoopTypeBase_DeactivateLoop, CLoopTypeBase_DeactivateLoop
+  Trigger: CLoopTypeBase_DeactivateLoop, CLoopTypeBase::DeactivateLoop
 disable-model-invocation: true
 ---
 
 # Find CLoopTypeBase_DeactivateLoop
 
-Target: `CLoopTypeBase_DeactivateLoop` (vfunc) in the module loaded in THIS session.
+Target: `CLoopTypeBase::DeactivateLoop` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CLoopTypeBase_DeactivateLoop.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

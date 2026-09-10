@@ -2,16 +2,16 @@
 name: find-CServerSideClient_ctor
 description: |
   Agent fallback for CServerSideClient_ctor (auto-generated, category: func). Locate
-  CServerSideClient_ctor in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CServerSideClient::CServerSideClient in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CServerSideClient_ctor, CServerSideClient_ctor
+  Trigger: CServerSideClient_ctor, CServerSideClient::CServerSideClient
 disable-model-invocation: true
 ---
 
 # Find CServerSideClient_ctor
 
-Target: `CServerSideClient_ctor` (func) in the module loaded in THIS session.
+Target: `CServerSideClient::CServerSideClient` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CServerSideClient_ctor.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CNetworkGameServerBase_ServerSimulateInternal-linux
 description: |
   Agent fallback for CNetworkGameServerBase_ServerSimulateInternal-linux (auto-generated, category: func). Locate
-  CNetworkGameServerBase_ServerSimulateInternal-linux in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkGameServerBase::ServerSimulateInternal in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkGameServerBase_ServerSimulateInternal-linux, CNetworkGameServerBase_ServerSimulateInternal-linux
+  Trigger: CNetworkGameServerBase_ServerSimulateInternal-linux, CNetworkGameServerBase::ServerSimulateInternal
 disable-model-invocation: true
 ---
 
 # Find CNetworkGameServerBase_ServerSimulateInternal-linux
 
-Target: `CNetworkGameServerBase_ServerSimulateInternal-linux` (func) in the module loaded in THIS session.
+Target: `CNetworkGameServerBase::ServerSimulateInternal` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkGameServerBase_ServerSimulateInternal.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

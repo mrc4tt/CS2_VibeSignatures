@@ -2,16 +2,16 @@
 name: find-CGameEntitySystem_FindEntityByClassName
 description: |
   Agent fallback for CGameEntitySystem_FindEntityByClassName (auto-generated, category: func). Locate
-  CGameEntitySystem_FindEntityByClassName in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CGameEntitySystem::FindEntityByClassName in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CGameEntitySystem_FindEntityByClassName, CGameEntitySystem_FindEntityByClassName
+  Trigger: CGameEntitySystem_FindEntityByClassName, CGameEntitySystem::FindEntityByClassName
 disable-model-invocation: true
 ---
 
 # Find CGameEntitySystem_FindEntityByClassName
 
-Target: `CGameEntitySystem_FindEntityByClassName` (func) in the module loaded in THIS session.
+Target: `CGameEntitySystem::FindEntityByClassName` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CGameEntitySystem_FindEntityByClassName.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

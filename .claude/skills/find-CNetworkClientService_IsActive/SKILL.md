@@ -2,16 +2,16 @@
 name: find-CNetworkClientService_IsActive
 description: |
   Agent fallback for CNetworkClientService_IsActive (auto-generated, category: vfunc). Locate
-  CNetworkClientService_IsActive in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkClientService::IsActive in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkClientService_IsActive, CNetworkClientService_IsActive
+  Trigger: CNetworkClientService_IsActive, CNetworkClientService::IsActive
 disable-model-invocation: true
 ---
 
 # Find CNetworkClientService_IsActive
 
-Target: `CNetworkClientService_IsActive` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkClientService::IsActive` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkClientService_IsActive.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

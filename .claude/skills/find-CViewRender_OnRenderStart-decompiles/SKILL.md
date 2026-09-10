@@ -2,16 +2,16 @@
 name: find-CViewRender_OnRenderStart-decompiles
 description: |
   Agent fallback for CViewRender_OnRenderStart-decompiles (auto-generated, category: vfunc). Locate
-  CViewRender_OnRenderStart-decompiles in the CS2 client module via IDA Pro MCP and emit a fresh,
+  CViewRender::OnRenderStart in the CS2 client module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CViewRender_OnRenderStart-decompiles, CViewRender_OnRenderStart-decompiles
+  Trigger: CViewRender_OnRenderStart-decompiles, CViewRender::OnRenderStart
 disable-model-invocation: true
 ---
 
 # Find CViewRender_OnRenderStart-decompiles
 
-Target: `CViewRender_OnRenderStart-decompiles` (vfunc) in the module loaded in THIS session.
+Target: `CViewRender::OnRenderStart` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CViewRender_OnRenderStart.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

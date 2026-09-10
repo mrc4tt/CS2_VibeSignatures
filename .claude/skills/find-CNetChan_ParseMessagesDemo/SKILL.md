@@ -1,17 +1,17 @@
 ---
 name: find-CNetChan_ParseMessagesDemo
 description: |
-  Agent fallback for CNetChan_ParseMessagesDemo (auto-generated, category: func). Locate
-  CNetChan_ParseMessagesDemo in the CS2 networksystem module via IDA Pro MCP and emit a fresh,
+  Agent fallback for CNetChan_ParseMessagesDemo (auto-generated, category: vfunc). Locate
+  CNetChan::ParseMessagesDemo in the CS2 networksystem module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetChan_ParseMessagesDemo, CNetChan_ParseMessagesDemo
+  Trigger: CNetChan_ParseMessagesDemo, CNetChan::ParseMessagesDemo
 disable-model-invocation: true
 ---
 
 # Find CNetChan_ParseMessagesDemo
 
-Target: `CNetChan_ParseMessagesDemo` (func) in the module loaded in THIS session.
+Target: `CNetChan::ParseMessagesDemo` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -19,9 +19,9 @@ Target: `CNetChan_ParseMessagesDemo` (func) in the module loaded in THIS session
 
 ## Method
 
-Locate via distinctive constants/strings in the body, cross-references from
-known callers/callees, or the owning class vtable (RTTI) if virtual. Verify by
-decompilation before committing to a candidate.
+Resolve the owning class vtable via RTTI (typeinfo-name string -> _ZTI object
+-> vtable). Identify the slot by xrefs from expected call sites. Slots commonly
+differ between platforms - never assume identical indices.
 
 ## Mandatory self-check before emitting
 
@@ -33,16 +33,18 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetChan_ParseMessagesDemo.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>
 func_va: "<hex virtual address>"
 func_rva: "<hex rva>"
 func_size: "<hex size>"
-func_sig: "<byte pattern, ?? wildcards, function head, minimal-unique>"
+vtable_name: <owning class RTTI name>
+vfunc_offset: "<hex vtable byte offset>"
+vfunc_index: <decimal slot index>
 ```
-NEVER include vfunc_* or struct fields.
+NEVER include func_sig.
 
 ## Verification
 

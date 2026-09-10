@@ -2,16 +2,16 @@
 name: find-CViewRender_OnRenderStart
 description: |
   Agent fallback for CViewRender_OnRenderStart (auto-generated, category: vfunc). Locate
-  CViewRender_OnRenderStart in the CS2 client module via IDA Pro MCP and emit a fresh,
+  CViewRender::OnRenderStart in the CS2 client module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CViewRender_OnRenderStart, CViewRender_OnRenderStart
+  Trigger: CViewRender_OnRenderStart, CViewRender::OnRenderStart
 disable-model-invocation: true
 ---
 
 # Find CViewRender_OnRenderStart
 
-Target: `CViewRender_OnRenderStart` (vfunc) in the module loaded in THIS session.
+Target: `CViewRender::OnRenderStart` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CViewRender_OnRenderStart.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

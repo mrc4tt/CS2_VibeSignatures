@@ -2,16 +2,16 @@
 name: find-CNetworkClientSpawnGroupCreatePrerequisites_GetStatus
 description: |
   Agent fallback for CNetworkClientSpawnGroupCreatePrerequisites_GetStatus (auto-generated, category: vfunc). Locate
-  CNetworkClientSpawnGroupCreatePrerequisites_GetStatus in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkClientSpawnGroupCreatePrerequisites::GetStatus in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkClientSpawnGroupCreatePrerequisites_GetStatus, CNetworkClientSpawnGroupCreatePrerequisites_GetStatus
+  Trigger: CNetworkClientSpawnGroupCreatePrerequisites_GetStatus, CNetworkClientSpawnGroupCreatePrerequisites::GetStatus
 disable-model-invocation: true
 ---
 
 # Find CNetworkClientSpawnGroupCreatePrerequisites_GetStatus
 
-Target: `CNetworkClientSpawnGroupCreatePrerequisites_GetStatus` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkClientSpawnGroupCreatePrerequisites::GetStatus` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkClientSpawnGroupCreatePrerequisites_GetStatus.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

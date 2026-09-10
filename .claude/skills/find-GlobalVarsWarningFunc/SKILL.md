@@ -2,7 +2,7 @@
 name: find-GlobalVarsWarningFunc
 description: |
   Agent fallback for GlobalVarsWarningFunc (auto-generated, category: func). Locate
-  GlobalVarsWarningFunc in the CS2 client module via IDA Pro MCP and emit a fresh,
+  GlobalVarsWarningFunc in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
   Trigger: GlobalVarsWarningFunc, GlobalVarsWarningFunc
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `GlobalVarsWarningFunc.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

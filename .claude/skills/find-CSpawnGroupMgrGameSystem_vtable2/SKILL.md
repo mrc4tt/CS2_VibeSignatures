@@ -2,7 +2,7 @@
 name: find-CSpawnGroupMgrGameSystem_vtable2
 description: |
   Agent fallback for CSpawnGroupMgrGameSystem_vtable2 (auto-generated, category: func). Locate
-  CSpawnGroupMgrGameSystem_vtable2 in the CS2 client module via IDA Pro MCP and emit a fresh,
+  CSpawnGroupMgrGameSystem_vtable2 in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
   Trigger: CSpawnGroupMgrGameSystem_vtable2, CSpawnGroupMgrGameSystem_vtable2
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CSpawnGroupMgrGameSystem_vtable2.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

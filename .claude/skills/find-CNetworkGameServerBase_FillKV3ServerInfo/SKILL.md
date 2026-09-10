@@ -2,16 +2,16 @@
 name: find-CNetworkGameServerBase_FillKV3ServerInfo
 description: |
   Agent fallback for CNetworkGameServerBase_FillKV3ServerInfo (auto-generated, category: vfunc). Locate
-  CNetworkGameServerBase_FillKV3ServerInfo in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkGameServerBase::FillKV3ServerInfo in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkGameServerBase_FillKV3ServerInfo, CNetworkGameServerBase_FillKV3ServerInfo
+  Trigger: CNetworkGameServerBase_FillKV3ServerInfo, CNetworkGameServerBase::FillKV3ServerInfo
 disable-model-invocation: true
 ---
 
 # Find CNetworkGameServerBase_FillKV3ServerInfo
 
-Target: `CNetworkGameServerBase_FillKV3ServerInfo` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkGameServerBase::FillKV3ServerInfo` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkGameServerBase_FillKV3ServerInfo.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

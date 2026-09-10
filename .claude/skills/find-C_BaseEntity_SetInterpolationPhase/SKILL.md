@@ -2,16 +2,16 @@
 name: find-C_BaseEntity_SetInterpolationPhase
 description: |
   Agent fallback for C_BaseEntity_SetInterpolationPhase (auto-generated, category: func). Locate
-  C_BaseEntity_SetInterpolationPhase in the CS2 client module via IDA Pro MCP and emit a fresh,
+  C_BaseEntity::SetInterpolationPhase in the CS2 client module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: C_BaseEntity_SetInterpolationPhase, C_BaseEntity_SetInterpolationPhase
+  Trigger: C_BaseEntity_SetInterpolationPhase, C_BaseEntity::SetInterpolationPhase
 disable-model-invocation: true
 ---
 
 # Find C_BaseEntity_SetInterpolationPhase
 
-Target: `C_BaseEntity_SetInterpolationPhase` (func) in the module loaded in THIS session.
+Target: `C_BaseEntity::SetInterpolationPhase` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `C_BaseEntity_SetInterpolationPhase.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

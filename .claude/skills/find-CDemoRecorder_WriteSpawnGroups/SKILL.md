@@ -2,16 +2,16 @@
 name: find-CDemoRecorder_WriteSpawnGroups
 description: |
   Agent fallback for CDemoRecorder_WriteSpawnGroups (auto-generated, category: func). Locate
-  CDemoRecorder_WriteSpawnGroups in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CDemoRecorder::WriteSpawnGroups in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CDemoRecorder_WriteSpawnGroups, CDemoRecorder_WriteSpawnGroups
+  Trigger: CDemoRecorder_WriteSpawnGroups, CDemoRecorder::WriteSpawnGroups
 disable-model-invocation: true
 ---
 
 # Find CDemoRecorder_WriteSpawnGroups
 
-Target: `CDemoRecorder_WriteSpawnGroups` (func) in the module loaded in THIS session.
+Target: `CDemoRecorder::WriteSpawnGroups` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CDemoRecorder_WriteSpawnGroups.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

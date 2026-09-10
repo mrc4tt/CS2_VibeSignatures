@@ -2,16 +2,16 @@
 name: find-INetworkSystem_ConnectSocket
 description: |
   Agent fallback for INetworkSystem_ConnectSocket (auto-generated, category: vfunc). Locate
-  INetworkSystem_ConnectSocket in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  INetworkSystem::ConnectSocket in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: INetworkSystem_ConnectSocket, INetworkSystem_ConnectSocket
+  Trigger: INetworkSystem_ConnectSocket, INetworkSystem::ConnectSocket
 disable-model-invocation: true
 ---
 
 # Find INetworkSystem_ConnectSocket
 
-Target: `INetworkSystem_ConnectSocket` (vfunc) in the module loaded in THIS session.
+Target: `INetworkSystem::ConnectSocket` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `INetworkSystem_ConnectSocket.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

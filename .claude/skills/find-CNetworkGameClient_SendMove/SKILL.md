@@ -2,16 +2,16 @@
 name: find-CNetworkGameClient_SendMove
 description: |
   Agent fallback for CNetworkGameClient_SendMove (auto-generated, category: func). Locate
-  CNetworkGameClient_SendMove in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkGameClient::SendMove in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkGameClient_SendMove, CNetworkGameClient_SendMove
+  Trigger: CNetworkGameClient_SendMove, CNetworkGameClient::SendMove
 disable-model-invocation: true
 ---
 
 # Find CNetworkGameClient_SendMove
 
-Target: `CNetworkGameClient_SendMove` (func) in the module loaded in THIS session.
+Target: `CNetworkGameClient::SendMove` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkGameClient_SendMove.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CNetworkGameServerBase_ServerProcessNetworking
 description: |
   Agent fallback for CNetworkGameServerBase_ServerProcessNetworking (auto-generated, category: vfunc). Locate
-  CNetworkGameServerBase_ServerProcessNetworking in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkGameServerBase::ServerProcessNetworking in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkGameServerBase_ServerProcessNetworking, CNetworkGameServerBase_ServerProcessNetworking
+  Trigger: CNetworkGameServerBase_ServerProcessNetworking, CNetworkGameServerBase::ServerProcessNetworking
 disable-model-invocation: true
 ---
 
 # Find CNetworkGameServerBase_ServerProcessNetworking
 
-Target: `CNetworkGameServerBase_ServerProcessNetworking` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkGameServerBase::ServerProcessNetworking` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkGameServerBase_ServerProcessNetworking.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

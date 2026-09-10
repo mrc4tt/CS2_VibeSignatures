@@ -2,16 +2,16 @@
 name: find-OnRenderStart-decompiles
 description: |
   Agent fallback for OnRenderStart-decompiles (auto-generated, category: func). Locate
-  OnRenderStart-decompiles in the CS2 client module via IDA Pro MCP and emit a fresh,
+  OnRenderStart in the CS2 client module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: OnRenderStart-decompiles, OnRenderStart-decompiles
+  Trigger: OnRenderStart-decompiles, OnRenderStart
 disable-model-invocation: true
 ---
 
 # Find OnRenderStart-decompiles
 
-Target: `OnRenderStart-decompiles` (func) in the module loaded in THIS session.
+Target: `OnRenderStart` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `OnRenderStart.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

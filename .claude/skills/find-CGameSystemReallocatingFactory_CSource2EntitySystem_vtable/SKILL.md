@@ -2,7 +2,7 @@
 name: find-CGameSystemReallocatingFactory_CSource2EntitySystem_vtable
 description: |
   Agent fallback for CGameSystemReallocatingFactory_CSource2EntitySystem_vtable (auto-generated, category: func). Locate
-  CGameSystemReallocatingFactory_CSource2EntitySystem_vtable in the CS2 client module via IDA Pro MCP and emit a fresh,
+  CGameSystemReallocatingFactory_CSource2EntitySystem_vtable in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
   Trigger: CGameSystemReallocatingFactory_CSource2EntitySystem_vtable, CGameSystemReallocatingFactory_CSource2EntitySystem_vtable
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CGameSystemReallocatingFactory_CSource2EntitySystem_vtable.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

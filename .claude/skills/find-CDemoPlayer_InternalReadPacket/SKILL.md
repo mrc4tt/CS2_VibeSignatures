@@ -2,16 +2,16 @@
 name: find-CDemoPlayer_InternalReadPacket
 description: |
   Agent fallback for CDemoPlayer_InternalReadPacket (auto-generated, category: func). Locate
-  CDemoPlayer_InternalReadPacket in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CDemoPlayer::InternalReadPacket in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CDemoPlayer_InternalReadPacket, CDemoPlayer_InternalReadPacket
+  Trigger: CDemoPlayer_InternalReadPacket, CDemoPlayer::InternalReadPacket
 disable-model-invocation: true
 ---
 
 # Find CDemoPlayer_InternalReadPacket
 
-Target: `CDemoPlayer_InternalReadPacket` (func) in the module loaded in THIS session.
+Target: `CDemoPlayer::InternalReadPacket` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CDemoPlayer_InternalReadPacket.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

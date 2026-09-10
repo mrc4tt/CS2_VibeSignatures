@@ -2,16 +2,16 @@
 name: find-CBaseEntity_Activate
 description: |
   Agent fallback for CBaseEntity_Activate (auto-generated, category: vfunc). Locate
-  CBaseEntity_Activate in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CBaseEntity::Activate in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CBaseEntity_Activate, CBaseEntity_Activate
+  Trigger: CBaseEntity_Activate, CBaseEntity::Activate
 disable-model-invocation: true
 ---
 
 # Find CBaseEntity_Activate
 
-Target: `CBaseEntity_Activate` (vfunc) in the module loaded in THIS session.
+Target: `CBaseEntity::Activate` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CBaseEntity_Activate.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

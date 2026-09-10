@@ -2,16 +2,16 @@
 name: find-CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract
 description: |
   Agent fallback for CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract (auto-generated, category: vfunc). Locate
-  CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract in the CS2 networksystem module via IDA Pro MCP and emit a fresh,
+  CNetworkMessages::AllocateAndCopyConstructNetMessageAbstract in the CS2 networksystem module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract, CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract
+  Trigger: CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract, CNetworkMessages::AllocateAndCopyConstructNetMessageAbstract
 disable-model-invocation: true
 ---
 
 # Find CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract
 
-Target: `CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkMessages::AllocateAndCopyConstructNetMessageAbstract` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

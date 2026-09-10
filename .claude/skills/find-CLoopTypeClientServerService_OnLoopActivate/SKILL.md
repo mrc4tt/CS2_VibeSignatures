@@ -2,16 +2,16 @@
 name: find-CLoopTypeClientServerService_OnLoopActivate
 description: |
   Agent fallback for CLoopTypeClientServerService_OnLoopActivate (auto-generated, category: vfunc). Locate
-  CLoopTypeClientServerService_OnLoopActivate in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CLoopTypeClientServerService::OnLoopActivate in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CLoopTypeClientServerService_OnLoopActivate, CLoopTypeClientServerService_OnLoopActivate
+  Trigger: CLoopTypeClientServerService_OnLoopActivate, CLoopTypeClientServerService::OnLoopActivate
 disable-model-invocation: true
 ---
 
 # Find CLoopTypeClientServerService_OnLoopActivate
 
-Target: `CLoopTypeClientServerService_OnLoopActivate` (vfunc) in the module loaded in THIS session.
+Target: `CLoopTypeClientServerService::OnLoopActivate` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CLoopTypeClientServerService_OnLoopActivate.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

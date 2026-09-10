@@ -2,16 +2,16 @@
 name: find-CNetworkGameClient_ProcessServerInfo
 description: |
   Agent fallback for CNetworkGameClient_ProcessServerInfo (auto-generated, category: vfunc). Locate
-  CNetworkGameClient_ProcessServerInfo in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkGameClient::ProcessServerInfo in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkGameClient_ProcessServerInfo, CNetworkGameClient_ProcessServerInfo
+  Trigger: CNetworkGameClient_ProcessServerInfo, CNetworkGameClient::ProcessServerInfo
 disable-model-invocation: true
 ---
 
 # Find CNetworkGameClient_ProcessServerInfo
 
-Target: `CNetworkGameClient_ProcessServerInfo` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkGameClient::ProcessServerInfo` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkGameClient_ProcessServerInfo.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

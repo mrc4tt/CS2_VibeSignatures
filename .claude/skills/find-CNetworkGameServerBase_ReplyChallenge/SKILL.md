@@ -2,16 +2,16 @@
 name: find-CNetworkGameServerBase_ReplyChallenge
 description: |
   Agent fallback for CNetworkGameServerBase_ReplyChallenge (auto-generated, category: func). Locate
-  CNetworkGameServerBase_ReplyChallenge in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkGameServerBase::ReplyChallenge in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkGameServerBase_ReplyChallenge, CNetworkGameServerBase_ReplyChallenge
+  Trigger: CNetworkGameServerBase_ReplyChallenge, CNetworkGameServerBase::ReplyChallenge
 disable-model-invocation: true
 ---
 
 # Find CNetworkGameServerBase_ReplyChallenge
 
-Target: `CNetworkGameServerBase_ReplyChallenge` (func) in the module loaded in THIS session.
+Target: `CNetworkGameServerBase::ReplyChallenge` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkGameServerBase_ReplyChallenge.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

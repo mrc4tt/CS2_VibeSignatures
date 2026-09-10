@@ -2,16 +2,16 @@
 name: find-CNetworkGameClient_SetSignonState
 description: |
   Agent fallback for CNetworkGameClient_SetSignonState (auto-generated, category: vfunc). Locate
-  CNetworkGameClient_SetSignonState in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkGameClient::SetSignonState in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkGameClient_SetSignonState, CNetworkGameClient_SetSignonState
+  Trigger: CNetworkGameClient_SetSignonState, CNetworkGameClient::SetSignonState
 disable-model-invocation: true
 ---
 
 # Find CNetworkGameClient_SetSignonState
 
-Target: `CNetworkGameClient_SetSignonState` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkGameClient::SetSignonState` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkGameClient_SetSignonState.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

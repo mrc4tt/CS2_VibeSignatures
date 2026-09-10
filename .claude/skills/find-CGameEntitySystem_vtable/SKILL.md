@@ -2,7 +2,7 @@
 name: find-CGameEntitySystem_vtable
 description: |
   Agent fallback for CGameEntitySystem_vtable (auto-generated, category: func). Locate
-  CGameEntitySystem_vtable in the CS2 client module via IDA Pro MCP and emit a fresh,
+  CGameEntitySystem_vtable in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
   Trigger: CGameEntitySystem_vtable, CGameEntitySystem_vtable
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CGameEntitySystem_vtable.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CBasePlayerWeapon_Shoot_Secondary
 description: |
   Agent fallback for CBasePlayerWeapon_Shoot_Secondary (auto-generated, category: func). Locate
-  CBasePlayerWeapon_Shoot_Secondary in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CBasePlayerWeapon::Shoot_Secondary in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CBasePlayerWeapon_Shoot_Secondary, CBasePlayerWeapon_Shoot_Secondary
+  Trigger: CBasePlayerWeapon_Shoot_Secondary, CBasePlayerWeapon::Shoot_Secondary
 disable-model-invocation: true
 ---
 
 # Find CBasePlayerWeapon_Shoot_Secondary
 
-Target: `CBasePlayerWeapon_Shoot_Secondary` (func) in the module loaded in THIS session.
+Target: `CBasePlayerWeapon::Shoot_Secondary` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CBasePlayerWeapon_Shoot_Secondary.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

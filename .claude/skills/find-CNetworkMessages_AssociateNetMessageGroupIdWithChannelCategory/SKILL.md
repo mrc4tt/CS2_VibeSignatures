@@ -2,16 +2,16 @@
 name: find-CNetworkMessages_AssociateNetMessageGroupIdWithChannelCategory
 description: |
   Agent fallback for CNetworkMessages_AssociateNetMessageGroupIdWithChannelCategory (auto-generated, category: vfunc). Locate
-  CNetworkMessages_AssociateNetMessageGroupIdWithChannelCategory in the CS2 networksystem module via IDA Pro MCP and emit a fresh,
+  CNetworkMessages::AssociateNetMessageGroupIdWithChannelCategory in the CS2 networksystem module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkMessages_AssociateNetMessageGroupIdWithChannelCategory, CNetworkMessages_AssociateNetMessageGroupIdWithChannelCategory
+  Trigger: CNetworkMessages_AssociateNetMessageGroupIdWithChannelCategory, CNetworkMessages::AssociateNetMessageGroupIdWithChannelCategory
 disable-model-invocation: true
 ---
 
 # Find CNetworkMessages_AssociateNetMessageGroupIdWithChannelCategory
 
-Target: `CNetworkMessages_AssociateNetMessageGroupIdWithChannelCategory` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkMessages::AssociateNetMessageGroupIdWithChannelCategory` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkMessages_AssociateNetMessageGroupIdWithChannelCategory.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

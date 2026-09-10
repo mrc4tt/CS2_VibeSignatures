@@ -2,16 +2,16 @@
 name: find-IVEngineServer2_GetAchievementMgr
 description: |
   Agent fallback for IVEngineServer2_GetAchievementMgr (auto-generated, category: vfunc). Locate
-  IVEngineServer2_GetAchievementMgr in the CS2 server module via IDA Pro MCP and emit a fresh,
+  IVEngineServer2::GetAchievementMgr in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: IVEngineServer2_GetAchievementMgr, IVEngineServer2_GetAchievementMgr
+  Trigger: IVEngineServer2_GetAchievementMgr, IVEngineServer2::GetAchievementMgr
 disable-model-invocation: true
 ---
 
 # Find IVEngineServer2_GetAchievementMgr
 
-Target: `IVEngineServer2_GetAchievementMgr` (vfunc) in the module loaded in THIS session.
+Target: `IVEngineServer2::GetAchievementMgr` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `IVEngineServer2_GetAchievementMgr.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

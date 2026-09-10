@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CBaseEntity_m_NetworkTransmitComponent.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 struct_name: <owning class name>

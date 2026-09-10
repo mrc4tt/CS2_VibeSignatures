@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `NET_ReloadGameEvents_CommandHandler.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CCSPlayerController_ChangeTeam
 description: |
   Agent fallback for CCSPlayerController_ChangeTeam (auto-generated, category: vfunc). Locate
-  CCSPlayerController_ChangeTeam in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CCSPlayerController::ChangeTeam in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CCSPlayerController_ChangeTeam, CCSPlayerController_ChangeTeam
+  Trigger: CCSPlayerController_ChangeTeam, CCSPlayerController::ChangeTeam
 disable-model-invocation: true
 ---
 
 # Find CCSPlayerController_ChangeTeam
 
-Target: `CCSPlayerController_ChangeTeam` (vfunc) in the module loaded in THIS session.
+Target: `CCSPlayerController::ChangeTeam` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CCSPlayerController_ChangeTeam.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

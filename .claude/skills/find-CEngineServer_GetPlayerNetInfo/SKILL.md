@@ -1,8 +1,8 @@
 ---
 name: find-CEngineServer_GetPlayerNetInfo
 description: |
-  Agent fallback for CEngineServer_GetPlayerNetInfo (auto-generated, category: vfunc). Locate
-  CEngineServer_GetPlayerNetInfo in the CS2 server module via IDA Pro MCP and emit a fresh,
+  Agent fallback for CEngineServer_GetPlayerNetInfo (auto-generated, category: func). Locate
+  CEngineServer_GetPlayerNetInfo in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
   Trigger: CEngineServer_GetPlayerNetInfo, CEngineServer_GetPlayerNetInfo
@@ -11,7 +11,7 @@ disable-model-invocation: true
 
 # Find CEngineServer_GetPlayerNetInfo
 
-Target: `CEngineServer_GetPlayerNetInfo` (vfunc) in the module loaded in THIS session.
+Target: `CEngineServer_GetPlayerNetInfo` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -19,9 +19,9 @@ Target: `CEngineServer_GetPlayerNetInfo` (vfunc) in the module loaded in THIS se
 
 ## Method
 
-Resolve the owning class vtable via RTTI (typeinfo-name string -> _ZTI object
--> vtable). Identify the slot by xrefs from expected call sites. Slots commonly
-differ between platforms - never assume identical indices.
+Locate via distinctive constants/strings in the body, cross-references from
+known callers/callees, or the owning class vtable (RTTI) if virtual. Verify by
+decompilation before committing to a candidate.
 
 ## Mandatory self-check before emitting
 
@@ -33,18 +33,16 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEngineServer_GetPlayerNetInfo.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>
 func_va: "<hex virtual address>"
 func_rva: "<hex rva>"
 func_size: "<hex size>"
-vtable_name: <owning class RTTI name>
-vfunc_offset: "<hex vtable byte offset>"
-vfunc_index: <decimal slot index>
+func_sig: "<byte pattern, ?? wildcards, function head, minimal-unique>"
 ```
-NEVER include func_sig.
+NEVER include vfunc_* or struct fields.
 
 ## Verification
 

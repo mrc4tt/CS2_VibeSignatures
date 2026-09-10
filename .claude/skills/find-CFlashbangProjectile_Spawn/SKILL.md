@@ -2,16 +2,16 @@
 name: find-CFlashbangProjectile_Spawn
 description: |
   Agent fallback for CFlashbangProjectile_Spawn (auto-generated, category: vfunc). Locate
-  CFlashbangProjectile_Spawn in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CFlashbangProjectile::Spawn in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CFlashbangProjectile_Spawn, CFlashbangProjectile_Spawn
+  Trigger: CFlashbangProjectile_Spawn, CFlashbangProjectile::Spawn
 disable-model-invocation: true
 ---
 
 # Find CFlashbangProjectile_Spawn
 
-Target: `CFlashbangProjectile_Spawn` (vfunc) in the module loaded in THIS session.
+Target: `CFlashbangProjectile::Spawn` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CFlashbangProjectile_Spawn.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

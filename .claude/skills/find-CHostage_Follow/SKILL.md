@@ -2,16 +2,16 @@
 name: find-CHostage_Follow
 description: |
   Agent fallback for CHostage_Follow (auto-generated, category: func). Locate
-  CHostage_Follow in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CHostage::Follow in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CHostage_Follow, CHostage_Follow
+  Trigger: CHostage_Follow, CHostage::Follow
 disable-model-invocation: true
 ---
 
 # Find CHostage_Follow
 
-Target: `CHostage_Follow` (func) in the module loaded in THIS session.
+Target: `CHostage::Follow` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CHostage_Follow.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

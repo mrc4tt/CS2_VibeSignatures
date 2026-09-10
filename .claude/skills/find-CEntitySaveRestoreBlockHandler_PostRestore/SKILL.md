@@ -2,16 +2,16 @@
 name: find-CEntitySaveRestoreBlockHandler_PostRestore
 description: |
   Agent fallback for CEntitySaveRestoreBlockHandler_PostRestore (auto-generated, category: vfunc). Locate
-  CEntitySaveRestoreBlockHandler_PostRestore in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CEntitySaveRestoreBlockHandler::PostRestore in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CEntitySaveRestoreBlockHandler_PostRestore, CEntitySaveRestoreBlockHandler_PostRestore
+  Trigger: CEntitySaveRestoreBlockHandler_PostRestore, CEntitySaveRestoreBlockHandler::PostRestore
 disable-model-invocation: true
 ---
 
 # Find CEntitySaveRestoreBlockHandler_PostRestore
 
-Target: `CEntitySaveRestoreBlockHandler_PostRestore` (vfunc) in the module loaded in THIS session.
+Target: `CEntitySaveRestoreBlockHandler::PostRestore` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEntitySaveRestoreBlockHandler_PostRestore.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,7 +2,7 @@
 name: find-ConnectInterfaces
 description: |
   Agent fallback for ConnectInterfaces (auto-generated, category: func). Locate
-  ConnectInterfaces in the CS2 client module via IDA Pro MCP and emit a fresh,
+  ConnectInterfaces in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
   Trigger: ConnectInterfaces, ConnectInterfaces
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `ConnectInterfaces.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

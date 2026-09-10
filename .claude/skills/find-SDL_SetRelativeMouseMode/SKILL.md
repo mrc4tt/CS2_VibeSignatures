@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `SDL_SetRelativeMouseMode.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

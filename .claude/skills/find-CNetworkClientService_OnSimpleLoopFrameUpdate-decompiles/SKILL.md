@@ -2,16 +2,16 @@
 name: find-CNetworkClientService_OnSimpleLoopFrameUpdate-decompiles
 description: |
   Agent fallback for CNetworkClientService_OnSimpleLoopFrameUpdate-decompiles (auto-generated, category: func). Locate
-  CNetworkClientService_OnSimpleLoopFrameUpdate-decompiles in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkClientService::OnSimpleLoopFrameUpdate in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkClientService_OnSimpleLoopFrameUpdate-decompiles, CNetworkClientService_OnSimpleLoopFrameUpdate-decompiles
+  Trigger: CNetworkClientService_OnSimpleLoopFrameUpdate-decompiles, CNetworkClientService::OnSimpleLoopFrameUpdate
 disable-model-invocation: true
 ---
 
 # Find CNetworkClientService_OnSimpleLoopFrameUpdate-decompiles
 
-Target: `CNetworkClientService_OnSimpleLoopFrameUpdate-decompiles` (func) in the module loaded in THIS session.
+Target: `CNetworkClientService::OnSimpleLoopFrameUpdate` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkClientService_OnSimpleLoopFrameUpdate.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

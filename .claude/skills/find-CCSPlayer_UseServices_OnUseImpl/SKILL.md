@@ -2,16 +2,16 @@
 name: find-CCSPlayer_UseServices_OnUseImpl
 description: |
   Agent fallback for CCSPlayer_UseServices_OnUseImpl (auto-generated, category: func). Locate
-  CCSPlayer_UseServices_OnUseImpl in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CCSPlayer_UseServices::OnUseImpl in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CCSPlayer_UseServices_OnUseImpl, CCSPlayer_UseServices_OnUseImpl
+  Trigger: CCSPlayer_UseServices_OnUseImpl, CCSPlayer_UseServices::OnUseImpl
 disable-model-invocation: true
 ---
 
 # Find CCSPlayer_UseServices_OnUseImpl
 
-Target: `CCSPlayer_UseServices_OnUseImpl` (func) in the module loaded in THIS session.
+Target: `CCSPlayer_UseServices::OnUseImpl` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CCSPlayer_UseServices_OnUseImpl.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

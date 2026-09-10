@@ -2,16 +2,16 @@
 name: find-CLoopTypeBase_LoopTypeShutdown
 description: |
   Agent fallback for CLoopTypeBase_LoopTypeShutdown (auto-generated, category: vfunc). Locate
-  CLoopTypeBase_LoopTypeShutdown in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CLoopTypeBase::LoopTypeShutdown in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CLoopTypeBase_LoopTypeShutdown, CLoopTypeBase_LoopTypeShutdown
+  Trigger: CLoopTypeBase_LoopTypeShutdown, CLoopTypeBase::LoopTypeShutdown
 disable-model-invocation: true
 ---
 
 # Find CLoopTypeBase_LoopTypeShutdown
 
-Target: `CLoopTypeBase_LoopTypeShutdown` (vfunc) in the module loaded in THIS session.
+Target: `CLoopTypeBase::LoopTypeShutdown` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CLoopTypeBase_LoopTypeShutdown.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

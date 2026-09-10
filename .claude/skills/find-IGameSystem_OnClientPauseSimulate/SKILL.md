@@ -2,16 +2,16 @@
 name: find-IGameSystem_OnClientPauseSimulate
 description: |
   Agent fallback for IGameSystem_OnClientPauseSimulate (auto-generated, category: vfunc). Locate
-  IGameSystem_OnClientPauseSimulate in the CS2 client module via IDA Pro MCP and emit a fresh,
+  IGameSystem::OnClientPauseSimulate in the CS2 client module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: IGameSystem_OnClientPauseSimulate, IGameSystem_OnClientPauseSimulate
+  Trigger: IGameSystem_OnClientPauseSimulate, IGameSystem::OnClientPauseSimulate
 disable-model-invocation: true
 ---
 
 # Find IGameSystem_OnClientPauseSimulate
 
-Target: `IGameSystem_OnClientPauseSimulate` (vfunc) in the module loaded in THIS session.
+Target: `IGameSystem::OnClientPauseSimulate` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `IGameSystem_OnClientPauseSimulate.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

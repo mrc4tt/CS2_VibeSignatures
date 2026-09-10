@@ -2,16 +2,16 @@
 name: find-CGameMoney_GetDataDescMap
 description: |
   Agent fallback for CGameMoney_GetDataDescMap (auto-generated, category: vfunc). Locate
-  CGameMoney_GetDataDescMap in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CGameMoney::GetDataDescMap in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CGameMoney_GetDataDescMap, CGameMoney_GetDataDescMap
+  Trigger: CGameMoney_GetDataDescMap, CGameMoney::GetDataDescMap
 disable-model-invocation: true
 ---
 
 # Find CGameMoney_GetDataDescMap
 
-Target: `CGameMoney_GetDataDescMap` (vfunc) in the module loaded in THIS session.
+Target: `CGameMoney::GetDataDescMap` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CGameMoney_GetDataDescMap.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

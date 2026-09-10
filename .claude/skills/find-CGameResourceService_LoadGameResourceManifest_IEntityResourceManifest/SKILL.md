@@ -2,16 +2,16 @@
 name: find-CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest
 description: |
   Agent fallback for CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest (auto-generated, category: vfunc). Locate
-  CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CGameResourceService::LoadGameResourceManifest in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest, CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest
+  Trigger: CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest, CGameResourceService::LoadGameResourceManifest
 disable-model-invocation: true
 ---
 
 # Find CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest
 
-Target: `CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest` (vfunc) in the module loaded in THIS session.
+Target: `CGameResourceService::LoadGameResourceManifest` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CGameResourceService_LoadGameResourceManifest_IEntityResourceManifest.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

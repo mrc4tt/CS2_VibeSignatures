@@ -2,16 +2,16 @@
 name: find-CEngineServiceMgr_UnregisterLoopMode-inlined
 description: |
   Agent fallback for CEngineServiceMgr_UnregisterLoopMode-inlined (auto-generated, category: func). Locate
-  CEngineServiceMgr_UnregisterLoopMode-inlined in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CEngineServiceMgr_UnregisterLoopMode in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CEngineServiceMgr_UnregisterLoopMode-inlined, CEngineServiceMgr_UnregisterLoopMode-inlined
+  Trigger: CEngineServiceMgr_UnregisterLoopMode-inlined, CEngineServiceMgr_UnregisterLoopMode
 disable-model-invocation: true
 ---
 
 # Find CEngineServiceMgr_UnregisterLoopMode-inlined
 
-Target: `CEngineServiceMgr_UnregisterLoopMode-inlined` (func) in the module loaded in THIS session.
+Target: `CEngineServiceMgr_UnregisterLoopMode` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEngineServiceMgr_UnregisterLoopMode.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

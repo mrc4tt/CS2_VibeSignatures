@@ -2,16 +2,16 @@
 name: find-ScriptBinding_Entity_SetEntityName
 description: |
   Agent fallback for ScriptBinding_Entity_SetEntityName (auto-generated, category: func). Locate
-  ScriptBinding_Entity_SetEntityName in the CS2 server module via IDA Pro MCP and emit a fresh,
+  Entity::SetEntityName in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: ScriptBinding_Entity_SetEntityName, ScriptBinding_Entity_SetEntityName
+  Trigger: ScriptBinding_Entity_SetEntityName, Entity::SetEntityName
 disable-model-invocation: true
 ---
 
 # Find ScriptBinding_Entity_SetEntityName
 
-Target: `ScriptBinding_Entity_SetEntityName` (func) in the module loaded in THIS session.
+Target: `Entity::SetEntityName` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `ScriptBinding_Entity_SetEntityName.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

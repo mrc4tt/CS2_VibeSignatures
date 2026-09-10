@@ -2,16 +2,16 @@
 name: find-CEntFireOutputAutoCompletionFunctor_FireOutput
 description: |
   Agent fallback for CEntFireOutputAutoCompletionFunctor_FireOutput (auto-generated, category: vfunc). Locate
-  CEntFireOutputAutoCompletionFunctor_FireOutput in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CEntFireOutputAutoCompletionFunctor::FireOutput in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CEntFireOutputAutoCompletionFunctor_FireOutput, CEntFireOutputAutoCompletionFunctor_FireOutput
+  Trigger: CEntFireOutputAutoCompletionFunctor_FireOutput, CEntFireOutputAutoCompletionFunctor::FireOutput
 disable-model-invocation: true
 ---
 
 # Find CEntFireOutputAutoCompletionFunctor_FireOutput
 
-Target: `CEntFireOutputAutoCompletionFunctor_FireOutput` (vfunc) in the module loaded in THIS session.
+Target: `CEntFireOutputAutoCompletionFunctor::FireOutput` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEntFireOutputAutoCompletionFunctor_FireOutput.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

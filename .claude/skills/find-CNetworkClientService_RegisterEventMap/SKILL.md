@@ -2,16 +2,16 @@
 name: find-CNetworkClientService_RegisterEventMap
 description: |
   Agent fallback for CNetworkClientService_RegisterEventMap (auto-generated, category: vfunc). Locate
-  CNetworkClientService_RegisterEventMap in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkClientService::RegisterEventMap in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkClientService_RegisterEventMap, CNetworkClientService_RegisterEventMap
+  Trigger: CNetworkClientService_RegisterEventMap, CNetworkClientService::RegisterEventMap
 disable-model-invocation: true
 ---
 
 # Find CNetworkClientService_RegisterEventMap
 
-Target: `CNetworkClientService_RegisterEventMap` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkClientService::RegisterEventMap` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkClientService_RegisterEventMap.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CInputService_IsClientOnlyCommandAllowed-linux
 description: |
   Agent fallback for CInputService_IsClientOnlyCommandAllowed-linux (auto-generated, category: func). Locate
-  CInputService_IsClientOnlyCommandAllowed-linux in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CInputService_IsClientOnlyCommandAllowed in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CInputService_IsClientOnlyCommandAllowed-linux, CInputService_IsClientOnlyCommandAllowed-linux
+  Trigger: CInputService_IsClientOnlyCommandAllowed-linux, CInputService_IsClientOnlyCommandAllowed
 disable-model-invocation: true
 ---
 
 # Find CInputService_IsClientOnlyCommandAllowed-linux
 
-Target: `CInputService_IsClientOnlyCommandAllowed-linux` (func) in the module loaded in THIS session.
+Target: `CInputService_IsClientOnlyCommandAllowed` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CInputService_IsClientOnlyCommandAllowed.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

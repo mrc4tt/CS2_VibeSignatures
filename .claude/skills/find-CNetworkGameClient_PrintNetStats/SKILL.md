@@ -2,16 +2,16 @@
 name: find-CNetworkGameClient_PrintNetStats
 description: |
   Agent fallback for CNetworkGameClient_PrintNetStats (auto-generated, category: func). Locate
-  CNetworkGameClient_PrintNetStats in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CNetworkGameClient::PrintNetStats in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkGameClient_PrintNetStats, CNetworkGameClient_PrintNetStats
+  Trigger: CNetworkGameClient_PrintNetStats, CNetworkGameClient::PrintNetStats
 disable-model-invocation: true
 ---
 
 # Find CNetworkGameClient_PrintNetStats
 
-Target: `CNetworkGameClient_PrintNetStats` (func) in the module loaded in THIS session.
+Target: `CNetworkGameClient::PrintNetStats` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkGameClient_PrintNetStats.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CLoopModeGame_OnClientSimulate-decompiles
 description: |
   Agent fallback for CLoopModeGame_OnClientSimulate-decompiles (auto-generated, category: func). Locate
-  CLoopModeGame_OnClientSimulate-decompiles in the CS2 client module via IDA Pro MCP and emit a fresh,
+  CLoopModeGame::OnClientSimulate in the CS2 client module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CLoopModeGame_OnClientSimulate-decompiles, CLoopModeGame_OnClientSimulate-decompiles
+  Trigger: CLoopModeGame_OnClientSimulate-decompiles, CLoopModeGame::OnClientSimulate
 disable-model-invocation: true
 ---
 
 # Find CLoopModeGame_OnClientSimulate-decompiles
 
-Target: `CLoopModeGame_OnClientSimulate-decompiles` (func) in the module loaded in THIS session.
+Target: `CLoopModeGame::OnClientSimulate` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CLoopModeGame_OnClientSimulate.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,7 +2,7 @@
 name: find-IGameSystemFactory_Shutdown
 description: |
   Agent fallback for IGameSystemFactory_Shutdown (auto-generated, category: func). Locate
-  IGameSystemFactory_Shutdown in the CS2 client module via IDA Pro MCP and emit a fresh,
+  IGameSystemFactory_Shutdown in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
   Trigger: IGameSystemFactory_Shutdown, IGameSystemFactory_Shutdown
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `IGameSystemFactory_Shutdown.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

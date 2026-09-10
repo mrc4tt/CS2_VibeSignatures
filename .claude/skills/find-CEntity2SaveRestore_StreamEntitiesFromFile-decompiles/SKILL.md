@@ -2,16 +2,16 @@
 name: find-CEntity2SaveRestore_StreamEntitiesFromFile-decompiles
 description: |
   Agent fallback for CEntity2SaveRestore_StreamEntitiesFromFile-decompiles (auto-generated, category: vfunc). Locate
-  CEntity2SaveRestore_StreamEntitiesFromFile-decompiles in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CEntity2SaveRestore::StreamEntitiesFromFile in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CEntity2SaveRestore_StreamEntitiesFromFile-decompiles, CEntity2SaveRestore_StreamEntitiesFromFile-decompiles
+  Trigger: CEntity2SaveRestore_StreamEntitiesFromFile-decompiles, CEntity2SaveRestore::StreamEntitiesFromFile
 disable-model-invocation: true
 ---
 
 # Find CEntity2SaveRestore_StreamEntitiesFromFile-decompiles
 
-Target: `CEntity2SaveRestore_StreamEntitiesFromFile-decompiles` (vfunc) in the module loaded in THIS session.
+Target: `CEntity2SaveRestore::StreamEntitiesFromFile` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEntity2SaveRestore_StreamEntitiesFromFile.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

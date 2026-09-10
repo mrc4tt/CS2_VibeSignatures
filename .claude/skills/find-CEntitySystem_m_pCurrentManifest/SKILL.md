@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEntitySystem_m_pCurrentManifest.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 struct_name: <owning class name>

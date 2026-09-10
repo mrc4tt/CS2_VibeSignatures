@@ -2,16 +2,16 @@
 name: find-CServerSideClientBase_SetConVarUserInfo-linux
 description: |
   Agent fallback for CServerSideClientBase_SetConVarUserInfo-linux (auto-generated, category: func). Locate
-  CServerSideClientBase_SetConVarUserInfo-linux in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CServerSideClientBase_SetConVarUserInfo in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CServerSideClientBase_SetConVarUserInfo-linux, CServerSideClientBase_SetConVarUserInfo-linux
+  Trigger: CServerSideClientBase_SetConVarUserInfo-linux, CServerSideClientBase_SetConVarUserInfo
 disable-model-invocation: true
 ---
 
 # Find CServerSideClientBase_SetConVarUserInfo-linux
 
-Target: `CServerSideClientBase_SetConVarUserInfo-linux` (func) in the module loaded in THIS session.
+Target: `CServerSideClientBase_SetConVarUserInfo` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CServerSideClientBase_SetConVarUserInfo.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CLog_Print
 description: |
   Agent fallback for CLog_Print (auto-generated, category: func). Locate
-  CLog_Print in the CS2 engine module via IDA Pro MCP and emit a fresh,
+  CLog::Print in the CS2 engine module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CLog_Print, CLog_Print
+  Trigger: CLog_Print, CLog::Print
 disable-model-invocation: true
 ---
 
 # Find CLog_Print
 
-Target: `CLog_Print` (func) in the module loaded in THIS session.
+Target: `CLog::Print` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CLog_Print.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

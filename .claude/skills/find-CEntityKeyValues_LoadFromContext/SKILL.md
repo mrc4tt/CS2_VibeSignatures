@@ -2,16 +2,16 @@
 name: find-CEntityKeyValues_LoadFromContext
 description: |
   Agent fallback for CEntityKeyValues_LoadFromContext (auto-generated, category: func). Locate
-  CEntityKeyValues_LoadFromContext in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CEntityKeyValues::LoadFromContext in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CEntityKeyValues_LoadFromContext, CEntityKeyValues_LoadFromContext
+  Trigger: CEntityKeyValues_LoadFromContext, CEntityKeyValues::LoadFromContext
 disable-model-invocation: true
 ---
 
 # Find CEntityKeyValues_LoadFromContext
 
-Target: `CEntityKeyValues_LoadFromContext` (func) in the module loaded in THIS session.
+Target: `CEntityKeyValues::LoadFromContext` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEntityKeyValues_LoadFromContext.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

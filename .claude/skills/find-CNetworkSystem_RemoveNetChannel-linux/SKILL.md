@@ -2,16 +2,16 @@
 name: find-CNetworkSystem_RemoveNetChannel-linux
 description: |
   Agent fallback for CNetworkSystem_RemoveNetChannel-linux (auto-generated, category: func). Locate
-  CNetworkSystem_RemoveNetChannel-linux in the CS2 networksystem module via IDA Pro MCP and emit a fresh,
+  CNetworkSystem_RemoveNetChannel in the CS2 networksystem module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkSystem_RemoveNetChannel-linux, CNetworkSystem_RemoveNetChannel-linux
+  Trigger: CNetworkSystem_RemoveNetChannel-linux, CNetworkSystem_RemoveNetChannel
 disable-model-invocation: true
 ---
 
 # Find CNetworkSystem_RemoveNetChannel-linux
 
-Target: `CNetworkSystem_RemoveNetChannel-linux` (func) in the module loaded in THIS session.
+Target: `CNetworkSystem_RemoveNetChannel` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkSystem_RemoveNetChannel.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

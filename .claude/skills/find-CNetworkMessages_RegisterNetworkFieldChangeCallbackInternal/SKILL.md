@@ -2,16 +2,16 @@
 name: find-CNetworkMessages_RegisterNetworkFieldChangeCallbackInternal
 description: |
   Agent fallback for CNetworkMessages_RegisterNetworkFieldChangeCallbackInternal (auto-generated, category: vfunc). Locate
-  CNetworkMessages_RegisterNetworkFieldChangeCallbackInternal in the CS2 networksystem module via IDA Pro MCP and emit a fresh,
+  CNetworkMessages::RegisterNetworkFieldChangeCallbackInternal in the CS2 networksystem module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CNetworkMessages_RegisterNetworkFieldChangeCallbackInternal, CNetworkMessages_RegisterNetworkFieldChangeCallbackInternal
+  Trigger: CNetworkMessages_RegisterNetworkFieldChangeCallbackInternal, CNetworkMessages::RegisterNetworkFieldChangeCallbackInternal
 disable-model-invocation: true
 ---
 
 # Find CNetworkMessages_RegisterNetworkFieldChangeCallbackInternal
 
-Target: `CNetworkMessages_RegisterNetworkFieldChangeCallbackInternal` (vfunc) in the module loaded in THIS session.
+Target: `CNetworkMessages::RegisterNetworkFieldChangeCallbackInternal` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CNetworkMessages_RegisterNetworkFieldChangeCallbackInternal.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CCSPlayerController_Connect
 description: |
   Agent fallback for CCSPlayerController_Connect (auto-generated, category: vfunc). Locate
-  CCSPlayerController_Connect in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CCSPlayerController::Connect in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CCSPlayerController_Connect, CCSPlayerController_Connect
+  Trigger: CCSPlayerController_Connect, CCSPlayerController::Connect
 disable-model-invocation: true
 ---
 
 # Find CCSPlayerController_Connect
 
-Target: `CCSPlayerController_Connect` (vfunc) in the module loaded in THIS session.
+Target: `CCSPlayerController::Connect` (vfunc) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CCSPlayerController_Connect.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

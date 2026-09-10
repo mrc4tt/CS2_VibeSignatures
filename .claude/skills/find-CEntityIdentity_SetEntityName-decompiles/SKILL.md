@@ -2,16 +2,16 @@
 name: find-CEntityIdentity_SetEntityName-decompiles
 description: |
   Agent fallback for CEntityIdentity_SetEntityName-decompiles (auto-generated, category: func). Locate
-  CEntityIdentity_SetEntityName-decompiles in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CEntityIdentity::SetEntityName in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CEntityIdentity_SetEntityName-decompiles, CEntityIdentity_SetEntityName-decompiles
+  Trigger: CEntityIdentity_SetEntityName-decompiles, CEntityIdentity::SetEntityName
 disable-model-invocation: true
 ---
 
 # Find CEntityIdentity_SetEntityName-decompiles
 
-Target: `CEntityIdentity_SetEntityName-decompiles` (func) in the module loaded in THIS session.
+Target: `CEntityIdentity::SetEntityName` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CEntityIdentity_SetEntityName.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>

@@ -2,16 +2,16 @@
 name: find-CCSWeaponBase_ItemPostFrame_ProcessReloadAction
 description: |
   Agent fallback for CCSWeaponBase_ItemPostFrame_ProcessReloadAction (auto-generated, category: func). Locate
-  CCSWeaponBase_ItemPostFrame_ProcessReloadAction in the CS2 server module via IDA Pro MCP and emit a fresh,
+  CCSWeaponBase::ItemPostFrame::ProcessReloadAction in the CS2 server module via IDA Pro MCP and emit a fresh,
   minimal-unique artifact. The deterministic preprocessor could not resolve this
   symbol on the current gamever - your job is the re-sign.
-  Trigger: CCSWeaponBase_ItemPostFrame_ProcessReloadAction, CCSWeaponBase_ItemPostFrame_ProcessReloadAction
+  Trigger: CCSWeaponBase_ItemPostFrame_ProcessReloadAction, CCSWeaponBase::ItemPostFrame::ProcessReloadAction
 disable-model-invocation: true
 ---
 
 # Find CCSWeaponBase_ItemPostFrame_ProcessReloadAction
 
-Target: `CCSWeaponBase_ItemPostFrame_ProcessReloadAction` (func) in the module loaded in THIS session.
+Target: `CCSWeaponBase::ItemPostFrame::ProcessReloadAction` (func) in the module loaded in THIS session.
 
 > The old artifact/preprocessor anchors no longer match this build. Use anchors
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
@@ -33,7 +33,7 @@ bug in YOUR output.
 
 ## Output schema (STRICT)
 
-Write `<task>.{platform}.yaml` with EXACTLY these fields:
+Write `CCSWeaponBase_ItemPostFrame_ProcessReloadAction.{platform}.yaml` with EXACTLY these fields:
 
 ```yaml
 func_name: <TASK>
