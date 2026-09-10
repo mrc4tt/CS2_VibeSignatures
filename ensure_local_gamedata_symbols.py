@@ -137,6 +137,20 @@ FORK_OWNED_PLATFORM_PINS = [
     # a1[23] = 0xC7EFFFFFE0000000, same netsystem vtable +120/+368/+144, same
     # convar ratio into +43). Confirmed by IDA decompiles of both.
     ("ParseNetadrList", "engine", "windows", "inlined into ConnectSocketToAddressList on linux"),
+    # No linux call site exists to record. g_pNetworkSystem dispatches on 34 distinct
+    # slots in engine2.dll and 27 in libengine2.so, and 0xb8 is in neither set. The
+    # windows artifact's own call site (0x1800696bd) receives from 0x180613ca8, not
+    # from g_pNetworkSystem (0x180689e80): that global is registered in the
+    # Source2Engine interface family between "Source2EngineToClient001" and
+    # "Source2EngineToServer001", and every function loading it deals with level
+    # loading ("*** Map Load Complete", "OnEngineLevelLoadingStarted",
+    # "Engine2/DisableLoadingPlaque", "ActivateGameUI()"). So the recorded receiver
+    # is an engine service, and the INetworkSystem label does not match it - which
+    # makes a hunt for a linux counterpart a hunt for something that is not there.
+    # Nothing consumes the symbol and it ships nothing, so windows keeps what it has
+    # always had and linux stops being reported as missing.
+    ("INetworkSystem_RemoveNetChannel", "engine", "windows",
+     "no linux call site; windows receiver is an engine service, not INetworkSystem"),
 ]
 # Fork-owned symbol REMOVALS. Upstream declares these, but the binary evidence says
 # they cannot be produced, so every run logged a missing_yaml warning and nothing

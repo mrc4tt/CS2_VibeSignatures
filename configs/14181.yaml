@@ -4094,6 +4094,7 @@ modules:
           - INetworkSystem::PollSocket
       - name: INetworkSystem_RemoveNetChannel
         category: vfunc
+        platform: windows
         alias:
           - INetworkSystem::RemoveNetChannel
       - name: INetworkSystem_PrintNetworkStats
