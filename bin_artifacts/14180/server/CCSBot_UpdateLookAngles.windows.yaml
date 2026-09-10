@@ -1,5 +1,5 @@
 func_name: CCSBot_UpdateLookAngles
-func_va: '0x1815575bc'
-func_rva: '0x15575bc'
-func_size: '0x3d'
-func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 49 8B F8 8B DA 48 8B F1 83 FA ??
+func_va: '0x1802e4cf0'
+func_rva: '0x2e4cf0'
+func_size: '0x4e6'
+func_sig: 40 55 53 56 57 48 8D 6C 24 C1 48 81 EC ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ??

@@ -1,5 +1,5 @@
 func_name: UpdateItemView
-func_va: '0x1815575bc'
-func_rva: '0x15575bc'
-func_size: '0x3d'
-func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 49 8B F8 8B DA 48 8B F1 83 FA ??
+func_va: '0x180f48d30'
+func_rva: '0xf48d30'
+func_size: '0x4bf'
+func_sig: 48 89 54 24 ?? 48 89 4C 24 ?? 53 57 48 81 EC ?? ?? ?? ??
