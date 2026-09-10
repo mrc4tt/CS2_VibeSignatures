@@ -121,8 +121,8 @@ binaries:
       sha256: 'd3a76f86ed6d005620484134882efecb965702ca88b2bcbd8b3411fa17033045'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:812a69d9a0abd3d5f4794802acbf1dea0999a0c7f57b3fc3d2657340f53504c5
-file_count: 3755
+config_sha256: sha256:f2f605848207c67087163f95b4d2dd4462657523f1d7b5c7396235c81599939b
+file_count: 3756
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -22558,6 +22558,11 @@ files:
     vfunc_index: 150
     vfunc_offset: '0x4b0'
     vtable_name: CBaseTrigger
+  server/CBaseTrigger_EndTouchInternal.linux.yaml:
+    func_name: CBaseTrigger_EndTouchInternal
+    func_rva: '0xd3ea70'
+    func_sig: 55 BA FF FF FF FF 48 89 E5 41 57 41 56 41 55 49 89 F5
+    func_va: '0xd3ea70'
   server/CBaseTrigger_PassesTriggerFilters.linux.yaml:
     func_name: CBaseTrigger_PassesTriggerFilters
     func_rva: '0xd40bb0'
@@ -46951,5 +46956,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T19:36:54Z'
+last_publish_time: '2026-09-10T20:09:46Z'
 schema_version: 5
