@@ -39,6 +39,7 @@ import yaml
 try:
     import capstone
     _MD = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+    _MD.detail = True          # _thunk_target reads instruction operands
 except Exception:            # the size check degrades gracefully without it
     capstone = None
     _MD = None
@@ -323,6 +324,35 @@ def resolve_vtable(blob, info, relocs, class_name):
     return sorted(best.items())
 
 
+def _thunk_target(blob, info, va, depth=2):
+    """Follow a slot that is only a tail jump into the real implementation.
+
+    Overloads with default arguments get one thunk per signature, all jumping to
+    the same body - CEntityResourceManifest slots 0, 1 and 2 are
+    "xor <args>; jmp 0x3cc340". Comparing the slot itself against the artifact
+    would then miss a perfectly good match on the implementation.
+    """
+    seen = {va}
+    for _ in range(depth):
+        off = va_to_off(info, va)
+        if off is None or _MD is None:
+            return va
+        target = None
+        for ins in _MD.disasm(blob[off:off + 32], va):
+            if ins.mnemonic == "jmp":
+                if ins.operands and ins.operands[0].type == capstone.x86.X86_OP_IMM:
+                    target = ins.operands[0].imm
+                break
+            # only argument shuffling may precede the tail jump
+            if ins.mnemonic not in ("xor", "mov", "lea", "movzx", "movsxd", "nop"):
+                break
+        if target is None or target in seen:
+            return va
+        seen.add(target)
+        va = target
+    return va
+
+
 def verify_vfunc_slot(blob, info, relocs, class_name, index, func_va):
     """'ok' | 'mismatch' | None (could not resolve).
 
@@ -338,9 +368,11 @@ def verify_vfunc_slot(blob, info, relocs, class_name, index, func_va):
     decisive = False
     for _va, slots in tables:
         if index < len(slots):
-            if slots[index] == func_va:
+            got = slots[index]
+            if got == func_va or (got is not None
+                                  and _thunk_target(blob, info, got) == func_va):
                 return "ok"
-            if slots[index] is not None:
+            if got is not None:
                 decisive = True
     return "mismatch" if decisive else None
 

@@ -1,6 +1,6 @@
 func_name: CCSPlayer_WeaponServices_DropWeapon
-func_va: '0x180ac8290'
-func_rva: '0xac8290'
+func_va: '0x180ac7f20'
+func_rva: '0xac7f20'
 func_size: '0x15c'
 vtable_name: CCSPlayer_WeaponServices
 vfunc_offset: '0xe0'

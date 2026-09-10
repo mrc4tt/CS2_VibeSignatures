@@ -21,7 +21,7 @@
     {
       "changes": [
         {
-          "after": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F8 8B DA 48 8B F1 83 FA ?",
+          "after": "40 53 55 41 56 48 81 EC ? ? ? ? 0F 29 74 24 ?",
           "before": "40 53 55 41 56 48 81 EC ? ? ? ? 0F 29 74 24",
           "line": 63,
           "path": [
@@ -186,7 +186,7 @@
           ]
         },
         {
-          "after": "55 48 89 E5 41 56 41 55 41 54 41 89 F4 53 48 83 EC 10 3B B7 90 07 00 00 7C",
+          "after": "55 48 89 E5 41 56 41 55 41 54 41 89 F4 53 48 83 EC 10 3B B7 90 07 00 00 7C 16 48 83 C4 10 5B 41 5C 41 5D 41 5E 5D C3 66 0F 1F 84 00 00 00 00 00 48 89 D6 31 D2 48 89 FB 66 89 55 DC 48 8D 55 DC 49 89 CD 4D 89 C6 E8 C5",
           "before": "55 48 89 E5 41 56 41 55 41 54 41 89 F4 53 48 83 EC ? 3B B7 ? ? ? ? 7C ? 48 83 C4 ? 5B 41 5C 41 5D 41 5E 5D C3 66 0F 1F 84 00 ? ? ? ? 48 89 D6 31 D2 48 89 FB 66 89 55 ? 48 8D 55 ? 49 89 CD 4D 89 C6",
           "line": 394,
           "path": [
@@ -500,17 +500,6 @@
       "updated": false
     },
     {
-      "changes": [
-        {
-          "after": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F8 8B DA 48 8B F1 83 FA ?",
-          "before": "48 89 74 24 20 57 41 54 41 57 48 83 EC 40 45",
-          "line": 226,
-          "path": [
-            "CCSPlayer_WeaponServices::DropWeapon",
-            "windows"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         225,
@@ -518,7 +507,7 @@
         227
       ],
       "name": "CCSPlayer_WeaponServices::DropWeapon",
-      "updated": true
+      "updated": false
     },
     {
       "covered": false,
@@ -862,6 +851,6 @@
   "summary": {
     "covered": 31,
     "total": 68,
-    "updated": 22
+    "updated": 21
   }
 }
