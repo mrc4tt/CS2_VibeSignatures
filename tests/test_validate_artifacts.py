@@ -281,5 +281,71 @@ class VtableTests(unittest.TestCase):
         self.assertEqual(out.errors, [])
 
 
+class ReadSlotsTests(unittest.TestCase):
+    """Guards the walk that truncated CGameRules' table at its first pure virtual."""
+
+    def _image(self, values, base_off=0x2000):
+        blob = bytearray(0x4000)
+        for i, v in enumerate(values):
+            struct.pack_into("<Q", blob, base_off + 8 * i, v)
+        return bytes(blob)
+
+    def test_unresolved_slot_does_not_end_the_table(self):
+        # a pure-virtual slot reads as zero in a PIE; the walk must continue
+        blob = self._image([0x1010, 0, 0x1020, 0x1030])
+        slots = va._read_slots(blob, _fake_info(), None, 0x3000)
+        self.assertEqual(slots, [0x1010, None, 0x1020, 0x1030])
+
+    def test_trailing_unresolved_slots_are_trimmed(self):
+        blob = self._image([0x1010, 0, 0, 0])
+        self.assertEqual(va._read_slots(blob, _fake_info(), None, 0x3000), [0x1010])
+
+    def test_a_long_run_of_zeros_ends_the_table(self):
+        blob = self._image([0x1010] + [0] * 12 + [0x1020])
+        self.assertEqual(va._read_slots(blob, _fake_info(), None, 0x3000), [0x1010])
+
+    def test_a_non_code_entry_ends_the_table(self):
+        blob = self._image([0x1010, 0x3100])       # 0x3100 is data, not code
+        self.assertEqual(va._read_slots(blob, _fake_info(), None, 0x3000), [0x1010])
+
+
+class VerifyVfuncSlotTests(unittest.TestCase):
+    """Multiple inheritance means several vtables; a hit in any of them passes."""
+
+    def _patch(self, tables):
+        va.resolve_vtable = lambda *a, **k: tables
+
+    def setUp(self):
+        self._real = va.resolve_vtable
+
+    def tearDown(self):
+        va.resolve_vtable = self._real
+
+    def test_hit_in_the_primary_table_is_ok(self):
+        self._patch([(0x3000, [0x1010, 0x1020, 0x1030])])
+        self.assertEqual(va.verify_vfunc_slot(b"", _fake_info(), None, "C", 2, 0x1030), "ok")
+
+    def test_hit_in_a_secondary_base_table_is_ok(self):
+        self._patch([(0x3000, [0x1010, 0x1020]), (0x3100, [0x1040, 0x1050, 0x1060])])
+        self.assertEqual(va.verify_vfunc_slot(b"", _fake_info(), None, "C", 2, 0x1060), "ok")
+
+    def test_resolved_slot_holding_something_else_is_a_mismatch(self):
+        self._patch([(0x3000, [0x1010, 0x1020, 0x1030])])
+        self.assertEqual(va.verify_vfunc_slot(b"", _fake_info(), None, "C", 2, 0xDEAD),
+                         "mismatch")
+
+    def test_pure_virtual_slot_is_inconclusive_not_a_mismatch(self):
+        self._patch([(0x3000, [0x1010, None, 0x1030])])
+        self.assertIsNone(va.verify_vfunc_slot(b"", _fake_info(), None, "C", 1, 0xDEAD))
+
+    def test_index_past_every_table_is_inconclusive(self):
+        self._patch([(0x3000, [0x1010, 0x1020])])
+        self.assertIsNone(va.verify_vfunc_slot(b"", _fake_info(), None, "C", 9, 0x1010))
+
+    def test_unresolvable_class_is_inconclusive(self):
+        self._patch([])
+        self.assertIsNone(va.verify_vfunc_slot(b"", _fake_info(), None, "C", 0, 0x1010))
+
+
 if __name__ == "__main__":
     unittest.main()

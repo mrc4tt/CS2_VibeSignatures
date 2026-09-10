@@ -43,7 +43,8 @@ except Exception:            # the size check degrades gracefully without it
     capstone = None
     _MD = None
 
-from auto_hunt_headless import BIN_LINUX, BIN_WIN, load_binary, off_to_va, va_to_off
+from auto_hunt_headless import (BIN_LINUX, BIN_WIN, elf_relocations, load_binary,
+                                off_to_va, va_to_off)
 from source_artifact_schema import canonical_symbol_yaml_bytes
 
 MIN_SIG_BYTES = 24
@@ -220,6 +221,131 @@ def in_data(info, va):
 
 
 # ---------------------------------------------------------------------------
+# RTTI vtable resolution - the strongest available check on a vfunc index
+# ---------------------------------------------------------------------------
+
+def _pointer_sites(blob, info, value, relocs):
+    """Every VA whose stored 8-byte pointer equals `value`."""
+    out = []
+    if relocs:                                  # PIE: the pointer is a relocation
+        out = [site for site, target in relocs.items() if target == value]
+    needle = struct.pack("<Q", value)
+    i = blob.find(needle)
+    while i != -1:
+        va = off_to_va(info, i)
+        if va is not None:
+            out.append(va)
+        i = blob.find(needle, i + 1)
+    return sorted(set(out))
+
+
+def _read_slots(blob, info, relocs, vt_va, limit=512):
+    """Walk vtable slots, keeping None for slots the image does not resolve.
+
+    A pure-virtual slot in a PIE has no relocation and zero file bytes. Stopping
+    there truncates the table and made slot 105 of CGameRules look absent, so an
+    unresolved slot is recorded as None and the walk continues; only a non-zero
+    entry that is not code ends the table.
+    """
+    slots = []
+    unresolved_run = 0
+    for k in range(limit):
+        slot = vt_va + 8 * k
+        off = va_to_off(info, slot)
+        if off is None or off + 8 > len(blob):
+            break
+        target = relocs.get(slot) if relocs else None
+        if target is None:
+            raw = struct.unpack_from("<Q", blob, off)[0]
+            if raw == 0:
+                unresolved_run += 1
+                if unresolved_run > 8:      # long run of zeros: past the table
+                    break
+                slots.append(None)
+                continue
+            target = raw
+        toff = va_to_off(info, target)
+        if toff is None or not is_exec(info, toff):
+            break
+        unresolved_run = 0
+        slots.append(target)
+    while slots and slots[-1] is None:
+        slots.pop()
+    return slots
+
+
+def resolve_vtable(blob, info, relocs, class_name):
+    """[(vtable_va, slots)] for class_name, via the platform's RTTI layout.
+
+    ELF (Itanium ABI): name string -> typeinfo -> _ZTV, reported at +0x10.
+    PE (MSVC): name -> TypeDescriptor -> CompleteObjectLocator -> vftable.
+    Returns [] when the name is not present or not uniquely resolvable, which is
+    normal for template instantiations whose artifact name is not the mangled one.
+    """
+    out = []
+    if relocs is not None:
+        tag = f"{len(class_name)}{class_name}".encode()
+        for m in re.finditer(re.escape(tag) + b"\x00", blob):
+            name_va = off_to_va(info, m.start())
+            if name_va is None:
+                continue
+            for tinfo_plus8 in _pointer_sites(blob, info, name_va, relocs):
+                for vt_plus8 in _pointer_sites(blob, info, tinfo_plus8 - 8, relocs):
+                    vt = vt_plus8 - 8
+                    if vt % 8:
+                        continue
+                    slots = _read_slots(blob, info, relocs, vt + 0x10)
+                    if len(slots) > 1:
+                        out.append((vt + 0x10, slots))
+    else:
+        tag = f".?AV{class_name}@@".encode()
+        for m in re.finditer(re.escape(tag) + b"\x00", blob):
+            td_va = off_to_va(info, m.start() - 0x10)
+            if td_va is None:
+                continue
+            needle = struct.pack("<I", td_va - info["base"])
+            i = blob.find(needle)
+            while i != -1:
+                col_off = i - 0x0C
+                col_va = off_to_va(info, col_off)
+                if col_va is not None and col_off >= 0 \
+                        and struct.unpack_from("<I", blob, col_off)[0] == 1:
+                    for p in _pointer_sites(blob, info, col_va, None):
+                        slots = _read_slots(blob, info, None, p + 8)
+                        if len(slots) > 1:
+                            out.append((p + 8, slots))
+                i = blob.find(needle, i + 1)
+    # keep the richest resolution per address, drop duplicates
+    best = {}
+    for va, slots in out:
+        if va not in best or len(slots) > len(best[va]):
+            best[va] = slots
+    return sorted(best.items())
+
+
+def verify_vfunc_slot(blob, info, relocs, class_name, index, func_va):
+    """'ok' | 'mismatch' | None (could not resolve).
+
+    A class with multiple inheritance has one vtable per non-primary base as well
+    as its primary, and the artifact index refers to whichever holds the method -
+    so a hit in ANY resolved table is a pass. "mismatch" is only claimed when no
+    table holds it AND at least one table is long enough and fully resolved at
+    that index, which keeps a pure-virtual (None) slot from being called wrong.
+    """
+    tables = resolve_vtable(blob, info, relocs, class_name)
+    if not tables:
+        return None
+    decisive = False
+    for _va, slots in tables:
+        if index < len(slots):
+            if slots[index] == func_va:
+                return "ok"
+            if slots[index] is not None:
+                decisive = True
+    return "mismatch" if decisive else None
+
+
+# ---------------------------------------------------------------------------
 # per-category checks
 # ---------------------------------------------------------------------------
 
@@ -323,12 +449,23 @@ def check_gv(rec, d, blob, info, out):
         out.warn(rec, f"gv_va {hex(gv_va)} lands in an executable section, not data")
 
 
-def check_vfunc(rec, d, blob, info, out):
+def check_vfunc(rec, d, blob, info, out, relocs=None):
     idx = d.get("vfunc_index")
     off = d.get("vfunc_offset")
     if idx is not None and off is not None:
         if int(str(off), 16) != 8 * int(idx):
             out.error(rec, f"vfunc_offset {off} is not 8 * vfunc_index {idx}")
+
+    # If the class has RTTI in this module and its vtable resolves uniquely, the
+    # slot itself settles the index - far stronger than comparing modules.
+    cls, fva = d.get("vtable_name"), _hexint(d.get("func_va"))
+    if cls and idx is not None and fva is not None:
+        verdict = verify_vfunc_slot(blob, info, relocs, cls, int(idx), fva)
+        if verdict == "mismatch":
+            out.error(rec, f"{cls} vtable slot {idx} does not hold func_va "
+                           f"{hex(fva)} in this module")
+        elif verdict == "ok":
+            rec["slot_verified"] = True
     if d.get("func_va"):
         check_func(rec, d, blob, info, out)
     elif d.get("vfunc_sig"):
@@ -473,7 +610,8 @@ def cross_platform_vfunc_check(artifacts, out):
         if not vt or idx is None:
             continue
         key = (vt, rec["symbol"], rec["platform"])
-        seen[key][rec["module"]] = (int(idx), d.get("func_va"), d.get("func_size"))
+        seen[key][rec["module"]] = (int(idx), d.get("func_va"), d.get("func_size"),
+                                    rec.get("slot_verified", False))
     for (vt, sym, plat), by_mod in seen.items():
         idxs = {m: v[0] for m, v in by_mod.items()}
         if len(set(idxs.values())) == 1:
@@ -483,6 +621,11 @@ def cross_platform_vfunc_check(artifacts, out):
         # slot on both platforms across every gamever, with different func_size).
         # A disagreement is only provably wrong when a side has no address of its
         # own, i.e. the index was copied from a module it did not belong to.
+        # every side checked against its own module's vtable and passed: the
+        # classes really do differ (CSkeletonInstance has 34 slots in client
+        # against 33 in server on linux, 32 against 31 on windows)
+        if all(v[3] for v in by_mod.values()):
+            continue
         copied = [m for m, v in by_mod.items() if not v[1]]
         sizes = {m: v[2] for m, v in by_mod.items()}
         severity = "error" if copied else "warning"
@@ -530,14 +673,16 @@ def main():
         name = names.get(module)
         path = os.path.join(args.bindir, args.gamever, module, name) if name else None
         if not path or not os.path.exists(path):
-            cache[key] = (None, None, path)
+            cache[key] = (None, None, path, None)
         else:
             blob, info = load_binary(path)
-            cache[key] = (blob, info, path)
+            relocs = elf_relocations(blob) if info["type"] == "elf" else None
+            cache[key] = (blob, info, path, relocs)
         return cache[key]
 
     out = Report(pedantic=args.pedantic)
     artifacts = []
+    slot_verified = 0
     skipped_no_binary = set()
     n = 0
 
@@ -580,7 +725,7 @@ def main():
             out.error(rec, f"rejected by the schema gate: {exc}")
             continue
 
-        blob, info, binpath = binary_for(module, platform)
+        blob, info, binpath, relocs = binary_for(module, platform)
         artifacts.append((rec, d))
         n += 1
         if blob is None:
@@ -593,12 +738,17 @@ def main():
                 rec["va"] = _hexint(d[va_field])
                 break
 
-        CHECKS[category](rec, d, blob, info, out)
+        if category == "vfunc":
+            check_vfunc(rec, d, blob, info, out, relocs)
+            slot_verified += bool(rec.get("slot_verified"))
+        else:
+            CHECKS[category](rec, d, blob, info, out)
 
     cross_platform_vfunc_check(artifacts, out)
 
     if args.as_json:
         print(json.dumps({"gamever": args.gamever, "artifacts": n,
+                          "slot_verified": slot_verified,
                           "errors": out.errors, "warnings": out.warnings}, indent=2))
     else:
         if not args.quiet:
@@ -609,7 +759,11 @@ def main():
         if skipped_no_binary:
             print(f"\nno binary present for: {', '.join(sorted(skipped_no_binary))} "
                   f"(hydrate bin/ from bin_artifacts/ or download the depot)")
-        print(f"\n{n} artifacts checked: {len(out.errors)} errors, {len(out.warnings)} warnings")
+        print(f"\n{n} artifacts checked: {len(out.errors)} errors, "
+              f"{len(out.warnings)} warnings")
+        if slot_verified:
+            print(f"{slot_verified} vfunc indices confirmed against their own "
+                  f"module's vtable via RTTI")
 
     if out.errors:
         return 1
