@@ -702,9 +702,12 @@ ida_kernwin.attach_action_to_menu("Edit/Plugins/CS2 struct member emitter", ACTI
 
 register_action()
 
-# A batch job takes precedence: the driver runs this file as __main__ with
-# CS2_SIG_MAKER_JOB set and waits for the report it writes.
-if os.environ.get("CS2_SIG_MAKER_JOB"):
-    run_batch_job()
-elif __name__ == "__main__":
-    main()
+# Only act when IDA executes this file directly (-S runner.py sets __name__ to
+# "__main__"). Loaded as a plugin, or exec'd by cs2_sig_maker_plugin.py, the
+# module must merely define its actions - otherwise a stray CS2_SIG_MAKER_JOB in
+# the environment would run the queue a second time and rewrite the report.
+if __name__ == "__main__":
+    if os.environ.get("CS2_SIG_MAKER_JOB"):
+        run_batch_job()
+    else:
+        main()
