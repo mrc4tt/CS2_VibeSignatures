@@ -24,6 +24,21 @@ if [ "${NO_REAP:-0}" != "1" ] && ss -tln 2>/dev/null | grep -q ':13337 '; then
     ss -tln 2>/dev/null | grep -q ':13337 ' && { echo "❌ porten er stadig optaget af en anden proces - undersoeg: ss -tlnp | grep 13337"; exit 1; }
 fi
 
+# Symboler som configen pinner til én platform kan aldrig faa en reference paa den
+# anden — fx SendViolationReport, der kun findes i client.dll (se
+# find-ClientAntiTamperTest-windows.py). Uden dette udfoldes {platform} til begge
+# og hver koersel ender med et evigt SKIP.
+PINS="$(mktemp)"
+trap 'rm -f "$PINS"' EXIT
+uv run --with pyyaml python - "$GAMEVER" > "$PINS" <<'PYEOF'
+import sys, yaml
+cfg = yaml.safe_load(open(f"configs/{sys.argv[1]}.yaml"))
+for module in cfg.get("modules", []):
+    for sym in module.get("symbols", []) or []:
+        if isinstance(sym, dict) and sym.get("platform"):
+            print(f"{sym['name']}\t{sym['platform']}")
+PYEOF
+
 # byg mangler-listen (samme tjek som missing-check kommandoen)
 MISSING=$(grep -h "references/" ida_preprocessor_scripts/find-*-decompiles.py | \
   grep -oP 'references/\S+?\.yaml' | sort -u | while read r; do
@@ -39,7 +54,10 @@ MISSING=$(grep -h "references/" ida_preprocessor_scripts/find-*-decompiles.py | 
         continue
       fi
     fi
+    sym2="$(basename "$r" | sed 's/\.{platform\}\.yaml$//;s/\.\(linux\|windows\)\.yaml$//')"
+    pin="$(awk -F'\t' -v s="$sym2" '$1==s {print $2; exit}' "$PINS")"
     for p in linux windows; do
+      [ -n "$pin" ] && [ "$pin" != "$p" ] && continue
       f="ida_preprocessor_scripts/${r/\{platform\}/$p}"
       [ -f "$f" ] || echo "${r/\{platform\}/$p}"
     done
