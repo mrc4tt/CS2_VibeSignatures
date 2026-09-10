@@ -85,14 +85,46 @@ class BoundaryTests(unittest.TestCase):
         blob[0x105] = 0xCC
         self.assertTrue(va.ends_clean(bytes(blob), _fake_info(), 0x1100, 0x5))
 
-    def test_end_on_a_packed_16_byte_boundary_is_clean(self):
-        # GCC places the next function directly after a tail jmp with no padding
-        blob = bytes(bytearray(b"\x55" * 0x2000))
-        self.assertTrue(va.ends_clean(blob, _fake_info(), 0x1100, 0x10))
-
     def test_end_mid_instruction_without_padding_is_not_clean(self):
         blob = bytes(bytearray(b"\x55" * 0x2000))
         self.assertFalse(va.ends_clean(blob, _fake_info(), 0x1100, 0x5))
+
+
+@unittest.skipIf(va._MD is None, "needs capstone")
+class EndsCleanTerminatorTests(unittest.TestCase):
+    """The invariant is that the range ends on a flow terminator.
+
+    Demanding padding or 16-byte alignment after the end flagged 25 correct
+    upstream sizes on 14181, because GCC packs the next function directly after
+    a tail jmp at arbitrary alignment.
+    """
+
+    def _blob(self, body):
+        blob = bytearray(b"\x90" * 0x2000)
+        blob[0x100:0x100 + len(body)] = body
+        return bytes(blob)
+
+    def test_range_ending_on_ret_is_clean_even_with_code_after_it(self):
+        # push rbp; mov rbp,rsp; ret | then the next function starts immediately
+        body = b"\x55\x48\x89\xE5\xC3" + b"\x55\x48\x89\xE5"
+        self.assertTrue(va.ends_clean(self._blob(body), _fake_info(), 0x1100, 5))
+
+    def test_range_ending_on_a_tail_jmp_is_clean(self):
+        body = b"\x55\x48\x89\xE5\xE9\x00\x00\x00\x00" + b"\x55"
+        self.assertTrue(va.ends_clean(self._blob(body), _fake_info(), 0x1100, 9))
+
+    def test_range_ending_mid_function_is_not_clean(self):
+        # ends after "mov rbp,rsp", which does not transfer control
+        body = b"\x55\x48\x89\xE5\xC3" + b"\x55"
+        self.assertFalse(va.ends_clean(self._blob(body), _fake_info(), 0x1100, 4))
+
+    def test_boundary_cutting_an_instruction_in_half_is_not_clean(self):
+        body = b"\x55\x48\x89\xE5\xC3" + b"\x55"
+        self.assertFalse(va.ends_clean(self._blob(body), _fake_info(), 0x1100, 3))
+
+    def test_padding_after_the_end_is_accepted_without_disassembly(self):
+        body = b"\x55\x48\x89\xE5" + b"\xCC"
+        self.assertTrue(va.ends_clean(self._blob(body), _fake_info(), 0x1100, 4))
 
 
 class CategoryTests(unittest.TestCase):

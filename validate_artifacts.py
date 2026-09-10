@@ -36,6 +36,13 @@ from collections import defaultdict
 
 import yaml
 
+try:
+    import capstone
+    _MD = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+except Exception:            # the size check degrades gracefully without it
+    capstone = None
+    _MD = None
+
 from auto_hunt_headless import BIN_LINUX, BIN_WIN, load_binary, off_to_va, va_to_off
 from source_artifact_schema import canonical_symbol_yaml_bytes
 
@@ -162,11 +169,17 @@ def is_boundary(blob, info, va):
     return blob[off - 1] in PADDING or va % 16 == 0
 
 
-def ends_clean(blob, info, va, size):
-    """Does va+size land on padding or on a plausible next function head.
+TERMINATORS = ("ret", "retf", "jmp", "ud2", "int3", "hlt")
 
-    GCC also packs the next function directly after a tail jmp with no padding,
-    so a 16-aligned successor whose first byte is not padding counts too.
+
+def ends_clean(blob, info, va, size):
+    """Does the claimed range end where a function can end?
+
+    Requiring padding or 16-byte alignment after the end is the wrong invariant:
+    GCC packs the next function directly after a tail jmp at arbitrary alignment,
+    which flagged 25 correct upstream sizes on 14181 (CGameEventManager_Shutdown
+    is a genuine 6-byte thunk). The real invariant is that the last instruction
+    in the range transfers control away.
     """
     end = va + size
     off = va_to_off(info, end)
@@ -174,7 +187,16 @@ def ends_clean(blob, info, va, size):
         return False
     if blob[off] in PADDING:
         return True
-    return end % 16 == 0
+    if _MD is None:
+        return end % 16 == 0
+    start = va_to_off(info, va)
+    last = None
+    for ins in _MD.disasm(blob[start:off], va):
+        if ins.address + ins.size > end:
+            return False                  # the boundary cuts an instruction in half
+        last = ins
+    return last is not None and last.address + last.size == end \
+        and last.mnemonic in TERMINATORS
 
 
 def data_sections(info):
