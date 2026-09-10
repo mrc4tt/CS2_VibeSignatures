@@ -51,6 +51,74 @@ address the RIP-relative operand points at, NOT the match address); `vfunc_index
 metadata only — it never reaches a plugin. The filename is always `<Symbol>.<platform>.yaml` with
 no role suffix.
 
+## HOW A SYMBOL IS PRODUCED (upstream's task model — learn this before editing anything)
+
+Three separate mistakes in one session came from guessing at these conventions
+instead of reading upstream. The mechanism is declarative, and the declarations are
+the only thing that survives a gamever bump.
+
+**A task is named after its ANCHOR, not its outputs.** One task can emit several
+symbols. `find-CBaseTrigger_vtable-decompiles` produces both
+`CBaseTrigger_StartTouch` and `CBaseTrigger_EndTouch`, taking the base class's
+anchored indices as input:
+
+```yaml
+- name: find-CBaseTrigger_vtable-decompiles
+  expected_output:
+    - CBaseTrigger_StartTouch.{platform}.yaml
+    - CBaseTrigger_EndTouch.{platform}.yaml
+  expected_input:
+    - CBaseTrigger_vtable.{platform}.yaml
+    - CBaseEntity_EndTouch.{platform}.yaml      # carries vfunc_sig -> the index
+```
+
+So `find-<Symbol>` not existing does NOT mean the symbol is unproduced. Search
+`expected_output` for the artifact, never the task list for the name.
+
+**`GENERATE_YAML_DESIRED_FIELDS` is the durability contract.** A task rewrites its
+artifact with exactly the fields it lists. Editing an artifact by hand adds a field
+that the next run silently drops — which is why a symbol can sit in the snapshot
+for years carrying an index but no signature: no task ever asked for one. To add a
+field permanently, add it to the producing task's list, then let the run regenerate
+the artifact.
+
+**Two shapes of task, and they are not interchangeable:**
+
+| | real hunting task | bare declaration task (fork-owned) |
+|---|---|---|
+| name | `find-X-linux` | `find-X-linux` |
+| platform | `platform: linux` key on the task | none |
+| output path | `X.{platform}.yaml` (expanded at run time) | `X.linux.yaml` (literal) |
+| preprocessor | required, filename == task name | none |
+| purpose | find the symbol | stop pack dropping an artifact as undeclared |
+
+A `{platform}` path in a declaration task is wrong: the name must state which
+platform the artifact was produced for. One entry per platform.
+
+**Discovery patterns, cheapest first** — a symbol usually needs only one:
+- plain relocation: symbol in `TARGET_FUNCTION_NAMES`, previous gamever's
+  `func_sig` locates it in the new binary. `find-ClientPrint.py` is nothing but this.
+- `INHERIT_VFUNCS`: `(target, inherit_vtable_class, base_vfunc_name, generate_func_sig)`
+  — take the slot index from one record, look it up in a class's vtable, generate the
+  signature. The lever for a virtual whose address moves but whose slot does not.
+- `FUNC_XREFS`: string/xref anchored search.
+- `LLM_DECOMPILE`: match a predecessor's decompiled shape; the fragile one, hence
+  the agent fallbacks.
+
+**`func_sig_allow_across_function_boundary:true`** belongs in the field list for any
+function too short to signature on its own. Below ~0x30 bytes a body-only pattern
+cannot be unique, and the generator then un-wildcards RIP-relative or branch
+displacement bytes — which move on every rebuild. Crossing into padding and the next
+head keeps them wildcarded. `find-CFlashbangProjectile_Spawn-decompiles.py` carries
+the precedent and the explanation.
+
+**Before naming anything, ask what the binary calls it.** `libserver.so` carries real
+symbol names for much of the server module: `ClientPrint`, `UTIL_ClientPrintFilter`,
+`CCSPlayer_ItemServices_GiveNamedItem` are the binary's own names, and the repo
+already files the neighbouring overload as `CCSPlayer_ItemServices_GiveNamedItemBool`.
+Two records under one name, or one name on two addresses, is the defect class that
+cost the most time this session.
+
 ## INVARIANTS ("iorden" means all of these hold)
 
 - **Declared set comes from find-tasks, not from `symbols:`.** An artifact with no declaring task
@@ -249,6 +317,21 @@ Duplicate YAML mapping keys keep only the LAST value and warn about nothing. 141
 48 harmless `member:` repeats, and 14 `alias:` repeats that had stacked fourteen
 `CServerSideClient::m_*` keys onto one unrelated symbol and thrown thirteen away. `load_config` now
 refuses duplicate keys — do not work around it.
+
+### 18. NEVER fix an artifact by editing the artifact
+The task that produces it rewrites it from `GENERATE_YAML_DESIRED_FIELDS` on the
+next run, so a hand-added field lasts exactly until the next gamever. Four
+signatures added by hand this session would have vanished that way. Add the field to
+the producing task instead — and find that task by searching `expected_output` for
+the artifact name, since tasks are named after their anchor, not their outputs.
+
+### 19. NEVER invent a symbol name to satisfy a report
+`CBaseTrigger_EndTouchInternal` was invented to give a tracker something to compare
+against, and it was wrong three ways: upstream tracks no such symbol, no generator
+consumes it, and the body it named is reached from two different wrappers so it was
+not specific to that class at all. If a downstream key and an analysis record
+disagree, the answer is an alias, a decision about which is correct, or an honest
+advisory — never a new name that makes the red go away.
 
 ## ALWAYS DO
 
