@@ -211,16 +211,33 @@ FORK_OWNED_REMOVALS = [
     ("CNetworkMessages_GetNetworkGroupColor", "networksystem", "never hunted, never shipped"),
     # Two symbols claimed the single downstream "ClientPrint" key: this one by its own
     # name, and ClientPrintToController through alias: [ClientPrint]. Emission order
-    # decided the winner, which is rule 15. CounterStrikeSharp is the only consumer and
-    # its delegate settles which one is correct:
-    #     MemoryFunctionVoid<IntPtr, HudDestination, string, IntPtr x4> ClientPrintFunc
-    #         = new(GameData.GetSignature("ClientPrint"));
-    # Argument 1 is the controller pointer (ClientPrintAll drops exactly that argument),
-    # and ClientPrintToController.windows opens with 48 85 C9 0F 84 - test rcx,rcx; je -
-    # the null check on that pointer. So the value already shipping is the right one, and
-    # retiring THIS declaration makes the winner deterministic without changing a byte
-    # downstream. The find-task and both artifacts stay, so the function keeps its locator.
-    ("ClientPrint", "server", "key belongs to ClientPrintToController (CSS delegate takes the controller first)"),
+    # decided the winner, which is rule 15. A headless IDA pass over libserver.so
+    # identified all three candidates in the family (the binary carries real symbol
+    # names here, so this is not inference):
+    #
+    #   0x17c7b30  UTIL_ClientPrintFilter(filter, dest, msg, p1..p4)   size 0xd02
+    #   0x17c8840  ClientPrint(pawn, dest, msg, p1..p4)                size 0xf2
+    #   0x17c8940  sub_17C8940(controller, dest, msg, p1..p4)          size 0x95
+    #
+    # ClientPrint reads the handle at pawn+3728, resolves the controller through the
+    # entity table, builds a single-recipient filter and forwards to
+    # UTIL_ClientPrintFilter. sub_17C8940 skips the pawn step: it passes its pointer
+    # straight to the same helper (sub_17BF520), so it takes the CONTROLLER - which is
+    # what our ClientPrintToController label already said, and what a managed plugin
+    # holds (CCSPlayerController.Handle). A filter, the third variant, cannot be built
+    # from managed code at all, so upstream CSS's historical template value pointing
+    # there was never usable.
+    #
+    # So the value already shipping (the controller variant) is the right one for the
+    # key, and retiring THIS declaration makes the winner deterministic without
+    # changing a byte downstream. The find-task and both artifacts stay as locators.
+    #
+    # Note for the cs2-signatures tracker: it maps a gamedata key to the snapshot
+    # symbol of the same name, so it compares the shipped controller sig against this
+    # pawn variant and reports "outdated vs reference". The fix belongs on that side,
+    # as one entry in its data/symbol_aliases.json:
+    #     "ClientPrint": "ClientPrintToController"
+    ("ClientPrint", "server", "key belongs to ClientPrintToController (controller variant; 0x17c8840 takes the pawn)"),
     # Upstream labels engine vfunc slot 0xb8 on the receiver at 0x180613ca8
     # INetworkSystem::RemoveNetChannel. A headless IDA pass read the registration
     # verbatim - (**v136)(v136, "LegacyGameUI001", qword_180613CA8) - and the slot map
