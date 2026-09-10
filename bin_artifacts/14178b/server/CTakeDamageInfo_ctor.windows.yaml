@@ -1,0 +1,5 @@
+func_name: CTakeDamageInfo_ctor
+func_va: '0x180e9dcd0'
+func_rva: '0xe9dcd0'
+func_size: '0x168'
+func_sig: 48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 60 45 33 F6

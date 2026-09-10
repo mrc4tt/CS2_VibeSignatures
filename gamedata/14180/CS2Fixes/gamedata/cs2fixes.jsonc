@@ -225,8 +225,8 @@
 		"CTakeDamageInfo":
 		{
 			"library": "server",
-			"windows": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 45 33 F6 48 C7 41",
-			"linux": "49 BB ? ? ? ? ? ? ? ? 55 48 89 E5 48 83 EC ? 4C 8D 15"
+			"windows": "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 60 45 33 F6",
+			"linux": "49 BB 00 00 00 00 00 00 80 3F 55 48 89 E5 48 83 EC 10 4C 8D 15 ? ? ? 00"
 		},
 		// "%sRecv usercmd %d.  Margin:%5.1fms net +%2d queue =%5.1f total\n"
 		"ProcessUsercmds":
@@ -499,7 +499,7 @@
 		"ServerMovementUnlock":
 		{
 			"windows": "E9 B0 00 00 00 90",
-			"linux": "90 90 90 90 90 90"
+			"linux": "66 0F 1F 44 00 00"
 		},
 		"FixWaterFloorJump":
 		{

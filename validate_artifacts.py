@@ -213,6 +213,55 @@ def ends_clean(blob, info, va, size):
     return end % 16 == 0
 
 
+PROLOGUES = (
+    b"\x55\x48\x89\xe5",              # push rbp; mov rbp, rsp        (gcc)
+    b"\x48\x89\x5c\x24",              # mov [rsp+x], rbx              (msvc)
+    b"\x48\x89\x6c\x24",
+    b"\x48\x89\x74\x24",
+    b"\x48\x8b\xc4",                  # mov rax, rsp                  (msvc)
+    b"\x4c\x8b\xdc",                  # mov r11, rsp                  (msvc)
+    b"\xf3\x0f\x1e\xfa",              # endbr64
+)
+
+
+def spans_a_function_head(blob, info, va, size):
+    """Does the claimed range swallow a following function?
+
+    A range can end on a valid terminator plus padding and still be far too long,
+    because the NEXT function ends that way too - CTakeDamageInfo_ctor.linux was
+    recorded as 0x70d when the body stops at 0xf9, seven bytes of cc padding
+    follow, and a fresh "push rbp; mov rbp, rsp" prologue starts 16-aligned at
+    0x1addac0.
+
+    Padding plus 16-byte alignment alone is NOT enough: compilers align loop heads
+    and cold blocks inside a function the same way, which flagged 615 correct
+    artifacts. A real boundary also needs a recognisable prologue AND no branch
+    into it from the code before it - an internal island is always a jump target.
+    """
+    start = va_to_off(info, va)
+    end = va_to_off(info, va + size)
+    if start is None or end is None or _MD is None:
+        return None
+
+    targets = set()
+    for ins in _MD.disasm(blob[start:end], va):
+        if ins.mnemonic.startswith("j") and ins.operands \
+                and ins.operands[0].type == capstone.x86.X86_OP_IMM:
+            targets.add(ins.operands[0].imm)
+
+    for k in range(start + 0x10, min(end, len(blob) - 4)):
+        v = off_to_va(info, k)
+        if v is None or v % 16 or v in targets:
+            continue
+        # a RUN of padding, not one byte: "mov rcx, r12" ends in 0xCC, which made
+        # GameStateAPI_GetPlayerStatsJSO.windows look like it swallowed a function
+        if blob[k - 2:k] not in (b"\xcc\xcc", b"\x90\x90") or blob[k] in PADDING:
+            continue
+        if any(blob[k:k + len(p)] == p for p in PROLOGUES):
+            return v
+    return None
+
+
 def data_sections(info):
     return [(fo, v, fs) for fo, v, fs, fl in info["segs"] if not (fl & 0x1)]
 
@@ -444,8 +493,15 @@ def check_func(rec, d, blob, info, out):
     size = d.get("func_size")
     if size is None or int(str(size), 16) == 0:
         out.warn(rec, "func_size is 0x0 (unknown)")
-    elif not ends_clean(blob, info, va, int(str(size), 16)):
-        out.warn(rec, f"func_size {size} does not end on padding or a 16-byte boundary")
+    else:
+        n = int(str(size), 16)
+        if not ends_clean(blob, info, va, n):
+            out.warn(rec, f"func_size {size} does not end on padding or a 16-byte boundary")
+        else:
+            inner = spans_a_function_head(blob, info, va, n)
+            if inner is not None:
+                out.warn(rec, f"func_size {size} runs past a function head at "
+                              f"{hex(inner)} - the range swallows the next function")
 
     if d.get("func_sig"):
         check_sig_field(rec, blob, info, "func_sig", d["func_sig"], va, out, out.pedantic)

@@ -136,6 +136,28 @@
       "updated": true
     },
     {
+      "changes": [
+        {
+          "after": "48 89 5C 24 08 44 88 44 24 18 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 80",
+          "before": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D",
+          "line": 29,
+          "path": [
+            "CCSPlayerController::HandleCommand_JoinTeam",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC 48 01 00 00",
+          "before": "55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC",
+          "line": 30,
+          "path": [
+            "CCSPlayerController::HandleCommand_JoinTeam",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         28,
@@ -144,7 +166,7 @@
         32
       ],
       "name": "CCSPlayerController::HandleCommand_JoinTeam",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -476,6 +498,6 @@
   "summary": {
     "covered": 30,
     "total": 30,
-    "updated": 10
+    "updated": 11
   }
 }

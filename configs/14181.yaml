@@ -6710,6 +6710,9 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CCSPlayerController_HandleCommand_JoinTeam-local
+        optional_output:
+          - CCSPlayerController_HandleCommand_JoinTeam.{platform}.yaml
       - name: find-CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem-server
         optional_output:
           - CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml

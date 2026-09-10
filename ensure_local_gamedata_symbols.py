@@ -151,6 +151,9 @@ FORK_OWNED_PLATFORM_PINS = [
     # always had and linux stops being reported as missing.
     ("INetworkSystem_RemoveNetChannel", "engine", "windows",
      "no linux call site; windows receiver is an engine service, not INetworkSystem"),
+    # windows-only in every gamever that has it (14172 onward); upstream added the
+    # pin itself from 14180, so this only backports it to 14178b
+    ("SendViolationReport", "client", "windows", "no linux artifact in any gamever"),
 ]
 # Fork-owned symbol REMOVALS. Upstream declares these, but the binary evidence says
 # they cannot be produced, so every run logged a missing_yaml warning and nothing
@@ -178,6 +181,9 @@ FORK_OWNED_REMOVALS = [
     # and the artifact stay, so the call-site locator survives in the snapshot and
     # a future consumer can re-declare the symbol with the bytes it wants.
     ("OnServerVoiceData_IsPlayingDemo_Callee", "client", "locator only, patch_bytes deliberately absent"),
+    # 14178b declares it in both engine and server; the artifact only ever lives in
+    # engine, and upstream dropped the server copy from 14180 onward
+    ("CServerSideClient_SetName", "server", "stray duplicate; the artifact lives in engine"),
 ]
 
 # Fork-owned symbol MOVES between module blocks. Upstream declares the symbol under a
@@ -218,6 +224,10 @@ FORK_OWNED_OPTIONAL_TASKS = [
      "CEnvHudHint_API_ShowHudHint.{platform}.yaml"),
     ("find-CCSPlayer_MovementServices_WaterMove-verified", "server",
      "CCSPlayer_MovementServices_WaterMove.{platform}.yaml"),
+    # upstream declares the symbol but ships no task for it, so the artifact was
+    # dropped as undeclared on every gamever that has one
+    ("find-CCSPlayerController_HandleCommand_JoinTeam-local", "server",
+     "CCSPlayerController_HandleCommand_JoinTeam.{platform}.yaml"),
     # cross-module relocations: the symbol is declared for this module too, but only
     # the other module was ever analysed, so the artifact had no declaring task here
     ("find-g_pGameEntitySystem", "client", "g_pGameEntitySystem.{platform}.yaml"),
@@ -697,7 +707,12 @@ def _enforce_fork_owned_tasks_once(text):
             at = next(i for i in range(start, end) if lines[i] == f"      - name: {anchor}")
         except StopIteration:
             continue  # anchor not present (yet) - a later round may restore it
-        lines[at:at] = [task, "        expected_output:", f"          - {symbol}.{{platform}}.yaml"]
+        # optional_output, not expected_output: expected makes the path REQUIRED and
+        # pack then dies with "Missing required symbol YAML" on any gamever where the
+        # artifact has not been recovered yet - which is what happened the moment
+        # these tasks were re-asserted onto 14180 and 14178b. Optional still declares
+        # the artifact, so it is packed wherever it does exist.
+        lines[at:at] = [task, "        optional_output:", f"          - {symbol}.{{platform}}.yaml"]
         module_starts = [(i, l[len("  - name: "):]) for i, l in enumerate(lines)
                          if l.startswith("  - name: ") and l.count(":") == 1]
         added += 1
