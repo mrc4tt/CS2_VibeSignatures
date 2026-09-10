@@ -2,6 +2,7 @@ func_name: CBaseEntity_Activate
 func_va: '0x180c7b460'
 func_rva: '0xc7b460'
 func_size: '0x1bf'
+func_sig: 48 89 5C 24 10 48 89 74 24 18 57 48 83 EC 50 0F 29 74 24 40
 vtable_name: CBaseEntity
 vfunc_offset: '0x68'
 vfunc_index: 13

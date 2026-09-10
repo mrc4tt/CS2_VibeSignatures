@@ -2,6 +2,7 @@ func_name: CSource2Client_CreateMove
 func_va: '0x180b291f0'
 func_rva: '0xb291f0'
 func_size: '0xe'
+func_sig: 48 8B 0D ?? ?? ?? ?? 48 8B 01 48 FF 60 40 CC CC 48 89 5C 24 08 48 89 7C 24 10
 vtable_name: CSource2Client
 vfunc_offset: '0x80'
 vfunc_index: 16

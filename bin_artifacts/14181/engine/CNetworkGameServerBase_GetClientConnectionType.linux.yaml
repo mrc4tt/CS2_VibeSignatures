@@ -2,6 +2,7 @@ func_name: CNetworkGameServerBase_GetClientConnectionType
 func_va: '0x4f4ad0'
 func_rva: '0x4f4ad0'
 func_size: '0x26'
+func_sig: 31 C0 85 F6 78 ?? 39 B7 48 02 00 00 7E ?? 48 8B 97 50 02 00 00
 vtable_name: CNetworkGameServerBase
 vfunc_offset: '0x1b8'
 vfunc_index: 55

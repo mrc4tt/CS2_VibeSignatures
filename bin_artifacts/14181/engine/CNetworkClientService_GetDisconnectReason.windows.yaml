@@ -2,6 +2,7 @@ func_name: CNetworkClientService_GetDisconnectReason
 func_va: '0x1801d5790'
 func_rva: '0x1d5790'
 func_size: '0x8'
+func_sig: 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B F1
 vtable_name: CNetworkClientService
 vfunc_offset: '0x120'
 vfunc_index: 36

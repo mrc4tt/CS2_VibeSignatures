@@ -2,6 +2,7 @@ func_name: CGameMoney_GetDataDescMap
 func_va: '0x18029c800'
 func_rva: '0x29c800'
 func_size: '0x8'
+func_sig: 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 41 60
 vtable_name: CGameMoney_vtable
 vfunc_offset: '0x158'
 vfunc_index: 43

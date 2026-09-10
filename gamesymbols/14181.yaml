@@ -642,6 +642,7 @@ files:
   client/CGameSystemReallocatingFactory_CSource2EntitySystem_Init.linux.yaml:
     func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_Init
     func_rva: '0x1717e80'
+    func_sig: 55 48 89 E5 E8 ?? ?? ?? ?? B8 01 00 00 00 5D C3 48 8D 05 ?? ?? ?? ??
     func_size: '0x10'
     func_va: '0x1717e80'
     vfunc_index: 0
@@ -650,6 +651,7 @@ files:
   client/CGameSystemReallocatingFactory_CSource2EntitySystem_Init.windows.yaml:
     func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_Init
     func_rva: '0x980310'
+    func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC 20 48 8B 05 ?? ?? ?? ??
     func_size: '0x5'
     func_va: '0x180980310'
     vfunc_index: 0
@@ -748,6 +750,7 @@ files:
   client/CLoopModeFactory_CLoopModeGame_Init.linux.yaml:
     func_name: CLoopModeFactory_CLoopModeGame_Init
     func_rva: '0x17514f0'
+    func_sig: 48 89 F7 E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC 55 48 89 E5 41 57 41 56 41 89 F6
     func_size: '0x8'
     func_va: '0x17514f0'
     vfunc_index: 0
@@ -756,6 +759,7 @@ files:
   client/CLoopModeFactory_CLoopModeGame_Init.windows.yaml:
     func_name: CLoopModeFactory_CLoopModeGame_Init
     func_rva: '0x9f1700'
+    func_sig: 40 53 48 83 EC 50 48 8D 0D ?? ?? ?? ?? 48 8B DA
     func_size: '0xd9'
     func_va: '0x1809f1700'
     vfunc_index: 0
@@ -1517,6 +1521,7 @@ files:
   client/CSource2Client_CreateMove.windows.yaml:
     func_name: CSource2Client_CreateMove
     func_rva: '0xb291f0'
+    func_sig: 48 8B 0D ?? ?? ?? ?? 48 8B 01 48 FF 60 40 CC CC 48 89 5C 24 08 48 89 7C 24 10
     func_size: '0xe'
     func_va: '0x180b291f0'
     vfunc_index: 16
@@ -2010,6 +2015,7 @@ files:
   client/CSpawnGroupMgrGameSystem_DoesGameSystemReallocate.linux.yaml:
     func_name: CSpawnGroupMgrGameSystem_DoesGameSystemReallocate
     func_rva: '0xf62ab0'
+    func_sig: 48 8B 3D ?? ?? ?? ?? 48 8B 07 FF 60 40 CC CC CC 48 8B 3D ?? ?? ?? ?? 48 85 FF 74 ?? 48 8B 07 FF 60 38 66 0F 1F 44 00 00 C3 0F 1F 80 00 00 00 00 48 8B 3D ?? ?? ?? ?? 48 85 FF 74 ?? 48 8B 07 FF 60 38 66 0F 1F 44 00 00 C3 CC CC CC CC CC CC CC C3
     func_size: '0xd'
     func_va: '0xf62ab0'
     vfunc_index: 62
@@ -2018,6 +2024,7 @@ files:
   client/CSpawnGroupMgrGameSystem_DoesGameSystemReallocate.windows.yaml:
     func_name: CSpawnGroupMgrGameSystem_DoesGameSystemReallocate
     func_rva: '0x39d9c0'
+    func_sig: 48 8B 0D ?? ?? ?? ?? 48 8B 01 48 FF 60 40 CC CC 48 8B 0D ?? ?? ?? ?? 48 8B 01 48 FF 60 40 CC CC 48 8B 0D ?? ?? ?? ?? 48 8B 01 48 FF 60 40 CC CC 40 53 48 81 EC A0 04 00 00
     func_size: '0xe'
     func_va: '0x18039d9c0'
     vfunc_index: 62
@@ -3947,6 +3954,7 @@ files:
   client/IGameSystem_OnClientAdvanceTick.windows.yaml:
     func_name: IGameSystem_OnClientAdvanceTick
     func_rva: '0x153d20'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC 20 48 8D 05 ?? ?? ?? ?? C6 41 14 FF
     func_size: '0x3'
     func_va: '0x180153d20'
     vfunc_index: 36
@@ -3995,6 +4003,7 @@ files:
   client/IGameSystem_OnClientGamePostSimulate.windows.yaml:
     func_name: IGameSystem_OnClientGamePostSimulate
     func_rva: '0x153d40'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC 20 48 8D 05 ?? ?? ?? ?? C6 41 14 FF
     func_size: '0x3'
     func_va: '0x180153d40'
     vfunc_index: 38
@@ -5975,6 +5984,7 @@ files:
   engine/CEngineClient_GetStatsAppID.windows.yaml:
     func_name: CEngineClient_GetStatsAppID
     func_rva: '0x75d80'
+    func_sig: 8B 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC CC 48 8B 05 ?? ?? ?? ??
     func_size: '0x7'
     func_va: '0x180075d80'
     vfunc_index: 15
@@ -5991,6 +6001,7 @@ files:
   engine/CEngineClient_IsPlayingDemo.windows.yaml:
     func_name: CEngineClient_IsPlayingDemo
     func_rva: '0x75f70'
+    func_sig: 48 83 3D 28 87 89 00 00 74 ?? 48 8B 0D ?? ?? ?? ??
     func_size: '0x1b'
     func_va: '0x180075f70'
     vfunc_index: 42
@@ -6563,6 +6574,7 @@ files:
   engine/CEngineServer_GetAchievementMgr.linux.yaml:
     func_name: CEngineServer_GetAchievementMgr
     func_rva: '0x519090'
+    func_sig: 48 8B 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 05 ?? ?? ?? ?? 0F B6 00
     func_size: '0x8'
     func_va: '0x519090'
     vfunc_index: 79
@@ -6571,6 +6583,7 @@ files:
   engine/CEngineServer_GetAchievementMgr.windows.yaml:
     func_name: CEngineServer_GetAchievementMgr
     func_rva: '0x76400'
+    func_sig: 48 8B 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8B 0D ?? ?? ?? ?? 48 8B 01 48 FF A0 70 01 00 00
     func_size: '0x8'
     func_va: '0x180076400'
     vfunc_index: 79
@@ -6597,6 +6610,7 @@ files:
   engine/CEngineServer_GetClientSteamID.linux.yaml:
     func_name: CEngineServer_GetClientSteamID
     func_rva: '0x519570'
+    func_sig: 48 8D 05 ?? ?? ?? ?? 55 48 89 E5 41 54 53 48 63 DE 48 8B 38 E8 ?? ?? ?? ?? 48 85 C0 74 ?? 85 DB 78 ?? 48 89 C7 49 89 C4 E8 ?? ?? ?? ?? 39 D8 7E ?? 41 39 9C 24 48 02 00 00 7E ?? 49 8B 84 24 50 02 00 00 48 8B 14 D8
     func_size: '0x10f'
     func_va: '0x519570'
     vfunc_index: 69
@@ -6605,6 +6619,7 @@ files:
   engine/CEngineServer_GetClientSteamID.windows.yaml:
     func_name: CEngineServer_GetClientSteamID
     func_rva: '0xa1b60'
+    func_sig: 48 83 EC 28 48 8B 05 ?? ?? ?? ?? 48 85 C0 74 ?? 85 D2 78 ?? 3B 90 48 02 00 00 7D ?? 48 8B 80 50 02 00 00 48 63 CA 48 8B 0C C8 48 85 C9 74 ?? 48 81 C1 AB 00 00 00
     func_size: '0x4e'
     func_va: '0x1800a1b60'
     vfunc_index: 69
@@ -6703,6 +6718,7 @@ files:
   engine/CEngineServer_GetSteamUniverse.linux.yaml:
     func_name: CEngineServer_GetSteamUniverse
     func_rva: '0x51a5d0'
+    func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 48 8D 3D ?? ?? ?? ??
     func_size: '0x5'
     func_va: '0x51a5d0'
     vfunc_index: 18
@@ -6720,6 +6736,7 @@ files:
   engine/CEngineServer_IsDedicatedServer.linux.yaml:
     func_name: CEngineServer_IsDedicatedServer
     func_rva: '0x51a3a0'
+    func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 55 48 89 E5 53 48 89 F3
     func_size: '0x5'
     func_va: '0x51a3a0'
     vfunc_index: 34
@@ -6728,6 +6745,7 @@ files:
   engine/CEngineServer_IsDedicatedServer.windows.yaml:
     func_name: CEngineServer_IsDedicatedServer
     func_rva: '0xa08f0'
+    func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 33 C0
     func_size: '0x5'
     func_va: '0x1800a08f0'
     vfunc_index: 34
@@ -6736,6 +6754,7 @@ files:
   engine/CEngineServer_IsLogEnabled.linux.yaml:
     func_name: CEngineServer_IsLogEnabled
     func_rva: '0x519030'
+    func_sig: 48 8D 05 ?? ?? ?? ?? 0F B6 40 58 C3 CC CC CC CC
     func_size: '0xc'
     func_va: '0x519030'
     vfunc_index: 55
@@ -6744,6 +6763,7 @@ files:
   engine/CEngineServer_IsLogEnabled.windows.yaml:
     func_name: CEngineServer_IsLogEnabled
     func_rva: '0xa0f00'
+    func_sig: 0F B6 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8B 0D ?? ?? ?? ?? 48 85 C9 0F 85 ?? ?? ?? ??
     func_size: '0x8'
     func_va: '0x1800a0f00'
     vfunc_index: 55
@@ -7186,6 +7206,7 @@ files:
   engine/CEngineServiceMgr_GetAddonCount.linux.yaml:
     func_name: CEngineServiceMgr_GetAddonCount
     func_rva: '0x366990'
+    func_sig: 8B 87 28 02 00 00 C3 CC CC CC CC CC CC CC CC CC
     func_size: '0x7'
     func_va: '0x366990'
     vfunc_index: 39
@@ -7194,6 +7215,7 @@ files:
   engine/CEngineServiceMgr_GetAddonCount.windows.yaml:
     func_name: CEngineServiceMgr_GetAddonCount
     func_rva: '0x214720'
+    func_sig: 8B 81 28 02 00 00 C3 CC CC CC CC CC CC CC CC CC
     func_size: '0x7'
     func_va: '0x180214720'
     vfunc_index: 39
@@ -7218,6 +7240,7 @@ files:
   engine/CEngineServiceMgr_GetEventDispatcher.linux.yaml:
     func_name: CEngineServiceMgr_GetEventDispatcher
     func_rva: '0x3667c0'
+    func_sig: 48 8D 87 78 01 00 00 C3 CC CC CC CC CC CC CC CC
     func_size: '0x8'
     func_va: '0x3667c0'
     vfunc_index: 29
@@ -7226,6 +7249,7 @@ files:
   engine/CEngineServiceMgr_GetEventDispatcher.windows.yaml:
     func_name: CEngineServiceMgr_GetEventDispatcher
     func_rva: '0x210b20'
+    func_sig: 48 8D 81 78 01 00 00 C3 CC CC CC CC CC CC CC CC
     func_size: '0x8'
     func_va: '0x180210b20'
     vfunc_index: 29
@@ -7862,6 +7886,7 @@ files:
   engine/CGameResourceService_RegisterEventMap.linux.yaml:
     func_name: CGameResourceService_RegisterEventMap
     func_rva: '0x3d1970'
+    func_sig: 48 89 F8 31 C9 48 89 F7 48 89 C6 E9 ?? ?? ?? ?? 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC 88 00 00 00
     func_size: '0x10'
     func_va: '0x3d1970'
     vfunc_index: 19
@@ -7870,6 +7895,7 @@ files:
   engine/CGameResourceService_RegisterEventMap.windows.yaml:
     func_name: CGameResourceService_RegisterEventMap
     func_rva: '0x1aae10'
+    func_sig: 48 8B C2 48 8B D1 48 8B C8 E9 ?? ?? ?? ?? CC CC 48 89 5C 24 18 55
     func_size: '0xe'
     func_va: '0x1801aae10'
     vfunc_index: 19
@@ -8629,6 +8655,7 @@ files:
   engine/CLoopTypeClientServer_DeactivateLoop.linux.yaml:
     func_name: CLoopTypeClientServer_DeactivateLoop
     func_rva: '0x390c90'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB 48 83 EC 38
     func_size: '0xe7'
     func_va: '0x390c90'
     vfunc_index: 8
@@ -8637,6 +8664,7 @@ files:
   engine/CLoopTypeClientServer_DeactivateLoop.windows.yaml:
     func_name: CLoopTypeClientServer_DeactivateLoop
     func_rva: '0x225730'
+    func_sig: 48 89 5C 24 10 48 89 6C 24 18 56 57 41 56 48 83 EC 40 48 8B D9
     func_size: '0x13f'
     func_va: '0x180225730'
     vfunc_index: 7
@@ -9244,6 +9272,7 @@ files:
   engine/CNetworkClientService_GetDisconnectReason.linux.yaml:
     func_name: CNetworkClientService_GetDisconnectReason
     func_rva: '0x417180'
+    func_sig: 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 0F B6 47 6A
     func_size: '0x8'
     func_va: '0x417180'
     vfunc_index: 37
@@ -9252,6 +9281,7 @@ files:
   engine/CNetworkClientService_GetDisconnectReason.windows.yaml:
     func_name: CNetworkClientService_GetDisconnectReason
     func_rva: '0x1d5790'
+    func_sig: 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B F1
     func_size: '0x8'
     func_va: '0x1801d5790'
     vfunc_index: 36
@@ -9278,6 +9308,7 @@ files:
   engine/CNetworkClientService_IsActive.linux.yaml:
     func_name: CNetworkClientService_IsActive
     func_rva: '0x4171b0'
+    func_sig: 48 8B 87 A0 00 00 00 48 85 C0 74 ?? 83 B8 40 02 00 00 05
     func_size: '0x23'
     func_va: '0x4171b0'
     vfunc_index: 32
@@ -9286,6 +9317,7 @@ files:
   engine/CNetworkClientService_IsActive.windows.yaml:
     func_name: CNetworkClientService_IsActive
     func_rva: '0x1d6810'
+    func_sig: 48 8B 81 A0 00 00 00 48 85 C0 75 ?? C3 83 B8 30 02 00 00 06
     func_size: '0x18'
     func_va: '0x1801d6810'
     vfunc_index: 31
@@ -9294,6 +9326,7 @@ files:
   engine/CNetworkClientService_IsConnected.linux.yaml:
     func_name: CNetworkClientService_IsConnected
     func_rva: '0x4171e0'
+    func_sig: 48 8B 87 A0 00 00 00 48 85 C0 74 ?? 83 B8 40 02 00 00 01 0F 9F C0
     func_size: '0x23'
     func_va: '0x4171e0'
     vfunc_index: 33
@@ -9302,6 +9335,7 @@ files:
   engine/CNetworkClientService_IsConnected.windows.yaml:
     func_name: CNetworkClientService_IsConnected
     func_rva: '0x1d6830'
+    func_sig: 48 8B 81 A0 00 00 00 48 85 C0 75 ?? C3 83 B8 30 02 00 00 02
     func_size: '0x18'
     func_va: '0x1801d6830'
     vfunc_index: 32
@@ -9310,6 +9344,7 @@ files:
   engine/CNetworkClientService_IsConnecting.linux.yaml:
     func_name: CNetworkClientService_IsConnecting
     func_rva: '0x42d270'
+    func_sig: 48 8B BF A0 00 00 00 48 85 FF 74 ?? E9 ?? ?? ?? ?? 0F 1F 80 00 00 00 00 31 C0 C3 CC CC CC CC CC 55
     func_size: '0x1b'
     func_va: '0x42d270'
     vfunc_index: 35
@@ -9318,6 +9353,7 @@ files:
   engine/CNetworkClientService_IsConnecting.windows.yaml:
     func_name: CNetworkClientService_IsConnecting
     func_rva: '0x1d6d70'
+    func_sig: 48 8B 81 A0 00 00 00 48 85 C0 74 ?? 80 B8 9D 02 00 00 00 75 ?? 0F B6 05 ?? ?? ?? ??
     func_size: '0x3c'
     func_va: '0x1801d6d70'
     vfunc_index: 34
@@ -9326,6 +9362,7 @@ files:
   engine/CNetworkClientService_IsPutInServer.linux.yaml:
     func_name: CNetworkClientService_IsPutInServer
     func_rva: '0x42d080'
+    func_sig: 48 8B BF A0 00 00 00 31 C0 48 85 FF 74 ?? 83 BF 40 02 00 00 01
     func_size: '0x39'
     func_va: '0x42d080'
     vfunc_index: 34
@@ -9334,6 +9371,7 @@ files:
   engine/CNetworkClientService_IsPutInServer.windows.yaml:
     func_name: CNetworkClientService_IsPutInServer
     func_rva: '0x1d6850'
+    func_sig: 48 8B 81 A0 00 00 00 48 85 C0 74 ?? 83 B8 30 02 00 00 02 7C ?? 83 B8 40 02 00 00 00
     func_size: '0x23'
     func_va: '0x1801d6850'
     vfunc_index: 33
@@ -11189,6 +11227,7 @@ files:
   engine/CNetworkGameServerBase_GetClientConnectionType.linux.yaml:
     func_name: CNetworkGameServerBase_GetClientConnectionType
     func_rva: '0x4f4ad0'
+    func_sig: 31 C0 85 F6 78 ?? 39 B7 48 02 00 00 7E ?? 48 8B 97 50 02 00 00
     func_size: '0x26'
     func_va: '0x4f4ad0'
     vfunc_index: 55
@@ -11197,6 +11236,7 @@ files:
   engine/CNetworkGameServerBase_GetClientConnectionType.windows.yaml:
     func_name: CNetworkGameServerBase_GetClientConnectionType
     func_rva: '0xb63a0'
+    func_sig: 85 D2 78 ?? 3B 91 48 02 00 00 7D ?? 48 8B 81 50 02 00 00 4C 63 C2 4A 8B 04 C0 48 85 C0
     func_size: '0x27'
     func_va: '0x1800b63a0'
     vfunc_index: 55
@@ -11229,6 +11269,7 @@ files:
   engine/CNetworkGameServerBase_GetMaxClients.linux.yaml:
     func_name: CNetworkGameServerBase_GetMaxClients
     func_rva: '0x4f49d0'
+    func_sig: 8B 87 9C 02 00 00 C3 CC CC CC CC CC CC CC CC CC
     func_size: '0x7'
     func_va: '0x4f49d0'
     vfunc_index: 12
@@ -11237,6 +11278,7 @@ files:
   engine/CNetworkGameServerBase_GetMaxClients.windows.yaml:
     func_name: CNetworkGameServerBase_GetMaxClients
     func_rva: '0xb25d0'
+    func_sig: 8B 81 9C 02 00 00 C3 CC CC CC CC CC CC CC CC CC
     func_size: '0x7'
     func_va: '0x1800b25d0'
     vfunc_index: 12
@@ -11263,6 +11305,7 @@ files:
   engine/CNetworkGameServerBase_GetPlayerNetworkIDString.linux.yaml:
     func_name: CNetworkGameServerBase_GetPlayerNetworkIDString
     func_rva: '0x51c290'
+    func_sig: 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 05 ?? ?? ?? ?? 40 88 30
     func_size: '0x8'
     func_va: '0x51c290'
     vfunc_index: 70
@@ -11271,6 +11314,7 @@ files:
   engine/CNetworkGameServerBase_GetPlayerNetworkIDString.windows.yaml:
     func_name: CNetworkGameServerBase_GetPlayerNetworkIDString
     func_rva: '0xa06e0'
+    func_sig: 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8B 05 ?? ?? ?? ?? 48 85 C0
     func_size: '0x8'
     func_va: '0x1800a06e0'
     vfunc_index: 65
@@ -11279,6 +11323,7 @@ files:
   engine/CNetworkGameServerBase_GetTimescale.linux.yaml:
     func_name: CNetworkGameServerBase_GetTimescale
     func_rva: '0x4f4a40'
+    func_sig: F3 0F 10 87 50 04 00 00 C3 CC CC CC CC CC CC CC
     func_size: '0x9'
     func_va: '0x4f4a40'
     vfunc_index: 22
@@ -11287,6 +11332,7 @@ files:
   engine/CNetworkGameServerBase_GetTimescale.windows.yaml:
     func_name: CNetworkGameServerBase_GetTimescale
     func_rva: '0xb3b90'
+    func_sig: F3 0F 10 81 50 04 00 00 C3 CC CC CC CC CC CC CC
     func_size: '0x9'
     func_va: '0x1800b3b90'
     vfunc_index: 22
@@ -11313,6 +11359,7 @@ files:
   engine/CNetworkGameServerBase_IsBackgroundMap.linux.yaml:
     func_name: CNetworkGameServerBase_IsBackgroundMap
     func_rva: '0x4f4a30'
+    func_sig: 0F B6 87 40 02 00 00 C3 CC CC CC CC CC CC CC CC
     func_size: '0x8'
     func_va: '0x4f4a30'
     vfunc_index: 27
@@ -11321,6 +11368,7 @@ files:
   engine/CNetworkGameServerBase_IsBackgroundMap.windows.yaml:
     func_name: CNetworkGameServerBase_IsBackgroundMap
     func_rva: '0xb3b80'
+    func_sig: 0F B6 81 40 02 00 00 C3 CC CC CC CC CC CC CC CC
     func_size: '0x8'
     func_va: '0x1800b3b80'
     vfunc_index: 27
@@ -11329,6 +11377,7 @@ files:
   engine/CNetworkGameServerBase_IsChangelevelPending.linux.yaml:
     func_name: CNetworkGameServerBase_IsChangelevelPending
     func_rva: '0x4f4a50'
+    func_sig: 0F B6 87 B8 02 00 00 C3 CC CC CC CC CC CC CC CC
     func_size: '0x8'
     func_va: '0x4f4a50'
     vfunc_index: 41
@@ -11337,6 +11386,7 @@ files:
   engine/CNetworkGameServerBase_IsChangelevelPending.windows.yaml:
     func_name: CNetworkGameServerBase_IsChangelevelPending
     func_rva: '0xb4730'
+    func_sig: 0F B6 81 B8 02 00 00 C3 CC CC CC CC CC CC CC CC
     func_size: '0x8'
     func_va: '0x1800b4730'
     vfunc_index: 41
@@ -13409,6 +13459,7 @@ files:
   engine/CServerSideClient_SetName.linux.yaml:
     func_name: CServerSideClient_SetName
     func_rva: '0x523380'
+    func_sig: 55 48 89 E5 41 55 41 54 4C 8D 25 ?? ?? ?? ?? 53 4C 8D 2D ?? ?? ?? ??
     func_size: '0xbe'
     func_va: '0x523380'
     vfunc_index: 63
@@ -16681,6 +16732,7 @@ files:
   networksystem/CNetworkMessages_SetIsForServer.linux.yaml:
     func_name: CNetworkMessages_SetIsForServer
     func_rva: '0x2a52f0'
+    func_sig: 40 88 B7 5E 06 00 00 C3 CC CC CC CC CC CC CC CC
     func_size: '0x8'
     func_va: '0x2a52f0'
     vfunc_index: 31
@@ -16689,6 +16741,7 @@ files:
   networksystem/CNetworkMessages_SetIsForServer.windows.yaml:
     func_name: CNetworkMessages_SetIsForServer
     func_rva: '0xdaee0'
+    func_sig: 88 91 0E 05 00 00 C3 CC CC CC CC CC CC CC CC CC
     func_size: '0x7'
     func_va: '0x1800daee0'
     vfunc_index: 31
@@ -16896,6 +16949,7 @@ files:
   networksystem/CNetworkSystem_CloseSocket.linux.yaml:
     func_name: CNetworkSystem_CloseSocket
     func_rva: '0x2dadb0'
+    func_sig: 31 C0 85 F6 78 ?? 3B B7 A8 00 00 00 7D ?? 55 48 89 E5
     func_size: '0x21'
     func_va: '0x2dadb0'
     vfunc_index: 17
@@ -16904,6 +16958,7 @@ files:
   networksystem/CNetworkSystem_CloseSocket.windows.yaml:
     func_name: CNetworkSystem_CloseSocket
     func_rva: '0xf19f0'
+    func_sig: 40 53 48 83 EC 40 48 8B D9 85 D2 0F 88 ?? ?? ?? ??
     func_size: '0x21e'
     func_va: '0x1800f19f0'
     vfunc_index: 17
@@ -17652,6 +17707,7 @@ files:
   server/CBaseEntity_Activate.linux.yaml:
     func_name: CBaseEntity_Activate
     func_rva: '0x1859180'
+    func_sig: 55 48 89 E5 41 55 41 54 41 89 F4 53 48 89 FB 48 83 EC 58 E8 ?? ?? ?? ?? 8B B3 FC 05 00 00
     func_size: '0x231'
     func_va: '0x1859180'
     vfunc_index: 14
@@ -17660,6 +17716,7 @@ files:
   server/CBaseEntity_Activate.windows.yaml:
     func_name: CBaseEntity_Activate
     func_rva: '0xc7b460'
+    func_sig: 48 89 5C 24 10 48 89 74 24 18 57 48 83 EC 50 0F 29 74 24 40
     func_size: '0x1bf'
     func_va: '0x180c7b460'
     vfunc_index: 13
@@ -17740,6 +17797,7 @@ files:
   server/CBaseEntity_DrawDebugTextOverlays.linux.yaml:
     func_name: CBaseEntity_DrawDebugTextOverlays
     func_rva: '0xd7a0c0'
+    func_sig: 55 48 89 E5 41 57 41 56 49 89 D6 41 55 41 54 53 48 89 FB 48 81 EC B8 01 00 00
     func_size: '0x189d'
     func_va: '0xd7a0c0'
     vfunc_index: 21
@@ -17748,6 +17806,7 @@ files:
   server/CBaseEntity_DrawDebugTextOverlays.windows.yaml:
     func_name: CBaseEntity_DrawDebugTextOverlays
     func_rva: '0x3c9370'
+    func_sig: 48 8B C4 44 89 48 20 4C 89 40 18 55 53 56 41 54
     func_size: '0x1798'
     func_va: '0x1803c9370'
     vfunc_index: 20
@@ -17848,6 +17907,7 @@ files:
   server/CBaseEntity_GetChangeAccessorPathInfo_1.windows.yaml:
     func_name: CBaseEntity_GetChangeAccessorPathInfo_1
     func_rva: '0x1530f0'
+    func_sig: 48 83 C1 38 E9 ?? ?? ?? ?? CC CC CC CC CC CC CC 40 55
     func_size: '0x9'
     func_va: '0x1801530f0'
     vfunc_index: 38
@@ -17864,6 +17924,7 @@ files:
   server/CBaseEntity_GetChangeAccessorPathInfo_2.windows.yaml:
     func_name: CBaseEntity_GetChangeAccessorPathInfo_2
     func_rva: '0x1530e0'
+    func_sig: 48 83 C1 38 E9 ?? ?? ?? ?? CC CC CC CC CC CC CC 48 83 C1 38
     func_size: '0x9'
     func_va: '0x1801530e0'
     vfunc_index: 39
@@ -18042,6 +18103,7 @@ files:
   server/CBaseEntity_NetworkStateChangedLog.linux.yaml:
     func_name: CBaseEntity_NetworkStateChangedLog
     func_rva: '0xd3d880'
+    func_sig: 55 48 89 E5 41 56 4C 8D 35 ?? ?? ?? ?? 41 55 49 89 D5
     func_size: '0xc7'
     func_va: '0xd3d880'
     vfunc_index: 33
@@ -18050,6 +18112,7 @@ files:
   server/CBaseEntity_NetworkStateChangedLog.windows.yaml:
     func_name: CBaseEntity_NetworkStateChangedLog
     func_rva: '0x3dae40'
+    func_sig: 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 40 48 8B F2 48 8B D9 8B 0D ?? ?? ?? ??
     func_size: '0xba'
     func_va: '0x1803dae40'
     vfunc_index: 32
@@ -20738,6 +20801,7 @@ files:
   server/CBasePlayerController_FakeClientFlags.linux.yaml:
     func_name: CBasePlayerController_FakeClientFlags
     func_rva: '0x15f6b30'
+    func_sig: 31 C0 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 8B 05 ?? ?? ?? ?? C3 0F 1F 84 00 00 00 00 00
     func_size: '0x3'
     func_va: '0x15f6b30'
     vfunc_index: 251
@@ -20746,6 +20810,7 @@ files:
   server/CBasePlayerController_FakeClientFlags.windows.yaml:
     func_name: CBasePlayerController_FakeClientFlags
     func_rva: '0xb18ed0'
+    func_sig: 32 C0 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC 20 65 48 8B 04 25 58 00 00 00
     func_size: '0x3'
     func_va: '0x180b18ed0'
     vfunc_index: 250
@@ -21533,6 +21598,7 @@ files:
   server/CBasePlayerPawn_OnTakeDamage.linux.yaml:
     func_name: CBasePlayerPawn_OnTakeDamage
     func_rva: '0x1603890'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC 78 E8 ?? ?? ?? ??
     func_size: '0x215'
     func_va: '0x1603890'
     vfunc_index: 127
@@ -21541,6 +21607,7 @@ files:
   server/CBasePlayerPawn_OnTakeDamage.windows.yaml:
     func_name: CBasePlayerPawn_OnTakeDamage
     func_rva: '0xb2dbc0'
+    func_sig: 48 89 5C 24 18 57 48 81 EC A0 00 00 00 48 8B FA
     func_size: '0x1e7'
     func_va: '0x180b2dbc0'
     vfunc_index: 128
@@ -22462,6 +22529,7 @@ files:
   server/CBaseTrigger_EndTouch.linux.yaml:
     func_name: CBaseTrigger_EndTouch
     func_rva: '0xd3ed90'
+    func_sig: 48 85 F6 74 ?? E9 ?? ?? ?? ?? 66 0F 1F 44 00 00 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 8B 07
     func_size: '0x11'
     func_va: '0xd3ed90'
     vfunc_index: 149
@@ -22470,6 +22538,7 @@ files:
   server/CBaseTrigger_EndTouch.windows.yaml:
     func_name: CBaseTrigger_EndTouch
     func_rva: '0x3cb540'
+    func_sig: 48 85 D2 0F 84 ?? ?? ?? ?? 53 41 57 48 83 EC 28 4C 8B 42 10
     func_size: '0x238'
     func_va: '0x1803cb540'
     vfunc_index: 150
@@ -22496,6 +22565,7 @@ files:
   server/CBaseTrigger_StartTouch.linux.yaml:
     func_name: CBaseTrigger_StartTouch
     func_rva: '0xd6f580'
+    func_sig: 55 48 89 E5 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 83 EC 10 48 8B 07 FF 90 70 08 00 00
     func_size: '0x29a'
     func_va: '0xd6f580'
     vfunc_index: 147
@@ -22504,6 +22574,7 @@ files:
   server/CBaseTrigger_StartTouch.windows.yaml:
     func_name: CBaseTrigger_StartTouch
     func_rva: '0x3e5320'
+    func_sig: 40 57 41 56 48 83 EC 28 48 8B 01 4C 8B F2 48 8B F9
     func_size: '0x225'
     func_va: '0x1803e5320'
     vfunc_index: 148
@@ -23670,6 +23741,7 @@ files:
   server/CBtActionCoordinatedBuy_Update.linux.yaml:
     func_name: CBtActionCoordinatedBuy_Update
     func_rva: '0xc4fa90'
+    func_sig: 55 49 89 F8 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC A8 00 00 00
     func_size: '0x57c'
     func_va: '0xc4fa90'
     vfunc_index: 3
@@ -23678,6 +23750,7 @@ files:
   server/CBtActionCoordinatedBuy_Update.windows.yaml:
     func_name: CBtActionCoordinatedBuy_Update
     func_rva: '0x3081c0'
+    func_sig: 48 89 4C 24 08 55 48 81 EC F0 00 00 00 48 8B E9
     func_size: '0x695'
     func_va: '0x1803081c0'
     vfunc_index: 3
@@ -26187,6 +26260,7 @@ files:
   server/CCSPlayerPawn_OnTakeDamage.linux.yaml:
     func_name: CCSPlayerPawn_OnTakeDamage
     func_rva: '0x1603890'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC 78 E8 ?? ?? ?? ??
     func_size: '0x215'
     func_va: '0x1603890'
     vfunc_index: 127
@@ -26195,6 +26269,7 @@ files:
   server/CCSPlayerPawn_OnTakeDamage.windows.yaml:
     func_name: CCSPlayerPawn_OnTakeDamage
     func_rva: '0xb2dbc0'
+    func_sig: 48 89 5C 24 18 57 48 81 EC A0 00 00 00 48 8B FA
     func_size: '0x1e7'
     func_va: '0x180b2dbc0'
     vfunc_index: 128
@@ -26203,6 +26278,7 @@ files:
   server/CCSPlayerPawn_OnTakeDamage_Alive.linux.yaml:
     func_name: CCSPlayerPawn_OnTakeDamage_Alive
     func_rva: '0x1572910'
+    func_sig: 55 48 89 E5 41 54 49 89 FC 53 48 89 F3 E8 ?? ?? ?? ?? 49 8B BC 24 38 10 00 00
     func_size: '0x26'
     func_va: '0x1572910'
     vfunc_index: 253
@@ -26211,6 +26287,7 @@ files:
   server/CCSPlayerPawn_OnTakeDamage_Alive.windows.yaml:
     func_name: CCSPlayerPawn_OnTakeDamage_Alive
     func_rva: '0xaa5260'
+    func_sig: 48 89 5C 24 08 57 48 83 EC 20 48 8B DA 48 8B F9 E8 ?? ?? ?? ?? 48 8B 8F 68 0D 00 00
     func_size: '0x2e'
     func_va: '0x180aa5260'
     vfunc_index: 252
@@ -26219,6 +26296,7 @@ files:
   server/CCSPlayerPawn_OnTakeDamage_Dead.linux.yaml:
     func_name: CCSPlayerPawn_OnTakeDamage_Dead
     func_rva: '0xa32340'
+    func_sig: C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC B8 01 00 00 00 C3 CC CC CC CC CC CC CC CC CC CC 31 C0 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 8D 87 18 0A 00 00
     func_size: '0x1'
     func_va: '0xa32340'
     vfunc_index: 257
@@ -26235,6 +26313,7 @@ files:
   server/CCSPlayerPawn_OnTakeDamage_Dying.linux.yaml:
     func_name: CCSPlayerPawn_OnTakeDamage_Dying
     func_rva: '0xa32320'
+    func_sig: C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 31 C0 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC B8 01 00 00 00
     func_size: '0x1'
     func_va: '0xa32320'
     vfunc_index: 255
@@ -26243,6 +26322,7 @@ files:
   server/CCSPlayerPawn_OnTakeDamage_Dying.windows.yaml:
     func_name: CCSPlayerPawn_OnTakeDamage_Dying
     func_rva: '0x15ad90'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 8B 81 D8 03 00 00
     func_size: '0x3'
     func_va: '0x18015ad90'
     vfunc_index: 254
@@ -27441,6 +27521,7 @@ files:
   server/CCSPlayer_MovementServices_Pawn.linux.yaml:
     func_name: CCSPlayer_MovementServices_Pawn
     func_rva: '0x17982c0'
+    func_sig: 55 48 89 E5 41 54 49 89 F4 53 48 89 FB E8 ?? ?? ?? ?? 84 C0 74 ?? 48 83 7B 30 00
     func_size: '0x5a'
     func_va: '0x17982c0'
     vfunc_index: 21
@@ -27636,6 +27717,7 @@ files:
   server/CCSPlayer_UseServices_OnUse.linux.yaml:
     func_name: CCSPlayer_UseServices_OnUse
     func_rva: '0x1582a80'
+    func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 55 B8 FF FF FF FF 31 C9 66 0F EF C0 48 89 E5 41 57 41 56 41 55 4C 8D AD 80 FE FF FF
     func_size: '0x5'
     func_va: '0x1582a80'
     vfunc_index: 13
@@ -27644,6 +27726,7 @@ files:
   server/CCSPlayer_UseServices_OnUse.windows.yaml:
     func_name: CCSPlayer_UseServices_OnUse
     func_rva: '0xaa96a0'
+    func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC 30 48 8B 05 ?? ?? ?? ??
     func_size: '0x5'
     func_va: '0x180aa96a0'
     vfunc_index: 12
@@ -29218,6 +29301,7 @@ files:
   server/CEntityInstance_Connect.windows.yaml:
     func_name: CEntityInstance_Connect
     func_rva: '0x126c610'
+    func_sig: C6 05 ?? ?? ?? ?? 01 C3 CC CC CC CC CC CC CC CC 48 8B C4 48 81 EC A8 00 00 00
     func_size: '0x8'
     func_va: '0x18126c610'
     vfunc_index: 5
@@ -29310,6 +29394,7 @@ files:
   server/CEntityInstance_GetScriptDesc.linux.yaml:
     func_name: CEntityInstance_GetScriptDesc
     func_rva: '0x2142b30'
+    func_sig: 48 8B 05 ?? ?? ?? ?? 48 85 C0 74 ?? C3 0F 1F 00 E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 48 8B 05 ?? ?? ?? ?? 48 85 C0 74 ?? C3 0F 1F 00 E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 55 48 89 E5 41 56 41 55 49 89 D5
     func_size: '0x15'
     func_va: '0x2142b30'
     vfunc_index: 3
@@ -29318,6 +29403,7 @@ files:
   server/CEntityInstance_GetScriptDesc.windows.yaml:
     func_name: CEntityInstance_GetScriptDesc
     func_rva: '0x126d050'
+    func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 33 C9
     func_size: '0x5'
     func_va: '0x18126d050'
     vfunc_index: 3
@@ -29875,6 +29961,7 @@ files:
   server/CEntitySaveRestoreBlockHandler_PostRestore.linux.yaml:
     func_name: CEntitySaveRestoreBlockHandler_PostRestore
     func_rva: '0x16b91b0'
+    func_sig: 48 8B 3D ?? ?? ?? ?? 31 F6 E9 ?? ?? ?? ?? CC CC
     func_size: '0xe'
     func_va: '0x16b91b0'
     vfunc_index: 8
@@ -29883,6 +29970,7 @@ files:
   server/CEntitySaveRestoreBlockHandler_PostRestore.windows.yaml:
     func_name: CEntitySaveRestoreBlockHandler_PostRestore
     func_rva: '0xb84bb0'
+    func_sig: 48 8B 0D ?? ?? ?? ?? 33 D2 E9 ?? ?? ?? ?? CC CC 48 8B 49 18
     func_size: '0xe'
     func_va: '0x180b84bb0'
     vfunc_index: 8
@@ -29891,6 +29979,7 @@ files:
   server/CEntitySaveRestoreBlockHandler_PreRestore.linux.yaml:
     func_name: CEntitySaveRestoreBlockHandler_PreRestore
     func_rva: '0x16b9190'
+    func_sig: 48 8B 3D ?? ?? ?? ?? BE 01 00 00 00 E9 ?? ?? ?? ??
     func_size: '0x11'
     func_va: '0x16b9190'
     vfunc_index: 5
@@ -29899,6 +29988,7 @@ files:
   server/CEntitySaveRestoreBlockHandler_PreRestore.windows.yaml:
     func_name: CEntitySaveRestoreBlockHandler_PreRestore
     func_rva: '0xb84ba0'
+    func_sig: 48 8B 0D ?? ?? ?? ?? B2 01 E9 ?? ?? ?? ?? CC CC
     func_size: '0xe'
     func_va: '0x180b84ba0'
     vfunc_index: 5
@@ -33383,6 +33473,7 @@ files:
   server/CGameMoney_GetDataDescMap.linux.yaml:
     func_name: CGameMoney_GetDataDescMap
     func_rva: '0xbaa6a0'
+    func_sig: 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8B 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC C3
     func_size: '0x8'
     func_va: '0xbaa6a0'
     vfunc_index: 44
@@ -33391,6 +33482,7 @@ files:
   server/CGameMoney_GetDataDescMap.windows.yaml:
     func_name: CGameMoney_GetDataDescMap
     func_rva: '0x29c800'
+    func_sig: 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 41 60
     func_size: '0x8'
     func_va: '0x18029c800'
     vfunc_index: 43
@@ -34707,6 +34799,7 @@ files:
   server/CGameSystemReallocatingFactory_CSource2EntitySystem_Init.linux.yaml:
     func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_Init
     func_rva: '0x1739160'
+    func_sig: 55 48 89 E5 E8 ?? ?? ?? ?? B8 01 00 00 00 5D C3 89 F1
     func_size: '0x10'
     func_va: '0x1739160'
     vfunc_index: 0
@@ -34715,6 +34808,7 @@ files:
   server/CGameSystemReallocatingFactory_CSource2EntitySystem_Init.windows.yaml:
     func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_Init
     func_rva: '0xb82b00'
+    func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC 20 48 8B 05 ?? ?? ?? ?? 48 8B 98 D8 20 00 00
     func_size: '0x5'
     func_va: '0x180b82b00'
     vfunc_index: 0
@@ -34945,6 +35039,7 @@ files:
   server/CLoopModeFactory_CLoopModeGame_Init.linux.yaml:
     func_name: CLoopModeFactory_CLoopModeGame_Init
     func_rva: '0x1768af0'
+    func_sig: 55 48 89 F7 48 89 E5 E8 ?? ?? ?? ?? B8 01 00 00 00 5D C3 CC 48 8D 3D ?? ?? ?? ??
     func_size: '0x13'
     func_va: '0x1768af0'
     vfunc_index: 0
@@ -34953,6 +35048,7 @@ files:
   server/CLoopModeFactory_CLoopModeGame_Init.windows.yaml:
     func_name: CLoopModeFactory_CLoopModeGame_Init
     func_rva: '0xbeea70'
+    func_sig: 40 53 48 83 EC 50 48 8D 0D ?? ?? ?? ?? FF 15 ?? ?? ?? ??
     func_size: '0xb5'
     func_va: '0x180beea70'
     vfunc_index: 0
@@ -37038,6 +37134,7 @@ files:
   server/CPhysExplosion_Activate.linux.yaml:
     func_name: CPhysExplosion_Activate
     func_rva: '0x19d0260'
+    func_sig: 55 48 89 E5 53 48 89 FB 48 83 EC 08 E8 ?? ?? ?? ?? 80 BB 88 07 00 00 00
     func_size: '0x3b'
     func_va: '0x19d0260'
     vfunc_index: 14
@@ -37046,6 +37143,7 @@ files:
   server/CPhysExplosion_Activate.windows.yaml:
     func_name: CPhysExplosion_Activate
     func_rva: '0xdd4100'
+    func_sig: 40 53 48 83 EC 20 48 8B D9 E8 ?? ?? ?? ?? 80 BB A8 04 00 00 00
     func_size: '0x38'
     func_va: '0x180dd4100'
     vfunc_index: 13
@@ -39446,6 +39544,7 @@ files:
   server/CSceneEntity_GetScriptDesc.windows.yaml:
     func_name: CSceneEntity_GetScriptDesc
     func_rva: '0xe6cf50'
+    func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC 50 44 8B 81 AC 04 00 00
     func_size: '0x5'
     func_va: '0x180e6cf50'
     vfunc_index: 3
@@ -41047,6 +41146,7 @@ files:
   server/CSource2GameClients_ClientSetConVarUserInfoSet.linux.yaml:
     func_name: CSource2GameClients_ClientSetConVarUserInfoSet
     func_rva: '0x19080f0'
+    func_sig: 89 F7 48 89 D6 E9 ?? ?? ?? ?? CC CC CC CC CC CC
     func_size: '0xa'
     func_va: '0x19080f0'
     vfunc_index: 18
@@ -41055,6 +41155,7 @@ files:
   server/CSource2GameClients_ClientSetConVarUserInfoSet.windows.yaml:
     func_name: CSource2GameClients_ClientSetConVarUserInfoSet
     func_rva: '0xd4f440'
+    func_sig: 8B CA 49 8B D0 E9 ?? ?? ?? ?? CC CC CC CC CC CC
     func_size: '0xa'
     func_va: '0x180d4f440'
     vfunc_index: 18
@@ -41532,6 +41633,7 @@ files:
   server/CSource2Server_GetAllServerClasses.linux.yaml:
     func_name: CSource2Server_GetAllServerClasses
     func_rva: '0x1904b70'
+    func_sig: 48 8D 05 ?? ?? ?? ?? 48 8B 00 48 8B B8 F0 20 00 00 48 8B 07 FF 60 30
     func_size: '0x17'
     func_va: '0x1904b70'
     vfunc_index: 29
@@ -41540,6 +41642,7 @@ files:
   server/CSource2Server_GetAllServerClasses.windows.yaml:
     func_name: CSource2Server_GetAllServerClasses
     func_rva: '0xd45250'
+    func_sig: 48 8B 05 ?? ?? ?? ?? 48 8B 88 E0 20 00 00 48 8B 01 48 FF 60 28
     func_size: '0x15'
     func_va: '0x180d45250'
     vfunc_index: 29
@@ -41674,6 +41777,7 @@ files:
   server/CSource2Server_PreWorldUpdate.linux.yaml:
     func_name: CSource2Server_PreWorldUpdate
     func_rva: '0x19097b0'
+    func_sig: 55 48 89 E5 41 54 53 89 F3 48 83 EC 10 E8 ?? ?? ?? ??
     func_size: '0xcb'
     func_va: '0x19097b0'
     vfunc_index: 15
@@ -41682,6 +41786,7 @@ files:
   server/CSource2Server_PreWorldUpdate.windows.yaml:
     func_name: CSource2Server_PreWorldUpdate
     func_rva: '0xd447f0'
+    func_sig: 40 53 48 83 EC 30 0F B6 DA E8 ?? ?? ?? ?? 84 C0
     func_size: '0xde'
     func_va: '0x180d447f0'
     vfunc_index: 15
@@ -42117,6 +42222,7 @@ files:
   server/CSpawnGroupMgrGameSystem_DoesGameSystemReallocate.windows.yaml:
     func_name: CSpawnGroupMgrGameSystem_DoesGameSystemReallocate
     func_rva: '0x5628f0'
+    func_sig: 48 8B 0D ?? ?? ?? ?? 48 8B 01 48 FF 60 40 CC CC 48 8B 0D ?? ?? ?? ?? 48 8B 01 48 FF 60 40 CC CC 48 8B 0D ?? ?? ?? ?? 48 8B 01 48 FF 60 40 CC CC 40 53
     func_size: '0xe'
     func_va: '0x1805628f0'
     vfunc_index: 62
@@ -43835,6 +43941,7 @@ files:
   server/IGameSystem_OnBuildGameSessionManifest.windows.yaml:
     func_name: IGameSystem_OnBuildGameSessionManifest
     func_rva: '0x1502d0'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 83 EC 28 48 8B C1 45 85 C9 75 ?? 48 83 7C 24 50 00 75 ?? 48 85 D2 74 ?? 48 8B CA FF D0 B0 01 48 83 C4 28 C3 32 C0 48 83 C4 28 C3 CC CC CC CC 40 53
     func_size: '0x3'
     func_va: '0x1801502d0'
     vfunc_index: 7
@@ -43939,6 +44046,7 @@ files:
   server/IGameSystem_OnPreSpawnGroupLoad.windows.yaml:
     func_name: IGameSystem_OnPreSpawnGroupLoad
     func_rva: '0x15aee0'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC 20 48 8B DA 48 8B F9 E8 ?? ?? ?? ??
     func_size: '0x3'
     func_va: '0x18015aee0'
     vfunc_index: 15
@@ -43955,6 +44063,7 @@ files:
   server/IGameSystem_OnPreSpawnGroupUnload.windows.yaml:
     func_name: IGameSystem_OnPreSpawnGroupUnload
     func_rva: '0x15aef0'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC 20 48 8B DA 48 8B F9 E8 ?? ?? ?? ?? 45 33 C9 45 33 C0 48 8B D3 48 8B CF 48 8B 5C 24 30 48 83 C4 20 5F E9 ?? ?? ?? ?? 48 89 5C 24 08
     func_size: '0x3'
     func_va: '0x18015aef0'
     vfunc_index: 17
@@ -43971,6 +44080,7 @@ files:
   server/IGameSystem_OnRestoreGame.windows.yaml:
     func_name: IGameSystem_OnRestoreGame
     func_rva: '0x15bef0'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 40 55 41 57 44 8B 51 04
     func_size: '0x3'
     func_va: '0x18015bef0'
     vfunc_index: 51
@@ -44035,6 +44145,7 @@ files:
   server/IGameSystem_OnServerGamePostSimulate.windows.yaml:
     func_name: IGameSystem_OnServerGamePostSimulate
     func_rva: '0x15ad10'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 33 C0 C3
     func_size: '0x3'
     func_va: '0x18015ad10'
     vfunc_index: 37
@@ -44083,6 +44194,7 @@ files:
   server/IGameSystem_OnServerPostEntityThink.windows.yaml:
     func_name: IGameSystem_OnServerPostEntityThink
     func_rva: '0x1528e0'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 83 EC 48
     func_size: '0x3'
     func_va: '0x1801528e0'
     vfunc_index: 32
@@ -44099,6 +44211,7 @@ files:
   server/IGameSystem_OnServerPreBeginAsyncPostTickWork.windows.yaml:
     func_name: IGameSystem_OnServerPreBeginAsyncPostTickWork
     func_rva: '0x15ad20'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 33 C0 C3
     func_size: '0x3'
     func_va: '0x18015ad20'
     vfunc_index: 41
@@ -44147,6 +44260,7 @@ files:
   server/IGameSystem_OnServerPreEntityThink.windows.yaml:
     func_name: IGameSystem_OnServerPreEntityThink
     func_rva: '0x152900'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 83 EC 48
     func_size: '0x3'
     func_va: '0x180152900'
     vfunc_index: 31
@@ -44163,6 +44277,7 @@ files:
   server/IGameSystem_OnSpawnGroupPrecache.windows.yaml:
     func_name: IGameSystem_OnSpawnGroupPrecache
     func_rva: '0x15cd90'
+    func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 81 EC 50 01 00 00
     func_size: '0x3'
     func_va: '0x18015cd90'
     vfunc_index: 13
@@ -46803,5 +46918,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T15:06:45Z'
+last_publish_time: '2026-09-10T18:27:27Z'
 schema_version: 5

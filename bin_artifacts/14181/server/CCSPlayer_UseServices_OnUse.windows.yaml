@@ -2,6 +2,7 @@ func_name: CCSPlayer_UseServices_OnUse
 func_va: '0x180aa96a0'
 func_rva: '0xaa96a0'
 func_size: '0x5'
+func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 08 57 48 83 EC 30 48 8B 05 ?? ?? ?? ??
 vtable_name: CCSPlayer_UseServices
 vfunc_offset: '0x60'
 vfunc_index: 12

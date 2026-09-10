@@ -2,6 +2,7 @@ func_name: CEngineServer_GetSteamUniverse
 func_va: '0x51a5d0'
 func_rva: '0x51a5d0'
 func_size: '0x5'
+func_sig: E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 48 8D 3D ?? ?? ?? ??
 vtable_name: CEngineServer_vtable
 vfunc_offset: '0x90'
 vfunc_index: 18

@@ -259,6 +259,7 @@ refuses duplicate keys — do not work around it.
 - **Use `git push` immediately after committing on server** — unpushed commits cause divergent branches that produce messy add/add conflicts later
 - **Verify a find before you write it** — unique sig match plus boundary plus one semantic signal (string set, call graph, decompile). See rules 12 and 13
 - **Leave `func_size: 0x0` when unsure** — unknown is safe, wrong is a defect
+- **Never pin a relative branch target or a RIP-relative displacement in a shipped sig** — those bytes move on every rebuild; `enrich_vfunc_sigs.py` wildcards them, and you must re-run `validate_artifacts.py` after it and drop any sig that then matches more than one place
 - **Commit inside plugin repos after `deploy_local_plugins.sh`** — deployed gamedata sits uncommitted in ~/customGIT/* until you commit and push to git.miksen.me
 
 ## TOOL QUICK-REFERENCE

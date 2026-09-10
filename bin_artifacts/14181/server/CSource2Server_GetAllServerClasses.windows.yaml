@@ -2,6 +2,7 @@ func_name: CSource2Server_GetAllServerClasses
 func_va: '0x180d45250'
 func_rva: '0xd45250'
 func_size: '0x15'
+func_sig: 48 8B 05 ?? ?? ?? ?? 48 8B 88 E0 20 00 00 48 8B 01 48 FF 60 28
 vtable_name: CSource2Server
 vfunc_offset: '0xe8'
 vfunc_index: 29

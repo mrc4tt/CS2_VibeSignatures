@@ -2,6 +2,7 @@ func_name: CNetworkClientService_IsPutInServer
 func_va: '0x42d080'
 func_rva: '0x42d080'
 func_size: '0x39'
+func_sig: 48 8B BF A0 00 00 00 31 C0 48 85 FF 74 ?? 83 BF 40 02 00 00 01
 vtable_name: CNetworkClientService
 vfunc_offset: '0x110'
 vfunc_index: 34

@@ -2,6 +2,7 @@ func_name: IGameSystem_OnBuildGameSessionManifest
 func_va: '0x1801502d0'
 func_rva: '0x1502d0'
 func_size: '0x3'
+func_sig: C2 00 00 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 83 EC 28 48 8B C1 45 85 C9 75 ?? 48 83 7C 24 50 00 75 ?? 48 85 D2 74 ?? 48 8B CA FF D0 B0 01 48 83 C4 28 C3 32 C0 48 83 C4 28 C3 CC CC CC CC 40 53
 vtable_name: IGameSystem
 vfunc_offset: '0x38'
 vfunc_index: 7

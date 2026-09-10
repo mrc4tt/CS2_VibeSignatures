@@ -2,6 +2,7 @@ func_name: CBaseEntity_NetworkStateChangedLog
 func_va: '0xd3d880'
 func_rva: '0xd3d880'
 func_size: '0xc7'
+func_sig: 55 48 89 E5 41 56 4C 8D 35 ?? ?? ?? ?? 41 55 49 89 D5
 vtable_name: CBaseEntity
 vfunc_offset: '0x108'
 vfunc_index: 33

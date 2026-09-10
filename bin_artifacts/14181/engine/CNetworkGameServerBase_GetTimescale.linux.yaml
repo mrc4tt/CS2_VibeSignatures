@@ -2,6 +2,7 @@ func_name: CNetworkGameServerBase_GetTimescale
 func_va: '0x4f4a40'
 func_rva: '0x4f4a40'
 func_size: '0x9'
+func_sig: F3 0F 10 87 50 04 00 00 C3 CC CC CC CC CC CC CC
 vtable_name: CNetworkGameServerBase
 vfunc_offset: '0xb0'
 vfunc_index: 22

@@ -9,6 +9,17 @@ the platform binary and grow a literal pattern until it is module-unique.
 
 Idempotent: artifacts that already carry func_sig are untouched.
 
+Volatile operand bytes (a relative branch/call target, a RIP-relative
+displacement) are emitted as ?? — they encode a distance that moves whenever
+anything around the function moves, so pinning them ships a signature that
+breaks on the next build even when the function is identical.
+
+ALWAYS run validate_artifacts.py afterwards and drop any func_sig it reports as
+matching more than one place. Wildcarding a displacement can make a tiny stub
+collide with an adjacent twin that differs only in those bytes; three did on
+14181. A non-unique signature is worse than none, because a plugin resolving it
+silently picks the wrong function.
+
 Usage:
   uv run enrich_vfunc_sigs.py -gamever 14178b                 # begge platforme
   uv run enrich_vfunc_sigs.py -gamever 14178b -platform linux
@@ -31,6 +42,16 @@ BIN_WIN = {"server": "server.dll", "engine": "engine2.dll", "client": "client.dl
            "vphysics2": "vphysics2.dll"}
 
 MIN_SIG, MAX_SIG = 16, 96
+# A head sig is shipped to plugins, so it must survive a rebuild that does not
+# touch the function. Two byte classes do not: a relative branch/call target and
+# a RIP-relative displacement both encode a distance that moves when anything
+# around the function moves. Both are wildcarded instead of being pinned.
+try:
+    import capstone
+    _MD = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+    _MD.detail = True
+except Exception:  # capstone missing: fall back to literal runs
+    _MD = None
 
 
 def elf_segs(blob):
@@ -60,26 +81,84 @@ def pe_segs(blob):
     return out
 
 
-def count_matches(blob, sig_bytes):
-    rx = re.compile(re.escape(sig_bytes), re.DOTALL)
+def count_matches(blob, tokens):
+    """tokens: list of ints, or None for a wildcard byte."""
+    pattern = b"".join(b"." if t is None else re.escape(bytes([t])) for t in tokens)
+    rx = re.compile(pattern, re.DOTALL)
     n = 0
-    for m in rx.finditer(blob):
+    for _ in rx.finditer(blob):
         n += 1
         if n > 1:
             return n
     return n
 
 
+def _volatile_offsets(ins):
+    """Byte offsets inside one instruction that encode a distance, not an opcode."""
+    out = set()
+    if _MD is None:
+        return out
+    # relative branch or call: the whole immediate is the distance
+    if ins.group(capstone.x86.X86_GRP_JUMP) or ins.group(capstone.x86.X86_GRP_CALL):
+        for op in ins.operands:
+            if op.type == capstone.x86.X86_OP_IMM:
+                width = 1 if ins.size <= 2 else 4
+                out.update(range(ins.size - width, ins.size))
+    # RIP-relative memory operand: disp32 sits immediately before any immediate
+    for op in ins.operands:
+        if op.type == capstone.x86.X86_OP_MEM and op.mem.base == capstone.x86.X86_REG_RIP:
+            imm_width = 0
+            for other in ins.operands:
+                if other.type == capstone.x86.X86_OP_IMM:
+                    imm_width = other.size
+            end = ins.size - imm_width
+            out.update(range(max(0, end - 4), end))
+    return out
+
+
+def _tokens_for(blob, off, length):
+    """Byte tokens for blob[off:off+length], wildcarding volatile operand bytes."""
+    raw = blob[off:off + length]
+    tokens = list(raw)
+    if _MD is None:
+        return tokens
+    pos = 0
+    for ins in _MD.disasm(raw, 0):
+        if pos + ins.size > length:
+            break
+        for rel in _volatile_offsets(ins):
+            tokens[pos + rel] = None
+        pos += ins.size
+    return tokens
+
+
+def _instruction_ends(blob, off, limit):
+    """Lengths at which a sig would end on an instruction boundary."""
+    if _MD is None:
+        return list(range(MIN_SIG, limit + 1, 8))
+    ends, total = [], 0
+    for ins in _MD.disasm(blob[off:off + limit], 0):
+        total += ins.size
+        if total > limit:
+            break
+        if total >= MIN_SIG:
+            ends.append(total)
+    return ends or list(range(MIN_SIG, limit + 1, 8))
+
+
 def build_sig(blob, va_to_off, va):
     off = va_to_off(va)
-    if off is None:
+    if off is None or off + MAX_SIG > len(blob):
         return None
-    for ln in range(MIN_SIG, MAX_SIG + 1, 8):
-        sig = blob[off:off + ln]
-        if len(sig) < ln:
+    for ln in _instruction_ends(blob, off, MAX_SIG):
+        tokens = _tokens_for(blob, off, ln)
+        if len(tokens) < ln:
             return None
-        if count_matches(blob, sig) == 1:
-            return " ".join(f"{b:02X}" for b in sig)
+        # An all-wildcard tail carries no information; require real bytes.
+        if sum(1 for t in tokens if t is not None) < MIN_SIG // 2:
+            continue
+        if count_matches(blob, tokens) == 1:
+            return " ".join("??" if t is None else f"{t:02X}" for t in tokens)
     return None
 
 

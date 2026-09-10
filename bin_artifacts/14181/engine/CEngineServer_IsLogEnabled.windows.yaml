@@ -2,6 +2,7 @@ func_name: CEngineServer_IsLogEnabled
 func_va: '0x1800a0f00'
 func_rva: '0xa0f00'
 func_size: '0x8'
+func_sig: 0F B6 05 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8B 0D ?? ?? ?? ?? 48 85 C9 0F 85 ?? ?? ?? ??
 vtable_name: CEngineServer
 vfunc_offset: '0x1b8'
 vfunc_index: 55

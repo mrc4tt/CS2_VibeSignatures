@@ -2,6 +2,7 @@ func_name: CNetworkMessages_SetIsForServer
 func_va: '0x1800daee0'
 func_rva: '0xdaee0'
 func_size: '0x7'
+func_sig: 88 91 0E 05 00 00 C3 CC CC CC CC CC CC CC CC CC
 vtable_name: CNetworkMessages
 vfunc_offset: '0xf8'
 vfunc_index: 31

@@ -2,6 +2,7 @@ func_name: CNetworkSystem_CloseSocket
 func_va: '0x2dadb0'
 func_rva: '0x2dadb0'
 func_size: '0x21'
+func_sig: 31 C0 85 F6 78 ?? 3B B7 A8 00 00 00 7D ?? 55 48 89 E5
 vtable_name: CNetworkSystem_vtable
 vfunc_offset: '0x88'
 vfunc_index: 17

@@ -2,6 +2,7 @@ func_name: CEntityInstance_GetScriptDesc
 func_va: '0x2142b30'
 func_rva: '0x2142b30'
 func_size: '0x15'
+func_sig: 48 8B 05 ?? ?? ?? ?? 48 85 C0 74 ?? C3 0F 1F 00 E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 48 8B 05 ?? ?? ?? ?? 48 85 C0 74 ?? C3 0F 1F 00 E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC CC CC 55 48 89 E5 41 56 41 55 49 89 D5
 vtable_name: CEntityInstance
 vfunc_offset: '0x18'
 vfunc_index: 3
