@@ -340,6 +340,7 @@ advisory — never a new name that makes the red go away.
 - **Run `audit_duplicate_va.py` after every hunt round** — catches batch-contamination (same VA under multiple names, the 0x20c2700 incident)
 - **Check `git check-ignore` before committing working files** — missing lists, logs, and alias candidates are now in .gitignore but weren't always
 - **Use `git push` immediately after committing on server** — unpushed commits cause divergent branches that produce messy add/add conflicts later
+- **Check what upstream actually does before writing a task, a preprocessor or a name** — `git show upstream/main:configs/<ver>.yaml` and grep `ida_preprocessor_scripts/` for a task that already emits the field combination you want. Task names carry the platform they were made for (`-linux` / `-windows`), and a fallback skill only loads when its name equals the task name — so let `ensure_agent_fallback_skills.py` generate them
 - **Verify a find before you write it** — unique sig match plus boundary plus one semantic signal (string set, call graph, decompile). See rules 12 and 13
 - **Leave `func_size: 0x0` when unsure** — unknown is safe, wrong is a defect
 - **Never pin a relative branch target or a RIP-relative displacement in a shipped sig** — those bytes move on every rebuild; `enrich_vfunc_sigs.py` wildcards them, and you must re-run `validate_artifacts.py` after it and drop any sig that then matches more than one place
