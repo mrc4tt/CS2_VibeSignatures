@@ -3,8 +3,8 @@ name: find-vtidx_DropWeapon
 description: |
   Locate vtidx::DropWeapon in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "vtidx::DropWeapon" (symbol vtidx_DropWeapon). This is a VIRTUAL function - resolve the vtidx::DropWeapon vtable via RTTI and identify the
-slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
-commonly differ between platforms - never assume identical indices.
+  slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
+  commonly differ between platforms - never assume identical indices.
   Trigger: vtidx_DropWeapon, vtidx::DropWeapon
 disable-model-invocation: true
 ---

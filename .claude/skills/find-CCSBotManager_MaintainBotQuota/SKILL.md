@@ -3,8 +3,8 @@ name: find-CCSBotManager_MaintainBotQuota
 description: |
   Locate CCSBotManager::MaintainBotQuota in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CCSBotManager::MaintainBotQuota" (symbol CCSBotManager_MaintainBotQuota). This is a non-virtual function - emit a byte signature (func_sig), not an offset.
-Locate it via cross-references, distinctive constants/strings in its body, or callers
-of related symbols; verify by decompilation before committing to a candidate.
+  Locate it via cross-references, distinctive constants/strings in its body, or callers
+  of related symbols; verify by decompilation before committing to a candidate.
   Trigger: CCSBotManager_MaintainBotQuota, CCSBotManager::MaintainBotQuota
 disable-model-invocation: true
 ---

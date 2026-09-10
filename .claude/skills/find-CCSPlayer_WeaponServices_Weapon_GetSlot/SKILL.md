@@ -3,8 +3,8 @@ name: find-CCSPlayer_WeaponServices_Weapon_GetSlot
 description: |
   Locate CCSPlayer_WeaponServices::GetSlot in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CCSPlayer_WeaponServices::GetSlot" (symbol CCSPlayer_WeaponServices_Weapon_GetSlot). This is a non-virtual function - emit a byte signature (func_sig), not an offset.
-Locate it via cross-references, distinctive constants/strings in its body, or callers
-of related symbols; verify by decompilation before committing to a candidate.
+  Locate it via cross-references, distinctive constants/strings in its body, or callers
+  of related symbols; verify by decompilation before committing to a candidate.
   Trigger: CCSPlayer_WeaponServices_Weapon_GetSlot, CCSPlayer_WeaponServices::GetSlot
 disable-model-invocation: true
 ---

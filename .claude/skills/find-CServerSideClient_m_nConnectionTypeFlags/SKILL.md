@@ -3,8 +3,8 @@ name: find-CServerSideClient_m_nConnectionTypeFlags
 description: |
   Locate CServerSideClient::m_nConnectionTypeFlags in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CServerSideClient::m_nConnectionTypeFlags" (symbol CServerSideClient_m_nConnectionTypeFlags). This is a STRUCT MEMBER OFFSET (schema netvar), not a function. Resolve the
-CServerSideClient class layout via the schema/network system; the member must satisfy
-natural alignment. Cross-check with functions that dereference the member.
+  CServerSideClient class layout via the schema/network system; the member must satisfy
+  natural alignment. Cross-check with functions that dereference the member.
   Trigger: CServerSideClient_m_nConnectionTypeFlags, CServerSideClient::m_nConnectionTypeFlags
 disable-model-invocation: true
 ---

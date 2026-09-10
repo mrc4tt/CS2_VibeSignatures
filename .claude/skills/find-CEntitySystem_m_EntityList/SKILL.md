@@ -3,8 +3,8 @@ name: find-CEntitySystem_m_EntityList
 description: |
   Locate CEntitySystem::m_EntityList in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CEntitySystem::m_EntityList" (symbol CEntitySystem_m_EntityList). This is a STRUCT MEMBER OFFSET (schema netvar), not a function. Resolve the
-CEntitySystem class layout via the schema/network system; the member must satisfy
-natural alignment. Cross-check with functions that dereference the member.
+  CEntitySystem class layout via the schema/network system; the member must satisfy
+  natural alignment. Cross-check with functions that dereference the member.
   Trigger: CEntitySystem_m_EntityList, CEntitySystem::m_EntityList
 disable-model-invocation: true
 ---

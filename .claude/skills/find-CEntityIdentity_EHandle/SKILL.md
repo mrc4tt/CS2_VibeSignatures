@@ -3,8 +3,8 @@ name: find-CEntityIdentity_EHandle
 description: |
   Locate CEntityIdentity::EHandle in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CEntityIdentity::EHandle" (symbol CEntityIdentity_EHandle). This is a VIRTUAL function - resolve the CEntityIdentity::EHandle vtable via RTTI and identify the
-slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
-commonly differ between platforms - never assume identical indices.
+  slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
+  commonly differ between platforms - never assume identical indices.
   Trigger: CEntityIdentity_EHandle, CEntityIdentity::EHandle
 disable-model-invocation: true
 ---

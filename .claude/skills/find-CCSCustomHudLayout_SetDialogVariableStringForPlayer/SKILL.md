@@ -3,10 +3,10 @@ name: find-CCSCustomHudLayout_SetDialogVariableStringForPlayer
 description: |
   Locate CCSCustomHudLayout_SetDialogVariableStringForPlayer in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CCSCustomHudLayout_SetDialogVariableStringForPlayer" (symbol CCSCustomHudLayout_SetDialogVariableStringForPlayer). The gamedata consumer stores a BYTE SIGNATURE for this entry - ALWAYS emit the func
-schema (func_sig), never vfunc fields. The function may be virtual; locating it via
-the owning class vtable (RTTI) is a fine strategy, but once found, read its head bytes
-and emit func_sig. Locate via cross-references, distinctive constants/strings, callers
-of related symbols, or vtable slots; verify by decompilation before committing.
+  schema (func_sig), never vfunc fields. The function may be virtual; locating it via
+  the owning class vtable (RTTI) is a fine strategy, but once found, read its head bytes
+  and emit func_sig. Locate via cross-references, distinctive constants/strings, callers
+  of related symbols, or vtable slots; verify by decompilation before committing.
   Trigger: CCSCustomHudLayout_SetDialogVariableStringForPlayer, CCSCustomHudLayout_SetDialogVariableStringForPlayer
 disable-model-invocation: true
 ---

@@ -3,8 +3,8 @@ name: find-CEntityIdentity_m_designerName
 description: |
   Locate CEntityIdentity::m_designerName in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CEntityIdentity::m_designerName" (symbol CEntityIdentity_m_designerName). This is a STRUCT MEMBER OFFSET (schema netvar), not a function. Resolve the
-CEntityIdentity class layout via the schema/network system; the member must satisfy
-natural alignment. Cross-check with functions that dereference the member.
+  CEntityIdentity class layout via the schema/network system; the member must satisfy
+  natural alignment. Cross-check with functions that dereference the member.
   Trigger: CEntityIdentity_m_designerName, CEntityIdentity::m_designerName
 disable-model-invocation: true
 ---

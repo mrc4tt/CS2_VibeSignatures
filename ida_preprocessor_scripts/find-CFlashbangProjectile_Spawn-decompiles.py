@@ -56,10 +56,10 @@ GENERATE_YAML_DESIRED_FIELDS = [
         [
             "func_name",
             "func_sig",
-            "func_sig_allow_across_function_boundary:true",
             "func_va",
             "func_rva",
             "func_size",
+            # same short-body reason as CBaseModelEntity_SetModel above
             "func_sig_allow_across_function_boundary:true",
         ],
     ),

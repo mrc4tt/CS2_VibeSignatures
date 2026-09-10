@@ -3,8 +3,8 @@ name: find-CCSBot_UpdateLookAngles
 description: |
   Locate CCSBot::UpdateLookAngles in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CCSBot::UpdateLookAngles" (symbol CCSBot_UpdateLookAngles). This is a non-virtual function - emit a byte signature (func_sig), not an offset.
-Locate it via cross-references, distinctive constants/strings in its body, or callers
-of related symbols; verify by decompilation before committing to a candidate.
+  Locate it via cross-references, distinctive constants/strings in its body, or callers
+  of related symbols; verify by decompilation before committing to a candidate.
   Trigger: CCSBot_UpdateLookAngles, CCSBot::UpdateLookAngles
 disable-model-invocation: true
 ---

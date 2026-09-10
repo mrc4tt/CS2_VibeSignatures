@@ -3,8 +3,8 @@ name: find-CServerSideClient_m_SteamIDMirror
 description: |
   Locate CServerSideClient::m_SteamIDMirror in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CServerSideClient::m_SteamIDMirror" (symbol CServerSideClient_m_SteamIDMirror). This is a STRUCT MEMBER OFFSET (schema netvar), not a function. Resolve the
-CServerSideClient class layout via the schema/network system; the member must satisfy
-natural alignment. Cross-check with functions that dereference the member.
+  CServerSideClient class layout via the schema/network system; the member must satisfy
+  natural alignment. Cross-check with functions that dereference the member.
   Trigger: CServerSideClient_m_SteamIDMirror, CServerSideClient::m_SteamIDMirror
 disable-model-invocation: true
 ---

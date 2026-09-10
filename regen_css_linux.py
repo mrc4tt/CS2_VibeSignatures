@@ -23,16 +23,17 @@ import json
 import os
 import sys
 
-import httpx
-from mcp import ClientSession
-from mcp.client.streamable_http import streamable_http_client
-
 import ida_analyze_bin as AB
 import ida_analyze_util as AU
+from ida_mcp_session import (
+    McpConnectionError,
+    McpDatabaseSelectionError,
+    McpToolCallError,
+    open_ida_mcp_session,
+)
 
 HOST = AB.DEFAULT_HOST
 PORT = AB.DEFAULT_PORT
-URL = f"http://{HOST}:{PORT}/mcp"
 
 # py_eval: count/collect matches of a masked byte pattern across the whole image.
 _SEARCH_PY = r"""
@@ -115,57 +116,58 @@ async def run(args, gd, binpath):
     changed = {}
     broken_list = []
     offset_list = []
-    async with httpx.AsyncClient(follow_redirects=True, timeout=httpx.Timeout(30.0, read=300.0), trust_env=False) as hc:
-        async with streamable_http_client(URL, http_client=hc) as (r, w, _):
-            async with ClientSession(r, w) as session:
-                await session.initialize()
-                print("  waiting for analysis...")
-                if not await wait_ready(session):
-                    print("  ERROR: analysis not ready in time")
-                    return None
-                image_base = await get_image_base(session)
-                print(f"  analysis ready (image_base={hex(image_base)})")
-                for key, ent in gd.items():
-                    sigs = ent.get("signatures")
-                    if not (isinstance(sigs, dict) and sigs.get("linux")):
-                        if "offsets" in ent:
-                            offset += 1
-                            offset_list.append(key)
-                        continue
-                    old = sigs["linux"]
-                    hits, starts = await search_sig(session, old)
-                    if hits is None:
-                        broken += 1
-                        broken_list.append((key, "parse-error"))
-                        continue
-                    uniq_starts = sorted(set(starts))
-                    if len(hits) == 1 and len(uniq_starts) == 1:
-                        fva = uniq_starts[0]
-                        try:
-                            res = await AU.preprocess_gen_func_sig_via_mcp(session, fva, image_base)
-                        except Exception as e:
-                            res = None
-                            if args.debug:
-                                print(f"    {key}: gen error {e!r}")
-                        new_sig = res.get("func_sig") if isinstance(res, dict) else None
-                        if new_sig:
-                            new_gd = sig_to_gd(new_sig)
-                            if new_gd != old:
-                                changed[key] = new_gd
-                                regen += 1
-                                print(f"  REGEN   {key}")
-                            else:
-                                kept += 1
-                                print(f"  same    {key}")
+    try:
+        async with open_ida_mcp_session(HOST, PORT, expected_binary=binpath) as session:
+            print("  waiting for analysis...")
+            if not await wait_ready(session):
+                print("  ERROR: analysis not ready in time")
+                return None
+            image_base = await get_image_base(session)
+            print(f"  analysis ready (image_base={hex(image_base)})")
+            for key, ent in gd.items():
+                sigs = ent.get("signatures")
+                if not (isinstance(sigs, dict) and sigs.get("linux")):
+                    if "offsets" in ent:
+                        offset += 1
+                        offset_list.append(key)
+                    continue
+                old = sigs["linux"]
+                hits, starts = await search_sig(session, old)
+                if hits is None:
+                    broken += 1
+                    broken_list.append((key, "parse-error"))
+                    continue
+                uniq_starts = sorted(set(starts))
+                if len(hits) == 1 and len(uniq_starts) == 1:
+                    fva = uniq_starts[0]
+                    try:
+                        res = await AU.preprocess_gen_func_sig_via_mcp(session, fva, image_base)
+                    except Exception as e:
+                        res = None
+                        if args.debug:
+                            print(f"    {key}: gen error {e!r}")
+                    new_sig = res.get("func_sig") if isinstance(res, dict) else None
+                    if new_sig:
+                        new_gd = sig_to_gd(new_sig)
+                        if new_gd != old:
+                            changed[key] = new_gd
+                            regen += 1
+                            print(f"  REGEN   {key}")
                         else:
-                            # old sig still unique but couldn't regen -> keep old (still valid)
                             kept += 1
-                            print(f"  keep    {key} (regen failed, old sig still unique)")
+                            print(f"  same    {key}")
                     else:
-                        broken += 1
-                        reason = "no-match" if len(hits) == 0 else f"multi({len(hits)})"
-                        broken_list.append((key, reason))
-                        print(f"  BROKEN  {key} [{reason}]")
+                        # old sig still unique but couldn't regen -> keep old (still valid)
+                        kept += 1
+                        print(f"  keep    {key} (regen failed, old sig still unique)")
+                else:
+                    broken += 1
+                    reason = "no-match" if len(hits) == 0 else f"multi({len(hits)})"
+                    broken_list.append((key, reason))
+                    print(f"  BROKEN  {key} [{reason}]")
+    except (McpConnectionError, McpDatabaseSelectionError, McpToolCallError) as exc:
+        print(f"  ERROR: {exc}")
+        return None
     return dict(
         kept=kept,
         regen=regen,

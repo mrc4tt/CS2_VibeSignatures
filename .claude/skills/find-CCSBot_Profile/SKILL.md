@@ -2,37 +2,33 @@
 name: find-CCSBot_Profile
 description: |
   Locate CCSBot::Profile in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
-  signature or offset for the local gamedata entry "CCSBot::Profile" (symbol CCSBot_Profile). This is a VIRTUAL function - resolve the CCSBot::Profile vtable via RTTI and identify the
-slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
-commonly differ between platforms - never assume identical indices.
+  signature or offset for the local gamedata entry "CCSBot::Profile" (symbol CCSBot_Profile). This is a STRUCT MEMBER OFFSET (schema netvar), not a function. Resolve the
+  CCSBot class layout via the schema/network system; the member must satisfy
+  natural alignment. Cross-check with functions that dereference the member.
+  Do not switch output schema: emit the structmember fields below even if the
+  class turns out to be polymorphic - a func_*/vfunc_* payload for this symbol
+  is rejected by canonical_symbol_yaml_bytes.
   Trigger: CCSBot_Profile, CCSBot::Profile
 disable-model-invocation: true
 ---
 
 # Find CCSBot_Profile
 
-Target: `CCSBot::Profile` (vfunc) in the CS2 server module.
+Target: `CCSBot::Profile` (structmember) in the CS2 server module.
 
 > Do NOT anchor on raw byte patterns from older releases - they shift. Use anchors only to *locate*
 > the function, then generate a fresh minimal-unique function-head signature with relocated bytes
 > wildcarded. Produce ONLY the output file(s) listed in this skill's expected outputs, for the binary
 > loaded in THIS session (one platform per run). NEVER open or analyze the other platform's binary.
 
-## Concrete anchors for THIS target (use these first)
-
-- `accessor der laeser CCSBot m_profile (BotProfile*) - xrefs fra EquipBestWeapon/UpdateLookAngles`
-
-## KNOWN CONTAMINATION WARNING
-
-VA 0x20c2700 (BuyState_OnUpdate) has WRONGLY been emitted for this target before.
-It is NOT this function. If your best candidate is 0x20c2700, you have NOT found
-the target - keep searching or report the shortlist instead of guessing.
-
 ## Method
 
-This is a VIRTUAL function - resolve the CCSBot::Profile vtable via RTTI and identify the
-slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
-commonly differ between platforms - never assume identical indices.
+This is a STRUCT MEMBER OFFSET (schema netvar), not a function. Resolve the
+CCSBot class layout via the schema/network system; the member must satisfy
+natural alignment. Cross-check with functions that dereference the member.
+Do not switch output schema: emit the structmember fields below even if the
+class turns out to be polymorphic - a func_*/vfunc_* payload for this symbol
+is rejected by canonical_symbol_yaml_bytes.
 
 ## Mandatory self-check before emitting
 
@@ -46,36 +42,17 @@ aborts. Therefore:
 3. `func_sig` MUST start at `func_va` (the true function head).
 4. Only then write the YAML. A mismatch is always a bug in YOUR output, never in the pipeline.
 
-
-## Struct-member alternative (choose the TRUTHFUL schema)
-
-If investigation shows the target is NOT a vtable slot but a plain struct member of a
-non-polymorphic class (no RTTI/vtable exists for the class), emit the structmember schema
-instead:
-
-```yaml
-struct_name: <owning class name>
-member_name: <member name>
-offset: "<hex byte offset as string>"
-size: <member size in bytes, decimal>
-offset_sig: "<short byte pattern of an instruction touching the offset>"
-```
-
-A truthful structmember artifact is always accepted; a guessed vfunc artifact is not.
-
 ## Output schema (STRICT)
 
 Write the YAML file `<symbol>.{platform}.yaml` with EXACTLY these fields:
 ```yaml
-func_name: <SYMBOL_NAME>
-func_va: "<hex virtual address>"
-func_rva: "<hex rva>"
-func_size: "<hex size>"
-vtable_name: <owning class RTTI name>
-vfunc_offset: "<hex vtable byte offset>"
-vfunc_index: <decimal slot index>
+struct_name: CCSBot
+member_name: m_profile
+offset: "<hex byte offset as string>"
+size: <member size in bytes, decimal>
+offset_sig: "<short byte pattern of an instruction touching the offset>"
 ```
-NEVER include func_sig.
+NEVER include func_* or vfunc_* fields.
 
 ## Verification
 

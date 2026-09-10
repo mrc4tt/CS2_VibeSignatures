@@ -3,8 +3,8 @@ name: find-CBasePlayerController_OnSimulateUserCommands
 description: |
   Locate CBasePlayerController::OnSimulateUserCommands in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CBasePlayerController::OnSimulateUserCommands" (symbol CBasePlayerController_OnSimulateUserCommands). This is a non-virtual function - emit a byte signature (func_sig), not an offset.
-Locate it via cross-references, distinctive constants/strings in its body, or callers
-of related symbols; verify by decompilation before committing to a candidate.
+  Locate it via cross-references, distinctive constants/strings in its body, or callers
+  of related symbols; verify by decompilation before committing to a candidate.
   Trigger: CBasePlayerController_OnSimulateUserCommands, CBasePlayerController::OnSimulateUserCommands
 disable-model-invocation: true
 ---

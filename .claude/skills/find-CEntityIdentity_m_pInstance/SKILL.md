@@ -3,8 +3,8 @@ name: find-CEntityIdentity_m_pInstance
 description: |
   Locate CEntityIdentity::m_pInstance in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CEntityIdentity::m_pInstance" (symbol CEntityIdentity_m_pInstance). This is a STRUCT MEMBER OFFSET (schema netvar), not a function. Resolve the
-CEntityIdentity class layout via the schema/network system; the member must satisfy
-natural alignment. Cross-check with functions that dereference the member.
+  CEntityIdentity class layout via the schema/network system; the member must satisfy
+  natural alignment. Cross-check with functions that dereference the member.
   Trigger: CEntityIdentity_m_pInstance, CEntityIdentity::m_pInstance
 disable-model-invocation: true
 ---

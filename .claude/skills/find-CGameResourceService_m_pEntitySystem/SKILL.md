@@ -3,8 +3,8 @@ name: find-CGameResourceService_m_pEntitySystem
 description: |
   Locate GameResourceServiceServer::m_pEntitySystem in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "GameResourceServiceServer::m_pEntitySystem" (symbol CGameResourceService_m_pEntitySystem). This is a STRUCT MEMBER OFFSET (schema netvar), not a function. Resolve the
-GameResourceServiceServer class layout via the schema/network system; the member must satisfy
-natural alignment. Cross-check with functions that dereference the member.
+  GameResourceServiceServer class layout via the schema/network system; the member must satisfy
+  natural alignment. Cross-check with functions that dereference the member.
   Trigger: CGameResourceService_m_pEntitySystem, GameResourceServiceServer::m_pEntitySystem
 disable-model-invocation: true
 ---

@@ -3,8 +3,8 @@ name: find-CMoveData_Velocity
 description: |
   Locate CMoveData::Velocity in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CMoveData::Velocity" (symbol CMoveData_Velocity). This is a VIRTUAL function - resolve the CMoveData::Velocity vtable via RTTI and identify the
-slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
-commonly differ between platforms - never assume identical indices.
+  slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
+  commonly differ between platforms - never assume identical indices.
   Trigger: CMoveData_Velocity, CMoveData::Velocity
 disable-model-invocation: true
 ---

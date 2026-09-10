@@ -3,8 +3,8 @@ name: find-CNetworkGameServerBase_m_Clients
 description: |
   Locate CNetworkGameServerBase::m_Clients in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CNetworkGameServerBase::m_Clients" (symbol CNetworkGameServerBase_m_Clients). This is a STRUCT MEMBER OFFSET (schema netvar), not a function. Resolve the
-CNetworkGameServerBase class layout via the schema/network system; the member must satisfy
-natural alignment. Cross-check with functions that dereference the member.
+  CNetworkGameServerBase class layout via the schema/network system; the member must satisfy
+  natural alignment. Cross-check with functions that dereference the member.
   Trigger: CNetworkGameServerBase_m_Clients, CNetworkGameServerBase::m_Clients
 disable-model-invocation: true
 ---

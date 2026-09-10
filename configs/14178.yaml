@@ -10011,6 +10011,8 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CCSBot
+        category: struct
       - name: BotProfile
         category: struct
       - name: BuyState
@@ -10088,7 +10090,9 @@ modules:
         alias:
           - CBasePlayerController::OnSimulateUserCommands
       - name: CCSBot_Profile
-        category: vfunc
+        category: structmember
+        struct: CCSBot
+        member: m_profile
         alias:
           - CCSBot::Profile
       - name: BotProfile_Aggression

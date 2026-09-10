@@ -3,8 +3,8 @@ name: find-CCSPlayerController_HandleCommand_JoinTeam
 description: |
   Locate CCSPlayerController::HandleCommand_JoinTeam in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "CCSPlayerController::HandleCommand_JoinTeam" (symbol CCSPlayerController_HandleCommand_JoinTeam). This is a non-virtual function - emit a byte signature (func_sig), not an offset.
-Locate it via cross-references, distinctive constants/strings in its body, or callers
-of related symbols; verify by decompilation before committing to a candidate.
+  Locate it via cross-references, distinctive constants/strings in its body, or callers
+  of related symbols; verify by decompilation before committing to a candidate.
   Trigger: CCSPlayerController_HandleCommand_JoinTeam, CCSPlayerController::HandleCommand_JoinTeam
 disable-model-invocation: true
 ---

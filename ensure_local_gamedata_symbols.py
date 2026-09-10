@@ -146,7 +146,7 @@ def struct_entry_block(struct):
     return f"      - name: {struct}\n        category: struct\n"
 
 
-def write_skill(symbol_name, category, struct, alias):
+def write_skill(symbol_name, category, struct, alias, member=""):
     display = alias or symbol_name
     if category == "func":
         kind_hint = (
@@ -192,13 +192,16 @@ def write_skill(symbol_name, category, struct, alias):
         kind_hint = (
             f"This is a STRUCT MEMBER OFFSET (schema netvar), not a function. Resolve the\n"
             f"{struct} class layout via the schema/network system; the member must satisfy\n"
-            f"natural alignment. Cross-check with functions that dereference the member."
+            f"natural alignment. Cross-check with functions that dereference the member.\n"
+            f"Do not switch output schema: emit the structmember fields below even if the\n"
+            f"class turns out to be polymorphic - a func_*/vfunc_* payload for this symbol\n"
+            f"is rejected by canonical_symbol_yaml_bytes."
         )
         output = (
             "Write the YAML file `<symbol>.{platform}.yaml` with EXACTLY these fields:\n"
             "```yaml\n"
-            "struct_name: <owning class name>\n"
-            "member_name: <member name>\n"
+            f"struct_name: {struct}\n"
+            f"member_name: {member}\n"
             "offset: \"<hex byte offset as string>\"\n"
             "size: <member size in bytes, decimal>\n"
             "offset_sig: \"<short byte pattern of an instruction touching the offset>\"\n"
@@ -211,11 +214,14 @@ def write_skill(symbol_name, category, struct, alias):
     if os.path.exists(skill_path):
         return
     os.makedirs(skill_dir, exist_ok=True)
+    # continuation lines must stay inside the "description: |" block scalar - at
+    # column 0 they terminate it and the frontmatter stops being valid YAML
+    kind_hint_indented = kind_hint.replace("\n", "\n  ")
     body = f"""---
 name: find-{symbol_name}
 description: |
   Locate {display} in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
-  signature or offset for the local gamedata entry "{display}" (symbol {symbol_name}). {kind_hint}
+  signature or offset for the local gamedata entry "{display}" (symbol {symbol_name}). {kind_hint_indented}
   Trigger: {symbol_name}, {display}
 disable-model-invocation: true
 ---
@@ -328,7 +334,7 @@ def inject(text, config_path, specs):
         new_symbols.setdefault(module, []).append(symbol_entry_block(symbol_name, category, struct, member, alias))
         if struct and f"- name: {struct}\n" not in block_text:
             new_structs.setdefault(module, []).append(struct)
-        write_skill(symbol_name, category, struct, alias)
+        write_skill(symbol_name, category, struct, alias, member)
         touched.add(module)
 
     if not touched:

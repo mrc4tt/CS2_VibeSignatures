@@ -3,8 +3,8 @@ name: find-BotProfile_Teamwork
 description: |
   Locate BotProfile::Teamwork in CS2 server.dll / libserver.so via IDA Pro MCP and emit a fresh, minimal-unique
   signature or offset for the local gamedata entry "BotProfile::Teamwork" (symbol BotProfile_Teamwork). This is a VIRTUAL function - resolve the BotProfile::Teamwork vtable via RTTI and identify the
-slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
-commonly differ between platforms - never assume identical indices.
+  slot, then emit the slot. Verify by xrefs from expected call sites. vtable slots
+  commonly differ between platforms - never assume identical indices.
   Trigger: BotProfile_Teamwork, BotProfile::Teamwork
 disable-model-invocation: true
 ---

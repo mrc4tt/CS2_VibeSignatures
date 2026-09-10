@@ -50,9 +50,21 @@ from ida_llm_decompile import (
 
 
 def _is_remote_absolute_path(path):
-    """Return True for absolute paths in either host, POSIX, or Windows form."""
+    """Return True for absolute paths in either host, POSIX, or Windows form.
+
+    The remote may not share the host's path flavour, so POSIX and Windows forms
+    are recognised explicitly rather than by asking the host's os.path: on a
+    POSIX host os.path IS posixpath, so deferring to those modules cannot tell
+    the two flavours apart (and a patched os.path.isabs silently disables both).
+    """
     path_str = os.fspath(path)
-    return os.path.isabs(path_str) or posixpath.isabs(path_str) or ntpath.isabs(path_str)
+    if os.path.isabs(path_str):
+        return True
+    if path_str.startswith("/"):  # POSIX form
+        return True
+    if path_str.startswith("\\\\") or re.match(r"^[A-Za-z]:[\\/]", path_str):  # Windows form
+        return True
+    return posixpath.isabs(path_str) or ntpath.isabs(path_str)
 
 
 def _absolute_path_preserve_spelling(path):
