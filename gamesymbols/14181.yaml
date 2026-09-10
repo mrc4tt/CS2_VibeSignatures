@@ -27336,10 +27336,10 @@ files:
     func_va: '0x180a88490'
   server/CCSPlayer_MovementServices_FullWalkMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_FullWalkMove
-    func_rva: '0x15b6750'
-    func_sig: 55 48 89 E5 41 54 49 89 F4 53 48 89 FB E8 ?? ?? ?? ?? 84 C0 0F 84 2E 01 00 00
+    func_rva: '0x15b69a0'
+    func_sig: 48 B8 00 00 00 00 00 00 80 3F 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D B5 F8 FD FF FF
     func_size: '0x0'
-    func_va: '0x15b6750'
+    func_va: '0x15b69a0'
   server/CCSPlayer_MovementServices_FullWalkMove.windows.yaml:
     func_name: CCSPlayer_MovementServices_FullWalkMove
     func_rva: '0xab4820'
@@ -46561,5 +46561,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T09:28:19Z'
+last_publish_time: '2026-09-10T09:33:36Z'
 schema_version: 5
