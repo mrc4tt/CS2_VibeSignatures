@@ -1,4 +1,0 @@
-func_name: CBaseTrigger_EndTouchInternal
-func_va: '0xd3ea70'
-func_rva: '0xd3ea70'
-func_sig: 55 BA FF FF FF FF 48 89 E5 41 57 41 56 41 55 49 89 F5

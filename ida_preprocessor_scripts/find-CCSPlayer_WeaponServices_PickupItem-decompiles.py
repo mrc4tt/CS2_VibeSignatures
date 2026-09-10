@@ -54,6 +54,16 @@ GENERATE_YAML_DESIRED_FIELDS = [
         "CCSPlayer_WeaponServices_CanUse",
         [
             "func_name",
+            # The relocation path already covers this symbol - it is in
+            # TARGET_FUNCTION_NAMES beside EquipWeapon, which emits exactly these
+            # fields - it was simply never asked for the address or a body
+            # signature, which is the only reason the signature tracker read it as
+            # analysed-but-unsignatured. vfunc_sig stays: it anchors the INDEX at
+            # the call site, while func_sig anchors the body.
+            "func_va",
+            "func_rva",
+            "func_size",
+            "func_sig",
             "vfunc_sig",
             "vfunc_offset",
             "vfunc_index",

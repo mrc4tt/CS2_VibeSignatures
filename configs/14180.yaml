@@ -6697,9 +6697,6 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
-      - name: find-CBaseTrigger_EndTouchInternal-linux
-        optional_output:
-          - CBaseTrigger_EndTouchInternal.linux.yaml
       - name: find-CCSNavArea_IsValidNavMesh
         expected_output:
           - CCSNavArea_IsValidNavMesh.{platform}.yaml

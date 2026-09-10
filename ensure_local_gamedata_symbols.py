@@ -132,6 +132,12 @@ FORK_OWNED_OBSOLETE_TASKS = [
     # NAME is the plugin key but whose ADDRESS is a sibling overload is the
     # ClientPrint trap; the plugin key is aliased to the named symbol instead.
     ("find-GiveNamedItem2", "server", "name belongs to CCSPlayer_ItemServices_GiveNamedItem"),
+    # An invented name for the shared body that CBaseTrigger::EndTouch's vtable
+    # wrapper tail-jumps to. Withdrawn: upstream does not track it, no generator
+    # consumes it, the tracker's flat alias map cannot use it without blinding the
+    # windows verdict, and the body is reached from at least two wrappers - so
+    # naming it after CBaseTrigger was not even accurate.
+    ("find-CBaseTrigger_EndTouchInternal-linux", "server", "invented name, no consumer"),
     # A single {platform} declaration task was wrong for this table: these are bare
     # declaration tasks and the name must say which platform the artifact was made
     # for, so the two per-platform entries replace it.
@@ -328,16 +334,6 @@ FORK_OWNED_OPTIONAL_TASKS = [
     # the resource name - is linux slot 0 (xor r8d/r9d/ecx/edx) and windows slot 2
     # (xor r9d, [rsp+0x20]=0, xor r8d). GCC and MSVC emit the overloads in opposite
     # order, which is exactly why the indices are 0 and 2.
-    # CBaseTrigger::EndTouch is split on linux only: the vtable entry (slot 149,
-    # 0xd3ed90) is a 17-byte wrapper that null-checks its second argument and
-    # tail-jumps to the body at 0xd3ea70. CounterStrikeSharp's linux signature
-    # targets the body, ours names the vtable entry, so both are correct and they
-    # disagree by name alone - filing the body under the repo's ...Internal
-    # convention gives the body a record to be compared against. No windows entry:
-    # MSVC inlined the null check, so slot 150 (0x1803cb540) IS the whole function
-    # and there is no second address to name.
-    ("find-CBaseTrigger_EndTouchInternal-linux", "server",
-     "CBaseTrigger_EndTouchInternal.linux.yaml"),
     ("find-CEntityResourceManifest_AddResource-linux", "engine",
      "CEntityResourceManifest_AddResource.linux.yaml"),
     ("find-CEntityResourceManifest_AddResource-windows", "engine",
