@@ -137,18 +137,26 @@ FORK_OWNED_PLATFORM_PINS = [
     # a1[23] = 0xC7EFFFFFE0000000, same netsystem vtable +120/+368/+144, same
     # convar ratio into +43). Confirmed by IDA decompiles of both.
     ("ParseNetadrList", "engine", "windows", "inlined into ConnectSocketToAddressList on linux"),
-    # No linux call site exists to record. g_pNetworkSystem dispatches on 34 distinct
-    # slots in engine2.dll and 27 in libengine2.so, and 0xb8 is in neither set. The
-    # windows artifact's own call site (0x1800696bd) receives from 0x180613ca8, not
-    # from g_pNetworkSystem (0x180689e80): that global is registered in the
-    # Source2Engine interface family between "Source2EngineToClient001" and
-    # "Source2EngineToServer001", and every function loading it deals with level
-    # loading ("*** Map Load Complete", "OnEngineLevelLoadingStarted",
-    # "Engine2/DisableLoadingPlaque", "ActivateGameUI()"). So the recorded receiver
-    # is an engine service, and the INetworkSystem label does not match it - which
-    # makes a hunt for a linux counterpart a hunt for something that is not there.
-    # Nothing consumes the symbol and it ships nothing, so windows keeps what it has
-    # always had and linux stops being reported as missing.
+    # Upstream's label is wrong, so there is no linux call site to find. A headless
+    # IDA pass read the registration line straight out of the interface-connect
+    # function:
+    #     (**v136)(v136, "LegacyGameUI001", qword_180613CA8);
+    # and 0x180613ca8 is exactly the receiver of the windows artifact's own call
+    # site (0x1800696bd). It is not g_pNetworkSystem (0x180689e80), which dispatches
+    # on 34 distinct slots in engine2.dll and 27 in libengine2.so without ever
+    # touching 0xb8.
+    #
+    # The slot map confirms ILegacyGameUI rather than INetworkSystem: 11 from
+    # ActivateGameUI(), 13/14 from GameUIService and PanoramaUIStartup, 17 from
+    # CEngineGameUI::OnLevelLoadingStarted, 18 from level-loading-finished and
+    # Engine2/DisableLoadingPlaque, 21 from "*** Map Load Complete", and 23 from a
+    # client disconnect handler ("CL: Disconnected - Client delta ticks out of
+    # order!"). So slot 23 is a disconnect notification on the legacy game-UI
+    # interface, not RemoveNetChannel.
+    #
+    # The symbol ships nothing and no generator consumes it, so upstream's windows
+    # artifact is left alone rather than relabelled, and linux stops being reported
+    # as missing.
     ("INetworkSystem_RemoveNetChannel", "engine", "windows",
      "no linux call site; windows receiver is an engine service, not INetworkSystem"),
     # windows-only in every gamever that has it (14172 onward); upstream added the
