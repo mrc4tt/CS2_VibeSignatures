@@ -22544,6 +22544,7 @@ files:
     func_name: CBaseTrigger_EndTouch
     func_rva: '0xd3ed90'
     func_sig: 48 85 F6 74 ?? E9 ?? ?? ?? ?? 66 0F 1F 44 00 00 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 8B 07
+    func_sig_allow_across_function_boundary: true
     func_size: '0x11'
     func_va: '0xd3ed90'
     vfunc_index: 149
@@ -22579,7 +22580,7 @@ files:
   server/CBaseTrigger_StartTouch.linux.yaml:
     func_name: CBaseTrigger_StartTouch
     func_rva: '0xd6f580'
-    func_sig: 55 48 89 E5 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 83 EC 10 48 8B 07 FF 90 70 08 00 00
+    func_sig: 55 48 89 E5 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 83 EC ?? 48 8B 07 FF 90 ?? ?? ?? ?? 84 C0
     func_size: '0x29a'
     func_va: '0xd6f580'
     vfunc_index: 147
@@ -46951,5 +46952,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T20:46:50Z'
+last_publish_time: '2026-09-10T21:26:20Z'
 schema_version: 5

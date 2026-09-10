@@ -5,8 +5,12 @@ from ida_analyze_util import preprocess_common_skill
 
 INHERIT_VFUNCS = [
     # (target_func_name, inherit_vtable_class, base_vfunc_name, generate_func_sig)
-    ("CBaseTrigger_StartTouch", "CBaseTrigger", "CBaseEntity_StartTouch", False),
-    ("CBaseTrigger_EndTouch", "CBaseTrigger", "CBaseEntity_EndTouch", False),
+    # generate_func_sig=True: the signature tracker compares byte patterns, and these
+    # two records carried an index but no pattern - so the fourth element has to be
+    # True as well, not just func_sig in the field list below. Without it the
+    # resolver is told not to produce a signature and the field stays empty.
+    ("CBaseTrigger_StartTouch", "CBaseTrigger", "CBaseEntity_StartTouch", True),
+    ("CBaseTrigger_EndTouch", "CBaseTrigger", "CBaseEntity_EndTouch", True),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [

@@ -3,6 +3,7 @@ func_va: '0xd3ed90'
 func_rva: '0xd3ed90'
 func_size: '0x11'
 func_sig: 48 85 F6 74 ?? E9 ?? ?? ?? ?? 66 0F 1F 44 00 00 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 8B 07
+func_sig_allow_across_function_boundary: true
 vtable_name: CBaseTrigger
 vfunc_offset: '0x4a8'
 vfunc_index: 149
