@@ -121,7 +121,7 @@ binaries:
       sha256: 'd3a76f86ed6d005620484134882efecb965702ca88b2bcbd8b3411fa17033045'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:b98b29d2b9b714cad6754737bd436ccaf70a4c60e5b421788f21b83eef10721a
+config_sha256: sha256:cbe8c690f09a1b4e7e01fbe420ada74b81f72bd9860f4f7807214ea645ea5aaf
 file_count: 3748
 files:
   SDL3/SDL_GetMouse.windows.yaml:
@@ -14019,6 +14019,12 @@ files:
     func_sig: 41 57 48 83 EC ?? 8B 05 ?? ?? ?? ?? 4C 8B F9
     func_size: '0x1bc'
     func_va: '0x1803ffee0'
+  engine/ConnectSocketToAddressList.linux.yaml:
+    func_name: ConnectSocketToAddressList
+    func_rva: '0x4ac3e0'
+    func_sig: 55 48 89 E5 41 57 41 56 49 89 FE 48 83 C7 60 41 55 41 54 4C 8D 65 80 53
+    func_size: '0x885'
+    func_va: '0x4ac3e0'
   engine/ConnectSocketToAddressList.windows.yaml:
     func_name: ConnectSocketToAddressList
     func_rva: '0x57c20'
@@ -14750,12 +14756,6 @@ files:
     func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 F3 48 81 EC ?? ?? ?? ?? 48 89 DF
     func_size: '0x2a5'
     func_va: '0x3f4ae0'
-  engine/ParseNetadrList.linux.yaml:
-    func_name: ParseNetadrList
-    func_rva: '0x4ac3e0'
-    func_sig: 55 48 89 E5 41 57 41 56 49 89 FE 48 83 C7 60 41 55 41 54 4C 8D 65 80 53
-    func_size: '0x4af'
-    func_va: '0x4ac3e0'
   engine/ParseNetadrList.windows.yaml:
     func_name: ParseNetadrList
     func_rva: '0x57410'
@@ -46783,5 +46783,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T11:20:16Z'
+last_publish_time: '2026-09-10T11:37:56Z'
 schema_version: 5

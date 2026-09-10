@@ -117,6 +117,27 @@ ALIAS_OVERRIDES = {
 }
 
 
+# Fork-owned OBSOLETE tasks: declarations for artifacts that turned out to be wrong.
+FORK_OWNED_OBSOLETE_TASKS = [
+    # (task_name, module, why)
+    # CNetChan has no RTTI in engine2 on either platform, so the single match a
+    # 7-byte signature found there was a false positive.
+    ("find-CNetChan_ProcessMessages", "engine", "artifact was a false positive"),
+]
+# Fork-owned platform pins. A symbol that exists on only one platform still gets
+# looked up on both, so the absent side logs missing_yaml forever. Pinning is
+# upstream's own lever (_target_platforms reads symbol["platform"]).
+FORK_OWNED_PLATFORM_PINS = [
+    # (symbol_name, module, platform, why)
+    # GCC inlines ParseNetadrList into ConnectSocketToAddressList on linux: the
+    # linux function at 0x4ac3e0 carries ParseNetadrList's own string literals
+    # (' ', 'loopback', ':%d', '%d') inside a body that is otherwise a
+    # line-for-line match for windows ConnectSocketToAddressList (same netadr_t
+    # clear + CUtlString::Purge prologue, same (a1+9, count) resize helper, same
+    # a1[23] = 0xC7EFFFFFE0000000, same netsystem vtable +120/+368/+144, same
+    # convar ratio into +43). Confirmed by IDA decompiles of both.
+    ("ParseNetadrList", "engine", "windows", "inlined into ConnectSocketToAddressList on linux"),
+]
 # Fork-owned symbol REMOVALS. Upstream declares these, but the binary evidence says
 # they cannot be produced, so every run logged a missing_yaml warning and nothing
 # ever shipped. sync_upstream.sh resolves config conflicts in upstream's favour, so
@@ -162,7 +183,7 @@ FORK_OWNED_OPTIONAL_TASKS = [
     ("find-INetworkSystem_CloseSocket-linux", "engine", "INetworkSystem_CloseSocket.linux.yaml"),
     ("find-INetworkSystem_ConnectSocket-linux", "engine", "INetworkSystem_ConnectSocket.linux.yaml"),
     ("find-INetworkSystem_PollSocket-linux", "engine", "INetworkSystem_PollSocket.linux.yaml"),
-    ("find-ParseNetadrList-linux", "engine", "ParseNetadrList.linux.yaml"),
+    ("find-ConnectSocketToAddressList-linux", "engine", "ConnectSocketToAddressList.linux.yaml"),
     ("find-CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem-server", "server",
      "CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml"),
     ("find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem-linux", "server",
@@ -209,6 +230,53 @@ def _symbol_block(lines, start, end, symbol):
     while to < end and lines[to].startswith("        "):
         to += 1
     return at, to
+
+
+def enforce_fork_owned_obsolete_tasks(text):
+    """Drop task declarations whose artifact was withdrawn."""
+    dropped = 0
+    lines = text.split("\n")
+    for task, module, _why in FORK_OWNED_OBSOLETE_TASKS:
+        for start, end, name in _module_blocks(lines):
+            if name != module:
+                continue
+            try:
+                at = next(i for i in range(start, end) if lines[i] == f"      - name: {task}")
+            except StopIteration:
+                continue
+            to = at + 1
+            while to < end and lines[to].startswith("        "):
+                to += 1
+            del lines[at:to]
+            dropped += 1
+            break
+    return "\n".join(lines), dropped
+
+
+def enforce_fork_owned_platform_pins(text):
+    """Re-assert single-platform pins on symbols the other platform cannot have."""
+    pinned = 0
+    lines = text.split("\n")
+    for symbol, module, platform, _why in FORK_OWNED_PLATFORM_PINS:
+        for start, end, name in _module_blocks(lines):
+            if name != module:
+                continue
+            span = _symbol_block(lines, start, end, symbol)
+            if span is None:
+                continue
+            at, to = span
+            if any(l.strip() == f"platform: {platform}" for l in lines[at:to]):
+                break
+            # replace a wrong pin, otherwise insert right after the category line
+            wrong = next((i for i in range(at, to) if lines[i].strip().startswith("platform:")), None)
+            if wrong is not None:
+                lines[wrong] = f"        platform: {platform}"
+            else:
+                cat = next((i for i in range(at, to) if lines[i].strip().startswith("category:")), at)
+                lines[cat + 1:cat + 1] = [f"        platform: {platform}"]
+            pinned += 1
+            break
+    return "\n".join(lines), pinned
 
 
 def enforce_fork_owned_removals(text):
@@ -277,7 +345,23 @@ def enforce_fork_owned_optional_tasks(text):
             # scope the presence check to THIS module: the same task name also exists
             # in another module with expected_output, and a global check skipped three
             # server tasks that upstream declares only for client.
-            if f"      - name: {task}" in lines[start:end]:
+            try:
+                have = next(i for i in range(start, end) if lines[i] == f"      - name: {task}")
+            except StopIteration:
+                have = None
+            if have is not None:
+                # present, but possibly narrower than we need (upstream ships
+                # g_pGameEntitySystem.windows.yaml; the linux artifact now exists too)
+                to = have + 1
+                while to < end and lines[to].startswith("        "):
+                    to += 1
+                if any(l.strip() == f"- {path}" for l in lines[have:to]):
+                    break
+                if not any(l.strip() == "optional_output:" for l in lines[have:to]):
+                    break  # a real find-task with expected_output - leave it alone
+                lines[have:to] = [f"      - name: {task}", "        optional_output:",
+                                  f"          - {path}"]
+                added += 1
                 break
             try:
                 at = next(i for i in range(start, end) if lines[i] == "    skills:")
@@ -746,6 +830,12 @@ def main():
     patched, moved = enforce_fork_owned_moves(patched)
     if moved:
         print(f"  moved: {moved} declaration(s) to the module holding the class")
+    patched, dropped = enforce_fork_owned_obsolete_tasks(patched)
+    if dropped:
+        print(f"  dropped: {dropped} obsolete task declaration(s)")
+    patched, pinned = enforce_fork_owned_platform_pins(patched)
+    if pinned:
+        print(f"  re-asserted: {pinned} single-platform pin(s)")
     patched, opt_tasked = enforce_fork_owned_optional_tasks(patched)
     if opt_tasked:
         print(f"  re-asserted: {opt_tasked} fork-owned optional_output task(s)")
@@ -758,7 +848,8 @@ def main():
     if tasked:
         print(f"  re-asserted: {tasked} fork-owned find-task(s)")
     if (patched == text and not repaired and not reclassified and not aliased
-            and not tasked and not removed and not moved and not opt_tasked):
+            and not tasked and not removed and not moved and not opt_tasked
+            and not pinned and not dropped):
         return
 
     with open(config_path, "w", encoding="utf-8") as f:

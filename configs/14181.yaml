@@ -647,9 +647,9 @@ modules:
       - name: find-INetworkSystem_PollSocket-linux
         optional_output:
           - INetworkSystem_PollSocket.linux.yaml
-      - name: find-ParseNetadrList-linux
+      - name: find-ConnectSocketToAddressList-linux
         optional_output:
-          - ParseNetadrList.linux.yaml
+          - ConnectSocketToAddressList.linux.yaml
       - name: find-CNetworkGameServer_PackEntities
         expected_output:
           - CNetworkGameServer_PackEntities.{platform}.yaml
@@ -4058,6 +4058,7 @@ modules:
         category: func
       - name: ParseNetadrList
         category: func
+        platform: windows
       - name: ConnectSocketToAddressList
         category: func
       - name: CNetworkStringTableClient_ParseUpdate
