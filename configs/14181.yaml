@@ -597,29 +597,15 @@ modules:
         category: vfunc
         alias:
           - CNetworkSystem::PrintNetworkStats
-      - name: CNetworkMessages_GetNetworkGroupCount
-        category: vfunc
-        source_alias:
-          - INetworkMessages_GetNetworkGroupCount
-        alias:
-          - CNetworkMessages::GetNetworkGroupCount
-        shared: true
-      - name: CNetworkMessages_GetNetworkGroupName
-        category: vfunc
-        source_alias:
-          - INetworkMessages_GetNetworkGroupName
-        alias:
-          - CNetworkMessages::GetNetworkGroupName
-        shared: true
-      - name: CNetworkMessages_GetNetworkGroupColor
-        category: vfunc
-        source_alias:
-          - INetworkMessages_GetNetworkGroupColor
-        alias:
-          - CNetworkMessages::GetNetworkGroupColor
-        shared: true
       - name: CFlattenedSerializers_vtable
         category: vtable
+      - name: CFlattenedSerializers_CreateFieldChangedEventQueue
+        category: vfunc
+        source_alias:
+          - IFlattenedSerializers_CreateFieldChangedEventQueue
+        alias:
+          - CFlattenedSerializers::CreateFieldChangedEventQueue
+        shared: true
       - name: CNetworkMessages_ConfirmAllMessageHandlersInstalled
         category: func
         alias:
@@ -13144,13 +13130,6 @@ modules:
         category: vfunc
         alias:
           - INetworkMessages::SetNetworkSerializationContextData
-        shared: true
-      - name: CFlattenedSerializers_CreateFieldChangedEventQueue
-        category: vfunc
-        source_alias:
-          - IFlattenedSerializers_CreateFieldChangedEventQueue
-        alias:
-          - CFlattenedSerializers::CreateFieldChangedEventQueue
         shared: true
       - name: INetworkMessages_RegisterSchemaTypeOverride
         category: vfunc

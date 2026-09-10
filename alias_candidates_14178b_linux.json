@@ -1,14 +1,5 @@
 {
  "aliases": [],
  "ambiguous": [],
- "no_analysis": [
-  [
-   "CCSPlayer_WeaponServices::GetSlot",
-   1
-  ],
-  [
-   "CCSPlayerController::HandleCommand_JoinTeam",
-   1
-  ]
- ]
+ "no_analysis": []
 }

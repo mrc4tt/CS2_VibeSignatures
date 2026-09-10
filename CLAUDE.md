@@ -57,8 +57,11 @@ no role suffix.
   is dropped at pack time with "Ignoring undeclared symbol YAML". A task's `expected_output`
   makes it required (pack dies on a missing file); `optional_output` declares it without
   requiring it.
-- **Snapshot digest matches the config.** The snapshot stores `config_sha256`; any config edit
-  without a re-pack makes it untrusted — "snapshot config digest mismatch".
+- **Snapshot digest matches the config.** The snapshot stores `config_sha256`, computed by
+  `_normalized_contract` over module names, `path_*` and the **`skills:` (find-tasks) only** — NOT
+  the `symbols:` lists. So a task edit without a re-pack is caught ("snapshot config digest
+  mismatch"), while a symbol edit is NOT: check-contract still says trusted while generation reads
+  a stale snapshot. Re-pack after every config change regardless of which half you touched.
 - **`alias` vs `source_alias`.** `alias` = extra downstream gamedata keys this symbol writes;
   `source_alias` = alternative artifact filenames this symbol may read. Two symbols must not read
   one artifact — `gamedata_config_validation` rejects it as
@@ -249,7 +252,7 @@ refuses duplicate keys — do not work around it.
 
 ## ALWAYS DO
 
-- **Re-pack snapshot after config changes** — the snapshot stores the config's `config_sha256`; a config edit without a re-pack makes it untrusted ("snapshot config digest mismatch")
+- **Re-pack snapshot after config changes** — and do not rely on check-contract to catch a stale one: the digest covers the find-tasks, not the `symbols:` lists
 - **Hydrate `bin/` from `bin_artifacts/` after every `git pull`** — `bin/` is untracked and doesn't auto-sync: `cp -ru bin_artifacts/<VER>/. bin/<VER>/`
 - **Run `audit_duplicate_va.py` after every hunt round** — catches batch-contamination (same VA under multiple names, the 0x20c2700 incident)
 - **Check `git check-ignore` before committing working files** — missing lists, logs, and alias candidates are now in .gitignore but weren't always

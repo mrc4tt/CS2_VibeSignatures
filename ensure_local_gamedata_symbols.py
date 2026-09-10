@@ -204,6 +204,16 @@ FORK_OWNED_REMOVALS = [
     # 14178b declares it in both engine and server; the artifact only ever lives in
     # engine, and upstream dropped the server copy from 14180 onward
     ("CServerSideClient_SetName", "server", "stray duplicate; the artifact lives in engine"),
+    # Declared by upstream in every config back to 14167, but nothing hunts them and
+    # nothing consumes them: no find-task in any module, no reference YAML, no artifact
+    # in any gamever, and upstream's own generated gamedata ships none of the three
+    # (checked against upstream/main). The only code hit is a synthetic fixture in
+    # tests/test_update_gamedata.py, which builds its own config and is unaffected.
+    # Retired so missing_report reaches 0 and a future real gap is visible instead of
+    # buried under permanent noise.
+    ("CNetworkMessages_GetNetworkGroupCount", "networksystem", "never hunted, never shipped"),
+    ("CNetworkMessages_GetNetworkGroupName", "networksystem", "never hunted, never shipped"),
+    ("CNetworkMessages_GetNetworkGroupColor", "networksystem", "never hunted, never shipped"),
 ]
 
 # Fork-owned symbol MOVES between module blocks. Upstream declares the symbol under a
@@ -219,6 +229,16 @@ FORK_OWNED_MOVES = [
      "CNetChan_ParseMessagesDemoInternal", "class absent from engine2"),
     ("CNetChan_ParseMessagesDemo", "engine", "networksystem",
      "CNetChan_ParseMessagesDemoInternal", "class absent from engine2"),
+    # Upstream declares it under server, but CFlattenedSerializers lives in
+    # networksystem: that is where the find-task, both -decompiles reference YAMLs
+    # (references/networksystem/) and the artifacts on both platforms actually are,
+    # in all three gamevers. The server declaration can never resolve, which is why
+    # missing_report listed it. Upstream's ida_analyze_util docstring still uses
+    # "../server/CFlattenedSerializers_CreateFieldChangedEventQueue" as its example
+    # of the cross-module base_vfunc_name syntax - that example is where the stale
+    # module came from, and no preprocessor uses that path.
+    ("CFlattenedSerializers_CreateFieldChangedEventQueue", "server", "networksystem",
+     "CFlattenedSerializers_vtable", "class lives in networksystem"),
 ]
 
 # Fork-owned bare optional_output tasks. These declare artifacts recovered headlessly
