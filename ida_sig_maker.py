@@ -160,6 +160,7 @@ SAFE_SYMBOL_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_=:]*$")
 MEMBER_NAME_RE = re.compile(r"_m_[A-Za-z0-9]")
 
 _OUTPUT_DIR_OVERRIDE = None
+_PLATFORM_OVERRIDE = None
 
 
 def safe_symbol(name):
@@ -303,7 +304,9 @@ def write_yaml(data, symbol, target):
         if not target:
             raise ValueError("loaded binary is outside bin/<GAMEVER>/<module>/ - nowhere to place the artifact")
         out_dir = target["artifact_dir"]
-    platform = (target or {}).get("platform") or "unknown"
+    platform = _PLATFORM_OVERRIDE or (target or {}).get("platform")
+    if not platform:
+        raise ValueError("cannot tell the platform: pass it in the job, or load the binary from bin/<GAMEVER>/<module>/")
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, f"{safe_symbol(symbol)}.{platform}.yaml")
     with open(out_path, "w", encoding="utf-8") as handle:
@@ -385,10 +388,11 @@ def emit_symbol(symbol, rule, extra, scan):
 
 def run_queue(queue, output_dir=None, module=None, platform=None, report_path=None, rules=None):
     """Work the queue for ONE module/platform and always produce a report."""
-    global _OUTPUT_DIR_OVERRIDE
+    global _OUTPUT_DIR_OVERRIDE, _PLATFORM_OVERRIDE
     ida_auto.auto_wait()
     rules = rules or {}
     _OUTPUT_DIR_OVERRIDE = output_dir
+    _PLATFORM_OVERRIDE = platform
     try:
         scan = Scan()
         results = []
@@ -415,6 +419,7 @@ def run_queue(queue, output_dir=None, module=None, platform=None, report_path=No
         }
     finally:
         _OUTPUT_DIR_OVERRIDE = None
+        _PLATFORM_OVERRIDE = None
     if report_path:
         with open(report_path, "w", encoding="utf-8") as handle:
             json.dump(report, handle, indent=2)
@@ -434,6 +439,9 @@ def run_batch_job():
         rules=job.get("rules"),
     )
     print(f"[sig_maker] batch job: {report['resolved']}/{len(report['results'])} resolved")
+    # the driver blocks on this process until it exits, so leave now rather than
+    # letting it sit until the batch timeout expires
+    idc.qexit(0)
     return report
 
 
