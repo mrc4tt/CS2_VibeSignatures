@@ -101,6 +101,22 @@ platform the artifact was produced for. One entry per platform.
 - `INHERIT_VFUNCS`: `(target, inherit_vtable_class, base_vfunc_name, generate_func_sig)`
   — take the slot index from one record, look it up in a class's vtable, generate the
   signature. The lever for a virtual whose address moves but whose slot does not.
+  **The fourth element and the field list must agree.** Listing `"func_sig"` asks for
+  the field; `generate_func_sig=True` is what produces it, and with the flag left
+  `False` the field stays empty and the preprocessor fails. Audited on 14181: all 69
+  specs are consistent (25 True / 44 False), so a `False` is a decision, not an
+  oversight — and upstream writes the reason next to it, e.g.
+  `CBaseEntity_GetChangeAccessorPathInfo_2` is a two-instruction this-adjusting thunk
+  that cannot be uniquely signatured because `_1` is identical. **A record with an
+  index and no signature may be impossible to signature, not merely neglected: read
+  the comment before adding one.**
+
+  The generated signature is also better than one built by hand. For
+  `CBaseTrigger_StartTouch` the pipeline emits
+  `... 48 83 EC ?? 48 8B 07 FF 90 ?? ?? ?? ?? 84 C0`, wildcarding the stack
+  displacement and the vfunc offset inside `call [rax+0x870]`, where
+  `enrich_vfunc_sigs.py` pinned both — a pattern that breaks as soon as the class
+  layout moves the offset. Prefer re-running the producing task over enriching.
 - `FUNC_XREFS`: string/xref anchored search.
 - `LLM_DECOMPILE`: match a predecessor's decompiled shape; the fragile one, hence
   the agent fallbacks.
