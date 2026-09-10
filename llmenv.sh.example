@@ -1,0 +1,14 @@
+# Source this before ./run_linux.sh / ./run_windows.sh to enable the
+# LLM_DECOMPILE fallback in the preprocessors:
+#
+#   cp llmenv.sh.example llmenv.sh   # llmenv.sh is gitignored
+#   $EDITOR llmenv.sh                # paste the API Key (not the key ID)
+#   . ./llmenv.sh && uv run test_llm_setup.py
+#
+# Paste the SECRET key value from the z.ai API key list, not the key's ID.
+export LLM_APIKEY='PASTE_API_KEY_HERE'
+
+# Free tier; falls back soft on failure, so it is safe to try first.
+# Paid alternative if this one throttles or answers badly: glm-5.3-flash
+export LLM_MODEL='glm-4.7-flash'
+export LLM_BASEURL='https://api.z.ai/api/paas/v4'
