@@ -59,13 +59,33 @@ BOTPROFILE_MEMBERS = {
 # 14181, whose artifacts then packed as "undeclared symbol YAML" and shipped
 # nowhere. Re-injected on every run, like the seed symbols.
 FORK_OWNED_SYMBOLS = [
-    # (symbol_name, category, lib)
-    ("CCSCustomHudLayout_SetDialogVariableString", "func", None),
-    ("CCSCustomHudLayout_SetDialogVariableStringForPlayer", "func", None),
-    ("CCSCustomHudLayout_SetHasClass", "func", None),
-    ("CCSCustomHudLayout_SetHasClassForPlayer", "func", None),
-    ("CCSCustomHudLayout_SetInputCaptureEnabled", "func", None),
-    ("CCSPointScript_OnCustomHudClicked", "func", None),
+    # (symbol_name, category, lib, alias)
+    ("CCSCustomHudLayout_SetDialogVariableString", "func", None, None),
+    ("CCSCustomHudLayout_SetDialogVariableStringForPlayer", "func", None, None),
+    ("CCSCustomHudLayout_SetHasClass", "func", None, None),
+    ("CCSCustomHudLayout_SetHasClassForPlayer", "func", None, None),
+    ("CCSCustomHudLayout_SetInputCaptureEnabled", "func", None, None),
+    ("CCSPointScript_OnCustomHudClicked", "func", None, None),
+    # CS2Fixes' gamedata asks for this under the alias; upstream declares neither
+    ("CTakeDamageInfo_ctor", "func", None, "CTakeDamageInfo"),
+]
+
+# Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
+# symbol that is already present, so a task upstream never had (or deliberately
+# commented out) is not restored by FORK_OWNED_SYMBOLS - and without a task the
+# artifact is never declared, so gamesymbol_snapshot drops it as "undeclared".
+#
+# Each entry names the task that must FOLLOW it. Position matters: task order
+# drives expected_input dependency resolution, and inserting at the head of the
+# skills list made pack fail with "Missing required symbol YAML" for an
+# unrelated symbol. Anchoring reproduces the layout that is known to pack.
+FORK_OWNED_TASKS = [
+    # (symbol_name, module, insert_before_task)
+    ("CCSPlayer_MovementServices_FullWalkMove", "server",
+     "find-CCSPlayer_MovementServices_FullWalkMove_SpeedClamp"),
+    ("CCSPlayer_MovementServices_FullWalkMove_SpeedClamp", "server",
+     "find-CCSPlayer_MovementServices_CheckJumpButton"),
+    ("CTakeDamageInfo_ctor", "server", "find-CTakeDamageInfo_GetWeaponName"),
 ]
 
 # Fork-owned category decisions. Upstream declares some offset-entries as vfunc
@@ -348,6 +368,54 @@ def enforce_category_decisions(text):
     return result, changed
 
 
+def enforce_fork_owned_tasks(text):
+    """Re-insert fork-owned find-tasks, each anchored before a known task.
+
+    Runs to a fixed point: one entry's anchor can be another entry's task, so a
+    single pass in list order silently skips whichever comes first (the
+    FullWalkMove task anchors on the SpeedClamp task). Looping until nothing
+    changes makes the order of FORK_OWNED_TASKS irrelevant.
+    """
+    total = 0
+    while True:
+        text, added = _enforce_fork_owned_tasks_once(text)
+        total += added
+        if not added:
+            return text, total
+
+
+def _enforce_fork_owned_tasks_once(text):
+    added = 0
+    lines = text.split("\n")
+    module_starts = [(i, l[len("  - name: "):]) for i, l in enumerate(lines)
+                     if l.startswith("  - name: ") and l.count(":") == 1]
+    for symbol, module, anchor in FORK_OWNED_TASKS:
+        task = f"      - name: find-{symbol}"
+        if task in lines:
+            continue
+        # the module block that declares the symbol
+        target = None
+        for k, (start, name) in enumerate(module_starts):
+            if name != module:
+                continue
+            end = module_starts[k + 1][0] if k + 1 < len(module_starts) else len(lines)
+            if f"      - name: {symbol}" in lines[start:end]:
+                target = (start, end)
+                break
+        if target is None:
+            continue  # symbol not declared (yet) - inject() may add it below
+        start, end = target
+        try:
+            at = next(i for i in range(start, end) if lines[i] == f"      - name: {anchor}")
+        except StopIteration:
+            continue  # anchor not present (yet) - a later round may restore it
+        lines[at:at] = [task, "        expected_output:", f"          - {symbol}.{{platform}}.yaml"]
+        module_starts = [(i, l[len("  - name: "):]) for i, l in enumerate(lines)
+                         if l.startswith("  - name: ") and l.count(":") == 1]
+        added += 1
+    return "\n".join(lines), added
+
+
 def enforce_alias_overrides(text):
     """Ensure every ALIAS_OVERRIDES key is an alias on its canonical symbol.
 
@@ -483,7 +551,7 @@ def main():
         return
 
     specs = load_seed_specs()
-    specs += [(name, category, None, None, None, lib) for name, category, lib in FORK_OWNED_SYMBOLS]
+    specs += [(name, category, None, None, alias, lib) for name, category, lib, alias in FORK_OWNED_SYMBOLS]
 
     with open(config_path, "r", encoding="utf-8") as f:
         text = f.read()
@@ -498,7 +566,11 @@ def main():
     if repaired:
         print(f"  repaired: {repaired} missing struct declaration(s)")
     patched = inject(patched, config_path, specs)
-    if patched == text and not repaired and not reclassified and not aliased:
+    # after inject(), so a symbol it just declared can anchor its own task
+    patched, tasked = enforce_fork_owned_tasks(patched)
+    if tasked:
+        print(f"  re-asserted: {tasked} fork-owned find-task(s)")
+    if patched == text and not repaired and not reclassified and not aliased and not tasked:
         return
 
     with open(config_path, "w", encoding="utf-8") as f:
