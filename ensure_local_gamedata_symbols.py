@@ -173,7 +173,7 @@ FORK_OWNED_OPTIONAL_TASKS = [
      "CEnvHudHint_API_ShowHudHint.{platform}.yaml"),
     # cross-module relocations: the symbol is declared for this module too, but only
     # the other module was ever analysed, so the artifact had no declaring task here
-    ("find-g_pGameEntitySystem", "client", "g_pGameEntitySystem.windows.yaml"),
+    ("find-g_pGameEntitySystem", "client", "g_pGameEntitySystem.{platform}.yaml"),
     ("find-g_pGameResourceService", "client", "g_pGameResourceService.{platform}.yaml"),
     ("find-IGameResourceService_SetEntityResourceManifestHandler", "client",
      "IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml"),

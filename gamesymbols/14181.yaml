@@ -121,8 +121,8 @@ binaries:
       sha256: 'd3a76f86ed6d005620484134882efecb965702ca88b2bcbd8b3411fa17033045'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:ccb0b595473be219936776466595a5e7a3e4c42e619c266267869e6cf740f45d
-file_count: 3747
+config_sha256: sha256:b98b29d2b9b714cad6754737bd436ccaf70a4c60e5b421788f21b83eef10721a
+file_count: 3748
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -4790,6 +4790,15 @@ files:
     gv_name: g_pFontManager
     gv_rva: '0x25f1138'
     gv_va: '0x1825f1138'
+  client/g_pGameEntitySystem.linux.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: g_pGameEntitySystem
+    gv_rva: '0x480dc10'
+    gv_sig: 48 89 1D ?? ?? ?? ?? 44 89 E8
+    gv_sig_va: '0x1717ac2'
+    gv_va: '0x480dc10'
   client/g_pGameEntitySystem.windows.yaml:
     gv_inst_disp: 3
     gv_inst_length: 7
@@ -46774,5 +46783,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T11:08:11Z'
+last_publish_time: '2026-09-10T11:20:16Z'
 schema_version: 5

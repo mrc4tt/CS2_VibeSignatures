@@ -4572,7 +4572,7 @@ modules:
     skills:
       - name: find-g_pGameEntitySystem
         optional_output:
-          - g_pGameEntitySystem.windows.yaml
+          - g_pGameEntitySystem.{platform}.yaml
       - name: find-IGameResourceService_SetEntityResourceManifestHandler
         optional_output:
           - IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml
