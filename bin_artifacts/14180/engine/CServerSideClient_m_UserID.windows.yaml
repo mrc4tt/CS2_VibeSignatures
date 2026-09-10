@@ -1,5 +1,5 @@
-func_name: CServerSideClient_m_UserID
-func_va: '0x1800c1bbf'
-func_rva: '0xc1bbf'
-func_size: '0x0'
-func_sig: 66 C7 81 A8 00 00 00 FF FF
+struct_name: CServerSideClient
+member_name: m_UserID
+offset: '0xa8'
+size: 2
+offset_sig: 66 C7 81 A8 00 00 00 FF FF

@@ -1,5 +1,5 @@
-func_name: CEntityIdentity_Size
-func_va: '0x181241a2e'
-func_rva: '0x1241a2e'
-func_size: '0x0'
-func_sig: 48 6B D0 70 48 03 D1
+struct_name: CEntityIdentity
+member_name: Size
+offset: '0x70'
+size: 112
+offset_sig: 48 6B D0 70 48 03 D1

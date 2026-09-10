@@ -1,5 +1,5 @@
-func_name: CServerSideClient_m_SteamID
-func_va: '0x1800c827e'
-func_rva: '0xc827e'
-func_size: '0x0'
-func_sig: 48 8B ?? AB 00 00 00 48 89 ?? C3 00 00 00
+struct_name: CServerSideClient
+member_name: m_SteamID
+offset: '0xab'
+size: 8
+offset_sig: 48 8B ?? AB 00 00 00 48 89 ?? C3 00 00 00

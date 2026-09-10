@@ -1,5 +1,5 @@
-func_name: CMoveData_AbsOrigin
-func_va: '0x177edf1'
-func_rva: '0x177edf1'
-func_size: '0x0'
-func_sig: 48 89 93 C8 00 00 00 8B 40 08 48 8B 55 ?? 89 83 D0 00 00 00
+struct_name: CMoveData
+member_name: AbsOrigin
+offset: '0xc8'
+size: 12
+offset_sig: 48 89 93 C8 00 00 00 8B 40 08 48 8B 55 ?? 89 83 D0 00 00 00

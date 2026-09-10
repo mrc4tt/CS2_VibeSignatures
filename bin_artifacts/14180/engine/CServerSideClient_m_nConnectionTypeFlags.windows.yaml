@@ -1,5 +1,5 @@
-func_name: CServerSideClient_m_nConnectionTypeFlags
-func_va: '0x1800c5085'
-func_rva: '0xc5085'
-func_size: '0x0'
-func_sig: 45 88 66 60
+struct_name: CServerSideClient
+member_name: m_nConnectionTypeFlags
+offset: '0x60'
+size: 1
+offset_sig: 45 88 66 60

@@ -1,5 +1,5 @@
-func_name: CServerSideClient_m_nSignonState
-func_va: '0x1800c3200'
-func_rva: '0xc3200'
-func_size: '0x0'
-func_sig: 39 51 64
+struct_name: CServerSideClient
+member_name: m_nSignonState
+offset: '0x64'
+size: 4
+offset_sig: 39 51 64

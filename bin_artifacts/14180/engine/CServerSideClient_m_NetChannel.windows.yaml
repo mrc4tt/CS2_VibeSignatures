@@ -1,5 +1,5 @@
-func_name: CServerSideClient_m_NetChannel
-func_va: '0x1800c5081'
-func_rva: '0xc5081'
-func_size: '0x0'
-func_sig: 4D 89 7E 58 45 88 66 60
+struct_name: CServerSideClient
+member_name: m_NetChannel
+offset: '0x58'
+size: 8
+offset_sig: 4D 89 7E 58 45 88 66 60

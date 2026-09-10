@@ -1,5 +1,5 @@
-func_name: CMoveData_Velocity
-func_va: '0x180a87dbe'
-func_rva: '0xa87dbe'
-func_size: '0x0'
-func_sig: 48 8D 56 38 49 8B CE E8 ?? ?? ?? ??
+struct_name: CMoveData
+member_name: Velocity
+offset: '0x38'
+size: 12
+offset_sig: 48 8D 56 38 49 8B CE E8 ?? ?? ?? ??
