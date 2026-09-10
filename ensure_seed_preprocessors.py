@@ -197,6 +197,17 @@ def main():
             if short.endswith(("-decompiles", "-inlined", "-noinline")):
                 continue  # staged intermediates, not base symbols
 
+            # A task may carry a role or platform suffix that the symbol does not:
+            # find-INetworkSystem_CloseSocket-linux declares the symbol
+            # INetworkSystem_CloseSocket. Matching on the full task name left every
+            # such task in "undeclared", so no relocation preprocessor was ever
+            # generated for it and the artifact would go missing on the next gamever.
+            symbol = short
+            if symbol not in categories and "-" in symbol:
+                stem = symbol.rsplit("-", 1)[0]
+                if stem in categories:
+                    symbol = stem
+
             existing = existing_preprocessor(pp_dir, short)
             hand_written = False
             if existing:
@@ -205,7 +216,7 @@ def main():
                     skipped += 1
                     continue
 
-            category = categories.get(short)
+            category = categories.get(symbol)
             if category is None:
                 undeclared.append(short)
                 continue
@@ -213,7 +224,7 @@ def main():
                 unsupported.append((short, category))
                 continue
 
-            version, paths = newest_baseline(mod_name, short, gamever)
+            version, paths = newest_baseline(mod_name, symbol, gamever)
             if not paths:
                 no_baseline.append(short)
                 continue
@@ -224,7 +235,9 @@ def main():
 
             path = existing or os.path.join(pp_dir, f"find-{short}.py")
             with open(path, "w", encoding="utf-8") as handle:
-                handle.write(render(short, category, fields, target_name(paths, category, short)))
+                # filnavnet foelger TASKEN, indholdet foelger SYMBOLET
+                handle.write(render(symbol, category, fields,
+                                    target_name(paths, category, symbol)))
             if existing:
                 rewritten += 1
                 print(f"  ~ {os.path.basename(path)} ({category}, {mod_name}, baseline {version})")
