@@ -23904,7 +23904,7 @@ files:
     func_name: CCSBot_Update
     func_rva: '0x2e4460'
     func_sig: 40 55 56 57 41 54 48 8D AC 24 F8 FE FF FF 48 81
-    func_size: '0x0'
+    func_size: '0x1c05'
     func_va: '0x1802e4460'
   server/CCSBot_UpdateLookAngles.linux.yaml:
     func_name: CCSBot_UpdateLookAngles
@@ -24507,7 +24507,7 @@ files:
     func_name: CCSPlayerController_HandleCommand_JoinTeam
     func_rva: '0xa48350'
     func_sig: 48 89 5C 24 08 44 88 44 24 18 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 80 48 81 EC 80 01 00
-    func_size: '0x0'
+    func_size: '0xb67'
     func_va: '0x180a48350'
   server/CCSPlayerController_InitialSpawn.linux.yaml:
     func_name: CCSPlayerController_InitialSpawn
@@ -27420,7 +27420,7 @@ files:
     func_name: CCSPlayer_MovementServices_FullWalkMove
     func_rva: '0x15b69a0'
     func_sig: 48 B8 00 00 00 00 00 00 80 3F 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D B5 F8 FD FF FF
-    func_size: '0x0'
+    func_size: '0xfce'
     func_va: '0x15b69a0'
   server/CCSPlayer_MovementServices_FullWalkMove.windows.yaml:
     func_name: CCSPlayer_MovementServices_FullWalkMove
@@ -46801,5 +46801,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T11:49:54Z'
+last_publish_time: '2026-09-10T11:58:47Z'
 schema_version: 5
