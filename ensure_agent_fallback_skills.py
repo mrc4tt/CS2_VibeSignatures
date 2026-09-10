@@ -164,7 +164,15 @@ def main():
                 category = "func"
             struct = (entry or {}).get("struct", "")
             member = (entry or {}).get("member", "")
-            display = f"{struct}::{member}" if category == "structmember" and struct else short
+            # a func/vfunc symbol's alias is the name plugins actually use, so it
+            # belongs in Trigger - without it the line just repeated `short` twice
+            aliases = [a for a in ((entry or {}).get("alias") or []) if isinstance(a, str)]
+            if category == "structmember" and struct:
+                display = f"{struct}::{member}"
+            elif aliases:
+                display = aliases[0]
+            else:
+                display = short
 
             schema = {"func": FUNC_SCHEMA, "vfunc": VFUNC_SCHEMA, "structmember": MEMBER_SCHEMA}[category]
             body = TEMPLATE.format(task=short, display=display, category=category,
