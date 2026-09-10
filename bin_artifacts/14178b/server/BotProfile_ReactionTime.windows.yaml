@@ -2,4 +2,4 @@ struct_name: BotProfile
 member_name: m_reactionTime
 offset: '0x58'
 size: 4
-offset_sig: 7E 6F 9D 58 00 00 00
+offset_sig: F3 41 0F 11 47 58 E9 ?? ?? ?? ??

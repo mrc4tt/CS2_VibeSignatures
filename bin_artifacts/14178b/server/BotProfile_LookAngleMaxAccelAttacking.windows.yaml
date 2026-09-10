@@ -2,4 +2,4 @@ struct_name: BotProfile
 member_name: m_lookAngleMaxAccelAttacking
 offset: '0x78'
 size: 4
-offset_sig: 67 20 BA 78 00 00 00
+offset_sig: F3 41 0F 11 47 78 E9 ?? ?? ?? ??

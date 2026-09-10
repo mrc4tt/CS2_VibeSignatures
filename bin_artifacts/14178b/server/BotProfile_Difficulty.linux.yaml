@@ -2,4 +2,4 @@ struct_name: BotProfile
 member_name: m_difficultyFlags
 offset: '0x50'
 size: 4
-offset_sig: CC 41 BB 50 00 00 00
+offset_sig: 41 0F B6 46 50 44 0F A3 E0

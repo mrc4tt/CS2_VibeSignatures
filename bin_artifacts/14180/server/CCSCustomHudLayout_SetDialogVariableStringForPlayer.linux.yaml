@@ -1,5 +1,5 @@
 func_name: CCSCustomHudLayout_SetDialogVariableStringForPlayer
 func_va: '0x1311e30'
 func_rva: '0x1311e30'
-func_size: '0x0'
+func_size: '0x95'
 func_sig: 55 48 89 E5 41 56 41 55 41 54 41 89 F4 53 48 83 EC 10 3B B7 90 07 00 00 7C 16 48 83 C4 10 5B 41 5C 41 5D 41 5E 5D C3 66 0F 1F 84 00 00 00 00 00 48 89 D6 31 D2 48 89 FB 66 89 55 DC 48 8D 55 DC 49 89 CD 4D 89 C6 E8 C5

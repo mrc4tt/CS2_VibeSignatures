@@ -2,4 +2,4 @@ struct_name: BotProfile
 member_name: m_cost
 offset: '0x48'
 size: 4
-offset_sig: 00 00 BA 48 00 00 00
+offset_sig: 41 89 47 48 E9 ?? ?? ?? ?? 48 8D 54 24 50

@@ -2,4 +2,4 @@ struct_name: BotProfile
 member_name: m_weaponPreferenceCount
 offset: '0x44'
 size: 4
-offset_sig: 40 30 B8 44 00 00 00
+offset_sig: 41 89 4F 44 48 8D 15 ?? ?? ?? ??

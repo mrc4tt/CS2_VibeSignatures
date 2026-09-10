@@ -1,5 +1,5 @@
-func_name: BotProfile_Teamwork
-func_va: '0x18000f7d9'
-func_rva: '0xf7d9'
-func_size: '0x0'
-func_sig: FB F6 A1 10 00 00 00
+struct_name: BotProfile
+member_name: m_teamwork
+offset: '0x10'
+size: 4
+offset_sig: F3 41 0F 11 47 10 E9 ?? ?? ?? ??

@@ -1,5 +1,5 @@
-func_name: BotProfile_AttackDelay
-func_va: '0x1802db75f'
-func_rva: '0x2db75f'
-func_size: '0x0'
-func_sig: C7 87 A0 5C 00 00 00
+struct_name: BotProfile
+member_name: m_attackDelay
+offset: '0x5c'
+size: 4
+offset_sig: F3 41 0F 11 47 5C E9 ?? ?? ?? ??

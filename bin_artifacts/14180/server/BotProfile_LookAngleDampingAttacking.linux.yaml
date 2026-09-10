@@ -3,4 +3,3 @@ member_name: m_lookAngleDampingAttacking
 offset: '0x80'
 size: 4
 offset_sig: F3 41 0F 11 84 24 80 00 00 00 E9 ?? ?? ?? ??
-offset_sig_disp: 0

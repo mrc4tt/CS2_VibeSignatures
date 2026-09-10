@@ -1,5 +1,5 @@
-func_name: BotProfile_LookAngleStiffnessAttacking
-func_va: '0x18018ee08'
-func_rva: '0x18ee08'
-func_size: '0x0'
-func_sig: F6 0F 84 7C 00 00 00
+struct_name: BotProfile
+member_name: m_lookAngleStiffnessAttacking
+offset: '0x7c'
+size: 4
+offset_sig: F3 41 0F 11 47 7C E9 ?? ?? ?? ??

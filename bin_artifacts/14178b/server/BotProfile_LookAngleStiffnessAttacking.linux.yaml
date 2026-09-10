@@ -2,4 +2,4 @@ struct_name: BotProfile
 member_name: m_lookAngleStiffnessAttacking
 offset: '0x7c'
 size: 4
-offset_sig: 00 00 80 7C 00 00 00
+offset_sig: F3 41 0F 11 44 24 7C E9 ?? ?? ?? ??
