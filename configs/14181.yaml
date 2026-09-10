@@ -7036,11 +7036,9 @@ modules:
       #  expected_input:
       #    - CCSPlayer_MovementServices_WalkMove.{platform}.yaml
 
-      #- name: find-CCSPlayer_MovementServices_FullWalkMove_SpeedClamp
-      #  expected_output:
-      #    - CCSPlayer_MovementServices_FullWalkMove_SpeedClamp.{platform}.yaml
-      #  expected_input:
-      #    - CCSPlayer_MovementServices_FullWalkMove.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_FullWalkMove_SpeedClamp
+        expected_output:
+          - CCSPlayer_MovementServices_FullWalkMove_SpeedClamp.{platform}.yaml
       - name: find-CCSPlayer_MovementServices_CheckJumpButton
         expected_output:
           - CCSPlayer_MovementServices_CheckJumpButton.{platform}.yaml
