@@ -18,6 +18,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_va",
             "func_rva",
             "func_size",
+            "func_sig",
             "vtable_name",
             "vfunc_offset",
             "vfunc_index",
@@ -30,6 +31,11 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_va",
             "func_rva",
             "func_size",
+            "func_sig",
+            # linux slot 149 is a 17-byte wrapper (test rsi,rsi; je; jmp body), so a
+            # body-only sig is not unique and the jmp displacement must stay
+            # wildcarded. Windows has no wrapper and is unaffected by the flag.
+            "func_sig_allow_across_function_boundary:true",
             "vtable_name",
             "vfunc_offset",
             "vfunc_index",

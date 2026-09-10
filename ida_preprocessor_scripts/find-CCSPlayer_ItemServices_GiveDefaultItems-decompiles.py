@@ -59,6 +59,11 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_va",
             "func_rva",
             "func_size",
+            "func_sig",
+            # 15-byte thunk (xor r8d/r9d/ecx/edx; jmp) - a body-only sig cannot be
+            # unique, so let it reach padding and the next head instead of pinning
+            # the jmp displacement, which moves on every rebuild.
+            "func_sig_allow_across_function_boundary:true",
             "vfunc_sig",
             "vfunc_offset",
             "vfunc_index",
