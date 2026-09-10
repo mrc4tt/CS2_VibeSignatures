@@ -33,3 +33,6 @@ refs_gen_*.log
 skill_hunt_*.log
 hunt_*.log
 alias_candidates_*.json
+
+# sync_upstream.sh backups of untracked files replaced by upstream
+.sync_backup/
