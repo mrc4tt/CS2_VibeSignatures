@@ -1,0 +1,5 @@
+func_name: INetworkSystem_PollSocket
+vtable_name: INetworkSystem
+vfunc_offset: '0xa0'
+vfunc_index: 20
+vfunc_sig: FF 90 A0 00 00 00 E9 ?? FD ?? FF

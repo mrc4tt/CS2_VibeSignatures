@@ -266,6 +266,24 @@ def relocated_artifact_text(symbol, f, sig, va, blob, info):
                 text += f"{extra}: {f[extra]}\n"
         return text
 
+    if f.get("gv_name") or "gv_sig" in f:
+        # gv_va is the DATA address the instruction refers to, not the match VA -
+        # writing the match VA there is the same corruption class as above.
+        inst = va + int(f.get("gv_inst_offset") or 0)
+        length = int(f.get("gv_inst_length") or 7)
+        disp_at = inst + int(f.get("gv_inst_disp") or 3)
+        doff = va_to_off(info, disp_at)
+        if doff is None:
+            return None
+        gv_va = inst + length + struct.unpack_from("<i", blob, doff)[0]
+        text = (f"gv_name: {f.get('gv_name', symbol)}\ngv_va: '{hex(gv_va)}'\n"
+                f"gv_rva: '{hex(gv_va - info['base'])}'\ngv_sig: {sig}\n"
+                f"gv_sig_va: '{hex(va)}'\n")
+        for extra in ("gv_inst_offset", "gv_inst_length", "gv_inst_disp"):
+            if f.get(extra) is not None:
+                text += f"{extra}: {f[extra]}\n"
+        return text
+
     size = _validated_func_size(blob, info, va, f.get("func_size"))
     text = (f"func_name: {symbol}\nfunc_va: '{hex(va)}'\nfunc_rva: '{hex(va - info['base'])}'\n"
             f"func_size: '{size}'\nfunc_sig: {sig}\n")

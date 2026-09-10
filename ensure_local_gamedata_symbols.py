@@ -110,7 +110,185 @@ ALIAS_OVERRIDES = {
     # IDA-verified 14178b: matchzy's GetSlot sig targets the same function upstream
     # analyzes as CCSPlayer_WeaponServices_Weapon_GetSlot (pseudocode confirmed).
     "CCSPlayer_WeaponServices::GetSlot": "CCSPlayer_WeaponServices_Weapon_GetSlot",
+    # ShowHudHint was refactored into CEnvHudHint_API::ShowHudHint in 14168; the old
+    # key survives as an alias instead of a second declaration (the config validator
+    # rejects two symbols sourcing one artifact).
+    "ShowHudHint": "CEnvHudHint_API_ShowHudHint",
 }
+
+
+# Fork-owned symbol REMOVALS. Upstream declares these, but the binary evidence says
+# they cannot be produced, so every run logged a missing_yaml warning and nothing
+# ever shipped. sync_upstream.sh resolves config conflicts in upstream's favour, so
+# a plain deletion comes back on the next merge.
+FORK_OWNED_REMOVALS = [
+    # (symbol_name, module, why)
+    # The think-function pointer lives at +0x28 in a schema struct that is filled at
+    # RUNTIME: there is no .rela.dyn entry and no raw qword anywhere in either binary
+    # pointing at the think function, so neither IDA nor a headless pass can read it.
+    # No artifact in 14 gamevers and no generator references the key.
+    ("g_CCSPlayerController_PlayerForceTeamThink", "server", "runtime-filled pointer"),
+    ("g_CCSPlayerController_ResetForceTeamThink", "server", "runtime-filled pointer"),
+    ("g_CCSPlayerController_ResourceDataThink", "server", "runtime-filled pointer"),
+    ("g_CCSPlayerController_InventoryUpdateThink", "server", "runtime-filled pointer"),
+    # Refactored into CEnvHudHint_API::ShowHudHint in 14168 (upstream's own comment
+    # on the commented-out find-ShowHudHint task). Kept as a downstream alias on the
+    # canonical symbol via ALIAS_OVERRIDES, so the old gamedata key still resolves.
+    ("ShowHudHint", "server", "refactored into CEnvHudHint_API_ShowHudHint"),
+]
+
+# Fork-owned symbol MOVES between module blocks. Upstream declares the symbol under a
+# module whose binary does not contain the class at all, so the artifact can never be
+# found there and the symbol ships nothing.
+FORK_OWNED_MOVES = [
+    # (symbol_name, from_module, to_module, anchor_in_target, why)
+    # CNetChan has zero RTTI strings in engine2 on either platform; it lives only in
+    # networksystem, where find-tasks already produce both artifacts. Slot indices also
+    # differ per platform there (linux 73/72, windows 72/71), so the engine declaration
+    # could not even be filled by copying.
+    ("CNetChan_ProcessMessages", "engine", "networksystem",
+     "CNetChan_ParseMessagesDemoInternal", "class absent from engine2"),
+    ("CNetChan_ParseMessagesDemo", "engine", "networksystem",
+     "CNetChan_ParseMessagesDemoInternal", "class absent from engine2"),
+]
+
+# Fork-owned bare optional_output tasks. These declare artifacts recovered headlessly
+# for a platform/module upstream never analysed; without a declaring task
+# gamesymbol_snapshot drops the artifact as "undeclared" and the warning returns.
+# optional_output (not expected_output) is the correct lever: expected_output makes the
+# path REQUIRED and pack then fails with "Missing required symbol YAML".
+FORK_OWNED_OPTIONAL_TASKS = [
+    # (task_name, module, artifact_path)
+    ("find-INetworkSystem_CloseSocket-linux", "engine", "INetworkSystem_CloseSocket.linux.yaml"),
+    ("find-INetworkSystem_ConnectSocket-linux", "engine", "INetworkSystem_ConnectSocket.linux.yaml"),
+    ("find-INetworkSystem_PollSocket-linux", "engine", "INetworkSystem_PollSocket.linux.yaml"),
+    ("find-ParseNetadrList-linux", "engine", "ParseNetadrList.linux.yaml"),
+    ("find-CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem-server", "server",
+     "CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml"),
+    ("find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem-linux", "server",
+     "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.linux.yaml"),
+    ("find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable-server", "server",
+     "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.{platform}.yaml"),
+    ("find-CEnvHudHint_API_ShowHudHint-binding", "server",
+     "CEnvHudHint_API_ShowHudHint.{platform}.yaml"),
+    # cross-module relocations: the symbol is declared for this module too, but only
+    # the other module was ever analysed, so the artifact had no declaring task here
+    ("find-g_pGameEntitySystem", "client", "g_pGameEntitySystem.windows.yaml"),
+    ("find-g_pGameResourceService", "client", "g_pGameResourceService.{platform}.yaml"),
+    ("find-IGameResourceService_SetEntityResourceManifestHandler", "client",
+     "IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml"),
+    ("find-IGameSystemFactory_SetGlobalPtr", "server",
+     "IGameSystemFactory_SetGlobalPtr.{platform}.yaml"),
+    ("find-IGameSystem_SetGameSystemGlobalPtrs", "server",
+     "IGameSystem_SetGameSystemGlobalPtrs.{platform}.yaml"),
+    ("find-IGameSystem_vdtor", "server", "IGameSystem_vdtor.{platform}.yaml"),
+    ("find-CNetworkGameServerBase_IsBackgroundMap", "server",
+     "CNetworkGameServerBase_IsBackgroundMap.{platform}.yaml"),
+    ("find-CEntityInstance_PreDataUpdate", "server",
+     "CEntityInstance_PreDataUpdate.{platform}.yaml"),
+    ("find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem", "server",
+     "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.windows.yaml"),
+]
+
+
+def _module_blocks(lines):
+    """(start, end, name) for every top-level module block."""
+    starts = [(i, l[len("  - name: "):]) for i, l in enumerate(lines)
+              if l.startswith("  - name: ") and l.count(":") == 1]
+    return [(st, starts[k + 1][0] if k + 1 < len(starts) else len(lines), name)
+            for k, (st, name) in enumerate(starts)]
+
+
+def _symbol_block(lines, start, end, symbol):
+    """(from, to) line range of a symbol entry and its attributes, or None."""
+    try:
+        at = next(i for i in range(start, end) if lines[i] == f"      - name: {symbol}")
+    except StopIteration:
+        return None
+    to = at + 1
+    while to < end and lines[to].startswith("        "):
+        to += 1
+    return at, to
+
+
+def enforce_fork_owned_removals(text):
+    """Drop declarations the binary evidence says can never be produced."""
+    removed = 0
+    lines = text.split("\n")
+    for symbol, module, _why in FORK_OWNED_REMOVALS:
+        for start, end, name in _module_blocks(lines):
+            if name != module:
+                continue
+            span = _symbol_block(lines, start, end, symbol)
+            if span is None:
+                continue
+            del lines[span[0]:span[1]]
+            removed += 1
+            break
+    return "\n".join(lines), removed
+
+
+def enforce_fork_owned_moves(text):
+    """Move a declaration to the module whose binary actually holds the class."""
+    moved = 0
+    for symbol, src, dst, anchor, _why in FORK_OWNED_MOVES:
+        lines = text.split("\n")
+        blocks = _module_blocks(lines)
+        # already in the target?
+        if any(name == dst and _symbol_block(lines, st, en, symbol)
+               for st, en, name in blocks):
+            continue
+        span = src_span = None
+        for st, en, name in blocks:
+            if name == src:
+                span = _symbol_block(lines, st, en, symbol)
+                if span:
+                    src_span = span
+                    break
+        if not src_span:
+            continue
+        block = lines[src_span[0]:src_span[1]]
+        del lines[src_span[0]:src_span[1]]
+        blocks = _module_blocks(lines)
+        target = None
+        for st, en, name in blocks:
+            if name != dst:
+                continue
+            a = _symbol_block(lines, st, en, anchor)
+            if a:
+                target = a[1]
+                break
+        if target is None:
+            continue  # anchor gone - leave the config untouched rather than guess
+        lines[target:target] = block
+        text = "\n".join(lines)
+        moved += 1
+    return text, moved
+
+
+def enforce_fork_owned_optional_tasks(text):
+    """Re-insert the bare optional_output tasks that declare recovered artifacts."""
+    added = 0
+    lines = text.split("\n")
+    for task, module, path in FORK_OWNED_OPTIONAL_TASKS:
+        for start, end, name in _module_blocks(lines):
+            if name != module:
+                continue
+            # scope the presence check to THIS module: the same task name also exists
+            # in another module with expected_output, and a global check skipped three
+            # server tasks that upstream declares only for client.
+            if f"      - name: {task}" in lines[start:end]:
+                break
+            try:
+                at = next(i for i in range(start, end) if lines[i] == "    skills:")
+            except StopIteration:
+                continue
+            lines[at + 1:at + 1] = [f"      - name: {task}",
+                                    "        optional_output:",
+                                    f"          - {path}"]
+            added += 1
+            break
+    return "\n".join(lines), added
 
 
 def newest_config():
@@ -562,6 +740,15 @@ def main():
     patched, aliased = enforce_alias_overrides(patched)
     if aliased:
         print(f"  re-asserted: {aliased} alias-override mapping(s)")
+    patched, removed = enforce_fork_owned_removals(patched)
+    if removed:
+        print(f"  removed: {removed} unproducible upstream declaration(s)")
+    patched, moved = enforce_fork_owned_moves(patched)
+    if moved:
+        print(f"  moved: {moved} declaration(s) to the module holding the class")
+    patched, opt_tasked = enforce_fork_owned_optional_tasks(patched)
+    if opt_tasked:
+        print(f"  re-asserted: {opt_tasked} fork-owned optional_output task(s)")
     patched, repaired = repair_missing_structs(patched)
     if repaired:
         print(f"  repaired: {repaired} missing struct declaration(s)")
@@ -570,7 +757,8 @@ def main():
     patched, tasked = enforce_fork_owned_tasks(patched)
     if tasked:
         print(f"  re-asserted: {tasked} fork-owned find-task(s)")
-    if patched == text and not repaired and not reclassified and not aliased and not tasked:
+    if (patched == text and not repaired and not reclassified and not aliased
+            and not tasked and not removed and not moved and not opt_tasked):
         return
 
     with open(config_path, "w", encoding="utf-8") as f:

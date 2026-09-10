@@ -121,8 +121,8 @@ binaries:
       sha256: 'd3a76f86ed6d005620484134882efecb965702ca88b2bcbd8b3411fa17033045'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:97cbafa0d9f1299f8dc93aa225b2006c03313a1470f4d91e9fd425e421c6e98e
-file_count: 3720
+config_sha256: sha256:ccb0b595473be219936776466595a5e7a3e4c42e619c266267869e6cf740f45d
+file_count: 3747
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -3678,6 +3678,16 @@ files:
     vfunc_sig: FF 50 60 48 8B F0 48 85 C0
     vfunc_sig_allow_across_function_boundary: true
     vtable_name: IGameEventManager2
+  client/IGameResourceService_SetEntityResourceManifestHandler.linux.yaml:
+    func_name: IGameResourceService_SetEntityResourceManifestHandler
+    vfunc_index: 34
+    vfunc_offset: '0x110'
+    vtable_name: IGameResourceService
+  client/IGameResourceService_SetEntityResourceManifestHandler.windows.yaml:
+    func_name: IGameResourceService_SetEntityResourceManifestHandler
+    vfunc_index: 34
+    vfunc_offset: '0x110'
+    vtable_name: IGameResourceService
   client/IGameSystemFactory_CreateGameSystem.linux.yaml:
     func_name: IGameSystemFactory_CreateGameSystem
     vfunc_index: 3
@@ -4780,6 +4790,33 @@ files:
     gv_name: g_pFontManager
     gv_rva: '0x25f1138'
     gv_va: '0x1825f1138'
+  client/g_pGameEntitySystem.windows.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: g_pGameEntitySystem
+    gv_rva: '0x23b42e8'
+    gv_sig: 48 89 1D ?? ?? ?? ?? 4C 63 B3 ?? ?? ?? ??
+    gv_sig_va: '0x1809e3f32'
+    gv_va: '0x1823b42e8'
+  client/g_pGameResourceService.linux.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: g_pGameResourceService
+    gv_rva: '0x48e1c38'
+    gv_sig: 48 8D 05 ?? ?? ?? ?? 48 8B 38 48 85 FF 74 ?? 48 8B 07 48 8B 35 ?? ?? ?? ??
+    gv_sig_va: '0x1717c55'
+    gv_va: '0x48e1c38'
+  client/g_pGameResourceService.windows.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: g_pGameResourceService
+    gv_rva: '0x257b1e8'
+    gv_sig: 48 8B 0D ?? ?? ?? ?? 48 85 C9 74 ?? 48 8B 01 48 8B 15 ?? ?? ?? ??
+    gv_sig_va: '0x1809e4258'
+    gv_va: '0x18257b1e8'
   client/g_pGameResourceServiceClient.linux.yaml:
     gv_name: g_pGameResourceServiceClient
     gv_rva: '0x48dccc0'
@@ -14483,11 +14520,23 @@ files:
     vfunc_offset: '0xf8'
     vfunc_sig: FF 90 F8 00 00 00 8B 74 24 ??
     vtable_name: INetworkSystem
+  engine/INetworkSystem_CloseSocket.linux.yaml:
+    func_name: INetworkSystem_CloseSocket
+    vfunc_index: 17
+    vfunc_offset: '0x88'
+    vfunc_sig: FF 90 88 00 00 00 48 81 C4 D8 01 00 00
+    vtable_name: INetworkSystem
   engine/INetworkSystem_CloseSocket.windows.yaml:
     func_name: INetworkSystem_CloseSocket
     vfunc_index: 17
     vfunc_offset: '0x88'
     vfunc_sig: FF 90 88 00 00 00 48 8B 5C 24 ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_ConnectSocket.linux.yaml:
+    func_name: INetworkSystem_ConnectSocket
+    vfunc_index: 15
+    vfunc_offset: '0x78'
+    vfunc_sig: FF 50 78 84 C0 0F 84 ?? 0B ?? 00
     vtable_name: INetworkSystem
   engine/INetworkSystem_ConnectSocket.windows.yaml:
     func_name: INetworkSystem_ConnectSocket
@@ -14524,6 +14573,12 @@ files:
     vfunc_index: 14
     vfunc_offset: '0x70'
     vfunc_sig: FF 50 70 84 C0 0F 85 ?? ?? ?? ?? E8 ?? ?? ?? ??
+    vtable_name: INetworkSystem
+  engine/INetworkSystem_PollSocket.linux.yaml:
+    func_name: INetworkSystem_PollSocket
+    vfunc_index: 20
+    vfunc_offset: '0xa0'
+    vfunc_sig: FF 90 A0 00 00 00 E9 ?? FD ?? FF
     vtable_name: INetworkSystem
   engine/INetworkSystem_PollSocket.windows.yaml:
     func_name: INetworkSystem_PollSocket
@@ -14686,6 +14741,12 @@ files:
     func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 F3 48 81 EC ?? ?? ?? ?? 48 89 DF
     func_size: '0x2a5'
     func_va: '0x3f4ae0'
+  engine/ParseNetadrList.linux.yaml:
+    func_name: ParseNetadrList
+    func_rva: '0x4ac3e0'
+    func_sig: 55 48 89 E5 41 57 41 56 49 89 FE 48 83 C7 60 41 55 41 54 4C 8D 65 80 53
+    func_size: '0x4af'
+    func_va: '0x4ac3e0'
   engine/ParseNetadrList.windows.yaml:
     func_name: ParseNetadrList
     func_rva: '0x57410'
@@ -29365,6 +29426,16 @@ files:
     vfunc_offset: '0x60'
     vfunc_sig: 41 FF 50 60 EB ??
     vtable_name: CEntityInstance
+  server/CEntityInstance_PreDataUpdate.linux.yaml:
+    func_name: CEntityInstance_PreDataUpdate
+    vfunc_index: 19
+    vfunc_offset: '0x98'
+    vtable_name: CEntityInstance
+  server/CEntityInstance_PreDataUpdate.windows.yaml:
+    func_name: CEntityInstance_PreDataUpdate
+    vfunc_index: 18
+    vfunc_offset: '0x90'
+    vtable_name: CEntityInstance
   server/CEntityInstance_Precache.linux.yaml:
     func_name: CEntityInstance_Precache
     func_rva: '0x213e4a0'
@@ -31664,6 +31735,18 @@ files:
     vtable_size: '0x760'
     vtable_symbol: ??_7CEnvEntityIgniter@@6B@
     vtable_va: '0x1817faff8'
+  server/CEnvHudHint_API_ShowHudHint.linux.yaml:
+    func_name: CEnvHudHint_API_ShowHudHint
+    func_rva: '0xbae390'
+    func_sig: 55 48 89 E5 41 54 53 0F B6 05 ?? AB ?? ?? 84 C0 74 2E 48 BE 00 00 00 00 FF FF FF FF
+    func_size: '0x10f'
+    func_va: '0xbae390'
+  server/CEnvHudHint_API_ShowHudHint.windows.yaml:
+    func_name: CEnvHudHint_API_ShowHudHint
+    func_rva: '0x27d4a0'
+    func_sig: 40 53 48 83 EC 20 8B 15 ?? EF F5 ?? 48 8B D9 65 48 8B 04 25 58 00 00 00
+    func_size: '0x11d'
+    func_va: '0x18027d4a0'
   server/CEnvShake_Spawn.linux.yaml:
     func_name: CEnvShake_Spawn
     func_rva: '0x189ee50'
@@ -34574,6 +34657,24 @@ files:
     vtable_size: '0xf8'
     vtable_symbol: ??_7CGameSceneNode@@6B@
     vtable_va: '0x1817c9e90'
+  server/CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.linux.yaml:
+    func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
+    func_rva: '0x16bfcf0'
+    func_sig: 55 BE 18 00 00 00 48 89 E5 53 48 83 EC 08 48 8B 05 5B ?? EF ?? 48 8B 38
+    func_size: '0x64'
+    func_va: '0x16bfcf0'
+    vfunc_index: 3
+    vfunc_offset: '0x18'
+    vtable_name: CGameSystemReallocatingFactory_CSource2EntitySystem
+  server/CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.windows.yaml:
+    func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
+    func_rva: '0xb82bb0'
+    func_sig: 40 53 48 83 EC 20 48 8B 05 ?? 88 ?? ?? BA 18 00 00 00 48 8B 08 48 8B 01
+    func_size: '0x56'
+    func_va: '0x180b82bb0'
+    vfunc_index: 3
+    vfunc_offset: '0x18'
+    vtable_name: CGameSystemReallocatingFactory_CSource2EntitySystem
   server/CGameSystemReallocatingFactory_CSource2EntitySystem_Init.linux.yaml:
     func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_Init
     func_rva: '0x1739160'
@@ -34626,6 +34727,60 @@ files:
     vtable_size: '0x50'
     vtable_symbol: ??_7?$CGameSystemReallocatingFactory@VCSource2EntitySystem@@V1@@@6B@
     vtable_va: '0x1817c6298'
+  server/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.linux.yaml:
+    func_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem
+    func_rva: '0xf1fc70'
+    func_sig: 48 85 F6 74 70 55 48 8D 0D ?? ?? ?? ?? 48 89 E5 41 54 53 48 8B 46 F8 4C 8D 66 F8
+    func_size: '0x7f'
+    func_va: '0xf1fc70'
+    vfunc_index: 4
+    vfunc_offset: '0x20'
+    vtable_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
+  server/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.windows.yaml:
+    func_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem
+    func_rva: '0x5408d0'
+    func_sig: 48 89 5C 24 08 57 48 83 EC 20 33 C0 48 8D 7A F8 48 85 D2 48 0F 44 F8 33 D2
+    func_size: '0x55'
+    func_va: '0x1805408d0'
+    vfunc_index: 4
+    vfunc_offset: '0x20'
+    vtable_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
+  server/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.linux.yaml:
+    vtable_class: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
+    vtable_entries:
+      0: '0xf17c00'
+      1: '0xf17c10'
+      2: '0xf17c20'
+      3: '0xf41f10'
+      4: '0xf1fc70'
+      5: '0xf17c30'
+      6: '0xf17c40'
+      7: '0xf17c50'
+      8: '0xf17c60'
+      9: '0xf17c70'
+    vtable_numvfunc: 10
+    vtable_rva: '0x2403a30'
+    vtable_size: '0x50'
+    vtable_symbol: _ZTV30CGameSystemReallocatingFactoryI24CSpawnGroupMgrGameSystemS0_E + 0x10
+    vtable_va: '0x2403a30'
+  server/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.windows.yaml:
+    vtable_class: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
+    vtable_entries:
+      0: '0x180540820'
+      1: '0x180540830'
+      2: '0x180540840'
+      3: '0x180540860'
+      4: '0x1805408d0'
+      5: '0x180540930'
+      6: '0x180540850'
+      7: '0x180540940'
+      8: '0x180540950'
+      9: '0x180540960'
+    vtable_numvfunc: 10
+    vtable_rva: '0x168ef58'
+    vtable_size: '0x50'
+    vtable_symbol: ??_7?$CGameSystemReallocatingFactory@VCSpawnGroupMgrGameSystem@@V1@@@6B@
+    vtable_va: '0x18168ef58'
   server/CHEGrenadeProjectile_Create.linux.yaml:
     func_name: CHEGrenadeProjectile_Create
     func_rva: '0xd329e0'
@@ -36136,6 +36291,16 @@ files:
     vtable_size: '0x48'
     vtable_symbol: ??_7CNavPhysicsInterface@@6B@
     vtable_va: '0x18188f618'
+  server/CNetworkGameServerBase_IsBackgroundMap.linux.yaml:
+    func_name: CNetworkGameServerBase_IsBackgroundMap
+    vfunc_index: 27
+    vfunc_offset: '0xd8'
+    vtable_name: CNetworkGameServerBase
+  server/CNetworkGameServerBase_IsBackgroundMap.windows.yaml:
+    func_name: CNetworkGameServerBase_IsBackgroundMap
+    vfunc_index: 27
+    vfunc_offset: '0xd8'
+    vtable_name: CNetworkGameServerBase
   server/CNetworkSerializerBindingBuildFilter_GetFieldPriority.linux.yaml:
     func_name: CNetworkSerializerBindingBuildFilter_GetFieldPriority
     func_rva: '0x216a6d0'
@@ -43482,6 +43647,16 @@ files:
     vfunc_offset: '0x8'
     vfunc_sig: FF 52 08 FF 15 ?? ?? ?? ??
     vtable_name: IGameSystemFactory
+  server/IGameSystemFactory_SetGlobalPtr.linux.yaml:
+    func_name: IGameSystemFactory_SetGlobalPtr
+    vfunc_index: 7
+    vfunc_offset: '0x38'
+    vtable_name: IGameSystemFactory
+  server/IGameSystemFactory_SetGlobalPtr.windows.yaml:
+    func_name: IGameSystemFactory_SetGlobalPtr
+    vfunc_index: 7
+    vfunc_offset: '0x38'
+    vtable_name: IGameSystemFactory
   server/IGameSystemFactory_Shutdown.linux.yaml:
     func_name: IGameSystemFactory_Shutdown
     vfunc_index: 2
@@ -43992,6 +44167,16 @@ files:
     func_sig: 40 55 57 41 55 48 83 EC ?? FF 15 ?? ?? ?? ??
     func_size: '0x1bb'
     func_va: '0x18052f5b0'
+  server/IGameSystem_SetGameSystemGlobalPtrs.linux.yaml:
+    func_name: IGameSystem_SetGameSystemGlobalPtrs
+    vfunc_index: 24
+    vfunc_offset: '0xc0'
+    vtable_name: IGameSystem
+  server/IGameSystem_SetGameSystemGlobalPtrs.windows.yaml:
+    func_name: IGameSystem_SetGameSystemGlobalPtrs
+    vfunc_index: 60
+    vfunc_offset: '0x1e0'
+    vtable_name: IGameSystem
   server/IGameSystem_ShutdownAllSystems.linux.yaml:
     func_name: IGameSystem_ShutdownAllSystems
     func_rva: '0xee12c0'
@@ -44004,6 +44189,16 @@ files:
     func_sig: 40 53 48 83 EC ?? 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 8B 05 ?? ?? ?? ?? 83 E8 ??
     func_size: '0x4b'
     func_va: '0x180539dc0'
+  server/IGameSystem_vdtor.linux.yaml:
+    func_name: IGameSystem_vdtor
+    vfunc_index: 28
+    vfunc_offset: '0xe0'
+    vtable_name: IGameSystem
+  server/IGameSystem_vdtor.windows.yaml:
+    func_name: IGameSystem_vdtor
+    vfunc_index: 63
+    vfunc_offset: '0x1f8'
+    vtable_name: IGameSystem
   server/IGameSystem_vtable.linux.yaml:
     vtable_class: IGameSystem
     vtable_entries:
@@ -46579,5 +46774,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T10:34:09Z'
+last_publish_time: '2026-09-10T11:08:11Z'
 schema_version: 5

@@ -512,6 +512,14 @@ modules:
         category: func
         alias:
           - CNetChan::ParseMessagesDemoInternal
+      - name: CNetChan_ProcessMessages
+        category: vfunc
+        alias:
+          - CNetChan::ProcessMessages
+      - name: CNetChan_ParseMessagesDemo
+        category: vfunc
+        alias:
+          - CNetChan::ParseMessagesDemo
       - name: CNetChan_ParseNetMessageShowFilter
         category: func
         alias:
@@ -630,6 +638,18 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-INetworkSystem_CloseSocket-linux
+        optional_output:
+          - INetworkSystem_CloseSocket.linux.yaml
+      - name: find-INetworkSystem_ConnectSocket-linux
+        optional_output:
+          - INetworkSystem_ConnectSocket.linux.yaml
+      - name: find-INetworkSystem_PollSocket-linux
+        optional_output:
+          - INetworkSystem_PollSocket.linux.yaml
+      - name: find-ParseNetadrList-linux
+        optional_output:
+          - ParseNetadrList.linux.yaml
       - name: find-CNetworkGameServer_PackEntities
         expected_output:
           - CNetworkGameServer_PackEntities.{platform}.yaml
@@ -3112,14 +3132,6 @@ modules:
         alias:
           - INetworkMessages::FindNetworkMessageById
         shared: true
-      - name: CNetChan_ProcessMessages
-        category: vfunc
-        alias:
-          - CNetChan::ProcessMessages
-      - name: CNetChan_ParseMessagesDemo
-        category: vfunc
-        alias:
-          - CNetChan::ParseMessagesDemo
       - name: CNetworkGameClient_ProcessPacketEntitiesInternal
         category: func
         platform: windows
@@ -4558,6 +4570,12 @@ modules:
     path_windows: game/csgo/bin/win64/client.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libclient.so
     skills:
+      - name: find-g_pGameEntitySystem
+        optional_output:
+          - g_pGameEntitySystem.windows.yaml
+      - name: find-IGameResourceService_SetEntityResourceManifestHandler
+        optional_output:
+          - IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml
       - name: find-IGameSystem_vtable
         expected_output:
           - IGameSystem_vtable.{platform}.yaml
@@ -5090,6 +5108,9 @@ modules:
           - g_CSGOInput.{platform}.yaml
         expected_input:
           - ClientModeCSNormal_Update.{platform}.yaml
+      - name: find-g_pGameResourceService
+        optional_output:
+          - g_pGameResourceService.{platform}.yaml
       - name: find-CEntitySystem_ctor
         expected_output:
           - CEntitySystem_ctor.{platform}.yaml
@@ -6687,6 +6708,36 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem-server
+        optional_output:
+          - CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml
+      - name: find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem-linux
+        optional_output:
+          - CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.linux.yaml
+      - name: find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable-server
+        optional_output:
+          - CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.{platform}.yaml
+      - name: find-CEnvHudHint_API_ShowHudHint-binding
+        optional_output:
+          - CEnvHudHint_API_ShowHudHint.{platform}.yaml
+      - name: find-IGameSystemFactory_SetGlobalPtr
+        optional_output:
+          - IGameSystemFactory_SetGlobalPtr.{platform}.yaml
+      - name: find-CNetworkGameServerBase_IsBackgroundMap
+        optional_output:
+          - CNetworkGameServerBase_IsBackgroundMap.{platform}.yaml
+      - name: find-CEntityInstance_PreDataUpdate
+        optional_output:
+          - CEntityInstance_PreDataUpdate.{platform}.yaml
+      - name: find-IGameSystem_vdtor
+        optional_output:
+          - IGameSystem_vdtor.{platform}.yaml
+      - name: find-IGameSystem_SetGameSystemGlobalPtrs
+        optional_output:
+          - IGameSystem_SetGameSystemGlobalPtrs.{platform}.yaml
+      - name: find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem
+        optional_output:
+          - CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.windows.yaml
       - name: find-CCSCustomHudLayout_SetDialogVariableString
         expected_output:
           - CCSCustomHudLayout_SetDialogVariableString.{platform}.yaml
@@ -11305,22 +11356,6 @@ modules:
         alias:
           - InventoryUpdateThink
           - CCSPlayerController::InventoryUpdateThink
-      - name: g_CCSPlayerController_PlayerForceTeamThink
-        category: gv
-        alias:
-          - g_CCSPlayerController::PlayerForceTeamThink
-      - name: g_CCSPlayerController_ResetForceTeamThink
-        category: gv
-        alias:
-          - g_CCSPlayerController::ResetForceTeamThink
-      - name: g_CCSPlayerController_ResourceDataThink
-        category: gv
-        alias:
-          - g_CCSPlayerController::ResourceDataThink
-      - name: g_CCSPlayerController_InventoryUpdateThink
-        category: gv
-        alias:
-          - g_CCSPlayerController::InventoryUpdateThink
       - name: CCSGameRules__sm_mapGcBanInformation
         category: gv
         alias:
@@ -12958,12 +12993,11 @@ modules:
         category: patch
         alias:
           - BotNavIgnore
-      - name: ShowHudHint
-        category: func
       - name: CEnvHudHint_API_ShowHudHint
         category: func
         alias:
           - CEnvHudHint_API::ShowHudHint
+          - ShowHudHint
       - name: UTIL_GetPlayerControllerForEntity
         category: func
         alias:
