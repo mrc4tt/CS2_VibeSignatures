@@ -73,6 +73,11 @@ FORK_OWNED_SYMBOLS = [
     # them, so gamesymbol_snapshot dropped them as undeclared. Relocated to 14181
     # (linux 0x1904cd0, windows 0x180d452d0, both a unique wildcarded match).
     ("CCSNavArea_IsValidNavMesh", "func", None, None),
+    # cs2-retakes-allocator ships this signature and the tracker had no reference:
+    # like IsValidNavMesh, the artifacts existed only on 14178b with no task to
+    # declare them. Relocated to 14181 (linux 0x1566a80, windows 0x180a92c80) and
+    # 14180 (0x155eec0 / 0x180a8b4b0), both a unique boundary-checked match.
+    ("GiveNamedItem2", "func", None, None),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a

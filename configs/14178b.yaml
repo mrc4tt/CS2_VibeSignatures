@@ -6731,6 +6731,9 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-GiveNamedItem2
+        expected_output:
+          - GiveNamedItem2.{platform}.yaml
       - name: find-CCSNavArea_IsValidNavMesh
         expected_output:
           - CCSNavArea_IsValidNavMesh.{platform}.yaml
@@ -10162,6 +10165,8 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: GiveNamedItem2
+        category: func
       - name: CCSNavArea_IsValidNavMesh
         category: func
       - name: CTakeDamageInfo_ctor

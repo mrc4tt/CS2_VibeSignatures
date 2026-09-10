@@ -232,12 +232,6 @@
       "linux": 80
     }
   },
-  "GameEventManager": {
-    "offsets": {
-      "windows": 93,
-      "linux": 93
-    }
-  },
   "CEntityIOOutput_FireOutputInternal": {
     "signatures": {
       "library": "server",
