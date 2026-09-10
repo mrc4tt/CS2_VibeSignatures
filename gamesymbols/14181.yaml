@@ -7683,6 +7683,8 @@ files:
   engine/CEntityResourceManifest_AddResource.linux.yaml:
     func_name: CEntityResourceManifest_AddResource
     func_rva: '0x3cfee0'
+    func_sig: 45 31 C0 45 31 C9 31 C9 31 D2 E9 ?? ?? ?? ?? CC
+    func_sig_allow_across_function_boundary: true
     func_va: '0x3cfee0'
     vfunc_index: 0
     vfunc_offset: '0x0'
@@ -7690,6 +7692,7 @@ files:
   engine/CEntityResourceManifest_AddResource.windows.yaml:
     func_name: CEntityResourceManifest_AddResource
     func_rva: '0x1ae5c0'
+    func_sig: 48 83 EC 38 45 33 C9 48 C7 44 24 20 00 00 00 00 45 33 C0
     func_va: '0x1801ae5c0'
     vfunc_index: 2
     vfunc_offset: '0x10'
@@ -46952,5 +46955,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-10T21:26:20Z'
+last_publish_time: '2026-09-10T22:07:15Z'
 schema_version: 5
