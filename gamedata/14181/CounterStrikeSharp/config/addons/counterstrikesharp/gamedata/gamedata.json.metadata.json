@@ -946,8 +946,11 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        283,
+        284
+      ],
       "name": "SetStateChanged",
       "updated": false
     },
@@ -1020,7 +1023,7 @@
   "gamever": "14181",
   "schema_version": 2,
   "summary": {
-    "covered": 50,
+    "covered": 51,
     "total": 52,
     "updated": 29
   }

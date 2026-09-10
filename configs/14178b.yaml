@@ -13238,6 +13238,7 @@ modules:
         category: vfunc
         alias:
           - CEntityInstance::NetworkStateChanged
+          - SetStateChanged
       - name: CEntityInstance_FullEdictChanged
         category: vfunc
         alias:

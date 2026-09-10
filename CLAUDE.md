@@ -183,6 +183,9 @@ uv run audit_duplicate_va.py -gamever $VER
 uv run detect_aliases.py -gamever $VER -platform linux
 uv run detect_aliases.py -gamever $VER -platform windows
 uv run missing_report.py -gamever $VER -all
+# 5b. the plugin files themselves: does every shipped entry still hold?
+uv run verify_plugin_gamedata.py -gamever $VER \
+  -gamedata gamedata/$VER/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json
 # 6. preprocessor/reference coverage, then the test suite
 ./gen_references.sh
 uv run --with pytest --with pyyaml --with capstone python -m pytest tests/ -q
@@ -367,6 +370,7 @@ advisory — never a new name that makes the red go away.
 | Tool | When | Notes |
 |------|------|-------|
 | `validate_artifacts.py` | After every artifact change | Re-checks every artifact against the binary; `-strict` fails on warnings |
+| `verify_plugin_gamedata.py` | Before a deploy, and to answer "is this plugin's file OK" | Scans every shipped signature against the binaries and re-derives every offset; non-zero exit on broken/ambiguous/mismatch |
 | `gamesymbol_snapshot.py` | `pack` after changes, `check-contract` to verify | Pack is what generation reads, not `bin_artifacts/` |
 | `missing_report.py` | After runs / before hunts | Writes `missing_<plat>_<ver>.txt` |
 | `audit_duplicate_va.py` | After every hunt round | 0 suspect clusters = clean |

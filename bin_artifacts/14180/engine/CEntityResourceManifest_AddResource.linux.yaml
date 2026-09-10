@@ -1,0 +1,8 @@
+func_name: CEntityResourceManifest_AddResource
+func_va: '0x3cdc60'
+func_rva: '0x3cdc60'
+func_sig: 45 31 C0 45 31 C9 31 C9 31 D2 E9 ?? ?? ?? ?? CC
+func_sig_allow_across_function_boundary: true
+vtable_name: CEntityResourceManifest
+vfunc_offset: '0x0'
+vfunc_index: 0

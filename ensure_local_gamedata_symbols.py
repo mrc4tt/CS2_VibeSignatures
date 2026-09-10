@@ -119,6 +119,12 @@ ALIAS_OVERRIDES = {
     # key survives as an alias instead of a second declaration (the config validator
     # rejects two symbols sourcing one artifact).
     "ShowHudHint": "CEnvHudHint_API_ShowHudHint",
+    # CounterStrikeSharp ships this offset under the short name its schema code uses
+    # (schema.cpp:167 reads GetOffset("SetStateChanged")), while the analysis files the
+    # virtual as CEntityInstance_NetworkStateChanged. Same values - windows 28 from
+    # vfunc_offset 0xe0, linux 29 from 0xe8 - so the alias only moves the key from the
+    # frozen template into pipeline control.
+    "SetStateChanged": "CEntityInstance_NetworkStateChanged",
 }
 
 

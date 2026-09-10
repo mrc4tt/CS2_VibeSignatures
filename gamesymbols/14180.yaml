@@ -122,7 +122,7 @@ binaries:
       size: 4592280
 config_digest_version: 2
 config_sha256: sha256:f5962c29a21830d516a1539bd4bcb8b42bdc3cd1041799f28ac176097f7d72b5
-file_count: 3753
+file_count: 3755
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -7650,6 +7650,23 @@ files:
     vtable_size: '0x180'
     vtable_symbol: CEngineSoundServices_vtable
     vtable_va: '0x18054c540'
+  engine/CEntityResourceManifest_AddResource.linux.yaml:
+    func_name: CEntityResourceManifest_AddResource
+    func_rva: '0x3cdc60'
+    func_sig: 45 31 C0 45 31 C9 31 C9 31 D2 E9 ?? ?? ?? ?? CC
+    func_sig_allow_across_function_boundary: true
+    func_va: '0x3cdc60'
+    vfunc_index: 0
+    vfunc_offset: '0x0'
+    vtable_name: CEntityResourceManifest
+  engine/CEntityResourceManifest_AddResource.windows.yaml:
+    func_name: CEntityResourceManifest_AddResource
+    func_rva: '0x1ad780'
+    func_sig: 48 83 EC 38 45 33 C9 48 C7 44 24 20 00 00 00 00 45 33 C0
+    func_va: '0x1801ad780'
+    vfunc_index: 2
+    vfunc_offset: '0x10'
+    vtable_name: CEntityResourceManifest
   engine/CGameClientConnectPrerequisite_ctor.linux.yaml:
     func_name: CGameClientConnectPrerequisite_ctor
     func_rva: '0x41c570'
@@ -46787,5 +46804,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14180'
-last_publish_time: '2026-09-10T19:37:48Z'
+last_publish_time: '2026-09-10T22:12:39Z'
 schema_version: 5
