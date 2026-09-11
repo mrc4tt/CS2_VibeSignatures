@@ -1,7 +1,7 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
-export const APP_LANGUAGES = ['en', 'zh-CN', 'zh-TW'] as const
+export const APP_LANGUAGES = ['en', 'da', 'zh-CN', 'zh-TW'] as const
 export type AppLanguage = (typeof APP_LANGUAGES)[number]
 
 const LANGUAGE_STORAGE_KEY = 'cs2vibe.language'
@@ -9,7 +9,47 @@ const LANGUAGE_STORAGE_KEY = 'cs2vibe.language'
 const resources = {
   en: {
     translation: {
-      language: { selector: 'Language', english: 'English', simplifiedChinese: 'Simplified Chinese', traditionalChinese: 'Traditional Chinese' },
+      language: { selector: 'Language', english: 'English', danish: 'Dansk', simplifiedChinese: 'Simplified Chinese', traditionalChinese: 'Traditional Chinese' },
+      brand: 'Signature Handbook',
+      nav2: { start: 'Start here', symbols: 'Find a symbol', gamedata: 'Game Data', runs: 'Analysis runs', words: 'Words' },
+      shell: { search: 'Search', explain: 'Explain everything', theme: 'Light or dark' },
+      start: {
+        h1: 'Signatures and offsets for the current CS2 build',
+        lede: 'Every game update moves the code. These are the byte patterns and offsets for build {{build}}, each one checked against the game files, plus the Game Data file every plugin reads.',
+        read: 'read from the game files',
+        symbols: 'symbols', files: 'Game Data files', keys: 'plugin keys', fingerprint: 'fingerprint',
+        glanceH: 'This build at a glance', glanceSub: 'measured, not estimated',
+        stepsH: 'Where the numbers come from',
+        s1: 'The game files for one build are downloaded. <code>libserver.so</code> on Linux, <code>server.dll</code> on Windows.',
+        s2: 'Each wanted function is located in the new files and a fresh byte pattern is cut for it.',
+        s3: 'Every pattern is searched back through the same file. It has to match once, and land on a function start.',
+        s4: 'The verified numbers are written into each plugin\'s own Game Data format.',
+        explain: 'A signature is a run of machine code bytes that appears once in the game file. A plugin scans for it to find a function after an update moves it. <code>??</code> marks a byte that may be anything. Switch off Explain everything in the top bar to hide these notes.',
+        statSymbols: 'symbols in this build', statKeys: 'of {{total}} plugin keys filled', statGap: 'plugin keys with no value', statBuilds: 'published builds',
+        t1q: 'Get the pattern for one function', t1d: 'Search by name. Linux and Windows side by side, ready to copy.',
+        t2q: 'Get my plugin\'s Game Data file', t2d: 'Pick the plugin, read the file with changed lines marked, then copy or download it.',
+        t3q: 'See the gaps', t3d: 'Keys a plugin asks for that this build has no value for.',
+        t4q: 'Look up a word', t4d: 'Plain meanings for signature, vtable slot, struct member offset and the rest.',
+      },
+      words: {
+        h1: 'Words used on this site', sub: 'plain meanings, in one place',
+        kbH: 'Keyboard', kb1: 'Arrow keys move between result cards, Enter opens one',
+        kb2: '/ jumps to the search box', kb3: 'Esc closes what is open',
+      },
+      glossary: {
+        signature: ['signature, or byte pattern', 'A run of machine code bytes that occurs exactly once in the game file. A plugin scans for it to find the function again after an update moved it. ?? means this byte may be anything.'],
+        vfunc: ['virtual function', 'A function called through a table of pointers on the object, so its address is not known ahead of time. It is found by its position in that table instead of by bytes.'],
+        slot: ['vtable slot', 'The position of a virtual function in its class table. Linux and Windows number these differently because the Microsoft compiler inserts extra entries, so the two numbers usually differ by one or two.'],
+        member: ['struct member offset', 'How many bytes from the start of an object a field sits at. m_iTeamNum at +0xaf0 means: read one byte, 0xaf0 bytes in.'],
+        funcsize: ['function size', 'How many bytes long the function is. A very short function cannot be given a pattern of its own, and 0x0 means the size could not be measured, which is recorded as unknown rather than guessed.'],
+        module: ['module', 'One game file. server is libserver.so on Linux and server.dll on Windows; engine, client and a few smaller ones are the rest.'],
+        address: ['address', 'Where something sits in memory for this exact build. It changes on every rebuild, so nothing should ever be pinned to it.'],
+        wildcard: ['?? wildcard', 'A byte in a pattern that is allowed to be anything. Bytes that hold an address or a jump distance get wildcarded, because those move on every rebuild.'],
+        build: ['game build', 'One released version of the game, named by its build number. 14181 is newer than 14180.'],
+        snapshot: ['snapshot', 'The full set of values recorded for one build, with a fingerprint so it can be told apart from any other set.'],
+        alias: ['alias', 'A second name the same value is published under, so a plugin that knows the old name still finds it.'],
+        notproduced: ['not produced', 'The plugin ships this key, but this build has no value for it. Sometimes a genuine gap in the analysis, sometimes a key the plugin resolves by itself.'],
+      },
       theme: { toggle: 'Toggle color theme', switchToLight: 'Switch to light mode', switchToDark: 'Switch to dark mode' },
       common: { notAvailable: '—' },
       errors: { connectionFailed: 'Connection failed', invalidApiAddress: 'Invalid API address', apiHttpOnly: 'The API address only supports HTTP or HTTPS', apiAddressParts: 'The API address cannot include credentials, query parameters, or a fragment', requestFailed: 'Request failed', cannotConnectApi: 'Unable to connect to the API' },
@@ -44,6 +84,57 @@ const resources = {
         loading: 'Loading gamedata…', indexError: 'Unable to load the gamedata version index', fileError: 'Unable to load this gamedata file', metadataError: 'Unable to load diff metadata',
         unanchoredChanges: '{{count}} deleted changes have no line in the final file.', viewerAria: 'Read-only gamedata viewer for {{file}}',
       },
+    },
+  },
+  da: {
+    translation: {
+      language: { selector: 'Sprog', english: 'English', danish: 'Dansk', simplifiedChinese: '简体中文', traditionalChinese: '繁體中文' },
+      theme: { toggle: 'Skift farvetema', switchToLight: 'Skift til lyst tema', switchToDark: 'Skift til mørkt tema' },
+      common: { notAvailable: '—' },
+      brand: 'Signaturhåndbog',
+      nav2: { start: 'Start her', symbols: 'Find et symbol', gamedata: 'Game Data', runs: 'Analysekørsler', words: 'Ord' },
+      shell: { search: 'Søg', explain: 'Forklar alt', theme: 'Lyst eller mørkt' },
+      navigation: { runs: 'Analysekørsler', symbols: 'Find et symbol', gamedata: 'Game Data' },
+      app: { pageTitle: 'CS2 Signaturhåndbog', apiSettings: 'API-indstillinger', loadingPage: 'Indlæser side…' },
+      start: {
+        h1: 'Signaturer og offsets til det nuværende CS2-build',
+        lede: 'Hver spilopdatering flytter koden. Her er byte-mønstrene og offsets til build {{build}}, hver enkelt tjekket mod spillets filer, plus den Game Data-fil hvert plugin læser.',
+        read: 'læst fra spillets filer',
+        symbols: 'symboler', files: 'Game Data-filer', keys: 'plugin-nøgler', fingerprint: 'fingeraftryk',
+        glanceH: 'Dette build på et blik', glanceSub: 'målt, ikke anslået',
+        stepsH: 'Hvor tallene kommer fra',
+        s1: 'Spillets filer hentes for ét build. <code>libserver.so</code> på Linux, <code>server.dll</code> på Windows.',
+        s2: 'Hver ønsket funktion findes igen i de nye filer, og der skæres et nyt byte-mønster til den.',
+        s3: 'Hvert mønster søges tilbage gennem samme fil. Det skal matche én gang og ramme et funktionsstart.',
+        s4: 'De verificerede tal skrives ind i hvert plugins eget Game Data-format.',
+        explain: 'En signatur er en række maskinkode-bytes der kun står ét sted i spillets fil. Et plugin scanner efter den for at finde en funktion igen efter en opdatering har flyttet den. <code>??</code> betyder at byten må være hvad som helst. Slå Forklar alt fra i topbaren for at skjule disse noter.',
+        statSymbols: 'symboler i dette build', statKeys: 'af {{total}} plugin-nøgler udfyldt', statGap: 'plugin-nøgler uden værdi', statBuilds: 'udgivne builds',
+        t1q: 'Hent mønsteret til én funktion', t1d: 'Søg på navn. Linux og Windows side om side, klar til at kopiere.',
+        t2q: 'Hent mit plugins Game Data-fil', t2d: 'Vælg pluginet, læs filen med ændrede linjer markeret, kopiér eller hent den.',
+        t3q: 'Se hullerne', t3d: 'Nøgler et plugin beder om, som dette build ikke har en værdi til.',
+        t4q: 'Slå et ord op', t4d: 'Almindelige forklaringer på signatur, vtable-slot, struct-medlem offset og resten.',
+      },
+      words: {
+        h1: 'Ord brugt på dette site', sub: 'almindelige forklaringer, samlet',
+        kbH: 'Tastatur', kb1: 'Piletaster flytter mellem resultatkort, Enter åbner et',
+        kb2: '/ hopper til søgefeltet', kb3: 'Esc lukker det der er åbent',
+      },
+      glossary: {
+        signature: ['signatur, eller byte-mønster', 'En række maskinkode-bytes der forekommer præcis ét sted i spillets fil. Et plugin scanner efter den for at finde funktionen igen efter en opdatering har flyttet den. ?? betyder at byten må være hvad som helst.'],
+        vfunc: ['virtuel funktion', 'En funktion der kaldes gennem en tabel af pointere på objektet, så adressen ikke kendes på forhånd. Den findes via sin position i tabellen i stedet for via bytes.'],
+        slot: ['vtable-slot', 'En virtuel funktions position i klassens tabel. Linux og Windows nummererer forskelligt, fordi Microsofts compiler indsætter ekstra poster, så de to tal plejer at afvige med et eller to.'],
+        member: ['struct-medlem offset', 'Hvor mange bytes fra objektets start et felt ligger. m_iTeamNum på +0xaf0 betyder: læs én byte, 0xaf0 bytes inde.'],
+        funcsize: ['funktionsstørrelse', 'Hvor mange bytes funktionen er. En meget kort funktion kan ikke få sit eget mønster, og 0x0 betyder at størrelsen ikke kunne måles, hvilket noteres som ukendt i stedet for gættet.'],
+        module: ['modul', 'Én spilfil. server er libserver.so på Linux og server.dll på Windows; engine, client og et par mindre er resten.'],
+        address: ['adresse', 'Hvor noget ligger i hukommelsen for præcis dette build. Den ændrer sig ved hver rebuild, så intet bør nogensinde bindes til den.'],
+        wildcard: ['?? joker', 'En byte i et mønster der må være hvad som helst. Bytes der indeholder en adresse eller en hopafstand gøres til jokere, fordi de flytter sig ved hver rebuild.'],
+        build: ['spil-build', 'Én udgivet version af spillet, navngivet efter sit buildnummer. 14181 er nyere end 14180.'],
+        snapshot: ['snapshot', 'Hele sættet af værdier optaget for ét build, med et fingeraftryk så det kan skelnes fra alle andre sæt.'],
+        alias: ['alias', 'Et andet navn den samme værdi udgives under, så et plugin der kender det gamle navn stadig finder den.'],
+        notproduced: ['ikke produceret', 'Pluginet sender denne nøgle, men dette build har ingen værdi til den. Nogle gange et reelt hul i analysen, nogle gange en nøgle pluginet selv resolver.'],
+      },
+      symbols: { title: 'Find et symbol', subtitle: 'Én post per funktion, med Linux og Windows ved siden af hinanden.', gameVersion: 'Spil-build', treeTitle: 'Symboltræ', searchTitle: 'Find symboler', allModules: 'Alle moduler', searchPlaceholder: 'Søg symbolnavn eller artifact', allPlatforms: 'Alle platforme', windows: 'Windows', linux: 'Linux', symbolName: 'Symbol', kind: 'Type', module: 'Modul', platform: 'Platform', artifact: 'Artifact', sourcePath: 'Snapshot-sti', aliases: 'Aliaser', detailTitle: 'Symboldetaljer', payload: 'Snapshot-data', loading: 'Indlæser symboldata…', noMatches: 'Ingen symboler matcher filtrene', resultCount: '{{count}} poster' },
+      gamedata: { title: 'Game Data', subtitle: 'Hvert plugin læser sine tal fra én fil i sit eget format.', gameVersion: 'Spil-build', treeTitle: 'Plugin-filer', viewerTitle: 'Game Data-viser', viewDiff: 'Vis diff', download: 'Hent', loading: 'Indlæser Game Data…' },
     },
   },
   'zh-CN': {
@@ -128,6 +219,7 @@ const resources = {
 
 export function resolveLanguage(language?: string): AppLanguage {
   const normalized = language?.toLowerCase()
+  if (normalized?.startsWith('da')) return 'da'
   if (normalized === 'zh-tw' || normalized === 'zh-hk' || normalized === 'zh-mo' || normalized === 'zh-hant') return 'zh-TW'
   if (normalized?.startsWith('zh')) return 'zh-CN'
   return 'en'

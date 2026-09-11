@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { App as AntApp, ConfigProvider, theme } from 'antd'
+import daDK from 'antd/locale/da_DK'
 import enUS from 'antd/locale/en_US'
 import zhCN from 'antd/locale/zh_CN'
 import zhTW from 'antd/locale/zh_TW'
@@ -17,7 +18,7 @@ const queryClient = new QueryClient({
   },
 })
 
-const ANT_DESIGN_LOCALES = { en: enUS, 'zh-CN': zhCN, 'zh-TW': zhTW }
+const ANT_DESIGN_LOCALES = { en: enUS, da: daDK, 'zh-CN': zhCN, 'zh-TW': zhTW }
 
 export default function App() {
   const { i18n } = useTranslation()
@@ -29,15 +30,23 @@ export default function App() {
       theme={{
         algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {
-          colorPrimary: '#3b82f6',
-          borderRadius: 8,
-          colorBgBase: isDark ? '#080d18' : '#e5eaf1',
-          ...(!isDark && {
-            colorBgLayout: '#e5eaf1',
-            colorBgContainer: '#edf1f5',
-            colorBgElevated: '#f1f4f7',
-            colorFillAlter: 'rgba(100, 116, 139, 0.08)',
-          }),
+          colorPrimary: isDark ? '#63c3cd' : '#17636e',
+          borderRadius: 6,
+          fontFamily: '"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif',
+          fontFamilyCode: '"JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace',
+          colorBgBase: isDark ? '#0e1115' : '#e9ebef',
+          ...(isDark
+            ? {
+                colorBgLayout: '#0e1115',
+                colorBgContainer: '#171b21',
+                colorBgElevated: '#1d222a',
+              }
+            : {
+                colorBgLayout: '#e9ebef',
+                colorBgContainer: '#ffffff',
+                colorBgElevated: '#ffffff',
+                colorFillAlter: 'rgba(95, 104, 119, 0.06)',
+              }),
         },
       }}
     >
