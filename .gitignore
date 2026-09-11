@@ -43,3 +43,6 @@ llmenv.sh
 
 # autopilot runtime state (lock, attempt counters, last run logs)
 .autopilot/
+
+# hand-carried brief for the cs2-signatures VPS (not part of the repo)
+NOTES-cs2-signatures.md
