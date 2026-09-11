@@ -1,0 +1,27 @@
+[Unit]
+Description=CS2_VibeSignatures autopilot (analyse a new game build)
+Documentation=file:/root/CS2_VibeSignatures/systemd/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/CS2_VibeSignatures
+# .env carries the Steam credentials, the agent choice and the LLM key. systemd
+# gives the unit no login shell, so without this line run_linux.sh would find
+# CS2VIBE_AGENT unset and stop.
+EnvironmentFile=/root/CS2_VibeSignatures/.env
+Environment=HOME=/root
+Environment=PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/root/CS2_VibeSignatures/autopilot.sh
+# An analysis run is hours of IDA, so no timeout and a low priority: the box
+# stays usable while it works.
+TimeoutStartSec=infinity
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=6
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

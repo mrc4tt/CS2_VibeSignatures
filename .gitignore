@@ -40,3 +40,6 @@ alias_candidates_*.json
 # detect_aliases output (regenereres pr. kørsel)
 alias_candidates_*.json
 llmenv.sh
+
+# autopilot runtime state (lock, attempt counters, last run logs)
+.autopilot/
