@@ -28,10 +28,17 @@ cd "$(dirname "$0")"
 # merge, regardless of conflict resolution (belt-and-suspenders on top of the
 # merge=ours gitattributes entry, which needs the local git config:
 #   git config merge.ours.driver true
+#
+# `pages` is here because this fork rewrites the site app. Protection is exact:
+# files upstream adds inside a protected path are removed again, so the path
+# never ends up half ours and half theirs. The trade is that upstream's own
+# pages work never arrives on its own, which is why the script prints what it
+# declined and how to cherry-pick it.
 PROTECTED_PATHS=(
     .github/workflows/deploy-pages.yml
     gamedata
     gamesymbols
+    pages
 )
 
 REMOTE="${REMOTE:-upstream}"
@@ -118,13 +125,36 @@ uv run ensure_local_gamedata_symbols.py || echo "  warning: seed-injection faile
 uv run ensure_agent_fallback_skills.py || echo "  warning: fallback-skill generation failed (run manually)"
 
 echo "==> Restoring protected fork-owned paths..."
+declared=()
 for path in "${PROTECTED_PATHS[@]}"; do
-    if git cat-file -e "$PREV:$path" 2>/dev/null && ! git diff --quiet "$PREV" HEAD -- "$path"; then
-        git checkout "$PREV" -- "$path"
-        git commit --amend --no-edit
-        echo "   kept ours: $path"
-    fi
+    git cat-file -e "$PREV:$path" 2>/dev/null || { echo "   skipped (absent before the merge): $path"; continue; }
+    git diff --quiet "$PREV" HEAD -- "$path" && continue
+
+    # Exact restore, not just "check out what we had". A plain
+    # `git checkout $PREV -- <dir>` leaves behind any file upstream ADDED inside
+    # the directory, so a protected path would end up ours-plus-theirs. Clear it
+    # first, then restore, and the path is byte-identical to the pre-merge tree.
+    git rm -rq --cached --ignore-unmatch -- "$path" 2>/dev/null || true
+    rm -rf -- "$path"
+    git checkout "$PREV" -- "$path"
+    git commit --amend --no-edit --quiet
+    echo "   kept ours: $path"
+    declared+=("$path")
 done
+
+if [ "${#declared[@]}" -gt 0 ]; then
+    echo
+    echo "==> What upstream changed in those paths, and this merge declined:"
+    for path in "${declared[@]}"; do
+        stat="$(git diff --stat "$PREV" "$REMOTE/$BRANCH" -- "$path" | tail -1)"
+        [ -n "$stat" ] || continue
+        echo "   $path: ${stat# }"
+        echo "     review: git diff $PREV $REMOTE/$BRANCH -- $path"
+        echo "     adopt:  git checkout $REMOTE/$BRANCH -- $path/<file>"
+    done
+    echo "   Keeping ours is the policy for these paths, not a verdict on upstream's"
+    echo "   version. Cherry-pick anything worth having."
+fi
 
 if [ "${#backed_up[@]}" -gt 0 ]; then
     echo "==> ${#backed_up[@]} untracked file(s) differed from upstream and were replaced by upstream's version."

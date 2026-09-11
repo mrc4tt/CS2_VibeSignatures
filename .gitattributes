@@ -7,3 +7,4 @@ gamedata-generators/** text eol=lf
 
 # Local fork customizations — always keep OUR version on merges
 .github/workflows/deploy-pages.yml merge=ours
+pages/** merge=ours
