@@ -451,3 +451,8 @@ advisory — never a new name that makes the red go away.
   failures retry, so budget ~1.3 calls per spec. Nothing is metered in-repo; there is no token
   accounting
 - Agent auto-select: if CS2VIBE_AGENT unset, scripts pick first installed CLI
+
+## Commit conventions
+
+Never add "Co-Authored-By" lines to commits. Do not include Claude attribution 
+in commit messages, PR descriptions, or any git metadata.
