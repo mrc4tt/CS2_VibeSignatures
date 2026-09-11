@@ -82,16 +82,26 @@ def load_alias_map(config_path):
 
 
 def load_snapshot_index(path):
-    """{folded symbol name: {platform: payload}} from a packed snapshot."""
+    """{folded symbol name: {platform: payload}} from a packed snapshot.
+
+    The snapshot keys every record by "<module>/<Symbol>.<platform>.yaml", and the
+    module matters: a vtable can only be re-read from the binary that holds the class,
+    so CEntityResourceManifest has to be looked up in engine, not server. The module
+    is carried on the payload as _module rather than guessed later.
+    """
     import yaml
     with open(path, "r", encoding="utf-8") as handle:
         files = yaml.safe_load(handle).get("files") or {}
     index = {}
     for artifact_path, payload in files.items():
-        base = artifact_path.split("/")[-1]
+        parts = artifact_path.split("/")
+        base = parts[-1]
+        module = parts[-2] if len(parts) > 1 else None
         for platform in PLATFORMS:
             suffix = f".{platform}.yaml"
             if base.endswith(suffix):
+                if isinstance(payload, dict) and module:
+                    payload = dict(payload, _module=module)
                 index.setdefault(fold(base[: -len(suffix)]), {})[platform] = payload
     return index
 
@@ -118,6 +128,26 @@ class Binaries:
         return self.cache[key]
 
 
+def _rip_target(blob, info, va):
+    """The global a RIP-relative instruction at `va` addresses, or None."""
+    try:
+        import capstone
+    except ImportError:
+        return None
+    md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+    md.detail = True
+    off = V.va_to_off(info, va)
+    if off is None:
+        return None
+    for ins in md.disasm(blob[off:off + 16], va):
+        for operand in ins.operands:
+            if (operand.type == capstone.x86.X86_OP_MEM
+                    and operand.mem.base == capstone.x86.X86_REG_RIP):
+                return ins.address + ins.size + operand.mem.disp
+        return None  # only the matched instruction counts
+    return None
+
+
 def check_signature(binaries, module, platform, pattern, record=None):
     """record: this repo's payload for the same symbol, when we have one."""
     blob, info, _ = binaries.get(module, platform)
@@ -133,9 +163,19 @@ def check_signature(binaries, module, platform, pattern, record=None):
     if V.is_boundary(blob, info, va):
         return {"status": "ok", "at": hex(va or 0)}
     # A global-variable entry anchors the instruction that REFERENCES the global, so
-    # landing mid-function is correct for it rather than a weakness.
+    # landing mid-function is correct for it rather than a weakness. Resolving where
+    # that instruction actually points turns "it resolves" into "it resolves at OUR
+    # global" — the same upgrade the RTTI re-read gives an offset.
     if record and record.get("gv_va"):
-        return {"status": "ok-globalref", "at": hex(va or 0)}
+        out = {"status": "ok-globalref", "at": hex(va or 0)}
+        target = _rip_target(blob, info, va)
+        if target is not None:
+            expected = V._hexint(record.get("gv_va"))
+            out["gv"] = "ok" if target == expected else "mismatch"
+            if out["gv"] == "mismatch":
+                out["points_at"] = hex(target)
+                out["expected"] = hex(expected or 0)
+        return out
     return {"status": "ok-midfunction", "at": hex(va or 0)}
 
 
@@ -158,17 +198,13 @@ def check_offset(index, binaries, name, platform, value, aliases=None):
     # A vtable-backed record can be re-read straight out of the binary.
     vtable_class, func_va = record.get("vtable_name"), record.get("func_va")
     if vtable_class and func_va and record.get("vfunc_index") is not None:
-        module_hint = record.get("_module") or module_of(index, name) or "server"
+        module_hint = record.get("_module") or "server"
         blob, info, relocs = binaries.get(module_hint, platform)
         if blob is not None:
             verdict = V.verify_vfunc_slot(blob, info, relocs, vtable_class,
                                           int(record["vfunc_index"]), V._hexint(func_va))
             out["rtti"] = verdict or "unresolved"
     return out
-
-
-def module_of(index, name):
-    return None  # the snapshot index is keyed by symbol, not module; server is the default
 
 
 def main():
@@ -221,7 +257,8 @@ def main():
             row = {"name": name, "kind": "other", "platforms": {}}
         results.append(row)
         for info in row["platforms"].values():
-            if info["status"] in ("broken", "ambiguous", "mismatch") or info.get("rtti") == "mismatch":
+            if (info["status"] in ("broken", "ambiguous", "mismatch")
+                    or info.get("rtti") == "mismatch" or info.get("gv") == "mismatch"):
                 bad += 1
 
     if args.json:
@@ -247,10 +284,15 @@ def main():
                 cell += f" ref={info['reference']}"
             if info.get("rtti"):
                 cell += f" rtti={info['rtti']}"
+            if info.get("gv"):
+                cell += f" gv={info['gv']}"
+            if info.get("points_at"):
+                cell += f" points_at={info['points_at']} expected={info.get('expected')}"
             cells.append(f"{platform} {cell}")
         print(f"  {row['name']:52} {row['kind']:9} {' | '.join(cells)}")
 
     print()
+    # ok-globalref and match are passes; they are named apart only to say WHY they pass.
     print(f"{len(results)} entries in {os.path.basename(args.gamedata)}: "
           + ", ".join(f"{n} {k}" for k, n in sorted(counts.items())))
     print(f"unhealthy: {bad}")
