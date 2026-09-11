@@ -135,6 +135,48 @@ already files the neighbouring overload as `CCSPlayer_ItemServices_GiveNamedItem
 Two records under one name, or one name on two addresses, is the defect class that
 cost the most time this session.
 
+## WHEN TO CREATE A NEW PREPROCESSOR (and when not to)
+
+A plugin key is not a reason to create a file. Four questions, in this order — the
+first "yes" decides, and only the last one ends in a new `.py`.
+
+1. **Is the symbol already produced?** Search `expected_output` across the config for
+   the artifact name, never the task list for `find-<Symbol>`. One task emits several
+   symbols and is named after its anchor, so `CCSPlayer_ItemServices_GiveNamedItem`
+   comes from `find-CCSPlayer_ItemServices_GiveDefaultItems-decompiles`.
+   → Yes: nothing to create.
+2. **Is it the same function under another name?** Ask the binary what it calls the
+   address, and look at the neighbours: `GiveNamedItem2` was
+   `CCSPlayer_ItemServices_GiveNamedItem`, and the sibling overload one address along
+   was already filed as `...GiveNamedItemBool`.
+   → Yes: add an alias (`ALIAS_OVERRIDES` here, or the tracker's `symbol_aliases.json`
+   for a key only it sees). Never a second record.
+3. **Is the record there but missing a field?** A symbol can carry an index for years
+   with no signature because no task ever asked for one.
+   → Yes: add the field to the producing task's `GENERATE_YAML_DESIRED_FIELDS` — and
+   for an `INHERIT_VFUNCS` target, set `generate_func_sig=True` in the same breath.
+   Editing the artifact instead lasts until the next run (rule 18).
+4. **Does the artifact exist but no task declares it?** Pack drops it as undeclared.
+   → Yes: a bare declaration task per platform, WITH a preprocessor — 58 of this
+   fork's 61 declaration tasks have one.
+
+Only if all four are "no" does a new symbol need a `find-<task>.py`, and then it needs
+a consumer and an anchor:
+
+- **a consumer**: a generator/plugin key, or another task's `expected_input`. A symbol
+  nothing reads is work with no payer — that is what retired `GameEventManager` and
+  the four `g_CCSPlayerController_*Think` declarations.
+- **an anchor**, cheapest first: a debug string (Pattern A/B), a known callee
+  (`xref_funcs`), a base-class slot (`INHERIT_VFUNCS`), a ConCommand name (G), or a
+  predecessor to decompile (`LLM_DECOMPILE`, C/D/E — the fragile one, hence the agent
+  fallbacks).
+
+And two cases that look like gaps and are not: a function **inlined** on one platform
+has no artifact there by design (`optional_output`, with an `-inlined` sibling task
+covering it — `CNetworkGameServer_IsMapValid` documents this in its own docstring),
+and a two-instruction thunk **cannot** be uniquely signatured, so slot-only output is
+correct rather than lazy.
+
 ## INVARIANTS ("iorden" means all of these hold)
 
 - **Declared set comes from find-tasks, not from `symbols:`.** An artifact with no declaring task
