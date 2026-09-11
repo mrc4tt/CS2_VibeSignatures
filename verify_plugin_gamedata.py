@@ -28,6 +28,7 @@ import json
 import os
 import re
 import sys
+import zlib
 
 import validate_artifacts as V
 
@@ -285,6 +286,110 @@ def _rip_target(blob, info, va):
     return None
 
 
+# -- flat key=value files (CS2FOW) ------------------------------------------
+# The platform is a name suffix and the values are integers, so there are no symbol
+# names to fold. That turns out not to matter: an RVA or a vtable index can be looked
+# up in our own records BY VALUE, and a hit both identifies the symbol and verifies
+# it, with no name mapping to guess. Binary size and CRC32 need no analysis at all -
+# they are checked against the file, and they are the strongest statement in any
+# gamedata file: this data was made for exactly this build.
+
+def parse_keyvalue_file(text):
+    """-> {name: {kind, values{platform: int}}} for `name_<platform>=<int>` lines."""
+    entries = {}
+    for line in text.splitlines():
+        line = line.split("//")[0].strip()
+        if not line or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip()
+        platform = None
+        for suffix, canonical in (("_windows", "windows"), ("_linux", "linux")):
+            if key.endswith(suffix):
+                platform, key = canonical, key[: -len(suffix)]
+                break
+        if platform is None or not re.fullmatch(r"-?\d+", value):
+            continue
+        if key.endswith("_rva"):
+            kind = "rva"
+        elif key.endswith("_index"):
+            kind = "vfunc-index"
+        elif key.endswith("_crc32"):
+            kind = "crc32"
+        elif key.endswith("_size"):
+            kind = "size"
+        else:
+            kind = "offset-int"
+        entries.setdefault(key, {"kind": kind, "values": {}})["values"][platform] = int(value)
+    return entries
+
+
+def _value_index(index, field_names):
+    """{(value, platform): [names]} over the given numeric fields of every record."""
+    out = {}
+    for name, per_platform in index.items():
+        for platform, payload in per_platform.items():
+            if not isinstance(payload, dict):
+                continue
+            for field in field_names:
+                raw = payload.get(field)
+                if raw in (None, ""):
+                    continue
+                try:
+                    value = int(str(raw), 16) if str(raw).startswith("0x") else int(raw)
+                except (TypeError, ValueError):
+                    continue
+                label = (payload.get("func_name") or payload.get("gv_name")
+                         or payload.get("patch_name"))
+                if not label and payload.get("struct_name"):
+                    label = f"{payload['struct_name']}::{payload.get('member_name','?')}"
+                if not label and payload.get("vtable_class"):
+                    label = f"{payload['vtable_class']}_vtable"
+                label = label or name
+                out.setdefault((value, platform), []).append(f"{label}.{field}")
+    return out
+
+
+def check_keyvalue_entries(entries, index, binaries, module="server"):
+    """Verify an RVA/index/fingerprint file; returns rows shaped like the rest."""
+    rvas = _value_index(index, ("func_rva", "vtable_rva", "gv_rva"))
+    idxs = _value_index(index, ("vfunc_index",))
+    offs = _value_index(index, ("offset",))
+    rows = []
+    for name in sorted(entries):
+        entry = entries[name]
+        row = {"name": name, "kind": entry["kind"], "module": module, "platforms": {}}
+        for platform in PLATFORMS:
+            value = entry["values"].get(platform)
+            if value is None:
+                row["platforms"][platform] = {"status": "not-shipped"}
+                continue
+            if entry["kind"] in ("size", "crc32"):
+                blob, _, _ = binaries.get(module, platform)
+                if blob is None:
+                    row["platforms"][platform] = {"status": "no-binary"}
+                    continue
+                actual = len(blob) if entry["kind"] == "size" else zlib.crc32(blob)
+                row["platforms"][platform] = ({"status": "match", "value": value}
+                                              if actual == value else
+                                              {"status": "mismatch", "reference": actual})
+                continue
+            table = {"rva": rvas, "vfunc-index": idxs}.get(entry["kind"], offs)
+            names = table.get((value, platform)) or []
+            if not names:
+                row["platforms"][platform] = {"status": "no-reference"}
+            elif len(names) == 1:
+                row["platforms"][platform] = {"status": "match", "resolved": names[0]}
+            else:
+                # Small integers collide: many members share offset 112. Say so rather
+                # than picking one and calling it verified.
+                row["platforms"][platform] = {"status": "ambiguous-reference",
+                                              "count": len(names),
+                                              "resolved": ", ".join(sorted(names)[:3])}
+        rows.append(row)
+    return rows
+
+
 def check_signature(binaries, module, platform, pattern, record=None):
     """record: this repo's payload for the same symbol, when we have one."""
     blob, info, _ = binaries.get(module, platform)
@@ -366,16 +471,22 @@ def main():
     args = parser.parse_args()
 
     snapshot = args.snapshot or os.path.join("gamesymbols", f"{args.gamever}.yaml")
+    index = load_snapshot_index(snapshot)
+    binaries = Binaries(args.bindir, args.gamever)
     gamedata, note = load_gamedata(args.gamedata)
+    if note and "key=value" in note:
+        text = open(args.gamedata, "r", encoding="utf-8-sig").read()
+        kv_entries = parse_keyvalue_file(text)
+        if kv_entries:
+            results = check_keyvalue_entries(kv_entries, index, binaries)
+            return _report(results, args, os.path.basename(args.gamedata))
     if note:
         print(f"{os.path.basename(args.gamedata)}: {note}")
         return 2
-    index = load_snapshot_index(snapshot)
     config_path = args.configyaml or os.path.join("configs", f"{args.gamever}.yaml")
     aliases = load_alias_map(config_path) if os.path.isfile(config_path) else {}
-    binaries = Binaries(args.bindir, args.gamever)
 
-    results, bad = [], 0
+    results = []
     for name in sorted(gamedata):
         entry = gamedata[name]
         kind, values = entry["kind"], entry["values"]
@@ -397,6 +508,14 @@ def main():
             row["platforms"][platform] = check_signature(binaries, module, platform,
                                                          value, record)
         results.append(row)
+
+    return _report(results, args, os.path.basename(args.gamedata))
+
+
+def _report(results, args, filename):
+    """Shared rendering for both the symbol-keyed and the key=value paths."""
+    bad = 0
+    for row in results:
         for info in row["platforms"].values():
             if (info["status"] in ("broken", "ambiguous", "mismatch", "unparsable")
                     or info.get("rtti") == "mismatch" or info.get("gv") == "mismatch"):
@@ -409,11 +528,12 @@ def main():
 
     counts = {}
     for row in results:
-        for platform, info in row["platforms"].items():
+        for info in row["platforms"].values():
             key = info["status"] if info.get("rtti") != "mismatch" else "rtti-mismatch"
             counts[key] = counts.get(key, 0) + 1
-        interesting = [i["status"] for i in row["platforms"].values()]
-        if args.quiet and all(s in ("ok", "match", "not-shipped") for s in interesting):
+        statuses = [i["status"] for i in row["platforms"].values()]
+        if args.quiet and all(st in ("ok", "ok-globalref", "match", "not-shipped",
+                                     "symbol-name") for st in statuses):
             continue
         cells = []
         for platform in PLATFORMS:
@@ -423,6 +543,8 @@ def main():
                 cell += f"({info['count']})"
             if info.get("reference") is not None:
                 cell += f" ref={info['reference']}"
+            if info.get("resolved"):
+                cell += f" as {info['resolved']}"
             if info.get("rtti"):
                 cell += f" rtti={info['rtti']}"
             if info.get("gv"):
@@ -430,11 +552,12 @@ def main():
             if info.get("points_at"):
                 cell += f" points_at={info['points_at']} expected={info.get('expected')}"
             cells.append(f"{platform} {cell}")
-        print(f"  {row['name']:52} {row['kind']:9} {' | '.join(cells)}")
+        print(f"  {row['name']:46} {row['kind']:12} {' | '.join(cells)}")
 
     print()
-    # ok-globalref and match are passes; they are named apart only to say WHY they pass.
-    print(f"{len(results)} entries in {os.path.basename(args.gamedata)}: "
+    # match, ok, ok-globalref and symbol-name are all passes; they are named apart
+    # only to say WHY they pass.
+    print(f"{len(results)} entries in {filename}: "
           + ", ".join(f"{n} {k}" for k, n in sorted(counts.items())))
     print(f"unhealthy: {bad}")
     return 1 if bad else 0
