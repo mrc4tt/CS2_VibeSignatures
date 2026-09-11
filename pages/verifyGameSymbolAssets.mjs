@@ -10,6 +10,8 @@ const MD5_PATTERN = /^[0-9a-f]{32}$/
 const CRC32_PATTERN = /^[0-9a-f]{8}$/
 const CRC64_PATTERN = /^[0-9a-f]{16}$/
 const SNAPSHOT_FILE_PATTERN = /^(\d{4,10}[a-z]?)\.([0-9a-f]{64})\.json$/
+const LIGHT_FILE_PATTERN = /^(\d{4,10}[a-z]?)\.([0-9a-f]{64})\.light\.json$/
+const LIGHT_DATASET_SCHEMA_VERSION = 1
 const LEGACY_DATASET_SCHEMA_VERSION = 2
 const CURRENT_DATASET_SCHEMA_VERSION = 3
 const SUPPORTED_DATASET_SCHEMA_VERSIONS = new Set([
@@ -57,6 +59,17 @@ export function validateGameSymbolIndex(value, source = 'gamesymbols/index.json'
     if (!Number.isInteger(entry.snapshotSchemaVersion)) throw new Error(`${entrySource}.snapshotSchemaVersion must be an integer`)
     if (!Number.isInteger(entry.fileCount) || entry.fileCount < 0) throw new Error(`${entrySource}.fileCount must be a non-negative integer`)
     if (typeof entry.lastPublishTime !== 'string') throw new Error(`${entrySource}.lastPublishTime must be a string`)
+    if (entry.light !== undefined) {
+      const light = entry.light
+      if (!isObject(light)) throw new Error(`${entrySource}.light must be an object`)
+      if (typeof light.sha256 !== 'string' || !SHA256_PATTERN.test(light.sha256)) {
+        throw new Error(`${entrySource}.light.sha256 is invalid`)
+      }
+      const expectedLightUrl = `${entry.gameVersion}.${light.sha256}.light.json`
+      if (light.url !== expectedLightUrl) throw new Error(`${entrySource}.light.url must be ${expectedLightUrl}`)
+      if (!Number.isInteger(light.size) || light.size <= 0) throw new Error(`${entrySource}.light.size must be a positive integer`)
+      if (light.sha256 === entry.sha256) throw new Error(`${entrySource}.light must not repeat the full snapshot`)
+    }
     if (seenGameVersions.has(entry.gameVersion)) throw new Error(`${source}: duplicate gameVersion ${entry.gameVersion}`)
     if (seenUrls.has(entry.url)) throw new Error(`${source}: duplicate url ${entry.url}`)
     seenGameVersions.add(entry.gameVersion)
@@ -140,23 +153,46 @@ function verifySnapshotBytes(fileName, bytes, source, expectedEntry, requiredSch
 async function snapshotFileNames(directory, allowIndex) {
   const entries = await readdir(directory, { withFileTypes: true })
   const files = []
+  const lightFiles = []
   for (const entry of entries) {
     if (!entry.isFile()) throw new Error(`${join(directory, entry.name)}: only files are allowed`)
     if (allowIndex && entry.name === 'index.json') continue
+    if (LIGHT_FILE_PATTERN.test(entry.name)) {
+      lightFiles.push(entry.name)
+      continue
+    }
     if (!SNAPSHOT_FILE_PATTERN.test(entry.name)) throw new Error(`${join(directory, entry.name)}: unexpected archive file`)
     files.push(entry.name)
   }
-  return files.sort()
+  return { files: files.sort(), lightFiles: lightFiles.sort() }
+}
+
+function verifyLightBytes(fileName, bytes, source, expectedEntry) {
+  const match = LIGHT_FILE_PATTERN.exec(fileName)
+  if (!match) throw new Error(`${source}: light filename must be <gameVersion>.<sha256>.light.json`)
+  const actualSha256 = sha256(bytes)
+  if (actualSha256 !== match[2]) throw new Error(`${source}: content SHA-256 does not match its filename`)
+  if (bytes.byteLength !== expectedEntry.size) {
+    throw new Error(`${source}: size ${bytes.byteLength} does not match index size ${expectedEntry.size}`)
+  }
+  if (actualSha256 !== expectedEntry.sha256) throw new Error(`${source}: content SHA-256 does not match index`)
+  const value = parseJson(bytes, source)
+  if (!isObject(value) || value.schemaVersion !== LIGHT_DATASET_SCHEMA_VERSION
+      || !isObject(value.source) || value.source.gameVersion !== match[1] || !Array.isArray(value.records)) {
+    throw new Error(`${source}: light body game version or schema is invalid`)
+  }
+  return { fileName, gameVersion: match[1], sha256: actualSha256, size: bytes.byteLength }
 }
 
 async function verifySnapshotDirectory(directory, allowIndex) {
   const verified = new Map()
-  for (const fileName of await snapshotFileNames(directory, allowIndex)) {
+  const { files, lightFiles } = await snapshotFileNames(directory, allowIndex)
+  for (const fileName of files) {
     const filePath = join(directory, fileName)
     const bytes = await readFile(filePath)
     verified.set(fileName, verifySnapshotBytes(fileName, bytes, filePath))
   }
-  return verified
+  return { verified, lightFiles: new Set(lightFiles) }
 }
 
 export async function verifyGameSymbolAssetDirectory(directory) {
@@ -164,12 +200,22 @@ export async function verifyGameSymbolAssetDirectory(directory) {
   const indexPath = join(root, 'index.json')
   const indexBytes = await readFile(indexPath)
   const index = validateGameSymbolIndex(parseJson(indexBytes, indexPath), indexPath)
-  const snapshots = await verifySnapshotDirectory(root, true)
+  const { verified: snapshots, lightFiles } = await verifySnapshotDirectory(root, true)
   for (const entry of index.versions) {
     const filePath = join(root, entry.url)
     const bytes = await readFile(filePath)
     verifySnapshotBytes(entry.url, bytes, filePath, entry, CURRENT_DATASET_SCHEMA_VERSION)
     if (!snapshots.has(entry.url)) throw new Error(`${filePath}: indexed snapshot is missing from the asset inventory`)
+    if (entry.light) {
+      const lightPath = join(root, entry.light.url)
+      verifyLightBytes(entry.light.url, await readFile(lightPath), lightPath, entry.light)
+      if (!lightFiles.delete(entry.light.url)) {
+        throw new Error(`${lightPath}: indexed light snapshot is missing from the asset inventory`)
+      }
+    }
+  }
+  if (lightFiles.size > 0) {
+    throw new Error(`${root}: light snapshot ${[...lightFiles][0]} is not referenced by the index`)
   }
   return {
     index,
@@ -228,8 +274,8 @@ export async function mergeImmutableArchive(currentDirectory, archiveDirectory) 
     }
   }
 
-  const archiveSnapshots = await verifySnapshotDirectory(archiveRoot, false)
-  for (const fileName of archiveSnapshots.keys()) {
+  const { verified: archiveSnapshots, lightFiles: archiveLightFiles } = await verifySnapshotDirectory(archiveRoot, false)
+  for (const fileName of [...archiveSnapshots.keys(), ...archiveLightFiles]) {
     const sourcePath = join(archiveRoot, fileName)
     const targetPath = join(currentRoot, fileName)
     try {

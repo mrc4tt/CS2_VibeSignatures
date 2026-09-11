@@ -1,6 +1,6 @@
 import { DownloadOutlined } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Button, Card, Checkbox, Select, Space, Spin, Tag, Tooltip, Typography } from 'antd'
+import { Alert, Button, Card, Checkbox, Select, Skeleton, Space, Spin, Tag, Tooltip, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getGameDataFile, getGameDataIndex, getGameDataMetadata } from './data'
@@ -104,7 +104,16 @@ export function ExploreGameDataPage() {
       </div>
 
       {indexQuery.error && <Alert type="error" showIcon message={t('gamedata.indexError')} description={indexQuery.error.message} />}
-      {indexQuery.isLoading && <div className="page-spinner"><Spin size="large" tip={t('gamedata.loading')} /></div>}
+      {indexQuery.isLoading && (
+        <div className="gamedata-browser-grid" aria-busy="true" aria-label={t('gamedata.loading')}>
+          <Card title={t('gamedata.treeTitle')} className="gamedata-tree-card">
+            <Skeleton active paragraph={{ rows: 10 }} title={false} />
+          </Card>
+          <Card title={t('gamedata.viewerTitle')} className="gamedata-viewer-card">
+            <div style={{ padding: 16 }}><Skeleton active paragraph={{ rows: 14 }} title={false} /></div>
+          </Card>
+        </div>
+      )}
 
       {versionEntry && (
         <div className="gamedata-browser-grid">
@@ -139,7 +148,9 @@ export function ExploreGameDataPage() {
             )}
           >
             {fileQuery.error && <Alert className="gamedata-inline-alert" type="error" showIcon message={t('gamedata.fileError')} description={fileQuery.error.message} />}
-            {fileQuery.isLoading && <div className="page-spinner"><Spin size="large" tip={t('gamedata.loading')} /></div>}
+            {fileQuery.isLoading && (
+              <div style={{ padding: 16 }} aria-busy="true"><Skeleton active paragraph={{ rows: 16 }} title={false} /></div>
+            )}
             {metadataQuery.error && <Alert className="gamedata-inline-alert" type="error" showIcon message={t('gamedata.metadataError')} description={metadataQuery.error.message} />}
             {diffEnabled && metadataQuery.data && (
               <div className="gamedata-diff-legend">

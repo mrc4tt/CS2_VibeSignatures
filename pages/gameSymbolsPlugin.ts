@@ -59,6 +59,12 @@ export interface GameSymbolIndex {
   versions: GameSymbolIndexVersion[]
 }
 
+export interface GameSymbolAssetReference {
+  url: string
+  sha256: string
+  size: number
+}
+
 export interface GameSymbolIndexVersion {
   gameVersion: string
   url: string
@@ -67,6 +73,31 @@ export interface GameSymbolIndexVersion {
   snapshotSchemaVersion: number
   fileCount: number
   lastPublishTime: string
+  /**
+   * Payload-free companion of the same snapshot, about a third of the size, so
+   * search and the module counts can render before the full dataset has
+   * arrived. Optional: a client that ignores it keeps working.
+   */
+  light?: GameSymbolAssetReference
+}
+
+/**
+ * The same records without their payloads: enough to list, filter and count.
+ * `id` is left out because it is `<module>/<artifact>.<platform>.yaml`, and
+ * `artifact` only appears when it differs from the symbol name.
+ */
+export interface GameSymbolLightDataset {
+  schemaVersion: 1
+  source: GameSymbolDataset['source']
+  modules: GameSymbolDataset['modules']
+  records: Array<{
+    module: string
+    symbolName: string
+    platform: GameSymbolPlatform
+    kind: string
+    artifact?: string
+    aliases?: string[]
+  }>
 }
 
 export interface EncodedGameSymbolAsset {
@@ -75,6 +106,7 @@ export interface EncodedGameSymbolAsset {
   sha256: string
   size: number
   url: string
+  light: { bytes: Uint8Array; sha256: string; size: number; url: string }
 }
 
 interface CachedDataset {
@@ -278,15 +310,42 @@ export function normalizeGameSymbolSnapshot(raw: unknown, expectedGameVersion: s
   }
 }
 
+export function toLightDataset(dataset: GameSymbolDataset): GameSymbolLightDataset {
+  return {
+    schemaVersion: 1,
+    source: dataset.source,
+    modules: dataset.modules,
+    records: dataset.records.map((record) => {
+      const light: GameSymbolLightDataset['records'][number] = {
+        module: record.module,
+        symbolName: record.symbolName,
+        platform: record.platform,
+        kind: record.kind,
+      }
+      if (record.artifact !== record.symbolName) light.artifact = record.artifact
+      if (record.aliases && record.aliases.length > 0) light.aliases = record.aliases
+      return light
+    }),
+  }
+}
+
 export function encodeGameSymbolAsset(dataset: GameSymbolDataset): EncodedGameSymbolAsset {
   const bytes = Buffer.from(JSON.stringify(dataset), 'utf8')
   const sha256 = sha256Bytes(bytes)
+  const lightBytes = Buffer.from(JSON.stringify(toLightDataset(dataset)), 'utf8')
+  const lightSha256 = sha256Bytes(lightBytes)
   return {
     dataset,
     bytes,
     sha256,
     size: bytes.byteLength,
     url: `${dataset.source.gameVersion}.${sha256}.json`,
+    light: {
+      bytes: lightBytes,
+      sha256: lightSha256,
+      size: lightBytes.byteLength,
+      url: `${dataset.source.gameVersion}.${lightSha256}.light.json`,
+    },
   }
 }
 
@@ -302,6 +361,7 @@ export function createGameSymbolIndex(assets: EncodedGameSymbolAsset[]): GameSym
         snapshotSchemaVersion: asset.dataset.source.snapshotSchemaVersion,
         fileCount: asset.dataset.source.fileCount,
         lastPublishTime: asset.dataset.source.lastPublishTime,
+        light: { url: asset.light.url, sha256: asset.light.sha256, size: asset.light.size },
       }))
       .sort((left, right) => compareGameVersions(left.gameVersion, right.gameVersion)),
   }
@@ -383,19 +443,20 @@ export function gameSymbolsPlugin(symbolsDirectory: string): Plugin {
           return
         }
 
-        const match = /\/gamesymbols\/(\d{4,10}[a-z]?)\.([0-9a-f]{64})\.json$/.exec(pathname)
+        const match = /\/gamesymbols\/(\d{4,10}[a-z]?)\.([0-9a-f]{64})(\.light)?\.json$/.exec(pathname)
         if (!match) {
           next()
           return
         }
         try {
           const asset = encodeGameSymbolAsset(await loadDataset(join(symbolsDirectory, `${match[1]}.yaml`)))
-          if (asset.sha256 !== match[2]) {
+          const wanted = match[3] ? asset.light : asset
+          if (wanted.sha256 !== match[2]) {
             response.statusCode = 404
             response.end()
             return
           }
-          sendBytes(response, asset.bytes)
+          sendBytes(response, wanted.bytes)
         } catch (error) {
           next(error instanceof Error ? error : new Error(String(error)))
         }
@@ -417,6 +478,11 @@ export function gameSymbolsPlugin(symbolsDirectory: string): Plugin {
           type: 'asset',
           fileName: `gamesymbols/${asset.url}`,
           source: asset.bytes,
+        })
+        this.emitFile({
+          type: 'asset',
+          fileName: `gamesymbols/${asset.light.url}`,
+          source: asset.light.bytes,
         })
       })
       this.emitFile({

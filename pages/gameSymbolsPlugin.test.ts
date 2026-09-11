@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { attachAliasesToDataset, buildConfigAliasIndex, createGameSymbolIndex, encodeGameSymbolAsset, normalizeGameSymbolSnapshot } from './gameSymbolsPlugin'
+import { attachAliasesToDataset, buildConfigAliasIndex, createGameSymbolIndex, encodeGameSymbolAsset, normalizeGameSymbolSnapshot, toLightDataset } from './gameSymbolsPlugin'
 
 function snapshot(files: Record<string, Record<string, unknown>>, gameVersion = '14168b') {
   return {
@@ -159,5 +159,56 @@ describe('config alias attachment', () => {
     const dataset = normalizeGameSymbolSnapshot(snapshot({ 'networksystem/F.windows.yaml': { func_name: 'F' } }, '14172'), '14172', 'snapshot.yaml')
     const index = buildConfigAliasIndex({ modules: [] }, 'config.yaml')
     expect(attachAliasesToDataset(dataset, index)).toBe(dataset)
+  })
+})
+
+describe('payload-free companion', () => {
+  it('keeps every record but drops the payloads', () => {
+    const dataset = normalizeGameSymbolSnapshot(snapshot({
+      'server/ClientPrint.linux.yaml': { func_name: 'ClientPrint', func_sig: '55 48 89 E5' },
+      'server/ClientPrint.windows.yaml': { func_name: 'ClientPrint', func_sig: '40 53' },
+    }), '14168b', 'test')
+    const light = toLightDataset(dataset)
+    expect(light.schemaVersion).toBe(1)
+    expect(light.records).toHaveLength(dataset.records.length)
+    expect(light.source).toEqual(dataset.source)
+    expect(light.modules).toEqual(dataset.modules)
+    expect(JSON.stringify(light)).not.toContain('55 48 89 E5')
+    expect(light.records[0].artifact).toBeUndefined()
+    expect(light.records[0].symbolName).toBe('ClientPrint')
+  })
+
+  it('names the companion by its own digest and is smaller than the full asset', () => {
+    const dataset = normalizeGameSymbolSnapshot(snapshot({
+      'server/ClientPrint.linux.yaml': { func_name: 'ClientPrint', func_sig: '55 48 89 E5 '.repeat(40) },
+      'server/ClientPrint.windows.yaml': { func_name: 'ClientPrint', func_sig: '40 53 '.repeat(40) },
+    }), '14168b', 'test')
+    const asset = encodeGameSymbolAsset(dataset)
+    expect(asset.light.url).toBe(`14168b.${asset.light.sha256}.light.json`)
+    expect(asset.light.sha256).not.toBe(asset.sha256)
+    expect(asset.light.size).toBeLessThan(asset.size)
+  })
+
+  it('carries the companion reference in the index', () => {
+    const dataset = normalizeGameSymbolSnapshot(snapshot({
+      'server/ClientPrint.linux.yaml': { func_name: 'ClientPrint' },
+      'server/ClientPrint.windows.yaml': { func_name: 'ClientPrint' },
+    }), '14168b', 'test')
+    const asset = encodeGameSymbolAsset(dataset)
+    const index = createGameSymbolIndex([asset])
+    expect(index.versions[0].light).toEqual({
+      url: asset.light.url,
+      sha256: asset.light.sha256,
+      size: asset.light.size,
+    })
+  })
+
+  it('keeps the artifact name when it differs from the symbol name', () => {
+    const dataset = normalizeGameSymbolSnapshot(snapshot({
+      'server/CBaseEntity_m_iTeamNum.linux.yaml': { struct_name: 'CBaseEntity', member_name: 'm_iTeamNum', offset: '0xaf0' },
+    }, '14181'), '14181', 'test')
+    const light = toLightDataset(dataset)
+    expect(light.records[0].symbolName).toBe('CBaseEntity.m_iTeamNum')
+    expect(light.records[0].artifact).toBe('CBaseEntity_m_iTeamNum')
   })
 })

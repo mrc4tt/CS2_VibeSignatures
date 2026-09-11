@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Card, Select, Space, Spin, Typography } from 'antd'
+import { Alert, Card, Select, Skeleton, Space, Typography } from 'antd'
 import dayjs from 'dayjs'
 import { useDeferredValue, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getGameSymbolDataset, getGameSymbolIndex } from './data'
+import { getGameSymbolDataset, getGameSymbolIndex, getGameSymbolLightDataset } from './data'
 import { filterSymbolRecords } from './model'
 import { SymbolDetailDrawer } from './SymbolDetailDrawer'
 import { SymbolSearch } from './SymbolSearch'
@@ -25,13 +25,24 @@ export function ExploreSymbolsPage() {
   })
   const gameVersion = selectedVersion ?? indexQuery.data?.versions[0]?.gameVersion
   const versionEntry = indexQuery.data?.versions.find((version) => version.gameVersion === gameVersion)
+  // The payload-free companion renders the list immediately; the full snapshot
+  // follows in the background and is what the detail drawer needs.
+  const lightQuery = useQuery({
+    queryKey: ['gamesymbols', 'light', gameVersion, versionEntry?.light?.url],
+    queryFn: ({ signal }) => getGameSymbolLightDataset(versionEntry!, signal),
+    enabled: Boolean(versionEntry),
+    staleTime: Infinity,
+  })
   const datasetQuery = useQuery({
     queryKey: ['gamesymbols', gameVersion, versionEntry?.url],
     queryFn: ({ signal }) => getGameSymbolDataset(versionEntry!, signal),
     enabled: Boolean(versionEntry),
     staleTime: Infinity,
   })
-  const dataset = datasetQuery.data
+  const dataset = datasetQuery.data ?? lightQuery.data ?? undefined
+  const detailRecord = selectedRecord
+    ? datasetQuery.data?.records.find((record) => record.id === selectedRecord.id) ?? selectedRecord
+    : undefined
   const versionMetadata = versionEntry
     ? t('symbols.versionMetadata', {
         time: dayjs(versionEntry.lastPublishTime).format('YYYY-MM-DD HH:mm:ss'),
@@ -76,7 +87,17 @@ export function ExploreSymbolsPage() {
 
       {indexQuery.error && <Alert type="error" showIcon message={t('symbols.indexError')} description={indexQuery.error.message} />}
       {datasetQuery.error && <Alert type="error" showIcon message={t('symbols.datasetError')} description={datasetQuery.error.message} />}
-      {(indexQuery.isLoading || datasetQuery.isLoading) && <div className="page-spinner"><Spin size="large" tip={t('symbols.loading')} /></div>}
+      {(indexQuery.isLoading || (!dataset && datasetQuery.isLoading)) && (
+        <div className="symbol-browser-grid" aria-busy="true" aria-label={t('symbols.loading')}>
+          <Card title={t('symbols.treeTitle')} className="symbol-tree-card">
+            <Skeleton active paragraph={{ rows: 12 }} title={false} />
+          </Card>
+          <Card title={t('symbols.searchTitle')} className="symbol-search-card">
+            <div className="symbol-filter-row"><Skeleton.Input active block /></div>
+            <div style={{ padding: '0 20px 20px' }}><Skeleton active paragraph={{ rows: 10 }} title={false} /></div>
+          </Card>
+        </div>
+      )}
 
       {dataset && (
         <div className="symbol-browser-grid">
@@ -94,7 +115,7 @@ export function ExploreSymbolsPage() {
           </Card>
         </div>
       )}
-      <SymbolDetailDrawer record={selectedRecord} onClose={() => setSelectedRecord(undefined)} />
+      <SymbolDetailDrawer record={detailRecord} onClose={() => setSelectedRecord(undefined)} />
     </Space>
   )
 }

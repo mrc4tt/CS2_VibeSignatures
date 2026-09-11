@@ -236,20 +236,26 @@ uv run --with pytest --with pyyaml --with capstone python -m pytest tests/ -q
 `-snapshot` and `-outputdir` are **required** on the snapshot and gamedata tools — there is no
 implicit default, by design, so a run can never write to the wrong gamever.
 
-**Current clean baseline** (measured 2026-09-10 — keep it). All three gamevers generate gamedata
+**Current clean baseline** (re-measured 2026-09-11 — keep it). All three gamevers generate gamedata
 with **0 warning diagnostics** and **0 errors**, and `validate_artifacts.py` reports **0 errors** on
 all three:
 
 | gamever | gamedata updates | artifacts | validator | vfunc indices RTTI-confirmed |
 |---------|------------------|-----------|-----------|------------------------------|
-| 14181   | 775 | 3751 | 0 errors, 25 warnings | 696 |
-| 14180   | 767 | 3751 | 0 errors, 42 warnings | 694 |
-| 14178b  | 778 | 3779 | 0 errors, 42 warnings | 703 |
+| 14181   | 804 | 3763 | 0 errors, 37 warnings | 700 |
+| 14180   | 782 | 3763 | 0 errors, 52 warnings | 696 |
+| 14178b  | 792 | 3789 | 0 errors, 50 warnings | 705 |
+
+The counts move whenever symbols are added, so re-measure rather than trusting a stale table: the
+numbers above replace an earlier set (775/767/778 updates, 25/42/42 warnings) that was two sessions
+old and made new advisories look like regressions. Re-measure with the VERIFICATION BATTERY and
+`validate_artifacts.py -gamever <VER> -json`, which prints `artifacts`, `slot_verified`, `errors`
+and `warnings` in one object.
 
 Every remaining warning is `func_size` — either an advisory "does not end on padding" on tightly
-packed GCC code, or an explicit `0x0` (unknown, see rule 14) — plus one `func_va` alignment
-advisory on 14180. None of them reach a plugin. **A new error, or a warning of any other kind, is
-a real defect.** `validate_artifacts.py` also takes `-module`, `-platform`, `-json`, `-quiet` and
+packed GCC code, or an explicit `0x0` (unknown, see rule 14; 12 on 14181, 25 on 14180, 20 on
+14178b) — plus one `func_va` alignment advisory on 14180. None of them reach a plugin. **A new
+error, or a warning of any other kind, is a real defect.** `validate_artifacts.py` also takes `-module`, `-platform`, `-json`, `-quiet` and
 `-pedantic` (the last promotes advisory size checks, so expect more of the same noise).
 
 ## AFTER AN UPSTREAM MERGE (the fork's own state is re-asserted, not merged)

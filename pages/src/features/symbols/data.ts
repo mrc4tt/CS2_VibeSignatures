@@ -53,6 +53,45 @@ function validateDatasetBinaries(value: unknown): void {
   }
 }
 
+function validateLightReference(value: unknown): value is { url: string; sha256: string; size: number } {
+  if (!isObject(value)) return false
+  return typeof value.url === 'string' && typeof value.sha256 === 'string'
+    && SHA256_PATTERN.test(value.sha256) && Number.isInteger(value.size) && (value.size as number) > 0
+}
+
+/**
+ * The payload-free companion: the same records without their analysis payloads.
+ * It lands about ten times faster, so the list and the counts can render while
+ * the full snapshot is still downloading. Returns undefined when this build was
+ * published before the companion existed.
+ */
+export async function getGameSymbolLightDataset(
+  version: GameSymbolIndexVersion,
+  signal?: AbortSignal,
+): Promise<GameSymbolDataset | undefined> {
+  validateIndexVersion(version, 0)
+  if (!validateLightReference(version.light)) return undefined
+  const expected = `${version.gameVersion}.${version.light.sha256}.light.json`
+  if (version.light.url !== expected) throw new Error(`Invalid light url for ${version.gameVersion}`)
+  const bytes = await fetchVerifiedBytes(`${SYMBOL_ASSET_ROOT}${version.light.url}`, version.light, signal)
+  const value = JSON.parse(decodeUtf8(bytes)) as unknown
+  if (!isObject(value) || value.schemaVersion !== 1 || !isObject(value.source)
+      || value.source.gameVersion !== version.gameVersion || !Array.isArray(value.records)) {
+    throw new Error(`Invalid light snapshot for ${version.gameVersion}`)
+  }
+  const records = value.records.map((record) => {
+    const entry = record as { module: string; symbolName: string; platform: string; kind: string; artifact?: string }
+    const artifact = entry.artifact ?? entry.symbolName
+    return {
+      ...entry,
+      artifact,
+      id: `${entry.module}/${artifact}.${entry.platform}.yaml`,
+      payload: {},
+    }
+  })
+  return { ...(value as object), schemaVersion: 3, binaries: {}, records } as unknown as GameSymbolDataset
+}
+
 export async function getGameSymbolDataset(version: GameSymbolIndexVersion, signal?: AbortSignal): Promise<GameSymbolDataset> {
   validateIndexVersion(version, 0)
   const bytes = await fetchVerifiedBytes(`${SYMBOL_ASSET_ROOT}${version.url}`, version, signal)

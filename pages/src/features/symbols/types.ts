@@ -11,6 +11,12 @@ export interface GameSymbolBinary {
 
 export type GameSymbolBinaries = Record<string, Partial<Record<GameSymbolPlatform, GameSymbolBinary>>>
 
+export interface GameSymbolAssetReference {
+  url: string
+  sha256: string
+  size: number
+}
+
 export interface GameSymbolIndexVersion {
   gameVersion: string
   url: string
@@ -19,6 +25,8 @@ export interface GameSymbolIndexVersion {
   snapshotSchemaVersion: number
   fileCount: number
   lastPublishTime: string
+  /** Payload-free companion, published alongside since index v4.1. */
+  light?: GameSymbolAssetReference
 }
 
 export interface GameSymbolIndex {
