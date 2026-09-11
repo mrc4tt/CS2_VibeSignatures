@@ -1,0 +1,5 @@
+patch_name: SetSchemaHammerUniqueId
+patch_va: '0x1851fb9'
+patch_rva: '0x1851fb9'
+patch_sig: 75 ?? 48 8B 03 48 89 DF FF 90 ?? ?? ?? ?? 84 C0 74 ?? 48 8D 05
+patch_bytes: EB

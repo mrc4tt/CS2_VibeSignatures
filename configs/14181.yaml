@@ -6697,6 +6697,18 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-SetBeamOrigin
+        expected_output:
+          - SetBeamOrigin.{platform}.yaml
+      - name: find-SetBeamEndPos
+        expected_output:
+          - SetBeamEndPos.{platform}.yaml
+      - name: find-IsCommandWhitelisted
+        expected_output:
+          - IsCommandWhitelisted.{platform}.yaml
+      - name: find-SetSchemaHammerUniqueId
+        expected_output:
+          - SetSchemaHammerUniqueId.{platform}.yaml
       - name: find-CCSNavArea_IsValidNavMesh
         expected_output:
           - CCSNavArea_IsValidNavMesh.{platform}.yaml
@@ -10115,6 +10127,14 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: SetBeamOrigin
+        category: func
+      - name: SetBeamEndPos
+        category: func
+      - name: IsCommandWhitelisted
+        category: func
+      - name: SetSchemaHammerUniqueId
+        category: patch
       - name: CCSNavArea_IsValidNavMesh
         category: func
       - name: CCSCustomHudLayout_SetDialogVariableString
@@ -10241,6 +10261,7 @@ modules:
         category: func
         alias:
           - CCSPlayerPawn::SetEyeAngles
+          - CBasePlayerPawn_SnapViewAngles
       - name: CBasePlayerController_OnSimulateUserCommands
         category: func
         alias:
@@ -12745,6 +12766,7 @@ modules:
         category: vfunc
         alias:
           - CBaseEntity::Teleport
+          - Teleport
       - name: CPointTeleport_Activate
         category: vfunc
         alias:

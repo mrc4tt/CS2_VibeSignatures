@@ -547,8 +547,12 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        221,
+        222,
+        223
+      ],
       "name": "SetSchemaHammerUniqueId",
       "updated": false
     },
@@ -581,7 +585,7 @@
   "gamever": "14180",
   "schema_version": 2,
   "summary": {
-    "covered": 25,
+    "covered": 26,
     "total": 54,
     "updated": 8
   }

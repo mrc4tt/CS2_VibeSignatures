@@ -121,8 +121,8 @@ binaries:
       sha256: 'e39313a48f591f3a141c121a59e499715502e6bdb6bd7e830dd983338131a0d6'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:f7ae482e0cd5cef7973e756a81a926f482d8e52e8bec14536200e5595eff35da
-file_count: 3773
+config_sha256: sha256:a3a0fc375601f576a02cd36b6fb9831b9282362629e667ad238b8a860563a8aa
+file_count: 3781
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -44907,6 +44907,16 @@ files:
     func_sig: 48 83 EC ?? 48 8B 0D ?? ?? ?? ?? 48 85 C9 74 ?? 48 8B 01 FF 50 ?? 84 C0
     func_size: '0x51'
     func_va: '0x180c01480'
+  server/IsCommandWhitelisted.linux.yaml:
+    func_name: IsCommandWhitelisted
+    func_rva: '0xbb9ad0'
+    func_sig: 55 48 89 F2 48 8D 35 ?? ?? ?? ?? 48 89 E5 48 83 EC 10
+    func_va: '0xbb9ad0'
+  server/IsCommandWhitelisted.windows.yaml:
+    func_name: IsCommandWhitelisted
+    func_rva: '0x292360'
+    func_sig: 48 83 EC 28 4C 8B C2 48 8D 0D ?? ?? ?? ?? 48 8D 54 24 40
+    func_va: '0x180292360'
   server/LegacyGameEventListener.linux.yaml:
     func_name: LegacyGameEventListener
     func_rva: '0x16dded0'
@@ -45075,6 +45085,38 @@ files:
     func_sig: 40 56 57 41 56 48 83 EC ?? 48 8B F9 BA ?? ?? ?? ?? 8B 0D AD 37 ?? ??
     func_size: '0x2de'
     func_va: '0x180268520'
+  server/SetBeamEndPos.linux.yaml:
+    func_name: SetBeamEndPos
+    func_rva: '0x1824bb0'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC 68 01 00 00 66 0F 1F 44 00 00
+    func_va: '0x1824bb0'
+  server/SetBeamEndPos.windows.yaml:
+    func_name: SetBeamEndPos
+    func_rva: '0xc9fc30'
+    func_sig: 48 8B C4 48 89 58 08 57 48 81 EC C0 00 00 00 0F 29 70 E8 48 8B FA 0F 29 78 D8 48 8B D9
+    func_va: '0x180c9fc30'
+  server/SetBeamOrigin.linux.yaml:
+    func_name: SetBeamOrigin
+    func_rva: '0x1810580'
+    func_sig: 55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 83 EC 10 0F 1F 80 00 00 00 00
+    func_va: '0x1810580'
+  server/SetBeamOrigin.windows.yaml:
+    func_name: SetBeamOrigin
+    func_rva: '0xc9ff70'
+    func_sig: 48 89 5C 24 08 57 48 81 EC D0 00 00 00 48 8B FA
+    func_va: '0x180c9ff70'
+  server/SetSchemaHammerUniqueId.linux.yaml:
+    patch_bytes: EB
+    patch_name: SetSchemaHammerUniqueId
+    patch_rva: '0x1851fb9'
+    patch_sig: 75 ?? 48 8B 03 48 89 DF FF 90 ?? ?? ?? ?? 84 C0 74 ?? 48 8D 05
+    patch_va: '0x1851fb9'
+  server/SetSchemaHammerUniqueId.windows.yaml:
+    patch_bytes: EB
+    patch_name: SetSchemaHammerUniqueId
+    patch_rva: '0xca4f46'
+    patch_sig: 75 ?? 48 8B 03 48 8B CB FF 90 ?? ?? ?? ?? 84 C0 74 ?? 48 8D 05
+    patch_va: '0x180ca4f46'
   server/SmokeVolume_BuildSmokeSimulation.linux.yaml:
     func_name: SmokeVolume_BuildSmokeSimulation
     func_rva: '0x144c970'
@@ -47057,5 +47099,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: 14178b
-last_publish_time: '2026-09-10T22:13:30Z'
+last_publish_time: '2026-09-11T07:57:39Z'
 schema_version: 5

@@ -1,0 +1,4 @@
+func_name: SetBeamOrigin
+func_va: '0x180c9ff70'
+func_rva: '0xc9ff70'
+func_sig: 48 89 5C 24 08 57 48 81 EC D0 00 00 00 48 8B FA

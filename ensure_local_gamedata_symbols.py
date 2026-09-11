@@ -73,6 +73,17 @@ FORK_OWNED_SYMBOLS = [
     # them, so gamesymbol_snapshot dropped them as undeclared. Relocated to 14181
     # (linux 0x1904cd0, windows 0x180d452d0, both a unique wildcarded match).
     ("CCSNavArea_IsValidNavMesh", "func", None, None),
+    # CS2Fixes ships signatures for these three and the analysis had no record under
+    # any name - verified by resolving its own patterns in libserver.so/server.dll and
+    # finding no artifact at the resulting addresses. All three are server functions
+    # with a clean head and a unique match on both platforms.
+    ("SetBeamOrigin", "func", None, None),
+    ("SetBeamEndPos", "func", None, None),
+    ("IsCommandWhitelisted", "func", None, None),
+    # CS2Fixes lists this in both Signatures and Patches: the anchor is the `75 ??`
+    # (jnz) it rewrites to EB to force the branch, so it is a patch site rather than a
+    # function head - hence category patch with patch_bytes, not func.
+    ("SetSchemaHammerUniqueId", "patch", None, None),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
@@ -125,6 +136,14 @@ ALIAS_OVERRIDES = {
     # vfunc_offset 0xe0, linux 29 from 0xe8 - so the alias only moves the key from the
     # frozen template into pipeline control.
     "SetStateChanged": "CEntityInstance_NetworkStateChanged",
+    # CS2Fixes ships an Offsets entry under the bare method name; the analysis files
+    # the virtual as CBaseEntity_Teleport (whose only alias was CBaseEntity::Teleport,
+    # which does not fold to "Teleport").
+    "Teleport": "CBaseEntity_Teleport",
+    # CS2Fixes calls it SnapViewAngles on CBasePlayerPawn. Its signature resolves to
+    # 0x1837d60 / 0x180cab920, which is the same function this repo files as
+    # CCSPlayerPawn_SetEyeAngles - verified by address, not by name.
+    "CBasePlayerPawn_SnapViewAngles": "CCSPlayerPawn_SetEyeAngles",
 }
 
 

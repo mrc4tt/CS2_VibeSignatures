@@ -248,10 +248,36 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B DA 48 8B F1 48 8D 55 ?",
+          "before": "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B DA 48 8B F1 48 8D 55",
+          "line": 358,
+          "path": [
+            "Signatures",
+            "CBasePlayerPawn_SnapViewAngles",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 49 89 FF 48 89 F7 41 56 41 55 41 54 53 48 81 EC B8 00",
+          "before": "55 48 89 E5 41 57 49 89 FF 48 89 F7 41 56 41 55 41 54 53 48 81 EC ? ? ? ? E8",
+          "line": 359,
+          "path": [
+            "Signatures",
+            "CBasePlayerPawn_SnapViewAngles",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        357,
+        358,
+        359
+      ],
       "name": "CBasePlayerPawn_SnapViewAngles",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -996,10 +1022,36 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": "48 83 EC 28 4C 8B C2 48 8D 0D ? ? ? ? 48 8D 54 24 40",
+          "before": "48 83 EC ? 4C 8B C2 48 8D 0D ? ? ? ? 48 8D 54 24 ? FF",
+          "line": 379,
+          "path": [
+            "Signatures",
+            "IsCommandWhitelisted",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 F2 48 8D 35 ? ? ? ? 48 89 E5 48 83 EC 10",
+          "before": "55 48 89 F2 48 8D 35 ? ? ? ? 48 89 E5 48 83 EC",
+          "line": 380,
+          "path": [
+            "Signatures",
+            "IsCommandWhitelisted",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        378,
+        379,
+        380
+      ],
       "name": "IsCommandWhitelisted",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -1099,16 +1151,68 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": "48 8B C4 48 89 58 08 57 48 81 EC C0 00 00 00 0F 29 70 E8 48 8B FA 0F 29 78 D8 48 8B D9",
+          "before": "48 8B C4 48 89 58 ? 57 48 81 EC ? ? ? ? 0F 29 70 ? 48 8B FA 0F 29 78 ? 48 8B D9",
+          "line": 372,
+          "path": [
+            "Signatures",
+            "SetBeamEndPos",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC 68 01 00 00 66 0F 1F 44 00 00",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 66 0F 1F 44 00",
+          "line": 373,
+          "path": [
+            "Signatures",
+            "SetBeamEndPos",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        371,
+        372,
+        373
+      ],
       "name": "SetBeamEndPos",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": "48 89 5C 24 08 57 48 81 EC D0 00 00 00 48 8B FA",
+          "before": "48 89 5C 24 ? 57 48 81 EC ? ? ? ? 48 8B FA 48 8B D9 E8 ? ? ? ? 48 8B CB",
+          "line": 366,
+          "path": [
+            "Signatures",
+            "SetBeamOrigin",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 83 EC 10 0F 1F 80 00 00 00 00",
+          "before": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 0F 1F 80",
+          "line": 367,
+          "path": [
+            "Signatures",
+            "SetBeamOrigin",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        365,
+        366,
+        367
+      ],
       "name": "SetBeamOrigin",
-      "updated": false
+      "updated": true
     },
     {
       "changes": [
@@ -1143,8 +1247,14 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        343,
+        344,
+        345,
+        518,
+        519
+      ],
       "name": "SetSchemaHammerUniqueId",
       "updated": false
     },
@@ -1224,8 +1334,8 @@
   "gamever": "14180",
   "schema_version": 2,
   "summary": {
-    "covered": 69,
+    "covered": 74,
     "total": 75,
-    "updated": 30
+    "updated": 34
   }
 }

@@ -1,0 +1,4 @@
+func_name: IsCommandWhitelisted
+func_va: '0xbb9ad0'
+func_rva: '0xbb9ad0'
+func_sig: 55 48 89 F2 48 8D 35 ?? ?? ?? ?? 48 89 E5 48 83 EC 10

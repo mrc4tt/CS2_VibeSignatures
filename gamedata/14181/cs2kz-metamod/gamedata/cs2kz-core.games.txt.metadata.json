@@ -577,8 +577,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        287,
+        288
+      ],
       "name": "Teleport",
       "updated": false
     },
@@ -698,7 +701,7 @@
   "gamever": "14181",
   "schema_version": 2,
   "summary": {
-    "covered": 23,
+    "covered": 24,
     "total": 64,
     "updated": 11
   }
