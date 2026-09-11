@@ -46,16 +46,20 @@ that knows which symbols stopped resolving in the plugins it watches, and
 re-running the two tasks behind three symbols is minutes where a full pipeline is
 hours.
 
-Write a queue file into this repository (a small commit on `main` is enough, the
-box pulls):
+Keep the queue in **your own** repository and let the box read it over HTTPS.
+The tracker then never needs write access to `mrc4tt/CS2_VibeSignatures`, which
+is one less credential to hold and one less thing that can push to a public repo.
 
-    .autopilot/rehunt.json
+    cs2-signatures/rehunt.json
     {"gamever": "14181", "symbols": ["CBaseTrigger_EndTouch", "ClientPrint"]}
 
-On the box:
+On the box, pointed straight at your raw URL:
 
-    uv run rehunt_queue.py -queue .autopilot/rehunt.json          # plan
-    uv run rehunt_queue.py -queue .autopilot/rehunt.json -run     # analyse
+    uv run rehunt_queue.py -queue https://git.miksen.me/mikkel/cs2-signatures/raw/branch/main/rehunt.json
+    uv run rehunt_queue.py -queue https://git.miksen.me/mikkel/cs2-signatures/raw/branch/main/rehunt.json -run
+
+Plain `http` is refused, and only the first megabyte is read. Adjust the path if
+Gitea serves raw files differently in your setup; a local file path works too.
 
 Symbols are mapped to their producing task through every task's
 `expected_output`, not by guessing `find-<Symbol>`, because tasks are named after

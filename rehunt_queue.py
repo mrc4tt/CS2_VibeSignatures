@@ -16,9 +16,12 @@ A symbol is mapped to its producing task by searching every task's
 `expected_output`, never by guessing `find-<Symbol>`: tasks are named after their
 anchor and one task emits several symbols (CLAUDE.md).
 
-    uv run rehunt_queue.py -queue .autopilot/rehunt.json            # plan only
-    uv run rehunt_queue.py -queue .autopilot/rehunt.json -run       # actually run
+    uv run rehunt_queue.py -queue https://git.miksen.me/mikkel/cs2-signatures/raw/branch/main/rehunt.json
+    uv run rehunt_queue.py -queue .autopilot/rehunt.json -run
     uv run rehunt_queue.py -gamever 14181 -symbols ClientPrint -run
+
+The queue stays in the tracker's own repository and is read over HTTPS, so the
+tracker never needs write access to this one.
 
 Planning touches nothing. `-run` analyses into a scratch directory, so
 `bin_artifacts/` and `bin/` are left alone and you compare before adopting.
@@ -33,6 +36,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import urllib.request
 
 import yaml
 
@@ -127,7 +131,7 @@ def run_task(entry: dict, gamever: str, old_gamever: str, scratch: str) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-queue", help="JSON file written by the tracker")
+    parser.add_argument("-queue", help="JSON file or https URL written by the tracker")
     parser.add_argument("-gamever", help="build to re-hunt in (default: the queue's)")
     parser.add_argument("-symbols", nargs="*", default=[], help="symbols instead of a queue file")
     parser.add_argument("-run", action="store_true", help="actually analyse; without it this only plans")
@@ -138,8 +142,17 @@ def main() -> int:
     symbols = list(args.symbols)
     gamever = args.gamever
     if args.queue:
-        with open(args.queue, encoding="utf-8") as handle:
-            queue = json.load(handle)
+        if args.queue.startswith(("http://", "https://")):
+            if not args.queue.startswith("https://"):
+                raise SystemExit("refusing to read a queue over plain http")
+            with urllib.request.urlopen(args.queue, timeout=20) as response:
+                payload = response.read(1_000_000)          # a queue is a few hundred bytes
+            queue = json.loads(payload.decode("utf-8"))
+        else:
+            with open(args.queue, encoding="utf-8") as handle:
+                queue = json.load(handle)
+        if not isinstance(queue, dict):
+            raise SystemExit("queue must be a JSON object")
         gamever = gamever or queue.get("gamever")
         symbols += [s for s in queue.get("symbols", []) if isinstance(s, str)]
     if not gamever:
