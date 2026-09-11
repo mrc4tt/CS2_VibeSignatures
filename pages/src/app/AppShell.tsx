@@ -13,7 +13,7 @@ import { persistExplain, persistView, readExplain, readStoredView, type AppView 
 const RunListPage = lazy(() => import('../features/runs/RunListPage').then((module) => ({ default: module.RunListPage })))
 const RunDetailPage = lazy(() => import('../features/run-detail/RunDetailPage').then((module) => ({ default: module.RunDetailPage })))
 const FindSymbolPage = lazy(() => import('../features/symbols/FindSymbolPage').then((module) => ({ default: module.FindSymbolPage })))
-const ExploreGameDataPage = lazy(() => import('../features/gamedata/ExploreGameDataPage').then((module) => ({ default: module.ExploreGameDataPage })))
+const GameDataPage = lazy(() => import('../features/gamedata/GameDataPage').then((module) => ({ default: module.GameDataPage })))
 const StartPage = lazy(() => import('../features/start/StartPage').then((module) => ({ default: module.StartPage })))
 const WordsPage = lazy(() => import('../features/words/WordsPage').then((module) => ({ default: module.WordsPage })))
 
@@ -117,7 +117,7 @@ export function AppShell() {
       <main className="app-content">
         {view === 'start' && <Suspense fallback={loading}><StartPage onGo={go} /></Suspense>}
         {view === 'symbols' && <Suspense fallback={loading}><FindSymbolPage /></Suspense>}
-        {view === 'gamedata' && <Suspense fallback={loading}><ExploreGameDataPage /></Suspense>}
+        {view === 'gamedata' && <Suspense fallback={loading}><GameDataPage /></Suspense>}
         {view === 'words' && <Suspense fallback={loading}><WordsPage /></Suspense>}
         {view === 'runs' && (
           <Routes>
