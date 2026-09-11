@@ -3,38 +3,6 @@
     {
       "changes": [
         {
-          "after": 2800,
-          "before": 836,
-          "line": 106,
-          "path": [
-            "CBaseEntity::m_iTeamNum",
-            "offsets",
-            "windows"
-          ]
-        },
-        {
-          "after": 2800,
-          "before": 836,
-          "line": 107,
-          "path": [
-            "CBaseEntity::m_iTeamNum",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
-      "covered": true,
-      "covered_lines": [
-        106,
-        107,
-        109
-      ],
-      "name": "CBaseEntity::m_iTeamNum",
-      "updated": true
-    },
-    {
-      "changes": [
-        {
           "after": "48 89 5C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 48 8B 05 ? ? ? ?",
           "before": "48 89 5C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 48 8B 05",
           "line": 21,
@@ -53,38 +21,6 @@
         24
       ],
       "name": "CBaseIssue::CountPotentialVoters",
-      "updated": true
-    },
-    {
-      "changes": [
-        {
-          "after": 250,
-          "before": 904,
-          "line": 120,
-          "path": [
-            "CBasePlayerController::FakeClientFlags",
-            "offsets",
-            "windows"
-          ]
-        },
-        {
-          "after": 251,
-          "before": 904,
-          "line": 121,
-          "path": [
-            "CBasePlayerController::FakeClientFlags",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
-      "covered": true,
-      "covered_lines": [
-        120,
-        121,
-        123
-      ],
-      "name": "CBasePlayerController::FakeClientFlags",
       "updated": true
     },
     {
@@ -242,103 +178,11 @@
     {
       "covered": true,
       "covered_lines": [
-        113,
-        114,
-        116
+        106,
+        107,
+        109
       ],
       "name": "CNetworkGameServerBase::m_Clients",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        190,
-        191,
-        193
-      ],
-      "name": "CServerSideClient::m_bFakePlayer",
-      "updated": false
-    },
-    {
-      "changes": [
-        {
-          "after": 104,
-          "before": 322,
-          "line": 218,
-          "path": [
-            "CServerSideClient::m_bIsHLTV",
-            "offsets",
-            "windows"
-          ]
-        },
-        {
-          "after": 104,
-          "before": 322,
-          "line": 219,
-          "path": [
-            "CServerSideClient::m_bIsHLTV",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
-      "covered": true,
-      "covered_lines": [
-        218,
-        219,
-        221
-      ],
-      "name": "CServerSideClient::m_bIsHLTV",
-      "updated": true
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        134,
-        135,
-        137
-      ],
-      "name": "CServerSideClient::m_Name",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        141,
-        142,
-        144
-      ],
-      "name": "CServerSideClient::m_nClientSlot",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        169,
-        170,
-        172
-      ],
-      "name": "CServerSideClient::m_nConnectionTypeFlags",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        148,
-        149,
-        151
-      ],
-      "name": "CServerSideClient::m_nEntityIndex",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        162,
-        163,
-        165
-      ],
-      "name": "CServerSideClient::m_NetChannel",
       "updated": false
     },
     {
@@ -348,17 +192,59 @@
         177,
         179
       ],
-      "name": "CServerSideClient::m_nSignonState",
+      "name": "CServerSideClient::m_bFakePlayer",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": 104,
+          "before": 322,
+          "line": 204,
+          "path": [
+            "CServerSideClient::m_bIsHLTV",
+            "offsets",
+            "windows"
+          ]
+        },
+        {
+          "after": 104,
+          "before": 322,
+          "line": 205,
+          "path": [
+            "CServerSideClient::m_bIsHLTV",
+            "offsets",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        204,
+        205,
+        207
+      ],
+      "name": "CServerSideClient::m_bIsHLTV",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        120,
+        121,
+        123
+      ],
+      "name": "CServerSideClient::m_Name",
       "updated": false
     },
     {
       "covered": true,
       "covered_lines": [
-        183,
-        184,
-        186
+        127,
+        128,
+        130
       ],
-      "name": "CServerSideClient::m_pAttachedTo",
+      "name": "CServerSideClient::m_nClientSlot",
       "updated": false
     },
     {
@@ -368,27 +254,67 @@
         156,
         158
       ],
+      "name": "CServerSideClient::m_nConnectionTypeFlags",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        134,
+        135,
+        137
+      ],
+      "name": "CServerSideClient::m_nEntityIndex",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        148,
+        149,
+        151
+      ],
+      "name": "CServerSideClient::m_NetChannel",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        162,
+        163,
+        165
+      ],
+      "name": "CServerSideClient::m_nSignonState",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        169,
+        170,
+        172
+      ],
+      "name": "CServerSideClient::m_pAttachedTo",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        141,
+        142,
+        144
+      ],
       "name": "CServerSideClient::m_Server",
       "updated": false
     },
     {
       "covered": true,
       "covered_lines": [
-        204,
-        205,
-        207
+        190,
+        191,
+        193
       ],
       "name": "CServerSideClient::m_SteamID",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        211,
-        212,
-        214
-      ],
-      "name": "CServerSideClient::m_SteamIDMirror",
       "updated": false
     },
     {
@@ -398,6 +324,16 @@
         198,
         200
       ],
+      "name": "CServerSideClient::m_SteamIDMirror",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        183,
+        184,
+        186
+      ],
       "name": "CServerSideClient::m_UserID",
       "updated": false
     },
@@ -406,7 +342,7 @@
         {
           "after": 187,
           "before": 56,
-          "line": 127,
+          "line": 113,
           "path": [
             "CServerSideClient::m_UserIDString",
             "offsets",
@@ -416,7 +352,7 @@
         {
           "after": 187,
           "before": 56,
-          "line": 128,
+          "line": 114,
           "path": [
             "CServerSideClient::m_UserIDString",
             "offsets",
@@ -426,9 +362,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        127,
-        128,
-        130
+        113,
+        114,
+        116
       ],
       "name": "CServerSideClient::m_UserIDString",
       "updated": true
@@ -516,8 +452,8 @@
   "gamever": "14181",
   "schema_version": 2,
   "summary": {
-    "covered": 30,
-    "total": 30,
-    "updated": 11
+    "covered": 28,
+    "total": 28,
+    "updated": 9
   }
 }

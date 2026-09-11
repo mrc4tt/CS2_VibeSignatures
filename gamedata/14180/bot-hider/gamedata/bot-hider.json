@@ -101,26 +101,12 @@
     },
     "comment": "resolves an entity class name"
   },
-  "CBaseEntity::m_iTeamNum": {
-    "offsets": {
-      "windows": 2800,
-      "linux": 1572
-    },
-    "comment": "reads the current controller team"
-  },
   "CNetworkGameServerBase::m_Clients": {
     "offsets": {
       "windows": 584,
       "linux": 584
     },
     "comment": "CUtlVector<CServerSideClient*> base offset"
-  },
-  "CBasePlayerController::FakeClientFlags": {
-    "offsets": {
-      "windows": 904,
-      "linux": 251
-    },
-    "comment": "controller fakeclient flags"
   },
   "CServerSideClient::m_UserIDString": {
     "offsets": {
