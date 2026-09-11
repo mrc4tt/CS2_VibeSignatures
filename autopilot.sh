@@ -134,9 +134,16 @@ uv run detect_aliases.py -gamever "$TAG" -platform linux || true
 uv run detect_aliases.py -gamever "$TAG" -platform windows || true
 uv run missing_report.py -gamever "$TAG" -all > "$STATE/missing-$TAG.txt" 2>&1 || true
 
+# The site's history and diagnostics panels read committed datasets rather than
+# recomputing in the browser, so they are refreshed here while the binaries are
+# still on disk. -skip-validator is not passed: the validator section is the
+# evidence that this build was checked.
+step "publishing the site datasets" uv run publish_site_data.py -gamever "$TAG"
+
 # ---------------------------------------------------------------- record it
 log "==> committing"
 git add -A -- "configs/$TAG.yaml" "bin_artifacts/$TAG" "gamesymbols/$TAG.yaml" "gamedata/$TAG" \
+    gamedata/history.json "diagnostics/$TAG.json" \
     download.yaml ida_preprocessor_scripts .claude/skills 2>/dev/null || true
 if git diff --cached --quiet; then
     log "    nothing to commit"

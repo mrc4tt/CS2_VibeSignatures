@@ -4,13 +4,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Explain } from '../../components/Explain'
+import { getSiteHistory } from '../../api/siteData'
 import { getGameDataFile, getGameDataIndex, getGameDataMetadata } from './data'
 import { changedKeys, describeFiles, formatLabel, notProducedKeys } from './fileModel'
 import { FileView } from './FileView'
 import { Pattern } from '../symbols/Pattern'
 import type { GameDataChange } from './types'
 
-type DetailTab = 'changes' | 'keys'
+type DetailTab = 'changes' | 'keys' | 'history'
 
 function ChangeValue({ value }: { value: unknown }) {
   if (value === null || value === undefined) return <em>—</em>
@@ -79,6 +80,26 @@ export function GameDataPage() {
     enabled: Boolean(selected?.descriptor.metadata && fileQuery.data && version),
     staleTime: Infinity,
   })
+
+  const historyQuery = useQuery({
+    queryKey: ['history'],
+    queryFn: ({ signal }) => getSiteHistory(signal),
+    staleTime: Infinity,
+  })
+  // history.json keys files by their path inside gamedata/<build>/, which is the
+  // descriptor id, so no mapping is needed.
+  const keyHistory = selected ? historyQuery.data?.files[selected.descriptor.id] : undefined
+  const fragility = useMemo(() => {
+    if (!keyHistory) return []
+    return Object.entries(keyHistory)
+      .map(([name, entry]) => ({
+        name,
+        changes: entry.changes.length,
+        observed: entry.points.length,
+        last: entry.changes[entry.changes.length - 1],
+      }))
+      .sort((left, right) => right.changes - left.changes || left.name.localeCompare(right.name))
+  }, [keyHistory])
 
   const changed = useMemo(() => changedKeys(metadataQuery.data), [metadataQuery.data])
   const missing = useMemo(() => notProducedKeys(metadataQuery.data), [metadataQuery.data])
@@ -229,7 +250,7 @@ export function GameDataPage() {
         {showDetail && (
           <>
             <div className="fdtabs" role="tablist">
-              {(['changes', 'keys'] as const).map((tab) => (
+              {(['changes', 'keys', 'history'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -238,7 +259,9 @@ export function GameDataPage() {
                   onClick={() => setDetailTab(tab)}
                 >
                   {t(`gamedata2.tab.${tab}`)}
-                  <span className="cnt">{tab === 'changes' ? changed.length : missing.length}</span>
+                  <span className="cnt">
+                    {tab === 'changes' ? changed.length : tab === 'keys' ? missing.length : fragility.length}
+                  </span>
                 </button>
               ))}
             </div>
@@ -272,6 +295,42 @@ export function GameDataPage() {
                         </details>
                       ))}
                     </div>
+              )}
+              {detailTab === 'history' && (
+                fragility.length === 0
+                  ? <p className="plain">{t('gamedata2.noHistory')}</p>
+                  : <>
+                      <p className="plain">{t('gamedata2.historyIntro', { builds: historyQuery.data?.builds.length ?? 0 })}</p>
+                      <div className="tablewrap">
+                        <table className="plaintable">
+                          <thead>
+                            <tr>
+                              <th>{t('gamedata2.hKey')}</th>
+                              <th>{t('gamedata2.hLast')}</th>
+                              <th>{t('gamedata2.hChanges')}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {fragility.map((row) => (
+                              <tr key={row.name}>
+                                <td className="mono">{row.name}</td>
+                                <td className="mono">
+                                  {row.last ?? <span style={{ color: 'var(--ok)' }}>{t('gamedata2.hStable')}</span>}
+                                </td>
+                                <td className="mono">
+                                  <span className="fragbar">
+                                    {Array.from({ length: Math.max(1, row.observed) }, (_unused, index) => (
+                                      <i className={index < row.changes ? 'on' : undefined} key={index} />
+                                    ))}
+                                  </span>
+                                  {' '}{row.changes} / {row.observed}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
               )}
               {detailTab === 'keys' && (
                 missing.length === 0

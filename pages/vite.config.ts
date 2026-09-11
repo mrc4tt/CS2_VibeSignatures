@@ -20,7 +20,7 @@ export default defineConfig({
     react(),
     gameSymbolsPlugin(join(inputRoot, 'gamesymbols')),
     gameDataPlugin(join(inputRoot, 'gamedata')),
-    siteMetaPlugin(join(inputRoot, 'gamesymbols'), join(inputRoot, 'gamedata')),
+    siteMetaPlugin(join(inputRoot, 'gamesymbols'), join(inputRoot, 'gamedata'), inputRoot),
   ],
   // Custom domain (sig.miksen.me) serves at root; the github.io/CS2_VibeSignatures path no longer applies.
   base: '/',

@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from 'antd'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSiteMeta } from '../../api/siteMeta'
+import { getSiteHistory } from '../../api/siteData'
 import { Explain } from '../../components/Explain'
 import type { AppView } from '../../app/appViews'
 
@@ -39,15 +41,52 @@ function formatAgo(iso: string, language: string): string {
   }
 }
 
+const SEEN_KEY = 'cs2vibe.seenBuild'
+
+function readSeen(): string | null {
+  try {
+    return localStorage.getItem(SEEN_KEY)
+  } catch {
+    return null
+  }
+}
+
 export function StartPage({ onGo }: { onGo(view: AppView): void }) {
   const { t, i18n } = useTranslation()
+  const [seen] = useState(readSeen)
+  const [dismissed, setDismissed] = useState(false)
   const language = i18n.resolvedLanguage ?? 'en'
   const metaQuery = useQuery({
     queryKey: ['site-meta'],
     queryFn: ({ signal }) => getSiteMeta(signal),
     staleTime: 5 * 60 * 1000,
   })
+  const historyQuery = useQuery({
+    queryKey: ['history'],
+    queryFn: ({ signal }) => getSiteHistory(signal),
+    staleTime: Infinity,
+  })
   const meta = metaQuery.data
+  const history = historyQuery.data
+
+  const sinceLastVisit = useMemo(() => {
+    if (!meta || !history) return undefined
+    const order = history.builds.map((build) => build.gameVersion)
+    const at = seen ? order.indexOf(seen) : -1
+    if (!seen || at < 0) return { first: true, builds: 0, keys: 0 }
+    if (seen === meta.latest.gameVersion) return undefined
+    const newer = history.builds.slice(at + 1)
+    return { first: false, builds: newer.length, keys: newer.reduce((total, build) => total + build.keyChanges, 0) }
+  }, [meta, history, seen])
+
+  function markSeen(): void {
+    setDismissed(true)
+    try {
+      if (meta) localStorage.setItem(SEEN_KEY, meta.latest.gameVersion)
+    } catch {
+      // a private window is not a reason to fail a click
+    }
+  }
 
   const tasks: Array<{ view: AppView; q: string; d: string }> = [
     { view: 'symbols', q: t('start.t1q'), d: t('start.t1d') },
@@ -59,6 +98,16 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
 
   return (
     <div className="handbook">
+      {sinceLastVisit && !dismissed && (
+        <p className="visit">
+          <span>
+            {sinceLastVisit.first
+              ? t('start.firstVisit', { build: meta?.latest.gameVersion ?? '' })
+              : t('start.sinceLast', { builds: sinceLastVisit.builds, keys: sinceLastVisit.keys })}
+          </span>
+          <button type="button" onClick={markSeen} aria-label={t('start.dismiss')}>×</button>
+        </p>
+      )}
       <div className="hero">
         <h1>{t('start.h1')}</h1>
         <p className="lede">{t('start.lede', { build: meta?.latest.gameVersion ?? '…' })}</p>
@@ -114,6 +163,33 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
           <Explain html={t('start.explain')} />
         </div>
       </section>
+
+      {history && history.builds.length > 1 && (
+        <section className="panel">
+          <header>
+            <h2>{t('start.timelineH')}</h2>
+            <span className="sub">{t('start.timelineSub')}</span>
+          </header>
+          <div className="panel-body">
+            <div className="timeline">
+              {history.builds.map((build) => {
+                const max = Math.max(...history.builds.map((item) => item.keyChanges), 1)
+                const height = Math.max(2, Math.round((26 * build.keyChanges) / max))
+                return (
+                  <span
+                    className={build.keyChanges > 0 ? 'tlb has' : 'tlb'}
+                    key={build.gameVersion}
+                    title={`${build.gameVersion}: ${build.keyChanges}`}
+                  >
+                    <i style={{ height }} />
+                    <span className="lv">{build.gameVersion}</span>
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="panel">
         <header><h2>{t('start.stepsH')}</h2></header>

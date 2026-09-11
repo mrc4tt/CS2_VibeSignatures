@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next'
+import { requestNavigation } from '../../app/navigate'
+import type { ValidatorWarning } from '../../api/siteData'
 import { Pattern, PatternDump } from './Pattern'
 import {
   adviceKind, factsOf, memberOffset, patternOf, slotPair, verdictOf, type SymbolEntry, type SymbolPlatform,
@@ -37,12 +39,14 @@ function PlatformBox({ entry, platform }: { entry: SymbolEntry; platform: Symbol
 interface Props {
   entry: SymbolEntry
   gameVersion: string
+  warnings?: ValidatorWarning[]
+  shippedBy?: Array<[string, string]>
   open: boolean
   detailReady: boolean
   onToggle(key: string): void
 }
 
-export function SymbolCard({ entry, gameVersion, open, detailReady, onToggle }: Props) {
+export function SymbolCard({ entry, gameVersion, warnings, shippedBy, open, detailReady, onToggle }: Props) {
   const { t } = useTranslation()
   const verdict = verdictOf(entry)
   const pattern = patternOf(entry.linux) ?? patternOf(entry.windows)
@@ -75,6 +79,7 @@ export function SymbolCard({ entry, gameVersion, open, detailReady, onToggle }: 
         <span className="tag kind">{t(`symbols.kinds.${entry.kind}`, { defaultValue: entry.kind })}</span>
         <span className="tag mod">{entry.module}</span>
         {entry.aliases.length > 0 && <span className="tag mod">+{entry.aliases.length} alias</span>}
+        {(warnings?.length ?? 0) > 0 && <span className="tag warn">{t('symbols2.advisory')}</span>}
       </div>
       <div className={`verdict ${verdict}`}>{t(`symbols2.verdict.${verdict}`)}</div>
       <p className="plain">{t(`symbols2.verdictBody.${verdict}`)}</p>
@@ -104,6 +109,36 @@ export function SymbolCard({ entry, gameVersion, open, detailReady, onToggle }: 
               >
                 {t('symbols2.copyPattern')}
               </button>
+            </div>
+          )}
+
+          {(warnings?.length ?? 0) > 0 && (
+            <div>
+              <h3>{t('symbols2.advisories')}</h3>
+              <div className="chiprow">
+                {warnings!.map((warning, index) => (
+                  <span className="minichip warnc" key={index}>{warning.platform}: {warning.message}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(shippedBy?.length ?? 0) > 0 && (
+            <div>
+              <h3>{t('symbols2.shippedBy')}</h3>
+              <div className="usedby">
+                {shippedBy!.map(([file, key]) => (
+                  <div className="u" key={`${file}/${key}`}>
+                    <b>{file.split('/')[0]}</b>
+                    <button
+                      type="button"
+                      onClick={() => requestNavigation({ view: 'gamedata', params: { file, find: key } })}
+                    >
+                      {key} &rsaquo;
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

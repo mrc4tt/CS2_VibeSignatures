@@ -1,19 +1,22 @@
 import { ApiOutlined, SettingOutlined } from '@ant-design/icons'
 import { Badge, Select, Typography } from 'antd'
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ApiSettingsDrawer } from '../components/ApiSettingsDrawer'
+import { CommandPalette } from '../components/CommandPalette'
 import { ConnectionGate } from '../components/ConnectionGate'
 import { APP_LANGUAGES, changeLanguage, resolveLanguage, type AppLanguage } from '../i18n'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { useApiConfig } from './apiContext'
 import { persistExplain, persistView, readExplain, readStoredView, type AppView } from './appViews'
+import { onNavigation } from './navigate'
 
 const RunListPage = lazy(() => import('../features/runs/RunListPage').then((module) => ({ default: module.RunListPage })))
 const RunDetailPage = lazy(() => import('../features/run-detail/RunDetailPage').then((module) => ({ default: module.RunDetailPage })))
 const FindSymbolPage = lazy(() => import('../features/symbols/FindSymbolPage').then((module) => ({ default: module.FindSymbolPage })))
 const GameDataPage = lazy(() => import('../features/gamedata/GameDataPage').then((module) => ({ default: module.GameDataPage })))
+const RunReportPage = lazy(() => import('../features/runs2/RunReportPage').then((module) => ({ default: module.RunReportPage })))
 const StartPage = lazy(() => import('../features/start/StartPage').then((module) => ({ default: module.StartPage })))
 const WordsPage = lazy(() => import('../features/words/WordsPage').then((module) => ({ default: module.WordsPage })))
 
@@ -35,13 +38,49 @@ export function AppShell() {
   const { baseUrl, connected } = useApiConfig()
   const { t, i18n } = useTranslation()
   const location = useLocation()
-  const [view, setView] = useState<AppView>(() => (location.pathname.startsWith('/runs') ? 'runs' : readStoredView()))
+  const [, setSearchParams] = useSearchParams()
+  const [view, setView] = useState<AppView>(() => (location.pathname.startsWith('/runs') ? 'runs-live' : readStoredView()))
   const [explain, setExplain] = useState<boolean>(readExplain)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const selectedLanguage = resolveLanguage(i18n.resolvedLanguage)
 
   useEffect(() => {
     document.body.classList.toggle('noexplain', !explain)
   }, [explain])
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent): void {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setPaletteOpen((current) => !current)
+        return
+      }
+      const tag = (document.activeElement?.tagName ?? '').toUpperCase()
+      if (event.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) {
+        const box = document.querySelector<HTMLInputElement>('.bigsearch input, .findbox input')
+        if (box) {
+          event.preventDefault()
+          box.focus()
+        } else {
+          event.preventDefault()
+          setPaletteOpen(true)
+        }
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  useEffect(() => onNavigation(({ view: next, params }) => {
+    if (params) {
+      const search = new URLSearchParams()
+      for (const [key, value] of Object.entries(params)) if (value) search.set(key, value)
+      setSearchParams(search, { replace: true })
+    }
+    setView(next)
+    persistView(next)
+    window.scrollTo({ top: 0 })
+  }), [setSearchParams])
 
   function go(next: AppView): void {
     setView(next)
@@ -78,6 +117,9 @@ export function AppShell() {
             ))}
           </nav>
           <div className="railtools">
+            <button type="button" className="btn small" onClick={() => setPaletteOpen(true)}>
+              ⌕ <span className="sw-label">{t('shell.search')}</span>
+            </button>
             <label className="sw" data-on={explain}>
               <input
                 id="explain-everything"
@@ -119,7 +161,8 @@ export function AppShell() {
         {view === 'symbols' && <Suspense fallback={loading}><FindSymbolPage /></Suspense>}
         {view === 'gamedata' && <Suspense fallback={loading}><GameDataPage /></Suspense>}
         {view === 'words' && <Suspense fallback={loading}><WordsPage /></Suspense>}
-        {view === 'runs' && (
+        {view === 'runs' && <Suspense fallback={loading}><RunReportPage /></Suspense>}
+        {view === 'runs-live' && (
           <Routes>
             <Route path="/runs" element={<ApiGate connected={connected} onSettings={() => setSettingsOpen(true)}><RunListPage /></ApiGate>} />
             <Route path="/runs/:runId" element={<ApiGate connected={connected} onSettings={() => setSettingsOpen(true)}><RunDetailPage /></ApiGate>} />
@@ -128,6 +171,7 @@ export function AppShell() {
         )}
       </main>
       <ApiSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Plugin } from 'vite'
 import { compareGameVersions, sendBytes, sendJson } from './staticAssetPluginUtils'
@@ -135,10 +136,31 @@ export function badgesFor(meta: SiteMeta): Map<string, string> {
 }
 
 /**
- * Publishes the two things a script wants without scraping the page: `latest.json`
- * (does a newer build exist?) and `badge/<build>.svg` for a plugin readme.
+ * The datasets that describe change over time rather than one build, produced by
+ * `publish_site_data.py` and committed. They are served from the site root
+ * rather than from `gamedata/`, because both asset verifiers require that
+ * directory to hold exactly what its index references and nothing else.
  */
-export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: string): Plugin {
+async function extraFiles(inputRoot: string): Promise<Map<string, Buffer>> {
+  const files = new Map<string, Buffer>()
+  const history = join(inputRoot, 'gamedata', 'history.json')
+  if (existsSync(history)) files.set('history.json', await readFile(history))
+  const diagnostics = join(inputRoot, 'diagnostics')
+  if (existsSync(diagnostics)) {
+    for (const entry of await readdir(diagnostics, { withFileTypes: true })) {
+      if (!entry.isFile() || !/^\d{4,10}[a-z]?\.json$/.test(entry.name)) continue
+      files.set(`diagnostics/${entry.name}`, await readFile(join(diagnostics, entry.name)))
+    }
+  }
+  return files
+}
+
+/**
+ * Publishes what a script wants without scraping the page (`latest.json`,
+ * `badge/<build>.svg`) plus the two committed datasets the site cannot derive
+ * from a single snapshot (`history.json`, `diagnostics/<build>.json`).
+ */
+export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: string, inputRoot: string): Plugin {
   return {
     name: 'site-meta-assets',
     configureServer(server) {
@@ -147,6 +169,18 @@ export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: stri
         try {
           if (pathname.endsWith('/latest.json')) {
             sendJson(response, await buildSiteMeta(symbolsDirectory, gamedataDirectory))
+            return
+          }
+          const extra = /\/(history\.json|diagnostics\/\d{4,10}[a-z]?\.json)$/.exec(pathname)
+          if (extra) {
+            const files = await extraFiles(inputRoot)
+            const bytes = files.get(extra[1])
+            if (!bytes) {
+              response.statusCode = 404
+              response.end()
+              return
+            }
+            sendBytes(response, bytes)
             return
           }
           const badge = /\/badge\/((?:\d{4,10}[a-z]?|latest)\.svg)$/.exec(pathname)
@@ -172,6 +206,9 @@ export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: stri
       this.emitFile({ type: 'asset', fileName: 'latest.json', source: JSON.stringify(meta) })
       for (const [fileName, svg] of badgesFor(meta)) {
         this.emitFile({ type: 'asset', fileName, source: svg })
+      }
+      for (const [fileName, bytes] of await extraFiles(inputRoot)) {
+        this.emitFile({ type: 'asset', fileName, source: bytes })
       }
     },
   }

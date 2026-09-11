@@ -3,6 +3,7 @@ import { Alert, Select, Skeleton } from 'antd'
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { getSiteDiagnostics, getSiteHistory } from '../../api/siteData'
 import { Explain } from '../../components/Explain'
 import { getGameSymbolDataset, getGameSymbolIndex, getGameSymbolLightDataset } from './data'
 import { filterEntries, pivotRecords, verdictOf, type SymbolFilters } from './pivot'
@@ -56,6 +57,22 @@ export function FindSymbolPage() {
     staleTime: Infinity,
   })
   const dataset = fullQuery.data ?? lightQuery.data
+
+  // Optional companions: a build published before they existed simply has none,
+  // and the panels they feed disappear rather than erroring.
+  const diagnosticsQuery = useQuery({
+    queryKey: ['diagnostics', version],
+    queryFn: ({ signal }) => getSiteDiagnostics(version!, signal),
+    enabled: Boolean(version),
+    staleTime: Infinity,
+  })
+  const historyQuery = useQuery({
+    queryKey: ['history'],
+    queryFn: ({ signal }) => getSiteHistory(signal),
+    staleTime: Infinity,
+  })
+  const warningsBySymbol = diagnosticsQuery.data?.validator.bySymbol
+  const symbolToKeys = historyQuery.data?.symbolToKeys
 
   const entries = useMemo(() => (dataset ? pivotRecords(dataset.records) : []), [dataset])
   const detailed = useMemo(() => (fullQuery.data ? pivotRecords(fullQuery.data.records) : []), [fullQuery.data])
@@ -178,6 +195,8 @@ export function FindSymbolPage() {
               key={item.key}
               entry={detailedByKey.get(item.key) ?? item}
               gameVersion={version ?? ''}
+              warnings={warningsBySymbol?.[item.key]}
+              shippedBy={symbolToKeys?.[item.key]}
               open={openKey === item.key}
               detailReady={detailedByKey.has(item.key)}
               onToggle={(key) => setParam('symbol', openKey === key ? undefined : key)}
