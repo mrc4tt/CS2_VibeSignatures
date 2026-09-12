@@ -6,11 +6,14 @@ import { Explain } from '../../components/Explain'
 import { getSiteHistory } from '../../api/siteData'
 import { Pattern } from '../symbols/Pattern'
 import { parseGameData, type FileValue, type GameDataFormat } from './parse'
+import { patchFile } from './patch'
 import { bestFit, identifyFile, keyVerdicts, scoreBuilds, summarise, type KeyState } from './verdict'
 
 interface Loaded {
   name: string
   format: GameDataFormat
+  /** Kept so the fixed file can be produced from the original bytes. */
+  text: string
   values: Map<string, FileValue>
 }
 
@@ -35,6 +38,7 @@ export function CheckFilePage() {
   const [dragging, setDragging] = useState(false)
   const [mode, setMode] = useState<'file' | 'paste'>('file')
   const [pasted, setPasted] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const newest = history?.builds[history.builds.length - 1]?.gameVersion
   const identification = useMemo(
@@ -52,6 +56,10 @@ export function CheckFilePage() {
     [loaded, history, file, newest],
   )
   const summary = useMemo(() => summarise(verdicts), [verdicts])
+  const patched = useMemo(
+    () => (loaded && summary.outdated > 0 ? patchFile(loaded.text, verdicts) : null),
+    [loaded, verdicts, summary.outdated],
+  )
   const filtered = useMemo(() => verdicts.filter((verdict) => verdict.state === show), [verdicts, show])
   const shown = filtered.slice(0, limit)
 
@@ -59,6 +67,7 @@ export function CheckFilePage() {
     setError(null)
     setChosenFile(null)
     setLimit(ROWS)
+    setCopied(false)
     try {
       const text = typeof input === 'string' ? input : await input.text()
       if (!text.trim()) throw new Error('empty')
@@ -73,7 +82,7 @@ export function CheckFilePage() {
         setError(t('check.noEntries', { format: parsed.format.toUpperCase() }))
         return
       }
-      setLoaded({ name, format: parsed.format, values: parsed.values })
+      setLoaded({ name, format: parsed.format, text, values: parsed.values })
     } catch {
       setLoaded(null)
       setError(t('check.unreadable'))
@@ -245,6 +254,50 @@ export function CheckFilePage() {
                       </span>
                     }
                   />
+                )}
+
+                {patched && patched.applied > 0 && (
+                  <div className="fixit">
+                    <div className="fixhead">
+                      <strong>{t('check.fixH')}</strong>
+                      <span>{t('check.fixSub', { applied: patched.applied })}</span>
+                    </div>
+                    <ol className="fixsteps">
+                      <li>{t('check.step1')}</li>
+                      <li>{t('check.step2')}</li>
+                      <li>{t('check.step3')}</li>
+                    </ol>
+                    <div className="pactions">
+                      <button
+                        type="button"
+                        className="btn primary"
+                        onClick={() => {
+                          const blob = new Blob([patched.text], { type: 'text/plain;charset=utf-8' })
+                          const url = URL.createObjectURL(blob)
+                          const anchor = document.createElement('a')
+                          anchor.href = url
+                          anchor.download = `${newest}-${loaded.name.replace(/^[\d\w]+-/, '')}`
+                          anchor.click()
+                          URL.revokeObjectURL(url)
+                        }}
+                      >
+                        {t('check.download')}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => { void navigator.clipboard?.writeText(patched.text); setCopied(true) }}
+                      >
+                        {copied ? t('check.copied') : t('check.copy')}
+                      </button>
+                    </div>
+                    {patched.skipped.length > 0 && (
+                      <p className="dznote">
+                        {t('check.manual', { count: patched.skipped.length })}{' '}
+                        {[...new Set(patched.skipped.map((entry) => entry.key))].join(', ')}
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 <div className="statgrid">

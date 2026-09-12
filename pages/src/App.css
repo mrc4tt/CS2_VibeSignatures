@@ -490,3 +490,14 @@ body.noexplain .explain { display: none; }
   letter-spacing: .06em; color: var(--muted); margin-right: 4px; }
 .fitnote { display: block; font-size: 12.5px; }
 @media (max-width: 560px) { .kline { grid-template-columns: 1fr; gap: 2px; } }
+
+/* The fixed file, offered before the per-key detail: for most people this is
+   the whole answer, so it comes first and the hex stays optional. */
+.fixit { border: 1px solid color-mix(in srgb, var(--ok) 40%, var(--rule));
+  background: color-mix(in srgb, var(--ok) 7%, var(--card)); border-radius: 8px;
+  padding: 13px 15px 15px; display: grid; gap: 10px; }
+.fixhead { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.fixhead strong { font-family: var(--serif); font-size: 16px; }
+.fixhead span { font-size: 12.5px; color: var(--muted); }
+.fixsteps { margin: 0; padding-left: 21px; display: grid; gap: 3px; font-size: 13px; }
+.fixsteps li::marker { color: var(--muted); font-variant-numeric: tabular-nums; }

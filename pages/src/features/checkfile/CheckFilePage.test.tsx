@@ -151,6 +151,32 @@ describe('Check my file', () => {
     await waitFor(() => expect(screen.getByText('1 key(s) need updating for build 14181')).toBeInTheDocument())
   })
 
+  it('offers a fixed file before any hex, and the fix actually holds', async () => {
+    paint()
+    await screen.findByText('Check your own Game Data file')
+    await drop(behindFile)
+
+    await waitFor(() => expect(screen.getByText('Get the file fixed for you')).toBeInTheDocument())
+    expect(screen.getByText(/1 value\(s\) replaced/)).toBeInTheDocument()
+    // Three plain steps, so it is clear what to do with the download.
+    expect(screen.getByText('Download the fixed file')).toBeInTheDocument()
+    expect(screen.getByText('Put it where your old one was, on the server.')).toBeInTheDocument()
+
+    // The copy button hands over the patched text, not the original.
+    const written: string[] = []
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: (text: string) => { written.push(text); return Promise.resolve() } },
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Copy it instead' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument())
+    expect(written).toHaveLength(1)
+    expect(written[0]).toContain('NEW-L')
+    expect(written[0]).not.toContain('OLD-L')
+    // and the untouched windows value survives
+    expect(written[0]).toContain('OLD-W')
+  })
+
   it('says a file carries no gamedata rather than offering to compare it', async () => {
     // The KeyValues reader never throws, so plain prose parses "successfully"
     // with nothing in it. Offering a plugin picker for that was misleading.
