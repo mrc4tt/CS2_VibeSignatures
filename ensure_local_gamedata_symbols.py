@@ -184,7 +184,6 @@ FORK_OWNED_OBSOLETE_TASKS = [
     ("find-GiveNamedItem2", "server", "name belongs to CCSPlayer_ItemServices_GiveNamedItem"),
     # Retired with the declaration above: the task existed only to feed a key that
     # wants a field offset, and its artifact would now pack as undeclared.
-    ("find-CCSPlayer_MovementServices_Pawn", "server", "declaration retired, see FORK_OWNED_REMOVALS"),
     ("find-vtidx_DropWeapon", "server", "declaration retired, see FORK_OWNED_REMOVALS"),
     # An invented name for the shared body that CBaseTrigger::EndTouch's vtable
     # wrapper tail-jumps to. Withdrawn: upstream does not track it, no generator
@@ -255,13 +254,6 @@ FORK_OWNED_REMOVALS = [
     # vtable slot, since MSVC shifts them (rule 5). When analysis finally resolved a
     # slot in 14181 the generator, which matches a key to a symbol by folded name,
     # handed 21 to bot-controller and bot-improver for a key they read as a field
-    # offset: they would have read memory at +21 instead of +56. The function the
-    # vfunc search did find (linux 0x17982c0) is a lazy-init around the field at
-    # +0x30 that calls vtable slot +0xb0 and never returns a pawn handle, so its
-    # name is doubtful too, and nothing consumes it - no generator wants a vfunc
-    # here and no task takes it as expected_input. load_seed_specs now leaves such
-    # keys to the plugin, so this removal is no longer undone by inject().
-    ("CCSPlayer_MovementServices_Pawn", "server", "plugin key is a field offset, not a vfunc slot"),
     # Same function as CCSPlayer_WeaponServices_DropWeapon - identical func_va on
     # both platforms - so it is a second record for one address, and the generator
     # resolves a key by folded name, meaning whichever record is declared claims
@@ -696,28 +688,21 @@ def load_seed_specs():
                 # carrying the SAME number on both platforms, which a vtable slot
                 # cannot do because MSVC shifts slots (rule 5).
                 #
-                # Nothing in this repo knows that member's offset, and the
-                # generator resolves a key to a symbol by FOLDED NAME, not by the
-                # config alias: CCSPlayer_MovementServices::Pawn and
-                # CCSPlayer_MovementServices_Pawn fold to the same string, so any
-                # symbol under that name claims the key whether it is aliased or
-                # not. Seeding one as a vfunc is therefore how 14181 came to ship
-                # slot 21 to bot-controller and bot-improver against their own 56
-                # (rule 15: when two things claim one key, decide).
+                # This branch used to skip such a key outright, because the
+                # generator resolves a key to a symbol by FOLDED NAME rather than
+                # by the config alias - CCSPlayer_MovementServices::Pawn and
+                # CCSPlayer_MovementServices_Pawn fold to the same string - so a
+                # symbol seeded here under the wrong category claims the key
+                # whether it is aliased or not. Seeding one as a vfunc is how
+                # 14181 came to ship slot 21 against the plugins' own 56.
                 #
-                # So the key is left to the plugin. To bring it under pipeline
-                # control, verify the member in IDA and declare a structmember
-                # symbol for it; the fold then lands on something truthful.
-                continue
-                # An offsets entry whose comment names an m_* member is a struct
-                # field, and the plugins say so twice: in the comment, and by
-                # carrying the SAME number on both platforms, which a vtable slot
-                # cannot do because MSVC shifts slots (rule 5). Without this the
-                # default below seeds it as a vfunc, and the day analysis finally
-                # resolves a slot the alias writes that slot into a key the plugin
-                # reads as a field offset - which is how bot-controller and
-                # bot-improver came to ship 21 for CCSPlayer_MovementServices::Pawn
-                # in 14181 where the plugins' own value is 56.
+                # structmember is the truthful category, and the offset is now
+                # verified: CCSPlayer_MovementServices' own PlayerRunCommand slot
+                # calls an accessor that reads the member directly -
+                # linux 0x179b460 "mov rax,[rdi+0x38]" and windows 0x180c36380
+                # "mov rax,[rcx+0x38]", each followed by a CHandle load at a
+                # DIFFERENT offset per platform (0xE90 vs 0xBB0), which is what a
+                # real field on two compilers looks like.
                 #
                 # This generalises BUYSTATE_MEMBERS and BOTPROFILE_MEMBERS above,
                 # which hand-maintain the same mapping for fourteen keys. Measured

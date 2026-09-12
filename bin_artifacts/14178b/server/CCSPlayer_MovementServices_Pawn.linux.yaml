@@ -1,0 +1,5 @@
+struct_name: CCSPlayer_MovementServices
+member_name: m_pawn
+offset: '0x38'
+size: 8
+offset_sig: 48 8B 47 38 8B 88 ?? ?? ?? ?? 83 F9 FF 74 ?? 48 8B 35

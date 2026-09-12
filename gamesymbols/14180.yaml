@@ -121,8 +121,8 @@ binaries:
       sha256: 'e39313a48f591f3a141c121a59e499715502e6bdb6bd7e830dd983338131a0d6'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:058807875f7858f6d790a8c5f99304ef6db3bcb1768c3a135afb66c435a4b3cf
-file_count: 3759
+config_sha256: sha256:4bdc18a15553d814a392a54a741774ada9d072b44e8c1963effb88861ce8338d
+file_count: 3761
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -27445,6 +27445,18 @@ files:
     patch_bytes: E9 B0 00 00 00 90
     patch_name: CCSPlayer_MovementServices_FullWalkMove_SpeedClamp
     patch_sig: 0F 86 AF 00 00 00 0F
+  server/CCSPlayer_MovementServices_Pawn.linux.yaml:
+    member_name: m_pawn
+    offset: '0x38'
+    offset_sig: 48 8B 47 38 8B 88 ?? ?? ?? ?? 83 F9 FF 74 ?? 48 8B 35
+    size: 8
+    struct_name: CCSPlayer_MovementServices
+  server/CCSPlayer_MovementServices_Pawn.windows.yaml:
+    member_name: m_pawn
+    offset: '0x38'
+    offset_sig: 48 8B 41 38 45 33 D2 8B 88 ?? ?? ?? ?? 83 F9 FF
+    size: 8
+    struct_name: CCSPlayer_MovementServices
   server/CCSPlayer_MovementServices_ProcessMovement.linux.yaml:
     func_name: CCSPlayer_MovementServices_ProcessMovement
     func_rva: '0x177c0c0'
@@ -46822,5 +46834,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14180'
-last_publish_time: '2026-09-12T15:54:04Z'
+last_publish_time: '2026-09-12T16:29:35Z'
 schema_version: 5

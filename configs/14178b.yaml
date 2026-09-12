@@ -6736,6 +6736,9 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CCSPlayer_MovementServices_Pawn
+        expected_output:
+          - CCSPlayer_MovementServices_Pawn.{platform}.yaml
       - name: find-SetBeamOrigin
         expected_output:
           - SetBeamOrigin.{platform}.yaml
@@ -10173,6 +10176,14 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CCSPlayer_MovementServices
+        category: struct
+      - name: CCSPlayer_MovementServices_Pawn
+        category: structmember
+        struct: CCSPlayer_MovementServices
+        member: m_pawn
+        alias:
+          - CCSPlayer_MovementServices::Pawn
       - name: SetBeamOrigin
         category: func
       - name: SetBeamEndPos

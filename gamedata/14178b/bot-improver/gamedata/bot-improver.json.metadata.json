@@ -352,8 +352,12 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        204,
+        205,
+        207
+      ],
       "name": "CCSPlayer_MovementServices::Pawn",
       "updated": false
     },
@@ -524,7 +528,7 @@
   "gamever": "14178b",
   "schema_version": 2,
   "summary": {
-    "covered": 31,
+    "covered": 32,
     "total": 32,
     "updated": 11
   }

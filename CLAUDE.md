@@ -252,9 +252,9 @@ all three:
 
 | gamever | gamedata updates | artifacts | validator | vfunc indices RTTI-confirmed |
 |---------|------------------|-----------|-----------|------------------------------|
-| 14181   | 485 | 3759 | 0 errors, 37 warnings | 699 |
-| 14180   | 473 | 3759 | 0 errors, 52 warnings | 696 |
-| 14178b  | 482 | 3785 | 0 errors, 50 warnings | 701 |
+| 14181   | 489 | 3761 | 0 errors, 37 warnings | 699 |
+| 14180   | 477 | 3761 | 0 errors, 52 warnings | 696 |
+| 14178b  | 486 | 3787 | 0 errors, 50 warnings | 701 |
 
 The counts move whenever symbols are added or retired, so re-measure rather than trusting a stale
 table: the numbers above replace an earlier set (775/767/778 updates, 25/42/42 warnings) that was
@@ -430,6 +430,17 @@ that looked like output:
 `verify_plugin_gamedata.py` called both healthy, correctly: a unique match with a clean boundary is
 all it claims (rule 12 again). To tell output from template, run `update_gamedata.py -debug` and
 read the per-module "Skipped Symbols" list — a skipped key means the plugin keeps whatever it had.
+
+The third key on that list is now fixed too. `CCSPlayer_MovementServices::Pawn` had no producer at
+all, so bot-controller and bot-improver kept the plugins' own 56. It is a real field, and the class
+proves it itself: slot 26 (`PlayerRunCommand`) calls an accessor that reads the member directly —
+linux `0x179b460` `mov rax,[rdi+0x38]`, windows `0x180c36380` `mov rax,[rcx+0x38]`, each followed by
+a CHandle load at a *different* offset per platform (0xE90 vs 0xBB0), which is what one field looks
+like through two compilers. Declared as a `structmember` with an `offset_sig` anchored on that
+instruction, so 56 is re-derived and checked every build instead of trusted. With `ida-pro-mcp`
+refusing connections, the decompilation was done headlessly:
+`~/ida-pro-9.1/idat -A -S<script> -L<log> bin/<VER>/server/libserver.so.i64` — note that a stale
+minidump in `/tmp/ida` makes `idat` block on a dialog even under `-A`, so clear it first.
 
 And the reason a field disappears in the first place: `ensure_seed_preprocessors.py` used to take
 `GENERATE_YAML_DESIRED_FIELDS` from whatever the baseline artifact happened to carry. One run that
