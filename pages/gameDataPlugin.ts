@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises'
-import { basename, extname, join, relative, sep } from 'node:path'
+import { basename, dirname, extname, join, relative, sep } from 'node:path'
 import type { Plugin } from 'vite'
+import { disabledPlugins } from './disabledPlugins'
 import { validateGameDataIndex, validateGameDataMetadata } from './src/features/gamedata/schema'
 import type {
   GameDataFileDescriptor,
@@ -87,6 +88,9 @@ function metadataUrl(bytes: Uint8Array): string {
 }
 
 export async function loadGameDataAssets(gamedataDirectory: string): Promise<LoadedGameData> {
+  // Plugins this fork stopped generating are not published, so a directory left
+  // behind by an earlier build does not keep appearing on the site.
+  const skipped = await disabledPlugins(join(dirname(gamedataDirectory), 'gamedata-generators'))
   const rootEntries = await readdir(gamedataDirectory, { withFileTypes: true })
   const versionDirectories = rootEntries
     .filter((entry) => entry.isDirectory() && GAME_VERSION_PATTERN.test(entry.name))
@@ -98,7 +102,8 @@ export async function loadGameDataAssets(gamedataDirectory: string): Promise<Loa
   const sourceFiles: string[] = []
   const versions: GameDataIndexVersion[] = []
   for (const version of versionDirectories) {
-    const files = await walkFiles(version.path)
+    const files = (await walkFiles(version.path))
+      .filter((path) => !skipped.has(posixRelative(version.path, path).split('/')[0]!))
     sourceFiles.push(...files)
     const relativeFiles = new Map(files.map((path) => [posixRelative(version.path, path), path]))
     const payloadPaths = [...relativeFiles.keys()].filter((path) => !path.endsWith(METADATA_SUFFIX))

@@ -69,6 +69,25 @@ describe('gameDataPlugin asset loading', () => {
     expect(loaded.assets.has(olderUrl)).toBe(true)
   })
 
+  it('leaves out plugins whose generator is switched off', async () => {
+    const base = await temporaryRoot()
+    const gamedata = join(base, 'gamedata')
+    const generators = join(base, 'gamedata-generators')
+    await mkdir(join(gamedata, '14181', 'Kept'), { recursive: true })
+    await writeFile(join(gamedata, '14181', 'Kept', 'data.json'), '{\n  "Sym": 1\n}\n', 'utf8')
+    await mkdir(join(gamedata, '14181', 'Dropped'), { recursive: true })
+    await writeFile(join(gamedata, '14181', 'Dropped', 'data.json'), '{\n  "Sym": 2\n}\n', 'utf8')
+    for (const [name, enabled] of [['Kept', 'True'], ['Dropped', 'False']] as const) {
+      await mkdir(join(generators, name), { recursive: true })
+      await writeFile(join(generators, name, 'gamedata.py'), `MODULE_ENABLED = ${enabled}\n`, 'utf8')
+    }
+
+    const loaded = await loadGameDataAssets(gamedata)
+
+    expect(loaded.index.versions[0].files.map((file) => file.plugin)).toEqual(['Kept'])
+    expect(loaded.sourceFiles.some((path) => path.includes('Dropped'))).toBe(false)
+  })
+
   it('rejects orphan companions and metadata whose identity does not match the payload', async () => {
     const root = await temporaryRoot()
     await writePayload(root, '14176', 'Plugin/orphan.json.metadata.json', '{}\n')

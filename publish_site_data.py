@@ -161,13 +161,45 @@ def read_values(path: str) -> dict[str, list[object]] | None:
     return out
 
 
+GENERATOR_ROOT = "gamedata-generators"
+
+
+def disabled_plugins() -> set[str]:
+    """
+    Plugins this fork no longer generates, read from the generators themselves.
+
+    MODULE_ENABLED = False is the switch update_gamedata already honours, so
+    taking the list from there means the site cannot disagree with what the
+    pipeline produces. A hand-kept list in two languages would drift the first
+    time a plugin is switched back on. The directories those plugins left behind
+    in gamedata/<build>/ stay on disk - they are history - but nothing published
+    reads them any more.
+    """
+    off = set()
+    if not os.path.isdir(GENERATOR_ROOT):
+        return off
+    for name in sorted(os.listdir(GENERATOR_ROOT)):
+        module = os.path.join(GENERATOR_ROOT, name, "gamedata.py")
+        if not os.path.isfile(module):
+            continue
+        with open(module, encoding="utf-8") as handle:
+            if re.search(r"^MODULE_ENABLED\s*=\s*False\b", handle.read(), re.MULTILINE):
+                off.add(name)
+    return off
+
+
 def generated_files(build: str) -> list[str]:
     root = os.path.join(GAMEDATA_ROOT, build)
+    skip = disabled_plugins()
     found = []
     for base, _dirs, names in os.walk(root):
         for name in names:
-            if not name.endswith(".metadata.json"):
-                found.append(os.path.relpath(os.path.join(base, name), root))
+            if name.endswith(".metadata.json"):
+                continue
+            relative = os.path.relpath(os.path.join(base, name), root)
+            if relative.split(os.sep)[0] in skip:
+                continue
+            found.append(relative)
     return sorted(found)
 
 
