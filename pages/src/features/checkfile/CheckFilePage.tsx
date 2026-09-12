@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Explain } from '../../components/Explain'
 import { getSiteHistory } from '../../api/siteData'
+import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { Pattern } from '../symbols/Pattern'
 import { parseGameData, type FileValue, type GameDataFormat } from './parse'
 import { patchFile } from './patch'
@@ -56,12 +57,33 @@ export function CheckFilePage() {
     [loaded, history, file, newest],
   )
   const summary = useMemo(() => summarise(verdicts), [verdicts])
+  // Only fetched once a file has been identified: someone who never drops a file
+  // should not pay for the gamedata index.
+  const { data: index } = useQuery({
+    queryKey: ['gamedata-index'],
+    queryFn: ({ signal }) => getGameDataIndex(signal),
+    enabled: Boolean(file),
+  })
+  const publishedFile = useMemo(
+    () => index?.versions.find((version) => version.gameVersion === newest)?.files.find((entry) => entry.id === file),
+    [index, newest, file],
+  )
   const patched = useMemo(
     () => (loaded && summary.outdated > 0 ? patchFile(loaded.text, verdicts) : null),
     [loaded, verdicts, summary.outdated],
   )
   const filtered = useMemo(() => verdicts.filter((verdict) => verdict.state === show), [verdicts, show])
   const shown = filtered.slice(0, limit)
+
+  function save(text: string, name: string) {
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = name
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
 
   async function accept(input: File | string, name: string) {
     setError(null)
@@ -271,15 +293,7 @@ export function CheckFilePage() {
                       <button
                         type="button"
                         className="btn primary"
-                        onClick={() => {
-                          const blob = new Blob([patched.text], { type: 'text/plain;charset=utf-8' })
-                          const url = URL.createObjectURL(blob)
-                          const anchor = document.createElement('a')
-                          anchor.href = url
-                          anchor.download = `${newest}-${loaded.name.replace(/^[\d\w]+-/, '')}`
-                          anchor.click()
-                          URL.revokeObjectURL(url)
-                        }}
+                        onClick={() => save(patched.text, `${newest}-${loaded.name}`)}
                       >
                         {t('check.download')}
                       </button>
@@ -298,6 +312,32 @@ export function CheckFilePage() {
                       </p>
                     )}
                   </div>
+                )}
+
+                {publishedFile && (
+                  <p className="dznote takeours">
+                    {t('check.orTakeOurs')}{' '}
+                    <button
+                      type="button"
+                      className="linkish"
+                      onClick={() => {
+                        void getGameDataFile(publishedFile).then((text) =>
+                          save(text, `${newest}-${publishedFile.fileName}`),
+                        )
+                      }}
+                    >
+                      {t('check.downloadPublished', { name: publishedFile.fileName })}
+                    </button>
+                  </p>
+                )}
+
+                {fit && behind === 0 && fit.share < 1 && (
+                  <Alert
+                    type="info"
+                    showIcon
+                    message={t('check.maybeNewer')}
+                    description={t('check.maybeNewerWhy', { build: newest })}
+                  />
                 )}
 
                 <div className="statgrid">
@@ -323,6 +363,13 @@ export function CheckFilePage() {
                     <details className="krow" data-state={verdict.state} key={`${verdict.state}-${verdict.key}`}>
                       <summary>
                         <code className="kname">{verdict.key}</code>
+                        <span className="kindbadge">
+                          {t(`check.kind.${
+                            typeof (verdict.expected?.[0] ?? verdict.mine?.linux ?? verdict.expected?.[1] ?? verdict.mine?.windows) === 'number'
+                              ? 'offset'
+                              : 'signature'
+                          }`)}
+                        </span>
                         {(['linux', 'windows'] as const).map((platform) => {
                           const ok = platform === 'linux' ? verdict.linuxOk : verdict.windowsOk
                           if (verdict.state !== 'outdated' && verdict.state !== 'current') return null

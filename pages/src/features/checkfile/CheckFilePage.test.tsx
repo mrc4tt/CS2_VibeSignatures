@@ -27,6 +27,16 @@ const history: SiteHistory = {
   symbolToKeys: {},
 }
 
+const PUBLISHED = { id: MATCHZY, plugin: 'matchzy', fileName: 'matchzy.json', language: 'json', content: { url: 'payloads/x.json', sha256: 'a'.repeat(64), size: 9 } }
+
+vi.mock('../gamedata/data', () => ({
+  getGameDataIndex: vi.fn(async () => ({
+    schemaVersion: 1,
+    versions: [{ gameVersion: '14181', fileCount: 1, metadataFileCount: 0, files: [PUBLISHED] }],
+  })),
+  getGameDataFile: vi.fn(async () => '{"published":"file"}'),
+}))
+
 vi.mock('../../api/siteData', async (importOriginal) => {
   const original = await importOriginal<typeof import('../../api/siteData')>()
   return { ...original, getSiteHistory: vi.fn(async () => history) }
@@ -175,6 +185,51 @@ describe('Check my file', () => {
     expect(written[0]).not.toContain('OLD-L')
     // and the untouched windows value survives
     expect(written[0]).toContain('OLD-W')
+  })
+
+  it('offers the published file as it is, and labels each key signature or offset', async () => {
+    paint()
+    await screen.findByText('Check your own Game Data file')
+    await drop(behindFile)
+
+    // (1) take ours wholesale - for a badly out-of-date file that beats patching
+    const takeOurs = await waitFor(() => screen.getByRole('button', { name: 'download matchzy.json' }))
+    const clicks: string[] = []
+    const created = vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+      clicks.push(String((blob as Blob).size))
+      return 'blob:x'
+    })
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    await userEvent.click(takeOurs)
+    await waitFor(() => expect(clicks).toHaveLength(1))
+    created.mockRestore()
+
+    // (2) a reader should not have to know that a number means a vtable slot.
+    // SelectItem and PostCleanUp are both current, so switch group first.
+    await userEvent.click(screen.getByText('Current'))
+    await waitFor(() => {
+      const current = [...document.querySelectorAll('details.krow')]
+      const numeric = current.find((row) => row.querySelector('.kname')?.textContent === 'SelectItem')
+      expect(numeric?.querySelector('.kindbadge')?.textContent).toBe('offset')
+      const hex = current.find((row) => row.querySelector('.kname')?.textContent === 'PostCleanUp')
+      expect(hex?.querySelector('.kindbadge')?.textContent).toBe('signature')
+    })
+  })
+
+  it('warns when a value matches no published build at all', async () => {
+    paint()
+    await screen.findByText('Check your own Game Data file')
+    // JoinTeam carries a value this site has never published: not 14181's and
+    // not 14180's either.
+    await drop(JSON.stringify({
+      JoinTeam: { signatures: { linux: 'HAND-EDITED', windows: 'OLD-W' } },
+      PostCleanUp: { signatures: { linux: 'SAME-L', windows: 'SAME-W' } },
+      SelectItem: { offsets: { linux: 31, windows: 30 } },
+    }))
+    await waitFor(() =>
+      expect(screen.getByText('Some values in your file have never been published here')).toBeInTheDocument(),
+    )
+    expect(screen.getByText(/were edited by hand/)).toBeInTheDocument()
   })
 
   it('says a file carries no gamedata rather than offering to compare it', async () => {
