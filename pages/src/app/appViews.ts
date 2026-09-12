@@ -1,4 +1,4 @@
-export const APP_VIEWS = ['start', 'symbols', 'gamedata', 'runs', 'runs-live', 'words'] as const
+export const APP_VIEWS = ['start', 'symbols', 'gamedata', 'check', 'runs', 'runs-live', 'words'] as const
 export type AppView = (typeof APP_VIEWS)[number]
 
 const STORAGE_KEY = 'cs2vibe.view'

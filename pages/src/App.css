@@ -435,3 +435,19 @@ body.noexplain .explain { display: none; }
   .symbol-version-metadata { text-align: left; }
   .filter-row > * { width: 100% !important; }
 }
+
+/* Check my file — the drop target and the two notes around it. The dashed
+   border is the whole affordance, so it has to read as a target before anyone
+   has dragged anything. */
+.dropzone { display: grid; justify-items: center; gap: 9px; padding: 26px 18px;
+  border: 2px dashed var(--rule); border-radius: 9px; background: var(--card-2);
+  transition: border-color .12s, background .12s; text-align: center; }
+.dropzone[data-dragging] { border-color: var(--accent); background: var(--ghost); }
+.dropzone .dzmain { margin: 0; font-family: var(--serif); font-size: 17px; }
+.dropzone .btn { cursor: pointer; }
+.dznote { margin: 0; font-size: 12.5px; color: var(--muted); }
+.pastebox > summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+.pastebox textarea { width: 100%; margin-top: 9px; padding: 9px 10px; border-radius: 7px;
+  border: 1px solid var(--rule); background: var(--code-bg); color: var(--code-fg);
+  font-family: var(--mono, ui-monospace, monospace); font-size: 12.5px; resize: vertical; }
+.pickplugin { margin-top: 10px; }
