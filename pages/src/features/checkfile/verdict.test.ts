@@ -143,3 +143,20 @@ describe('picking which build a file is when several fit', () => {
     expect(bestFit([])).toBeUndefined()
   })
 })
+
+describe('which platform is stale', () => {
+  it('says linux is wrong and windows is fine', () => {
+    const verdicts = keyVerdicts(values({ JoinTeam: { linux: 'OLD', windows: 'W-NEW' } }), history, MATCHZY, '14181')
+    const joinTeam = verdicts.find((verdict) => verdict.key === 'JoinTeam')!
+    expect(joinTeam.state).toBe('outdated')
+    expect(joinTeam.linuxOk).toBe(false)
+    expect(joinTeam.windowsOk).toBe(true)
+  })
+
+  it('leaves a platform the file does not ship out of the verdict', () => {
+    const verdicts = keyVerdicts(values({ JoinTeam: { linux: 'NEW', windows: null } }), history, MATCHZY, '14181')
+    const joinTeam = verdicts.find((verdict) => verdict.key === 'JoinTeam')!
+    expect(joinTeam.state).toBe('current')
+    expect(joinTeam.windowsOk).toBeUndefined()
+  })
+})

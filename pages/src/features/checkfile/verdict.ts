@@ -117,6 +117,11 @@ export interface KeyVerdict {
   state: KeyState
   mine?: FileValue
   expected?: [unknown, unknown]
+  /** Per platform: true fine, false stale, undefined not comparable. Platforms
+   *  move independently (a vtable slot shifts on MSVC and not on GCC), so a key
+   *  that is wrong on one side and right on the other has to say which. */
+  linuxOk?: boolean
+  windowsOk?: boolean
 }
 
 /** Per-key verdict against one build: what to change, and what is fine. */
@@ -140,9 +145,10 @@ export function keyVerdicts(
       out.push({ key, state: 'unknown', mine })
       continue
     }
-    const linuxOk = mine.linux === null || expected[0] == null || same(mine.linux, expected[0])
-    const windowsOk = mine.windows === null || expected[1] == null || same(mine.windows, expected[1])
-    out.push({ key, state: linuxOk && windowsOk ? 'current' : 'outdated', mine, expected })
+    const linuxOk = mine.linux === null || expected[0] == null ? undefined : same(mine.linux, expected[0])
+    const windowsOk = mine.windows === null || expected[1] == null ? undefined : same(mine.windows, expected[1])
+    const stale = linuxOk === false || windowsOk === false
+    out.push({ key, state: stale ? 'outdated' : 'current', mine, expected, linuxOk, windowsOk })
   }
   for (const key of [...values.keys()].sort()) {
     if (!(key in entries)) out.push({ key, state: 'unknown', mine: values.get(key) })

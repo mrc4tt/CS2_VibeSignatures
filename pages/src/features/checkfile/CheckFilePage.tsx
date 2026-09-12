@@ -15,6 +15,8 @@ interface Loaded {
 }
 
 const STATES: KeyState[] = ['outdated', 'current', 'unknown', 'absent']
+/** Signatures are long; a page of them at a time keeps the list readable. */
+const ROWS = 25
 
 function Value({ value }: { value: unknown }) {
   if (value === null || value === undefined) return <em>—</em>
@@ -29,6 +31,7 @@ export function CheckFilePage() {
   const [error, setError] = useState<string | null>(null)
   const [chosenFile, setChosenFile] = useState<string | null>(null)
   const [show, setShow] = useState<KeyState>('outdated')
+  const [limit, setLimit] = useState(ROWS)
   const [dragging, setDragging] = useState(false)
 
   const newest = history?.builds[history.builds.length - 1]?.gameVersion
@@ -47,14 +50,27 @@ export function CheckFilePage() {
     [loaded, history, file, newest],
   )
   const summary = useMemo(() => summarise(verdicts), [verdicts])
+  const filtered = useMemo(() => verdicts.filter((verdict) => verdict.state === show), [verdicts, show])
+  const shown = filtered.slice(0, limit)
 
   async function accept(input: File | string, name: string) {
     setError(null)
     setChosenFile(null)
+    setLimit(ROWS)
     try {
       const text = typeof input === 'string' ? input : await input.text()
       if (!text.trim()) throw new Error('empty')
       const parsed = parseGameData(text)
+      // A file with no platform entries is readable and still useless here, and
+      // it is the likeliest mistake - a README, the wrong file from the plugin
+      // folder. Saying that is more use than offering a plugin to compare it
+      // against. The KeyValues reader never throws, so this is the only way an
+      // unusable file shows up.
+      if (parsed.values.size === 0) {
+        setLoaded(null)
+        setError(t('check.noEntries', { format: parsed.format.toUpperCase() }))
+        return
+      }
       setLoaded({ name, format: parsed.format, values: parsed.values })
     } catch {
       setLoaded(null)
@@ -158,71 +174,98 @@ export function CheckFilePage() {
 
             {file && (
               <>
-                <p className="plain prose">
-                  {identification?.decisive && !chosenFile
-                    ? t('check.identified', { plugin: file.split('/')[0], shared: identification.best!.shared, keys: loaded.values.size })
-                    : t('check.comparing', { plugin: file.split('/')[0] })}
-                </p>
-
                 {fit && (
                   <Alert
-                    type={behind === 0 && summary.outdated === 0 ? 'success' : 'warning'}
+                    type={summary.outdated === 0 ? 'success' : 'warning'}
                     showIcon
                     message={
-                      behind === 0
-                        ? t('check.isCurrent', { build: fit.build })
-                        : t('check.isBehind', { build: fit.build, builds: behind, newest })
+                      summary.outdated === 0
+                        ? t('check.upToDate', { build: newest })
+                        : t('check.needsWork', { keys: summary.outdated, build: newest })
                     }
                     description={
-                      <>
-                        {t('check.matchDetail', { matched: fit.matched, comparable: fit.comparable, build: fit.build })}
-                        {fit.tied && <> {t('check.tied', { oldest: fit.oldest, build: fit.build })}</>}
-                      </>
+                      <span className="fitnote">
+                        {t('check.identifiedAs')} <strong>{file.split('/')[0]}</strong>
+                        {identification?.decisive && !chosenFile
+                          ? ` (${t('check.sharedKeys', { shared: identification.best!.shared, keys: loaded.values.size })})`
+                          : ''}
+                        {'. '}
+                        {behind === 0
+                          ? t('check.fitCurrent', { build: fit.build })
+                          : t('check.fitBehind', { build: fit.build, builds: behind })}
+                        {fit.tied ? ` ${t('check.tied', { oldest: fit.oldest, build: fit.build })}` : ''}
+                      </span>
                     }
                   />
                 )}
 
-                <div className="filters">
+                <div className="statgrid">
                   {STATES.map((state) => (
                     <button
                       key={state}
                       type="button"
-                      className="chip"
+                      className={`stat kstat${state === 'outdated' && summary.outdated ? ' warnv' : ''}${state === 'current' ? ' okv' : ''}`}
                       data-on={show === state || undefined}
-                      onClick={() => setShow(state)}
+                      disabled={summary[state] === 0}
+                      onClick={() => { setShow(state); setLimit(ROWS) }}
                     >
-                      {t(`check.state.${state}`)} <span className="cnt">{summary[state]}</span>
+                      <span className="v">{summary[state]}</span>
+                      <span className="l">{t(`check.state.${state}`)}</span>
                     </button>
                   ))}
                 </div>
 
-                <div className="cbody">
-                  {verdicts.filter((verdict) => verdict.state === show).map((verdict) => (
-                    <div className="chgline" key={`${verdict.state}-${verdict.key}`}>
-                      <span className="lab">{verdict.key}</span>
-                      {verdict.state === 'outdated' && (
-                        <>
-                          <span className="o">- <Value value={verdict.mine?.linux} /> / <Value value={verdict.mine?.windows} /></span>
-                          <span className="n2">+ <Value value={verdict.expected?.[0]} /> / <Value value={verdict.expected?.[1]} /></span>
-                        </>
-                      )}
-                      {verdict.state === 'current' && (
-                        <span className="n2"><Value value={verdict.expected?.[0]} /> / <Value value={verdict.expected?.[1]} /></span>
-                      )}
-                      {verdict.state === 'unknown' && (
-                        <span className="o"><Value value={verdict.mine?.linux} /> / <Value value={verdict.mine?.windows} /></span>
-                      )}
-                      {verdict.state === 'absent' && (
-                        <span className="n2"><Value value={verdict.expected?.[0]} /> / <Value value={verdict.expected?.[1]} /></span>
-                      )}
-                    </div>
+                <p className="plain prose dznote">{t(`check.meaning.${show}`)}</p>
+
+                <div className="krows">
+                  {shown.map((verdict) => (
+                    <details className="krow" data-state={verdict.state} key={`${verdict.state}-${verdict.key}`}>
+                      <summary>
+                        <code className="kname">{verdict.key}</code>
+                        {(['linux', 'windows'] as const).map((platform) => {
+                          const ok = platform === 'linux' ? verdict.linuxOk : verdict.windowsOk
+                          if (verdict.state !== 'outdated' && verdict.state !== 'current') return null
+                          if (ok === undefined) return null
+                          return (
+                            <span className={`pbadge ${ok ? 'ok' : 'bad'}`} key={platform}>
+                              {t(`check.platform.${platform}`)}
+                            </span>
+                          )
+                        })}
+                      </summary>
+                      <div className="kdiff">
+                        {(['linux', 'windows'] as const).map((platform, index) => {
+                          const mineValue = verdict.mine?.[platform]
+                          const theirsValue = verdict.expected?.[index]
+                          if (mineValue == null && theirsValue == null) return null
+                          const ok = platform === 'linux' ? verdict.linuxOk : verdict.windowsOk
+                          return (
+                            <div className="kline" key={platform}>
+                              <span className="pl">{t(`check.platform.${platform}`)}</span>
+                              <span className="vals">
+                                {verdict.state === 'outdated' && ok === false ? (
+                                  <>
+                                    <span className="was"><span className="tag">{t('check.yours')}</span> <Value value={mineValue} /></span>
+                                    <span className="now"><span className="tag">{t('check.published')}</span> <Value value={theirsValue} /></span>
+                                  </>
+                                ) : (
+                                  <span className="same"><Value value={verdict.state === 'unknown' ? mineValue : theirsValue} /></span>
+                                )}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </details>
                   ))}
-                  {verdicts.filter((verdict) => verdict.state === show).length === 0 && (
-                    <p className="plain">{t('check.none')}</p>
-                  )}
+                  {shown.length === 0 && <p className="plain">{t('check.none')}</p>}
                 </div>
 
-                <p className="plain prose dznote">{t(`check.meaning.${show}`)}</p>
+                {filtered.length > shown.length && (
+                  <button type="button" className="btn" onClick={() => setLimit(filtered.length)}>
+                    {t('check.showAll', { count: filtered.length - shown.length })}
+                  </button>
+                )}
               </>
             )}
           </div>

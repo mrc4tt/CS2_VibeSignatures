@@ -451,3 +451,33 @@ body.noexplain .explain { display: none; }
   border: 1px solid var(--rule); background: var(--code-bg); color: var(--code-fg);
   font-family: var(--mono, ui-monospace, monospace); font-size: 12.5px; resize: vertical; }
 .pickplugin { margin-top: 10px; }
+
+/* Check my file — the per-key list. Signatures are long, so a row is a single
+   line until it is opened: the screenshot that prompted this showed 35 keys
+   printing two full patterns each, which buried the answer. */
+.statgrid .kstat { border: 0; cursor: pointer; text-align: left; font: inherit; }
+.statgrid .kstat[data-on] { background: var(--ghost); box-shadow: inset 3px 0 0 var(--accent); }
+.statgrid .kstat:disabled { cursor: default; opacity: .5; }
+.krows { display: grid; gap: 1px; background: var(--rule-soft);
+  border: 1px solid var(--rule-soft); border-radius: 7px; overflow: hidden; }
+.krow { background: var(--card); }
+.krow > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 8px 11px; cursor: pointer; }
+.krow > summary::marker { color: var(--muted); }
+.krow[open] > summary { border-bottom: 1px solid var(--rule-soft); }
+.krow .kname { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+.pbadge { font-size: 10px; font-weight: 600; letter-spacing: .04em; padding: 1px 6px;
+  border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); }
+.pbadge.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
+.pbadge.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, transparent); }
+.kdiff { padding: 9px 11px 11px; display: grid; gap: 8px; }
+.kline { display: grid; grid-template-columns: 66px 1fr; gap: 9px; align-items: baseline; }
+.kline .pl { font-size: 11px; color: var(--muted); font-family: var(--sans); }
+.kline .vals { display: grid; gap: 3px; font-family: var(--mono); font-size: 11px; line-height: 1.5; }
+.kline .was { color: var(--bad); overflow-wrap: anywhere; }
+.kline .now { color: var(--ok); overflow-wrap: anywhere; }
+.kline .same { color: var(--muted); overflow-wrap: anywhere; }
+.kline .tag { font-family: var(--sans); font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted); margin-right: 4px; }
+.fitnote { display: block; font-size: 12.5px; }
+@media (max-width: 560px) { .kline { grid-template-columns: 1fr; gap: 2px; } }
