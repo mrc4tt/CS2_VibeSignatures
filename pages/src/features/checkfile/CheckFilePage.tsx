@@ -33,6 +33,8 @@ export function CheckFilePage() {
   const [show, setShow] = useState<KeyState>('outdated')
   const [limit, setLimit] = useState(ROWS)
   const [dragging, setDragging] = useState(false)
+  const [mode, setMode] = useState<'file' | 'paste'>('file')
+  const [pasted, setPasted] = useState('')
 
   const newest = history?.builds[history.builds.length - 1]?.gameVersion
   const identification = useMemo(
@@ -92,46 +94,92 @@ export function CheckFilePage() {
       </div>
 
       <section className="panel">
+        <header>
+          <h2>{t('check.inputH')}</h2>
+          <span className="sub">{t('check.private')}</span>
+        </header>
         <div className="panel-body">
-          <div
-            className="dropzone"
-            data-dragging={dragging || undefined}
-            onDragOver={(event) => { event.preventDefault(); setDragging(true) }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(event) => {
-              event.preventDefault()
-              setDragging(false)
-              const dropped = event.dataTransfer.files[0]
-              if (dropped) void accept(dropped, dropped.name)
-            }}
-          >
-            <p className="dzmain">{t('check.drop')}</p>
-            <label className="btn primary">
-              {t('check.browse')}
-              <input
-                type="file"
-                hidden
-                onChange={(event) => {
-                  const picked = event.target.files?.[0]
-                  if (picked) void accept(picked, picked.name)
-                }}
-              />
-            </label>
-            <p className="dznote">{t('check.private')}</p>
+          {/* Two ways in, given the same weight. They used to be a drop zone and
+              a collapsed grey line of text underneath it, which made pasting
+              look like an afterthought and left the explain box as the biggest
+              thing on the page. */}
+          <div className="segmented" role="tablist">
+            {(['file', 'paste'] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="tab"
+                aria-selected={mode === option}
+                data-on={mode === option || undefined}
+                onClick={() => setMode(option)}
+              >
+                {t(`check.mode.${option}`)}
+              </button>
+            ))}
           </div>
 
-          <details className="pastebox">
-            <summary>{t('check.paste')}</summary>
-            <textarea
-              rows={6}
-              spellCheck={false}
-              placeholder={'{ "ClientPrint": { "signatures": { "linux": "55 48 …" } } }'}
-              onChange={(event) => {
-                const text = event.target.value
-                if (text.trim().length > 40) void accept(text, t('check.pasted'))
+          {mode === 'file' ? (
+            <div
+              className="dropzone"
+              data-dragging={dragging || undefined}
+              onDragOver={(event) => { event.preventDefault(); setDragging(true) }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(event) => {
+                event.preventDefault()
+                setDragging(false)
+                const dropped = event.dataTransfer.files[0]
+                if (dropped) void accept(dropped, dropped.name)
               }}
-            />
-          </details>
+            >
+              <p className="dzmain">{t('check.drop')}</p>
+              <label className="btn primary">
+                {t('check.browse')}
+                <input
+                  type="file"
+                  hidden
+                  onChange={(event) => {
+                    const picked = event.target.files?.[0]
+                    if (picked) void accept(picked, picked.name)
+                  }}
+                />
+              </label>
+              <p className="dznote">{t('check.examples')}</p>
+            </div>
+          ) : (
+            <div className="pasteform">
+              <label className="plabel" htmlFor="check-paste">{t('check.pasteLabel')}</label>
+              <textarea
+                id="check-paste"
+                rows={9}
+                spellCheck={false}
+                value={pasted}
+                placeholder={'{\n  "ClientPrint": {\n    "signatures": { "linux": "55 48 89 E5 …", "windows": "40 53 …" }\n  }\n}'}
+                onChange={(event) => setPasted(event.target.value)}
+                onPaste={(event) => {
+                  const text = event.clipboardData.getData('text')
+                  if (text.trim().length > 40) {
+                    setPasted(text)
+                    void accept(text, t('check.pasted'))
+                  }
+                }}
+              />
+              <div className="pactions">
+                <button
+                  type="button"
+                  className="btn primary"
+                  disabled={pasted.trim().length < 10}
+                  onClick={() => void accept(pasted, t('check.pasted'))}
+                >
+                  {t('check.checkIt')}
+                </button>
+                {pasted && (
+                  <button type="button" className="btn" onClick={() => { setPasted(''); setLoaded(null); setError(null) }}>
+                    {t('check.clear')}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           <Explain>{t('check.explain')}</Explain>
         </div>

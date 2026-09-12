@@ -127,6 +127,30 @@ describe('Check my file', () => {
     )
   })
 
+  it('offers uploading and pasting as equal choices, and the paste path works', async () => {
+    paint()
+    await screen.findByText('Check your own Game Data file')
+
+    // Both ways in are real buttons of the same weight. Pasting used to be a
+    // collapsed line of grey text under the drop zone.
+    const upload = screen.getByRole('tab', { name: 'Upload a file' })
+    const paste = screen.getByRole('tab', { name: 'Paste the text' })
+    expect(upload).toHaveAttribute('aria-selected', 'true')
+    expect(paste).toHaveAttribute('aria-selected', 'false')
+
+    await userEvent.click(paste)
+    expect(paste).toHaveAttribute('aria-selected', 'true')
+    expect(document.querySelector('input[type="file"]')).toBeNull()
+
+    const box = screen.getByLabelText('Paste the contents of the file')
+    const check = screen.getByRole('button', { name: 'Check it' })
+    // Nothing is checked until asked: typing no longer fires a parse mid-edit.
+    expect(check).toBeDisabled()
+    await userEvent.click(box)
+    await userEvent.paste(behindFile)
+    await waitFor(() => expect(screen.getByText('1 key(s) need updating for build 14181')).toBeInTheDocument())
+  })
+
   it('says a file carries no gamedata rather than offering to compare it', async () => {
     // The KeyValues reader never throws, so plain prose parses "successfully"
     // with nothing in it. Offering a plugin picker for that was misleading.
