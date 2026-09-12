@@ -352,26 +352,10 @@
       "updated": true
     },
     {
-      "changes": [
-        {
-          "after": 21,
-          "before": 56,
-          "line": 205,
-          "path": [
-            "CCSPlayer_MovementServices::Pawn",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
-      "covered": true,
-      "covered_lines": [
-        204,
-        205,
-        207
-      ],
+      "covered": false,
+      "covered_lines": [],
       "name": "CCSPlayer_MovementServices::Pawn",
-      "updated": true
+      "updated": false
     },
     {
       "changes": [
@@ -550,8 +534,8 @@
   "gamever": "14181",
   "schema_version": 2,
   "summary": {
-    "covered": 33,
+    "covered": 32,
     "total": 33,
-    "updated": 12
+    "updated": 11
   }
 }

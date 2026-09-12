@@ -242,13 +242,14 @@ all three:
 
 | gamever | gamedata updates | artifacts | validator | vfunc indices RTTI-confirmed |
 |---------|------------------|-----------|-----------|------------------------------|
-| 14181   | 804 | 3763 | 0 errors, 37 warnings | 700 |
+| 14181   | 802 | 3761 | 0 errors, 37 warnings | 699 |
 | 14180   | 782 | 3763 | 0 errors, 52 warnings | 696 |
 | 14178b  | 792 | 3789 | 0 errors, 50 warnings | 705 |
 
-The counts move whenever symbols are added, so re-measure rather than trusting a stale table: the
-numbers above replace an earlier set (775/767/778 updates, 25/42/42 warnings) that was two sessions
-old and made new advisories look like regressions. Re-measure with the VERIFICATION BATTERY and
+The counts move whenever symbols are added or retired, so re-measure rather than trusting a stale
+table: the numbers above replace an earlier set (775/767/778 updates, 25/42/42 warnings) that was
+two sessions old and made new advisories look like regressions. 14181 lost two artifacts and one
+confirmed slot when `CCSPlayer_MovementServices_Pawn` was retired (see FORK_OWNED_REMOVALS). Re-measure with the VERIFICATION BATTERY and
 `validate_artifacts.py -gamever <VER> -json`, which prints `artifacts`, `slot_verified`, `errors`
 and `warnings` in one object.
 

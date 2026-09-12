@@ -147,6 +147,16 @@ ALIAS_OVERRIDES = {
 }
 
 
+# Downstream keys a declared symbol must STOP claiming. ALIAS_OVERRIDES points a
+# key at the right symbol; this points a key away from the wrong one (rule 15:
+# when two things claim one key, decide, and write the decision down).
+FORK_OWNED_ALIAS_REMOVALS = {
+    # (no entries: the one case this was written for turned out to need the
+    # declaration retired, because the generator folds names rather than reading
+    # aliases. Kept as the lever for the next key two symbols fight over.)
+}
+
+
 # Fork-owned OBSOLETE tasks: declarations for artifacts that turned out to be wrong.
 FORK_OWNED_OBSOLETE_TASKS = [
     # The GiveNamedItem2 records were withdrawn: 0x1566a70 is the function the
@@ -157,6 +167,9 @@ FORK_OWNED_OBSOLETE_TASKS = [
     # NAME is the plugin key but whose ADDRESS is a sibling overload is the
     # ClientPrint trap; the plugin key is aliased to the named symbol instead.
     ("find-GiveNamedItem2", "server", "name belongs to CCSPlayer_ItemServices_GiveNamedItem"),
+    # Retired with the declaration above: the task existed only to feed a key that
+    # wants a field offset, and its artifact would now pack as undeclared.
+    ("find-CCSPlayer_MovementServices_Pawn", "server", "declaration retired, see FORK_OWNED_REMOVALS"),
     # An invented name for the shared body that CBaseTrigger::EndTouch's vtable
     # wrapper tail-jumps to. Withdrawn: upstream does not track it, no generator
     # consumes it, the tracker's flat alias map cannot use it without blinding the
@@ -221,6 +234,18 @@ FORK_OWNED_REMOVALS = [
     ("g_CCSPlayerController_ResetForceTeamThink", "server", "runtime-filled pointer"),
     ("g_CCSPlayerController_ResourceDataThink", "server", "runtime-filled pointer"),
     ("g_CCSPlayerController_InventoryUpdateThink", "server", "runtime-filled pointer"),
+    # Seeded as a vfunc from bot-controller's "offsets" entry whose comment says
+    # m_pawn and whose value is the same on both platforms (56) - which rules out a
+    # vtable slot, since MSVC shifts them (rule 5). When analysis finally resolved a
+    # slot in 14181 the generator, which matches a key to a symbol by folded name,
+    # handed 21 to bot-controller and bot-improver for a key they read as a field
+    # offset: they would have read memory at +21 instead of +56. The function the
+    # vfunc search did find (linux 0x17982c0) is a lazy-init around the field at
+    # +0x30 that calls vtable slot +0xb0 and never returns a pawn handle, so its
+    # name is doubtful too, and nothing consumes it - no generator wants a vfunc
+    # here and no task takes it as expected_input. load_seed_specs now leaves such
+    # keys to the plugin, so this removal is no longer undone by inject().
+    ("CCSPlayer_MovementServices_Pawn", "server", "plugin key is a field offset, not a vfunc slot"),
     # Refactored into CEnvHudHint_API::ShowHudHint in 14168 (upstream's own comment
     # on the commented-out find-ShowHudHint task). Kept as a downstream alias on the
     # canonical symbol via ALIAS_OVERRIDES, so the old gamedata key still resolves.
@@ -487,6 +512,31 @@ def enforce_fork_owned_removals(text):
     return "\n".join(lines), removed
 
 
+def enforce_fork_owned_alias_removals(text):
+    """Stop a symbol claiming a downstream key that means something else."""
+    removed = 0
+    lines = text.split("\n")
+    for symbol, aliases in FORK_OWNED_ALIAS_REMOVALS.items():
+        wanted = {f"- {alias}" for alias in aliases}
+        for start, end, _name in _module_blocks(lines):
+            span = _symbol_block(lines, start, end, symbol)
+            if span is None:
+                continue
+            block = [l for l in lines[span[0]:span[1]] if l.strip() not in wanted]
+            dropped = (span[1] - span[0]) - len(block)
+            if not dropped:
+                break
+            # An "alias:" key with nothing under it is not valid for load_config,
+            # so it goes when its last entry does.
+            cleaned = [l for i, l in enumerate(block)
+                       if l.strip() != "alias:"
+                       or (i + 1 < len(block) and block[i + 1].strip().startswith("- "))]
+            lines[span[0]:span[1]] = cleaned
+            removed += dropped
+            break
+    return "\n".join(lines), removed
+
+
 def enforce_fork_owned_moves(text):
     """Move a declaration to the module whose binary actually holds the class."""
     moved = 0
@@ -617,6 +667,40 @@ def load_seed_specs():
                 # (IDA-verificeret 14178b: m_attackDelay +0x5C; Bot-Improver reference).
                 specs.append((symbol_name, "structmember", "BotProfile",
                               BOTPROFILE_MEMBERS[symbol_name[len("BotProfile_"):]], alias, lib))
+            elif cls and method and re.fullmatch(r"m_[A-Za-z0-9_]+", (entry.get("comment") or "").strip()):
+                # An offsets entry whose comment names an m_* member is a struct
+                # field, and the plugins say so twice: in the comment, and by
+                # carrying the SAME number on both platforms, which a vtable slot
+                # cannot do because MSVC shifts slots (rule 5).
+                #
+                # Nothing in this repo knows that member's offset, and the
+                # generator resolves a key to a symbol by FOLDED NAME, not by the
+                # config alias: CCSPlayer_MovementServices::Pawn and
+                # CCSPlayer_MovementServices_Pawn fold to the same string, so any
+                # symbol under that name claims the key whether it is aliased or
+                # not. Seeding one as a vfunc is therefore how 14181 came to ship
+                # slot 21 to bot-controller and bot-improver against their own 56
+                # (rule 15: when two things claim one key, decide).
+                #
+                # So the key is left to the plugin. To bring it under pipeline
+                # control, verify the member in IDA and declare a structmember
+                # symbol for it; the fold then lands on something truthful.
+                continue
+                # An offsets entry whose comment names an m_* member is a struct
+                # field, and the plugins say so twice: in the comment, and by
+                # carrying the SAME number on both platforms, which a vtable slot
+                # cannot do because MSVC shifts slots (rule 5). Without this the
+                # default below seeds it as a vfunc, and the day analysis finally
+                # resolves a slot the alias writes that slot into a key the plugin
+                # reads as a field offset - which is how bot-controller and
+                # bot-improver came to ship 21 for CCSPlayer_MovementServices::Pawn
+                # in 14181 where the plugins' own value is 56.
+                #
+                # This generalises BUYSTATE_MEMBERS and BOTPROFILE_MEMBERS above,
+                # which hand-maintain the same mapping for fourteen keys. Measured
+                # over all four seed files, exactly one key reaches this branch
+                # today; the tables keep the ones they already cover.
+                specs.append((symbol_name, "structmember", cls, entry["comment"].strip(), alias, lib))
             else:
                 specs.append((symbol_name, "vfunc", None, None, alias, lib))
     return specs
@@ -1020,6 +1104,9 @@ def main():
     patched, aliased = enforce_alias_overrides(patched)
     if aliased:
         print(f"  re-asserted: {aliased} alias-override mapping(s)")
+    patched, unaliased = enforce_fork_owned_alias_removals(patched)
+    if unaliased:
+        print(f"  re-asserted: {unaliased} downstream key(s) taken off the wrong symbol")
     patched, removed = enforce_fork_owned_removals(patched)
     if removed:
         print(f"  removed: {removed} unproducible upstream declaration(s)")

@@ -6883,9 +6883,6 @@ modules:
       - name: find-CEntityIdentity_EHandle
         expected_output:
           - CEntityIdentity_EHandle.{platform}.yaml
-      - name: find-CCSPlayer_MovementServices_Pawn
-        expected_output:
-          - CCSPlayer_MovementServices_Pawn.{platform}.yaml
       - name: find-CMoveData_Velocity
         expected_output:
           - CMoveData_Velocity.{platform}.yaml
@@ -10350,10 +10347,6 @@ modules:
         member: EHandle
         alias:
           - CEntityIdentity::EHandle
-      - name: CCSPlayer_MovementServices_Pawn
-        category: vfunc
-        alias:
-          - CCSPlayer_MovementServices::Pawn
       - name: CMoveData_Velocity
         category: structmember
         struct: CMoveData

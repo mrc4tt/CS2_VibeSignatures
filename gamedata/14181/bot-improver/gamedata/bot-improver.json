@@ -202,7 +202,7 @@
   "CCSPlayer_MovementServices::Pawn": {
     "offsets": {
       "windows": 56,
-      "linux": 21
+      "linux": 56
     },
     "comment": "m_pawn"
   },
