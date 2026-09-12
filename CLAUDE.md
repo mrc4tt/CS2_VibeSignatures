@@ -350,7 +350,24 @@ Applying on spawn or `NextFrame` crashes in native `SetModel`/`SetBodygroup` (pa
 Without it, `MigrateConfigFile` never rewrites existing user configs and new fields never reach operators.
 
 ### 10. NEVER run `run_linux.sh` and `run_windows.sh` simultaneously
-They share idalib-mcp infrastructure (ports, IDB locks). The reap-preflight in each script kills ALL idalib-mcp processes — running both at once means they kill each other's sessions.
+They share IDB locks and both clear `bin/<VER>/**/*.id0|id1|id2|nam|til` for the gamever they are
+analysing, so running them together corrupts each other's databases. Ports are no longer the
+problem: each entry point takes its own (`run_linux.sh` 13400, `run_windows.sh` 13401,
+`gen_references.sh` 13402, all overridable with `CS2VIBE_MCP_PORT`), and the reap is scoped to that
+port plus orphaned workers whose parent is gone. The interactive editor session keeps 13337, which
+`.mcp.json` points at, and survives a run — it used to be killed by a blanket
+`pkill -f 'idalib-mcp --unsafe'`, so every analysis cost the editor its IDA connection.
+
+Start the session server by hand when you want IDA tools in the editor:
+
+```bash
+uv run idalib-mcp --unsafe --host 127.0.0.1 --port 13337 bin/<VER>/server/libserver.so
+```
+
+One instance serves ONE binary, so Windows work wants a second instance on another port. And keep
+it off the gamever being analysed: the run clears that gamever's IDB aux files, and the scripts now
+warn when a live server holds a `bin/<VER>/` binary rather than pulling the files out from under
+it.
 
 ### 11. NEVER use `expected_output` for a symbol you have not recovered on every gamever
 `expected_output` makes the artifact **required**: pack aborts with "Missing required symbol YAML"

@@ -135,7 +135,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Custom output file name; defaults to <func_name>.<platform>.yaml",
     )
     parser.add_argument("-mcp_host", default="127.0.0.1", help="MCP host")
-    parser.add_argument("-mcp_port", type=int, default=13337, help="MCP port")
+    parser.add_argument("-mcp_port", type=int,
+                        default=int(os.environ.get("CS2VIBE_MCP_PORT", "13337")),
+                        help="MCP port (default: $CS2VIBE_MCP_PORT or 13337)")
     parser.add_argument("-mcp_database", default=None, help="Explicit active MCP database session id")
     parser.add_argument("-ida_args", default="", help="Additional arguments for idalib-mcp")
     parser.add_argument("-debug", action="store_true", help="Enable debug output")

@@ -135,7 +135,11 @@ DEFAULT_MODULES = "*"
 DEFAULT_AGENT = "claude"
 DEFAULT_LLM_MODEL = "gpt-4o"
 DEFAULT_HOST = "127.0.0.1"
-DEFAULT_PORT = 13337
+# The interactive session's idalib-mcp owns 13337 (.mcp.json points there), so an
+# analysis run takes its own port from the environment and the run scripts set
+# one. Without that, a run either refuses to start because the port is taken, or
+# the reap has to kill the editor's server to get it back.
+DEFAULT_PORT = int(os.environ.get("CS2VIBE_MCP_PORT", "13337"))
 POST_PROCESS_FUNC_RENAME_BATCH_SIZE = 50
 MCP_STARTUP_TIMEOUT = 1200  # seconds to wait for MCP server
 MCP_SHUTDOWN_TIMEOUT = 10.0
