@@ -4,42 +4,9 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSiteMeta } from '../../api/siteMeta'
 import { getSiteHistory } from '../../api/siteData'
+import { formatAgo, formatWhen } from '../../components/whenText'
 import { Explain } from '../../components/Explain'
 import type { AppView } from '../../app/appViews'
-
-function formatWhen(iso: string, language: string): string {
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return iso
-  try {
-    // dateStyle/timeStyle cannot be combined with timeZoneName, so name the
-    // components: mixing them throws and silently loses the zone.
-    return new Intl.DateTimeFormat(language, {
-      year: 'numeric', month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
-    }).format(date)
-  } catch {
-    return date.toLocaleString()
-  }
-}
-
-function formatAgo(iso: string, language: string): string {
-  const elapsed = Date.now() - new Date(iso).getTime()
-  if (!Number.isFinite(elapsed)) return ''
-  const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
-    ['minute', 60], ['hour', 24], ['day', 30], ['month', 12], ['year', Number.POSITIVE_INFINITY],
-  ]
-  let value = Math.round(elapsed / 60_000)
-  let index = 0
-  while (index < units.length - 1 && Math.abs(value) >= units[index][1]) {
-    value = Math.round(value / units[index][1])
-    index += 1
-  }
-  try {
-    return new Intl.RelativeTimeFormat(language, { numeric: 'auto' }).format(-value, units[index][0])
-  } catch {
-    return ''
-  }
-}
 
 const SEEN_KEY = 'cs2vibe.seenBuild'
 

@@ -4,14 +4,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Explain } from '../../components/Explain'
-import { getSiteHistory } from '../../api/siteData'
+import { buildDate, differencesSince, getSiteHistory, lastChangedIn } from '../../api/siteData'
+import { formatAgo, formatDay, formatWhen } from '../../components/whenText'
 import { getGameDataFile, getGameDataIndex, getGameDataMetadata } from './data'
 import { changedKeys, describeFiles, formatLabel, notProducedKeys } from './fileModel'
 import { FileView } from './FileView'
 import { Pattern } from '../symbols/Pattern'
 import type { GameDataChange } from './types'
 
-type DetailTab = 'changes' | 'keys' | 'history'
+type DetailTab = 'changes' | 'keys' | 'history' | 'since'
 
 function ChangeValue({ value }: { value: unknown }) {
   if (value === null || value === undefined) return <em>—</em>
@@ -34,17 +35,23 @@ function ChangeRows({ changes }: { changes: GameDataChange[] }) {
 }
 
 export function GameDataPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const language = i18n.resolvedLanguage ?? 'en'
   const [params, setParams] = useSearchParams()
-  const [detailTab, setDetailTab] = useState<DetailTab>('changes')
+  const [detailTab, setDetailTab] = useState<DetailTab>('since')
   const [showDetail, setShowDetail] = useState(false)
   const [fullWidth, setFullWidth] = useState(false)
 
-  const setParam = (key: string, value?: string) => {
+  /**
+   * `push` for anything that changes what you are looking at, so the browser's
+   * back button returns to the file list or the previous file; `replace` for
+   * typing, which would otherwise put one history entry per keystroke.
+   */
+  const setParam = (key: string, value?: string, push = false) => {
     const next = new URLSearchParams(params)
     if (value) next.set(key, value)
     else next.delete(key)
-    setParams(next, { replace: true })
+    setParams(next, { replace: !push })
   }
 
   useEffect(() => {
@@ -60,6 +67,12 @@ export function GameDataPage() {
   const version = params.get('build') ?? indexQuery.data?.versions[0]?.gameVersion
   const versionEntry = indexQuery.data?.versions.find((entry) => entry.gameVersion === version)
   const files = useMemo(() => describeFiles(versionEntry?.files ?? []), [versionEntry])
+  const historyQuery = useQuery({
+    queryKey: ['history'],
+    queryFn: ({ signal }) => getSiteHistory(signal),
+    staleTime: Infinity,
+  })
+  const history = historyQuery.data
   const selectedId = params.get('file') ?? undefined
   const selected = files.find((file) => file.descriptor.id === selectedId)
   const find = params.get('find') ?? ''
@@ -81,14 +94,9 @@ export function GameDataPage() {
     staleTime: Infinity,
   })
 
-  const historyQuery = useQuery({
-    queryKey: ['history'],
-    queryFn: ({ signal }) => getSiteHistory(signal),
-    staleTime: Infinity,
-  })
   // history.json keys files by their path inside gamedata/<build>/, which is the
   // descriptor id, so no mapping is needed.
-  const keyHistory = selected ? historyQuery.data?.files[selected.descriptor.id] : undefined
+  const keyHistory = selected ? history?.files[selected.descriptor.id] : undefined
   const fragility = useMemo(() => {
     if (!keyHistory) return []
     return Object.entries(keyHistory)
@@ -100,6 +108,13 @@ export function GameDataPage() {
       }))
       .sort((left, right) => right.changes - left.changes || left.name.localeCompare(right.name))
   }, [keyHistory])
+
+  const sinceBuild = params.get('since') ?? undefined
+  const differences = useMemo(
+    () => (selected && sinceBuild ? differencesSince(history, selected.descriptor.id, sinceBuild) : []),
+    [history, selected, sinceBuild],
+  )
+  const fileLastChanged = selected ? lastChangedIn(history, selected.descriptor.id) : undefined
 
   const changed = useMemo(() => changedKeys(metadataQuery.data), [metadataQuery.data])
   const missing = useMemo(() => notProducedKeys(metadataQuery.data), [metadataQuery.data])
@@ -160,7 +175,7 @@ export function GameDataPage() {
               type="button"
               className="filecard"
               key={file.descriptor.id}
-              onClick={() => setParam('file', file.descriptor.id)}
+              onClick={() => setParam('file', file.descriptor.id, true)}
             >
               <span className="fh">
                 <span className="pl">{file.descriptor.plugin}</span>
@@ -170,6 +185,17 @@ export function GameDataPage() {
               <span className="meter">
                 <i style={{ width: `${file.percent}%` }} />
                 {file.gap > 0 && <i className="gapbar" style={{ width: `${100 - file.percent}%` }} />}
+              </span>
+              <span className="fw">
+                {(() => {
+                  const changed = lastChangedIn(history, file.descriptor.id)
+                  const when = buildDate(history, changed)
+                  if (!changed) return t('gamedata2.neverChanged')
+                  return t('gamedata2.updatedIn', {
+                    build: changed,
+                    ago: formatAgo(when ?? undefined, language) || formatDay(when ?? undefined, language),
+                  })
+                })()}
               </span>
               <span className="fs">
                 <span>{t('gamedata2.keysOf', { covered: file.covered, total: file.total })}</span>
@@ -190,7 +216,7 @@ export function GameDataPage() {
 
   return (
     <div className="handbook">
-      <button type="button" className="backlink" onClick={() => { setParam('file'); setShowDetail(false) }}>
+      <button type="button" className="backlink" onClick={() => { setParam('file', undefined, true); setShowDetail(false) }}>
         ← {t('gamedata2.allFiles')}
       </button>
 
@@ -227,6 +253,32 @@ export function GameDataPage() {
           </span>
         </div>
 
+        <div className="fdhist">
+          <div className="hrow">
+            <span className="hl">{t('gamedata2.whenBuilt')}</span>
+            <span className="hv">
+              {formatWhen(buildDate(history, version) ?? undefined, language) || version}
+              <span className="ago">{formatAgo(buildDate(history, version) ?? undefined, language)}</span>
+            </span>
+          </div>
+          <div className="hrow">
+            <span className="hl">{t('gamedata2.whenChanged')}</span>
+            <span className="hv">
+              {fileLastChanged
+                ? <>
+                    {t('gamedata2.changedInBuild', { build: fileLastChanged })}
+                    <span className="ago">
+                      {formatAgo(buildDate(history, fileLastChanged) ?? undefined, language)}
+                    </span>
+                    {fileLastChanged !== version && (
+                      <span className="subj">{t('gamedata2.unchangedSince', { build: version })}</span>
+                    )}
+                  </>
+                : <span style={{ fontFamily: 'var(--sans)' }}>{t('gamedata2.neverChanged')}</span>}
+            </span>
+          </div>
+        </div>
+
         {fileQuery.error && <Alert className="gamedata-inline-alert" type="error" showIcon message={t('gamedata.fileError')} description={fileQuery.error.message} />}
         {fileQuery.isLoading && <div style={{ padding: 16 }}><Skeleton active paragraph={{ rows: 16 }} title={false} /></div>}
 
@@ -250,7 +302,7 @@ export function GameDataPage() {
         {showDetail && (
           <>
             <div className="fdtabs" role="tablist">
-              {(['changes', 'keys', 'history'] as const).map((tab) => (
+              {(['since', 'changes', 'keys', 'history'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -260,7 +312,10 @@ export function GameDataPage() {
                 >
                   {t(`gamedata2.tab.${tab}`)}
                   <span className="cnt">
-                    {tab === 'changes' ? changed.length : tab === 'keys' ? missing.length : fragility.length}
+                    {tab === 'changes' ? changed.length
+                      : tab === 'keys' ? missing.length
+                        : tab === 'history' ? fragility.length
+                          : sinceBuild ? differences.length : ''}
                   </span>
                 </button>
               ))}
@@ -296,11 +351,67 @@ export function GameDataPage() {
                       ))}
                     </div>
               )}
+              {detailTab === 'since' && (
+                <>
+                  <p className="plain prose">{t('gamedata2.sinceIntro')}</p>
+                  <div className="filters">
+                    {(history?.builds ?? []).slice().reverse().filter((b) => b.gameVersion !== version).map((b) => (
+                      <button
+                        key={b.gameVersion}
+                        type="button"
+                        className="chip"
+                        aria-pressed={sinceBuild === b.gameVersion}
+                        onClick={() => setParam('since', sinceBuild === b.gameVersion ? undefined : b.gameVersion)}
+                      >
+                        {b.gameVersion}
+                        <span className="n">{formatDay(b.publishedAt ?? undefined, language)}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {!sinceBuild && <p className="plain">{t('gamedata2.sincePick')}</p>}
+                  {sinceBuild && differences.length === 0 && (
+                    <p className="plain">{t('gamedata2.sinceNone', { build: sinceBuild })}</p>
+                  )}
+                  {sinceBuild && differences.length > 0 && (
+                    <>
+                      <p className="plain">
+                        <b>{t('gamedata2.sinceCount', { count: differences.length, build: sinceBuild })}</b>
+                      </p>
+                      {differences.map((difference) => (
+                        <details className="chgrow" key={difference.key}>
+                          <summary>
+                            <span className="ck">{difference.key}</span>
+                            <span className="cw">
+                              {!difference.before ? t('gamedata2.sinceAdded')
+                                : !difference.after ? t('gamedata2.sinceRemoved')
+                                  : t('gamedata2.sinceChanged')}
+                            </span>
+                          </summary>
+                          <div className="cbody">
+                            {(['linux', 'windows'] as const).map((platform, index) => {
+                              const before = difference.before?.[index]
+                              const after = difference.after?.[index]
+                              if (JSON.stringify(before) === JSON.stringify(after)) return null
+                              return (
+                                <div className="chgline" key={platform}>
+                                  <span className="lab">{platform}</span>
+                                  <span className="o">- <ChangeValue value={before ?? null} /></span>
+                                  <span className="n2">+ <ChangeValue value={after ?? null} /></span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </details>
+                      ))}
+                    </>
+                  )}
+                </>
+              )}
               {detailTab === 'history' && (
                 fragility.length === 0
                   ? <p className="plain">{t('gamedata2.noHistory')}</p>
                   : <>
-                      <p className="plain">{t('gamedata2.historyIntro', { builds: historyQuery.data?.builds.length ?? 0 })}</p>
+                      <p className="plain">{t('gamedata2.historyIntro', { builds: history?.builds.length ?? 0 })}</p>
                       <div className="tablewrap">
                         <table className="plaintable">
                           <thead>

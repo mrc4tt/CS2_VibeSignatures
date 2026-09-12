@@ -26,11 +26,13 @@ export function FindSymbolPage() {
   const openKey = params.get('symbol') ?? undefined
   const deferredQuery = useDeferredValue(query)
 
-  const setParam = useCallback((key: string, value?: string) => {
+  // `push` for opening or closing a card, so the back button closes it again;
+  // `replace` while typing, which would otherwise add one entry per keystroke.
+  const setParam = useCallback((key: string, value?: string, push = false) => {
     const next = new URLSearchParams(params)
     if (value) next.set(key, value)
     else next.delete(key)
-    setParams(next, { replace: true })
+    setParams(next, { replace: !push })
   }, [params, setParams])
 
   const indexQuery = useQuery({
@@ -199,7 +201,7 @@ export function FindSymbolPage() {
               shippedBy={symbolToKeys?.[item.key]}
               open={openKey === item.key}
               detailReady={detailedByKey.has(item.key)}
-              onToggle={(key) => setParam('symbol', openKey === key ? undefined : key)}
+              onToggle={(key) => setParam('symbol', openKey === key ? undefined : key, true)}
             />
           ))}
           {visible.length === 0 && (

@@ -48,6 +48,21 @@ def sort_key(tag: str) -> tuple[int, str]:
     return (int(match.group(1)), match.group(2)) if match else (0, tag)
 
 
+def build_published_at(build: str) -> str | None:
+    """
+    When this build's gamedata first landed. The first commit that added
+    gamedata/<build>/ is the honest answer: a snapshot's own last_publish_time
+    only says when it was last re-packed, which moves every time the pipeline is
+    re-run and would tell a server owner nothing about the age of the numbers.
+    """
+    completed = subprocess.run(
+        ["git", "log", "--diff-filter=A", "--format=%aI", "--", os.path.join(GAMEDATA_ROOT, build)],
+        capture_output=True, text=True,
+    )
+    lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
+    return lines[-1] if lines else None
+
+
 def builds() -> list[str]:
     tags = [t for t in os.listdir(GAMEDATA_ROOT) if re.fullmatch(r"\d+[a-z]?", t)]
     return sorted(tags, key=sort_key)
@@ -189,7 +204,14 @@ def build_history(newest: str) -> dict:
     return {
         "schemaVersion": 1,
         "gameVersion": newest,
-        "builds": [{"gameVersion": build, "keyChanges": per_build.get(build, 0)} for build in order],
+        "builds": [
+            {
+                "gameVersion": build,
+                "keyChanges": per_build.get(build, 0),
+                "publishedAt": build_published_at(build),
+            }
+            for build in order
+        ],
         "files": files,
         "keyToSymbol": key_to_symbol,
         "symbolToKeys": {symbol: sorted(keys) for symbol, keys in symbol_to_keys.items()},
