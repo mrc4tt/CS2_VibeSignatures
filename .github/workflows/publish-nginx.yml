@@ -1,0 +1,90 @@
+name: Publish to nginx
+
+# Builds the Pages app on a self-hosted runner and publishes it to an nginx root
+# on the same machine. Independent of deploy-pages.yml, which keeps serving
+# GitHub Pages until the DNS for sig.miksen.me is moved - running both is fine,
+# they write to different places.
+#
+# A self-hosted runner executes whatever a workflow says on hardware you own, so
+# the triggers here are deliberately narrow: a push to this repository's main,
+# or a manual dispatch. There is no pull_request trigger, so no fork PR can
+# reach this runner, and the repository guard on the job refuses to run in
+# anyone else's copy of the repo. See docs/selfhosted-runner.md for the settings
+# that have to be right on the GitHub side as well.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pages/**'
+      - 'gamedata/**'
+      - 'gamesymbols/**'
+      - 'diagnostics/**'
+      - '.github/workflows/publish-nginx.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: publish-nginx
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: github.repository == 'mrc4tt/CS2_VibeSignatures' && github.event_name != 'pull_request'
+    runs-on: [self-hosted, linux, X64, cs2vibe]
+    env:
+      # Override with a repository variable if the nginx root lives elsewhere.
+      SITE_ROOT: ${{ vars.SITE_ROOT || '/srv/sig' }}
+      RELEASES_KEPT: '5'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      # No setup-node: the box has its own toolchain, and every third-party
+      # action is code running on your machine. Fewer of them is the point.
+      - name: Toolchain
+        run: |
+          node --version
+          npm --version
+          python3 --version
+
+      - name: Install Pages dependencies
+        working-directory: pages
+        run: npm ci
+
+      - name: Refresh the published history dataset
+        run: |
+          python3 -m pip install --quiet --user pyyaml
+          python3 publish_site_data.py -history-only
+
+      - name: Build
+        working-directory: pages
+        env:
+          PAGES_RELEASE_INPUT_ROOT: ${{ github.workspace }}
+        run: npm run build
+
+      - name: Verify the emitted assets
+        working-directory: pages
+        run: |
+          npm run verify:gamesymbols
+          npm run verify:gamedata
+
+      - name: Is the committed dataset current?
+        run: python3 publish_site_data.py -check
+
+      # Published as a new release directory with the serving symlink flipped
+      # last, so a visitor never sees a half-copied site and a rollback is one
+      # symlink. nginx serves $SITE_ROOT/current.
+      - name: Publish
+        run: |
+          set -euo pipefail
+          release="$SITE_ROOT/releases/$(date -u +%Y%m%dT%H%M%SZ)-${GITHUB_SHA::12}"
+          mkdir -p "$SITE_ROOT/releases"
+          rsync -a --delete pages/dist/ "$release/"
+          ln -sfn "$release" "$SITE_ROOT/current.new"
+          mv -T "$SITE_ROOT/current.new" "$SITE_ROOT/current"
+          ls -1dt "$SITE_ROOT"/releases/* | tail -n +$((RELEASES_KEPT + 1)) | xargs -r rm -rf
+          echo "serving $release" >> "$GITHUB_STEP_SUMMARY"
