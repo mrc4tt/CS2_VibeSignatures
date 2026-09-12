@@ -165,6 +165,28 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": "48 8B C4 55 53 57 41 54",
+          "before": "4C 89 4C 24 ? 44 89 44 24 ? 48 89 54 24 ? 48 89 4C 24 ? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ? ? ? ? B8 ? ? ? ? E8 ? ? ? ? 48 2B E0 4D 63 F8",
+          "line": 45,
+          "path": [
+            "CNetworkGameServer::PackEntities",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 48 8D 85 ? ? ? ? 41 89 D6",
+          "before": "55 48 89 E5 41 57 41 89 D7 41 56 48 8D 85",
+          "line": 46,
+          "path": [
+            "CNetworkGameServer::PackEntities",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         44,
@@ -173,7 +195,7 @@
         48
       ],
       "name": "CNetworkGameServer::PackEntities",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -454,6 +476,6 @@
   "summary": {
     "covered": 28,
     "total": 28,
-    "updated": 9
+    "updated": 10
   }
 }

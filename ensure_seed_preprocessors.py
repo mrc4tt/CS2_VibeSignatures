@@ -121,8 +121,26 @@ def newest_baseline(module, short, gamever):
     return version, sorted(found[version])
 
 
+# The fields that DEFINE each category. Taking the field list from whatever the
+# baseline artifact happens to carry is a ratchet: one run that fails to resolve
+# a vtable writes an artifact without vfunc_index, the next regeneration of this
+# preprocessor stops asking for it, and the field can never come back. That is
+# how vtidx_DropWeapon went from a verified linux 29 / windows 28 on 14178b to
+# shipping the template's stale 24/25 on 14180 and 14181 with nothing failing.
+# These are floored in regardless of the baseline, so a category always asks for
+# what makes it that category.
+CATEGORY_REQUIRED_FIELDS = {
+    "func": ("func_name", "func_va", "func_sig"),
+    "vfunc": ("func_name", "func_va", "func_sig", "vtable_name", "vfunc_offset", "vfunc_index"),
+    "gv": ("gv_name", "gv_va", "gv_sig"),
+    "structmember": ("struct_name", "member_name", "offset"),
+    "patch": ("patch_name", "patch_va", "patch_sig"),
+    "vtable": ("vtable_class", "vtable_va"),
+}
+
+
 def desired_fields(paths, category):
-    """Canonically ordered fields actually present in the baseline artifacts."""
+    """Canonically ordered fields present in the baseline, plus the category's own."""
     present = set()
     for path in paths:
         try:
@@ -131,6 +149,7 @@ def desired_fields(paths, category):
             continue
         if isinstance(doc, dict):
             present.update(doc.keys())
+    present.update(CATEGORY_REQUIRED_FIELDS.get(category, ()))
     order = SYMBOL_ARTIFACT_FIELD_ORDER.get(category, ())
     return [field for field in order if field in present]
 

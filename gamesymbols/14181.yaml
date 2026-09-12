@@ -121,8 +121,8 @@ binaries:
       sha256: 'd3a76f86ed6d005620484134882efecb965702ca88b2bcbd8b3411fa17033045'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:cbd46b1c1d3f9085fdaed54aa71d283e726f8d8508d52ca294107c1d6610f8ba
-file_count: 3761
+config_sha256: sha256:8d130134877e435a3860ebda334b29a1c1ddb38f90dda2feb26237f887350bbd
+file_count: 3759
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -46482,18 +46482,6 @@ files:
     gv_sig: 48 8D 0D ?? ?? ?? ?? 49 8B 04 38
     gv_sig_va: '0x180bed8be'
     gv_va: '0x181c85e60'
-  server/vtidx_DropWeapon.linux.yaml:
-    func_name: vtidx_DropWeapon
-    func_rva: '0x15cde70'
-    func_sig: 48 85 F6 0F 84 7F 02 00 00 55 48 89 E5 41 57 41
-    func_size: '0x2fb'
-    func_va: '0x15cde70'
-  server/vtidx_DropWeapon.windows.yaml:
-    func_name: vtidx_DropWeapon
-    func_rva: '0xacf6f0'
-    func_sig: 48 85 D2 0F 84 52 01 00 00 48 89 6C 24 10 48 89
-    func_size: '0x15c'
-    func_va: '0x180acf6f0'
   server/vtidx_FinishMove.linux.yaml:
     func_name: vtidx_FinishMove
     func_rva: '0x15b44c0'
@@ -46982,5 +46970,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14181'
-last_publish_time: '2026-09-12T11:28:45Z'
+last_publish_time: '2026-09-12T15:53:56Z'
 schema_version: 5

@@ -500,6 +500,28 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": 28,
+          "before": 24,
+          "line": 239,
+          "path": [
+            "vtidx::DropWeapon",
+            "offsets",
+            "windows"
+          ]
+        },
+        {
+          "after": 29,
+          "before": 25,
+          "line": 240,
+          "path": [
+            "vtidx::DropWeapon",
+            "offsets",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         239,
@@ -507,7 +529,7 @@
         242
       ],
       "name": "vtidx::DropWeapon",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -536,6 +558,6 @@
   "summary": {
     "covered": 32,
     "total": 33,
-    "updated": 11
+    "updated": 12
   }
 }

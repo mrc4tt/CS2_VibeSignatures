@@ -236,8 +236,8 @@
   },
   "vtidx::DropWeapon": {
     "offsets": {
-      "windows": 24,
-      "linux": 25
+      "windows": 28,
+      "linux": 29
     },
     "comment": "CCSPlayer_WeaponServices::DropWeapon vtable index"
   }

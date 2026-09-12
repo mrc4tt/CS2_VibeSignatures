@@ -252,14 +252,16 @@ all three:
 
 | gamever | gamedata updates | artifacts | validator | vfunc indices RTTI-confirmed |
 |---------|------------------|-----------|-----------|------------------------------|
-| 14181   | 802 | 3761 | 0 errors, 37 warnings | 699 |
-| 14180   | 782 | 3763 | 0 errors, 52 warnings | 696 |
-| 14178b  | 792 | 3789 | 0 errors, 50 warnings | 705 |
+| 14181   | 485 | 3759 | 0 errors, 37 warnings | 699 |
+| 14180   | 473 | 3759 | 0 errors, 52 warnings | 696 |
+| 14178b  | 482 | 3785 | 0 errors, 50 warnings | 701 |
 
 The counts move whenever symbols are added or retired, so re-measure rather than trusting a stale
 table: the numbers above replace an earlier set (775/767/778 updates, 25/42/42 warnings) that was
-two sessions old and made new advisories look like regressions. 14181 lost two artifacts and one
-confirmed slot when `CCSPlayer_MovementServices_Pawn` was retired (see FORK_OWNED_REMOVALS). Re-measure with the VERIFICATION BATTERY and
+two sessions old and made new advisories look like regressions. The update counts dropped by roughly 320 when five generators were disabled
+(`MODULE_ENABLED = False` for swiftlys2, plugify, modsharp, cs2surf, cs2kz — 620 of 871 keys), so
+they are no longer comparable with the 800-ish numbers above them. Artifacts and slots fell when
+`CCSPlayer_MovementServices_Pawn` and `vtidx_DropWeapon` were retired (see FORK_OWNED_REMOVALS). Re-measure with the VERIFICATION BATTERY and
 `validate_artifacts.py -gamever <VER> -json`, which prints `artifacts`, `slot_verified`, `errors`
 and `warnings` in one object.
 
@@ -410,6 +412,30 @@ consumes it, and the body it named is reached from two different wrappers so it 
 not specific to that class at all. If a downstream key and an analysis record
 disagree, the answer is an alias, a decision about which is correct, or an honest
 advisory — never a new name that makes the red go away.
+
+### 20. NEVER read a plugin file as evidence that the pipeline produced it
+A generator writes a key only when the snapshot has the field it needs; otherwise the template's
+value stays and the run reports nothing. Both of 14181's shipped defects were frozen template text
+that looked like output:
+
+- `bot-controller`'s `vtidx::DropWeapon` shipped `windows 24 / linux 25` on 14180 and 14181 while
+  RTTI says 28/29. `vtidx_DropWeapon` was a second record for a function already filed as
+  `CCSPlayer_WeaponServices_DropWeapon` (identical `func_va` on both platforms), and once its own
+  artifacts lost `vfunc_index` the key fell back to the template.
+- `bot-hider`'s `CNetworkGameServer::PackEntities` shipped a 14178b signature that resolved to
+  `0x568d00` when the function is at `0x567d20` — a different function, hooked for two gamevers.
+  Cause: the file says `"library": "engine2"`, the analysis module is `engine`, and the generator
+  compares the two, so every run skipped it as "no matching YAML data".
+
+`verify_plugin_gamedata.py` called both healthy, correctly: a unique match with a clean boundary is
+all it claims (rule 12 again). To tell output from template, run `update_gamedata.py -debug` and
+read the per-module "Skipped Symbols" list — a skipped key means the plugin keeps whatever it had.
+
+And the reason a field disappears in the first place: `ensure_seed_preprocessors.py` used to take
+`GENERATE_YAML_DESIRED_FIELDS` from whatever the baseline artifact happened to carry. One run that
+fails to resolve a vtable writes an artifact without `vfunc_index`, the next regeneration stops
+asking for it, and it can never come back. `CATEGORY_REQUIRED_FIELDS` now floors each category with
+the fields that define it, so a vfunc always asks for `vtable_name`/`vfunc_offset`/`vfunc_index`.
 
 ## ALWAYS DO
 

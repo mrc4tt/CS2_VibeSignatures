@@ -121,8 +121,8 @@ binaries:
       sha256: 'e39313a48f591f3a141c121a59e499715502e6bdb6bd7e830dd983338131a0d6'
       size: 4592280
 config_digest_version: 2
-config_sha256: sha256:a3a0fc375601f576a02cd36b6fb9831b9282362629e667ad238b8a860563a8aa
-file_count: 3781
+config_sha256: sha256:ea250872ad7178833be7e317a9cc070d7a4c37664410e168648cfa891e01e4f7
+file_count: 3777
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -27624,24 +27624,6 @@ files:
     patch_bytes: E9 B0 00 00 00 90
     patch_name: CCSPlayer_MovementServices_FullWalkMove_SpeedClamp
     patch_sig: 0F 86 AF 00 00 00 0F
-  server/CCSPlayer_MovementServices_Pawn.linux.yaml:
-    func_name: CCSPlayer_MovementServices_Pawn
-    func_rva: '0x1790700'
-    func_sig: 55 48 89 E5 41 54 49 89 F4 53 48 89 FB E8 6E 64
-    func_size: '0x5a'
-    func_va: '0x1790700'
-    vfunc_index: 21
-    vfunc_offset: '0xa8'
-    vtable_name: CCSPlayer_MovementServices
-  server/CCSPlayer_MovementServices_Pawn.windows.yaml:
-    func_name: CCSPlayer_MovementServices_Pawn
-    func_rva: '0xc2dd30'
-    func_sig: 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B F2 48 8B F9 E8 B6 66
-    func_size: '0x48'
-    func_va: '0x180c2dd30'
-    vfunc_index: 20
-    vfunc_offset: '0xa0'
-    vtable_name: CCSPlayer_MovementServices
   server/CCSPlayer_MovementServices_ProcessMovement.linux.yaml:
     func_name: CCSPlayer_MovementServices_ProcessMovement
     func_rva: '0x177c0c0'
@@ -46581,24 +46563,6 @@ files:
     gv_sig: 48 8D 0D ?? ?? ?? ?? 49 8B 04 38
     gv_sig_va: '0x180be60ee'
     gv_va: '0x181c7cc00'
-  server/vtidx_DropWeapon.linux.yaml:
-    func_name: vtidx_DropWeapon
-    func_rva: '0x15c62b0'
-    func_sig: 48 85 F6 0F 84 7F 02 00 00 55 48 89 E5 41 57 41
-    func_size: '0x2fb'
-    func_va: '0x15c62b0'
-    vfunc_index: 29
-    vfunc_offset: '0xe8'
-    vtable_name: CCSPlayer_WeaponServices
-  server/vtidx_DropWeapon.windows.yaml:
-    func_name: vtidx_DropWeapon
-    func_rva: '0xac7f20'
-    func_sig: 48 85 D2 0F 84 52 01 00 00 48 89 6C 24 10 48 89
-    func_size: '0x15c'
-    func_va: '0x180ac7f20'
-    vfunc_index: 28
-    vfunc_offset: '0xe0'
-    vtable_name: CCSPlayer_WeaponServices
   server/vtidx_FinishMove.linux.yaml:
     func_name: vtidx_FinishMove
     func_rva: '0x15ac900'
@@ -47099,5 +47063,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: 14178b
-last_publish_time: '2026-09-11T07:57:39Z'
+last_publish_time: '2026-09-12T15:54:12Z'
 schema_version: 5

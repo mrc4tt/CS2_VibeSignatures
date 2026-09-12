@@ -657,8 +657,11 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        257,
+        258
+      ],
       "name": "CEntityResourceManifest_AddResource",
       "updated": false
     },
@@ -1023,7 +1026,7 @@
   "gamever": "14181",
   "schema_version": 2,
   "summary": {
-    "covered": 51,
+    "covered": 52,
     "total": 52,
     "updated": 29
   }

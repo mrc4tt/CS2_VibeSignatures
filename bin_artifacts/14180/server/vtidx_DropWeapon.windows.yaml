@@ -1,5 +1,0 @@
-func_name: vtidx_DropWeapon
-func_va: '0x180ac7f20'
-func_rva: '0xac7f20'
-func_size: '0x15c'
-func_sig: 48 85 D2 0F 84 52 01 00 00 48 89 6C 24 10 48 89

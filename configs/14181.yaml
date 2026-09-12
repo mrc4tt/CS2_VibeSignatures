@@ -2585,6 +2585,8 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
+      - name: CEntityResourceManifest_AddResource
+        category: vfunc
       - name: CNetworkGameServerBase
         category: struct
       - name: CServerSideClient
@@ -6895,9 +6897,6 @@ modules:
       - name: find-vtidx_FinishMove
         expected_output:
           - vtidx_FinishMove.{platform}.yaml
-      - name: find-vtidx_DropWeapon
-        expected_output:
-          - vtidx_DropWeapon.{platform}.yaml
       - name: find-CCSBotManager_MaintainBotQuota
         expected_output:
           - CCSBotManager_MaintainBotQuota.{platform}.yaml
@@ -10367,10 +10366,6 @@ modules:
         category: vfunc
         alias:
           - vtidx::FinishMove
-      - name: vtidx_DropWeapon
-        category: vfunc
-        alias:
-          - vtidx::DropWeapon
       - name: CCSBotManager_MaintainBotQuota
         category: func
         alias:
@@ -12424,6 +12419,7 @@ modules:
         category: vfunc
         alias:
           - CCSPlayer_WeaponServices::DropWeapon
+          - vtidx::DropWeapon
       - name: CBasePlayerWeapon_Shoot_Secondary
         category: func
         alias:

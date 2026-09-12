@@ -84,6 +84,13 @@ FORK_OWNED_SYMBOLS = [
     # (jnz) it rewrites to EB to force the branch, so it is a patch site rather than a
     # function head - hence category patch with patch_bytes, not func.
     ("SetSchemaHammerUniqueId", "patch", None, None),
+    # CounterStrikeSharp's key is offsets-only, so it carries no signatures.library,
+    # and the config declared the artifact through per-platform declaration tasks
+    # without ever adding a symbols: entry - so build_function_library_map had no
+    # library for it and the generator skipped it as "unknown library". The slots
+    # sat frozen in the template instead (linux 0 / windows 2, which the artifacts
+    # do confirm). Declared here so they are regenerated and RTTI-checked instead.
+    ("CEntityResourceManifest_AddResource", "vfunc", "engine", None),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
@@ -136,6 +143,14 @@ ALIAS_OVERRIDES = {
     # vfunc_offset 0xe0, linux 29 from 0xe8 - so the alias only moves the key from the
     # frozen template into pipeline control.
     "SetStateChanged": "CEntityInstance_NetworkStateChanged",
+    # bot-controller asks for the CCSPlayer_WeaponServices::DropWeapon vtable index
+    # under its own short key. A separate vtidx_DropWeapon record carried the same
+    # func_va on both platforms (linux 0x15cde70 / windows 0x180acf6f0) - one
+    # function, two records, which is the ClientPrint trap again. Its own artifacts
+    # then lost vfunc_index (see the seeder ratchet), so the key fell back to the
+    # template's stale 24/25 while RTTI says 29/28. Aliased onto the canonical
+    # symbol, which carries the index, and the duplicate is retired below.
+    "vtidx::DropWeapon": "CCSPlayer_WeaponServices_DropWeapon",
     # CS2Fixes ships an Offsets entry under the bare method name; the analysis files
     # the virtual as CBaseEntity_Teleport (whose only alias was CBaseEntity::Teleport,
     # which does not fold to "Teleport").
@@ -170,6 +185,7 @@ FORK_OWNED_OBSOLETE_TASKS = [
     # Retired with the declaration above: the task existed only to feed a key that
     # wants a field offset, and its artifact would now pack as undeclared.
     ("find-CCSPlayer_MovementServices_Pawn", "server", "declaration retired, see FORK_OWNED_REMOVALS"),
+    ("find-vtidx_DropWeapon", "server", "declaration retired, see FORK_OWNED_REMOVALS"),
     # An invented name for the shared body that CBaseTrigger::EndTouch's vtable
     # wrapper tail-jumps to. Withdrawn: upstream does not track it, no generator
     # consumes it, the tracker's flat alias map cannot use it without blinding the
@@ -246,6 +262,13 @@ FORK_OWNED_REMOVALS = [
     # here and no task takes it as expected_input. load_seed_specs now leaves such
     # keys to the plugin, so this removal is no longer undone by inject().
     ("CCSPlayer_MovementServices_Pawn", "server", "plugin key is a field offset, not a vfunc slot"),
+    # Same function as CCSPlayer_WeaponServices_DropWeapon - identical func_va on
+    # both platforms - so it is a second record for one address, and the generator
+    # resolves a key by folded name, meaning whichever record is declared claims
+    # bot-controller's vtidx::DropWeapon. The canonical symbol carries the
+    # RTTI-confirmed index (linux 29 / windows 28) and now carries the key as an
+    # alias, so this record has nothing left to do.
+    ("vtidx_DropWeapon", "server", "duplicate of CCSPlayer_WeaponServices_DropWeapon"),
     # Refactored into CEnvHudHint_API::ShowHudHint in 14168 (upstream's own comment
     # on the commented-out find-ShowHudHint task). Kept as a downstream alias on the
     # canonical symbol via ALIAS_OVERRIDES, so the old gamedata key still resolves.
@@ -1130,6 +1153,16 @@ def main():
     patched, tasked = enforce_fork_owned_tasks(patched)
     if tasked:
         print(f"  re-asserted: {tasked} fork-owned find-task(s)")
+    # Again, because inject() runs after the first pass and adds a find-<symbol>
+    # task for every symbol it declares. For a symbol whose declaration this fork
+    # has deliberately reshaped - CEntityResourceManifest_AddResource is declared
+    # by two per-platform tasks, not one {platform} task - the first pass dropped
+    # the generic task and inject() put it straight back. The table means the task
+    # must not exist, which one pass before inject cannot guarantee.
+    patched, dropped_again = enforce_fork_owned_obsolete_tasks(patched)
+    if dropped_again:
+        print(f"  dropped after inject: {dropped_again} obsolete task declaration(s)")
+        dropped += dropped_again
     if (patched == text and not repaired and not reclassified and not aliased
             and not tasked and not removed and not moved and not opt_tasked
             and not pinned and not dropped):

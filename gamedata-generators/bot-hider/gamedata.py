@@ -37,6 +37,17 @@ OUTPUT_PATHS = (GAMEDATA_PATH,)
 STATIC_SOURCES = ((GAMEDATA_PATH, GAMEDATA_PATH),)
 
 
+# The plugin names the engine binary the way the file system does (engine2.dll /
+# libengine2.so), while an analysis module is called "engine". The library is
+# compared against the module name, so the shipped token needs translating for
+# the lookup only - rewriting it in the output would change what the plugin
+# reads. CNetworkGameServer::PackEntities was silently frozen at its 14178b
+# signature for two gamevers because of this mismatch.
+LIBRARY_ALIASES = {
+    "engine2": "engine",
+}
+
+
 def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
     """
     Update WeaponPaints weaponpaints.json file.
@@ -78,7 +89,8 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
         # Determine library for this function
         library = None
         if "signatures" in entry and "library" in entry["signatures"]:
-            library = entry["signatures"]["library"]
+            library = LIBRARY_ALIASES.get(entry["signatures"]["library"],
+                                          entry["signatures"]["library"])
         elif yaml_func_name in func_lib_map:
             library = func_lib_map[yaml_func_name]
 

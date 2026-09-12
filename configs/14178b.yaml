@@ -2612,6 +2612,8 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
+      - name: CEntityResourceManifest_AddResource
+        category: vfunc
       - name: CServerSideClient_SetName
         category: vfunc
       - name: CServerSideClient_m_UserIDString
@@ -6899,9 +6901,6 @@ modules:
       - name: find-CEntityIdentity_EHandle
         expected_output:
           - CEntityIdentity_EHandle.{platform}.yaml
-      - name: find-CCSPlayer_MovementServices_Pawn
-        expected_output:
-          - CCSPlayer_MovementServices_Pawn.{platform}.yaml
       - name: find-CMoveData_Velocity
         expected_output:
           - CMoveData_Velocity.{platform}.yaml
@@ -6914,9 +6913,6 @@ modules:
       - name: find-vtidx_FinishMove
         expected_output:
           - vtidx_FinishMove.{platform}.yaml
-      - name: find-vtidx_DropWeapon
-        expected_output:
-          - vtidx_DropWeapon.{platform}.yaml
       - name: find-CCSBotManager_MaintainBotQuota
         expected_output:
           - CCSBotManager_MaintainBotQuota.{platform}.yaml
@@ -10354,10 +10350,6 @@ modules:
         member: EHandle
         alias:
           - CEntityIdentity::EHandle
-      - name: CCSPlayer_MovementServices_Pawn
-        category: vfunc
-        alias:
-          - CCSPlayer_MovementServices::Pawn
       - name: CMoveData_Velocity
         category: structmember
         struct: CMoveData
@@ -10378,10 +10370,6 @@ modules:
         category: vfunc
         alias:
           - vtidx::FinishMove
-      - name: vtidx_DropWeapon
-        category: vfunc
-        alias:
-          - vtidx::DropWeapon
       - name: CCSBotManager_MaintainBotQuota
         category: func
         alias:
@@ -12487,6 +12475,7 @@ modules:
         category: vfunc
         alias:
           - CCSPlayer_WeaponServices::DropWeapon
+          - vtidx::DropWeapon
       - name: CBasePlayerWeapon_Shoot_Secondary
         category: func
         alias:
