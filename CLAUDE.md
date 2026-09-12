@@ -226,8 +226,11 @@ uv run detect_aliases.py -gamever $VER -platform linux
 uv run detect_aliases.py -gamever $VER -platform windows
 uv run missing_report.py -gamever $VER -all
 # 5b. the plugin files themselves: does every shipped entry still hold?
-uv run verify_plugin_gamedata.py -gamever $VER \
-  -gamedata gamedata/$VER/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json
+#     EVERY shipped file, not just CounterStrikeSharp - checking one of them is
+#     how CS2Fixes went four gamevers without being verified at all.
+for f in $(find gamedata/$VER -name '*.json' -o -name '*.jsonc' -o -name '*.txt' | grep -v metadata); do
+  uv run verify_plugin_gamedata.py -gamever $VER -gamedata "$f" | tail -2
+done
 # 6. preprocessor/reference coverage, then the test suite
 ./gen_references.sh
 uv run --with pytest --with pyyaml --with capstone python -m pytest tests/ -q
@@ -441,6 +444,25 @@ instruction, so 56 is re-derived and checked every build instead of trusted. Wit
 refusing connections, the decompilation was done headlessly:
 `~/ida-pro-9.1/idat -A -S<script> -L<log> bin/<VER>/server/libserver.so.i64` — note that a stale
 minidump in `/tmp/ida` makes `idat` block on a dialog even under `-A`, so clear it first.
+
+**The verifier had two blind spots of its own**, both found by pointing it at a file
+the battery never checked. `cs2fixes.jsonc` reported `unhealthy: 4`, and all four were
+the tool's fault:
+
+- `CNetworkGameServer_ClientList` was called a mismatch, 73 against an analysed 584.
+  CS2Fixes indexes that struct by element rather than by byte and its generator says so
+  in `STRUCT_MEMBER_OFFSET_DIVISOR`; 584 / 8 = 73 is correct. `check_offset` now reads
+  the divisor tables out of the generators and reports `match` with `scaled_by`.
+- Two patches were called `broken`. The kind-word hint was only looked for in the path
+  segments *below* the entry name, which finds CSS's `Key > signatures > linux` and
+  misses CS2Fixes' `Patches > Key > linux` - so patch payloads were scanned as
+  signatures. A patch value is what the plugin *writes*, not where, so its bytes are not
+  supposed to occur in the binary at all: the status is now `patch-unverifiable`.
+
+All seven shipped files are `unhealthy: 0` after that. A status of `ok-midfunction` or
+`ok-globalref` is a pass with a qualification, `no-reference` and `patch-unverifiable`
+mean the entry could not be checked, and only `broken`, `ambiguous`, `mismatch` and
+`unparsable` are defects - `_report` is the authority.
 
 And the reason a field disappears in the first place: `ensure_seed_preprocessors.py` used to take
 `GENERATE_YAML_DESIRED_FIELDS` from whatever the baseline artifact happened to carry. One run that

@@ -187,14 +187,21 @@ def _walk_entries(node, path=()):
         # under "signatures", CS2Fixes under a "Signatures" section, cs2surf under
         # "Offset" - so the entry name is the nearest ancestor key that is not one of
         # those kind words, and the kind word (when present) is only a hint.
+        # The kind word can sit ABOVE the name as well as below it: CSS nests
+        # platforms under "signatures" (Key > signatures > linux) while CS2Fixes
+        # sections them above (Patches > Key > linux). Stopping at the name found
+        # the first shape and missed the second, so every CS2Fixes patch was
+        # scanned as a signature and reported broken for carrying replacement
+        # bytes that are not supposed to occur in the binary.
         name, hint = "?", None
         for key in reversed(path):
             lowered = str(key).lower()
             if lowered in KIND_WORDS:
-                hint = hint or lowered
+                if hint is None:
+                    hint = lowered
                 continue
-            name = key
-            break
+            if name == "?":
+                name = key
         sample = next(iter(platform_values.values()))
         kind = "offset" if isinstance(sample, (int, float)) and not isinstance(sample, bool) else "signature"
         if kind == "signature" and isinstance(sample, str) and re.fullmatch(r"\s*\d+\s*", sample):
@@ -429,6 +436,42 @@ def check_signature(binaries, module, platform, pattern, record=None):
     return {"status": "ok-midfunction", "at": hex(va or 0)}
 
 
+def generator_offset_divisors(modules_dir="gamedata-generators"):
+    """
+    {symbol: divisor} declared by the generators themselves.
+
+    A plugin may index a struct by element rather than by byte -
+    CS2Fixes ships CNetworkGameServer_ClientList as 584/8 = 73 - and its
+    generator says so in STRUCT_MEMBER_OFFSET_DIVISOR. Without reading that, this
+    tool compares 73 against the analysed 584 and calls a correct file broken,
+    which is exactly what it did until now.
+    """
+    divisors = {}
+    if not os.path.isdir(modules_dir):
+        return divisors
+    pattern = re.compile(r'^\s*"([^"]+)":\s*(\d+)\s*,?\s*$')
+    for entry in sorted(os.listdir(modules_dir)):
+        path = os.path.join(modules_dir, entry, "gamedata.py")
+        if not os.path.isfile(path):
+            continue
+        with open(path, encoding="utf-8") as handle:
+            inside = False
+            for line in handle:
+                if line.startswith("STRUCT_MEMBER_OFFSET_DIVISOR"):
+                    inside = True
+                    continue
+                if inside:
+                    if line.startswith("}"):
+                        break
+                    found = pattern.match(line)
+                    if found:
+                        divisors[found.group(1)] = int(found.group(2))
+    return divisors
+
+
+OFFSET_DIVISORS = None
+
+
 def check_offset(index, binaries, name, platform, value, aliases=None):
     record = (index.get(fold(name)) or {}).get(platform)
     if record is None and aliases:
@@ -442,6 +485,13 @@ def check_offset(index, binaries, name, platform, value, aliases=None):
         reference = V._hexint(record.get("offset"))
     if reference is None:
         return {"status": "no-reference", "reason": "record carries no index or offset"}
+    global OFFSET_DIVISORS
+    if OFFSET_DIVISORS is None:
+        OFFSET_DIVISORS = generator_offset_divisors()
+    divisor = OFFSET_DIVISORS.get(name)
+    if divisor and int(reference) % divisor == 0 and int(reference) // divisor == int(value):
+        return {"status": "match", "value": int(value), "scaled_by": divisor,
+                "reference": int(reference)}
     if int(reference) != int(value):
         return {"status": "mismatch", "reference": int(reference)}
     out = {"status": "match", "value": int(value)}
@@ -501,7 +551,13 @@ def main():
                 row["platforms"][platform] = check_offset(index, binaries, name, platform,
                                                           value, aliases)
                 continue
-            # signature and patch are both byte patterns to scan for
+            if kind == "patch":
+                # A patch value is what the plugin WRITES, not where it writes
+                # it, so its bytes are not expected to appear in the binary.
+                # Scanning for them says nothing either way - reporting that
+                # honestly beats calling a working patch broken.
+                row["platforms"][platform] = {"status": "patch-unverifiable"}
+                continue
             record = (index.get(fold(name)) or {}).get(platform)
             if record is None and aliases.get(fold(name)):
                 record = (index.get(fold(aliases[fold(name)])) or {}).get(platform)
