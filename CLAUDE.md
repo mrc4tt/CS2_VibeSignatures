@@ -364,10 +364,19 @@ Start the session server by hand when you want IDA tools in the editor:
 uv run idalib-mcp --unsafe --host 127.0.0.1 --port 13337 bin/<VER>/server/libserver.so
 ```
 
-One instance serves ONE binary, so Windows work wants a second instance on another port. And keep
-it off the gamever being analysed: the run clears that gamever's IDB aux files, and the scripts now
-warn when a live server holds a `bin/<VER>/` binary rather than pulling the files out from under
-it.
+One instance serves ONE binary, so Windows work wants a second instance on another port.
+
+The aux-file cleanup no longer touches a live database either. `.id0/.id1/.id2/.nam/.til` are what
+an OPEN database works in and `.i64` is the packed form written on close, so a set with no owner is
+the wreckage of an interrupted run while a set with an owner is somebody's working database. The
+run scripts therefore delete only the unowned ones, deciding by which binary a live idalib process
+holds (read from `/proc/<pid>/fd`, not per file — a live database keeps `.id0` open but not always
+`.til`, so a per-file test deletes the wrong things). Measured: 5 stale files removed, 5 belonging
+to the open session kept, and the session decompiled normally afterwards.
+
+What is left is a real but harmless overlap: one instance holds one binary, so if the session has
+`libserver.so` open and the run needs it, that module fails with "only <other>.so is open" until
+the session is closed. The scripts say so instead of failing cryptically.
 
 ### 11. NEVER use `expected_output` for a symbol you have not recovered on every gamever
 `expected_output` makes the artifact **required**: pack aborts with "Missing required symbol YAML"
