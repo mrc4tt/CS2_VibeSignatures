@@ -32,10 +32,11 @@ permissions:
 
 jobs:
   publish:
-    # vars.PUBLISH_NGINX gates the whole thing: with no runner registered the
-    # job would sit queued on every push that touches pages/, showing a pending
-    # check that never resolves. Set the repository variable to 'true' when the
-    # runner exists, and this stays dormant until then.
+    # vars.PUBLISH_NGINX gates the job. Note that this is NOT enough on its own:
+    # a skipped job still creates a run, and with no runner registered those runs
+    # sat queued forever, so the workflow itself ships disabled
+    # (gh workflow disable). Enabling means the workflow, the variable AND a
+    # runner carrying the cs2vibe label - see docs/selfhosted-runner.md.
     if: |
       vars.PUBLISH_NGINX == 'true'
       && github.repository == 'mrc4tt/CS2_VibeSignatures'

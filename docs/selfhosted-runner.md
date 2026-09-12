@@ -68,12 +68,21 @@ every third-party action a workflow uses, runs on it too.
 
 ## Turning it on
 
-The job is gated on a repository variable, so a push that touches `pages/` does
-not leave a queued check waiting for a runner that does not exist yet:
+The workflow ships **disabled**, and that is deliberate: a job-level `if` skips
+the job but GitHub still creates the run, so with no runner registered every push
+touching `pages/` left a queued run and a pending check that never resolved. Two
+of those had to be cancelled by hand before the workflow was disabled.
+
+So enabling it takes three steps, not one:
 
 ```bash
-gh variable set PUBLISH_NGINX --body true      # and `gh variable delete` to stop
+gh workflow enable publish-nginx.yml               # the run is created at all
+gh variable set PUBLISH_NGINX --body true          # the job is allowed to run
+# and a runner registered with the cs2vibe label, or it queues again
 ```
+
+To stand it down again: `gh workflow disable publish-nginx.yml`. Removing the
+variable alone still leaves skipped runs in the history.
 
 ## Labels
 
