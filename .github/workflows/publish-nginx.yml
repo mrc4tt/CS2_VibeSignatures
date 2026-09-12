@@ -32,7 +32,14 @@ permissions:
 
 jobs:
   publish:
-    if: github.repository == 'mrc4tt/CS2_VibeSignatures' && github.event_name != 'pull_request'
+    # vars.PUBLISH_NGINX gates the whole thing: with no runner registered the
+    # job would sit queued on every push that touches pages/, showing a pending
+    # check that never resolves. Set the repository variable to 'true' when the
+    # runner exists, and this stays dormant until then.
+    if: |
+      vars.PUBLISH_NGINX == 'true'
+      && github.repository == 'mrc4tt/CS2_VibeSignatures'
+      && github.event_name != 'pull_request'
     runs-on: [self-hosted, linux, X64, cs2vibe]
     env:
       # Override with a repository variable if the nginx root lives elsewhere.

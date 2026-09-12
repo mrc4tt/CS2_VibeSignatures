@@ -66,6 +66,15 @@ every third-party action a workflow uses, runs on it too.
 - **No secrets it does not need.** This workflow reads none. Do not add repo
   secrets that only the Pages job needs.
 
+## Turning it on
+
+The job is gated on a repository variable, so a push that touches `pages/` does
+not leave a queued check waiting for a runner that does not exist yet:
+
+```bash
+gh variable set PUBLISH_NGINX --body true      # and `gh variable delete` to stop
+```
+
 ## Labels
 
 The job asks for `[self-hosted, linux, X64, cs2vibe]`. Register with
