@@ -231,7 +231,17 @@ uv run verify_plugin_gamedata.py -gamever $VER \
 # 6. preprocessor/reference coverage, then the test suite
 ./gen_references.sh
 uv run --with pytest --with pyyaml --with capstone python -m pytest tests/ -q
+# 7. the published site datasets: does gamedata/history.json still match gamedata/?
+uv run publish_site_data.py -check          # exit 10 = stale, and it names the drift
+uv run publish_site_data.py                 # regenerate, then commit gamedata/history.json
 ```
+
+Step 7 exists because `gamedata/` and the site's datasets are separate commits. The Pages build
+reads `gamedata/history.json` and `diagnostics/<build>.json`, so changing a gamedata file without
+re-running `publish_site_data.py` leaves the site showing the previous numbers with no error
+anywhere. `deploy-pages.yml` now regenerates the history dataset during the build and a separate
+`check-datasets` job fails the run when the committed one is stale — but CI catching it after a
+push is the backstop, not the workflow.
 
 `-snapshot` and `-outputdir` are **required** on the snapshot and gamedata tools — there is no
 implicit default, by design, so a run can never write to the wrong gamever.
@@ -461,5 +471,11 @@ advisory — never a new name that makes the red go away.
 
 ## Commit conventions
 
-Never add "Co-Authored-By" lines to commits. Do not include Claude attribution 
+Never add "Co-Authored-By" lines to commits. Do not include Claude attribution
 in commit messages, PR descriptions, or any git metadata.
+
+Two mechanisms enforce this, because a prompt rule alone has been overridden by newer clients:
+`.claude/settings.json` sets `"includeCoAuthoredBy": false`, and `.git/hooks/commit-msg` strips any
+`Co-Authored-By: … Claude/Anthropic`, `Claude-Session:`, `Generated with [Claude Code]` or bare
+`https://claude.ai/code/…` trailer that still reaches the message. The hook lives in `.git/`, so it
+is per-clone: re-create it after a fresh clone.

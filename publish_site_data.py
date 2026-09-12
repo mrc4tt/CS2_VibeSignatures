@@ -17,7 +17,15 @@ so they are committed and published rather than recomputed in the browser.
 
     uv run publish_site_data.py                 # newest build, both files
     uv run publish_site_data.py -gamever 14181
-    uv run publish_site_data.py -skip-validator # history only, no IDA pass
+    uv run publish_site_data.py -skip-validator # keep the previous validator section
+    uv run publish_site_data.py -history-only   # history.json alone, no binaries needed
+    uv run publish_site_data.py -check          # is the committed history.json current?
+
+`-check` writes nothing and exits 10 when the committed history.json disagrees
+with what the gamedata in the tree implies. It needs no binaries, so CI can run
+it: the site's history, fragility and "since my build" panels read that committed
+file, and without the check a hand edit to gamedata/ publishes correct files
+beside stale history.
 """
 from __future__ import annotations
 
@@ -48,19 +56,40 @@ def sort_key(tag: str) -> tuple[int, str]:
     return (int(match.group(1)), match.group(2)) if match else (0, tag)
 
 
-def build_published_at(build: str) -> str | None:
+def _committed_dates() -> dict[str, str]:
+    """publishedAt as the last published history.json recorded it."""
+    try:
+        with open(os.path.join(GAMEDATA_ROOT, "history.json"), encoding="utf-8") as handle:
+            previous = json.load(handle)
+    except Exception:
+        return {}
+    return {
+        entry["gameVersion"]: entry["publishedAt"]
+        for entry in previous.get("builds", [])
+        if isinstance(entry, dict) and entry.get("gameVersion") and entry.get("publishedAt")
+    }
+
+
+def build_published_at(build: str, fallback: dict[str, str]) -> str | None:
     """
     When this build's gamedata first landed. The first commit that added
     gamedata/<build>/ is the honest answer: a snapshot's own last_publish_time
     only says when it was last re-packed, which moves every time the pipeline is
     re-run and would tell a server owner nothing about the age of the numbers.
+
+    A shallow clone cannot answer that - CI checks out with fetch-depth 1, where
+    `git log` over a path returns nothing - so the date already recorded in the
+    committed history.json is reused instead. Without that, a CI regeneration
+    would silently drop every date and the drift check would fail forever.
     """
     completed = subprocess.run(
         ["git", "log", "--diff-filter=A", "--format=%aI", "--", os.path.join(GAMEDATA_ROOT, build)],
         capture_output=True, text=True,
     )
     lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
-    return lines[-1] if lines else None
+    if lines:
+        return lines[-1]
+    return fallback.get(build)
 
 
 def builds() -> list[str]:
@@ -162,6 +191,7 @@ def symbol_index(build: str) -> dict[str, str]:
 
 def build_history(newest: str) -> dict:
     order = builds()
+    known_dates = _committed_dates()
     index = symbol_index(newest)
     per_build = collections.Counter()
     files: dict[str, dict] = {}
@@ -208,7 +238,7 @@ def build_history(newest: str) -> dict:
             {
                 "gameVersion": build,
                 "keyChanges": per_build.get(build, 0),
-                "publishedAt": build_published_at(build),
+                "publishedAt": build_published_at(build, known_dates),
             }
             for build in order
         ],
@@ -321,6 +351,10 @@ def main() -> int:
     parser.add_argument("-gamever", help="build to publish for (default: the newest)")
     parser.add_argument("-skip-validator", action="store_true", dest="skip_validator",
                         help="do not re-read the binaries; keep the previous validator section")
+    parser.add_argument("-history-only", action="store_true", dest="history_only",
+                        help="write gamedata/history.json only (needs no binaries)")
+    parser.add_argument("-check", action="store_true",
+                        help="write nothing; exit 10 if the committed history.json is stale")
     args = parser.parse_args()
 
     available = builds()
@@ -335,6 +369,40 @@ def main() -> int:
     history = build_history(build)
     os.makedirs(GAMEDATA_ROOT, exist_ok=True)
     history_path = os.path.join(GAMEDATA_ROOT, "history.json")
+
+    if args.check:
+        fresh = json.dumps(history, separators=(",", ":"), sort_keys=True)
+        try:
+            with open(history_path, encoding="utf-8") as handle:
+                committed = json.dumps(json.load(handle), separators=(",", ":"), sort_keys=True)
+        except Exception as error:
+            print(f"{history_path}: cannot read ({error}); run publish_site_data.py", file=sys.stderr)
+            return 10
+        if committed == fresh:
+            print(f"{history_path} is current for {build}")
+            return 0
+        old = json.loads(committed)
+        drift = []
+        if old.get("gameVersion") != history["gameVersion"]:
+            drift.append(f"gameVersion {old.get('gameVersion')} -> {history['gameVersion']}")
+        old_files, new_files = set(old.get("files", {})), set(history["files"])
+        for missing in sorted(new_files - old_files):
+            drift.append(f"file not recorded: {missing}")
+        for extra in sorted(old_files - new_files):
+            drift.append(f"file no longer generated: {extra}")
+        for path in sorted(old_files & new_files):
+            old_keys, new_keys = old["files"][path], history["files"][path]
+            changed = [k for k in set(old_keys) | set(new_keys)
+                       if old_keys.get(k) != new_keys.get(k)]
+            if changed:
+                drift.append(f"{path}: {len(changed)} key(s) differ, e.g. {sorted(changed)[0]}")
+        print(f"{history_path} is stale for {build}:", file=sys.stderr)
+        for line in drift[:10]:
+            print(f"  {line}", file=sys.stderr)
+        if len(drift) > 10:
+            print(f"  ... and {len(drift) - 10} more", file=sys.stderr)
+        print("  fix: uv run publish_site_data.py, then commit gamedata/history.json", file=sys.stderr)
+        return 10
     with open(history_path, "w", encoding="utf-8") as handle:
         json.dump(history, handle, separators=(",", ":"), sort_keys=True)
         handle.write("\n")
@@ -343,6 +411,9 @@ def main() -> int:
           f"{sum(len(keys) for keys in history['files'].values())} keys, "
           f"{changed} recorded changes across {len(history['builds'])} builds, "
           f"{len(history['keyToSymbol'])} keys mapped to a symbol")
+
+    if args.history_only:
+        return 0
 
     diagnostics = build_diagnostics(build, skip_validator=args.skip_validator)
     os.makedirs(DIAGNOSTICS_ROOT, exist_ok=True)

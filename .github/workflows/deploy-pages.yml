@@ -37,6 +37,21 @@ jobs:
           node-version: '24'
           cache: 'npm'
           cache-dependency-path: pages/package-lock.json
+      # history.json is a committed dataset, not something vite computes: the
+      # site's key history, fragility and "since my build" panels read it. A hand
+      # edit to gamedata/ therefore publishes correct files beside stale history
+      # unless it is refreshed. Regenerated here for the build only - the tree is
+      # not committed back - so the published site is always current, while the
+      # separate check-datasets job below is what tells you to commit it.
+      #
+      # -history-only because the diagnostics half needs the game binaries, which
+      # a GitHub-hosted runner does not have.
+      - name: Refresh the published history dataset
+        working-directory: ${{ github.workspace }}
+        run: |
+          python3 -m pip install --quiet pyyaml
+          python3 publish_site_data.py -history-only
+
       - name: Install Pages dependencies
         run: npm ci
       - name: Test Pages application
@@ -186,3 +201,32 @@ jobs:
           node "$RUNNER_TEMP/pages-verification/verifyGameDataAssets.mjs"
           --base-url "${PAGE_URL%/}/gamedata/"
           --manifest "$RUNNER_TEMP/pages-verification/gamedata-manifest.json"
+
+  # Deliberately its own job: a stale committed dataset must not block a deploy
+  # that is already publishing the right numbers, but it must still show up as a
+  # red mark so the file gets regenerated and committed.
+  check-datasets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Is gamedata/history.json current?
+        run: |
+          python3 -m pip install --quiet pyyaml
+          if ! python3 publish_site_data.py -check; then
+            {
+              echo "### gamedata/history.json is stale"
+              echo
+              echo 'The site build regenerated it, so the published pages are correct,'
+              echo 'but the committed copy no longer matches `gamedata/`. Run:'
+              echo
+              echo '```'
+              echo 'uv run publish_site_data.py'
+              echo 'git add gamedata/history.json diagnostics/'
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
