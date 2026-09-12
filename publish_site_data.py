@@ -70,6 +70,21 @@ def _committed_dates() -> dict[str, str]:
     }
 
 
+def _is_shallow() -> bool:
+    """
+    A shallow clone cannot answer when a path first appeared. Worse than being
+    unable: with --depth 1 the single commit is the root, so `git log
+    --diff-filter=A -- <path>` reports every path as added in HEAD and hands
+    back HEAD's date. That looked like a working answer and turned all sixteen
+    build dates into today, which is what made the CI check fail.
+    """
+    completed = subprocess.run(
+        ["git", "rev-parse", "--is-shallow-repository"],
+        capture_output=True, text=True,
+    )
+    return completed.stdout.strip() == "true"
+
+
 def build_published_at(build: str, fallback: dict[str, str]) -> str | None:
     """
     When this build's gamedata first landed. The first commit that added
@@ -77,11 +92,13 @@ def build_published_at(build: str, fallback: dict[str, str]) -> str | None:
     only says when it was last re-packed, which moves every time the pipeline is
     re-run and would tell a server owner nothing about the age of the numbers.
 
-    A shallow clone cannot answer that - CI checks out with fetch-depth 1, where
-    `git log` over a path returns nothing - so the date already recorded in the
-    committed history.json is reused instead. Without that, a CI regeneration
-    would silently drop every date and the drift check would fail forever.
+    A shallow clone cannot answer that, and answers wrongly rather than not at
+    all (see _is_shallow), so there the date already recorded in the committed
+    history.json is reused. A build missing from that record gets no date, which
+    is honest: the record is genuinely stale and -check should say so.
     """
+    if _is_shallow():
+        return fallback.get(build)
     completed = subprocess.run(
         ["git", "log", "--diff-filter=A", "--format=%aI", "--", os.path.join(GAMEDATA_ROOT, build)],
         capture_output=True, text=True,
@@ -390,6 +407,18 @@ def main() -> int:
             drift.append(f"file not recorded: {missing}")
         for extra in sorted(old_files - new_files):
             drift.append(f"file no longer generated: {extra}")
+        old_builds = {entry.get("gameVersion"): entry for entry in old.get("builds", [])
+                      if isinstance(entry, dict)}
+        new_builds = {entry["gameVersion"]: entry for entry in history["builds"]}
+        for gone in sorted(set(old_builds) - set(new_builds)):
+            drift.append(f"build no longer present: {gone}")
+        for added in sorted(set(new_builds) - set(old_builds)):
+            drift.append(f"build not recorded: {added}")
+        for version in sorted(set(old_builds) & set(new_builds)):
+            was, now = old_builds[version], new_builds[version]
+            for field in sorted(set(was) | set(now)):
+                if was.get(field) != now.get(field):
+                    drift.append(f"build {version}: {field} {was.get(field)!r} -> {now.get(field)!r}")
         for path in sorted(old_files & new_files):
             old_keys, new_keys = old["files"][path], history["files"][path]
             changed = [k for k in set(old_keys) | set(new_keys)
