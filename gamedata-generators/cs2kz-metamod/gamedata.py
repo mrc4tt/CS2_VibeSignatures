@@ -21,7 +21,13 @@ except ImportError:
 
 # Module metadata
 MODULE_NAME = "CS2KZ"
-MODULE_ENABLED = True
+# Fork-owned: this server does not run the plugin, so its gamedata is not
+# generated, shipped or published. The file is listed in sync_upstream.sh's
+# PROTECTED_PATHS and in .gitattributes as merge=ours, because -X theirs would
+# otherwise flip this back to True on the next upstream merge without a word.
+# Re-enabling means removing both protections and syncing this file fresh -
+# it stops receiving upstream fixes while it is protected.
+MODULE_ENABLED = False
 
 # Relative path to gamedata file within the module output directory
 GAMEDATA_PATH = "gamedata/cs2kz-core.games.txt"

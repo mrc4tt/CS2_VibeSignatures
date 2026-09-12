@@ -15,7 +15,13 @@ from gamedata_utils import convert_sig_to_css, normalize_func_name_colons_to_und
 
 # Module metadata
 MODULE_NAME = "ModSharp"
-MODULE_ENABLED = True
+# Fork-owned: this server does not run the plugin, so its gamedata is not
+# generated, shipped or published. The file is listed in sync_upstream.sh's
+# PROTECTED_PATHS and in .gitattributes as merge=ours, because -X theirs would
+# otherwise flip this back to True on the next upstream merge without a word.
+# Re-enabling means removing both protections and syncing this file fresh -
+# it stops receiving upstream fixes while it is protected.
+MODULE_ENABLED = False
 
 # Relative paths to gamedata files within the module output directory
 GAMEDATA_DIR = ".asset/gamedata"

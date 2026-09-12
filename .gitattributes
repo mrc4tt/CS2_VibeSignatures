@@ -8,3 +8,10 @@ gamedata-generators/** text eol=lf
 # Local fork customizations — always keep OUR version on merges
 .github/workflows/deploy-pages.yml merge=ours
 pages/** merge=ours
+
+# Generators disabled in this fork (MODULE_ENABLED = False)
+gamedata-generators/swiftlys2/gamedata.py merge=ours
+gamedata-generators/plugify-plugin-s2sdk/gamedata.py merge=ours
+gamedata-generators/modsharp-public/gamedata.py merge=ours
+gamedata-generators/cs2surf/gamedata.py merge=ours
+gamedata-generators/cs2kz-metamod/gamedata.py merge=ours
