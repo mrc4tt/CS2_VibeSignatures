@@ -233,7 +233,6 @@ uv run missing_report.py -gamever $VER -all
 #     run over data this fork does not ship.
 DISABLED=$(uv run python -c "import publish_site_data as P; print(' '.join(sorted(P.disabled_plugins())))")
 for f in $(find gamedata/$VER -type f \( -name '*.json' -o -name '*.jsonc' -o -name '*.txt' \) ! -name '*.metadata.json'); do
-  plugin=$(basename "$(dirname "${f#gamedata/$VER/}")"); case " $DISABLED " in *" ${f#gamedata/$VER/}"*) ;; esac
   echo " $DISABLED " | grep -q " $(echo "${f#gamedata/$VER/}" | cut -d/ -f1) " && continue
   uv run verify_plugin_gamedata.py -gamever $VER -gamedata "$f" | tail -2
 done
