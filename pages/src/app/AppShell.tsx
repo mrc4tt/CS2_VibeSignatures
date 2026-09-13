@@ -9,7 +9,7 @@ import { ConnectionGate } from '../components/ConnectionGate'
 import { APP_LANGUAGES, changeLanguage, resolveLanguage, type AppLanguage } from '../i18n'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { useApiConfig } from './apiContext'
-import { persistExplain, persistView, readExplain, readStoredView, type AppView } from './appViews'
+import { forgetStoredView, persistExplain, readExplain, type AppView } from './appViews'
 import { onNavigation } from './navigate'
 
 const RunListPage = lazy(() => import('../features/runs/RunListPage').then((module) => ({ default: module.RunListPage })))
@@ -40,7 +40,9 @@ export function AppShell() {
   const { t, i18n } = useTranslation()
   const location = useLocation()
   const [, setSearchParams] = useSearchParams()
-  const [view, setView] = useState<AppView>(() => (location.pathname.startsWith('/runs') ? 'runs-live' : readStoredView()))
+  // Always Start, unless the URL itself asks for something else. The previous
+  // page is deliberately not remembered.
+  const [view, setView] = useState<AppView>(() => (location.pathname.startsWith('/runs') ? 'runs-live' : 'start'))
   const [explain, setExplain] = useState<boolean>(readExplain)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const selectedLanguage = resolveLanguage(i18n.resolvedLanguage)
@@ -48,6 +50,8 @@ export function AppShell() {
   useEffect(() => {
     document.body.classList.toggle('noexplain', !explain)
   }, [explain])
+
+  useEffect(forgetStoredView, [])
 
   useEffect(() => {
     function onKey(event: KeyboardEvent): void {
@@ -79,13 +83,11 @@ export function AppShell() {
       setSearchParams(search, { replace: true })
     }
     setView(next)
-    persistView(next)
     window.scrollTo({ top: 0 })
   }), [setSearchParams])
 
   function go(next: AppView): void {
     setView(next)
-    persistView(next)
     window.scrollTo({ top: 0 })
   }
 

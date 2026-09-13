@@ -1,26 +1,25 @@
 export const APP_VIEWS = ['start', 'symbols', 'gamedata', 'check', 'runs', 'runs-live', 'words'] as const
 export type AppView = (typeof APP_VIEWS)[number]
 
-const STORAGE_KEY = 'cs2vibe.view'
+const LEGACY_VIEW_KEY = 'cs2vibe.view'
 
 export function resolveView(value?: string | null): AppView {
   return APP_VIEWS.includes(value as AppView) ? (value as AppView) : 'start'
 }
 
-/** Remember where someone was, so a reload does not send them back to Start. */
-export function readStoredView(): AppView {
+/**
+ * The app no longer remembers which page you were on.
+ *
+ * It used to open wherever you left off, which meant a link to the site landed
+ * people in the middle of Game Data or Check my file with no explanation. Start
+ * is the page that says what this is, so every visit begins there. This clears
+ * the key one last time for anyone who still has it stored.
+ */
+export function forgetStoredView(): void {
   try {
-    return resolveView(localStorage.getItem(STORAGE_KEY))
+    localStorage.removeItem(LEGACY_VIEW_KEY)
   } catch {
-    return 'start'
-  }
-}
-
-export function persistView(view: AppView): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, view)
-  } catch {
-    // a private window is not a reason to fail a click
+    // a private window is not a reason to fail a load
   }
 }
 
