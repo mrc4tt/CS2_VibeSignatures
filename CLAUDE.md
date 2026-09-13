@@ -227,8 +227,14 @@ uv run detect_aliases.py -gamever $VER -platform windows
 uv run missing_report.py -gamever $VER -all
 # 5b. the plugin files themselves: does every shipped entry still hold?
 #     EVERY shipped file, not just CounterStrikeSharp - checking one of them is
-#     how CS2Fixes went four gamevers without being verified at all.
-for f in $(find gamedata/$VER -name '*.json' -o -name '*.jsonc' -o -name '*.txt' | grep -v metadata); do
+#     how CS2Fixes went four gamevers without being verified at all. Skip the
+#     disabled generators: their directories survive from older builds and their
+#     data is stale on purpose, so cs2kz's own 4 unhealthy entries would fail a
+#     run over data this fork does not ship.
+DISABLED=$(uv run python -c "import publish_site_data as P; print(' '.join(sorted(P.disabled_plugins())))")
+for f in $(find gamedata/$VER -type f \( -name '*.json' -o -name '*.jsonc' -o -name '*.txt' \) ! -name '*.metadata.json'); do
+  plugin=$(basename "$(dirname "${f#gamedata/$VER/}")"); case " $DISABLED " in *" ${f#gamedata/$VER/}"*) ;; esac
+  echo " $DISABLED " | grep -q " $(echo "${f#gamedata/$VER/}" | cut -d/ -f1) " && continue
   uv run verify_plugin_gamedata.py -gamever $VER -gamedata "$f" | tail -2
 done
 # 6. preprocessor/reference coverage, then the test suite
@@ -245,6 +251,13 @@ re-running `publish_site_data.py` leaves the site showing the previous numbers w
 anywhere. `deploy-pages.yml` now regenerates the history dataset during the build and a separate
 `check-datasets` job fails the run when the committed one is stale — but CI catching it after a
 push is the backstop, not the workflow.
+
+`autopilot.sh` runs step 5b as a **gate**, not a report: a build whose shipped files do not all
+verify is never committed, pushed or deployed. That is what makes `AUTOPILOT_DEPLOY=verified`
+defensible — it deploys whenever generation is clean, every artifact holds against the binaries,
+there are no duplicate-VA clusters and every shipped entry re-scans with `unhealthy: 0`, even when
+values changed. `safe` is stricter and holds anything that is more than a pure relocation; `auto`
+ignores the gate entirely.
 
 `-snapshot` and `-outputdir` are **required** on the snapshot and gamedata tools — there is no
 implicit default, by design, so a run can never write to the wrong gamever.
