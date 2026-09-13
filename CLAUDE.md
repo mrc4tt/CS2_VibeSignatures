@@ -251,6 +251,12 @@ anywhere. `deploy-pages.yml` now regenerates the history dataset during the buil
 `check-datasets` job fails the run when the committed one is stale — but CI catching it after a
 push is the backstop, not the workflow.
 
+`AUTOPILOT_NOTIFY_URL` needs one thing to actually deliver to Discord: a **User-Agent**. The same
+payload reaches the webhook through `curl` (HTTP 204) and is refused through `urllib` with its
+default agent (HTTP 403), so `autopilot_notify.sh` sets one explicitly. Worth remembering because
+the failure is silent by design — a dead webhook must not fail a green run, so it only prints
+`notification not delivered` to the journal.
+
 `autopilot.sh` runs step 5b as a **gate**, not a report: a build whose shipped files do not all
 verify is never committed, pushed or deployed. That is what makes `AUTOPILOT_DEPLOY=verified`
 defensible — it deploys whenever generation is clean, every artifact holds against the binaries,
