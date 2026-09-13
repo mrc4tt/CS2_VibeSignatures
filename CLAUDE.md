@@ -257,6 +257,12 @@ default agent (HTTP 403), so `autopilot_notify.sh` sets one explicitly. Worth re
 the failure is silent by design — a dead webhook must not fail a green run, so it only prints
 `notification not delivered` to the journal.
 
+A run announces itself twice: `started` the moment a build passes the preflight, and then the
+outcome with `took Xh Ym` on the first line. The start notice is there because a run takes hours -
+without it the first sign of life is the finished message, and there is no way to tell "still
+working" from "never started". `AUTOPILOT_NOTIFY_START=0` turns it off. It is sent after the disk
+check and the dirty-tree check, so a message never promises a run that is about to be refused.
+
 `autopilot.sh` runs step 5b as a **gate**, not a report: a build whose shipped files do not all
 verify is never committed, pushed or deployed. That is what makes `AUTOPILOT_DEPLOY=verified`
 defensible — it deploys whenever generation is clean, every artifact holds against the binaries,
