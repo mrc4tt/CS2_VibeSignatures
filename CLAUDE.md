@@ -257,6 +257,14 @@ default agent (HTTP 403), so `autopilot_notify.sh` sets one explicitly. Worth re
 the failure is silent by design — a dead webhook must not fail a green run, so it only prints
 `notification not delivered` to the journal.
 
+A `failed` message carries **what to run next**, not just which step broke: `hint_for()` maps the
+failure text to the two or three commands that move it forward, with the gamever and the log path
+already filled in — `./run_linux.sh <VER>` resumes rather than restarting, a verify failure points
+at `grep -B20 "^unhealthy: [1-9]" .autopilot/verify-<VER>.log`, a dirty tree points at
+`git status --short`. Every hint ends with `systemctl start cs2vibe-autopilot.service`, and an
+unrecognised failure falls back to the journal. The point is that a notification which only names
+the step still costs an SSH session to work out the command.
+
 A run announces itself twice: `started` the moment a build passes the preflight, and then the
 outcome with `took Xh Ym` on the first line. The start notice is there because a run takes hours -
 without it the first sign of life is the finished message, and there is no way to tell "still
