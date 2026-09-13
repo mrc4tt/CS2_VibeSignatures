@@ -12,7 +12,11 @@ WorkingDirectory=/root/CS2_VibeSignatures
 # CS2VIBE_AGENT unset and stop.
 EnvironmentFile=/root/CS2_VibeSignatures/.env
 Environment=HOME=/root
-Environment=PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# /root/.opencode/bin holds the agent CLI that CS2VIBE_AGENT names. A login
+# shell has it on PATH; systemd does not, so without it the agent fallback
+# fails with "opencode: not found" - on the one step that matters when a
+# symbol cannot be relocated deterministically.
+Environment=PATH=/root/.local/bin:/root/.opencode/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=/root/CS2_VibeSignatures/autopilot.sh
 # An analysis run is hours of IDA, so no timeout and a low priority: the box
 # stays usable while it works.
