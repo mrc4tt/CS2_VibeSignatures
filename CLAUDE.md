@@ -294,7 +294,7 @@ all three:
 
 | gamever | gamedata updates | artifacts | validator | vfunc indices RTTI-confirmed |
 |---------|------------------|-----------|-----------|------------------------------|
-| 14181   | 489 | 3761 | 0 errors, 37 warnings | 699 |
+| 14181   | 489 | 3763 | 0 errors, 37 warnings | 699 |
 | 14180   | 477 | 3761 | 0 errors, 52 warnings | 696 |
 | 14178b  | 486 | 3787 | 0 errors, 50 warnings | 701 |
 
@@ -303,7 +303,9 @@ table: the numbers above replace an earlier set (775/767/778 updates, 25/42/42 w
 two sessions old and made new advisories look like regressions. The update counts dropped by roughly 320 when five generators were disabled
 (`MODULE_ENABLED = False` for swiftlys2, plugify, modsharp, cs2surf, cs2kz — 620 of 871 keys), so
 they are no longer comparable with the 800-ish numbers above them. Artifacts and slots fell when
-`CCSPlayer_MovementServices_Pawn` and `vtidx_DropWeapon` were retired (see FORK_OWNED_REMOVALS). Re-measure with the VERIFICATION BATTERY and
+`CCSPlayer_MovementServices_Pawn` and `vtidx_DropWeapon` were retired (see FORK_OWNED_REMOVALS), and
+14181 gained two when the `worldrenderer` module was added (3761 -> 3763; the warning count did not
+move, and no gamedata update did either — nothing ships that key yet). Re-measure with the VERIFICATION BATTERY and
 `validate_artifacts.py -gamever <VER> -json`, which prints `artifacts`, `slot_verified`, `errors`
 and `warnings` in one object.
 
@@ -330,6 +332,7 @@ fork's local decisions every time. Those decisions therefore live in code, as de
 | `FORK_OWNED_PLATFORM_PINS` | single-platform symbols (`platform:`) |
 | `FORK_OWNED_OBSOLETE_TASKS` | tasks whose target no longer exists |
 | `ALIAS_OVERRIDES` | downstream key renames |
+| `FORK_OWNED_MODULES` | whole analysis modules upstream does not have |
 
 The other three re-generators, also run from `sync_upstream.sh` or by hand:
 `ensure_agent_fallback_skills.py` (agent finder skills; `-force` rewrites only AUTO-GENERATED
@@ -340,6 +343,37 @@ gave a `-decompiles` task, so their artifact can actually materialize).
 
 **A local fix that is not in one of these tables will be silently lost on the next merge.** When
 you change a config by hand, put the same change in the matching table.
+
+`FORK_OWNED_MODULES` is the odd one out: every other table patches a module upstream already has,
+this one creates the module. It has to run FIRST, before `inject()` and the other enforcers, because
+`inject()` resolves a symbol's module with `next(name == module)` and raises `StopIteration` on a
+module the config does not contain — so a fork-owned symbol in a fork-owned module cannot be
+declared at all until the block exists. The block is appended at the END of `modules:` (immediately
+before the next top-level key, `cpp_tests:`), so the insert does not depend on upstream's module
+order, which changes between gamevers and carries staging meaning this fork has no say over.
+
+Adding a module means **four** places, not one: the table here, plus `LIB_MODULE` so `module_for()`
+routes the library to it, plus the two hand-maintained module→filename maps — `auto_hunt_headless.py`
+(which `validate_artifacts.py` imports) and `verify_plugin_gamedata.py`'s own copy. Miss either map
+and the artifact is simply never checked against its binary. `tests/test_fork_owned_modules.py`
+asserts all four for every entry in the table.
+
+Nothing else needs teaching: `copy_depot_bin.py` reads each module's `path_windows`/`path_linux`
+straight out of the config (note `-platform all-platform` for the flat `cs2_depot/game/...` layout —
+the default expects `cs2_depot/<platform>/game/...`), `run_linux.sh` iterates `bin/<VER>/*/`, and
+`missing_report.py` picks the module up from the config too.
+
+`worldrenderer` is the first entry: it carries `CWorldRendererMgr::CreateWorld_Internal`, the
+function StripperCS2 hooks to rewrite a map's entity lump, and it is in none of upstream's nine
+modules. Its preprocessor is **string-anchored, not relocation-only**, because a fork-owned symbol
+has no baseline in any earlier gamever — a relocation preprocessor would fail on its first run and
+on every re-run of that same gamever. The anchor is the function's own name, which it prints in its
+bail-out path and which both binaries carry verbatim:
+`CWorldRendererMgr::CreateWorld_Internal( %s ):  Blocking load because marked for deletion during
+load`. That is also the rule-12 confirmation: linux `0x2b1180` loads it at `0x2b1622`, windows
+`0x18002b1a0` at `0x18002b2ad` (a `4C 8D` lea — scanning only for `48 8D` finds nothing and looks
+like a failed identification). `ensure_seed_preprocessors.py` leaves the file alone even under
+`-force`, because a preprocessor without the AUTO-GENERATED marker counts as hand-written.
 
 ## TAKING A NEW GAMEVER THROUGH
 

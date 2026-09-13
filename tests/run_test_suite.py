@@ -70,6 +70,7 @@ UNIT_MODULES = frozenset(
         "test_cs2fow_gamedata",
         "test_define_inputfunc_preprocessor",
         "test_download_depot",
+        "test_fork_owned_modules",
         "test_format_repo_files",
         "test_gamedata_candidate",
         "test_gamedata_metadata",

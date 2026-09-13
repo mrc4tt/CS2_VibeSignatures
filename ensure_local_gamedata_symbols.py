@@ -91,6 +91,11 @@ FORK_OWNED_SYMBOLS = [
     # sat frozen in the template instead (linux 0 / windows 2, which the artifacts
     # do confirm). Declared here so they are regenerated and RTTI-checked instead.
     ("CEntityResourceManifest_AddResource", "vfunc", "engine", None),
+    # The function StripperCS2 hooks to rewrite a map's entity lump, in a module
+    # upstream does not analyse at all - see FORK_OWNED_MODULES, which creates the
+    # module block this entry needs before inject() can place it.
+    ("CWorldRendererMgr_CreateWorld_Internal", "func", "worldrenderer",
+     "CWorldRendererMgr::CreateWorld_Internal"),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
@@ -366,6 +371,76 @@ FORK_OWNED_MOVES = [
     ("CFlattenedSerializers_CreateFieldChangedEventQueue", "server", "networksystem",
      "CFlattenedSerializers_vtable", "class lives in networksystem"),
 ]
+
+# Whole analysis modules this fork adds. Every other table here patches a module
+# upstream already has; this one creates the module itself, because inject() resolves
+# a symbol's module with `next(... if name == module)` and raises StopIteration when
+# the module is absent - so a fork-owned symbol in a module upstream does not analyse
+# cannot be declared at all.
+#
+# worldrenderer carries CWorldRendererMgr::CreateWorld_Internal, the function
+# StripperCS2 hooks to rewrite a map's entity lump. It is not in any of upstream's
+# nine modules, and neither the depot copy nor the run scripts need teaching: both are
+# config-driven (copy_depot_bin.py reads path_windows/path_linux, run_linux.sh iterates
+# bin/<VER>/*/). The two hand-maintained module->filename maps do
+# (auto_hunt_headless.py, also imported by validate_artifacts.py, and
+# verify_plugin_gamedata.py).
+FORK_OWNED_MODULES = [
+    # (module, path_windows, path_linux, symbols)
+    #   symbols: (symbol_name, category, alias) - a real hunting task named
+    #   find-<symbol> is generated for each, matching its preprocessor's filename.
+    ("worldrenderer", "game/bin/win64/worldrenderer.dll",
+     "game/bin/linuxsteamrt64/libworldrenderer.so",
+     [("CWorldRendererMgr_CreateWorld_Internal", "func", "CWorldRendererMgr::CreateWorld_Internal")]),
+]
+
+
+def enforce_fork_owned_modules(text):
+    """Create the module blocks in FORK_OWNED_MODULES that the config lacks.
+
+    Appended at the END of `modules:`, i.e. immediately before the next top-level
+    key, so the insert does not depend on upstream's module ORDER - which changes
+    between gamevers and carries staging meaning this fork has no say over. A new
+    module is independent of every stage, so last is as correct as anywhere.
+
+    The block ships its find-tasks and its symbol entry with it rather than an empty
+    `skills:`/`symbols:` pair: a module whose keys are empty parses as null, and
+    inject() would only fill it on a run where the symbol is still missing.
+    """
+    added = 0
+    for module, path_windows, path_linux, symbols in FORK_OWNED_MODULES:
+        if re.search(rf"^  - name: {re.escape(module)}\b", text, re.M):
+            continue
+        tasks, entries = [], []
+        for symbol_name, category, alias in symbols:
+            # No platform: key and a {platform} output path - the shape upstream uses
+            # for a task that runs on both platforms, which this one does: its anchor
+            # is a string literal present in both binaries. optional_output, not
+            # expected_output, because the older gamevers have no artifact for a
+            # symbol this fork added and expected_output makes the path REQUIRED, at
+            # which point pack dies with "Missing required symbol YAML" (rule 11).
+            tasks.append(
+                f"      - name: find-{symbol_name}\n"
+                "        optional_output:\n"
+                f"          - {symbol_name}.{{platform}}.yaml\n"
+            )
+            entries.append(symbol_entry_block(symbol_name, category, None, None, alias))
+        block = (
+            f"  - name: {module}\n"
+            f"    path_windows: {path_windows}\n"
+            f"    path_linux: {path_linux}\n"
+            "    skills:\n"
+            + "".join(tasks)
+            + "    symbols:\n"
+            + "".join(entries)
+        )
+        # First top-level key after `modules:` - `cpp_tests:` on every config so far.
+        following = re.search(r"^(?!modules:)[A-Za-z_][\w]*:", text[len("modules:"):], re.M)
+        at = len("modules:") + following.start() if following else len(text)
+        text = text[:at] + block + text[at:]
+        added += 1
+    return text, added
+
 
 # Fork-owned bare optional_output tasks. These declare artifacts recovered headlessly
 # for a platform/module upstream never analysed; without a declaring task
@@ -857,7 +932,8 @@ aborts. Therefore:
         f.write(body)
 
 
-LIB_MODULE = {"server": "server", "engine2": "engine", "engine": "engine", "client": "client"}
+LIB_MODULE = {"server": "server", "engine2": "engine", "engine": "engine", "client": "client",
+              "worldrenderer": "worldrenderer"}
 ENGINE_CLASSES = (
     "CNetworkGameServerBase", "CNetworkGameServer", "CServerSideClient",
     "CServerSideClientBase", "CGameEntitySystem",
@@ -1106,7 +1182,13 @@ def main():
     with open(config_path, "r", encoding="utf-8") as f:
         text = f.read()
 
-    patched, reclassified = enforce_category_decisions(text)
+    # Before everything else: the other enforcers and inject() all resolve a symbol
+    # to a module, and inject() raises StopIteration on a module that is not there.
+    patched, new_modules = enforce_fork_owned_modules(text)
+    if new_modules:
+        print(f"  created: {new_modules} fork-owned module block(s)")
+
+    patched, reclassified = enforce_category_decisions(patched)
     if reclassified:
         print(f"  re-asserted: {reclassified} fork-owned category decision(s)")
     patched, aliased = enforce_alias_overrides(patched)

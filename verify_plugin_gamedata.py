@@ -39,16 +39,17 @@ LIBRARY_TO_MODULE = {
     "client": "client", "networksystem": "networksystem",
     "scenesystem": "scenesystem", "matchmaking": "matchmaking",
     "vphysics2": "vphysics2", "sdl3": "SDL3", "SDL3": "SDL3",
+    "worldrenderer": "worldrenderer",
 }
 
 BIN_LINUX = {"server": "libserver.so", "engine": "libengine2.so", "client": "libclient.so",
              "networksystem": "libnetworksystem.so", "scenesystem": "libscenesystem.so",
              "matchmaking": "libmatchmaking.so", "vphysics2": "libvphysics2.so",
-             "SDL3": "libSDL3.so.0"}
+             "SDL3": "libSDL3.so.0", "worldrenderer": "libworldrenderer.so"}
 BIN_WIN = {"server": "server.dll", "engine": "engine2.dll", "client": "client.dll",
            "networksystem": "networksystem.dll", "scenesystem": "scenesystem.dll",
            "matchmaking": "matchmaking.dll", "vphysics2": "vphysics2.dll",
-           "SDL3": "SDL3.dll"}
+           "SDL3": "SDL3.dll", "worldrenderer": "worldrenderer.dll"}
 
 PLATFORMS = ("linux", "windows")
 

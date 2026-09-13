@@ -14480,6 +14480,18 @@ modules:
         alias:
           - INetworkMessages::GetFieldChangeCallbackPriorities
         shared: true
+  - name: worldrenderer
+    path_windows: game/bin/win64/worldrenderer.dll
+    path_linux: game/bin/linuxsteamrt64/libworldrenderer.so
+    skills:
+      - name: find-CWorldRendererMgr_CreateWorld_Internal
+        optional_output:
+          - CWorldRendererMgr_CreateWorld_Internal.{platform}.yaml
+    symbols:
+      - name: CWorldRendererMgr_CreateWorld_Internal
+        category: func
+        alias:
+          - CWorldRendererMgr::CreateWorld_Internal
 cpp_tests:
   - name: CEntityInstance_MSVC
     symbol: CEntityInstance

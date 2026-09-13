@@ -120,9 +120,24 @@ binaries:
       path: game/bin/win64/vphysics2.dll
       sha256: 'd3a76f86ed6d005620484134882efecb965702ca88b2bcbd8b3411fa17033045'
       size: 4592280
+  worldrenderer:
+    linux:
+      crc32: '363cbbf9'
+      crc64: '5c966204fd359e3e'
+      md5: 'c89157cc4be1aad76f9bf2b6d6387550'
+      path: game/bin/linuxsteamrt64/libworldrenderer.so
+      sha256: '8e8fccaac9fcf689cd35734fab9eb9ea57f15d40c42162c48d2c843c4485d87d'
+      size: 4433276
+    windows:
+      crc32: '0fcf449b'
+      crc64: '9b5658898590cb58'
+      md5: '590e4df2afab0ed591541914b26a8473'
+      path: game/bin/win64/worldrenderer.dll
+      sha256: '7d9f50fee0fef18ab782d5dc661592af597ea9cff1e7183feaf93e8e5c32b2ae'
+      size: 1953432
 config_digest_version: 2
-config_sha256: sha256:2135103245024dc807d03d69904a83ff2b310f03872e439af70b10431e14fd25
-file_count: 3761
+config_sha256: sha256:5f057dd78f54e62b88b0ec6eb0f4d082554aa96793106a26942cb4e9971a022f
+file_count: 3763
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -46981,6 +46996,18 @@ files:
     vtable_size: '0x620'
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
+  worldrenderer/CWorldRendererMgr_CreateWorld_Internal.linux.yaml:
+    func_name: CWorldRendererMgr_CreateWorld_Internal
+    func_rva: '0x2b1180'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 89 F3 48 81 EC ?? ?? ?? ?? F6 46 ?? ??
+    func_size: '0x946'
+    func_va: '0x2b1180'
+  worldrenderer/CWorldRendererMgr_CreateWorld_Internal.windows.yaml:
+    func_name: CWorldRendererMgr_CreateWorld_Internal
+    func_rva: '0x2b1a0'
+    func_sig: 48 89 5C 24 ?? 48 89 54 24 ?? 55 56 57 48 81 EC ?? ?? ?? ??
+    func_size: '0x2fd'
+    func_va: '0x18002b1a0'
 game_version: '14181'
-last_publish_time: '2026-09-12T16:29:24Z'
+last_publish_time: '2026-09-13T21:03:48Z'
 schema_version: 5
