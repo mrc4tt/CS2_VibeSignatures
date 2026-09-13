@@ -257,6 +257,13 @@ default agent (HTTP 403), so `autopilot_notify.sh` sets one explicitly. Worth re
 the failure is silent by design — a dead webhook must not fail a green run, so it only prints
 `notification not delivered` to the journal.
 
+A finished message carries the two things that otherwise cost an SSH session: **which keys moved**
+(read from the metadata companions the generator just wrote, so it is what the plugins actually
+got, and skipping the disabled plugins whose old metadata still sits on disk — 8 files, not 13) and
+**links to the site** for the files and the file check. Assemble that body with `printf`, never a
+quoted `"\n\n"`: inside double quotes those are two literal characters, and the first version
+reached Discord showing them.
+
 A `failed` message carries **what to run next**, not just which step broke: `hint_for()` maps the
 failure text to the two or three commands that move it forward, with the gamever and the log path
 already filled in — `./run_linux.sh <VER>` resumes rather than restarting, a verify failure points
