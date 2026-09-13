@@ -35,17 +35,17 @@ describe('the browser Back button', () => {
     paint()
     // The navigation is anchors, not buttons: a destination should survive
     // middle-click, ctrl-click and "copy link address".
-    expect(screen.getByRole('link', { name: 'Game Data' })).toHaveAttribute('href', '/gamedata')
+    expect(screen.getByRole('link', { name: 'Game Data' })).toHaveAttribute('href', '/game-data')
     // Views used to be shell state on a single route: nothing was pushed, so the
     // first Back took you off the site altogether.
     await userEvent.click(screen.getByRole('link', { name: 'Game Data' }))
-    await waitFor(() => expect(window.location.pathname).toBe('/gamedata'))
+    await waitFor(() => expect(window.location.pathname).toBe('/game-data'))
 
     await userEvent.click(screen.getByRole('link', { name: 'Check my file' }))
     await waitFor(() => expect(window.location.pathname).toBe('/check'))
 
     window.history.back()
-    await waitFor(() => expect(window.location.pathname).toBe('/gamedata'))
+    await waitFor(() => expect(window.location.pathname).toBe('/game-data'))
     window.history.back()
     await waitFor(() => expect(window.location.pathname).toBe('/'))
   })
@@ -55,7 +55,7 @@ describe('the browser Back button', () => {
     // A symbol linking to the Game Data key that ships it: the target has to be
     // shareable, not just rendered.
     requestNavigation({ view: 'gamedata', params: { file: 'matchzy/gamedata/matchzy.json', key: 'JoinTeam' } })
-    await waitFor(() => expect(window.location.pathname).toBe('/gamedata'))
+    await waitFor(() => expect(window.location.pathname).toBe('/game-data'))
     expect(new URLSearchParams(window.location.search).get('key')).toBe('JoinTeam')
   })
 

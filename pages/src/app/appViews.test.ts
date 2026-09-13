@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { APP_VIEWS, forgetStoredView, resolveView, VIEW_PATHS, viewFromPath } from './appViews'
+import { APP_VIEWS, forgetStoredView, RESERVED_PATHS, resolveView, VIEW_PATHS, viewFromPath } from './appViews'
 
 describe('which page the app opens on', () => {
   it('resolves anything unknown to Start', () => {
@@ -30,7 +30,7 @@ describe('every view has its own URL', () => {
 
   it('reads the view back out of a pathname', () => {
     expect(viewFromPath('/')).toBe('start')
-    expect(viewFromPath('/gamedata')).toBe('gamedata')
+    expect(viewFromPath('/game-data')).toBe('gamedata')
     expect(viewFromPath('/check')).toBe('check')
     expect(viewFromPath('/words')).toBe('words')
     expect(viewFromPath('/analysis')).toBe('runs')
@@ -38,7 +38,17 @@ describe('every view has its own URL', () => {
 
   it('tolerates a trailing slash, because a pasted link often has one', () => {
     expect(viewFromPath('/check/')).toBe('check')
-    expect(viewFromPath('gamedata')).toBe('gamedata')
+    expect(viewFromPath('game-data')).toBe('gamedata')
+  })
+
+  it('never routes over a name the built site already serves', () => {
+    // /gamedata was exactly this mistake: the published assets live there, and
+    // GitHub Pages answered a reload with the directory's index.json.
+    for (const view of APP_VIEWS) {
+      const first = VIEW_PATHS[view].replace(/^\/+/, '').split('/')[0]
+      if (first === '') continue
+      expect(RESERVED_PATHS).not.toContain(first)
+    }
   })
 
   it('keeps /runs and its run pages on the live view, where existing links point', () => {

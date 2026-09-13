@@ -14,12 +14,28 @@ const LEGACY_VIEW_KEY = 'cs2vibe.view'
 export const VIEW_PATHS: Record<AppView, string> = {
   start: '/',
   symbols: '/symbols',
-  gamedata: '/gamedata',
+  // NOT /gamedata: that is a directory of published assets at the site root, and
+  // GitHub Pages serves its index.json as the directory index - so visiting the
+  // route and reloading printed raw JSON instead of the page.
+  gamedata: '/game-data',
   check: '/check',
   words: '/words',
   runs: '/analysis',
   'runs-live': '/runs',
 }
+
+/**
+ * Names the built site occupies at its root, which a route therefore cannot use.
+ *
+ * The published data is emitted beside index.html - gamedata/, gamesymbols/,
+ * diagnostics/, badge/, assets/ - and a static host answers those before any
+ * SPA fallback. A route sharing a name is not a routing bug that shows up in
+ * development; it is a page that works until someone reloads it.
+ */
+export const RESERVED_PATHS = [
+  'assets', 'badge', 'diagnostics', 'gamedata', 'gamesymbols',
+  'history.json', 'latest.json', 'vite.svg',
+]
 
 /** Which view a pathname names; anything unrecognised is Start. */
 export function viewFromPath(pathname: string): AppView {
