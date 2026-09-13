@@ -18,7 +18,7 @@ bin_artifacts/<gamever>/<module>/<Symbol>.<platform>.yaml
 gamesymbols/<gamever>.yaml      packed snapshot, stamped with the config digest
         |  update_gamedata.py
         v
-gamedata/<gamever>/<plugin>/    one dir per plugin, from gamedata-generators/<plugin>/ (14 of them)
+gamedata/<gamever>/<plugin>/    one dir per plugin, from gamedata-generators/<plugin>/ (15, 9 enabled)
         |  deploy_local_plugins.sh + update_css_gamedata.sh
         v
 ~/customGIT/*  and  ~/CounterStrikeSharp     (still needs a commit inside each plugin repo)
@@ -259,7 +259,7 @@ the failure is silent by design — a dead webhook must not fail a green run, so
 
 A finished message carries the two things that otherwise cost an SSH session: **which keys moved**
 (read from the metadata companions the generator just wrote, so it is what the plugins actually
-got, and skipping the disabled plugins whose old metadata still sits on disk — 8 files, not 13) and
+got, and skipping the disabled plugins whose old metadata still sits on disk — 9 files, not 15) and
 **links to the site** for the files and the file check. Assemble that body with `printf`, never a
 quoted `"\n\n"`: inside double quotes those are two literal characters, and the first version
 reached Discord showing them.
@@ -294,7 +294,7 @@ all three:
 
 | gamever | gamedata updates | artifacts | validator | vfunc indices RTTI-confirmed |
 |---------|------------------|-----------|-----------|------------------------------|
-| 14181   | 489 | 3763 | 0 errors, 37 warnings | 699 |
+| 14181   | 491 | 3763 | 0 errors, 37 warnings | 699 |
 | 14180   | 477 | 3761 | 0 errors, 52 warnings | 696 |
 | 14178b  | 486 | 3787 | 0 errors, 50 warnings | 701 |
 
@@ -359,8 +359,10 @@ and the artifact is simply never checked against its binary. `tests/test_fork_ow
 asserts all four for every entry in the table.
 
 Nothing else needs teaching: `copy_depot_bin.py` reads each module's `path_windows`/`path_linux`
-straight out of the config (note `-platform all-platform` for the flat `cs2_depot/game/...` layout —
-the default expects `cs2_depot/<platform>/game/...`), `run_linux.sh` iterates `bin/<VER>/*/`, and
+straight out of the config (`run_linux.sh`/`run_windows.sh` already pass `-platform all-platform`,
+which is the flat `cs2_depot/game/...` layout `download_depot.py` produces; only a by-hand call
+without that flag looks for `cs2_depot/<platform>/game/...` and fails), `run_linux.sh` iterates
+`bin/<VER>/*/`, and
 `missing_report.py` picks the module up from the config too.
 
 `worldrenderer` is the first entry: it carries `CWorldRendererMgr::CreateWorld_Internal`, the
@@ -374,6 +376,18 @@ load`. That is also the rule-12 confirmation: linux `0x2b1180` loads it at `0x2b
 `0x18002b1a0` at `0x18002b2ad` (a `4C 8D` lea — scanning only for `48 8D` finds nothing and looks
 like a failed identification). `ensure_seed_preprocessors.py` leaves the file alone even under
 `-force`, because a preprocessor without the AUTO-GENERATED marker counts as hand-written.
+
+Its consumer is the `stripper` generator, and that one is deliberately **a reference file, not a
+drop-in**: StripperCS2 reads no gamedata at all, both signatures are string literals in
+`src/hook.cpp` behind an `#ifdef WIN32`, resolved with `KHook::LookupSignature`. So the emitted
+`stripper.json` cannot be copied into the plugin — the value has to be pasted into `hook.cpp` and
+the plugin rebuilt. Generating it is still what makes the symbol worth carrying: the value is
+published with every build, so the site shows when it last moved and "Check my file" can tell
+someone whether the literal their build carries is current. Which is the actual problem — the linux
+literal in the plugin's own source is stale for 14181 (`48 83 EC ?` where the function now does
+`48 81 EC ? ? ? ?`), so the hook would simply not be found. `convert_sig_to_css` is the right
+converter for it: `KHook` wants space-separated hex with one `?` per wildcard, which is exactly the
+`??` -> `?` that function does.
 
 ## TAKING A NEW GAMEVER THROUGH
 
