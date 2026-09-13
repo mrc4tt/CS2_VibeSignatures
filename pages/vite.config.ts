@@ -1,5 +1,6 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import { copyFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gameDataPlugin } from './gameDataPlugin'
@@ -14,10 +15,37 @@ const inputRoot = configuredInputRoot
   ? resolve(configuredInputRoot)
   : fileURLToPath(new URL('..', import.meta.url))
 
+/**
+ * GitHub Pages has no rewrite rule, so it answers an unknown path with its own
+ * 404 page. Every route other than "/" is an unknown path to it, which is why a
+ * deep link into the app only ever worked in dev. Pages does serve 404.html for
+ * those, so shipping the app shell under that name turns the 404 into the router
+ * taking over. nginx does the same job with try_files.
+ */
+function spaFallback(): Plugin {
+  let outDir = 'dist'
+  return {
+    name: 'spa-fallback-404',
+    configResolved(config) {
+      outDir = config.build.outDir
+    },
+    // Copied after the write rather than emitted during the bundle: in Vite 7
+    // index.html is not in the bundle yet when generateBundle runs, so emitting
+    // from there failed outright.
+    async closeBundle() {
+      const root = fileURLToPath(new URL('.', import.meta.url))
+      const index = resolve(root, outDir, 'index.html')
+      const fallback = resolve(root, outDir, '404.html')
+      await copyFile(index, fallback)
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    spaFallback(),
     gameSymbolsPlugin(join(inputRoot, 'gamesymbols')),
     gameDataPlugin(join(inputRoot, 'gamedata')),
     siteMetaPlugin(join(inputRoot, 'gamesymbols'), join(inputRoot, 'gamedata'), inputRoot),

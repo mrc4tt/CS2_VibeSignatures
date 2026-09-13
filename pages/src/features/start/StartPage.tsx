@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from 'antd'
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getSiteMeta } from '../../api/siteMeta'
 import { getSiteHistory } from '../../api/siteData'
 import { formatAgo, formatWhen } from '../../components/whenText'
 import { Explain } from '../../components/Explain'
-import type { AppView } from '../../app/appViews'
+import { VIEW_PATHS, type AppView } from '../../app/appViews'
 
 const SEEN_KEY = 'cs2vibe.seenBuild'
 
@@ -90,12 +91,14 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
         </p>
       )}
 
+      {/* Links, not buttons: these are destinations, so middle-click, ctrl-click
+          and "copy link address" all work. */}
       <div className="tasks">
         {tasks.map((task) => (
-          <button key={task.q} type="button" className="task" onClick={() => onGo(task.view)}>
+          <Link key={task.q} to={VIEW_PATHS[task.view]} className="task" onClick={() => onGo(task.view)}>
             <span className="q">{task.q}</span>
             <span className="d">{task.d}</span>
-          </button>
+          </Link>
         ))}
       </div>
 

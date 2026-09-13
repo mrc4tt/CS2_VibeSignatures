@@ -3,6 +3,34 @@ export type AppView = (typeof APP_VIEWS)[number]
 
 const LEGACY_VIEW_KEY = 'cs2vibe.view'
 
+/**
+ * One path per view, so the browser's own Back button works.
+ *
+ * Until now every view was shell state on a single route: clicking a card on
+ * Start changed what was rendered without adding a history entry, so Back left
+ * the site entirely. The live run pages keep /runs, which is where their links
+ * already point.
+ */
+export const VIEW_PATHS: Record<AppView, string> = {
+  start: '/',
+  symbols: '/symbols',
+  gamedata: '/gamedata',
+  check: '/check',
+  words: '/words',
+  runs: '/analysis',
+  'runs-live': '/runs',
+}
+
+/** Which view a pathname names; anything unrecognised is Start. */
+export function viewFromPath(pathname: string): AppView {
+  const path = `/${pathname.replace(/^\/+|\/+$/g, '')}`
+  if (path === '/runs' || path.startsWith('/runs/')) return 'runs-live'
+  const found = (Object.keys(VIEW_PATHS) as AppView[]).find(
+    (view) => view !== 'runs-live' && VIEW_PATHS[view] === path,
+  )
+  return found ?? 'start'
+}
+
 export function resolveView(value?: string | null): AppView {
   return APP_VIEWS.includes(value as AppView) ? (value as AppView) : 'start'
 }

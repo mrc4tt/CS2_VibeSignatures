@@ -1,7 +1,7 @@
 import { ApiOutlined, SettingOutlined } from '@ant-design/icons'
 import { Badge, Select, Typography } from 'antd'
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
-import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom'
+import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ApiSettingsDrawer } from '../components/ApiSettingsDrawer'
 import { CommandPalette } from '../components/CommandPalette'
@@ -9,7 +9,7 @@ import { ConnectionGate } from '../components/ConnectionGate'
 import { APP_LANGUAGES, changeLanguage, resolveLanguage, type AppLanguage } from '../i18n'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { useApiConfig } from './apiContext'
-import { forgetStoredView, persistExplain, readExplain, type AppView } from './appViews'
+import { forgetStoredView, persistExplain, readExplain, VIEW_PATHS, viewFromPath, type AppView } from './appViews'
 import { onNavigation } from './navigate'
 
 const RunListPage = lazy(() => import('../features/runs/RunListPage').then((module) => ({ default: module.RunListPage })))
@@ -39,10 +39,10 @@ export function AppShell() {
   const { baseUrl, connected } = useApiConfig()
   const { t, i18n } = useTranslation()
   const location = useLocation()
-  const [, setSearchParams] = useSearchParams()
-  // Always Start, unless the URL itself asks for something else. The previous
-  // page is deliberately not remembered.
-  const [view, setView] = useState<AppView>(() => (location.pathname.startsWith('/runs') ? 'runs-live' : 'start'))
+  const navigate = useNavigate()
+  // The URL is the single source of truth for which view is showing, which is
+  // what makes Back and Forward work and a link to a page shareable.
+  const view = viewFromPath(location.pathname)
   const [explain, setExplain] = useState<boolean>(readExplain)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const selectedLanguage = resolveLanguage(i18n.resolvedLanguage)
@@ -77,17 +77,15 @@ export function AppShell() {
   }, [])
 
   useEffect(() => onNavigation(({ view: next, params }) => {
-    if (params) {
-      const search = new URLSearchParams()
-      for (const [key, value] of Object.entries(params)) if (value) search.set(key, value)
-      setSearchParams(search, { replace: true })
-    }
-    setView(next)
+    const search = new URLSearchParams()
+    if (params) for (const [key, value] of Object.entries(params)) if (value) search.set(key, value)
+    const query = search.toString()
+    navigate(`${VIEW_PATHS[next]}${query ? `?${query}` : ''}`)
     window.scrollTo({ top: 0 })
-  }), [setSearchParams])
+  }), [navigate])
 
   function go(next: AppView): void {
-    setView(next)
+    navigate(VIEW_PATHS[next])
     window.scrollTo({ top: 0 })
   }
 
@@ -109,14 +107,14 @@ export function AppShell() {
           </a>
           <nav className="nav" aria-label={t('brand')}>
             {tabs.map((tab) => (
-              <button
+              <Link
                 key={tab}
-                type="button"
+                to={VIEW_PATHS[tab]}
                 aria-current={view === tab ? 'page' : undefined}
-                onClick={() => go(tab)}
+                onClick={() => window.scrollTo({ top: 0 })}
               >
                 {t(`nav2.${tab}`)}
-              </button>
+              </Link>
             ))}
           </nav>
           <div className="railtools">
