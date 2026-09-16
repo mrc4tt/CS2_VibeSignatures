@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CBaseEntity_EmitSoundFilter skill."""
+"""Preprocess script for find-CBaseEntity_EmitSoundFilter skill.
 
+ABI NOTE: consumers call this with sret ABI (out-struct in rdi/rcx). The correct
+target's head is `48 B8 00 00 00 00 FF FF FF FF 55 48 89 E5 ...` (writes [rdi]).
+The `55 48 89 E5 41 57 41 56 49 89 F6 BE ...` / `48 89 74 24 ?? 57 41 56 41 57 ...`
+candidate is a different `this`-method and crashes every consumer - see SKILL.md.
+"""
+
+from abi_guard import make_llm_result_validator
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
@@ -58,6 +65,8 @@ async def preprocess_skill(
         func_names=TARGET_FUNCTION_NAMES,
         llm_decompile_specs=LLM_DECOMPILE,
         llm_config=llm_config,
+        # ABI guard: reject LLM-fallback candidates with a known-bad function head (see abi_guard.py)
+        llm_result_validator=make_llm_result_validator("CBaseEntity_EmitSoundFilter", platform, new_binary_dir),
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )

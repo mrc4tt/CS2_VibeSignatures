@@ -136,8 +136,8 @@ binaries:
       sha256: '7d9f50fee0fef18ab782d5dc661592af597ea9cff1e7183feaf93e8e5c32b2ae'
       size: 1953432
 config_digest_version: 2
-config_sha256: sha256:5f057dd78f54e62b88b0ec6eb0f4d082554aa96793106a26942cb4e9971a022f
-file_count: 3763
+config_sha256: sha256:91ec28f6b91b96d9eb8480b1d4c843162e701ff5e0532798f5bedaab541b6277
+file_count: 3765
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -17858,16 +17858,28 @@ files:
     func_va: '0x180e65870'
   server/CBaseEntity_EmitSoundFilter.linux.yaml:
     func_name: CBaseEntity_EmitSoundFilter
-    func_rva: '0xf419d0'
-    func_sig: 55 48 89 E5 41 57 41 56 49 89 F6 BE ?? ?? ?? ?? 41 55 49 89 D5 41 54 53 48 89 FB 48 8D 3D ?? ?? ?? ??
-    func_size: '0x168'
-    func_va: '0xf419d0'
+    func_rva: '0x1a81640'
+    func_sig: 48 B8 00 00 00 00 FF FF FF FF 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ?? ?? ?? ?? 48 89 07 48 8D 05 ?? ?? ?? ?? 48 C7 47 08 00 00 00 00
+    func_size: '0xd5c'
+    func_va: '0x1a81640'
   server/CBaseEntity_EmitSoundFilter.windows.yaml:
     func_name: CBaseEntity_EmitSoundFilter
-    func_rva: '0x56dea0'
-    func_sig: 48 89 74 24 ?? 57 41 56 41 57 48 83 EC ?? BE ?? ?? ?? ??
-    func_size: '0x10f'
-    func_va: '0x18056dea0'
+    func_rva: '0xe65a20'
+    func_sig: 40 53 48 83 EC ?? 4C 89 4C 24 ?? 48 8B D9 45 8B C8
+    func_size: '0x2c'
+    func_va: '0x180e65a20'
+  server/CBaseEntity_EmitSoundFilter_SoundName.linux.yaml:
+    func_name: CBaseEntity_EmitSoundFilter_SoundName
+    func_rva: '0x1a82e60'
+    func_sig: 55 48 89 E5 41 57 66 41 0F 7E C7 41 56 4D 89 C6
+    func_size: '0x0'
+    func_va: '0x1a82e60'
+  server/CBaseEntity_EmitSoundFilter_SoundName.windows.yaml:
+    func_name: CBaseEntity_EmitSoundFilter_SoundName
+    func_rva: '0xe8fd20'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B DA 49 8B F9
+    func_size: '0xe8'
+    func_va: '0x180e8fd20'
   server/CBaseEntity_EndTouch.linux.yaml:
     func_name: CBaseEntity_EndTouch
     vfunc_index: 149
@@ -27546,16 +27558,16 @@ files:
     func_va: '0x180a88490'
   server/CCSPlayer_MovementServices_FullWalkMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_FullWalkMove
-    func_rva: '0x15b69a0'
-    func_sig: 48 B8 00 00 00 00 00 00 80 3F 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D B5 F8 FD FF FF
-    func_size: '0xfce'
-    func_va: '0x15b69a0'
+    func_rva: '0x15b7e30'
+    func_sig: 55 48 89 E5 41 54 49 89 F4 53 48 89 FB 84 D2
+    func_size: '0xd23'
+    func_va: '0x15b7e30'
   server/CCSPlayer_MovementServices_FullWalkMove.windows.yaml:
     func_name: CCSPlayer_MovementServices_FullWalkMove
-    func_rva: '0xab4820'
-    func_sig: 48 8B C4 48 89 70 18 48 89 78 20 55 41 54
-    func_size: '0x103f'
-    func_va: '0x180ab4820'
+    func_rva: '0xaa6ba0'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B FA 48 8B D9 45 84 C0 75
+    func_size: '0x122'
+    func_va: '0x180aa6ba0'
   server/CCSPlayer_MovementServices_FullWalkMove_SpeedClamp.linux.yaml:
     patch_bytes: 66 0F 1F 44 00 00
     patch_name: CCSPlayer_MovementServices_FullWalkMove_SpeedClamp
@@ -27578,28 +27590,28 @@ files:
     struct_name: CCSPlayer_MovementServices
   server/CCSPlayer_MovementServices_ProcessMovement.linux.yaml:
     func_name: CCSPlayer_MovementServices_ProcessMovement
-    func_rva: '0x1783c80'
-    func_sig: 55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 49 89 F4 53 48 83 EC ?? E8 ?? ?? ?? ?? 89 C7
-    func_size: '0x4bc'
-    func_va: '0x1783c80'
+    func_rva: '0x15b8570'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 83 EC ?? 48 8B 7F
+    func_size: '0x5e3'
+    func_va: '0x15b8570'
   server/CCSPlayer_MovementServices_ProcessMovement.windows.yaml:
     func_name: CCSPlayer_MovementServices_ProcessMovement
-    func_rva: '0xc2a480'
-    func_sig: 48 8B C4 48 89 58 ?? 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ??
-    func_size: '0x4fb'
-    func_va: '0x180c2a480'
+    func_rva: '0xaa9a30'
+    func_sig: 40 57 41 57 48 81 EC ?? ?? ?? ?? 48 83 79
+    func_size: '0x785'
+    func_va: '0x180aa9a30'
   server/CCSPlayer_MovementServices_WalkMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_WalkMove
-    func_rva: '0x15b61d0'
-    func_sig: 55 48 89 E5 41 55 41 89 D5 41 54 49 89 F4 53 48 89 FB 48 83 EC ?? 48 8B 47 ??
-    func_size: '0x1f1'
-    func_va: '0x15b61d0'
+    func_rva: '0x15b69a0'
+    func_sig: 48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D B5 ?? ?? ?? ?? 41 55 41 BD
+    func_size: '0x0'
+    func_va: '0x15b69a0'
   server/CCSPlayer_MovementServices_WalkMove.windows.yaml:
     func_name: CCSPlayer_MovementServices_WalkMove
-    func_rva: '0xaa6cd0'
-    func_sig: 40 53 56 57 48 83 EC ?? 48 83 79 ?? ??
-    func_size: '0x29b'
-    func_va: '0x180aa6cd0'
+    func_rva: '0xab4820'
+    func_sig: 48 8B C4 48 89 70 ?? 48 89 78 ?? 55 41 54 41 55 41 56 41 57 48 8D A8 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 0F 29 70 ?? 48 8B F1
+    func_size: '0x1a8e'
+    func_va: '0x180ab4820'
   server/CCSPlayer_MovementServices_WaterMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_WaterMove
     func_rva: '0x157c6e0'
@@ -44883,16 +44895,16 @@ files:
     func_va: '0x180bed890'
   server/NetworkStateChanged.linux.yaml:
     func_name: NetworkStateChanged
-    func_rva: '0xa882e0'
-    func_sig: 55 48 89 E5 41 56 49 89 F6 41 55 4C 8D 2D ?? ?? ?? ?? 41 54 53
-    func_size: '0x156'
-    func_va: '0xa882e0'
+    func_rva: '0x216a990'
+    func_sig: 48 8B 07 48 85 C0 74 ?? 48 8B 50
+    func_size: '0xca5'
+    func_va: '0x216a990'
   server/NetworkStateChanged.windows.yaml:
     func_name: NetworkStateChanged
-    func_rva: '0x1861e0'
-    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B 42 ?? 48 8D 35 ?? ?? ?? ??
-    func_size: '0x189'
-    func_va: '0x1801861e0'
+    func_rva: '0x126eef0'
+    func_sig: 4C 8B C2 48 8B D1 48 8B 09
+    func_size: '0x44'
+    func_va: '0x18126eef0'
   server/ParticleTestStart_CommandHandler.linux.yaml:
     func_name: ParticleTestStart_CommandHandler
     func_rva: '0x175ae10'
@@ -47009,5 +47021,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x18002b1a0'
 game_version: '14181'
-last_publish_time: '2026-09-13T21:03:48Z'
+last_publish_time: '2026-09-16T14:29:01Z'
 schema_version: 5

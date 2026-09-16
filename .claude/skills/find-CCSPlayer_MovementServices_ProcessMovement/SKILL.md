@@ -17,6 +17,18 @@ Target: `CCSPlayer_MovementServices::ProcessMovement` (func) in the module loade
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
 > Produce ONLY this session's platform output. NEVER open another binary.
 
+## ABI identification (mandatory)
+
+`CCSPlayer_MovementServices::ProcessMovement(CMoveData*)` is **virtual**: on 14181 it is
+vtable slot 29 (linux) / 28 (windows) of `CCSPlayer_MovementServices`. Accept only a candidate
+that sits in that vtable. Head: linux `55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 89 FB
+48 83 EC ?? 48 8B 7F`, windows `40 57 41 57 48 81 EC ?? ?? ?? ?? 48 83 79`.
+
+**Reject** the 14176–14181 candidate (linux `55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 49 89 F4
+53`, 14181 VA 0x1783c80 / windows RVA 0xc2a480): it is a non-virtual helper reached via the
+`s_pRunCommandPawn` xref and is in no vtable. `uv run abi_guard.py` enforces this.
+
+
 ## Method
 
 Locate via distinctive constants/strings in the body, cross-references from

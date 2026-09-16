@@ -119,6 +119,16 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
     return updated_count, skipped_count, updated_symbols, skipped_symbols
 
 
+# ModSharp's gamedata names a DIFFERENT overload than every other consumer for this key:
+# CBaseEntity::EmitSoundFilter(IRecipientFilter&, int, const char* soundname, float volume, ...)
+# (IDA-verified 14181: linux 0x1a82e60, windows RVA 0xe8fd20). The shared symbol
+# CBaseEntity_EmitSoundFilter is the sret variant taking EmitSound_t& (CS#/CS2Fixes/plugify ABI);
+# shipping it to ModSharp would crash their EmitSound. Route the key to its own symbol.
+KEY_SYMBOL_OVERRIDES = {
+    "CBaseEntity::EmitSoundFilter": "CBaseEntity_EmitSoundFilter_SoundName",
+}
+
+
 def _update_addresses(addresses, yaml_data, func_lib_map, platforms, alias_to_name_map, debug):
     """
     Update Addresses section with signatures from YAML data.
@@ -133,8 +143,10 @@ def _update_addresses(addresses, yaml_data, func_lib_map, platforms, alias_to_na
     skipped_symbols = []
 
     for func_name, entry in addresses.items():
-        # Convert :: to _ for matching with YAML data
-        yaml_func_name = normalize_func_name_colons_to_underscore(func_name, alias_to_name_map)
+        # Convert :: to _ for matching with YAML data (per-consumer overload overrides first)
+        yaml_func_name = KEY_SYMBOL_OVERRIDES.get(func_name) or normalize_func_name_colons_to_underscore(
+            func_name, alias_to_name_map
+        )
 
         # Determine library for this function
         library = entry.get("library")

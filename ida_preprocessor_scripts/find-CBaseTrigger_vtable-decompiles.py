@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CBaseTrigger_vtable-decompiles skill."""
+"""Preprocess script for find-CBaseTrigger_vtable-decompiles skill.
+
+StartTouch/EndTouch now emit func_sig (generate_func_sig=True): without it the CounterStrikeSharp
+generator keeps the stale template sig, which on 14181 resolved EndTouch.windows to an unrelated
+function (RVA 0x136a0d0 instead of the vtable slot 0x3cb540). See abi_guard.py.
+"""
 
 from ida_analyze_util import preprocess_common_skill
 

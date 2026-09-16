@@ -6699,6 +6699,9 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CBaseEntity_EmitSoundFilter_SoundName
+        expected_output:
+          - CBaseEntity_EmitSoundFilter_SoundName.{platform}.yaml
       - name: find-CCSPlayer_MovementServices_Pawn
         expected_output:
           - CCSPlayer_MovementServices_Pawn.{platform}.yaml
@@ -7073,8 +7076,7 @@ modules:
         expected_output:
           - CCSPlayer_MovementServices_ProcessMovement.{platform}.yaml
         expected_input:
-          - CPlayer_MovementServices_s_pRunCommandPawn.{platform}.yaml
-          - CPlayer_MovementServices_ForceButtonState.{platform}.yaml
+          - CCSPlayer_MovementServices_vtable.{platform}.yaml
       - name: find-CCSPlayer_MovementServices_CheckMovingGround
         expected_output:
           - CCSPlayer_MovementServices_CheckMovingGround.{platform}.yaml
@@ -10126,6 +10128,8 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CBaseEntity_EmitSoundFilter_SoundName
+        category: func
       - name: CCSPlayer_MovementServices
         category: struct
       - name: CCSPlayer_MovementServices_Pawn

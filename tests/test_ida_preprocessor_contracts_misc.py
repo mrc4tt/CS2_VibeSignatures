@@ -1,7 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 import yaml
 
@@ -261,29 +261,21 @@ class TestFindCNetworkMessagesGetNetworkSerializationContextData(unittest.Isolat
 
 
 class TestFindCcsPlayerMovementServicesProcessMovement(unittest.IsolatedAsyncioTestCase):
-    async def test_script_forwards_gv_backed_func_xrefs(self) -> None:
+    async def test_script_forwards_signature_and_vtable_anchor(self) -> None:
         module = _load_module(
             PROCESS_MOVEMENT_SCRIPT_PATH,
             "find_CCSPlayer_MovementServices_ProcessMovement",
         )
         mock_preprocess_common_skill = AsyncMock(return_value=True)
-        expected_func_xrefs = [
-            {
-                "func_name": "CCSPlayer_MovementServices_ProcessMovement",
-                "xref_strings": [],
-                "xref_gvs": ["CPlayer_MovementServices_s_pRunCommandPawn"],
-                "xref_signatures": [],
-                "xref_funcs": [],
-                "xref_floats": ["64.0", "0.5"],
-                "exclude_funcs": [
-                    "CPlayer_MovementServices_ForceButtons",
-                    "CPlayer_MovementServices_ForceButtonState",
-                ],
-                "exclude_strings": [],
-                "exclude_gvs": [],
-                "exclude_signatures": [],
-                "exclude_floats": [],
-            }
+        # Anchor is the function's own head bytes (platform-specific) plus vtable membership;
+        # the old gv/float anchor selected a non-virtual helper (see abi_guard.py).
+        expected_func_xrefs = module.FUNC_XREFS_BY_PLATFORM["windows"]
+        self.assertEqual(
+            expected_func_xrefs[0]["xref_signatures"],
+            ["40 57 41 57 48 81 EC ?? ?? ?? ?? 48 83 79"],
+        )
+        expected_func_vtable_relations = [
+            ("CCSPlayer_MovementServices_ProcessMovement", "CCSPlayer_MovementServices"),
         ]
         expected_func_names = [
             "CCSPlayer_MovementServices_ProcessMovement",
@@ -327,6 +319,8 @@ class TestFindCcsPlayerMovementServicesProcessMovement(unittest.IsolatedAsyncioT
             image_base=0x180000000,
             func_names=expected_func_names,
             func_xrefs=expected_func_xrefs,
+            func_vtable_relations=expected_func_vtable_relations,
+            llm_result_validator=ANY,
             generate_yaml_desired_fields=expected_generate_yaml_desired_fields,
             debug=True,
         )

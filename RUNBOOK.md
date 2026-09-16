@@ -59,6 +59,8 @@ Alias-fil: `aliases/<VER>.json` (curated + auto-detected).
 ## FASE 4 — GAMEDATA-GENERERING + DEPLOY
 
 ```bash
+uv run abi_guard.py -gamever <VER> --fix     # ABI-identitet: EmitSoundFilter/NetworkStateChanged (se abi_guard.py)
+uv run consumer_drift_audit.py -gamever <VER>  # krydstjek mod consumers' egne upstream-gamedata (DIFFERENT = IDA-verificér)
 uv run gamesymbol_snapshot.py pack -gamever <VER> -snapshot gamesymbols/<VER>.yaml
 uv run update_gamedata.py -gamever <VER> -snapshot gamesymbols/<VER>.yaml -outputdir gamedata/<VER>
 ./update_css_gamedata.sh <VER>            # gamedata.json → ~/CounterStrikeSharp-installen
@@ -70,6 +72,7 @@ uv run update_gamedata.py -gamever <VER> -snapshot gamesymbols/<VER>.yaml -outpu
 
 ```bash
 uv run audit_duplicate_va.py -gamever <VER>     # sidste check
+uv run abi_guard.py -gamever <VER> && uv run consumer_drift_audit.py -gamever <VER>   # identitet + drift, skal være grønne
 git add gamedata/<VER> gamesymbols/<VER>.yaml bin_artifacts/<VER> configs/<VER>.yaml
 git commit -m "feat(<VER>): complete analysis + gamedata" && git push origin main
 # → sig.miksen.me deployer automatisk

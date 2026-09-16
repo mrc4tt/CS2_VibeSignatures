@@ -17,6 +17,16 @@ Target: `CCSPlayer_MovementServices::WalkMove` (func) in the module loaded in TH
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
 > Produce ONLY this session's platform output. NEVER open another binary.
 
+## ABI identification (mandatory)
+
+`CCSPlayer_MovementServices::WalkMove(CMoveData*)` is the ~4 KB SIMD body (14181: linux 0x15b69a0,
+windows RVA 0xab4820), head linux `48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56`,
+windows `48 8B C4 48 89 70 ?? 48 89 78 ?? 55 41 54 41 55 41 56 41 57`. swiftlys2, cs2kz and modsharp all
+agree. **Reject** the small 3-argument helper that references "PlayerMove_PostMove" (14181 linux
+0x15b61d0 / windows RVA 0xaa6cd0) - the old xref_strings anchor selected it. Note: the pipeline
+previously shipped this body under FullWalkMove; FullWalkMove is the small `(CMoveData*, bool)`
+function (14181 linux 0x15b7e30 / windows RVA 0xaa6ba0). `uv run abi_guard.py` enforces both.
+
 ## Method
 
 Locate via distinctive constants/strings in the body, cross-references from

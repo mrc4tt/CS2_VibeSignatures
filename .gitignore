@@ -46,3 +46,6 @@ llmenv.sh
 
 # hand-carried brief for the cs2-signatures VPS (not part of the repo)
 NOTES-cs2-signatures.md
+
+# consumer_drift_audit.py upstream download cache
+/.cache/

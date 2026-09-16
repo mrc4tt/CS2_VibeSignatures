@@ -44,9 +44,14 @@ BUYSTATE_MEMBERS = {
     "InitialDelay": "m_isInitialDelay",
 }
 BOTPROFILE_MEMBERS = {
-    "Aggression": "m_aggression", "Skill": "m_skill", "Teamwork": "m_teamwork",
-    "WeaponPref": "m_weaponPreference", "WeaponPrefCount": "m_weaponPreferenceCount",
-    "Cost": "m_cost", "Difficulty": "m_difficultyFlags", "ReactionTime": "m_reactionTime",
+    "Aggression": "m_aggression",
+    "Skill": "m_skill",
+    "Teamwork": "m_teamwork",
+    "WeaponPref": "m_weaponPreference",
+    "WeaponPrefCount": "m_weaponPreferenceCount",
+    "Cost": "m_cost",
+    "Difficulty": "m_difficultyFlags",
+    "ReactionTime": "m_reactionTime",
     "AttackDelay": "m_attackDelay",
     "LookAngleMaxAccelAttacking": "m_lookAngleMaxAccelAttacking",
     "LookAngleStiffnessAttacking": "m_lookAngleStiffnessAttacking",
@@ -66,6 +71,9 @@ FORK_OWNED_SYMBOLS = [
     ("CCSCustomHudLayout_SetHasClassForPlayer", "func", None, None),
     ("CCSCustomHudLayout_SetInputCaptureEnabled", "func", None, None),
     ("CCSPointScript_OnCustomHudClicked", "func", None, None),
+    # ModSharp-only overload of EmitSoundFilter (const char* soundname variant) - see
+    # gamedata-generators/modsharp-public/gamedata.py KEY_SYMBOL_OVERRIDES and abi_guard.py.
+    ("CBaseEntity_EmitSoundFilter_SoundName", "func", None, None),
     # CS2Fixes' gamedata asks for this under the alias; upstream declares neither
     ("CTakeDamageInfo_ctor", "func", None, "CTakeDamageInfo"),
     # CounterStrikeSharp ships this signature and the cs2-signatures tracker had no
@@ -94,8 +102,7 @@ FORK_OWNED_SYMBOLS = [
     # The function StripperCS2 hooks to rewrite a map's entity lump, in a module
     # upstream does not analyse at all - see FORK_OWNED_MODULES, which creates the
     # module block this entry needs before inject() can place it.
-    ("CWorldRendererMgr_CreateWorld_Internal", "func", "worldrenderer",
-     "CWorldRendererMgr::CreateWorld_Internal"),
+    ("CWorldRendererMgr_CreateWorld_Internal", "func", "worldrenderer", "CWorldRendererMgr::CreateWorld_Internal"),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
@@ -109,10 +116,8 @@ FORK_OWNED_SYMBOLS = [
 # unrelated symbol. Anchoring reproduces the layout that is known to pack.
 FORK_OWNED_TASKS = [
     # (symbol_name, module, insert_before_task)
-    ("CCSPlayer_MovementServices_FullWalkMove", "server",
-     "find-CCSPlayer_MovementServices_FullWalkMove_SpeedClamp"),
-    ("CCSPlayer_MovementServices_FullWalkMove_SpeedClamp", "server",
-     "find-CCSPlayer_MovementServices_CheckJumpButton"),
+    ("CCSPlayer_MovementServices_FullWalkMove", "server", "find-CCSPlayer_MovementServices_FullWalkMove_SpeedClamp"),
+    ("CCSPlayer_MovementServices_FullWalkMove_SpeedClamp", "server", "find-CCSPlayer_MovementServices_CheckJumpButton"),
     ("CTakeDamageInfo_ctor", "server", "find-CTakeDamageInfo_GetWeaponName"),
 ]
 
@@ -199,8 +204,7 @@ FORK_OWNED_OBSOLETE_TASKS = [
     # A single {platform} declaration task was wrong for this table: these are bare
     # declaration tasks and the name must say which platform the artifact was made
     # for, so the two per-platform entries replace it.
-    ("find-CEntityResourceManifest_AddResource", "engine",
-     "replaced by the -linux and -windows declaration tasks"),
+    ("find-CEntityResourceManifest_AddResource", "engine", "replaced by the -linux and -windows declaration tasks"),
     # (task_name, module, why)
     # CNetChan has no RTTI in engine2 on either platform, so the single match a
     # 7-byte signature found there was a false positive.
@@ -303,7 +307,11 @@ FORK_OWNED_REMOVALS = [
     ("CNetworkMessages_GetNetworkGroupCount", "networksystem", "never hunted, never shipped"),
     ("CNetworkMessages_GetNetworkGroupName", "networksystem", "never hunted, never shipped"),
     ("CNetworkMessages_GetNetworkGroupColor", "networksystem", "never hunted, never shipped"),
-    ("GiveNamedItem2", "server", "address is a sibling overload; the name belongs to CCSPlayer_ItemServices_GiveNamedItem"),
+    (
+        "GiveNamedItem2",
+        "server",
+        "address is a sibling overload; the name belongs to CCSPlayer_ItemServices_GiveNamedItem",
+    ),
     # Two symbols claimed the single downstream "ClientPrint" key: this one by its own
     # name, and ClientPrintToController through alias: [ClientPrint]. Emission order
     # decided the winner, which is rule 15. A headless IDA pass over libserver.so
@@ -344,7 +352,11 @@ FORK_OWNED_REMOVALS = [
     # Retired instead of relabelled: upstream's windows artifact stays untouched as a
     # locator, and this stops the linux half being reported as missing forever.
     # Replaces the earlier platform: windows pin, which only hid half the problem.
-    ("INetworkSystem_RemoveNetChannel", "engine", "mislabelled ILegacyGameUI slot; real data is CNetworkSystem_RemoveNetChannel"),
+    (
+        "INetworkSystem_RemoveNetChannel",
+        "engine",
+        "mislabelled ILegacyGameUI slot; real data is CNetworkSystem_RemoveNetChannel",
+    ),
 ]
 
 # Fork-owned symbol MOVES between module blocks. Upstream declares the symbol under a
@@ -356,10 +368,20 @@ FORK_OWNED_MOVES = [
     # networksystem, where find-tasks already produce both artifacts. Slot indices also
     # differ per platform there (linux 73/72, windows 72/71), so the engine declaration
     # could not even be filled by copying.
-    ("CNetChan_ProcessMessages", "engine", "networksystem",
-     "CNetChan_ParseMessagesDemoInternal", "class absent from engine2"),
-    ("CNetChan_ParseMessagesDemo", "engine", "networksystem",
-     "CNetChan_ParseMessagesDemoInternal", "class absent from engine2"),
+    (
+        "CNetChan_ProcessMessages",
+        "engine",
+        "networksystem",
+        "CNetChan_ParseMessagesDemoInternal",
+        "class absent from engine2",
+    ),
+    (
+        "CNetChan_ParseMessagesDemo",
+        "engine",
+        "networksystem",
+        "CNetChan_ParseMessagesDemoInternal",
+        "class absent from engine2",
+    ),
     # Upstream declares it under server, but CFlattenedSerializers lives in
     # networksystem: that is where the find-task, both -decompiles reference YAMLs
     # (references/networksystem/) and the artifacts on both platforms actually are,
@@ -368,8 +390,13 @@ FORK_OWNED_MOVES = [
     # "../server/CFlattenedSerializers_CreateFieldChangedEventQueue" as its example
     # of the cross-module base_vfunc_name syntax - that example is where the stale
     # module came from, and no preprocessor uses that path.
-    ("CFlattenedSerializers_CreateFieldChangedEventQueue", "server", "networksystem",
-     "CFlattenedSerializers_vtable", "class lives in networksystem"),
+    (
+        "CFlattenedSerializers_CreateFieldChangedEventQueue",
+        "server",
+        "networksystem",
+        "CFlattenedSerializers_vtable",
+        "class lives in networksystem",
+    ),
 ]
 
 # Whole analysis modules this fork adds. Every other table here patches a module
@@ -389,9 +416,12 @@ FORK_OWNED_MODULES = [
     # (module, path_windows, path_linux, symbols)
     #   symbols: (symbol_name, category, alias) - a real hunting task named
     #   find-<symbol> is generated for each, matching its preprocessor's filename.
-    ("worldrenderer", "game/bin/win64/worldrenderer.dll",
-     "game/bin/linuxsteamrt64/libworldrenderer.so",
-     [("CWorldRendererMgr_CreateWorld_Internal", "func", "CWorldRendererMgr::CreateWorld_Internal")]),
+    (
+        "worldrenderer",
+        "game/bin/win64/worldrenderer.dll",
+        "game/bin/linuxsteamrt64/libworldrenderer.so",
+        [("CWorldRendererMgr_CreateWorld_Internal", "func", "CWorldRendererMgr::CreateWorld_Internal")],
+    ),
 ]
 
 
@@ -429,13 +459,10 @@ def enforce_fork_owned_modules(text):
             f"  - name: {module}\n"
             f"    path_windows: {path_windows}\n"
             f"    path_linux: {path_linux}\n"
-            "    skills:\n"
-            + "".join(tasks)
-            + "    symbols:\n"
-            + "".join(entries)
+            "    skills:\n" + "".join(tasks) + "    symbols:\n" + "".join(entries)
         )
         # First top-level key after `modules:` - `cpp_tests:` on every config so far.
-        following = re.search(r"^(?!modules:)[A-Za-z_][\w]*:", text[len("modules:"):], re.M)
+        following = re.search(r"^(?!modules:)[A-Za-z_][\w]*:", text[len("modules:") :], re.M)
         at = len("modules:") + following.start() if following else len(text)
         text = text[:at] + block + text[at:]
         added += 1
@@ -474,56 +501,73 @@ FORK_OWNED_OPTIONAL_TASKS = [
     # the resource name - is linux slot 0 (xor r8d/r9d/ecx/edx) and windows slot 2
     # (xor r9d, [rsp+0x20]=0, xor r8d). GCC and MSVC emit the overloads in opposite
     # order, which is exactly why the indices are 0 and 2.
-    ("find-CEntityResourceManifest_AddResource-linux", "engine",
-     "CEntityResourceManifest_AddResource.linux.yaml"),
-    ("find-CEntityResourceManifest_AddResource-windows", "engine",
-     "CEntityResourceManifest_AddResource.windows.yaml"),
+    ("find-CEntityResourceManifest_AddResource-linux", "engine", "CEntityResourceManifest_AddResource.linux.yaml"),
+    ("find-CEntityResourceManifest_AddResource-windows", "engine", "CEntityResourceManifest_AddResource.windows.yaml"),
     ("find-INetworkSystem_CloseSocket-linux", "engine", "INetworkSystem_CloseSocket.linux.yaml"),
-    ("find-INetworkSystem_EnableLoopbackBetweenSockets-linux", "engine",
-     "INetworkSystem_EnableLoopbackBetweenSockets.linux.yaml"),
+    (
+        "find-INetworkSystem_EnableLoopbackBetweenSockets-linux",
+        "engine",
+        "INetworkSystem_EnableLoopbackBetweenSockets.linux.yaml",
+    ),
     ("find-INetworkSystem_ConnectSocket-linux", "engine", "INetworkSystem_ConnectSocket.linux.yaml"),
     ("find-INetworkSystem_PollSocket-linux", "engine", "INetworkSystem_PollSocket.linux.yaml"),
     ("find-ConnectSocketToAddressList-linux", "engine", "ConnectSocketToAddressList.linux.yaml"),
-    ("find-CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem-server", "server",
-     "CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml"),
-    ("find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem-linux", "server",
-     "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.linux.yaml"),
-    ("find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable-server", "server",
-     "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.{platform}.yaml"),
-    ("find-CEnvHudHint_API_ShowHudHint-binding", "server",
-     "CEnvHudHint_API_ShowHudHint.{platform}.yaml"),
-    ("find-CCSPlayer_MovementServices_WaterMove-verified", "server",
-     "CCSPlayer_MovementServices_WaterMove.{platform}.yaml"),
+    (
+        "find-CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem-server",
+        "server",
+        "CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml",
+    ),
+    (
+        "find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem-linux",
+        "server",
+        "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.linux.yaml",
+    ),
+    (
+        "find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable-server",
+        "server",
+        "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.{platform}.yaml",
+    ),
+    ("find-CEnvHudHint_API_ShowHudHint-binding", "server", "CEnvHudHint_API_ShowHudHint.{platform}.yaml"),
+    (
+        "find-CCSPlayer_MovementServices_WaterMove-verified",
+        "server",
+        "CCSPlayer_MovementServices_WaterMove.{platform}.yaml",
+    ),
     # upstream declares the symbol but ships no task for it, so the artifact was
     # dropped as undeclared on every gamever that has one
-    ("find-CCSPlayerController_HandleCommand_JoinTeam-local", "server",
-     "CCSPlayerController_HandleCommand_JoinTeam.{platform}.yaml"),
+    (
+        "find-CCSPlayerController_HandleCommand_JoinTeam-local",
+        "server",
+        "CCSPlayerController_HandleCommand_JoinTeam.{platform}.yaml",
+    ),
     # cross-module relocations: the symbol is declared for this module too, but only
     # the other module was ever analysed, so the artifact had no declaring task here
     ("find-g_pGameEntitySystem", "client", "g_pGameEntitySystem.{platform}.yaml"),
     ("find-g_pGameResourceService", "client", "g_pGameResourceService.{platform}.yaml"),
-    ("find-IGameResourceService_SetEntityResourceManifestHandler", "client",
-     "IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml"),
-    ("find-IGameSystemFactory_SetGlobalPtr", "server",
-     "IGameSystemFactory_SetGlobalPtr.{platform}.yaml"),
-    ("find-IGameSystem_SetGameSystemGlobalPtrs", "server",
-     "IGameSystem_SetGameSystemGlobalPtrs.{platform}.yaml"),
+    (
+        "find-IGameResourceService_SetEntityResourceManifestHandler",
+        "client",
+        "IGameResourceService_SetEntityResourceManifestHandler.{platform}.yaml",
+    ),
+    ("find-IGameSystemFactory_SetGlobalPtr", "server", "IGameSystemFactory_SetGlobalPtr.{platform}.yaml"),
+    ("find-IGameSystem_SetGameSystemGlobalPtrs", "server", "IGameSystem_SetGameSystemGlobalPtrs.{platform}.yaml"),
     ("find-IGameSystem_vdtor", "server", "IGameSystem_vdtor.{platform}.yaml"),
-    ("find-CNetworkGameServerBase_IsBackgroundMap", "server",
-     "CNetworkGameServerBase_IsBackgroundMap.{platform}.yaml"),
-    ("find-CEntityInstance_PreDataUpdate", "server",
-     "CEntityInstance_PreDataUpdate.{platform}.yaml"),
-    ("find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem", "server",
-     "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.windows.yaml"),
+    ("find-CNetworkGameServerBase_IsBackgroundMap", "server", "CNetworkGameServerBase_IsBackgroundMap.{platform}.yaml"),
+    ("find-CEntityInstance_PreDataUpdate", "server", "CEntityInstance_PreDataUpdate.{platform}.yaml"),
+    (
+        "find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem",
+        "server",
+        "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.windows.yaml",
+    ),
 ]
 
 
 def _module_blocks(lines):
     """(start, end, name) for every top-level module block."""
-    starts = [(i, l[len("  - name: "):]) for i, l in enumerate(lines)
-              if l.startswith("  - name: ") and l.count(":") == 1]
-    return [(st, starts[k + 1][0] if k + 1 < len(starts) else len(lines), name)
-            for k, (st, name) in enumerate(starts)]
+    starts = [
+        (i, l[len("  - name: ") :]) for i, l in enumerate(lines) if l.startswith("  - name: ") and l.count(":") == 1
+    ]
+    return [(st, starts[k + 1][0] if k + 1 < len(starts) else len(lines), name) for k, (st, name) in enumerate(starts)]
 
 
 def _symbol_block(lines, start, end, symbol):
@@ -579,7 +623,7 @@ def enforce_fork_owned_platform_pins(text):
                 lines[wrong] = f"        platform: {platform}"
             else:
                 cat = next((i for i in range(at, to) if lines[i].strip().startswith("category:")), at)
-                lines[cat + 1:cat + 1] = [f"        platform: {platform}"]
+                lines[cat + 1 : cat + 1] = [f"        platform: {platform}"]
             pinned += 1
             break
     return "\n".join(lines), pinned
@@ -596,7 +640,7 @@ def enforce_fork_owned_removals(text):
             span = _symbol_block(lines, start, end, symbol)
             if span is None:
                 continue
-            del lines[span[0]:span[1]]
+            del lines[span[0] : span[1]]
             removed += 1
             break
     return "\n".join(lines), removed
@@ -612,16 +656,18 @@ def enforce_fork_owned_alias_removals(text):
             span = _symbol_block(lines, start, end, symbol)
             if span is None:
                 continue
-            block = [l for l in lines[span[0]:span[1]] if l.strip() not in wanted]
+            block = [l for l in lines[span[0] : span[1]] if l.strip() not in wanted]
             dropped = (span[1] - span[0]) - len(block)
             if not dropped:
                 break
             # An "alias:" key with nothing under it is not valid for load_config,
             # so it goes when its last entry does.
-            cleaned = [l for i, l in enumerate(block)
-                       if l.strip() != "alias:"
-                       or (i + 1 < len(block) and block[i + 1].strip().startswith("- "))]
-            lines[span[0]:span[1]] = cleaned
+            cleaned = [
+                l
+                for i, l in enumerate(block)
+                if l.strip() != "alias:" or (i + 1 < len(block) and block[i + 1].strip().startswith("- "))
+            ]
+            lines[span[0] : span[1]] = cleaned
             removed += dropped
             break
     return "\n".join(lines), removed
@@ -634,8 +680,7 @@ def enforce_fork_owned_moves(text):
         lines = text.split("\n")
         blocks = _module_blocks(lines)
         # already in the target?
-        if any(name == dst and _symbol_block(lines, st, en, symbol)
-               for st, en, name in blocks):
+        if any(name == dst and _symbol_block(lines, st, en, symbol) for st, en, name in blocks):
             continue
         span = src_span = None
         for st, en, name in blocks:
@@ -646,8 +691,8 @@ def enforce_fork_owned_moves(text):
                     break
         if not src_span:
             continue
-        block = lines[src_span[0]:src_span[1]]
-        del lines[src_span[0]:src_span[1]]
+        block = lines[src_span[0] : src_span[1]]
+        del lines[src_span[0] : src_span[1]]
         blocks = _module_blocks(lines)
         target = None
         for st, en, name in blocks:
@@ -690,17 +735,14 @@ def enforce_fork_owned_optional_tasks(text):
                     break
                 if not any(l.strip() == "optional_output:" for l in lines[have:to]):
                     break  # a real find-task with expected_output - leave it alone
-                lines[have:to] = [f"      - name: {task}", "        optional_output:",
-                                  f"          - {path}"]
+                lines[have:to] = [f"      - name: {task}", "        optional_output:", f"          - {path}"]
                 added += 1
                 break
             try:
                 at = next(i for i in range(start, end) if lines[i] == "    skills:")
             except StopIteration:
                 continue
-            lines[at + 1:at + 1] = [f"      - name: {task}",
-                                    "        optional_output:",
-                                    f"          - {path}"]
+            lines[at + 1 : at + 1] = [f"      - name: {task}", "        optional_output:", f"          - {path}"]
             added += 1
             break
     return "\n".join(lines), added
@@ -744,19 +786,35 @@ def load_seed_specs():
             cls, _, method = key.partition("::")
             if method.startswith("m_"):
                 specs.append((symbol_name, "structmember", cls, method, alias, lib))
-            elif symbol_name.startswith("BuyState_") and symbol_name[len("BuyState_"):] in BUYSTATE_MEMBERS:
+            elif symbol_name.startswith("BuyState_") and symbol_name[len("BuyState_") :] in BUYSTATE_MEMBERS:
                 # BuyState er en non-polymorphic POD - offset-entries er structmembers
                 # (kilde-kommentarer: m_doneBuying / m_isInitialDelay).
-                specs.append((symbol_name, "structmember", "BuyState",
-                              BUYSTATE_MEMBERS[symbol_name[len("BuyState_"):]], alias, lib))
+                specs.append(
+                    (
+                        symbol_name,
+                        "structmember",
+                        "BuyState",
+                        BUYSTATE_MEMBERS[symbol_name[len("BuyState_") :]],
+                        alias,
+                        lib,
+                    )
+                )
             elif cls in ("CEntityIdentity", "CMoveData") and method:
                 # layout-holder-klasser: offset-entries er structmembers (agent-verificeret 14178b)
                 specs.append((symbol_name, "structmember", cls, method, alias, lib))
-            elif symbol_name.startswith("BotProfile_") and symbol_name[len("BotProfile_"):] in BOTPROFILE_MEMBERS:
+            elif symbol_name.startswith("BotProfile_") and symbol_name[len("BotProfile_") :] in BOTPROFILE_MEMBERS:
                 # BotProfile er en non-polymorphic POD - offset-entries er structmembers
                 # (IDA-verificeret 14178b: m_attackDelay +0x5C; Bot-Improver reference).
-                specs.append((symbol_name, "structmember", "BotProfile",
-                              BOTPROFILE_MEMBERS[symbol_name[len("BotProfile_"):]], alias, lib))
+                specs.append(
+                    (
+                        symbol_name,
+                        "structmember",
+                        "BotProfile",
+                        BOTPROFILE_MEMBERS[symbol_name[len("BotProfile_") :]],
+                        alias,
+                        lib,
+                    )
+                )
             elif cls and method and re.fullmatch(r"m_[A-Za-z0-9_]+", (entry.get("comment") or "").strip()):
                 # An offsets entry whose comment names an m_* member is a struct
                 # field, and the plugins say so twice: in the comment, and by
@@ -790,11 +848,7 @@ def load_seed_specs():
 
 
 def find_task_block(symbol_name):
-    return (
-        f"      - name: find-{symbol_name}\n"
-        f"        expected_output:\n"
-        f"          - {symbol_name}.{{platform}}.yaml\n"
-    )
+    return f"      - name: find-{symbol_name}\n        expected_output:\n          - {symbol_name}.{{platform}}.yaml\n"
 
 
 def symbol_entry_block(symbol_name, category, struct, member, alias):
@@ -826,10 +880,10 @@ def write_skill(symbol_name, category, struct, alias, member=""):
             "Write the YAML file `<symbol>.{platform}.yaml` with EXACTLY these fields:\n"
             "```yaml\n"
             "func_name: <SYMBOL_NAME>\n"
-            "func_va: \"<hex virtual address>\"\n"
-            "func_rva: \"<hex rva>\"\n"
-            "func_size: \"<hex size>\"\n"
-            "func_sig: \"<byte pattern, ?? wildcards, function head, minimal-unique>\"\n"
+            'func_va: "<hex virtual address>"\n'
+            'func_rva: "<hex rva>"\n'
+            'func_size: "<hex size>"\n'
+            'func_sig: "<byte pattern, ?? wildcards, function head, minimal-unique>"\n'
             "```\n"
             "NEVER include vfunc_index, vfunc_offset, vfunc_sig or vtable_name."
         )
@@ -845,11 +899,11 @@ def write_skill(symbol_name, category, struct, alias, member=""):
             "Write the YAML file `<symbol>.{platform}.yaml` with EXACTLY these fields:\n"
             "```yaml\n"
             "func_name: <SYMBOL_NAME>\n"
-            "func_va: \"<hex virtual address>\"\n"
-            "func_rva: \"<hex rva>\"\n"
-            "func_size: \"<hex size>\"\n"
+            'func_va: "<hex virtual address>"\n'
+            'func_rva: "<hex rva>"\n'
+            'func_size: "<hex size>"\n'
             "vtable_name: <owning class RTTI name>\n"
-            "vfunc_offset: \"<hex vtable byte offset>\"\n"
+            'vfunc_offset: "<hex vtable byte offset>"\n'
             "vfunc_index: <decimal slot index>\n"
             "```\n"
             "NEVER include func_sig."
@@ -868,9 +922,9 @@ def write_skill(symbol_name, category, struct, alias, member=""):
             "```yaml\n"
             f"struct_name: {struct}\n"
             f"member_name: {member}\n"
-            "offset: \"<hex byte offset as string>\"\n"
+            'offset: "<hex byte offset as string>"\n'
             "size: <member size in bytes, decimal>\n"
-            "offset_sig: \"<short byte pattern of an instruction touching the offset>\"\n"
+            'offset_sig: "<short byte pattern of an instruction touching the offset>"\n'
             "```\n"
             "NEVER include func_* or vfunc_* fields."
         )
@@ -932,11 +986,19 @@ aborts. Therefore:
         f.write(body)
 
 
-LIB_MODULE = {"server": "server", "engine2": "engine", "engine": "engine", "client": "client",
-              "worldrenderer": "worldrenderer"}
+LIB_MODULE = {
+    "server": "server",
+    "engine2": "engine",
+    "engine": "engine",
+    "client": "client",
+    "worldrenderer": "worldrenderer",
+}
 ENGINE_CLASSES = (
-    "CNetworkGameServerBase", "CNetworkGameServer", "CServerSideClient",
-    "CServerSideClientBase", "CGameEntitySystem",
+    "CNetworkGameServerBase",
+    "CNetworkGameServer",
+    "CServerSideClient",
+    "CServerSideClientBase",
+    "CGameEntitySystem",
 )
 
 
@@ -984,7 +1046,7 @@ def enforce_category_decisions(text):
             rebuilt += "".join(kept)
             if rebuilt == attrs:
                 continue
-            result = result[:m.start()] + f"      - name: {name}\n" + rebuilt + result[m.end():]
+            result = result[: m.start()] + f"      - name: {name}\n" + rebuilt + result[m.end() :]
             changed += 1
     return result, changed
 
@@ -1008,8 +1070,9 @@ def enforce_fork_owned_tasks(text):
 def _enforce_fork_owned_tasks_once(text):
     added = 0
     lines = text.split("\n")
-    module_starts = [(i, l[len("  - name: "):]) for i, l in enumerate(lines)
-                     if l.startswith("  - name: ") and l.count(":") == 1]
+    module_starts = [
+        (i, l[len("  - name: ") :]) for i, l in enumerate(lines) if l.startswith("  - name: ") and l.count(":") == 1
+    ]
     for symbol, module, anchor in FORK_OWNED_TASKS:
         task = f"      - name: find-{symbol}"
         if task in lines:
@@ -1036,8 +1099,9 @@ def _enforce_fork_owned_tasks_once(text):
         # these tasks were re-asserted onto 14180 and 14178b. Optional still declares
         # the artifact, so it is packed wherever it does exist.
         lines[at:at] = [task, "        optional_output:", f"          - {symbol}.{{platform}}.yaml"]
-        module_starts = [(i, l[len("  - name: "):]) for i, l in enumerate(lines)
-                         if l.startswith("  - name: ") and l.count(":") == 1]
+        module_starts = [
+            (i, l[len("  - name: ") :]) for i, l in enumerate(lines) if l.startswith("  - name: ") and l.count(":") == 1
+        ]
         added += 1
     return "\n".join(lines), added
 
@@ -1091,7 +1155,7 @@ def repair_missing_structs(text):
     added = 0
     for i, m in enumerate(mm):
         end = mm[i + 1].start() if i + 1 < len(mm) else len(text)
-        block = result[m.start():end] if i == 0 else None
+        block = result[m.start() : end] if i == 0 else None
     # process bottom-up so offsets stay valid
     blocks = []
     for i, m in enumerate(mm):
@@ -1099,7 +1163,9 @@ def repair_missing_structs(text):
         blocks.append((m.group(1), m.start(), end))
     for mod, start, end in reversed(blocks):
         block = result[start:end]
-        members = re.findall(r"^      - name: (\S+)\n        category: structmember\n        struct: (\S+)", block, re.M)
+        members = re.findall(
+            r"^      - name: (\S+)\n        category: structmember\n        struct: (\S+)", block, re.M
+        )
         structs = set(re.findall(r"^      - name: (\S+)\n        category: struct\n", block, re.M))
         missing = sorted({s for _, s in members if s not in structs})
         if not missing:
@@ -1108,7 +1174,7 @@ def repair_missing_structs(text):
         if not sm:
             continue
         decls = "".join(f"      - name: {s}\n        category: struct\n" for s in missing)
-        block = block[:sm.end()] + decls + block[sm.end():]
+        block = block[: sm.end()] + decls + block[sm.end() :]
         result = result[:start] + block + result[end:]
         added += len(missing)
     return result, added
@@ -1120,7 +1186,7 @@ def inject(text, config_path, specs):
     blocks = []  # (name, block_text, start, end)
     for i, m in enumerate(module_matches):
         end = module_matches[i + 1].start() if i + 1 < len(module_matches) else len(text)
-        blocks.append((m.group(1), text[m.start():end], m.start(), end))
+        blocks.append((m.group(1), text[m.start() : end], m.start(), end))
 
     new_tasks, new_symbols, new_structs, touched = {}, {}, {}, set()
     for symbol_name, category, struct, member, alias, lib in specs:
@@ -1155,10 +1221,10 @@ def inject(text, config_path, specs):
         block = (
             block[: skills_match.end()]
             + "".join(new_tasks[module])
-            + block[skills_match.end(): symbols_match.end()]
+            + block[skills_match.end() : symbols_match.end()]
             + "".join(struct_blocks)
             + "".join(new_symbols[module])
-            + block[symbols_match.end():]
+            + block[symbols_match.end() :]
         )
         result = result[:m_start] + block + result[m_end:]
         print(f"  {module}: +{len(new_tasks[module])} task(s), +{len(new_symbols[module])} symbol(s)")
@@ -1230,9 +1296,18 @@ def main():
     if dropped_again:
         print(f"  dropped after inject: {dropped_again} obsolete task declaration(s)")
         dropped += dropped_again
-    if (patched == text and not repaired and not reclassified and not aliased
-            and not tasked and not removed and not moved and not opt_tasked
-            and not pinned and not dropped):
+    if (
+        patched == text
+        and not repaired
+        and not reclassified
+        and not aliased
+        and not tasked
+        and not removed
+        and not moved
+        and not opt_tasked
+        and not pinned
+        and not dropped
+    ):
         return
 
     with open(config_path, "w", encoding="utf-8") as f:

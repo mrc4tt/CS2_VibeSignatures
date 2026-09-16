@@ -1,42 +1,42 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CCSPlayer_MovementServices_WalkMove skill."""
+"""Preprocess script for find-CBaseEntity_EmitSoundFilter_SoundName skill.
 
+ModSharp-only overload: CBaseEntity::EmitSoundFilter(IRecipientFilter&, int, const char* soundname,
+float volume, ...). Distinct from CBaseEntity_EmitSoundFilter (sret, EmitSound_t&). Anchored on its
+own head bytes per platform; abi_guard.py enforces the identity.
+"""
+
+from abi_guard import make_llm_result_validator
 from ida_analyze_util import preprocess_common_skill
 
 TARGET_FUNCTION_NAMES = [
-    "CCSPlayer_MovementServices_WalkMove",
+    "CBaseEntity_EmitSoundFilter_SoundName",
 ]
 
-# The old xref_strings anchor ("PlayerMove_PostMove") selected the small helper that *references*
-# that string, not WalkMove (IDA-verified 14181; swiftlys2/cs2kz/modsharp all agree on the real
-# body). Anchor on WalkMove's own head bytes per platform; abi_guard.py enforces the identity.
+# Per-platform head-byte anchors (signatures differ per platform; selected in preprocess_skill).
 FUNC_XREFS_BY_PLATFORM = {
     "linux": [
         {
-            "func_name": "CCSPlayer_MovementServices_WalkMove",
+            "func_name": "CBaseEntity_EmitSoundFilter_SoundName",
             "xref_strings": [],
             "xref_gvs": [],
-            "xref_signatures": [
-                "48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D B5 ?? ?? ?? ?? 41 55 41 BD"
-            ],
+            "xref_signatures": ["55 48 89 E5 41 57 66 41 0F 7E C7 41 56 4D 89 C6"],
             "xref_funcs": [],
             "exclude_funcs": [],
-            "exclude_strings": ["PlayerMove_PostMove"],
+            "exclude_strings": [],
             "exclude_gvs": [],
             "exclude_signatures": [],
         },
     ],
     "windows": [
         {
-            "func_name": "CCSPlayer_MovementServices_WalkMove",
+            "func_name": "CBaseEntity_EmitSoundFilter_SoundName",
             "xref_strings": [],
             "xref_gvs": [],
-            "xref_signatures": [
-                "48 8B C4 48 89 70 ?? 48 89 78 ?? 55 41 54 41 55 41 56 41 57 48 8D A8 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 0F 29 70 ?? 48 8B F1"
-            ],
+            "xref_signatures": ["48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B DA 49 8B F9"],
             "xref_funcs": [],
             "exclude_funcs": [],
-            "exclude_strings": ["PlayerMove_PostMove"],
+            "exclude_strings": [],
             "exclude_gvs": [],
             "exclude_signatures": [],
         },
@@ -47,7 +47,7 @@ FUNC_XREFS = FUNC_XREFS_BY_PLATFORM["linux"]  # kept for recipe importers; prepr
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
     (
-        "CCSPlayer_MovementServices_WalkMove",
+        "CBaseEntity_EmitSoundFilter_SoundName",
         [
             "func_name",
             "func_sig",
@@ -79,6 +79,10 @@ async def preprocess_skill(
         image_base=image_base,
         func_names=TARGET_FUNCTION_NAMES,
         func_xrefs=FUNC_XREFS_BY_PLATFORM.get(platform, FUNC_XREFS),
+        # ABI guard: reject LLM-fallback candidates with a known-bad function head (see abi_guard.py)
+        llm_result_validator=make_llm_result_validator(
+            "CBaseEntity_EmitSoundFilter_SoundName", platform, new_binary_dir
+        ),
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )

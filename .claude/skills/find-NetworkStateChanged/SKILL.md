@@ -15,6 +15,19 @@ disable-model-invocation: true
 Locate the bare `NetworkStateChanged` helper (distinct from `CBaseEntity_NetworkStateChanged`, which has its own
 config-skill/yaml) in CS2 `server.dll` / `libserver.so` using IDA Pro MCP tools.
 
+## ABI identification (mandatory)
+
+CS# typedef: `void* NetworkStateChanged(void* chainEntity, CNetworkStateChangedInfo& info)`.
+The correct function is `CEntityInstance::NetworkStateChanged(info)` — same VA as the
+`CEntityInstance_NetworkStateChanged` artifact. Head: linux `48 8B 07 48 85 C0 74 ?? 48 8B 50`
+(`mov rax,[rdi]; test; je; mov rdx,[rax+0x10]; testb $4,0x31(rdx)`), then reads
+`[rsi+0x38]` = `info.m_nPathIndex`. Windows `4C 8B C2 48 8B D1 48 8B 09`.
+
+**Reject** the 14176–14181 candidate `55 48 89 E5 41 56 49 89 F6 41 55 4C 8D 2D ...` (linux
+0xa882e0 on 14181) / windows RVA 0x1861e0: it reads `[info+0x10]` (the CUtlVector element
+pointer) and builds its own info for offset 0x198 — a different method that merely *calls*
+NetworkStateChanged. Shipped in CS# fork v1.0.400/401 → SetStateChanged silently broken.
+
 ## Method
 
 ### 1. Explore the light_capsule / light_omni Lead (string path — informative but does not directly resolve the target)

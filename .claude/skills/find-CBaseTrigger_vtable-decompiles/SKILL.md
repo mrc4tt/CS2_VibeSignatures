@@ -17,6 +17,16 @@ Target: `CBaseTrigger_vtable` (func) in the module loaded in THIS session.
 > only to *locate* candidates; derive the artifact from the ACTUAL bytes you read.
 > Produce ONLY this session's platform output. NEVER open another binary.
 
+## func_sig is required for CBaseTrigger_EndTouch / StartTouch
+
+The CounterStrikeSharp generator keeps the *template* sig when a vfunc artifact has no
+`func_sig`; on 14181 the stale template resolved `CBaseTrigger_EndTouch.windows` to an
+unrelated function (RVA 0x136a0d0) while the vtable slot is RVA 0x3cb540. Always emit
+`func_sig` for these two artifacts (linux EndTouch: sig the real function `55 BA ?? ?? ?? ?? 48 89
+E5 41 57 ...`, not the null-check thunk `48 85 F6 74 ?? E9` the vtable points at).
+`uv run abi_guard.py` checks artifact + template.
+
+
 ## Method
 
 Locate via distinctive constants/strings in the body, cross-references from
