@@ -246,31 +246,54 @@ body.filefull .rawscroll { max-height: calc(100dvh - 104px); }
 /* Handbook shell: the fork's own design. Kept above the inherited        */
 /* dashboard rules so the run-detail views below still work unchanged.   */
 /* ===================================================================== */
-.rail { position: sticky; top: 0; z-index: 40; background: var(--card); border-bottom: 1px solid var(--rule); }
-.rail-inner { display: flex; align-items: center; gap: 18px; min-height: 56px; width: 100%; max-width: 1360px;
-  margin: 0 auto; padding-inline: clamp(16px, 3vw, 32px); }
+/* --- shell -----------------------------------------------------------------
+   The rail is a 244px column on the left from lg up and a horizontal bar below
+   it. Both shapes come from the same markup: .rail-inner is a flex container
+   that changes direction, so there is no duplicate nav to keep in sync. */
+.rail { position: sticky; top: 0; z-index: 40; background: var(--rail); border-bottom: 1px solid var(--rule); }
+.rail-inner { display: flex; align-items: center; gap: 18px; min-height: 56px; width: 100%;
+  padding-inline: clamp(16px, 3vw, 32px); }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-weight: 700;
   font-size: 17px; white-space: nowrap; text-decoration: none; color: var(--ink); }
 .brand .mark { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 5px;
   background: var(--accent-fill); color: var(--accent-ink); font-family: var(--mono); font-size: 13px; font-weight: 700; }
 .nav { display: flex; gap: 3px; margin-right: auto; overflow-x: auto; }
-.nav a, .nav button { border: 0; background: none; padding: 8px 12px; border-radius: 5px; color: var(--muted);
-  font-weight: 500; font-size: 14.5px; cursor: pointer; white-space: nowrap; }
+.nav a, .nav button { display: flex; align-items: center; gap: 10px; border: 0; background: none;
+  padding: 8px 12px; border-radius: 7px; color: var(--muted);
+  font-weight: 500; font-size: 14.5px; cursor: pointer; white-space: nowrap; text-decoration: none; }
 .nav a:hover, .nav button:hover { background: var(--card-2); color: var(--ink); }
-.nav a[aria-current="page"], .nav button[aria-current="page"] { background: var(--accent-2); color: var(--accent); font-weight: 600; }
+.nav a[aria-current="page"], .nav button[aria-current="page"] { background: var(--card-2); color: var(--ink); font-weight: 600; }
+.nav .nav-icon { flex-shrink: 0; color: var(--faint); }
+.nav a[aria-current="page"] .nav-icon { color: var(--accent); }
 .railtools { display: flex; align-items: center; gap: 8px; }
+.railtools-row { display: flex; align-items: center; gap: 8px; }
 .sw { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); cursor: pointer;
   padding: 5px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--card); }
-.sw input { accent-color: var(--accent); margin: 0; }
-.sw[data-on="true"] { background: var(--accent-2); border-color: var(--accent); color: var(--accent); }
-.apibar { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 1360px; margin: 0 auto;
+.sw input { accent-color: var(--accent-fill); margin: 0; }
+.sw[data-on="true"] { background: var(--accent-2); border-color: var(--accent-line); color: var(--accent); }
+.apibar { display: flex; align-items: center; gap: 10px; width: 100%;
   padding: 7px clamp(16px, 3vw, 32px); border-top: 1px solid var(--rule-soft); background: var(--sunk); font-size: 12.5px; }
+
+@media (min-width: 1024px) {
+  .app-layout { display: flex; align-items: flex-start; }
+  .rail { position: sticky; top: 0; align-self: stretch; flex-shrink: 0;
+    width: 244px; height: 100vh; border-bottom: 0; border-right: 1px solid var(--rule);
+    display: flex; flex-direction: column; }
+  .rail-inner { flex-direction: column; align-items: stretch; gap: 26px; min-height: 0;
+    flex-grow: 1; padding: 22px 16px; overflow-y: auto; }
+  .brand { padding-inline: 8px; }
+  .nav { flex-direction: column; gap: 2px; margin-right: 0; overflow-x: visible; }
+  .railtools { flex-direction: column; align-items: stretch; gap: 8px; margin-top: auto; }
+  .railtools .btn, .railtools .sw { justify-content: flex-start; }
+  .apibar { border-top: 1px solid var(--rule); }
+  .app-content { max-width: 1400px; padding-inline: clamp(20px, 2.5vw, 34px); }
+}
 .btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border: 1px solid var(--rule);
   border-radius: 6px; background: var(--card); font-size: 13.5px; cursor: pointer; color: inherit; }
 .btn:hover { background: var(--card-2); border-color: var(--muted); }
 .btn.small { padding: 3px 9px; font-size: 12.5px; }
 
-.app-content { width: 100%; max-width: 1360px; margin: 0 auto; padding: 26px clamp(16px, 3vw, 32px) 56px; }
+.app-content { flex-grow: 1; min-width: 0; width: 100%; max-width: 1360px; margin: 0 auto; padding: 26px clamp(16px, 3vw, 32px) 56px; }
 .handbook { display: block; }
 .hero { display: grid; gap: 14px; margin-bottom: 22px; }
 .hero h1 { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.2; }

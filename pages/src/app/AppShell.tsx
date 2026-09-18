@@ -9,7 +9,7 @@ import { ThemeToggle } from '../theme/ThemeToggle'
 import { useApiConfig } from './apiContext'
 import { forgetStoredView, persistExplain, readExplain, VIEW_PATHS, viewFromPath, type AppView } from './appViews'
 import { onNavigation } from './navigate'
-import { ApiIcon, SettingsIcon } from '../ui/icons'
+import { ApiIcon, BookIcon, ChartIcon, FileCheckIcon, OverviewIcon, SearchIcon, SettingsIcon, TableIcon, type IconProps } from '../ui/icons'
 import { Dot, Select } from '../ui/primitives'
 
 const RunListPage = lazy(() => import('../features/runs/RunListPage').then((module) => ({ default: module.RunListPage })))
@@ -20,6 +20,16 @@ const CheckFilePage = lazy(() => import('../features/checkfile/CheckFilePage').t
 const RunReportPage = lazy(() => import('../features/runs2/RunReportPage').then((module) => ({ default: module.RunReportPage })))
 const StartPage = lazy(() => import('../features/start/StartPage').then((module) => ({ default: module.StartPage })))
 const WordsPage = lazy(() => import('../features/words/WordsPage').then((module) => ({ default: module.WordsPage })))
+
+const NAV_ICONS: Record<AppView, (props: IconProps) => React.ReactElement> = {
+  start: OverviewIcon,
+  symbols: SearchIcon,
+  gamedata: TableIcon,
+  check: FileCheckIcon,
+  runs: ChartIcon,
+  'runs-live': ChartIcon,
+  words: BookIcon,
+}
 
 const LANGUAGE_LABELS: Record<AppLanguage, string> = {
   en: 'English',
@@ -94,6 +104,12 @@ export function AppShell() {
 
   return (
     <div className="app-layout">
+      {/*
+        A rail rather than a top bar: the nav is a fixed six, the pages below are
+        wide data surfaces, and vertical space is the scarce one on a page of
+        tables. Below lg it lies down into the old horizontal bar, because 244px
+        of chrome on a phone is most of the screen.
+      */}
       <header className="rail">
         <div className="rail-inner">
           <a
@@ -106,20 +122,24 @@ export function AppShell() {
             <span className="brand-name">{t('brand')}</span>
           </a>
           <nav className="nav" aria-label={t('brand')}>
-            {tabs.map((tab) => (
-              <Link
-                key={tab}
-                to={VIEW_PATHS[tab]}
-                aria-current={view === tab ? 'page' : undefined}
-                onClick={() => window.scrollTo({ top: 0 })}
-              >
-                {t(`nav2.${tab}`)}
-              </Link>
-            ))}
+            {tabs.map((tab) => {
+              const Icon = NAV_ICONS[tab]
+              return (
+                <Link
+                  key={tab}
+                  to={VIEW_PATHS[tab]}
+                  aria-current={view === tab ? 'page' : undefined}
+                  onClick={() => window.scrollTo({ top: 0 })}
+                >
+                  <Icon size={16} className="nav-icon" />
+                  <span>{t(`nav2.${tab}`)}</span>
+                </Link>
+              )
+            })}
           </nav>
           <div className="railtools">
             <button type="button" className="btn small" onClick={() => setPaletteOpen(true)}>
-              ⌕ <span className="sw-label">{t('shell.search')}</span>
+              <SearchIcon size={14} /> <span className="sw-label">{t('shell.search')}</span>
             </button>
             <label className="sw" data-on={explain}>
               <input
@@ -133,20 +153,22 @@ export function AppShell() {
               />
               <span className="sw-label">{t('shell.explain')}</span>
             </label>
-            <Select
-              aria-label={t('language.selector')}
-              value={selectedLanguage}
-              onChange={(event) => void changeLanguage(event.target.value as AppLanguage)}
-              className="px-2 py-1 text-[12.5px]"
-            >
-              {APP_LANGUAGES.map((language) => (
-                <option key={language} value={language}>{LANGUAGE_LABELS[language]}</option>
-              ))}
-            </Select>
-            <ThemeToggle />
+            <div className="railtools-row">
+              <Select
+                aria-label={t('language.selector')}
+                value={selectedLanguage}
+                onChange={(event) => void changeLanguage(event.target.value as AppLanguage)}
+                className="min-w-0 flex-grow px-2 py-1 text-[12.5px]"
+              >
+                {APP_LANGUAGES.map((language) => (
+                  <option key={language} value={language}>{LANGUAGE_LABELS[language]}</option>
+                ))}
+              </Select>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
-        {view === 'runs' && (
+        {view === 'runs-live' && (
           <div className="apibar">
             <Dot tone={connected ? 'ok' : 'neutral'} />
             <span className="flex min-w-0 items-center gap-1.5 truncate text-[13px] text-muted" title={baseUrl}>

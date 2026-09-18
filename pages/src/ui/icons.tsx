@@ -56,3 +56,45 @@ export const MoonIcon = (props: IconProps) => (
 export const SunIcon = (props: IconProps) => (
   <Glyph {...props}><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></Glyph>
 )
+
+/* Navigation glyphs, one per view in the sidebar rail. */
+
+export const OverviewIcon = (props: IconProps) => (
+  <Glyph {...props}><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></Glyph>
+)
+
+export const SearchIcon = (props: IconProps) => (
+  <Glyph {...props}><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.5" y2="16.5" /></Glyph>
+)
+
+export const TableIcon = (props: IconProps) => (
+  <Glyph {...props}><path d="M4 5h16v14H4z" /><path d="M4 10h16" /><path d="M10 10v9" /></Glyph>
+)
+
+export const FileCheckIcon = (props: IconProps) => (
+  <Glyph {...props}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /><path d="M9 15l2 2 4-4" /></Glyph>
+)
+
+export const ChartIcon = (props: IconProps) => (
+  <Glyph {...props}><path d="M4 19V5" /><path d="M4 19h16" /><path d="M8 15l4-6 3 4 4-7" /></Glyph>
+)
+
+export const BookIcon = (props: IconProps) => (
+  <Glyph {...props}><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z" /><path d="M5 17h14" /></Glyph>
+)
+
+export const CopyIcon = (props: IconProps) => (
+  <Glyph {...props}><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></Glyph>
+)
+
+export const DownloadIcon = (props: IconProps) => (
+  <Glyph {...props}><path d="M12 3v12" /><path d="M7 11l5 5 5-5" /><path d="M4 20h16" /></Glyph>
+)
+
+export const InfoIcon = (props: IconProps) => (
+  <Glyph {...props}><circle cx="12" cy="12" r="9" /><path d="M12 11v5" /><path d="M12 8h.01" /></Glyph>
+)
+
+export const CheckIcon = (props: IconProps) => (
+  <Glyph strokeWidth={2.6} {...props}><path d="M20 6L9 17l-5-5" /></Glyph>
+)

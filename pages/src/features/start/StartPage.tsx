@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { Skeleton } from '../../ui/primitives'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +7,9 @@ import { getSiteHistory } from '../../api/siteData'
 import { formatAgo, formatWhen } from '../../components/whenText'
 import { Explain } from '../../components/Explain'
 import { VIEW_PATHS, type AppView } from '../../app/appViews'
+import { getGameDataIndex } from '../gamedata/data'
+import { describeFiles } from '../gamedata/fileModel'
+import { Card, Dot, Progress, Skeleton, Tag } from '../../ui/primitives'
 
 const SEEN_KEY = 'cs2vibe.seenBuild'
 
@@ -34,8 +36,21 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
     queryFn: ({ signal }) => getSiteHistory(signal),
     staleTime: Infinity,
   })
+  // The shipped-files panel reads the same index Game Data does, so the two can
+  // never disagree about how much of a plugin's file this build filled in.
+  const indexQuery = useQuery({
+    queryKey: ['gamedata', 'index'],
+    queryFn: ({ signal }) => getGameDataIndex(signal),
+    staleTime: 5 * 60 * 1000,
+  })
   const meta = metaQuery.data
   const history = historyQuery.data
+
+  const files = useMemo(() => {
+    const version = indexQuery.data?.versions.find((entry) => entry.gameVersion === meta?.latest.gameVersion)
+      ?? indexQuery.data?.versions[0]
+    return describeFiles(version?.files ?? [])
+  }, [indexQuery.data, meta])
 
   const sinceLastVisit = useMemo(() => {
     if (!meta || !history) return undefined
@@ -63,9 +78,11 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
     { view: 'words', q: t('start.t4q'), d: t('start.t4d') },
   ]
   const gap = meta ? meta.latest.pluginKeys - meta.latest.pluginKeysCovered : 0
+  const changedThisBuild = files.reduce((total, file) => total + file.updated, 0)
+  const complete = files.filter((file) => file.gap === 0).length
 
   return (
-    <div className="handbook">
+    <div className="handbook flex flex-col gap-5">
       {sinceLastVisit && !dismissed && (
         <p className="visit">
           <span>
@@ -76,20 +93,35 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
           <button type="button" onClick={markSeen} aria-label={t('start.dismiss')}>×</button>
         </p>
       )}
+      {/* Build header: what this page is about, stated once, at the top. */}
+      <header className="flex flex-wrap items-end justify-between gap-5">
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[28px] font-semibold tracking-tight text-ink">{meta?.latest.gameVersion ?? '…'}</span>
+            <Tag tone="ok">{t('start.currentBadge')}</Tag>
+          </div>
+          {meta && (
+            <p className="m-0 text-[13px] text-muted">
+              {t('start.read')} <b className="font-medium text-ink-2">{formatWhen(meta.latest.lastPublishTime, language)}</b>
+              {' · '}{formatAgo(meta.latest.lastPublishTime, language)}
+              {' · '}{t('start.fingerprint')}{' '}
+              <b className="font-mono font-medium text-ink-2">{meta.latest.configSha256.replace(/^sha256:/, '').slice(0, 8)}</b>
+            </p>
+          )}
+        </div>
+        <Link
+          to={VIEW_PATHS.symbols}
+          onClick={() => onGo('symbols')}
+          className="rounded-[8px] bg-accent-fill px-4 py-2 text-[13.5px] font-semibold text-accent-ink no-underline hover:brightness-110"
+        >
+          {t('start.browseSymbols')}
+        </Link>
+      </header>
+
       <div className="hero">
         <h1>{t('start.h1')}</h1>
         <p className="lede">{t('start.lede', { build: meta?.latest.gameVersion ?? '…' })}</p>
       </div>
-
-      {meta && (
-        <p className="buildline">
-          <span>
-            {t('start.read')} <b>{formatWhen(meta.latest.lastPublishTime, language)}</b>{' '}
-            <span className="ago">{formatAgo(meta.latest.lastPublishTime, language)}</span>
-          </span>
-          <span>{t('start.fingerprint')} <b>{meta.latest.configSha256.replace(/^sha256:/, '').slice(0, 8)}</b></span>
-        </p>
-      )}
 
       {/* Links, not buttons: these are destinations, so middle-click, ctrl-click
           and "copy link address" all work. */}
@@ -102,37 +134,89 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
         ))}
       </div>
 
-      <section className="panel">
-        <header>
-          <h2>{t('start.glanceH')}</h2>
-          <span className="sub">{t('start.glanceSub')}</span>
-        </header>
-        {metaQuery.isLoading && <div className="panel-body"><Skeleton rows={2} /></div>}
-        {metaQuery.error && <div className="panel-body"><p className="plain">{metaQuery.error.message}</p></div>}
-        {meta && (
-          <div className="statgrid">
-            <div className="stat">
-              <span className="v">{meta.latest.symbolRecords}</span>
-              <span className="l">{t('start.statSymbols')}</span>
-            </div>
-            <div className="stat okv">
-              <span className="v">{meta.latest.pluginKeysCovered}</span>
-              <span className="l">{t('start.statKeys', { total: meta.latest.pluginKeys })}</span>
-            </div>
-            <div className={gap > 0 ? 'stat warnv' : 'stat okv'}>
-              <span className="v">{gap}</span>
-              <span className="l">{t('start.statGap')}</span>
-            </div>
-            <div className="stat">
-              <span className="v">{meta.builds.length}</span>
-              <span className="l">{t('start.statBuilds')}</span>
-            </div>
-          </div>
-        )}
-        <div className="panel-body">
-          <Explain html={t('start.explain')} />
+      {/* Four measured numbers, one tile each. */}
+      {metaQuery.isLoading && <Card><Skeleton rows={2} /></Card>}
+      {metaQuery.error && <Card><p className="plain">{metaQuery.error.message}</p></Card>}
+      {meta && (
+        <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+          <Card className="flex flex-col gap-1.5">
+            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted">{t('start.statSymbols')}</span>
+            <span className="font-display text-[30px] font-bold leading-none text-ink">{meta.latest.symbolRecords}</span>
+          </Card>
+          <Card className="flex flex-col gap-2">
+            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted">
+              {t('start.statKeys', { total: meta.latest.pluginKeys })}
+            </span>
+            <span className="font-display text-[30px] font-bold leading-none text-ok">{meta.latest.pluginKeysCovered}</span>
+            <Progress
+              percent={(100 * meta.latest.pluginKeysCovered) / Math.max(1, meta.latest.pluginKeys)}
+              tone="qualify"
+              label={t('start.statKeys', { total: meta.latest.pluginKeys })}
+            />
+          </Card>
+          <Card className="flex flex-col gap-1.5">
+            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted">{t('start.statGap')}</span>
+            <span className={gap > 0 ? 'font-display text-[30px] font-bold leading-none text-warn' : 'font-display text-[30px] font-bold leading-none text-ok'}>{gap}</span>
+          </Card>
+          <Card className="flex flex-col gap-1.5">
+            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted">{t('start.statBuilds')}</span>
+            <span className="font-display text-[30px] font-bold leading-none text-ink">{meta.builds.length}</span>
+          </Card>
         </div>
-      </section>
+      )}
+
+      <Card className="border-l-[3px] border-l-[color:var(--accent-fill)]">
+        <Explain html={t('start.explain')} />
+      </Card>
+
+      {/* What moved, next to which files carry it. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <Card className="flex flex-col gap-4">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="font-display text-[17px] font-bold text-ink">
+              {t('start.movedH', { build: meta?.latest.gameVersion ?? '' })}
+            </h2>
+            <span className="text-[12.5px] text-muted">{t('start.movedSub', { count: changedThisBuild })}</span>
+          </div>
+          {indexQuery.isLoading && <Skeleton rows={4} />}
+          <div className="flex flex-col gap-2">
+            {files.filter((file) => file.updated > 0).map((file) => (
+              <Link
+                key={file.descriptor.id}
+                to={`${VIEW_PATHS.gamedata}?file=${encodeURIComponent(file.descriptor.id)}`}
+                onClick={() => onGo('gamedata')}
+                className="flex items-stretch gap-3 rounded-[9px] border border-rule bg-sunk px-3.5 py-2.5 no-underline hover:border-rule-strong"
+              >
+                <span className="w-[3px] shrink-0 rounded bg-accent-fill" />
+                <span className="flex min-w-0 grow flex-col gap-0.5">
+                  <span className="truncate font-mono text-[13px] text-ink">{file.descriptor.plugin}</span>
+                  <span className="text-[11.5px] text-muted">{t('start.fileKeys', { covered: file.covered, total: file.total })}</span>
+                </span>
+                <span className="flex items-center"><Tag tone="accent">{t('start.fileChanged', { count: file.updated })}</Tag></span>
+              </Link>
+            ))}
+          </div>
+          <Link to={VIEW_PATHS.gamedata} onClick={() => onGo('gamedata')} className="self-start text-[13px] font-semibold">
+            {t('start.movedAll')}
+          </Link>
+        </Card>
+
+        <Card className="flex flex-col gap-4">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="font-display text-[17px] font-bold text-ink">{t('start.filesH')}</h2>
+            <span className="text-[12.5px] text-ok">{t('start.filesSub', { complete, total: files.length })}</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {files.map((file) => (
+              <div key={file.descriptor.id} className="flex items-center gap-2.5 text-[12.5px]">
+                <Dot tone={file.gap === 0 ? 'ok' : 'warn'} />
+                <span className="min-w-0 grow truncate font-mono text-ink-2">{file.descriptor.plugin}</span>
+                <span className="shrink-0 text-faint">{t('start.fileKeys', { covered: file.covered, total: file.total })}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
 
       {history && history.builds.length > 1 && (
         <section className="panel">
