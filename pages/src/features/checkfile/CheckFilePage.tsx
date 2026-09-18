@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { FileCheckIcon } from '../../ui/icons'
 import { Alert, Select, Skeleton } from '../../ui/primitives'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -229,10 +230,38 @@ export function CheckFilePage() {
 
       {loaded && (
         <section className="panel">
-          <header>
-            <h2>{loaded.name}</h2>
-            <span className="chip">{t('check.readAs', { format: loaded.format.toUpperCase(), keys: loaded.values.size })}</span>
-          </header>
+          {/* The file you dropped and the verdict on it, side by side: which file
+              this is and whether it still holds are the same question. */}
+          <div className="flex flex-wrap items-stretch gap-4 p-4">
+            <div className="flex min-w-0 grow items-center gap-3.5 rounded-[12px] border border-rule-strong bg-card px-4 py-3.5">
+              <span className="flex size-[38px] shrink-0 items-center justify-center rounded-[9px] bg-card-2 text-[color:var(--accent-text)]">
+                <FileCheckIcon size={18} />
+              </span>
+              <span className="flex min-w-0 grow flex-col gap-0.5">
+                <span className="truncate font-mono text-[14px] text-ink">{loaded.name}</span>
+                <span className="text-[12px] text-muted">
+                  {t('check.readAs', { format: loaded.format.toUpperCase(), keys: loaded.values.size })}
+                </span>
+              </span>
+            </div>
+            {file && fit && (
+              <div
+                className={[
+                  'flex w-full shrink-0 flex-col justify-center gap-1 rounded-[12px] border px-4 py-3.5 lg:w-[310px]',
+                  summary.outdated === 0 ? 'border-ok-line bg-ok-bg' : 'border-warn-line bg-warn-bg',
+                ].join(' ')}
+              >
+                <span className={summary.outdated === 0 ? 'font-display text-[16px] font-bold text-ok' : 'font-display text-[16px] font-bold text-warn'}>
+                  {summary.outdated === 0
+                    ? t('check.upToDate', { build: newest })
+                    : t('check.needsWork', { keys: summary.outdated, build: newest })}
+                </span>
+                <span className="text-[12.5px] leading-relaxed text-ink-2">
+                  {t('check.identifiedAs')} <strong>{file.split('/')[0]}</strong>
+                </span>
+              </div>
+            )}
+          </div>
           <div className="panel-body">
             {!file && (
               <Alert
@@ -265,28 +294,19 @@ export function CheckFilePage() {
 
             {file && (
               <>
+                {/* The headline verdict moved into the bar above; what is left
+                    here is which build your file looks like and how far back
+                    that is - the part you act on. */}
                 {fit && (
-                  <Alert
-                    tone={summary.outdated === 0 ? 'ok' : 'warn'}
-                    title={
-                      summary.outdated === 0
-                        ? t('check.upToDate', { build: newest })
-                        : t('check.needsWork', { keys: summary.outdated, build: newest })
-                    }
-                    description={
-                      <span className="fitnote">
-                        {t('check.identifiedAs')} <strong>{file.split('/')[0]}</strong>
-                        {identification?.decisive && !chosenFile
-                          ? ` (${t('check.sharedKeys', { shared: identification.best!.shared, keys: loaded.values.size })})`
-                          : ''}
-                        {'. '}
-                        {behind === 0
-                          ? t('check.fitCurrent', { build: fit.build })
-                          : t('check.fitBehind', { build: fit.build, builds: behind })}
-                        {fit.tied ? ` ${t('check.tied', { oldest: fit.oldest, build: fit.build })}` : ''}
-                      </span>
-                    }
-                  />
+                  <p className="fitnote m-0 text-[12.5px] leading-relaxed text-muted">
+                    {identification?.decisive && !chosenFile
+                      ? `${t('check.sharedKeys', { shared: identification.best!.shared, keys: loaded.values.size })}. `
+                      : ''}
+                    {behind === 0
+                      ? t('check.fitCurrent', { build: fit.build })
+                      : t('check.fitBehind', { build: fit.build, builds: behind })}
+                    {fit.tied ? ` ${t('check.tied', { oldest: fit.oldest, build: fit.build })}` : ''}
+                  </p>
                 )}
 
                 {patched && patched.applied > 0 && (
@@ -387,6 +407,17 @@ export function CheckFilePage() {
 
                 <p className="plain prose dznote">{t(`check.meaning.${show}`)}</p>
 
+                {/*
+                  A table's header over a list of <details>, not a real <table>.
+                  The rows stay disclosures because a signature is 40+ bytes and
+                  dumping every one inline is what the folding was for; the
+                  header and the column grid are what make it scannable.
+                */}
+                <div className="krowhead" aria-hidden="true">
+                  <span>{t('check.col.entry')}</span>
+                  <span>{t('check.col.kind')}</span>
+                  <span>{t('check.col.platform')}</span>
+                </div>
                 <div className="krows">
                   {shown.map((verdict) => (
                     <details className="krow" data-state={verdict.state} key={`${verdict.state}-${verdict.key}`}>
@@ -399,16 +430,19 @@ export function CheckFilePage() {
                               : 'signature'
                           }`)}
                         </span>
-                        {(['linux', 'windows'] as const).map((platform) => {
-                          const ok = platform === 'linux' ? verdict.linuxOk : verdict.windowsOk
-                          if (verdict.state !== 'outdated' && verdict.state !== 'current') return null
-                          if (ok === undefined) return null
-                          return (
-                            <span className={`pbadge ${ok ? 'ok' : 'bad'}`} key={platform}>
-                              {t(`check.platform.${platform}`)}
-                            </span>
-                          )
-                        })}
+                        {/* One grid cell, so the badges line up down the column. */}
+                        <span className="pbadges">
+                          {(['linux', 'windows'] as const).map((platform) => {
+                            const ok = platform === 'linux' ? verdict.linuxOk : verdict.windowsOk
+                            if (verdict.state !== 'outdated' && verdict.state !== 'current') return null
+                            if (ok === undefined) return null
+                            return (
+                              <span className={`pbadge ${ok ? 'ok' : 'bad'}`} key={platform}>
+                                {t(`check.platform.${platform}`)}
+                              </span>
+                            )
+                          })}
+                        </span>
                       </summary>
                       <div className="kdiff">
                         {(['linux', 'windows'] as const).map((platform, index) => {

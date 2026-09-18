@@ -473,13 +473,27 @@ body.noexplain .explain { display: none; }
 .statgrid .kstat { border: 0; cursor: pointer; text-align: left; font: inherit; }
 .statgrid .kstat[data-on] { background: var(--ghost); box-shadow: inset 3px 0 0 var(--accent); }
 .statgrid .kstat:disabled { cursor: default; opacity: .5; }
+/* A table's shape over a list of disclosures. The rows stay <details> because a
+   signature is 40+ bytes and dumping every one inline is what the folding was
+   for; the shared column grid is what makes them scannable as a table. */
+.krowhead, .krow > summary { display: grid; align-items: center; gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 118px 132px; padding: 9px 14px; }
+.krowhead { font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase;
+  color: var(--muted); border: 1px solid var(--rule); border-bottom: 0;
+  border-radius: 10px 10px 0 0; background: var(--sunk); }
 .krows { display: grid; gap: 1px; background: var(--rule-soft);
-  border: 1px solid var(--rule-soft); border-radius: 7px; overflow: hidden; }
+  border: 1px solid var(--rule); border-radius: 0 0 10px 10px; overflow: hidden; }
 .krow { background: var(--card); }
-.krow > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-  padding: 8px 11px; cursor: pointer; }
-.krow > summary::marker { color: var(--muted); }
+.krow > summary { cursor: pointer; list-style: none; }
+.krow > summary::-webkit-details-marker { display: none; }
+.krow > summary:hover { background: var(--card-2); }
 .krow[open] > summary { border-bottom: 1px solid var(--rule-soft); }
+.krow > summary > .kindbadge { justify-self: start; }
+.krow > summary > .pbadges { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 720px) {
+  .krowhead { display: none; }
+  .krow > summary { display: flex; flex-wrap: wrap; }
+}
 .krow .kname { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
 .pbadge { font-size: 10px; font-weight: 600; letter-spacing: .04em; padding: 1px 6px;
   border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); }
