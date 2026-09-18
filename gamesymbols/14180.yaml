@@ -17769,16 +17769,16 @@ files:
     func_va: '0x180e5df40'
   server/CBaseEntity_EmitSoundFilter.linux.yaml:
     func_name: CBaseEntity_EmitSoundFilter
-    func_rva: '0xf3e0d0'
-    func_sig: 55 48 89 E5 41 57 41 56 49 89 F6 BE ?? ?? ?? ?? 41 55 49 89 D5 41 54 53 48 89 FB 48 8D 3D ?? ?? ?? ??
-    func_size: '0x168'
-    func_va: '0xf3e0d0'
+    func_rva: '0x1a79840'
+    func_sig: 48 B8 00 00 00 00 FF FF FF FF 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ?? ?? ?? ?? 48 89 07 48 8D 05 ?? ?? ?? ?? 48 C7 47 08 00 00 00 00
+    func_size: '0xd5c'
+    func_va: '0x1a79840'
   server/CBaseEntity_EmitSoundFilter.windows.yaml:
     func_name: CBaseEntity_EmitSoundFilter
-    func_rva: '0x56c590'
-    func_sig: 48 89 74 24 ?? 57 41 56 41 57 48 83 EC ?? BE ?? ?? ?? ??
-    func_size: '0x10f'
-    func_va: '0x18056c590'
+    func_rva: '0xe5e0f0'
+    func_sig: 40 53 48 83 EC ?? 4C 89 4C 24 ?? 48 8B D9 45 8B C8
+    func_size: '0x2c'
+    func_va: '0x180e5e0f0'
   server/CBaseEntity_EndTouch.linux.yaml:
     func_name: CBaseEntity_EndTouch
     vfunc_index: 149
@@ -22462,6 +22462,8 @@ files:
   server/CBaseTrigger_EndTouch.linux.yaml:
     func_name: CBaseTrigger_EndTouch
     func_rva: '0xd3b490'
+    func_sig: 48 85 F6 74 0B E9 D6 FC FF FF 66 0F 1F 44 00 00
+    func_sig_allow_across_function_boundary: true
     func_size: '0x11'
     func_va: '0xd3b490'
     vfunc_index: 149
@@ -22470,6 +22472,7 @@ files:
   server/CBaseTrigger_EndTouch.windows.yaml:
     func_name: CBaseTrigger_EndTouch
     func_rva: '0x3c9c30'
+    func_sig: 48 85 D2 0F 84 ?? ?? ?? ?? 53 41 57 48 83 EC ?? 4C 8B 42 10
     func_size: '0x238'
     func_va: '0x1803c9c30'
     vfunc_index: 150
@@ -22496,6 +22499,7 @@ files:
   server/CBaseTrigger_StartTouch.linux.yaml:
     func_name: CBaseTrigger_StartTouch
     func_rva: '0xd6bc80'
+    func_sig: 55 48 89 E5 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 83 EC 10 48 8B 07 FF 90 70 08 00 00 84 C0
     func_size: '0x29a'
     func_va: '0xd6bc80'
     vfunc_index: 147
@@ -22504,6 +22508,7 @@ files:
   server/CBaseTrigger_StartTouch.windows.yaml:
     func_name: CBaseTrigger_StartTouch
     func_rva: '0x3e3a10'
+    func_sig: 40 57 41 56 48 83 EC 28 48 8B 01 4C 8B F2 48 8B
     func_size: '0x225'
     func_va: '0x1803e3a10'
     vfunc_index: 148
@@ -27427,16 +27432,16 @@ files:
     func_va: '0x180a80cc0'
   server/CCSPlayer_MovementServices_FullWalkMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_FullWalkMove
-    func_rva: '0x15aede0'
-    func_sig: 48 B8 00 00 00 00 00 00 80 3F 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D B5 F8 FD FF FF
-    func_size: '0x0'
-    func_va: '0x15aede0'
+    func_rva: '0x15b0270'
+    func_sig: 55 48 89 E5 41 54 49 89 F4 53 48 89 FB 84 D2
+    func_size: '0xd23'
+    func_va: '0x15b0270'
   server/CCSPlayer_MovementServices_FullWalkMove.windows.yaml:
     func_name: CCSPlayer_MovementServices_FullWalkMove
-    func_rva: '0xaad050'
-    func_sig: 48 8B C4 48 89 70 18 48 89 78 20 55 41 54 41 55 41 56 41 57 48 8D A8 D8 FD FF FF
-    func_size: '0x103f'
-    func_va: '0x180aad050'
+    func_rva: '0xa9f3d0'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B FA 48 8B D9 45 84 C0 75
+    func_size: '0x122'
+    func_va: '0x180a9f3d0'
   server/CCSPlayer_MovementServices_FullWalkMove_SpeedClamp.linux.yaml:
     patch_bytes: 66 0F 1F 44 00 00
     patch_name: CCSPlayer_MovementServices_FullWalkMove_SpeedClamp
@@ -27459,28 +27464,28 @@ files:
     struct_name: CCSPlayer_MovementServices
   server/CCSPlayer_MovementServices_ProcessMovement.linux.yaml:
     func_name: CCSPlayer_MovementServices_ProcessMovement
-    func_rva: '0x177c0c0'
-    func_sig: 55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 49 89 F4 53 48 83 EC ?? E8 ?? ?? ?? ?? 89 C7
-    func_size: '0x4bc'
-    func_va: '0x177c0c0'
+    func_rva: '0x15b09b0'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 83 EC ?? 48 8B 7F
+    func_size: '0x5e3'
+    func_va: '0x15b09b0'
   server/CCSPlayer_MovementServices_ProcessMovement.windows.yaml:
     func_name: CCSPlayer_MovementServices_ProcessMovement
-    func_rva: '0xc22cb0'
-    func_sig: 48 8B C4 48 89 58 ?? 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ??
-    func_size: '0x4fb'
-    func_va: '0x180c22cb0'
+    func_rva: '0xaa2260'
+    func_sig: 40 57 41 57 48 81 EC ?? ?? ?? ?? 48 83 79
+    func_size: '0x785'
+    func_va: '0x180aa2260'
   server/CCSPlayer_MovementServices_WalkMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_WalkMove
-    func_rva: '0x15ae610'
-    func_sig: 55 48 89 E5 41 55 41 89 D5 41 54 49 89 F4 53 48 89 FB 48 83 EC ?? 48 8B 47 ??
-    func_size: '0x1f1'
-    func_va: '0x15ae610'
+    func_rva: '0x15aede0'
+    func_sig: 48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D B5 ?? ?? ?? ?? 41 55 41 BD
+    func_size: '0x0'
+    func_va: '0x15aede0'
   server/CCSPlayer_MovementServices_WalkMove.windows.yaml:
     func_name: CCSPlayer_MovementServices_WalkMove
-    func_rva: '0xa9f500'
-    func_sig: 40 53 56 57 48 83 EC ?? 48 83 79 ?? ??
-    func_size: '0x29b'
-    func_va: '0x180a9f500'
+    func_rva: '0xaad050'
+    func_sig: 48 8B C4 48 89 70 ?? 48 89 78 ?? 55 41 54 41 55 41 56 41 57 48 8D A8 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 0F 29 70 ?? 48 8B F1
+    func_size: '0x1a8e'
+    func_va: '0x180aad050'
   server/CCSPlayer_MovementServices_WaterMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_WaterMove
     func_rva: '0x1574b20'
@@ -44720,16 +44725,16 @@ files:
     func_va: '0x180be60c0'
   server/NetworkStateChanged.linux.yaml:
     func_name: NetworkStateChanged
-    func_rva: '0xa85d60'
-    func_sig: 55 48 89 E5 41 56 49 89 F6 41 55 4C 8D 2D ?? ?? ?? ?? 41 54 53
-    func_size: '0x156'
-    func_va: '0xa85d60'
+    func_rva: '0x2162d10'
+    func_sig: 48 8B 07 48 85 C0 74 ?? 48 8B 50
+    func_size: '0xca5'
+    func_va: '0x2162d10'
   server/NetworkStateChanged.windows.yaml:
     func_name: NetworkStateChanged
-    func_rva: '0x185f80'
-    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B 42 ?? 48 8D 35 ?? ?? ?? ??
-    func_size: '0x189'
-    func_va: '0x180185f80'
+    func_rva: '0x12675c0'
+    func_sig: 4C 8B C2 48 8B D1 48 8B 09
+    func_size: '0x44'
+    func_va: '0x1812675c0'
   server/ParticleTestStart_CommandHandler.linux.yaml:
     func_name: ParticleTestStart_CommandHandler
     func_rva: '0x1753250'
@@ -46834,5 +46839,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14180'
-last_publish_time: '2026-09-12T16:29:35Z'
+last_publish_time: '2026-09-18T17:34:15Z'
 schema_version: 5

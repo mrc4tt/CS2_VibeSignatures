@@ -1,0 +1,18 @@
+{
+  "entries": [
+    {
+      "covered": false,
+      "covered_lines": [],
+      "name": "CWorldRendererMgr::CreateWorld_Internal",
+      "updated": false
+    }
+  ],
+  "file": "stripper/gamedata/stripper.json",
+  "gamever": "14180",
+  "schema_version": 2,
+  "summary": {
+    "covered": 0,
+    "total": 1,
+    "updated": 0
+  }
+}

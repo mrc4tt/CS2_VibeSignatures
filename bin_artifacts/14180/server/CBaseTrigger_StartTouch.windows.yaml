@@ -2,6 +2,7 @@ func_name: CBaseTrigger_StartTouch
 func_va: '0x1803e3a10'
 func_rva: '0x3e3a10'
 func_size: '0x225'
+func_sig: 40 57 41 56 48 83 EC 28 48 8B 01 4C 8B F2 48 8B
 vtable_name: CBaseTrigger
 vfunc_offset: '0x4a0'
 vfunc_index: 148
