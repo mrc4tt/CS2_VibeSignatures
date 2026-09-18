@@ -212,6 +212,10 @@ Run in this order after any change. Anything but the stated result is a defect, 
 
 ```bash
 VER=14181
+# 0. ABI identity, BEFORE the pack: relocation propagates a wrong identification
+#    faithfully and nothing downstream notices (rule 21). Every gamever, not just
+#    the newest - a stale baseline poisons re-runs on the ones after it.
+uv run abi_guard.py -gamever $VER --fix
 # 1. artifacts -> snapshot (every artifact or config change needs this)
 uv run gamesymbol_snapshot.py pack -gamever $VER -snapshot gamesymbols/$VER.yaml
 uv run gamesymbol_snapshot.py check-contract -gamever $VER -snapshot gamesymbols/$VER.yaml
@@ -288,15 +292,24 @@ ignores the gate entirely.
 `-snapshot` and `-outputdir` are **required** on the snapshot and gamedata tools — there is no
 implicit default, by design, so a run can never write to the wrong gamever.
 
-**Current clean baseline** (re-measured 2026-09-11 — keep it). All three gamevers generate gamedata
+**Current clean baseline** (re-measured 2026-09-18 — keep it). All three gamevers generate gamedata
 with **0 warning diagnostics** and **0 errors**, and `validate_artifacts.py` reports **0 errors** on
 all three:
 
 | gamever | gamedata updates | artifacts | validator | vfunc indices RTTI-confirmed |
 |---------|------------------|-----------|-----------|------------------------------|
-| 14181   | 491 | 3763 | 0 errors, 37 warnings | 699 |
-| 14180   | 477 | 3761 | 0 errors, 52 warnings | 696 |
-| 14178b  | 486 | 3787 | 0 errors, 50 warnings | 701 |
+| 14181   | 491 | 3765 | 0 errors, 19 warnings | 699 |
+| 14180   | 481 | 3763 | 0 errors, 34 warnings | 696 |
+| 14178b  | 486 | 3789 | 0 errors, 28 warnings | 701 |
+
+**`capstone` must be installed for these numbers to mean anything.** It is a declared
+dependency now, but `validate_artifacts.py`, `verify_plugin_gamedata.py` and
+`enrich_vfunc_sigs.py` all degrade SILENTLY without it (`capstone = None` / `_MD = None`)
+rather than failing. With it missing, `ends_clean` cannot disassemble and falls back to
+`end % 16 == 0`, which reported 22 correct sizes as suspect on 14181 and — worse — never
+reached the swallow check behind them, hiding both three real over-measurements and a
+genuine vtable-slot error on 14180. `uv run python -c "import capstone"` before trusting a
+run that looks unusually quiet.
 
 The counts move whenever symbols are added or retired, so re-measure rather than trusting a stale
 table: the numbers above replace an earlier set (775/767/778 updates, 25/42/42 warnings) that was
@@ -309,11 +322,21 @@ move, and no gamedata update did either — nothing ships that key yet). Re-meas
 `validate_artifacts.py -gamever <VER> -json`, which prints `artifacts`, `slot_verified`, `errors`
 and `warnings` in one object.
 
-Every remaining warning is `func_size` — either an advisory "does not end on padding" on tightly
-packed GCC code, or an explicit `0x0` (unknown, see rule 14; 12 on 14181, 25 on 14180, 20 on
-14178b) — plus one `func_va` alignment advisory on 14180. None of them reach a plugin. **A new
-error, or a warning of any other kind, is a real defect.** `validate_artifacts.py` also takes `-module`, `-platform`, `-json`, `-quiet` and
-`-pedantic` (the last promotes advisory size checks, so expect more of the same noise).
+Every remaining warning is `func_size`. On 14181 all 19 are now the explicit `0x0`
+(unknown, see rule 14). 14180 and 14178b add two "does not end on padding" advisories each
+on tightly packed GCC code (`BuyState_OnUpdate.windows`, `CCSGameRules_SameMapTeardown.windows`),
+and 14180 one `func_va` alignment advisory. None of them reach a plugin. **A new
+error, or a warning of any other kind, is a real defect.**
+
+The unknown counts went UP (12/25/20 -> 19/31/26) because `abi_guard.guess_func_size` stopped
+guessing past a function boundary. It used to scan forward for the first `ret; int3; int3`,
+which a function ending on a tail `jmp` does not have — so the scan ran through the functions
+after it. It measured `NetworkStateChanged.linux` as `0xca5` where IDA says `0x55`, and
+`CCSPlayer_MovementServices_FullWalkMove.linux` as `0xd23` against `0x170`. Those are the
+warnings that turned into `0x0`: a larger unknown count here is the fix, not a regression.
+
+`validate_artifacts.py` also takes `-module`, `-platform`, `-json`, `-quiet` and `-pedantic`
+(the last promotes advisory size checks, so expect more of the same noise).
 
 ## AFTER AN UPSTREAM MERGE (the fork's own state is re-asserted, not merged)
 
@@ -583,6 +606,31 @@ fails to resolve a vtable writes an artifact without `vfunc_index`, the next reg
 asking for it, and it can never come back. `CATEGORY_REQUIRED_FIELDS` now floors each category with
 the fields that define it, so a vfunc always asks for `vtable_name`/`vfunc_offset`/`vfunc_index`.
 
+### 21. NEVER re-run a task without checking that the PREVIOUS gamever's artifact is right
+Relocation takes the previous gamever's `func_sig` as ground truth. A baseline naming the
+wrong function is reproduced faithfully on the new build — unique match, clean boundary,
+nothing complains — so a re-run can be a regression, not a repair. Measured: re-running
+`find-CCSPlayer_MovementServices_ProcessMovement` on 14180 replaced the correct
+`0x180aa2260` (vtable slot 28) with `0x180c22cb0`, which is in no slot at all, purely
+because 14178b's artifact still held it. `find-NetworkStateChanged` and
+`find-CCSPlayer_MovementServices_FullWalkMove` regressed the same way.
+
+`abi_guard.py` is the answer to this and it is not optional: run
+`uv run abi_guard.py -gamever <VER> --fix` after `sync_upstream.sh` and **before**
+`gamesymbol_snapshot.py pack`, on **every** gamever. 14178b had never been through it,
+which is precisely why it was still poisoning re-runs on 14180.
+
+Two guards now catch the class before the baseline does:
+- a relocation whose address is not an entry of the class's vtable is discarded, so
+  `FUNC_VTABLE_RELATIONS` finally constrains the path that actually resolves the symbol
+  rather than only the `func_xrefs` fallback beneath it. This only works for symbols that
+  declare the relation — `find-NetworkStateChanged` and
+  `find-CCSPlayer_MovementServices_FullWalkMove` declare none, so they still depend on the
+  guard table.
+- `abi_guard.check_symbol` verifies `func_size` as well, which is how four over-measurements
+  surfaced that `validate_artifacts` had missed (its swallow check needs a recognisable
+  prologue with no branch into it).
+
 ## ALWAYS DO
 
 - **Re-pack snapshot after config changes** — and do not rely on check-contract to catch a stale one: the digest covers the find-tasks, not the `symbols:` lists
@@ -600,7 +648,8 @@ the fields that define it, so a vfunc always asks for `vtable_name`/`vfunc_offse
 
 | Tool | When | Notes |
 |------|------|-------|
-| `validate_artifacts.py` | After every artifact change | Re-checks every artifact against the binary; `-strict` fails on warnings |
+| `abi_guard.py` | After `sync_upstream.sh`, before every pack, on every gamever | Catches a wrong *identification* that relocated cleanly; `--fix` rewrites the artifact. Also verifies `func_size` |
+| `validate_artifacts.py` | After every artifact change | Re-checks every artifact against the binary; `-strict` fails on warnings. Needs `capstone` — degrades silently without it |
 | `verify_plugin_gamedata.py` | Before a deploy, and to answer "is this plugin's file OK" | Scans every shipped signature against the binaries and re-derives every offset; non-zero exit on broken/ambiguous/mismatch |
 | `gamesymbol_snapshot.py` | `pack` after changes, `check-contract` to verify | Pack is what generation reads, not `bin_artifacts/` |
 | `missing_report.py` | After runs / before hunts | Writes `missing_<plat>_<ver>.txt` |
