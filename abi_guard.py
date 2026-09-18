@@ -291,8 +291,31 @@ def write_func_yaml(
 
 
 def guess_func_size(data: bytes, off: int, limit: int = 0x2000) -> int:
-    m = re.compile(rb"\xc3\xcc\xcc", re.S).search(data, off, off + limit)
-    return (m.start() + 1 - off) if m else 0
+    """Bytes from *off* to the end of its function, or 0 when that cannot be told.
+
+    Scanning for the first ``ret; int3; int3`` alone over-measures: a function that
+    ends on a tail ``jmp`` has no such tail of its own, so the scan runs THROUGH the
+    functions after it until one does end that way. That is where 14181's
+    NetworkStateChanged.linux 0xca5 (IDA: 0x55), CCSPlayer_MovementServices_
+    FullWalkMove.linux 0xd23 (IDA: 0x170) and CCSPlayer_MovementServices_
+    ProcessMovement.windows 0x785 (IDA: 0x67e) came from -- each swallowed at least
+    one whole following function.
+
+    An inter-function gap is padding, so a run of two or more 0xCC/0x90 bytes reached
+    before the ``ret`` means the function already ended and this measurement would
+    span a boundary. func_size is internal metadata that never reaches a plugin, so
+    reporting 0x0 (unknown) costs nothing while a wrong value is a live defect.
+    """
+    end = min(len(data), off + limit)
+    i = off
+    while i < end - 2:
+        b = data[i]
+        if b == 0xC3 and data[i + 1] == 0xCC and data[i + 2] == 0xCC:
+            return i + 1 - off
+        if b in (0xCC, 0x90) and data[i + 1] == b and i > off:
+            return 0            # padding first: another function ended here
+        i += 1
+    return 0
 
 
 # --- LLM finder validator ---------------------------------------------------------------
@@ -376,6 +399,16 @@ def _load_binary(bindir: str, gamever: str, platform: str):
         return binary, f.read()
 
 
+def _parse_hex(value):
+    """Hex string (or int) -> int, or None when it is neither."""
+    if isinstance(value, int):
+        return value
+    try:
+        return int(str(value).strip(), 16)
+    except (TypeError, ValueError):
+        return None
+
+
 def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> tuple[bool, str]:
     binary, data = _load_binary(bindir, gamever, platform)
     if data is None:
@@ -423,6 +456,19 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
                 problems.append(f"func_sig has {len(sh)} hits")
             elif cur_off is not None and sh[0] != cur_off:
                 problems.append(f"func_sig resolves to {offset_to_va(data, platform, sh[0]):#x}, not func_va")
+
+        # A func_size written by the old guess_func_size can span a function
+        # boundary even when func_va and func_sig are right, because that scan
+        # ran past a tail jmp into the next function. Rule 14: an unknown size
+        # costs nothing (it never reaches a plugin) and a wrong one is a defect.
+        recorded_size = _parse_hex(y.get("func_size"))
+        if recorded_size and cur_off is not None:
+            honest_size = guess_func_size(data, cur_off)
+            if honest_size != recorded_size:
+                problems.append(
+                    f"func_size {recorded_size:#x} is not measurable from {cur_va:#x}"
+                    f" (honest measurement: {honest_size:#x})"
+                )
 
     if not problems:
         return True, f"ok  {symbol}.{platform} @ {cur_va:#x}"

@@ -17860,7 +17860,7 @@ files:
     func_name: CBaseEntity_EmitSoundFilter
     func_rva: '0x1a81640'
     func_sig: 48 B8 00 00 00 00 FF FF FF FF 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ?? ?? ?? ?? 48 89 07 48 8D 05 ?? ?? ?? ?? 48 C7 47 08 00 00 00 00
-    func_size: '0xd5c'
+    func_size: '0x0'
     func_va: '0x1a81640'
   server/CBaseEntity_EmitSoundFilter.windows.yaml:
     func_name: CBaseEntity_EmitSoundFilter
@@ -27560,7 +27560,7 @@ files:
     func_name: CCSPlayer_MovementServices_FullWalkMove
     func_rva: '0x15b7e30'
     func_sig: 55 48 89 E5 41 54 49 89 F4 53 48 89 FB 84 D2
-    func_size: '0xd23'
+    func_size: '0x0'
     func_va: '0x15b7e30'
   server/CCSPlayer_MovementServices_FullWalkMove.windows.yaml:
     func_name: CCSPlayer_MovementServices_FullWalkMove
@@ -27592,13 +27592,13 @@ files:
     func_name: CCSPlayer_MovementServices_ProcessMovement
     func_rva: '0x15b8570'
     func_sig: 55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 83 EC ?? 48 8B 7F
-    func_size: '0x5e3'
+    func_size: '0x0'
     func_va: '0x15b8570'
   server/CCSPlayer_MovementServices_ProcessMovement.windows.yaml:
     func_name: CCSPlayer_MovementServices_ProcessMovement
     func_rva: '0xaa9a30'
     func_sig: 40 57 41 57 48 81 EC ?? ?? ?? ?? 48 83 79
-    func_size: '0x785'
+    func_size: '0x0'
     func_va: '0x180aa9a30'
   server/CCSPlayer_MovementServices_WalkMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_WalkMove
@@ -44897,7 +44897,7 @@ files:
     func_name: NetworkStateChanged
     func_rva: '0x216a990'
     func_sig: 48 8B 07 48 85 C0 74 ?? 48 8B 50
-    func_size: '0xca5'
+    func_size: '0x0'
     func_va: '0x216a990'
   server/NetworkStateChanged.windows.yaml:
     func_name: NetworkStateChanged
@@ -47021,5 +47021,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x18002b1a0'
 game_version: '14181'
-last_publish_time: '2026-09-16T14:29:01Z'
+last_publish_time: '2026-09-18T18:02:53Z'
 schema_version: 5

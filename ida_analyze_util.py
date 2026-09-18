@@ -7926,6 +7926,32 @@ async def _rename_gv_in_ida(session, gv_va_hex, gv_name, debug=False):
             print(f"    Preprocess: failed to rename gv {gv_va_hex} -> {gv_name}: {e}")
 
 
+def _declared_vtable_addr_set(new_binary_dir, vtable_class, platform, debug=False):
+    """Addresses held by *vtable_class*'s vtable artifact, or None when unreadable.
+
+    Read from the artifact the task already declares as expected_input, so the
+    check costs no IDA work.
+    """
+    if not vtable_class or not new_binary_dir:
+        return None
+    try:
+        new_binary_dir = os.fspath(new_binary_dir)
+    except Exception:
+        return None
+    vtable_data = _read_yaml_file(_build_vtable_yaml_path(new_binary_dir, vtable_class, platform))
+    if not isinstance(vtable_data, dict):
+        if debug:
+            print(f"    Preprocess: vtable YAML missing for {vtable_class}; cannot constrain relocation")
+        return None
+    addrs = set()
+    for _idx, addr in (vtable_data.get("vtable_entries") or {}).items():
+        try:
+            addrs.add(int(str(addr), 16))
+        except (TypeError, ValueError):
+            continue
+    return addrs or None
+
+
 async def _try_preprocess_func_without_llm(
     *,
     session,
@@ -7953,6 +7979,35 @@ async def _try_preprocess_func_without_llm(
         debug=debug,
         mangled_class_names=normalized_mangled_class_names,
     )
+
+    # Relocation trusts the previous gamever's artifact as ground truth, so a
+    # baseline naming the wrong function reproduces it faithfully on the new
+    # one -- the sig still matches uniquely with a clean boundary and nothing
+    # downstream complains. FUNC_VTABLE_RELATIONS exists to stop exactly that
+    # ("a wrong candidate can never pass"), but it was only consulted on the
+    # xref path below, which relocation short-circuits. Measured on 14180:
+    # CCSPlayer_MovementServices_ProcessMovement.windows relocated to
+    # 0x180c22cb0 from 14178b, a function in no slot of the class's vtable,
+    # while the real one is slot 28. Discard such a relocation and let the
+    # vtable-constrained xref path run.
+    if func_data is not None and func_name in vtable_relations_map:
+        vtable_class = vtable_relations_map[func_name]
+        vtable_addrs = _declared_vtable_addr_set(
+            new_binary_dir, vtable_class, platform, debug=debug
+        )
+        if vtable_addrs:
+            try:
+                relocated_va = int(str(func_data.get("func_va")), 16)
+            except (TypeError, ValueError):
+                relocated_va = None
+            if relocated_va is None or relocated_va not in vtable_addrs:
+                if debug:
+                    shown = hex(relocated_va) if relocated_va is not None else func_data.get("func_va")
+                    print(
+                        f"    Preprocess: discarding relocation for {func_name} at {shown}"
+                        f" - not an entry of the {vtable_class} vtable"
+                    )
+                func_data = None
 
     if func_data is None and func_name in func_xrefs_map:
         xref_spec = func_xrefs_map[func_name]

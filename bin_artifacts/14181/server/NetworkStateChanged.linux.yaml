@@ -1,5 +1,5 @@
 func_name: NetworkStateChanged
 func_va: '0x216a990'
 func_rva: '0x216a990'
-func_size: '0xca5'
+func_size: '0x0'
 func_sig: 48 8B 07 48 85 C0 74 ?? 48 8B 50
