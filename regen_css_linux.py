@@ -192,11 +192,15 @@ def main():
 
     css_install = os.environ.get("CSS_INSTALL", os.path.expanduser("~/CounterStrikeSharp"))
     install_gd = os.path.join(css_install, "configs/addons/counterstrikesharp/gamedata/gamedata.json")
-    dist_gd = os.path.join(
+    # update_gamedata.py writes per-version output under gamedata/<gamever>/; the
+    # unversioned dist/ tree it used to write is gone, so fall back to this
+    # gamever's generated file when there is no CSS install to read.
+    generated_gd = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        "dist/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json",
+        "gamedata", args.gamever,
+        "CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json",
     )
-    gdpath = args.gamedata or (install_gd if os.path.exists(install_gd) else dist_gd)
+    gdpath = args.gamedata or (install_gd if os.path.exists(install_gd) else generated_gd)
     if not os.path.exists(gdpath):
         print(f"Error: gamedata not found: {gdpath}")
         sys.exit(1)
@@ -211,7 +215,12 @@ def main():
 
     gd = json.load(open(gdpath, encoding="utf-8"))
 
-    AB._preflight_cleanup(args.bindir, args.gamever)
+    # ida_analyze_bin._preflight_cleanup() is gone: it reaped whatever held the
+    # port and deleted every .id0/.id1/.id2/.nam/.til under bin/<gamever>
+    # regardless of owner, which killed the editor's IDA session and live
+    # databases along with the stale ones. The ownership-aware replacement lives
+    # in run_linux.sh / run_windows.sh; run one of those if a stale lock blocks
+    # this. Calling the removed helper crashed this script on every invocation.
     proc = AB.start_idalib_mcp(binpath, HOST, PORT, "", args.debug)
     if proc is None:
         print("Error: failed to start idalib-mcp")
