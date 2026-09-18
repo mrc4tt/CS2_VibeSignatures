@@ -103,6 +103,7 @@ export function FileView({ descriptor, content, metadata, find, marks, focusLine
             <>
               <span><i className="c" />{t('gamedata2.legendFrom')}</span>
               <span><i className="u" />{t('gamedata2.legendChanged')}</span>
+              <span><i className="p" />{t('gamedata2.legendPlugin')}</span>
             </>
           ) : (
             <span>{t('gamedata2.plainNote')}</span>

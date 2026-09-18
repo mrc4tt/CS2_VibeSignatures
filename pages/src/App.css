@@ -88,8 +88,9 @@
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-left: auto; align-items: center; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 3px; height: 12px; display: block; }
-.legend i.c { background: var(--accent-fill); }
-.legend i.u { background: var(--warn); }
+.legend i.c { background: var(--ok); }
+.legend i.u { background: var(--accent-fill); }
+.legend i.p { background: var(--ghost); }
 .nav2 { display: inline-flex; align-items: center; border: 1px solid var(--rule); border-radius: 6px;
   background: var(--card); overflow: hidden; }
 .nav2 button { border: 0; background: none; padding: 4px 9px; cursor: pointer; color: var(--muted); font-size: 12px; }
@@ -105,12 +106,18 @@
 .rl .fold { position: sticky; left: 52px; z-index: 3; flex: 0 0 14px; text-align: center; color: var(--faint);
   background: var(--sunk); cursor: pointer; user-select: none; font-size: 9px; }
 .rl .fold:hover { color: var(--ink); }
-.rl .st { position: sticky; left: 66px; z-index: 2; flex: 0 0 3px; background: transparent; }
+/* The gutter says where a line CAME FROM, which is the one thing a gamedata file
+   cannot tell you by looking at it: grey is the plugin's own text that nothing
+   here ever writes, green is a line this build produced, amber is one it changed.
+   A key frozen at its template value is grey among green - rule 20 made visible
+   by scrolling instead of by reading a -debug log. */
+.rl .st { position: sticky; left: 66px; z-index: 2; flex: 0 0 3px; background: var(--ghost); }
 .rl .lc { padding: 0 16px 0 11px; flex: 1 1 auto; white-space: pre; color: var(--ink-2); }
 .rl.longline .lc { white-space: pre-wrap; overflow-wrap: anywhere; }
-.rl.cov .st { background: var(--accent-fill); }
-.rl.upd .st { background: var(--warn); }
-.rl.hit .st { background: var(--ok); }
+.rl.cov .st { background: var(--ok); }
+.rl.upd .st { background: var(--accent-fill); }
+.rl.upd { background: color-mix(in srgb, var(--accent-fill) 7%, transparent); }
+.rl.hit .st { background: var(--qualify); }
 .rl.foc .st { background: var(--ink); }
 .raw .jk { color: var(--ink); }
 .raw .jp { color: var(--faint); }

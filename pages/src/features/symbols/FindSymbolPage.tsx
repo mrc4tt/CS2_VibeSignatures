@@ -8,6 +8,7 @@ import { Explain } from '../../components/Explain'
 import { getGameSymbolDataset, getGameSymbolIndex, getGameSymbolLightDataset } from './data'
 import { filterEntries, pivotRecords, verdictOf, type SymbolFilters } from './pivot'
 import { SymbolCard } from './SymbolCard'
+import { SymbolRow } from './SymbolRow'
 
 const PAGE = 12
 
@@ -197,30 +198,54 @@ export function FindSymbolPage() {
       )}
 
       {dataset && (
-        <div className="results" ref={listRef}>
-          {visible.slice(0, limit).map((item) => (
-            <SymbolCard
-              key={item.key}
-              entry={detailedByKey.get(item.key) ?? item}
-              gameVersion={version ?? ''}
-              warnings={warningsBySymbol?.[item.key]}
-              shippedBy={symbolToKeys?.[item.key]}
-              open={openKey === item.key}
-              detailReady={detailedByKey.has(item.key)}
-              onToggle={(key) => setParam('symbol', openKey === key ? undefined : key, true)}
-            />
-          ))}
-          {visible.length === 0 && (
-            <div className="blank">
-              <div className="big">◆</div>
-              <p>{t('symbols2.none', { query: filters.query })}<br />{t('symbols2.noneHint')}</p>
-            </div>
-          )}
-          {visible.length > limit && (
-            <button type="button" className="btn morebtn" onClick={() => setLimit(limit + PAGE)}>
-              {t('symbols2.showMore', { count: Math.min(PAGE, visible.length - limit), total: visible.length })}
-            </button>
-          )}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:items-start">
+          {/*
+            Master-detail rather than a column of expanders: with 2,008 entries
+            the list is for scanning and the detail is for reading, and one
+            column made you lose your place in the list every time you opened
+            something. Below lg the grid collapses, list first, detail under it.
+          */}
+          <div className="results flex flex-col gap-1.5 lg:max-h-[calc(100vh-260px)] lg:overflow-y-auto lg:pr-1" ref={listRef}>
+            {visible.slice(0, limit).map((item) => (
+              <SymbolRow
+                key={item.key}
+                entry={item}
+                selected={openKey === item.key}
+                onSelect={(key) => setParam('symbol', key, true)}
+              />
+            ))}
+            {visible.length === 0 && (
+              <div className="blank">
+                <div className="big">◆</div>
+                <p>{t('symbols2.none', { query: filters.query })}<br />{t('symbols2.noneHint')}</p>
+              </div>
+            )}
+            {visible.length > limit && (
+              <button type="button" className="btn morebtn" onClick={() => setLimit(limit + PAGE)}>
+                {t('symbols2.showMore', { count: Math.min(PAGE, visible.length - limit), total: visible.length })}
+              </button>
+            )}
+          </div>
+
+          {/* Detail pane: the selected symbol, or the first result so the pane
+              is never an empty box on arrival. */}
+          <div className="lg:sticky lg:top-6">
+            {(() => {
+              const selected = visible.find((item) => item.key === openKey) ?? visible[0]
+              if (!selected) return null
+              return (
+                <SymbolCard
+                  entry={detailedByKey.get(selected.key) ?? selected}
+                  gameVersion={version ?? ''}
+                  warnings={warningsBySymbol?.[selected.key]}
+                  shippedBy={symbolToKeys?.[selected.key]}
+                  open
+                  detailReady={detailedByKey.has(selected.key)}
+                  onToggle={() => undefined}
+                />
+              )
+            })()}
+          </div>
         </div>
       )}
     </div>

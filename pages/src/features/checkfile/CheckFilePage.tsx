@@ -19,6 +19,15 @@ interface Loaded {
 }
 
 const STATES: KeyState[] = ['outdated', 'current', 'unknown', 'absent']
+
+/** One tone per state, so a number reads the same here as anywhere else on the site. */
+const STATE_TONE: Record<KeyState, 'bad' | 'ok' | 'warn' | 'neutral'> = {
+  outdated: 'bad',
+  current: 'ok',
+  unknown: 'warn',
+  absent: 'neutral',
+}
+const STATE_NUMBER = { bad: 'text-bad', ok: 'text-ok', warn: 'text-warn', neutral: 'text-ink' } as const
 /** Signatures are long; a page of them at a time keeps the list readable. */
 const ROWS = 25
 
@@ -342,20 +351,38 @@ export function CheckFilePage() {
                   />
                 )}
 
-                <div className="statgrid">
-                  {STATES.map((state) => (
-                    <button
-                      key={state}
-                      type="button"
-                      className={`stat kstat${state === 'outdated' && summary.outdated ? ' warnv' : ''}${state === 'current' ? ' okv' : ''}`}
-                      data-on={show === state || undefined}
-                      disabled={summary[state] === 0}
-                      onClick={() => { setShow(state); setLimit(ROWS) }}
-                    >
-                      <span className="v">{summary[state]}</span>
-                      <span className="l">{t(`check.state.${state}`)}</span>
-                    </button>
-                  ))}
+                {/*
+                  Four states, and they are this checker's own: it compares your
+                  file against published values, so it can say a value is current
+                  or out of date, but not the things verify_plugin_gamedata says
+                  after scanning the binaries. Naming them its way would claim a
+                  distinction this data cannot support.
+                */}
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  {STATES.map((state) => {
+                    const tone = STATE_TONE[state]
+                    const active = show === state
+                    return (
+                      <button
+                        key={state}
+                        type="button"
+                        aria-pressed={active}
+                        disabled={summary[state] === 0}
+                        onClick={() => { setShow(state); setLimit(ROWS) }}
+                        className={[
+                          'flex flex-col items-start gap-1 rounded-[12px] border p-4 text-left transition-colors',
+                          'disabled:cursor-not-allowed disabled:opacity-45',
+                          active ? 'border-rule-strong bg-card-2' : 'border-rule bg-card hover:border-rule-strong',
+                        ].join(' ')}
+                      >
+                        {/* `v` is the hook CheckFilePage.test.tsx reads the count through. */}
+                        <span className={`v font-display text-[28px] font-bold leading-none ${STATE_NUMBER[tone]}`}>
+                          {summary[state]}
+                        </span>
+                        <span className="text-[12px] uppercase tracking-wide text-muted">{t(`check.state.${state}`)}</span>
+                      </button>
+                    )
+                  })}
                 </div>
 
                 <p className="plain prose dznote">{t(`check.meaning.${show}`)}</p>
