@@ -145,7 +145,7 @@ export function Button({
         'inline-flex items-center justify-center gap-2 rounded-[8px] font-medium transition-colors',
         'disabled:cursor-not-allowed disabled:opacity-55',
         pad,
-        variant === 'primary' && 'bg-accent text-accent-ink font-semibold hover:brightness-110',
+        variant === 'primary' && 'bg-accent-fill text-accent-ink font-semibold hover:brightness-110',
         variant === 'default' && 'border border-rule-strong bg-transparent text-ink hover:bg-card-2',
         variant === 'text' && 'bg-transparent text-ink-2 hover:bg-card-2',
         variant === 'link' && 'bg-transparent p-0 text-[color:var(--accent-text)] hover:underline',
@@ -167,7 +167,7 @@ export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputEleme
     <input
       className={cn(
         'w-full rounded-[8px] border border-rule-strong bg-card-2 px-3 py-2 text-[13.5px] text-ink',
-        'placeholder:text-faint focus:border-accent focus:outline-none',
+        'placeholder:text-faint focus:border-accent-fill focus:outline-none',
         className,
       )}
       {...rest}
@@ -180,7 +180,7 @@ export function Select({ className, children, ...rest }: SelectHTMLAttributes<HT
     <select
       className={cn(
         'rounded-[8px] border border-rule-strong bg-card-2 px-3 py-2 text-[13.5px] text-ink',
-        'focus:border-accent focus:outline-none',
+        'focus:border-accent-fill focus:outline-none',
         className,
       )}
       {...rest}
@@ -230,7 +230,7 @@ export function Switch({
       aria-label={label}
       className={cn(
         'relative h-5 w-9 shrink-0 rounded-full border border-rule-strong transition-colors',
-        checked ? 'bg-accent' : 'bg-card-2',
+        checked ? 'bg-accent-fill' : 'bg-card-2',
       )}
     >
       <SwitchPrimitive.Thumb
@@ -273,7 +273,7 @@ export function Tag({ tone = 'neutral', className, children }: { tone?: Tone; cl
 export function Dot({ tone = 'neutral', className }: { tone?: Tone; className?: string }) {
   const fill =
     tone === 'ok' ? 'bg-ok' : tone === 'qualify' ? 'bg-qualify' : tone === 'warn' ? 'bg-warn'
-      : tone === 'bad' ? 'bg-bad' : tone === 'accent' ? 'bg-accent' : 'bg-faint'
+      : tone === 'bad' ? 'bg-bad' : tone === 'accent' ? 'bg-accent-fill' : 'bg-faint'
   return <span aria-hidden="true" className={cn('inline-block size-[7px] shrink-0 rounded-full', fill, className)} />
 }
 
@@ -307,7 +307,7 @@ export function Alert({
 export function Progress({ percent, tone = 'accent', label }: { percent: number; tone?: Tone; label?: string }) {
   const clamped = Math.max(0, Math.min(100, Math.round(percent)))
   const fill =
-    tone === 'ok' ? 'bg-ok' : tone === 'bad' ? 'bg-bad' : tone === 'qualify' ? 'bg-qualify' : 'bg-accent'
+    tone === 'ok' ? 'bg-ok' : tone === 'bad' ? 'bg-bad' : tone === 'qualify' ? 'bg-qualify' : 'bg-accent-fill'
   return (
     <div
       role="progressbar"
@@ -328,7 +328,7 @@ export function Spin({ size = 'middle', label, className }: { size?: 'small' | '
     <span
       role="status"
       aria-label={label ?? 'Loading'}
-      className={cn('inline-block animate-spin rounded-full border-2 border-rule-strong border-t-accent', px, className)}
+      className={cn('inline-block animate-spin rounded-full border-2 border-rule-strong border-t-accent-fill', px, className)}
     />
   )
 }
@@ -496,7 +496,7 @@ export function Tabs({
             value={item.key}
             className={cn(
               '-mb-px border-b-2 border-transparent pb-2.5 text-[13.5px] font-medium text-muted',
-              'data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:text-ink',
+              'data-[state=active]:border-accent-fill data-[state=active]:font-semibold data-[state=active]:text-ink',
             )}
           >
             {item.label}

@@ -25,6 +25,7 @@
   --color-rule-soft: var(--rule-soft);
   --color-rule-strong: var(--rule-strong);
   --color-accent: var(--accent);
+  --color-accent-fill: var(--accent-fill);
   --color-accent-2: var(--accent-2);
   --color-accent-ink: var(--accent-ink);
   --color-accent-text: var(--accent-text);
@@ -77,15 +78,18 @@
   --panel-border: #1e262f;
 
   /*
-   * One accent, and it only ever means "act on this".
-   * --accent is a FILL (dark ink sits on it); --accent-text is the same hue at a
-   * lightness that reads as text on --paper. They differ per theme for that
-   * reason - an amber that passes on black fails on white.
+   * One accent, and it only ever means "act on this", in two weights.
+   * --accent-fill is the brand amber a button or bar is painted in, with
+   * --accent-ink on top; --accent is the same hue at a lightness that reads as
+   * TEXT on --paper. App.css uses the token as a colour 19 times against 5 fills,
+   * so --accent has to be the text-safe one - #e8a33d on white is 1.9:1, which
+   * is how "Start here" ended up amber on pale amber in the light theme.
    */
+  --accent-fill: #e8a33d;
   --accent: #e8a33d;
   --accent-2: #241b0e;
   --accent-ink: #101418;
-  --accent-text: #e8a33d;
+  --accent-text: var(--accent);
   --accent-line: #4a3a1b;
 
   --ok: #45c46a;
@@ -162,11 +166,11 @@ html[data-theme="light"] {
   --rule-strong: #c4cfd9;
   --panel-border: #dde4ea;
 
-  /* Same fill, darker text-weight sibling: #e8a33d on white is 1.9:1. */
-  --accent: #e8a33d;
+  /* Same fill, darker text-weight sibling. */
+  --accent-fill: #e8a33d;
+  --accent: #8a5200;
   --accent-2: #fbf0dd;
   --accent-ink: #101418;
-  --accent-text: #8a5200;
   --accent-line: #e2c48d;
 
   --ok: #1f7a3d;
