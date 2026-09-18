@@ -318,6 +318,45 @@ def guess_func_size(data: bytes, off: int, limit: int = 0x2000) -> int:
     return 0
 
 
+def relocation_verdict(symbol: str, platform: str, func_va, binary_dir) -> str:
+    """'ok' | 'bad' | 'unknown' for an address a relocation just produced.
+
+    Relocation takes the previous gamever's func_sig as ground truth, so a
+    baseline naming the wrong function is reproduced faithfully on the new build
+    - unique match, clean boundary, nothing downstream complains (rule 21). For a
+    virtual the class vtable settles it, but NetworkStateChanged and
+    CCSPlayer_MovementServices_FullWalkMove are not virtual and have no vtable to
+    be constrained by. What they do have is an entry in ABI_GUARDS: an accepted
+    head pattern, and the head of the function that keeps getting picked instead.
+
+    Deterministic and IDA-free, like the rest of this file: it maps the address
+    into the binary and looks at the bytes. 'unknown' whenever the question
+    cannot be answered - no rule for this symbol, no binary, an address that maps
+    nowhere - so a caller can only ever use this to REJECT, never to bless.
+    """
+    rule = (ABI_GUARDS.get(symbol) or {}).get(platform)
+    if not rule:
+        return "unknown"
+    binary = os.path.join(os.fspath(binary_dir), BINARY.get(platform, ""))
+    if not os.path.exists(binary):
+        return "unknown"
+    try:
+        va = int(str(func_va), 16) if str(func_va).lower().startswith("0x") else int(func_va)
+    except (TypeError, ValueError):
+        return "unknown"
+    with open(binary, "rb") as f:
+        data = f.read()
+    off = va_to_offset(data, platform, va)
+    if off is None:
+        return "unknown"
+    if head_matches(data, off, rule.get("bad_heads") or []):
+        return "bad"
+    accept = rule.get("accept_heads") or []
+    if accept and not head_matches(data, off, accept):
+        return "bad"
+    return "ok"
+
+
 # --- LLM finder validator ---------------------------------------------------------------
 
 

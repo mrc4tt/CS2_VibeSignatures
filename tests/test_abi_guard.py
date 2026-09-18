@@ -107,6 +107,52 @@ class TestCheckSymbol(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("missing", msg)
 
+    def test_relocation_verdict_rejects_the_known_bad_head(self):
+        """The lock ida_analyze_util puts on a relocation for a NON-virtual symbol.
+
+        A virtual can be constrained by its class vtable; NetworkStateChanged and
+        CCSPlayer_MovementServices_FullWalkMove cannot, because neither is
+        virtual. Their ABI_GUARDS entry is the only thing that can tell the right
+        function from the one relocation keeps landing on, so this is the check
+        that stops a bad baseline propagating (rule 21).
+        """
+        good = self.text_vaddr
+        bad = self.text_vaddr + 0x40
+        binary_dir = self.bindir / "14999" / "server"
+
+        self.assertEqual(
+            abi_guard.relocation_verdict("NetworkStateChanged", "linux", hex(good), str(binary_dir)),
+            "ok",
+        )
+        self.assertEqual(
+            abi_guard.relocation_verdict("NetworkStateChanged", "linux", hex(bad), str(binary_dir)),
+            "bad",
+        )
+
+    def test_relocation_verdict_only_ever_rejects_when_certain(self):
+        """Everything unanswerable is 'unknown', so a caller can never bless on it."""
+        binary_dir = self.bindir / "14999" / "server"
+        # no rule for this symbol
+        self.assertEqual(
+            abi_guard.relocation_verdict("SomeSymbolWithNoRule", "linux", hex(self.text_vaddr), str(binary_dir)),
+            "unknown",
+        )
+        # an address that maps into no section
+        self.assertEqual(
+            abi_guard.relocation_verdict("NetworkStateChanged", "linux", "0xdeadbeef", str(binary_dir)),
+            "unknown",
+        )
+        # no binary to read
+        self.assertEqual(
+            abi_guard.relocation_verdict("NetworkStateChanged", "linux", hex(self.text_vaddr), str(self.bindir / "nope")),
+            "unknown",
+        )
+        # an unparseable address
+        self.assertEqual(
+            abi_guard.relocation_verdict("NetworkStateChanged", "linux", None, str(binary_dir)),
+            "unknown",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

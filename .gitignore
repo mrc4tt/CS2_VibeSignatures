@@ -15,6 +15,12 @@ vcall_finder
 
 # Local fork scripts and files (git-ignored by design)
 *.sh
+# ...except the one that is not a local convenience but the fork's merge policy.
+# sync_upstream.sh decides which paths survive an upstream merge (PROTECTED_PATHS)
+# and how a submodule gitlink is restored; losing it to a fresh clone means the
+# next sync silently hands those decisions back to upstream. It carries no
+# secrets and no machine-specific paths, so it is version controlled.
+!sync_upstream.sh
 libtier0.so
 libtier0.so.*
 hm

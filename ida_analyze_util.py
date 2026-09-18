@@ -8009,6 +8009,27 @@ async def _try_preprocess_func_without_llm(
                     )
                 func_data = None
 
+    # The same rejection for a symbol that has no vtable to be constrained by.
+    # NetworkStateChanged and CCSPlayer_MovementServices_FullWalkMove are not
+    # virtual, so FUNC_VTABLE_RELATIONS cannot speak for them; what they do have
+    # is an ABI_GUARDS entry naming the head of the function that keeps getting
+    # picked instead. relocation_verdict only ever says "bad" when it is certain,
+    # so this can reject and never bless.
+    if func_data is not None:
+        try:
+            from abi_guard import relocation_verdict
+        except Exception:
+            relocation_verdict = None
+        if relocation_verdict is not None and new_binary_dir:
+            verdict = relocation_verdict(func_name, platform, func_data.get("func_va"), new_binary_dir)
+            if verdict == "bad":
+                if debug:
+                    print(
+                        f"    Preprocess: discarding relocation for {func_name} at"
+                        f" {func_data.get('func_va')} - head matches a known-bad function"
+                    )
+                func_data = None
+
     if func_data is None and func_name in func_xrefs_map:
         xref_spec = func_xrefs_map[func_name]
         if debug:
