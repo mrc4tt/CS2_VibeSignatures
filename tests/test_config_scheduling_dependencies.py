@@ -10,23 +10,57 @@ CONFIG_ROOT = Path("configs")
 PREPROCESSOR_ROOT = Path("ida_preprocessor_scripts")
 
 
+def _assignment_targets(node):
+    if isinstance(node, ast.Assign):
+        return [target.id for target in node.targets if isinstance(target, ast.Name)]
+    if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+        return [node.target.id]
+    return []
+
+
+def _resolve_static_value(value, literals):
+    """literal_eval, plus one indirection: NAME[<literal key>] where NAME is a module-level literal.
+
+    Four preprocessors keep their anchors in a FUNC_XREFS_BY_PLATFORM dict because the
+    signatures differ per platform, and then expose FUNC_XREFS = FUNC_XREFS_BY_PLATFORM["linux"]
+    for importers that want one list. That subscript is still statically inspectable -- it just
+    is not a literal -- so resolve it rather than making those scripts duplicate their specs.
+    """
+    try:
+        return ast.literal_eval(value)
+    except (TypeError, ValueError, SyntaxError):
+        pass
+    if (
+        isinstance(value, ast.Subscript)
+        and isinstance(value.value, ast.Name)
+        and value.value.id in literals
+    ):
+        container = literals[value.value.id]
+        key = ast.literal_eval(value.slice)  # raises for a non-literal key, which is the point
+        return container[key]
+    raise ValueError("not statically inspectable")
+
+
 def _literal_assignment(script_path, assignment_name):
     tree = ast.parse(script_path.read_text(encoding="utf-8"), filename=str(script_path))
+    literals = {}
     for node in tree.body:
-        value = None
-        if isinstance(node, ast.Assign) and any(
-            isinstance(target, ast.Name) and target.id == assignment_name for target in node.targets
-        ):
-            value = node.value
-        elif (
-            isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == assignment_name
-        ):
-            value = node.value
-        if value is None:
+        targets = _assignment_targets(node)
+        if not targets or node.value is None:
+            continue
+        if assignment_name not in targets:
+            # Remember every module-level literal seen so far, so a later subscript of one
+            # (FUNC_XREFS = FUNC_XREFS_BY_PLATFORM["linux"]) can be resolved against it.
+            try:
+                resolved = ast.literal_eval(node.value)
+            except (TypeError, ValueError, SyntaxError):
+                continue
+            for name in targets:
+                literals[name] = resolved
             continue
         try:
-            return ast.literal_eval(value)
-        except (TypeError, ValueError, SyntaxError) as exc:
+            return _resolve_static_value(node.value, literals)
+        except (TypeError, ValueError, SyntaxError, KeyError, IndexError) as exc:
             raise AssertionError(
                 f"{script_path}:{node.lineno}: {assignment_name} must remain statically inspectable"
             ) from exc

@@ -5,6 +5,12 @@ description = "CS2 signature and offset generation utilities."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    # validate_artifacts, verify_plugin_gamedata and enrich_vfunc_sigs all degrade
+    # SILENTLY without it (capstone = None / _MD = None), so it has to be declared:
+    # without it validate_artifacts cannot disassemble, ends_clean falls back to
+    # "end % 16 == 0" and reports 22 correct sizes as suspect while never reaching
+    # the swallow check that finds the real ones.
+    "capstone>=5.0.1",
     "fastapi>=0.139.0",
     "fastcrc>=0.3.6",
     "httpx",
