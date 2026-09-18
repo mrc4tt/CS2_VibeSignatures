@@ -85,6 +85,10 @@
   position: sticky; top: 0; z-index: 5; }
 .findbox input { padding: 7px 11px; border: 1px solid var(--rule); border-radius: 6px; background: var(--card);
   font-family: var(--mono); font-size: 13px; color: var(--ink); min-width: 200px; }
+/* The identity-guard tag: same weight as the advisory tag it sits beside, but
+   teal, because it is a reassurance rather than a caution. */
+.tag.guarded { color: var(--qualify); background: var(--qualify-bg); border-color: var(--qualify-line); cursor: help; }
+
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-left: auto; align-items: center; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 3px; height: 12px; display: block; }

@@ -1,7 +1,8 @@
 import { readFile, readdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, relative } from 'node:path'
 import type { Plugin } from 'vite'
+import { disabledPlugins } from './disabledPlugins'
 import { compareGameVersions, sendBytes, sendJson } from './staticAssetPluginUtils'
 
 const SNAPSHOT_FILE_PATTERN = /^(\d{4,10}[a-z]?)\.yaml$/
@@ -13,6 +14,8 @@ export interface SiteMetaBuild {
   symbolRecords: number
   pluginKeys: number
   pluginKeysCovered: number
+  /** Per-plugin key coverage, which is what a per-plugin badge is drawn from. */
+  plugins: Record<string, { total: number; covered: number }>
 }
 
 export interface SiteMeta {
@@ -44,9 +47,14 @@ export function readSnapshotHeader(text: string, source: string): {
   }
 }
 
-async function metadataSummaries(directory: string): Promise<{ total: number; covered: number }> {
+async function metadataSummaries(
+  directory: string,
+): Promise<{ total: number; covered: number; plugins: Record<string, { total: number; covered: number }> }> {
   let total = 0
   let covered = 0
+  // Keyed by the directory directly under <build>/, which is the plugin name the
+  // badge route and Game Data both already use.
+  const plugins: Record<string, { total: number; covered: number }> = {}
   async function walk(path: string): Promise<void> {
     let entries
     try {
@@ -64,15 +72,23 @@ async function metadataSummaries(directory: string): Promise<{ total: number; co
       try {
         const parsed = JSON.parse(await readFile(next, 'utf8')) as { summary?: { total?: unknown; covered?: unknown } }
         const summary = parsed.summary
-        if (Number.isInteger(summary?.total)) total += summary!.total as number
-        if (Number.isInteger(summary?.covered)) covered += summary!.covered as number
+        const plugin = relative(directory, next).split(/[\\/]/)[0]
+        const bucket = plugins[plugin] ?? (plugins[plugin] = { total: 0, covered: 0 })
+        if (Number.isInteger(summary?.total)) {
+          total += summary!.total as number
+          bucket.total += summary!.total as number
+        }
+        if (Number.isInteger(summary?.covered)) {
+          covered += summary!.covered as number
+          bucket.covered += summary!.covered as number
+        }
       } catch {
         // a malformed companion must not fail the build; it is only a counter here
       }
     }
   }
   await walk(directory)
-  return { total, covered }
+  return { total, covered, plugins }
 }
 
 /** Shields-compatible flat badge, drawn rather than fetched so the page stays self-contained. */
@@ -117,13 +133,18 @@ export async function buildSiteMeta(symbolsDirectory: string, gamedataDirectory:
       symbolRecords: header.fileCount,
       pluginKeys: keys.total,
       pluginKeysCovered: keys.covered,
+      plugins: keys.plugins,
     },
     builds: versions,
     generatedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
   }
 }
 
-export function badgesFor(meta: SiteMeta): Map<string, string> {
+/** Green when this build fills the whole file, amber when a key has no producer. */
+const BADGE_OK = '#2f7247'
+const BADGE_GAP = '#8a5f10'
+
+export function badgesFor(meta: SiteMeta, disabled: ReadonlySet<string> = new Set()): Map<string, string> {
   const badges = new Map<string, string>()
   const value = `${meta.latest.gameVersion} · ${meta.latest.pluginKeysCovered}/${meta.latest.pluginKeys}`
   badges.set('badge/latest.svg', renderBadge('gamedata', value))
@@ -131,6 +152,18 @@ export function badgesFor(meta: SiteMeta): Map<string, string> {
   for (const build of meta.builds) {
     if (build === meta.latest.gameVersion) continue
     badges.set(`badge/${build}.svg`, renderBadge('gamedata', build))
+  }
+  // One badge per plugin, so a plugin's own README can say whether this build
+  // still fills its file without anybody going and looking.
+  for (const [plugin, keys] of Object.entries(meta.latest.plugins ?? {})) {
+    // A disabled generator's directory survives from older builds and its data
+    // is stale on purpose, so a badge over it would be a promise nothing keeps.
+    if (disabled.has(plugin)) continue
+    const gap = keys.total - keys.covered
+    badges.set(
+      `badge/plugin/${plugin}.svg`,
+      renderBadge(plugin, `${meta.latest.gameVersion} · ${keys.covered}/${keys.total}`, gap === 0 ? BADGE_OK : BADGE_GAP),
+    )
   }
   return badges
 }
@@ -188,7 +221,10 @@ export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: stri
             next()
             return
           }
-          const badges = badgesFor(await buildSiteMeta(symbolsDirectory, gamedataDirectory))
+          const badges = badgesFor(
+            await buildSiteMeta(symbolsDirectory, gamedataDirectory),
+            await disabledPlugins(join(inputRoot, 'gamedata-generators')),
+          )
           const svg = badges.get(`badge/${badge[1]}`)
           if (!svg) {
             response.statusCode = 404
@@ -204,7 +240,8 @@ export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: stri
     async generateBundle() {
       const meta = await buildSiteMeta(symbolsDirectory, gamedataDirectory)
       this.emitFile({ type: 'asset', fileName: 'latest.json', source: JSON.stringify(meta) })
-      for (const [fileName, svg] of badgesFor(meta)) {
+      const disabled = await disabledPlugins(join(inputRoot, 'gamedata-generators'))
+      for (const [fileName, svg] of badgesFor(meta, disabled)) {
         this.emitFile({ type: 'asset', fileName, source: svg })
       }
       for (const [fileName, bytes] of await extraFiles(inputRoot)) {

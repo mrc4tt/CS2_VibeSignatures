@@ -21,6 +21,8 @@ export interface SiteHistory {
   files: Record<string, Record<string, KeyHistory>>
   keyToSymbol: Record<string, string>
   symbolToKeys: Record<string, Array<[string, string]>>
+  /** Symbols abi_guard.py holds an identity rule for; see abiGuarded in publish_site_data.py. */
+  abiGuarded?: string[]
 }
 
 export interface ValidatorWarning {
@@ -145,6 +147,41 @@ export function differencesSince(
     const after = valueAtBuild(history, file, key, newest)
     if (JSON.stringify(before) === JSON.stringify(after)) continue
     out.push({ key, before, after })
+  }
+  return out
+}
+
+export interface FileDifference {
+  file: string
+  differences: KeyDifference[]
+}
+
+/**
+ * Every key in every file whose value differs between two builds.
+ *
+ * differencesSince answers "how far behind is this one file"; this answers the
+ * question a server owner has when they skip a release: everything that moved
+ * between the build they are on and the one they are going to, in one list.
+ * Order of the two arguments does not matter for whether a key is listed, but it
+ * does decide which side is `before`.
+ */
+export function differencesBetween(
+  history: SiteHistory | undefined,
+  from: string,
+  to: string,
+): FileDifference[] {
+  if (!history || from === to) return []
+  const out: FileDifference[] = []
+  for (const file of Object.keys(history.files).sort()) {
+    const entries = history.files[file]
+    const differences: KeyDifference[] = []
+    for (const key of Object.keys(entries).sort()) {
+      const before = valueAtBuild(history, file, key, from)
+      const after = valueAtBuild(history, file, key, to)
+      if (JSON.stringify(before) === JSON.stringify(after)) continue
+      differences.push({ key, before, after })
+    }
+    if (differences.length > 0) out.push({ file, differences })
   }
   return out
 }

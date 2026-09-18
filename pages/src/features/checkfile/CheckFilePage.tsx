@@ -223,6 +223,24 @@ export function CheckFilePage() {
           )}
 
           <Explain>{t('check.explain')}</Explain>
+
+          {/*
+            There is no server here to POST a file to - the site is static, and
+            this check runs in your browser. What CI needs instead is the
+            published file itself, and the index already addresses every one of
+            them with a sha256, so the recipe is two requests and a diff.
+          */}
+          <details className="ci">
+            <summary>{t('check.ciH')}</summary>
+            <p className="plain">{t('check.ciBody')}</p>
+            <pre className="json-block">{`# the newest published file for one plugin, and its digest
+url=$(curl -sS ${window.location.origin}/gamedata/index.json \\
+  | jq -r '.versions[0].files[] | select(.plugin=="matchzy") | .content.url')
+curl -sS ${window.location.origin}/gamedata/$url -o published.json
+
+# fail the build when what you ship no longer matches it
+diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
+          </details>
         </div>
       </section>
 

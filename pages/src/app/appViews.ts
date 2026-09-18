@@ -1,4 +1,4 @@
-export const APP_VIEWS = ['start', 'symbols', 'gamedata', 'check', 'runs', 'runs-live', 'words'] as const
+export const APP_VIEWS = ['start', 'symbols', 'gamedata', 'diff', 'check', 'runs', 'runs-live', 'words'] as const
 export type AppView = (typeof APP_VIEWS)[number]
 
 const LEGACY_VIEW_KEY = 'cs2vibe.view'
@@ -18,6 +18,7 @@ export const VIEW_PATHS: Record<AppView, string> = {
   // GitHub Pages serves its index.json as the directory index - so visiting the
   // route and reloading printed raw JSON instead of the page.
   gamedata: '/game-data',
+  diff: '/diff',
   check: '/check',
   words: '/words',
   runs: '/analysis',
@@ -41,10 +42,26 @@ export const RESERVED_PATHS = [
 export function viewFromPath(pathname: string): AppView {
   const path = `/${pathname.replace(/^\/+|\/+$/g, '')}`
   if (path === '/runs' || path.startsWith('/runs/')) return 'runs-live'
+  // /symbols/<key> is a permalink to one symbol, so it is still the symbols view.
+  if (path.startsWith('/symbols/')) return 'symbols'
   const found = (Object.keys(VIEW_PATHS) as AppView[]).find(
     (view) => view !== 'runs-live' && VIEW_PATHS[view] === path,
   )
   return found ?? 'start'
+}
+
+/**
+ * The symbol a /symbols/<key> permalink names, or undefined for the plain list.
+ *
+ * A link someone can paste into a plugin channel has to survive being read by
+ * something that does not run JavaScript, which is why the key lives in the path
+ * and not only in ?symbol=.
+ */
+export function symbolFromPath(pathname: string): string | undefined {
+  const path = `/${pathname.replace(/^\/+|\/+$/g, '')}`
+  if (!path.startsWith('/symbols/')) return undefined
+  const key = decodeURIComponent(path.slice('/symbols/'.length))
+  return key.length > 0 ? key : undefined
 }
 
 export function resolveView(value?: string | null): AppView {

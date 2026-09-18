@@ -41,12 +41,13 @@ interface Props {
   gameVersion: string
   warnings?: ValidatorWarning[]
   shippedBy?: Array<[string, string]>
+  abiGuarded?: boolean
   open: boolean
   detailReady: boolean
   onToggle(key: string): void
 }
 
-export function SymbolCard({ entry, gameVersion, warnings, shippedBy, open, detailReady, onToggle }: Props) {
+export function SymbolCard({ entry, gameVersion, warnings, shippedBy, abiGuarded, open, detailReady, onToggle }: Props) {
   const { t } = useTranslation()
   const verdict = verdictOf(entry)
   const pattern = patternOf(entry.linux) ?? patternOf(entry.windows)
@@ -80,6 +81,13 @@ export function SymbolCard({ entry, gameVersion, warnings, shippedBy, open, deta
         <span className="tag mod">{entry.module}</span>
         {entry.aliases.length > 0 && <span className="tag mod">+{entry.aliases.length} alias</span>}
         {(warnings?.length ?? 0) > 0 && <span className="tag warn">{t('symbols2.advisory')}</span>}
+        {/*
+          A unique match proves only that a function was found. These are the
+          records whose IDENTITY is pinned too - abi_guard re-checks the head
+          against an accepted pattern on every run - which is the distinction
+          rule 21 exists for and the one a gamedata file cannot show.
+        */}
+        {abiGuarded && <span className="tag guarded" title={t('symbols2.guardedWhy')}>{t('symbols2.guarded')}</span>}
       </div>
       <div className={`verdict ${verdict}`}>{t(`symbols2.verdict.${verdict}`)}</div>
       <p className="plain">{t(`symbols2.verdictBody.${verdict}`)}</p>
@@ -93,6 +101,18 @@ export function SymbolCard({ entry, gameVersion, warnings, shippedBy, open, deta
           <div>
             <h3>{t('symbols2.whatToDo')}</h3>
             <p className="plain">{adviceText}</p>
+            {/*
+              Rule 13 said out loud, on the record it applies to. Two different
+              slot numbers is not a defect and not a typo - MSVC emits a
+              deleting-destructor pair the Itanium ABI does not - but the only
+              way to know that was to have read the handbook. Copying one slot
+              across platforms is the mistake this sentence exists to stop.
+            */}
+            {slots && slots.linux !== undefined && slots.windows !== undefined && slots.linux !== slots.windows && (
+              <p className="slotwarn">
+                {t('symbols2.slotDiffers', { linux: slots.linux, windows: slots.windows })}
+              </p>
+            )}
           </div>
 
           {!detailReady && <p className="plain">{t('symbols2.loadingDetail')}</p>}
@@ -173,7 +193,7 @@ export function SymbolCard({ entry, gameVersion, warnings, shippedBy, open, deta
             </div>
           </div>
 
-          <div>
+          <div className="flex flex-wrap items-center gap-4">
             <a
               className="ghlink"
               href={`${SOURCE_ROOT}/${encodeURIComponent(gameVersion)}/${encodeURIComponent(entry.module)}/${encodeURIComponent(`${entry.artifact}.${sourcePlatform}.yaml`)}`}
@@ -183,6 +203,23 @@ export function SymbolCard({ entry, gameVersion, warnings, shippedBy, open, deta
             >
               {t('symbols2.openSource')} &rsaquo;
             </a>
+            {/*
+              The permalink, not the current URL: this page keeps the selection
+              in ?symbol= so filters survive a click, but the thing worth pasting
+              into a plugin channel is /symbols/<key>, which the build also
+              publishes as its own page with the signature in its meta tags.
+            */}
+            <button
+              type="button"
+              className="ghlink"
+              onClick={(event) => {
+                event.stopPropagation()
+                const link = `${window.location.origin}/symbols/${encodeURIComponent(entry.key)}`
+                void navigator.clipboard?.writeText(link).catch(() => undefined)
+              }}
+            >
+              {t('symbols2.copyLink')}
+            </button>
           </div>
         </div>
       )}

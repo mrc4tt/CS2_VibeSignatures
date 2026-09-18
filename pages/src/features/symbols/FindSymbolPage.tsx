@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Select, Skeleton } from '../../ui/primitives'
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getSiteDiagnostics, getSiteHistory } from '../../api/siteData'
 import { Explain } from '../../components/Explain'
@@ -9,12 +9,14 @@ import { getGameSymbolDataset, getGameSymbolIndex, getGameSymbolLightDataset } f
 import { filterEntries, pivotRecords, verdictOf, type SymbolFilters } from './pivot'
 import { SymbolCard } from './SymbolCard'
 import { SymbolRow } from './SymbolRow'
+import { symbolFromPath } from '../../app/appViews'
 
 const PAGE = 12
 
 export function FindSymbolPage() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
+  const location = useLocation()
   const [limit, setLimit] = useState(PAGE)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -24,7 +26,9 @@ export function FindSymbolPage() {
   // Memoised so the filter object is stable between renders; an inline literal
   // makes every useMemo below recompute on every keystroke.
   const filters = useMemo<SymbolFilters>(() => ({ query, module, state }), [query, module, state])
-  const openKey = params.get('symbol') ?? undefined
+  // A permalink puts the key in the path; ?symbol= stays as the in-page
+  // selection so the two never fight over the same history entry.
+  const openKey = symbolFromPath(location.pathname) ?? params.get('symbol') ?? undefined
   const deferredQuery = useDeferredValue(query)
 
   // `push` for opening or closing a card, so the back button closes it again;
@@ -76,6 +80,7 @@ export function FindSymbolPage() {
   })
   const warningsBySymbol = diagnosticsQuery.data?.validator.bySymbol
   const symbolToKeys = historyQuery.data?.symbolToKeys
+  const guarded = useMemo(() => new Set(historyQuery.data?.abiGuarded ?? []), [historyQuery.data])
 
   const entries = useMemo(() => (dataset ? pivotRecords(dataset.records) : []), [dataset])
   const detailed = useMemo(() => (fullQuery.data ? pivotRecords(fullQuery.data.records) : []), [fullQuery.data])
@@ -239,6 +244,7 @@ export function FindSymbolPage() {
                   gameVersion={version ?? ''}
                   warnings={warningsBySymbol?.[selected.key]}
                   shippedBy={symbolToKeys?.[selected.key]}
+                  abiGuarded={guarded.has(selected.artifact)}
                   open
                   detailReady={detailedByKey.has(selected.key)}
                   onToggle={() => undefined}

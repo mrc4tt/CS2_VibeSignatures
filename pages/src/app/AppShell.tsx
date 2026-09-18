@@ -16,6 +16,7 @@ const RunListPage = lazy(() => import('../features/runs/RunListPage').then((modu
 const RunDetailPage = lazy(() => import('../features/run-detail/RunDetailPage').then((module) => ({ default: module.RunDetailPage })))
 const FindSymbolPage = lazy(() => import('../features/symbols/FindSymbolPage').then((module) => ({ default: module.FindSymbolPage })))
 const GameDataPage = lazy(() => import('../features/gamedata/GameDataPage').then((module) => ({ default: module.GameDataPage })))
+const DiffPage = lazy(() => import('../features/diff/DiffPage').then((module) => ({ default: module.DiffPage })))
 const CheckFilePage = lazy(() => import('../features/checkfile/CheckFilePage').then((module) => ({ default: module.CheckFilePage })))
 const RunReportPage = lazy(() => import('../features/runs2/RunReportPage').then((module) => ({ default: module.RunReportPage })))
 const StartPage = lazy(() => import('../features/start/StartPage').then((module) => ({ default: module.StartPage })))
@@ -25,6 +26,7 @@ const NAV_ICONS: Record<AppView, (props: IconProps) => React.ReactElement> = {
   start: OverviewIcon,
   symbols: SearchIcon,
   gamedata: TableIcon,
+  diff: ChartIcon,
   check: FileCheckIcon,
   runs: ChartIcon,
   'runs-live': ChartIcon,
@@ -99,7 +101,7 @@ export function AppShell() {
     window.scrollTo({ top: 0 })
   }
 
-  const tabs: AppView[] = ['start', 'symbols', 'gamedata', 'check', 'runs', 'words']
+  const tabs: AppView[] = ['start', 'symbols', 'gamedata', 'diff', 'check', 'runs', 'words']
   const loading = <div className="page-spinner">{t('app.loadingPage')}</div>
 
   return (
@@ -185,6 +187,7 @@ export function AppShell() {
         {view === 'start' && <Suspense fallback={loading}><StartPage onGo={go} /></Suspense>}
         {view === 'symbols' && <Suspense fallback={loading}><FindSymbolPage /></Suspense>}
         {view === 'gamedata' && <Suspense fallback={loading}><GameDataPage /></Suspense>}
+        {view === 'diff' && <Suspense fallback={loading}><DiffPage /></Suspense>}
         {view === 'check' && <Suspense fallback={loading}><CheckFilePage /></Suspense>}
         {view === 'words' && <Suspense fallback={loading}><WordsPage /></Suspense>}
         {view === 'runs' && <Suspense fallback={loading}><RunReportPage /></Suspense>}

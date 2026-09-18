@@ -238,6 +238,9 @@ def symbol_index(build: str) -> dict[str, str]:
     return index
 
 
+from abi_guard import ABI_GUARDS
+
+
 def build_history(newest: str) -> dict:
     order = builds()
     known_dates = _committed_dates()
@@ -294,6 +297,12 @@ def build_history(newest: str) -> dict:
         "files": files,
         "keyToSymbol": key_to_symbol,
         "symbolToKeys": {symbol: sorted(keys) for symbol, keys in symbol_to_keys.items()},
+        # Symbols abi_guard.py holds an identity rule for. A signature matching
+        # uniquely says only that it found *a* function; these are the ones whose
+        # identity is also pinned, checked against an accepted head on every run.
+        # The site can then tell "found" from "confirmed", which is the whole
+        # point of rule 21 and is invisible from a gamedata file.
+        "abiGuarded": sorted(ABI_GUARDS),
     }
 
 

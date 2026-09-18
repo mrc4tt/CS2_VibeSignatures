@@ -73,12 +73,24 @@ describe('site meta publishing', () => {
     expect(meta.latest.pluginKeysCovered).toBe(0)
   })
 
-  it('draws one badge per build plus a latest alias', async () => {
+  it('draws one badge per build plus a latest alias, and one per plugin', async () => {
     const { symbols, gamedata } = await fixture()
     const badges = badgesFor(await buildSiteMeta(symbols, gamedata))
-    expect([...badges.keys()].sort()).toEqual(['badge/14180.svg', 'badge/14181.svg', 'badge/latest.svg'])
+    expect([...badges.keys()].sort()).toEqual([
+      'badge/14180.svg',
+      'badge/14181.svg',
+      'badge/latest.svg',
+      'badge/plugin/CS2Fixes.svg',
+    ])
     expect(badges.get('badge/latest.svg')).toBe(badges.get('badge/14181.svg'))
     expect(badges.get('badge/latest.svg')).toContain('14181 · 74/75')
+
+    // A plugin badge carries its own coverage, and goes amber when a key this
+    // build has no value for is left over - 74 of 75 in the fixture.
+    const plugin = badges.get('badge/plugin/CS2Fixes.svg')!
+    expect(plugin).toContain('CS2Fixes')
+    expect(plugin).toContain('14181 · 74/75')
+    expect(plugin).toContain('#8a5f10')
   })
 
   it('escapes badge text and stays a single svg element', () => {
