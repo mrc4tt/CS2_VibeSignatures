@@ -15,3 +15,6 @@ gamedata-generators/plugify-plugin-s2sdk/gamedata.py merge=ours
 gamedata-generators/modsharp-public/gamedata.py merge=ours
 gamedata-generators/cs2surf/gamedata.py merge=ours
 gamedata-generators/cs2kz-metamod/gamedata.py merge=ours
+
+# Submodule pinned to this fork's own hl2sdk (mrc4tt/hl2sdk, branch cs2)
+.gitmodules merge=ours
