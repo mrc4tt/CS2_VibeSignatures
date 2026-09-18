@@ -82,7 +82,7 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
   const complete = files.filter((file) => file.gap === 0).length
 
   return (
-    <div className="handbook flex flex-col gap-5">
+    <div className="handbook stack">
       {sinceLastVisit && !dismissed && (
         <p className="visit">
           <span>
@@ -165,9 +165,14 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
         </div>
       )}
 
-      <Card className="border-l-[3px] border-l-[color:var(--accent-fill)]">
-        <Explain html={t('start.explain')} />
-      </Card>
+      {/*
+        No wrapper. `.explain` already carries its own left rule, tint and
+        padding, so a Card around it drew the stripe twice - and, because the
+        switch in the top bar hides the paragraph and not its container, left an
+        empty bordered box sitting above "What moved in" once the notes were
+        turned off.
+      */}
+      <Explain html={t('start.explain')} />
 
       {/* What moved, next to which files carry it. */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">

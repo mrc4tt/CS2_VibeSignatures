@@ -72,10 +72,15 @@ export function summariseRecords(records: GameSymbolRecord[]): SymbolSummary[] {
   return [...byKey.values()].sort((left, right) => left.key.localeCompare(right.key))
 }
 
-export function renderSymbolShell(shell: string, summary: SymbolSummary, gameVersion: string): string {
-  const title = `${summary.symbolName} · CS2 ${gameVersion}`
-  const description = clamp(describe(summary), 300)
-  const url = `/symbols/${encodeURIComponent(summary.key)}`
+export function renderSymbolShell(
+  shell: string,
+  summary: SymbolSummary,
+  gameVersion: string,
+  overrideDescription?: string,
+): string {
+  const title = gameVersion ? `${summary.symbolName} · CS2 ${gameVersion}` : summary.symbolName
+  const description = clamp(overrideDescription ?? describe(summary), 300)
+  const url = gameVersion ? `/symbols/${encodeURIComponent(summary.key)}` : `/${summary.key}`
   const tags = [
     `<title>${escapeAttribute(title)}</title>`,
     `<meta name="description" content="${escapeAttribute(description)}">`,
@@ -90,6 +95,33 @@ export function renderSymbolShell(shell: string, summary: SymbolSummary, gameVer
   // Asset URLs in the shell are absolute (base '/'), so a page one level deeper
   // loads exactly the same bundle without rewriting anything.
   return shell.replace(/<title>[\s\S]*?<\/title>/, tags)
+}
+
+/**
+ * The app's own routes, each as a real page.
+ *
+ * Without these, a static host answers every route but "/" with its 404 handler.
+ * spaFallback copies index.html to 404.html so a HUMAN still gets the right
+ * page, but the status is still 404 - which is enough for a link preview to
+ * refuse to unfurl it, an uptime check to call the site down, and a crawler to
+ * skip it. The symbol permalinks made the contrast visible: they are real files
+ * and answer 200 while /diff did not.
+ *
+ * Kept in step with VIEW_PATHS by symbolPagesPlugin.test.ts, which fails if a
+ * route is added there and not here.
+ */
+export const ROUTE_PAGES: Array<{ path: string; title: string; description: string }> = [
+  { path: 'symbols', title: 'Find a symbol', description: 'Every signature and offset in this CS2 build, Linux and Windows side by side.' },
+  { path: 'game-data', title: 'Game Data', description: 'The gamedata file each plugin reads, with the lines this build produced marked.' },
+  { path: 'diff', title: 'Between builds', description: 'Everything that moved between two CS2 builds, key by key, across every plugin file.' },
+  { path: 'check', title: 'Check my file', description: 'Drop a plugin gamedata file and see which of its keys this build has moved.' },
+  { path: 'words', title: 'Words', description: 'Plain meanings for signature, vtable slot, struct member offset and the rest.' },
+  { path: 'analysis', title: 'Analysis runs', description: 'What the run that produced this build actually did.' },
+  { path: 'runs', title: 'Live runs', description: 'Progress of an analysis run in flight.' },
+]
+
+export function renderRouteShell(shell: string, route: { path: string; title: string; description: string }): string {
+  return renderSymbolShell(shell, { key: route.path, symbolName: route.title, module: '' }, '', route.description)
 }
 
 export function symbolPagesPlugin(): Plugin {
@@ -139,7 +171,15 @@ export function symbolPagesPlugin(): Plugin {
           'utf8',
         )
       }
-      this.info?.(`symbol permalinks: ${summaries.length} pages for ${dataset.source.gameVersion}`)
+      for (const route of ROUTE_PAGES) {
+        const directory = join(dist, route.path)
+        await mkdir(directory, { recursive: true })
+        await writeFile(join(directory, 'index.html'), renderRouteShell(shell, route), 'utf8')
+      }
+      this.info?.(
+        `symbol permalinks: ${summaries.length} pages for ${dataset.source.gameVersion},`
+        + ` plus ${ROUTE_PAGES.length} route pages`,
+      )
     },
   }
 }

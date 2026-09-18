@@ -306,6 +306,12 @@ body.filefull .rawscroll { max-height: calc(100dvh - 104px); }
 
 .app-content { flex-grow: 1; min-width: 0; width: 100%; max-width: 1360px; margin: 0 auto; padding: 26px clamp(16px, 3vw, 32px) 56px; }
 .handbook { display: block; }
+/* A page that stacks its sections with one rhythm.
+   It lives here, not as Tailwind utilities on the element, because App.css is
+   imported after index.css and `.handbook` and `.flex` are both single-class
+   selectors - so source order decided, `display: block` won, and the utilities
+   silently did nothing. Two classes beat one, whatever the order. */
+.handbook.stack { display: flex; flex-direction: column; gap: 20px; }
 .hero { display: grid; gap: 14px; margin-bottom: 22px; }
 .hero h1 { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.2; }
 .hero .lede { font-size: 16.5px; color: var(--ink-2); max-width: 62ch; margin: 0; }

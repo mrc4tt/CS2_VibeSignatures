@@ -44,7 +44,7 @@ export function DiffPage() {
   const keyCount = files.reduce((total, file) => total + file.differences.length, 0)
 
   return (
-    <div className="handbook flex flex-col gap-5">
+    <div className="handbook stack">
       <div className="hero">
         <h1>{t('diff.h1')}</h1>
         <p className="lede">{t('diff.lede')}</p>
