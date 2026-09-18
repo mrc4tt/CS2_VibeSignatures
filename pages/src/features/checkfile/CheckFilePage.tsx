@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Select, Skeleton } from 'antd'
+import { Alert, Select, Skeleton } from '../../ui/primitives'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Explain } from '../../components/Explain'
@@ -111,7 +111,7 @@ export function CheckFilePage() {
     }
   }
 
-  if (isLoading) return <div className="handbook"><Skeleton active paragraph={{ rows: 6 }} /></div>
+  if (isLoading) return <div className="handbook"><Skeleton rows={6} /></div>
 
   const behind = fit && newest && fit.build !== newest
     ? history!.builds.length - 1 - history!.builds.findIndex((entry) => entry.gameVersion === fit.build)
@@ -216,7 +216,7 @@ export function CheckFilePage() {
         </div>
       </section>
 
-      {error && <Alert type="error" showIcon message={error} />}
+      {error && <Alert tone="bad" title={error} />}
 
       {loaded && (
         <section className="panel">
@@ -227,24 +227,27 @@ export function CheckFilePage() {
           <div className="panel-body">
             {!file && (
               <Alert
-                type="warning"
-                showIcon
-                message={t('check.unknownPlugin')}
+                tone="warn"
+               
+                title={t('check.unknownPlugin')}
                 description={
                   <>
                     {identification?.best
                       ? t('check.closest', { plugin: identification.best.plugin, shared: identification.best.shared, keys: loaded.values.size })
                       : t('check.noOverlap')}
                     <div className="pickplugin">
+                      <label htmlFor="check-plugin" className="sr-only">{t('check.pick')}</label>
                       <Select
-                        style={{ minWidth: 260 }}
-                        placeholder={t('check.pick')}
-                        options={Object.keys(history?.files ?? {}).sort().map((path) => ({
-                          value: path,
-                          label: path.split('/')[0],
-                        }))}
-                        onChange={(value: string) => setChosenFile(value)}
-                      />
+                        id="check-plugin"
+                        className="min-w-[260px]"
+                        defaultValue=""
+                        onChange={(event) => setChosenFile(event.target.value)}
+                      >
+                        <option value="" disabled>{t('check.pick')}</option>
+                        {Object.keys(history?.files ?? {}).sort().map((path) => (
+                          <option key={path} value={path}>{path.split('/')[0]}</option>
+                        ))}
+                      </Select>
                     </div>
                   </>
                 }
@@ -255,9 +258,8 @@ export function CheckFilePage() {
               <>
                 {fit && (
                   <Alert
-                    type={summary.outdated === 0 ? 'success' : 'warning'}
-                    showIcon
-                    message={
+                    tone={summary.outdated === 0 ? 'ok' : 'warn'}
+                    title={
                       summary.outdated === 0
                         ? t('check.upToDate', { build: newest })
                         : t('check.needsWork', { keys: summary.outdated, build: newest })
@@ -333,9 +335,9 @@ export function CheckFilePage() {
 
                 {fit && behind === 0 && fit.share < 1 && (
                   <Alert
-                    type="info"
-                    showIcon
-                    message={t('check.maybeNewer')}
+                    tone="qualify"
+                   
+                    title={t('check.maybeNewer')}
                     description={t('check.maybeNewerWhy', { build: newest })}
                   />
                 )}

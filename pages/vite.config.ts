@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { copyFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -45,6 +46,7 @@ function spaFallback(): Plugin {
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(),
     spaFallback(),
     gameSymbolsPlugin(join(inputRoot, 'gamesymbols')),
     gameDataPlugin(join(inputRoot, 'gamedata')),

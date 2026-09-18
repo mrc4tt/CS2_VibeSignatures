@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Skeleton } from 'antd'
+import { Alert, Skeleton } from '../../ui/primitives'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSiteMeta } from '../../api/siteMeta'
@@ -56,10 +56,10 @@ export function RunReportPage() {
         <p className="lede">{t('runs2.lede', { build: build ?? '…' })}</p>
       </div>
 
-      {diagnosticsQuery.isLoading && <Skeleton active paragraph={{ rows: 6 }} title={false} />}
+      {diagnosticsQuery.isLoading && <Skeleton rows={6} />}
 
       {!diagnosticsQuery.isLoading && !diagnostics && (
-        <Alert type="info" showIcon message={t('runs2.noReport')} description={t('runs2.noReportWhy')} />
+        <Alert tone="qualify" title={t('runs2.noReport')} description={t('runs2.noReportWhy')} />
       )}
 
       {diagnostics && (

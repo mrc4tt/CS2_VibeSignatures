@@ -1,8 +1,8 @@
-import { Card, Space, Spin, Switch, Tabs, Typography } from 'antd'
 import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TaskView } from '../../api/types'
 import type { GraphFilters, VisualGraph } from '../../graph/model'
+import { Card, Space, Spin, Switch, Tabs, Text } from '../../ui/primitives'
 import { TaskTable } from './TaskTable'
 
 type ViewMode = 'mindmap' | 'dag' | 'list'
@@ -29,8 +29,8 @@ function graphFallback() {
 function MindMapTab({ props }: { props: Props }) {
   const { t } = useTranslation()
   return (
-    <Space orientation="vertical" className="full-width">
-      <Typography.Text type="secondary">{t('views.mindMapHint')}</Typography.Text>
+    <Space direction="vertical" className="full-width" align="start">
+      <Text type="secondary">{t('views.mindMapHint')}</Text>
       <Suspense fallback={graphFallback()}>
         <GraphCanvas
           graph={props.mindMap}
@@ -46,9 +46,14 @@ function MindMapTab({ props }: { props: Props }) {
 function DagTab({ props }: { props: Props }) {
   const { t } = useTranslation()
   return (
-    <Space orientation="vertical" className="full-width">
-      <Space>
-        <Switch checked={props.showStageOrder} onChange={props.onShowStageOrder} />{t('views.showStageOrder')}
+    <Space direction="vertical" className="full-width" align="start">
+      <Space size="small">
+        <Switch
+          checked={props.showStageOrder}
+          onCheckedChange={props.onShowStageOrder}
+          label={t('views.showStageOrder')}
+        />
+        <span className="text-[13px] text-ink-2">{t('views.showStageOrder')}</span>
       </Space>
       <Suspense fallback={graphFallback()}>
         <GraphCanvas graph={props.dag} selectedId={props.selectedTask} onSelect={props.onSelect} />
@@ -64,5 +69,9 @@ export function RunViewTabs(props: Props) {
     { key: 'dag', label: t('views.dag'), children: <DagTab props={props} /> },
     { key: 'list', label: t('views.taskList'), children: <TaskTable tasks={props.tasks} filters={props.filters} onSelect={props.onSelect} /> },
   ]
-  return <Card className="view-card"><Tabs activeKey={props.view} onChange={props.onView} items={items} /></Card>
+  return (
+    <Card className="view-card pt-2">
+      <Tabs value={props.view} onValueChange={props.onView} items={items} />
+    </Card>
+  )
 }

@@ -1,5 +1,5 @@
-import { ArrowLeftOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons'
-import { Alert, Button, Card, Empty, Progress, Space, Spin, Tag, Typography } from 'antd'
+import { ArrowLeftIcon, ReloadIcon, WarningIcon } from '../../ui/icons'
+import { Alert, Button, Card, Empty, Progress, Space, Spin, Tag, Text, Title } from '../../ui/primitives'
 import type { TFunction } from 'i18next'
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
@@ -59,22 +59,25 @@ function RunHeader({ onRefresh }: { onRefresh(): void }) {
     <Card>
       <div className="run-header-grid">
         <div>
-          <Space wrap><StatusTag status={run.effective_status} /><Tag>{streamLabel(streamStatus, t)}</Tag></Space>
-          <Typography.Title level={2}>{run.run_id}</Typography.Title>
-          <Typography.Text type="secondary">{run.current_skill_id || t('detail.noCurrentTask')}</Typography.Text>
+          <Space wrap size="small"><StatusTag status={run.effective_status} /><Tag>{streamLabel(streamStatus, t)}</Tag></Space>
+          <Title level={2} className="font-mono text-[20px] font-medium">{run.run_id}</Title>
+          <Text type="secondary">{run.current_skill_id || t('detail.noCurrentTask')}</Text>
         </div>
         <div className="run-progress">
-          <Progress type="dashboard" percent={run.progress.percent} status={run.progress.failed ? 'exception' : 'normal'} />
-          <Typography.Text type="secondary">{t('detail.progressSummary', {
+          <div className="flex w-[220px] flex-col gap-1.5">
+            <span className="font-display text-[26px] font-bold text-ink">{Math.round(run.progress.percent)}%</span>
+            <Progress percent={run.progress.percent} tone={run.progress.failed ? 'bad' : 'accent'} label={t('runs.progress')} />
+          </div>
+          <Text type="secondary">{t('detail.progressSummary', {
             succeeded: run.progress.succeeded,
             failed: run.progress.failed,
             skipped: run.progress.skipped,
             aborted: run.progress.aborted,
-          })}</Typography.Text>
-          <Button icon={<ReloadOutlined />} onClick={onRefresh}>{t('detail.refreshSnapshot')}</Button>
+          })}</Text>
+          <Button icon={<ReloadIcon />} onClick={onRefresh}>{t('detail.refreshSnapshot')}</Button>
         </div>
       </div>
-      {run.error_summary && <Alert type="error" showIcon message={run.error_summary} className="run-error" />}
+      {run.error_summary && <Alert tone="bad" title={run.error_summary} className="run-error" />}
     </Card>
   )
 }
@@ -100,12 +103,12 @@ interface DetailContentProps {
 function RunDetailContent(props: DetailContentProps) {
   const { t } = useTranslation()
   return (
-    <Space orientation="vertical" size="large" className="full-width">
-      <Link to="/runs"><ArrowLeftOutlined /> {t('detail.backToRuns')}</Link>
+    <Space direction="vertical" size="large" className="full-width" align="start">
+      <Link to="/runs" className="inline-flex items-center gap-1.5"><ArrowLeftIcon size={14} /> {t('detail.backToRuns')}</Link>
       <RunHeader onRefresh={props.onRefresh} />
       {!props.graph ? <Card><Empty description={t('detail.waitingForPlan')} /></Card> : (
         <>
-          {props.graph.warnings.length > 0 && <Alert type="warning" showIcon icon={<WarningOutlined />} message={t('detail.executionPlanWarnings')} description={<pre className="warning-block">{JSON.stringify(props.graph.warnings, null, 2)}</pre>} />}
+          {props.graph.warnings.length > 0 && <Alert tone="warn" title={<span className="inline-flex items-center gap-2"><WarningIcon size={15} />{t('detail.executionPlanWarnings')}</span>} description={<pre className="warning-block">{JSON.stringify(props.graph.warnings, null, 2)}</pre>} />}
           <Card><RunFilterBar graph={props.graph} filters={props.filters} onChange={props.onFilters} /></Card>
           {props.mindMap && props.dag && <RunViewTabs view={props.view} mindMap={props.mindMap} dag={props.dag} tasks={props.tasks} filters={props.filters} selectedTask={props.selectedTask} showStageOrder={props.showStageOrder} onView={(key) => props.onParam('view', key)} onSelect={props.onSelect} onToggleExpand={props.onToggle} onShowStageOrder={props.onShowStageOrder} />}
           <TaskDrawer runId={props.runId} taskId={props.selectedTask} graph={props.graph} onClose={() => props.onParam('task')} onNavigate={props.onSelect} />
@@ -159,7 +162,7 @@ export function RunDetailPage() {
   }
 
   if (snapshotQuery.isLoading || !run) return <div className="page-spinner"><Spin size="large" /></div>
-  if (snapshotQuery.error) return <Alert type="error" showIcon message={snapshotQuery.error.message} description={t('detail.snapshotError')} />
+  if (snapshotQuery.error) return <Alert tone="bad" title={snapshotQuery.error.message} description={t('detail.snapshotError')} />
 
   return <RunDetailContent runId={runId} graph={graph} tasks={tasks} filters={filters} view={view} selectedTask={selectedTask} mindMap={mindMap} dag={dag} showStageOrder={showStageOrder} onRefresh={() => void snapshotQuery.refetch()} onFilters={(next) => setParams(writeFilters(params, next), { replace: true })} onParam={updateParam} onSelect={selectTask} onToggle={toggleExpanded} onShowStageOrder={setShowStageOrder} />
 }

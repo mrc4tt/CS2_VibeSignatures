@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Skeleton } from 'antd'
+import { Skeleton } from '../../ui/primitives'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -107,7 +107,7 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
           <h2>{t('start.glanceH')}</h2>
           <span className="sub">{t('start.glanceSub')}</span>
         </header>
-        {metaQuery.isLoading && <div className="panel-body"><Skeleton active paragraph={{ rows: 2 }} title={false} /></div>}
+        {metaQuery.isLoading && <div className="panel-body"><Skeleton rows={2} /></div>}
         {metaQuery.error && <div className="panel-body"><p className="plain">{metaQuery.error.message}</p></div>}
         {meta && (
           <div className="statgrid">

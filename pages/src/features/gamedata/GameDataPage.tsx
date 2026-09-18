@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Select, Skeleton } from 'antd'
+import { Alert, Select, Skeleton } from '../../ui/primitives'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -150,21 +150,27 @@ export function GameDataPage() {
             {t('gamedata2.hasGap')}<span className="n">{files.filter((file) => file.gap > 0).length}</span>
           </button>
           {indexQuery.data && version && (
-            <Select
-              size="small"
-              style={{ minWidth: 110 }}
-              value={version}
-              onChange={(value: string) => setParam('build', value)}
-              options={indexQuery.data.versions.map((entry) => ({ value: entry.gameVersion, label: entry.gameVersion }))}
-            />
+            <>
+              <label htmlFor="gamedata-build" className="sr-only">{t('gamedata.build')}</label>
+              <Select
+                id="gamedata-build"
+                className="min-w-[110px] px-2 py-1 font-mono text-[12.5px]"
+                value={version}
+                onChange={(event) => setParam('build', event.target.value)}
+              >
+                {indexQuery.data.versions.map((entry) => (
+                  <option key={entry.gameVersion} value={entry.gameVersion}>{entry.gameVersion}</option>
+                ))}
+              </Select>
+            </>
           )}
         </div>
 
-        {indexQuery.error && <Alert type="error" showIcon message={t('gamedata.indexError')} description={indexQuery.error.message} />}
+        {indexQuery.error && <Alert tone="bad" title={t('gamedata.indexError')} description={indexQuery.error.message} />}
         {indexQuery.isLoading && (
           <div className="filegrid">
             {[0, 1, 2, 3, 4, 5].map((row) => (
-              <div className="filecard" key={row}><Skeleton active paragraph={{ rows: 2 }} title={false} /></div>
+              <div className="filecard" key={row}><Skeleton rows={2} /></div>
             ))}
           </div>
         )}
@@ -279,8 +285,8 @@ export function GameDataPage() {
           </div>
         </div>
 
-        {fileQuery.error && <Alert className="gamedata-inline-alert" type="error" showIcon message={t('gamedata.fileError')} description={fileQuery.error.message} />}
-        {fileQuery.isLoading && <div style={{ padding: 16 }}><Skeleton active paragraph={{ rows: 16 }} title={false} /></div>}
+        {fileQuery.error && <Alert className="gamedata-inline-alert" tone="bad" title={t('gamedata.fileError')} description={fileQuery.error.message} />}
+        {fileQuery.isLoading && <div style={{ padding: 16 }}><Skeleton rows={16} /></div>}
 
         {fileQuery.data && (
           <FileView
@@ -321,7 +327,7 @@ export function GameDataPage() {
               ))}
             </div>
             <div className="fdpane pad">
-              {metadataQuery.isLoading && <Skeleton active paragraph={{ rows: 4 }} title={false} />}
+              {metadataQuery.isLoading && <Skeleton rows={4} />}
               {!descriptor.metadata && <p className="plain">{t('gamedata.noMetadata')}</p>}
               {detailTab === 'changes' && (
                 changed.length === 0

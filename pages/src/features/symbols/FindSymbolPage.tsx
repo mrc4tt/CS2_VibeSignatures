@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Select, Skeleton } from 'antd'
+import { Alert, Select, Skeleton } from '../../ui/primitives'
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -150,24 +150,30 @@ export function FindSymbolPage() {
             </button>
           ))}
           <span className="fsep" />
+          <label htmlFor="symbol-module" className="sr-only">{t('symbols.allModules')}</label>
           <Select
-            allowClear
-            showSearch
-            size="small"
-            style={{ minWidth: 150 }}
-            placeholder={t('symbols.allModules')}
-            value={filters.module}
-            onChange={(value?: string) => setParam('module', value)}
-            options={modules.map((module) => ({ value: module, label: module }))}
-          />
+            id="symbol-module"
+            className="min-w-[150px] px-2 py-1 text-[12.5px]"
+            value={filters.module ?? ''}
+            onChange={(event) => setParam('module', event.target.value || undefined)}
+          >
+            <option value="">{t('symbols.allModules')}</option>
+            {modules.map((module) => <option key={module} value={module}>{module}</option>)}
+          </Select>
           {version && indexQuery.data && (
-            <Select
-              size="small"
-              style={{ minWidth: 110 }}
-              value={version}
-              onChange={(value: string) => setParam('build', value)}
-              options={indexQuery.data.versions.map((item) => ({ value: item.gameVersion, label: item.gameVersion }))}
-            />
+            <>
+              <label htmlFor="symbol-build" className="sr-only">{t('symbols.build')}</label>
+              <Select
+                id="symbol-build"
+                className="min-w-[110px] px-2 py-1 font-mono text-[12.5px]"
+                value={version}
+                onChange={(event) => setParam('build', event.target.value)}
+              >
+                {indexQuery.data.versions.map((item) => (
+                  <option key={item.gameVersion} value={item.gameVersion}>{item.gameVersion}</option>
+                ))}
+              </Select>
+            </>
           )}
         </div>
 
@@ -177,15 +183,15 @@ export function FindSymbolPage() {
         </div>
       </div>
 
-      {indexQuery.error && <Alert type="error" showIcon message={t('symbols.indexError')} description={indexQuery.error.message} />}
+      {indexQuery.error && <Alert tone="bad" title={t('symbols.indexError')} description={indexQuery.error.message} />}
       {lightQuery.error && fullQuery.error && (
-        <Alert type="error" showIcon message={t('symbols.datasetError')} description={fullQuery.error.message} />
+        <Alert tone="bad" title={t('symbols.datasetError')} description={fullQuery.error.message} />
       )}
 
       {!dataset && (
         <div className="results" aria-busy="true">
           {[0, 1, 2].map((row) => (
-            <div className="rescard" key={row}><Skeleton active paragraph={{ rows: 3 }} title={false} /></div>
+            <div className="rescard" key={row}><Skeleton rows={3} /></div>
           ))}
         </div>
       )}

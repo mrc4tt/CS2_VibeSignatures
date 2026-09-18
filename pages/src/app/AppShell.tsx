@@ -1,5 +1,3 @@
-import { ApiOutlined, SettingOutlined } from '@ant-design/icons'
-import { Badge, Select, Typography } from 'antd'
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -11,6 +9,8 @@ import { ThemeToggle } from '../theme/ThemeToggle'
 import { useApiConfig } from './apiContext'
 import { forgetStoredView, persistExplain, readExplain, VIEW_PATHS, viewFromPath, type AppView } from './appViews'
 import { onNavigation } from './navigate'
+import { ApiIcon, SettingsIcon } from '../ui/icons'
+import { Dot, Select } from '../ui/primitives'
 
 const RunListPage = lazy(() => import('../features/runs/RunListPage').then((module) => ({ default: module.RunListPage })))
 const RunDetailPage = lazy(() => import('../features/run-detail/RunDetailPage').then((module) => ({ default: module.RunDetailPage })))
@@ -136,22 +136,24 @@ export function AppShell() {
             <Select
               aria-label={t('language.selector')}
               value={selectedLanguage}
-              onChange={(language: AppLanguage) => void changeLanguage(language)}
-              options={APP_LANGUAGES.map((language) => ({ value: language, label: LANGUAGE_LABELS[language] }))}
-              popupMatchSelectWidth={false}
-              size="small"
-            />
+              onChange={(event) => void changeLanguage(event.target.value as AppLanguage)}
+              className="px-2 py-1 text-[12.5px]"
+            >
+              {APP_LANGUAGES.map((language) => (
+                <option key={language} value={language}>{LANGUAGE_LABELS[language]}</option>
+              ))}
+            </Select>
             <ThemeToggle />
           </div>
         </div>
         {view === 'runs' && (
           <div className="apibar">
-            <Badge status={connected ? 'success' : 'default'} />
-            <Typography.Text type="secondary" ellipsis title={baseUrl}>
-              <ApiOutlined /> {baseUrl}
-            </Typography.Text>
+            <Dot tone={connected ? 'ok' : 'neutral'} />
+            <span className="flex min-w-0 items-center gap-1.5 truncate text-[13px] text-muted" title={baseUrl}>
+              <ApiIcon size={14} /> {baseUrl}
+            </span>
             <button type="button" className="btn small" onClick={() => setSettingsOpen(true)}>
-              <SettingOutlined /> {t('app.apiSettings')}
+              <SettingsIcon size={14} /> {t('app.apiSettings')}
             </button>
           </div>
         )}

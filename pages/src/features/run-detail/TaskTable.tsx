@@ -1,12 +1,10 @@
-import { Button, Table, Typography } from 'antd'
-import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
-import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import type { TaskView } from '../../api/types'
 import { StatusTag } from '../../components/StatusTag'
 import { phaseLabel } from '../../components/status'
 import type { GraphFilters } from '../../graph/model'
+import { Button, Table, Td, Th } from '../../ui/primitives'
 
 function matches(task: TaskView, filters: GraphFilters): boolean {
   const query = filters.query.trim().toLowerCase()
@@ -18,22 +16,53 @@ function matches(task: TaskView, filters: GraphFilters): boolean {
   return !filters.jobId || filters.jobId === 'all' || task.job_id === filters.jobId
 }
 
-function columns(onSelect: (id: string) => void, t: TFunction): ColumnsType<TaskView> {
-  return [
-    { title: t('taskTable.task'), dataIndex: 'name', width: 260, render: (name, task) => <Button type="link" onClick={() => onSelect(task.task_id)}>{name}</Button> },
-    { title: t('taskTable.description'), dataIndex: 'description', width: 360, ellipsis: true, render: (value) => <Typography.Text title={value || undefined}>{value || t('common.notAvailable')}</Typography.Text> },
-    { title: t('runs.status'), dataIndex: 'status', width: 105, render: (status) => <StatusTag status={status} /> },
-    { title: t('phase.label'), dataIndex: 'phase', width: 170, render: (phase) => phaseLabel(phase, t) },
-    { title: t('taskTable.type'), dataIndex: 'task_type', width: 130 },
-    { title: t('taskTable.stage'), dataIndex: 'stage_id', width: 190, ellipsis: true },
-    { title: t('taskTable.job'), dataIndex: 'job_id', width: 220, ellipsis: true },
-    { title: t('taskTable.updatedAt'), dataIndex: 'updated_at', width: 170, render: (value) => value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : t('common.notAvailable') },
-    { title: t('taskTable.reason'), dataIndex: 'reason', ellipsis: true, render: (value) => value || t('common.notAvailable') },
-  ]
-}
-
+/**
+ * antd's Table did virtualisation, column widths and paging for us. A run plan
+ * is ~1,300 tasks and the filters above already cut it down, so a plain table in
+ * a scroll container is enough - and it keeps the rows selectable and printable,
+ * which the virtualised body did not.
+ */
 export function TaskTable({ tasks, filters, onSelect }: { tasks: TaskView[]; filters: GraphFilters; onSelect(id: string): void }) {
   const rows = tasks.filter((task) => matches(task, filters))
   const { t } = useTranslation()
-  return <Table rowKey="task_id" virtual columns={columns(onSelect, t)} dataSource={rows} pagination={{ pageSize: 100, showSizeChanger: false }} scroll={{ x: 1760, y: 520 }} />
+  return (
+    <div className="max-h-[520px] overflow-auto rounded-[12px] border border-rule">
+      <Table>
+        <thead className="sticky top-0 z-10 bg-card">
+          <tr>
+            <Th className="w-[260px]">{t('taskTable.task')}</Th>
+            <Th className="w-[360px]">{t('taskTable.description')}</Th>
+            <Th className="w-[105px]">{t('runs.status')}</Th>
+            <Th className="w-[170px]">{t('phase.label')}</Th>
+            <Th className="w-[130px]">{t('taskTable.type')}</Th>
+            <Th className="w-[190px]">{t('taskTable.stage')}</Th>
+            <Th className="w-[220px]">{t('taskTable.job')}</Th>
+            <Th className="w-[170px]">{t('taskTable.updatedAt')}</Th>
+            <Th>{t('taskTable.reason')}</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((task) => (
+            <tr key={task.task_id} className="hover:bg-card-2">
+              <Td>
+                <Button variant="link" onClick={() => onSelect(task.task_id)}>{task.name}</Button>
+              </Td>
+              <Td className="max-w-[360px] truncate" title={task.description || undefined}>
+                {task.description || t('common.notAvailable')}
+              </Td>
+              <Td><StatusTag status={task.status} /></Td>
+              <Td>{phaseLabel(task.phase, t)}</Td>
+              <Td className="font-mono text-[12.5px]">{task.task_type}</Td>
+              <Td className="max-w-[190px] truncate font-mono text-[12.5px]" title={task.stage_id || undefined}>{task.stage_id}</Td>
+              <Td className="max-w-[220px] truncate font-mono text-[12.5px]" title={task.job_id || undefined}>{task.job_id}</Td>
+              <Td className="font-mono text-[12.5px]">
+                {task.updated_at ? dayjs(task.updated_at).format('YYYY-MM-DD HH:mm:ss') : t('common.notAvailable')}
+              </Td>
+              <Td className="truncate" title={task.reason || undefined}>{task.reason || t('common.notAvailable')}</Td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </div>
+  )
 }

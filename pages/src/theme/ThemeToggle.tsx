@@ -1,6 +1,6 @@
-import { MoonOutlined, SunOutlined } from '@ant-design/icons'
-import { Button, Tooltip } from 'antd'
 import { useTranslation } from 'react-i18next'
+import { MoonIcon, SunIcon } from '../ui/icons'
+import { Button, Tooltip } from '../ui/primitives'
 import { useTheme } from './themeContext'
 
 export function ThemeToggle() {
@@ -10,7 +10,7 @@ export function ThemeToggle() {
   const label = isDark ? t('theme.switchToLight') : t('theme.switchToDark')
   return (
     <Tooltip title={label}>
-      <Button className="theme-toggle" aria-label={label} icon={isDark ? <SunOutlined /> : <MoonOutlined />} onClick={toggleTheme} />
+      <Button className="theme-toggle" aria-label={label} icon={isDark ? <SunIcon /> : <MoonIcon />} onClick={toggleTheme} />
     </Tooltip>
   )
 }

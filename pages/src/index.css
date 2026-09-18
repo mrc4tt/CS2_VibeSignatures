@@ -1,132 +1,206 @@
+@import "tailwindcss";
+
+/*
+ * Tokens first, Tailwind second.
+ *
+ * App.css already styles ~180 page classes entirely through these variables, so
+ * repointing them is what actually repaints the site - rewriting that file class
+ * by class would mean touching the markup of every feature for no visual gain.
+ * The names below therefore keep their old spelling and only change value; the
+ * `@theme inline` block re-exports them as Tailwind utilities (bg-card, text-ink,
+ * border-rule, font-mono) for markup written from here on.
+ */
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-rail: var(--rail);
+  --color-card: var(--card);
+  --color-card-2: var(--card-2);
+  --color-sunk: var(--sunk);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-rule-strong: var(--rule-strong);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-text: var(--accent-text);
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --color-ok-line: var(--ok-line);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-line: var(--warn-line);
+  --color-bad: var(--bad);
+  --color-bad-bg: var(--bad-bg);
+  --color-bad-line: var(--bad-line);
+  --color-qualify: var(--qualify);
+  --color-qualify-bg: var(--qualify-bg);
+  --color-qualify-line: var(--qualify-line);
+
+  --font-sans: var(--sans);
+  --font-display: var(--serif);
+  --font-mono: var(--mono);
+
+  --radius-card: 12px;
+  --radius-control: 8px;
+}
+
 :root {
-  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
-  --sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+  --serif: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
   font-family: var(--sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --panel-border: #272d36;
-  --paper: #0e1115;
-  --card: #171b21;
-  --card-2: #1d222a;
-  --sunk: #0a0d10;
-  --ink: #e8ebf0;
-  --ink-2: #bcc4d0;
-  --muted: #8b94a3;
-  --faint: #69727f;
-  --rule: #272d36;
-  --rule-soft: #1f242c;
-  --accent: #63c3cd;
-  --accent-2: #152a2e;
-  --accent-ink: #0b1013;
-  --ok: #5cbd83;
-  --ok-bg: #14251b;
-  --warn: #dda953;
-  --warn-bg: #291f10;
-  --bad: #f0786a;
-  --bad-bg: #2a1614;
-  --elf: #cfae57;
-  --pe: #8aaee0;
-  --ghost: #4c5460;
+
+  /* Surfaces, darkest to lightest. */
+  --rail: #0b0e12;
+  --paper: #101418;
+  --card: #141a21;
+  --card-2: #1a222b;
+  --sunk: #0a0e12;
+
+  /* Ink. --muted and --faint both clear 4.5:1 on --paper. */
+  --ink: #e8edf2;
+  --ink-2: #c6d0da;
+  --muted: #8c98a4;
+  --faint: #6f7c88;
+
+  --rule: #1e262f;
+  --rule-soft: #161d24;
+  --rule-strong: #2b3742;
+  --panel-border: #1e262f;
+
+  /*
+   * One accent, and it only ever means "act on this".
+   * --accent is a FILL (dark ink sits on it); --accent-text is the same hue at a
+   * lightness that reads as text on --paper. They differ per theme for that
+   * reason - an amber that passes on black fails on white.
+   */
+  --accent: #e8a33d;
+  --accent-2: #241b0e;
+  --accent-ink: #101418;
+  --accent-text: #e8a33d;
+  --accent-line: #4a3a1b;
+
+  --ok: #45c46a;
+  --ok-bg: #12261a;
+  --ok-line: #1e4a2c;
+  --qualify: #5bc8af;
+  --qualify-bg: #0e2320;
+  --qualify-line: #1b4a42;
+  --warn: #d2a03a;
+  --warn-bg: #241b0e;
+  --warn-line: #4a3a1b;
+  --bad: #e5534b;
+  --bad-bg: #2a1414;
+  --bad-line: #5a2422;
+
+  --elf: #d8b45e;
+  --pe: #7fa8dd;
+  --ghost: #3c4a55;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 14px 34px -26px #000;
-  --page-color: #e8ebf0;
-  --page-bg-solid: #0e1115;
-  --page-bg: #0e1115;
-  --header-bg: #171b21;
-  --brand-color: #e8ebf0;
-  --connection-card-border: rgba(59, 130, 246, 0.3);
-  --connection-card-bg: linear-gradient(145deg, rgba(17, 24, 39, 0.96), rgba(11, 18, 32, 0.96));
+
+  --page-color: var(--ink);
+  --page-bg-solid: var(--paper);
+  --page-bg: var(--paper);
+  --header-bg: var(--rail);
+  --brand-color: var(--ink);
+  --heading-fg: var(--ink);
+  --legend-fg: var(--muted);
+
+  --connection-card-border: var(--rule-strong);
+  --connection-card-bg: var(--card);
   --connection-card-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
-  --graph-canvas-bg: #0b1220;
-  --graph-node-bg: #111827;
-  --graph-node-fg: #f8fafc;
-  --graph-node-muted: #a8b4c7;
-  --graph-node-description: #dbeafe;
-  --graph-node-accent: #60a5fa;
-  --graph-controls-bg: #111827;
-  --graph-controls-fg: #dbeafe;
-  --graph-grid: #273449;
-  --code-bg: #080d18;
-  --code-fg: #cbd5e1;
-  --editor-bg: #080d18;
-  --editor-fg: #dbeafe;
-  --editor-gutter-bg: #0b1220;
-  --editor-gutter-fg: #64748b;
-  --tooltip-bg: #111827;
-  --tooltip-fg: #dbeafe;
-  --tooltip-border: rgba(148, 163, 184, 0.3);
+
+  --graph-canvas-bg: var(--sunk);
+  --graph-node-bg: var(--card);
+  --graph-node-fg: var(--ink);
+  --graph-node-muted: var(--muted);
+  --graph-node-description: var(--ink-2);
+  --graph-node-accent: var(--accent);
+  --graph-controls-bg: var(--card);
+  --graph-controls-fg: var(--ink-2);
+  --graph-grid: var(--rule);
+
+  --code-bg: var(--sunk);
+  --code-fg: var(--ink);
+  --editor-bg: var(--sunk);
+  --editor-fg: var(--ink);
+  --editor-gutter-bg: var(--rail);
+  --editor-gutter-fg: #414f5c;
+
+  --tooltip-bg: var(--card-2);
+  --tooltip-fg: var(--ink);
+  --tooltip-border: var(--rule-strong);
   --tooltip-shadow: 0 14px 32px rgba(0, 0, 0, 0.38);
-  --legend-fg: #94a3b8;
-  --heading-fg: #f8fafc;
+
   color: var(--page-color);
   background: var(--page-bg-solid);
   color-scheme: dark;
 }
 
 html[data-theme="light"] {
-  --panel-border: #cbd2db;
-  --paper: #e9ebef;
+  --rail: #f2f5f8;
+  --paper: #fbfcfd;
   --card: #ffffff;
-  --card-2: #f3f5f8;
-  --sunk: #dee2e8;
-  --ink: #14181d;
-  --ink-2: #3b434f;
-  --muted: #5f6877;
-  --faint: #98a1b0;
-  --rule: #cbd2db;
-  --rule-soft: #dfe4ea;
-  --accent: #17636e;
-  --accent-2: #e3f0f1;
-  --accent-ink: #ffffff;
-  --ok: #2f7247;
-  --ok-bg: #e4f0e7;
-  --warn: #8c5a10;
-  --warn-bg: #f6eddc;
-  --bad: #9e2b22;
-  --bad-bg: #f7e5e3;
-  --elf: #7b5e1c;
-  --pe: #3a5b86;
-  --ghost: #aab2bf;
-  --shadow: 0 1px 2px rgba(20, 24, 29, 0.05), 0 12px 28px -22px rgba(20, 24, 29, 0.4);
-  --page-color: #14181d;
-  --page-bg-solid: #e9ebef;
-  --page-bg: #e9ebef;
-  --header-bg: #ffffff;
-  --brand-color: #14181d;
-  --connection-card-border: rgba(37, 99, 235, 0.22);
-  --connection-card-bg: linear-gradient(145deg, #f0f3f7, #e7ebf0);
-  --connection-card-shadow: 0 30px 80px rgba(15, 23, 42, 0.12);
-  --graph-canvas-bg: #dde4ec;
-  --graph-node-bg: #edf1f5;
-  --graph-node-fg: #0f172a;
-  --graph-node-muted: #64748b;
-  --graph-node-description: #334155;
-  --graph-node-accent: #2563eb;
-  --graph-controls-bg: #edf1f5;
-  --graph-controls-fg: #1e293b;
-  --graph-grid: #cbd5e1;
-  --code-bg: #e4eaf0;
-  --code-fg: #334155;
-  --editor-bg: #e7ecf2;
-  --editor-fg: #0f172a;
-  --editor-gutter-bg: #dfe6ee;
-  --editor-gutter-fg: #64748b;
-  --tooltip-bg: #edf1f5;
-  --tooltip-fg: #0f172a;
-  --tooltip-border: rgba(15, 23, 42, 0.12);
-  --tooltip-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
-  --legend-fg: #64748b;
-  --heading-fg: #0f172a;
+  --card-2: #f4f7fa;
+  --sunk: #f0f4f8;
+
+  --ink: #121820;
+  --ink-2: #333f4b;
+  --muted: #566572;
+  --faint: #6b7a87;
+
+  --rule: #dde4ea;
+  --rule-soft: #e9eef3;
+  --rule-strong: #c4cfd9;
+  --panel-border: #dde4ea;
+
+  /* Same fill, darker text-weight sibling: #e8a33d on white is 1.9:1. */
+  --accent: #e8a33d;
+  --accent-2: #fbf0dd;
+  --accent-ink: #101418;
+  --accent-text: #8a5200;
+  --accent-line: #e2c48d;
+
+  --ok: #1f7a3d;
+  --ok-bg: #e6f4ea;
+  --ok-line: #a9d6b8;
+  --qualify: #0f6e5c;
+  --qualify-bg: #e2f2ef;
+  --qualify-line: #9dccc2;
+  --warn: #8a5f10;
+  --warn-bg: #faf0db;
+  --warn-line: #e0c68c;
+  --bad: #a32820;
+  --bad-bg: #fbeae8;
+  --bad-line: #e8b5b0;
+
+  --elf: #7a5c16;
+  --pe: #33598a;
+  --ghost: #aab4be;
+  --shadow: 0 1px 2px rgba(18, 24, 32, 0.05), 0 12px 28px -22px rgba(18, 24, 32, 0.4);
+
+  --connection-card-shadow: 0 30px 80px rgba(18, 24, 32, 0.12);
+  --editor-gutter-fg: #8996a3;
+  --tooltip-shadow: 0 14px 32px rgba(18, 24, 32, 0.12);
+
   color-scheme: light;
 }
 
 * { box-sizing: border-box; }
 html, body, #root { min-width: 320px; min-height: 100%; margin: 0; }
-body { min-height: 100vh; background: var(--page-bg); font: 400 15px/1.55 var(--sans); }
-h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+body { min-height: 100vh; background: var(--page-bg); font: 400 15px/1.55 var(--sans); color: var(--ink); }
+h1, h2, h3 { font-family: var(--serif); font-weight: 700; letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+code, kbd, pre, samp { font-family: var(--mono); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
-button, input { font: inherit; }
+button, input, select, textarea { font: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }

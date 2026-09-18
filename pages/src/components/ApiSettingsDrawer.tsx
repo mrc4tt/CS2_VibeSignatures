@@ -1,7 +1,7 @@
-import { Alert, Button, Drawer, Form, Input, Space, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useApiConfig } from '../app/apiContext'
+import { Alert, Button, Drawer, Field, Input, Paragraph, Space } from '../ui/primitives'
 
 interface Props {
   open: boolean
@@ -28,21 +28,15 @@ export function ApiSettingsDrawer({ open, onClose }: Props) {
 
   return (
     <Drawer title={t('settings.title')} open={open} onClose={onClose} width={440}>
-      <Form layout="vertical">
-        <Form.Item label={t('settings.baseUrl')}>
-          <Input value={value} onChange={(event) => setValue(event.target.value)} />
-        </Form.Item>
-        {error && <Alert type="error" message={error} showIcon />}
-        <Typography.Paragraph type="secondary" className="settings-help">
-          {t('settings.help')}
-        </Typography.Paragraph>
-        <Space>
-          <Button type="primary" onClick={save}>
-            {t('settings.saveAndReconnect')}
-          </Button>
-          <Button onClick={disconnect}>{t('settings.disconnect')}</Button>
-        </Space>
-      </Form>
+      <Field label={t('settings.baseUrl')} htmlFor="api-base-url">
+        <Input id="api-base-url" value={value} onChange={(event) => setValue(event.target.value)} />
+      </Field>
+      {error && <Alert tone="bad" title={error} />}
+      <Paragraph className="settings-help text-[13px] text-muted">{t('settings.help')}</Paragraph>
+      <Space>
+        <Button variant="primary" onClick={save}>{t('settings.saveAndReconnect')}</Button>
+        <Button onClick={disconnect}>{t('settings.disconnect')}</Button>
+      </Space>
     </Drawer>
   )
 }

@@ -1,7 +1,4 @@
-import { ReloadOutlined } from '@ant-design/icons'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Alert, Button, Card, Input, Progress, Select, Space, Table, Typography } from 'antd'
-import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import type { TFunction } from 'i18next'
 import { useState } from 'react'
@@ -12,43 +9,13 @@ import type { RunStatus, RunView } from '../../api/types'
 import { useApiConfig } from '../../app/apiContext'
 import { StatusTag } from '../../components/StatusTag'
 import { statusLabel } from '../../components/status'
+import { ReloadIcon } from '../../ui/icons'
+import { Alert, Button, Card, Input, Progress, Select, Space, Spin, Table, Td, Text, Th, Title } from '../../ui/primitives'
 
-const STATUS_OPTIONS: RunStatus[] = [
-  'queued',
-  'starting',
-  'running',
-  'succeeded',
-  'failed',
-  'aborted',
-  'stale',
-]
+const STATUS_OPTIONS: RunStatus[] = ['queued', 'starting', 'running', 'succeeded', 'failed', 'aborted', 'stale']
 
 function formatTime(value: string | null): string {
   return value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '—'
-}
-
-function columns(t: TFunction): ColumnsType<RunView> {
-  return [
-    {
-      title: t('runs.run'),
-      dataIndex: 'run_id',
-      width: 220,
-      render: (value: string) => <Link to={`/runs/${encodeURIComponent(value)}`}>{value}</Link>,
-    },
-    { title: t('runs.status'), dataIndex: 'effective_status', width: 110, render: (value) => <StatusTag status={value} /> },
-    { title: t('runs.version'), dataIndex: 'gamever', width: 100, render: (value) => value || t('common.notAvailable') },
-    { title: t('runs.agent'), dataIndex: 'agent', width: 100, render: (value) => value || t('common.notAvailable') },
-    {
-      title: t('runs.progress'),
-      dataIndex: 'progress',
-      width: 220,
-      render: (progress: RunView['progress']) => (
-        <Progress percent={progress.percent} size="small" status={progress.failed ? 'exception' : 'normal'} />
-      ),
-    },
-    { title: t('runs.currentTask'), dataIndex: 'current_skill_id', ellipsis: true, render: (value) => value || t('common.notAvailable') },
-    { title: t('runs.createdAt'), dataIndex: 'created_at', width: 170, render: formatTime },
-  ]
 }
 
 function errorDescription(error: Error, t: TFunction): string {
@@ -70,13 +37,33 @@ function RunListToolbar(props: ToolbarProps) {
   return (
     <>
       <div className="page-title-row">
-        <div><Typography.Title level={2}>{t('runs.title')}</Typography.Title><Typography.Text type="secondary">{t('runs.subtitle')}</Typography.Text></div>
-        <Button icon={<ReloadOutlined />} loading={props.refreshing} onClick={props.onRefresh}>{t('runs.refresh')}</Button>
+        <div className="flex flex-col gap-1.5">
+          <Title level={2}>{t('runs.title')}</Title>
+          <Text type="secondary">{t('runs.subtitle')}</Text>
+        </div>
+        <Button icon={<ReloadIcon />} loading={props.refreshing} onClick={props.onRefresh}>{t('runs.refresh')}</Button>
       </div>
       <Card>
-        <Space wrap className="filter-row">
-          <Select allowClear placeholder={t('runs.allStatuses')} value={props.status} onChange={props.onStatus} options={STATUS_OPTIONS.map((value) => ({ value, label: statusLabel(value, t) }))} style={{ width: 150 }} />
-          <Input allowClear placeholder={t('runs.gameVersion')} value={props.gamever} onChange={(event) => props.onGamever(event.target.value)} style={{ width: 180 }} />
+        <Space wrap className="filter-row" size="small">
+            <label htmlFor="run-status" className="sr-only">{t('runs.allStatuses')}</label>
+            <Select
+              id="run-status"
+              className="w-[150px]"
+              value={props.status ?? ''}
+              onChange={(event) => props.onStatus((event.target.value || undefined) as RunStatus | undefined)}
+            >
+              <option value="">{t('runs.allStatuses')}</option>
+              {STATUS_OPTIONS.map((value) => <option key={value} value={value}>{statusLabel(value, t)}</option>)}
+            </Select>
+            <label htmlFor="run-gamever" className="sr-only">{t('runs.gameVersion')}</label>
+            <Input
+              id="run-gamever"
+              type="search"
+              className="w-[180px] font-mono"
+              placeholder={t('runs.gameVersion')}
+              value={props.gamever}
+              onChange={(event) => props.onGamever(event.target.value)}
+            />
         </Space>
       </Card>
     </>
@@ -94,9 +81,52 @@ interface ResultsProps {
 function RunResults(props: ResultsProps) {
   const { t } = useTranslation()
   return (
-    <Card className="table-card">
-      <Table rowKey="run_id" columns={columns(t)} dataSource={props.rows} loading={props.loading} pagination={false} scroll={{ x: 1200 }} />
-      {props.hasNext && <div className="load-more"><Button loading={props.fetchingNext} onClick={props.onNext}>{t('runs.loadMore')}</Button></div>}
+    <Card className="table-card p-0">
+      {props.loading ? (
+        <div className="page-spinner"><Spin /></div>
+      ) : (
+        <Table>
+          <thead>
+            <tr>
+              <Th className="w-[220px]">{t('runs.run')}</Th>
+              <Th className="w-[110px]">{t('runs.status')}</Th>
+              <Th className="w-[100px]">{t('runs.version')}</Th>
+              <Th className="w-[100px]">{t('runs.agent')}</Th>
+              <Th className="w-[220px]">{t('runs.progress')}</Th>
+              <Th>{t('runs.currentTask')}</Th>
+              <Th className="w-[170px]">{t('runs.createdAt')}</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {props.rows.map((run) => (
+              <tr key={run.run_id} className="hover:bg-card-2">
+                <Td className="font-mono text-[12.5px]">
+                  <Link to={`/runs/${encodeURIComponent(run.run_id)}`}>{run.run_id}</Link>
+                </Td>
+                <Td><StatusTag status={run.effective_status} /></Td>
+                <Td className="font-mono text-[12.5px]">{run.gamever || t('common.notAvailable')}</Td>
+                <Td>{run.agent || t('common.notAvailable')}</Td>
+                <Td>
+                  <Progress
+                    percent={run.progress.percent}
+                    tone={run.progress.failed ? 'bad' : 'accent'}
+                    label={t('runs.progress')}
+                  />
+                </Td>
+                <Td className="truncate font-mono text-[12.5px]" title={run.current_skill_id || undefined}>
+                  {run.current_skill_id || t('common.notAvailable')}
+                </Td>
+                <Td className="font-mono text-[12.5px]">{formatTime(run.created_at)}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+      {props.hasNext && (
+        <div className="load-more">
+          <Button loading={props.fetchingNext} onClick={props.onNext}>{t('runs.loadMore')}</Button>
+        </div>
+      )}
     </Card>
   )
 }
@@ -116,9 +146,9 @@ export function RunListPage() {
   const rows = query.data?.pages.flatMap((page) => page.items) || []
 
   return (
-    <Space orientation="vertical" size="large" className="full-width">
+    <Space direction="vertical" size="large" className="full-width" align="start">
       <RunListToolbar status={status} gamever={gamever} refreshing={query.isFetching} onStatus={setStatus} onGamever={setGamever} onRefresh={() => void query.refetch()} />
-      {query.error && <Alert type="error" showIcon message={query.error.message} description={errorDescription(query.error, t)} />}
+      {query.error && <Alert tone="bad" title={query.error.message} description={errorDescription(query.error, t)} />}
       <RunResults rows={rows} loading={query.isLoading} fetchingNext={query.isFetchingNextPage} hasNext={query.hasNextPage} onNext={() => void query.fetchNextPage()} />
     </Space>
   )

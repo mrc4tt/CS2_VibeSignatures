@@ -265,7 +265,6 @@ body.filefull .rawscroll { max-height: calc(100dvh - 104px); }
 .sw[data-on="true"] { background: var(--accent-2); border-color: var(--accent); color: var(--accent); }
 .apibar { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 1360px; margin: 0 auto;
   padding: 7px clamp(16px, 3vw, 32px); border-top: 1px solid var(--rule-soft); background: var(--sunk); font-size: 12.5px; }
-.apibar .ant-typography { max-width: 380px; margin: 0 !important; }
 .btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border: 1px solid var(--rule);
   border-radius: 6px; background: var(--card); font-size: 13.5px; cursor: pointer; color: inherit; }
 .btn:hover { background: var(--card-2); border-color: var(--muted); }
@@ -330,33 +329,22 @@ body.noexplain .explain { display: none; }
 .app-layout { min-height: 100vh; background: transparent; }
 .app-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-inline: clamp(16px, 4vw, 48px); border-bottom: 1px solid var(--panel-border); background: var(--header-bg); backdrop-filter: blur(16px); }
 .app-brand { display: flex; align-items: center; gap: 10px; color: var(--brand-color); font-size: 17px; }
-.app-brand .ant-typography { color: inherit; }
 .app-nav { align-self: stretch; margin-right: auto; }
-.app-nav .ant-tabs-nav { height: 100%; margin: 0; }
-.app-nav .ant-tabs-content-holder { display: none; }
 .api-summary { min-width: 0; align-items: center !important; }
-.api-summary .ant-space-item { vertical-align: middle; }
-.api-summary .ant-typography { max-width: 380px; vertical-align: middle !important; }
-.api-summary .ant-badge { vertical-align: middle !important; }
 .app-content { width: 100%; margin: 0 auto; padding: 28px clamp(16px, 4vw, 48px) 60px; }
 .full-width { width: 100%; }
 .page-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.page-title-row .ant-typography { margin: 0; }
 .symbol-version-controls { display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
-.symbol-version-controls .ant-select { width: 210px; }
 .symbol-version-metadata { min-width: 0; overflow-wrap: anywhere; text-align: right; }
 .filter-row { width: 100%; }
-.table-card .ant-card-body { padding: 0; }
 .load-more { padding: 18px; text-align: center; border-top: 1px solid var(--panel-border); }
 .connection-wrap { min-height: calc(100vh - 160px); display: grid; place-items: center; }
 .connection-card { width: min(680px, 100%); border-color: var(--connection-card-border); background: var(--connection-card-bg); box-shadow: var(--connection-card-shadow); }
 .settings-help { margin-top: 20px; }
 .page-spinner { min-height: 60vh; display: grid; place-items: center; }
 .run-header-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: center; }
-.run-header-grid .ant-typography { margin-block: 10px 4px; overflow-wrap: anywhere; }
 .run-progress { display: flex; align-items: center; gap: 18px; max-width: 620px; }
 .run-error { margin-top: 18px; }
-.view-card .ant-card-body { padding-top: 8px; }
 .graph-canvas { position: relative; width: 100%; height: min(68vh, 760px); min-height: 520px; overflow: hidden; border: 1px solid var(--panel-border); border-radius: 10px; background: var(--graph-canvas-bg); }
 .graph-loading { position: absolute; top: 16px; right: 16px; z-index: 8; }
 .flow-node-label { display: flex; flex-direction: column; gap: 4px; text-align: left; overflow: hidden; }
@@ -373,16 +361,10 @@ body.noexplain .explain { display: none; }
 .status-running { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.55); animation: status-pulse 2s infinite; }
 .symbol-browser-grid, .gamedata-browser-grid { display: grid; grid-template-columns: minmax(320px, 2fr) minmax(0, 3fr); gap: 20px; align-items: start; }
 .symbol-tree-card, .symbol-search-card, .gamedata-tree-card, .gamedata-viewer-card { min-width: 0; overflow: hidden; }
-.symbol-tree-card .ant-card-body, .gamedata-tree-card .ant-card-body { height: 680px; overflow: auto; }
-.symbol-tree-card .ant-tree-title, .gamedata-tree-card .ant-tree-title { overflow-wrap: anywhere; }
-.symbol-search-card .ant-card-body { padding: 0; }
 .symbol-filter-row { padding: 20px 20px 12px; }
 .symbol-result-count { display: block; padding: 0 20px 14px; }
-.symbol-search-card .ant-table-wrapper { border-top: 1px solid var(--panel-border); }
 .symbol-payload-title { margin-top: 24px !important; }
 .symbol-payload { max-height: calc(100vh - 360px); }
-.gamedata-viewer-card .ant-card-head-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gamedata-viewer-card .ant-card-body { padding: 0; }
 .gamedata-viewer { height: 680px; min-width: 0; overflow: hidden; }
 .gamedata-inline-alert { margin: 12px; }
 .gamedata-diff-legend { display: flex; gap: 18px; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--panel-border); color: var(--legend-fg); font-size: 12px; }
@@ -410,29 +392,22 @@ body.noexplain .explain { display: none; }
 }
 
 @media (max-width: 1180px) {
-  .api-summary .ant-typography { display: none; }
 }
 
 @media (max-width: 900px) {
   .app-header { height: auto; min-height: 64px; flex-wrap: wrap; padding-block: 10px; line-height: 1.4; }
   .app-nav { order: 3; width: 100%; height: 44px; }
-  .app-nav .ant-tabs-nav-wrap { justify-content: center; }
   .app-content { padding-top: 20px; }
   .run-header-grid { grid-template-columns: 1fr; }
   .run-progress { flex-wrap: wrap; }
   .graph-canvas { min-height: 460px; }
   .symbol-browser-grid, .gamedata-browser-grid { grid-template-columns: 1fr; }
-  .symbol-tree-card .ant-card-body, .gamedata-tree-card .ant-card-body { height: 520px; }
   .gamedata-viewer { height: 580px; }
 }
 
 @media (max-width: 600px) {
-  .app-brand .ant-typography { display: none; }
-  .api-summary .ant-btn:not(.theme-toggle) { font-size: 0; }
-  .api-summary .ant-btn .anticon { margin-inline-end: 0; font-size: 14px; }
   .page-title-row { align-items: stretch; flex-direction: column; }
   .symbol-version-controls { width: 100%; align-items: stretch; justify-content: flex-start; flex-direction: column; }
-  .symbol-version-controls .ant-select { width: 100% !important; }
   .symbol-version-metadata { text-align: left; }
   .filter-row > * { width: 100% !important; }
 }
