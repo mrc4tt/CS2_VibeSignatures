@@ -4,6 +4,12 @@
    here on purpose, so it is added by hand. */
 @import "tw-animate-css";
 
+/* shadcn components carry `dark:` classes, and Tailwind v4 resolves those against
+   prefers-color-scheme - the visitor's OS, not this site's toggle. Someone on a
+   dark OS who picked the light theme would get dark-mode fills on light surfaces.
+   The theme lives in html[data-theme], which index.html sets before first paint. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
  * Tokens first, Tailwind second.
  *

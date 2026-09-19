@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ChipToggle } from '../../ui/primitives'
 import {
   buildLineModel, foldRanges, hiddenLines, tokenizeLine, type Token,
 } from './fileModel'
@@ -85,9 +86,9 @@ export function FileView({ descriptor, content, metadata, find, marks, focusLine
             onChange={(event) => onFind(event.target.value)}
           />
         </label>
-        <button type="button" className="chip" aria-pressed={marks} onClick={() => onMarks(!marks)}>
+        <ChipToggle pressed={marks} onPressedChange={onMarks}>
           {t('gamedata2.marks')}
-        </button>
+        </ChipToggle>
         {marks && changedLines.length > 0 && (
           <span className="nav2">
             <button type="button" onClick={() => stepChange(-1)} aria-label={t('gamedata2.prevChange')}>▲</button>

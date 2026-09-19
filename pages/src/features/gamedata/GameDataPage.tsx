@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Select, Skeleton } from '../../ui/primitives'
+import { Alert, ChipGroup, Select, Skeleton } from '../../ui/primitives'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -143,12 +143,15 @@ export function GameDataPage() {
         <Explain html={t('gamedata2.explain')} />
 
         <div className="filters" style={{ margin: '14px 0' }}>
-          <button type="button" className="chip" aria-pressed={!gapFilter} onClick={() => setParam('only')}>
-            {t('gamedata2.allFiles')}<span className="n">{files.length}</span>
-          </button>
-          <button type="button" className="chip" aria-pressed={gapFilter} onClick={() => setParam('only', 'gap')}>
-            {t('gamedata2.hasGap')}<span className="n">{files.filter((file) => file.gap > 0).length}</span>
-          </button>
+          <ChipGroup
+            label={t('chips.files')}
+            value={gapFilter ? 'gap' : 'all'}
+            onValueChange={(next) => setParam('only', next === 'gap' ? 'gap' : undefined)}
+            items={[
+              { value: 'all', label: t('gamedata2.allFiles'), count: files.length },
+              { value: 'gap', label: t('gamedata2.hasGap'), count: files.filter((file) => file.gap > 0).length },
+            ]}
+          />
           {indexQuery.data && version && (
             <>
               <label htmlFor="gamedata-build" className="sr-only">{t('gamedata.build')}</label>
@@ -360,20 +363,18 @@ export function GameDataPage() {
               {detailTab === 'since' && (
                 <>
                   <p className="plain prose">{t('gamedata2.sinceIntro')}</p>
-                  <div className="filters">
-                    {(history?.builds ?? []).slice().reverse().filter((b) => b.gameVersion !== version).map((b) => (
-                      <button
-                        key={b.gameVersion}
-                        type="button"
-                        className="chip"
-                        aria-pressed={sinceBuild === b.gameVersion}
-                        onClick={() => setParam('since', sinceBuild === b.gameVersion ? undefined : b.gameVersion)}
-                      >
-                        {b.gameVersion}
-                        <span className="n">{formatDay(b.publishedAt ?? undefined, language)}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <ChipGroup
+                    className="filters"
+                    label={t('chips.since')}
+                    allowEmpty
+                    value={sinceBuild}
+                    onValueChange={(next) => setParam('since', next)}
+                    items={(history?.builds ?? []).slice().reverse().filter((b) => b.gameVersion !== version).map((b) => ({
+                      value: b.gameVersion,
+                      label: b.gameVersion,
+                      count: formatDay(b.publishedAt ?? undefined, language),
+                    }))}
+                  />
                   {!sinceBuild && <p className="plain">{t('gamedata2.sincePick')}</p>}
                   {sinceBuild && differences.length === 0 && (
                     <p className="plain">{t('gamedata2.sinceNone', { build: sinceBuild })}</p>

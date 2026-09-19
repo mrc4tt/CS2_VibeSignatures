@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Select, Skeleton } from '../../ui/primitives'
+import { Alert, ChipGroup, Select, Skeleton } from '../../ui/primitives'
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -143,18 +143,16 @@ export function FindSymbolPage() {
         </label>
 
         <div className="filters">
-          {(['all', 'caveat', 'onePlatform'] as const).map((state) => (
-            <button
-              key={state}
-              type="button"
-              className="chip"
-              aria-pressed={filters.state === state}
-              onClick={() => setParam('state', state === 'all' ? undefined : state)}
-            >
-              {t(`symbols2.filter.${state}`)}
-              <span className="n">{counts[state]}</span>
-            </button>
-          ))}
+          <ChipGroup
+            label={t('chips.symbolState')}
+            value={filters.state}
+            onValueChange={(state) => setParam('state', state === 'all' ? undefined : state)}
+            items={(['all', 'caveat', 'onePlatform'] as const).map((state) => ({
+              value: state,
+              label: t(`symbols2.filter.${state}`),
+              count: counts[state],
+            }))}
+          />
           <span className="fsep" />
           <label htmlFor="symbol-module" className="sr-only">{t('symbols.allModules')}</label>
           <Select

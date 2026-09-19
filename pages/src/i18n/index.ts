@@ -19,6 +19,8 @@ const resources = {
         summary: '{{keys}} key(s) moved across {{files}} file(s)',
         keysMoved: '{{count}} moved',
         none: 'Nothing moved between {{from}} and {{to}}.',
+        old: 'old', new: 'new', absent: 'not in this build',
+        legend: 'Only the bytes that changed are highlighted.',
       },
       shell: { search: 'Search', explain: 'Explain everything', theme: 'Light or dark' },
       palette: {
@@ -28,6 +30,12 @@ const resources = {
         none: 'Nothing matches "{{query}}".',
         group: { symbols: 'Symbols', keys: 'Keys in Game Data', files: 'Game Data files' },
         move: 'move', open: 'open', close: 'close',
+      },
+      // Accessible names for the filter chip groups; a screen reader announces
+      // them on entering the group, where sighted users read the row's context.
+      chips: {
+        files: 'Which files', since: 'Compare with build', symbolState: 'Which symbols',
+        module: 'Module', method: 'How it was found',
       },
       start: {
         h1: 'Signatures and offsets for the current CS2 build',
@@ -299,6 +307,8 @@ const resources = {
         summary: '{{keys}} nøgle(r) flyttede sig i {{files}} fil(er)',
         keysMoved: '{{count}} flyttet',
         none: 'Intet flyttede sig mellem {{from}} og {{to}}.',
+        old: 'gammel', new: 'ny', absent: 'findes ikke i dette build',
+        legend: 'Kun de bytes der ændrede sig er fremhævet.',
       },
       shell: { search: 'Søg', explain: 'Forklar alt', theme: 'Lyst eller mørkt' },
       palette: {
@@ -308,6 +318,10 @@ const resources = {
         none: 'Intet matcher "{{query}}".',
         group: { symbols: 'Symboler', keys: 'Nøgler i Game Data', files: 'Game Data-filer' },
         move: 'flyt', open: 'åbn', close: 'luk',
+      },
+      chips: {
+        files: 'Hvilke filer', since: 'Sammenlign med build', symbolState: 'Hvilke symboler',
+        module: 'Modul', method: 'Hvordan det blev fundet',
       },
       navigation: { runs: 'Analysekørsler', symbols: 'Find et symbol', gamedata: 'Game Data' },
       app: { pageTitle: 'CS2 Signaturhåndbog', apiSettings: 'API-indstillinger', loadingPage: 'Indlæser side…' },

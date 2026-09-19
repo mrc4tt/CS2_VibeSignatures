@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Skeleton } from '../../ui/primitives'
+import { Alert, ChipGroup, Skeleton } from '../../ui/primitives'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSiteMeta } from '../../api/siteMeta'
@@ -8,6 +8,8 @@ import { Explain } from '../../components/Explain'
 
 const METHODS = ['reloc', 'xref', 'llm', 'vtable', 'other', 'none'] as const
 const PAGE = 60
+/** The "all" chip's value; no module or method is named `*`. */
+const ALL = '*'
 
 /**
  * What the run that produced this build actually did. Live progress needs a
@@ -130,35 +132,36 @@ export function RunReportPage() {
                 ))}
               </div>
               <div className="filters">
-                <button type="button" className="chip" aria-pressed={!module} onClick={() => setModule(undefined)}>
-                  {t('runs2.allModules')}<span className="n">{tasks.length}</span>
-                </button>
-                {modules.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    className="chip"
-                    aria-pressed={module === name}
-                    onClick={() => { setModule(name); setLimit(PAGE) }}
-                  >
-                    {name}<span className="n">{tasks.filter((task) => task.module === name).length}</span>
-                  </button>
-                ))}
-                <span className="fsep" />
-                <button type="button" className="chip" aria-pressed={!method} onClick={() => setMethod(undefined)}>
-                  {t('runs2.allMethods')}
-                </button>
-                {methodCounts.map(([name, count]) => (
-                  <button
-                    key={name}
-                    type="button"
-                    className="chip"
-                    aria-pressed={method === name}
-                    onClick={() => { setMethod(name); setLimit(PAGE) }}
-                  >
-                    {t(`runs2.method.${name}`)}<span className="n">{count}</span>
-                  </button>
-                ))}
+                <ChipGroup
+                  label={t('chips.module')}
+                  value={module ?? ALL}
+                  onValueChange={(next) => {
+                    setModule(next === ALL ? undefined : next)
+                    if (next !== ALL) setLimit(PAGE)
+                  }}
+                  items={[
+                    { value: ALL, label: t('runs2.allModules'), count: tasks.length },
+                    ...modules.map((name) => ({
+                      value: name,
+                      label: name,
+                      count: tasks.filter((task) => task.module === name).length,
+                    })),
+                  ]}
+                  className="w-full"
+                />
+                <ChipGroup
+                  label={t('chips.method')}
+                  value={method ?? ALL}
+                  onValueChange={(next) => {
+                    setMethod(next === ALL ? undefined : next)
+                    if (next !== ALL) setLimit(PAGE)
+                  }}
+                  items={[
+                    { value: ALL, label: t('runs2.allMethods') },
+                    ...methodCounts.map(([name, count]) => ({ value: name, label: t(`runs2.method.${name}`), count })),
+                  ]}
+                  className="w-full"
+                />
               </div>
               <div className="resultline" role="status" aria-live="polite">
                 {t('runs2.shown', { count: Math.min(limit, rows.length), total: rows.length })}

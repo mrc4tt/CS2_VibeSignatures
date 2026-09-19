@@ -160,7 +160,8 @@ export function AppShell() {
                 aria-label={t('language.selector')}
                 value={selectedLanguage}
                 onChange={(event) => void changeLanguage(event.target.value as AppLanguage)}
-                className="min-w-0 flex-grow px-2 py-1 text-[12.5px]"
+                wrapperClassName="min-w-0 flex-grow"
+                className="px-2 py-1 text-[12.5px]"
               >
                 {APP_LANGUAGES.map((language) => (
                   <option key={language} value={language}>{LANGUAGE_LABELS[language]}</option>

@@ -2,17 +2,30 @@
  * The primitives that replace Ant Design.
  *
  * Only what the app actually used is here - the 22 components the 18 antd
- * importers between them referenced, and nothing speculative. Anything whose
- * keyboard and screen-reader behaviour is hard to get right (dialog, tabs,
- * tooltip, switch) delegates to Radix; the rest is markup, because a Card that
- * pulls in a component library is a Card that cannot be restyled.
+ * importers between them referenced, and nothing speculative.
+ *
+ * Where shadcn/ui has the same component, the primitive is a thin wrapper over
+ * the generated one in ./shadcn: the antd-shaped API stays (so no call site
+ * changes), and the wrapper translates it - variant and size names, `tone` -
+ * and restates only what is this site's own look (the tone colours, the
+ * underlined tabs, the drawer width). The rest is plain markup, because shadcn
+ * has no counterpart for it or its counterpart would only change the spacing.
  */
-import * as DialogPrimitive from '@radix-ui/react-dialog'
-import * as SwitchPrimitive from '@radix-ui/react-switch'
-import * as TabsPrimitive from '@radix-ui/react-tabs'
-import * as TooltipPrimitive from '@radix-ui/react-tooltip'
+import { cva } from 'class-variance-authority'
+import { XIcon } from 'lucide-react'
 import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react'
 import { cn } from './cn'
+import { Alert as AlertRoot, AlertDescription, AlertTitle } from './shadcn/alert'
+import { Badge } from './shadcn/badge'
+import { Button as ShadcnButton } from './shadcn/button'
+import { NativeSelect } from './shadcn/native-select'
+import { Sheet, SheetClose, SheetContent, SheetTitle } from './shadcn/sheet'
+import { Spinner } from './shadcn/spinner'
+import { Switch as ShadcnSwitch } from './shadcn/switch'
+import { Tabs as TabsRoot, TabsContent, TabsList, TabsTrigger } from './shadcn/tabs'
+import { Toggle } from './shadcn/toggle'
+import { ToggleGroup, ToggleGroupItem } from './shadcn/toggle-group'
+import { Tooltip as TooltipRoot, TooltipContent, TooltipProvider, TooltipTrigger } from './shadcn/tooltip'
 
 /* ------------------------------------------------------------------ layout */
 
@@ -118,6 +131,16 @@ export function Paragraph({ className, children, ...rest }: HTMLAttributes<HTMLP
 /* ----------------------------------------------------------------- actions */
 
 type ButtonVariant = 'primary' | 'default' | 'text' | 'link'
+type ButtonSize = 'small' | 'middle' | 'large'
+
+const BUTTON_VARIANT = { primary: 'default', default: 'outline', text: 'ghost', link: 'link' } as const
+const BUTTON_SIZE = { small: 'sm', middle: 'default', large: 'lg' } as const
+/** shadcn sizes by height and text-sm; this site's three sizes each have their own type size. */
+const BUTTON_TEXT: Record<ButtonSize, string> = {
+  small: 'h-7 px-2.5 text-[12.5px]',
+  middle: 'px-3.5 text-[13.5px]',
+  large: 'px-5 text-[15px]',
+}
 
 export function Button({
   variant = 'default',
@@ -131,32 +154,30 @@ export function Button({
   ...rest
 }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> & {
   variant?: ButtonVariant
-  size?: 'small' | 'middle' | 'large'
+  size?: ButtonSize
   block?: boolean
   loading?: boolean
   icon?: ReactNode
 }) {
-  const pad = size === 'small' ? 'px-2.5 py-1 text-[12.5px]' : size === 'large' ? 'px-5 py-2.5 text-[15px]' : 'px-3.5 py-2 text-[13.5px]'
   return (
-    <button
+    <ShadcnButton
       type="button"
+      variant={BUTTON_VARIANT[variant]}
+      size={BUTTON_SIZE[size]}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-[8px] font-medium transition-colors',
-        'disabled:cursor-not-allowed disabled:opacity-55',
-        pad,
-        variant === 'primary' && 'bg-accent-fill text-accent-ink font-semibold hover:brightness-110',
-        variant === 'default' && 'border border-rule-strong bg-transparent text-ink hover:bg-card-2',
-        variant === 'text' && 'bg-transparent text-ink-2 hover:bg-card-2',
-        variant === 'link' && 'bg-transparent p-0 text-[color:var(--accent-text)] hover:underline',
+        BUTTON_TEXT[size],
+        variant === 'primary' && 'font-semibold',
+        variant === 'link' && 'h-auto p-0',
         block && 'w-full',
         className,
       )}
       {...rest}
     >
-      {loading ? <Spin size="small" /> : icon}
+      {loading ? <Spinner /> : icon}
       {children}
-    </button>
+    </ShadcnButton>
   )
 }
 
@@ -175,18 +196,28 @@ export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputEleme
   )
 }
 
-export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
+/**
+ * A native <select>, deliberately: shadcn's `select` is a Radix listbox with its
+ * own API. `wrapperClassName` reaches the positioned box around the control -
+ * a layout that wants the select to grow has to size that, not the select.
+ */
+export function Select({
+  className,
+  wrapperClassName,
+  children,
+  ...rest
+}: Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> & { wrapperClassName?: string }) {
   return (
-    <select
-      className={cn(
-        'rounded-[8px] border border-rule-strong bg-card-2 px-3 py-2 text-[13.5px] text-ink',
-        'focus:border-accent-fill focus:outline-none',
-        className,
-      )}
+    <NativeSelect
+      wrapperClassName={wrapperClassName}
+      // h-auto: the height comes from the padding, so a caller's py-1 still
+      // makes a compact select. pr-8 is re-applied last because a caller's px-2
+      // would otherwise take away the room the chevron sits in.
+      className={cn('h-auto bg-card-2 text-[13.5px] text-ink dark:bg-card-2', className, 'pr-8')}
       {...rest}
     >
       {children}
-    </select>
+    </NativeSelect>
   )
 }
 
@@ -223,50 +254,40 @@ export function Switch({
   onCheckedChange(next: boolean): void
   label: string
 }) {
-  return (
-    <SwitchPrimitive.Root
-      checked={checked}
-      onCheckedChange={onCheckedChange}
-      aria-label={label}
-      className={cn(
-        'relative h-5 w-9 shrink-0 rounded-full border border-rule-strong transition-colors',
-        checked ? 'bg-accent-fill' : 'bg-card-2',
-      )}
-    >
-      <SwitchPrimitive.Thumb
-        className={cn(
-          'block h-3.5 w-3.5 rounded-full bg-ink transition-transform',
-          checked ? 'translate-x-[18px] bg-accent-ink' : 'translate-x-[3px]',
-        )}
-      />
-    </SwitchPrimitive.Root>
-  )
+  return <ShadcnSwitch checked={checked} onCheckedChange={onCheckedChange} aria-label={label} />
 }
 
 /* ------------------------------------------------------------------ status */
 
 type Tone = 'neutral' | 'ok' | 'qualify' | 'warn' | 'bad' | 'accent'
 
-const TONE_CLASS: Record<Tone, string> = {
-  neutral: 'text-ink-2 bg-card-2 border-rule-strong',
-  ok: 'text-ok bg-ok-bg border-ok-line',
-  qualify: 'text-qualify bg-qualify-bg border-qualify-line',
-  warn: 'text-warn bg-warn-bg border-warn-line',
-  bad: 'text-bad bg-bad-bg border-bad-line',
-  accent: 'text-[color:var(--accent-text)] bg-accent-2 border-[color:var(--accent-line)]',
-}
+/**
+ * The six status tones, shared by Tag and Alert. shadcn's badge and alert only
+ * know default/destructive; these ride on top of them as classes rather than as
+ * edits to the generated files, so `shadcn add --overwrite` cannot lose them.
+ */
+const toneVariants = cva('border', {
+  variants: {
+    tone: {
+      neutral: 'text-ink-2 bg-card-2 border-rule-strong',
+      ok: 'text-ok bg-ok-bg border-ok-line',
+      qualify: 'text-qualify bg-qualify-bg border-qualify-line',
+      warn: 'text-warn bg-warn-bg border-warn-line',
+      bad: 'text-bad bg-bad-bg border-bad-line',
+      accent: 'text-[color:var(--accent-text)] bg-accent-2 border-[color:var(--accent-line)]',
+    } satisfies Record<Tone, string>,
+  },
+  defaultVariants: { tone: 'neutral' },
+})
 
 export function Tag({ tone = 'neutral', className, children }: { tone?: Tone; className?: string; children: ReactNode }) {
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-[11.5px] font-semibold',
-        TONE_CLASS[tone],
-        className,
-      )}
+    <Badge
+      variant="outline"
+      className={cn(toneVariants({ tone }), 'gap-1.5 rounded-[5px] px-2 py-0.5 text-[11.5px] font-semibold', className)}
     >
       {children}
-    </span>
+    </Badge>
   )
 }
 
@@ -290,17 +311,20 @@ export function Alert({
   action?: ReactNode
   className?: string
 }) {
+  // shadcn lays the alert out as an icon/text grid; this one has an action slot
+  // on the right instead, hence flex. w-auto: shadcn's w-full stretches it past
+  // its text in a flex column. line-clamp-none: titles here are often error
+  // messages, which shadcn's one-line clamp would cut off.
   return (
-    <div
-      role="alert"
-      className={cn('flex items-start gap-3 rounded-[10px] border px-4 py-3', TONE_CLASS[tone], className)}
-    >
+    <AlertRoot className={cn(toneVariants({ tone }), 'flex w-auto gap-3 rounded-[10px]', className)}>
       <div className="flex min-w-0 grow flex-col gap-1">
-        <span className="text-[13.5px] font-semibold">{title}</span>
-        {description ? <span className="text-[12.5px] leading-relaxed text-ink-2">{description}</span> : null}
+        <AlertTitle className="line-clamp-none text-[13.5px] font-semibold tracking-normal">{title}</AlertTitle>
+        {description ? (
+          <AlertDescription className="block text-[12.5px] leading-relaxed text-ink-2">{description}</AlertDescription>
+        ) : null}
       </div>
       {action}
-    </div>
+    </AlertRoot>
   )
 }
 
@@ -324,13 +348,7 @@ export function Progress({ percent, tone = 'accent', label }: { percent: number;
 
 export function Spin({ size = 'middle', label, className }: { size?: 'small' | 'middle' | 'large'; label?: string; className?: string }) {
   const px = size === 'small' ? 'size-3.5' : size === 'large' ? 'size-7' : 'size-5'
-  return (
-    <span
-      role="status"
-      aria-label={label ?? 'Loading'}
-      className={cn('inline-block animate-spin rounded-full border-2 border-rule-strong border-t-accent-fill', px, className)}
-    />
-  )
+  return <Spinner aria-label={label ?? 'Loading'} className={cn('text-accent-fill', px, className)} />
 }
 
 export function Skeleton({ rows = 3, className }: { rows?: number; className?: string }) {
@@ -353,6 +371,84 @@ export function Empty({ description, children, className }: { description: React
       <span className="text-[13.5px] text-muted-foreground">{description}</span>
       {children}
     </div>
+  )
+}
+
+/* ------------------------------------------------------------------- chips */
+
+/** The pill look the old `.chip` rule in App.css had, restated over shadcn's toggle. */
+const CHIP_CLASS = [
+  'h-auto min-w-0 gap-1.5 rounded-[18px] border border-rule bg-card px-3 py-1.5 text-[13px] font-normal text-muted-foreground',
+  'hover:border-muted-foreground hover:bg-card hover:text-ink',
+  'data-[state=on]:border-ink data-[state=on]:bg-ink data-[state=on]:font-medium data-[state=on]:text-card',
+].join(' ')
+
+export interface ChipItem {
+  value: string
+  label: ReactNode
+  /** Shown after the label in small mono figures. */
+  count?: ReactNode
+}
+
+/**
+ * A row of filter chips of which one is chosen. It is Radix's ToggleGroup, so
+ * the row is a radiogroup: one tab stop, arrow keys between chips, and a screen
+ * reader hears one question with its options instead of N unrelated buttons.
+ *
+ * Clicking the chosen chip is ignored, as in any radio group, unless
+ * `allowEmpty` - then it clears the choice and `onValueChange` gets undefined.
+ */
+export function ChipGroup({
+  value,
+  onValueChange,
+  items,
+  label,
+  allowEmpty = false,
+  className,
+}: {
+  value: string | undefined
+  onValueChange(next: string | undefined): void
+  items: ChipItem[]
+  label: string
+  allowEmpty?: boolean
+  className?: string
+}) {
+  return (
+    <ToggleGroup
+      type="single"
+      value={value ?? ''}
+      onValueChange={(next) => {
+        if (next) onValueChange(next)
+        else if (allowEmpty) onValueChange(undefined)
+      }}
+      aria-label={label}
+      spacing={1.5}
+      className={cn('flex-wrap', className)}
+    >
+      {items.map((item) => (
+        <ToggleGroupItem key={item.value} value={item.value} className={CHIP_CLASS}>
+          {item.label}
+          {item.count !== undefined && <span className="font-mono text-[11px] tabular-nums opacity-70">{item.count}</span>}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  )
+}
+
+/** A single on/off chip. */
+export function ChipToggle({
+  pressed,
+  onPressedChange,
+  children,
+}: {
+  pressed: boolean
+  onPressedChange(next: boolean): void
+  children: ReactNode
+}) {
+  return (
+    <Toggle pressed={pressed} onPressedChange={onPressedChange} className={CHIP_CLASS}>
+      {children}
+    </Toggle>
   )
 }
 
@@ -420,6 +516,7 @@ export function List({ items, empty }: { items: ReactNode[]; empty?: ReactNode }
 
 /* ---------------------------------------------------------------- overlays */
 
+/** A right-hand sheet. Not shadcn's `drawer`: that one is vaul, and slides up from the bottom. */
 export function Drawer({
   open,
   onClose,
@@ -434,50 +531,45 @@ export function Drawer({
   width?: number
 }) {
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={(next) => { if (!next) onClose() }}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/55" />
-        <DialogPrimitive.Content
-          style={{ width: `min(${width}px, 100vw)` }}
-          className="fixed inset-y-0 right-0 z-50 flex flex-col gap-4 overflow-y-auto border-l border-rule bg-card p-6 shadow-[var(--shadow)]"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <DialogPrimitive.Title className="m-0 font-display text-[19px] font-bold text-ink">
-              {title}
-            </DialogPrimitive.Title>
-            <DialogPrimitive.Close asChild>
-              <Button variant="text" size="small" aria-label="Close">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-                  <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              </Button>
-            </DialogPrimitive.Close>
-          </div>
-          {children}
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+    <Sheet open={open} onOpenChange={(next) => { if (!next) onClose() }}>
+      <SheetContent
+        side="right"
+        showCloseButton={false}
+        aria-describedby={undefined}
+        style={{ width: `min(${width}px, 100vw)` }}
+        // sm:max-w-none: shadcn caps a sheet at 24rem, which the 440/620px drawers exceed.
+        className="gap-4 overflow-y-auto border-rule bg-card p-6 shadow-[var(--shadow)] sm:max-w-none"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <SheetTitle className="m-0 font-display text-[19px] font-bold text-ink">{title}</SheetTitle>
+          <SheetClose asChild>
+            <Button variant="text" size="small" aria-label="Close">
+              <XIcon className="size-[15px]" strokeWidth={2.2} aria-hidden="true" />
+            </Button>
+          </SheetClose>
+        </div>
+        {children}
+      </SheetContent>
+    </Sheet>
   )
 }
 
+/** shadcn's tooltip as it comes: inverted ink on paper, with its arrow. */
 export function Tooltip({ title, children }: { title: ReactNode; children: ReactNode }) {
   return (
-    <TooltipPrimitive.Provider delayDuration={200}>
-      <TooltipPrimitive.Root>
-        <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
-        <TooltipPrimitive.Portal>
-          <TooltipPrimitive.Content
-            sideOffset={6}
-            className="z-50 rounded-[7px] border border-rule-strong bg-card-2 px-2.5 py-1.5 text-[12.5px] text-ink shadow-[var(--tooltip-shadow)]"
-          >
-            {title}
-          </TooltipPrimitive.Content>
-        </TooltipPrimitive.Portal>
-      </TooltipPrimitive.Root>
-    </TooltipPrimitive.Provider>
+    <TooltipProvider delayDuration={200}>
+      <TooltipRoot>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent sideOffset={4}>{title}</TooltipContent>
+      </TooltipRoot>
+    </TooltipProvider>
   )
 }
 
+/**
+ * shadcn's `line` tabs, recoloured: the underline is the accent and sits on the
+ * list's rule, where shadcn floats it 5px below the trigger.
+ */
 export function Tabs({
   value,
   onValueChange,
@@ -488,26 +580,30 @@ export function Tabs({
   items: { key: string; label: ReactNode; children: ReactNode }[]
 }) {
   return (
-    <TabsPrimitive.Root value={value} onValueChange={onValueChange} className="flex min-h-0 flex-col gap-4">
-      <TabsPrimitive.List className="flex gap-5 border-b border-rule">
+    <TabsRoot value={value} onValueChange={onValueChange} className="min-h-0 gap-4">
+      <TabsList
+        variant="line"
+        className="w-full justify-start gap-5 rounded-none border-b border-rule p-0 group-data-[orientation=horizontal]/tabs:h-auto"
+      >
         {items.map((item) => (
-          <TabsPrimitive.Trigger
+          <TabsTrigger
             key={item.key}
             value={item.key}
             className={cn(
-              '-mb-px border-b-2 border-transparent pb-2.5 text-[13.5px] font-medium text-muted-foreground',
-              'data-[state=active]:border-accent-fill data-[state=active]:font-semibold data-[state=active]:text-ink',
+              'h-auto flex-none rounded-none px-0 pt-0 pb-2.5 text-[13.5px] text-muted-foreground',
+              'data-[state=active]:font-semibold data-[state=active]:text-ink',
+              'after:bg-accent-fill group-data-[orientation=horizontal]/tabs:after:bottom-[-2px]',
             )}
           >
             {item.label}
-          </TabsPrimitive.Trigger>
+          </TabsTrigger>
         ))}
-      </TabsPrimitive.List>
+      </TabsList>
       {items.map((item) => (
-        <TabsPrimitive.Content key={item.key} value={item.key} className="min-h-0">
+        <TabsContent key={item.key} value={item.key} className="min-h-0">
           {item.children}
-        </TabsPrimitive.Content>
+        </TabsContent>
       ))}
-    </TabsPrimitive.Root>
+    </TabsRoot>
   )
 }
