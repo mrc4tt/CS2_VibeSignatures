@@ -127,16 +127,31 @@ other than `"light"` resolves to dark.
 ## Afterwards
 
 ```bash
-pkill -f vite                       # the dev server does not stop on its own
+pkill -f '[v]ite'                    # the dev server does not stop on its own
 rm -f pages/shot.tmp.mjs            # never commit the driver
 ```
 
-`pages/dist` is gitignored; `pkill -f vite` is safe here because nothing else in
-this repo runs Vite — do **not** widen it to a bare `pkill -f node`.
+`pages/dist` is gitignored. Nothing else in this repo runs Vite, so matching on
+it is safe — do **not** widen it to a bare `pkill -f node`.
+
+Two traps in the stop command, both of which cost a run:
+
+- **Bracket the pattern, and stop in its own call.** `pkill -f vite` matches the
+  shell that is running it, because that shell's own command line contains
+  "vite" — it kills itself with exit 144 before the next command runs. `[v]ite`
+  matches "vite" but not the literal text `[v]ite`. That only holds while the
+  same command line does not also say `vite` elsewhere, so never put the
+  `pkill` and an `npx vite ...` start in one Bash call.
+- **One dev server per `node_modules`.** To compare against another checkout
+  (a `git worktree` of `HEAD`, say), do not symlink its `node_modules` and run
+  both servers at once: they share `node_modules/.vite`, each re-optimizes the
+  deps under the other, and the page goes blank with
+  `504 (Outdated Optimize Dep)` in the console. Run them one after the other,
+  each started with `--force`.
 
 ## Checks that are not this
 
-- `npm test` (vitest, 138 tests), `npm run lint` and `tsc -b` need no browser and
+- `npm test` (vitest, ~150 tests), `npm run lint` and `tsc -b` need no browser and
   no env var. They pass on markup that renders illegibly, which is the whole
   reason to drive the real thing.
 - `npm run verify:gamesymbols` and `npm run verify:gamedata` check the **built**
