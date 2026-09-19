@@ -46,7 +46,7 @@ export function SymbolRow({
         ) : (
           <Tag tone="neutral">{t(`symbols2.kind.${advice}`, { defaultValue: advice })}</Tag>
         )}
-        <span className="flex items-center gap-1.5 text-[11.5px] text-muted">
+        <span className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
           <Dot tone={VERDICT_TONE[verdict]} />
           {entry.module}
         </span>

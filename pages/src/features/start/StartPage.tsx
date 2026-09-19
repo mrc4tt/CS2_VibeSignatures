@@ -101,7 +101,7 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
             <Tag tone="ok">{t('start.currentBadge')}</Tag>
           </div>
           {meta && (
-            <p className="m-0 text-[13px] text-muted">
+            <p className="m-0 text-[13px] text-muted-foreground">
               {t('start.read')} <b className="font-medium text-ink-2">{formatWhen(meta.latest.lastPublishTime, language)}</b>
               {' · '}{formatAgo(meta.latest.lastPublishTime, language)}
               {' · '}{t('start.fingerprint')}{' '}
@@ -140,11 +140,11 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
       {meta && (
         <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
           <Card className="flex flex-col gap-1.5">
-            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted">{t('start.statSymbols')}</span>
+            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted-foreground">{t('start.statSymbols')}</span>
             <span className="font-display text-[30px] font-bold leading-none text-ink">{meta.latest.symbolRecords}</span>
           </Card>
           <Card className="flex flex-col gap-2">
-            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted">
+            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted-foreground">
               {t('start.statKeys', { total: meta.latest.pluginKeys })}
             </span>
             <span className="font-display text-[30px] font-bold leading-none text-ok">{meta.latest.pluginKeysCovered}</span>
@@ -155,11 +155,11 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
             />
           </Card>
           <Card className="flex flex-col gap-1.5">
-            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted">{t('start.statGap')}</span>
+            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted-foreground">{t('start.statGap')}</span>
             <span className={gap > 0 ? 'font-display text-[30px] font-bold leading-none text-warn' : 'font-display text-[30px] font-bold leading-none text-ok'}>{gap}</span>
           </Card>
           <Card className="flex flex-col gap-1.5">
-            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted">{t('start.statBuilds')}</span>
+            <span className="text-[11.5px] font-medium uppercase tracking-wide text-muted-foreground">{t('start.statBuilds')}</span>
             <span className="font-display text-[30px] font-bold leading-none text-ink">{meta.builds.length}</span>
           </Card>
         </div>
@@ -181,7 +181,7 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
             <h2 className="font-display text-[17px] font-bold text-ink">
               {t('start.movedH', { build: meta?.latest.gameVersion ?? '' })}
             </h2>
-            <span className="text-[12.5px] text-muted">{t('start.movedSub', { count: changedThisBuild })}</span>
+            <span className="text-[12.5px] text-muted-foreground">{t('start.movedSub', { count: changedThisBuild })}</span>
           </div>
           {indexQuery.isLoading && <Skeleton rows={4} />}
           <div className="flex flex-col gap-2">
@@ -195,7 +195,7 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
                 <span className="w-[3px] shrink-0 rounded bg-accent-fill" />
                 <span className="flex min-w-0 grow flex-col gap-0.5">
                   <span className="truncate font-mono text-[13px] text-ink">{file.descriptor.plugin}</span>
-                  <span className="text-[11.5px] text-muted">{t('start.fileKeys', { covered: file.covered, total: file.total })}</span>
+                  <span className="text-[11.5px] text-muted-foreground">{t('start.fileKeys', { covered: file.covered, total: file.total })}</span>
                 </span>
                 <span className="flex items-center"><Tag tone="accent">{t('start.fileChanged', { count: file.updated })}</Tag></span>
               </Link>

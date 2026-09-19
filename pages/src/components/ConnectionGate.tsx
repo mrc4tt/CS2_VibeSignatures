@@ -21,7 +21,7 @@ export function ConnectionGate({ onSettings }: { onSettings(): void }) {
           <Space direction="vertical" size="large" className="full-width" align="start">
             <div className="flex flex-col gap-2">
               <Title level={2}>{t('connection.title')}</Title>
-              <Paragraph className="text-muted">
+              <Paragraph className="text-muted-foreground">
                 {t('connection.descriptionBefore')}
                 <code className="mx-1 rounded bg-sunk px-1.5 py-0.5 text-[13px] text-ink">{baseUrl}</code>
                 {t('connection.descriptionAfter')}

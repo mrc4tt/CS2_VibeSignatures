@@ -32,7 +32,7 @@ export function ApiSettingsDrawer({ open, onClose }: Props) {
         <Input id="api-base-url" value={value} onChange={(event) => setValue(event.target.value)} />
       </Field>
       {error && <Alert tone="bad" title={error} />}
-      <Paragraph className="settings-help text-[13px] text-muted">{t('settings.help')}</Paragraph>
+      <Paragraph className="settings-help text-[13px] text-muted-foreground">{t('settings.help')}</Paragraph>
       <Space>
         <Button variant="primary" onClick={save}>{t('settings.saveAndReconnect')}</Button>
         <Button onClick={disconnect}>{t('settings.disconnect')}</Button>

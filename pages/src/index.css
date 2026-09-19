@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* The enter/exit keyframes shadcn overlays name in their classes (animate-in,
+   fade-in-0, zoom-in-95). `shadcn init` would have added this; it was skipped
+   here on purpose, so it is added by hand. */
+@import "tw-animate-css";
 
 /*
  * Tokens first, Tailwind second.
@@ -19,12 +23,53 @@
   --color-sunk: var(--sunk);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
-  --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-rule: var(--rule);
   --color-rule-soft: var(--rule-soft);
   --color-rule-strong: var(--rule-strong);
-  --color-accent: var(--accent);
+  /*
+   * shadcn/ui's semantic names, bridged onto this palette.
+   *
+   * Generated shadcn components style themselves through these utilities
+   * (bg-primary, text-muted-foreground, bg-accent, border-input, ring-ring), so
+   * mapping them here is what makes `npx shadcn add <x>` land in the site's
+   * look instead of shadcn's neutral one. Two names collide with ours and mean
+   * something different there:
+   *
+   *   muted   shadcn: a BACKGROUND, text is muted-foreground.
+   *           ours:   the muted TEXT colour (--muted, 41 uses in App.css).
+   *   accent  shadcn: a subtle HOVER background.
+   *           ours:   amber TEXT (--accent, 17 uses in App.css).
+   *
+   * Only the Tailwind layer below takes shadcn's meaning; the raw CSS variables
+   * App.css reads keep ours. Nothing in this app uses a bare bg-/text-accent or
+   * bg-muted utility, and every text-muted became text-muted-foreground, so the
+   * two meanings never meet. That is also why `shadcn init` must never be run
+   * here: it rewrites this file with its own values for exactly these names.
+   */
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--card-2);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--accent-fill);
+  --color-primary-foreground: var(--accent-ink);
+  --color-secondary: var(--card-2);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--card-2);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--card-2);
+  --color-accent-foreground: var(--ink);
+  --color-destructive: var(--bad);
+  --color-border: var(--rule);
+  --color-input: var(--rule-strong);
+  --color-ring: var(--accent-fill);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
   --color-accent-fill: var(--accent-fill);
   --color-accent-2: var(--accent-2);
   --color-accent-ink: var(--accent-ink);
@@ -109,6 +154,7 @@
   --pe: #7fa8dd;
   --ghost: #3c4a55;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 14px 34px -26px #000;
+  --radius: 10px;
 
   --page-color: var(--ink);
   --page-bg-solid: var(--paper);
@@ -196,6 +242,20 @@ html[data-theme="light"] {
   --tooltip-shadow: 0 14px 32px rgba(18, 24, 32, 0.12);
 
   color-scheme: light;
+}
+
+/* shadcn uses `primary` as both a FILL (bg-primary, the default button) and as
+   TEXT (text-primary, the link variant). This palette splits those, because the
+   amber that works as a fill under dark ink is 1.9:1 as text on white - the same
+   failure --accent had before it was split. Only the text use is redirected, and
+   only where it fails; on the dark ground the fill amber reads at 9:1 as it is. */
+html[data-theme="light"] .text-primary { color: var(--accent); }
+
+/* shadcn components put a bare `border` on elements and expect it to take the
+   theme's colour; Tailwind v4's default is currentColor. Layered, so every
+   unlayered rule in App.css that names its own border colour still wins. */
+@layer base {
+  * { border-color: var(--color-border); }
 }
 
 * { box-sizing: border-box; }

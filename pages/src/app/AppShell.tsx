@@ -173,7 +173,7 @@ export function AppShell() {
         {view === 'runs-live' && (
           <div className="apibar">
             <Dot tone={connected ? 'ok' : 'neutral'} />
-            <span className="flex min-w-0 items-center gap-1.5 truncate text-[13px] text-muted" title={baseUrl}>
+            <span className="flex min-w-0 items-center gap-1.5 truncate text-[13px] text-muted-foreground" title={baseUrl}>
               <ApiIcon size={14} /> {baseUrl}
             </span>
             <button type="button" className="btn small" onClick={() => setSettingsOpen(true)}>

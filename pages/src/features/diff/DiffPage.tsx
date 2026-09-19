@@ -56,7 +56,7 @@ export function DiffPage() {
         <>
           <Card className="flex flex-wrap items-end gap-4">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="diff-from" className="text-[12px] font-medium text-muted">{t('diff.from')}</label>
+              <label htmlFor="diff-from" className="text-[12px] font-medium text-muted-foreground">{t('diff.from')}</label>
               <Select
                 id="diff-from"
                 className="min-w-[120px] font-mono"
@@ -66,9 +66,9 @@ export function DiffPage() {
                 {builds.map((build) => <option key={build} value={build}>{build}</option>)}
               </Select>
             </div>
-            <span className="pb-2.5 text-muted" aria-hidden="true">→</span>
+            <span className="pb-2.5 text-muted-foreground" aria-hidden="true">→</span>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="diff-to" className="text-[12px] font-medium text-muted">{t('diff.to')}</label>
+              <label htmlFor="diff-to" className="text-[12px] font-medium text-muted-foreground">{t('diff.to')}</label>
               <Select
                 id="diff-to"
                 className="min-w-[120px] font-mono"
@@ -78,13 +78,13 @@ export function DiffPage() {
                 {builds.map((build) => <option key={build} value={build}>{build}</option>)}
               </Select>
             </div>
-            <span className="ml-auto pb-2.5 text-[13px] text-muted" role="status" aria-live="polite">
+            <span className="ml-auto pb-2.5 text-[13px] text-muted-foreground" role="status" aria-live="polite">
               {t('diff.summary', { keys: keyCount, files: files.length })}
             </span>
           </Card>
 
           {files.length === 0 && (
-            <Card><p className="m-0 text-[13px] text-muted">{t('diff.none', { from, to })}</p></Card>
+            <Card><p className="m-0 text-[13px] text-muted-foreground">{t('diff.none', { from, to })}</p></Card>
           )}
 
           {files.map((file) => (

@@ -56,4 +56,6 @@ export default defineConfig({
   ],
   // Custom domain (sig.miksen.me) serves at root; the github.io/CS2_VibeSignatures path no longer applies.
   base: '/',
+  // components.json points shadcn at @/ - the same alias the tsconfigs declare.
+  resolve: { alias: { '@': resolve(fileURLToPath(new URL('.', import.meta.url)), 'src') } },
 })

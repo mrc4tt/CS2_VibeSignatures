@@ -93,7 +93,7 @@ export function Text({
   return (
     <span
       className={cn(
-        type === 'secondary' && 'text-muted',
+        type === 'secondary' && 'text-muted-foreground',
         type === 'success' && 'text-ok',
         type === 'warning' && 'text-warn',
         type === 'danger' && 'text-bad',
@@ -205,7 +205,7 @@ export function Field({
 }) {
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <label htmlFor={htmlFor} className="text-[12.5px] font-medium text-muted">
+      <label htmlFor={htmlFor} className="text-[12.5px] font-medium text-muted-foreground">
         {label}
       </label>
       {children}
@@ -350,7 +350,7 @@ export function Skeleton({ rows = 3, className }: { rows?: number; className?: s
 export function Empty({ description, children, className }: { description: ReactNode; children?: ReactNode; className?: string }) {
   return (
     <div className={cn('flex flex-col items-center gap-3 px-4 py-10 text-center', className)}>
-      <span className="text-[13.5px] text-muted">{description}</span>
+      <span className="text-[13.5px] text-muted-foreground">{description}</span>
       {children}
     </div>
   )
@@ -373,7 +373,7 @@ export function Th({ className, children, ...rest }: HTMLAttributes<HTMLTableCel
     <th
       scope="col"
       className={cn(
-        'border-b border-rule px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-muted',
+        'border-b border-rule px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-muted-foreground',
         className,
       )}
       {...rest}
@@ -397,7 +397,7 @@ export function Descriptions({ items, className }: { items: { label: ReactNode; 
     <dl className={cn('m-0 grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-5 gap-y-2.5', className)}>
       {items.map((item, index) => (
         <div key={index} className="contents">
-          <dt className="text-[12.5px] text-muted">{item.label}</dt>
+          <dt className="text-[12.5px] text-muted-foreground">{item.label}</dt>
           <dd className="m-0 min-w-0 text-[13px] text-ink">{item.value}</dd>
         </div>
       ))}
@@ -495,7 +495,7 @@ export function Tabs({
             key={item.key}
             value={item.key}
             className={cn(
-              '-mb-px border-b-2 border-transparent pb-2.5 text-[13.5px] font-medium text-muted',
+              '-mb-px border-b-2 border-transparent pb-2.5 text-[13.5px] font-medium text-muted-foreground',
               'data-[state=active]:border-accent-fill data-[state=active]:font-semibold data-[state=active]:text-ink',
             )}
           >

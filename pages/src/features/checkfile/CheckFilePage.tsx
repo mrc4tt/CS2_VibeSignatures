@@ -257,7 +257,7 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
               </span>
               <span className="flex min-w-0 grow flex-col gap-0.5">
                 <span className="truncate font-mono text-[14px] text-ink">{loaded.name}</span>
-                <span className="text-[12px] text-muted">
+                <span className="text-[12px] text-muted-foreground">
                   {t('check.readAs', { format: loaded.format.toUpperCase(), keys: loaded.values.size })}
                 </span>
               </span>
@@ -316,7 +316,7 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
                     here is which build your file looks like and how far back
                     that is - the part you act on. */}
                 {fit && (
-                  <p className="fitnote m-0 text-[12.5px] leading-relaxed text-muted">
+                  <p className="fitnote m-0 text-[12.5px] leading-relaxed text-muted-foreground">
                     {identification?.decisive && !chosenFile
                       ? `${t('check.sharedKeys', { shared: identification.best!.shared, keys: loaded.values.size })}. `
                       : ''}
@@ -417,7 +417,7 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
                         <span className={`v font-display text-[28px] font-bold leading-none ${STATE_NUMBER[tone]}`}>
                           {summary[state]}
                         </span>
-                        <span className="text-[12px] uppercase tracking-wide text-muted">{t(`check.state.${state}`)}</span>
+                        <span className="text-[12px] uppercase tracking-wide text-muted-foreground">{t(`check.state.${state}`)}</span>
                       </button>
                     )
                   })}
