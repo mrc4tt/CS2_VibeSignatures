@@ -20,8 +20,10 @@ import { cn } from './cn'
 import { Alert as AlertRoot, AlertDescription, AlertTitle } from './shadcn/alert'
 import { Badge } from './shadcn/badge'
 import { Button as ShadcnButton } from './shadcn/button'
+import { Dialog, DialogContent, DialogTitle } from './shadcn/dialog'
 import { Empty as EmptyRoot, EmptyDescription, EmptyHeader } from './shadcn/empty'
 import { Field as FieldRoot, FieldDescription, FieldLabel } from './shadcn/field'
+import { Kbd } from './shadcn/kbd'
 import { NativeSelect } from './shadcn/native-select'
 import { Sheet, SheetClose, SheetContent, SheetTitle } from './shadcn/sheet'
 import { Skeleton as SkeletonBar } from './shadcn/skeleton'
@@ -477,6 +479,48 @@ export function ChipGroup({
   )
 }
 
+/**
+ * Chips of which any number can be on - "show me these plugins". It is a
+ * toolbar of toggle buttons (aria-pressed), still one tab stop with arrow keys
+ * inside. Nothing on means no filter, which the caller decides how to read.
+ */
+export function ChipSet({
+  value,
+  onValueChange,
+  items,
+  label,
+  className,
+}: {
+  value: string[]
+  onValueChange(next: string[]): void
+  items: ChipItem[]
+  label: string
+  className?: string
+}) {
+  return (
+    <ToggleGroup
+      type="multiple"
+      value={value}
+      onValueChange={onValueChange}
+      aria-label={label}
+      spacing={1.5}
+      className={cn('flex-wrap', className)}
+    >
+      {items.map((item) => (
+        <ToggleGroupItem key={item.value} value={item.value} disabled={item.disabled} className={CHIP_CLASS}>
+          {item.label}
+          {item.count !== undefined && <span className="font-mono text-[11px] tabular-nums opacity-70">{item.count}</span>}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  )
+}
+
+/** A key on the keyboard, as shown in the shortcut list and the palette footer. */
+export function Key({ children }: { children: ReactNode }) {
+  return <Kbd className="border border-rule bg-card-2 font-mono text-[11px] text-ink-2">{children}</Kbd>
+}
+
 /** A single on/off chip. */
 export function ChipToggle({
   pressed,
@@ -593,6 +637,28 @@ export function Drawer({
         {children}
       </SheetContent>
     </Sheet>
+  )
+}
+
+/** A centred dialog for short content - the shortcut list. Drawer is the one for forms. */
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean
+  onClose(): void
+  title: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(next) => { if (!next) onClose() }}>
+      <DialogContent aria-describedby={undefined} className="gap-4 rounded-[12px] border-rule bg-card p-6 text-ink">
+        <DialogTitle className="m-0 font-display text-[19px] font-bold text-ink">{title}</DialogTitle>
+        {children}
+      </DialogContent>
+    </Dialog>
   )
 }
 

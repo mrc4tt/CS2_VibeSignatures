@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSiteHistory } from '../api/siteData'
 import { requestNavigation } from '../app/navigate'
@@ -7,6 +7,7 @@ import { getGameDataIndex } from '../features/gamedata/data'
 import { getGameSymbolIndex, getGameSymbolLightDataset } from '../features/symbols/data'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/shadcn/command'
 import { Dialog, DialogContent, DialogTitle } from '../ui/shadcn/dialog'
+import { Key } from '../ui/primitives'
 
 interface Hit {
   group: 'symbols' | 'keys' | 'files'
@@ -21,7 +22,7 @@ const LIMIT = 40
  * One search across everything the site holds. Finding out which plugin key
  * ships a symbol used to mean switching page and searching again by hand.
  */
-export function CommandPalette({ open, onClose }: { open: boolean; onClose(): void }) {
+export function CommandPalette({ open, onClose, onHelp }: { open: boolean; onClose(): void; onHelp(): void }) {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
 
@@ -155,9 +156,12 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose(): vo
             ))}
           </CommandList>
           <div className="flex flex-wrap gap-3.5 border-t border-rule bg-card-2 px-[18px] py-[9px] text-[11.5px] text-faint">
-            <span><Key>↑</Key><Key>↓</Key> {t('palette.move')}</span>
-            <span><Key>Enter</Key> {t('palette.open')}</span>
-            <span><Key>Esc</Key> {t('palette.close')}</span>
+            <span className="inline-flex items-center gap-1"><Key>↑</Key><Key>↓</Key> {t('palette.move')}</span>
+            <span className="inline-flex items-center gap-1"><Key>Enter</Key> {t('palette.open')}</span>
+            <span className="inline-flex items-center gap-1"><Key>Esc</Key> {t('palette.close')}</span>
+            <button type="button" className="ml-auto inline-flex cursor-pointer items-center gap-1 hover:text-ink" onClick={onHelp}>
+              <Key>?</Key> {t('shortcuts.hint')}
+            </button>
           </div>
         </Command>
       </DialogContent>
@@ -174,7 +178,3 @@ const GROUP_CLASS = [
   '[&_[cmdk-group-heading]]:text-[10.5px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase',
   '[&_[cmdk-group-heading]]:tracking-[0.08em] [&_[cmdk-group-heading]]:text-faint',
 ].join(' ')
-
-function Key({ children }: { children: ReactNode }) {
-  return <kbd className="mr-0.5 rounded-[3px] border border-rule px-1 font-mono">{children}</kbd>
-}

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { copyText } from '../../ui/clipboard'
+import { saveText } from '../../ui/download'
 import { Alert, Button, ChipGroup, Select, Skeleton } from '../../ui/primitives'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -122,15 +123,7 @@ export function GameDataPage() {
 
   async function download(): Promise<void> {
     if (!selected || !fileQuery.data) return
-    const blob = new Blob([fileQuery.data], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = selected.descriptor.fileName
-    document.body.appendChild(anchor)
-    anchor.click()
-    anchor.remove()
-    URL.revokeObjectURL(url)
+    saveText(fileQuery.data, selected.descriptor.fileName)
   }
 
   if (!selected) {

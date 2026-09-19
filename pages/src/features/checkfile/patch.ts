@@ -38,7 +38,7 @@ const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\
  * nested "signatures" wrapper every format uses and left the actual values
  * outside it - so nothing was ever replaced.
  */
-function keyWindow(text: string, key: string): { from: number; to: number } | null {
+export function keyWindow(text: string, key: string): { from: number; to: number } | null {
   const at = text.indexOf(`"${key}"`)
   if (at < 0) return null
   const open = text.indexOf('{', at + key.length + 2)

@@ -3,6 +3,7 @@ import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ApiSettingsDrawer } from '../components/ApiSettingsDrawer'
 import { CommandPalette } from '../components/CommandPalette'
+import { ShortcutHelp } from '../components/ShortcutHelp'
 import { ConnectionGate } from '../components/ConnectionGate'
 import { APP_LANGUAGES, changeLanguage, resolveLanguage, type AppLanguage } from '../i18n'
 import { ThemeToggle } from '../theme/ThemeToggle'
@@ -57,6 +58,7 @@ export function AppShell() {
   const view = viewFromPath(location.pathname)
   const [explain, setExplain] = useState<boolean>(readExplain)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const selectedLanguage = resolveLanguage(i18n.resolvedLanguage)
 
   useEffect(() => {
@@ -72,8 +74,15 @@ export function AppShell() {
         setPaletteOpen((current) => !current)
         return
       }
-      const tag = (document.activeElement?.tagName ?? '').toUpperCase()
-      if (event.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) {
+      const active = document.activeElement
+      const tag = (active?.tagName ?? '').toUpperCase()
+      const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || (active instanceof HTMLElement && active.isContentEditable)
+      if (event.key === '?' && !typing) {
+        event.preventDefault()
+        setHelpOpen(true)
+        return
+      }
+      if (event.key === '/' && !typing) {
         const box = document.querySelector<HTMLInputElement>('.bigsearch input, .findbox input')
         if (box) {
           event.preventDefault()
@@ -202,7 +211,12 @@ export function AppShell() {
         )}
       </main>
       <ApiSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onHelp={() => { setPaletteOpen(false); setHelpOpen(true) }}
+      />
+      <ShortcutHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
       <Toaster />
     </div>
   )

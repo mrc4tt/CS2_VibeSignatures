@@ -71,3 +71,26 @@ describe('the browser Back button', () => {
     await waitFor(() => expect(screen.getByRole('link', { name: 'Start here' })).toHaveAttribute('aria-current', 'page'))
   })
 })
+
+describe('the shortcut list', () => {
+  beforeEach(async () => {
+    window.history.pushState({}, '', '/')
+    await i18n.changeLanguage('en')
+  })
+  afterEach(() => cleanup())
+
+  it('opens on ?, but not while typing into a field', async () => {
+    paint()
+    const select = screen.getByRole('combobox', { name: 'Language' })
+    select.focus()
+    await userEvent.keyboard('?')
+    expect(screen.queryByRole('dialog', { name: 'Keyboard shortcuts' })).toBeNull()
+
+    select.blur()
+    await userEvent.keyboard('?')
+    const dialog = await screen.findByRole('dialog', { name: 'Keyboard shortcuts' })
+    expect(dialog).toHaveTextContent('Search everything')
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Keyboard shortcuts' })).toBeNull())
+  })
+})

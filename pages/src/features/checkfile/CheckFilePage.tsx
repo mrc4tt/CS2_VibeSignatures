@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { FileCheckIcon } from '../../ui/icons'
 import { buttonClass } from '../../ui/buttonStyle'
 import { copyText } from '../../ui/clipboard'
+import { saveText } from '../../ui/download'
 import { Alert, Button, ChipGroup, Select, Skeleton, Tabs } from '../../ui/primitives'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -88,15 +89,6 @@ export function CheckFilePage() {
   const filtered = useMemo(() => verdicts.filter((verdict) => verdict.state === show), [verdicts, show])
   const shown = filtered.slice(0, limit)
 
-  function save(text: string, name: string) {
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = name
-    anchor.click()
-    URL.revokeObjectURL(url)
-  }
 
   async function accept(input: File | string, name: string) {
     setError(null)
@@ -342,7 +334,7 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
                       <li>{t('check.step3')}</li>
                     </ol>
                     <div className="pactions">
-                      <Button variant="primary" onClick={() => save(patched.text, `${newest}-${loaded.name}`)}>
+                      <Button variant="primary" onClick={() => saveText(patched.text, `${newest}-${loaded.name}`)}>
                         {t('check.download')}
                       </Button>
                       <Button
@@ -370,7 +362,7 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
                       className="linkish"
                       onClick={() => {
                         void getGameDataFile(publishedFile).then((text) =>
-                          save(text, `${newest}-${publishedFile.fileName}`),
+                          saveText(text, `${newest}-${publishedFile.fileName}`),
                         )
                       }}
                     >
@@ -474,6 +466,7 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
                                     afterLabel={`${t('check.published')} ${newest ?? ''}`.trim()}
                                     oldClassName="was"
                                     newClassName="now"
+                                    copyable
                                   />
                                 ) : (
                                   <span className="same"><Value value={verdict.state === 'unknown' ? mineValue : theirsValue} /></span>
