@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { requestNavigation } from '../../app/navigate'
 import type { ValidatorWarning } from '../../api/siteData'
+import { copyText } from '../../ui/clipboard'
+import { Button } from '../../ui/primitives'
 import { Pattern, PatternDump } from './Pattern'
 import {
   adviceKind, factsOf, memberOffset, patternOf, slotPair, verdictOf, type SymbolEntry, type SymbolPlatform,
@@ -121,14 +123,9 @@ export function SymbolCard({ entry, gameVersion, warnings, shippedBy, abiGuarded
             <div>
               <h3>{t('symbols2.fullPattern')}</h3>
               <PatternDump pattern={pattern} />
-              <button
-                type="button"
-                className="btn small"
-                style={{ marginTop: 8 }}
-                onClick={() => void navigator.clipboard?.writeText(pattern)}
-              >
+              <Button size="small" className="mt-2" onClick={() => void copyText(pattern, { ok: t('clipboard.ok'), failed: t('clipboard.failed') })}>
                 {t('symbols2.copyPattern')}
-              </button>
+              </Button>
             </div>
           )}
 
@@ -215,7 +212,7 @@ export function SymbolCard({ entry, gameVersion, warnings, shippedBy, abiGuarded
               onClick={(event) => {
                 event.stopPropagation()
                 const link = `${window.location.origin}/symbols/${encodeURIComponent(entry.key)}`
-                void navigator.clipboard?.writeText(link).catch(() => undefined)
+                void copyText(link, { ok: t('clipboard.ok'), failed: t('clipboard.failed') })
               }}
             >
               {t('symbols2.copyLink')}

@@ -10,7 +10,7 @@ import { useApiConfig } from './apiContext'
 import { forgetStoredView, persistExplain, readExplain, VIEW_PATHS, viewFromPath, type AppView } from './appViews'
 import { onNavigation } from './navigate'
 import { ApiIcon, BookIcon, ChartIcon, FileCheckIcon, OverviewIcon, SearchIcon, SettingsIcon, TableIcon, type IconProps } from '../ui/icons'
-import { Dot, Select } from '../ui/primitives'
+import { Button, Dot, Select, Switch, Toaster } from '../ui/primitives'
 
 const RunListPage = lazy(() => import('../features/runs/RunListPage').then((module) => ({ default: module.RunListPage })))
 const RunDetailPage = lazy(() => import('../features/run-detail/RunDetailPage').then((module) => ({ default: module.RunDetailPage })))
@@ -140,18 +140,19 @@ export function AppShell() {
             })}
           </nav>
           <div className="railtools">
-            <button type="button" className="btn small" onClick={() => setPaletteOpen(true)}>
+            <Button size="small" className="lg:justify-start" onClick={() => setPaletteOpen(true)}>
               <SearchIcon size={14} /> <span className="sw-label">{t('shell.search')}</span>
-            </button>
+            </Button>
+            {/* The label keeps the whole pill clickable; the switch carries the
+                name itself too, because the text is hidden on narrow screens. */}
             <label className="sw" data-on={explain}>
-              <input
-                id="explain-everything"
-                type="checkbox"
+              <Switch
                 checked={explain}
-                onChange={(event) => {
-                  setExplain(event.target.checked)
-                  persistExplain(event.target.checked)
+                onCheckedChange={(next) => {
+                  setExplain(next)
+                  persistExplain(next)
                 }}
+                label={t('shell.explain')}
               />
               <span className="sw-label">{t('shell.explain')}</span>
             </label>
@@ -177,9 +178,9 @@ export function AppShell() {
             <span className="flex min-w-0 items-center gap-1.5 truncate text-[13px] text-muted-foreground" title={baseUrl}>
               <ApiIcon size={14} /> {baseUrl}
             </span>
-            <button type="button" className="btn small" onClick={() => setSettingsOpen(true)}>
+            <Button size="small" onClick={() => setSettingsOpen(true)}>
               <SettingsIcon size={14} /> {t('app.apiSettings')}
-            </button>
+            </Button>
           </div>
         )}
       </header>
@@ -202,6 +203,7 @@ export function AppShell() {
       </main>
       <ApiSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <Toaster />
     </div>
   )
 }

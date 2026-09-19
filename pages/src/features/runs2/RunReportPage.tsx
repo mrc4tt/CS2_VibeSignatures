@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, ChipGroup, Skeleton } from '../../ui/primitives'
+import { Alert, Button, ChipGroup, Skeleton } from '../../ui/primitives'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSiteMeta } from '../../api/siteMeta'
@@ -195,9 +195,9 @@ export function RunReportPage() {
                 </table>
               </div>
               {rows.length > limit && (
-                <button type="button" className="btn morebtn" onClick={() => setLimit(limit + PAGE)}>
+                <Button className="morebtn" onClick={() => setLimit(limit + PAGE)}>
                   {t('runs2.showMore', { count: Math.min(PAGE, rows.length - limit), total: rows.length })}
-                </button>
+                </Button>
               )}
             </div>
           </section>

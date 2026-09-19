@@ -13,13 +13,19 @@
  */
 import { cva } from 'class-variance-authority'
 import { XIcon } from 'lucide-react'
-import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react'
+import type { ButtonHTMLAttributes, CSSProperties, HTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react'
+import { useTheme } from '../theme/themeContext'
+import { BUTTON_SIZE, BUTTON_TEXT, BUTTON_VARIANT, type ButtonSize, type ButtonVariant } from './buttonStyle'
 import { cn } from './cn'
 import { Alert as AlertRoot, AlertDescription, AlertTitle } from './shadcn/alert'
 import { Badge } from './shadcn/badge'
 import { Button as ShadcnButton } from './shadcn/button'
+import { Empty as EmptyRoot, EmptyDescription, EmptyHeader } from './shadcn/empty'
+import { Field as FieldRoot, FieldDescription, FieldLabel } from './shadcn/field'
 import { NativeSelect } from './shadcn/native-select'
 import { Sheet, SheetClose, SheetContent, SheetTitle } from './shadcn/sheet'
+import { Skeleton as SkeletonBar } from './shadcn/skeleton'
+import { Toaster as SonnerToaster } from './shadcn/sonner'
 import { Spinner } from './shadcn/spinner'
 import { Switch as ShadcnSwitch } from './shadcn/switch'
 import { Tabs as TabsRoot, TabsContent, TabsList, TabsTrigger } from './shadcn/tabs'
@@ -130,18 +136,6 @@ export function Paragraph({ className, children, ...rest }: HTMLAttributes<HTMLP
 
 /* ----------------------------------------------------------------- actions */
 
-type ButtonVariant = 'primary' | 'default' | 'text' | 'link'
-type ButtonSize = 'small' | 'middle' | 'large'
-
-const BUTTON_VARIANT = { primary: 'default', default: 'outline', text: 'ghost', link: 'link' } as const
-const BUTTON_SIZE = { small: 'sm', middle: 'default', large: 'lg' } as const
-/** shadcn sizes by height and text-sm; this site's three sizes each have their own type size. */
-const BUTTON_TEXT: Record<ButtonSize, string> = {
-  small: 'h-7 px-2.5 text-[12.5px]',
-  middle: 'px-3.5 text-[13.5px]',
-  large: 'px-5 text-[15px]',
-}
-
 export function Button({
   variant = 'default',
   size = 'middle',
@@ -235,13 +229,13 @@ export function Field({
   children: ReactNode
 }) {
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
-      <label htmlFor={htmlFor} className="text-[12.5px] font-medium text-muted-foreground">
+    <FieldRoot className={cn('gap-1.5', className)}>
+      <FieldLabel htmlFor={htmlFor} className="text-[12.5px] font-medium text-muted-foreground">
         {label}
-      </label>
+      </FieldLabel>
       {children}
-      {help ? <span className="text-[12px] text-faint">{help}</span> : null}
-    </div>
+      {help ? <FieldDescription className="text-[12px] text-faint">{help}</FieldDescription> : null}
+    </FieldRoot>
   )
 }
 
@@ -355,9 +349,9 @@ export function Skeleton({ rows = 3, className }: { rows?: number; className?: s
   return (
     <div aria-hidden="true" className={cn('flex flex-col gap-2.5', className)}>
       {Array.from({ length: rows }, (_, index) => (
-        <span
+        <SkeletonBar
           key={index}
-          className="h-3.5 animate-pulse rounded bg-card-2"
+          className="h-3.5 rounded bg-card-2"
           style={{ width: index === rows - 1 ? '62%' : '100%' }}
         />
       ))}
@@ -366,11 +360,40 @@ export function Skeleton({ rows = 3, className }: { rows?: number; className?: s
 }
 
 export function Empty({ description, children, className }: { description: ReactNode; children?: ReactNode; className?: string }) {
+  // shadcn pads an empty state up to 3rem and gaps it 1.5rem, sized for a page;
+  // these sit inside cards and lists, so they keep the tighter spacing.
   return (
-    <div className={cn('flex flex-col items-center gap-3 px-4 py-10 text-center', className)}>
-      <span className="text-[13.5px] text-muted-foreground">{description}</span>
+    <EmptyRoot className={cn('flex-none gap-3 px-4 py-10 md:p-0 md:px-4 md:py-10', className)}>
+      <EmptyHeader>
+        <EmptyDescription className="text-[13.5px] text-muted-foreground">{description}</EmptyDescription>
+      </EmptyHeader>
       {children}
-    </div>
+    </EmptyRoot>
+  )
+}
+
+/* ------------------------------------------------------------------- toasts */
+
+/**
+ * The one toast outlet, mounted by the app shell. shadcn's generated Toaster
+ * reads its theme from next-themes and its colours from raw --popover/--border
+ * variables, neither of which this site has; both are props it spreads last,
+ * so they are set here rather than by editing the generated file.
+ */
+export function Toaster() {
+  const { theme } = useTheme()
+  return (
+    <SonnerToaster
+      theme={theme}
+      position="bottom-right"
+      style={{
+        '--normal-bg': 'var(--card-2)',
+        '--normal-text': 'var(--ink)',
+        '--normal-border': 'var(--rule-strong)',
+        '--border-radius': 'var(--radius)',
+        fontFamily: 'var(--sans)',
+      } as CSSProperties}
+    />
   )
 }
 
@@ -383,11 +406,23 @@ const CHIP_CLASS = [
   'data-[state=on]:border-ink data-[state=on]:bg-ink data-[state=on]:font-medium data-[state=on]:text-card',
 ].join(' ')
 
+/**
+ * A choice laid out as cards rather than pills - Check my file's four state
+ * counts, which are both a summary and the filter for the list below them.
+ */
+const CARD_CLASS = [
+  'h-auto min-w-0 flex-col items-start gap-1 whitespace-normal rounded-[12px] border border-rule bg-card p-4 text-left font-normal',
+  'hover:border-rule-strong hover:bg-card hover:text-inherit',
+  'data-[state=on]:border-rule-strong data-[state=on]:bg-card-2 data-[state=on]:text-inherit',
+  'disabled:opacity-45',
+].join(' ')
+
 export interface ChipItem {
   value: string
   label: ReactNode
   /** Shown after the label in small mono figures. */
   count?: ReactNode
+  disabled?: boolean
 }
 
 /**
@@ -404,6 +439,7 @@ export function ChipGroup({
   items,
   label,
   allowEmpty = false,
+  variant = 'chip',
   className,
 }: {
   value: string | undefined
@@ -411,6 +447,7 @@ export function ChipGroup({
   items: ChipItem[]
   label: string
   allowEmpty?: boolean
+  variant?: 'chip' | 'card'
   className?: string
 }) {
   return (
@@ -426,7 +463,12 @@ export function ChipGroup({
       className={cn('flex-wrap', className)}
     >
       {items.map((item) => (
-        <ToggleGroupItem key={item.value} value={item.value} className={CHIP_CLASS}>
+        <ToggleGroupItem
+          key={item.value}
+          value={item.value}
+          disabled={item.disabled}
+          className={variant === 'card' ? CARD_CLASS : CHIP_CLASS}
+        >
           {item.label}
           {item.count !== undefined && <span className="font-mono text-[11px] tabular-nums opacity-70">{item.count}</span>}
         </ToggleGroupItem>
@@ -567,33 +609,53 @@ export function Tooltip({ title, children }: { title: ReactNode; children: React
 }
 
 /**
- * shadcn's `line` tabs, recoloured: the underline is the accent and sits on the
- * list's rule, where shadcn floats it 5px below the trigger.
+ * Two looks over one component:
+ *   line       shadcn's `line` tabs, recoloured: the underline is the accent and
+ *              sits on the list's rule, where shadcn floats it 5px below.
+ *   segmented  shadcn's default pill tabs, for a choice between two equal ways
+ *              of doing one thing (Check my file: upload or paste).
  */
+const TABS_LOOK = {
+  line: {
+    list: 'w-full justify-start gap-5 rounded-none border-b border-rule p-0',
+    trigger: cn(
+      'h-auto flex-none rounded-none px-0 pt-0 pb-2.5 text-[13.5px] text-muted-foreground',
+      'data-[state=active]:font-semibold data-[state=active]:text-ink',
+      'after:bg-accent-fill group-data-[orientation=horizontal]/tabs:after:bottom-[-2px]',
+    ),
+  },
+  segmented: {
+    list: 'gap-[2px] rounded-[8px] border border-rule bg-card-2 p-[2px]',
+    trigger: cn(
+      'h-auto flex-none rounded-[6px] border-0 px-3.5 py-1.5 text-[13px] font-normal text-muted-foreground',
+      'data-[state=active]:bg-card data-[state=active]:font-semibold data-[state=active]:text-ink',
+      'data-[state=active]:shadow-[var(--shadow)] dark:data-[state=active]:bg-card',
+    ),
+  },
+} as const
+
 export function Tabs({
   value,
   onValueChange,
   items,
+  variant = 'line',
 }: {
   value: string
   onValueChange(next: string): void
   items: { key: string; label: ReactNode; children: ReactNode }[]
+  variant?: keyof typeof TABS_LOOK
 }) {
   return (
     <TabsRoot value={value} onValueChange={onValueChange} className="min-h-0 gap-4">
       <TabsList
-        variant="line"
-        className="w-full justify-start gap-5 rounded-none border-b border-rule p-0 group-data-[orientation=horizontal]/tabs:h-auto"
+        variant={variant === 'line' ? 'line' : 'default'}
+        className={cn(TABS_LOOK[variant].list, 'group-data-[orientation=horizontal]/tabs:h-auto')}
       >
         {items.map((item) => (
           <TabsTrigger
             key={item.key}
             value={item.key}
-            className={cn(
-              'h-auto flex-none rounded-none px-0 pt-0 pb-2.5 text-[13.5px] text-muted-foreground',
-              'data-[state=active]:font-semibold data-[state=active]:text-ink',
-              'after:bg-accent-fill group-data-[orientation=horizontal]/tabs:after:bottom-[-2px]',
-            )}
+            className={TABS_LOOK[variant].trigger}
           >
             {item.label}
           </TabsTrigger>

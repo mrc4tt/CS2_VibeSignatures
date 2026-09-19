@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, ChipGroup, Select, Skeleton } from '../../ui/primitives'
+import { Alert, Button, ChipGroup, Select, Skeleton } from '../../ui/primitives'
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -224,9 +224,9 @@ export function FindSymbolPage() {
               </div>
             )}
             {visible.length > limit && (
-              <button type="button" className="btn morebtn" onClick={() => setLimit(limit + PAGE)}>
+              <Button className="morebtn" onClick={() => setLimit(limit + PAGE)}>
                 {t('symbols2.showMore', { count: Math.min(PAGE, visible.length - limit), total: visible.length })}
-              </button>
+              </Button>
             )}
           </div>
 

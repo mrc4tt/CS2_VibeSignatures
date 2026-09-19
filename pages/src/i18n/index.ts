@@ -33,6 +33,10 @@ const resources = {
       },
       // Accessible names for the filter chip groups; a screen reader announces
       // them on entering the group, where sighted users read the row's context.
+      clipboard: {
+        ok: 'Copied to the clipboard',
+        failed: 'Could not copy: the browser blocked the clipboard. Select the text and copy it by hand.',
+      },
       chips: {
         files: 'Which files', since: 'Compare with build', symbolState: 'Which symbols',
         module: 'Module', method: 'How it was found',
@@ -259,6 +263,7 @@ const resources = {
         download: 'Download the fixed file',
         copy: 'Copy it instead',
         copied: 'Copied',
+        statesLabel: 'Show keys that are',
         manual: '{{count}} value(s) could not be placed safely and are left for you to edit by hand:',
         upToDate: 'Up to date with build {{build}}',
         needsWork: '{{keys}} key(s) need updating for build {{build}}',
@@ -318,6 +323,10 @@ const resources = {
         none: 'Intet matcher "{{query}}".',
         group: { symbols: 'Symboler', keys: 'Nøgler i Game Data', files: 'Game Data-filer' },
         move: 'flyt', open: 'åbn', close: 'luk',
+      },
+      clipboard: {
+        ok: 'Kopieret til udklipsholderen',
+        failed: 'Kunne ikke kopiere: browseren blokerede udklipsholderen. Markér teksten og kopiér den selv.',
       },
       chips: {
         files: 'Hvilke filer', since: 'Sammenlign med build', symbolState: 'Hvilke symboler',
@@ -521,6 +530,7 @@ const resources = {
         download: 'Hent den rettede fil',
         copy: 'Kopiér den i stedet',
         copied: 'Kopieret',
+        statesLabel: 'Vis nøgler der er',
         manual: '{{count}} værdi(er) kunne ikke placeres sikkert og er efterladt til dig at rette i hånden:',
         upToDate: 'Opdateret til build {{build}}',
         needsWork: '{{keys}} nøgle(r) skal opdateres til build {{build}}',

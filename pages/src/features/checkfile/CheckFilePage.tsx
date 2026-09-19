@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { FileCheckIcon } from '../../ui/icons'
-import { Alert, Select, Skeleton } from '../../ui/primitives'
+import { buttonClass } from '../../ui/buttonStyle'
+import { copyText } from '../../ui/clipboard'
+import { Alert, Button, ChipGroup, Select, Skeleton, Tabs } from '../../ui/primitives'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Explain } from '../../components/Explain'
@@ -144,83 +146,83 @@ export function CheckFilePage() {
               a collapsed grey line of text underneath it, which made pasting
               look like an afterthought and left the explain box as the biggest
               thing on the page. */}
-          <div className="segmented" role="tablist">
-            {(['file', 'paste'] as const).map((option) => (
-              <button
-                key={option}
-                type="button"
-                role="tab"
-                aria-selected={mode === option}
-                data-on={mode === option || undefined}
-                onClick={() => setMode(option)}
-              >
-                {t(`check.mode.${option}`)}
-              </button>
-            ))}
-          </div>
-
-          {mode === 'file' ? (
-            <div
-              className="dropzone"
-              data-dragging={dragging || undefined}
-              onDragOver={(event) => { event.preventDefault(); setDragging(true) }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={(event) => {
-                event.preventDefault()
-                setDragging(false)
-                const dropped = event.dataTransfer.files[0]
-                if (dropped) void accept(dropped, dropped.name)
-              }}
-            >
-              <p className="dzmain">{t('check.drop')}</p>
-              <label className="btn primary">
-                {t('check.browse')}
-                <input
-                  type="file"
-                  hidden
-                  onChange={(event) => {
-                    const picked = event.target.files?.[0]
-                    if (picked) void accept(picked, picked.name)
-                  }}
-                />
-              </label>
-              <p className="dznote">{t('check.examples')}</p>
-            </div>
-          ) : (
-            <div className="pasteform">
-              <label className="plabel" htmlFor="check-paste">{t('check.pasteLabel')}</label>
-              <textarea
-                id="check-paste"
-                rows={9}
-                spellCheck={false}
-                value={pasted}
-                placeholder={'{\n  "ClientPrint": {\n    "signatures": { "linux": "55 48 89 E5 …", "windows": "40 53 …" }\n  }\n}'}
-                onChange={(event) => setPasted(event.target.value)}
-                onPaste={(event) => {
-                  const text = event.clipboardData.getData('text')
-                  if (text.trim().length > 40) {
-                    setPasted(text)
-                    void accept(text, t('check.pasted'))
-                  }
-                }}
-              />
-              <div className="pactions">
-                <button
-                  type="button"
-                  className="btn primary"
-                  disabled={pasted.trim().length < 10}
-                  onClick={() => void accept(pasted, t('check.pasted'))}
-                >
-                  {t('check.checkIt')}
-                </button>
-                {pasted && (
-                  <button type="button" className="btn" onClick={() => { setPasted(''); setLoaded(null); setError(null) }}>
-                    {t('check.clear')}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+          <Tabs
+            variant="segmented"
+            value={mode}
+            onValueChange={(next) => setMode(next as 'file' | 'paste')}
+            items={[
+              {
+                key: 'file',
+                label: t('check.mode.file'),
+                children: (
+                  <div
+                    className="dropzone"
+                    data-dragging={dragging || undefined}
+                    onDragOver={(event) => { event.preventDefault(); setDragging(true) }}
+                    onDragLeave={() => setDragging(false)}
+                    onDrop={(event) => {
+                      event.preventDefault()
+                      setDragging(false)
+                      const dropped = event.dataTransfer.files[0]
+                      if (dropped) void accept(dropped, dropped.name)
+                    }}
+                  >
+                    <p className="dzmain">{t('check.drop')}</p>
+                    <label className={buttonClass('primary')}>
+                      {t('check.browse')}
+                      <input
+                        type="file"
+                        hidden
+                        onChange={(event) => {
+                          const picked = event.target.files?.[0]
+                          if (picked) void accept(picked, picked.name)
+                        }}
+                      />
+                    </label>
+                    <p className="dznote">{t('check.examples')}</p>
+                  </div>
+                ),
+              },
+              {
+                key: 'paste',
+                label: t('check.mode.paste'),
+                children: (
+                  <div className="pasteform">
+                    <label className="plabel" htmlFor="check-paste">{t('check.pasteLabel')}</label>
+                    <textarea
+                      id="check-paste"
+                      rows={9}
+                      spellCheck={false}
+                      value={pasted}
+                      placeholder={'{\n  "ClientPrint": {\n    "signatures": { "linux": "55 48 89 E5 …", "windows": "40 53 …" }\n  }\n}'}
+                      onChange={(event) => setPasted(event.target.value)}
+                      onPaste={(event) => {
+                        const text = event.clipboardData.getData('text')
+                        if (text.trim().length > 40) {
+                          setPasted(text)
+                          void accept(text, t('check.pasted'))
+                        }
+                      }}
+                    />
+                    <div className="pactions">
+                      <Button
+                        variant="primary"
+                        disabled={pasted.trim().length < 10}
+                        onClick={() => void accept(pasted, t('check.pasted'))}
+                      >
+                        {t('check.checkIt')}
+                      </Button>
+                      {pasted && (
+                        <Button onClick={() => { setPasted(''); setLoaded(null); setError(null) }}>
+                          {t('check.clear')}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ),
+              },
+            ]}
+          />
 
           <Explain>{t('check.explain')}</Explain>
 
@@ -339,20 +341,16 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
                       <li>{t('check.step3')}</li>
                     </ol>
                     <div className="pactions">
-                      <button
-                        type="button"
-                        className="btn primary"
-                        onClick={() => save(patched.text, `${newest}-${loaded.name}`)}
-                      >
+                      <Button variant="primary" onClick={() => save(patched.text, `${newest}-${loaded.name}`)}>
                         {t('check.download')}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => { void navigator.clipboard?.writeText(patched.text); setCopied(true) }}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          void copyText(patched.text, { ok: t('clipboard.ok'), failed: t('clipboard.failed') }).then(setCopied)
+                        }}
                       >
                         {copied ? t('check.copied') : t('check.copy')}
-                      </button>
+                      </Button>
                     </div>
                     {patched.skipped.length > 0 && (
                       <p className="dznote">
@@ -396,32 +394,26 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
                   after scanning the binaries. Naming them its way would claim a
                   distinction this data cannot support.
                 */}
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                  {STATES.map((state) => {
-                    const tone = STATE_TONE[state]
-                    const active = show === state
-                    return (
-                      <button
-                        key={state}
-                        type="button"
-                        aria-pressed={active}
-                        disabled={summary[state] === 0}
-                        onClick={() => { setShow(state); setLimit(ROWS) }}
-                        className={[
-                          'flex flex-col items-start gap-1 rounded-[12px] border p-4 text-left transition-colors',
-                          'disabled:cursor-not-allowed disabled:opacity-45',
-                          active ? 'border-rule-strong bg-card-2' : 'border-rule bg-card hover:border-rule-strong',
-                        ].join(' ')}
-                      >
+                <ChipGroup
+                  variant="card"
+                  label={t('check.statesLabel')}
+                  value={show}
+                  onValueChange={(state) => { setShow(state as KeyState); setLimit(ROWS) }}
+                  className="grid w-full grid-cols-2 items-stretch gap-3 lg:grid-cols-4"
+                  items={STATES.map((state) => ({
+                    value: state,
+                    disabled: summary[state] === 0,
+                    label: (
+                      <>
                         {/* `v` is the hook CheckFilePage.test.tsx reads the count through. */}
-                        <span className={`v font-display text-[28px] font-bold leading-none ${STATE_NUMBER[tone]}`}>
+                        <span className={`v font-display text-[28px] font-bold leading-none ${STATE_NUMBER[STATE_TONE[state]]}`}>
                           {summary[state]}
                         </span>
                         <span className="text-[12px] uppercase tracking-wide text-muted-foreground">{t(`check.state.${state}`)}</span>
-                      </button>
-                    )
-                  })}
-                </div>
+                      </>
+                    ),
+                  }))}
+                />
 
                 <p className="plain prose dznote">{t(`check.meaning.${show}`)}</p>
 
@@ -491,9 +483,9 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
                 </div>
 
                 {filtered.length > shown.length && (
-                  <button type="button" className="btn" onClick={() => setLimit(filtered.length)}>
+                  <Button onClick={() => setLimit(filtered.length)}>
                     {t('check.showAll', { count: filtered.length - shown.length })}
-                  </button>
+                  </Button>
                 )}
               </>
             )}

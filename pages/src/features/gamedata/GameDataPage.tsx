@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { Alert, ChipGroup, Select, Skeleton } from '../../ui/primitives'
+import { copyText } from '../../ui/clipboard'
+import { Alert, Button, ChipGroup, Select, Skeleton } from '../../ui/primitives'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -245,20 +246,18 @@ export function GameDataPage() {
             </span>
           </span>
           <span className="fdacts">
-            <button type="button" className="btn" aria-pressed={fullWidth} onClick={() => setFullWidth(!fullWidth)}>
+            <Button aria-pressed={fullWidth} onClick={() => setFullWidth(!fullWidth)}>
               {fullWidth ? t('gamedata2.exitFull') : t('gamedata2.full')}
-            </button>
-            <button
-              type="button"
-              className="btn"
+            </Button>
+            <Button
               disabled={!fileQuery.data}
-              onClick={() => void navigator.clipboard?.writeText(fileQuery.data ?? '')}
+              onClick={() => void copyText(fileQuery.data ?? '', { ok: t('clipboard.ok'), failed: t('clipboard.failed') })}
             >
               {t('gamedata2.copyText')}
-            </button>
-            <button type="button" className="btn primary" disabled={!fileQuery.data} onClick={() => void download()}>
+            </Button>
+            <Button variant="primary" disabled={!fileQuery.data} onClick={() => void download()}>
               {t('gamedata.download')}
-            </button>
+            </Button>
           </span>
         </div>
 

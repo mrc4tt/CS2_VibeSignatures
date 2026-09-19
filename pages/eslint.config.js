@@ -35,4 +35,25 @@ export default tseslint.config([
     files: ['src/ui/shadcn/**/*.{ts,tsx}'],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
+  {
+    // Feature code goes through src/ui: the old hand-rolled `.btn` class and the
+    // silent clipboard call were both replaced there, and these keep them from
+    // coming back one call site at a time. A raw <button> is still fine for
+    // things that are not buttons in look - a card, a row, a link-styled action.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/ui/**', 'src/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "JSXAttribute[name.name='className'] > Literal[value=/(^|\\s)btn(\\s|$)/]",
+          message: 'Use <Button> from ui/primitives (or buttonClass from ui/buttonStyle for a non-button element).',
+        },
+        {
+          selector: "MemberExpression[object.object.name='navigator'][object.property.name='clipboard'][property.name='writeText']",
+          message: 'Use copyText from ui/clipboard: it reports success and failure instead of failing silently.',
+        },
+      ],
+    },
+  },
 ])

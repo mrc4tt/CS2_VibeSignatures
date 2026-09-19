@@ -41,3 +41,7 @@ command palette: `command` + `dialog`) imports from `ui/shadcn/` directly.
 - Restyle a shadcn component from its wrapper with classes, not by editing the
   generated file: tailwind-merge lets the wrapper's class win, and the file stays
   re-addable.
+- ESLint refuses the two things this replaced: a raw `className="btn"` (use
+  `<Button>`, or `buttonClass()` from `ui/buttonStyle` for a `<label>` or link)
+  and `navigator.clipboard.writeText` (use `copyText()` from `ui/clipboard`,
+  which toasts success or failure).
