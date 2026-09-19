@@ -6,6 +6,7 @@ import { Alert, Button, ChipGroup, Select, Skeleton, Tabs } from '../../ui/primi
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Explain } from '../../components/Explain'
+import { ValueChange } from '../../components/ValueChange'
 import { getSiteHistory } from '../../api/siteData'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { Pattern } from '../symbols/Pattern'
@@ -465,10 +466,15 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
                               <span className="pl">{t(`check.platform.${platform}`)}</span>
                               <span className="vals">
                                 {verdict.state === 'outdated' && ok === false ? (
-                                  <>
-                                    <span className="was"><span className="tag">{t('check.yours')}</span> <Value value={mineValue} /></span>
-                                    <span className="now"><span className="tag">{t('check.published')}</span> <Value value={theirsValue} /></span>
-                                  </>
+                                  // `was`/`now` are the hooks CheckFilePage.test.tsx reads the two values through.
+                                  <ValueChange
+                                    before={mineValue}
+                                    after={theirsValue}
+                                    beforeLabel={t('check.yours')}
+                                    afterLabel={`${t('check.published')} ${newest ?? ''}`.trim()}
+                                    oldClassName="was"
+                                    newClassName="now"
+                                  />
                                 ) : (
                                   <span className="same"><Value value={verdict.state === 'unknown' ? mineValue : theirsValue} /></span>
                                 )}

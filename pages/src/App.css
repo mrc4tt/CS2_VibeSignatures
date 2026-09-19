@@ -477,11 +477,7 @@ body.noexplain .explain { display: none; }
 .kline { display: grid; grid-template-columns: 66px 1fr; gap: 9px; align-items: baseline; }
 .kline .pl { font-size: 11px; color: var(--muted); font-family: var(--sans); }
 .kline .vals { display: grid; gap: 3px; font-family: var(--mono); font-size: 11px; line-height: 1.5; }
-.kline .was { color: var(--bad); overflow-wrap: anywhere; }
-.kline .now { color: var(--ok); overflow-wrap: anywhere; }
 .kline .same { color: var(--muted); overflow-wrap: anywhere; }
-.kline .tag { font-family: var(--sans); font-size: 9.5px; text-transform: uppercase;
-  letter-spacing: .06em; color: var(--muted); margin-right: 4px; }
 .fitnote { display: block; font-size: 12.5px; }
 @media (max-width: 560px) { .kline { grid-template-columns: 1fr; gap: 2px; } }
 

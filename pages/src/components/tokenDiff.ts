@@ -1,5 +1,5 @@
 /**
- * Which bytes of a signature actually moved between two builds.
+ * Which bytes of a signature actually moved.
  *
  * A signature that changed usually changed in two or three bytes - a
  * displacement, a register, a few bytes appended - and printing the old and new
@@ -18,13 +18,31 @@ export interface TokenDiff {
   after: DiffToken[]
 }
 
-/** A value that reads as bytes: a signature, or a patch's replacement bytes. */
-export function isByteString(value: unknown): value is string {
-  return typeof value === 'string' && /^[0-9A-Fa-f?]{1,2}(\s+[0-9A-Fa-f?]{1,2})*$/.test(value.trim())
+/** Bytes split into tokens, and what to put back between them when shown. */
+export interface ByteTokens {
+  tokens: string[]
+  separator: string
 }
 
-export function byteTokens(value: string): string[] {
-  return value.trim().split(/\s+/)
+const SPACED = /^[0-9A-Fa-f?]{1,2}(\s+[0-9A-Fa-f?]{1,2})*$/
+/** SourceMod/Metamod KeyValues spelling: \x55\x48\x2A, with \x2A as the wildcard. */
+const ESCAPED = /^(\\x[0-9A-Fa-f]{2})+$/
+
+/**
+ * A value read as bytes - a signature or a patch's replacement bytes, in either
+ * spelling plugins use - or undefined when it is something else (an offset, a
+ * slot index, a name).
+ */
+export function byteTokens(value: unknown): ByteTokens | undefined {
+  if (typeof value !== 'string') return undefined
+  const text = value.trim()
+  if (SPACED.test(text)) return { tokens: text.split(/\s+/), separator: ' ' }
+  if (ESCAPED.test(text)) return { tokens: text.match(/\\x[0-9A-Fa-f]{2}/g)!, separator: '' }
+  return undefined
+}
+
+export function isWildcard(token: string): boolean {
+  return token === '?' || token === '??' || token.toLowerCase() === '\\x2a'
 }
 
 /** `?` and `??` are the same wildcard written two ways; plugins use both. */
