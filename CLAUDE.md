@@ -240,6 +240,10 @@ for f in $(find gamedata/$VER -type f \( -name '*.json' -o -name '*.jsonc' -o -n
   echo " $DISABLED " | grep -q " $(echo "${f#gamedata/$VER/}" | cut -d/ -f1) " && continue
   uv run verify_plugin_gamedata.py -gamever $VER -gamedata "$f" | tail -2
 done
+# 5c. did the last generation actually reach the plugins? verify_plugin_gamedata
+#     cannot answer this: a stale value that still resolves uniquely is healthy by
+#     that test and says nothing about its own age.
+uv run check_deploy_drift.py -gamever $VER      # exit 1 = a target is behind, and it names the keys
 # 6. preprocessor/reference coverage, then the test suite
 ./gen_references.sh
 uv run --with pytest --with pyyaml --with capstone python -m pytest tests/ -q
@@ -247,6 +251,20 @@ uv run --with pytest --with pyyaml --with capstone python -m pytest tests/ -q
 uv run publish_site_data.py -check          # exit 10 = stale, and it names the drift
 uv run publish_site_data.py                 # regenerate, then commit gamedata/history.json
 ```
+
+Step 5c exists because generation and deployment are separate steps, run by separate scripts, and
+nothing else in the battery compares them. `gamedata/14181/CounterStrikeSharp/...` carried
+regenerated `CCSCustomHudLayout` win64 signatures for a whole generation while the install still
+held the previous ones — both resolved to the same address uniquely, so `verify_plugin_gamedata.py`
+called the install healthy, correctly, while the deployed pattern still pinned a relative call
+displacement (`E8 6B 1B FF FF`) that the next build would move. Note the two compare modes, which
+mirror the two deploy scripts: `deploy_local_plugins.sh` **copies**, so the file must match byte for
+byte (bar a trailing newline); `update_css_gamedata.sh` **merges by key**, so install-only symbols
+are kept on purpose and only generated keys are compared. `tests/test_deploy_targets.py` asserts
+`DEPLOY_TARGETS` against both scripts, so adding a plugin to one without the other fails the suite
+rather than silently dropping it from the check — on a machine that has them, since `.gitignore`
+excludes `*.sh` and that half of the test skips on a fresh clone. `autopilot.sh` runs it after every deploy —
+running the scripts is not evidence the files moved.
 
 Step 7 exists because `gamedata/` and the site's datasets are separate commits. The Pages build
 reads `gamedata/history.json` and `diagnostics/<build>.json`, so changing a gamedata file without
@@ -651,6 +669,7 @@ Two guards now catch the class before the baseline does:
 | `abi_guard.py` | After `sync_upstream.sh`, before every pack, on every gamever | Catches a wrong *identification* that relocated cleanly; `--fix` rewrites the artifact. Also verifies `func_size` |
 | `validate_artifacts.py` | After every artifact change | Re-checks every artifact against the binary; `-strict` fails on warnings. Needs `capstone` — degrades silently without it |
 | `verify_plugin_gamedata.py` | Before a deploy, and to answer "is this plugin's file OK" | Scans every shipped signature against the binaries and re-derives every offset; non-zero exit on broken/ambiguous/mismatch |
+| `check_deploy_drift.py` | After every deploy | Diffs `gamedata/<VER>/<plugin>/` against the deployed file; catches a generation that never left the repo, which no entry-level check can see |
 | `gamesymbol_snapshot.py` | `pack` after changes, `check-contract` to verify | Pack is what generation reads, not `bin_artifacts/` |
 | `missing_report.py` | After runs / before hunts | Writes `missing_<plat>_<ver>.txt` |
 | `audit_duplicate_va.py` | After every hunt round | 0 suspect clusters = clean |
