@@ -1700,7 +1700,9 @@ def parse_args():
         default=os.environ.get("CS2VIBE_AGENT", DEFAULT_AGENT),
         help=(
             "Agent executable to use for analysis, e.g., claude, claude.cmd, codex, "
-            f"codex.cmd, opencode, opencode.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var)"
+            f"codex.cmd, opencode, opencode.cmd (default: {DEFAULT_AGENT}, or set CS2VIBE_AGENT env var). "
+            "A comma-separated chain such as 'opencode,claude,codex' tries the next agent only when "
+            "the previous one exhausted its attempts; -agent_model applies to the first agent only."
         ),
     )
     parser.add_argument(
@@ -1811,7 +1813,13 @@ def parse_args():
         help="Existing scheduler-created run ID (or set CS2VIBE_RUN_ID)",
     )
     parser.add_argument(
-        "-maxretry", type=int, default=3, help="Maximum number of retry attempts for skill execution (default: 3)"
+        "-maxretry",
+        type=int,
+        default=int(os.environ.get("CS2VIBE_AGENT_MAX_RETRIES", "3")),
+        help=(
+            "Maximum attempts per agent for one skill (default: 3, or set CS2VIBE_AGENT_MAX_RETRIES). "
+            "With an agent chain every agent gets this many attempts."
+        ),
     )
     parser.add_argument(
         "-oldgamever",

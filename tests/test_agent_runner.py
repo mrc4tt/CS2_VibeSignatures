@@ -1187,3 +1187,38 @@ class TestRunSkillMcpListPreflight(unittest.TestCase):
         self.assertFalse(
             agent_runner._mcp_list_contains_server("\x1b[34m•\x1b[39m  ✗ not-ida-pro-mcp \x1b[90mfailed\x1b[39m\n")
         )
+
+
+class AgentChainTests(unittest.TestCase):
+    def test_split_agent_chain_accepts_single_and_comma_separated(self) -> None:
+        self.assertEqual(agent_runner._split_agent_chain("claude"), ["claude"])
+        self.assertEqual(agent_runner._split_agent_chain(" opencode, claude ,codex "), ["opencode", "claude", "codex"])
+        self.assertEqual(agent_runner._split_agent_chain(""), [])
+
+    def test_run_skill_falls_back_to_next_agent_after_first_fails(self) -> None:
+        calls = []
+
+        def fake_single(skill_name, agent, **kwargs):
+            calls.append((agent, kwargs["agent_model"]))
+            return agent == "claude"
+
+        events = []
+        with patch.object(agent_runner, "_run_skill_with_agent", side_effect=fake_single):
+            result = agent_runner.run_skill(
+                "find-X",
+                "opencode,claude,codex",
+                agent_model="zai-coding-plan/glm-5.3-flash",
+                progress_callback=lambda **p: events.append(p),
+            )
+        self.assertTrue(result)
+        # opencode got the model, claude ran with the default, codex never ran
+        self.assertEqual(calls, [("opencode", "zai-coding-plan/glm-5.3-flash"), ("claude", "")])
+        self.assertEqual(
+            [e for e in events if e.get("event") == "agent_fallback"],
+            [{"event": "agent_fallback", "agent": "claude", "position": 2, "chain_length": 3}],
+        )
+
+    def test_run_skill_returns_false_when_whole_chain_fails(self) -> None:
+        with patch.object(agent_runner, "_run_skill_with_agent", return_value=False) as single:
+            self.assertFalse(agent_runner.run_skill("find-X", "opencode,claude"))
+        self.assertEqual(single.call_count, 2)

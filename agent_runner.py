@@ -12,7 +12,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-SKILL_TIMEOUT = 1200
+# Wall-clock budget per agent attempt. glm-5.3-flash needs 10-30 min for a real
+# hunt (measured on 14182: m_pInventory 30 min, m_pSOCache 13 min), so 20 min
+# killed correct runs; override per machine with CS2VIBE_SKILL_TIMEOUT.
+SKILL_TIMEOUT = int(os.environ.get("CS2VIBE_SKILL_TIMEOUT", "1200"))
 MCP_LIST_TIMEOUT = 30
 SKILL_ERROR_RE = re.compile(r"<skill_error>\s*(.*?)\s*</skill_error>", re.IGNORECASE | re.DOTALL)
 CYBERSECURITY_BLOCK_MARKERS = (
@@ -670,6 +673,11 @@ def _run_skill_attempts(
     return False
 
 
+def _split_agent_chain(agent) -> list[str]:
+    """'opencode,claude,codex' -> ['opencode', 'claude', 'codex']; a plain name is a chain of one."""
+    return [part.strip() for part in str(agent or "").split(",") if part.strip()]
+
+
 def run_skill(
     skill_name,
     agent="claude",
@@ -681,7 +689,58 @@ def run_skill(
     mcp_url=None,
     output_validator=None,
 ) -> bool:
-    """Execute and validate each attempt within one retry budget.
+    """Run the skill with each agent of a fallback chain until one succeeds.
+
+    ``agent`` is one CLI name or a comma-separated chain such as
+    ``opencode,claude,codex`` (CS2VIBE_AGENT accepts the same). Every agent gets
+    its own ``max_retries`` budget; the next one starts only when the previous
+    one exhausted it or failed for good, so a cheap agent can go first and the
+    expensive one only pays for what it could not do. ``agent_model`` applies to
+    the first agent only, since model ids are CLI-specific.
+    """
+    chain = _split_agent_chain(agent)
+    if not chain:
+        print("    Error: no agent configured")
+        _notify_progress(progress_callback, "failed", reason="unknown_agent")
+        return False
+    for position, one_agent in enumerate(chain, start=1):
+        if position > 1:
+            print(f"    Falling back to agent '{one_agent}' ({position}/{len(chain)})")
+            _notify_progress(
+                progress_callback,
+                "agent_fallback",
+                agent=one_agent,
+                position=position,
+                chain_length=len(chain),
+            )
+        if _run_skill_with_agent(
+            skill_name,
+            one_agent,
+            debug=debug,
+            expected_yaml_paths=expected_yaml_paths,
+            max_retries=max_retries,
+            agent_model=agent_model if position == 1 else DEFAULT_AGENT_MODEL,
+            progress_callback=progress_callback,
+            mcp_url=mcp_url,
+            output_validator=output_validator,
+        ):
+            return True
+    return False
+
+
+def _run_skill_with_agent(
+    skill_name,
+    agent,
+    *,
+    debug=False,
+    expected_yaml_paths=None,
+    max_retries=3,
+    agent_model=DEFAULT_AGENT_MODEL,
+    progress_callback=None,
+    mcp_url=None,
+    output_validator=None,
+) -> bool:
+    """Execute and validate each attempt of ONE agent within one retry budget.
 
     output_validator returns artifact error strings for correction, or raises
     NonRetryableOutputError for protected-output changes. It also runs after
