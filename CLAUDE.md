@@ -341,6 +341,17 @@ there are no duplicate-VA clusters and every shipped entry re-scans with `unheal
 values changed. `safe` is stricter and holds anything that is more than a pure relocation; `auto`
 ignores the gate entirely.
 
+**Linux and windows pack and generate independently.** `gamesymbol_snapshot.py pack
+-platform linux` requires every linux YAML and packs the windows ones that exist, reporting
+the rest instead of failing; `update_gamedata.py -platform linux` accepts such a snapshot and
+starts each output from the file already in `-outputdir`, so the windows values a windows run
+wrote stay exactly as they were (measured: 167 windows values untouched, 44 linux updated).
+Without `-platform` both tools keep the full requirement, and `check-contract` stays red
+until both platforms are complete - which is what the battery and autopilot gate on. A
+task whose `expected_input` belongs to another module that has not run yet is **deferred**
+and retried after every module ran, instead of failing (engine's `CEngineServer_*` read
+server's `IVEngineServer2_*`).
+
 `-snapshot` and `-outputdir` are **required** on the snapshot and gamedata tools — there is no
 implicit default, by design, so a run can never write to the wrong gamever.
 

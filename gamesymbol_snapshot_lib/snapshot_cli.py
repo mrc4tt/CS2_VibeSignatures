@@ -7,6 +7,7 @@ from gamesymbol_snapshot_lib.errors import SnapshotConfigError, SnapshotMismatch
 from gamesymbol_snapshot_lib.operations import (
     check_snapshot_contract,
     migrate_snapshot,
+    missing_required_by_platform,
     pack_snapshot,
     restore_snapshot,
     verify_snapshot,
@@ -36,7 +37,15 @@ def parse_args(argv=None):
     for command in ("pack", "restore", "verify", "check-contract", "migrate"):
         subparser = commands.add_parser(command)
         _add_common_arguments(subparser)
-        if command == "restore":
+        if command == "pack":
+            subparser.add_argument(
+                "-platform",
+                choices=("linux", "windows"),
+                help="Pack for one platform's run: every required YAML of THIS platform must exist, "
+                "the other platform's are packed where they exist and otherwise only reported, so "
+                "linux and windows can each pack without waiting for the other.",
+            )
+        elif command == "restore":
             subparser.add_argument("-replace", action="store_true", help="Replace only YAML files under the game root")
         elif command == "check-contract":
             subparser.add_argument("-json", action="store_true", help="Emit one machine-readable JSON result")
@@ -59,8 +68,15 @@ def _run(args) -> None:
         print(f"Analysis config: {args.configyaml}")
     common = (args.gamever, args.bindir, args.configyaml, args.snapshot)
     if args.command == "pack":
-        data = pack_snapshot(*common, artifactdir=args.artifactdir)
+        data = pack_snapshot(*common, artifactdir=args.artifactdir, platform=args.platform)
         print(f"Packed {args.snapshot} ({len(data)} bytes)")
+        if args.platform:
+            other = "windows" if args.platform == "linux" else "linux"
+            pending = missing_required_by_platform(*common, artifactdir=args.artifactdir).get(other, [])
+            if pending:
+                print(f"WARNING: {other} is not complete yet: {len(pending)} required {other} YAML(s) missing. "
+                      f"This snapshot is {args.platform}-complete only; check-contract stays red and the "
+                      f"generators keep their previous {other} values until the {other} run packs.")
     elif args.command == "restore":
         restore_snapshot(*common, replace=args.replace, artifactdir=args.artifactdir)
         print(f"Restored game-symbol snapshot for {args.gamever}")

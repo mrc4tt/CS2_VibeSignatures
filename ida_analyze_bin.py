@@ -4311,6 +4311,27 @@ def process_binary(
                 )
                 continue
             missing_inputs = [p for p in expected_inputs if not os.path.exists(p)]
+            other_module_inputs = [
+                p for p in missing_inputs
+                if os.path.normcase(os.path.dirname(os.path.normpath(p))) != os.path.normcase(os.path.normpath(artifact_dir))
+            ]
+            if missing_inputs and len(other_module_inputs) == len(missing_inputs) and module_name:
+                # produced by another module that may simply not have run yet (engine's
+                # CEngineServer_* read server's IVEngineServer2_*): retried at the end
+                skip_count += 1
+                _DEFERRED_INPUT_SKILLS.append((module_name, platform, skill_name, tuple(missing_inputs)))
+                missing_names = [os.path.basename(p) for p in missing_inputs]
+                print(f"  Deferred: {skill_name} (waits for another module: {', '.join(missing_names)})")
+                _report_skill_status(
+                    reporting,
+                    job_id,
+                    skill_name,
+                    TaskStatus.SKIPPED,
+                    ProcessPhase.FINISHED,
+                    reason=ProcessReason.MISSING_INPUT,
+                    payload={"missing_inputs": missing_inputs, "deferred": True},
+                )
+                continue
             if missing_inputs:
                 fail_count += 1
                 missing_names = [os.path.basename(p) for p in missing_inputs]
@@ -6027,6 +6048,47 @@ def _run_vcall_aggregation(args, object_names, found_object_names=None):
     return counts
 
 
+_DEFERRED_INPUT_SKILLS = []
+
+
+def _retry_deferred_skills(args, modules, reporting, found_vcall_objects):
+    """Second pass for tasks whose inputs belonged to a module that ran after them.
+
+    A task whose input is still missing now fails for real; one pass only, so a task
+    that waits on another deferred task's output is reported rather than looped on.
+    """
+    deferred = list(_DEFERRED_INPUT_SKILLS)
+    _DEFERRED_INPUT_SKILLS.clear()
+    counts = [0, 0, 0]
+    ready = {}
+    for module_name, platform, skill_name, inputs in deferred:
+        still = [path for path in inputs if not os.path.exists(path)]
+        if still:
+            counts[1] += 1
+            print(f"  Failed: {skill_name} (missing expected_input after every module ran: "
+                  f"{', '.join(os.path.basename(p) for p in still)})")
+            continue
+        ready.setdefault((module_name, platform), []).append(skill_name)
+    if not ready:
+        return counts
+    print(f"\nRetrying {sum(len(v) for v in ready.values())} deferred task(s) whose inputs now exist")
+    by_name = {module["name"]: module for module in modules}
+    for (module_name, platform), names in ready.items():
+        module = by_name.get(module_name)
+        if module is None:
+            counts[1] += len(names)
+            continue
+        wanted = set(names)
+        subset = {**module, "skills": [skill for skill in module.get("skills", []) if skill.get("name") in wanted]}
+        # vcall targets already ran with the module; only the deferred tasks are repeated
+        _print_module_header(subset, [])
+        result = _process_platform(args, subset, platform, [], reporting, found_vcall_objects)
+        counts = [total + count for total, count in zip(counts, result)]
+        # the first pass counted each of these as skipped
+        counts[2] -= len(names)
+    return counts
+
+
 def _execute_analysis(args, modules, reporting):
     totals = [0, 0, 0]
     all_vcall_objects = list((args.vcall_finder_filter or {}).get("names", []))
@@ -6046,6 +6108,9 @@ def _execute_analysis(args, modules, reporting):
                 print("  Continuing after binary processing failure (-skip_error)")
         if abort_processing:
             break
+    if not abort_processing and _DEFERRED_INPUT_SKILLS:
+        retry_counts = _retry_deferred_skills(args, modules, reporting, found_vcall_objects)
+        totals = [total + count for total, count in zip(totals, retry_counts)]
     if not abort_processing:
         aggregate_counts = _run_vcall_aggregation(args, all_vcall_objects, found_vcall_objects)
         totals = [total + count for total, count in zip(totals, aggregate_counts)]
@@ -6063,6 +6128,12 @@ def _print_summary(totals):
 
 def main():
     """Main entry point."""
+    try:
+        # piped through tee by the run scripts: without this the log shows nothing
+        # for minutes, then a block at once
+        sys.stdout.reconfigure(line_buffering=True)
+    except (AttributeError, ValueError):
+        pass
     args = parse_args()
     selected_manifest = None
     if getattr(args, "selected_execution", None):

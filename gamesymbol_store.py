@@ -19,7 +19,7 @@ from gamesymbol_snapshot_lib.codec import (
 )
 from gamesymbol_snapshot_lib.config import LATEST_CONFIG_DIGEST_VERSION, load_contract
 from gamesymbol_snapshot_lib.errors import SnapshotConfigError, SnapshotMismatchError, SnapshotSchemaError
-from gamesymbol_snapshot_lib.operations import validate_snapshot_contract
+from gamesymbol_snapshot_lib.operations import tolerate_platforms, validate_snapshot_contract
 from gamesymbol_snapshot_lib.paths import canonical_key, is_reparse_point, iter_yaml_paths
 
 
@@ -231,7 +231,10 @@ class _MemorySymbolStore:
 
 class SnapshotSymbolStore(_MemorySymbolStore):
     @classmethod
-    def open(cls, snapshot_path, *, expected_game_version: str, config_path=None):
+    def open(cls, snapshot_path, *, expected_game_version: str, config_path=None, platforms=None):
+        """`platforms`: the ones being generated. A snapshot packed by one platform's run
+        (pack -platform) is complete only for that platform; generating that platform
+        from it is allowed, the other platform's keys are simply not written."""
         path = _ensure_plain_file(Path(snapshot_path))
         try:
             raw = path.read_bytes()
@@ -252,7 +255,9 @@ class SnapshotSymbolStore(_MemorySymbolStore):
                 digest_version,
                 artifactdir="bin_artifacts",
             )
-            validate_snapshot_contract(document, contract)
+            tolerated = {"linux", "windows"} - set(platforms) if platforms else set()
+            with tolerate_platforms(tolerated):
+                validate_snapshot_contract(document, contract)
         except (AnalysisConfigError, SnapshotConfigError, SnapshotMismatchError) as exc:
             raise SnapshotConfigMismatchError(str(exc)) from exc
         if raw != canonical_snapshot_bytes(document):
@@ -307,9 +312,10 @@ class DirectorySymbolStore(_MemorySymbolStore):
         return files
 
 
-def open_snapshot_store(*, snapshot_path, config_path, expected_game_version: str) -> SnapshotSymbolStore:
+def open_snapshot_store(*, snapshot_path, config_path, expected_game_version: str, platforms=None) -> SnapshotSymbolStore:
     return SnapshotSymbolStore.open(
         snapshot_path,
         expected_game_version=expected_game_version,
         config_path=config_path,
+        platforms=platforms,
     )

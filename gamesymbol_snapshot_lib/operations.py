@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import os
 import subprocess
@@ -85,8 +86,50 @@ def _waived(contract, path: str) -> bool:
         return False
 
 
+# Platforms whose missing required YAMLs are tolerated: a platform's own run packs with
+# `pack -platform linux`, which must not depend on the other platform having run yet.
+# Everything else (check-contract, verify, a plain pack) keeps the full requirement.
+_TOLERATED_PLATFORMS: set[str] = set()
+
+
+@contextlib.contextmanager
+def tolerate_platforms(platforms):
+    """Within the block, missing required YAMLs of these platforms are not an error."""
+    saved = set(_TOLERATED_PLATFORMS)
+    _TOLERATED_PLATFORMS.update(platforms or ())
+    try:
+        yield
+    finally:
+        _TOLERATED_PLATFORMS.clear()
+        _TOLERATED_PLATFORMS.update(saved)
+
+
+def _platform_of(path: str) -> str:
+    return "windows" if path.endswith(".windows.yaml") else "linux"
+
+
 def _missing_required(contract, present) -> list[str]:
-    return [path for path in sorted(contract.required_paths) if not present(path) and not _waived(contract, path)]
+    return [
+        path for path in sorted(contract.required_paths)
+        if not present(path) and _platform_of(path) not in _TOLERATED_PLATFORMS and not _waived(contract, path)
+    ]
+
+
+def missing_required_by_platform(game_version, bindir="bin", config_path=None, snapshot_path=None, artifactdir=None):
+    """{platform: [missing required keys]} - what pack would refuse over, split by platform."""
+    config_path = resolve_analysis_config(game_version, config_path)
+    artifactdir = Path(bindir).parent / "bin_artifacts" if artifactdir is None else Path(artifactdir)
+    contract = load_contract(config_path, game_version, bindir, LATEST_CONFIG_DIGEST_VERSION, artifactdir=artifactdir)
+    out = {}
+    saved = set(_TOLERATED_PLATFORMS)
+    _TOLERATED_PLATFORMS.clear()
+    try:
+        for path in _missing_required(contract, lambda key: path_from_key(contract.artifact_game_root, key).is_file()):
+            out.setdefault(_platform_of(path), []).append(path)
+    finally:
+        _TOLERATED_PLATFORMS.clear()
+        _TOLERATED_PLATFORMS.update(saved)
+    return out
 
 
 def collect_actual_files(contract, strict=True) -> dict[str, dict]:
@@ -355,7 +398,14 @@ def pack_snapshot(
     last_publish_time: str | None = None,
     binary_metadata_source_path=None,
     artifactdir=None,
+    platform=None,
 ) -> bytes:
+    """With `platform`, pack what that platform's run produced without requiring the other
+    platform: its YAMLs that exist are packed, the missing ones are only tolerated."""
+    if platform:
+        with tolerate_platforms({"linux", "windows"} - {platform}):
+            return pack_snapshot(game_version, bindir, config_path, snapshot_path, last_publish_time,
+                                 binary_metadata_source_path, artifactdir)
     snapshot_path = _explicit_snapshot_path(snapshot_path)
     config_path = resolve_analysis_config(game_version, config_path)
     artifactdir = Path(bindir).parent / "bin_artifacts" if artifactdir is None else Path(artifactdir)

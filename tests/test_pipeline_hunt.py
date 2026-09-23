@@ -4,6 +4,7 @@ The hunt itself runs inside IDA; these tests cover the host side: when it runs, 
 unavailable hunter is remembered, and how the manual list merges and cleans itself.
 """
 import os
+from pathlib import Path
 import tempfile
 import unittest
 from unittest import mock
@@ -112,3 +113,97 @@ class RunPipelineHuntTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DeferredInputRetryTests(unittest.TestCase):
+    """A task whose input another module produces is retried once every module ran."""
+
+    def setUp(self):
+        I._DEFERRED_INPUT_SKILLS.clear()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.ready = os.path.join(self.tmp.name, "server", "IVEngineServer2_ServerCommand.windows.yaml")
+        os.makedirs(os.path.dirname(self.ready))
+        open(self.ready, "w").close()
+        self.missing = os.path.join(self.tmp.name, "server", "IVEngineServer2_Nope.windows.yaml")
+        self.modules = [{"name": "engine", "skills": [{"name": "find-A"}, {"name": "find-B"}, {"name": "find-C"}]}]
+
+    def tearDown(self):
+        self.tmp.cleanup()
+        I._DEFERRED_INPUT_SKILLS.clear()
+
+    def test_ready_tasks_rerun_and_missing_ones_fail(self):
+        I._DEFERRED_INPUT_SKILLS.extend([
+            ("engine", "windows", "find-A", (self.ready,)),
+            ("engine", "windows", "find-B", (self.missing,)),
+        ])
+        seen = {}
+
+        def fake(args, module, platform, vcall_targets, reporting, found):
+            seen["skills"] = [s["name"] for s in module["skills"]]
+            seen["platform"] = platform
+            return 1, 0, 0
+
+        args = mock.Mock(vcall_finder_filter=None)
+        with mock.patch.object(I, "_process_platform", side_effect=fake):
+            counts = I._retry_deferred_skills(args, self.modules, None, set())
+        self.assertEqual(seen, {"skills": ["find-A"], "platform": "windows"})
+        # A: success (its first-pass skip taken back); B: a real failure now
+        self.assertEqual(counts, [1, 1, -1])
+        self.assertEqual(I._DEFERRED_INPUT_SKILLS, [])
+
+
+class PackPlatformTests(unittest.TestCase):
+    """pack -platform: each platform's run packs without waiting for the other."""
+
+    def test_other_platform_missing_is_tolerated_own_is_not(self):
+        from gamesymbol_snapshot_lib import operations as O
+
+        contract = mock.Mock(required_paths={"server/A.linux.yaml", "server/B.windows.yaml"})
+        with mock.patch.object(O, "_waived", return_value=False):
+            self.assertEqual(O._missing_required(contract, lambda p: False),
+                             ["server/A.linux.yaml", "server/B.windows.yaml"])
+            O._TOLERATED_PLATFORMS.add("windows")
+            try:
+                self.assertEqual(O._missing_required(contract, lambda p: False), ["server/A.linux.yaml"])
+            finally:
+                O._TOLERATED_PLATFORMS.clear()
+
+    def test_pack_platform_restores_the_full_requirement_afterwards(self):
+        from gamesymbol_snapshot_lib import operations as O
+
+        seen = []
+
+        def fake_load_contract(*_args, **_kwargs):
+            seen.append(set(O._TOLERATED_PLATFORMS))
+            raise RuntimeError("stop")
+
+        with mock.patch.object(O, "resolve_analysis_config", return_value="c.yaml"), \
+                mock.patch.object(O, "load_contract", side_effect=fake_load_contract), \
+                mock.patch.object(O, "_explicit_snapshot_path", side_effect=lambda p: p):
+            with self.assertRaises(RuntimeError):
+                O.pack_snapshot("14182", snapshot_path="x.yaml", platform="linux")
+        self.assertEqual(seen, [{"windows"}])
+        self.assertEqual(O._TOLERATED_PLATFORMS, set())
+
+
+class SinglePlatformGenerationTests(unittest.TestCase):
+    """update_gamedata -platform linux keeps the windows values already in the output."""
+
+    def test_existing_output_is_kept_only_for_single_platform_runs(self):
+        import update_gamedata as U
+
+        with tempfile.TemporaryDirectory() as tmp:
+            src = os.path.join(tmp, "src")
+            os.makedirs(src)
+            with open(os.path.join(src, "template.json"), "w") as handle:
+                handle.write("template")
+            contract = mock.Mock(static_sources=[("template.json", "gamedata/p.json")], directory="p", source_dir=Path(src))
+            out = os.path.join(tmp, "out")
+            target = os.path.join(out, "p", "gamedata", "p.json")
+            os.makedirs(os.path.dirname(target))
+            with open(target, "w") as handle:
+                handle.write("generated earlier")
+            U._seed_output_root([contract], out, keep_existing=True)
+            self.assertEqual(open(target).read(), "generated earlier")
+            U._seed_output_root([contract], out, keep_existing=False)
+            self.assertEqual(open(target).read(), "template")

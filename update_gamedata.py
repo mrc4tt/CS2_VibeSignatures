@@ -227,12 +227,18 @@ def _load_base_context(base_config, symbol_store, platforms, debug):
     return yaml_data, (func_lib_map, alias_map), diagnostics, findings
 
 
-def _seed_output_root(modules, output_root):
+def _seed_output_root(modules, output_root, keep_existing=False):
+    """Start every output from the generator's template - or, when only some platforms are
+    generated, from the file already there, so the other platform keeps the values its
+    own run wrote instead of falling back to the template (rule 20)."""
     os.makedirs(output_root, exist_ok=True)
     for contract in modules:
         for source, target in contract.static_sources:
             destination = os.path.join(output_root, contract.directory, *target.split("/"))
             os.makedirs(os.path.dirname(destination), exist_ok=True)
+            if keep_existing and os.path.isfile(destination):
+                print(f"  Kept existing output (other platform untouched): {contract.directory}/{target}")
+                continue
             shutil.copy2(contract.source_dir / source, destination)
             print(f"  Seeded static template: {contract.directory}/{target}")
 
@@ -288,6 +294,8 @@ def generate_gamedata(
         snapshot_path=snapshot_path,
         config_path=config_path,
         expected_game_version=gamever,
+        # only the platforms generated here must be complete in the snapshot
+        platforms=list(platforms) if platforms else None,
     )
     print("Symbol source: snapshot")
     print(f"Candidate SHA-256: {symbol_store.candidate_sha256}")
@@ -308,7 +316,7 @@ def generate_gamedata(
     print_config_findings(base_findings, title="Config validation findings", debug=debug)
     modules = discover_generator_modules(modules_dir)
     print(f"Found {len(modules)} enabled generators")
-    _seed_output_root(modules, output_root)
+    _seed_output_root(modules, output_root, keep_existing=set(platforms) != {"linux", "windows"})
     if download_latest:
         downloaded, failed = download_latest_gamedata(modules, output_root, strict=strict)
         print(f"Downloads complete: {downloaded} succeeded, {failed} failed")
