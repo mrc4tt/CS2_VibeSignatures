@@ -76,6 +76,7 @@ UNIT_MODULES = frozenset(
         "test_disabled_generator_waiver",
         "test_pipeline_hunt",
         "test_hunt_strategies",
+        "test_review_issue",
         "test_download_depot",
         "test_fork_owned_modules",
         "test_format_repo_files",
