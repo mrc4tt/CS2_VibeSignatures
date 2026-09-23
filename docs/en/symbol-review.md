@@ -1,9 +1,11 @@
 # Symbol review: helping without IDA
 
 Every CS2 update moves the functions, globals and struct members that plugins hook. The
-pipeline finds almost all of them on its own. What it cannot prove ends up in one GitHub
-issue per game version, **"Symbol review: &lt;gamever&gt;"** (label `symbol-review`), and anyone
-with collaborator access can settle an entry with a single comment.
+pipeline finds almost all of them on its own. What it cannot prove ends up in a GitHub
+issue, one per game version **and platform**: **"Symbol review: &lt;gamever&gt; (linux)"** and
+**"Symbol review: &lt;gamever&gt; (windows)"** (label `symbol-review`). Linux and windows are
+analysed by separate runs, and each run owns its own issue. Anyone with collaborator
+access can settle an entry with a single comment.
 
 ## How it works
 
@@ -15,23 +17,25 @@ with collaborator access can settle an entry with a single comment.
 2. **What is still open goes on a list.** The list holds each symbol with its kind
    (function, virtual, global, ...), the run's best candidate address with a similarity
    score, and the reason it stopped. A typical reason is "two identical twins" or "only
-   weak evidence". At the end of the run the list is mirrored into the review issue, as
-   one table per module and platform. When the list is empty, the issue closes itself.
+   weak evidence". At the end of the linux run the linux list is mirrored into the linux
+   issue, and the windows run does the same for windows. Each issue has one table per
+   module. When a list is empty, its issue closes itself.
 
-3. **You answer in a comment**, one command per line:
-
-   ```
-   /confirm <Symbol> [linux|windows] 0x<address>            a function head
-   /confirm <Symbol> [linux|windows] vfunc <Class> <index>   a vtable slot
-   /confirm <Symbol> [linux|windows] gv 0x<instruction>      the instruction loading a global
-   /reject  <Symbol> [linux|windows] <reason>                e.g. inlined, or gone from this build
-   ```
-
-   The platform can be left out when the symbol is only open on one platform. For example:
+3. **You answer in a comment on that platform's issue**, one command per line:
 
    ```
-   /confirm CCSCustomHudLayout_SetHasClassForPlayer windows 0x1808d2750
-   /reject  CBaseFilter_InputTestActivator windows inlined into the TestActivator script binding
+   /confirm <Symbol> 0x<address>            a function head
+   /confirm <Symbol> vfunc <Class> <index>   a vtable slot
+   /confirm <Symbol> gv 0x<instruction>      the instruction loading a global
+   /reject  <Symbol> <reason>                e.g. inlined, or gone from this build
+   ```
+
+   The platform is the issue's, so you never have to type it. For example, in the
+   windows issue:
+
+   ```
+   /confirm CCSCustomHudLayout_SetHasClassForPlayer 0x1808d2750
+   /reject  CBaseFilter_InputTestActivator inlined into the TestActivator script binding
    ```
 
 4. **The server acts on it every 15 minutes.** It reads only comments from the
@@ -89,8 +93,9 @@ Addresses are the virtual addresses the disassembler shows with the default imag
 ## For maintainers
 
 ```bash
-uv run review_issue.py publish -gamever 14182            # create or refresh the issue
-uv run review_issue.py apply   -gamever latest -commit   # what the 15-minute timer runs
+uv run review_issue.py publish -gamever 14182 -platform linux   # what run_linux.sh does at the end
+uv run review_issue.py publish -gamever 14182 -platform windows # what run_windows.sh does
+uv run review_issue.py apply   -gamever latest -commit          # the 15-minute timer: both issues
 uv run review_issue.py apply   -gamever 14182 -dry_run   # read the commands, change nothing
 ```
 

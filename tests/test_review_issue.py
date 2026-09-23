@@ -35,15 +35,19 @@ class ListTests(unittest.TestCase):
         self.assertEqual((row["candidate"], row["score"]), ("0x1808d2750", "0.58"))
         self.assertEqual(row["flags"], ["agent failed"])
 
-    def test_body_groups_by_module_and_platform(self):
-        body = R.render_body("14182", self.rows)
-        self.assertIn("### server (windows) - 2", body)
-        self.assertIn("### server (linux) - 1", body)
+    def test_one_issue_per_platform(self):
+        windows = R.read_todo("14182", root=self.tmp.name, platform="windows")
+        linux = R.read_todo("14182", root=self.tmp.name, platform="linux")
+        self.assertEqual((len(windows), len(linux)), (2, 1))
+        body = R.render_body("14182", "windows", windows)
+        self.assertIn("**windows** run (server.dll", body)
+        self.assertIn("### server - 2", body)
         self.assertIn("`0x1808d2750` (0.58)", body)
-        self.assertIn("/confirm <Symbol>", body)
+        self.assertIn("/confirm <Symbol> 0x<address>", body)
+        self.assertNotEqual(R.title_for("14182", "linux"), R.title_for("14182", "windows"))
 
     def test_empty_list_says_so(self):
-        self.assertIn("Nothing left", R.render_body("14182", []))
+        self.assertIn("Nothing left", R.render_body("14182", "linux", []))
 
     def test_a_symbol_open_on_both_platforms_needs_the_platform(self):
         row, problem = R.target_row(self.rows, "CBaseFilter_InputTestActivator", None)

@@ -53,10 +53,11 @@ that it should exist. Recovery is attempted in this order, cheapest first:
    candidate and why it stopped; Ctrl-Alt-D pre-fills its list from that file, and an entry
    drops out as soon as its artifact exists. `CS2VIBE_AGENT=none` skips agents entirely:
    free work only, the rest goes to the list.
-   Review by people without IDA: `review_issue.py publish -gamever <VER>` mirrors that list
-   into one GitHub issue per gamever on **origin** (pinned explicitly - `gh`'s default in this
+   Review by people without IDA: `review_issue.py publish -gamever <VER> -platform <p>` mirrors
+   that list into one GitHub issue per gamever and platform on **origin** (each run publishes
+   its own) (pinned explicitly - `gh`'s default in this
    checkout is the upstream remote); `review_issue.py apply -gamever <VER> -commit` reads
-   `/confirm <Symbol> [platform] 0x<addr>` (or `vfunc <Class> <index>`, `gv 0x<insn>`) and
+   `/confirm <Symbol> 0x<addr>` (or `vfunc <Class> <index>`, `gv 0x<insn>`) and
    `/reject` comments from collaborators only, rebuilds each confirmed artifact from the warm
    IDB with `emit_artifact.py`, and writes it only when `validate_artifacts` and the
    one-address-one-name check pass. It replies on the issue and reacts to each processed

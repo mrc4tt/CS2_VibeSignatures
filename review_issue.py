@@ -3,17 +3,18 @@
 
 The run leaves what neither its hunter nor an agent could prove in
 manual_todo/<gamever>/<module>.<platform>.txt. This tool mirrors that list into one
-GitHub issue per gamever and acts on review comments:
+GitHub issue per gamever AND platform - linux and windows are analysed by separate runs,
+so each gets its own issue - and acts on review comments:
 
-    uv run review_issue.py publish -gamever 14182          # create / refresh the issue
-    uv run review_issue.py apply   -gamever 14182 -commit  # act on /confirm and /reject
+    uv run review_issue.py publish -gamever 14182 -platform linux   # create / refresh
+    uv run review_issue.py apply   -gamever 14182 -commit           # both platforms' issues
 
-Comment grammar (one command per line, any number per comment):
+Comment grammar (one command per line, any number per comment; the platform is the issue's):
 
-    /confirm <Symbol> [linux|windows] 0x<address>              a function head
-    /confirm <Symbol> [linux|windows] vfunc <Class> <index>     a vtable slot
-    /confirm <Symbol> [linux|windows] gv 0x<instruction>        the instruction loading a global
-    /reject  <Symbol> [linux|windows] <reason>
+    /confirm <Symbol> 0x<address>              a function head
+    /confirm <Symbol> vfunc <Class> <index>     a vtable slot
+    /confirm <Symbol> gv 0x<instruction>        the instruction loading a global
+    /reject  <Symbol> <reason>
 
 Only comments by the repository's owner, members and collaborators are read. A confirm
 is never written as-is: the artifact is built from the warm IDB with emit_artifact.py
@@ -51,8 +52,8 @@ def resolve_gamever(gamever):
     return max(versions, key=hunt_core.version_key) if versions else None
 
 
-def title_for(gamever):
-    return f"Symbol review: {gamever}"
+def title_for(gamever, platform):
+    return f"Symbol review: {gamever} ({platform})"
 
 
 def repo_slug():
@@ -97,26 +98,30 @@ def parse_detail(detail):
     return {"flags": flags, "category": category, "candidate": va, "score": score, "why": " | ".join(parts)}
 
 
-def read_todo(gamever, root=REPO):
+def read_todo(gamever, root=REPO, platform=None):
     rows = []
     folder = Path(root) / "manual_todo" / str(gamever)
     for path in sorted(folder.glob("*.txt")) if folder.is_dir() else ():
-        module, platform = path.stem.rsplit(".", 1)
+        module, file_platform = path.stem.rsplit(".", 1)
+        if platform and file_platform != platform:
+            continue
+        platform_of_file = file_platform
         for line in path.read_text(encoding="utf-8").splitlines():
             if not line.strip() or line.startswith("#"):
                 continue
             parts = line.split(None, 2)
             if len(parts) < 2:
                 continue
-            row = {"module": module, "platform": platform, "symbol": parts[0], "task": parts[1], "path": str(path)}
+            row = {"module": module, "platform": platform_of_file, "symbol": parts[0], "task": parts[1], "path": str(path)}
             row.update(parse_detail(parts[2] if len(parts) > 2 else ""))
             rows.append(row)
     return rows
 
 
-def render_body(gamever, rows):
+def render_body(gamever, platform, rows):
+    binaries = "server.dll, engine2.dll, client.dll, ..." if platform == "windows" else "libserver.so, libengine2.so, libclient.so, ..."
     lines = [
-        f"The {gamever} run could not prove these symbols on its own: the hunter's evidence was too weak "
+        f"The {gamever} **{platform}** run ({binaries}) could not prove these symbols on its own: the hunter's evidence was too weak "
         "and no agent got it right. If you can tell which function (or slot, or global) is the right "
         "one, say so in a comment - no IDA needed if you can read the candidate's code in any "
         "disassembler.",
@@ -124,10 +129,10 @@ def render_body(gamever, rows):
         "**How to answer** (one command per line; only the repository's collaborators are read):",
         "",
         "```",
-        "/confirm <Symbol> [linux|windows] 0x<address>            a function head",
-        "/confirm <Symbol> [linux|windows] vfunc <Class> <index>   a vtable slot",
-        "/confirm <Symbol> [linux|windows] gv 0x<instruction>      the instruction loading a global",
-        "/reject  <Symbol> [linux|windows] <reason>                e.g. inlined, or gone from this build",
+        "/confirm <Symbol> 0x<address>            a function head",
+        "/confirm <Symbol> vfunc <Class> <index>   a vtable slot",
+        "/confirm <Symbol> gv 0x<instruction>      the instruction loading a global",
+        "/reject  <Symbol> <reason>                e.g. inlined, or gone from this build",
         "```",
         "",
         "A confirm is not trusted blindly: the artifact is rebuilt from the binary and must pass the "
@@ -143,7 +148,7 @@ def render_body(gamever, rows):
     for row in rows:
         groups.setdefault((row["module"], row["platform"]), []).append(row)
     for (module, platform), items in sorted(groups.items()):
-        lines += [f"### {module} ({platform}) - {len(items)}", "",
+        lines += [f"### {module} - {len(items)}", "",
                   "| Symbol | Kind | Best candidate | Why the run stopped |", "|---|---|---|---|"]
         for row in items:
             candidate = f"`{row['candidate']}`" + (f" ({row['score']})" if row["score"] else "") if row["candidate"] else "-"
@@ -159,27 +164,30 @@ def render_body(gamever, rows):
 
 # ----------------------------------------------------------------------------- github
 
-def find_issue(gamever):
-    found = json.loads(gh("issue", "list", "--label", LABEL, "--state", "all", "--limit", "50",
+def find_issue(gamever, platform):
+    found = json.loads(gh("issue", "list", "--label", LABEL, "--state", "all", "--limit", "100",
                           "--json", "number,title,state"))
     for issue in found:
-        if issue["title"] == title_for(gamever):
+        if issue["title"] == title_for(gamever, platform):
             return issue
     return None
 
 
-def publish(gamever, rows=None):
-    rows = read_todo(gamever) if rows is None else rows
-    body = render_body(gamever, rows)
-    issue = find_issue(gamever)
+def publish(gamever, platform=None, rows=None):
+    """One issue per platform; without `platform`, both."""
+    if platform is None:
+        return [publish(gamever, one) for one in PLATFORMS]
+    rows = read_todo(gamever, platform=platform) if rows is None else rows
+    body = render_body(gamever, platform, rows)
+    issue = find_issue(gamever, platform)
     if issue is None:
         if not rows:
-            print(f"[review] nothing to review for {gamever}")
+            print(f"[review] nothing to review for {gamever} {platform}")
             return None
         gh("label", "create", LABEL, "--color", "D4C5F9", "--description",
            "Symbols the run could not prove on its own", "--force")
-        url = gh("issue", "create", "--title", title_for(gamever), "--label", LABEL, "--body-file", "-", stdin=body).strip()
-        print(f"[review] opened {url} ({len(rows)} symbols)")
+        url = gh("issue", "create", "--title", title_for(gamever, platform), "--label", LABEL, "--body-file", "-", stdin=body).strip()
+        print(f"[review] opened {url} ({platform}, {len(rows)} symbols)")
         return url
     number = str(issue["number"])
     gh("issue", "edit", number, "--body-file", "-", stdin=body)
@@ -187,7 +195,7 @@ def publish(gamever, rows=None):
         gh("issue", "reopen", number)
     if not rows and issue["state"] == "OPEN":
         gh("issue", "close", number, "--comment", "Every symbol now has an artifact - closing.")
-    print(f"[review] refreshed #{number} ({len(rows)} symbols)")
+    print(f"[review] refreshed #{number} ({platform}, {len(rows)} symbols)")
     return number
 
 
@@ -299,13 +307,42 @@ def reject(row, login, reason):
     path.write_text("\n".join(out) + "\n", encoding="utf-8")
 
 
-def apply(gamever, commit=False, dry_run=False):
-    issue = find_issue(gamever)
-    if issue is None:
-        print(f"[review] no review issue for {gamever}")
-        return 0
-    number = str(issue["number"])
+def apply(gamever, commit=False, dry_run=False, platform=None):
     me = my_login()
+    written = []
+    for one in (platform,) if platform else PLATFORMS:
+        written += _apply_issue(gamever, one, me, dry_run)
+    if written and commit and not dry_run:
+        paths = [str(p.relative_to(REPO)) for p in written]
+        # the server's tree carries a run's uncommitted output: only these paths are
+        # committed, and the branch is brought up to date first so the push is a fast-forward
+        subprocess.run(["git", "pull", "-q", "--ff-only", "origin", "main"], cwd=REPO, check=False)
+        subprocess.run(["git", "add", "--", *paths], cwd=REPO, check=True)
+        subprocess.run(["git", "commit", "-q", "-m",
+                        f"feat({gamever}): {len(paths)} symbol(s) confirmed in symbol review", "--", *paths],
+                       cwd=REPO, check=True)
+        subprocess.run(["git", "push", "-q", "origin", "HEAD"], cwd=REPO, check=True)
+        print(f"[review] committed and pushed {len(paths)} artifact(s)")
+    if not dry_run:
+        # the todo list drops entries whose artifact now exists; refresh the issues from it
+        import ida_analyze_bin
+
+        for path in (REPO / "manual_todo" / str(gamever)).glob("*.txt"):
+            module, file_platform = path.stem.rsplit(".", 1)
+            ida_analyze_bin.update_manual_todo(str(path), str(REPO / "bin_artifacts" / str(gamever) / module),
+                                               file_platform, {})
+        for one in (platform,) if platform else PLATFORMS:
+            if find_issue(gamever, one) is not None or read_todo(gamever, platform=one):
+                publish(gamever, one)
+    return 0
+
+
+def _apply_issue(gamever, platform, me, dry_run):
+    issue = find_issue(gamever, platform)
+    if issue is None:
+        print(f"[review] no {platform} review issue for {gamever}")
+        return []
+    number = str(issue["number"])
     written = []
     for comment in issue_comments(number):
         commands = parse_commands(comment["body"])
@@ -315,9 +352,13 @@ def apply(gamever, commit=False, dry_run=False):
             continue
         if reacted_by(comment["id"], me):
             continue
-        rows = read_todo(gamever)
+        rows = read_todo(gamever, platform=platform)
         replies, ok, refused = [], 0, 0
-        for verb, symbol, platform, tokens in commands:
+        for verb, symbol, named_platform, tokens in commands:
+            if named_platform and named_platform != platform:
+                replies.append(f"- `{symbol}`: this is the {platform} issue - post {named_platform} answers in its own issue")
+                refused += 1
+                continue
             row, problem = target_row(rows, symbol, platform)
             if problem:
                 replies.append(f"- `{symbol}`: {problem}")
@@ -349,26 +390,7 @@ def apply(gamever, commit=False, dry_run=False):
         gh("issue", "comment", number, "--body-file", "-",
            stdin=f"**review bot** - re @{comment['login']}:\n\n" + "\n".join(replies))
         react(comment["id"], "+1" if ok and not refused else "-1" if refused and not ok else "eyes")
-    if written and commit and not dry_run:
-        paths = [str(p.relative_to(REPO)) for p in written]
-        # the server's tree carries a run's uncommitted output: only these paths are
-        # committed, and the branch is brought up to date first so the push is a fast-forward
-        subprocess.run(["git", "pull", "-q", "--ff-only", "origin", "main"], cwd=REPO, check=False)
-        subprocess.run(["git", "add", "--", *paths], cwd=REPO, check=True)
-        subprocess.run(["git", "commit", "-q", "-m",
-                        f"feat({gamever}): {len(paths)} symbol(s) confirmed in review #{number}", "--", *paths],
-                       cwd=REPO, check=True)
-        subprocess.run(["git", "push", "-q", "origin", "HEAD"], cwd=REPO, check=True)
-        print(f"[review] committed and pushed {len(paths)} artifact(s)")
-    if not dry_run:
-        # the todo list drops entries whose artifact now exists; refresh the issue from it
-        import ida_analyze_bin
-
-        for path in (REPO / "manual_todo" / str(gamever)).glob("*.txt"):
-            module, platform = path.stem.rsplit(".", 1)
-            ida_analyze_bin.update_manual_todo(str(path), str(REPO / "bin_artifacts" / str(gamever) / module), platform, {})
-        publish(gamever)
-    return 0
+    return written
 
 
 def main():
@@ -377,6 +399,7 @@ def main():
     for name in ("publish", "apply"):
         p = sub.add_parser(name)
         p.add_argument("-gamever", required=True)
+        p.add_argument("-platform", choices=PLATFORMS, help="only this platform's issue (default: both)")
         if name == "apply":
             p.add_argument("-commit", action="store_true", help="commit and push the artifacts written")
             p.add_argument("-dry_run", action="store_true", help="read the commands, change nothing")
@@ -386,9 +409,9 @@ def main():
         print("[review] no manual list yet - nothing to do")
         return 0
     if args.command == "publish":
-        publish(args.gamever)
+        publish(args.gamever, args.platform)
         return 0
-    return apply(args.gamever, commit=args.commit, dry_run=args.dry_run)
+    return apply(args.gamever, commit=args.commit, dry_run=args.dry_run, platform=args.platform)
 
 
 if __name__ == "__main__":
