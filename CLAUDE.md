@@ -734,7 +734,7 @@ Two guards now catch the class before the baseline does:
 | Ctrl-Alt-H | auto-hunt v2 | 5 strategies: reloc, vtable, seed-sig, sibling, string-anchor |
 | Ctrl-Alt-J | hunt named symbols | Asks for names (comma separated); hunts only those, even if an artifact exists |
 | Ctrl-Alt-E | emit artifact here | Artifact for the address under the cursor (also `emit_artifact.py` CLI) |
-| Ctrl-Alt-D | sig maker batch | Cursor-driven (renamed from S — Fusion conflict) |
+| Ctrl-Alt-D | sig maker batch | List of symbols: hunted automatically first (Ctrl-Alt-H's engine and evidence rule); only the rest is placed by hand, with the cursor already moved to the hunter's best candidate |
 | Ctrl-Alt-V | vtable finder | Interactive: class + slot + symbol |
 | Ctrl-Alt-O | struct member emitter | Cursor on member-access instruction |
 

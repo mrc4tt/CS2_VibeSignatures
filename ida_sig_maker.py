@@ -867,6 +867,33 @@ def main(queue=None, output_dir=None, module=None, platform=None, report_path=No
     return interactive_main()
 
 
+def _auto_hunt_first(symbols):
+    """(solved symbols, {symbol: best candidate ea}) from the baseline-facts hunter.
+
+    Solved artifacts are written to auto_hunt_out/<gamever>/<module>/ like Ctrl-Alt-H's, for
+    review before promotion; a symbol without baseline facts simply falls through to the
+    cursor workflow.
+    """
+    try:
+        import ida_auto_hunt
+        report = ida_auto_hunt.run(symbols=symbols)
+    except Exception as error:
+        print(f"[sig_maker] automatic pass skipped: {error}")
+        return [], {}
+    if not report:
+        return [], {}
+    solved = [row["symbol"] for row in report.get("solved", [])]
+    hints = {}
+    for row in report.get("unresolved", []) + report.get("changed", []):
+        for candidate in row.get("candidates") or []:
+            try:
+                hints[row["symbol"]] = int(str(candidate.get("va")), 16)
+                break
+            except (TypeError, ValueError):
+                continue
+    return solved, hints
+
+
 def interactive_main():
     text = ida_kernwin.ask_text(16384, DEFAULT_QUEUE,
                                 "Symbols to make (one per line). Edit the list freely:")
@@ -876,12 +903,29 @@ def interactive_main():
     if not symbols:
         return
 
+    # 1. automatic first: the baseline-facts hunter (Ctrl-Alt-H's engine and evidence rule)
+    #    resolves what it can prove, so only the rest needs a human
+    auto_done, hints = _auto_hunt_first(symbols)
+    remaining = [s for s in symbols if s not in auto_done]
+    if auto_done:
+        print(f"[sig_maker] found automatically ({len(auto_done)}): {', '.join(auto_done)}")
+    if not remaining:
+        print("[sig_maker] every symbol was found automatically - nothing to place by hand")
+        return
+
     done, skipped = [], []
     emitted = {}  # func_ea -> symbol (guard: samme funktion under to navne = naesten altid en fejl)
-    for i, symbol in enumerate(symbols, 1):
+    for i, symbol in enumerate(remaining, 1):
+        hint = hints.get(symbol)
+        where = ""
+        if hint is not None:
+            # 2. the cursor goes to the hunter's best guess, so the question is "is this it?"
+            ida_kernwin.jumpto(hint)
+            where = (f"The cursor was moved to the hunter's best candidate {hex(hint)} "
+                     f"(not proven - check it).\n\n")
         answer = ida_kernwin.ask_yn(
             1,
-            f"[{i}/{len(symbols)}] Navigate so the cursor is INSIDE the target function of:\n\n"
+            f"[{i}/{len(remaining)}] {where}Is the cursor INSIDE the target function of:\n\n"
             f"    {symbol}\n\n"
             f"YES = cursor is in place, make the sig\n"
             f"NO = skip this symbol\n"
