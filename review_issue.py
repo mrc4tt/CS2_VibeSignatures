@@ -304,6 +304,18 @@ def previous_issue(gamever, platform):
     return max(closed, key=lambda i: i["number"]) if closed else None
 
 
+def ensure_label():
+    """Create the label only when it is missing: creating one needs more rights than using it."""
+    try:
+        gh_api("GET", f"repos/{{repo}}/labels/{LABEL}")
+        return
+    except RuntimeError as error:
+        if "404" not in str(error):
+            raise
+    gh_api("POST", "repos/{repo}/labels",
+           {"name": LABEL, "color": "D4C5F9", "description": "Symbols the run could not prove on its own"})
+
+
 def publish(gamever, platform=None, rows=None):
     """One issue per platform; without `platform`, both."""
     if platform is None:
@@ -315,12 +327,7 @@ def publish(gamever, platform=None, rows=None):
         if not rows:
             print(f"[review] nothing to review for {gamever} {platform}")
             return None
-        try:
-            gh_api("POST", "repos/{repo}/labels",
-                   {"name": LABEL, "color": "D4C5F9", "description": "Symbols the run could not prove on its own"})
-        except RuntimeError as error:
-            if "already_exists" not in str(error) and "422" not in str(error):
-                raise
+        ensure_label()
         earlier = remembered_closed(gamever, platform) or previous_issue(gamever, platform)
         if earlier:
             body = f"Previous round: #{earlier['number']} (closed - its comments are not read any more).\n\n" + body

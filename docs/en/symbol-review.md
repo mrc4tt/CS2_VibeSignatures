@@ -107,8 +107,10 @@ uv run review_issue.py apply   -gamever 14182 -dry_run   # read the commands, ch
 ```
 
 The bot acts as its own GitHub account (`miksencs2-bot`, a collaborator with write access)
-when `~/.config/cs2vibe-review.env` holds its fine-grained token, either bare or as
-`GH_TOKEN=...` (mode 600; `CS2VIBE_REVIEW_ENV` points elsewhere). The token is handed to
+when `~/.config/cs2vibe-review.env` holds its token, either bare or as `GH_TOKEN=...`.
+It has to be a **classic** token with the `public_repo` scope: a fine-grained token only
+reaches repositories its own account (or an organisation) owns, so for a collaborator on
+someone else's repository it can read but gets 403 on every write (mode 600; `CS2VIBE_REVIEW_ENV` points elsewhere). The token is handed to
 `gh` only. Without the file, `gh`'s own login is used.
 
 The issue always goes to the repository `origin` points at. In this checkout, `gh`'s own
