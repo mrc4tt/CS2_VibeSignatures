@@ -1,5 +1,5 @@
 func_name: EntityInstanceAddChangeAccessorPath
-func_va: '0xa00020'
-func_rva: '0xa00020'
-func_size: '0xc'
-func_sig: "41 BB 65 0B 00 ??"
+func_va: '0x2293730'
+func_rva: '0x2293730'
+func_size: '0x22'
+func_sig: "48 8B 07 48 8D 15 ?? ?? ?? ?? 48 8B 80 ?? ?? ?? ?? 48 39 D0 75 ?? B8 ?? ?? ?? ?? C3 0F 1F 40 ?? FF E0"
