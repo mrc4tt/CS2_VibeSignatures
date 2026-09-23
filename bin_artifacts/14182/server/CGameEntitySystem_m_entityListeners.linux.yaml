@@ -1,0 +1,5 @@
+struct_name: CGameEntitySystem
+member_name: m_entityListeners
+offset: '0x2150'
+size: 4
+offset_sig: "49 63 86 50 21 00 00"
