@@ -1,4 +1,4 @@
 struct_name: CEntitySystem
 member_name: m_eNetworkSerializationMode
 offset: '0xc44'
-offset_sig: "89 BB 44 0C 00 00"
+offset_sig: 89 BB 44 0C 00 00
