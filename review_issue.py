@@ -118,6 +118,13 @@ def read_todo(gamever, root=REPO, platform=None):
     return rows
 
 
+def guide_url():
+    try:
+        return f"https://github.com/{repo_slug()}/blob/main/docs/en/symbol-review.md"
+    except Exception:
+        return "docs/en/symbol-review.md"
+
+
 def render_body(gamever, platform, rows):
     binaries = "server.dll, engine2.dll, client.dll, ..." if platform == "windows" else "libserver.so, libengine2.so, libclient.so, ..."
     lines = [
@@ -136,9 +143,31 @@ def render_body(gamever, platform, rows):
         "```",
         "",
         "A confirm is not trusted blindly: the artifact is rebuilt from the binary and must pass the "
-        "same checks as everything else (unique signature, function boundary, not the entry point, "
-        "vtable slot via RTTI, one address one name). You get a reply either way, usually within 15 "
-        "minutes. Full guide: [docs/en/symbol-review.md](../blob/main/docs/en/symbol-review.md).",
+        "same checks as everything else. You get a reply either way, usually within 15 minutes.",
+        "",
+        "<details><summary><b>How it works</b></summary>",
+        "",
+        "1. **The run does everything it can prove first.** Each symbol is relocated from the previous "
+        "game version; if that fails, the built-in hunter tries strings, call graphs, vtable slots, "
+        "sibling functions and layout fingerprints, and an AI agent gets whatever is left.",
+        f"2. **What is still open is listed below**, with the run's best candidate and why it stopped. "
+        f"The {platform} run refreshes this issue; when the list is empty, the issue closes itself.",
+        "3. **You answer in a comment**, with the commands above. The platform is this issue's.",
+        "4. **The server acts on it every 15 minutes.** Only comments from the owner, members and "
+        "collaborators are read. The artifact is rebuilt from the game binary and must pass: the "
+        "signature matches exactly one place; that place is a real function start; it is not the "
+        "binary's entry point; a virtual function really sits in that vtable slot (via RTTI); no other "
+        "symbol already owns the address.",
+        "5. **You get a reply** with the artifact written or the reason it was refused, and whether your "
+        "address matches the run's best candidate. Your comment gets a reaction: :+1: written, "
+        ":-1: refused, :eyes: mixed or a `/reject` noted. A comment with a reaction is never processed twice.",
+        "6. **From there it flows on as usual:** committed, packed, generated into the plugin gamedata "
+        "files and deployed. A `/reject` keeps the symbol listed, marked with who rejected it and why.",
+        "",
+        "Full guide, including how to find the right address without IDA: "
+        f"[docs/en/symbol-review.md]({guide_url()})",
+        "",
+        "</details>",
         "",
     ]
     if not rows:
