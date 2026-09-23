@@ -917,10 +917,35 @@ def manual_todo_symbols():
     return symbols, path
 
 
+def missing_report_symbols():
+    """Symbols missing_report.py lists for the open module (missing_<platform>_<gamever>.txt,
+    lines '<module>/<task> -> <Symbol>.<platform>.yaml'), minus the ones that exist by now."""
+    target = detect_target()
+    if not target:
+        return [], None
+    path = os.path.join(target["repo_root"], f"missing_{target['platform']}_{target['gamever']}.txt")
+    if not os.path.isfile(path):
+        return [], path
+    suffix = f".{target['platform']}.yaml"
+    symbols = []
+    with open(path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            head, _, tail = line.strip().partition(" -> ")
+            if not tail.endswith(suffix) or head.split("/", 1)[0] != target["module"]:
+                continue
+            name = tail[: -len(suffix)]
+            if name not in symbols and not os.path.isfile(os.path.join(target["artifact_dir"], tail)):
+                symbols.append(name)
+    return symbols, path
+
+
 def interactive_main():
     todo, todo_path = manual_todo_symbols()
+    if not todo:
+        # no hard cases left by a run: everything the missing report still lists for this module
+        todo, todo_path = missing_report_symbols()
     if todo:
-        print(f"[sig_maker] {len(todo)} symbol(s) left by the pipeline in {todo_path}")
+        print(f"[sig_maker] {len(todo)} symbol(s) pre-filled from {todo_path}")
     text = ida_kernwin.ask_text(16384, "\n".join(todo) if todo else DEFAULT_QUEUE,
                                 "Symbols to make (one per line). Edit the list freely:")
     if not text:
