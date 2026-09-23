@@ -356,21 +356,12 @@ class SignatureLadderTests(unittest.TestCase):
                 self.m.signature_ex(0x1000, MagicMock())
 
 
-def load_auto_hunt():
-    names = ("ida_auto ida_bytes ida_funcs ida_ida ida_idaapi ida_kernwin ida_name ida_nalt ida_segment ida_ua idautils idc").split()
-    stubs = {name: MagicMock() for name in names}
-    stubs["ida_kernwin"].action_handler_t = object
-    stubs["ida_idaapi"].BADADDR = -1
-    with patch.dict(sys.modules, stubs):
-        spec = importlib.util.spec_from_file_location("auto_hunt_under_test", ROOT / "ida_auto_hunt.py")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-    return module
+class HuntCoreTests(unittest.TestCase):
+    """hunt_core is tool-neutral: no IDA stubs needed."""
 
-
-class AutoHuntScoringTests(unittest.TestCase):
     def setUp(self):
-        self.h = load_auto_hunt()
+        import hunt_core
+        self.h = hunt_core
 
     def test_token_match_treats_wildcards_as_agreement(self):
         self.assertEqual(self.h.token_match(["55", "??", "E5"], ["55", "48", "E5"]), 1.0)
@@ -379,11 +370,31 @@ class AutoHuntScoringTests(unittest.TestCase):
 
     def test_similarity_rewards_identical_functions_and_punishes_size_mismatch(self):
         base = {"head": ["55", "48", "89", "E5"], "mnem": ["push", "mov", "call", "ret"], "size": 100, "strings": ["Kicking user %s"]}
-        same = dict(base)
-        self.assertGreater(self.h.similarity(base, same), 0.95)
+        self.assertGreater(self.h.similarity(base, dict(base)), 0.95)
         other = {"head": ["41", "57", "41", "56"], "mnem": ["push", "push", "sub", "lea"], "size": 3000, "strings": []}
         self.assertLess(self.h.similarity(base, other), 0.4)
 
     def test_version_key_orders_suffixed_gamevers(self):
         self.assertLess(self.h.version_key("14181"), self.h.version_key("14181b"))
         self.assertLess(self.h.version_key("14181b"), self.h.version_key("14182"))
+
+    def test_scan_matches_wildcards_and_overlaps(self):
+        scan = self.h.Scan([(0x1000, bytes.fromhex("5548 89e5 5548 89e5 90".replace(" ", "")))])
+        self.assertEqual(scan.matches("55 48 ?? E5"), [0x1000, 0x1004])
+        self.assertEqual(scan.matches("55 48 ?? E5", limit=1), [0x1000])
+        with self.assertRaises(ValueError):
+            scan.matches("?? ??")
+
+    def test_category_and_rtti_class_helpers(self):
+        self.assertEqual(self.h.category_of({"patch_name": "P"}), "patch")
+        self.assertEqual(self.h.category_of({"gv_name": "G"}), "gv")
+        self.assertEqual(self.h.category_of({"struct_name": "S"}), "structmember")
+        self.assertEqual(self.h.category_of({"vtable_class": "C"}), "vtable")
+        self.assertEqual(self.h.category_of({"vfunc_index": 3, "func_va": "0x1"}), "vfunc")
+        self.assertEqual(self.h.category_of({"func_va": "0x1"}), "func")
+        self.assertEqual(self.h.rtti_class("CBaseEntity_vtable"), "CBaseEntity")
+        self.assertEqual(self.h.rtti_class("CBaseEntity"), "CBaseEntity")
+
+    def test_render_yaml_matches_artifact_conventions(self):
+        text = self.h.render_yaml({"func_name": "X", "func_va": "0x10", "func_sig": "55 ??", "vfunc_index": 3, "flag": True})
+        self.assertEqual(text, "func_name: X\nfunc_va: '0x10'\nfunc_sig: \"55 ??\"\nvfunc_index: 3\nflag: true\n")

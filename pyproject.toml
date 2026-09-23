@@ -26,6 +26,11 @@ dependencies = [
     "vdf",
 ]
 
+[project.optional-dependencies]
+ghidra = [
+    "pyghidra>=3.0",
+]
+
 [dependency-groups]
 dev = [
     "ruff>=0.15.20",
