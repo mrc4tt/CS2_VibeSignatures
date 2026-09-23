@@ -1,0 +1,9 @@
+func_name: CEngineServiceMgr_GetEventDispatcher
+func_va: '0x180210fb0'
+func_rva: '0x210fb0'
+func_size: '0x8'
+func_sig: "48 8D 81 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 48 89 5C 24 ?? 55"
+func_sig_allow_across_function_boundary: true
+vtable_name: CEngineServiceMgr
+vfunc_offset: '0xe0'
+vfunc_index: 28
