@@ -142,7 +142,7 @@ def parse_detail(detail):
     """'agent failed | func | best 0x1808d1cf0 (0.58) | why' -> parts."""
     parts = [p.strip() for p in detail.split(" | ")]
     flags = []
-    while parts and parts[0] in ("agent failed",):
+    while parts and parts[0] in ("agent failed", "agent trying"):
         flags.append(parts.pop(0))
     category = parts.pop(0) if parts else "?"
     va, score = None, None

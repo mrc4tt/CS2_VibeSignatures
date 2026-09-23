@@ -4869,6 +4869,14 @@ def process_binary(
                         reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
                     )
                     continue
+                if todo_entries:
+                    # on the list the moment the hunter gives up, not only after the agent has
+                    # failed too: a person can start in IDA while the agent is still trying,
+                    # and the watchdog stops the agent as soon as their YAML arrives
+                    update_manual_todo(
+                        todo_path, artifact_dir, platform,
+                        {symbol: (task, f"agent trying | {detail}") for symbol, (task, detail) in todo_entries.items()},
+                    )
                 print(f"    Starting agent skill: {skill_name}")
                 _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.AGENT_FALLBACK)
                 agent_succeeded = run_skill(
@@ -4885,10 +4893,12 @@ def process_binary(
                     mcp_url=mcp_url,
                     output_validator=validate_agent_outputs,
                 )
-                if not agent_succeeded and todo_entries:
-                    # what neither the hunter nor the agent could do is left for a person
+                if todo_entries:
+                    # failed: what neither the hunter nor the agent could do is left for a
+                    # person; succeeded: its artifacts exist, so the entries drop out
                     update_manual_todo(
                         todo_path, artifact_dir, platform,
+                        {} if agent_succeeded else
                         {symbol: (task, f"agent failed | {detail}") for symbol, (task, detail) in todo_entries.items()},
                     )
             changed_existing_outputs = _changed_existing_outputs(existing_output_digests) if force_all else []
