@@ -156,3 +156,77 @@ class LatestTests(unittest.TestCase):
     def test_latest_without_lists_is_none(self):
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(R, "REPO", Path(tmp)):
             self.assertIsNone(R.resolve_gamever("latest"))
+
+
+class ReactionTests(unittest.TestCase):
+    def test_reactions(self):
+        self.assertEqual(R.reaction_for(1, 0, 0), "+1")
+        self.assertEqual(R.reaction_for(0, 1, 0), "-1")
+        self.assertEqual(R.reaction_for(0, 1, 1), "eyes")   # live test 3: a reject plus a refusal
+        self.assertEqual(R.reaction_for(1, 1, 0), "eyes")
+        self.assertEqual(R.reaction_for(0, 0, 1), "eyes")
+
+
+class CommitDespiteFailureTests(unittest.TestCase):
+    def test_written_artifacts_are_committed_when_a_later_step_fails(self):
+        def boom(gamever, platform, me, dry_run, written):
+            written.append(R.REPO / "bin_artifacts" / "x.yaml")
+            raise RuntimeError("HTTP 401")
+
+        with mock.patch.object(R, "my_login", return_value="me"), \
+                mock.patch.object(R, "_apply_issue", side_effect=boom), \
+                mock.patch.object(R, "find_issue", return_value=None), \
+                mock.patch.object(R, "read_todo", return_value=[]), \
+                mock.patch.object(R.subprocess, "run") as run, \
+                mock.patch.dict("sys.modules", {"ida_analyze_bin": mock.Mock()}):
+            with self.assertRaises(RuntimeError):
+                R.apply("14182", commit=True, platform="windows")
+        commands = [c.args[0][:2] for c in run.call_args_list]
+        self.assertIn(["git", "commit"], commands)
+        self.assertIn(["git", "push"], commands)
+
+
+class EnvTests(unittest.TestCase):
+    def test_gh_ignores_a_token_loaded_later_from_dotenv(self):
+        seen = {}
+
+        def fake_run(command, **kwargs):
+            seen["env"] = kwargs.get("env")
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+        with mock.patch.dict(os.environ, {"CS2VIBE_REVIEW_REPO": "me/fork", "GITHUB_TOKEN": "stale"}), \
+                mock.patch.object(R, "_GH_ENV", {"PATH": "/usr/bin"}), \
+                mock.patch.object(R.subprocess, "run", side_effect=fake_run):
+            R.gh("api", "user")
+        self.assertNotIn("GITHUB_TOKEN", seen["env"])
+
+
+class BotLogTests(unittest.TestCase):
+    """One bot comment per issue, edited in place, newest result first."""
+
+    def test_log_round_trip_and_newest_first(self):
+        posted = []
+
+        def fake_api(method, path, payload=None):
+            posted.append((method, path, payload["body"]))
+
+        with mock.patch.object(R, "gh_api", side_effect=fake_api):
+            R.write_bot_log("2", None, ["re @a:\n\n- first\n"])
+            first = posted[-1][2]
+            comment = {"id": 7, "body": first}
+            log_id, sections = R.bot_log("2", [{"id": 1, "body": "/confirm X 0x1"}, comment])
+            self.assertEqual((log_id, len(sections)), (7, 1))
+            R.write_bot_log("2", log_id, ["re @b:\n\n- second\n"] + sections)
+        self.assertEqual(posted[0][0], "POST")
+        self.assertEqual(posted[1][:2], ("PATCH", "repos/{repo}/issues/comments/7"))
+        body = posted[1][2]
+        self.assertTrue(body.startswith(R.BOT_MARK))
+        self.assertLess(body.index("- second"), body.index("- first"))
+
+    def test_oldest_results_are_dropped_when_too_long(self):
+        posted = []
+        with mock.patch.object(R, "gh_api", side_effect=lambda m, p, payload=None: posted.append(payload["body"])), \
+                mock.patch.object(R, "MAX_BODY", 200):
+            R.write_bot_log("2", 7, ["new " * 10, "old " * 40])
+        self.assertIn("new", posted[0])
+        self.assertNotIn("old", posted[0])

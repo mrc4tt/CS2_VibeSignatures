@@ -48,8 +48,9 @@ access can settle an entry with a single comment.
    - for a virtual function, the class's vtable (found via RTTI) really holds it in that slot;
    - no other symbol already owns that address (one address, one name).
 
-5. **You get a reply.** The bot answers in the issue with the artifact it wrote, or with
-   the reason it refused. It also tells you whether your address matches the run's own
+5. **You get a reply.** The bot keeps **one** comment per issue and edits it, newest result
+   first, with a link back to the comment each result answers. It shows the artifact it
+   wrote, or the reason it refused. It also tells you whether your address matches the run's own
    best candidate. Your comment gets a reaction:
 
    | Reaction | Meaning |

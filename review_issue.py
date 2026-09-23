@@ -31,14 +31,23 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent
+# gh runs with the environment this process started with. ida_analyze_bin (imported for
+# update_manual_todo) calls load_dotenv(), and .env carries a GITHUB_TOKEN that gh then
+# prefers over its own login - an invalid one on both machines, which surfaced as
+# "HTTP 401: Bad credentials" on every call after that import.
+_GH_ENV = dict(os.environ)
 LABEL = "symbol-review"
 TRUSTED = {"OWNER", "MEMBER", "COLLABORATOR"}
 PLATFORMS = ("linux", "windows")
 COMMAND_RE = re.compile(r"^\s*/(confirm|reject)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(.*?)\s*$", re.M)
 MAX_BODY = 60000
+# the bot keeps ONE comment per issue and edits it, newest result first
+BOT_MARK = "<!-- review-bot -->"
+BOT_HEADER = f"{BOT_MARK}\n**review bot** - results, newest first (reactions on your comment: :+1: written, :-1: refused, :eyes: mixed or noted)"
 
 
 def resolve_gamever(gamever):
@@ -53,7 +62,8 @@ def resolve_gamever(gamever):
 
 
 def title_for(gamever, platform):
-    return f"Symbol review: {gamever} ({platform})"
+    # CS2VIBE_REVIEW_TITLE_PREFIX="[TEST] " keeps a live test out of the real issues
+    return f"{os.environ.get('CS2VIBE_REVIEW_TITLE_PREFIX', '')}Symbol review: {gamever} ({platform})"
 
 
 def repo_slug():
@@ -75,10 +85,28 @@ def gh(*args, stdin=None):
     args = [a.replace("{owner}/{repo}", slug) for a in args]
     if args and args[0] in ("issue", "label"):
         args = [args[0], args[1], "-R", slug, *args[2:]]
-    done = subprocess.run(["gh", *args], cwd=REPO, input=stdin, capture_output=True, text=True)
-    if done.returncode != 0:
-        raise RuntimeError(f"gh {' '.join(args[:3])}: {done.stderr.strip()[-400:]}")
-    return done.stdout
+    for attempt in range(3):
+        done = subprocess.run(["gh", *args], cwd=REPO, input=stdin, capture_output=True, text=True, env=_GH_ENV)
+        if done.returncode == 0:
+            return done.stdout
+        # GitHub answers a sound token with an occasional 401/5xx; measured once in a live test
+        if attempt < 2 and re.search(r"HTTP (401|5\d\d)|timeout|connection", done.stderr, re.I):
+            time.sleep(5 * (attempt + 1))
+            continue
+        break
+    raise RuntimeError(f"gh {' '.join(args[:3])}: {done.stderr.strip()[-400:]}")
+
+
+def gh_api(method, path, payload=None):
+    """REST only: in a live test gh's GraphQL commands (issue list/create) answered 401 several
+    times in a row while REST calls with the same token kept working."""
+    args = ["api", "-X", method, path.replace("{repo}", repo_slug())]
+    stdin = None
+    if payload is not None:
+        args += ["--input", "-"]
+        stdin = json.dumps(payload)
+    out = gh(*args, stdin=stdin)
+    return json.loads(out) if out.strip() else None
 
 
 # ----------------------------------------------------------------------------- the list
@@ -158,7 +186,8 @@ def render_body(gamever, platform, rows):
         "signature matches exactly one place; that place is a real function start; it is not the "
         "binary's entry point; a virtual function really sits in that vtable slot (via RTTI); no other "
         "symbol already owns the address.",
-        "5. **You get a reply** with the artifact written or the reason it was refused, and whether your "
+        "5. **You get a reply** in the bot's one comment on this issue (newest first), with the artifact "
+        "written or the reason it was refused, and whether your "
         "address matches the run's best candidate. Your comment gets a reaction: :+1: written, "
         ":-1: refused, :eyes: mixed or a `/reject` noted. A comment with a reaction is never processed twice.",
         "6. **From there it flows on as usual:** committed, packed, generated into the plugin gamedata "
@@ -194,11 +223,10 @@ def render_body(gamever, platform, rows):
 # ----------------------------------------------------------------------------- github
 
 def find_issue(gamever, platform):
-    found = json.loads(gh("issue", "list", "--label", LABEL, "--state", "all", "--limit", "100",
-                          "--json", "number,title,state"))
+    found = gh_api("GET", f"repos/{{repo}}/issues?labels={LABEL}&state=all&per_page=100") or []
     for issue in found:
-        if issue["title"] == title_for(gamever, platform):
-            return issue
+        if issue["title"] == title_for(gamever, platform) and "pull_request" not in issue:
+            return {"number": issue["number"], "title": issue["title"], "state": issue["state"].upper()}
     return None
 
 
@@ -213,25 +241,55 @@ def publish(gamever, platform=None, rows=None):
         if not rows:
             print(f"[review] nothing to review for {gamever} {platform}")
             return None
-        gh("label", "create", LABEL, "--color", "D4C5F9", "--description",
-           "Symbols the run could not prove on its own", "--force")
-        url = gh("issue", "create", "--title", title_for(gamever, platform), "--label", LABEL, "--body-file", "-", stdin=body).strip()
-        print(f"[review] opened {url} ({platform}, {len(rows)} symbols)")
-        return url
+        try:
+            gh_api("POST", "repos/{repo}/labels",
+                   {"name": LABEL, "color": "D4C5F9", "description": "Symbols the run could not prove on its own"})
+        except RuntimeError as error:
+            if "already_exists" not in str(error) and "422" not in str(error):
+                raise
+        created = gh_api("POST", "repos/{repo}/issues",
+                         {"title": title_for(gamever, platform), "body": body, "labels": [LABEL]})
+        print(f"[review] opened {created['html_url']} ({platform}, {len(rows)} symbols)")
+        return created["html_url"]
     number = str(issue["number"])
-    gh("issue", "edit", number, "--body-file", "-", stdin=body)
+    update = {"body": body}
     if rows and issue["state"] == "CLOSED":
-        gh("issue", "reopen", number)
+        update["state"] = "open"
     if not rows and issue["state"] == "OPEN":
-        gh("issue", "close", number, "--comment", "Every symbol now has an artifact - closing.")
+        log_id, sections = bot_log(number)
+        write_bot_log(number, log_id, ["Every symbol now has an artifact - closing.\n"] + sections)
+        update["state"] = "closed"
+    gh_api("PATCH", f"repos/{{repo}}/issues/{number}", update)
     print(f"[review] refreshed #{number} ({platform}, {len(rows)} symbols)")
     return number
 
 
 def issue_comments(number):
     out = gh("api", f"repos/{{owner}}/{{repo}}/issues/{number}/comments", "--paginate",
-             "--jq", ".[] | {id, body, author_association, login: .user.login}")
+             "--jq", ".[] | {id, body, author_association, login: .user.login, url: .html_url}")
     return [json.loads(line) for line in out.splitlines() if line.strip()]
+
+
+def bot_log(number, comments=None):
+    """(comment id, [sections]) of the bot's one comment on the issue, or (None, [])."""
+    for comment in comments if comments is not None else issue_comments(number):
+        if BOT_MARK in (comment.get("body") or ""):
+            body = comment["body"].split("\n", 2)
+            rest = body[2] if len(body) > 2 else ""
+            sections = [part for part in rest.split("\n---\n") if part.strip()]
+            return comment["id"], sections
+    return None, []
+
+
+def write_bot_log(number, comment_id, sections):
+    body = BOT_HEADER + "\n" + "\n---\n".join(sections)
+    while len(body) > MAX_BODY and len(sections) > 1:
+        sections = sections[:-1]  # the oldest results go first
+        body = BOT_HEADER + "\n" + "\n---\n".join(sections)
+    if comment_id is None:
+        gh_api("POST", f"repos/{{repo}}/issues/{number}/comments", {"body": body})
+    else:
+        gh_api("PATCH", f"repos/{{repo}}/issues/comments/{comment_id}", {"body": body})
 
 
 def my_login():
@@ -324,6 +382,15 @@ def build_artifact(gamever, row, args, runner=subprocess.run):
         return dest, f"written and validated.{note}\n```yaml\n{text.strip()}\n```"
 
 
+def reaction_for(ok, refused, noted):
+    """+1 everything written, -1 everything refused, eyes for a mix or a noted /reject."""
+    if ok and not refused and not noted:
+        return "+1"
+    if refused and not ok and not noted:
+        return "-1"
+    return "eyes"
+
+
 def reject(row, login, reason):
     """Keep the entry, but record who rejected which candidate and why."""
     path = Path(row["path"])
@@ -339,8 +406,16 @@ def reject(row, login, reason):
 def apply(gamever, commit=False, dry_run=False, platform=None):
     me = my_login()
     written = []
+    failure = None
     for one in (platform,) if platform else PLATFORMS:
-        written += _apply_issue(gamever, one, me, dry_run)
+        try:
+            _apply_issue(gamever, one, me, dry_run, written)
+        except Exception as error:
+            # a comment already has its reaction once its artifact is written, so the
+            # artifacts must still be committed or the next run would never see them again
+            failure = error
+            print(f"[review] {one}: stopped early ({error}) - committing what was written")
+            break
     if written and commit and not dry_run:
         paths = [str(p.relative_to(REPO)) for p in written]
         # the server's tree carries a run's uncommitted output: only these paths are
@@ -361,28 +436,35 @@ def apply(gamever, commit=False, dry_run=False, platform=None):
             ida_analyze_bin.update_manual_todo(str(path), str(REPO / "bin_artifacts" / str(gamever) / module),
                                                file_platform, {})
         for one in (platform,) if platform else PLATFORMS:
-            if find_issue(gamever, one) is not None or read_todo(gamever, platform=one):
-                publish(gamever, one)
+            try:
+                if find_issue(gamever, one) is not None or read_todo(gamever, platform=one):
+                    publish(gamever, one)
+            except Exception as error:
+                print(f"[review] {one}: issue not refreshed ({error}) - the next run refreshes it")
+    if failure is not None:
+        raise failure
     return 0
 
 
-def _apply_issue(gamever, platform, me, dry_run):
+def _apply_issue(gamever, platform, me, dry_run, written):
     issue = find_issue(gamever, platform)
     if issue is None:
         print(f"[review] no {platform} review issue for {gamever}")
-        return []
+        return written
     number = str(issue["number"])
-    written = []
-    for comment in issue_comments(number):
+    comments = issue_comments(number)
+    log_id, log_sections = bot_log(number, comments)
+    new_sections = []
+    for comment in comments:
         commands = parse_commands(comment["body"])
-        if not commands or comment["login"] == me and comment["body"].startswith("**review bot**"):
+        if not commands or BOT_MARK in comment["body"]:
             continue
         if comment["author_association"] not in TRUSTED:
             continue
         if reacted_by(comment["id"], me):
             continue
         rows = read_todo(gamever, platform=platform)
-        replies, ok, refused = [], 0, 0
+        replies, ok, refused, noted = [], 0, 0, 0
         for verb, symbol, named_platform, tokens in commands:
             if named_platform and named_platform != platform:
                 replies.append(f"- `{symbol}`: this is the {platform} issue - post {named_platform} answers in its own issue")
@@ -397,6 +479,7 @@ def _apply_issue(gamever, platform, me, dry_run):
                 if not dry_run:
                     reject(row, comment["login"], " ".join(tokens))
                 replies.append(f"- `{symbol}` ({row['platform']}): noted as rejected - it stays on the list for another look")
+                noted += 1
                 continue
             args, problem = rule_args(tokens)
             if problem:
@@ -416,9 +499,13 @@ def _apply_issue(gamever, platform, me, dry_run):
         print("\n".join(replies))
         if dry_run:
             continue
-        gh("issue", "comment", number, "--body-file", "-",
-           stdin=f"**review bot** - re @{comment['login']}:\n\n" + "\n".join(replies))
-        react(comment["id"], "+1" if ok and not refused else "-1" if refused and not ok else "eyes")
+        new_sections.insert(0, f"re @{comment['login']} ([comment]({comment.get('url', '')})):\n\n" + "\n".join(replies) + "\n")
+        # the log first, then the reaction: a reacted comment is never read again, so its
+        # result must already be recorded
+        write_bot_log(number, log_id, new_sections + log_sections)
+        if log_id is None:
+            log_id, _ = bot_log(number)
+        react(comment["id"], reaction_for(ok, refused, noted))
     return written
 
 
