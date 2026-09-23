@@ -640,7 +640,8 @@ def emit_artifact(backend, scan, symbol, rule, out_dir, platform, log=None):
             data["func_sig_allow_across_function_boundary"] = True
     elif kind == "vfunc":
         class_name = rtti_class(rule["class"])
-        tables = [ap for ap, ott in rtti_vtables(backend, class_name) if ott == 0]
+        tables = [to_int(rule["address_point"])] if rule.get("address_point") else \
+            [ap for ap, ott in rtti_vtables(backend, class_name) if ott == 0]
         if len(tables) != 1:
             raise ValueError(f"{symbol}: {len(tables)} primary vtables for {class_name}")
         index = int(rule["index"])
@@ -729,6 +730,9 @@ class Hunter:
         # the same build's other platform (facts of its artifacts): what a symbol with no
         # baseline on this platform can be transferred from, by compiler-neutral evidence
         self.sister = sister_facts
+        # where this build's own <Class>_vtable.<platform>.yaml may already sit: the answer
+        # when RTTI cannot name the class (templates such as CLoopModeFactory<CLoopModeGame>)
+        self.vtable_artifact_dirs = [out_dir]
         self.report = {"solved": [], "unresolved": [], "changed": [], "skipped": []}
         if os.path.isdir(out_dir):
             for name in os.listdir(out_dir):
@@ -781,6 +785,10 @@ class Hunter:
         if class_name in self._vt_cache:
             return self._vt_cache[class_name]
         tables = [ap for ap, ott in rtti_vtables(self.b, rtti_class(class_name), self.data_regions) if ott == 0]
+        if len(tables) != 1:
+            from_artifact = self.vtable_from_artifact(class_name)
+            if from_artifact is not None:
+                tables = [from_artifact]
         slots = []
         if len(tables) == 1:
             for index in range(1024):
@@ -790,6 +798,18 @@ class Hunter:
                 slots.append(fn)
         self._vt_cache[class_name] = (tables[0] if len(tables) == 1 else None, slots)
         return self._vt_cache[class_name]
+
+    def vtable_from_artifact(self, class_name):
+        """vtable_va of this build's <Class>_vtable artifact, if its slot 0 holds code."""
+        name = class_name if class_name.endswith("_vtable") else f"{class_name}_vtable"
+        for directory in self.vtable_artifact_dirs:
+            path = os.path.join(directory, f"{name}.{self.platform}.yaml")
+            if os.path.isfile(path):
+                va = to_int(parse_yaml(path).get("vtable_va"))
+                first = self.b.qword(va) if va is not None else None
+                if first and self.b.is_code(first):
+                    return va
+        return None
 
     def measure_shift(self, class_name, index):
         """Shift that aligns the baseline vtable neighbourhood onto the live one.
@@ -1311,7 +1331,10 @@ class Hunter:
                                                           "candidates": [{"va": hex(va), "score": round(score, 2), "how": [how]}]})
                         return
                     index = base["vfunc_index"] + shift
-                rule = {"kind": "vfunc", "class": rtti_class(class_name), "index": index, "vtable_name": class_name}
+                rule = {"kind": "vfunc", "class": rtti_class(class_name), "index": index, "vtable_name": class_name,
+                        # the table the index was measured in: same answer as RTTI where RTTI
+                        # works, and the only one for template classes RTTI cannot name
+                        "address_point": self.vtable_live(class_name)[0]}
             else:
                 rule = {"kind": "func", "ea": va}
             out = self.trim_to_baseline(self.emit(symbol, rule), artifact)

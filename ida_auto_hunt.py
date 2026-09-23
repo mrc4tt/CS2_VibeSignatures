@@ -96,6 +96,7 @@ def run(symbols=None, dry_run=False, out_dir=None, report_path=None, min_score=N
 
     hunter = hunt_core.Hunter(backend, gamever, module, platform, facts, out_dir, emit=emit, dry_run=dry_run,
                               min_score=min_score or hunt_core.MIN_SCORE, log=log)
+    hunter.vtable_artifact_dirs = [out_dir, real_dir]
     report = hunter.run(symbols, baseline_artifact_dir=os.path.join(REPO, "bin_artifacts", baseline, module),
                         # symbols named explicitly are re-hunted even when an artifact
                         # exists: that is how a suspect record gets a second opinion

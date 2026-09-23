@@ -3,6 +3,7 @@
 Twins (sibling-callees), inlined functions, the layout fingerprint (consts), symbols
 with no baseline (the same build's other platform).
 """
+import os
 import tempfile
 import unittest
 
@@ -253,3 +254,18 @@ class SharedStubTests(unittest.TestCase):
             h, _ = hunter(binary, {"gamever": "1", "symbols": {}}, out)
             self.assertTrue(h.is_shared_stub(0x1000))
             self.assertFalse(h.is_shared_stub(0x2000))
+
+
+class TemplateVtableTests(unittest.TestCase):
+    """RTTI cannot name CLoopModeFactory<CLoopModeGame>; this build's vtable artifact can."""
+
+    def test_vtable_artifact_is_the_fallback(self):
+        binary = FakeBinary({0x1000: {"pad": 2}})
+        binary.qword = lambda ea: 0x1000 if ea == 0x5000 else None
+        with tempfile.TemporaryDirectory() as out:
+            with open(os.path.join(out, "CLoopModeFactory_CLoopModeGame_vtable.windows.yaml"), "w") as handle:
+                handle.write("vtable_class: CLoopModeFactory_CLoopModeGame\nvtable_va: '0x5000'\n")
+            h, _ = hunter(binary, {"gamever": "1", "symbols": {}}, out)
+            self.assertEqual(h.vtable_from_artifact("CLoopModeFactory_CLoopModeGame_vtable"), 0x5000)
+            self.assertEqual(h.vtable_from_artifact("CLoopModeFactory_CLoopModeGame"), 0x5000)
+            self.assertIsNone(h.vtable_from_artifact("Other_vtable"))

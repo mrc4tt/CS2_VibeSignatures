@@ -699,6 +699,13 @@ def emit_symbol(symbol, rule, extra, scan):
     if kind == "vfunc":
         index = int(rule["index"])
         class_name = rule.get("class")
+        if rule.get("address_point"):
+            # the hunter's measured table (RTTI, or this build's vtable artifact for templates)
+            slot = int(rule["address_point"]) + 8 * index
+            func_ea = ida_bytes.get_qword(slot)
+            if func_ea in (0, ida_idaapi.BADADDR):
+                raise ValueError(f"{symbol}: vtable slot {index} at {hex(slot)} holds no pointer")
+            return emit_vfunc_yaml(func_ea, symbol, rule.get("vtable_name") or class_name, index, extra, scan=scan)
         if class_name:
             func_ea, address_point = vtable_slot_func(class_name, index)
             return emit_vfunc_yaml(func_ea, symbol, rule.get("vtable_name") or class_name, index, extra, scan=scan)
