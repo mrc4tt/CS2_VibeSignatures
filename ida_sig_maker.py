@@ -882,19 +882,29 @@ def _auto_hunt_first(symbols):
         report = ida_auto_hunt.run(symbols=symbols)
     except Exception as error:
         print(f"[sig_maker] automatic pass skipped: {error}")
-        return [], {}
+        return [], {}, {}
     if not report:
-        return [], {}
+        return [], {}, {}
     solved = [row["symbol"] for row in report.get("solved", [])]
-    hints = {}
+    hints, whys = {}, {}
     for row in report.get("unresolved", []) + report.get("changed", []):
+        whys[row["symbol"]] = str(row.get("why", ""))[:200]
+        ranked = []
+        for candidate in (row.get("candidates") or [])[:3]:
+            try:
+                ranked.append((int(str(candidate.get("va")), 16), candidate.get("score"),
+                               " + ".join(candidate.get("how") or [])[:120]))
+            except (TypeError, ValueError):
+                continue
+        if ranked:
+            hints[row["symbol"]] = ranked
         for candidate in row.get("candidates") or []:
             try:
                 hints[row["symbol"]] = int(str(candidate.get("va")), 16)
                 break
             except (TypeError, ValueError):
                 continue
-    return solved, hints
+    return solved, hints, whys
 
 
 def manual_todo_symbols():
@@ -956,7 +966,7 @@ def interactive_main():
 
     # 1. automatic first: the baseline-facts hunter (Ctrl-Alt-H's engine and evidence rule)
     #    resolves what it can prove, so only the rest needs a human
-    auto_done, hints = _auto_hunt_first(symbols)
+    auto_done, hints, whys = _auto_hunt_first(symbols)
     remaining = [s for s in symbols if s not in auto_done]
     if auto_done:
         print(f"[sig_maker] found automatically ({len(auto_done)}): {', '.join(auto_done)}")
@@ -964,81 +974,158 @@ def interactive_main():
         print("[sig_maker] every symbol was found automatically - nothing to place by hand")
         return
 
-    done, skipped = [], []
-    emitted = {}  # func_ea -> symbol (guard: samme funktion under to navne = naesten altid en fejl)
-    for i, symbol in enumerate(remaining, 1):
-        hint = hints.get(symbol)
-        where = ""
-        if hint is not None:
-            # 2. the cursor goes to the hunter's best guess, so the question is "is this it?"
-            ida_kernwin.jumpto(hint)
-            where = (f"The cursor was moved to the hunter's best candidate {hex(hint)} "
-                     f"(not proven - check it).\n\n")
-        answer = ida_kernwin.ask_yn(
-            1,
-            f"[{i}/{len(remaining)}] {where}Is the cursor INSIDE the target function of:\n\n"
-            f"    {symbol}\n\n"
-            f"YES = cursor is in place, make the sig\n"
-            f"NO = skip this symbol\n"
-            f"Cancel = stop the whole queue",
+    # 2. the rest in ONE non-modal list, one row per candidate the hunter ranked: Ins writes
+    #    THAT candidate - the cursor is never read, so "YES without moving it" cannot happen
+    rows = [{"symbol": s, "hint": va, "score": score, "why": how or whys.get(s, "")}
+            for s in remaining for va, score, how in hints.get(s, [])]
+    without = [s for s in remaining if not hints.get(s)]
+    if without:
+        print(f"[sig_maker] no candidate at all ({len(without)}) - left for the review issue / manual list:")
+        for symbol in without:
+            print(f"    {symbol}")
+    if rows:
+        _open_review(rows)
+
+
+_REVIEW = {}
+
+
+class _ReviewChooser(ida_kernwin.Choose):
+    """Symbols the hunter could not prove. Nothing is written without a key press."""
+
+    def __init__(self, rows):
+        ida_kernwin.Choose.__init__(
+            self,
+            "CS2 review - Enter: look at candidate | Ins: write THIS candidate | Del: drop row",
+            [["Symbol", 42], ["Candidate", 14], ["Score", 6], ["Evidence / status", 70]],
+            flags=ida_kernwin.Choose.CH_CAN_INS | ida_kernwin.Choose.CH_CAN_DEL | ida_kernwin.Choose.CH_CAN_REFRESH,
         )
-        if answer == -1:
-            print(f"[sig_maker] queue cancelled at {symbol}")
-            break
-        if answer == 0:
-            skipped.append(symbol)
-            continue
+        self.rows = rows
+        self.emitted = {}
 
-        func_ea = get_target_ea()
-        if func_ea is None:
-            cursor = ida_kernwin.get_screen_ea()
-            if cursor == ida_idaapi.BADADDR:
-                print(f"[sig_maker] no function under cursor for '{symbol}' - skipped")
-                skipped.append(symbol)
-                continue
-            answer = ida_kernwin.ask_yn(
-                1,
-                f"No IDA function is defined at the cursor ({hex(cursor)}).\n"
-                f"Create a function here and continue with '{symbol}'?",
-            )
-            if answer != 1:
-                print(f"[sig_maker] no function under cursor for '{symbol}' - skipped")
-                skipped.append(symbol)
-                continue
-            if not ida_funcs.add_func(cursor):
-                print(f"[sig_maker] could not create a function at {hex(cursor)} - skipped")
-                skipped.append(symbol)
-                continue
-            func_ea = ida_funcs.get_func(cursor).start_ea
-        if func_ea in emitted:
-            answer = ida_kernwin.ask_yn(
-                0,
-                f"VA {hex(func_ea)} er ALLEREDE emitteret som '{emitted[func_ea]}'.\n"
-                f"Er '{symbol}' den SAMME funktion (rename - der laves alias i stedet)?",
-            )
-            if answer != 1:
-                print(f"[sig_maker] {symbol}: samme VA som {emitted[func_ea]} - skipped (flyt cursor!)")
-                skipped.append(symbol)
-                continue
-        if not confirm_identity(func_ea, symbol):
-            skipped.append(symbol)
-            continue
-        if not emit_yaml(func_ea, symbol):
-            skipped.append(symbol)
-            continue
-        emitted[func_ea] = symbol
-        done.append(symbol)
+    def OnGetSize(self):
+        return len(self.rows)
 
-    print("=" * 60)
-    print(f"[sig_maker] batch finished: {len(done)} made, {len(skipped)} skipped")
-    if skipped:
-        print("[sig_maker] skipped symbols (rerun the queue for these):")
-        for s in skipped:
-            print(f"    {s}")
-    print("=" * 60)
+    def OnGetLine(self, n):
+        row = self.rows[n]
+        score = row.get("score")
+        return [row["symbol"], hex(row["hint"]), f"{score:.2f}" if isinstance(score, (int, float)) else "-", row["why"]]
+
+    def OnSelectLine(self, n):
+        n = n[0] if isinstance(n, (list, tuple)) else n
+        if 0 <= n < len(self.rows) and self.rows[n]["hint"] is not None:
+            ida_kernwin.jumpto(self.rows[n]["hint"])
+        return (ida_kernwin.Choose.NOTHING_CHANGED, n)
+
+    def OnDeleteLine(self, n):
+        n = n[0] if isinstance(n, (list, tuple)) else n
+        if 0 <= n < len(self.rows):
+            print(f"[sig_maker] dropped {self.rows[n]['symbol']}")
+            del self.rows[n]
+        return (ida_kernwin.Choose.ALL_CHANGED, min(n, len(self.rows) - 1))
+
+    def OnInsertLine(self, n):
+        n = n[0] if isinstance(n, (list, tuple)) else n
+        if not 0 <= n < len(self.rows):
+            return (ida_kernwin.Choose.NOTHING_CHANGED, n)
+        row = self.rows[n]
+        if _review_write(row, self.emitted):
+            # the symbol is done: its other candidates go too
+            self.rows[:] = [r for r in self.rows if r["symbol"] != row["symbol"]]
+            n = min(n, len(self.rows) - 1)
+        return (ida_kernwin.Choose.ALL_CHANGED, n)
+
+    def OnClose(self):
+        _REVIEW.pop("chooser", None)
+        if self.rows:
+            print(f"[sig_maker] review closed with {len(self.rows)} left: {', '.join(r['symbol'] for r in self.rows)}")
+
+
+def _review_write(row, emitted):
+    """Write the row's candidate as row['symbol']; the reason lands in the row. The cursor is
+    never read: what is written is exactly what the row shows."""
+    symbol = row["symbol"]
+    func = ida_funcs.get_func(row["hint"])
+    if func is None:
+        row["why"] = f"{hex(row['hint'])} is not inside a function in this database"
+        return False
+    func_ea = func.start_ea
+    owner = emitted.get(func_ea)
+    if owner and owner != symbol:
+        row["why"] = f"{hex(func_ea)} was just written as {owner} - one address, one name"
+        return False
+    ok, report = verify_identity(func_ea, symbol)
+    if ok is False:
+        row["why"] = f"refused: {report.splitlines()[0] if report else 'entry point'}"
+        print(f"[sig_maker] {symbol}: {row['why']}")
+        return False
+    if ok is None and row.get("doubt_ea") != func_ea:
+        # a doubt is shown, not a dialog: a second Ins on the same function writes it anyway
+        row["doubt_ea"] = func_ea
+        row["why"] = "DOUBT - Ins again to write anyway: " + " ".join(report.split())[:160]
+        print(f"[sig_maker] {symbol} at {hex(func_ea)} looks doubtful:\n{report}")
+        return False
+    if not emit_yaml(func_ea, symbol):
+        row["why"] = "no unique signature even over the whole body (identical twin) - not written"
+        return False
+    emitted[func_ea] = symbol
+    print(f"[sig_maker] {symbol}: written from {hex(func_ea)}")
+    return True
+
+
+def _open_review(rows):
+    old = _REVIEW.get("chooser")
+    if old is not None:
+        try:
+            old.Close()
+        except Exception:
+            pass
+    chooser = _ReviewChooser(rows)
+    _REVIEW["chooser"] = chooser  # keep a reference: the window lives after this returns
+    chooser.Show()
+    print(f"[sig_maker] {len({r['symbol'] for r in rows})} symbol(s), {len(rows)} candidate(s) in the 'CS2 review' "
+          f"window - Enter looks at a candidate, Ins writes it, Del drops the row")
 
 
 IDENTITY_MIN_SCORE = 0.5
+
+
+def crt_startup_functions():
+    """The entry point's function and everything it calls directly: C runtime start-up
+    (DllMain dispatch, security cookie, ...). Never a game function - windows 14182 had 21
+    engine symbols written at one of these (0x180430dfc, next to the entry point)."""
+    entry = entry_point_ea()
+    out = set()
+    func = ida_funcs.get_func(entry) if entry not in (None, ida_idaapi.BADADDR) else None
+    if not func:
+        return out
+    out.add(func.start_ea)
+    for ea in idautils.FuncItems(func.start_ea):
+        if idc.print_insn_mnem(ea) in ("call", "jmp"):
+            target = idc.get_operand_value(ea, 0)
+            callee = ida_funcs.get_func(target)
+            if callee is not None and callee.start_ea == target:
+                out.add(target)
+    return out
+
+
+def artifact_owner_at(func_ea, symbol, target):
+    """Another symbol's artifact already at func_ea on this platform, or None."""
+    folder = target.get("artifact_dir", "")
+    suffix = f".{target.get('platform', '')}.yaml"
+    if not folder or not os.path.isdir(folder):
+        return None
+    for name in os.listdir(folder):
+        if not name.endswith(suffix) or name == f"{symbol}{suffix}":
+            continue
+        try:
+            with open(os.path.join(folder, name), "r", encoding="utf-8") as handle:
+                m = re.search(r"^func_va:\s*'?(0x[0-9a-fA-F]+)", handle.read(), re.M)
+        except OSError:
+            continue
+        if m and int(m.group(1), 16) == func_ea:
+            return name[: -len(suffix)]
+    return None
 
 
 def verify_identity(func_ea, symbol):
@@ -1053,10 +1140,16 @@ def verify_identity(func_ea, symbol):
          head bytes, mnemonics, size, string set, vcalls) - a low score needs a yes.
     """
     lines = []
-    if func_ea == entry_point_ea():
-        return False, (f"{hex(func_ea)} is the binary's entry point (CRT startup) - never a game function. "
-                       f"Move the cursor to the real function.")
+    if func_ea == entry_point_ea() or func_ea in crt_startup_functions():
+        return False, (f"{hex(func_ea)} is the binary's entry point or C runtime start-up it calls - never a "
+                       f"game function. Move the cursor to the real function.")
     target = detect_target() or {}
+    owner = artifact_owner_at(func_ea, symbol, target)
+    if owner:
+        # one address, one name: this is what stops "YES" pressed again and again without
+        # the cursor moving (7 server symbols were written at SetDialogVariableStringForPlayer)
+        return False, (f"{hex(func_ea)} is already {owner} in bin_artifacts - one address, one name. "
+                       f"Move the cursor to {symbol}'s own function.")
     existing = os.path.join(target.get("artifact_dir", ""), f"{symbol}.{target.get('platform', '')}.yaml")
     if target and os.path.isfile(existing):
         import hunt_core
