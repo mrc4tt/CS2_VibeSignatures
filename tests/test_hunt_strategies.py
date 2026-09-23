@@ -240,3 +240,16 @@ class NewSymbolTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SharedStubTests(unittest.TestCase):
+    """_purecall fills hundreds of vtable slots on engine2.dll 14182; never one symbol."""
+
+    def test_many_vtable_slots_mark_a_shared_stub(self):
+        import struct
+        binary = FakeBinary({0x1000: {"pad": 2}, 0x2000: {"pad": 2}})
+        binary.data += struct.pack("<Q", 0x1000) * 40 + struct.pack("<Q", 0x2000) * 2
+        with tempfile.TemporaryDirectory() as out:
+            h, _ = hunter(binary, {"gamever": "1", "symbols": {}}, out)
+            self.assertTrue(h.is_shared_stub(0x1000))
+            self.assertFalse(h.is_shared_stub(0x2000))

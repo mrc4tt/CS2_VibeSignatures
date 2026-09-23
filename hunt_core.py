@@ -837,6 +837,16 @@ class Hunter:
             return None
         return hits[0]
 
+    def is_shared_stub(self, va, limit=32):
+        """True when `limit` or more qwords in data point at va (vtable slots of many classes)."""
+        needle = struct.pack("<Q", va)
+        count = 0
+        for _base, blob in self.data_regions:
+            count += blob.count(needle)
+            if count >= limit:
+                return True
+        return False
+
     def s_siblingcallees(self, symbol, base, artifact):
         """Twins: pick the candidate that calls what a found sibling calls.
 
@@ -1127,6 +1137,14 @@ class Hunter:
                         candidates.append((head, how, self.score(base, head)))
             except Exception as error:
                 self.log(f"    {strat.__name__} failed: {error}")
+        # a stub every class shares (_purecall fills hundreds of vtable slots) is never one
+        # symbol: an abstract base's slot points at it, the implementation lives elsewhere
+        stubs = {va for va in {c[0] for c in candidates} if self.is_shared_stub(va)}
+        if stubs:
+            candidates = [c for c in candidates if c[0] not in stubs]
+            if not candidates:
+                return None, (f"only a shared stub ({', '.join(hex(v) for v in sorted(stubs))}, e.g. _purecall) - "
+                              f"the slot belongs to an abstract class; take it from one that implements it"), 0.0, []
         if not candidates:
             return None, "no candidate", 0.0, []
         by_va = {}
@@ -1367,7 +1385,9 @@ class Hunter:
     def run(self, symbols=None, baseline_artifact_dir=None, existing_dirs=(), categories=None):
         suffix = f".{self.platform}.yaml"
         have = set()
-        for directory in (self.out_dir, *existing_dirs):
+        # symbols named explicitly are hunted even when some folder already holds them: an
+        # unreviewed file in the review folder is not a reason to skip (Ctrl-Alt-D's list)
+        for directory in () if symbols else (self.out_dir, *existing_dirs):
             if os.path.isdir(directory):
                 have.update(n[: -len(suffix)] for n in os.listdir(directory) if n.endswith(suffix))
         targets = [s for s in self.facts["symbols"] if s not in have and (not symbols or s in symbols)]

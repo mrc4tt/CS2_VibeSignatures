@@ -898,12 +898,6 @@ def _auto_hunt_first(symbols):
                 continue
         if ranked:
             hints[row["symbol"]] = ranked
-        for candidate in row.get("candidates") or []:
-            try:
-                hints[row["symbol"]] = int(str(candidate.get("va")), 16)
-                break
-            except (TypeError, ValueError):
-                continue
     return solved, hints, whys
 
 
@@ -1090,6 +1084,11 @@ def _open_review(rows):
 IDENTITY_MIN_SCORE = 0.5
 
 
+# a function this many data references point at is a stub every class shares: engine2.dll's
+# _purecall (0x180430dfc on 14182) fills 583 vtable slots and was written under 21 names
+SHARED_STUB_REFS = 32
+
+
 def crt_startup_functions():
     """The entry point's function and everything it calls directly: C runtime start-up
     (DllMain dispatch, security cookie, ...). Never a game function - windows 14182 had 21
@@ -1143,6 +1142,10 @@ def verify_identity(func_ea, symbol):
     if func_ea == entry_point_ea() or func_ea in crt_startup_functions():
         return False, (f"{hex(func_ea)} is the binary's entry point or C runtime start-up it calls - never a "
                        f"game function. Move the cursor to the real function.")
+    shared = sum(1 for _ in zip(range(SHARED_STUB_REFS), idautils.DataRefsTo(func_ea)))
+    if shared >= SHARED_STUB_REFS:
+        return False, (f"{hex(func_ea)} is referenced from {shared}+ places (vtable slots) - a shared stub such as "
+                       f"_purecall, never one symbol. Take the slot from a class that implements it.")
     target = detect_target() or {}
     owner = artifact_owner_at(func_ea, symbol, target)
     if owner:
