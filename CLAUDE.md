@@ -53,6 +53,14 @@ that it should exist. Recovery is attempted in this order, cheapest first:
    candidate and why it stopped; Ctrl-Alt-D pre-fills its list from that file, and an entry
    drops out as soon as its artifact exists. `CS2VIBE_AGENT=none` skips agents entirely:
    free work only, the rest goes to the list.
+   Beyond relocation the hunter has three answers for what used to reach an agent:
+   **sibling-callees** (template twins such as the `CCSCustomHudLayout_*ForPlayer` setters:
+   the candidate calling the helpers a found sibling calls), **consts** (the function's
+   struct offsets and immediates, a layout fingerprint that only votes for a clear unique
+   winner, so twins tie and stay undecided - needs facts built after this change), and for
+   a symbol with **no baseline** on windows, the same build's linux facts by string set
+   (built once from the linux IDB). A symbol whose strings or callees now sit inside
+   another function is reported `inlined into X` and costs no agent run.
 4. Hand analysis, with `idat` (headless IDA, `/root/ida-pro-9.1/idat -A -S"<script>" -L"<log>" <binary>`;
    the IDB is `<binary>.i64`, e.g. `client.dll.i64`).
 
@@ -139,10 +147,14 @@ displacement bytes — which move on every rebuild. Crossing into padding and th
 head keeps them wildcarded. `find-CFlashbangProjectile_Spawn-decompiles.py` carries
 the precedent and the explanation.
 
-**Before naming anything, ask what the binary calls it.** `libserver.so` carries real
-symbol names for much of the server module: `ClientPrint`, `UTIL_ClientPrintFilter`,
-`CCSPlayer_ItemServices_GiveNamedItem` are the binary's own names, and the repo
-already files the neighbouring overload as `CCSPlayer_ItemServices_GiveNamedItemBool`.
+**Before naming anything, ask what the IDB already calls it.** The server IDBs carry
+names for much of the server module: `ClientPrint`, `UTIL_ClientPrintFilter`,
+`CCSPlayer_ItemServices_GiveNamedItem`, and the repo already files the neighbouring
+overload as `CCSPlayer_ItemServices_GiveNamedItemBool`. Those names are NOT in the
+shipped file - 14182's `libserver.so` exports only libstdc++ and third-party functions
+(`readelf --dyn-syms`), so every game name in IDA was given by an earlier analysis.
+Use them to keep one name per function, never as evidence that a find is right: a wrong
+find that was renamed would confirm itself.
 Two records under one name, or one name on two addresses, is the defect class that
 cost the most time this session.
 

@@ -2896,7 +2896,7 @@ def agent_disabled(agent):
     return str(agent or "").strip().lower() in _NO_AGENT_NAMES
 
 
-async def _pipeline_hunt_via_mcp(host, port, expected_binary, symbols, out_dir):
+async def _pipeline_hunt_via_mcp(host, port, expected_binary, symbols, out_dir, categories=None):
     repo = os.path.dirname(os.path.abspath(__file__))
     code = (
         "import json, sys\n"
@@ -2904,7 +2904,8 @@ async def _pipeline_hunt_via_mcp(host, port, expected_binary, symbols, out_dir):
         "if repo not in sys.path:\n"
         "    sys.path.insert(0, repo)\n"
         "import pipeline_hunt\n"
-        f"result = json.dumps(pipeline_hunt.hunt(repo, {json.dumps(list(symbols))}, {json.dumps(os.fspath(out_dir))}))\n"
+        f"result = json.dumps(pipeline_hunt.hunt(repo, {json.dumps(list(symbols))}, {json.dumps(os.fspath(out_dir))}, "
+        f"{json.dumps(dict(categories or {}))}))\n"
     )
     async with open_ida_mcp_session(host, port, expected_binary=expected_binary) as session:
         response = await session.call_tool(name="py_eval", arguments={"code": code})
@@ -2916,11 +2917,12 @@ async def _pipeline_hunt_via_mcp(host, port, expected_binary, symbols, out_dir):
     return payload
 
 
-def _generate_baseline_facts(old_artifact_dir, module_name, platform):
-    """Build the baseline facts the hunter needs, once, from the previous gamever's warm IDB."""
-    if os.environ.get(PIPELINE_HUNT_FACTS_ENV, "1") == "0" or not old_artifact_dir:
+def _generate_baseline_facts(old_artifact_dir, module_name, platform, gamever=None):
+    """Build facts the hunter needs, once, from a warm IDB: the previous gamever's
+    (baseline), or with `gamever` the current build's other platform (sister facts)."""
+    if os.environ.get(PIPELINE_HUNT_FACTS_ENV, "1") == "0" or not (old_artifact_dir or gamever):
         return False
-    baseline = os.path.basename(os.path.dirname(os.path.abspath(old_artifact_dir)))
+    baseline = gamever or os.path.basename(os.path.dirname(os.path.abspath(old_artifact_dir)))
     repo = os.path.dirname(os.path.abspath(__file__))
     print(f"    Hunter: building baseline facts {baseline}/{module_name}.{platform} from the warm IDB (once)")
     try:
@@ -2938,8 +2940,11 @@ def _generate_baseline_facts(old_artifact_dir, module_name, platform):
     return True
 
 
+_sister_facts_tried = set()
+
+
 def run_pipeline_hunt(*, host, port, binary_path, symbols, artifact_dir, old_artifact_dir,
-                      module_name, platform):
+                      module_name, platform, gamever=None, categories=None):
     """Ctrl-Alt-H's hunter in the open session, before an agent is paid.
 
     Returns the hunt result ({"solved", "unresolved"}) or None when the hunter is off or
@@ -2950,12 +2955,21 @@ def run_pipeline_hunt(*, host, port, binary_path, symbols, artifact_dir, old_art
     key = (str(binary_path), platform)
     if key in _pipeline_hunt_unavailable:
         return None
+    def ask():
+        return asyncio.run(_pipeline_hunt_via_mcp(host, port, binary_path, symbols, artifact_dir, categories))
+
     try:
-        result = asyncio.run(_pipeline_hunt_via_mcp(host, port, binary_path, symbols, artifact_dir))
+        result = ask()
         if result.get("error", "").startswith("no baseline facts") and _generate_baseline_facts(
             old_artifact_dir, module_name, platform
         ):
-            result = asyncio.run(_pipeline_hunt_via_mcp(host, port, binary_path, symbols, artifact_dir))
+            result = ask()
+        sister_key = (gamever, module_name)
+        if result.get("sister_missing") and gamever and sister_key not in _sister_facts_tried:
+            # a symbol windows never had: linux of this same build may carry its strings
+            _sister_facts_tried.add(sister_key)
+            if _generate_baseline_facts(None, module_name, "linux", gamever=gamever):
+                result = ask()
     except Exception as error:
         result = {"error": f"{type(error).__name__}: {error}"}
     if result.get("error"):
@@ -4764,6 +4778,13 @@ def process_binary(
                     old_artifact_dir=old_artifact_dir,
                     module_name=module_name or os.path.basename(os.path.normpath(artifact_dir)),
                     platform=platform,
+                    gamever=gamever,
+                    categories={
+                        _derive_artifact_symbol_name(path, platform): _lookup_expected_input_artifact_category(
+                            path, platform, config_path=config_path, category_map=category_map
+                        )
+                        for path in hunt_targets
+                    },
                 )
             agent_succeeded = False
             if hunted and hunted.get("solved") and all(os.path.isfile(path) for path in wanted_outputs):
@@ -4795,6 +4816,24 @@ def process_binary(
                     module_name or os.path.basename(os.path.normpath(artifact_dir)),
                     platform,
                 )
+                inlined = [
+                    symbol for symbol in todo_entries
+                    if (unresolved_rows.get(symbol) or {}).get("inlined_into")
+                ]
+                if todo_entries and len(inlined) == len(todo_entries) and not agent_disabled(agent):
+                    # nothing to find: an agent would spend its attempts learning that
+                    left = update_manual_todo(todo_path, artifact_dir, platform, todo_entries)
+                    skip_count += 1
+                    print(f"  Skipping agent for {skill_name}: inlined ({', '.join(inlined)}) -> {todo_path} ({left} open)")
+                    _report_skill_status(
+                        reporting,
+                        job_id,
+                        skill_name,
+                        TaskStatus.SKIPPED,
+                        ProcessPhase.FINISHED,
+                        reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
+                    )
+                    continue
                 if agent_disabled(agent):
                     left = update_manual_todo(todo_path, artifact_dir, platform, todo_entries)
                     skip_count += 1

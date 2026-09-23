@@ -387,6 +387,29 @@ class FactsBuilder:
                         break
         return out
 
+    def consts(self, start, limit=64):
+        """Struct offsets and immediates the function uses - its layout fingerprint.
+
+        Survives a rebuild that moves every call and RIP target, and tells apart two
+        functions that merely look alike. Small values are left out: stack slots and
+        loop counters would make every function resemble every other.
+        """
+        out = set()
+        for ea in self.b.func_items(start):
+            insn = self.b.insn(ea)
+            if insn is None or insn.mnem in ("call", "jmp") or insn.mnem.startswith("j"):
+                continue
+            for op in insn.ops:
+                if op.kind == "displ" and op.addr is not None:
+                    value = int(op.addr) & 0xFFFFFFFF
+                    if 0x80 <= value <= 0x40000:
+                        out.add(value)
+                elif op.kind == "imm" and op.value is not None:
+                    value = int(op.value) & 0xFFFFFFFFFFFFFFFF
+                    if 0x10 <= value <= 0x40000:
+                        out.add(value)
+        return sorted(out)[:limit]
+
     def strings_of(self, start):
         out = set()
         for ea in self.b.func_items(start):
@@ -423,6 +446,7 @@ class FactsBuilder:
             "callers": self.callers_of(start, va_to_symbol),
             "strings": self.strings_of(start)[:40],
             "vcalls": self.vcalls(start),
+            "consts": self.consts(start),
         }
 
     def context_shapes(self, start, site_ea, before=3, after=3):
@@ -687,7 +711,7 @@ def emit_artifact(backend, scan, symbol, rule, out_dir, platform, log=None):
 
 class Hunter:
     def __init__(self, backend, gamever, module, platform, facts, out_dir, emit=None, dry_run=False, min_score=MIN_SCORE, log=print,
-                 scan=None):
+                 scan=None, sister_facts=None):
         self.b = backend
         self.gamever, self.module, self.platform = gamever, module, platform
         self.facts = facts
@@ -702,6 +726,9 @@ class Hunter:
         self._emit = emit or (lambda symbol, rule: emit_artifact(backend, self.scan, symbol, rule, out_dir, platform, log=log))
         self.resolved, self.resolved_va = {}, {}
         self._vt_cache, self._live_cache, self._string_cache = {}, {}, {}
+        # the same build's other platform (facts of its artifacts): what a symbol with no
+        # baseline on this platform can be transferred from, by compiler-neutral evidence
+        self.sister = sister_facts
         self.report = {"solved": [], "unresolved": [], "changed": [], "skipped": []}
         if os.path.isdir(out_dir):
             for name in os.listdir(out_dir):
@@ -810,6 +837,128 @@ class Hunter:
             return None
         return hits[0]
 
+    def s_siblingcallees(self, symbol, base, artifact):
+        """Twins: pick the candidate that calls what a found sibling calls.
+
+        Functions stamped from one template (CCSCustomHudLayout's *ForPlayer setters)
+        share every byte but their helpers. In the baseline the target shared some unnamed
+        helpers with a sibling that is already found here; the sibling's live calls, in the
+        same order, say what those helpers are now, and only one other function calls all
+        of them.
+        """
+        mine = {to_int(c.get("va")) for c in base.get("callees") or []} - {None}
+        if not mine:
+            return []
+        mapped = {}
+        for other, entry in self.facts["symbols"].items():
+            if other == symbol or other not in self.resolved or entry.get("category") not in ("func", "vfunc"):
+                continue
+            theirs = [to_int(c.get("va")) for c in entry.get("callees") or []]
+            if not mine.intersection(theirs):
+                continue
+            live = [target for _, target in self.fb.direct_calls(self.resolved[other])][:40]
+            if len(live) != len(theirs):
+                continue
+            for was, now in zip(theirs, live):
+                if was in mine:
+                    mapped[was] = now if mapped.get(was, now) == now else None
+        targets = {now for now in mapped.values() if now}
+        if len(targets) < 2:
+            return []
+        callers = None
+        for target in targets:
+            here = {self.func_start(frm) for frm in self.b.code_refs_to(target)} - {None}
+            callers = here if callers is None else callers & here
+        callers = {fn for fn in callers or () if self.resolved_va.get(fn) in (None, symbol)}
+        if len(callers) != 1:
+            return []
+        return [(callers.pop(), f"sibling-callees {len(targets)} shared helpers")]
+
+    def s_consts(self, symbol, base, artifact):
+        """Weak evidence: the layout fingerprint among the functions between the found
+        neighbours. Only a clear, unique winner votes - twins tie and stay undecided."""
+        mine = set(base.get("consts") or [])
+        va = to_int(base.get("va"))
+        if len(mine) < 5 or va is None:
+            return []
+        window = self._neighbour_window(va)
+        if not window:
+            return []
+        lo, hi = window
+        scored = []
+        ea = self.b.next_func(lo)
+        while ea is not None and ea < hi:
+            live = set(self.fb.consts(ea))
+            if live:
+                scored.append((len(mine & live) / len(mine | live), ea))
+            ea = self.b.next_func(ea)
+        scored.sort(reverse=True)
+        if not scored or scored[0][0] < 0.8 or (len(scored) > 1 and scored[0][0] - scored[1][0] < 0.15):
+            return []
+        return [(scored[0][1], f"consts {scored[0][0]:.2f} of {len(mine)}")]
+
+    def inlined_into(self, symbol, base):
+        """(va, why) when the symbol's own strings now sit in another function.
+
+        A function the compiler folded into its caller leaves nothing to find, and an
+        agent spends three attempts learning that. Its string set moving whole into a
+        function that is already something else, or has grown well past its old size,
+        is what that looks like (ParseNetadrList into ConnectSocketToAddressList).
+        """
+        strings = [s for s in (base.get("strings") or []) if len(s) >= 8 and s.strip() not in GENERIC_STRINGS][:12]
+        if len(strings) < 2:
+            return self._inlined_by_calls(symbol, base)
+        votes = {}
+        for text in strings:
+            for fn in self.string_refs(text):
+                votes[fn] = votes.get(fn, 0) + 1
+        if not votes:
+            return None
+        top, count = max(votes.items(), key=lambda kv: kv[1])
+        if count < max(2, -(-len(strings) * 4 // 5)):
+            return None
+        owner = self.resolved_va.get(top)
+        if owner and owner != symbol:
+            return top, f"its strings ({count}/{len(strings)}) now sit in {owner} {hex(top)}"
+        live = self.live_facts(top) or {}
+        old, new = base.get("size") or 0, live.get("size") or 0
+        if old and new >= 2 * old and self.score(base, top) < 0.5:
+            return top, f"its strings ({count}/{len(strings)}) now sit in {hex(top)}, {new / old:.1f}x its old size"
+        return None
+
+    def _inlined_by_calls(self, symbol, base):
+        """No strings: its callees and virtual calls, all found together in one function
+        that is much bigger or already something else (InputTestActivator folded into
+        the TestActivator script binding on windows 14182)."""
+        targets = set()
+        for callee in base.get("callees") or []:
+            if callee.get("name") in self.resolved:
+                targets.add(self.resolved[callee["name"]])
+            elif callee.get("head"):
+                hits = self.scan.matches(" ".join(callee["head"][:16]), limit=2)
+                if len(hits) == 1:
+                    targets.add(hits[0])
+        vcalls = set(base.get("vcalls") or [])
+        if not targets or len(targets) + len(vcalls) < 2:
+            return None
+        callers = None
+        for target in targets:
+            here = {self.func_start(frm) for frm in self.b.code_refs_to(target)} - {None}
+            callers = here if callers is None else callers & here
+        hosts = [fn for fn in callers or () if vcalls <= set(self.fb.vcalls(fn, limit=64))]
+        if len(hosts) != 1:
+            return None
+        host = hosts[0]
+        owner = self.resolved_va.get(host)
+        what = f"its {len(targets)} callee(s) and {len(vcalls)} virtual call(s) now sit in"
+        if owner and owner != symbol:
+            return host, f"{what} {owner} {hex(host)}"
+        live = self.live_facts(host) or {}
+        old, new = base.get("size") or 0, live.get("size") or 0
+        if old and new >= 2 * old and self.score(base, host) < 0.5:
+            return host, f"{what} {hex(host)}, {new / old:.1f}x its old size"
+        return None
+
     def s_vtable(self, symbol, base, artifact):
         class_name, index = base.get("vtable_name"), base.get("vfunc_index")
         if not class_name or index is None:
@@ -913,19 +1062,27 @@ class Hunter:
             return []
         return [(top, f"callee-heads {count}/{len(located)}")]
 
-    def s_neighbour(self, symbol, base, artifact):
-        va = to_int(base.get("va"))
-        if va is None:
-            return []
+    def _neighbour_window(self, va):
+        """(lo, hi) live addresses of the found symbols that bracketed `va` in the baseline."""
         base_syms = sorted(((to_int(e.get("va")), n) for n, e in self.facts["symbols"].items()
                             if e.get("va") and n in self.resolved and e.get("category") in ("func", "vfunc")), key=lambda t: t[0])
         before = [t for t in base_syms if t[0] < va]
         after = [t for t in base_syms if t[0] > va]
         if not before or not after:
-            return []
+            return None
         lo, hi = self.resolved[before[-1][1]], self.resolved[after[0][1]]
         if hi <= lo or hi - lo > 0x40000:
+            return None
+        return lo, hi
+
+    def s_neighbour(self, symbol, base, artifact):
+        va = to_int(base.get("va"))
+        if va is None:
             return []
+        window = self._neighbour_window(va)
+        if not window:
+            return []
+        lo, hi = window
         best = []
         ea = self.b.next_func(lo)
         while ea is not None and ea < hi:
@@ -961,7 +1118,8 @@ class Hunter:
     # -- resolution -----------------------------------------------------------------
     def resolve_function(self, symbol, base, artifact):
         candidates = []
-        for strat in (self.s_reloc, self.s_headreloc, self.s_vtable, self.s_strings, self.s_callgraph, self.s_calleeheads, self.s_neighbour):
+        for strat in (self.s_reloc, self.s_headreloc, self.s_vtable, self.s_strings, self.s_callgraph, self.s_calleeheads,
+                      self.s_neighbour, self.s_siblingcallees, self.s_consts):
             try:
                 for va, how in strat(symbol, base, artifact):
                     head = self.func_start(va)
@@ -999,7 +1157,7 @@ class Hunter:
         strong = set()
         for how in hows:
             family = how.split()[0]
-            if family in ("reloc", "callgraph", "calls", "callee-heads", "thunk"):
+            if family in ("reloc", "callgraph", "calls", "callee-heads", "thunk", "sibling-callees", "consts"):
                 strong.add(family)
             elif family == "strings":
                 m = re.match(r"strings (\d+)/(\d+)", how)
@@ -1112,8 +1270,13 @@ class Hunter:
                         how = f"{hex(va)} is already {owner}, and 14181 kept them apart"
                         va = None
             if va is None:
-                self.report["unresolved"].append({"symbol": symbol, "category": category, "why": how,
-                                                  "candidates": [{"va": hex(v), "score": round(i["score"], 2), "how": i["how"]} for v, i in ranked[:4]]})
+                row = {"symbol": symbol, "category": category, "why": how,
+                       "candidates": [{"va": hex(v), "score": round(i["score"], 2), "how": i["how"]} for v, i in ranked[:4]]}
+                inlined = self.inlined_into(symbol, base)
+                if inlined:
+                    row["inlined_into"] = hex(inlined[0])
+                    row["why"] = f"inlined? {inlined[1]} - check, then declare it optional_output with an -inlined task"
+                self.report["unresolved"].append(row)
                 return
             if category == "vfunc":
                 class_name = base.get("vtable_name")
@@ -1162,7 +1325,46 @@ class Hunter:
         out = self.trim_to_baseline(self.emit(symbol, rule), artifact)
         self.report["solved"].append({"symbol": symbol, "category": category, "va": hex(site), "how": f"{how}, site shape+context {agree:.2f}", "output": out})
 
-    def run(self, symbols=None, baseline_artifact_dir=None, existing_dirs=()):
+    def hunt_new(self, symbol, category=None):
+        """A symbol with no baseline on this platform: the same build's other platform,
+        by its strings - the one fact two compilers agree on.
+
+        Not the names IDA shows: the game's functions carry no symbols in the shipped
+        binaries (14182's libserver.so exports only libstdc++ and third-party code), so
+        a name in the database is one an earlier run gave it, and trusting it would let a
+        wrong find confirm itself."""
+        def unresolved(why, candidates=()):
+            self.report["unresolved"].append({"symbol": symbol, "category": category or "?", "why": why,
+                                              "candidates": [{"va": hex(v), "how": [h]} for v, h in candidates]})
+
+        if category not in (None, "func", "vfunc"):
+            unresolved(f"new {category}: no baseline to relocate - it needs an anchor (string, callee, slot) once")
+            return
+        va, how = None, None
+        if self.sister and symbol in (self.sister.get("symbols") or {}):
+            other = self.sister["symbols"][symbol]
+            hits = self.s_strings(symbol, other, {})
+            count = int(re.match(r"strings (\d+)", hits[0][1]).group(1)) if hits else 0
+            if count >= 3:
+                va, how = self.func_start(hits[0][0]), f"{self.sister.get('platform')} {self.sister.get('gamever')} {hits[0][1]}"
+            else:
+                unresolved(f"new here; the {self.sister.get('platform')} record's strings do not decide it"
+                           + (f" ({hits[0][1]})" if hits else ""), [(hits[0][0], hits[0][1])] if hits else [])
+                return
+        else:
+            where = f" and no {self.sister.get('platform')} record" if self.sister else ""
+            unresolved(f"new: no baseline in {self.facts.get('gamever')}{where} - it needs an anchor (string, callee, slot) once")
+            return
+        owner = self.resolved_va.get(va)
+        if va is None or (owner is not None and owner != symbol):
+            unresolved(f"{how} points at {hex(va) if va else '?'}, which is already {owner}")
+            return
+        out = self.emit(symbol, {"kind": "func", "ea": va})
+        self.resolved[symbol] = va
+        self.resolved_va.setdefault(va, symbol)
+        self.report["solved"].append({"symbol": symbol, "category": "func", "va": hex(va), "how": how, "score": None, "output": out})
+
+    def run(self, symbols=None, baseline_artifact_dir=None, existing_dirs=(), categories=None):
         suffix = f".{self.platform}.yaml"
         have = set()
         for directory in (self.out_dir, *existing_dirs):
@@ -1184,6 +1386,14 @@ class Hunter:
                 self.report["unresolved"].append({"symbol": symbol, "category": base.get("category"), "why": f"error: {error}", "candidates": []})
             if n % 25 == 0:
                 self.log(f"[hunt] {n}/{len(order)} ... solved {len(self.report['solved'])}")
+        # named symbols the baseline never had: nothing to relocate, so other evidence
+        for symbol in symbols or ():
+            if symbol in self.facts["symbols"] or symbol in have:
+                continue
+            try:
+                self.hunt_new(symbol, (categories or {}).get(symbol))
+            except Exception as error:
+                self.report["unresolved"].append({"symbol": symbol, "category": "?", "why": f"error: {error}", "candidates": []})
         return self.report
 
 

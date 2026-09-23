@@ -45,6 +45,12 @@ def _session(repo, gamever, module, platform):
     key = (gamever, module, platform)
     state = _STATE.get(key)
     if state is not None:
+        if state["sister"] is None and os.path.isfile(state["sister_path"]):
+            # built by the caller after the first ask
+            import json
+
+            with open(state["sister_path"], "r", encoding="utf-8") as handle:
+                state["sister"] = json.load(handle)
         return state
     import hunt_core
     import ida_backend
@@ -56,13 +62,21 @@ def _session(repo, gamever, module, platform):
                          f"(uv run baseline_facts.py -gamever <prev> -module {module} -platform {platform})"}
     backend = ida_backend.IdaBackend()
     sig_maker = _sig_maker(repo)
-    state = {"baseline": baseline, "facts": facts, "backend": backend,
+    sister_platform = "linux" if platform == "windows" else "windows"
+    sister_path = hunt_core.facts_path(repo, gamever, module, sister_platform)
+    sister = None
+    if os.path.isfile(sister_path):
+        import json
+
+        with open(sister_path, "r", encoding="utf-8") as handle:
+            sister = json.load(handle)
+    state = {"baseline": baseline, "facts": facts, "backend": backend, "sister": sister, "sister_path": sister_path,
              "scan": hunt_core.Scan(backend.exec_regions()), "sm_scan": sig_maker["Scan"]()}
     _STATE[key] = state
     return state
 
 
-def hunt(repo, symbols, out_dir):
+def hunt(repo, symbols, out_dir, categories=None):
     """Hunt `symbols` on the open binary, writing artifacts to `out_dir`.
 
     Returns {"solved": [...], "unresolved": [...], "log": [...]} or {"error": ...}. Only
@@ -88,7 +102,7 @@ def hunt(repo, symbols, out_dir):
     # that mirrors into bin/ and bin_artifacts/ on its own
     sig_maker["_OUTPUT_DIR_OVERRIDE"] = out_dir
     sig_maker["_PLATFORM_OVERRIDE"] = platform
-    wanted = [s for s in symbols if s in known]
+    wanted = list(symbols)
     report = {"solved": [], "unresolved": [], "changed": [], "skipped": []}
     try:
         if not wanted:
@@ -97,18 +111,19 @@ def hunt(repo, symbols, out_dir):
         hunter = hunt_core.Hunter(
             state["backend"], gamever, module, platform, facts, out_dir,
             emit=lambda symbol, rule: sig_maker["emit_symbol"](symbol, rule, {}, state["sm_scan"]),
-            log=lines.append, scan=state["scan"],
+            log=lines.append, scan=state["scan"], sister_facts=state["sister"],
         )
-        report = hunter.run(wanted, baseline_artifact_dir=os.path.join(repo, "bin_artifacts", state["baseline"], module))
+        report = hunter.run(wanted, baseline_artifact_dir=os.path.join(repo, "bin_artifacts", state["baseline"], module),
+                            categories=categories)
     except _NothingToHunt:
         pass
     finally:
         sig_maker["_OUTPUT_DIR_OVERRIDE"] = None
         sig_maker["_PLATFORM_OVERRIDE"] = None
-    for symbol in symbols:
-        if symbol not in known:
-            report["unresolved"].append({"symbol": symbol, "category": "?", "candidates": [],
-                                         "why": f"not in the {state['baseline']} baseline facts"})
     hunt_core.print_report(report, lines.append)
+    new_symbols = [s for s in symbols if s not in known]
     return {"solved": report["solved"], "unresolved": report["unresolved"] + report["changed"],
-            "baseline": state["baseline"], "log": lines}
+            "baseline": state["baseline"], "log": lines,
+            # a symbol this platform's baseline never had can be transferred from the same
+            # build's other platform, once its facts exist
+            "sister_missing": bool(new_symbols) and state["sister"] is None and platform == "windows"}
