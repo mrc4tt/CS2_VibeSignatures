@@ -897,8 +897,31 @@ def _auto_hunt_first(symbols):
     return solved, hints
 
 
+def manual_todo_symbols():
+    """Symbols the pipeline left for a person (manual_todo/<gamever>/<module>.<platform>.txt),
+    written by ida_analyze_bin when neither its hunter nor an agent could prove them."""
+    target = detect_target()
+    if not target:
+        return [], None
+    path = os.path.join(target["repo_root"], "manual_todo", target["gamever"],
+                        f"{target['module']}.{target['platform']}.txt")
+    if not os.path.isfile(path):
+        return [], path
+    symbols = []
+    with open(path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            if line.strip() and not line.startswith("#"):
+                name = line.split()[0]
+                if not os.path.isfile(os.path.join(target["artifact_dir"], f"{name}.{target['platform']}.yaml")):
+                    symbols.append(name)
+    return symbols, path
+
+
 def interactive_main():
-    text = ida_kernwin.ask_text(16384, DEFAULT_QUEUE,
+    todo, todo_path = manual_todo_symbols()
+    if todo:
+        print(f"[sig_maker] {len(todo)} symbol(s) left by the pipeline in {todo_path}")
+    text = ida_kernwin.ask_text(16384, "\n".join(todo) if todo else DEFAULT_QUEUE,
                                 "Symbols to make (one per line). Edit the list freely:")
     if not text:
         return

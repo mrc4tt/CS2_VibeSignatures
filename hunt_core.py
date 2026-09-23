@@ -686,7 +686,8 @@ def emit_artifact(backend, scan, symbol, rule, out_dir, platform, log=None):
 # ----------------------------------------------------------------------------- hunter
 
 class Hunter:
-    def __init__(self, backend, gamever, module, platform, facts, out_dir, emit=None, dry_run=False, min_score=MIN_SCORE, log=print):
+    def __init__(self, backend, gamever, module, platform, facts, out_dir, emit=None, dry_run=False, min_score=MIN_SCORE, log=print,
+                 scan=None):
         self.b = backend
         self.gamever, self.module, self.platform = gamever, module, platform
         self.facts = facts
@@ -694,7 +695,8 @@ class Hunter:
         self.dry_run = dry_run
         self.min_score = min_score
         self.log = log
-        self.scan = Scan(backend.exec_regions())
+        # a caller hunting one task at a time (pipeline_hunt) passes its cached scan
+        self.scan = scan or Scan(backend.exec_regions())
         self.data_regions = backend.data_regions()
         self.fb = FactsBuilder(backend)
         self._emit = emit or (lambda symbol, rule: emit_artifact(backend, self.scan, symbol, rule, out_dir, platform, log=log))

@@ -59,4 +59,5 @@ baseline_facts/
 auto_hunt_reports/
 ghidra_projects/
 auto_hunt_out/
+manual_todo/
 schema/

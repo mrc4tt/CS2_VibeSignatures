@@ -58,7 +58,7 @@ def _load_all():
             if os.path.exists(path):
                 # a real __name__ keeps the scripts' own __main__ guards from
                 # firing (bare exec globals would resolve it to "builtins")
-                namespace = _NS.setdefault(script, {"__name__": "cs2_plugin_" + script[:-3]})
+                namespace = _NS.setdefault(script, {"__name__": "cs2_plugin_" + script[:-3], "__file__": path})
                 with open(path, "r", encoding="utf-8") as handle:
                     exec(compile(handle.read(), path, "exec"), namespace)
                 print(f"[cs2_plugins] loaded {path}")

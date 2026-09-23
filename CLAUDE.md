@@ -42,6 +42,17 @@ that it should exist. Recovery is attempted in this order, cheapest first:
 2. `auto_hunt_headless.py` — five strategies in pure Python (reloc, vtable, seed-sig, sibling,
    string-anchor); runs on the server with no IDA.
 3. The IDA-side auto-hunt (Ctrl-Alt-H) and the agent-driven finder skills in `.claude/skills/`.
+   The run does the first of these itself: when a preprocessor fails, `pipeline_hunt.py`
+   runs Ctrl-Alt-H's hunter (`hunt_core` + `ida_backend`, same evidence rule, no UI) inside
+   the run's own idalib session, and an agent is started only for what it cannot prove.
+   Its artifacts go through the same finalize/validator as an agent's. It needs
+   `baseline_facts/<prev>/<module>.<platform>.json` (gitignored) and builds it once from the
+   previous gamever's warm IDB when missing (`CS2VIBE_PIPELINE_HUNT_FACTS=0` stops that;
+   `CS2VIBE_PIPELINE_HUNT=0` turns the pass off). What neither the hunter nor the agent
+   resolves lands in `manual_todo/<gamever>/<module>.<platform>.txt` with the hunter's best
+   candidate and why it stopped; Ctrl-Alt-D pre-fills its list from that file, and an entry
+   drops out as soon as its artifact exists. `CS2VIBE_AGENT=none` skips agents entirely:
+   free work only, the rest goes to the list.
 4. Hand analysis, with `idat` (headless IDA, `/root/ida-pro-9.1/idat -A -S"<script>" -L"<log>" <binary>`;
    the IDB is `<binary>.i64`, e.g. `client.dll.i64`).
 
@@ -734,7 +745,7 @@ Two guards now catch the class before the baseline does:
 | Ctrl-Alt-H | auto-hunt v2 | 5 strategies: reloc, vtable, seed-sig, sibling, string-anchor |
 | Ctrl-Alt-J | hunt named symbols | Asks for names (comma separated); hunts only those, even if an artifact exists |
 | Ctrl-Alt-E | emit artifact here | Artifact for the address under the cursor (also `emit_artifact.py` CLI) |
-| Ctrl-Alt-D | sig maker batch | List of symbols: hunted automatically first (Ctrl-Alt-H's engine and evidence rule); only the rest is placed by hand, with the cursor already moved to the hunter's best candidate |
+| Ctrl-Alt-D | sig maker batch | List of symbols (pre-filled from `manual_todo/` when the run left one): hunted automatically first (Ctrl-Alt-H's engine and evidence rule); only the rest is placed by hand, with the cursor already moved to the hunter's best candidate |
 | Ctrl-Alt-V | vtable finder | Interactive: class + slot + symbol |
 | Ctrl-Alt-O | struct member emitter | Cursor on member-access instruction |
 
@@ -756,6 +767,8 @@ Two guards now catch the class before the baseline does:
   failures retry, so budget ~1.3 calls per spec. Nothing is metered in-repo; there is no token
   accounting
 - Agent auto-select: if CS2VIBE_AGENT unset, scripts pick first installed CLI
+- `CS2VIBE_AGENT=none` (or `manual`/`off`): no agent at all - preprocessors and the in-session
+  hunter only, everything else written to `manual_todo/` for Ctrl-Alt-D
 
 ## Commit conventions
 

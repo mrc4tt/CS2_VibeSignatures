@@ -2884,6 +2884,135 @@ def _entry_point_output_issues(output_paths, binary_path):
     return issues
 
 
+PIPELINE_HUNT_ENV = "CS2VIBE_PIPELINE_HUNT"
+PIPELINE_HUNT_FACTS_ENV = "CS2VIBE_PIPELINE_HUNT_FACTS"
+MANUAL_TODO_DIRNAME = "manual_todo"
+_NO_AGENT_NAMES = ("none", "manual", "off")
+_pipeline_hunt_unavailable = {}
+
+
+def agent_disabled(agent):
+    """CS2VIBE_AGENT=none: free work only - what it cannot prove goes to the manual list."""
+    return str(agent or "").strip().lower() in _NO_AGENT_NAMES
+
+
+async def _pipeline_hunt_via_mcp(host, port, expected_binary, symbols, out_dir):
+    repo = os.path.dirname(os.path.abspath(__file__))
+    code = (
+        "import json, sys\n"
+        f"repo = {json.dumps(repo)}\n"
+        "if repo not in sys.path:\n"
+        "    sys.path.insert(0, repo)\n"
+        "import pipeline_hunt\n"
+        f"result = json.dumps(pipeline_hunt.hunt(repo, {json.dumps(list(symbols))}, {json.dumps(os.fspath(out_dir))}))\n"
+    )
+    async with open_ida_mcp_session(host, port, expected_binary=expected_binary) as session:
+        response = await session.call_tool(name="py_eval", arguments={"code": code})
+    payload = _parse_py_eval_result_json(response)
+    if payload is None:
+        raw = _parse_tool_json_content(response)
+        detail = raw.get("stderr") if isinstance(raw, dict) else raw
+        return {"error": f"py_eval returned no result: {str(detail)[-400:]}"}
+    return payload
+
+
+def _generate_baseline_facts(old_artifact_dir, module_name, platform):
+    """Build the baseline facts the hunter needs, once, from the previous gamever's warm IDB."""
+    if os.environ.get(PIPELINE_HUNT_FACTS_ENV, "1") == "0" or not old_artifact_dir:
+        return False
+    baseline = os.path.basename(os.path.dirname(os.path.abspath(old_artifact_dir)))
+    repo = os.path.dirname(os.path.abspath(__file__))
+    print(f"    Hunter: building baseline facts {baseline}/{module_name}.{platform} from the warm IDB (once)")
+    try:
+        completed = subprocess.run(
+            [sys.executable, os.path.join(repo, "baseline_facts.py"), "-gamever", baseline,
+             "-module", module_name, "-platform", platform],
+            cwd=repo, capture_output=True, text=True, timeout=2400,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        print(f"    Hunter: baseline facts failed ({error})")
+        return False
+    if completed.returncode != 0:
+        print(f"    Hunter: baseline facts failed: {(completed.stderr or completed.stdout).strip()[-300:]}")
+        return False
+    return True
+
+
+def run_pipeline_hunt(*, host, port, binary_path, symbols, artifact_dir, old_artifact_dir,
+                      module_name, platform):
+    """Ctrl-Alt-H's hunter in the open session, before an agent is paid.
+
+    Returns the hunt result ({"solved", "unresolved"}) or None when the hunter is off or
+    unavailable for this binary (the reason is printed once).
+    """
+    if os.environ.get(PIPELINE_HUNT_ENV, "1") == "0" or not symbols:
+        return None
+    key = (str(binary_path), platform)
+    if key in _pipeline_hunt_unavailable:
+        return None
+    try:
+        result = asyncio.run(_pipeline_hunt_via_mcp(host, port, binary_path, symbols, artifact_dir))
+        if result.get("error", "").startswith("no baseline facts") and _generate_baseline_facts(
+            old_artifact_dir, module_name, platform
+        ):
+            result = asyncio.run(_pipeline_hunt_via_mcp(host, port, binary_path, symbols, artifact_dir))
+    except Exception as error:
+        result = {"error": f"{type(error).__name__}: {error}"}
+    if result.get("error"):
+        _pipeline_hunt_unavailable[key] = result["error"]
+        print(f"    Hunter unavailable for this binary: {result['error']}")
+        return None
+    for line in result.get("log") or []:
+        if line.startswith(("  OK", "  ??", "  CHG")):
+            print(f"    Hunter:{line[1:]}")
+    return result
+
+
+def manual_todo_path(gamever, module_name, platform, repo_root=None):
+    repo = repo_root or os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(repo, MANUAL_TODO_DIRNAME, str(gamever), f"{module_name}.{platform}.txt")
+
+
+def describe_unresolved(row):
+    """One line for the manual list: why the hunter stopped, and where to look first."""
+    candidates = row.get("candidates") or []
+    best = ""
+    if candidates:
+        first = candidates[0]
+        score = first.get("score")
+        best = f"best {first.get('va')}" + (f" ({score})" if score is not None else "") + " | "
+    return f"{row.get('category', '?')} | {best}{row.get('why', '')}"
+
+
+def update_manual_todo(path, artifact_dir, platform, entries):
+    """Merge {symbol: (task, detail)} into the manual list; entries whose artifact now
+    exists drop out, so the file is always what is still left to do."""
+    rows = {}
+    if os.path.isfile(path):
+        with open(path, "r", encoding="utf-8") as handle:
+            for line in handle:
+                if not line.strip() or line.startswith("#"):
+                    continue
+                parts = line.rstrip("\n").split(None, 2)
+                if len(parts) >= 2:
+                    rows[parts[0]] = (parts[1], parts[2] if len(parts) > 2 else "")
+    rows.update(entries)
+    rows = {
+        symbol: value for symbol, value in rows.items()
+        if not os.path.isfile(os.path.join(artifact_dir, f"{symbol}.{platform}.yaml"))
+    }
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(
+            "# Left for a person: symbol  task  category | best candidate | why the hunter stopped.\n"
+            "# Ctrl-Alt-D in IDA reads this file (jumps to each candidate); push the YAMLs you make.\n"
+        )
+        for symbol in sorted(rows):
+            task, detail = rows[symbol]
+            handle.write(f"{symbol:<60} {task:<60} {detail}\n")
+    return len(rows)
+
+
 def artifact_only_disabled_consumers(artifact_path, platform, config_path, repo_root=None):
     """True when the artifact's ONLY readers are switched-off generators.
 
@@ -4584,8 +4713,6 @@ def process_binary(
                 abort_binary_processing = True
                 break
 
-            print(f"    Starting agent skill: {skill_name}")
-            _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.AGENT_FALLBACK)
             progress_callback = _build_agent_progress_callback(reporting, job_id, skill_name)
 
             mcp_url = f"http://{host}:{port}/mcp"
@@ -4622,20 +4749,88 @@ def process_binary(
                     list(required_outputs) + list(optional_outputs), binary_path
                 )
 
-            agent_succeeded = run_skill(
-                skill_name,
-                agent,
-                debug,
-                # A baseline-backed optional output is validated like a required one,
-                # so the agent retries when it produces nothing instead of reporting
-                # success over a missing artifact.
-                expected_yaml_paths=required_outputs or regressed_optional_outputs,
-                max_retries=skill_max_retries,
-                agent_model=agent_model,
-                progress_callback=progress_callback,
-                mcp_url=mcp_url,
-                output_validator=validate_agent_outputs,
-            )
+            # Ctrl-Alt-H's hunter first, in this same session: it writes only what its
+            # evidence rule proves, so a symbol that merely moved costs no agent run.
+            wanted_outputs = list(required_outputs or regressed_optional_outputs)
+            hunt_targets = [path for path in wanted_outputs if not os.path.exists(path)]
+            hunted = None
+            if hunt_targets and not skip_pp:
+                hunted = run_pipeline_hunt(
+                    host=host,
+                    port=port,
+                    binary_path=binary_path,
+                    symbols=[_derive_artifact_symbol_name(path, platform) for path in hunt_targets],
+                    artifact_dir=artifact_dir,
+                    old_artifact_dir=old_artifact_dir,
+                    module_name=module_name or os.path.basename(os.path.normpath(artifact_dir)),
+                    platform=platform,
+                )
+            agent_succeeded = False
+            if hunted and hunted.get("solved") and all(os.path.isfile(path) for path in wanted_outputs):
+                try:
+                    hunter_issues = validate_agent_outputs()
+                except NonRetryableOutputError as error:
+                    hunter_issues = [str(error)]
+                if hunter_issues:
+                    print(f"    Hunter output rejected: {' | '.join(hunter_issues)}")
+                    for path in hunt_targets:
+                        if os.path.isfile(path):
+                            os.remove(path)
+                else:
+                    print("    Solved by the hunter - no agent needed")
+                    agent_succeeded = True
+
+            if not agent_succeeded:
+                unresolved_rows = {row.get("symbol"): row for row in (hunted or {}).get("unresolved") or []}
+                todo_entries = {}
+                for path in hunt_targets:
+                    if os.path.exists(path):
+                        continue
+                    symbol = _derive_artifact_symbol_name(path, platform)
+                    row = unresolved_rows.get(symbol)
+                    detail = describe_unresolved(row) if row else "? | hunter did not run (no session, facts or baseline)"
+                    todo_entries[symbol] = (skill_name, detail)
+                todo_path = manual_todo_path(
+                    gamever or os.path.basename(os.path.dirname(os.path.normpath(artifact_dir))),
+                    module_name or os.path.basename(os.path.normpath(artifact_dir)),
+                    platform,
+                )
+                if agent_disabled(agent):
+                    left = update_manual_todo(todo_path, artifact_dir, platform, todo_entries)
+                    skip_count += 1
+                    print(f"  Left for manual work: {skill_name} ({', '.join(todo_entries) or 'partial outputs'})"
+                          f" -> {todo_path} ({left} open)")
+                    _report_skill_status(
+                        reporting,
+                        job_id,
+                        skill_name,
+                        TaskStatus.SKIPPED,
+                        ProcessPhase.FINISHED,
+                        reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
+                    )
+                    continue
+                print(f"    Starting agent skill: {skill_name}")
+                _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.AGENT_FALLBACK)
+                agent_succeeded = run_skill(
+                    skill_name,
+                    agent,
+                    debug,
+                    # A baseline-backed optional output is validated like a required one,
+                    # so the agent retries when it produces nothing instead of reporting
+                    # success over a missing artifact.
+                    expected_yaml_paths=required_outputs or regressed_optional_outputs,
+                    max_retries=skill_max_retries,
+                    agent_model=agent_model,
+                    progress_callback=progress_callback,
+                    mcp_url=mcp_url,
+                    output_validator=validate_agent_outputs,
+                )
+                if not agent_succeeded and todo_entries:
+                    # what neither the hunter nor the agent could do is left for a person
+                    update_manual_todo(
+                        todo_path, artifact_dir, platform,
+                        {symbol: (task, f"agent failed | {detail}") for symbol, (task, detail) in todo_entries.items()},
+                    )
             changed_existing_outputs = _changed_existing_outputs(existing_output_digests) if force_all else []
             if changed_existing_outputs:
                 fail_count += 1
