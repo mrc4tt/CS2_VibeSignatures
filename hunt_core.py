@@ -56,14 +56,26 @@ def to_int(value):
 
 
 def parse_yaml(path):
-    """Flat key: value reader for artifact files (no PyYAML inside IDA/Ghidra)."""
-    data = {}
+    """Flat key: value reader for artifact files (no PyYAML inside IDA/Ghidra).
+
+    A long signature is folded onto indented continuation lines; those belong to the value
+    above. Reading only the first line cut 487 of 14181's signatures short - usually still
+    unique, but not ILoopModeFactory_Shutdown's, which then matched twice."""
+    data, last = {}, None
     with open(path, "r", encoding="utf-8") as handle:
         for line in handle:
-            if ":" in line and not line.startswith((" ", "#")):
+            if line.startswith("#") or not line.strip():
+                continue
+            if line.startswith((" ", "\t")):
+                # "  0: '0x...'" is a nested mapping (vtable_entries), not a folded value
+                if last is not None and not re.match(r"\s+[^\s:]+:(\s|$)", line):
+                    data[last] = f"{data[last]} {line.strip()}".strip()
+                continue
+            if ":" in line and not line.startswith((" ", "\t")):
                 key, _, value = line.partition(":")
-                data[key.strip()] = value.strip().strip("'\"")
-    return data
+                last = key.strip()
+                data[last] = value.strip()
+    return {key: value.strip("'\"") for key, value in data.items()}
 
 
 def category_of(rec):
@@ -140,6 +152,26 @@ class Scan:
                     return out
                 pos = rx.search(blob, pos.start() + 1)
         return out
+
+
+def vcall_disp_variants(sig):
+    """The pattern with its leading call's displacement wildcarded, same size and (for a
+    disp8 that may have outgrown a byte) disp32: FF 50 xx / FF 90 xx xx xx xx."""
+    tokens = str(sig).split()
+    if len(tokens) < 3 or tokens[0] != "FF" or "?" in tokens[1]:
+        return []
+    modrm = int(tokens[1], 16)
+    mod, reg, rm = modrm >> 6, (modrm >> 3) & 7, modrm & 7
+    if reg != 2 or mod not in (1, 2):
+        return []
+    head = 2 + (1 if rm == 4 else 0)
+    size = 1 if mod == 1 else 4
+    rest = tokens[head + size:]
+    out = [" ".join(tokens[:head] + ["??"] * size + rest)]
+    if mod == 1:
+        wide = f"{(2 << 6) | (reg << 3) | rm:02X}"
+        out.append(" ".join([tokens[0], wide] + tokens[2:head] + ["??"] * 4 + rest))
+    return out
 
 
 def find_qword_holders(value, regions):
@@ -733,6 +765,7 @@ class Hunter:
         # where this build's own <Class>_vtable.<platform>.yaml may already sit: the answer
         # when RTTI cannot name the class (templates such as CLoopModeFactory<CLoopModeGame>)
         self.vtable_artifact_dirs = [out_dir]
+        self.baseline_artifact_dir, self.existing_dirs = None, ()
         self.report = {"solved": [], "unresolved": [], "changed": [], "skipped": []}
         if os.path.isdir(out_dir):
             for name in os.listdir(out_dir):
@@ -1291,8 +1324,109 @@ class Hunter:
                 handle.writelines(kept)
         return out
 
+    def relocate_vcall(self, symbol, artifact):
+        """A slot number read at a call site (vfunc_sig, no func_va): CLoopTypeBase_GetImplType
+        is `call [rax+0x48]` inside CEngineServiceMgr_UnregisterLoopMode. The interface's own
+        slot points at _purecall, so the site is the only evidence - and it is exact when the
+        old pattern, displacement included, still matches once."""
+        sig = artifact.get("vfunc_sig")
+        if not sig or artifact.get("func_va"):
+            return None
+        offset = to_int(artifact.get("vfunc_offset"))
+        hits = self.scan.matches(sig, limit=2)
+        moved = False
+        if not hits:
+            # the slot may have moved (IEngineServiceMgr_GetEventDispatcher: call [rax+0xE8] ->
+            # [rax+0xE0] on client 14182): the same site with the displacement as a wildcard,
+            # still unique, is the same call - and its displacement is the new slot
+            for variant in vcall_disp_variants(sig):
+                hits = self.scan.matches(variant, limit=2)
+                if hits:
+                    sig, moved = variant, True
+                    break
+        if len(hits) != 1:
+            return f"call-site pattern matches {len(hits)} places"
+        insn = self.b.insn(hits[0])
+        disp = next((op.addr for op in (insn.ops if insn else []) if op.kind == "displ" and op.addr is not None), None)
+        if insn is None or insn.mnem != "call" or disp is None or offset is None:
+            return f"no virtual call at {hex(hits[0])}"
+        disp = int(disp) & 0xFFFFFFFF
+        if disp % 8 or disp > 0x2000:
+            return f"call at {hex(hits[0])} uses offset {hex(disp)}, not a vtable slot"
+        if disp != offset and not moved and "??" not in sig.split()[2:3]:
+            return f"call site at {hex(hits[0])} does not call slot offset {artifact.get('vfunc_offset')}"
+        data = {key: artifact[key] for key in ("func_name", "vtable_name", "vfunc_sig_allow_across_function_boundary")
+                if key in artifact}
+        data.update({"vfunc_offset": hex(disp), "vfunc_index": disp // 8, "vfunc_sig": artifact["vfunc_sig"]})
+        if moved:
+            # the new site's own call bytes, displacement pinned again as in the baseline
+            raw = self.b.read(hits[0], insn.size) or b""
+            tokens = sig.split()
+            tokens[: len(raw)] = [f"{b:02X}" for b in raw]
+            data["vfunc_sig"] = " ".join(tokens)
+        out = None
+        if not self.dry_run:
+            os.makedirs(self.out_dir, exist_ok=True)
+            out = os.path.join(self.out_dir, f"{symbol}.{self.platform}.yaml")
+            with open(out, "w", encoding="utf-8") as handle:
+                handle.write(render_yaml(data))
+        self.report["solved"].append({"symbol": symbol, "category": "vfunc", "va": hex(hits[0]),
+                                      "how": (f"call site relocated, slot moved {artifact.get('vfunc_index')} -> {disp // 8} "
+                                              f"(call [reg+{hex(offset)}] is now [reg+{hex(disp)}])" if disp != offset else
+                                              f"call site relocated (call [reg+{hex(disp)}] -> slot {disp // 8})"),
+                                      "score": None, "output": out})
+        return True
+
+    def relocate_slot_only(self, symbol, artifact, existing_dirs=()):
+        """An interface slot with no function and no call site (INetworkGameServer_Set...):
+        the method of the same name in another class shared its slot in the baseline, and
+        that one has been found in this build - so the slot is the one it has now."""
+        index = to_int(artifact.get("vfunc_index"))
+        method = symbol.split("_", 1)[1] if "_" in symbol else None
+        if index is None or not method or not self.baseline_artifact_dir:
+            return None
+        suffix = f"_{method}.{self.platform}.yaml"
+        for name in sorted(os.listdir(self.baseline_artifact_dir)):
+            if not name.endswith(suffix) or name == f"{symbol}.{self.platform}.yaml":
+                continue
+            before = parse_yaml(os.path.join(self.baseline_artifact_dir, name))
+            if to_int(before.get("vfunc_index")) != index:
+                continue
+            for directory in (self.out_dir, *existing_dirs):
+                path = os.path.join(directory, name)
+                if not os.path.isfile(path):
+                    continue
+                now = to_int(parse_yaml(path).get("vfunc_index"))
+                if now is None:
+                    continue
+                data = {"func_name": symbol, "vtable_name": artifact.get("vtable_name"),
+                        "vfunc_offset": hex(now * 8), "vfunc_index": now}
+                out = None
+                if not self.dry_run:
+                    os.makedirs(self.out_dir, exist_ok=True)
+                    out = os.path.join(self.out_dir, f"{symbol}.{self.platform}.yaml")
+                    with open(out, "w", encoding="utf-8") as handle:
+                        handle.write(render_yaml(data))
+                sibling = name[: -len(f".{self.platform}.yaml")]
+                self.report["solved"].append({"symbol": symbol, "category": "vfunc", "va": "-",
+                                              "how": f"slot {now}: {sibling} shared slot {index} in the baseline and is at {now} now",
+                                              "score": None, "output": out})
+                return True
+        return None
+
     def hunt(self, symbol, base, artifact):
         category = base.get("category", "func")
+        if category in ("func", "vfunc") and artifact and not artifact.get("func_va") \
+                and not artifact.get("vfunc_sig") and artifact.get("vfunc_index") is not None:
+            if self.relocate_slot_only(symbol, artifact, self.existing_dirs):
+                return
+        if category in ("func", "vfunc") and artifact.get("vfunc_sig") and not artifact.get("func_va"):
+            outcome = self.relocate_vcall(symbol, artifact)
+            if outcome is True:
+                return
+            if outcome:
+                self.report["unresolved"].append({"symbol": symbol, "category": "vfunc", "why": outcome, "candidates": []})
+                return
         if category == "vtable":
             self.report["skipped"].append({"symbol": symbol, "why": "vtable artifacts come from their own task"})
             return
@@ -1416,6 +1550,7 @@ class Hunter:
         targets = [s for s in self.facts["symbols"] if s not in have and (not symbols or s in symbols)]
         self.log(f"[hunt] {self.module}/{self.platform} {self.gamever}: {len(targets)} missing vs {self.facts.get('gamever')}")
         order = sorted(targets, key=lambda s: 0 if self.facts["symbols"][s].get("category") in ("func", "vfunc") else 1)
+        self.baseline_artifact_dir, self.existing_dirs = baseline_artifact_dir, tuple(existing_dirs)
         for n, symbol in enumerate(order, 1):
             base = self.facts["symbols"][symbol]
             artifact = {}

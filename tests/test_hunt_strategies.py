@@ -269,3 +269,39 @@ class TemplateVtableTests(unittest.TestCase):
             self.assertEqual(h.vtable_from_artifact("CLoopModeFactory_CLoopModeGame_vtable"), 0x5000)
             self.assertEqual(h.vtable_from_artifact("CLoopModeFactory_CLoopModeGame"), 0x5000)
             self.assertIsNone(h.vtable_from_artifact("Other_vtable"))
+
+
+class ParseYamlTests(unittest.TestCase):
+    def test_folded_signature_and_nested_mapping(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "a.yaml")
+            with open(path, "w") as handle:
+                handle.write("func_name: X\nvfunc_sig: FF 50 08 EB ?? 48\n  FF 50 ?? EB\nvtable_entries:\n  0: '0x10'\n"
+                             "vfunc_index: 1\n")
+            got = H.parse_yaml(path)
+        self.assertEqual(got["vfunc_sig"], "FF 50 08 EB ?? 48 FF 50 ?? EB")   # both lines, not the first
+        self.assertEqual(got["vtable_entries"], "")
+        self.assertEqual(got["vfunc_index"], "1")
+
+
+class SlotOnlyTests(unittest.TestCase):
+    def test_interface_slot_follows_the_sibling_that_shared_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = os.path.join(tmp, "old"), os.path.join(tmp, "new")
+            os.makedirs(old), os.makedirs(new)
+            for folder, index in ((old, 1), (new, 2)):
+                with open(os.path.join(folder, "CBase_SetX.windows.yaml"), "w") as handle:
+                    handle.write(f"vtable_name: CBase\nvfunc_index: {index}\n")
+            h, _ = hunter(FakeBinary({0x1000: {}}), {"gamever": "1", "symbols": {}}, new)
+            h.baseline_artifact_dir = old
+            self.assertTrue(h.relocate_slot_only("IBase_SetX", {"vtable_name": "IBase", "vfunc_index": "1"}))
+            got = H.parse_yaml(os.path.join(new, "IBase_SetX.windows.yaml"))
+        self.assertEqual((got["vfunc_index"], got["vfunc_offset"], got["vtable_name"]), ("2", "0x10", "IBase"))
+
+
+class VcallVariantTests(unittest.TestCase):
+    def test_displacement_wildcards(self):
+        self.assertEqual(H.vcall_disp_variants("FF 90 E8 00 00 00 48 8B D8"), ["FF 90 ?? ?? ?? ?? 48 8B D8"])
+        self.assertEqual(H.vcall_disp_variants("FF 50 48 83 F8"), ["FF 50 ?? 83 F8", "FF 90 ?? ?? ?? ?? 83 F8"])
+        self.assertEqual(H.vcall_disp_variants("48 8B 01 FF 50 08"), [])      # not starting at the call
+        self.assertEqual(H.vcall_disp_variants("FF 60 08"), [])               # jmp, not call
