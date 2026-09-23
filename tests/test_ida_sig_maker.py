@@ -354,3 +354,36 @@ class SignatureLadderTests(unittest.TestCase):
         with patch.object(self.m, "_grow_signature", side_effect=[None, None, None]):
             with self.assertRaises(ValueError):
                 self.m.signature_ex(0x1000, MagicMock())
+
+
+def load_auto_hunt():
+    names = ("ida_auto ida_bytes ida_funcs ida_ida ida_idaapi ida_kernwin ida_name ida_nalt ida_segment ida_ua idautils idc").split()
+    stubs = {name: MagicMock() for name in names}
+    stubs["ida_kernwin"].action_handler_t = object
+    stubs["ida_idaapi"].BADADDR = -1
+    with patch.dict(sys.modules, stubs):
+        spec = importlib.util.spec_from_file_location("auto_hunt_under_test", ROOT / "ida_auto_hunt.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    return module
+
+
+class AutoHuntScoringTests(unittest.TestCase):
+    def setUp(self):
+        self.h = load_auto_hunt()
+
+    def test_token_match_treats_wildcards_as_agreement(self):
+        self.assertEqual(self.h.token_match(["55", "??", "E5"], ["55", "48", "E5"]), 1.0)
+        self.assertAlmostEqual(self.h.token_match(["55", "48"], ["55", "49"]), 0.5)
+        self.assertEqual(self.h.token_match([], ["55"]), 0.0)
+
+    def test_similarity_rewards_identical_functions_and_punishes_size_mismatch(self):
+        base = {"head": ["55", "48", "89", "E5"], "mnem": ["push", "mov", "call", "ret"], "size": 100, "strings": ["Kicking user %s"]}
+        same = dict(base)
+        self.assertGreater(self.h.similarity(base, same), 0.95)
+        other = {"head": ["41", "57", "41", "56"], "mnem": ["push", "push", "sub", "lea"], "size": 3000, "strings": []}
+        self.assertLess(self.h.similarity(base, other), 0.4)
+
+    def test_version_key_orders_suffixed_gamevers(self):
+        self.assertLess(self.h.version_key("14181"), self.h.version_key("14181b"))
+        self.assertLess(self.h.version_key("14181b"), self.h.version_key("14182"))

@@ -148,6 +148,25 @@ udvej: de lave displacement-bytes fastholdes (det pipelinen selv gør for famili
 identiske hoveder som point_script-bindingerne). Trin 3 flytter sig ved næste build -
 scriptet siger det, og et streng- eller vtable-anker bør så tilføjes i preprocessoren.
 
+## Automatisk jagt uden cursor (Ctrl-Alt-H / `auto_hunt_ida.py`)
+
+1. Én gang per baseline: `uv run baseline_facts.py -gamever 14181 -module server -platform linux`
+   (kører headless over en kopi af den varme baseline-IDB, ~2 min, skriver
+   `baseline_facts/14181/server.linux.json`: maskerede hoveder, mnemonic-sekvens, kald i
+   rækkefølge, kaldere med ordinal, strenge, vcall-offsets, hele vtable-nabolaget per klasse,
+   og for members/globals/patches instruktions-form + kontekst + ejerfunktion).
+2. I GUI'en med den NYE binær åben: **Ctrl-Alt-H**. Eller headless på en kopi af IDB'en:
+   `uv run auto_hunt_ida.py -gamever 14182 -module server -platform linux [-symbols A,B] [-dry_run] [-outdir DIR]`
+
+Strategier per manglende symbol, alle verificeret mod baseline-fakta før der skrives:
+reloc, head-reloc (maskeret hoved vokset til entydigt), vtable med **målt slot-forskydning**
+(nabolaget justeres, aldrig det gamle index), strengsæt-afstemning, kaldgraf (N'te kald i
+en allerede løst kalder, funktioner der kalder kendte callees), callee-hoveder, nabo. Members,
+globals og patches findes inde i den løste ejerfunktion efter instruktions-form + kontekst; en
+patch hvis instruktion har skiftet form rapporteres som CHG og skrives aldrig. Resten kommer
+med kandidater og score, så et menneske starter fra en shortlist. Målt på 14182 server/linux:
+20 af 22 løst, alle enige med håndderiverede adresser; de to sidste korrekt tilbageholdt.
+
 ## Output og fejl
 
 YAML skrives atomisk til `bin_artifacts/<gamever>/<module>/<Symbol>.<platform>.yaml`.
