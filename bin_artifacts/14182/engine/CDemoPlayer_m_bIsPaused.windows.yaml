@@ -1,0 +1,5 @@
+struct_name: CDemoPlayer
+member_name: m_bIsPaused
+offset: '0x1231'
+size: 1
+offset_sig: "C6 81 31 12 00 00 01"
