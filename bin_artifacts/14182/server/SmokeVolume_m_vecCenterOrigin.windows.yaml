@@ -1,0 +1,4 @@
+struct_name: SmokeVolume
+member_name: m_vecCenterOrigin
+offset: '0xd4'
+offset_sig: "F2 0F 11 87 D4 00 00 00 89 87 ?? ?? ?? ??"

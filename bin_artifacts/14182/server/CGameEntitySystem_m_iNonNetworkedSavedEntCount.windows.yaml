@@ -1,0 +1,5 @@
+struct_name: CGameEntitySystem
+member_name: m_iNonNetworkedSavedEntCount
+offset: '0x2124'
+size: 4
+offset_sig: "FF 87 24 21 00 00"

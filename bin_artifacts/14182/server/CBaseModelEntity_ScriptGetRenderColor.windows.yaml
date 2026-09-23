@@ -1,0 +1,5 @@
+func_name: CBaseModelEntity_ScriptGetRenderColor
+func_va: '0x180639740'
+func_rva: '0x639740'
+func_size: '0x3c'
+func_sig: "0F B6 81 ?? ?? ?? ?? 66 0F 6E C0"

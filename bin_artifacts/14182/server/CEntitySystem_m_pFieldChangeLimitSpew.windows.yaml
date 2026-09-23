@@ -1,0 +1,4 @@
+struct_name: CEntitySystem
+member_name: m_pFieldChangeLimitSpew
+offset: '0xd18'
+offset_sig: "4C 8B 83 18 0D 00 00"

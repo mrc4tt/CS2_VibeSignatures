@@ -1,0 +1,4 @@
+func_name: CBasePlayerPawn_OnTakeDamage_Alive
+vtable_name: CBasePlayerPawn
+vfunc_offset: '0x7f8'
+vfunc_index: 255

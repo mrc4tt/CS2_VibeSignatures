@@ -1,0 +1,4 @@
+struct_name: CEntitySystem
+member_name: m_pNetworkFieldChangedEventQueue
+offset: '0xd08'
+offset_sig: "48 89 83 08 0D 00 00"

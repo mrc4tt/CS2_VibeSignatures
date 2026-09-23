@@ -1,0 +1,4 @@
+struct_name: CEntitySystem
+member_name: m_Symbols
+offset: '0x1f50'
+offset_sig: "4C 8D 8B 50 1F 00 00"

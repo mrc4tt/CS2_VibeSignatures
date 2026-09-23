@@ -1,0 +1,5 @@
+func_name: CBaseEntity_GetAbsVelocity
+func_va: '0x1803d0380'
+func_rva: '0x3d0380'
+func_size: '0xda'
+func_sig: "48 89 5C 24 ?? 57 48 83 EC ?? 80 B9 ?? ?? ?? ?? ?? 48 8B FA 48 8B D9 0F 85 ?? ?? ?? ??"

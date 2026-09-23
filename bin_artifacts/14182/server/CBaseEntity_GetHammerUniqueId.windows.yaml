@@ -1,0 +1,4 @@
+func_name: CBaseEntity_GetHammerUniqueId
+vtable_name: CBaseEntity
+vfunc_offset: '0x398'
+vfunc_index: 115

@@ -1,0 +1,7 @@
+func_name: CSaveRestoreBlockSet_PreRestore
+func_va: '0x180bc3280'
+func_rva: '0xbc3280'
+func_size: '0x49'
+vtable_name: CSaveRestoreBlockSet
+vfunc_offset: '0x28'
+vfunc_index: 5

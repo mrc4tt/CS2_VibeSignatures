@@ -1,0 +1,7 @@
+func_name: CGameSceneNode_GetSkeletonInstance
+func_va: '0x180188a70'
+func_rva: '0x188a70'
+func_size: '0x3'
+vtable_name: CGameSceneNode
+vfunc_offset: '0x60'
+vfunc_index: 12

@@ -1,0 +1,5 @@
+struct_name: CEntitySystem
+member_name: m_flChangeCallbackSpewThreshold
+offset: '0xc5c'
+size: 4
+offset_sig: "F3 0F 10 91 5C 0C 00 00"

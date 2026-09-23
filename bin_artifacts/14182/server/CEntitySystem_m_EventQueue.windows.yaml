@@ -1,0 +1,5 @@
+struct_name: CEntitySystem
+member_name: m_EventQueue
+offset: '0xb10'
+size: 16
+offset_sig: "48 8D B9 10 0B 00 00 48 8B F1"

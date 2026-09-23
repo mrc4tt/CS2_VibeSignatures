@@ -1,0 +1,4 @@
+func_name: CEntitySystem_SortEntities
+vtable_name: CEntitySystem
+vfunc_offset: '0x90'
+vfunc_index: 18

@@ -1,0 +1,4 @@
+func_name: SetBeamEndPos
+func_va: '0x180d06df0'
+func_rva: '0xd06df0'
+func_sig: "48 8B C4 48 89 58 ?? 57 48 81 EC ?? ?? ?? ?? 0F 29 70 ?? 48 8B FA 0F 29 78 ?? 48 8B D9"

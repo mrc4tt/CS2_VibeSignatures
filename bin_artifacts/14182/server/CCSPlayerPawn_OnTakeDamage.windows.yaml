@@ -1,0 +1,8 @@
+func_name: CCSPlayerPawn_OnTakeDamage
+func_va: '0x180b60510'
+func_rva: '0xb60510'
+func_size: '0x1ce'
+func_sig: "48 89 5C 24 ?? 57 48 81 EC ?? ?? ?? ?? 48 8B FA 48 8B D9 E8 ?? ?? ?? ?? 0F B6 47 ??"
+vtable_name: CCSPlayerPawn
+vfunc_offset: '0x410'
+vfunc_index: 130

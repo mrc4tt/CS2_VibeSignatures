@@ -1,0 +1,7 @@
+func_name: CCSPlayer_ItemServices_DropActivePlayerWeapon
+func_va: '0x180abb410'
+func_rva: '0xabb410'
+func_size: '0xea'
+vtable_name: CCSPlayer_ItemServices
+vfunc_offset: '0xd0'
+vfunc_index: 26

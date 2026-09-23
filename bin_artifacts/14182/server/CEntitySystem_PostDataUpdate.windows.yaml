@@ -1,0 +1,7 @@
+func_name: CEntitySystem_PostDataUpdate
+func_va: '0x181387910'
+func_rva: '0x1387910'
+func_size: '0x7f'
+vtable_name: CEntitySystem
+vfunc_offset: '0xa8'
+vfunc_index: 21

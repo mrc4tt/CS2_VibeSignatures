@@ -1,0 +1,8 @@
+func_name: CBaseEntity_DrawDebugTextOverlays
+func_va: '0x1803cbb30'
+func_rva: '0x3cbb30'
+func_size: '0x1713'
+func_sig: "48 8B C4 44 89 48 ?? 4C 89 40 ?? 55"
+vtable_name: CBaseEntity
+vfunc_offset: '0xa0'
+vfunc_index: 20

@@ -1,0 +1,5 @@
+func_name: CBaseEntity_ScriptSetMass
+func_va: '0x180d05e30'
+func_rva: '0xd05e30'
+func_size: '0x34'
+func_sig: "48 83 EC ?? 0F 29 74 24 ?? 33 D2"
