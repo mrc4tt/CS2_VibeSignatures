@@ -46,8 +46,13 @@ def loaded_context():
 
 
 def run(symbols=None, dry_run=False, out_dir=None, report_path=None, min_score=None, log=print):
+    import importlib
     import hunt_core
     import ida_backend
+    # re-read both on every press: the plugin loads once per IDA session, and an edited
+    # hunt_core would otherwise only take effect after reopening the database
+    hunt_core = importlib.reload(hunt_core)
+    ida_backend = importlib.reload(ida_backend)
     if not REPO:
         log("[auto_hunt] repo not found (set CS2VIBE_REPO)"); return None
     ctx = loaded_context()
@@ -58,7 +63,10 @@ def run(symbols=None, dry_run=False, out_dir=None, report_path=None, min_score=N
     if not facts:
         log(f"[auto_hunt] no baseline facts: run  uv run baseline_facts.py -gamever <prev> -module {module} -platform {platform}")
         return None
-    out_dir = out_dir or os.path.join(REPO, "bin_artifacts", gamever, module)
+    # the GUI writes to a review folder, never straight into bin_artifacts: a find is
+    # promoted only after validate_artifacts / audit_duplicate_va have seen it
+    real_dir = os.path.join(REPO, "bin_artifacts", gamever, module)
+    out_dir = out_dir or os.path.join(REPO, "auto_hunt_out", gamever, module)
     os.makedirs(out_dir, exist_ok=True)
     sm = sig_maker()
     # every ida_sig_maker emitter writes through write_yaml when these are set, never
@@ -83,9 +91,15 @@ def run(symbols=None, dry_run=False, out_dir=None, report_path=None, min_score=N
 
     hunter = hunt_core.Hunter(backend, gamever, module, platform, facts, out_dir, emit=emit, dry_run=dry_run,
                               min_score=min_score or hunt_core.MIN_SCORE, log=log)
-    report = hunter.run(symbols, baseline_artifact_dir=os.path.join(REPO, "bin_artifacts", baseline, module))
+    report = hunter.run(symbols, baseline_artifact_dir=os.path.join(REPO, "bin_artifacts", baseline, module),
+                        # symbols named explicitly are re-hunted even when an artifact
+                        # exists: that is how a suspect record gets a second opinion
+                        existing_dirs=() if symbols else (real_dir,))
     report.update({"gamever": gamever, "baseline": baseline, "module": module, "platform": platform, "backend": "ida"})
     hunt_core.print_report(report, log)
+    if os.path.normpath(out_dir) != os.path.normpath(real_dir):
+        log(f"[auto_hunt] written to {out_dir} - review, then:")
+        log(f"  uv run validate_artifacts.py -gamever {gamever} -module {module} -platform {platform} -artifactdir {os.path.dirname(os.path.dirname(out_dir))}")
     if report_path:
         with open(report_path, "w", encoding="utf-8") as handle:
             json.dump(report, handle, indent=2)

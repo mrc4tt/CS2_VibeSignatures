@@ -8592,6 +8592,18 @@ async def preprocess_common_skill(
                         )
                     func_data = None
 
+            # A reuse that could not read the slot at all (a template vtable name
+            # RTTI cannot resolve) used to be accepted as is, and the artifact then
+            # silently lost the vtable fields its task asks for. Resolve the slot
+            # through the vtable artifact as well, keeping the reuse if that fails.
+            reused_without_slot = None
+            if (
+                func_data is not None
+                and not isinstance(func_data.get("vfunc_index"), int)
+                and "vfunc_index" in desired_field_spec["desired_output_fields"]
+            ):
+                reused_without_slot, func_data = func_data, None
+
             # Fallback: resolve via base-class vfunc_index + vtable lookup.
             if func_data is None:
                 func_data = await preprocess_index_based_vfunc_via_mcp(
@@ -8612,6 +8624,8 @@ async def preprocess_common_skill(
                     ),
                     debug=debug,
                 )
+            if func_data is None and reused_without_slot is not None:
+                func_data = reused_without_slot
             if func_data is None:
                 if debug:
                     print(f"    Preprocess: failed to locate {func_name}")

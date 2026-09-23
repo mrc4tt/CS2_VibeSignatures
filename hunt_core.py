@@ -1001,6 +1001,31 @@ class Hunter:
             return f"(dry-run) {rule}"
         return self._emit(symbol, rule)
 
+    @staticmethod
+    def trim_to_baseline(out, artifact):
+        """Keep only the fields the baseline artifact carries.
+
+        The producing task's GENERATE_YAML_DESIRED_FIELDS decides an artifact's fields
+        (CLAUDE.md rule 18), and the baseline is what that list produced last time. An
+        emitter adds a func_sig to every function it can, including getters upstream
+        chose to leave unsigned; the next pipeline run would drop it again. The boundary
+        flag survives whenever the signature it qualifies does.
+        """
+        if not out or not artifact or not os.path.isfile(out):
+            return out
+        keep = set(artifact)
+        if "func_sig" in keep:
+            keep.add("func_sig_allow_across_function_boundary")
+        if "vfunc_sig" in keep:
+            keep.add("vfunc_sig_allow_across_function_boundary")
+        with open(out, "r", encoding="utf-8") as handle:
+            lines = handle.readlines()
+        kept = [line for line in lines if line.partition(":")[0].strip() in keep or line.startswith((" ", "#"))]
+        if len(kept) != len(lines):
+            with open(out, "w", encoding="utf-8") as handle:
+                handle.writelines(kept)
+        return out
+
     def hunt(self, symbol, base, artifact):
         category = base.get("category", "func")
         if category == "vtable":
@@ -1030,7 +1055,7 @@ class Hunter:
                 rule = {"kind": "vfunc", "class": rtti_class(class_name), "index": index, "vtable_name": class_name}
             else:
                 rule = {"kind": "func", "ea": va}
-            out = self.emit(symbol, rule)
+            out = self.trim_to_baseline(self.emit(symbol, rule), artifact)
             self.resolved[symbol] = va
             self.resolved_va.setdefault(va, symbol)
             self.report["solved"].append({"symbol": symbol, "category": category, "va": hex(va), "how": how, "score": round(score, 2), "output": out})
@@ -1056,11 +1081,15 @@ class Hunter:
             rule = {"kind": "gv", "ea": site}
         else:
             rule = {"kind": "patch", "ea": site, "patch_bytes": base.get("patch_bytes")}
-        out = self.emit(symbol, rule)
+        out = self.trim_to_baseline(self.emit(symbol, rule), artifact)
         self.report["solved"].append({"symbol": symbol, "category": category, "va": hex(site), "how": f"{how}, site shape+context {agree:.2f}", "output": out})
 
-    def run(self, symbols=None, baseline_artifact_dir=None):
-        have = {n[: -len(f".{self.platform}.yaml")] for n in os.listdir(self.out_dir)} if os.path.isdir(self.out_dir) else set()
+    def run(self, symbols=None, baseline_artifact_dir=None, existing_dirs=()):
+        suffix = f".{self.platform}.yaml"
+        have = set()
+        for directory in (self.out_dir, *existing_dirs):
+            if os.path.isdir(directory):
+                have.update(n[: -len(suffix)] for n in os.listdir(directory) if n.endswith(suffix))
         targets = [s for s in self.facts["symbols"] if s not in have and (not symbols or s in symbols)]
         self.log(f"[hunt] {self.module}/{self.platform} {self.gamever}: {len(targets)} missing vs {self.facts.get('gamever')}")
         order = sorted(targets, key=lambda s: 0 if self.facts["symbols"][s].get("category") in ("func", "vfunc") else 1)
