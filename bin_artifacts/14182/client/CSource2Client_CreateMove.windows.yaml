@@ -1,0 +1,9 @@
+func_name: CSource2Client_CreateMove
+func_va: '0x180b6b690'
+func_rva: '0xb6b690'
+func_size: '0xe'
+func_sig: "48 8B 0D ?? ?? ?? ?? 48 8B 01 48 FF 60 ?? ?? ?? 48 89 5C 24 ?? 48 89 7C 24 ??"
+func_sig_allow_across_function_boundary: true
+vtable_name: CSource2Client
+vfunc_offset: '0x80'
+vfunc_index: 16

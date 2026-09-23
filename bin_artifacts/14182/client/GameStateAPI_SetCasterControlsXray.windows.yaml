@@ -1,0 +1,5 @@
+func_name: GameStateAPI_SetCasterControlsXray
+func_va: '0x180fea2f0'
+func_rva: '0xfea2f0'
+func_size: '0xbf'
+func_sig: "48 89 5C 24 ?? 57 48 83 EC ?? 8B DA 48 8D 4C 24 ?? 48 8D 15 48 13 D0 ??"

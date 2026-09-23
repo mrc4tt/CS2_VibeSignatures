@@ -1,0 +1,5 @@
+func_name: GameStateAPI_SetCasterIsHeard
+func_va: '0x180fea490'
+func_rva: '0xfea490'
+func_size: '0xbf'
+func_sig: "48 89 5C 24 ?? 57 48 83 EC ?? 8B DA 48 8D 4C 24 ?? 48 8D 15 38 11 D0 ??"

@@ -1,0 +1,5 @@
+func_name: GameStateAPI_GetPlayerActiveWeaponItemId
+func_va: '0x180fa73c0'
+func_rva: '0xfa73c0'
+func_size: '0x10b'
+func_sig: "40 53 48 83 EC ?? E8 ?? ?? ?? ?? 48 85 C0"
