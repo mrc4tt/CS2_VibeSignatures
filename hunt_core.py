@@ -817,11 +817,11 @@ class Hunter:
     def vtable_live(self, class_name):
         if class_name in self._vt_cache:
             return self._vt_cache[class_name]
-        tables = [ap for ap, ott in rtti_vtables(self.b, rtti_class(class_name), self.data_regions) if ott == 0]
-        if len(tables) != 1:
-            from_artifact = self.vtable_from_artifact(class_name)
-            if from_artifact is not None:
-                tables = [from_artifact]
+        # this build's own vtable artifact first: its task already resolved and validated the
+        # table, where RTTI can offer another one (IGameSystem on windows 14182) or none (templates)
+        from_artifact = self.vtable_from_artifact(class_name)
+        tables = [from_artifact] if from_artifact is not None else \
+            [ap for ap, ott in rtti_vtables(self.b, rtti_class(class_name), self.data_regions) if ott == 0]
         slots = []
         if len(tables) == 1:
             for index in range(1024):
@@ -899,6 +899,22 @@ class Hunter:
             if count >= limit:
                 return True
         return False
+
+    def s_samelayout(self, symbol, base, artifact):
+        """The class's vtable unchanged: as many slots as in the baseline and every slot's
+        code the same shape, so no method was added or removed and the index still holds.
+        Decides what neighbour agreement cannot - a slot among a run of identical stubs."""
+        class_name, index = base.get("vtable_name"), to_int(base.get("vfunc_index"))
+        before = ((self.facts.get("vtables") or {}).get(class_name) or {}).get("slots") or []
+        if base.get("category") != "vfunc" or not class_name or index is None or len(before) < 8:
+            return []
+        _ap, live = self.vtable_live(class_name)
+        if len(live) != len(before) or not 0 <= index < len(live):
+            return []
+        for (_old, old_head, _name), now in zip(before, live):
+            if masked_head(self.b, now, limit=16) != old_head:
+                return []
+        return [(live[index], f"vtable-layout unchanged ({len(live)}/{len(live)} slots)")]
 
     def s_siblingcallees(self, symbol, base, artifact):
         """Twins: pick the candidate that calls what a found sibling calls.
@@ -1181,8 +1197,8 @@ class Hunter:
     # -- resolution -----------------------------------------------------------------
     def resolve_function(self, symbol, base, artifact):
         candidates = []
-        for strat in (self.s_reloc, self.s_headreloc, self.s_vtable, self.s_strings, self.s_callgraph, self.s_calleeheads,
-                      self.s_neighbour, self.s_siblingcallees, self.s_consts):
+        for strat in (self.s_reloc, self.s_headreloc, self.s_samelayout, self.s_vtable, self.s_strings, self.s_callgraph,
+                      self.s_calleeheads, self.s_neighbour, self.s_siblingcallees, self.s_consts):
             try:
                 for va, how in strat(symbol, base, artifact):
                     head = self.func_start(va)
@@ -1192,7 +1208,10 @@ class Hunter:
                 self.log(f"    {strat.__name__} failed: {error}")
         # a stub every class shares (_purecall fills hundreds of vtable slots) is never one
         # symbol: an abstract base's slot points at it, the implementation lives elsewhere
-        stubs = {va for va in {c[0] for c in candidates} if self.is_shared_stub(va)}
+        # ... unless the baseline function was itself such a stub (IGameSystem_OnSaveGame is a
+        # 3-byte `ret 0` that many game systems share)
+        tiny = 0 < (base.get("size") or 0) <= 8
+        stubs = set() if tiny else {va for va in {c[0] for c in candidates} if self.is_shared_stub(va)}
         if stubs:
             candidates = [c for c in candidates if c[0] not in stubs]
             if not candidates:
@@ -1216,7 +1235,7 @@ class Hunter:
         # string set, its callers or callees, or a vtable slot most neighbours agree on. A head
         # that merely resembles the old one, or a similar-looking neighbour, is what put three
         # CLoopModeGame callbacks on one stub in the 14182 windows run - never enough alone.
-        decisive = "reloc" in strong or strong_slot or any(
+        decisive = "reloc" in strong or strong_slot or any(h.startswith("vtable-layout") for h in info["how"]) or any(
             h.startswith("strings") and int(re.match(r"strings (\d+)", h).group(1)) >= 3 for h in info["how"])
         if decisive or (strong and info["families"] >= 2 and info["score"] >= 0.35) or len(strong) >= 2:
             return va, " + ".join(info["how"]), info["score"], ranked

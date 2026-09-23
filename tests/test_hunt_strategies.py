@@ -305,3 +305,38 @@ class VcallVariantTests(unittest.TestCase):
         self.assertEqual(H.vcall_disp_variants("FF 50 48 83 F8"), ["FF 50 ?? 83 F8", "FF 90 ?? ?? ?? ?? 83 F8"])
         self.assertEqual(H.vcall_disp_variants("48 8B 01 FF 50 08"), [])      # not starting at the call
         self.assertEqual(H.vcall_disp_variants("FF 60 08"), [])               # jmp, not call
+
+
+class SameLayoutTests(unittest.TestCase):
+    """IGameSystem on windows 14182: 65 slots, many identical `ret` stubs - neighbour
+    agreement cannot pick one, an unchanged layout can."""
+
+    def _setup(self, extra_slot=False):
+        functions = {0x1000 + 0x100 * i: {"pad": i % 3} for i in range(10)}
+        binary = FakeBinary(functions)
+        fns = sorted(functions)
+        live = fns + ([0x1000] if extra_slot else [])
+        table = {0x9000 + 8 * i: fn for i, fn in enumerate(live)}
+        binary.qword = lambda ea: table.get(ea)
+        facts = {"gamever": "1", "symbols": {},
+                 "vtables": {"IGameSystem": {"slots": [[hex(f), H.masked_head(binary, f, limit=16), None] for f in fns]}}}
+        return binary, facts, fns
+
+    def _hunter(self, binary, facts, out):
+        with open(os.path.join(out, "IGameSystem_vtable.windows.yaml"), "w") as handle:
+            handle.write("vtable_va: '0x9000'\n")
+        return hunter(binary, facts, out)[0]
+
+    def test_unchanged_layout_gives_the_slot(self):
+        binary, facts, fns = self._setup()
+        with tempfile.TemporaryDirectory() as out:
+            h = self._hunter(binary, facts, out)
+            got = h.s_samelayout("IGameSystem_X", {"category": "vfunc", "vtable_name": "IGameSystem", "vfunc_index": 6}, {})
+        self.assertEqual(got, [(fns[6], "vtable-layout unchanged (10/10 slots)")])
+
+    def test_an_added_slot_means_no_vote(self):
+        binary, facts, _ = self._setup(extra_slot=True)
+        with tempfile.TemporaryDirectory() as out:
+            h = self._hunter(binary, facts, out)
+            self.assertEqual(h.s_samelayout("IGameSystem_X", {"category": "vfunc", "vtable_name": "IGameSystem",
+                                                              "vfunc_index": 6}, {}), [])
