@@ -969,6 +969,9 @@ def interactive_main():
                 print(f"[sig_maker] {symbol}: samme VA som {emitted[func_ea]} - skipped (flyt cursor!)")
                 skipped.append(symbol)
                 continue
+        if not confirm_identity(func_ea, symbol):
+            skipped.append(symbol)
+            continue
         emit_yaml(func_ea, symbol)
         emitted[func_ea] = symbol
         done.append(symbol)
@@ -980,6 +983,74 @@ def interactive_main():
         for s in skipped:
             print(f"    {s}")
     print("=" * 60)
+
+
+IDENTITY_MIN_SCORE = 0.5
+
+
+def verify_identity(func_ea, symbol):
+    """(ok, report) - is the function at func_ea plausibly `symbol`? Run before every write.
+
+    A unique signature only proves the bytes occur once; the entry point's signature is
+    unique too, and it was written under three different names on windows 14182. Three
+    checks, each shown to the user rather than hidden:
+      1. never the image entry point (where IDA opens the database);
+      2. an artifact already in bin_artifacts at another address is not replaced silently;
+      3. the candidate must resemble the previous gamever's function (baseline facts:
+         head bytes, mnemonics, size, string set, vcalls) - a low score needs a yes.
+    """
+    lines = []
+    if func_ea == entry_point_ea():
+        return False, (f"{hex(func_ea)} is the binary's entry point (CRT startup) - never a game function. "
+                       f"Move the cursor to the real function.")
+    target = detect_target() or {}
+    existing = os.path.join(target.get("artifact_dir", ""), f"{symbol}.{target.get('platform', '')}.yaml")
+    if target and os.path.isfile(existing):
+        import hunt_core
+        old = hunt_core.parse_yaml(existing).get("func_va")
+        if old and int(str(old), 16) != func_ea:
+            lines.append(f"bin_artifacts already has {symbol} at {old} (this would replace it with {hex(func_ea)})")
+    try:
+        import hunt_core
+        import ida_backend
+        _ver, facts = hunt_core.load_baseline_facts(target.get("repo_root", ""), target.get("gamever", ""),
+                                                    target.get("module", ""), target.get("platform", ""))
+        base = ((facts or {}).get("symbols") or {}).get(symbol)
+        if base and (base.get("head") or base.get("mnem")):
+            live = hunt_core.FactsBuilder(ida_backend.IdaBackend()).function_facts(func_ea, {})
+            score = hunt_core.similarity(base, live) if live else 0.0
+            bstr = set(base.get("strings") or [])
+            lstr = set((live or {}).get("strings") or [])
+            detail = (f"resemblance to the previous build: {score:.2f}"
+                      f" | size {hex(base.get('size') or 0)} -> {hex((live or {}).get('size') or 0)}")
+            if bstr:
+                detail += f" | strings {len(bstr & lstr)}/{len(bstr)}"
+            print(f"[sig_maker] {symbol}: {detail}")
+            if score < IDENTITY_MIN_SCORE:
+                lines.append(f"it does not look like {symbol} did in the previous build ({detail})")
+        elif not base:
+            print(f"[sig_maker] {symbol}: no baseline facts to compare against - identity unchecked")
+    except Exception as error:
+        print(f"[sig_maker] {symbol}: identity check unavailable ({error})")
+    if lines:
+        return None, "\n".join(f"- {line}" for line in lines)
+    return True, ""
+
+
+def confirm_identity(func_ea, symbol):
+    """verify_identity with the user deciding the doubtful cases (default: No)."""
+    ok, report = verify_identity(func_ea, symbol)
+    if ok is True:
+        return True
+    if ok is False:
+        print(f"[sig_maker] {symbol}: refused - {report}")
+        ida_kernwin.warning(f"{symbol}: {report}")
+        return False
+    answer = ida_kernwin.ask_yn(0, f"{symbol} at {hex(func_ea)} looks doubtful:\n\n{report}\n\nWrite it anyway?")
+    if answer != 1:
+        print(f"[sig_maker] {symbol}: not written ({report.strip()})")
+        return False
+    return True
 
 
 def emit_yaml(func_ea, symbol):
@@ -1227,6 +1298,9 @@ def emit_here(symbol=None):
         rule = {"kind": "patch", "ea": ea, "patch_bytes": patch_bytes}
     else:
         rule = {"kind": "func", "ea": ea}
+        func = ida_funcs.get_func(ea)
+        if func is not None and not confirm_identity(func.start_ea, symbol):
+            return None
     out = emit_symbol(symbol, rule, extra, scan)
     print(f"[sig_maker] {kind} {symbol} written: {out}")
     # bin/ is a hydrated copy; keep it in step so the IDA session sees its own output
