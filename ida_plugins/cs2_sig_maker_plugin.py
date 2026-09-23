@@ -67,6 +67,24 @@ def _load_all():
             print(f"[cs2_plugins] {script} not found in any of: {dirs}")
 
 
+HOTKEYS = (
+    ("Ctrl-Alt-H", "auto-hunt: every missing symbol of the open binary, no cursor needed"),
+    ("Ctrl-Alt-J", "hunt the symbols you NAME (comma separated), also re-checks existing ones"),
+    ("Ctrl-Alt-D", "sig maker batch: list of symbols, found automatically first, the rest asked"),
+    ("Ctrl-Alt-E", "artifact for the function under the CURSOR (jump there first: G + address)"),
+    ("Ctrl-Alt-V", "vtable finder: class + slot -> vfunc artifact"),
+    ("Ctrl-Alt-O", "struct member offset: cursor on the instruction that reads it"),
+)
+
+
+def print_hotkeys():
+    print("[cs2_plugins] hotkeys:")
+    for key, what in HOTKEYS:
+        print(f"    {key:11} {what}")
+    print("    results: Ctrl-Alt-H/J/D automatic -> auto_hunt_out/  |  Ctrl-Alt-E/V/O/D confirmed -> bin_artifacts/")
+    print("    Edit -> Plugins -> CS2 plugins prints this list again")
+
+
 class cs2_plugins_t(ida_idaapi.plugin_t):
     flags = ida_idaapi.PLUGIN_KEEP
     comment = "CS2_VibeSignatures tooling"
@@ -80,13 +98,14 @@ class cs2_plugins_t(ida_idaapi.plugin_t):
             _load_all()
         except Exception as error:
             print(f"[cs2_plugins] load failed: {error}")
+        print_hotkeys()
         return ida_idaapi.PLUGIN_KEEP
 
     def run(self, arg):
+        # the tools each have their own hotkey and Edit -> Plugins entry; this entry is the
+        # reminder of which is which rather than launching every tool's window in a row
         _load_all()
-        for ns in _NS.values():
-            if "main" in ns:
-                ns["main"]()
+        print_hotkeys()
 
     def term(self):
         pass
