@@ -501,6 +501,20 @@ def _failure_progress_payload(reason, result) -> dict:
     return {"reason": "missing_expected_output", "missing_outputs": list(reason)}
 
 
+def _outputs_present_and_valid(expected_yaml_paths, output_validator) -> bool:
+    """True when every expected output exists and the validator has no complaints.
+
+    Without expected paths there is nothing to short-circuit on. The validator
+    may raise NonRetryableOutputError; callers decide what that means.
+    """
+    if not expected_yaml_paths:
+        return False
+    if _missing_expected_outputs(expected_yaml_paths):
+        return False
+    issues = list(output_validator() or []) if output_validator is not None else []
+    return not issues
+
+
 def _result_failure_reason(result, expected_yaml_paths):
     if result.returncode != 0:
         return "returncode"
@@ -551,6 +565,32 @@ def _run_skill_attempts(
     process_env = _agent_process_env(agent_kind, mcp_url)
     for attempt in range(max_retries):
         attempt_number = attempt + 1
+        # Another producer may have delivered the outputs since the last look:
+        # a retry after a timeout whose agent did finish writing, or a second
+        # machine whose artifacts were pulled in mid-run. An agent attempt costs
+        # minutes to an hour, so present-and-valid outputs end the hunt here.
+        try:
+            if _outputs_present_and_valid(expected_yaml_paths, output_validator):
+                print("    Expected outputs already exist and validate; skipping the agent attempt")
+                _notify_progress(
+                    progress_callback,
+                    "succeeded",
+                    attempt=attempt_number,
+                    max_attempts=max_retries,
+                    reason="outputs_present",
+                )
+                return True
+        except NonRetryableOutputError as error:
+            print(f"    Error: Protected output modification: {error}")
+            _notify_progress(
+                progress_callback,
+                "failed",
+                attempt=attempt_number,
+                max_attempts=max_retries,
+                reason="invalid_output",
+                error=str(error),
+            )
+            return False
         _notify_progress(
             progress_callback,
             "attempt_started",

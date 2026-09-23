@@ -1222,3 +1222,47 @@ class AgentChainTests(unittest.TestCase):
         with patch.object(agent_runner, "_run_skill_with_agent", return_value=False) as single:
             self.assertFalse(agent_runner.run_skill("find-X", "opencode,claude"))
         self.assertEqual(single.call_count, 2)
+
+
+class OutputsPresentShortCircuitTests(unittest.TestCase):
+    def test_present_and_valid_outputs_skip_the_agent(self) -> None:
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "X.linux.yaml")
+            open(out, "w").write("func_name: X\n")
+            events = []
+            with patch.object(agent_runner, "_run_process_with_stream_capture") as run, \
+                 patch.object(agent_runner, "_ensure_agent_mcp_preflight", return_value=True), \
+                 patch.object(agent_runner.os.path, "exists", return_value=True):
+                result = agent_runner.run_skill(
+                    "find-X", "claude", expected_yaml_paths=[out],
+                    output_validator=lambda: [], progress_callback=lambda **p: events.append(p),
+                )
+        self.assertTrue(result)
+        run.assert_not_called()
+        self.assertEqual(events[-1]["reason"], "outputs_present")
+
+    def test_present_but_invalid_outputs_still_run_the_agent(self) -> None:
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "X.linux.yaml")
+            open(out, "w").write("func_name: X\n")
+            fake = MagicMock(returncode=1, stdout="", stderr="")
+            with patch.object(agent_runner, "_run_process_with_stream_capture", return_value=fake) as run, \
+                 patch.object(agent_runner, "_ensure_agent_mcp_preflight", return_value=True), \
+                 patch.object(agent_runner.os.path, "exists", return_value=True):
+                result = agent_runner.run_skill(
+                    "find-X", "claude", expected_yaml_paths=[out], max_retries=1,
+                    output_validator=lambda: ["func_sig mismatch"],
+                )
+        self.assertFalse(result)
+        self.assertEqual(run.call_count, 1)
+
+    def test_missing_outputs_run_the_agent(self) -> None:
+        fake = MagicMock(returncode=1, stdout="", stderr="")
+        with patch.object(agent_runner, "_run_process_with_stream_capture", return_value=fake) as run, \
+             patch.object(agent_runner, "_ensure_agent_mcp_preflight", return_value=True), \
+             patch.object(agent_runner.os.path, "exists", side_effect=lambda p: p.endswith("SKILL.md")):
+            result = agent_runner.run_skill("find-X", "claude", expected_yaml_paths=["/nonexistent/X.linux.yaml"], max_retries=1)
+        self.assertFalse(result)
+        self.assertEqual(run.call_count, 1)
