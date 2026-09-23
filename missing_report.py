@@ -36,6 +36,18 @@ SEEDS = [
 BINARIES = {"linux": "libserver.so / libengine2.so", "windows": "server.dll / engine2.dll"}
 
 
+def is_needed(module, filename, notask, platform, config_path):
+    """Required by a task and not waived, or read by an enabled plugin or another task."""
+    import ida_analyze_bin as I
+
+    path = os.path.join("bin_artifacts", "x", module, filename)
+    if I.artifact_has_consumer(path, platform, config_path):
+        return True
+    if notask:
+        return False
+    return not I.artifact_only_disabled_consumers(path, platform, config_path)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("-gamever", default="14178b")
@@ -99,11 +111,20 @@ def main():
                 rel = os.path.relpath(f, d)
                 have.add(f"{os.path.dirname(rel)}/{os.path.basename(rel)}")
         entries = expected.get(platform, {})
-        grand = grand_seed = grand_notask = 0
+        grand = grand_seed = grand_notask = grand_unneeded = 0
+        needed_rows = {}
         for mod in sorted(entries):
-            rows = [r for r in entries[mod] if f"{mod}/{r[1]}" not in have]
+            missing = [r for r in entries[mod] if f"{mod}/{r[1]}" not in have]
+            # Missing on disk is not the same as missing: an output only switched-off plugins
+            # read is waived (pack does not insist on it), and one no task requires and
+            # nothing reads is not wanted at all. Only the rest is worth anyone's time.
+            unneeded = [r for r in missing if not is_needed(mod, r[1], r[3], platform, cfg_path)]
+            rows = [r for r in missing if r not in unneeded]
+            needed_rows[mod] = rows
+            grand_unneeded += len(unneeded)
             if not rows:
-                print(f"\n[{mod}]  komplett ✓")
+                extra = f"  ({len(unneeded)} not needed: {', '.join(r[0] for r in unneeded)})" if unneeded else ""
+                print(f"\n[{mod}]  komplett ✓{extra}")
                 continue
             seed_rows = [r for r in rows if r[2]]
             notask_rows = [r for r in rows if r[3]]
@@ -122,11 +143,18 @@ def main():
                     note = "" if fn.startswith(t + ".") else f"   (fil: {fn})"
                     print(f"    {t}  ★SEED{'  [ingen find-task]' if notask else ''}{note}")
         print(f"\n--- {platform}: {grand} manglende i alt ({grand_seed} ★SEED, "
-              f"{grand_notask} uden find-task)")
+              f"{grand_notask} uden find-task)" + (f"; {grand_unneeded} not needed (no reader, or read only by "
+                                                    f"switched-off plugins) left out" if grand_unneeded else ""))
         outfile = f"missing_{platform}_{args.gamever}.txt"
+        if not grand:
+            # nothing to hunt: no list, and no stale one from an earlier run either
+            if os.path.exists(outfile):
+                os.remove(outfile)
+            print(f"no list: nothing is missing ({outfile} {'removed' if not os.path.exists(outfile) else 'kept'})")
+            continue
         with open(outfile, "w") as f:
             for mod in sorted(entries):
-                for t, fn, sd, notask in expected[platform][mod]:
+                for t, fn, sd, notask in needed_rows.get(mod, []):
                     # Symbol-derived rows are REPORTED but never written here.
                     # auto_hunt consumes this file, and a symbol whose find-task
                     # is commented out is deliberately disabled ("We don't need
