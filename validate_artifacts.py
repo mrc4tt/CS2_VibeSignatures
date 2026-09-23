@@ -482,6 +482,10 @@ def check_func(rec, d, blob, info, out):
         return
     if not is_exec(info, va_to_off(info, va)):
         out.error(rec, f"func_va {hex(va)} is not in an executable section")
+    if info.get("entry") and va == info["entry"]:
+        # _DllMainCRTStartup / _start: unique, clean boundary, and never the symbol named.
+        # An agent that cannot find a function has landed here twice on windows 14182.
+        out.error(rec, f"func_va {hex(va)} is the binary's entry point (CRT startup), not a game function")
     if not is_boundary(blob, info, va):
         out.warn(rec, f"func_va {hex(va)} has neither padding before it nor 16-byte alignment")
 

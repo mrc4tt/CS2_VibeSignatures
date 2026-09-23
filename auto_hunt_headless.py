@@ -48,7 +48,8 @@ def _load_elf(blob):
         p_offset, p_vaddr, _, p_filesz = struct.unpack_from("<QQQQ", blob, o + 8)
         if p_type == 1:
             segs.append((p_offset, p_vaddr, p_filesz, p_flags))
-    return blob, {"type": "elf", "segs": segs, "base": 0}
+    e_entry = struct.unpack_from("<Q", blob, 24)[0]
+    return blob, {"type": "elf", "segs": segs, "base": 0, "entry": e_entry}
 
 
 def _load_pe(blob):
@@ -66,7 +67,8 @@ def _load_pe(blob):
         # hardcoded 0x80000000 no longer makes every PE section non-executable
         flags = 0x1 if characteristics & 0x20000000 else 0x0
         segs.append((rawptr, base + vaddr, rawsize, flags))
-    return blob, {"type": "pe", "segs": segs, "base": base}
+    entry_rva = struct.unpack_from("<I", blob, opt + 16)[0]
+    return blob, {"type": "pe", "segs": segs, "base": base, "entry": base + entry_rva if entry_rva else None}
 
 
 def va_to_off(info, va):

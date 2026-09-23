@@ -2845,6 +2845,45 @@ def artifact_has_consumer(artifact_path, platform, config_path, repo_root=None):
     return any(name in consumed for name in candidate_names)
 
 
+@functools.lru_cache(maxsize=16)
+def _binary_entry_point(binary_path):
+    try:
+        import auto_hunt_headless
+
+        _blob, info = auto_hunt_headless.load_binary(binary_path)
+        return (info or {}).get("entry")
+    except Exception:
+        return None
+
+
+def _entry_point_output_issues(output_paths, binary_path):
+    """Outputs whose func_va is the binary's entry point (_DllMainCRTStartup / _start).
+
+    An agent that cannot find a function has twice reported windows 14182's entry point
+    under a symbol's name: a unique signature on a clean boundary that no check objected
+    to. Reported as an output issue, so the agent gets it back and retries.
+    """
+    entry = _binary_entry_point(str(binary_path)) if binary_path else None
+    if not entry:
+        return []
+    issues = []
+    for path in output_paths:
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                data = yaml.safe_load(handle) or {}
+            va = int(str(data.get("func_va")), 16) if data.get("func_va") else None
+        except Exception:
+            continue
+        if va == entry:
+            issues.append(
+                f"{os.path.basename(path)}: func_va {hex(va)} is the binary's entry point "
+                "(CRT startup), not the requested function - find the real one"
+            )
+    return issues
+
+
 def artifact_only_disabled_consumers(artifact_path, platform, config_path, repo_root=None):
     """True when the artifact's ONLY readers are switched-off generators.
 
@@ -4579,7 +4618,9 @@ def process_binary(
                         regenerate_func_signatures=True,
                     )
                 check_protected_outputs()
-                return finalization_issues
+                return list(finalization_issues or []) + _entry_point_output_issues(
+                    list(required_outputs) + list(optional_outputs), binary_path
+                )
 
             agent_succeeded = run_skill(
                 skill_name,
