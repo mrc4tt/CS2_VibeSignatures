@@ -1,0 +1,8 @@
+func_name: CEntityInstance_PostDataUpdateDelta
+func_va: '0x228a5f0'
+func_rva: '0x228a5f0'
+func_size: '0x22'
+func_sig: "48 8B 07 48 8D 15 ?? ?? ?? ?? 48 8B 40 ?? 48 39 D0 75 ?? C6 05 ?? ?? ?? ?? ??"
+vtable_name: CEntityInstance
+vfunc_offset: '0x58'
+vfunc_index: 11

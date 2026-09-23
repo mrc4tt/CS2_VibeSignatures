@@ -1,0 +1,9 @@
+func_name: CSource2GameClients_ClientSetConVarUserInfoSet
+func_va: '0x1993a10'
+func_rva: '0x1993a10'
+func_size: '0xa'
+func_sig: "89 F7 48 89 D6 E9 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 55"
+func_sig_allow_across_function_boundary: true
+vtable_name: CSource2GameClients
+vfunc_offset: '0x90'
+vfunc_index: 18

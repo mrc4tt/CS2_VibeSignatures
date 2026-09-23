@@ -1,0 +1,5 @@
+struct_name: CEntitySystem
+member_name: m_EntityMaterialAttributes
+offset: '0x2100'
+size: 4
+offset_sig: "4C 8D AF 00 21 00 00"

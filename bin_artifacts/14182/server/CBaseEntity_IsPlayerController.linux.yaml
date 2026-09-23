@@ -1,0 +1,7 @@
+func_name: CBaseEntity_IsPlayerController
+func_va: '0xa34880'
+func_rva: '0xa34880'
+func_size: '0x3'
+vtable_name: CBaseEntity
+vfunc_offset: '0x558'
+vfunc_index: 171

@@ -1,0 +1,8 @@
+func_name: CEntitySystem_UpdateOnRemove
+func_va: '0x22c2b70'
+func_rva: '0x22c2b70'
+func_size: '0x122'
+func_sig: "55 31 C0 48 89 E5 41 57 41 56 49 89 D6 41 55 41 54"
+vtable_name: CEntitySystem
+vfunc_offset: '0xc0'
+vfunc_index: 24

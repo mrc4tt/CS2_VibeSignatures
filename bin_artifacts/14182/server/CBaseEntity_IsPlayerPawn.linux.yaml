@@ -1,0 +1,7 @@
+func_name: CBaseEntity_IsPlayerPawn
+func_va: '0xa34870'
+func_rva: '0xa34870'
+func_size: '0x3'
+vtable_name: CBaseEntity
+vfunc_offset: '0x550'
+vfunc_index: 170

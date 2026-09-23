@@ -1,0 +1,8 @@
+func_name: CBaseEntity_CollisionRulesChanged
+func_va: '0xd33ba0'
+func_rva: '0xd33ba0'
+func_size: '0x9a'
+func_sig: "55 48 89 E5 41 54 53 48 8B 47 ?? 48 89 FB 48 85 C0 74 ?? 48 8B 78 ??"
+vtable_name: CBaseEntity
+vfunc_offset: '0x5d8'
+vfunc_index: 187

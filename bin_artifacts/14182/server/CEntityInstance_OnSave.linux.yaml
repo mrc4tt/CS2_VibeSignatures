@@ -1,0 +1,7 @@
+func_name: CEntityInstance_OnSave
+func_va: '0x228a2a0'
+func_rva: '0x228a2a0'
+func_size: '0x1'
+vtable_name: CEntityInstance_vtable
+vfunc_offset: '0xc0'
+vfunc_index: 24

@@ -1,0 +1,8 @@
+func_name: CEntitySystem_BuildResourceManifestForEntity
+func_va: '0x22dc6e0'
+func_rva: '0x22dc6e0'
+func_size: '0x292'
+func_sig: "55 48 89 E5 41 57 49 89 D7 41 56 4D 89 C6 41 55 49 89 FD"
+vtable_name: CEntitySystem
+vfunc_offset: '0x28'
+vfunc_index: 5

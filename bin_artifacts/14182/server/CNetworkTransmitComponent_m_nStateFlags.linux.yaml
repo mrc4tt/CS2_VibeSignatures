@@ -1,0 +1,5 @@
+struct_name: CNetworkTransmitComponent
+member_name: m_nStateFlags
+offset: '0x2d8'
+size: 4
+offset_sig: "41 8B 87 D8 02 00 00 A8 ?? 75 ?? 48 8B 95 ?? ?? ?? ??"

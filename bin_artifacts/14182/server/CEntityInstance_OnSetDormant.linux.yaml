@@ -1,0 +1,8 @@
+func_name: CEntityInstance_OnSetDormant
+func_va: '0x228a4c0'
+func_rva: '0x228a4c0'
+func_size: '0x71'
+func_sig: "83 FE ?? C6 05 ?? ?? ?? ?? ??"
+vtable_name: CEntityInstance
+vfunc_offset: '0x80'
+vfunc_index: 16

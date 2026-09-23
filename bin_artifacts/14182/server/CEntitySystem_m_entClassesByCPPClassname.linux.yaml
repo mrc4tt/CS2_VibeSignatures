@@ -1,0 +1,5 @@
+struct_name: CEntitySystem
+member_name: m_entClassesByCPPClassname
+offset: '0xa90'
+size: 4
+offset_sig: "4C 8D AF 90 0A 00 00"

@@ -1,0 +1,7 @@
+func_name: CEntityInstance_PreDataUpdate
+func_va: '0xa34150'
+func_rva: '0xa34150'
+func_size: '0x1'
+vtable_name: CEntityInstance
+vfunc_offset: '0x98'
+vfunc_index: 19

@@ -1,0 +1,5 @@
+func_name: SmokeVolume_GetSmokeDensityInLine_Lambda1_operator_call
+func_va: '0x1455d60'
+func_rva: '0x1455d60'
+func_size: '0x223'
+func_sig: "55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 0F B6 05 ?? ?? ?? ?? 48 89 FB 84 C0 0F 84 ?? ?? ?? ?? 8B 93 ?? ?? ?? ??"

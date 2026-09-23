@@ -1,0 +1,7 @@
+func_name: CEntityInstance_OnRestore
+func_va: '0x228a2b0'
+func_rva: '0x228a2b0'
+func_size: '0x1'
+vtable_name: CEntityInstance
+vfunc_offset: '0xc8'
+vfunc_index: 25

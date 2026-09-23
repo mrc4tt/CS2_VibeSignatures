@@ -1,0 +1,5 @@
+func_name: EntityInstanceAddChangeAccessorPath
+func_va: '0xa00020'
+func_rva: '0xa00020'
+func_size: '0xc'
+func_sig: "41 BB 65 0B 00 ??"

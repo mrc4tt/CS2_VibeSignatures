@@ -1,0 +1,8 @@
+func_name: CEntitySystem_Activate
+func_va: '0x22c28e0'
+func_rva: '0x22c28e0'
+func_size: '0x18a'
+func_sig: "55 31 C0 48 89 E5 41 57 41 56 4C 63 F6"
+vtable_name: CEntitySystem
+vfunc_offset: '0xa8'
+vfunc_index: 21

@@ -1,0 +1,8 @@
+func_name: CPhysExplosion_Activate
+func_va: '0x1abd8c0'
+func_rva: '0x1abd8c0'
+func_size: '0x3b'
+func_sig: "55 48 89 E5 53 48 89 FB 48 83 EC ?? E8 ?? ?? ?? ?? 80 BB ?? ?? ?? ?? ?? 75 ?? 48 8B 5D ?? C9 C3 48 89 DF 48 89 DA"
+vtable_name: CPhysExplosion
+vfunc_offset: '0x70'
+vfunc_index: 14
