@@ -1,0 +1,10 @@
+func_name: CBasePlayerController_FakeClientFlags
+func_va: '0x161b240'
+func_rva: '0x161b240'
+func_size: '0x3'
+func_sig: 31 C0 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC C3 CC CC CC CC CC
+  CC CC CC CC CC CC CC CC CC CC C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC C3 CC CC CC CC CC CC CC CC CC CC CC CC CC
+  CC CC 48 8B 05 ?? ?? ?? ?? C3 0F 1F 84 00 00 00 00 00
+vtable_name: CBasePlayerController
+vfunc_offset: '0x7f8'
+vfunc_index: 255

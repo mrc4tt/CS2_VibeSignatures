@@ -1,0 +1,5 @@
+struct_name: BotProfile
+member_name: m_weaponPreference
+offset: '0x24'
+size: 32
+offset_sig: 66 41 89 54 44 24 E9 ?? ?? ?? ??
