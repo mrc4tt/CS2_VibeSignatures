@@ -105,7 +105,10 @@ def run(symbols=None, dry_run=False, out_dir=None, report_path=None, min_score=N
     if os.path.normpath(out_dir) != os.path.normpath(real_dir):
         log(f"[auto_hunt] written to {out_dir} - review, then:")
         log(f"  uv run validate_artifacts.py -gamever {gamever} -module {module} -platform {platform} -artifactdir {os.path.dirname(os.path.dirname(out_dir))}")
+    # the GUI run keeps its report too, so every find's evidence can be reviewed later
+    report_path = report_path or os.path.join(REPO, "auto_hunt_reports", gamever, f"{module}.{platform}.json")
     if report_path:
+        os.makedirs(os.path.dirname(report_path), exist_ok=True)
         with open(report_path, "w", encoding="utf-8") as handle:
             json.dump(report, handle, indent=2)
     return report

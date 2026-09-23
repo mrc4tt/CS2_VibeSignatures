@@ -980,10 +980,32 @@ class Hunter:
         va, info = ranked[0]
         no_function_facts = not base.get("head") and not base.get("mnem")
         strong_slot = any(h.startswith("vtable") and self._slot_agreement(h) >= 5 for h in info["how"])
-        if (info["families"] >= 2 and info["score"] >= 0.35) or info["score"] >= self.min_score \
-                or (no_function_facts and strong_slot):
+        strong = self._strong_families(info["how"])
+        # Identity needs evidence about THIS function: the old signature still matching, its
+        # string set, its callers or callees, or a vtable slot most neighbours agree on. A head
+        # that merely resembles the old one, or a similar-looking neighbour, is what put three
+        # CLoopModeGame callbacks on one stub in the 14182 windows run - never enough alone.
+        decisive = "reloc" in strong or strong_slot or any(
+            h.startswith("strings") and int(re.match(r"strings (\d+)", h).group(1)) >= 3 for h in info["how"])
+        if decisive or (strong and info["families"] >= 2 and info["score"] >= 0.35) or len(strong) >= 2:
             return va, " + ".join(info["how"]), info["score"], ranked
-        return None, f"best {hex(va)} score {info['score']:.2f} via {info['how'][0]}", info["score"], ranked
+        why = "weak evidence only" if info["score"] >= self.min_score else f"score {info['score']:.2f}"
+        return None, f"best {hex(va)} {why} via {' + '.join(info['how'])[:120]}", info["score"], ranked
+
+    @classmethod
+    def _strong_families(cls, hows):
+        strong = set()
+        for how in hows:
+            family = how.split()[0]
+            if family in ("reloc", "callgraph", "calls", "callee-heads", "thunk"):
+                strong.add(family)
+            elif family == "strings":
+                m = re.match(r"strings (\d+)/(\d+)", how)
+                if m and int(m.group(1)) >= 2:
+                    strong.add(family)
+            elif family == "vtable" and cls._slot_agreement(how) >= 4:
+                strong.add(family)
+        return strong
 
     @staticmethod
     def _slot_agreement(how):
@@ -1078,6 +1100,15 @@ class Hunter:
             return
         if category in ("func", "vfunc"):
             va, how, score, ranked = self.resolve_function(symbol, base, artifact)
+            if va is not None:
+                owner = self.resolved_va.get(va)
+                if owner is not None and owner != symbol:
+                    # one address, one name - unless the baseline shared it too (an alias, or
+                    # two bodies the compiler folded into one)
+                    other = (self.facts.get("symbols") or {}).get(owner) or {}
+                    if not (other.get("va") and other.get("va") == base.get("va")):
+                        how = f"{hex(va)} is already {owner}, and 14181 kept them apart"
+                        va = None
             if va is None:
                 self.report["unresolved"].append({"symbol": symbol, "category": category, "why": how,
                                                   "candidates": [{"va": hex(v), "score": round(i["score"], 2), "how": i["how"]} for v, i in ranked[:4]]})
