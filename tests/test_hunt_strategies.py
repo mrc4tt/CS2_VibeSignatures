@@ -340,3 +340,31 @@ class SameLayoutTests(unittest.TestCase):
             h = self._hunter(binary, facts, out)
             self.assertEqual(h.s_samelayout("IGameSystem_X", {"category": "vfunc", "vtable_name": "IGameSystem",
                                                               "vfunc_index": 6}, {}), [])
+
+
+class SlotWindowTests(unittest.TestCase):
+    """vtidx_PlayerRunCommand: a func record that sat in CCSPlayer_MovementServices[25];
+    the table gained a slot elsewhere, the window around 25 kept its code."""
+
+    def _run(self, live_order):
+        functions = {0x1000 + 0x100 * i: {"pad": i} for i in range(9)}
+        binary = FakeBinary(functions)
+        fns = sorted(functions)
+        facts = {"gamever": "1", "symbols": {},
+                 "vtables": {"C": {"slots": [[hex(f), H.masked_head(binary, f, limit=16), None] for f in fns]}}}
+        live = [fns[i] if i is not None else fns[0] for i in live_order]
+        table = {0x9000 + 8 * k: fn for k, fn in enumerate(live)}
+        binary.qword = lambda ea: table.get(ea)
+        with tempfile.TemporaryDirectory() as out:
+            with open(os.path.join(out, "C_vtable.windows.yaml"), "w") as handle:
+                handle.write("vtable_va: '0x9000'\n")
+            h, _ = hunter(binary, facts, out)
+            return h.s_slotwindow("X", {"va": hex(fns[4])}, {}), fns
+
+    def test_slot_found_after_an_insertion_before_it(self):
+        got, fns = self._run([0, 1, None, 2, 3, 4, 5, 6, 7, 8])     # a new slot at 2
+        self.assertEqual(got, [(fns[4], "vtable-window C[4]->[5] (5/5 slots around it unchanged)")])
+
+    def test_window_broken_no_vote(self):
+        got, _ = self._run([0, 1, 2, 3, 4, None, 6, 7, 8])          # slot 5's code changed
+        self.assertEqual(got, [])

@@ -916,6 +916,40 @@ class Hunter:
                 return []
         return [(live[index], f"vtable-layout unchanged ({len(live)}/{len(live)} slots)")]
 
+    def s_slotwindow(self, symbol, base, artifact, radius=2, max_shift=3):
+        """A function that sat in a class's vtable in the baseline, also when its record is
+        a plain func (vtidx_PlayerRunCommand = CCSPlayer_MovementServices[25]). The slots
+        around it must keep their code at one consistent offset: a method added elsewhere
+        in the table (58 -> 59 slots on windows 14182) does not matter, only the window."""
+        va = to_int(base.get("va"))
+        if va is None:
+            return []
+        homes = []
+        for class_name, table in (self.facts.get("vtables") or {}).items():
+            for index, slot in enumerate(table.get("slots") or []):
+                if to_int(slot[0]) == va:
+                    homes.append((class_name, index, table["slots"]))
+        if len(homes) != 1:
+            return []
+        class_name, index, before = homes[0]
+        _ap, live = self.vtable_live(class_name)
+        if not live:
+            return []
+        low, high = max(0, index - radius), min(len(before), index + radius + 1)
+        if high - low < 2 * radius + 1:
+            return []
+        fits = []
+        for shift in range(-max_shift, max_shift + 1):
+            if not (0 <= low + shift and high + shift <= len(live)):
+                continue
+            if all(masked_head(self.b, live[i + shift], limit=16) == before[i][1] for i in range(low, high)):
+                fits.append(shift)
+        if len(fits) != 1:
+            return []
+        shift = fits[0]
+        return [(live[index + shift], f"vtable-window {class_name}[{index}]->[{index + shift}] "
+                                      f"({high - low}/{high - low} slots around it unchanged)")]
+
     def s_siblingcallees(self, symbol, base, artifact):
         """Twins: pick the candidate that calls what a found sibling calls.
 
@@ -1198,7 +1232,7 @@ class Hunter:
     def resolve_function(self, symbol, base, artifact):
         candidates = []
         for strat in (self.s_reloc, self.s_headreloc, self.s_samelayout, self.s_vtable, self.s_strings, self.s_callgraph,
-                      self.s_calleeheads, self.s_neighbour, self.s_siblingcallees, self.s_consts):
+                      self.s_calleeheads, self.s_neighbour, self.s_siblingcallees, self.s_consts, self.s_slotwindow):
             try:
                 for va, how in strat(symbol, base, artifact):
                     head = self.func_start(va)
@@ -1247,7 +1281,8 @@ class Hunter:
         strong = set()
         for how in hows:
             family = how.split()[0]
-            if family in ("reloc", "callgraph", "calls", "callee-heads", "thunk", "sibling-callees", "consts"):
+            if family in ("reloc", "callgraph", "calls", "callee-heads", "thunk", "sibling-callees", "consts",
+                          "vtable-window"):
                 strong.add(family)
             elif family == "strings":
                 m = re.match(r"strings (\d+)/(\d+)", how)
