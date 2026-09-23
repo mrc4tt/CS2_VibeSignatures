@@ -62,8 +62,9 @@ access can settle an entry with a single comment.
    | 👎 | refused (the reply says why) - nothing was written |
    | 👀 | a mix, or a `/reject` noted |
 
-   Put as many commands as you like in **one** comment, one per line. You can also **edit**
-   it later, say to correct an address: the bot remembers which lines it already handled
+   Keep to **one** comment per person, with as many commands as you like, one per line. To
+   correct an address or add another answer, **edit that comment** instead of posting a
+   new one: the bot remembers which lines it already handled
    (hidden markers in its own comment), acts only on the new or changed ones, replaces its
    reaction, and marks the result "edited". Deleting a line undoes nothing already written.
 

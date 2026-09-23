@@ -161,7 +161,9 @@ def render_body(gamever, platform, rows):
         "one, say so in a comment - no IDA needed if you can read the candidate's code in any "
         "disassembler.",
         "",
-        "**How to answer** (one command per line; only the repository's collaborators are read):",
+        "**How to answer** - one comment per person, one command per line; to correct or add "
+        "something, **edit your comment** rather than posting a new one (only the changed lines are "
+        "acted on). Only the repository's collaborators are read:",
         "",
         "```",
         "/confirm <Symbol> 0x<address>            a function head",
@@ -304,7 +306,7 @@ def publish(gamever, platform=None, rows=None):
     update = {"body": body}
     if not rows:
         log_id, sections = bot_log(number)
-        write_bot_log(number, log_id, sections + ["Every symbol now has an artifact - closing.\n"])
+        write_bot_log(number, log_id, sections + ["Nothing is left on the list - closing. A later round opens a new issue.\n"])
         update["state"] = "closed"
     gh_api("PATCH", f"repos/{{repo}}/issues/{number}", update)
     print(f"[review] refreshed #{number} ({platform}, {len(rows)} symbols)")
