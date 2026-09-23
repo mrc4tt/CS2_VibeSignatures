@@ -777,8 +777,9 @@ Two guards now catch the class before the baseline does:
 | Ctrl-Alt-H | auto-hunt v2 | 5 strategies: reloc, vtable, seed-sig, sibling, string-anchor |
 | Ctrl-Alt-J | hunt named symbols | Asks for names (comma separated); hunts only those, even if an artifact exists |
 | Ctrl-Alt-E | emit artifact here | Artifact for the address under the cursor (also `emit_artifact.py` CLI) |
-| Ctrl-Alt-D | sig maker batch | List of symbols, pre-filled from `manual_todo/` or else from `missing_<platform>_<gamever>.txt` (open module only, existing artifacts skipped): hunted automatically first (Ctrl-Alt-H's engine and evidence rule); the rest opens ONE non-modal "CS2 review" window, a row per ranked candidate - Enter looks, Ins writes that candidate, Del drops. The cursor is never read, and every write refuses CRT start-up code and an address another artifact already owns |
+| Ctrl-Alt-D | sig maker batch | List of symbols, pre-filled from `manual_todo/` or else from `missing_<platform>_<gamever>.txt` (open module only, existing artifacts skipped): hunted automatically first (Ctrl-Alt-H's engine and evidence rule); the rest is written to `manual_todo/<gamever>/<module>.<platform>.txt` with every candidate and the reason (Ctrl-Alt-R opens it as a review window). The cursor is never read, and every write refuses CRT start-up code and an address another artifact already owns |
 | Ctrl-Alt-V | vtable finder | Interactive: class + slot + symbol |
+| Ctrl-Alt-R | review list | `manual_todo/<gamever>/<module>.<platform>.txt` (written by Ctrl-Alt-D and by the run) as a review window: Enter looks, Ins writes that candidate |
 | Ctrl-Alt-O | struct member emitter | Cursor on member-access instruction |
 
 ## AGENT SETUP

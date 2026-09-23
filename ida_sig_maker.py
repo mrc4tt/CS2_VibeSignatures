@@ -18,6 +18,7 @@ Platform + gamever are inferred from the loaded input file path:
 import json
 import os
 import re
+import sys
 
 import ida_auto
 import ida_bytes
@@ -889,13 +890,14 @@ def _auto_hunt_first(symbols):
         report = ida_auto_hunt.run(symbols=symbols)
     except Exception as error:
         print(f"[sig_maker] automatic pass skipped: {error}")
-        return [], {}, {}
+        return [], {}, {}, {}
     if not report:
-        return [], {}, {}
+        return [], {}, {}, {}
     solved = [row["symbol"] for row in report.get("solved", [])]
-    hints, whys = {}, {}
+    hints, whys, cats = {}, {}, {}
     for row in report.get("unresolved", []) + report.get("changed", []):
         whys[row["symbol"]] = str(row.get("why", ""))[:200]
+        cats[row["symbol"]] = row.get("category", "?")
         ranked = []
         for candidate in (row.get("candidates") or [])[:3]:
             try:
@@ -905,7 +907,7 @@ def _auto_hunt_first(symbols):
                 continue
         if ranked:
             hints[row["symbol"]] = ranked
-    return solved, hints, whys
+    return solved, hints, whys, cats
 
 
 def manual_todo_symbols():
@@ -967,7 +969,7 @@ def interactive_main():
 
     # 1. automatic first: the baseline-facts hunter (Ctrl-Alt-H's engine and evidence rule)
     #    resolves what it can prove, so only the rest needs a human
-    auto_done, hints, whys = _auto_hunt_first(symbols)
+    auto_done, hints, whys, cats = _auto_hunt_first(symbols)
     remaining = [s for s in symbols if s not in auto_done]
     if auto_done:
         print(f"[sig_maker] found automatically ({len(auto_done)}): {', '.join(auto_done)}")
@@ -975,17 +977,78 @@ def interactive_main():
         print("[sig_maker] every symbol was found automatically - nothing to place by hand")
         return
 
-    # 2. the rest in ONE non-modal list, one row per candidate the hunter ranked: Ins writes
-    #    THAT candidate - the cursor is never read, so "YES without moving it" cannot happen
-    rows = [{"symbol": s, "hint": va, "score": score, "why": how or whys.get(s, "")}
-            for s in remaining for va, score, how in hints.get(s, [])]
-    without = [s for s in remaining if not hints.get(s)]
-    if without:
-        print(f"[sig_maker] no candidate at all ({len(without)}) - left for the review issue / manual list:")
-        for symbol in without:
-            print(f"    {symbol}")
-    if rows:
-        _open_review(rows)
+    # 2. the rest goes to a LIST FILE - manual_todo/<gamever>/<module>.<platform>.txt, the same
+    #    file the server run writes - with every candidate and why the hunter stopped, to
+    #    work through at your own pace. Ctrl-Alt-R opens it as a review window.
+    path, count = write_manual_list(remaining, hints, whys, cats)
+    with_candidate = sum(1 for s in remaining if hints.get(s))
+    print("=" * 78)
+    print(f"[sig_maker] {len(remaining)} not proven ({with_candidate} with a candidate) -> {path} ({count} open)")
+    print("[sig_maker] Ctrl-Alt-R opens that list as a review window (Enter looks, Ins writes that candidate)")
+    print("=" * 78)
+
+
+def _task_names(target):
+    """{symbol: task} from the missing report and the list file, for the list's task column."""
+    tasks = {}
+    report = os.path.join(target["repo_root"], f"missing_{target['platform']}_{target['gamever']}.txt")
+    suffix = f".{target['platform']}.yaml"
+    if os.path.isfile(report):
+        with open(report, "r", encoding="utf-8") as handle:
+            for line in handle:
+                head, _, tail = line.strip().partition(" -> ")
+                if tail.endswith(suffix) and "/" in head:
+                    tasks.setdefault(tail[: -len(suffix)], head.split("/", 1)[1])
+    return tasks
+
+
+def write_manual_list(remaining, hints, whys, cats):
+    """Merge the unproven symbols into manual_todo/<gamever>/<module>.<platform>.txt."""
+    target = detect_target()
+    if not target:
+        print("[sig_maker] load the binary from bin/<gamever>/<module>/ to get a list file")
+        return None, 0
+    repo = os.path.dirname(os.path.abspath(globals().get("__file__") or "")) or target["repo_root"]
+    for candidate in (repo, os.environ.get("CS2VIBE_REPO"), os.path.join(os.path.expanduser("~"), "CS2_VibeSignatures")):
+        if candidate and os.path.isfile(os.path.join(candidate, "manual_todo.py")) and candidate not in sys.path:
+            sys.path.insert(0, candidate)
+    import manual_todo
+    tasks = _task_names(target)
+    path = manual_todo.manual_todo_path(target["gamever"], target["module"], target["platform"],
+                                        repo_root=target["repo_root"])
+    entries = {}
+    for symbol in remaining:
+        ranked = hints.get(symbol) or []
+        row = {"category": cats.get(symbol, "?"), "why": whys.get(symbol, "no candidate"),
+               "candidates": [{"va": hex(va), "score": score} for va, score, _how in ranked]}
+        detail = manual_todo.describe_unresolved(row)
+        if len(ranked) > 1:
+            detail += " | also " + ", ".join(f"{hex(va)} ({score})" for va, score, _how in ranked[1:])
+        entries[symbol] = (tasks.get(symbol, "-"), detail)
+    count = manual_todo.update_manual_todo(path, target["artifact_dir"], target["platform"], entries)
+    return path, count
+
+
+def open_review_from_list():
+    """Ctrl-Alt-R: the list file as a review window, one row per candidate it names."""
+    todo, path = manual_todo_symbols()
+    if not todo:
+        print(f"[sig_maker] nothing open in {path or 'manual_todo/'}")
+        return
+    rows = []
+    with open(path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            parts = line.split(None, 2)
+            if len(parts) < 3 or line.startswith("#") or parts[0] not in todo:
+                continue
+            detail = parts[2]
+            for va, score in re.findall(r"(0x[0-9a-fA-F]+) \(([0-9.]+)\)", detail):
+                rows.append({"symbol": parts[0], "hint": int(va, 16), "score": float(score),
+                             "why": detail.strip()[:200]})
+    if not rows:
+        print(f"[sig_maker] {len(todo)} open in {path}, none with a candidate - they need a look in IDA or the review issue")
+        return
+    _open_review(rows)
 
 
 _REVIEW = {}
@@ -1498,6 +1561,29 @@ ida_kernwin.register_action(ida_kernwin.action_desc_t(
 ))
 ida_kernwin.attach_action_to_menu("Edit/Plugins/CS2 emit artifact here", ACTION_ID_EMIT)
 
+
+class _ReviewListAction(ida_kernwin.action_handler_t):
+    def activate(self, ctx):
+        try:
+            open_review_from_list()
+        except Exception as error:
+            print(f"[sig_maker] review window failed: {error}")
+        return 1
+
+    def update(self, ctx):
+        return ida_kernwin.AST_ENABLE_ALWAYS
+
+
+ACTION_ID_REVIEW = "cs2vibe:review_list"
+try:
+    ida_kernwin.unregister_action(ACTION_ID_REVIEW)
+except Exception:
+    pass
+ida_kernwin.register_action(ida_kernwin.action_desc_t(
+    ACTION_ID_REVIEW, "CS2 review list", _ReviewListAction(), "Ctrl-Alt-R",
+    "The manual_todo list of the loaded binary as a review window: Enter looks, Ins writes that candidate", -1,
+))
+ida_kernwin.attach_action_to_menu("Edit/Plugins/CS2 review list", ACTION_ID_REVIEW)
 
 ACTION_ID_SM = "cs2vibe:struct_member"
 try:

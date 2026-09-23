@@ -70,7 +70,8 @@ def _load_all():
 HOTKEYS = (
     ("Ctrl-Alt-H", "auto-hunt: every missing symbol of the open binary, no cursor needed"),
     ("Ctrl-Alt-J", "hunt the symbols you NAME (comma separated), also re-checks existing ones"),
-    ("Ctrl-Alt-D", "sig maker batch: list of symbols, found automatically first, the rest asked"),
+    ("Ctrl-Alt-D", "symbol list (from missing_*.txt): found automatically, the rest -> manual_todo/*.txt"),
+    ("Ctrl-Alt-R", "review window for that manual_todo list: Enter looks, Ins writes the candidate"),
     ("Ctrl-Alt-E", "artifact for the function under the CURSOR (jump there first: G + address)"),
     ("Ctrl-Alt-V", "vtable finder: class + slot -> vfunc artifact"),
     ("Ctrl-Alt-O", "struct member offset: cursor on the instruction that reads it"),
