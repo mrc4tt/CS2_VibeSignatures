@@ -2,6 +2,7 @@
 
 Hotkeys (registered by the scripts it loads):
   Ctrl-Alt-H  auto-hunt from baseline facts, no cursor needed (ida_auto_hunt.py)
+  Ctrl-Alt-J  auto-hunt only the symbols you name (ida_auto_hunt.py)
   Ctrl-Alt-E  emit an artifact for the address under the cursor (ida_sig_maker.py)
   Ctrl-Alt-D  sig/YAML maker batch (ida_sig_maker.py)
   Ctrl-Alt-O  struct member emitter (ida_sig_maker.py)
@@ -69,7 +70,7 @@ def _load_all():
 class cs2_plugins_t(ida_idaapi.plugin_t):
     flags = ida_idaapi.PLUGIN_KEEP
     comment = "CS2_VibeSignatures tooling"
-    help = ("Ctrl-Alt-H = auto-hunt, Ctrl-Alt-E = emit artifact here, Ctrl-Alt-D = sig/YAML maker, "
+    help = ("Ctrl-Alt-H = auto-hunt, Ctrl-Alt-J = hunt named symbols, Ctrl-Alt-E = emit artifact here, Ctrl-Alt-D = sig/YAML maker, "
             "Ctrl-Alt-O = struct member emitter, Ctrl-Alt-V = vtable finder")
     wanted_name = "CS2 plugins"
     wanted_hotkey = ""

@@ -138,6 +138,29 @@ class _AutoHuntAction(ida_kernwin.action_handler_t):
         return ida_kernwin.AST_ENABLE_ALWAYS
 
 
+class _HuntSymbolsAction(ida_kernwin.action_handler_t):
+    """Ctrl-Alt-J: hunt the symbols you name, even when an artifact already exists."""
+
+    def activate(self, ctx):
+        text = ida_kernwin.ask_str("", 0, "Symbols to hunt (comma separated), e.g. CCSBot_EquipPistol:")
+        names = [n.strip() for n in (text or "").replace(";", ",").split(",") if n.strip()]
+        if not names:
+            return 1
+        try:
+            report = run(symbols=names)
+            if report is not None:
+                known = {r["symbol"] for key in ("solved", "unresolved", "changed", "skipped") for r in report.get(key, [])}
+                missing = [n for n in names if n not in known]
+                if missing:
+                    print(f"[auto_hunt] not in the baseline facts (check the spelling): {', '.join(missing)}")
+        except Exception as error:
+            print(f"[auto_hunt] failed: {error}")
+        return 1
+
+    def update(self, ctx):
+        return ida_kernwin.AST_ENABLE_ALWAYS
+
+
 ACTION_ID = "cs2vibe:auto_hunt"
 try:
     ida_kernwin.unregister_action(ACTION_ID)
@@ -148,6 +171,17 @@ ida_kernwin.register_action(ida_kernwin.action_desc_t(
     "Resolve every missing artifact of the loaded binary, verified against baseline facts", -1,
 ))
 ida_kernwin.attach_action_to_menu("Edit/Plugins/CS2 auto-hunt (baseline facts)", ACTION_ID)
+
+ACTION_ID_ONE = "cs2vibe:auto_hunt_symbols"
+try:
+    ida_kernwin.unregister_action(ACTION_ID_ONE)
+except Exception:
+    pass
+ida_kernwin.register_action(ida_kernwin.action_desc_t(
+    ACTION_ID_ONE, "CS2 auto-hunt: named symbols", _HuntSymbolsAction(), "Ctrl-Alt-J",
+    "Hunt only the symbols you type (also re-checks ones that already have an artifact)", -1,
+))
+ida_kernwin.attach_action_to_menu("Edit/Plugins/CS2 auto-hunt: named symbols", ACTION_ID_ONE)
 
 if __name__ == "__main__" and os.environ.get("CS2_AUTO_HUNT_JOB"):
     run_batch_job()
