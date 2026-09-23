@@ -32,6 +32,9 @@ import idautils
 import idc
 
 MAX_SIG_BYTES = 128
+# a func head sig may run the whole body: twins generated from one template (the
+# CCSCustomHudLayout_*ForPlayer setters) differ only at +0x90, past MAX_SIG_BYTES
+MAX_FUNC_SIG_BYTES = 512
 STEP = 16
 MIN_SIG_BYTES = 24
 
@@ -972,7 +975,9 @@ def interactive_main():
         if not confirm_identity(func_ea, symbol):
             skipped.append(symbol)
             continue
-        emit_yaml(func_ea, symbol)
+        if not emit_yaml(func_ea, symbol):
+            skipped.append(symbol)
+            continue
         emitted[func_ea] = symbol
         done.append(symbol)
 
@@ -1054,23 +1059,25 @@ def confirm_identity(func_ea, symbol):
 
 
 def emit_yaml(func_ea, symbol):
+    """Write the func artifact; False when no unique signature exists (nothing written)."""
     func = ida_funcs.get_func(func_ea)
     func_size = func.size()
 
-    length = MIN_SIG_BYTES
-    while length <= min(MAX_SIG_BYTES, func_size):
+    cap = min(MAX_FUNC_SIG_BYTES, func_size)
+    lengths = list(range(MIN_SIG_BYTES, cap, STEP)) + [cap]
+    for length in lengths:
         sig_str, covered = build_pattern(func_ea, length)
         if covered < MIN_SIG_BYTES:
             print(f"[sig_maker] Could not decode {MIN_SIG_BYTES} bytes from function head - aborting.")
-            return
+            return False
         matches = count_matches(sig_str)
         print(f"[sig_maker] {covered} bytes, {matches} match(es)...")
         if matches == 1:
             break
-        length += STEP
     else:
-        print("[sig_maker] Signature still not unique at max length - consider fewer wildcards or a longer pattern.")
-        return
+        print(f"[sig_maker] {symbol}: NOT WRITTEN - no unique signature even over the whole body ({hex(func_size)} bytes);"
+              f" an identical twin exists")
+        return False
 
     rva = func_ea - ida_nalt.get_imagebase()
     yaml_block = (
@@ -1093,6 +1100,7 @@ def emit_yaml(func_ea, symbol):
     else:
         print("[sig_maker] UNIQUE signature (input path outside bin/<GAMEVER> - paste manually):")
         print(yaml_block)
+    return True
 
 
 def emit_vfunc_yaml(func_ea, symbol, vtable_name, vfunc_index, extra=None, scan=None):
