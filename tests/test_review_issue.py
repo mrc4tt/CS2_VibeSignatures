@@ -202,31 +202,134 @@ class EnvTests(unittest.TestCase):
 
 
 class BotLogTests(unittest.TestCase):
-    """One bot comment per issue, edited in place, newest result first."""
+    """One bot comment per issue, always the last: posted anew, old copy deleted."""
 
-    def test_log_round_trip_and_newest_first(self):
-        posted = []
+    def test_repost_at_the_bottom_then_delete_the_old_copy(self):
+        calls = []
 
         def fake_api(method, path, payload=None):
-            posted.append((method, path, payload["body"]))
+            calls.append((method, path, payload and payload["body"]))
+            return {"id": 8} if method == "POST" else None
 
         with mock.patch.object(R, "gh_api", side_effect=fake_api):
-            R.write_bot_log("2", None, ["re @a:\n\n- first\n"])
-            first = posted[-1][2]
-            comment = {"id": 7, "body": first}
-            log_id, sections = R.bot_log("2", [{"id": 1, "body": "/confirm X 0x1"}, comment])
-            self.assertEqual((log_id, len(sections)), (7, 1))
-            R.write_bot_log("2", log_id, ["re @b:\n\n- second\n"] + sections)
-        self.assertEqual(posted[0][0], "POST")
-        self.assertEqual(posted[1][:2], ("PATCH", "repos/{repo}/issues/comments/7"))
-        body = posted[1][2]
+            new_id = R.write_bot_log("2", 7, ["re @a:\n\n- first\n", "re @b:\n\n- second\n"])
+        self.assertEqual(new_id, 8)
+        self.assertEqual([c[:2] for c in calls], [("POST", "repos/{repo}/issues/2/comments"),
+                                                  ("DELETE", "repos/{repo}/issues/comments/7")])
+        body = calls[0][2]
         self.assertTrue(body.startswith(R.BOT_MARK))
-        self.assertLess(body.index("- second"), body.index("- first"))
+        self.assertLess(body.index("- first"), body.index("- second"))   # newest at the bottom
+        log_id, sections = R.bot_log("2", [{"id": 8, "body": body}])
+        self.assertEqual((log_id, len(sections)), (8, 2))
 
     def test_oldest_results_are_dropped_when_too_long(self):
         posted = []
-        with mock.patch.object(R, "gh_api", side_effect=lambda m, p, payload=None: posted.append(payload["body"])), \
+        with mock.patch.object(R, "gh_api", side_effect=lambda m, p, payload=None: posted.append(payload and payload["body"]) or {"id": 1}), \
                 mock.patch.object(R, "MAX_BODY", 200):
-            R.write_bot_log("2", 7, ["new " * 10, "old " * 40])
+            R.write_bot_log("2", None, ["old " * 40, "new " * 10])
         self.assertIn("new", posted[0])
         self.assertNotIn("old", posted[0])
+
+class EditTests(unittest.TestCase):
+    def test_markers_round_trip(self):
+        key = R.line_key("confirm", "A_b", None, ["0x10"])
+        self.assertEqual(key, R.line_key("confirm", "A_b", None, ["0x10"]))
+        self.assertNotEqual(key, R.line_key("confirm", "A_b", None, ["0x20"]))
+        sections = [f"re @x:\n\n- ok\n<!-- done:42:{key},abc123 -->\n"]
+        self.assertEqual(R.done_lines(sections), {42: {key, "abc123"}})
+
+    def test_edited_comment_acts_on_changed_lines_only(self):
+        old = R.line_key("confirm", "A_b", None, ["0x10"])
+        reject = R.line_key("reject", "C_d", None, ["inlined"])
+        log = {"id": 9, "body": R.BOT_HEADER + f"\nre @x:\n\n- A_b refused\n<!-- done:5:{old},{reject} -->\n"}
+        edited = {"id": 5, "author_association": "OWNER", "login": "x", "url": "u",
+                  "body": "/confirm A_b 0x20\n/reject C_d inlined"}
+        built = []
+
+        def fake_build(gamever, row, args, runner=None):
+            built.append(args)
+            return R.REPO / "A_b.windows.yaml", "written and validated."
+
+        rows = [{"symbol": "A_b", "platform": "windows", "module": "server", "candidate": None, "path": "p"},
+                {"symbol": "C_d", "platform": "windows", "module": "server", "candidate": None, "path": "p"}]
+        posted, reactions = [], []
+        with mock.patch.object(R, "find_issue", return_value={"number": 2}), \
+                mock.patch.object(R, "issue_comments", return_value=[edited, log]), \
+                mock.patch.object(R, "read_todo", return_value=rows), \
+                mock.patch.object(R, "build_artifact", side_effect=fake_build), \
+                mock.patch.object(R, "write_bot_log", side_effect=lambda n, i, s: posted.append(s) or 10), \
+                mock.patch.object(R, "replace_reaction", side_effect=lambda c, r, m: reactions.append((c, r))), \
+                mock.patch.object(R, "react") as plain_react:
+            R._apply_issue("14182", "windows", "me", False, [])
+        self.assertEqual(built, [["-kind", "func", "-ea", "0x20"]])      # only the changed line
+        self.assertEqual(reactions, [(5, "+1")])                         # verdict replaced
+        plain_react.assert_not_called()
+        self.assertIn("edited: 1 new or changed line(s)", posted[-1][-1])
+
+
+class NewRoundTests(unittest.TestCase):
+    def test_closed_issue_is_not_reopened_a_new_one_links_it(self):
+        calls = []
+
+        def fake_api(method, path, payload=None):
+            calls.append((method, path, payload))
+            if method == "GET" and "state=open" in path:
+                return []
+            if method == "GET" and "state=closed" in path:
+                return [{"number": 2, "title": R.title_for("14182", "windows"), "state": "closed"}]
+            if method == "POST" and path.endswith("/issues"):
+                return {"html_url": "https://github.com/x/y/issues/3", "number": 3}
+            return None
+
+        rows = [{"module": "server", "platform": "windows", "symbol": "A_b", "flags": [], "category": "func",
+                 "candidate": None, "score": None, "why": "no candidate"}]
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(R, "REPO", Path(tmp)), \
+                mock.patch.object(R, "gh_api", side_effect=fake_api):
+            R.publish("14182", "windows", rows=rows)
+            self.assertEqual(R._remembered_path("14182", "windows").read_text().strip(), "3")
+        created = [c for c in calls if c[0] == "POST" and c[1].endswith("/issues")]
+        self.assertEqual(len(created), 1)
+        self.assertTrue(created[0][2]["body"].startswith("Previous round: #2"))
+        self.assertFalse([c for c in calls if c[0] == "PATCH"])   # #2 stays closed
+
+    def test_a_stale_list_entry_is_checked_directly(self):
+        # the list still says open; the issue itself says closed
+        def fake_api(method, path, payload=None):
+            if "state=open" in path:
+                return [{"number": 2, "title": R.title_for("14182", "windows"), "state": "open"}]
+            if path.endswith("/issues/2"):
+                return {"state": "closed"}
+            return None
+
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(R, "REPO", Path(tmp)), \
+                mock.patch.object(R, "gh_api", side_effect=fake_api):
+            self.assertIsNone(R.find_issue("14182", "windows"))
+
+    def test_remembered_issue_is_found_even_when_the_list_misses_it(self):
+        def fake_api(method, path, payload=None):
+            if "state=open" in path:
+                return []                                  # the list has not caught up yet
+            if path.endswith("/issues/3"):
+                return {"state": "open", "title": R.title_for("14182", "windows")}
+            return None
+
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(R, "REPO", Path(tmp)), \
+                mock.patch.object(R, "gh_api", side_effect=fake_api):
+            R.remember_issue("14182", "windows", 3)
+            self.assertEqual(R.find_issue("14182", "windows")["number"], 3)
+
+    def _unused(self):
+        calls = []
+
+        def fake_api(method, path, payload=None):
+            calls.append((method, path, payload))
+            return None
+
+        rows = [{"module": "server", "platform": "windows", "symbol": "A_b", "flags": [], "category": "func",
+                 "candidate": None, "score": None, "why": "no candidate"}]
+        with mock.patch.object(R, "gh_api", side_effect=fake_api):
+            R.publish("14182", "windows", rows=rows)
+        created = [c for c in calls if c[0] == "POST" and c[1].endswith("/issues")]
+        self.assertEqual(len(created), 1)
+        self.assertTrue(created[0][2]["body"].startswith("Previous round: #2"))
+        self.assertFalse([c for c in calls if c[0] == "PATCH"])   # #2 stays closed

@@ -47,7 +47,7 @@ COMMAND_RE = re.compile(r"^\s*/(confirm|reject)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(.*
 MAX_BODY = 60000
 # the bot keeps ONE comment per issue and edits it, newest result first
 BOT_MARK = "<!-- review-bot -->"
-BOT_HEADER = f"{BOT_MARK}\n**review bot** - results, newest first (reactions on your comment: :+1: written, :-1: refused, :eyes: mixed or noted)"
+BOT_HEADER = f"{BOT_MARK}\n**review bot** - results, newest at the bottom (reactions on your comment: :+1: written, :-1: refused, :eyes: mixed or noted)"
 
 
 def resolve_gamever(gamever):
@@ -179,17 +179,19 @@ def render_body(gamever, platform, rows):
         "game version; if that fails, the built-in hunter tries strings, call graphs, vtable slots, "
         "sibling functions and layout fingerprints, and an AI agent gets whatever is left.",
         f"2. **What is still open is listed below**, with the run's best candidate and why it stopped. "
-        f"The {platform} run refreshes this issue; when the list is empty, the issue closes itself.",
+        f"The {platform} run refreshes this issue; when the list is empty, the issue closes itself, "
+        f"and a later round opens a new one.",
         "3. **You answer in a comment**, with the commands above. The platform is this issue's.",
         "4. **The server acts on it every 15 minutes.** Only comments from the owner, members and "
         "collaborators are read. The artifact is rebuilt from the game binary and must pass: the "
         "signature matches exactly one place; that place is a real function start; it is not the "
         "binary's entry point; a virtual function really sits in that vtable slot (via RTTI); no other "
         "symbol already owns the address.",
-        "5. **You get a reply** in the bot's one comment on this issue (newest first), with the artifact "
+        "5. **You get a reply** in the bot's one comment, always the last on this issue (newest at the bottom), with the artifact "
         "written or the reason it was refused, and whether your "
         "address matches the run's best candidate. Your comment gets a reaction: :+1: written, "
-        ":-1: refused, :eyes: mixed or a `/reject` noted. A comment with a reaction is never processed twice.",
+        ":-1: refused, :eyes: mixed or a `/reject` noted. You can **edit** your comment: only new or changed "
+        "lines are acted on, and the reaction is replaced.",
         "6. **From there it flows on as usual:** committed, packed, generated into the plugin gamedata "
         "files and deployed. A `/reject` keeps the symbol listed, marked with who rejected it and why.",
         "",
@@ -222,12 +224,55 @@ def render_body(gamever, platform, rows):
 
 # ----------------------------------------------------------------------------- github
 
+def _issues(gamever, platform, state):
+    found = gh_api("GET", f"repos/{{repo}}/issues?labels={LABEL}&state={state}&per_page=100") or []
+    return [{"number": i["number"], "title": i["title"], "state": i["state"].upper()}
+            for i in found if i["title"] == title_for(gamever, platform) and "pull_request" not in i]
+
+
+def _remembered_path(gamever, platform):
+    return REPO / "manual_todo" / str(gamever) / f"review-issue.{platform}"
+
+
+def remembered_closed(gamever, platform):
+    """The issue this machine used last, when it has been closed since: the previous round."""
+    path = _remembered_path(gamever, platform)
+    number = path.read_text(encoding="utf-8").strip() if path.is_file() else ""
+    if not number.isdigit():
+        return None
+    current = gh_api("GET", f"repos/{{repo}}/issues/{number}") or {}
+    return {"number": int(number)} if current.get("state") == "closed" else None
+
+
+def remember_issue(gamever, platform, number):
+    path = _remembered_path(gamever, platform)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"{number}\n", encoding="utf-8")
+
+
 def find_issue(gamever, platform):
-    found = gh_api("GET", f"repos/{{repo}}/issues?labels={LABEL}&state=all&per_page=100") or []
-    for issue in found:
-        if issue["title"] == title_for(gamever, platform) and "pull_request" not in issue:
-            return {"number": issue["number"], "title": issue["title"], "state": issue["state"].upper()}
+    """The OPEN review issue, if any. A closed one is history: a new round gets a new issue.
+
+    GitHub's issue LIST lags behind changes in both directions (live test: an issue closed
+    seconds earlier was still listed as open, and a new one was missing from the list), so
+    the number this machine last used is read directly first, and anything the list offers
+    is confirmed with a direct read too."""
+    path = _remembered_path(gamever, platform)
+    if path.is_file():
+        number = path.read_text(encoding="utf-8").strip()
+        current = gh_api("GET", f"repos/{{repo}}/issues/{number}") if number.isdigit() else None
+        if current and current.get("state") == "open" and current.get("title") == title_for(gamever, platform):
+            return {"number": int(number), "title": current["title"], "state": "OPEN"}
+    for issue in _issues(gamever, platform, "open"):
+        current = gh_api("GET", f"repos/{{repo}}/issues/{issue['number']}") or {}
+        if current.get("state") == "open":
+            return issue
     return None
+
+
+def previous_issue(gamever, platform):
+    closed = _issues(gamever, platform, "closed")
+    return max(closed, key=lambda i: i["number"]) if closed else None
 
 
 def publish(gamever, platform=None, rows=None):
@@ -247,17 +292,19 @@ def publish(gamever, platform=None, rows=None):
         except RuntimeError as error:
             if "already_exists" not in str(error) and "422" not in str(error):
                 raise
+        earlier = remembered_closed(gamever, platform) or previous_issue(gamever, platform)
+        if earlier:
+            body = f"Previous round: #{earlier['number']} (closed - its comments are not read any more).\n\n" + body
         created = gh_api("POST", "repos/{repo}/issues",
                          {"title": title_for(gamever, platform), "body": body, "labels": [LABEL]})
+        remember_issue(gamever, platform, created["number"])
         print(f"[review] opened {created['html_url']} ({platform}, {len(rows)} symbols)")
         return created["html_url"]
     number = str(issue["number"])
     update = {"body": body}
-    if rows and issue["state"] == "CLOSED":
-        update["state"] = "open"
-    if not rows and issue["state"] == "OPEN":
+    if not rows:
         log_id, sections = bot_log(number)
-        write_bot_log(number, log_id, ["Every symbol now has an artifact - closing.\n"] + sections)
+        write_bot_log(number, log_id, sections + ["Every symbol now has an artifact - closing.\n"])
         update["state"] = "closed"
     gh_api("PATCH", f"repos/{{repo}}/issues/{number}", update)
     print(f"[review] refreshed #{number} ({platform}, {len(rows)} symbols)")
@@ -268,6 +315,26 @@ def issue_comments(number):
     out = gh("api", f"repos/{{owner}}/{{repo}}/issues/{number}/comments", "--paginate",
              "--jq", ".[] | {id, body, author_association, login: .user.login, url: .html_url}")
     return [json.loads(line) for line in out.splitlines() if line.strip()]
+
+
+DONE_RE = re.compile(r"<!-- done:(\d+):([0-9a-f,]*) -->")
+
+
+def line_key(verb, symbol, platform, tokens):
+    """A stable id for one command line, so an edited comment is compared line by line."""
+    import hashlib
+
+    text = " ".join([verb, symbol, platform or "", *tokens]).strip()
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:10]
+
+
+def done_lines(sections):
+    """{comment id: {line keys already handled}} from the bot log's hidden markers."""
+    done = {}
+    for section in sections:
+        for comment_id, keys in DONE_RE.findall(section):
+            done.setdefault(int(comment_id), set()).update(k for k in keys.split(",") if k)
+    return done
 
 
 def bot_log(number, comments=None):
@@ -282,14 +349,17 @@ def bot_log(number, comments=None):
 
 
 def write_bot_log(number, comment_id, sections):
+    """Post the log as the issue's LAST comment and delete the previous copy, so the one
+    bot comment always sits below the comments it answers. Posted before the delete: a
+    failure in between leaves two copies, never none. Returns the new comment's id."""
     body = BOT_HEADER + "\n" + "\n---\n".join(sections)
     while len(body) > MAX_BODY and len(sections) > 1:
-        sections = sections[:-1]  # the oldest results go first
+        sections = sections[1:]  # the oldest results go first
         body = BOT_HEADER + "\n" + "\n---\n".join(sections)
-    if comment_id is None:
-        gh_api("POST", f"repos/{{repo}}/issues/{number}/comments", {"body": body})
-    else:
-        gh_api("PATCH", f"repos/{{repo}}/issues/comments/{comment_id}", {"body": body})
+    created = gh_api("POST", f"repos/{{repo}}/issues/{number}/comments", {"body": body}) or {}
+    if comment_id is not None:
+        gh_api("DELETE", f"repos/{{repo}}/issues/comments/{comment_id}")
+    return created.get("id")
 
 
 def my_login():
@@ -299,6 +369,19 @@ def my_login():
 def reacted_by(comment_id, login):
     out = gh("api", f"repos/{{owner}}/{{repo}}/issues/comments/{comment_id}/reactions", "--jq", ".[].user.login")
     return login in out.split()
+
+
+def my_reactions(comment_id, login):
+    out = gh("api", f"repos/{{owner}}/{{repo}}/issues/comments/{comment_id}/reactions",
+             "--jq", ".[] | [.id, .user.login] | @tsv")
+    return [int(line.split("\t")[0]) for line in out.splitlines() if line.split("\t")[-1] == login]
+
+
+def replace_reaction(comment_id, content, login):
+    """An edited comment gets a fresh verdict: the bot's earlier reaction goes."""
+    for reaction_id in my_reactions(comment_id, login):
+        gh("api", "-X", "DELETE", f"repos/{{owner}}/{{repo}}/issues/comments/{comment_id}/reactions/{reaction_id}")
+    react(comment_id, content)
 
 
 def react(comment_id, content):
@@ -454,6 +537,7 @@ def _apply_issue(gamever, platform, me, dry_run, written):
     number = str(issue["number"])
     comments = issue_comments(number)
     log_id, log_sections = bot_log(number, comments)
+    done = done_lines(log_sections)
     new_sections = []
     for comment in comments:
         commands = parse_commands(comment["body"])
@@ -461,11 +545,17 @@ def _apply_issue(gamever, platform, me, dry_run, written):
             continue
         if comment["author_association"] not in TRUSTED:
             continue
-        if reacted_by(comment["id"], me):
+        seen = done.get(int(comment["id"]))
+        if seen is None and reacted_by(comment["id"], me):
+            continue  # handled before the log kept line markers
+        keyed = [(line_key(*command), command) for command in commands]
+        pending = [(key, command) for key, command in keyed if not seen or key not in seen]
+        if not pending:
             continue
+        edited = seen is not None
         rows = read_todo(gamever, platform=platform)
         replies, ok, refused, noted = [], 0, 0, 0
-        for verb, symbol, named_platform, tokens in commands:
+        for _key, (verb, symbol, named_platform, tokens) in pending:
             if named_platform and named_platform != platform:
                 replies.append(f"- `{symbol}`: this is the {platform} issue - post {named_platform} answers in its own issue")
                 refused += 1
@@ -499,13 +589,19 @@ def _apply_issue(gamever, platform, me, dry_run, written):
         print("\n".join(replies))
         if dry_run:
             continue
-        new_sections.insert(0, f"re @{comment['login']} ([comment]({comment.get('url', '')})):\n\n" + "\n".join(replies) + "\n")
+        handled = sorted((seen or set()) | {key for key, _ in keyed})
+        what = (f" - edited: {len(pending)} new or changed line(s); lines already handled are not repeated"
+                if edited else "")
+        new_sections.append(f"re @{comment['login']} ([comment]({comment.get('url', '')})){what}:\n\n"
+                            + "\n".join(replies) + f"\n<!-- done:{comment['id']}:{','.join(handled)} -->\n")
+        done[int(comment["id"])] = set(handled)
         # the log first, then the reaction: a reacted comment is never read again, so its
         # result must already be recorded
-        write_bot_log(number, log_id, new_sections + log_sections)
-        if log_id is None:
-            log_id, _ = bot_log(number)
-        react(comment["id"], reaction_for(ok, refused, noted))
+        log_id = write_bot_log(number, log_id, log_sections + new_sections)
+        if edited:
+            replace_reaction(comment["id"], reaction_for(ok, refused, noted), me)
+        else:
+            react(comment["id"], reaction_for(ok, refused, noted))
     return written
 
 

@@ -19,7 +19,9 @@ access can settle an entry with a single comment.
    score, and the reason it stopped. A typical reason is "two identical twins" or "only
    weak evidence". At the end of the linux run the linux list is mirrored into the linux
    issue, and the windows run does the same for windows. Each issue has one table per
-   module. When a list is empty, its issue closes itself.
+   module. When a list is empty, its issue closes itself. A closed issue is never reopened:
+   if symbols are left for review later, a **new** issue is opened that links the previous
+   one, and only open issues are read.
 
 3. **You answer in a comment on that platform's issue**, one command per line:
 
@@ -48,8 +50,9 @@ access can settle an entry with a single comment.
    - for a virtual function, the class's vtable (found via RTTI) really holds it in that slot;
    - no other symbol already owns that address (one address, one name).
 
-5. **You get a reply.** The bot keeps **one** comment per issue and edits it, newest result
-   first, with a link back to the comment each result answers. It shows the artifact it
+5. **You get a reply.** The bot keeps **one** comment per issue, always the last one: when
+   there are new results, it posts the updated log at the bottom and removes the previous
+   copy. The newest result is at the bottom, with a link back to the comment it answers. It shows the artifact it
    wrote, or the reason it refused. It also tells you whether your address matches the run's own
    best candidate. Your comment gets a reaction:
 
@@ -59,8 +62,10 @@ access can settle an entry with a single comment.
    | 👎 | refused (the reply says why) - nothing was written |
    | 👀 | a mix, or a `/reject` noted |
 
-   A comment with a reaction counts as handled and is never processed twice. To try
-   again, post a new comment.
+   Put as many commands as you like in **one** comment, one per line. You can also **edit**
+   it later, say to correct an address: the bot remembers which lines it already handled
+   (hidden markers in its own comment), acts only on the new or changed ones, replaces its
+   reaction, and marks the result "edited". Deleting a line undoes nothing already written.
 
 6. **From there it flows on as usual.** The accepted artifact is committed and pushed.
    The next pack and gamedata generation pick it up, and the plugin files are updated
