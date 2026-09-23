@@ -1,0 +1,5 @@
+func_name: CGamePlayerEquip_InputTriggerForActivatedPlayer
+func_va: '0x19ff8a0'
+func_rva: '0x19ff8a0'
+func_size: '0xa9'
+func_sig: 48 85 F6 0F 84 ?? ?? ?? ?? 55 48 89 E5 41 56 41 55 49 89 FD 48 89 F7

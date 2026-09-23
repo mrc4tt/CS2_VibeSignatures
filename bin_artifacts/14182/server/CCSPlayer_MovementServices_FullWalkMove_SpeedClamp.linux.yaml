@@ -1,0 +1,5 @@
+patch_name: CCSPlayer_MovementServices_FullWalkMove_SpeedClamp
+patch_va: '0x15daee2'
+patch_rva: '0x15daee2'
+patch_sig: 76 7E F3 0F 51 C0
+patch_bytes: EB 7E
