@@ -718,26 +718,50 @@ class Hunter:
         return self._vt_cache[class_name]
 
     def measure_shift(self, class_name, index):
+        """Shift that aligns the baseline vtable neighbourhood onto the live one.
+
+        Only DISCRIMINATIVE neighbours count: a head that several slots of the
+        baseline vtable share (empty stubs, `xor eax,eax; ret`) agrees with any
+        shift and says nothing. Ties go to the smallest |shift|, since the usual
+        answer is "nothing moved".
+        """
         base_slots = ((self.facts.get("vtables") or {}).get(class_name) or {}).get("slots") or []
         ap, live_slots = self.vtable_live(class_name)
         if ap is None or not base_slots or not live_slots or index is None:
             return None, "vtable not resolvable"
+        counts = {}
+        for _, head, _ in base_slots:
+            counts[" ".join(head)] = counts.get(" ".join(head), 0) + 1
+        window = [i for i in range(max(0, index - 8), min(len(base_slots), index + 9))
+                  if counts[" ".join(base_slots[i][1])] == 1 and len(base_slots[i][1]) >= 8]
+        if len(window) < 3:
+            return None, f"too few discriminative neighbours ({len(window)})"
+        live_heads = {}
         best = (None, -1)
-        for shift in range(-12, 13):
-            agree = total = 0
-            for i in range(max(0, index - 8), min(len(base_slots), index + 9)):
+        for shift in sorted(range(-12, 13), key=abs):
+            agree = 0
+            for i in window:
                 j = i + shift
                 if not (0 <= j < len(live_slots)):
                     continue
-                total += 1
-                if token_match(base_slots[i][1], masked_head(self.b, live_slots[j], limit=16)) >= 0.9:
+                if j not in live_heads:
+                    live_heads[j] = masked_head(self.b, live_slots[j], limit=16)
+                if token_match(base_slots[i][1], live_heads[j]) >= 0.9:
                     agree += 1
-            if total and agree > best[1]:
+            if agree > best[1]:
                 best = (shift, agree)
         shift, agree = best
-        if shift is None or agree < 3:
-            return None, f"neighbourhood agreement too low ({agree})"
-        return shift, f"shift {shift:+d} ({agree} neighbours agree)"
+        if shift is None or agree < 3 or agree < len(window) // 2:
+            return None, f"neighbourhood agreement too low ({agree}/{len(window)})"
+        return shift, f"shift {shift:+d} ({agree}/{len(window)} discriminative neighbours agree)"
+
+    def index_in_vtable(self, class_name, va):
+        """Slot index of va in the class's primary live vtable, when it appears exactly once."""
+        _, live_slots = self.vtable_live(class_name)
+        hits = [i for i, fn in enumerate(live_slots) if fn == va]
+        if len(hits) != 1:
+            return None
+        return hits[0]
 
     def s_vtable(self, symbol, base, artifact):
         class_name, index = base.get("vtable_name"), base.get("vfunc_index")
@@ -903,11 +927,23 @@ class Hunter:
         by_va = {}
         for va, how, sc in candidates:
             by_va.setdefault(va, {"how": [], "score": sc})["how"].append(how)
-        ranked = sorted(by_va.items(), key=lambda kv: (len(kv[1]["how"]), kv[1]["score"]), reverse=True)
+        # agreement counts DISTINCT strategies: the same caller voting for ordinals
+        # k and k+1 is one opinion, not two
+        for info in by_va.values():
+            info["families"] = len({h.split()[0] for h in info["how"]})
+        ranked = sorted(by_va.items(), key=lambda kv: (kv[1]["families"], kv[1]["score"]), reverse=True)
         va, info = ranked[0]
-        if (len(info["how"]) >= 2 and info["score"] >= 0.35) or info["score"] >= self.min_score:
+        no_function_facts = not base.get("head") and not base.get("mnem")
+        strong_slot = any(h.startswith("vtable") and self._slot_agreement(h) >= 5 for h in info["how"])
+        if (info["families"] >= 2 and info["score"] >= 0.35) or info["score"] >= self.min_score \
+                or (no_function_facts and strong_slot):
             return va, " + ".join(info["how"]), info["score"], ranked
         return None, f"best {hex(va)} score {info['score']:.2f} via {info['how'][0]}", info["score"], ranked
+
+    @staticmethod
+    def _slot_agreement(how):
+        m = re.search(r"\((\d+)/(\d+) discriminative neighbours agree\)", how)
+        return int(m.group(1)) if m else 0
 
     def find_site(self, owner_va, base, exact_bytes=False):
         func = self.b.get_func(owner_va)
@@ -978,12 +1014,20 @@ class Hunter:
                 return
             if category == "vfunc":
                 class_name = base.get("vtable_name")
-                shift, _ = self.measure_shift(class_name, base.get("vfunc_index"))
-                if shift is None:
-                    self.report["unresolved"].append({"symbol": symbol, "category": category, "why": f"function found at {hex(va)} but the {class_name} slot could not be measured",
-                                                      "candidates": [{"va": hex(va), "score": round(score, 2), "how": [how]}]})
-                    return
-                rule = {"kind": "vfunc", "class": rtti_class(class_name), "index": base["vfunc_index"] + shift, "vtable_name": class_name}
+                # the function's own position in the live vtable is the answer when it is
+                # unambiguous; the measured shift is the fallback (and the only option for
+                # slot-only baselines, where va came from that shift in the first place)
+                index = self.index_in_vtable(class_name, va)
+                if index is not None:
+                    how += f" -> slot {index}"
+                else:
+                    shift, why = self.measure_shift(class_name, base.get("vfunc_index"))
+                    if shift is None:
+                        self.report["unresolved"].append({"symbol": symbol, "category": category, "why": f"function found at {hex(va)} but its {class_name} slot could not be determined ({why})",
+                                                          "candidates": [{"va": hex(va), "score": round(score, 2), "how": [how]}]})
+                        return
+                    index = base["vfunc_index"] + shift
+                rule = {"kind": "vfunc", "class": rtti_class(class_name), "index": index, "vtable_name": class_name}
             else:
                 rule = {"kind": "func", "ea": va}
             out = self.emit(symbol, rule)
