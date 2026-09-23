@@ -1,0 +1,5 @@
+func_name: CCSPlayer_MovementServices_WalkMove
+func_va: '0x15dab30'
+func_rva: '0x15dab30'
+func_size: '0x0'
+func_sig: 48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D BD ?? ?? ?? ?? 41 55 49 89 F5
