@@ -106,6 +106,11 @@ uv run review_issue.py apply   -gamever latest -commit          # the 15-minute 
 uv run review_issue.py apply   -gamever 14182 -dry_run   # read the commands, change nothing
 ```
 
+The bot acts as its own GitHub account (`miksencs2-bot`, a collaborator with write access)
+when `~/.config/cs2vibe-review.env` holds its fine-grained token, either bare or as
+`GH_TOKEN=...` (mode 600; `CS2VIBE_REVIEW_ENV` points elsewhere). The token is handed to
+`gh` only. Without the file, `gh`'s own login is used.
+
 The issue always goes to the repository `origin` points at. In this checkout, `gh`'s own
 default is the upstream remote, so the tool never relies on it. The timer is
 `cs2vibe-review.timer` on the analysis server.

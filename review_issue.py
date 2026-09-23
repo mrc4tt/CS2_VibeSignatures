@@ -40,6 +40,33 @@ REPO = Path(__file__).resolve().parent
 # prefers over its own login - an invalid one on both machines, which surfaced as
 # "HTTP 401: Bad credentials" on every call after that import.
 _GH_ENV = dict(os.environ)
+# The bot account's token, when this machine has one: a file holding either the bare token
+# or GH_TOKEN=/GITHUB_TOKEN= lines. Given to gh only, never exported to the process.
+BOT_TOKEN_FILE = Path(os.environ.get("CS2VIBE_REVIEW_ENV", "~/.config/cs2vibe-review.env")).expanduser()
+
+
+def _bot_token(path=BOT_TOKEN_FILE):
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" in line:
+            key, _, value = line.partition("=")
+            if key.strip() in ("GH_TOKEN", "GITHUB_TOKEN") and value.strip():
+                return value.strip().strip("'\"")
+            continue
+        return line
+    return None
+
+
+_TOKEN = _bot_token()
+if _TOKEN:
+    _GH_ENV["GH_TOKEN"] = _TOKEN
+    _GH_ENV.pop("GITHUB_TOKEN", None)
 LABEL = "symbol-review"
 TRUSTED = {"OWNER", "MEMBER", "COLLABORATOR"}
 PLATFORMS = ("linux", "windows")

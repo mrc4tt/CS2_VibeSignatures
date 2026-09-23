@@ -333,3 +333,20 @@ class NewRoundTests(unittest.TestCase):
         self.assertEqual(len(created), 1)
         self.assertTrue(created[0][2]["body"].startswith("Previous round: #2"))
         self.assertFalse([c for c in calls if c[0] == "PATCH"])   # #2 stays closed
+
+
+class BotTokenTests(unittest.TestCase):
+    def _read(self, text):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bot.env"
+            path.write_text(text)
+            return R._bot_token(path)
+
+    def test_bare_token_and_key_value_forms(self):
+        self.assertEqual(self._read("github_pat_abc\n"), "github_pat_abc")
+        self.assertEqual(self._read("# bot\nGH_TOKEN=github_pat_abc\n"), "github_pat_abc")
+        self.assertEqual(self._read('GITHUB_TOKEN="github_pat_abc"\n'), "github_pat_abc")
+        self.assertIsNone(self._read("OTHER=1\n"))
+
+    def test_missing_file_means_no_bot(self):
+        self.assertIsNone(R._bot_token(Path("/nonexistent/bot.env")))
