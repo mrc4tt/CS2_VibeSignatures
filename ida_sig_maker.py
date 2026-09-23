@@ -256,7 +256,25 @@ def resolve(symbol, rule, scan):
         candidates = found
     if len(candidates) != 1:
         raise ValueError(f"{symbol}: evidence found {len(candidates)} candidates, need exactly 1")
-    return candidates.pop()
+    head = candidates.pop()
+    if head == entry_point_ea():
+        raise ValueError(
+            f"{symbol}: {hex(head)} is the binary's entry point (_DllMainCRTStartup / _start), "
+            f"where IDA opens a database - move the cursor to the real function first"
+        )
+    return head
+
+
+def entry_point_ea():
+    """The image entry point IDA positions a freshly opened database on."""
+    try:
+        import ida_ida
+        return ida_ida.inf_get_start_ea()
+    except Exception:
+        try:
+            return idc.get_inf_attr(idc.INF_START_EA)
+        except Exception:
+            return None
 
 
 def _grow_signature(func_ea, scan, end_ea, pin_low_bytes=0, max_bytes=None):
@@ -1106,6 +1124,12 @@ def emit_here(symbol=None):
     ea = ida_kernwin.get_screen_ea()
     if ea == ida_idaapi.BADADDR:
         print("[sig_maker] no address under the cursor")
+        return
+    func = ida_funcs.get_func(ea)
+    if func is not None and func.start_ea == entry_point_ea():
+        # IDA opens every database here; an artifact from this spot is DllMain, not the symbol
+        print(f"[sig_maker] the cursor is in the entry point {hex(func.start_ea)} (CRT startup) - "
+              f"jump to the function you want first (G + address)")
         return
     symbol = symbol or ida_kernwin.ask_str("", 0, "Symbol name (artifact file name):")
     if not symbol:
