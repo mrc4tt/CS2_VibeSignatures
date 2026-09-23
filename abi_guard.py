@@ -105,7 +105,11 @@ ABI_GUARDS = {
     # small 3-argument helper instead (IDA-verified 14181).
     "CCSPlayer_MovementServices_WalkMove": {
         "linux": {
-            "good_sig": "48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D B5 ? ? ? ? 41 55 41 BD",
+            # 14182: register allocation moved (lea r15 / mov r13,rsi where 14181 had lea r14 / mov r13d,-1);
+            # identity re-verified via FullWalkMove's call graph, the movabs-1.0f/pxor head and the two
+            # vcalls ([rax+0x658] and [rax+0x20]). The 14181 head was
+            # "... 4C 8D B5 ? ? ? ? 41 55 41 BD".
+            "good_sig": "48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D BD ? ? ? ? 41 55 49 89 F5",
             "accept_heads": ["48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56"],
             "bad_heads": ["55 48 89 E5 41 55 41 89 D5 41 54 49 89 F4 53"],
         },
@@ -164,8 +168,11 @@ ABI_GUARDS = {
             "bad_heads": [],
         },
         "windows": {
-            "good_sig": "48 85 D2 0F 84 ? ? ? ? 53 41 57 48 83 EC ? 4C 8B 42 10",
-            "accept_heads": ["48 85 D2 0F 84 ? ? ? ? 53 41 57 48 83 EC ? 4C 8B 42"],
+            # 14182: the CBaseTrigger vtable grew by two slots (14181 slots 148/149/150 are byte-for-byte
+            # 14182 slots 150/151/152) and the body now saves rbp where 14181 saved r15. Head was
+            # "48 85 D2 0F 84 ? ? ? ? 53 41 57 48 83 EC ? 4C 8B 42 10" on 14181.
+            "good_sig": "48 85 D2 0F 84 ? ? ? ? 53 55 48 83 EC ? 4C 8B 42 10",
+            "accept_heads": ["48 85 D2 0F 84 ? ? ? ? 53 55 48 83 EC ? 4C 8B 42"],
             "bad_heads": ["40 53 41 55 48 83 EC ? 83 BA"],  # stale template target (14181)
         },
     },

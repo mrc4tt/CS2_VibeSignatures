@@ -17,7 +17,8 @@ FUNC_XREFS_BY_PLATFORM = {
             "xref_strings": [],
             "xref_gvs": [],
             "xref_signatures": [
-                "48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D B5 ?? ?? ?? ?? 41 55 41 BD"
+                # 14182 head; 14181 was "... 4C 8D B5 ?? ?? ?? ?? 41 55 41 BD" (lea r14 / mov r13d,-1).
+                "48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D BD ?? ?? ?? ?? 41 55 49 89 F5"
             ],
             "xref_funcs": [],
             "exclude_funcs": [],
