@@ -101,6 +101,53 @@ ida_sig_maker.main(rules=rules)
 
 Sørg for, at repository-mappen findes på IDA's Python-importsti.
 
+## Fra fund til artifact på ét tastetryk (Ctrl-Alt-E) og fra kommandolinjen
+
+Når du selv har fundet målet i GUI'en, skal scriptet kun gøre det mekaniske: læse
+de aktuelle bytes, wildcarde det der relokeres, vokse til mønstret er entydigt og
+skrive pipelinens schema. **Ctrl-Alt-E** ("CS2 emit artifact here") vælger art efter
+det der står under cursoren:
+
+| cursor på | art | hvad der udledes |
+|---|---|---|
+| vtable-slot (qword i data der peger på kode) | `vfunc` | klasse og index via RTTI-typeinfo-pointeren over slottet; `func_sig` når den findes |
+| instruktion med `[reg+disp]` og symbol `Struct_m_member` | `structmember` | displacement fra DENNE binær; `offset_sig` vokser til entydig, `..._allow_across_function_boundary` sættes hvis nødvendigt |
+| instruktion med RIP-relativ operand | `gv` / `func` / `patch` (spørger) | `gv_va` = RIP-mål, `gv_sig_va`, `gv_inst_length`, `gv_inst_disp` |
+| andet inde i en funktion | `func` (eller `patch`) | funktionshovedet |
+
+Forrige gamevers artifact (`bin_artifacts/<ældre>/<module>/<Symbol>.<platform>.yaml`)
+udfylder `vtable_name`, `size`, `patch_bytes` og struct/member-navne, så de ikke
+skal tastes igen. Værdierne er hints, aldrig bevis.
+
+Samme kode fra kommandolinjen, på en midlertidig kopi af den varme `.i64` (GUI'en
+kan blive stående åben; ingen genanalyse):
+
+```
+uv run emit_artifact.py -gamever 14182 -module server -platform linux \
+    -symbol CCSPointScript_OnCustomHudClicked -kind func -ea 0xb27740
+uv run emit_artifact.py ... -symbol CBaseTrigger_EndTouch -kind vfunc -class CBaseTrigger -index 151
+uv run emit_artifact.py ... -symbol CGameEntitySystem_m_entityListeners -kind structmember \
+    -ea 0x16f6bce -struct CGameEntitySystem -member m_entityListeners -size 8
+uv run emit_artifact.py ... -symbol IGameSystem_InitAllSystems_pFirst -kind gv -ea 0xf022a6
+uv run emit_artifact.py ... -symbol X_Patch -kind patch -ea 0x15dacf9 -patch_bytes "EB 7E"
+```
+
+Artifactet valideres bagefter med `validate_artifacts.py` for modulet. Et entydigt
+mønster beviser placering, ikke identitet (CLAUDE.md regel 12): det er dig der står
+inde for adressen. `uv run hunt_list.py -gamever <VER> -platform linux -module server
+-only consumed` viser hvad der mangler, om relokering vil ramme (hits), hvilke ankre
+den producerende task har, hvem der bruger symbolet, og den færdige emit-kommando.
+
+Nye regelfelter i `--rules`: `ea` (eksplicit adresse) for `func`, `structmember`,
+`gv` og `patch`; `class` + `index` for `vfunc` (RTTI i stedet for et IDA-navn);
+`patch_bytes` for `patch`.
+
+Signatur-stigen for funktionshoveder: (1) wildcarded inden for funktionen, (2) fortsat
+ind i padding/næste hoved med `func_sig_allow_across_function_boundary`, (3) sidste
+udvej: de lave displacement-bytes fastholdes (det pipelinen selv gør for familier af
+identiske hoveder som point_script-bindingerne). Trin 3 flytter sig ved næste build -
+scriptet siger det, og et streng- eller vtable-anker bør så tilføjes i preprocessoren.
+
 ## Output og fejl
 
 YAML skrives atomisk til `bin_artifacts/<gamever>/<module>/<Symbol>.<platform>.yaml`.

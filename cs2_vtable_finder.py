@@ -15,8 +15,21 @@ CLASS_NAME = "CCSPlayer_WeaponServices"   # default - spoerges ved koersel
 SLOT = 31          # default - spoerges ved koersel (linux: 31, windows: 30)
 SYMBOL = "CCSPlayer_WeaponServices_SelectItem"
 
+import os
 ns = {"__name__": "cs2vibe_vtable_finder"}
-exec(open("/root/CS2_VibeSignatures/ida_sig_maker.py").read(), ns)
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_SIG_MAKER = next(
+    (p for p in (
+        os.path.join(_HERE, "ida_sig_maker.py"),
+        os.path.join(os.environ.get("CS2VIBE_REPO", ""), "ida_sig_maker.py"),
+        os.path.expanduser("~/CS2_VibeSignatures/ida_sig_maker.py"),
+        "/root/CS2_VibeSignatures/ida_sig_maker.py",
+    ) if os.path.isfile(p)),
+    None,
+)
+if _SIG_MAKER is None:
+    raise ImportError("ida_sig_maker.py not found next to cs2_vtable_finder.py, in CS2VIBE_REPO or ~/CS2_VibeSignatures")
+exec(open(_SIG_MAKER).read(), ns)
 
 def find_bytes(needle):
     hits = []

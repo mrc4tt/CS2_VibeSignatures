@@ -240,6 +240,14 @@ def resolve(symbol, rule, scan):
         ea = ida_name.get_name_ea(ida_idaapi.BADADDR, name)
         if ea not in (ida_idaapi.BADADDR, 0, None):
             found.add(ea)
+    explicit = parse_ea(rule.get("ea"))
+    if explicit is not None:
+        # a hand-verified address is evidence like any other: it must agree
+        func = ida_funcs.get_func(explicit)
+        head = func.start_ea if func else explicit
+        found = (found & {head}) if found else {head}
+        if not found:
+            raise ValueError(f"{symbol}: explicit ea {hex(explicit)} disagrees with the named function")
     pattern = rule.get("pattern")
     if pattern:
         hits = set(scan.matches(pattern))
@@ -251,17 +259,21 @@ def resolve(symbol, rule, scan):
     return candidates.pop()
 
 
-def signature(func_ea, scan):
-    """Grow a wildcarded head signature until unique, never past the function end."""
-    func = ida_funcs.get_func(func_ea)
-    if not func:
-        raise ValueError(f"no function defined at {hex(func_ea)}")
+def _grow_signature(func_ea, scan, end_ea, pin_low_bytes=0, max_bytes=None):
+    """Grow a head signature until unique.
+
+    Relocatable operands are wildcarded from their first byte to the end of the
+    instruction. With ``pin_low_bytes`` the low bytes of a 4-byte relocatable
+    operand stay visible (the pipeline's own last resort for families of
+    identical heads: those bytes move on every rebuild, so callers must say so).
+    Growth stops at ``end_ea`` (function end, or None for "until unique").
+    """
     tokens, ea = [], func_ea
-    while ea < func.end_ea:
+    while end_ea is None or ea < end_ea:
         insn = ida_ua.insn_t()
         size = ida_ua.decode_insn(insn, ea)
         # stop rather than read bytes that belong to the next function
-        if size <= 0 or ea + size > func.end_ea:
+        if size <= 0 or (end_ea is not None and ea + size > end_ea):
             break
         raw = ida_bytes.get_bytes(ea, size)
         if raw is None:
@@ -271,13 +283,59 @@ def signature(func_ea, scan):
             if op.type == ida_ua.o_void:
                 break
             if op.type in MASK_OP_TYPES and op.offb != -1 and op.offb < size:
-                for i in range(op.offb, size):
+                start = op.offb
+                if pin_low_bytes and size - op.offb == 4:
+                    start = op.offb + pin_low_bytes
+                for i in range(start, size):
                     masked[i] = "??"
                 break
         tokens.extend(masked)
         ea += size
         if len(scan.matches(" ".join(tokens), limit=2)) == 1:
             return " ".join(tokens)
+        if max_bytes is not None and len(tokens) >= max_bytes:
+            break
+    return None
+
+
+def signature_ex(func_ea, scan, allow_across_function_boundary=True, allow_pinned=True):
+    """(sig, crossed_boundary, pinned_displacements) with the pipeline's fallback ladder.
+
+    1. wildcarded head inside the function (the durable form);
+    2. the same pattern continued into padding and the next head, recorded with
+       func_sig_allow_across_function_boundary so the relocator keeps the
+       displacements wildcarded (CLAUDE.md);
+    3. low displacement bytes pinned (what preprocess_common_skill emits for
+       families of identical heads such as the point_script bindings). Those
+       bytes move on every rebuild, so the caller is told and should prefer a
+       string or vtable anchor for the next gamever.
+    """
+    func = ida_funcs.get_func(func_ea)
+    if not func:
+        raise ValueError(f"no function defined at {hex(func_ea)}")
+    sig = _grow_signature(func_ea, scan, func.end_ea)
+    if sig:
+        return sig, False, False
+    if allow_across_function_boundary:
+        sig = _grow_signature(func_ea, scan, None, max_bytes=max(MAX_SIG_BYTES, 4 * MIN_SIG_BYTES))
+        if sig:
+            return sig, True, False
+    if allow_pinned:
+        sig = _grow_signature(func_ea, scan, func.end_ea, pin_low_bytes=3)
+        if sig:
+            print(f"[sig_maker] {hex(func_ea)}: only unique with displacement bytes pinned - fragile across builds")
+            return sig, False, True
+    raise ValueError(f"No unique signature for {hex(func_ea)} within its function bounds")
+
+
+def signature(func_ea, scan):
+    """Grow a wildcarded head signature until unique, never past the function end."""
+    func = ida_funcs.get_func(func_ea)
+    if not func:
+        raise ValueError(f"no function defined at {hex(func_ea)}")
+    sig = _grow_signature(func_ea, scan, func.end_ea)
+    if sig:
+        return sig
     raise ValueError(f"No unique signature for {hex(func_ea)} within its function bounds")
 
 
@@ -314,6 +372,239 @@ def write_yaml(data, symbol, target):
     return out_path
 
 
+
+# =============================================================================
+# Explicit-address hand-off (GUI find -> artifact) and RTTI vtable resolution
+#
+# The rule keys below let a human (or emit_artifact.py) hand the script an
+# address it already trusts, so the script only has to do what it is good at:
+# read the current bytes, wildcard what relocates, grow until unique, write the
+# schema the pipeline expects. Nothing here guesses an identity.
+# =============================================================================
+
+def parse_ea(value):
+    """'0x15dab30' / 0x15dab30 / '22981424' -> int; None stays None."""
+    if value is None or value == "":
+        return None
+    if isinstance(value, int):
+        return value
+    text = str(value).strip()
+    return int(text, 16) if text.lower().startswith("0x") else int(text, 0)
+
+
+def data_regions():
+    """(start_va, bytes) for every NON-executable segment; vtables and RTTI live here."""
+    out = []
+    for seg_ea in idautils.Segments():
+        seg = ida_segment.getseg(seg_ea)
+        if not seg or (seg.perm & ida_segment.SEGPERM_EXEC):
+            continue
+        blob = ida_bytes.get_bytes(seg.start_ea, seg.end_ea - seg.start_ea)
+        if blob:
+            out.append((seg.start_ea, blob))
+    return out
+
+
+def find_qword_holders(value, regions=None):
+    """Addresses in data segments whose qword equals ``value`` (raw scan, no xrefs needed)."""
+    needle = int(value).to_bytes(8, "little", signed=False)
+    hits = []
+    for base, blob in regions or data_regions():
+        pos = blob.find(needle)
+        while pos != -1:
+            hits.append(base + pos)
+            pos = blob.find(needle, pos + 1)
+    return hits
+
+
+def is_code_ea(ea):
+    seg = ida_segment.getseg(ea)
+    return bool(seg and (seg.perm & ida_segment.SEGPERM_EXEC))
+
+
+def rtti_vtables(class_name):
+    """Every vtable address point (slot-0 address) of ``class_name`` via the Itanium RTTI chain.
+
+    typeinfo-name string "<len><Class>" -> typeinfo object (holds a pointer to
+    the name at +8) -> vtable (holds a pointer to the typeinfo at slot -1).
+    Returns a list of (address_point, offset_to_top); the primary vtable is the
+    one with offset_to_top == 0.
+    """
+    regions = data_regions()
+    mangled = f"{len(class_name)}{class_name}".encode()
+    name_eas = []
+    for base, blob in regions:
+        pos = blob.find(b"\x00" + mangled + b"\x00")
+        while pos != -1:
+            name_eas.append(base + pos + 1)
+            pos = blob.find(b"\x00" + mangled + b"\x00", pos + 1)
+    out = []
+    for name_ea in name_eas:
+        for holder in find_qword_holders(name_ea, regions):
+            typeinfo = holder - 8
+            for vt_holder in find_qword_holders(typeinfo, regions):
+                address_point = vt_holder + 8
+                first = ida_bytes.get_qword(address_point)
+                if not first or not is_code_ea(first):
+                    continue
+                offset_to_top = ida_bytes.get_qword(vt_holder - 8)
+                out.append((address_point, offset_to_top))
+    out.sort(key=lambda item: (item[1] != 0, item[0]))
+    return out
+
+
+def vtable_slot_func(class_name, index):
+    """Function pointer held by slot ``index`` of ``class_name``'s primary vtable."""
+    tables = [ap for ap, ott in rtti_vtables(class_name) if ott == 0]
+    if len(tables) != 1:
+        raise ValueError(f"{class_name}: found {len(tables)} primary vtables via RTTI, need exactly 1")
+    slot = tables[0] + 8 * int(index)
+    func_ea = ida_bytes.get_qword(slot)
+    if func_ea in (0, ida_idaapi.BADADDR) or not is_code_ea(func_ea):
+        raise ValueError(f"{class_name}: slot {index} at {hex(slot)} does not hold code")
+    return func_ea, tables[0]
+
+
+def vtable_slot_at(slot_ea):
+    """(class_name, index) for a cursor ON a vtable slot, walking back to the typeinfo pointer."""
+    ea = slot_ea
+    for _ in range(4096):
+        candidate = ida_bytes.get_qword(ea)
+        if candidate and not is_code_ea(candidate):
+            # a non-code qword inside the table is the typeinfo pointer (slot -1)
+            name_ptr = ida_bytes.get_qword(candidate + 8)
+            raw = ida_bytes.get_bytes(name_ptr, 256) if name_ptr else None
+            if raw:
+                text = raw.split(b"\x00", 1)[0].decode("ascii", "replace")
+                digits = ""
+                while text and text[0].isdigit():
+                    digits, text = digits + text[0], text[1:]
+                if digits and len(text) >= int(digits):
+                    return text[: int(digits)], (slot_ea - (ea + 8)) // 8
+            break
+        ea -= 8
+    raise ValueError(f"{hex(slot_ea)}: no typeinfo pointer found above this slot - not inside an RTTI vtable?")
+
+
+def masked_instruction(ea):
+    """(masked_tokens, insn) for one instruction with relocatable operands wildcarded."""
+    insn = ida_ua.insn_t()
+    size = ida_ua.decode_insn(insn, ea)
+    if size <= 0:
+        raise ValueError(f"cannot decode the instruction at {hex(ea)}")
+    raw = ida_bytes.get_bytes(ea, size)
+    if raw is None:
+        raise ValueError(f"Unreadable bytes at {hex(ea)} - refusing to invent them")
+    masked = [f"{b:02X}" for b in raw]
+    for op in insn.ops:
+        if op.type == ida_ua.o_void:
+            break
+        if op.type in MASK_OP_TYPES and op.offb != -1 and op.offb < size:
+            for i in range(op.offb, size):
+                masked[i] = "??"
+            break
+    return masked, insn, raw
+
+
+def instruction_signature(ea, scan, pin_first=True, allow_across_function_boundary=False):
+    """Grow a signature that STARTS at ``ea`` until unique.
+
+    With ``pin_first`` the first instruction is kept verbatim (a struct offset or
+    a patch site has to be identified by its own bytes); later instructions are
+    wildcarded like a function head. Growth stops at the function end unless
+    ``allow_across_function_boundary`` is set, then it may run into padding and
+    the next head (the pipeline flag of the same name records that choice).
+    Returns (signature, crossed_boundary).
+    """
+    func = ida_funcs.get_func(ea)
+    end = func.end_ea if func else None
+    tokens, cur, crossed = [], ea, False
+    while True:
+        if end is not None and cur >= end:
+            if not allow_across_function_boundary:
+                break
+            crossed = True
+        try:
+            masked, insn, raw = masked_instruction(cur)
+        except ValueError:
+            break
+        if pin_first and cur == ea:
+            masked = [f"{b:02X}" for b in raw]
+        tokens.extend(masked)
+        cur += insn.size
+        if len(tokens) > MAX_SIG_BYTES * 2:
+            break
+        if len(scan.matches(" ".join(tokens), limit=2)) == 1:
+            return " ".join(tokens), crossed
+    raise ValueError(f"No unique signature starting at {hex(ea)}")
+
+
+def rip_relative_operand(insn, ea):
+    """(target_va, disp_offset_in_insn) for the RIP-relative memory operand, or None."""
+    for op in insn.ops:
+        if op.type == ida_ua.o_void:
+            break
+        if op.type in (ida_ua.o_mem, ida_ua.o_displ) and op.offb != -1:
+            # x86-64 RIP-relative: 4-byte displacement, target = next_ip + disp
+            raw = ida_bytes.get_bytes(ea + op.offb, 4)
+            if raw is None or len(raw) < 4:
+                continue
+            disp = int.from_bytes(raw, "little", signed=True)
+            target = ea + insn.size + disp
+            if op.type == ida_ua.o_mem and op.addr == target:
+                return target, op.offb
+            if op.type == ida_ua.o_mem and op.addr not in (0, ida_idaapi.BADADDR):
+                return op.addr, op.offb
+    return None
+
+
+def displacement_operand(insn, index=None):
+    """(signed displacement, operand slot) of a [reg+disp] operand, the given slot or the first."""
+    slots = [int(index)] if index is not None else range(len(insn.ops))
+    for slot in slots:
+        op = insn.ops[slot]
+        if op.type == ida_ua.o_void:
+            break
+        if op.type == ida_ua.o_displ and getattr(op, "offb", 0) != -1:
+            offset = op.addr & 0xFFFFFFFF
+            if offset >= 0x80000000:
+                offset -= 0x100000000
+            return offset, slot
+    return None
+
+
+def baseline_artifact(symbol, target=None):
+    """Newest previous-gamever artifact for ``symbol`` on this platform, as a dict, or None.
+
+    Prefills what a human should not have to retype: vtable_name, size,
+    patch_bytes, struct/member names. Values are hints, never evidence.
+    """
+    target = target or detect_target()
+    if not target:
+        return None
+    root = os.path.join(target["repo_root"], "bin_artifacts")
+    if not os.path.isdir(root):
+        return None
+    versions = [d for d in os.listdir(root) if d != target["gamever"] and os.path.isdir(os.path.join(root, d))]
+
+    def version_key(name):
+        m = re.match(r"^(\d+)([a-z]*)$", name)
+        return (int(m.group(1)), m.group(2)) if m else (0, name)
+
+    for version in sorted(versions, key=version_key, reverse=True):
+        path = os.path.join(root, version, target["module"], f"{symbol}.{target['platform']}.yaml")
+        if os.path.isfile(path):
+            data = {}
+            with open(path, "r", encoding="utf-8") as handle:
+                for line in handle:
+                    if ":" in line and not line.startswith(" "):
+                        key, _, value = line.partition(":")
+                        data[key.strip()] = value.strip().strip("'\"")
+            data["_path"] = path
+            return data
+    return None
+
+
 def emit_symbol(symbol, rule, extra, scan):
     """Emit one artifact in the schema its rule asks for."""
     symbol = safe_symbol(symbol)
@@ -329,24 +620,29 @@ def emit_symbol(symbol, rule, extra, scan):
 
     if kind == "structmember":
         pattern = rule.get("pattern")
-        if not pattern:
-            raise ValueError(f"{symbol}: structmember rules need a typed instruction pattern")
-        hits = scan.matches(pattern, limit=2)
-        if len(hits) != 1:
-            raise ValueError(f"{symbol}: pattern found {len(hits)} matches, need exactly 1")
-        ea = hits[0]
+        ea = parse_ea(rule.get("ea"))
+        if ea is None:
+            if not pattern:
+                raise ValueError(f"{symbol}: structmember rules need a typed instruction pattern or an ea")
+            hits = scan.matches(pattern, limit=2)
+            if len(hits) != 1:
+                raise ValueError(f"{symbol}: pattern found {len(hits)} matches, need exactly 1")
+            ea = hits[0]
         if not ida_bytes.is_code(ida_bytes.get_flags(ea)):
             raise ValueError(f"{symbol}: {hex(ea)} is not code")
         insn = ida_ua.insn_t()
         if ida_ua.decode_insn(insn, ea) <= 0:
             raise ValueError(f"{symbol}: cannot decode the instruction at {hex(ea)}")
-        op = insn.ops[int(rule.get("operand", 0))]
-        if op.type != ida_ua.o_displ:
+        found = displacement_operand(insn, rule.get("operand"))
+        if found is None:
             raise ValueError(f"{symbol}: operand {rule.get('operand', 0)} at {hex(ea)} has no displacement")
         # read the displacement from THIS build, never from the rule
-        offset = op.addr & 0xFFFFFFFF
-        if offset >= 0x80000000:
-            offset -= 0x100000000
+        offset, _ = found
+        crossed = False
+        if not pattern:
+            pattern, crossed = instruction_signature(
+                ea, scan, pin_first=True, allow_across_function_boundary=True
+            )
         data = {
             "struct_name": rule["struct_name"],
             "member_name": rule["member_name"],
@@ -354,11 +650,17 @@ def emit_symbol(symbol, rule, extra, scan):
             "size": int(rule.get("size", 4)),
             "offset_sig": pattern,
         }
+        if crossed:
+            data["offset_sig_allow_across_function_boundary"] = True
         data.update(extra or {})
         return write_yaml(data, symbol, detect_target())
 
     if kind == "vfunc":
         index = int(rule["index"])
+        class_name = rule.get("class")
+        if class_name:
+            func_ea, address_point = vtable_slot_func(class_name, index)
+            return emit_vfunc_yaml(func_ea, symbol, rule.get("vtable_name") or class_name, index, extra, scan=scan)
         anchor = rule.get("address_point_name")
         base = ida_name.get_name_ea(ida_idaapi.BADADDR, anchor) if anchor else None
         if base in (None, ida_idaapi.BADADDR, 0):
@@ -369,11 +671,58 @@ def emit_symbol(symbol, rule, extra, scan):
             raise ValueError(f"{symbol}: vtable slot {index} at {hex(slot)} holds no pointer")
         return emit_vfunc_yaml(func_ea, symbol, rule["vtable_name"], index, extra)
 
+    if kind == "gv":
+        ea = parse_ea(rule.get("ea"))
+        if ea is None:
+            pattern = rule.get("pattern")
+            if not pattern:
+                raise ValueError(f"{symbol}: gv rules need the referencing instruction's ea or a pattern")
+            hits = scan.matches(pattern, limit=2)
+            if len(hits) != 1:
+                raise ValueError(f"{symbol}: pattern found {len(hits)} matches, need exactly 1")
+            ea = hits[0]
+        masked, insn, raw = masked_instruction(ea)
+        found = rip_relative_operand(insn, ea)
+        if found is None:
+            raise ValueError(f"{symbol}: {hex(ea)} has no RIP-relative operand")
+        gv_va, disp_offset = found
+        sig, _ = instruction_signature(ea, scan, pin_first=False, allow_across_function_boundary=False)
+        data = {
+            "gv_name": symbol,
+            "gv_va": hex(gv_va),
+            "gv_rva": hex(gv_va - ida_nalt.get_imagebase()),
+            "gv_sig": sig,
+            "gv_sig_va": hex(ea),
+            "gv_inst_offset": 0,
+            "gv_inst_length": int(insn.size),
+            "gv_inst_disp": int(disp_offset),
+        }
+        data.update(extra or {})
+        return write_yaml(data, symbol, detect_target())
+
+    if kind == "patch":
+        ea = parse_ea(rule.get("ea"))
+        if ea is None:
+            raise ValueError(f"{symbol}: patch rules need the ea of the instruction to patch")
+        patch_bytes = rule.get("patch_bytes")
+        if not patch_bytes:
+            raise ValueError(f"{symbol}: patch rules need patch_bytes (what the plugin writes)")
+        sig, _ = instruction_signature(ea, scan, pin_first=False, allow_across_function_boundary=False)
+        data = {
+            "patch_name": symbol,
+            "patch_va": hex(ea),
+            "patch_rva": hex(ea - ida_nalt.get_imagebase()),
+            "patch_sig": sig,
+            "patch_bytes": patch_bytes,
+        }
+        data.update(extra or {})
+        return write_yaml(data, symbol, detect_target())
+
     if kind != "func":
         raise ValueError(f"{symbol}: unknown rule kind {kind!r}")
 
     ea = resolve(symbol, rule, scan)
-    sig = signature(ea, scan)
+    sig, crossed, _pinned = signature_ex(ea, scan)
     func = ida_funcs.get_func(ea)
     data = {
         "func_name": symbol,
@@ -382,6 +731,8 @@ def emit_symbol(symbol, rule, extra, scan):
         "func_size": hex(func.size()) if func else "0x0",
         "func_sig": sig,
     }
+    if crossed:
+        data["func_sig_allow_across_function_boundary"] = True
     data.update(extra or {})
     return write_yaml(data, symbol, detect_target())
 
@@ -591,25 +942,43 @@ def emit_yaml(func_ea, symbol):
         print(yaml_block)
 
 
-def emit_vfunc_yaml(func_ea, symbol, vtable_name, vfunc_index):
+def emit_vfunc_yaml(func_ea, symbol, vtable_name, vfunc_index, extra=None, scan=None):
     """Write a vfunc-schema YAML (vtable slot) for a virtual function.
     Cursor workflow: navigate to the VTABLE SLOT ENTRY (the qword holding the
-    function pointer) in IDA and use the driver's cursor variant."""
+    function pointer) in IDA and use the driver's cursor variant.
+
+    A unique head signature is added when one exists inside the function: the
+    signature tracker compares byte patterns, and a record with an index but no
+    pattern cannot be checked. A thunk too small to be unique keeps slot-only
+    output, which is correct rather than lazy (CLAUDE.md)."""
     if not ida_funcs.get_func(func_ea):
         if not ida_funcs.add_func(func_ea):
             print(f"[sig_maker] could not create function at {hex(func_ea)}")
             return
     func = ida_funcs.get_func(func_ea)
     vfunc_offset = vfunc_index * 8
-    yaml_block = (
-        f"func_name: {symbol}\n"
-        f"func_va: '{hex(func_ea)}'\n"
-        f"func_rva: '{hex(func_ea - ida_nalt.get_imagebase())}'\n"
-        f"func_size: '{hex(func.size())}'\n"
-        f"vtable_name: {vtable_name}\n"
-        f"vfunc_offset: '{hex(vfunc_offset)}'\n"
-        f"vfunc_index: {vfunc_index}\n"
-    )
+    data = {
+        "func_name": symbol,
+        "func_va": hex(func_ea),
+        "func_rva": hex(func_ea - ida_nalt.get_imagebase()),
+        "func_size": hex(func.size()),
+    }
+    try:
+        sig, crossed, _pinned = signature_ex(func_ea, scan or Scan())
+        data["func_sig"] = sig
+        if crossed:
+            data["func_sig_allow_across_function_boundary"] = True
+    except ValueError as error:
+        print(f"[sig_maker] {symbol}: slot-only artifact, {error}")
+    data.update({
+        "vtable_name": vtable_name,
+        "vfunc_offset": hex(vfunc_offset),
+        "vfunc_index": int(vfunc_index),
+    })
+    data.update(extra or {})
+    if _OUTPUT_DIR_OVERRIDE or os.environ.get("CS2_SIG_MAKER_JOB"):
+        return write_yaml(data, symbol, detect_target())
+    yaml_block = render_yaml(data)
     target = detect_target()
     if target:
         for out_dir in target["dirs"]:
@@ -661,13 +1030,18 @@ def emit_structmember_from_cursor(struct_name, member_name, size=4):
     if offset is None or offset <= 0:
         print("[sig_maker] ingen positiv displacement under cursor - placér cursor paa member-adgang.")
         return
-    offset_sig = " ".join(f"{b:02X}" for b in raw)
+    try:
+        offset_sig, crossed = instruction_signature(ea, Scan(), pin_first=True, allow_across_function_boundary=True)
+    except ValueError as error:
+        print(f"[sig_maker] {error} - falling back to the bare instruction bytes (may not be unique)")
+        offset_sig, crossed = " ".join(f"{b:02X}" for b in raw), False
     yaml_block = (
         f"struct_name: {struct_name}\n"
         f"member_name: {member_name}\n"
         f"offset: '{hex(offset)}'\n"
         f"size: {size}\n"
         f"offset_sig: {offset_sig}\n"
+        + ("offset_sig_allow_across_function_boundary: true\n" if crossed else "")
     )
     target = detect_target()
     if target:
@@ -694,6 +1068,114 @@ class _StructMemberAction(ida_kernwin.action_handler_t):
 
     def update(self, ctx):
         return ida_kernwin.AST_ENABLE_ALWAYS
+
+
+def emit_here(symbol=None):
+    """One hotkey for every artifact kind, decided by what is under the cursor.
+
+    - cursor on a vtable slot (data qword pointing at code): vfunc; class and
+      index come from the RTTI typeinfo pointer above the slot.
+    - cursor on an instruction with a [reg+disp] operand: struct member; the
+      struct/member names are taken from the symbol (Struct_m_member) and the
+      size from the previous gamever's artifact when it exists.
+    - cursor on an instruction with a RIP-relative operand: asks gv or func.
+    - anything else inside a function: func at the function head.
+    The symbol name is asked once; the previous gamever's artifact, when it
+    exists, prefills vtable_name / size / patch_bytes.
+    """
+    ea = ida_kernwin.get_screen_ea()
+    if ea == ida_idaapi.BADADDR:
+        print("[sig_maker] no address under the cursor")
+        return
+    symbol = symbol or ida_kernwin.ask_str("", 0, "Symbol name (artifact file name):")
+    if not symbol:
+        return
+    symbol = safe_symbol(symbol)
+    target = detect_target()
+    baseline = baseline_artifact(symbol, target) or {}
+    if baseline:
+        print(f"[sig_maker] baseline: {baseline.get('_path')}")
+    scan = Scan()
+    extra = {}
+    if not is_code_ea(ea):
+        pointer = ida_bytes.get_qword(ea)
+        if not pointer or not is_code_ea(pointer):
+            print(f"[sig_maker] {hex(ea)} is data but holds no code pointer - not a vtable slot")
+            return
+        class_name, index = vtable_slot_at(ea)
+        vtable_name = baseline.get("vtable_name") or class_name
+        print(f"[sig_maker] vtable slot: {class_name}[{index}] -> {hex(pointer)}")
+        return emit_vfunc_yaml(pointer, symbol, vtable_name, index, extra, scan=scan)
+    insn = ida_ua.insn_t()
+    if ida_ua.decode_insn(insn, ea) <= 0:
+        print(f"[sig_maker] cannot decode the instruction at {hex(ea)}")
+        return
+    kind = None
+    if MEMBER_NAME_RE.search(symbol) and displacement_operand(insn) is not None:
+        kind = "structmember"
+    elif rip_relative_operand(insn, ea) is not None:
+        choice = ida_kernwin.ask_buttons("gv", "func", "patch", 0, "RIP-relative operand here: emit the global (gv), the function head, or a patch site?")
+        kind = {1: "gv", 0: "func", -1: "patch"}.get(choice, "func")
+    else:
+        func = ida_funcs.get_func(ea)
+        if func and func.start_ea != ea:
+            choice = ida_kernwin.ask_buttons("func", "patch", "member", 0, "Inside a function: emit the function head, a patch at this instruction, or a struct member?")
+            kind = {1: "func", 0: "patch", -1: "structmember"}.get(choice, "func")
+        else:
+            kind = "func"
+    if kind == "structmember":
+        struct_name, _, member_name = symbol.partition("_m_")
+        member_name = "m_" + member_name
+        rule = {
+            "kind": "structmember", "ea": ea,
+            "struct_name": baseline.get("struct_name") or struct_name,
+            "member_name": baseline.get("member_name") or member_name,
+            "size": int(baseline.get("size") or 4),
+        }
+    elif kind == "gv":
+        rule = {"kind": "gv", "ea": ea}
+    elif kind == "patch":
+        patch_bytes = baseline.get("patch_bytes") or ida_kernwin.ask_str("", 0, "patch_bytes the plugin writes (hex, space separated):")
+        rule = {"kind": "patch", "ea": ea, "patch_bytes": patch_bytes}
+    else:
+        rule = {"kind": "func", "ea": ea}
+    out = emit_symbol(symbol, rule, extra, scan)
+    print(f"[sig_maker] {kind} {symbol} written: {out}")
+    # bin/ is a hydrated copy; keep it in step so the IDA session sees its own output
+    if target and out:
+        for out_dir in target["dirs"]:
+            if os.path.normpath(out_dir) != os.path.normpath(os.path.dirname(out)):
+                try:
+                    os.makedirs(out_dir, exist_ok=True)
+                    with open(out, "r", encoding="utf-8") as src, open(os.path.join(out_dir, os.path.basename(out)), "w", encoding="utf-8") as dst:
+                        dst.write(src.read())
+                except OSError as error:
+                    print(f"[sig_maker] could not mirror into {out_dir}: {error}")
+    return out
+
+
+class _EmitHereAction(ida_kernwin.action_handler_t):
+    def activate(self, ctx):
+        try:
+            emit_here()
+        except Exception as error:
+            print(f"[sig_maker] emit failed: {error}")
+        return 1
+
+    def update(self, ctx):
+        return ida_kernwin.AST_ENABLE_ALWAYS
+
+
+ACTION_ID_EMIT = "cs2vibe:emit_here"
+try:
+    ida_kernwin.unregister_action(ACTION_ID_EMIT)
+except Exception:
+    pass
+ida_kernwin.register_action(ida_kernwin.action_desc_t(
+    ACTION_ID_EMIT, "CS2 emit artifact here", _EmitHereAction(), "Ctrl-Alt-E",
+    "Cursor on a function / vtable slot / member access / RIP-relative insn -> artifact YAML", -1,
+))
+ida_kernwin.attach_action_to_menu("Edit/Plugins/CS2 emit artifact here", ACTION_ID_EMIT)
 
 
 ACTION_ID_SM = "cs2vibe:struct_member"

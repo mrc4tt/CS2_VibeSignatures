@@ -263,3 +263,94 @@ class BatchTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExplicitAddressRuleTests(unittest.TestCase):
+    def setUp(self):
+        self.m = load_ida_script()
+
+    def test_parse_ea_accepts_hex_and_int(self):
+        self.assertEqual(self.m.parse_ea("0x15dab30"), 0x15DAB30)
+        self.assertEqual(self.m.parse_ea(0x10), 0x10)
+        self.assertEqual(self.m.parse_ea("16"), 16)
+        self.assertIsNone(self.m.parse_ea(None))
+
+    def test_func_rule_with_explicit_ea_uses_function_head(self):
+        self.m.ida_funcs.get_func.return_value = types.SimpleNamespace(start_ea=0x1000, end_ea=0x1100)
+        scan = MagicMock()
+        self.assertEqual(self.m.resolve("X", {"ea": "0x1010"}, scan), 0x1000)
+
+    def test_func_rule_with_explicit_ea_must_agree_with_name(self):
+        self.m.ida_name.get_name_ea.return_value = 0x2000
+        self.m.ida_funcs.get_func.return_value = types.SimpleNamespace(start_ea=0x1000, end_ea=0x1100)
+        with self.assertRaisesRegex(ValueError, "disagrees"):
+            self.m.resolve("X", {"ea": "0x1000"}, MagicMock())
+
+    def test_structmember_by_ea_reads_displacement_and_grows_signature(self):
+        self.m.ida_bytes.is_code.return_value = True
+        self.m.ida_ua.decode_insn.return_value = 7
+        self.m.ida_ua.insn_t.return_value = types.SimpleNamespace(
+            ops=[types.SimpleNamespace(type=self.m.ida_ua.o_displ, addr=0x2150, offb=3)], size=7
+        )
+        rule = {"kind": "structmember", "ea": "0x16f6bce", "struct_name": "CGameEntitySystem", "member_name": "m_entityListeners", "size": 8}
+        with patch.object(self.m, "instruction_signature", return_value=("49 63 86 50 21 00 00 89 C2", True)), \
+             patch.object(self.m, "write_yaml") as write:
+            self.m.emit_symbol("CGameEntitySystem_m_entityListeners", rule, {}, MagicMock())
+        data = write.call_args.args[0]
+        self.assertEqual(data["offset"], "0x2150")
+        self.assertEqual(data["offset_sig"], "49 63 86 50 21 00 00 89 C2")
+        self.assertTrue(data["offset_sig_allow_across_function_boundary"])
+
+    def test_vfunc_by_class_resolves_through_rtti(self):
+        with patch.object(self.m, "vtable_slot_func", return_value=(0xD36350, 0x2535DF8)) as slot, \
+             patch.object(self.m, "emit_vfunc_yaml") as emit:
+            self.m.emit_symbol("CBaseTrigger_EndTouch", {"kind": "vfunc", "class": "CBaseTrigger", "index": 151}, {}, MagicMock())
+        slot.assert_called_once_with("CBaseTrigger", 151)
+        self.assertEqual(emit.call_args.args[:4], (0xD36350, "CBaseTrigger_EndTouch", "CBaseTrigger", 151))
+
+    def test_gv_rule_emits_rip_target_and_instruction_layout(self):
+        self.m.ida_nalt.get_imagebase.return_value = 0
+        insn = types.SimpleNamespace(ops=[types.SimpleNamespace(type=self.m.ida_ua.o_mem, addr=0x2764708, offb=3)], size=7)
+        with patch.object(self.m, "masked_instruction", return_value=(["4C", "8B", "35", "??", "??", "??", "??"], insn, b"\x4c\x8b\x35\x00\x00\x00\x00")), \
+             patch.object(self.m, "rip_relative_operand", return_value=(0x2764708, 3)), \
+             patch.object(self.m, "instruction_signature", return_value=("4C 8B 35 ?? ?? ?? ?? 4D 85 F6", False)), \
+             patch.object(self.m, "write_yaml") as write:
+            self.m.emit_symbol("IGameSystem_InitAllSystems_pFirst", {"kind": "gv", "ea": "0xf022a6"}, {}, MagicMock())
+        data = write.call_args.args[0]
+        self.assertEqual(data["gv_va"], "0x2764708")
+        self.assertEqual((data["gv_inst_offset"], data["gv_inst_length"], data["gv_inst_disp"]), (0, 7, 3))
+        self.assertEqual(data["gv_sig_va"], "0xf022a6")
+
+    def test_patch_rule_requires_bytes_and_emits_site(self):
+        self.m.ida_nalt.get_imagebase.return_value = 0
+        with self.assertRaisesRegex(ValueError, "patch_bytes"):
+            self.m.emit_symbol("P", {"kind": "patch", "ea": "0x10"}, {}, MagicMock())
+        with patch.object(self.m, "instruction_signature", return_value=("0F 86 ?? ?? ?? ?? 0F 57 C0", False)), \
+             patch.object(self.m, "write_yaml") as write:
+            self.m.emit_symbol("P", {"kind": "patch", "ea": "0x15dacf9", "patch_bytes": "EB 7E"}, {}, MagicMock())
+        data = write.call_args.args[0]
+        self.assertEqual((data["patch_va"], data["patch_bytes"]), ("0x15dacf9", "EB 7E"))
+        self.assertEqual(data["patch_sig"], "0F 86 ?? ?? ?? ?? 0F 57 C0")
+
+
+class SignatureLadderTests(unittest.TestCase):
+    def setUp(self):
+        self.m = load_ida_script()
+        self.m.ida_funcs.get_func.return_value = types.SimpleNamespace(start_ea=0x1000, end_ea=0x1010)
+
+    def test_durable_head_wins_without_flags(self):
+        with patch.object(self.m, "_grow_signature", side_effect=["55 48 89 E5"]):
+            self.assertEqual(self.m.signature_ex(0x1000, MagicMock()), ("55 48 89 E5", False, False))
+
+    def test_across_boundary_is_flagged(self):
+        with patch.object(self.m, "_grow_signature", side_effect=[None, "55 48 89 E5 CC CC 55"]):
+            self.assertEqual(self.m.signature_ex(0x1000, MagicMock()), ("55 48 89 E5 CC CC 55", True, False))
+
+    def test_pinned_is_last_resort_and_flagged(self):
+        with patch.object(self.m, "_grow_signature", side_effect=[None, None, "55 4C 8D 35 98 22 BE ??"]):
+            self.assertEqual(self.m.signature_ex(0x1000, MagicMock()), ("55 4C 8D 35 98 22 BE ??", False, True))
+
+    def test_nothing_unique_raises(self):
+        with patch.object(self.m, "_grow_signature", side_effect=[None, None, None]):
+            with self.assertRaises(ValueError):
+                self.m.signature_ex(0x1000, MagicMock())
