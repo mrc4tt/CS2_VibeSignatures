@@ -65,12 +65,32 @@ def _actual_yaml_keys(contract) -> set[str]:
     }
 
 
+def _waived(contract, path: str) -> bool:
+    """A required output whose only readers are switched-off plugins.
+
+    The run no longer hunts those (ida_analyze_bin.artifact_only_disabled_consumers), so
+    pack must not insist on them either. Everything else stays required.
+    """
+    import ida_analyze_bin
+
+    config_path = Path(ida_analyze_bin.__file__).resolve().parent / "configs" / f"{contract.game_version}.yaml"
+    if not config_path.is_file():
+        return False
+    platform = "windows" if path.endswith(".windows.yaml") else "linux"
+    try:
+        return ida_analyze_bin.artifact_only_disabled_consumers(
+            str(path_from_key(contract.artifact_game_root, path)), platform, str(config_path)
+        )
+    except Exception:
+        return False
+
+
+def _missing_required(contract, present) -> list[str]:
+    return [path for path in sorted(contract.required_paths) if not present(path) and not _waived(contract, path)]
+
+
 def collect_actual_files(contract, strict=True) -> dict[str, dict]:
-    missing = [
-        path
-        for path in sorted(contract.required_paths)
-        if not path_from_key(contract.artifact_game_root, path).is_file()
-    ]
+    missing = _missing_required(contract, lambda path: path_from_key(contract.artifact_game_root, path).is_file())
     if missing:
         lines = "\n".join(f"  {path}" for path in missing)
         raise SnapshotMismatchError(f"Missing required symbol YAML:\n{lines}")
@@ -81,7 +101,7 @@ def collect_actual_files(contract, strict=True) -> dict[str, dict]:
         if strict:
             raise SnapshotMismatchError(f"Undeclared symbol YAML:\n{lines}")
         LOGGER.warning("WARNING: Ignoring undeclared symbol YAML:\n%s", lines)
-    selected = sorted(contract.required_paths | (contract.optional_paths & actual_keys))
+    selected = sorted((contract.required_paths & actual_keys) | (contract.optional_paths & actual_keys))
     return {path: _load_yaml_mapping(path_from_key(contract.artifact_game_root, path)) for path in selected}
 
 
@@ -214,7 +234,7 @@ def _reuse_stable_publish_time(document: dict, source_path: Path, contract) -> d
 def _validate_snapshot_paths(document: dict, contract) -> None:
     paths = set(document["files"])
     undeclared = sorted(paths - contract.formal_paths)
-    missing = sorted(contract.required_paths - paths)
+    missing = _missing_required(contract, lambda path: path in paths)
     if undeclared or missing:
         details = []
         if undeclared:

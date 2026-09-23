@@ -19,7 +19,7 @@ from gamedata_utils import (
 
 # Module metadata
 MODULE_NAME = "CS2Fixes"
-MODULE_ENABLED = True
+MODULE_ENABLED = False
 
 # Relative path to gamedata file within the module output directory
 GAMEDATA_PATH = "gamedata/cs2fixes.jsonc"

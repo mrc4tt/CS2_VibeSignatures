@@ -2748,6 +2748,26 @@ _ARTIFACT_PLATFORM_SUFFIX_RE = re.compile(r"\.(\{platform\}|linux|windows)\.yaml
 
 
 @functools.lru_cache(maxsize=8)
+def disabled_generator_dirs(generators_root):
+    """Generator directories whose gamedata.py says MODULE_ENABLED = False."""
+    out = []
+    try:
+        entries = sorted(os.listdir(generators_root))
+    except OSError:
+        return out
+    for name in entries:
+        module = os.path.join(generators_root, name, "gamedata.py")
+        try:
+            with open(module, "r", encoding="utf-8") as handle:
+                text = handle.read()
+        except OSError:
+            continue
+        if re.search(r"^MODULE_ENABLED\s*=\s*False\b", text, re.M):
+            out.append(os.path.join(generators_root, name))
+    return out
+
+
+@functools.lru_cache(maxsize=8)
 def generator_consumed_names(generators_root):
     """Every symbol name a generator's shipped file names as a key.
 
@@ -2757,7 +2777,12 @@ def generator_consumed_names(generators_root):
     spelling the same way the generators do when they look a symbol up.
     """
     names = set()
+    disabled = disabled_generator_dirs(generators_root)
     for root, _dirs, files in os.walk(generators_root):
+        # a switched-off generator (MODULE_ENABLED = False) ships nothing, so its keys
+        # pay for nothing either - CS2Fixes was disabled for exactly that reason
+        if any(root == d or root.startswith(d + os.sep) for d in disabled):
+            continue
         for filename in files:
             if filename.endswith(".metadata.json"):
                 continue
@@ -2818,6 +2843,31 @@ def artifact_has_consumer(artifact_path, platform, config_path, repo_root=None):
     )
     consumed = generator_consumed_names(generators_root)
     return any(name in consumed for name in candidate_names)
+
+
+def artifact_only_disabled_consumers(artifact_path, platform, config_path, repo_root=None):
+    """True when the artifact's ONLY readers are switched-off generators.
+
+    Disabling a plugin (MODULE_ENABLED = False) should also stop the runs paying for the
+    symbols nothing else needs - on 14182 that is 58 required outputs, CS2Fixes' among
+    them. A required output no plugin has ever read is NOT waived: it stays required,
+    exactly as before, since that is upstream's declaration rather than a plugin choice.
+    """
+    if not config_path:
+        return False
+    symbol_name = _derive_artifact_symbol_name(artifact_path, platform)
+    if not symbol_name or artifact_has_consumer(artifact_path, platform, config_path, repo_root):
+        return False
+    candidate_names = {symbol_name}
+    for alias in _load_symbol_alias_map(config_path).get(symbol_name, ()):
+        candidate_names.add(alias.replace("::", "_"))
+    generators_root = os.path.join(
+        repo_root or os.path.dirname(os.path.abspath(__file__)), GENERATORS_DIRNAME
+    )
+    return any(
+        candidate_names & generator_consumed_names(directory)
+        for directory in disabled_generator_dirs(generators_root)
+    )
 
 
 def outputs_target_other_platform(required_outputs, optional_outputs, platform):
@@ -4392,6 +4442,30 @@ def process_binary(
                     reason=ProcessReason.EXISTING_OUTPUTS,
                 )
                 continue
+
+            missing_required = [path for path in required_outputs if not os.path.exists(path)]
+            if missing_required and preprocess_status == PREPROCESS_STATUS_FAILED and not skip_pp:
+                # A required output read only by switched-off plugins has no payer, and
+                # pack waives it too (collect_actual_files). The free preprocessor already
+                # had its try; an agent hunt would be work for nobody.
+                unpaid = [path for path in missing_required if artifact_only_disabled_consumers(path, platform, config_path)]
+                paid_optional = [
+                    path for path in optional_outputs
+                    if not os.path.exists(path) and artifact_has_consumer(path, platform, config_path)
+                ]
+                if len(unpaid) == len(missing_required) and not paid_optional:
+                    skip_count += 1
+                    names = ", ".join(os.path.basename(path) for path in unpaid)
+                    print(f"  Skipping skill: {skill_name} (required outputs read only by disabled plugins - {names})")
+                    _report_skill_status(
+                        reporting,
+                        job_id,
+                        skill_name,
+                        TaskStatus.SKIPPED,
+                        ProcessPhase.FINISHED,
+                        reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
+                    )
+                    continue
 
             regressed_optional_outputs = []
             if not required_outputs and optional_outputs and not skip_pp:

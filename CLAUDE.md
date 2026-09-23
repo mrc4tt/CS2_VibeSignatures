@@ -18,7 +18,7 @@ bin_artifacts/<gamever>/<module>/<Symbol>.<platform>.yaml
 gamesymbols/<gamever>.yaml      packed snapshot, stamped with the config digest
         |  update_gamedata.py
         v
-gamedata/<gamever>/<plugin>/    one dir per plugin, from gamedata-generators/<plugin>/ (15, 9 enabled)
+gamedata/<gamever>/<plugin>/    one dir per plugin, from gamedata-generators/<plugin>/ (15, 8 enabled)
         |  deploy_local_plugins.sh + update_css_gamedata.sh
         v
 ~/customGIT/*  and  ~/CounterStrikeSharp     (still needs a commit inside each plugin repo)
@@ -546,6 +546,16 @@ names it as a key (in the plugin's own `CClass::Method` spelling, resolved throu
 and stop there, so they are skipped with the reason printed. Beware the near-miss that makes
 `g_pGameEntitySystem` look consumed: CounterStrikeSharp ships a `GameEntitySystem` key, but it
 carries `offsets` (88/80) for a member of another class, not this global's address.
+
+**A disabled plugin stops paying for symbols.** `MODULE_ENABLED = False` (CS2Fixes joined the
+others on 14182) removes the plugin's keys from `generator_consumed_names`, so an optional
+output only it read is no longer hunted. A *required* output whose only readers are
+switched-off plugins is waived as well: the run skips its agent hunt after the free
+preprocessor fails (`required outputs read only by disabled plugins`), and pack does not
+insist on it (`artifact_only_disabled_consumers`, `gamesymbol_snapshot_lib.operations._waived`).
+On 14182 that is 58 of 1979 required outputs. The other 1135 that no plugin ever read stay
+required - that is upstream's declaration, not a plugin choice. Re-enabling a plugin
+restores both halves; existing artifacts are packed either way.
 
 ### 12. NEVER stop at the boundary check — confirm the function is the one you named
 A clean boundary only proves you found *a* function head. Two real cases: `0x4ac3e0` was
