@@ -7,6 +7,7 @@ import shlex
 import subprocess
 import sys
 import threading
+import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -227,7 +228,63 @@ def _drain_text_stream(stream, chunks, forward_stream=None):
             pass
 
 
-def _run_process_with_stream_capture(cmd, *, agent_input=None, debug=False, timeout=SKILL_TIMEOUT, env=None):
+WATCH_INTERVAL = int(os.environ.get("CS2VIBE_WATCH_INTERVAL", "30"))
+REMOTE_FETCH_INTERVAL = int(os.environ.get("CS2VIBE_REMOTE_FETCH_INTERVAL", "60"))
+_last_remote_fetch = [0.0]
+
+
+class StoppedForOutputs(Exception):
+    """The agent was stopped because its outputs arrived from elsewhere."""
+
+
+def _repo_root():
+    try:
+        out = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=10)
+        return out.stdout.strip() or None
+    except Exception:
+        return None
+
+
+def _materialize_remote_outputs(paths, remote_ref="origin/main"):
+    """Fetch the remote and write any of `paths` a pushed commit already carries.
+
+    This is how an artifact made on another machine (the IDA GUI, a hand find) reaches
+    a run in progress without a full `git pull`, which would collide with the run's own
+    uncommitted outputs. Only files missing here are written; nothing else is touched.
+    Throttled to one fetch per REMOTE_FETCH_INTERVAL seconds.
+    """
+    if os.environ.get("CS2VIBE_WATCH_REMOTE", "1") == "0":
+        return []
+    missing = [path for path in paths if not os.path.exists(path)]
+    if not missing:
+        return []
+    now = time.time()
+    if now - _last_remote_fetch[0] < REMOTE_FETCH_INTERVAL:
+        return []
+    _last_remote_fetch[0] = now
+    root = _repo_root()
+    if not root:
+        return []
+    try:
+        subprocess.run(["git", "-C", root, "fetch", "-q", "origin"], capture_output=True, timeout=60)
+    except Exception:
+        return []
+    written = []
+    for path in missing:
+        rel = os.path.relpath(os.path.abspath(path), root)
+        if rel.startswith(".."):
+            continue  # an artifact dir outside the repo (a scratch run) has no remote copy
+        shown = subprocess.run(["git", "-C", root, "show", f"{remote_ref}:{rel}"], capture_output=True, timeout=30)
+        if shown.returncode == 0 and shown.stdout and not os.path.exists(path):
+            os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+            with open(path, "wb") as handle:
+                handle.write(shown.stdout)
+            written.append(path)
+    return written
+
+
+def _run_process_with_stream_capture(cmd, *, agent_input=None, debug=False, timeout=SKILL_TIMEOUT, env=None,
+                                     stop_when=None):
     process = subprocess.Popen(
         cmd,
         stdin=subprocess.PIPE if agent_input is not None else None,
@@ -250,8 +307,30 @@ def _run_process_with_stream_capture(cmd, *, agent_input=None, debug=False, time
     )
     stdout_thread.start()
     stderr_thread.start()
+    deadline = time.time() + timeout if timeout else None
     try:
-        process.wait(timeout=timeout)
+        while True:
+            step = WATCH_INTERVAL if stop_when is not None else None
+            if deadline is not None:
+                remaining = deadline - time.time()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired(cmd, timeout)
+                step = remaining if step is None else min(step, remaining)
+            try:
+                process.wait(timeout=step)
+                break
+            except subprocess.TimeoutExpired:
+                if deadline is not None and time.time() >= deadline:
+                    raise
+                if stop_when is not None and stop_when():
+                    process.kill()
+                    try:
+                        process.wait(timeout=5)
+                    except Exception:
+                        pass
+                    stdout_thread.join(timeout=1)
+                    stderr_thread.join(timeout=1)
+                    raise StoppedForOutputs()
     except subprocess.TimeoutExpired:
         process.kill()
         try:
@@ -570,6 +649,7 @@ def _run_skill_attempts(
         # machine whose artifacts were pulled in mid-run. An agent attempt costs
         # minutes to an hour, so present-and-valid outputs end the hunt here.
         try:
+            _materialize_remote_outputs(expected_yaml_paths or [])
             if _outputs_present_and_valid(expected_yaml_paths, output_validator):
                 print("    Expected outputs already exist and validate; skipping the agent attempt")
                 _notify_progress(
@@ -610,6 +690,15 @@ def _run_skill_attempts(
         )
         command = _with_output_feedback(command, agent_kind, output_issues)
         _print_command(command, attempt, max_retries)
+
+        def outputs_arrived():
+            # A find made elsewhere (the IDA GUI, a hand analysis) and pushed while this
+            # agent runs: fetch it for exactly these outputs, and stop the agent once they
+            # are all here instead of letting it run to its timeout.
+            _materialize_remote_outputs(expected_yaml_paths or [])
+            return bool(expected_yaml_paths) and not _missing_expected_outputs(expected_yaml_paths)
+
+        stopped_for_outputs = False
         try:
             try:
                 result = _run_process_with_stream_capture(
@@ -618,11 +707,26 @@ def _run_skill_attempts(
                     debug=debug,
                     timeout=SKILL_TIMEOUT,
                     env=process_env,
+                    stop_when=outputs_arrived if expected_yaml_paths else None,
                 )
+            except StoppedForOutputs:
+                stopped_for_outputs = True
             finally:
                 # Check interrupted/failed attempts too: an Agent may already
-                # have changed protected files before failing or timing out.
-                output_issues = list(output_validator() or []) if output_validator is not None else []
+                # have changed protected files before failing or timing out. Not when
+                # the outputs arrived from elsewhere: those are not this agent's work.
+                if not stopped_for_outputs:
+                    output_issues = list(output_validator() or []) if output_validator is not None else []
+            if stopped_for_outputs:
+                print("    Expected outputs arrived while the agent was running; stopped it")
+                _notify_progress(
+                    progress_callback,
+                    "succeeded",
+                    attempt=attempt_number,
+                    max_attempts=max_retries,
+                    reason="outputs_arrived",
+                )
+                return True
             if agent_kind == "opencode" and opencode_session_id is None:
                 opencode_session_id = _extract_opencode_session_id(result.stdout)
             reason = _result_failure_reason(result, expected_yaml_paths)
