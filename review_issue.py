@@ -40,6 +40,17 @@ COMMAND_RE = re.compile(r"^\s*/(confirm|reject)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(.*
 MAX_BODY = 60000
 
 
+def resolve_gamever(gamever):
+    """'latest' -> the newest gamever that has a manual list (what a timer wants)."""
+    if gamever != "latest":
+        return gamever
+    import hunt_core
+
+    root = REPO / "manual_todo"
+    versions = [d.name for d in root.iterdir() if d.is_dir()] if root.is_dir() else []
+    return max(versions, key=hunt_core.version_key) if versions else None
+
+
 def title_for(gamever):
     return f"Symbol review: {gamever}"
 
@@ -121,7 +132,8 @@ def render_body(gamever, rows):
         "",
         "A confirm is not trusted blindly: the artifact is rebuilt from the binary and must pass the "
         "same checks as everything else (unique signature, function boundary, not the entry point, "
-        "vtable slot via RTTI, one address one name). You get a reply either way.",
+        "vtable slot via RTTI, one address one name). You get a reply either way, usually within 15 "
+        "minutes. Full guide: [docs/en/symbol-review.md](../blob/main/docs/en/symbol-review.md).",
         "",
     ]
     if not rows:
@@ -339,6 +351,9 @@ def apply(gamever, commit=False, dry_run=False):
         react(comment["id"], "+1" if ok and not refused else "-1" if refused and not ok else "eyes")
     if written and commit and not dry_run:
         paths = [str(p.relative_to(REPO)) for p in written]
+        # the server's tree carries a run's uncommitted output: only these paths are
+        # committed, and the branch is brought up to date first so the push is a fast-forward
+        subprocess.run(["git", "pull", "-q", "--ff-only", "origin", "main"], cwd=REPO, check=False)
         subprocess.run(["git", "add", "--", *paths], cwd=REPO, check=True)
         subprocess.run(["git", "commit", "-q", "-m",
                         f"feat({gamever}): {len(paths)} symbol(s) confirmed in review #{number}", "--", *paths],
@@ -366,6 +381,10 @@ def main():
             p.add_argument("-commit", action="store_true", help="commit and push the artifacts written")
             p.add_argument("-dry_run", action="store_true", help="read the commands, change nothing")
     args = ap.parse_args()
+    args.gamever = resolve_gamever(args.gamever)
+    if not args.gamever:
+        print("[review] no manual list yet - nothing to do")
+        return 0
     if args.command == "publish":
         publish(args.gamever)
         return 0

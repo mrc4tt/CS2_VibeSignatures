@@ -138,3 +138,17 @@ class RepoPinTests(unittest.TestCase):
             with mock.patch.dict(os.environ, {}, clear=False), mock.patch.object(R.subprocess, "run", return_value=done):
                 os.environ.pop("CS2VIBE_REVIEW_REPO", None)
                 self.assertEqual(R.repo_slug(), "mrc4tt/CS2_VibeSignatures")
+
+
+class LatestTests(unittest.TestCase):
+    def test_latest_is_the_newest_manual_list(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for version in ("14181", "14182", "14178b"):
+                (Path(tmp) / "manual_todo" / version).mkdir(parents=True)
+            with mock.patch.object(R, "REPO", Path(tmp)):
+                self.assertEqual(R.resolve_gamever("latest"), "14182")
+                self.assertEqual(R.resolve_gamever("14180"), "14180")
+
+    def test_latest_without_lists_is_none(self):
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(R, "REPO", Path(tmp)):
+            self.assertIsNone(R.resolve_gamever("latest"))
