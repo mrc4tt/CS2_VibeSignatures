@@ -85,8 +85,16 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
         # Update signatures
         if "signatures" in entry:
             for platform in platforms:
-                if platform in yaml_entry and "func_sig" in yaml_entry[platform]:
-                    sig = convert_sig_to_css(yaml_entry[platform]["func_sig"])
+                record = yaml_entry.get(platform) or {}
+                raw_sig = record.get("func_sig")
+                # A global's key (IGameSystem_InitAllSystems_pFirst) carries gv_sig, which this
+                # used to ignore: the template's value stayed from 14180 to 14182 and matched
+                # twice on linux 14182. Only a gv_sig that starts AT the loading instruction
+                # (gv_inst_offset 0) has the shape the plugin resolves, so only that is used.
+                if raw_sig is None and yaml_entry.get("category") == "gv" and str(record.get("gv_inst_offset", "")) == "0":
+                    raw_sig = record.get("gv_sig")
+                if raw_sig:
+                    sig = convert_sig_to_css(raw_sig)
                     entry["signatures"][platform] = sig
                     updated_count += 1
                     if debug:
