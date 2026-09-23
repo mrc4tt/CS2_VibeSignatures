@@ -1,4 +1,11 @@
-"""IDA Pro plugin: CS2 sig maker (Ctrl-Alt-D) + CS2 vtable finder (Ctrl-Alt-V).
+"""IDA Pro plugin loader for the CS2_VibeSignatures IDA tooling.
+
+Hotkeys (registered by the scripts it loads):
+  Ctrl-Alt-H  auto-hunt from baseline facts, no cursor needed (ida_auto_hunt.py)
+  Ctrl-Alt-E  emit an artifact for the address under the cursor (ida_sig_maker.py)
+  Ctrl-Alt-D  sig/YAML maker batch (ida_sig_maker.py)
+  Ctrl-Alt-O  struct member emitter (ida_sig_maker.py)
+  Ctrl-Alt-V  vtable finder (cs2_vtable_finder.py)
 
 This is the ONLY file that belongs in ~/.idapro/plugins/. The scripts it loads
 are plain scripts with no PLUGIN_ENTRY, so dropping them in plugins/ too makes
@@ -8,7 +15,9 @@ Repo location is resolved at load time (CS2VIBE_REPO wins), so the same plugin
 works on a workstation and on the server without editing a hardcoded path; the
 copy sitting beside this file is only a last-resort fallback.
 
-Install: place this file in ~/.idapro/plugins/ and restart IDA.
+Install: symlink this file into ~/.idapro/plugins/ so it follows the repo:
+    ln -sf "$PWD/ida_plugins/cs2_sig_maker_plugin.py" ~/.idapro/plugins/
+then restart IDA.
 """
 import os
 import ida_idaapi
@@ -60,7 +69,8 @@ def _load_all():
 class cs2_plugins_t(ida_idaapi.plugin_t):
     flags = ida_idaapi.PLUGIN_KEEP
     comment = "CS2_VibeSignatures tooling"
-    help = "Ctrl-Alt-D = sig/YAML maker, Ctrl-Alt-V = vtable finder"
+    help = ("Ctrl-Alt-H = auto-hunt, Ctrl-Alt-E = emit artifact here, Ctrl-Alt-D = sig/YAML maker, "
+            "Ctrl-Alt-O = struct member emitter, Ctrl-Alt-V = vtable finder")
     wanted_name = "CS2 plugins"
     wanted_hotkey = ""
 

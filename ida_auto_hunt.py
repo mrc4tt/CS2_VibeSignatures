@@ -30,6 +30,11 @@ _SIG_MAKER = {"__name__": "cs2_auto_hunt_sig_maker"}
 def sig_maker():
     """ida_sig_maker exec'd once INTO this dict, which is therefore the functions' globals:
     setting _OUTPUT_DIR_OVERRIDE on it is what redirects write_yaml. A copy would not."""
+    # re-exec on every press so an edited ida_sig_maker takes effect without reopening the
+    # database; the dict is cleared in place because the emitters use it as their globals
+    name = _SIG_MAKER.get("__name__", "cs2_auto_hunt_sig_maker")
+    _SIG_MAKER.clear()
+    _SIG_MAKER["__name__"] = name
     if "emit_symbol" not in _SIG_MAKER:
         with open(os.path.join(REPO, "ida_sig_maker.py"), "r", encoding="utf-8") as handle:
             exec(compile(handle.read(), "ida_sig_maker.py", "exec"), _SIG_MAKER)

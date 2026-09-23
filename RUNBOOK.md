@@ -31,7 +31,7 @@ uv run missing_report.py -gamever <VER>          # kun ★SEED-rækker = dit arb
 uv run audit_duplicate_va.py -gamever <VER>      # 0 suspekte klynger påkrævet
 ```
 ★SEED-residu → manuel IDA-jagt (PC): Ctrl-Alt-H (auto-hunt: 5 strategier) /
-Ctrl-Alt-D (funcs batch) / Ctrl-Alt-V (vtables) / Ctrl-Alt-M (structmembers).
+Ctrl-Alt-D (funcs batch) / Ctrl-Alt-V (vtables) / Ctrl-Alt-O (structmembers).
 
 **Auto-hunt (Ctrl-Alt-H) prøver automatisk i rækkefølge:**
 1. Relocation (baseline-sig → søg i ny binær)
@@ -217,7 +217,7 @@ uv run update_gamedata.py -gamever <VER> -snapshot gamesymbols/<VER>.yaml -outpu
 | Ctrl-Alt-H | auto-hunt v2 | 5 strategier automatisk |
 | Ctrl-Alt-D | sig maker batch | Cursor-drevet (omdøbt fra S) |
 | Ctrl-Alt-V | vtable finder | Interaktiv: klasse + slot + symbol |
-| Ctrl-Alt-M | struct member emitter | Cursor på member-adgang |
+| Ctrl-Alt-O | struct member emitter | Cursor på member-adgang |
 
 ## AGENT SETUP
 

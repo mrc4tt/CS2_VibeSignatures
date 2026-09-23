@@ -431,6 +431,12 @@ def rtti_vtables(class_name):
     one with offset_to_top == 0.
     """
     regions = data_regions()
+    if (ida_nalt.get_input_file_path() or "").lower().endswith((".dll", ".exe")):
+        # MSVC RTTI (TypeDescriptor -> Complete Object Locator -> vtable) lives in the
+        # tool-neutral hunt_core, so the emitter and the hunter resolve the same table
+        import hunt_core
+        import ida_backend
+        return hunt_core.msvc_rtti_vtables(ida_backend.IdaBackend(), class_name, regions)
     mangled = f"{len(class_name)}{class_name}".encode()
     name_eas = []
     for base, blob in regions:
@@ -558,8 +564,14 @@ def rip_relative_operand(insn, ea):
     return None
 
 
-def displacement_operand(insn, index=None):
-    """(signed displacement, operand slot) of a [reg+disp] operand, the given slot or the first."""
+def displacement_operand(insn, index=None, ea=None):
+    """(member offset, operand slot) read from the instruction.
+
+    A [reg+disp] operand gives the offset directly. A member reached by pointer
+    arithmetic (`add rdi, 70h ; jmp getter`, the shape of an accessor thunk)
+    has it as the immediate of an add/sub/lea, so those are accepted when no
+    displacement operand exists.
+    """
     slots = [int(index)] if index is not None else range(len(insn.ops))
     for slot in slots:
         op = insn.ops[slot]
@@ -570,6 +582,14 @@ def displacement_operand(insn, index=None):
             if offset >= 0x80000000:
                 offset -= 0x100000000
             return offset, slot
+    mnem = idc.print_insn_mnem(ea) if ea is not None else None
+    if mnem in ("add", "sub", "lea"):
+        for slot in range(len(insn.ops)):
+            op = insn.ops[slot]
+            if op.type == ida_ua.o_void:
+                break
+            if op.type == ida_ua.o_imm and 0 < int(op.value) < 0x10000:
+                return int(op.value) * (-1 if mnem == "sub" else 1), slot
     return None
 
 
@@ -633,9 +653,9 @@ def emit_symbol(symbol, rule, extra, scan):
         insn = ida_ua.insn_t()
         if ida_ua.decode_insn(insn, ea) <= 0:
             raise ValueError(f"{symbol}: cannot decode the instruction at {hex(ea)}")
-        found = displacement_operand(insn, rule.get("operand"))
+        found = displacement_operand(insn, rule.get("operand"), ea=ea)
         if found is None:
-            raise ValueError(f"{symbol}: operand {rule.get('operand', 0)} at {hex(ea)} has no displacement")
+            raise ValueError(f"{symbol}: operand {rule.get('operand', 0)} at {hex(ea)} has no displacement or add/sub immediate")
         # read the displacement from THIS build, never from the rule
         offset, _ = found
         crossed = False
@@ -1184,7 +1204,7 @@ try:
 except Exception:
     pass
 _desc_sm = ida_kernwin.action_desc_t(
-    ACTION_ID_SM, "CS2 struct member emitter", _StructMemberAction(), "Ctrl-Alt-M",
+    ACTION_ID_SM, "CS2 struct member emitter", _StructMemberAction(), "Ctrl-Alt-O",
     "Cursor paa member-adgangsinstruktion -> structmember YAML", -1,
 )
 ida_kernwin.register_action(_desc_sm)

@@ -30,6 +30,7 @@ offset of the operand's encoded value, -1 if none), .value (imm), .addr
 (displacement / target), .rip (True for RIP-relative memory).
 """
 import difflib
+import struct
 import json
 import os
 import re
@@ -152,9 +153,53 @@ def find_qword_holders(value, regions):
     return hits
 
 
+def _is_pe(backend):
+    path = (backend.input_path() or "").lower()
+    return path.endswith((".dll", ".exe"))
+
+
+def msvc_rtti_vtables(backend, class_name, regions):
+    """[(address_point, offset)] for an MSVC x64 binary, primary (offset 0) first.
+
+    TypeDescriptor = {pVFTable, spare, ".?AV<name>@@"}; a Complete Object Locator is
+    {signature=1, offset, cdOffset, TypeDescriptor RVA, ClassHierarchy RVA, self RVA}
+    and the qword right before a vtable's first slot points at its COL. `offset` is the
+    subobject's place in the complete object, the analogue of Itanium's offset-to-top.
+    """
+    imagebase = backend.imagebase()
+    out = []
+    for prefix in (b".?AV", b".?AU"):
+        name = prefix + class_name.encode() + b"@@\x00"
+        for base, blob in regions:
+            pos = blob.find(name)
+            while pos != -1:
+                td_rva = base + pos - 0x10 - imagebase
+                needle = struct.pack("<I", td_rva & 0xFFFFFFFF)
+                for cbase, cblob in regions:
+                    hit = cblob.find(needle)
+                    while hit != -1:
+                        col_off = hit - 12
+                        if col_off >= 0 and struct.unpack_from("<I", cblob, col_off)[0] == 1:
+                            col = cbase + col_off
+                            self_rva = struct.unpack_from("<I", cblob, col_off + 20)[0] if col_off + 24 <= len(cblob) else None
+                            if self_rva in (None, col - imagebase):
+                                offset = struct.unpack_from("<I", cblob, col_off + 4)[0]
+                                for holder in find_qword_holders(col, regions):
+                                    address_point = holder + 8
+                                    first = backend.qword(address_point)
+                                    if first and backend.is_code(first):
+                                        out.append((address_point, offset))
+                        hit = cblob.find(needle, hit + 1)
+                pos = blob.find(name, pos + 1)
+    out = sorted(set(out), key=lambda item: (item[1] != 0, item[0]))
+    return out
+
+
 def rtti_vtables(backend, class_name, regions=None):
     """[(address_point, offset_to_top)] via typeinfo-name -> typeinfo -> vtable, primary first."""
     regions = regions if regions is not None else backend.data_regions()
+    if _is_pe(backend):
+        return msvc_rtti_vtables(backend, class_name, regions)
     mangled = f"{len(class_name)}{class_name}".encode()
     name_eas = []
     for base, blob in regions:
