@@ -197,6 +197,17 @@ correct rather than lazy.
   `platform: windows` (or `linux`). This is the only correct lever — it drives `_target_platforms`
   in `gamedata_symbol_data.py`, and `gen_references.sh` now expands only the pinned platform, so a
   pinned symbol stops being reported as a missing reference.
+- **A task produces only for the binary that is open.** `platform:` on a task was the only filter,
+  so a bare declaration task naming its platform in the *filename* instead
+  (`find-CEntityResourceManifest_AddResource-windows`, whose one output is a literal
+  `.windows.yaml`) was walked by the linux run too: preprocessed against `libserver.so`, failed,
+  and — once optional outputs became huntable — nearly hunted. `outputs_target_other_platform()`
+  now skips a task whose every expanded output names the other platform, printing
+  `declares only non-linux outputs`. On 14182 that is 2 tasks in the linux run and 7 in the windows
+  run. A task with no outputs is left alone, since that is a different kind of task rather than a
+  mismatch. Note one task states its platform in neither place:
+  `server/find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem` emits
+  `.windows.yaml` while its sibling is `-linux`; the filter handles it, but the name should say so.
 - **Names must line up exactly.** A preprocessor's filename equals the config **task** name; a
   skill's frontmatter `name:` equals its directory name (a mismatch means the skill never loads);
   an artifact's filename equals `<symbol>.<platform>`.
@@ -512,6 +523,30 @@ the moment one gamever lacks it. `optional_output` still declares the artifact �
 packs it wherever it exists — without failing where it does not. Re-asserting fork-owned
 `expected_output` tasks onto 14180/14178b killed pack outright until they were switched.
 
+That declaration used to also disable recovery. A task whose outputs are **all** optional was
+skipped outright when its preprocessor failed — "falling back to AGENT SKILL" was printed and then
+`Skipping skill: <name> (optional outputs not generated)`, so a symbol that had merely moved
+dropped out of the snapshot with no error anywhere. On 14182 that silently lost
+`IGameResourceService_SetEntityResourceManifestHandler`, `g_pGameEntitySystem` and
+`INetworkSystem_PollSocket`, all three of which 14181 carries on both platforms.
+`optional_outputs_with_baseline()` now tells the two cases apart by the previous gamever's
+artifacts: a baseline-backed output is hunted (and validated like a required one, so the agent
+retries instead of reporting success over a missing file), while a genuinely inlined symbol has no
+baseline either and still skips. The filter is per platform, because a task with a literal
+`<Symbol>.windows.yaml` output and no `platform:` key runs in the linux run too and only the open
+binary can be hunted.
+
+`artifact_has_consumer()` is the second gate, and it is the payer rule in code: a hunt costs up to
+three agent attempts, so a baseline-backed symbol is only paid for when a generator's shipped file
+names it as a key (in the plugin's own `CClass::Method` spelling, resolved through the symbol's
+`alias` list) or another task takes it as `expected_input`. Measured on 14182:
+`INetworkSystem_PollSocket` is read by `networksystem/find-CNetworkSystem_PollSocket` and
+`CEntityResourceManifest_AddResource` ships in CounterStrikeSharp and swiftlys2, so both are hunted;
+`IGameResourceService_SetEntityResourceManifestHandler` and `g_pGameEntitySystem` reach the snapshot
+and stop there, so they are skipped with the reason printed. Beware the near-miss that makes
+`g_pGameEntitySystem` look consumed: CounterStrikeSharp ships a `GameEntitySystem` key, but it
+carries `offsets` (88/80) for a member of another class, not this global's address.
+
 ### 12. NEVER stop at the boundary check — confirm the function is the one you named
 A clean boundary only proves you found *a* function head. Two real cases: `0x4ac3e0` was
 labelled `ParseNetadrList` because it carried that function's string literals — GCC had inlined it
@@ -670,6 +705,7 @@ Two guards now catch the class before the baseline does:
 | `validate_artifacts.py` | After every artifact change | Re-checks every artifact against the binary; `-strict` fails on warnings. Needs `capstone` — degrades silently without it |
 | `verify_plugin_gamedata.py` | Before a deploy, and to answer "is this plugin's file OK" | Scans every shipped signature against the binaries and re-derives every offset; non-zero exit on broken/ambiguous/mismatch |
 | `check_deploy_drift.py` | After every deploy | Diffs `gamedata/<VER>/<plugin>/` against the deployed file; catches a generation that never left the repo, which no entry-level check can see |
+| `check_upstream_drift.py` | After `sync_upstream.sh`, before a hunt round | Skills and YAMLs upstream has that this fork lacks (exit 1), plus what differs and what is fork-only; `-fetch`, `-full`, `-json`. Adds nothing — a missing artifact with no declaring find-task would only be dropped at pack time |
 | `gamesymbol_snapshot.py` | `pack` after changes, `check-contract` to verify | Pack is what generation reads, not `bin_artifacts/` |
 | `missing_report.py` | After runs / before hunts | Writes `missing_<plat>_<ver>.txt` |
 | `audit_duplicate_va.py` | After every hunt round | 0 suspect clusters = clean |

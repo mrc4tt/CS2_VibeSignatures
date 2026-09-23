@@ -35,11 +35,13 @@ Output:
 """
 
 import argparse
+import functools
 import hashlib
 import inspect
 import json
 import logging
 import os
+import re
 import signal
 import posixpath
 import socket
@@ -2727,6 +2729,133 @@ def should_skip_skill_for_existing_outputs(required_outputs, optional_outputs):
     return all_expected_outputs_exist(optional_outputs)
 
 
+GENERATORS_DIRNAME = "gamedata-generators"
+
+# Generator templates are JSON, JSONC or KeyValues, and in all three a symbol key is a
+# quoted token. Parsing each dialect properly would buy nothing here: the question is only
+# whether a name appears as a key anywhere, not what its value is.
+_GENERATOR_KEY_RE = re.compile(r'"([A-Za-z_][A-Za-z0-9_:]{2,120})"')
+
+_ARTIFACT_PLATFORM_SUFFIX_RE = re.compile(r"\.(\{platform\}|linux|windows)\.yaml$")
+
+
+@functools.lru_cache(maxsize=8)
+def generator_consumed_names(generators_root):
+    """Every symbol name a generator's shipped file names as a key.
+
+    A plugin key is written from the snapshot only when some generator's file asks for it,
+    so this is the "is there a payer" half of CLAUDE.md's rule. Keys are stored in the
+    plugin's own spelling (``CBaseEntity::Teleport``) and normalized to the artifact
+    spelling the same way the generators do when they look a symbol up.
+    """
+    names = set()
+    for root, _dirs, files in os.walk(generators_root):
+        for filename in files:
+            if filename.endswith(".metadata.json"):
+                continue
+            if not filename.endswith((".json", ".jsonc", ".txt", ".games.txt")):
+                continue
+            try:
+                with open(os.path.join(root, filename), "r", encoding="utf-8", errors="replace") as handle:
+                    text = handle.read()
+            except OSError:
+                continue
+            for token in _GENERATOR_KEY_RE.findall(text):
+                names.add(token.replace("::", "_"))
+    return frozenset(names)
+
+
+@functools.lru_cache(maxsize=8)
+def task_input_artifact_names(config_path):
+    """Artifact stems some task declares as an input.
+
+    The second kind of payer: a symbol no plugin ships can still be required because
+    another find-task reads it, the way an anchored vtable feeds its -decompiles sibling.
+    """
+    stems = set()
+    document = _load_config_document(config_path)
+    for module_entry in document.get("modules", []) or []:
+        if not isinstance(module_entry, dict):
+            continue
+        for skill_entry in module_entry.get("skills", []) or []:
+            if not isinstance(skill_entry, dict):
+                continue
+            for key in ("expected_input", "optional_input"):
+                for entry in skill_entry.get(key) or []:
+                    basename = os.path.basename(str(entry))
+                    stems.add(_ARTIFACT_PLATFORM_SUFFIX_RE.sub("", basename))
+    return frozenset(stems)
+
+
+def artifact_has_consumer(artifact_path, platform, config_path, repo_root=None):
+    """True when something downstream actually reads this artifact.
+
+    CLAUDE.md: a symbol nothing reads is work with no payer - that test is what retired
+    ``GameEventManager`` and the four ``*Think`` declarations. Hunting one costs an agent
+    run of up to three attempts, so it is worth asking before paying.
+    """
+    symbol_name = _derive_artifact_symbol_name(artifact_path, platform)
+    if not symbol_name:
+        return False
+    if symbol_name in task_input_artifact_names(config_path):
+        return True
+
+    # A symbol's own name and every entry in its alias list are downstream keys (rule 15).
+    candidate_names = {symbol_name}
+    for alias in _load_symbol_alias_map(config_path).get(symbol_name, ()):
+        candidate_names.add(alias.replace("::", "_"))
+
+    generators_root = os.path.join(
+        repo_root or os.path.dirname(os.path.abspath(__file__)), GENERATORS_DIRNAME
+    )
+    consumed = generator_consumed_names(generators_root)
+    return any(name in consumed for name in candidate_names)
+
+
+def outputs_target_other_platform(required_outputs, optional_outputs, platform):
+    """True when every declared output names a platform that is not the open binary's.
+
+    An artifact is always ``<Symbol>.<platform>.yaml``, and a run has exactly one binary
+    open per module, so a task declaring only ``.windows.yaml`` outputs cannot produce
+    anything during the linux run. Tasks that pin ``platform:`` are already filtered; this
+    catches the fork's bare declaration tasks, which state the platform in the filename
+    instead (``find-CEntityResourceManifest_AddResource-windows``).
+
+    A task with no outputs at all is left alone - that is a different kind of task, not a
+    platform mismatch.
+    """
+    outputs = list(required_outputs or []) + list(optional_outputs or [])
+    if not outputs:
+        return False
+    suffix = f".{platform}.yaml"
+    return all(not os.path.basename(str(path)).endswith(suffix) for path in outputs)
+
+
+def optional_outputs_with_baseline(optional_outputs, old_artifact_dir, platform=None):
+    """Optional outputs of *platform* that the previous gamever actually produced.
+
+    ``optional_output`` covers two different situations that look identical at
+    run time: a symbol genuinely absent on this platform (inlined, with an
+    ``-inlined`` sibling task), and a symbol declared optional only so pack does
+    not die on a gamever that lacks it. The baseline separates them. An artifact
+    the previous build produced is a symbol that still exists and merely moved,
+    so its absence is a regression worth hunting rather than an expected skip.
+
+    A task with a literal ``<Symbol>.windows.yaml`` output and no ``platform:``
+    key runs in both runs, and the opened binary is the only one that can be
+    hunted - so an output for the other platform is never escalated here.
+    """
+    if not old_artifact_dir:
+        return []
+    suffix = f".{platform}.yaml" if platform else None
+    return [
+        path
+        for path in optional_outputs or []
+        if (suffix is None or os.path.basename(path).endswith(suffix))
+        and os.path.isfile(os.path.join(old_artifact_dir, os.path.basename(path)))
+    ]
+
+
 def _load_post_process_yaml_mapping(path, debug=False):
     """Load one post_process YAML file and return a mapping payload or None."""
     try:
@@ -3528,6 +3657,23 @@ def process_binary(
                 error=str(e),
             )
             continue
+        # A task with a literal <Symbol>.windows.yaml output and no platform: key is not
+        # restricted by the check above, so the linux run used to walk it too - preprocess
+        # it against libserver.so, fail, and (with the escalation below) even hunt it. Only
+        # the open binary can produce an artifact, so a task whose every output belongs to
+        # the other platform has nothing to do in this run.
+        if outputs_target_other_platform(required_outputs, optional_outputs, platform):
+            print(f"  Skipping skill: {skill_name} (declares only non-{platform} outputs)")
+            skip_count += 1
+            _report_skill_status(
+                reporting,
+                job_id,
+                skill_name,
+                TaskStatus.SKIPPED,
+                ProcessPhase.FINISHED,
+                reason=ProcessReason.PLATFORM_MISMATCH,
+            )
+            continue
         # Check if configured output files already make the skill unnecessary.
         if not force_all and should_skip_skill_for_existing_outputs(required_outputs, optional_outputs):
             print(f"  Skipping skill: {skill_name} (all outputs exist)")
@@ -4239,18 +4385,51 @@ def process_binary(
                 )
                 continue
 
+            regressed_optional_outputs = []
             if not required_outputs and optional_outputs and not skip_pp:
-                skip_count += 1
-                print(f"  Skipping skill: {skill_name} (optional outputs not generated)")
-                _report_skill_status(
-                    reporting,
-                    job_id,
-                    skill_name,
-                    TaskStatus.SKIPPED,
-                    ProcessPhase.FINISHED,
-                    reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
+                # An all-optional task whose preprocessor failed used to be skipped
+                # outright, so a symbol that merely moved on a new build dropped out
+                # of the snapshot with no error anywhere. Hunt it when the previous
+                # gamever produced the artifact; a genuinely absent (inlined) symbol
+                # has no baseline either and still skips.
+                regressed_optional_outputs = optional_outputs_with_baseline(
+                    optional_outputs, old_artifact_dir, platform
                 )
-                continue
+                # ... but only when something downstream reads it. A hunt costs up to
+                # three agent attempts, and a symbol no generator ships and no task takes
+                # as input is work with no payer.
+                unread_optional_outputs = [
+                    path
+                    for path in regressed_optional_outputs
+                    if not artifact_has_consumer(path, platform, config_path)
+                ]
+                regressed_optional_outputs = [
+                    path for path in regressed_optional_outputs if path not in unread_optional_outputs
+                ]
+                if not regressed_optional_outputs:
+                    skip_count += 1
+                    if unread_optional_outputs:
+                        unread_names = ", ".join(os.path.basename(path) for path in unread_optional_outputs)
+                        print(
+                            f"  Skipping skill: {skill_name} (optional outputs not generated; "
+                            f"{unread_names} has no consumer - no generator key, no task input)"
+                        )
+                    else:
+                        print(f"  Skipping skill: {skill_name} (optional outputs not generated)")
+                    _report_skill_status(
+                        reporting,
+                        job_id,
+                        skill_name,
+                        TaskStatus.SKIPPED,
+                        ProcessPhase.FINISHED,
+                        reason=ProcessReason.OPTIONAL_OUTPUT_ABSENT,
+                    )
+                    continue
+                regressed_names = ", ".join(os.path.basename(path) for path in regressed_optional_outputs)
+                print(
+                    f"    Optional outputs missing but produced on the baseline and read downstream "
+                    f"({regressed_names}); hunting instead of skipping"
+                )
 
             process, verified = verify_owned_mcp_with_single_recovery(
                 process,
@@ -4324,7 +4503,10 @@ def process_binary(
                 skill_name,
                 agent,
                 debug,
-                expected_yaml_paths=required_outputs,
+                # A baseline-backed optional output is validated like a required one,
+                # so the agent retries when it produces nothing instead of reporting
+                # success over a missing artifact.
+                expected_yaml_paths=required_outputs or regressed_optional_outputs,
                 max_retries=skill_max_retries,
                 agent_model=agent_model,
                 progress_callback=progress_callback,

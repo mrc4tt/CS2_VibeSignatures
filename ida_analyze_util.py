@@ -5416,81 +5416,97 @@ async def preprocess_struct_offset_sig_via_mcp(
         return None
     expected_offset_expr = "None" if old_offset is None else str(old_offset)
     sig_addrs_literal = "[" + ", ".join(str(a) for a in match_addr_ints) + "]"
+    sig_len = len(offset_sig.split())
 
+    # The anchored instruction is not always the one carrying the member offset: a
+    # signature that starts on a RIP-relative load (``divss xmm0, cs:flt_...``) has
+    # only a negative displacement there, and a struct offset is never negative. So
+    # negative candidates are discarded and the scan walks the remaining
+    # instructions inside the signature span, reporting the delta it settled on as
+    # the new ``offset_sig_disp``.
     py_code = (
         "import idaapi, ida_bytes, idautils, ida_ua, json\n"
         f"sig_addrs = {sig_addrs_literal}\n"
         f"offset_sig_disp = {offset_sig_disp}\n"
+        f"sig_len = {sig_len}\n"
         f"expected_offset = {expected_offset_expr}\n"
         "best_result = None\n"
         "any_result = None\n"
         "for sig_addr in sig_addrs:\n"
         "    inst_addr = sig_addr + offset_sig_disp\n"
-        "    insn = idautils.DecodeInstruction(inst_addr)\n"
-        "    raw = ida_bytes.get_bytes(inst_addr, insn.size) if insn and insn.size > 0 else None\n"
-        "    if not insn or insn.size <= 0 or not raw:\n"
-        "        continue\n"
-        "    candidates = []\n"
-        "    for op in insn.ops:\n"
-        "        ot = int(op.type)\n"
-        "        if ot == int(idaapi.o_void):\n"
-        "            continue\n"
-        "        if ot not in (int(idaapi.o_displ), int(idaapi.o_mem), int(idaapi.o_imm)):\n"
-        "            continue\n"
-        "        for attr in ('offb', 'offo'):\n"
-        "            off = int(getattr(op, attr, 0))\n"
-        "            if off <= 0 or off >= insn.size:\n"
+        "    sig_end = sig_addr + max(sig_len, offset_sig_disp + 1)\n"
+        "    scanned = 0\n"
+        "    while inst_addr < sig_end:\n"
+        "        insn = idautils.DecodeInstruction(inst_addr)\n"
+        "        raw = ida_bytes.get_bytes(inst_addr, insn.size) if insn and insn.size > 0 else None\n"
+        "        if not insn or insn.size <= 0 or not raw:\n"
+        "            break\n"
+        "        scanned += 1\n"
+        "        candidates = []\n"
+        "        for op in insn.ops:\n"
+        "            ot = int(op.type)\n"
+        "            if ot == int(idaapi.o_void):\n"
         "                continue\n"
-        "            sizes = []\n"
-        "            dsz = ida_ua.get_dtype_size(getattr(op, 'dtype', getattr(op, 'dtyp', 0)))\n"
-        "            if dsz > 0:\n"
-        "                sizes.append(dsz)\n"
-        "            for s in (1, 2, 4, 8):\n"
-        "                if s not in sizes:\n"
-        "                    sizes.append(s)\n"
-        "            for sz in sizes:\n"
-        "                if off + sz > insn.size:\n"
+        "            if ot not in (int(idaapi.o_displ), int(idaapi.o_mem), int(idaapi.o_imm)):\n"
+        "                continue\n"
+        "            for attr in ('offb', 'offo'):\n"
+        "                off = int(getattr(op, attr, 0))\n"
+        "                if off <= 0 or off >= insn.size:\n"
         "                    continue\n"
-        "                chunk = raw[off:off + sz]\n"
-        "                unsigned_val = int.from_bytes(chunk, 'little', signed=False)\n"
-        "                signed_val = int.from_bytes(chunk, 'little', signed=True)\n"
-        "                expected_match = False\n"
-        "                if expected_offset is not None:\n"
-        "                    expected_mod = expected_offset & ((1 << (8 * sz)) - 1)\n"
-        "                    expected_match = unsigned_val == expected_mod or signed_val == expected_offset\n"
-        "                candidates.append({\n"
-        "                    'off': off,\n"
-        "                    'size': sz,\n"
-        "                    'unsigned': unsigned_val,\n"
-        "                    'signed': signed_val,\n"
-        "                    'expected': expected_match,\n"
-        "                })\n"
-        "    uniq = []\n"
-        "    seen = set()\n"
-        "    for c in candidates:\n"
-        "        key = (c['off'], c['size'])\n"
-        "        if key in seen:\n"
-        "            continue\n"
-        "        seen.add(key)\n"
-        "        uniq.append(c)\n"
-        "    if not uniq:\n"
-        "        continue\n"
-        "    preferred = [c for c in uniq if c['expected']]\n"
-        "    pool = preferred if preferred else uniq\n"
-        "    pool.sort(key=lambda c: (c['size'], -c['off']), reverse=True)\n"
-        "    best = pool[0]\n"
-        "    final_offset = best['signed'] if best['signed'] < 0 else best['unsigned']\n"
-        "    candidate_result = {\n"
-        "        'offset': final_offset,\n"
-        "        'sig_va': hex(sig_addr),\n"
-        "        'inst_va': hex(inst_addr),\n"
-        "        'offset_size': best['size'],\n"
-        "        'matched_expected': bool(preferred),\n"
-        "    }\n"
-        "    if any_result is None:\n"
-        "        any_result = candidate_result\n"
-        "    if candidate_result['matched_expected']:\n"
-        "        best_result = candidate_result\n"
+        "                sizes = []\n"
+        "                dsz = ida_ua.get_dtype_size(getattr(op, 'dtype', getattr(op, 'dtyp', 0)))\n"
+        "                if dsz > 0:\n"
+        "                    sizes.append(dsz)\n"
+        "                for s in (1, 2, 4, 8):\n"
+        "                    if s not in sizes:\n"
+        "                        sizes.append(s)\n"
+        "                for sz in sizes:\n"
+        "                    if off + sz > insn.size:\n"
+        "                        continue\n"
+        "                    chunk = raw[off:off + sz]\n"
+        "                    unsigned_val = int.from_bytes(chunk, 'little', signed=False)\n"
+        "                    signed_val = int.from_bytes(chunk, 'little', signed=True)\n"
+        "                    if signed_val < 0:\n"
+        "                        continue\n"
+        "                    expected_match = False\n"
+        "                    if expected_offset is not None:\n"
+        "                        expected_mod = expected_offset & ((1 << (8 * sz)) - 1)\n"
+        "                        expected_match = unsigned_val == expected_mod or signed_val == expected_offset\n"
+        "                    candidates.append({\n"
+        "                        'off': off,\n"
+        "                        'size': sz,\n"
+        "                        'unsigned': unsigned_val,\n"
+        "                        'signed': signed_val,\n"
+        "                        'expected': expected_match,\n"
+        "                    })\n"
+        "        uniq = []\n"
+        "        seen = set()\n"
+        "        for c in candidates:\n"
+        "            key = (c['off'], c['size'])\n"
+        "            if key in seen:\n"
+        "                continue\n"
+        "            seen.add(key)\n"
+        "            uniq.append(c)\n"
+        "        if uniq:\n"
+        "            preferred = [c for c in uniq if c['expected']]\n"
+        "            pool = preferred if preferred else uniq\n"
+        "            pool.sort(key=lambda c: (c['size'], -c['off']), reverse=True)\n"
+        "            best = pool[0]\n"
+        "            candidate_result = {\n"
+        "                'offset': best['unsigned'],\n"
+        "                'sig_va': hex(sig_addr),\n"
+        "                'inst_va': hex(inst_addr),\n"
+        "                'inst_disp': inst_addr - sig_addr,\n"
+        "                'offset_size': best['size'],\n"
+        "                'matched_expected': bool(preferred),\n"
+        "            }\n"
+        "            if any_result is None:\n"
+        "                any_result = candidate_result\n"
+        "            if candidate_result['matched_expected']:\n"
+        "                best_result = candidate_result\n"
+        "                break\n"
+        "        inst_addr += insn.size\n"
+        "    if best_result is not None:\n"
         "        break\n"
         "result = json.dumps(best_result if best_result is not None else any_result)\n"
     )
@@ -5529,12 +5545,30 @@ async def preprocess_struct_offset_sig_via_mcp(
             print(f"    Preprocess: invalid parsed offset at {matches_preview}")
         return None
 
+    if offset_int < 0:
+        if debug:
+            print(f"    Preprocess: negative struct offset {offset_int} at {matches_preview}")
+        return None
+
+    # Anchor the next gamever on the instruction this resolution actually used, so a
+    # signature whose first instruction carries no member offset does not have to be
+    # re-scanned (or re-hunted by an agent) every build.
+    resolved_disp = offset_sig_disp
+    try:
+        raw_inst_disp = offset_info.get("inst_disp")
+        if raw_inst_disp is not None:
+            parsed_disp = _parse_int_field(raw_inst_disp, "inst_disp")
+            if parsed_disp >= 0:
+                resolved_disp = parsed_disp
+    except Exception:
+        pass
+
     new_data = {
         "struct_name": struct_name,
         "member_name": member_name,
         "offset": hex(offset_int),
         "offset_sig": offset_sig,
-        "offset_sig_disp": offset_sig_disp,
+        "offset_sig_disp": resolved_disp,
     }
     if offset_sig_max_match > 1:
         new_data["offset_sig_max_match"] = offset_sig_max_match

@@ -7748,6 +7748,126 @@ found_struct_offset: []
             result,
         )
 
+    async def test_preprocess_struct_offset_sig_via_mcp_reanchors_on_resolved_instruction(
+        self,
+    ) -> None:
+        """A signature starting on a RIP-relative load resolves from a later instruction.
+
+        ``BotProfile_Teamwork``'s sig begins with ``divss xmm0, cs:flt_...``, whose only
+        operand displacement is negative; the member offset lives in the ``movss
+        [rax+0x10]`` that follows. The scan walks the signature span and reports the
+        delta it settled on.
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            old_path = Path(temp_dir) / "BotProfile_Teamwork.old.yaml"
+            new_path = Path(temp_dir) / "BotProfile_Teamwork.linux.yaml"
+            _write_yaml(
+                old_path,
+                {
+                    "struct_name": "BotProfile",
+                    "member_name": "m_teamwork",
+                    "offset": "0x10",
+                    "size": 4,
+                    "offset_sig": "F3 0F 5E 05 ?? ?? ?? ?? F3 0F 11 40 10",
+                },
+            )
+
+            session = AsyncMock()
+
+            def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+                if name == "find_bytes":
+                    return _FakeCallToolResult([{"matches": ["0xC871B3"], "n": 1}])
+                if name == "py_eval":
+                    code = arguments["code"]
+                    self.assertIn("sig_len = 13", code)
+                    self.assertIn("while inst_addr < sig_end:", code)
+                    self.assertIn("if signed_val < 0:", code)
+                    return _py_eval_payload(
+                        {
+                            "offset": 0x10,
+                            "sig_va": "0xC871B3",
+                            "inst_va": "0xC871BB",
+                            "inst_disp": 8,
+                            "offset_size": 1,
+                            "matched_expected": True,
+                        }
+                    )
+                raise AssertionError(f"unexpected MCP tool: {name}")
+
+            session.call_tool.side_effect = _fake_call_tool
+
+            result = await ida_analyze_util.preprocess_struct_offset_sig_via_mcp(
+                session=session,
+                new_path=str(new_path),
+                old_path=str(old_path),
+                image_base=0,
+                new_binary_dir=temp_dir,
+                platform="linux",
+                debug=True,
+            )
+
+        self.assertEqual(
+            {
+                "struct_name": "BotProfile",
+                "member_name": "m_teamwork",
+                "offset": "0x10",
+                "offset_sig": "F3 0F 5E 05 ?? ?? ?? ?? F3 0F 11 40 10",
+                "offset_sig_disp": 8,
+                "size": 4,
+            },
+            result,
+        )
+
+    async def test_preprocess_struct_offset_sig_via_mcp_rejects_negative_offset(
+        self,
+    ) -> None:
+        """A negative resolution is a wrong operand, not a member offset."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            old_path = Path(temp_dir) / "BotProfile_Teamwork.old.yaml"
+            new_path = Path(temp_dir) / "BotProfile_Teamwork.linux.yaml"
+            _write_yaml(
+                old_path,
+                {
+                    "struct_name": "BotProfile",
+                    "member_name": "m_teamwork",
+                    "offset": "0x10",
+                    "size": 4,
+                    "offset_sig": "F3 0F 5E 05 ?? ?? ?? ??",
+                },
+            )
+
+            session = AsyncMock()
+
+            def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+                if name == "find_bytes":
+                    return _FakeCallToolResult([{"matches": ["0xC871B3"], "n": 1}])
+                if name == "py_eval":
+                    return _py_eval_payload(
+                        {
+                            "offset": -0x3BB17B,
+                            "sig_va": "0xC871B3",
+                            "inst_va": "0xC871B3",
+                            "inst_disp": 0,
+                            "offset_size": 4,
+                            "matched_expected": False,
+                        }
+                    )
+                raise AssertionError(f"unexpected MCP tool: {name}")
+
+            session.call_tool.side_effect = _fake_call_tool
+
+            result = await ida_analyze_util.preprocess_struct_offset_sig_via_mcp(
+                session=session,
+                new_path=str(new_path),
+                old_path=str(old_path),
+                image_base=0,
+                new_binary_dir=temp_dir,
+                platform="linux",
+                debug=True,
+            )
+
+        self.assertIsNone(result)
+
     async def test_preprocess_gen_struct_offset_sig_via_mcp_generates_current_version_sig(
         self,
     ) -> None:

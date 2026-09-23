@@ -7211,5 +7211,154 @@ class TestSelectedExecution(unittest.TestCase):
             )
 
 
+class TestOutputsTargetOtherPlatform(unittest.TestCase):
+    """Only the open binary can produce an artifact, so the other platform's tasks are not run."""
+
+    def test_windows_only_outputs_are_skipped_in_a_linux_run(self) -> None:
+        self.assertTrue(
+            ida_analyze_bin.outputs_target_other_platform(
+                [], ["/bin/14182/engine/CEntityResourceManifest_AddResource.windows.yaml"], "linux"
+            )
+        )
+
+    def test_matching_platform_outputs_are_kept(self) -> None:
+        self.assertFalse(
+            ida_analyze_bin.outputs_target_other_platform(
+                ["/bin/14182/engine/INetworkSystem_PollSocket.linux.yaml"], [], "linux"
+            )
+        )
+
+    def test_a_task_with_one_usable_output_still_runs(self) -> None:
+        self.assertFalse(
+            ida_analyze_bin.outputs_target_other_platform(
+                ["/bin/14182/server/A.linux.yaml"], ["/bin/14182/server/B.windows.yaml"], "linux"
+            )
+        )
+
+    def test_a_task_without_outputs_is_not_a_platform_mismatch(self) -> None:
+        self.assertFalse(ida_analyze_bin.outputs_target_other_platform([], [], "linux"))
+
+
+class TestArtifactHasConsumer(unittest.TestCase):
+    """A hunt is only worth paying for when something downstream reads the artifact."""
+
+    def _fixture(self, root: Path, *, generator_key=None, task_input=None, alias=None):
+        generators = root / ida_analyze_bin.GENERATORS_DIRNAME / "someplugin" / "gamedata"
+        generators.mkdir(parents=True)
+        keys = {generator_key: {"signatures": {}}} if generator_key else {}
+        (generators / "someplugin.json").write_text(json.dumps(keys), encoding="utf-8")
+
+        skill = {"name": "find-other", "expected_output": ["Other.{platform}.yaml"]}
+        if task_input:
+            skill["expected_input"] = [task_input]
+        symbol = {"name": "Target", "category": "func"}
+        if alias:
+            symbol["alias"] = [alias]
+        config = root / "configs" / "1.yaml"
+        write_config(config, [
+            {
+                "name": "server",
+                "stage_index": 0,
+                "path_windows": "game/bin/win64/server.dll",
+                "skills": [skill],
+                "symbols": [symbol],
+            }
+        ])
+        # The caches are keyed by path, and each test builds a fresh temporary one.
+        ida_analyze_bin.generator_consumed_names.cache_clear()
+        ida_analyze_bin.task_input_artifact_names.cache_clear()
+        return str(config), str(root)
+
+    def test_symbol_a_generator_ships_has_a_consumer(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config, repo_root = self._fixture(root, generator_key="Target")
+
+            self.assertTrue(
+                ida_analyze_bin.artifact_has_consumer("Target.linux.yaml", "linux", config, repo_root)
+            )
+
+    def test_generator_key_in_plugin_spelling_matches_through_the_alias(self) -> None:
+        """Plugins spell a key CClass::Method; the alias list is what ties it to the artifact."""
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config, repo_root = self._fixture(root, generator_key="CClass::Method", alias="CClass::Method")
+
+            self.assertTrue(
+                ida_analyze_bin.artifact_has_consumer("Target.linux.yaml", "linux", config, repo_root)
+            )
+
+    def test_symbol_another_task_reads_has_a_consumer(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config, repo_root = self._fixture(root, task_input="../engine/Target.{platform}.yaml")
+
+            self.assertTrue(
+                ida_analyze_bin.artifact_has_consumer("Target.linux.yaml", "linux", config, repo_root)
+            )
+
+    def test_symbol_nothing_reads_has_no_consumer(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config, repo_root = self._fixture(root, generator_key="SomethingElse")
+
+            self.assertFalse(
+                ida_analyze_bin.artifact_has_consumer("Target.linux.yaml", "linux", config, repo_root)
+            )
+
+
+class TestOptionalOutputsWithBaseline(unittest.TestCase):
+    """An optional output the previous gamever produced is a regression, not an absence."""
+
+    def test_reports_optional_outputs_the_baseline_produced(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            old_dir = root / "old" / "engine"
+            old_dir.mkdir(parents=True)
+            (old_dir / "INetworkSystem_PollSocket.linux.yaml").write_text("func_name: x\n", encoding="utf-8")
+            new_dir = root / "new" / "engine"
+            new_dir.mkdir(parents=True)
+
+            moved = str(new_dir / "INetworkSystem_PollSocket.linux.yaml")
+            inlined = str(new_dir / "CNetworkGameServer_IsMapValid.linux.yaml")
+
+            self.assertEqual(
+                [moved],
+                ida_analyze_bin.optional_outputs_with_baseline([moved, inlined], str(old_dir), "linux"),
+            )
+
+    def test_other_platform_output_is_not_escalated(self) -> None:
+        """A literal .windows.yaml task also runs in the linux run; only the open binary can be hunted."""
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            old_dir = root / "old" / "engine"
+            old_dir.mkdir(parents=True)
+            (old_dir / "CEntityResourceManifest_AddResource.windows.yaml").write_text(
+                "func_name: x\n", encoding="utf-8"
+            )
+            windows_output = str(root / "new" / "engine" / "CEntityResourceManifest_AddResource.windows.yaml")
+
+            self.assertEqual(
+                [],
+                ida_analyze_bin.optional_outputs_with_baseline([windows_output], str(old_dir), "linux"),
+            )
+            self.assertEqual(
+                [windows_output],
+                ida_analyze_bin.optional_outputs_with_baseline([windows_output], str(old_dir), "windows"),
+            )
+
+    def test_no_baseline_directory_reports_nothing(self) -> None:
+        self.assertEqual([], ida_analyze_bin.optional_outputs_with_baseline(["Opt.linux.yaml"], None, "linux"))
+
+    def test_absent_baseline_artifact_reports_nothing(self) -> None:
+        with TemporaryDirectory() as temporary:
+            old_dir = Path(temporary) / "old"
+            old_dir.mkdir()
+            self.assertEqual(
+                [],
+                ida_analyze_bin.optional_outputs_with_baseline(["Opt.linux.yaml"], str(old_dir), "linux"),
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
