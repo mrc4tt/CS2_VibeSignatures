@@ -9,7 +9,6 @@ State (baseline facts, byte caches) is kept in this module between calls, becaus
 session answers one task at a time and a server.dll scan costs seconds.
 """
 import os
-import re
 import sys
 
 _STATE = {}
@@ -19,15 +18,11 @@ class _NothingToHunt(Exception):
     pass
 
 
-def _context():
+def _context(repo=None):
+    import hunt_core
     import ida_nalt
 
-    path = (ida_nalt.get_input_file_path() or "").replace("\\", "/")
-    m = re.search(r"/bin/([A-Za-z0-9_.\-]+)/(\w+)/([^/]+)$", path)
-    if not m:
-        return None
-    gamever, module, binname = m.groups()
-    return gamever, module, ("windows" if binname.lower().endswith(".dll") else "linux")
+    return hunt_core.bin_context(ida_nalt.get_input_file_path(), repo)
 
 
 def _sig_maker(repo):
@@ -87,7 +82,7 @@ def hunt(repo, symbols, out_dir, categories=None):
         sys.path.insert(0, repo)
     import hunt_core
 
-    ctx = _context()
+    ctx = _context(repo)
     if not ctx:
         return {"error": "the open binary is not under bin/<gamever>/<module>/"}
     gamever, module, platform = ctx

@@ -612,6 +612,25 @@ def extract_facts(backend, artifact_dir, platform, gamever, module, log=print):
     return out
 
 
+def bin_context(path, repo=None):
+    """(gamever, module, platform) for a binary under bin/<gamever>/<module>/, or None.
+
+    IDA stores the input path with symlinks resolved, so when bin/ is a symlink (the
+    server's points at /srv/cs2-binaries) the path carries no "/bin/" segment at all.
+    A path under the resolved bin/ of `repo` is accepted as well.
+    """
+    path = (path or "").replace("\\", "/")
+    m = re.search(r"/bin/([A-Za-z0-9_.\-]+)/(\w+)/([^/]+)$", path)
+    if not m and repo:
+        root = os.path.realpath(os.path.join(repo, "bin")).replace("\\", "/").rstrip("/") + "/"
+        if path.startswith(root):
+            m = re.fullmatch(r"([A-Za-z0-9_.\-]+)/(\w+)/([^/]+)", path[len(root):])
+    if not m:
+        return None
+    gamever, module, binname = m.groups()
+    return gamever, module, ("windows" if binname.lower().endswith(".dll") else "linux")
+
+
 def facts_path(repo, gamever, module, platform):
     return os.path.join(repo, "baseline_facts", gamever, f"{module}.{platform}.json")
 

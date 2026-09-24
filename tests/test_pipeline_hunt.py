@@ -207,3 +207,27 @@ class SinglePlatformGenerationTests(unittest.TestCase):
             self.assertEqual(open(target).read(), "generated earlier")
             U._seed_output_root([contract], out, keep_existing=False)
             self.assertEqual(open(target).read(), "template")
+
+
+class BinContextTests(unittest.TestCase):
+    """IDA stores the input path with symlinks resolved, so bin/ -> /srv/... loses "/bin/"."""
+
+    def test_plain_bin_path(self):
+        import hunt_core
+
+        self.assertEqual(hunt_core.bin_context("/home/x/repo/bin/14182/server/server.dll"),
+                         ("14182", "server", "windows"))
+
+    def test_symlinked_bin_resolves_through_repo(self):
+        import hunt_core
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "cs2-binaries"
+            (target / "14183" / "engine").mkdir(parents=True)
+            repo = Path(tmp) / "repo"
+            repo.mkdir()
+            os.symlink(target, repo / "bin")
+            resolved = os.path.realpath(target / "14183" / "engine" / "libengine2.so")
+            self.assertIsNone(hunt_core.bin_context(resolved))
+            self.assertEqual(hunt_core.bin_context(resolved, str(repo)), ("14183", "engine", "linux"))
+            self.assertIsNone(hunt_core.bin_context("/elsewhere/14183/engine/libengine2.so", str(repo)))

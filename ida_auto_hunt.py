@@ -8,7 +8,6 @@ write. Needs baseline facts: `uv run baseline_facts.py -gamever <prev> -module <
 """
 import json
 import os
-import re
 import sys
 
 import ida_kernwin
@@ -42,12 +41,9 @@ def sig_maker():
 
 
 def loaded_context():
-    path = (ida_nalt.get_input_file_path() or "").replace("\\", "/")
-    m = re.search(r"/bin/([A-Za-z0-9_.\-]+)/(\w+)/([^/]+)$", path)
-    if not m:
-        return None
-    gamever, module, binname = m.groups()
-    return gamever, module, ("windows" if binname.lower().endswith(".dll") else "linux")
+    import hunt_core
+
+    return hunt_core.bin_context(ida_nalt.get_input_file_path(), REPO)
 
 
 def run(symbols=None, dry_run=False, out_dir=None, report_path=None, min_score=None, log=print):
