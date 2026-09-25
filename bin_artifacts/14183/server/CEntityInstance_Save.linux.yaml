@@ -1,0 +1,8 @@
+func_name: CEntityInstance_Save
+func_va: '0x228a280'
+func_rva: '0x228a280'
+func_size: '0x6'
+vtable_name: CEntityInstance
+vfunc_offset: '0xb0'
+vfunc_index: 22
+vfunc_sig: FF 90 B0 00 00 00 49 8B 45 00 48 8B 80 80 00 00 00

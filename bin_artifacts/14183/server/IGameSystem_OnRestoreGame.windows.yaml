@@ -1,0 +1,9 @@
+func_name: IGameSystem_OnRestoreGame
+func_va: '0x180159030'
+func_rva: '0x159030'
+func_size: '0x3'
+func_sig: C2 ?? ?? CC CC CC CC CC CC CC CC CC CC CC CC CC 40 55 41 57 44 8B 51 ??
+func_sig_allow_across_function_boundary: true
+vtable_name: IGameSystem
+vfunc_offset: '0x198'
+vfunc_index: 51

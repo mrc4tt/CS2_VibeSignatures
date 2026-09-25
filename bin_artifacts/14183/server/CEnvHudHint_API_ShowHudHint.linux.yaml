@@ -1,0 +1,5 @@
+func_name: CEnvHudHint_API_ShowHudHint
+func_va: '0xbafb80'
+func_rva: '0xbafb80'
+func_size: '0x108'
+func_sig: 55 48 89 E5 41 54 53 0F B6 05 82 B4 C8 ??

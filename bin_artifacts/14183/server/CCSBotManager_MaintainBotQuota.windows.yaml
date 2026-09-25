@@ -1,0 +1,5 @@
+func_name: CCSBotManager_MaintainBotQuota
+func_va: '0x1802cf080'
+func_rva: '0x2cf080'
+func_size: '0x9c6'
+func_sig: 40 55 41 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 4C 8B F9 FF 15 ?? ?? ?? ??

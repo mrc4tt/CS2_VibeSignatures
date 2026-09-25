@@ -1,0 +1,7 @@
+func_name: CEntityInstance_PostDataUpdatePreserve
+func_va: '0x228a430'
+func_rva: '0x228a430'
+func_size: '0x8'
+vtable_name: CEntityInstance
+vfunc_offset: '0x68'
+vfunc_index: 13

@@ -1,0 +1,6 @@
+func_name: CEntitySystem_DoConstructEntity
+func_va: '0x181376de0'
+func_rva: '0x1376de0'
+func_size: '0x1c8'
+func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 56 41 57 48 8D 6C 24 ?? 48 81 EC 90 00 00 ?? 48 8D 59 ?? 45 33
+  FF 4D 8B F0 48 8B F2 48 8B F9 4C 39 3B 75 ?? 48 85 C9 74 ?? 48 8B 0D FF B0 C7 ??

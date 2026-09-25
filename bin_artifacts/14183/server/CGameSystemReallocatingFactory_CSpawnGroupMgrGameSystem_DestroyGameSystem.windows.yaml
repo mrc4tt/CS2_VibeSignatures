@@ -1,0 +1,7 @@
+func_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem
+func_va: '0x18055b610'
+func_rva: '0x55b610'
+func_size: '0x55'
+vtable_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
+vfunc_offset: '0x20'
+vfunc_index: 4

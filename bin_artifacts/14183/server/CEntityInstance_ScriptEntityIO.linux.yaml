@@ -1,0 +1,7 @@
+func_name: CEntityInstance_ScriptEntityIO
+func_va: '0x2288140'
+func_rva: '0x2288140'
+func_size: '0x3'
+vtable_name: CEntityInstance
+vfunc_offset: '0x88'
+vfunc_index: 17

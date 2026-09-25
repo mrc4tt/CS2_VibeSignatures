@@ -1,0 +1,7 @@
+func_name: CCSPlayer_WeaponServices_PickupItem
+func_va: '0x15f6d50'
+func_rva: '0x15f6d50'
+func_size: '0xa1d'
+vtable_name: CCSPlayer_WeaponServices
+vfunc_offset: '0xf0'
+vfunc_index: 30

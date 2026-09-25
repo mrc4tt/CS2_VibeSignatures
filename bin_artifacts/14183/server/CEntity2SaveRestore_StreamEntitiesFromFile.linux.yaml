@@ -1,0 +1,7 @@
+func_name: CEntity2SaveRestore_StreamEntitiesFromFile
+func_va: '0x176b250'
+func_rva: '0x176b250'
+func_size: '0x90c'
+vtable_name: CEntity2SaveRestore
+vfunc_offset: '0x20'
+vfunc_index: 4

@@ -1,0 +1,7 @@
+func_name: CEntityInstance_ScriptAcceptInput
+func_va: "0x2288150"
+func_rva: "0x2288150"
+func_size: "0x3"
+vtable_name: CEntityInstance
+vfunc_offset: "0x90"
+vfunc_index: 18
