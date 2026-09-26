@@ -7,9 +7,16 @@ TARGETS = [
     "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem",
 ]
 
+MANGLED_CLASS_NAMES = {
+    "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem": [
+        "_ZTV30CGameSystemReallocatingFactoryI24CSpawnGroupMgrGameSystemS0_E",
+        "??_7?$CGameSystemReallocatingFactory@VCSpawnGroupMgrGameSystem@@V1@@@6B@",
+    ],
+}
+
 GENERATE_YAML_DESIRED_FIELDS = [
     (
-        "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable",
+        "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem",
         [
             "vtable_class",
             "vtable_symbol",
@@ -42,6 +49,7 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         vtable_class_names=TARGETS,
+        mangled_class_names=MANGLED_CLASS_NAMES,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )

@@ -48,10 +48,10 @@ from ida_analyze_util import preprocess_common_skill
 TARGETS = [
     "@TARGET@",
 ]
-
+@MANGLED@
 GENERATE_YAML_DESIRED_FIELDS = [
     (
-        "@SYMBOL@",
+        "@FIELDS_KEY@",
         [
 @FIELDS@
         ],
@@ -78,7 +78,7 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         @KWARG@=TARGETS,
-        generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
+@MANGLED_KWARG@        generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )
 '''
@@ -168,9 +168,40 @@ def target_name(paths, category, short):
     return short
 
 
-def render(short, category, fields, target):
+def mangled_names(paths):
+    """The baseline's own vtable symbols, e.g. ``_ZTV30...E`` from ``_ZTV30...E + 0x10``.
+
+    A template class such as CGameSystemReallocatingFactory<CSpawnGroupMgrGameSystem>
+    cannot be found from its flattened class name; the hand-written preprocessors pass
+    MANGLED_CLASS_NAMES for exactly that, and the baseline already records both.
+    """
+    names = []
+    for path in paths:
+        try:
+            doc = yaml.safe_load(open(path, encoding="utf-8")) or {}
+        except Exception:
+            continue
+        symbol = str(doc.get("vtable_symbol") or "").split(" + ")[0].strip() if isinstance(doc, dict) else ""
+        if symbol and symbol not in names:
+            names.append(symbol)
+    return names
+
+
+def render(short, category, fields, target, mangled=()):
     body = "\n".join(f'            "{field}",' for field in fields)
+    mangled_decl = mangled_kwarg = ""
+    if category == "vtable" and mangled:
+        listed = "".join(f'        "{name}",\n' for name in mangled)
+        mangled_decl = f"\nMANGLED_CLASS_NAMES = {{\n    \"{target}\": [\n{listed}    ],\n}}\n"
+        mangled_kwarg = "        mangled_class_names=MANGLED_CLASS_NAMES,\n"
+    # preprocess_common_skill looks a vtable's field list up by its CLASS name
+    # (the target), not by the artifact stem; "<class>_vtable" there reads as
+    # "unknown desired-fields symbol" and the preprocessor can never succeed.
+    fields_key = target if category == "vtable" else short
     return (TEMPLATE
+            .replace("@MANGLED@", mangled_decl)
+            .replace("@MANGLED_KWARG@", mangled_kwarg)
+            .replace("@FIELDS_KEY@", fields_key)
             .replace("@SYMBOL@", short)
             .replace("@TARGET@", target)
             .replace("@CATEGORY@", category)
@@ -256,7 +287,7 @@ def main():
             with open(path, "w", encoding="utf-8") as handle:
                 # filnavnet foelger TASKEN, indholdet foelger SYMBOLET
                 handle.write(render(symbol, category, fields,
-                                    target_name(paths, category, symbol)))
+                                    target_name(paths, category, symbol), mangled_names(paths)))
             if existing:
                 rewritten += 1
                 print(f"  ~ {os.path.basename(path)} ({category}, {mod_name}, baseline {version})")

@@ -3745,6 +3745,11 @@ async def preprocess_gen_func_sig_via_mcp(
                 print("    Preprocess: invalid extra_wildcard_offsets")
             return None
 
+    # Wildcard width is the operand's ENCODED field (up to the next field or the end of
+    # the instruction), not its data size: `movzx eax, byte [rip+X]` has a 1-byte dtype
+    # and a 4-byte displacement, and sizing by dtype left three displacement bytes pinned
+    # (CCSPointScript_OnCustomHudClicked on 14185: `0F B6 05 ?? 9C CE 01`). Same in the
+    # other signature generators below.
     py_code = (
         "import idaapi, ida_bytes, idautils, ida_ua, json\n"
         f"target_ea = {func_va_int}\n"
@@ -3801,7 +3806,7 @@ async def preprocess_gen_func_sig_via_mcp(
         "            if op_type in (int(idaapi.o_imm), int(idaapi.o_near), int(idaapi.o_far), int(idaapi.o_mem), int(idaapi.o_displ)):\n"
         "                offb = int(op.offb)\n"
         "                if offb > 0 and offb < insn.size:\n"
-        "                    dsz = ida_ua.get_dtype_size(getattr(op, 'dtype', getattr(op, 'dtyp', 0)))\n"
+        "                    dsz = (min([_o for _p in insn.ops for _o in (int(getattr(_p, 'offb', 0)), int(getattr(_p, 'offo', 0))) if _o > offb] + [insn.size]) - offb)\n"
         "                    if dsz <= 0:\n"
         "                        dsz = insn.size - offb\n"
         "                    end = min(insn.size, offb + dsz)\n"
@@ -3809,7 +3814,7 @@ async def preprocess_gen_func_sig_via_mcp(
         "                        wild.add(i)\n"
         "                offo = int(op.offo)\n"
         "                if offo > 0 and offo < insn.size:\n"
-        "                    dsz2 = ida_ua.get_dtype_size(getattr(op, 'dtype', getattr(op, 'dtyp', 0)))\n"
+        "                    dsz2 = (min([_o for _p in insn.ops for _o in (int(getattr(_p, 'offb', 0)), int(getattr(_p, 'offo', 0))) if _o > offo] + [insn.size]) - offo)\n"
         "                    if dsz2 <= 0:\n"
         "                        dsz2 = insn.size - offo\n"
         "                    end2 = min(insn.size, offo + dsz2)\n"
@@ -4274,14 +4279,14 @@ async def preprocess_gen_vfunc_sig_via_mcp(
         "        if ot in (int(idaapi.o_imm), int(idaapi.o_near), int(idaapi.o_far), int(idaapi.o_mem), int(idaapi.o_displ)):\n"
         "            offb = int(getattr(op, 'offb', 0))\n"
         "            if offb > 0 and offb < insn.size:\n"
-        "                dsz = ida_ua.get_dtype_size(getattr(op, 'dtype', getattr(op, 'dtyp', 0)))\n"
+        "                dsz = (min([_o for _p in insn.ops for _o in (int(getattr(_p, 'offb', 0)), int(getattr(_p, 'offo', 0))) if _o > offb] + [insn.size]) - offb)\n"
         "                if dsz <= 0:\n"
         "                    dsz = insn.size - offb\n"
         "                for i in range(offb, min(insn.size, offb + dsz)):\n"
         "                    wild.add(i)\n"
         "            offo = int(getattr(op, 'offo', 0))\n"
         "            if offo > 0 and offo < insn.size:\n"
-        "                dsz2 = ida_ua.get_dtype_size(getattr(op, 'dtype', getattr(op, 'dtyp', 0)))\n"
+        "                dsz2 = (min([_o for _p in insn.ops for _o in (int(getattr(_p, 'offb', 0)), int(getattr(_p, 'offo', 0))) if _o > offo] + [insn.size]) - offo)\n"
         "                if dsz2 <= 0:\n"
         "                    dsz2 = insn.size - offo\n"
         "                for i in range(offo, min(insn.size, offo + dsz2)):\n"
@@ -4735,7 +4740,7 @@ async def preprocess_gen_gv_sig_via_mcp(
         "            if op_type in (int(idaapi.o_imm), int(idaapi.o_near), int(idaapi.o_far), int(idaapi.o_mem), int(idaapi.o_displ)):\n"
         "                offb = int(getattr(op, 'offb', 0))\n"
         "                if offb > 0 and offb < insn.size:\n"
-        "                    dsz = ida_ua.get_dtype_size(getattr(op, 'dtype', getattr(op, 'dtyp', 0)))\n"
+        "                    dsz = (min([_o for _p in insn.ops for _o in (int(getattr(_p, 'offb', 0)), int(getattr(_p, 'offo', 0))) if _o > offb] + [insn.size]) - offb)\n"
         "                    if dsz <= 0:\n"
         "                        dsz = insn.size - offb\n"
         "                    end = min(insn.size, offb + dsz)\n"
@@ -4744,7 +4749,7 @@ async def preprocess_gen_gv_sig_via_mcp(
         "\n"
         "                offo = int(getattr(op, 'offo', 0))\n"
         "                if offo > 0 and offo < insn.size:\n"
-        "                    dsz2 = ida_ua.get_dtype_size(getattr(op, 'dtype', getattr(op, 'dtyp', 0)))\n"
+        "                    dsz2 = (min([_o for _p in insn.ops for _o in (int(getattr(_p, 'offb', 0)), int(getattr(_p, 'offo', 0))) if _o > offo] + [insn.size]) - offo)\n"
         "                    if dsz2 <= 0:\n"
         "                        dsz2 = insn.size - offo\n"
         "                    end2 = min(insn.size, offo + dsz2)\n"
@@ -7115,15 +7120,12 @@ async def preprocess_gen_struct_offset_sig_via_mcp(
         "                continue\n"
         "            offb = int(getattr(op, 'offb', 0))\n"
         "            offo = int(getattr(op, 'offo', 0))\n"
-        "            dtype_size = ida_ua.get_dtype_size(getattr(op, 'dtype', getattr(op, 'dtyp', 0)))\n"
-        "            if dtype_size <= 0:\n"
-        "                dtype_size = 4\n"
         "            if op_type in (int(idaapi.o_imm), int(idaapi.o_displ), int(idaapi.o_mem), int(idaapi.o_near), int(idaapi.o_far)):\n"
         "                if offb > 0 and offb < insn.size:\n"
-        "                    for idx in range(offb, min(insn.size, offb + dtype_size)):\n"
+        "                    for idx in range(offb, offb + (min([_o for _p in insn.ops for _o in (int(getattr(_p, 'offb', 0)), int(getattr(_p, 'offo', 0))) if _o > offb] + [insn.size]) - offb)):\n"
         "                        wild.add(idx)\n"
         "                if offo > 0 and offo < insn.size:\n"
-        "                    for idx in range(offo, min(insn.size, offo + dtype_size)):\n"
+        "                    for idx in range(offo, offo + (min([_o for _p in insn.ops for _o in (int(getattr(_p, 'offb', 0)), int(getattr(_p, 'offo', 0))) if _o > offo] + [insn.size]) - offo)):\n"
         "                        wild.add(idx)\n"
         "        b0 = raw[0]\n"
         "        if b0 in (0xE8, 0xE9, 0xEB):\n"

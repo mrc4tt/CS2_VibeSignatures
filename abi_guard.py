@@ -176,6 +176,23 @@ ABI_GUARDS = {
             "bad_heads": ["40 53 41 55 48 83 EC ? 83 BA"],  # stale template target (14181)
         },
     },
+    # CCSPointScript::OnCustomHudClicked(player, layout, buttonId) - the virtual that fires the
+    # script event; it builds "player"/"layout"/"buttonId" arguments and is reached only through
+    # the class vtable. From 14181 the relocation chain slid onto the JS binding
+    # point_script.OnCustomHudClicked(callback) instead, which only REGISTERS a callback
+    # ("Method %s.%s requires %d argument(s), (callback: function)"), and CounterStrikeSharp
+    # shipped that. IDA-verified on 14185 (0xb4ce10 real, 0xb27a80 binding); the good sig is
+    # unique on every build 14178b..14185 and equals the plugin's own template head.
+    # windows kept a 4-argument head (mov [rsp+20h],r9) since 14178b and is not guarded.
+    "CCSPointScript_OnCustomHudClicked": {
+        "css_template_key": "CCSPointScript_OnCustomHudClicked",
+        "linux": {
+            "good_sig": "55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB "
+            "48 83 EC ? 0F B6 05 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7B 30 00",
+            "accept_heads": ["55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB"],
+            "bad_heads": ["55 BE ? ? ? ? 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53"],  # JS binding
+        },
+    },
 }
 
 BINARY = {"linux": "libserver.so", "windows": "server.dll"}

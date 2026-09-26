@@ -430,7 +430,7 @@ def verify_vfunc_slot(blob, info, relocs, class_name, index, func_va):
 # per-category checks
 # ---------------------------------------------------------------------------
 
-def check_sig_field(rec, blob, info, field, sig, claim_va, out, pedantic=False):
+def check_sig_field(rec, blob, info, field, sig, claim_va, out, pedantic=False, max_match=1):
     pat = parse_sig(sig)
     if pat is None:
         out.error(rec, f"{field} is not parseable hex")
@@ -457,7 +457,7 @@ def check_sig_field(rec, blob, info, field, sig, claim_va, out, pedantic=False):
         elif len(vas) > 1:
             out.warn(rec, f"{field} matches {len(vas)} places, "
                           f"{[hex(v) for v in vas[:4]]}")
-    elif len(vas) > 1 and (field != "vfunc_sig" or out.pedantic):
+    elif len(vas) > max_match and (field != "vfunc_sig" or out.pedantic):
         # A vfunc_sig records where a slot is CALLED and the payload is the
         # index, so repeats are expected: INetworkMessages::GetLoggingChannel is
         # called four times inside one function. Only report it when asked.
@@ -609,7 +609,14 @@ def check_structmember(rec, d, blob, info, out):
     if d.get("offset") is None:
         out.error(rec, "structmember artifact has no offset")
     if d.get("offset_sig"):
-        check_sig_field(rec, blob, info, "offset_sig", d["offset_sig"], None, out, out.pedantic)
+        # the artifact may declare how many hits its signature is allowed: every one
+        # carries the same member offset (m_EntityKeyValuesAllocator's sig is 2, by
+        # the producing task's own choice), so only more than that is a finding
+        try:
+            max_match = max(1, int(d.get("offset_sig_max_match") or 1))
+        except (TypeError, ValueError):
+            max_match = 1
+        check_sig_field(rec, blob, info, "offset_sig", d["offset_sig"], None, out, out.pedantic, max_match)
 
 
 def check_patch(rec, d, blob, info, out):
