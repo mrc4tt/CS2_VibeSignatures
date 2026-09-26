@@ -1,0 +1,5 @@
+struct_name: CSmokeGrenadeProjectile
+member_name: m_SmokeVolume
+offset: '0xe90'
+offset_sig: 48 8D BB 90 0E 00 00 E8 ?? ?? ?? ?? 48 8B 43 ??
+offset_sig_disp: 0

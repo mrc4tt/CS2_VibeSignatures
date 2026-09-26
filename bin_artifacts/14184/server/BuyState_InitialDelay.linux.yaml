@@ -1,0 +1,6 @@
+struct_name: BuyState
+member_name: m_isInitialDelay
+offset: '0x8'
+size: 1
+offset_sig: 80 7F 08 00 74 ?? 48 8D 05 ?? ?? ?? ??
+offset_sig_disp: 0

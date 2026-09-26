@@ -1,0 +1,49 @@
+// CS2FOW private runtime compatibility data.
+// Verified against the public CS2 game version (14184).
+// Unknown binaries fail open. Keep exactly one fingerprint per platform.
+
+// Exact server binaries (file size and CRC32).
+server_binary_size_windows=34664088
+server_binary_crc32_windows=2778187156
+server_binary_size_linux=41765752
+server_binary_crc32_linux=563322988
+
+// CCheckTransmitInfo private layout.
+recipient_slot_offset_windows=576
+recipient_slot_offset_linux=576
+checktransmit_full_update_offset_windows=580
+checktransmit_full_update_offset_linux=580
+
+// GameResourceServiceServerV001 private layout in engine2.
+game_entity_system_offset_windows=88
+game_entity_system_offset_linux=80
+
+// Module-relative server function and vtable addresses.
+game_event_manager_vtable_rva_windows=26508104
+game_event_manager_vtable_rva_linux=40128824
+lookup_bone_rva_windows=11908960
+lookup_bone_rva_linux=23318352
+get_bone_transform_rva_windows=11847856
+get_bone_transform_rva_linux=23318912
+create_entity_by_name_rva_windows=12491456
+create_entity_by_name_rva_linux=24240576
+dispatch_spawn_rva_windows=13257424
+dispatch_spawn_rva_linux=25178176
+remove_entity_rva_windows=12759200
+remove_entity_rva_linux=24241376
+
+// CBaseEntity virtual function indexes used by temporary LOS debug beams.
+teleport_vtable_index_windows=165
+teleport_vtable_index_linux=164
+
+// CSmokeGrenadeProjectile::SmokeVolume private voxel layout.
+smoke_volume_offset_windows=3000
+smoke_volume_offset_linux=3728
+smoke_storage_offset_windows=112
+smoke_storage_offset_linux=112
+smoke_frame_offset_windows=236
+smoke_frame_offset_linux=236
+smoke_center_offset_windows=212
+smoke_center_offset_linux=212
+smoke_start_time_offset_windows=12
+smoke_start_time_offset_linux=12

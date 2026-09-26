@@ -1,0 +1,5 @@
+func_name: CCSBot_EquipBestWeapon
+func_va: '0xbfc8b0'
+func_rva: '0xbfc8b0'
+func_size: '0x232'
+func_sig: 55 48 89 E5 41 56 41 55 41 54 53 48 89 FB 48 83 EC ?? 40 84 F6

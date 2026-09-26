@@ -1,0 +1,5 @@
+struct_name: CMoveData
+member_name: AbsOrigin
+offset: '0xc8'
+size: 12
+offset_sig: F2 0F 11 85 C8 00 00 00 8B 40 08 89 85 D0 00 00 00

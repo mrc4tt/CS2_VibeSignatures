@@ -1,0 +1,8 @@
+func_name: CSaveRestoreBlockSet_PostRestore
+func_va: '0x16eff90'
+func_rva: '0x16eff90'
+func_size: '0x41'
+vtable_name: CSaveRestoreBlockSet
+vfunc_offset: '0x40'
+vfunc_index: 8
+vfunc_sig: FF 50 40 44 39 6B ?? 7F ?? 4C 8B AD ?? ?? ?? ??

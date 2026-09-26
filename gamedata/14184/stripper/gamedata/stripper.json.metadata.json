@@ -1,0 +1,45 @@
+{
+  "entries": [
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 48 89 54 24 ? 55 56 57 48 81 EC ? ? ? ?",
+          "before": "48 89 5C 24 ? 48 89 54 24 ? 55 56 57 48 81 EC",
+          "line": 5,
+          "path": [
+            "CWorldRendererMgr::CreateWorld_Internal",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 56 41 55 41 54 49 89 FC 53 48 89 F3 48 83 EC ? F6 46 ? ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 89 F3 48 81 EC ? ? ? ? F6 46",
+          "line": 6,
+          "path": [
+            "CWorldRendererMgr::CreateWorld_Internal",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6,
+        8
+      ],
+      "name": "CWorldRendererMgr::CreateWorld_Internal",
+      "updated": true
+    }
+  ],
+  "file": "stripper/gamedata/stripper.json",
+  "gamever": "14184",
+  "schema_version": 2,
+  "summary": {
+    "covered": 1,
+    "total": 1,
+    "updated": 1
+  }
+}

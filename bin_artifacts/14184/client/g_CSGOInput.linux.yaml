@@ -1,0 +1,8 @@
+gv_name: g_CSGOInput
+gv_va: '0x494d040'
+gv_rva: '0x494d040'
+gv_sig: 4C 8D 3D ?? ?? ?? ?? 4C 89 FF E8 ?? ?? ?? ?? 4C 89 FE
+gv_sig_va: '0x1b0b2d0'
+gv_inst_offset: 0
+gv_inst_length: 7
+gv_inst_disp: 3

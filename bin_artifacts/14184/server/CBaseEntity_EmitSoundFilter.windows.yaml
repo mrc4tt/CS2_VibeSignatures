@@ -1,0 +1,5 @@
+func_name: CBaseEntity_EmitSoundFilter
+func_va: '0x180f63da0'
+func_rva: '0xf63da0'
+func_size: '0x2c'
+func_sig: 40 53 48 83 EC ?? 4C 89 4C 24 ?? 48 8B D9 45 8B C8

@@ -1,0 +1,17 @@
+vtable_class: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
+vtable_symbol: ??_7?$CGameSystemReallocatingFactory@VCSpawnGroupMgrGameSystem@@V1@@@6B@
+vtable_va: '0x181803be8'
+vtable_rva: '0x1803be8'
+vtable_size: '0x50'
+vtable_numvfunc: 10
+vtable_entries:
+  0: '0x18055b560'
+  1: '0x18055b570'
+  2: '0x18055b580'
+  3: '0x18055b5a0'
+  4: '0x18055b610'
+  5: '0x18055b670'
+  6: '0x18055b590'
+  7: '0x18055b680'
+  8: '0x18055b690'
+  9: '0x18055b6a0'

@@ -1,0 +1,5 @@
+struct_name: CEntityIdentity
+member_name: m_designerName
+offset: '0x20'
+size: 8
+offset_sig: 48 8B 43 10 48 8B 48 20 48 85 C9 48 0F 45 D1
