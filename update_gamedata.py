@@ -28,6 +28,7 @@ import os
 import sys
 from urllib.parse import urlparse
 import shutil
+from dataclasses import replace
 from pathlib import Path
 
 from analysis_config import AnalysisConfigError, resolve_analysis_config
@@ -209,6 +210,7 @@ def _module_data(contract, base_config, base_data, base_maps, symbol_store, plat
         func_lib_map = build_function_library_map(merged_config)
         alias_map = build_alias_to_name_map(merged_config)
         yaml_data, diagnostics = load_all_yaml_data(merged_config, symbol_store, platforms, debug=debug)
+        diagnostics = _demote_unshipped(diagnostics, merged_config)
         print(f"  Using merged config with {len(func_lib_map)} function mappings")
         return yaml_data, func_lib_map, alias_map, diagnostics, findings
     except Exception as exc:
@@ -224,7 +226,54 @@ def _load_base_context(base_config, symbol_store, platforms, debug):
     func_lib_map = build_function_library_map(base_config)
     alias_map = build_alias_to_name_map(base_config)
     yaml_data, diagnostics = load_all_yaml_data(base_config, symbol_store, platforms, debug=debug)
-    return yaml_data, (func_lib_map, alias_map), diagnostics, findings
+    return yaml_data, (func_lib_map, alias_map), _demote_unshipped(diagnostics, base_config), findings
+
+
+# A missing artifact only matters when some plugin would ship its key: then the plugin
+# keeps its template text (rule 20). Pack and the run already waive what no enabled
+# generator reads; generation now agrees, instead of failing the autopilot gate on
+# symbols only CS2Fixes/modsharp/cs2kz (all disabled) or nobody reads - which is what
+# held 14183, 14184 and 14185 back.
+_UNSHIPPED_DEMOTABLE_REASONS = frozenset({"missing_yaml", "structmember_yaml_missing"})
+
+
+def _enabled_generator_keys():
+    import ida_analyze_bin
+
+    return ida_analyze_bin.generator_consumed_names(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), ida_analyze_bin.GENERATORS_DIRNAME)
+    )
+
+
+def _symbol_key_names(config):
+    names = {}
+    for module in config.get("modules", []) or []:
+        for symbol in module.get("symbols", []) or []:
+            name = symbol.get("name")
+            if not name:
+                continue
+            keys = names.setdefault(name, {name})
+            for alias in symbol.get("alias") or []:
+                keys.add(str(alias).replace("::", "_"))
+    return names
+
+
+def _demote_unshipped(diagnostics, config, shipped_keys=None):
+    """Missing-artifact warnings for symbols no enabled plugin ships become info."""
+    if not diagnostics:
+        return diagnostics
+    shipped = _enabled_generator_keys() if shipped_keys is None else shipped_keys
+    key_names = _symbol_key_names(config)
+    result = []
+    for diagnostic in diagnostics:
+        if (
+            diagnostic.severity == "warning"
+            and diagnostic.reason in _UNSHIPPED_DEMOTABLE_REASONS
+            and not (key_names.get(diagnostic.symbol, {diagnostic.symbol}) & shipped)
+        ):
+            diagnostic = replace(diagnostic, severity="info", detail="no enabled plugin ships this key")
+        result.append(diagnostic)
+    return result
 
 
 def _seed_output_root(modules, output_root, keep_existing=False):

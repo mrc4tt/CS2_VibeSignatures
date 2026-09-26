@@ -447,6 +447,8 @@ class TestGenerateGamedataDiagnostics(unittest.TestCase):
                 patch.object(update_gamedata, "open_snapshot_store", return_value=RecordingStore()),
                 patch.object(update_gamedata, "discover_generator_modules", return_value=[contract]),
                 patch.object(update_gamedata, "generator_contract_sha256", return_value="contract-sha256"),
+                # fixture symbols ship in no real generator; keep them warnings here
+                patch.object(update_gamedata, "_demote_unshipped", side_effect=lambda diagnostics, _config: diagnostics),
                 redirect_stdout(output),
             ):
                 update_gamedata.generate_gamedata(
@@ -512,3 +514,46 @@ class TestGenerateGamedataDiagnostics(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDemoteUnshipped(unittest.TestCase):
+    def _diag(self, symbol, reason="missing_yaml", severity="warning"):
+        from gamedata_diagnostics import GamedataDiagnostic
+
+        return GamedataDiagnostic(
+            reason=reason,
+            severity=severity,
+            module="server",
+            symbol=symbol,
+            category="func",
+            platform="linux",
+            canonical_path=f"server/{symbol}.linux.yaml",
+        )
+
+    def test_only_keys_an_enabled_plugin_ships_stay_warnings(self) -> None:
+        import update_gamedata
+
+        config = {
+            "modules": [
+                {
+                    "name": "server",
+                    "symbols": [
+                        {"name": "Shipped"},
+                        {"name": "ShippedByAlias", "alias": ["CFoo::Bar"]},
+                        {"name": "OnlyDisabledReads"},
+                    ],
+                }
+            ]
+        }
+        result = update_gamedata._demote_unshipped(
+            [
+                self._diag("Shipped"),
+                self._diag("ShippedByAlias"),
+                self._diag("OnlyDisabledReads"),
+                self._diag("OnlyDisabledReads", reason="patch_yaml_missing_or_invalid"),
+            ],
+            config,
+            shipped_keys=frozenset({"Shipped", "CFoo_Bar"}),
+        )
+        self.assertEqual(["warning", "warning", "info", "warning"], [d.severity for d in result])
+        self.assertEqual("no enabled plugin ships this key", result[2].detail)

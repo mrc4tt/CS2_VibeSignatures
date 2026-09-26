@@ -9,6 +9,7 @@ import sys
 import threading
 import time
 import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -36,6 +37,52 @@ class AgentCommand:
     args: list[str]
     input_text: str | None
     retry_target_desc: str
+
+
+try:
+    import fcntl
+except ImportError:  # windows: no cap, one binary at a time there anyway
+    fcntl = None
+
+AGENT_SLOT_POLL_SECONDS = 5
+
+
+@contextmanager
+def agent_slot():
+    """Hold one of CS2VIBE_AGENT_JOBS agent slots, shared by every process of a run.
+
+    ida_analyze_bin -jobs runs one child per binary, and each may start agents; the
+    slots are flock'd files in CS2VIBE_AGENT_SLOT_DIR, so the cap holds across those
+    processes and a slot frees itself when its holder dies. Unset or 0: no cap.
+    """
+    try:
+        slots = int(os.environ.get("CS2VIBE_AGENT_JOBS", "0") or 0)
+    except ValueError:
+        slots = 0
+    slot_dir = os.environ.get("CS2VIBE_AGENT_SLOT_DIR")
+    if slots <= 0 or not slot_dir or fcntl is None:
+        yield
+        return
+    os.makedirs(slot_dir, exist_ok=True)
+    announced = False
+    while True:
+        for index in range(slots):
+            handle = open(os.path.join(slot_dir, f"slot{index}.lock"), "w")
+            try:
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                handle.close()
+                continue
+            try:
+                yield
+            finally:
+                fcntl.flock(handle, fcntl.LOCK_UN)
+                handle.close()
+            return
+        if not announced:
+            print(f"    Waiting for a free agent slot ({slots} in use, CS2VIBE_AGENT_JOBS)")
+            announced = True
+        time.sleep(AGENT_SLOT_POLL_SECONDS)
 
 
 class NonRetryableOutputError(RuntimeError):
@@ -701,14 +748,15 @@ def _run_skill_attempts(
         stopped_for_outputs = False
         try:
             try:
-                result = _run_process_with_stream_capture(
-                    command.args,
-                    agent_input=command.input_text,
-                    debug=debug,
-                    timeout=SKILL_TIMEOUT,
-                    env=process_env,
-                    stop_when=outputs_arrived if expected_yaml_paths else None,
-                )
+                with agent_slot():
+                    result = _run_process_with_stream_capture(
+                        command.args,
+                        agent_input=command.input_text,
+                        debug=debug,
+                        timeout=SKILL_TIMEOUT,
+                        env=process_env,
+                        stop_when=outputs_arrived if expected_yaml_paths else None,
+                    )
             except StoppedForOutputs:
                 stopped_for_outputs = True
             finally:

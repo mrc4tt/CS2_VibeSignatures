@@ -349,3 +349,27 @@ class VerifyVfuncSlotTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OffsetSigMaxMatchTests(unittest.TestCase):
+    """CEntitySystem_m_EntityKeyValuesAllocator declares offset_sig_max_match: 2."""
+
+    def _run(self, max_match):
+        blob = bytearray(0x3000)
+        sig = bytes.fromhex("4981C5AABBCCDDE8")
+        blob[0x100:0x108] = sig
+        blob[0x200:0x208] = sig
+        rec = {"path": "p", "module": "server", "platform": "linux", "symbol": "S",
+               "category": "structmember", "binary": "libserver.so"}
+        d = {"offset": "0xd58", "offset_sig": "49 81 C5 ?? ?? ?? ?? E8"}
+        if max_match is not None:
+            d["offset_sig_max_match"] = max_match
+        out = va.Report()
+        va.check_structmember(rec, d, bytes(blob), _fake_info(), out)
+        return out.warnings
+
+    def test_declared_repeats_are_not_a_finding(self):
+        self.assertEqual([], self._run(2))
+
+    def test_undeclared_repeats_still_warn(self):
+        self.assertEqual(1, len(self._run(None)))

@@ -2271,7 +2271,7 @@ class TestPostProcessMcpExecution(unittest.IsolatedAsyncioTestCase):
 class TestStartIdalibMcp(unittest.TestCase):
     @patch.object(ida_analyze_bin, "wait_for_port", return_value=True)
     @patch("ida_analyze_bin.subprocess.Popen")
-    def test_start_idalib_mcp_non_debug_discards_server_output(
+    def test_start_idalib_mcp_discards_output_when_no_log_can_be_written(
         self,
         mock_popen,
         _mock_wait_for_port,
@@ -2305,6 +2305,93 @@ class TestStartIdalibMcp(unittest.TestCase):
         )
         self.assertEqual(ida_analyze_bin.subprocess.DEVNULL, kwargs["stdout"])
         self.assertEqual(ida_analyze_bin.subprocess.DEVNULL, kwargs["stderr"])
+
+    @patch.object(ida_analyze_bin, "wait_for_port", return_value=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    def test_start_idalib_mcp_logs_server_output_beside_the_binary(
+        self,
+        mock_popen,
+        _mock_wait_for_port,
+    ) -> None:
+        with TemporaryDirectory() as tmp, patch.object(ida_analyze_bin, "is_port_in_use", return_value=False):
+            binary = os.path.join(tmp, "libclient.so")
+            ida_analyze_bin.start_idalib_mcp(binary, host="127.0.0.1", port=13337, debug=False)
+
+            _args, kwargs = mock_popen.call_args
+            self.assertEqual(binary + ".idalib-mcp.log", kwargs["stdout"].name)
+            self.assertIs(kwargs["stdout"], kwargs["stderr"])
+            self.assertTrue(kwargs["start_new_session"])
+
+    @patch.object(ida_analyze_bin, "wait_for_port_release", return_value=True)
+    @patch.object(ida_analyze_bin, "_terminate_process_group")
+    @patch("ida_analyze_bin.os.killpg", create=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    def test_start_idalib_mcp_retries_once_after_a_failed_start(
+        self,
+        mock_popen,
+        _killpg,
+        terminate,
+        _release,
+    ) -> None:
+        dead = MagicMock(pid=111)
+        dead.poll.return_value = 3
+        alive = MagicMock(pid=222)
+        mock_popen.side_effect = [dead, alive]
+
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=False),
+            patch.object(ida_analyze_bin, "wait_for_port", side_effect=[False, True]) as wait,
+            patch("sys.stdout", new_callable=io.StringIO) as out,
+        ):
+            Path(tmp, "libengine2.so.i64").write_bytes(b"")
+            process = ida_analyze_bin.start_idalib_mcp(
+                os.path.join(tmp, "libengine2.so"), host="127.0.0.1", port=13337, debug=False
+            )
+
+        self.assertIs(alive, process)
+        self.assertEqual(2, mock_popen.call_count)
+        terminate.assert_called_once_with(dead, 13337)
+        self.assertIn("exited with code 3 before opening its port", out.getvalue())
+        # an existing IDB gets the warm budget, and the wait watches the process
+        first = wait.call_args_list[0]
+        self.assertEqual(ida_analyze_bin.MCP_WARM_STARTUP_TIMEOUT, first.kwargs["timeout"])
+        self.assertIs(dead, first.kwargs["process"])
+
+    @patch.object(ida_analyze_bin, "wait_for_port_release", return_value=True)
+    @patch.object(ida_analyze_bin, "_terminate_process_group")
+    @patch("ida_analyze_bin.os.killpg", create=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    def test_start_idalib_mcp_gives_up_after_the_retry(
+        self,
+        mock_popen,
+        _killpg,
+        _terminate,
+        _release,
+    ) -> None:
+        stuck = MagicMock(pid=333)
+        stuck.poll.return_value = None
+        mock_popen.return_value = stuck
+
+        with (
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=False),
+            patch.object(ida_analyze_bin, "wait_for_port", return_value=False) as wait,
+            patch("sys.stdout", new_callable=io.StringIO),
+        ):
+            process = ida_analyze_bin.start_idalib_mcp(
+                "bin/14160/client/libclient.so", host="127.0.0.1", port=13337, debug=False
+            )
+
+        self.assertIsNone(process)
+        self.assertEqual(ida_analyze_bin.MCP_STARTUP_ATTEMPTS, mock_popen.call_count)
+        self.assertEqual(ida_analyze_bin.MCP_STARTUP_TIMEOUT, wait.call_args.kwargs["timeout"])
+
+    def test_wait_for_port_stops_when_the_process_exits(self) -> None:
+        dead = MagicMock()
+        dead.poll.return_value = 1
+        with patch("ida_analyze_bin.time.sleep") as sleep:
+            self.assertFalse(ida_analyze_bin.wait_for_port("127.0.0.1", 1, timeout=600, process=dead))
+        sleep.assert_not_called()
 
     @patch.object(ida_analyze_bin, "is_port_in_use", return_value=True, create=True)
     @patch("ida_analyze_bin.subprocess.Popen")

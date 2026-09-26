@@ -394,6 +394,14 @@ move, and no gamedata update did either — nothing ships that key yet). Re-meas
 `validate_artifacts.py -gamever <VER> -json`, which prints `artifacts`, `slot_verified`, `errors`
 and `warnings` in one object.
 
+**Generation warns only about keys a plugin actually ships.** A `missing_yaml` (or
+`structmember_yaml_missing`) for a symbol whose name and aliases appear in no ENABLED
+generator's file is printed as `info` with "no enabled plugin ships this key", the same
+payer rule pack and the run apply. Without it the autopilot gate failed 14183 (17),
+14184 (24) and 14185 (23) on symbols only CS2Fixes/modsharp/cs2kz (disabled) or nobody
+read, and nothing deployed after 14182. A missing key an enabled plugin ships is still
+a warning and still blocks - that is the case where a plugin keeps its template text.
+
 Every remaining warning is `func_size`. On 14181 all 19 are now the explicit `0x0`
 (unknown, see rule 14). 14180 and 14178b add two "does not end on padding" advisories each
 on tightly packed GCC code (`BuyState_OnUpdate.windows`, `CCSGameRules_SameMapTeardown.windows`),
@@ -547,6 +555,24 @@ uv run idalib-mcp --unsafe --host 127.0.0.1 --port 13337 bin/<VER>/server/libser
 ```
 
 One instance serves ONE binary, so Windows work wants a second instance on another port.
+
+**Within one run, binaries go side by side** (`-jobs` / `CS2VIBE_JOBS`, which the run
+scripts default to `auto`). IDA is single-threaded per database, so the only way to use
+more cores is more databases: the parent starts one `ida_analyze_bin.py` child per
+(module, platform), heaviest first so server starts at once, each with its own idalib and
+dynamic port, and prefixes its output `[server/linux]`. Every stage of one module stays in
+that one child, in config order, because the stages share an IDB. `auto` =
+min(cores, RAM / 6 GiB, binaries). A task whose input another binary has not produced yet
+is deferred as before; the parent runs the deferred ones after every child exits, ready
+ones first and again until no progress, so a chain of deferrals resolves.
+Agents are capped separately, across all children, by `CS2VIBE_AGENT_JOBS` (default 3,
+flock'd slot files): they wait on the API, not a core, and the plan's rate limit is the
+real bound. `-vcall_finder`, `-force_all`, `-selected_execution` and the redis reporter
+stay sequential. `CS2VIBE_JOBS=1` is the old behaviour.
+
+A failed idalib start no longer costs 1200 s blind: output goes to
+`<binary>.idalib-mcp.log`, the wait ends as soon as the process exits, an existing IDB
+gets 300 s, and one retry follows (14185's engine open stalled 20 min, then opened in 2 s).
 
 The aux-file cleanup no longer touches a live database either. `.id0/.id1/.id2/.nam/.til` are what
 an OPEN database works in and `.i64` is the packed form written on close, so a set with no owner is

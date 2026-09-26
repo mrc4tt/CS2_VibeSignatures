@@ -48,9 +48,11 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 from binary_hashing import hash_file
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -144,6 +146,16 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = int(os.environ.get("CS2VIBE_MCP_PORT", "13337"))
 POST_PROCESS_FUNC_RENAME_BATCH_SIZE = 50
 MCP_STARTUP_TIMEOUT = 1200  # seconds to wait for MCP server
+# A warm IDB opens in seconds (2-30s measured on 14185), so waiting the full cold
+# timeout on one only hides a stuck start: 14185's linux engine open sat 20 minutes
+# at 15:21 and then opened in 2s when retried at 15:41.
+MCP_WARM_STARTUP_TIMEOUT = 300
+MCP_STARTUP_ATTEMPTS = 2
+# -jobs auto: one idalib per binary, bounded by cores and by memory. A warm libserver
+# IDB is the largest resident one; this is the budget per concurrent binary.
+PARALLEL_JOB_MEMORY_BYTES = 6 * 1024**3
+# agents wait on the API rather than the CPU, so they get their own cap
+DEFAULT_PARALLEL_AGENT_JOBS = 3
 MCP_SHUTDOWN_TIMEOUT = 10.0
 QEXIT_CONNECTION_RESET_MARKER = "[WinError 10054]"
 OPENED_BINARY_VERIFY_TIMEOUT = 60.0
@@ -1754,6 +1766,16 @@ def parse_args():
     parser.add_argument("-ida_args", default="", help="Additional arguments for idalib-mcp (optional)")
     parser.add_argument("-debug", action="store_true", help="Enable debug output")
     parser.add_argument(
+        "-jobs",
+        default=os.environ.get("CS2VIBE_JOBS", "1"),
+        help=(
+            "Binaries analysed at the same time: a number, or 'auto' for min(cores, memory / 6 GiB, "
+            "binaries). Each gets its own idalib-mcp process; stages of one binary stay in order "
+            "(default: 1, or set CS2VIBE_JOBS). Agents are capped separately by CS2VIBE_AGENT_JOBS."
+        ),
+    )
+    parser.add_argument("-deferred_out", default=None, help=argparse.SUPPRESS)
+    parser.add_argument(
         "-skip_error",
         action="store_true",
         help="Continue analysis after skill or preprocessor failures",
@@ -1836,6 +1858,11 @@ def parse_args():
     for p in args.platforms:
         if p not in valid_platforms:
             parser.error(f"Invalid platform: {p}. Must be one of: {', '.join(valid_platforms)}")
+
+    try:
+        _resolve_jobs(args.jobs, 1)
+    except ValueError as e:
+        parser.error(str(e))
 
     # Parse modules filter
     if args.modules == "*":
@@ -3512,7 +3539,7 @@ def get_binary_path(bin_dir, gamever, module_name, module_path):
     return os.path.join(bin_dir, gamever, module_name, filename)
 
 
-def wait_for_port(host, port, timeout=60):
+def wait_for_port(host, port, timeout=60, process=None):
     """
     Wait for a port to become available.
 
@@ -3520,12 +3547,15 @@ def wait_for_port(host, port, timeout=60):
         host: Host address
         port: Port number
         timeout: Maximum time to wait in seconds
+        process: Optional Popen; stop waiting as soon as it has exited
 
     Returns:
-        True if port is available, False if timeout
+        True if port is available, False if timeout or the process exited
     """
     start = time.time()
     while time.time() - start < timeout:
+        if process is not None and process.poll() is not None:
+            return False
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
@@ -3609,6 +3639,27 @@ def _allocate_local_port(host: str = DEFAULT_HOST) -> int:
         sock.bind((host, 0))
         return int(sock.getsockname()[1])
 
+def _idalib_mcp_log_path(binary_path):
+    return f"{binary_path}.idalib-mcp.log"
+
+
+def _open_idalib_mcp_log(binary_path):
+    """Append-mode log beside the binary, or None when it cannot be written."""
+    try:
+        return open(_idalib_mcp_log_path(binary_path), "ab")
+    except OSError:
+        return None
+
+
+def _idalib_mcp_log_tail(binary_path, lines=15):
+    try:
+        with open(_idalib_mcp_log_path(binary_path), "rb") as handle:
+            text = handle.read()[-8192:].decode("utf-8", errors="replace")
+    except OSError:
+        return ""
+    return "\n".join(text.strip().splitlines()[-lines:])
+
+
 def start_idalib_mcp(
     binary_path,
     host=DEFAULT_HOST,
@@ -3630,6 +3681,11 @@ def start_idalib_mcp(
 
     Returns:
         subprocess.Popen object if successful, None if failed
+
+    Without debug or explicit streams, the server's output goes to
+    ``<binary>.idalib-mcp.log`` so a failed start leaves evidence. A start that
+    exits or times out is retried once (``MCP_STARTUP_ATTEMPTS``); an existing
+    IDB gets ``MCP_WARM_STARTUP_TIMEOUT`` instead of the cold-analysis timeout.
     """
     if is_port_in_use(host, port):
         print(f"  Error: MCP port {host}:{port} is already in use")
@@ -3642,29 +3698,54 @@ def start_idalib_mcp(
 
     cmd.append(binary_path)
 
-    print(f"  Starting idalib-mcp: {' '.join(cmd)}")
-
-    try:
-        if debug or stdout is not None or stderr is not None:
-            process = subprocess.Popen(cmd, stdout=stdout, stderr=stderr)
-        else:
-            process = subprocess.Popen(
-                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True
-            )
+    timeout = MCP_WARM_STARTUP_TIMEOUT if _has_ida_database(binary_path) else MCP_STARTUP_TIMEOUT
+    for attempt in range(1, MCP_STARTUP_ATTEMPTS + 1):
+        print(f"  Starting idalib-mcp: {' '.join(cmd)}")
+        log_handle = None
+        own_session = not (debug or stdout is not None or stderr is not None)
+        try:
+            if not own_session:
+                process = subprocess.Popen(cmd, stdout=stdout, stderr=stderr)
+            else:
+                log_handle = _open_idalib_mcp_log(binary_path)
+                sink = log_handle if log_handle is not None else subprocess.DEVNULL
+                process = subprocess.Popen(cmd, stdout=sink, stderr=sink, start_new_session=True)
+        except Exception as e:
+            print(f"  Error starting idalib-mcp: {e}")
+            return None
+        finally:
+            # the child holds its own descriptor
+            if log_handle is not None:
+                log_handle.close()
 
         # Wait for MCP server to be ready
         print(f"  Waiting for MCP server on {host}:{port}...")
-        if not wait_for_port(host, port, timeout=MCP_STARTUP_TIMEOUT):
-            print(f"  Error: MCP server failed to start within {MCP_STARTUP_TIMEOUT} seconds")
-            _terminate_process_group(process, port)
-            return None
+        if wait_for_port(host, port, timeout=timeout, process=process):
+            print("  MCP server port is ready")
+            return process
 
-        print("  MCP server port is ready")
-        return process
-
-    except Exception as e:
-        print(f"  Error starting idalib-mcp: {e}")
-        return None
+        code = process.poll()
+        if code is not None:
+            print(f"  Error: idalib-mcp exited with code {code} before opening its port")
+        else:
+            print(f"  Error: MCP server failed to start within {timeout} seconds")
+        tail = _idalib_mcp_log_tail(binary_path)
+        if tail:
+            print(f"  idalib-mcp log ({_idalib_mcp_log_path(binary_path)}):")
+            for line in tail.splitlines():
+                print(f"    {line}")
+        _terminate_process_group(process, port)
+        if own_session and hasattr(os, "killpg"):
+            # own session, so pgid == pid; a supervisor that already exited is
+            # skipped above, while its idalib worker may still hold the database
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except OSError:
+                pass
+        if attempt < MCP_STARTUP_ATTEMPTS:
+            wait_for_port_release(host, port)
+            print(f"  Retrying idalib-mcp start ({attempt + 1}/{MCP_STARTUP_ATTEMPTS})")
+    return None
 
 
 def _report_skill_status(reporting, job_id, skill_name, status, phase, **details):
@@ -6056,7 +6137,192 @@ def _retry_deferred_skills(args, modules, reporting, found_vcall_objects):
     return counts
 
 
+def _memory_bound_jobs():
+    try:
+        total = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+    except (AttributeError, OSError, ValueError):
+        return os.cpu_count() or 1
+    return max(1, total // PARALLEL_JOB_MEMORY_BYTES)
+
+
+def _resolve_jobs(value, group_count):
+    """Concurrent binaries for -jobs: a number, or 'auto' from cores and memory."""
+    raw = str(value or "1").strip().lower()
+    if raw == "auto":
+        wanted = min(os.cpu_count() or 1, _memory_bound_jobs())
+    else:
+        try:
+            wanted = int(raw)
+        except ValueError:
+            raise ValueError(f"-jobs must be a number or 'auto', got {value!r}") from None
+    return max(1, min(wanted, group_count))
+
+
+def _parallel_groups(modules, platforms):
+    """(module name, platform) per binary, heaviest first.
+
+    A module name repeats across stages, and those stages share one binary and so
+    one IDB; they stay together, in config order, in one child. Heaviest first so
+    server, the long pole, starts at once instead of behind the small modules.
+    """
+    weights = {}
+    for module in modules:
+        for platform in platforms:
+            if not module.get(f"path_{platform}"):
+                continue
+            key = (module["name"], platform)
+            weights[key] = weights.get(key, 0) + len(module.get("skills", []))
+    order = {key: index for index, key in enumerate(weights)}
+    return sorted(weights, key=lambda key: (-weights[key], order[key]))
+
+
+def _parallel_unsupported_reason(args):
+    for label, present in (
+        ("-selected_execution", getattr(args, "selected_execution", None)),
+        ("-force_all", getattr(args, "force_all", False)),
+        ("-vcall_finder", args.vcall_finder_filter is not None),
+        ("-process_reporter redis", getattr(args, "process_reporter", "none") != "none"),
+    ):
+        if present:
+            return label
+    return None
+
+
+def _child_command(args, module_name, platform, deferred_out):
+    # argparse keeps the last occurrence, so the overrides go after the original argv
+    return [
+        sys.executable,
+        os.path.abspath(__file__),
+        *sys.argv[1:],
+        "-modules",
+        module_name,
+        "-platform",
+        platform,
+        "-jobs",
+        "1",
+        "-deferred_out",
+        deferred_out,
+    ]
+
+
+def _write_child_result(path, totals, aborted, found_vcall_objects):
+    payload = {
+        "totals": totals,
+        "aborted": aborted,
+        "deferred": [[m, p, s, list(inputs)] for m, p, s, inputs in _DEFERRED_INPUT_SKILLS],
+        "found_vcall_objects": sorted(found_vcall_objects),
+    }
+    _atomic_write_bytes(Path(path), json.dumps(payload).encode("utf-8"))
+
+
+def _run_ready_deferred(args, modules, reporting, found_vcall_objects):
+    """Deferred retry in dependency order.
+
+    With binaries running side by side a deferred task can wait on another deferred
+    task's output, so the ready ones run first and the rest are rechecked, until a
+    pass makes no progress; whatever still waits is then failed by the usual retry.
+    """
+    counts = [0, 0, 0]
+    pending = list(_DEFERRED_INPUT_SKILLS)
+    while True:
+        ready = [entry for entry in pending if all(os.path.exists(p) for p in entry[3])]
+        if not ready:
+            break
+        pending = [entry for entry in pending if entry not in ready]
+        _DEFERRED_INPUT_SKILLS[:] = ready
+        result = _retry_deferred_skills(args, modules, reporting, found_vcall_objects)
+        counts = [total + count for total, count in zip(counts, result)]
+        # anything deferred again during that pass waits with the rest
+        pending.extend(_DEFERRED_INPUT_SKILLS)
+    _DEFERRED_INPUT_SKILLS[:] = pending
+    if pending:
+        result = _retry_deferred_skills(args, modules, reporting, found_vcall_objects)
+        counts = [total + count for total, count in zip(counts, result)]
+    return counts
+
+
+def _execute_parallel(args, modules, reporting, jobs, groups):
+    print(f"\nAnalysing {len(groups)} binaries, {jobs} at a time: "
+          + ", ".join(f"{name}/{platform}" for name, platform in groups))
+    workdir = tempfile.mkdtemp(prefix="cs2vibe-jobs-")
+    env = dict(os.environ)
+    env["CS2VIBE_JOBS"] = "1"
+    env.setdefault("CS2VIBE_AGENT_JOBS", str(DEFAULT_PARALLEL_AGENT_JOBS))
+    env.setdefault("CS2VIBE_AGENT_SLOT_DIR", os.path.join(workdir, "agent-slots"))
+    print(f"Agents at a time: {env['CS2VIBE_AGENT_JOBS']} (CS2VIBE_AGENT_JOBS)")
+    output_lock = threading.Lock()
+    stop = threading.Event()
+    skip_error = getattr(args, "skip_error", False)
+
+    def run(group):
+        name, platform = group
+        if stop.is_set():
+            return None
+        result_path = os.path.join(workdir, f"{name}.{platform}.json")
+        prefix = f"[{name}/{platform}] "
+        with output_lock:
+            print(f"{prefix}started")
+        process = subprocess.Popen(
+            _child_command(args, name, platform, result_path),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
+            text=True,
+            errors="replace",
+            bufsize=1,
+            env=env,
+        )
+        for line in process.stdout:
+            with output_lock:
+                sys.stdout.write(prefix + line)
+        code = process.wait()
+        try:
+            with open(result_path, encoding="utf-8") as handle:
+                payload = json.load(handle)
+        except (OSError, ValueError):
+            payload = {"totals": [0, 1, 0], "aborted": True, "deferred": [], "found_vcall_objects": []}
+            with output_lock:
+                print(f"{prefix}exited with code {code} and no result")
+        failed = payload["totals"][1] or payload["aborted"]
+        with output_lock:
+            print(f"{prefix}finished: ok {payload['totals'][0]}, failed {payload['totals'][1]}, "
+                  f"skipped {payload['totals'][2]}")
+        if failed and not skip_error:
+            stop.set()
+        return payload
+
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        payloads = list(pool.map(run, groups))
+
+    totals = [0, 0, 0]
+    found_vcall_objects = set()
+    for payload in payloads:
+        if payload is None:
+            continue
+        totals = [total + count for total, count in zip(totals, payload["totals"])]
+        found_vcall_objects.update(payload["found_vcall_objects"])
+        _DEFERRED_INPUT_SKILLS.extend((m, p, s, tuple(inputs)) for m, p, s, inputs in payload["deferred"])
+    aborted = stop.is_set()
+    if aborted:
+        not_started = [f"{name}/{platform}" for (name, platform), payload in zip(groups, payloads) if payload is None]
+        print("  Aborting remaining modules after binary processing failure"
+              + (f" (not started: {', '.join(not_started)})" if not_started else ""))
+    elif _DEFERRED_INPUT_SKILLS:
+        retry_counts = _run_ready_deferred(args, modules, reporting, found_vcall_objects)
+        totals = [total + count for total, count in zip(totals, retry_counts)]
+    return totals, aborted
+
+
 def _execute_analysis(args, modules, reporting):
+    child_result = getattr(args, "deferred_out", None)
+    if not child_result:
+        groups = _parallel_groups(modules, args.platforms)
+        jobs = _resolve_jobs(getattr(args, "jobs", "1"), len(groups))
+        if jobs > 1:
+            reason = _parallel_unsupported_reason(args)
+            if reason is None:
+                return _execute_parallel(args, modules, reporting, jobs, groups)
+            print(f"  -jobs {args.jobs} ignored with {reason}; analysing one binary at a time")
     totals = [0, 0, 0]
     all_vcall_objects = list((args.vcall_finder_filter or {}).get("names", []))
     found_vcall_objects = set()
@@ -6075,6 +6341,10 @@ def _execute_analysis(args, modules, reporting):
                 print("  Continuing after binary processing failure (-skip_error)")
         if abort_processing:
             break
+    if child_result:
+        # the parent retries deferred tasks once every binary has run
+        _write_child_result(child_result, totals, abort_processing, found_vcall_objects)
+        return totals, abort_processing
     if not abort_processing and _DEFERRED_INPUT_SKILLS:
         retry_counts = _retry_deferred_skills(args, modules, reporting, found_vcall_objects)
         totals = [total + count for total, count in zip(totals, retry_counts)]
