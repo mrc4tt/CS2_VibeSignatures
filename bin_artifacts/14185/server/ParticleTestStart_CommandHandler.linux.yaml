@@ -1,0 +1,5 @@
+func_name: ParticleTestStart_CommandHandler
+func_va: '0x17a2910'
+func_rva: '0x17a2910'
+func_size: '0x3e'
+func_sig: 55 48 89 E5 53 48 8D 1D ?? ?? ?? ?? 48 83 EC ?? 83 BE ?? ?? ?? ?? ??

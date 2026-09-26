@@ -1,0 +1,7 @@
+func_name: CSource2Server_OnStreamEntitiesFromFileCompleted
+func_va: '0x19997a0'
+func_rva: '0x19997a0'
+func_size: '0x1'
+vtable_name: CSource2Server_vtable2
+vfunc_offset: '0x0'
+vfunc_index: 0

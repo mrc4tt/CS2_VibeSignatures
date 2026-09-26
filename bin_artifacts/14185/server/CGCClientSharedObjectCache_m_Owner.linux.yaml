@@ -1,0 +1,5 @@
+struct_name: CGCClientSharedObjectCache
+member_name: m_Owner
+offset: '0x28'
+size: 8
+offset_sig: 48 8B 47 28 48 8B 57 30 C3

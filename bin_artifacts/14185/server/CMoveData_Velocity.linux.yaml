@@ -1,0 +1,5 @@
+struct_name: CMoveData
+member_name: Velocity
+offset: "0x38"
+size: 12
+offset_sig: "41 0F 13 45 38 F3 0F 10 ?? 34"

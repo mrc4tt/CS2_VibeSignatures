@@ -1,0 +1,7 @@
+func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
+func_va: '0x16fafe0'
+func_rva: '0x16fafe0'
+func_size: '0x64'
+vtable_name: CGameSystemReallocatingFactory_CSource2EntitySystem
+vfunc_offset: '0x18'
+vfunc_index: 3

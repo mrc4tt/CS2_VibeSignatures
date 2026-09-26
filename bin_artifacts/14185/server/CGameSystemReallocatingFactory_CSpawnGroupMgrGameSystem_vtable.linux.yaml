@@ -1,0 +1,5 @@
+func_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable
+func_va: '0x256b6a8'
+func_rva: '0x256b6a8'
+func_size: '0x50'
+func_sig: 'C0 EE F1 00 00 00 00 00 D0 EE F1 00 00 00 00 00 E0 EE F1 00 00 00 00 00 70 95 F4 00 00 00 00 00 B0 75 F2 00 00 00 00 00 F0 EE F1 00 00 00 00 00 00 EF F1 00 00 00 00 00 10 EF F1 00 00 00 00 00 20 EF F1 00 00 00 00 00 30 EF F1 00 00 00 00 00'
