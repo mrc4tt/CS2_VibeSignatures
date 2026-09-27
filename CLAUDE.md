@@ -501,6 +501,7 @@ uv run ensure_seed_preprocessors.py          # free deterministic relocations fr
 ./run_linux.sh                               # then, separately, ./run_windows.sh  (rule 10)
 # ... then the full VERIFICATION BATTERY above, and only then:
 uv run write_binary_lock.py -gamever <VER>   # binary_locks/<VER>.json; autopilot does this itself
+uv run schema_dump.py impact -old <PREV> -new <VER> -plugins <plugins dir>   # used schema fields that broke
 ./deploy_local_plugins.sh && ./update_css_gamedata.sh
 ```
 
@@ -795,6 +796,7 @@ Two guards now catch the class before the baseline does:
 | `fix_duplicate_symbols.py` | Only on configs with validator errors | NEVER use `-all` |
 | `enrich_vfunc_sigs.py` | After analysis | Adds func_sig to vfunc artifacts offline |
 | `deploy_local_plugins.sh` | After gamedata generation | → ~/customGIT/weaponpaints + matchzy |
+| `schema_dump.py` | New gamever, or "what is offset X on class Y" | Schema (classes/fields/offsets) read statically from libserver.so/server.dll, no server. `diff` flags a field gone + a field added at one offset with one size as *likely renamed* (classes too). `impact -old <PREV> -new <VER> [-plugins DIR]... [-json]`: which fields CounterStrikeSharp's generated `SchemaMember`s and each plugin .dll (ECMA-335 MemberRefs + `ldstr` class/field pairs, `schema_impact.py`) use are removed/renamed/moved; exit 1 on removed or renamed. Moves are harmless (CSSharp resolves offsets by name at runtime). Also flags a base-class field named on a derived class, which CSSharp's lookup silently resolves to 0 |
 | `update_css_gamedata.sh` | After gamedata generation | → ~/CounterStrikeSharp install |
 
 ## IDA PLUGIN HOTKEYS (local PC)

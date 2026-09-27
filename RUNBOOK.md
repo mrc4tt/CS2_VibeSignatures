@@ -209,6 +209,7 @@ uv run update_gamedata.py -gamever <VER> -snapshot gamesymbols/<VER>.yaml -outpu
 | `ensure_agent_fallback_skills.py` | Auto i run-scripts | Alle tasks får skills |
 | `ensure_reference_base_tasks.py` | Efter nyt gamever | Tasks til reference-mål |
 | `deploy_local_plugins.sh` | Efter gamedata-gen | → ~/customGIT/* |
+| `schema_dump.py impact` | Ny gamever | `-old <FORRIGE> -new <VER> -plugins <dir>`: hvilke schema-felter CSSharp og plugins bruger, der er fjernet/omdøbt/flyttet; exit 1 ved fjernet/omdøbt. Flyt er harmløse |
 
 ## IDA PLUGIN HOTKEYS (lokal PC)
 
