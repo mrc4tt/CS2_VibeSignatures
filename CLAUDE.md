@@ -500,6 +500,7 @@ uv run ensure_local_gamedata_symbols.py      # re-assert the fork's tables onto 
 uv run ensure_seed_preprocessors.py          # free deterministic relocations from the last gamever
 ./run_linux.sh                               # then, separately, ./run_windows.sh  (rule 10)
 # ... then the full VERIFICATION BATTERY above, and only then:
+uv run write_binary_lock.py -gamever <VER>   # binary_locks/<VER>.json; autopilot does this itself
 ./deploy_local_plugins.sh && ./update_css_gamedata.sh
 ```
 
