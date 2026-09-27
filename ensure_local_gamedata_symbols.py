@@ -103,6 +103,13 @@ FORK_OWNED_SYMBOLS = [
     # upstream does not analyse at all - see FORK_OWNED_MODULES, which creates the
     # module block this entry needs before inject() can place it.
     ("CWorldRendererMgr_CreateWorld_Internal", "func", "worldrenderer", "CWorldRendererMgr::CreateWorld_Internal"),
+    # HvH.gg TeleportFix hooks this as "RunCommand" (this = movement services, arg 2 =
+    # CUserCmd*) to sanitise view angles. Its own signatures stopped matching on 14182
+    # (linux) and are gone on windows too. The name is the function's own profiling
+    # scope, "UpdateInputState" with ../../game/shared/player_movementservices.cpp; it
+    # is the base the CCSPlayer_MovementServices override calls first (linux slot 24,
+    # windows 23). Not PlayerRunCommand (slot 26/25), which modsharp calls RunCommand.
+    ("CPlayer_MovementServices_UpdateInputState", "func", None, "RunCommand"),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
