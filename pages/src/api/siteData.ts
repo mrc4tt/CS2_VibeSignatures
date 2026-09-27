@@ -42,6 +42,26 @@ export interface RunTask {
   status: string
 }
 
+/** One entry verify_plugin_gamedata did not call a plain pass. */
+export interface PluginCheckProblem {
+  name: string
+  platform: string
+  status: string
+}
+
+/** verify_plugin_gamedata's verdict for one file an enabled plugin ships. */
+export interface PluginCheckFile {
+  plugin: string
+  /** Relative to gamedata/<build>/. */
+  path: string
+  ran: boolean
+  entries?: number
+  statuses?: Record<string, number>
+  unhealthy?: number
+  problems?: PluginCheckProblem[]
+  reason?: string
+}
+
 export interface SiteDiagnostics {
   schemaVersion: 1
   gameVersion: string
@@ -54,6 +74,8 @@ export interface SiteDiagnostics {
     bySymbol?: Record<string, ValidatorWarning[]>
     reason?: string
   }
+  /** Absent in diagnostics published before this check existed. */
+  plugins?: { ran: boolean; files?: PluginCheckFile[] }
   run: RunTask[]
 }
 

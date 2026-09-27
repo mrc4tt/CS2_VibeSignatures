@@ -9,7 +9,9 @@ can answer:
   gamedata/history.json      per-key value history across every published build,
                              plus which build each change landed in, and the map
                              from a plugin key to the symbol that feeds it
-  diagnostics/<build>.json   what validate_artifacts found, and the plan the
+  diagnostics/<build>.json   what validate_artifacts found, whether every file an
+                             enabled plugin ships holds against that build's
+                             binaries (verify_plugin_gamedata), and the plan the
                              analysis ran with what each task produced
 
 Both are small, deterministic and derived from files already in the repository,
@@ -17,7 +19,7 @@ so they are committed and published rather than recomputed in the browser.
 
     uv run publish_site_data.py                 # newest build, both files
     uv run publish_site_data.py -gamever 14181
-    uv run publish_site_data.py -skip-validator # keep the previous validator section
+    uv run publish_site_data.py -skip-validator # keep the previous validator and plugins sections
     uv run publish_site_data.py -history-only   # history.json alone, no binaries needed
     uv run publish_site_data.py -check          # is the committed history.json current?
 
@@ -370,6 +372,56 @@ def build_run_report(build: str) -> list[dict]:
     return rows
 
 
+# verify_plugin_gamedata statuses that are a pass (possibly qualified) or "could not
+# check"; anything else is a defect. The tool's own `unhealthy` count is the authority
+# for the verdict - this only decides which entries are listed on the page.
+PLUGIN_PASS_STATUSES = {"ok", "match", "ok-midfunction", "ok-globalref"}
+PLUGIN_FILE_SUFFIXES = (".json", ".jsonc", ".txt")
+
+
+def build_plugin_checks(build: str) -> dict:
+    """Does every file an enabled plugin ships hold against this build's binaries?
+
+    The same selection as the verification battery (step 5b): every generated
+    .json/.jsonc/.txt of an enabled generator. Per file the counts by status and the
+    entries that are not a plain pass, so the page can show "current build vs new
+    build" without re-running anything in the browser.
+    """
+    files = []
+    for relative in generated_files(build):
+        if not relative.endswith(PLUGIN_FILE_SUFFIXES):
+            continue
+        path = os.path.join(GAMEDATA_ROOT, build, relative)
+        completed = subprocess.run(
+            ["uv", "run", "verify_plugin_gamedata.py", "-gamever", build, "-gamedata", path, "-json"],
+            capture_output=True, text=True,
+        )
+        entry: dict = {"plugin": relative.split(os.sep)[0], "path": relative.replace(os.sep, "/")}
+        try:
+            report = json.loads(completed.stdout)
+        except ValueError:
+            entry.update(ran=False, reason=(completed.stderr or "verify_plugin_gamedata failed").strip()[-200:])
+            files.append(entry)
+            continue
+        counts: collections.Counter = collections.Counter()
+        problems = []
+        for result in report.get("results", []):
+            for platform, verdict in sorted(result.get("platforms", {}).items()):
+                status = verdict.get("status", "unknown")
+                counts[status] += 1
+                if status not in PLUGIN_PASS_STATUSES:
+                    problems.append({"name": result.get("name"), "platform": platform, "status": status})
+        entry.update(
+            ran=True,
+            entries=len(report.get("results", [])),
+            statuses=dict(sorted(counts.items())),
+            unhealthy=int(report.get("unhealthy", 0)),
+            problems=problems,
+        )
+        files.append(entry)
+    return {"ran": True, "files": files}
+
+
 def build_diagnostics(build: str, *, skip_validator: bool) -> dict:
     validator: dict = {"ran": False}
     if not skip_validator:
@@ -400,6 +452,7 @@ def build_diagnostics(build: str, *, skip_validator: bool) -> dict:
         "schemaVersion": 1,
         "gameVersion": build,
         "validator": validator,
+        "plugins": {"ran": False} if skip_validator else build_plugin_checks(build),
         "run": build_run_report(build),
     }
 
@@ -493,6 +546,8 @@ def main() -> int:
             previous = json.load(open(diagnostics_path, encoding="utf-8"))
             if previous.get("validator", {}).get("ran"):
                 diagnostics["validator"] = previous["validator"]
+            if previous.get("plugins", {}).get("ran"):
+                diagnostics["plugins"] = previous["plugins"]
         except Exception:
             pass
     with open(diagnostics_path, "w", encoding="utf-8") as handle:

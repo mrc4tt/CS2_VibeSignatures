@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { getSiteMeta } from '../../api/siteMeta'
 import { getSiteDiagnostics, type RunTask } from '../../api/siteData'
 import { Explain } from '../../components/Explain'
+import { PluginChecksPanel } from './PluginChecksPanel'
 
 const METHODS = ['reloc', 'xref', 'llm', 'vtable', 'other', 'none'] as const
 const PAGE = 60
@@ -120,6 +121,8 @@ export function RunReportPage() {
               </div>
             </section>
           )}
+
+          <PluginChecksPanel diagnostics={diagnostics} />
 
           <section className="panel">
             <header>

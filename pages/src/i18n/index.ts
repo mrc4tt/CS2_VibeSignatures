@@ -129,6 +129,15 @@ const resources = {
         verifyH: 'How the numbers were checked', verifySub: 'every artifact, re-read from the game files',
         artifacts: 'artifacts in this build', slots: 'vtable slots confirmed by RTTI',
         errors: 'errors', warnings: 'advisories, all about function size',
+        plugins: {
+          h: 'Do the shipped files hold?',
+          sub: 'every file an enabled plugin ships, re-checked against this build and the one before',
+          files: 'plugin files', entries: 'entries checked', unhealthyTotal: 'entries that do not hold',
+          tFile: 'file', tEntries: 'entries', tThis: 'build {{build}}', tBefore: 'build {{build}}', tBeforeNone: 'previous build',
+          holds: 'holds', unhealthy: '{{count}} do not hold', notRun: 'not checked',
+          allPass: 'Every entry is a plain pass.',
+          explain: 'Each signature is scanned in the game files (exactly one match, at a function start) and each offset is re-derived. Only broken, ambiguous, mismatch and unparsable are defects (red); the others listed under a file could not be checked here. Open a file to see which.',
+        },
         methodH: 'How each target was recovered',
         method: {
           reloc: 'relocated from the previous build',
@@ -434,6 +443,15 @@ const resources = {
         verifyH: 'Hvordan tallene blev kontrolleret', verifySub: 'hver post, læst igen fra spillets filer',
         artifacts: 'poster i dette build', slots: 'vtable-slots bekræftet via RTTI',
         errors: 'fejl', warnings: 'bemærkninger, alle om funktionsstørrelse',
+        plugins: {
+          h: 'Holder de udsendte filer?',
+          sub: 'hver fil et aktivt plugin udsender, kontrolleret igen mod dette build og det forrige',
+          files: 'plugin-filer', entries: 'poster kontrolleret', unhealthyTotal: 'poster der ikke holder',
+          tFile: 'fil', tEntries: 'poster', tThis: 'build {{build}}', tBefore: 'build {{build}}', tBeforeNone: 'forrige build',
+          holds: 'holder', unhealthy: '{{count}} holder ikke', notRun: 'ikke kontrolleret',
+          allPass: 'Alle poster består.',
+          explain: 'Hver signatur søges i spillets filer (præcis ét match, ved starten af en funktion), og hvert offset udledes igen. Kun broken, ambiguous, mismatch og unparsable er fejl (røde); de øvrige under en fil kunne ikke kontrolleres her. Åbn en fil for at se hvilke.',
+        },
         methodH: 'Hvordan hvert mål blev fundet',
         method: {
           reloc: 'relokeret fra forrige build',
