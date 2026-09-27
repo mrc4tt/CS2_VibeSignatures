@@ -1,10 +1,12 @@
 import { createHash } from 'node:crypto'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { buildLatestGameData, loadGameDataAssets } from './gameDataPlugin'
 import {
   verifyGameDataAssetDirectory,
+  verifyLatestGameDataDirectory,
   verifyRemoteGameDataAssets,
   writeGameDataVerificationManifest,
 } from './verifyGameDataAssets.mjs'
@@ -109,5 +111,44 @@ describe('gamedata asset verification', () => {
       batchSize: 2,
     })).resolves.toEqual(expect.objectContaining({ verified: 2 }))
     expect(indexRequests).toBe(2)
+  })
+
+  it('requires latest/ to be the newest build, byte-identical to the source tree', async () => {
+    const root = await temporaryRoot()
+    const source = join(root, 'source')
+    const dist = join(root, 'dist')
+    const cssFile = 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json'
+    const put = async (base, path, text) => {
+      await mkdir(dirname(join(base, ...path.split('/'))), { recursive: true })
+      await writeFile(join(base, ...path.split('/')), text)
+    }
+    await put(source, `14178b/${cssFile}`, '{"Sym":"OLD"}\n')
+    await put(source, `14180/${cssFile}`, '{"Sym":"NEW"}\n')
+    const loaded = await loadGameDataAssets(source)
+    for (const asset of loaded.assets.values()) await put(join(dist, 'gamedata'), asset.url, asset.bytes)
+    await put(join(dist, 'gamedata'), 'index.json', JSON.stringify(loaded.index))
+    const latest = buildLatestGameData(loaded)
+    for (const [url, bytes] of latest.files) await put(join(dist, 'latest'), url, bytes)
+    await put(join(dist, 'latest'), 'manifest.json', JSON.stringify(latest.manifest))
+    const verify = () => verifyLatestGameDataDirectory(join(dist, 'latest'), join(dist, 'gamedata'), source)
+
+    await expect(verify()).resolves.toEqual(expect.objectContaining({ gameVersion: '14180' }))
+
+    // The index still says NEW, but the source file the build was made from
+    // changed after the fact: the served copy no longer matches it.
+    await put(source, `14180/${cssFile}`, '{"Sym":"NEX"}\n')
+    await expect(verify()).rejects.toThrow(/bytes differ from/)
+    await put(source, `14180/${cssFile}`, '{"Sym":"NEW"}\n')
+
+    await put(join(dist, 'latest'), 'CounterStrikeSharp/gamedata.json', '{"Sym":"OLD"}\n')
+    await expect(verify()).rejects.toThrow(/SHA-256 does not match index/)
+    await put(join(dist, 'latest'), 'CounterStrikeSharp/gamedata.json', '{"Sym":"NEW"}\n')
+
+    await put(join(dist, 'latest'), 'Stray/extra.json', '{}\n')
+    await expect(verify()).rejects.toThrow(/latest inventory does not match/)
+    await rm(join(dist, 'latest', 'Stray'), { recursive: true })
+
+    await put(join(dist, 'latest'), 'manifest.json', JSON.stringify({ ...latest.manifest, gameVersion: '14178b' }))
+    await expect(verify()).rejects.toThrow(/is not the newest build 14180/)
   })
 })

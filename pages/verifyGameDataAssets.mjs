@@ -147,6 +147,71 @@ export async function verifyGameDataAssetDirectory(directory) {
   }
 }
 
+function compareGameVersionsNewestFirst(left, right) {
+  const leftMatch = /^(\d+)([a-z]?)$/.exec(left)
+  const rightMatch = /^(\d+)([a-z]?)$/.exec(right)
+  const numberDifference = Number(rightMatch[1]) - Number(leftMatch[1])
+  if (numberDifference !== 0) return numberDifference
+  return rightMatch[2].localeCompare(leftMatch[2])
+}
+
+/**
+ * latest/ is the fixed-URL mirror of the newest build (see LATEST_DIRECTORY in
+ * gameDataPlugin.ts); CounterStrikeSharp's native updater polls it. This check
+ * does not trust the plugin's own idea of "newest": it re-derives the newest
+ * build from the emitted index with its own ordering, requires latest/ to hold
+ * exactly that build's files, and compares every byte against the source tree
+ * the build was made from, so a served file can never differ from
+ * gamedata/<newest>/<plugin>/.../<file>.
+ */
+export async function verifyLatestGameDataDirectory(latestDirectory, gamedataDirectory, sourceGamedataDirectory) {
+  const latestRoot = resolve(latestDirectory)
+  const indexPath = join(resolve(gamedataDirectory), 'index.json')
+  const { index } = validateGameDataIndex(parseJson(await readFile(indexPath), indexPath), indexPath)
+  const newest = [...index.versions].sort((left, right) => compareGameVersionsNewestFirst(left.gameVersion, right.gameVersion))[0]
+  if (!newest) throw new Error(`${indexPath}: no versions`)
+
+  const expected = new Map()
+  for (const file of newest.files) {
+    const url = `${file.plugin}/${file.fileName}`
+    if (expected.has(url)) throw new Error(`${indexPath}: ${newest.gameVersion} has two ${url} files`)
+    expected.set(url, { url, source: `${newest.gameVersion}/${file.id}`, sha256: file.content.sha256, size: file.content.size })
+  }
+
+  const manifestPath = join(latestRoot, 'manifest.json')
+  const manifest = parseJson(await readFile(manifestPath), manifestPath)
+  if (!isObject(manifest) || manifest.schemaVersion !== 1 || !Array.isArray(manifest.files)) {
+    throw new Error(`${manifestPath}: expected latest manifest schema v1`)
+  }
+  if (manifest.gameVersion !== newest.gameVersion) {
+    throw new Error(`${manifestPath}: gameVersion ${manifest.gameVersion} is not the newest build ${newest.gameVersion}`)
+  }
+  if (manifest.files.length !== expected.size) throw new Error(`${manifestPath}: file inventory does not match ${newest.gameVersion}`)
+  for (const file of manifest.files) {
+    const want = isObject(file) ? expected.get(file.url) : undefined
+    if (!want || file.source !== want.source || file.sha256 !== want.sha256 || file.size !== want.size) {
+      throw new Error(`${manifestPath}: entry ${isObject(file) ? file.url : file} does not match the index for ${newest.gameVersion}`)
+    }
+  }
+
+  const actualFiles = await recursiveFileNames(latestRoot)
+  const expectedFiles = new Set(['manifest.json', ...expected.keys()])
+  if (actualFiles.length !== expectedFiles.size || actualFiles.some((file) => !expectedFiles.has(file))) {
+    throw new Error(`${latestRoot}: emitted latest inventory does not match manifest`)
+  }
+
+  const sourceRoot = resolve(sourceGamedataDirectory)
+  for (const want of expected.values()) {
+    const path = join(latestRoot, ...want.url.split('/'))
+    const bytes = await readFile(path)
+    verifyBytes(bytes, path, want)
+    const sourcePath = join(sourceRoot, ...want.source.split('/'))
+    const sourceBytes = await readFile(sourcePath)
+    if (!Buffer.from(bytes).equals(sourceBytes)) throw new Error(`${path}: bytes differ from ${sourcePath}`)
+  }
+  return { gameVersion: newest.gameVersion, files: [...expected.values()] }
+}
+
 export function validateGameDataVerificationManifest(value, source = 'gamedata-verification.json') {
   if (!isObject(value) || value.schemaVersion !== 1 || !isObject(value.index) || !Array.isArray(value.assets)) {
     throw new Error(`${source}: expected verification manifest schema v1`)
@@ -234,16 +299,28 @@ async function main(args) {
   const baseUrl = argumentValue(args, '--base-url')
   const manifestPath = argumentValue(args, '--manifest')
   const writeManifestPath = argumentValue(args, '--write-manifest')
+  const latestDirectory = argumentValue(args, '--latest')
+  const sourceArgument = argumentValue(args, '--source')
   if (directory && baseUrl) throw new Error('Choose either --directory or --base-url')
   if (!directory && !baseUrl) throw new Error('Expected --directory or --base-url')
   if (writeManifestPath && !directory) throw new Error('--write-manifest requires --directory')
   if (manifestPath && !baseUrl) throw new Error('--manifest requires --base-url')
   if (baseUrl && !manifestPath) throw new Error('--base-url requires --manifest')
+  if (latestDirectory && !directory) throw new Error('--latest requires --directory')
 
   if (directory) {
     const result = await verifyGameDataAssetDirectory(directory)
     if (writeManifestPath) await writeGameDataVerificationManifest(directory, writeManifestPath)
     console.log(`Verified ${result.assets.length} gamedata assets.`)
+    if (latestDirectory) {
+      // The source tree is the one the build read: --source, else the same
+      // PAGES_RELEASE_INPUT_ROOT vite.config.ts requires.
+      const inputRoot = process.env.PAGES_RELEASE_INPUT_ROOT
+      const source = sourceArgument ?? (inputRoot ? join(inputRoot, 'gamedata') : undefined)
+      if (!source) throw new Error('--latest needs --source <gamedata dir> or PAGES_RELEASE_INPUT_ROOT')
+      const latest = await verifyLatestGameDataDirectory(latestDirectory, directory, source)
+      console.log(`Verified ${latest.files.length} latest gamedata files for ${latest.gameVersion} against ${resolve(source)}.`)
+    }
     return
   }
   const manifestSource = resolve(manifestPath)

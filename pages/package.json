@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify:gamesymbols": "node verifyGameSymbolAssets.mjs --directory dist/gamesymbols",
-    "verify:gamedata": "node verifyGameDataAssets.mjs --directory dist/gamedata"
+    "verify:gamedata": "node verifyGameDataAssets.mjs --directory dist/gamedata --latest dist/latest"
   },
   "engines": {
     "node": ">=20.19.0"

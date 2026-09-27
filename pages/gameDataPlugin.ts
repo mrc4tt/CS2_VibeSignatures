@@ -175,6 +175,70 @@ export async function loadGameDataAssets(gamedataDirectory: string): Promise<Loa
   return { index, assets, sourceFiles }
 }
 
+/**
+ * Stable URLs for the newest build, so a consumer can poll one fixed address
+ * instead of reading index.json and following a content hash:
+ *
+ *   latest/<plugin>/<file basename>   byte-identical copy of gamedata/<newest>/<plugin>/.../<file>
+ *   latest/manifest.json              which build that is, and each file's sha256 + size
+ *
+ * CounterStrikeSharp's native gamedata updater ETag-polls
+ * latest/CounterStrikeSharp/gamedata.json. "Newest" is index.versions[0], the
+ * same compareGameVersions order the site uses everywhere (14178b sorts above
+ * 14178, 14180 above 14178b), and only the plugins present in that build are
+ * published: a plugin the newest build no longer carries does not keep serving
+ * a stale file here. Disabled plugins never reach the index, so they never
+ * reach latest/ either. *.metadata.json sidecars are site annotations, not
+ * plugin gamedata, and are left out of the flat directory.
+ */
+export const LATEST_DIRECTORY = 'latest'
+
+export interface LatestGameDataFile {
+  /** Path under latest/, always <plugin>/<basename>. */
+  url: string
+  plugin: string
+  fileName: string
+  /** Source path relative to gamedata/, e.g. 14185/CounterStrikeSharp/config/.../gamedata.json. */
+  source: string
+  sha256: string
+  size: number
+}
+
+export interface LatestGameDataManifest {
+  schemaVersion: 1
+  gameVersion: string
+  files: LatestGameDataFile[]
+}
+
+export function buildLatestGameData(loaded: Pick<LoadedGameData, 'index' | 'assets'>): {
+  manifest: LatestGameDataManifest
+  files: Map<string, Uint8Array>
+} {
+  const newest = loaded.index.versions[0]
+  if (!newest) throw new Error('gamedata index has no versions to publish as latest')
+  const files = new Map<string, Uint8Array>()
+  const entries: LatestGameDataFile[] = []
+  for (const descriptor of newest.files) {
+    const url = `${descriptor.plugin}/${descriptor.fileName}`
+    if (files.has(url)) {
+      throw new Error(`${newest.gameVersion}/${descriptor.id}: basename collides with another ${descriptor.plugin} file in ${LATEST_DIRECTORY}/`)
+    }
+    const asset = loaded.assets.get(descriptor.content.url)
+    if (!asset) throw new Error(`${newest.gameVersion}/${descriptor.id}: payload missing from asset map`)
+    files.set(url, asset.bytes)
+    entries.push({
+      url,
+      plugin: descriptor.plugin,
+      fileName: descriptor.fileName,
+      source: `${newest.gameVersion}/${descriptor.id}`,
+      sha256: asset.sha256,
+      size: asset.size,
+    })
+  }
+  entries.sort((left, right) => left.url.localeCompare(right.url))
+  return { manifest: { schemaVersion: 1, gameVersion: newest.gameVersion, files: entries }, files }
+}
+
 export function gameDataPlugin(gamedataDirectory: string): Plugin {
   return {
     name: 'gamedata-assets',
@@ -182,6 +246,26 @@ export function gameDataPlugin(gamedataDirectory: string): Plugin {
       server.watcher.add(gamedataDirectory)
       server.middlewares.use(async (request, response, next) => {
         const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
+        const latestMatch = new RegExp(`/${LATEST_DIRECTORY}/(manifest\\.json|[^/]+/[^/]+)$`).exec(pathname)
+        if (latestMatch) {
+          try {
+            const latest = buildLatestGameData(await loadGameDataAssets(gamedataDirectory))
+            if (latestMatch[1] === 'manifest.json') {
+              sendJson(response, latest.manifest)
+              return
+            }
+            const bytes = latest.files.get(decodeURIComponent(latestMatch[1]))
+            if (!bytes) {
+              response.statusCode = 404
+              response.end()
+              return
+            }
+            sendBytes(response, bytes, latestMatch[1].endsWith('.json') ? 'application/json; charset=utf-8' : 'text/plain; charset=utf-8')
+          } catch (error) {
+            next(error instanceof Error ? error : new Error(String(error)))
+          }
+          return
+        }
         if (!pathname.includes('/gamedata/')) {
           next()
           return
@@ -220,6 +304,11 @@ export function gameDataPlugin(gamedataDirectory: string): Plugin {
         this.emitFile({ type: 'asset', fileName: `gamedata/${asset.url}`, source: asset.bytes })
       }
       this.emitFile({ type: 'asset', fileName: 'gamedata/index.json', source: JSON.stringify(loaded.index) })
+      const latest = buildLatestGameData(loaded)
+      for (const [url, bytes] of latest.files) {
+        this.emitFile({ type: 'asset', fileName: `${LATEST_DIRECTORY}/${url}`, source: bytes })
+      }
+      this.emitFile({ type: 'asset', fileName: `${LATEST_DIRECTORY}/manifest.json`, source: `${JSON.stringify(latest.manifest, null, 2)}\n` })
     },
   }
 }

@@ -62,6 +62,9 @@ jobs:
         run: npm run build
       - name: Verify current game-symbol bytes
         run: npm run verify:gamesymbols
+      # Also checks latest/ (the fixed-URL copy of the newest build that
+      # CounterStrikeSharp's gamedata updater polls) byte-for-byte against
+      # $PAGES_RELEASE_INPUT_ROOT/gamedata/<newest>/..., so it needs the job env above.
       - name: Verify current gamedata bytes
         run: npm run verify:gamedata
       - name: Upload current Pages build

@@ -1,8 +1,9 @@
+import { createHash } from 'node:crypto'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { loadGameDataAssets } from './gameDataPlugin'
+import { buildLatestGameData, loadGameDataAssets } from './gameDataPlugin'
 
 const temporaryRoots: string[] = []
 
@@ -103,5 +104,42 @@ describe('gameDataPlugin asset loading', () => {
     await writeFile(path, JSON.stringify(mismatched), 'utf8')
 
     await expect(loadGameDataAssets(second)).rejects.toThrow(/invalid metadata identity/)
+  })
+
+  it('publishes the newest build under stable latest/<plugin>/<basename> URLs', async () => {
+    const root = await temporaryRoot()
+    const older = '{\n  "Sym": "OLD"\n}\n'
+    const newer = '{\n  "Sym": "NEW"\n}\n'
+    // 14180 must beat 14178b, and 14178b must beat 14178: numeric, then suffix.
+    await writePayload(root, '14178', 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json', older)
+    await writePayload(root, '14178b', 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json', older)
+    await writePayload(root, '14178b', 'Gone/gamedata/gone.json', older)
+    await writePayload(root, '14180', 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json', newer)
+    await writeMetadata(root, '14180', 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json', 2)
+    await writePayload(root, '14180', 'Vdf/gamedata/vdf.games.txt', '"Games"\n{\n}\n')
+
+    const latest = buildLatestGameData(await loadGameDataAssets(root))
+
+    expect(latest.manifest.gameVersion).toBe('14180')
+    expect([...latest.files.keys()].sort()).toEqual(['CounterStrikeSharp/gamedata.json', 'Vdf/vdf.games.txt'])
+    expect(Buffer.from(latest.files.get('CounterStrikeSharp/gamedata.json')!).toString('utf8')).toBe(newer)
+    const entry = latest.manifest.files.find((file) => file.url === 'CounterStrikeSharp/gamedata.json')
+    expect(entry).toEqual({
+      url: 'CounterStrikeSharp/gamedata.json',
+      plugin: 'CounterStrikeSharp',
+      fileName: 'gamedata.json',
+      source: '14180/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json',
+      sha256: createHash('sha256').update(newer).digest('hex'),
+      size: Buffer.byteLength(newer),
+    })
+  })
+
+  it('refuses to flatten two files of one plugin onto the same latest URL', async () => {
+    const root = await temporaryRoot()
+    await writePayload(root, '14180', 'Plugin/a/data.json', '{}\n')
+    await writePayload(root, '14180', 'Plugin/b/data.json', '{"x":1}\n')
+
+    expect(() => buildLatestGameData({ index: { schemaVersion: 1, versions: [] }, assets: new Map() })).toThrow(/no versions/)
+    await expect(loadGameDataAssets(root).then(buildLatestGameData)).rejects.toThrow(/basename collides/)
   })
 })
