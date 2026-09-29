@@ -135,18 +135,6 @@
       "updated": true
     },
     {
-      "changes": [
-        {
-          "after": 16,
-          "before": 32,
-          "line": 100,
-          "path": [
-            "CEntityIdentity::m_designerName",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         99,
@@ -154,7 +142,7 @@
         102
       ],
       "name": "CEntityIdentity::m_designerName",
-      "updated": true
+      "updated": false
     },
     {
       "covered": true,
@@ -580,6 +568,6 @@
   "summary": {
     "covered": 28,
     "total": 28,
-    "updated": 17
+    "updated": 16
   }
 }

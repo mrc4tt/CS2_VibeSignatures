@@ -3,3 +3,4 @@ member_name: Size
 offset: '0x70'
 size: 112
 offset_sig: 4C 6B F2 70
+offset_sig_disp: 0

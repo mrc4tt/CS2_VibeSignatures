@@ -19289,8 +19289,8 @@ files:
     struct_name: CBaseEntity
   server/CBaseEntity_m_iTeamNum.windows.yaml:
     member_name: m_iTeamNum
-    offset: '0xaf0'
-    offset_sig: 44 89 B3 F0 0A 00 00
+    offset: '0x344'
+    offset_sig: 0F B6 93 44 03 00 00 8D 42 FE 83 F8 01 0F 87
     size: 1
     struct_name: CBaseEntity
   server/CBaseEntity_vdtor.linux.yaml:
@@ -29219,8 +29219,9 @@ files:
     struct_name: CEntityIdentity
   server/CEntityIdentity_m_designerName.linux.yaml:
     member_name: m_designerName
-    offset: '0x10'
-    offset_sig: 48 8B 40 10 48 8B 50 ?? 4C 8B 40 ??
+    offset: '0x20'
+    offset_sig: 48 8B 50 20 48 8D 05 ?? ?? ?? ?? 48 85 D2 48 0F 44 D0 31 C0 E8 ?? ?? ?? ?? 48 63 85
+    offset_sig_disp: 0
     size: 8
     struct_name: CEntityIdentity
   server/CEntityIdentity_m_designerName.windows.yaml:
@@ -46964,5 +46965,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14185'
-last_publish_time: '2026-09-27T08:58:16Z'
+last_publish_time: '2026-09-29T07:53:04Z'
 schema_version: 5

@@ -97,7 +97,7 @@
   "CEntityIdentity::m_designerName": {
     "offsets": {
       "windows": 32,
-      "linux": 16
+      "linux": 32
     },
     "comment": "resolves an entity class name"
   },

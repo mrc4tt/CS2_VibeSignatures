@@ -3,3 +3,4 @@ member_name: m_pSOCache
 offset: '0x68'
 size: 8
 offset_sig: 48 89 7B 68 48 85 FF
+offset_sig_disp: 0

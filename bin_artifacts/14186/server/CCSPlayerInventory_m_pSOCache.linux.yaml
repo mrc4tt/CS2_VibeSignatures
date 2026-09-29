@@ -2,4 +2,5 @@ struct_name: CCSPlayerInventory
 member_name: m_pSOCache
 offset: '0x68'
 size: 8
-offset_sig: 4C 89 6B 68 4D 85 ED 0F 84 ?? ?? ?? ?? 4C 89 EF BE 01 00 00 00 E8 ?? ?? ?? ??
+offset_sig: C7 43 28 00 00 00 00 C7 43 30 00 00 00 00 4C 89 6B 68
+offset_sig_disp: 14
