@@ -1,0 +1,5 @@
+struct_name: CMoveData
+member_name: Velocity
+offset: '0x38'
+size: 12
+offset_sig: 44 89 7E 38 BB 01 00 00 00 8B 46 3C
