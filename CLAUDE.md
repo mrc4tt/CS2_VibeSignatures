@@ -506,7 +506,7 @@ uv run ensure_seed_preprocessors.py          # free deterministic relocations fr
 # ... then the full VERIFICATION BATTERY above, and only then:
 uv run write_binary_lock.py -gamever <VER>   # binary_locks/<VER>.json; autopilot does this itself
 uv run schema_dump.py impact -old <PREV> -new <VER> -plugins <plugins dir>   # used schema fields that broke
-./deploy_local_plugins.sh && ./update_css_gamedata.sh
+./update_css_gamedata.sh && ./deploy_local_plugins.sh   # this order: the second commits the CSS repo
 ```
 
 Order matters: everything cheap and deterministic runs before any agent or LLM work, so a symbol
