@@ -339,7 +339,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.139.0" },
     { name = "fastcrc", specifier = ">=0.3.6" },
     { name = "httpx" },
-    { name = "ida-pro-mcp", git = "https://github.com/mrexodia/ida-pro-mcp.git?rev=2f762bbbd26764cb855e693051a5426650fa5acf" },
+    { name = "ida-pro-mcp", git = "https://github.com/mrc4tt/ida-pro-mcp.git?rev=ee1a9b7aba043b7bc4de6e954607766e5b72d7fb" },
     { name = "mcp" },
     { name = "openai" },
     { name = "pyghidra", marker = "extra == 'ghidra'", specifier = ">=3.0" },
@@ -527,7 +527,7 @@ wheels = [
 [[package]]
 name = "ida-pro-mcp"
 version = "2.0.0"
-source = { git = "https://github.com/mrexodia/ida-pro-mcp.git?rev=2f762bbbd26764cb855e693051a5426650fa5acf#2f762bbbd26764cb855e693051a5426650fa5acf" }
+source = { git = "https://github.com/mrc4tt/ida-pro-mcp.git?rev=ee1a9b7aba043b7bc4de6e954607766e5b72d7fb#ee1a9b7aba043b7bc4de6e954607766e5b72d7fb" }
 dependencies = [
     { name = "idapro" },
     { name = "tomli-w" },
