@@ -745,6 +745,45 @@ def cross_platform_vfunc_check(artifacts, out):
         })
 
 
+def schema_structmember_check(artifacts, gamever, bindir, out):
+    """A struct member the game's own schema names must sit at the schema's offset.
+
+    Nothing else can catch a member offset read from the wrong instruction: the
+    signature still matches uniquely and the value is a plausible small integer.
+    CEntityIdentity::m_designerName shipped as 0x10 on linux for 14182, 14184 and
+    14185 - the neighbouring EHandle read in the same block - while the schema
+    has said 0x20 on both platforms throughout. Members the schema does not know
+    (engine structs, non-networked fields, sizes) are simply not checked.
+    """
+    try:
+        import schema_dump
+    except Exception:
+        return
+    schemas = {}
+    for rec, d in artifacts:
+        if rec["category"] != "structmember":
+            continue
+        key = (rec["module"], rec["platform"])
+        if key not in schema_dump.BINARY_NAMES:
+            continue
+        if key not in schemas:
+            try:
+                schemas[key] = schema_dump.load_or_dump(gamever, key[0], key[1], bindir)
+            except Exception:
+                schemas[key] = None
+        classes = schemas[key]
+        if not classes:
+            continue
+        hit = schema_dump.field_offset(classes, str(d.get("struct_name")), str(d.get("member_name")))
+        offset = _hexint(d.get("offset")) if isinstance(d.get("offset"), str) else d.get("offset")
+        if hit is None or offset is None:
+            continue
+        owner, want = hit
+        if int(offset) != want:
+            out.error(rec, f"offset {hex(int(offset))} disagrees with the schema: "
+                           f"{owner}::{d.get('member_name')} is at {hex(want)}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -849,6 +888,7 @@ def main():
             CHECKS[category](rec, d, blob, info, out)
 
     cross_platform_vfunc_check(artifacts, out)
+    schema_structmember_check(artifacts, args.gamever, args.bindir, out)
 
     if args.as_json:
         print(json.dumps({"gamever": args.gamever, "artifacts": n,

@@ -564,7 +564,12 @@ def extract_facts(backend, artifact_dir, platform, gamever, module, log=print):
                 entry.update({"struct_name": rec.get("struct_name"), "member_name": rec.get("member_name"), "offset": rec.get("offset"), "size": to_int(rec.get("size"))})
                 hits = scan.matches(rec["offset_sig"], limit=2) if rec.get("offset_sig") else []
                 if len(hits) == 1:
-                    entry.update(fb.site_facts(hits[0], va_to_symbol))
+                    # The member offset sits in the instruction offset_sig_disp bytes
+                    # into the match, not necessarily the first one. Reading the head
+                    # instead is how CEntityIdentity::m_designerName shipped as the
+                    # EHandle's 0x10 on linux for three builds.
+                    disp = to_int(rec.get("offset_sig_disp")) or 0
+                    entry.update(fb.site_facts(hits[0] + disp, va_to_symbol))
                 else:
                     entry["site_error"] = f"offset_sig hits={len(hits)}"
             elif category == "gv":
@@ -721,11 +726,17 @@ def emit_artifact(backend, scan, symbol, rule, out_dir, platform, log=None):
                 offset = int(op.addr) & 0xFFFFFFFF
                 offset = offset - 0x100000000 if offset >= 0x80000000 else offset
                 break
-        if offset is None and insn.mnem in ("add", "sub", "lea"):
+        if offset is None and insn.mnem in ("add", "sub", "lea", "imul"):
+            # imul reg, reg, imm is an element stride - the shape a *_Size record
+            # (CEntityIdentity_Size, 0x70) is anchored on
             for op in insn.ops:
                 if op.kind == "imm" and 0 < int(op.value or 0) < 0x10000:
                     offset = int(op.value) * (-1 if insn.mnem == "sub" else 1)
                     break
+        if offset is None and to_int(rule.get("offset")) == 0 and any(op.kind == "phrase" for op in insn.ops):
+            # a member at offset 0 is a bare [reg]: no displacement bytes to read,
+            # so only accepted when the baseline already said 0
+            offset = 0
         if offset is None:
             raise ValueError(f"{symbol}: {hex(ea)} carries no member offset")
         sig, crossed = site_signature(backend, scan, ea, pin_first=True)
@@ -1565,7 +1576,7 @@ class Hunter:
                  "candidates": [{"va": hex(owner_va), "how": [how]}]})
             return
         if category == "structmember":
-            rule = {"kind": "structmember", "ea": site, "struct_name": base.get("struct_name"), "member_name": base.get("member_name"), "size": base.get("size") or 4}
+            rule = {"kind": "structmember", "ea": site, "struct_name": base.get("struct_name"), "member_name": base.get("member_name"), "size": base.get("size") or 4, "offset": base.get("offset")}
         elif category == "gv":
             rule = {"kind": "gv", "ea": site}
         else:

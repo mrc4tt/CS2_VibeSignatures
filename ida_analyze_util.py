@@ -5452,6 +5452,12 @@ async def preprocess_struct_offset_sig_via_mcp(
         "            ot = int(op.type)\n"
         "            if ot == int(idaapi.o_void):\n"
         "                continue\n"
+        # A member at offset 0 is addressed as a bare [reg] (o_phrase) with no
+        # displacement bytes at all. Only taken when the old offset was 0, so a
+        # phrase operand never outvotes a real displacement.
+        "            if ot == int(idaapi.o_phrase) and expected_offset == 0:\n"
+        "                candidates.append({'off': 0, 'size': 0, 'unsigned': 0, 'signed': 0, 'expected': True})\n"
+        "                continue\n"
         "            if ot not in (int(idaapi.o_displ), int(idaapi.o_mem), int(idaapi.o_imm)):\n"
         "                continue\n"
         "            for attr in ('offb', 'offo'):\n"

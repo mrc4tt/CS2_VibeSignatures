@@ -225,6 +225,21 @@ def load_or_dump(gamever, module, platform, bindir="bin"):
     return classes
 
 
+def field_offset(classes, cls, field):
+    """(owner, absolute offset) of `field` in `cls` or its bases, or None."""
+    chain, seen = [(cls, 0)], set()
+    while chain:
+        name, base = chain.pop(0)
+        if name in seen or name not in classes:
+            continue
+        seen.add(name)
+        for f in classes[name]["fields"]:
+            if f["name"] == field:
+                return name, base + f["offset"]
+        chain += [(b["name"], base + b["offset"]) for b in classes[name]["bases"]]
+    return None
+
+
 def field_at(classes, cls, offset, base_offset=0):
     """(owner, field, field_offset) covering `offset` inside `cls`, searching base classes."""
     info = classes.get(cls)
@@ -499,20 +514,16 @@ def main():
             print(f"class {args.cls} not found", file=sys.stderr)
             return 1
         if args.field:
-            chain, seen = [(args.cls, 0)], set()
-            while chain:
-                cls, base = chain.pop(0)
-                if cls in seen or cls not in classes:
-                    continue
-                seen.add(cls)
-                for f in classes[cls]["fields"]:
-                    if f["name"] == args.field:
-                        total = base + f["offset"]
-                        print(f"{cls}::{f['name']} = {hex(total)} ({total})")
-                        return 0
-                chain += [(b["name"], base + b["offset"]) for b in classes[cls]["bases"]]
-            print(f"{args.field} not found in {args.cls} or its bases", file=sys.stderr)
-            return 1
+            hit = field_offset(classes, args.cls, args.field)
+            if hit is None:
+                print(f"{args.field} not found in {args.cls} or its bases", file=sys.stderr)
+                return 1
+            owner, total = hit
+            print(f"{owner}::{args.field} = {hex(total)} ({total})")
+            return 0
+        if args.offset is None:
+            print("lookup needs -offset or -field", file=sys.stderr)
+            return 2
         offset = int(args.offset, 0)
         hit = field_at(classes, args.cls, offset)
         if hit is None:

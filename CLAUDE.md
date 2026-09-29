@@ -248,6 +248,10 @@ correct rather than lazy.
   binary and checks the stored signature still matches at the stored VA, the match is unique, the
   boundary looks like a function head, `gv_va` equals the RIP target, `vfunc_offset` equals
   8 × index, and the class vtable (resolved via RTTI) really holds `func_va` in that slot.
+  A struct member whose class and field the game's schema knows must also sit at the schema's
+  offset (`schema_structmember_check`): that is what caught linux `CEntityIdentity::m_designerName`
+  shipping the neighbouring EHandle's 0x10 on 14182/14184/14185, and windows `m_iTeamNum` at 0xaf0
+  on every build.
 
 ## VERIFICATION BATTERY
 
