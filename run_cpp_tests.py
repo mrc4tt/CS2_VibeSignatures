@@ -40,6 +40,40 @@ from gamesymbol_store import SymbolStore, SymbolStoreError, open_snapshot_store
 DEFAULT_CLANG = "clang++"
 DEFAULT_CPP_STD = "c++20"
 
+# Every configured test targets x86_64-pc-windows-msvc, and tier0/platform.h
+# includes <Windows.h>. Off Windows that needs an MSVC CRT and Windows SDK laid
+# down by xwin (https://github.com/Jake-Shadle/xwin):
+#   xwin --accept-license --arch x86_64 splat --output ~/.xwin
+# Without it 15 of 16 tests fail to compile at ANY hl2sdk commit, so the run
+# cannot tell good headers from broken ones. CS2VIBE_XWIN_ROOT overrides the
+# location; an explicit CPLUS_INCLUDE_PATH is left alone.
+XWIN_ROOT_ENV = "CS2VIBE_XWIN_ROOT"
+DEFAULT_XWIN_ROOT = "~/.xwin"
+_XWIN_INCLUDE_SUBDIRS = ("crt/include", "sdk/include/ucrt", "sdk/include/um", "sdk/include/shared")
+
+
+def xwin_include_directories() -> List[Path]:
+    """Include directories of an xwin sysroot, or [] when none is installed."""
+    root = Path(os.environ.get(XWIN_ROOT_ENV) or DEFAULT_XWIN_ROOT).expanduser()
+    directories = [root / sub for sub in _XWIN_INCLUDE_SUBDIRS]
+    return directories if all(d.is_dir() for d in directories) else []
+
+
+def compile_environment(target: str) -> Dict[str, str]:
+    """Environment for one compile: adds the xwin sysroot for an MSVC target.
+
+    CPLUS_INCLUDE_PATH rather than -isystem arguments, so the command line stays
+    exactly what the config describes. clang honours it for every target;
+    INCLUDE, which clang-cl reads, is ignored by the clang++ driver here.
+    """
+    env = dict(os.environ)
+    if os.name == "nt" or not target.endswith("-windows-msvc") or env.get("CPLUS_INCLUDE_PATH"):
+        return env
+    directories = xwin_include_directories()
+    if directories:
+        env["CPLUS_INCLUDE_PATH"] = os.pathsep.join(str(d) for d in directories)
+    return env
+
 
 def parse_args():
     """Parse CLI arguments."""
@@ -359,6 +393,7 @@ def compile_and_compare(
             capture_output=True,
             text=True,
             check=False,
+            env=compile_environment(target),
         )
 
     compile_output = _collect_process_output(result)
@@ -540,6 +575,16 @@ def main():
         else:
             skipped_tests.append(test_item)
 
+    if os.name != "nt" and any(str(t).endswith("-windows-msvc") for t in configured_targets):
+        if os.environ.get("CPLUS_INCLUDE_PATH"):
+            print("MSVC sysroot: CPLUS_INCLUDE_PATH from the environment")
+        elif xwin_include_directories():
+            print(f"MSVC sysroot: {xwin_include_directories()[0].parents[1]} (xwin)")
+        else:
+            print(
+                "MSVC sysroot: NONE - tests including <Windows.h> will fail to compile whatever the headers say. "
+                f"Install one with xwin into {DEFAULT_XWIN_ROOT} or set {XWIN_ROOT_ENV}."
+            )
     print("=== test selection summary ===")
     print(f"Total tests in config: {len(cpp_tests)}")
     print(f"Runnable tests: {len(runnable_tests)}")

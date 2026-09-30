@@ -136,6 +136,7 @@ UNIT_MODULES = frozenset(
         "test_register_event_listener_abstract_preprocessor",
         "test_registerconcommand_preprocessor",
         "test_run_cpp_tests",
+        "test_run_cpp_tests_xwin",
         "test_script_desc_internal_preprocessor",
         "test_source_artifact_accepted_bin",
         "test_source_artifact_bootstrap",
