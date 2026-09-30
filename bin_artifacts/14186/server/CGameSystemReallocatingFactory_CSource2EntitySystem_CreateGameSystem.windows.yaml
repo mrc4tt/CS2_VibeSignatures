@@ -2,6 +2,13 @@ func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
 func_va: '0x180bc9270'
 func_rva: '0xbc9270'
 func_size: '0x56'
+func_sig: 40 53 48 83 EC ?? 48 8B 05 ?? ?? ?? ?? BA ?? ?? ?? ?? 48 8B 08 48 8B 01 FF 50 ?? 48 8B D8 33 C0 48 85 DB 74 ?? 48
+  89 43 ?? 48 89 43 ?? 48 8D 05 ?? ?? ?? ?? 48 89 03 48 8B 0D ?? ?? ?? ?? 48 85 C9 74 ?? 4C 8B 01 48 8B D3 41 FF 50 ?? 48
+  8B C3 48 83 C4 ?? 5B C3 CC CC CC CC CC CC CC CC CC CC 40 53 48 83 EC ?? 48 8B 02 48 8B DA 33 D2 48 8B CB FF 90 ?? ?? ??
+  ?? 48 8B 03 33 D2 48 8B CB FF 90 ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 8B D3 48 8B 08 48 8B 01 48 83 C4 ?? 5B 48 FF 60 ??
+  CC CC B0 ?? C3 CC CC CC CC CC CC CC CC CC CC CC CC CC 48 8B 41 ?? 48 85 C0 74 ?? 48 89 10 C3 CC CC CC B0 ?? C3 CC CC CC
+  CC CC CC CC CC CC CC CC CC CC 33 C0 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC C2 ?? ??
+func_sig_allow_across_function_boundary: true
 vtable_name: CGameSystemReallocatingFactory_CSource2EntitySystem
 vfunc_offset: '0x18'
 vfunc_index: 3

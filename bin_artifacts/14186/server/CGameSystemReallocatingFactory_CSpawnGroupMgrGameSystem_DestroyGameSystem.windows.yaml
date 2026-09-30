@@ -2,6 +2,8 @@ func_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSy
 func_va: '0x18055b730'
 func_rva: '0x55b730'
 func_size: '0x55'
+func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 33 C0 48 8D 7A ??
+func_sig_allow_across_function_boundary: true
 vtable_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
 vfunc_offset: '0x20'
 vfunc_index: 4
