@@ -1,0 +1,25 @@
+[Unit]
+Description=CS2_VibeSignatures editor IDA session (idalib-mcp on 127.0.0.1:13337)
+Documentation=file:/root/CS2_VibeSignatures/systemd/README.md
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/CS2_VibeSignatures
+Environment=HOME=/root
+Environment=PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/root/.local/bin/uv run python ida_session.py
+# run_linux.sh / run_windows.sh stop this unit while they analyse and start it on
+# exit, so a stop is expected; anything else is restarted.
+Restart=on-failure
+RestartSec=30
+# One worker per open binary, each single-threaded; the cap keeps the editor from
+# competing with an analysis run for memory.
+MemoryHigh=12G
+MemoryMax=16G
+Nice=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

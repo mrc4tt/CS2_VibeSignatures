@@ -17,6 +17,23 @@ runner here would let anyone's pull request execute code on it.
     sudo systemctl daemon-reload
     sudo systemctl enable --now cs2vibe-autopilot.timer
 
+The editor's IDA session is a second, independent unit:
+
+    sudo cp systemd/cs2vibe-ida-session.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now cs2vibe-ida-session.service
+
+It runs `ida_session.py`, which starts `idalib-mcp` on 127.0.0.1:13337 (where
+`.mcp.json` points) with the newest `bin/<VER>/server/libserver.so` that already
+has a `.i64`. Other binaries are opened on demand through the supervisor's
+`idalib_open` tool, one worker each. `run_linux.sh`, `run_windows.sh` and
+`gen_references.sh` stop it for the length of a run and start it again on exit,
+so it never holds a database a run needs, and each restart moves it to the build
+that run produced. `MemoryMax=16G` keeps it from competing with a run.
+
+    journalctl -u cs2vibe-ida-session -f              # what is it doing
+    uv run python ida_session.py -print               # which binary it opens
+
 ## Operate
 
     systemctl list-timers cs2vibe-autopilot.timer     # when does it next look
@@ -29,7 +46,7 @@ runner here would let anyone's pull request execute code on it.
 
 ## Settings, in `.env`
 
-    AUTOPILOT_DEPLOY=safe        # safe (default) | auto | off
+    AUTOPILOT_DEPLOY=safe        # safe (default) | verified | auto | off
     AUTOPILOT_NOTIFY_URL=        # ntfy topic or Discord webhook, outgoing only
     AUTOPILOT_MIN_FREE_GB=40     # refuse to start a depot download below this
     AUTOPILOT_MAX_ATTEMPTS=2     # then stop retrying that build

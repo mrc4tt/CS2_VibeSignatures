@@ -574,13 +574,17 @@ port plus orphaned workers whose parent is gone. The interactive editor session 
 `.mcp.json` points at, and survives a run — it used to be killed by a blanket
 `pkill -f 'idalib-mcp --unsafe'`, so every analysis cost the editor its IDA connection.
 
-Start the session server by hand when you want IDA tools in the editor:
+The session server runs as `systemd/cs2vibe-ida-session.service` (`ida_session.py`: the newest
+`bin/<VER>/server/libserver.so` that has a `.i64`). `run_linux.sh`, `run_windows.sh` and
+`gen_references.sh` stop it while they run and start it on exit, so it never holds a database a
+run needs and always follows the newest analysed build. By hand, when the unit is not installed:
 
 ```bash
 uv run idalib-mcp --unsafe --host 127.0.0.1 --port 13337 bin/<VER>/server/libserver.so
 ```
 
-One instance serves ONE binary, so Windows work wants a second instance on another port.
+One supervisor holds several binaries - one worker each, opened with its `idalib_open` tool - so
+Windows work no longer needs a second instance.
 
 **Within one run, binaries go side by side** (`-jobs` / `CS2VIBE_JOBS`, which the run
 scripts default to `auto`). IDA is single-threaded per database, so the only way to use
@@ -608,9 +612,9 @@ holds (read from `/proc/<pid>/fd`, not per file — a live database keeps `.id0`
 `.til`, so a per-file test deletes the wrong things). Measured: 5 stale files removed, 5 belonging
 to the open session kept, and the session decompiled normally afterwards.
 
-What is left is a real but harmless overlap: one instance holds one binary, so if the session has
-`libserver.so` open and the run needs it, that module fails with "only <other>.so is open" until
-the session is closed. The scripts say so instead of failing cryptically.
+The overlap that used to remain - a session holding `libserver.so` made that module of a run fail
+with "only <other>.so is open" - is gone for the systemd unit, which the run scripts pause. A
+server started by hand on 13337 is still only warned about, not stopped.
 
 ### 11. NEVER use `expected_output` for a symbol you have not recovered on every gamever
 `expected_output` makes the artifact **required**: pack aborts with "Missing required symbol YAML"
