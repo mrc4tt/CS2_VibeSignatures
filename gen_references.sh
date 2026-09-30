@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+#
+# gen_references.sh — generér manglende LLM_DECOMPILE-referencer med fuld log.
+#
+# Finder selv de manglende (placeholder-bevidst: {platform} udfoldes til linux+windows),
+# springer eksisterende over (resume-sikkert), og skriver:
+#   - konsol: statuslinjer pr. funktion (START/OK/FAIL/SKIP + tidspunkt)
+#   - refs_gen_<tidsstempel>.log: ALLE output inkl. fejlmeddelelser
+#
+# Usage: ./gen_references.sh [GAMEVER]     (default: 14178b)
+
+set -uo pipefail
+cd "$(dirname "$0")"
+GAMEVER="${1:-14178b}"
+LOG="refs_gen_$(date +%Y%m%d_%H%M%S).log"
+
+# Auto-reap: en efterlevende idalib-mcp paa port 13337 faar alle koersler til at
+# fejle oejeblikkeligt. Dræb og vent før start (med mindre NO_REAP=1).
+# Own port, so the interactive session's server on 13337 is left alone: .mcp.json
+# points there, and reaping it cost the editor its IDA connection on every run.
+export CS2VIBE_MCP_PORT="${CS2VIBE_MCP_PORT:-13402}"
+if [ "${NO_REAP:-0}" != "1" ] && ss -tln 2>/dev/null | grep -q ":${CS2VIBE_MCP_PORT} "; then
+    echo "[reap] port ${CS2VIBE_MCP_PORT} optaget - dræber kun den server og efterladte workers"
+    for _pid in $(pgrep -f "idalib-mcp --unsafe --host 127.0.0.1 --port ${CS2VIBE_MCP_PORT}" 2>/dev/null); do
+        pkill -9 -P "$_pid" 2>/dev/null || true
+        kill -9 "$_pid" 2>/dev/null || true
+    done
+    for _pid in $(pgrep -f 'ida_pro_mcp\.idalib_server' 2>/dev/null); do
+        [ "$(ps -o ppid= -p "$_pid" 2>/dev/null | tr -d ' ')" = "1" ] && kill -9 "$_pid" 2>/dev/null || true
+    done
+    sleep 2
+    ss -tln 2>/dev/null | grep -q ":${CS2VIBE_MCP_PORT} " && { echo "❌ porten er stadig optaget af en anden proces - undersoeg: ss -tlnp | grep ${CS2VIBE_MCP_PORT}"; exit 1; }
+fi
+
+# Symboler som configen pinner til én platform kan aldrig faa en reference paa den
+# anden — fx SendViolationReport, der kun findes i client.dll (se
+# find-ClientAntiTamperTest-windows.py). Uden dette udfoldes {platform} til begge
+# og hver koersel ender med et evigt SKIP.
+PINS="$(mktemp)"
+SESSION_UNIT=cs2vibe-ida-session.service
+if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet "$SESSION_UNIT" 2>/dev/null; then
+    echo "[idb] pausing the editor IDA session for this run ($SESSION_UNIT)"
+    systemctl stop "$SESSION_UNIT" || true
+fi
+trap 'rm -f "$PINS"; systemctl is-enabled --quiet "$SESSION_UNIT" 2>/dev/null && systemctl start --no-block "$SESSION_UNIT" 2>/dev/null; true' EXIT
+uv run --with pyyaml python - "$GAMEVER" > "$PINS" <<'PYEOF'
+import sys, yaml
+cfg = yaml.safe_load(open(f"configs/{sys.argv[1]}.yaml"))
+for module in cfg.get("modules", []):
+    for sym in module.get("symbols", []) or []:
+        if isinstance(sym, dict) and sym.get("platform"):
+            print(f"{sym['name']}\t{sym['platform']}")
+PYEOF
+
+# byg mangler-listen (samme tjek som missing-check kommandoen)
+MISSING=$(grep -h "references/" ida_preprocessor_scripts/find-*-decompiles.py | \
+  grep -oP 'references/\S+?\.yaml' | sort -u | while read r; do
+    # ekspander {module_name}-placeholder via symbolets eksisterende artefakt
+    if [[ "$r" == *'{module_name}'* ]]; then
+      sym="$(basename "$r" | sed 's/\.{platform\}\.yaml$//')"
+      mod="$(find bin/$GAMEVER bin_artifacts/$GAMEVER -maxdepth 2 \
+             -name "${sym}.linux.yaml" -o -name "${sym}.windows.yaml" 2>/dev/null \
+             | head -1 | cut -d/ -f3)"
+      if [ -n "$mod" ]; then
+        r="${r/\{module_name\}/$mod}"
+      else
+        continue
+      fi
+    fi
+    sym2="$(basename "$r" | sed 's/\.{platform\}\.yaml$//;s/\.\(linux\|windows\)\.yaml$//')"
+    pin="$(awk -F'\t' -v s="$sym2" '$1==s {print $2; exit}' "$PINS")"
+    for p in linux windows; do
+      [ -n "$pin" ] && [ "$pin" != "$p" ] && continue
+      f="ida_preprocessor_scripts/${r/\{platform\}/$p}"
+      [ -f "$f" ] || echo "${r/\{platform\}/$p}"
+    done
+  done)
+
+TOTAL=$(printf '%s\n' "$MISSING" | grep -c .)
+echo "[$(date +%H:%M:%S)] Manglende referencer: $TOTAL — log: $LOG" | tee -a "$LOG"
+
+ok=0; fail=0; skip=0
+while read -r r; do
+  [ -z "$r" ] && continue
+  rel="${r#references/}"
+  mod="${rel%%/*}"
+  name="$(basename "$r" | sed 's/\.\(linux\|windows\)\.yaml//')"
+  plat="$(basename "$r" | grep -oP 'linux|windows')"
+  # platform-bevidst binary-map (.windows-referencer SKAL eksporteres fra .dll,
+  # linux-referencer fra .so — at blande dem fejler altid paa VA/eksport)
+  declare -A BIN_LINUX=( [engine]=libengine2.so [server]=libserver.so [client]=libclient.so \
+    [SDL3]=libSDL3.so.0 [scenesystem]=libscenesystem.so [networksystem]=libnetworksystem.so \
+    [matchmaking]=libmatchmaking.so [vphysics2]=libvphysics2.so )
+  declare -A BIN_WIN=( [engine]=engine2.dll [server]=server.dll [client]=client.dll \
+    [SDL3]=SDL3.dll [scenesystem]=scenesystem.dll [networksystem]=networksystem.dll \
+    [matchmaking]=matchmaking.dll [vphysics2]=vphysics2.dll )
+  if [ "$plat" = "windows" ]; then
+    bin="bin/$GAMEVER/$mod/${BIN_WIN[$mod]:-}"
+  else
+    bin="bin/$GAMEVER/$mod/${BIN_LINUX[$mod]:-}"
+  fi
+  [ -z "${bin##*/}" ] && bin=""
+  if [ -z "$bin" ]; then
+    echo "[$(date +%H:%M:%S)] SKIP (ukendt modul): $r" | tee -a "$LOG"; skip=$((skip+1)); continue
+  fi
+  # platform-artefakt-tjek: uden artefakt kan func_va aldrig resolves (fx
+  # Windows-eksklusive funktioner paa linux eller endnu ikke jagede platforme)
+  if [ ! -f "bin/$GAMEVER/$mod/$name.$plat.yaml" ] && [ ! -f "bin_artifacts/$GAMEVER/$mod/$name.$plat.yaml" ]; then
+    echo "[$(date +%H:%M:%S)] SKIP (ingen $plat-artefakt — jagt platformen foerst): $r" | tee -a "$LOG"; skip=$((skip+1)); continue
+  fi
+  echo "[$(date +%H:%M:%S)] START $r (bin: $bin)" | tee -a "$LOG"
+  if uv run generate_reference_yaml.py -gamever "$GAMEVER" -module "$mod" -platform "$plat" \
+       -func_name "$name" -auto_start_mcp -binary "$bin" >> "$LOG" 2>&1; then
+    echo "[$(date +%H:%M:%S)] OK   $r" | tee -a "$LOG"; ok=$((ok+1))
+  else
+    echo "[$(date +%H:%M:%S)] FAIL $r  (detaljer i $LOG)" | tee -a "$LOG"; fail=$((fail+1))
+  fi
+done <<< "$MISSING"
+
+echo "=== FÆRDIG $(date +%H:%M:%S): OK=$ok FAIL=$fail SKIP=$skip af $TOTAL — detaljer: $LOG" | tee -a "$LOG"

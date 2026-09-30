@@ -21,6 +21,16 @@ vcall_finder
 # next sync silently hands those decisions back to upstream. It carries no
 # secrets and no machine-specific paths, so it is version controlled.
 !sync_upstream.sh
+# The pipeline's own entry points, for the same reason: autopilot's step resume
+# and done-means-committed gate, the deploy's commit-and-push, and the run
+# scripts' pause of the editor IDA session lived only on the analysis server,
+# so a fresh clone or a lost box took them with it. None of them carries a
+# secret - credentials come from .env - and upstream has no file of these names.
+!autopilot.sh
+!deploy_local_plugins.sh
+!run_linux.sh
+!run_windows.sh
+!gen_references.sh
 libtier0.so
 libtier0.so.*
 hm

@@ -5,10 +5,10 @@ second copy drifts the first time a plugin is added to one and not the other - w
 make the drift check silently stop covering that plugin, the exact failure it exists to
 catch. So the table is asserted against the scripts rather than trusted.
 
-Those scripts are git-ignored on purpose (.gitignore excludes *.sh; sync_upstream.sh is the
-one exception), so the comparison can only run on a machine that actually deploys. There it
-is the check that matters; on a fresh clone it skips, and the comparison semantics below -
-which are repository code - are asserted either way.
+deploy_local_plugins.sh is version controlled; update_css_gamedata.sh is still a git-ignored
+local script (.gitignore excludes *.sh with named exceptions), so its half of the comparison
+only runs on a machine that actually deploys and skips on a fresh clone. The comparison
+semantics below - which are repository code - are asserted either way.
 """
 
 import os
