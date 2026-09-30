@@ -32,7 +32,14 @@ GENERATE_YAML_DESIRED_FIELDS = [
         "CBaseEntity_EndTouch",
         [
             "func_name",
-            "vfunc_sig",
+            # optional: vfunc_sig is a call-site pattern only the LLM path finds,
+            # and requiring it failed every build without an LLM key. func_sig is
+            # what lets the next gamever relocate without one.
+            "func_va?",
+            "func_rva?",
+            "func_size?",
+            "func_sig?",
+            "vfunc_sig?",
             "vfunc_offset",
             "vfunc_index",
             "vtable_name",

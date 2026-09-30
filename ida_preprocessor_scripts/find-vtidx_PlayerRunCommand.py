@@ -16,6 +16,9 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_rva",
             "func_size",
             "func_sig",
+            # short body: a pattern that stays inside it has to pin call/RIP
+            # displacements, which move every build
+            "func_sig_allow_across_function_boundary:true",
             "vtable_name",
             "vfunc_offset",
             "vfunc_index",

@@ -3127,6 +3127,7 @@ async def preprocess_func_sig_via_mcp(
     direct_vtable_class=None,
     direct_vfunc_offset=None,
     allow_func_sig_across_function_boundary=False,
+    require_func_sig=True,
 ):
     """
     Preprocess a function output by reusing old-version signature metadata.
@@ -3176,7 +3177,7 @@ async def preprocess_func_sig_via_mcp(
             direct_func_va=direct_func_va,
             direct_vtable_class=direct_vtable_class,
             direct_vfunc_offset=direct_vfunc_offset,
-            require_func_sig=True,
+            require_func_sig=require_func_sig,
             allow_func_sig_across_function_boundary=allow_func_sig_across_function_boundary,
             normalized_mangled_class_names=normalized_mangled_class_names,
             debug=debug,
@@ -8407,9 +8408,14 @@ async def preprocess_common_skill(
             and not normalized_spec["xref_funcs"]
             and not normalized_spec["inline_alias"]
         ):
+            # An entry with no anchor at all is a placeholder ("no xref route is
+            # known yet"), not a bad spec. Returning False here failed the whole
+            # preprocessor before relocation was even tried, so a symbol whose
+            # func_sig was still unique went to an agent every build
+            # (CAttributeList_SetOrAddAttributeValueByName windows, 14186).
             if debug:
-                print(f"    Preprocess: empty func_xrefs spec for {func_name}")
-            return False
+                print(f"    Preprocess: empty func_xrefs spec for {func_name}; relocation only")
+            continue
 
         func_xrefs_map[func_name] = normalized_spec
 

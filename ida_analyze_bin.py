@@ -462,7 +462,11 @@ def _agent_func_signature_artifact_paths(
             payload = load_yaml_file(artifact_path)
         except Exception:
             continue
-        if isinstance(payload, dict) and payload.get("func_sig") is not None:
+        # An agent-written artifact with an address but no func_sig is selected
+        # too: without a signature the next gamever cannot relocate it, so an
+        # agent is paid to find it again every build (vtidx_FinishMove and
+        # vtidx_PlayerRunCommand did exactly that through 14186).
+        if isinstance(payload, dict) and (payload.get("func_sig") is not None or payload.get("func_va")):
             selected.append(artifact_path)
     return selected
 
@@ -495,7 +499,13 @@ async def regenerate_agent_func_signatures_via_session(
         except Exception as exc:
             issues.append(f"{artifact_path}: failed to read Agent YAML for func_sig regeneration ({exc})")
             continue
-        if not isinstance(payload, dict) or payload.get("func_sig") is None:
+        if not isinstance(payload, dict):
+            continue
+        # Filling in a missing signature is best effort: a two-instruction thunk
+        # cannot be signatured uniquely (CLAUDE.md, INHERIT_VFUNCS), and its
+        # slot-only artifact is correct, so a failure there is not an issue.
+        fill_only = payload.get("func_sig") is None
+        if fill_only and not payload.get("func_va"):
             continue
 
         func_va = str(payload.get("func_va") or "").strip()
@@ -512,10 +522,14 @@ async def regenerate_agent_func_signatures_via_session(
                 debug=debug,
             )
         except Exception as exc:
-            issues.append(f"{artifact_path}: deterministic func_sig regeneration failed for func_va={func_va} ({exc})")
+            if not fill_only:
+                issues.append(f"{artifact_path}: deterministic func_sig regeneration failed for func_va={func_va} ({exc})")
             continue
         if not isinstance(generated, dict) or not generated.get("func_sig"):
-            issues.append(f"{artifact_path}: unable to deterministically regenerate func_sig from func_va={func_va}")
+            if not fill_only:
+                issues.append(f"{artifact_path}: unable to deterministically regenerate func_sig from func_va={func_va}")
+            elif debug:
+                print(f"    No unique func_sig for {os.path.basename(artifact_path)}; kept slot-only")
             continue
 
         payload["func_sig"] = generated["func_sig"]

@@ -16,7 +16,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "offset",
             "size",
             "offset_sig",
-            "offset_sig_allow_across_function_boundary",
+            "offset_sig_allow_across_function_boundary:true",
         ],
     ),
 ]

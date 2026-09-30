@@ -51,6 +51,10 @@ async def preprocess_skill(
         debug=debug,
         direct_vtable_class=VTABLE_STEM,
         direct_vfunc_offset=VFUNC_OFFSET,
+        # The body is a bare `ret` (1 byte linux, 3 windows): no signature can be
+        # unique, and the slot is what identifies it. Requiring one failed the
+        # preprocess every build and sent it to an agent (~25 min on 14186).
+        require_func_sig=False,
     )
     if not isinstance(result, dict):
         return False
