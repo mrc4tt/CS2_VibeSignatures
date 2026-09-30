@@ -424,10 +424,30 @@ warnings that turned into `0x0`: a larger unknown count here is the fix, not a r
 
 ## AFTER AN UPSTREAM MERGE (the fork's own state is re-asserted, not merged)
 
-`sync_upstream.sh` resolves every content conflict in **upstream's** favour (`-X theirs`, and
-structural conflicts forced to upstream state). That means upstream's config overwrites this
-fork's local decisions every time. Those decisions therefore live in code, as declarative tables in
-`ensure_local_gamedata_symbols.py`, and are replayed after each merge:
+`sync_upstream.sh` does a plain merge and resolves each conflicted path by the class it is in:
+
+| Class | Paths | On conflict |
+|-------|-------|-------------|
+| `PROTECTED_PATHS` | `pages`, `gamedata`, `gamesymbols`, `hl2sdk_cs2`, `.gitmodules`, the disabled generators | ours, exactly; upstream's additions inside are removed |
+| `ADDITIVE_PATHS` | `bin_artifacts`, `binary_locks` | ours for every file the fork has; files only upstream has arrive |
+| `THEIRS_ON_CONFLICT` | `configs`, `download.yaml` | upstream wins the conflicting hunks |
+| everything else | code | the script stops with the markers in place; resolve, `git add`, `./sync_upstream.sh --continue` |
+
+It used to be `-X theirs` across the board. That held while upstream produced the artifacts; once
+this fork analysed gamevers itself it meant 3060 conflicted files decided for upstream in one run
+(3040 of them the fork's own artifacts, 1284 on 14182 alone), and in `ida_analyze_bin.py` upstream's
+import block replaced the fork's, dropping `import functools` — the module stopped importing and
+nothing reported it. Two gates now follow the resolution: before the commit, no markers, the
+analysis modules import, and no undefined name in any Python file both sides changed (failing here
+leaves an uncommitted merge, so `git merge --abort` undoes it); after the commit and the table
+replay, the test suite (`SYNC_SKIP_TESTS=1` skips it). Expect the second gate to fail on a test
+upstream added for a file inside a protected path: `tests/test_legacy_inputs_tool.py` loads
+`pages/legacy_inputs_tool.py`, which exact protection of `pages` removes. That is a decision to
+make per file (`git checkout <upstream> -- pages/<file>`), not a reason to skip the gate.
+
+Upstream's config still overwrites this fork's local decisions in every conflicting hunk. Those
+decisions therefore live in code, as declarative tables in `ensure_local_gamedata_symbols.py`,
+and are replayed after each merge:
 
 | Table | What it re-asserts |
 |-------|--------------------|
