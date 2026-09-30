@@ -31,12 +31,12 @@ vcall_finder
 !run_linux.sh
 !run_windows.sh
 !gen_references.sh
+!update_css_gamedata.sh
 libtier0.so
 libtier0.so.*
 hm
 clear_ida_db.sh
 pop.sh
-update_css_gamedata.sh
 gamedatatest.json
 
 # Basic Memory knowledge base (memory.db, config, logs stay local)

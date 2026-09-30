@@ -5,10 +5,9 @@ second copy drifts the first time a plugin is added to one and not the other - w
 make the drift check silently stop covering that plugin, the exact failure it exists to
 catch. So the table is asserted against the scripts rather than trusted.
 
-deploy_local_plugins.sh is version controlled; update_css_gamedata.sh is still a git-ignored
-local script (.gitignore excludes *.sh with named exceptions), so its half of the comparison
-only runs on a machine that actually deploys and skips on a fresh clone. The comparison
-semantics below - which are repository code - are asserted either way.
+Both deploy scripts are version controlled (.gitignore excludes *.sh but names them as
+exceptions), so the comparison runs on every checkout. The skip below only fires if one of
+them is removed.
 """
 
 import os
@@ -24,7 +23,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def _read(name):
     path = os.path.join(REPO, name)
     if not os.path.isfile(path):
-        raise unittest.SkipTest(f"{name} is a git-ignored local script and is not present here")
+        raise unittest.SkipTest(f"{name} is not present here")
     with open(path, encoding="utf-8") as handle:
         return handle.read()
 

@@ -309,10 +309,9 @@ mirror the two deploy scripts: `deploy_local_plugins.sh` **copies**, so the file
 byte (bar a trailing newline); `update_css_gamedata.sh` **merges by key**, so install-only symbols
 are kept on purpose and only generated keys are compared. `tests/test_deploy_targets.py` asserts
 `DEPLOY_TARGETS` against both scripts, so adding a plugin to one without the other fails the suite
-rather than silently dropping it from the check. `deploy_local_plugins.sh` is tracked;
-`update_css_gamedata.sh` is still git-ignored, so its half of the test skips on a fresh clone.
-`.gitignore` excludes `*.sh` but tracks, by name, `sync_upstream.sh` and the pipeline's own
-entry points: `autopilot.sh`, `deploy_local_plugins.sh`, `run_linux.sh`, `run_windows.sh`,
+rather than silently dropping it from the check. `.gitignore` excludes `*.sh` but tracks, by
+name, `sync_upstream.sh` and the pipeline's own entry points: `autopilot.sh`,
+`deploy_local_plugins.sh`, `update_css_gamedata.sh`, `run_linux.sh`, `run_windows.sh`,
 `gen_references.sh`. `autopilot.sh` runs it after every deploy —
 running the scripts is not evidence the files moved.
 
