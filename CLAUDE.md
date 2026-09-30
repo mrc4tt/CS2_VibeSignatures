@@ -21,7 +21,7 @@ gamesymbols/<gamever>.yaml      packed snapshot, stamped with the config digest
 gamedata/<gamever>/<plugin>/    one dir per plugin, from gamedata-generators/<plugin>/ (15, 8 enabled)
         |  deploy_local_plugins.sh + update_css_gamedata.sh
         v
-~/customGIT/*  and  ~/CounterStrikeSharp     (still needs a commit inside each plugin repo)
+~/customGIT/*  and  ~/CounterStrikeSharp     (deploy_local_plugins.sh commits and pushes each repo)
 
 One generator module per plugin lives in `gamedata-generators/<plugin>/`; it decides which keys
 that plugin ships and in what format. Adding a plugin means adding a generator there, not touching
@@ -800,7 +800,7 @@ Two guards now catch the class before the baseline does:
 - **Verify a find before you write it** — unique sig match plus boundary plus one semantic signal (string set, call graph, decompile). See rules 12 and 13
 - **Leave `func_size: 0x0` when unsure** — unknown is safe, wrong is a defect
 - **Never pin a relative branch target or a RIP-relative displacement in a shipped sig** — those bytes move on every rebuild; `enrich_vfunc_sigs.py` wildcards them, and you must re-run `validate_artifacts.py` after it and drop any sig that then matches more than one place
-- **Commit inside plugin repos after `deploy_local_plugins.sh`** — deployed gamedata sits uncommitted in ~/customGIT/* until you commit and push to git.miksen.me
+- **Check the plugin repos were pushed after `deploy_local_plugins.sh`** — it now commits and pushes the generated file in weaponpaints, matchzy and CounterStrikeSharp itself (that path only, rebasing once with `--autostash` when the remote moved) and exits 1 naming any repo it could not push. `check_deploy_drift.py` reads working copies, so it cannot see a commit that never left the server
 
 ## TOOL QUICK-REFERENCE
 
@@ -819,7 +819,7 @@ Two guards now catch the class before the baseline does:
 | `add_gamever.sh` | New gamever release | Probes Steam for manifest IDs |
 | `fix_duplicate_symbols.py` | Only on configs with validator errors | NEVER use `-all` |
 | `enrich_vfunc_sigs.py` | After analysis | Adds func_sig to vfunc artifacts offline |
-| `deploy_local_plugins.sh` | After gamedata generation | → ~/customGIT/weaponpaints + matchzy |
+| `deploy_local_plugins.sh` | After gamedata generation, after `update_css_gamedata.sh` | → ~/customGIT/weaponpaints + matchzy, then commits and pushes those two and ~/CounterStrikeSharp |
 | `schema_dump.py` | New gamever, or "what is offset X on class Y" | Schema (classes/fields/offsets) read statically from libserver.so/server.dll, no server. `diff` flags a field gone + a field added at one offset with one size as *likely renamed* (classes too). `impact -old <PREV> -new <VER> [-plugins DIR]... [-json]`: which fields CounterStrikeSharp's generated `SchemaMember`s and each plugin .dll (ECMA-335 MemberRefs + `ldstr` class/field pairs, `schema_impact.py`) use are removed/renamed/moved; exit 1 on removed or renamed. Moves are harmless (CSSharp resolves offsets by name at runtime). Also flags a base-class field named on a derived class, which CSSharp's lookup silently resolves to 0 |
 | `update_css_gamedata.sh` | After gamedata generation | → ~/CounterStrikeSharp install |
 
