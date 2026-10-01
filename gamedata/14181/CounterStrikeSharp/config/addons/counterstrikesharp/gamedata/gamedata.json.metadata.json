@@ -159,7 +159,7 @@
       "changes": [
         {
           "after": "48 85 D2 0F 84 ? ? ? ? 53 41 57 48 83 EC 28 4C 8B 42 10",
-          "before": "48 85 D2 0F 84 ? ? ? ? 53 41 57 48 83 EC ? 4C 8B 42 10",
+          "before": "48 85 D2 0F 84 ? ? ? ? 53 55 48 83 EC ? 4C 8B 42 10",
           "line": 231,
           "path": [
             "CBaseTrigger_EndTouch",
@@ -573,7 +573,7 @@
           ]
         },
         {
-          "after": "55 BE ? ? ? ? 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 83 EC ? 4C 8D 35 98 22 BE ?",
+          "after": "55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB 48 83 EC ? 0F B6 05 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7B 30 00",
           "before": "55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB 48 83 EC 68 0F B6 05 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7B 30 00",
           "line": 339,
           "path": [
@@ -866,6 +866,28 @@
       "updated": true
     },
     {
+      "changes": [
+        {
+          "after": "48 8B 1D ? ? ? ? 48 85 DB 0F 84 ? ? ? ? BD ? ? ? ?",
+          "before": "48 8B 1D ? ? ? ? 48 85 DB 0F 84 ? ? ? ? BD",
+          "line": 251,
+          "path": [
+            "IGameSystem_InitAllSystems_pFirst",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "4C 8B 35 ? ? ? ? 4D 85 F6 75 ?",
+          "before": "4C 8B 35 ? ? ? ? 4D 85 F6 75",
+          "line": 252,
+          "path": [
+            "IGameSystem_InitAllSystems_pFirst",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         250,
@@ -873,7 +895,7 @@
         252
       ],
       "name": "IGameSystem_InitAllSystems_pFirst",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -996,6 +1018,6 @@
   "summary": {
     "covered": 52,
     "total": 52,
-    "updated": 28
+    "updated": 29
   }
 }
