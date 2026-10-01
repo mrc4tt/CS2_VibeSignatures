@@ -51,6 +51,12 @@ deploy "$OUT_ROOT/weaponpaints/gamedata/weaponpaints.json" \
 deploy "$OUT_ROOT/matchzy/gamedata/matchzy.json" \
        "$HOME/customGIT/matchzy/gamedata/matchzy.json"
 
+# Took over from rosetta (/root/rosetta, retired), which was the only thing
+# refreshing it. (Ray-Trace, its other target, is archived: CounterStrikeSharp
+# core implements ray tracing now.)
+deploy "$OUT_ROOT/cs2-retakes-allocator/Resources/RetakesAllocator_gamedata.json" \
+       "$HOME/plugins/cs2-retakes-allocator/Resources/RetakesAllocator_gamedata.json"
+
 # Commit and push exactly the generated path in a plugin repo, nothing else: a
 # workflow being edited or a scratch file in the same repo is left as it is.
 # The plugin repos get commits from elsewhere too (matchzy was three behind on
@@ -90,6 +96,7 @@ commit_push() {  # commit_push <repo> <path inside repo>
 
 commit_push "$HOME/customGIT/weaponpaints" gamedata/weaponpaints.json
 commit_push "$HOME/customGIT/matchzy" gamedata/matchzy.json
+commit_push "$HOME/plugins/cs2-retakes-allocator" Resources/RetakesAllocator_gamedata.json
 # CounterStrikeSharp's file is written by update_css_gamedata.sh, which has to
 # run first; only configs/ is ours there.
 commit_push "$HOME/CounterStrikeSharp" configs/

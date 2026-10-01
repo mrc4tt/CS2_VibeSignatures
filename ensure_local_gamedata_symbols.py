@@ -154,6 +154,12 @@ ALIAS_OVERRIDES = {
     # key survives as an alias instead of a second declaration (the config validator
     # rejects two symbols sourcing one artifact).
     "ShowHudHint": "CEnvHudHint_API_ShowHudHint",
+    # cs2-retakes-allocator's GiveNamedItem2: its own signature lands on this
+    # artifact's func_va on both platforms (14188 linux 0x1586d10 slot 24, windows
+    # 0x180ac1a90 slot 23) - the thunk that zeroes the trailing args. Not the slot-25
+    # sibling GiveNamedItemBool, which is what the withdrawn GiveNamedItem2 records
+    # pointed at (FORK_OWNED_OBSOLETE_TASKS, audit_duplicate_va.DECLARED_ALIAS_PAIRS).
+    "GiveNamedItem2": "CCSPlayer_ItemServices_GiveNamedItem",
     # CounterStrikeSharp ships this offset under the short name its schema code uses
     # (schema.cpp:167 reads GetOffset("SetStateChanged")), while the analysis files the
     # virtual as CEntityInstance_NetworkStateChanged. Same values - windows 28 from

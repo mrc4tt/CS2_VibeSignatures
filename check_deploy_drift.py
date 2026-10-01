@@ -68,6 +68,15 @@ DEPLOY_TARGETS = (
         "mode": "copy",
         "deployed_by": "deploy_local_plugins.sh",
     },
+    {
+        "plugin": "cs2-retakes-allocator",
+        "dist": "Resources/RetakesAllocator_gamedata.json",
+        "root_env": "PLUGINS_ROOT",
+        "root_default": "~/plugins",
+        "install": "cs2-retakes-allocator/Resources/RetakesAllocator_gamedata.json",
+        "mode": "copy",
+        "deployed_by": "deploy_local_plugins.sh",
+    },
 )
 
 

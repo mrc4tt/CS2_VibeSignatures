@@ -11338,6 +11338,7 @@ modules:
         category: vfunc
         alias:
           - CCSPlayer_ItemServices::GiveNamedItem
+          - GiveNamedItem2
       - name: CCSPlayer_ItemServices_GiveNamedItemBool
         category: vfunc
         alias:

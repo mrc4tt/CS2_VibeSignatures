@@ -32,6 +32,7 @@ SEEDS = [
     "gamedata-generators/bot-controller/gamedata/bot-controller.json",
     "gamedata-generators/bot-hider/gamedata/bot-hider.json",
     "gamedata-generators/css-extras/gamedata/css-extras.json",
+    "gamedata-generators/cs2-retakes-allocator/Resources/RetakesAllocator_gamedata.json",
 ]
 BINARIES = {"linux": "libserver.so / libengine2.so", "windows": "server.dll / engine2.dll"}
 
