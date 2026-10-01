@@ -86,6 +86,22 @@ ABI_GUARDS = {
             "bad_heads": ["48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B 42"],
         },
     },
+    # CBasePlayerController::HandleCommand_JoinTeam(controller, team, flags, float). Identity
+    # anchor: the only function that references "HandleCommand_JoinTeam( %d ) - invalid team
+    # index.". 14182 dropped the early `mov r14d, edx` from the prologue; relocation kept the
+    # 14181 sig, which from 14182 on uniquely matches a different function (0x14b1950 on 14182,
+    # 0x14b36a0 on 14185) and calling it SIGSEGVs the server (MatchZy .spec -> .t/.ct).
+    # Verified by the string xref on 14182 (0x1580e50) and 14185 (0x15828d0). Linux only: the
+    # windows sig has not been re-checked.
+    "CBasePlayerController_HandleCommand_JoinTeam": {
+        "linux": {
+            "good_sig": "55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? "
+            "48 8D 05 ? ? ? ? 89 95 ? ? ? ? 4C 8B 28 4C 89 EF E8 ? ? ? ? 84 C0 0F 85 ? ? ? ? "
+            "48 89 DF 45 31 FF E8",
+            "accept_heads": ["55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8D 05"],
+            "bad_heads": ["55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB"],
+        },
+    },
     # Virtual CCSPlayer_MovementServices::ProcessMovement (vtable slot 29 linux / 28 windows on
     # 14181). The xref finder (s_pRunCommandPawn + floats) picked a non-virtual helper instead.
     "CCSPlayer_MovementServices_ProcessMovement": {
@@ -203,6 +219,8 @@ ABI_GUARDS = {
         },
     },
 }
+# The older key name for the same function (still produced by its own finder).
+ABI_GUARDS["CCSPlayerController_HandleCommand_JoinTeam"] = ABI_GUARDS["CBasePlayerController_HandleCommand_JoinTeam"]
 
 BINARY = {"linux": "libserver.so", "windows": "server.dll"}
 PE_IMAGE_BASE = 0x180000000
