@@ -16,3 +16,26 @@ if [ "$tools_deleted" -gt 3 ] && [ "${FORCE_SKILL_DELETE:-0}" != "1" ]; then
     echo "⚠️  Commit sletter $tools_deleted .py/.sh-filer - bevidst? (FORCE_SKILL_DELETE=1 for at tvinge)"
     exit 1
 fi
+
+# gamedata/history.json is a committed dataset derived from gamedata/<build>/. A hand
+# fix to generated gamedata (e.g. abi_guard --fix + update_gamedata.py) that is
+# committed without refreshing it turns the check-datasets CI job red ("history.json
+# is stale"). Refresh it here and stage it with the commit, so the CI check only ever
+# catches a commit that bypassed this hook. -history-only needs no game binaries.
+if git diff --cached --name-only -- 'gamedata/' | grep -qv '^gamedata/history\.json$'; then
+    if command -v uv >/dev/null 2>&1; then
+        run_py() { uv run --quiet python "$@"; }
+    else
+        run_py() { python3 "$@"; }
+    fi
+    if ! run_py publish_site_data.py -check >/dev/null 2>&1; then
+        if run_py publish_site_data.py -history-only >/dev/null; then
+            git add gamedata/history.json
+            echo "pre-commit: refreshed gamedata/history.json and added it to this commit"
+        else
+            echo "❌ pre-commit: gamedata/ changed but publish_site_data.py -history-only failed."
+            echo "   Run it by hand, or commit with --no-verify if this is intentional."
+            exit 1
+        fi
+    fi
+fi
