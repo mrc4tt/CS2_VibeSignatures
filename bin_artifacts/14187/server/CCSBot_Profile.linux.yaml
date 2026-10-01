@@ -1,0 +1,5 @@
+struct_name: CCSBot
+member_name: m_profile
+offset: '0x8'
+size: 8
+offset_sig: 49 8B 44 24 08 48 8D 9D C0 FE FF FF F3 0F 10 05 ?? ?? ?? ??

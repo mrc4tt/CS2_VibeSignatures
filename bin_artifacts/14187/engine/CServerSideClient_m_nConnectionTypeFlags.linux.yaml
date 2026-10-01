@@ -1,0 +1,5 @@
+struct_name: CServerSideClient
+member_name: m_nConnectionTypeFlags
+offset: '0x60'
+size: 1
+offset_sig: 45 88 67 60
