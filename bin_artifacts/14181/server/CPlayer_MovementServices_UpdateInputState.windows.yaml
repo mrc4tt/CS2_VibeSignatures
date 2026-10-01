@@ -1,0 +1,5 @@
+func_name: CPlayer_MovementServices_UpdateInputState
+func_va: '0x180c2ef80'
+func_rva: '0xc2ef80'
+func_size: '0x280'
+func_sig: "48 89 5C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ?? 45 33 FF 4C 8B EA"

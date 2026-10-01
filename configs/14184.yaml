@@ -6699,6 +6699,9 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CPlayer_MovementServices_UpdateInputState
+        expected_output:
+          - CPlayer_MovementServices_UpdateInputState.{platform}.yaml
       - name: find-CBaseEntity_EmitSoundFilter_SoundName
         expected_output:
           - CBaseEntity_EmitSoundFilter_SoundName.{platform}.yaml
@@ -10128,6 +10131,10 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CPlayer_MovementServices_UpdateInputState
+        category: func
+        alias:
+          - RunCommand
       - name: CBaseEntity_EmitSoundFilter_SoundName
         category: func
       - name: CCSPlayer_MovementServices

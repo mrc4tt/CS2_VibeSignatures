@@ -136,8 +136,8 @@ binaries:
       sha256: '7d9f50fee0fef18ab782d5dc661592af597ea9cff1e7183feaf93e8e5c32b2ae'
       size: 1953432
 config_digest_version: 2
-config_sha256: sha256:91ec28f6b91b96d9eb8480b1d4c843162e701ff5e0532798f5bedaab541b6277
-file_count: 3765
+config_sha256: sha256:99572434e00832646fdde4c4cedcac008f036d621cb373457fcce9fc01d1108d
+file_count: 3767
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -38334,6 +38334,18 @@ files:
     func_sig: 48 8B C4 4C 89 40 ?? 48 89 50 ?? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D 68 ?? 48 81 EC ?? ?? ?? ?? F2 41 0F 10 09
     func_size: '0x440'
     func_va: '0x180c2f350'
+  server/CPlayer_MovementServices_UpdateInputState.linux.yaml:
+    func_name: CPlayer_MovementServices_UpdateInputState
+    func_rva: '0x177e7b0'
+    func_sig: 55 48 89 E5 41 57 49 89 FF 41 56 41 55 49 89 F5 41 54 53 48 83 EC ?? 48 8B 7F ??
+    func_size: '0x4e8'
+    func_va: '0x177e7b0'
+  server/CPlayer_MovementServices_UpdateInputState.windows.yaml:
+    func_name: CPlayer_MovementServices_UpdateInputState
+    func_rva: '0xc2ef80'
+    func_sig: 48 89 5C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ?? 45 33 FF 4C 8B EA
+    func_size: '0x280'
+    func_va: '0x180c2ef80'
   server/CPlayer_MovementServices_s_pRunCommandPawn.linux.yaml:
     gv_inst_disp: 3
     gv_inst_length: 7
@@ -47022,5 +47034,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x18002b1a0'
 game_version: '14181'
-last_publish_time: '2026-10-01T07:39:07Z'
+last_publish_time: '2026-10-01T08:11:25Z'
 schema_version: 5
