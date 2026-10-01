@@ -82,6 +82,7 @@ UNIT_MODULES = frozenset(
         "test_css_generator_gv",
         "test_download_depot",
         "test_fork_owned_modules",
+        "test_identity_audits",
         "test_format_repo_files",
         "test_gamedata_candidate",
         "test_gamedata_metadata",

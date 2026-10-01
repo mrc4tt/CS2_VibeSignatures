@@ -8073,6 +8073,89 @@ async def _try_preprocess_func_without_llm(
                     )
                 func_data = None
 
+    # The general form of the same rejection, for every finder that names an anchor
+    # string. A sig that outlives its function keeps matching uniquely in ANOTHER
+    # one: CBasePlayerController_HandleCommand_JoinTeam.linux relocated onto the
+    # wrong function from 14182 to 14188 and crashed MatchZy servers, while its
+    # "HandleCommand_JoinTeam( %d ) - invalid team index." string sat in the real
+    # one all along. audit_xref_identity judges the relocated body against the
+    # spec's xref_strings in the raw binary (a schema field anchor may instead be
+    # proven by an access at the schema's offset); only "bad" - the anchor is
+    # referenced elsewhere and never here - discards, so the xref path below finds
+    # the real function. CS2VIBE_RELOC_XREF_CHECK=0 turns it off.
+    if (
+        func_data is not None
+        and func_name in func_xrefs_map
+        and os.environ.get("CS2VIBE_RELOC_XREF_CHECK", "1") != "0"
+    ):
+        xref_spec = func_xrefs_map[func_name]
+        if (xref_spec.get("xref_strings") or xref_spec.get("xref_signatures")) and not xref_spec.get("inline_alias"):
+            try:
+                from audit_xref_identity import relocation_verdict as xref_relocation_verdict
+            except Exception:
+                xref_relocation_verdict = None
+            verdict = None
+            if xref_relocation_verdict is not None:
+                try:
+                    verdict = xref_relocation_verdict(
+                        func_name,
+                        platform,
+                        func_data.get("func_va"),
+                        func_data.get("func_size"),
+                        new_binary_dir,
+                        xref_spec.get("xref_strings"),
+                        xref_spec.get("exclude_strings"),
+                        vtable_relations_map.get(func_name),
+                        xref_spec.get("xref_signatures"),
+                    )
+                except Exception as exc:
+                    if debug:
+                        print(f"    Preprocess: anchor check for {func_name} failed: {exc}")
+            if verdict == "bad":
+                print(
+                    f"    Preprocess: discarding relocation for {func_name} at"
+                    f" {func_data.get('func_va')} - its xref anchor is found"
+                    " elsewhere, never in this function"
+                )
+                func_data = None
+
+    # The same question for EVERY relocated function, anchor or not: compare it with
+    # the previous gamever's function. Code that only moved keeps its strings; when
+    # the previous body's strings all still exist, none is referenced from the new
+    # one and a single other function now holds them together, the sig matched the
+    # wrong function. audit_identity_drift says "drift" only then (JoinTeam.linux on
+    # 14182: 11/11 strings sat together in the real 0x1580e50).
+    # CS2VIBE_RELOC_DRIFT_CHECK=0 turns it off.
+    if (
+        func_data is not None
+        and old_path
+        and os.environ.get("CS2VIBE_RELOC_DRIFT_CHECK", "1") != "0"
+    ):
+        try:
+            from audit_identity_drift import relocation_drift_verdict
+        except Exception:
+            relocation_drift_verdict = None
+        verdict = None
+        if relocation_drift_verdict is not None:
+            try:
+                verdict = relocation_drift_verdict(
+                    platform,
+                    func_data.get("func_va"),
+                    func_data.get("func_size"),
+                    new_binary_dir,
+                    old_path,
+                )
+            except Exception as exc:
+                if debug:
+                    print(f"    Preprocess: drift check for {func_name} failed: {exc}")
+        if verdict == "drift":
+            print(
+                f"    Preprocess: discarding relocation for {func_name} at"
+                f" {func_data.get('func_va')} - the previous build's strings now sit"
+                " together in another function"
+            )
+            func_data = None
+
     if func_data is None and func_name in func_xrefs_map:
         xref_spec = func_xrefs_map[func_name]
         if debug:

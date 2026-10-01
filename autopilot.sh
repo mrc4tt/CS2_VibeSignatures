@@ -100,6 +100,15 @@ hint_for() {  # hint_for <failure text>
             printf 'cd %s && uv run verify_plugin_gamedata.py -gamever %s -gamedata <the file named above>\n' "$repo" "$ver" ;;
         *"validate"*|*"artifact"*)
             printf 'cd %s && uv run validate_artifacts.py -gamever %s -json | head -40\n' "$repo" "$ver" ;;
+        *"binary lock"*)
+            printf 'cd %s && uv run write_binary_lock.py -gamever %s -check      # which module differs\n' "$repo" "$ver"
+            printf 're-download the pinned manifests: uv run download_depot.py -tag %s, then copy_depot_bin.py\n' "$ver" ;;
+        *"anchor drift"*)
+            printf 'cd %s && uv run audit_identity_drift.py -gamever %s      # DRIFT lines name the symbol and where its strings went\n' "$repo" "$ver"
+            printf 'decide which build is wrong: uv run audit_identity_drift.py -gamever %s -old <an earlier VER> -symbol <name> -v\n' "$ver" ;;
+        *"anchor"*)
+            printf 'cd %s && uv run audit_xref_identity.py -gamever %s      # BAD lines name the symbol and where its anchor really is\n' "$repo" "$ver"
+            printf 're-run its task: uv run ida_analyze_bin.py -gamever %s -platform <p> -modules <m> -skill <task> -require_warm_idb\n' "$ver" ;;
         *"audit"*)
             printf 'cd %s && uv run audit_duplicate_va.py -gamever %s\n' "$repo" "$ver" ;;
         *"ABI identity"*)
@@ -273,7 +282,23 @@ step_resume "analysing windows" ./run_windows.sh "$TAG"
 # baseline faithfully, and nothing after this point would notice. --fix rewrites
 # an artifact onto the guarded head; a guard whose own pattern no longer matches
 # still fails, because that needs a person to update the table.
+# Every check below reads bin/$TAG. If a lock already exists, those files must be
+# the ones it names - otherwise every verdict is about some other build.
+if [ -f "binary_locks/$TAG.json" ]; then
+    step "checking bin/ against the binary lock" uv run write_binary_lock.py -gamever "$TAG" -check
+fi
 step "checking ABI identity" uv run abi_guard.py -gamever "$TAG" --fix
+# The general form of the same question: does every relocated function still
+# reference the string (or byte pattern) its finder anchors on? A sig that outlived
+# its function matches uniquely in another one - JoinTeam.linux sat on the wrong
+# function 14182-14188 and crashed MatchZy servers. The run already discards such a
+# relocation; this catches one that reached the artifacts any other way.
+step "checking each function still holds its anchor" uv run audit_xref_identity.py -gamever "$TAG"
+# And every function artifact, anchored or not, against the previous gamever: its
+# strings must carry over. DRIFT = the previous strings now sit together in another
+# function, so one of the two builds names the wrong one. The run already discards
+# such a relocation (CS2VIBE_RELOC_DRIFT_CHECK=0 turns that off).
+step "checking each function against the previous gamever (anchor drift)" uv run audit_identity_drift.py -gamever "$TAG"
 step "packing the snapshot" uv run gamesymbol_snapshot.py pack -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
 step "checking the snapshot against the config" uv run gamesymbol_snapshot.py check-contract \
     -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
@@ -348,7 +373,14 @@ step "publishing the site datasets" uv run publish_site_data.py -gamever "$TAG"
 # build, and without one anything that maps a build through binary_locks/ (the
 # cs2-signatures tracker's reference lookup) silently skips it - locks stopped at
 # 14181 that way. -force: a re-run of the same tag rewrites identical content.
-step "writing the binary lock" uv run write_binary_lock.py -gamever "$TAG" -force
+if [ -f "binary_locks/$TAG.json" ]; then
+    # A re-run must analyse the SAME files: overwriting the lock here is how a
+    # bin/ holding another build's binaries would go unnoticed (bin/14171 held
+    # 14170's, bin/14167 and bin/14168 files no manifest matched).
+    step "checking the binary lock" uv run write_binary_lock.py -gamever "$TAG" -check
+else
+    step "writing the binary lock" uv run write_binary_lock.py -gamever "$TAG"
+fi
 
 # Schema impact: which schema fields CounterStrikeSharp and the plugins actually use
 # were removed or renamed by this build. Gamedata says nothing about that - a plugin

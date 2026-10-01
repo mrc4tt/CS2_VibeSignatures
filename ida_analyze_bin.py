@@ -15,7 +15,7 @@ Usage:
     -bindir: Directory containing downloaded binaries (default: bin)
     -artifactdir: Directory containing source-owned per-symbol YAML (default: bin_artifacts)
     -platform: Platforms to analyze, comma-separated (default: windows,linux)
-    -skill: Exact skill name to run; all other skills are skipped
+    -skill: Exact skill name(s) to run, comma-separated; all other skills are skipped
     -agent: Agent to use for analysis: claude, codex, or opencode (default: claude)
     -agent_model: Optional model override; OpenCode requires provider/model format
     -ida_args: Additional arguments for idalib-mcp (optional)
@@ -1744,7 +1744,7 @@ def parse_args():
     parser.add_argument(
         "-skill",
         default=None,
-        help="Exact skill name to run; all other skills are skipped",
+        help="Exact skill name to run (comma-separated for several); all other skills are skipped",
     )
     parser.add_argument("-vcall_finder", default=None, help="Comma-separated vcall_finder object names")
     parser.add_argument(
@@ -2138,12 +2138,16 @@ def resolve_module_vcall_targets(module, selector):
 
 
 def _select_skills_by_name(skills, selected_skill_name):
-    """Return only skills whose name exactly matches the requested name."""
+    """Return only skills whose name exactly matches the requested name.
+
+    A comma-separated list selects several tasks, so a re-run of many symbols on one
+    gamever opens each IDB once instead of once per task.
+    """
     if selected_skill_name is None:
         return skills
 
-    normalized_name = str(selected_skill_name).strip()
-    return [skill for skill in skills if skill.get("name") == normalized_name]
+    wanted = {part.strip() for part in str(selected_skill_name).split(",") if part.strip()}
+    return [skill for skill in skills if skill.get("name") in wanted]
 
 
 def _select_modules_by_skill(modules, selected_skill_name, module_filter=None):

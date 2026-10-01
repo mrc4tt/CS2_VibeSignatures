@@ -16,7 +16,7 @@ når en besked siger `failed` eller `held`, eller når du vil tilføje symboler.
 | 1 | `add_gamever.sh` → download.yaml | stop |
 | 2 | `ensure_local_gamedata_symbols.py` + `ensure_seed_preprocessors.py` | stop |
 | 3 | `run_linux.sh`, så `run_windows.sh` (aldrig samtidig) | resume op til 2× |
-| 4 | `abi_guard.py --fix` (ABI-identitet, før pack — regel 21) | stop |
+| 4 | `write_binary_lock.py -check` når låsen findes (bin/ skal være de låste filer), så `abi_guard.py --fix` (ABI-identitet, før pack — regel 21), så `audit_xref_identity.py` (hver funktion skal stadig rumme sit ankers streng/mønster) og `audit_identity_drift.py` (hver funktion mod forrige gamever: strengene skal følge med) | stop |
 | 5 | snapshot `pack` + `check-contract` | stop |
 | 6 | `update_gamedata.py` — 0 warnings krævet | stop |
 | 7 | `validate_artifacts.py`, `audit_duplicate_va.py` | stop |
@@ -67,13 +67,15 @@ Samme rækkefølge som tabellen. Hvert trin kan genoptages:
 ```bash
 ./run_linux.sh <VER>; ./run_windows.sh <VER>      # resume, starter ikke forfra
 uv run abi_guard.py -gamever <VER> --fix
+uv run audit_xref_identity.py -gamever <VER>
+uv run audit_identity_drift.py -gamever <VER>
 uv run gamesymbol_snapshot.py pack -gamever <VER> -snapshot gamesymbols/<VER>.yaml
 uv run gamesymbol_snapshot.py check-contract -gamever <VER> -snapshot gamesymbols/<VER>.yaml
 uv run update_gamedata.py -gamever <VER> -snapshot gamesymbols/<VER>.yaml -outputdir gamedata/<VER>
 uv run validate_artifacts.py -gamever <VER>
 uv run audit_duplicate_va.py -gamever <VER>
 uv run publish_site_data.py -gamever <VER>
-uv run write_binary_lock.py -gamever <VER> -force
+uv run write_binary_lock.py -gamever <VER>          # -check når låsen allerede findes; aldrig -force over en lås
 git add configs/<VER>.yaml bin_artifacts/<VER> gamesymbols/<VER>.yaml gamedata/<VER> \
     gamedata/history.json diagnostics/<VER>.json binary_locks/<VER>.json download.yaml
 git commit -m "feat(<VER>): ..." && uv run publish_site_data.py -history-only

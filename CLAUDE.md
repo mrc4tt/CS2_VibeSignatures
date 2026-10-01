@@ -259,10 +259,22 @@ Run in this order after any change. Anything but the stated result is a defect, 
 
 ```bash
 VER=14181
+# 00. the binaries every check below reads must be the ones the lock names. bin/14171
+#     held 14170's files and bin/14167 + bin/14168 files no manifest matched, and every
+#     audit then judged the wrong build. Fix: download_depot.py -tag $VER, copy_depot_bin.py
+uv run write_binary_lock.py -gamever $VER -check
 # 0. ABI identity, BEFORE the pack: relocation propagates a wrong identification
 #    faithfully and nothing downstream notices (rule 21). Every gamever, not just
 #    the newest - a stale baseline poisons re-runs on the ones after it.
 uv run abi_guard.py -gamever $VER --fix
+# 0b. every anchored function still holds its finder's string / byte pattern
+#     (a sig that outlived its function matches uniquely in ANOTHER one). 0 bad.
+#     The run itself discards such a relocation (CS2VIBE_RELOC_XREF_CHECK=0 off).
+uv run audit_xref_identity.py -gamever $VER
+# 0c. every function artifact (anchored or not) against the previous gamever with
+#     binaries: its strings must carry over. 0 drift. The run discards a drifting
+#     relocation itself (CS2VIBE_RELOC_DRIFT_CHECK=0 off).
+uv run audit_identity_drift.py -gamever $VER
 # 1. artifacts -> snapshot (every artifact or config change needs this)
 uv run gamesymbol_snapshot.py pack -gamever $VER -snapshot gamesymbols/$VER.yaml
 uv run gamesymbol_snapshot.py check-contract -gamever $VER -snapshot gamesymbols/$VER.yaml
@@ -813,6 +825,8 @@ Two guards now catch the class before the baseline does:
 | Tool | When | Notes |
 |------|------|-------|
 | `abi_guard.py` | After `sync_upstream.sh`, before every pack, on every gamever | Catches a wrong *identification* that relocated cleanly; `--fix` rewrites the artifact. Also verifies `func_size` |
+| `audit_xref_identity.py` | After every run, before pack | Each anchored function must still reference its finder's string / byte pattern (or, for an `m_*` anchor, access the schema offset). The run applies the same judgement to every relocation and discards a `bad` one |
+| `audit_identity_drift.py` | After every run, before pack | Every function artifact against the previous gamever: strings must carry over. DRIFT names the function that now holds them. Recognises outlining (the new body calls the holder). The run discards a drifting relocation |
 | `validate_artifacts.py` | After every artifact change | Re-checks every artifact against the binary; `-strict` fails on warnings. Needs `capstone` — degrades silently without it |
 | `verify_plugin_gamedata.py` | Before a deploy, and to answer "is this plugin's file OK" | Scans every shipped signature against the binaries and re-derives every offset; non-zero exit on broken/ambiguous/mismatch |
 | `check_deploy_drift.py` | After every deploy | Diffs `gamedata/<VER>/<plugin>/` against the deployed file; catches a generation that never left the repo, which no entry-level check can see |

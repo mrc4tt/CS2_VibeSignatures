@@ -49,19 +49,25 @@ TARGET_FUNCTION_NAMES = [
     "CMsgSource2NetworkFlowQuality_PrintStats",
 ]
 
-FUNC_XREFS = [
-    {
-        "func_name": "CMsgSource2NetworkFlowQuality_PrintStats",
-        "xref_strings": [],
-        "xref_gvs": [],
-        "xref_signatures": ["8B 47 ?? 85 C0"],
-        "xref_funcs": ["CMsgSource2NetworkFlowQuality_PrintStatsInternal"],
-        "exclude_funcs": ["CNetworkGameClient_PrintNetStats"],
-        "exclude_strings": [],
-        "exclude_gvs": [],
-        "exclude_signatures": [],
-    },
-]
+# Linux only: Windows always fuses the body into PrintStats (see above), so this spec
+# never describes a windows function. Keeping it out of windows stops the run's
+# relocation anchor check from judging the fused body against the wrapper's guard head.
+FUNC_XREFS_BY_PLATFORM = {
+    "linux": [
+        {
+            "func_name": "CMsgSource2NetworkFlowQuality_PrintStats",
+            "xref_strings": [],
+            "xref_gvs": [],
+            "xref_signatures": ["8B 47 ?? 85 C0"],
+            "xref_funcs": ["CMsgSource2NetworkFlowQuality_PrintStatsInternal"],
+            "exclude_funcs": ["CNetworkGameClient_PrintNetStats"],
+            "exclude_strings": [],
+            "exclude_gvs": [],
+            "exclude_signatures": [],
+        },
+    ],
+}
+FUNC_XREFS = FUNC_XREFS_BY_PLATFORM["linux"]  # kept for recipe importers; preprocess_skill picks per platform
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
@@ -97,7 +103,7 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         func_names=TARGET_FUNCTION_NAMES,
-        func_xrefs=FUNC_XREFS,
+        func_xrefs=FUNC_XREFS_BY_PLATFORM.get(platform, []),
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )
