@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: Checkout main
         id: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -66,7 +66,7 @@ jobs:
       - name: Check duplicate bump target
         id: duplicate
         if: steps.preview.outputs.updated == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           BUMP_TAG: ${{ steps.preview.outputs.tag }}
         with:
@@ -186,7 +186,7 @@ jobs:
       - name: Upload exact download bump candidate
         id: upload
         if: steps.bump.outputs.updated == 'true' && steps.duplicate.outputs.skip_pr != 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.package.outputs.artifact_name }}
           path: ${{ env.CANDIDATE_ROOT }}
@@ -251,18 +251,18 @@ jobs:
           "artifact_digest=$artifactDigest" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "run_attempt=$producerAttempt" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
       - name: Checkout exact bound default-branch base without credentials
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
           path: publication
       - name: Set up trusted publisher environment
-        uses: astral-sh/setup-uv@v9.0.0
+        uses: astral-sh/setup-uv@v10.2.0
       - name: Sync trusted publisher dependencies
         run: uv sync --project publication --locked
       - name: Download exact credential-free bump candidate
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ steps.validate-inputs.outputs.artifact_name }}
           path: candidate
@@ -346,7 +346,7 @@ jobs:
           }
       - name: Create bump pull request with read/write PR token
         id: create-pr
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           BUMP_TAG: ${{ steps.validate-inputs.outputs.gamever }}
           BUMP_BRANCH: bump-download/${{ steps.validate-inputs.outputs.gamever }}
@@ -455,7 +455,7 @@ jobs:
           }
           "trigger_sha=$triggerSha" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
       - name: Verify synchronized PR head
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           BUMP_BRANCH: bump-download/${{ steps.validate-inputs.outputs.gamever }}
           TRIGGER_SHA: ${{ steps.synchronize.outputs.trigger_sha }}

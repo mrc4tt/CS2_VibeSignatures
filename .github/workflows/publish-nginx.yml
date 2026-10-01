@@ -47,7 +47,7 @@ jobs:
       SITE_ROOT: ${{ vars.SITE_ROOT || '/srv/sig' }}
       RELEASES_KEPT: '5'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 

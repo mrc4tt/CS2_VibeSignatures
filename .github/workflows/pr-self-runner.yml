@@ -50,15 +50,15 @@ jobs:
       DEPOTDOWNLOADER_STEAM_PASSWORD: ${{ secrets.DEPOTDOWNLOADER_STEAM_PASSWORD }}
     steps:
       - name: Checkout exact prospective merge tree as data
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.source_sha }}
           fetch-depth: 1
           submodules: recursive
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v9.0.0
+      - uses: astral-sh/setup-uv@v10.2.0
       - name: Checkout trusted base verification tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.base_sha }}
           fetch-depth: 1
@@ -69,7 +69,7 @@ jobs:
         shell: pwsh
         run: uv sync --project .trusted-tools --locked
       - name: Download bound trusted plan
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.plan_artifact_name }}
           path: ${{ runner.temp }}/trusted-pr-plan
@@ -263,7 +263,7 @@ jobs:
           (steps.prepare-rebuild.outcome == 'failure' || steps.execute-rebuild.outcome == 'failure' ||
           steps.verify-rebuild.outcome == 'failure' || steps.downstream.outcome == 'failure' || steps.cpp-validation.outcome == 'failure')
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trusted-pr-rebuild-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.gamever }}
           path: ${{ steps.collect-failure.outputs.diagnostics }}/**
@@ -271,7 +271,7 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
       - name: Upload bound rebuild evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trusted-pr-rebuild-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.gamever }}
           path: |

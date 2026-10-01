@@ -29,10 +29,10 @@ jobs:
       run:
         working-directory: pages
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
@@ -68,7 +68,7 @@ jobs:
       - name: Verify current gamedata bytes
         run: npm run verify:gamedata
       - name: Upload current Pages build
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: pages-current-build
           overwrite: true
@@ -87,14 +87,14 @@ jobs:
       run:
         working-directory: pages
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
       - name: Download current Pages build
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: pages-current-build
           path: pages/dist
@@ -158,14 +158,14 @@ jobs:
             --write-manifest "$verification_root/gamedata-manifest.json"
           cp verifyGameDataAssets.mjs "$verification_root/verifyGameDataAssets.mjs"
       - name: Upload static asset verification manifests
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: pages-static-asset-verification
           overwrite: true
           path: ${{ runner.temp }}/pages-verification
           retention-days: 1
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: pages/dist
 
@@ -180,11 +180,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
       - name: Download static asset verification manifests
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: pages-static-asset-verification
           path: ${{ runner.temp }}/pages-verification
@@ -213,7 +213,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Is gamedata/history.json current?

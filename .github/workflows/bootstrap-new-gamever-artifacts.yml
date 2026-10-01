@@ -64,7 +64,7 @@ jobs:
       CS2VIBE_LLM_MODEL: ${{ secrets.CS2VIBE_LLM_MODEL }}
     steps:
       - name: Checkout exact prospective merge source without publisher credentials
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.merge_sha }}
           fetch-depth: 0
@@ -88,9 +88,9 @@ jobs:
           git submodule update --init --recursive --depth 1 --jobs 8
           if ($LASTEXITCODE -ne 0) { throw "Trusted SDK submodule initialization failed." }
       - name: Set up uv
-        uses: astral-sh/setup-uv@v9.0.0
+        uses: astral-sh/setup-uv@v10.2.0
       - name: Download bound trusted plan
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.plan_artifact_name }}
           path: ${{ runner.temp }}/source-artifact-plan
@@ -233,7 +233,7 @@ jobs:
           "CANDIDATE_PACKAGE=$package" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Upload exact bootstrap candidate
         id: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.package.outputs.candidate-artifact-name }}
           path: ${{ env.CANDIDATE_PACKAGE }}
@@ -244,7 +244,7 @@ jobs:
           failure() && (steps.binsync-local.outcome == 'failure' || steps.gates.outcome == 'failure' ||
           steps.package.outcome == 'failure' || steps.upload.outcome == 'failure')
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bootstrap-diagnostics-${{ inputs.pull_request_number }}-${{ inputs.gamever }}-${{ github.run_id }}-${{ github.run_attempt }}
           # Upload partial outputs directly; canonical candidate packaging requires all gates to pass.
@@ -261,7 +261,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout prospective merge tree as non-executable data
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.merge_sha }}
           fetch-depth: 0
@@ -269,7 +269,7 @@ jobs:
           persist-credentials: false
           path: prospective
       - name: Checkout trusted base publisher tooling
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.base_sha }}
           fetch-depth: 1
@@ -277,7 +277,7 @@ jobs:
           persist-credentials: false
           path: trusted-publisher
       - name: Checkout exact bound PR head for artifact-only commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.head_sha }}
           fetch-depth: 0
@@ -285,16 +285,16 @@ jobs:
           persist-credentials: false
           path: publication
       - name: Set up trusted publisher environment
-        uses: astral-sh/setup-uv@v9.0.0
+        uses: astral-sh/setup-uv@v10.2.0
       - name: Sync trusted publisher dependencies
         run: uv sync --project trusted-publisher --locked
       - name: Download bound plan and exact bootstrap candidate
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.plan_artifact_name }}
           path: evidence/plan
       - name: Download exact bootstrap candidate package
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.build-bootstrap-candidate.outputs.candidate-artifact-name }}
           path: evidence/candidate

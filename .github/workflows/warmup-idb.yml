@@ -53,7 +53,7 @@ jobs:
           }
       - name: Checkout exact cache producer source
         id: checkout-source
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.source_sha }}
           fetch-depth: 1
@@ -70,7 +70,7 @@ jobs:
           }
       - name: Set up uv
         id: setup-uv
-        uses: astral-sh/setup-uv@v9.0.0
+        uses: astral-sh/setup-uv@v10.2.0
       - name: Prepare persisted depot link and restore accepted bin
         id: prepare-workspace
         shell: pwsh

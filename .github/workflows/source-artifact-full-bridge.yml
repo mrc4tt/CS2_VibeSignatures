@@ -51,15 +51,15 @@ jobs:
       DEPOTDOWNLOADER_STEAM_PASSWORD: ${{ secrets.DEPOTDOWNLOADER_STEAM_PASSWORD }}
     steps:
       - name: Checkout exact prospective merge tree as data
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.source_sha }}
           fetch-depth: 1
           submodules: recursive
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v9.0.0
+      - uses: astral-sh/setup-uv@v10.2.0
       - name: Checkout trusted base verification tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.base_sha }}
           fetch-depth: 1
@@ -70,7 +70,7 @@ jobs:
         shell: pwsh
         run: uv sync --project .trusted-tools --locked
       - name: Download bound trusted plan
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.plan_artifact_name }}
           path: ${{ runner.temp }}/trusted-pr-plan
@@ -205,7 +205,7 @@ jobs:
             -configyaml "${{ steps.prepare-rebuild.outputs.config }}" -debug
           if ($LASTEXITCODE -ne 0) { throw "C++ ABI validation failed." }
       - name: Upload bound rebuild evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trusted-pr-rebuild-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.gamever }}
           path: |
@@ -220,15 +220,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact prospective merge tree as data
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.source_sha }}
           fetch-depth: 1
           submodules: false
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v9.0.0
+      - uses: astral-sh/setup-uv@v10.2.0
       - name: Checkout trusted base verification tools
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.base_sha }}
           fetch-depth: 1
@@ -239,12 +239,12 @@ jobs:
         shell: bash
         run: uv sync --project .trusted-tools --locked
       - name: Download bound trusted plan
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.plan_artifact_name }}
           path: ${{ runner.temp }}/trusted-pr-plan
       - name: Download untrusted rebuild evidence
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: trusted-pr-rebuild-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.gamever }}
           path: ${{ runner.temp }}/trusted-pr-rebuild-evidence
@@ -261,7 +261,7 @@ jobs:
             --execution-report "${{ runner.temp }}/trusted-pr-rebuild-evidence/execution-reports/${{ inputs.gamever }}.force-all.json" \
             --output "${{ runner.temp }}/trusted-hosted-validation.json"
       - name: Upload hosted validation receipt
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trusted-hosted-validation-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.gamever }}
           path: ${{ runner.temp }}/trusted-hosted-validation.json
