@@ -20832,10 +20832,10 @@ files:
     func_va: '0x180b500c0'
   server/CBasePlayerController_HandleCommand_JoinTeam.linux.yaml:
     func_name: CBasePlayerController_HandleCommand_JoinTeam
-    func_rva: '0x14b36a0'
-    func_sig: 55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ?? ?? ?? ??
-    func_size: '0x6a3'
-    func_va: '0x14b36a0'
+    func_rva: '0x15828d0'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 89 95 ?? ?? ?? ?? 4C 8B 28 4C 89 EF E8 ?? ?? ?? ?? 84 C0 0F 85 ?? ?? ?? ?? 48 89 DF 45 31 FF E8
+    func_size: '0x0'
+    func_va: '0x15828d0'
   server/CBasePlayerController_HandleCommand_JoinTeam.windows.yaml:
     func_name: CBasePlayerController_HandleCommand_JoinTeam
     func_rva: '0xa78990'
@@ -24598,10 +24598,10 @@ files:
     func_va: '0x180a92570'
   server/CCSPlayerController_HandleCommand_JoinTeam.linux.yaml:
     func_name: CCSPlayerController_HandleCommand_JoinTeam
-    func_rva: '0x14b36a0'
-    func_sig: 55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ?? ?? ?? ??
-    func_size: '0x6a3'
-    func_va: '0x14b36a0'
+    func_rva: '0x15828d0'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 89 95 ?? ?? ?? ?? 4C 8B 28 4C 89 EF E8 ?? ?? ?? ?? 84 C0 0F 85 ?? ?? ?? ?? 48 89 DF 45 31 FF E8
+    func_size: '0x0'
+    func_va: '0x15828d0'
   server/CCSPlayerController_HandleCommand_JoinTeam.windows.yaml:
     func_name: CCSPlayerController_HandleCommand_JoinTeam
     func_rva: '0xa78990'
@@ -46987,5 +46987,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14186'
-last_publish_time: '2026-09-30T18:15:58Z'
+last_publish_time: '2026-10-01T21:14:15Z'
 schema_version: 5
