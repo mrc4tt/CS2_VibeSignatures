@@ -1,0 +1,5 @@
+func_name: CNetworkServerService_OnClientPollNetworking
+func_va: '0x40fdb0'
+func_rva: '0x40fdb0'
+func_size: '0xbd'
+func_sig: 55 48 8D 05 9A 67 ?? ??

@@ -1,0 +1,8 @@
+func_name: vtidx_FinishMove
+func_va: '0x180abe000'
+func_rva: '0xabe000'
+func_size: '0x227'
+func_sig: 48 89 6C 24 ?? 56 57 41 56 48 83 EC ?? 48 83 79 ?? ??
+vtable_name: CCSPlayer_MovementServices
+vfunc_offset: '0x138'
+vfunc_index: 39

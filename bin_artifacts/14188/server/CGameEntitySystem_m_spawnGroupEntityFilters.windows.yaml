@@ -1,0 +1,5 @@
+struct_name: CGameEntitySystem
+member_name: m_spawnGroupEntityFilters
+offset: '0x2128'
+offset_sig: 4C 8D 83 28 21 00 00
+offset_sig_disp: 0
