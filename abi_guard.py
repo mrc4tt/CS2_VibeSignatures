@@ -109,7 +109,10 @@ ABI_GUARDS = {
             # identity re-verified via FullWalkMove's call graph, the movabs-1.0f/pxor head and the two
             # vcalls ([rax+0x658] and [rax+0x20]). The 14181 head was
             # "... 4C 8D B5 ? ? ? ? 41 55 41 BD".
-            "good_sig": "48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D BD ? ? ? ? 41 55 49 89 F5",
+            "good_sig": [
+                "48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D BD ? ? ? ? 41 55 49 89 F5",
+                "48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D B5 ? ? ? ? 41 55 41 BD",  # 14181
+            ],
             "accept_heads": ["48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56"],
             "bad_heads": ["55 48 89 E5 41 55 41 89 D5 41 54 49 89 F4 53"],
         },
@@ -171,8 +174,14 @@ ABI_GUARDS = {
             # 14182: the CBaseTrigger vtable grew by two slots (14181 slots 148/149/150 are byte-for-byte
             # 14182 slots 150/151/152) and the body now saves rbp where 14181 saved r15. Head was
             # "48 85 D2 0F 84 ? ? ? ? 53 41 57 48 83 EC ? 4C 8B 42 10" on 14181.
-            "good_sig": "48 85 D2 0F 84 ? ? ? ? 53 55 48 83 EC ? 4C 8B 42 10",
-            "accept_heads": ["48 85 D2 0F 84 ? ? ? ? 53 55 48 83 EC ? 4C 8B 42"],
+            "good_sig": [
+                "48 85 D2 0F 84 ? ? ? ? 53 55 48 83 EC ? 4C 8B 42 10",
+                "48 85 D2 0F 84 ? ? ? ? 53 41 57 48 83 EC ? 4C 8B 42 10",  # 14181
+            ],
+            "accept_heads": [
+                "48 85 D2 0F 84 ? ? ? ? 53 55 48 83 EC ? 4C 8B 42",
+                "48 85 D2 0F 84 ? ? ? ? 53 41 57 48 83 EC ? 4C 8B 42",  # 14181
+            ],
             "bad_heads": ["40 53 41 55 48 83 EC ? 83 BA"],  # stale template target (14181)
         },
     },
@@ -513,6 +522,26 @@ def _parse_hex(value):
         return None
 
 
+def good_sig_hit(rule: dict, data: bytes) -> tuple[str, list[int]]:
+    """The first of the rule's good sigs that matches exactly once, with its hits.
+
+    ``good_sig`` is a string or a list: a head changes between builds (register
+    allocation, a saved register), and a guard that only knows the newest head
+    can neither verify nor repair the older builds it is still run on. When none
+    is unique, the first sig and its hits are returned for the report.
+    """
+    sigs = rule["good_sig"]
+    sigs = [sigs] if isinstance(sigs, str) else list(sigs)
+    first = None
+    for sig in sigs:
+        hits = sig_hits(sig, data)
+        if len(hits) == 1:
+            return sig, hits
+        if first is None:
+            first = (sig, hits)
+    return first
+
+
 def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> tuple[bool, str]:
     binary, data = _load_binary(bindir, gamever, platform)
     if data is None:
@@ -521,7 +550,7 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
     art_yaml = os.path.join(artifactdir, yaml_rel)
     bin_yaml = os.path.join(bindir, yaml_rel)
 
-    good_hits = sig_hits(rule["good_sig"], data)
+    good_sig, good_hits = good_sig_hit(rule, data)
     if len(good_hits) != 1:
         return (
             False,
@@ -585,9 +614,9 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
         return False, msg
 
     size = guess_func_size(data, good_off)
-    write_func_yaml(art_yaml, symbol, good_va, platform, size, rule["good_sig"], extra)
+    write_func_yaml(art_yaml, symbol, good_va, platform, size, good_sig, extra)
     if os.path.isdir(os.path.dirname(bin_yaml)):
-        write_func_yaml(bin_yaml, symbol, good_va, platform, size, rule["good_sig"], extra)
+        write_func_yaml(bin_yaml, symbol, good_va, platform, size, good_sig, extra)
     return True, msg + f" -> FIXED (rewrote {art_yaml})"
 
 
@@ -629,7 +658,11 @@ def check_template(symbol, rule_all, gamever, bindir, template_path, fix) -> lis
         if not fix:
             results.append((False, msg))
             continue
-        sigs[platform] = to_css_sig(rule["good_sig"])
+        good_sig, good_hits = good_sig_hit(rule, data)
+        if len(good_hits) != 1:
+            results.append((False, msg + f" (no good_sig is unique on {gamever}; cannot fix)"))
+            continue
+        sigs[platform] = to_css_sig(good_sig)
         changed = True
         results.append((True, msg + " -> FIXED"))
     if changed:
@@ -642,7 +675,7 @@ def check_template(symbol, rule_all, gamever, bindir, template_path, fix) -> lis
             if not block:
                 continue
             new_block = re.sub(
-                r'"%s": "[^"]*"' % platform, f'"{platform}": "{to_css_sig(rule["good_sig"])}"', block.group(0)
+                r'"%s": "[^"]*"' % platform, f'"{platform}": "{sigs[platform]}"', block.group(0)
             )
             raw = raw.replace(block.group(0), new_block)
         json.loads(raw)
@@ -677,6 +710,11 @@ def main(argv=None) -> int:
             ok, msg = check_symbol(symbol, platform, rule, gamever, args.bindir, args.artifactdir, args.fix)
             print("  " + msg)
             failed += 0 if ok else 1
+        # One template serves every build, so it is checked against the newest
+        # only: on an older build a head that moved since is not a defect, and
+        # --fix there would write that build's sig into the shared template.
+        if gamever != newest_gamever(args.artifactdir):
+            continue
         for ok, msg in check_template(symbol, per_plat, gamever, args.bindir, args.template, args.fix):
             print("  " + msg)
             failed += 0 if ok else 1

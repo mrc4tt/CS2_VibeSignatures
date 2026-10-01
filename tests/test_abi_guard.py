@@ -184,3 +184,16 @@ class TestReadFlatYaml(unittest.TestCase):
             y = abi_guard.read_flat_yaml(str(path))
         self.assertEqual(y["func_sig"], "48 8B C4 0F 29 70 ?? 48 8B F1")
         self.assertEqual(y["func_va"], "0x180ae3950")
+
+
+class TestGoodSigHit(unittest.TestCase):
+    def test_older_head_in_the_list_is_used_when_the_newest_misses(self):
+        data = b"\x00" * 8 + bytes.fromhex("53 41 57 48") + b"\x00" * 8
+        rule = {"good_sig": ["53 55 48", "53 41 57 48"]}
+        sig, hits = abi_guard.good_sig_hit(rule, data)
+        self.assertEqual((sig, hits), ("53 41 57 48", [8]))
+
+    def test_no_unique_sig_reports_the_first(self):
+        rule = {"good_sig": ["53 55 48", "53 41 57 48"]}
+        sig, hits = abi_guard.good_sig_hit(rule, b"\x00" * 16)
+        self.assertEqual((sig, hits), ("53 55 48", []))
