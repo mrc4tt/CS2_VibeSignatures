@@ -285,14 +285,18 @@ def head_matches(data: bytes, off: int, patterns) -> bool:
 
 
 def read_flat_yaml(path: str) -> dict:
-    out = {}
+    """Top-level scalars as strings. A real YAML parse, not a line split: the
+    emitter folds a long func_sig onto a continuation line, and reading only the
+    first line truncated CCSPlayer_MovementServices_WalkMove.windows on 14186+ to a
+    prefix with two hits."""
+    import yaml
+
     with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            if ":" not in line or line.startswith("#"):
-                continue
-            k, v = line.split(":", 1)
-            out[k.strip()] = v.strip().strip("'\"")
-    return out
+        doc = yaml.safe_load(f) or {}
+    if not isinstance(doc, dict):
+        return {}
+    return {str(k): "" if v is None else (f"{v:#x}" if isinstance(v, int) and not isinstance(v, bool) else str(v))
+            for k, v in doc.items()}
 
 
 def write_func_yaml(
@@ -340,6 +344,43 @@ def guess_func_size(data: bytes, off: int, limit: int = 0x2000) -> int:
             return 0            # padding first: another function ended here
         i += 1
     return 0
+
+
+def boundary_before(data: bytes, off: int, limit: int = 0x2000) -> int | None:
+    """Bytes from *off* to the first evidence that its function has ended, or None.
+
+    Evidence is a run of two or more int3 / one-byte nop INSTRUCTIONS that no
+    earlier branch jumps past. Instruction-aware on purpose: a byte scan read the
+    ``90 08 00 00`` displacement of ``call [rax+0x890]`` as nop padding, which
+    "proved" CBaseTrigger_EndTouch.windows and CBaseEntity_EmitSoundFilter.linux
+    swallowed a boundary while both end cleanly on ret/jmp + int3. A branch
+    target beyond the run means it is alignment inside the function.
+
+    A recorded size reaching past this point swallowed a boundary. A size shorter
+    than it proves nothing - GCC packs the next function straight after a tail
+    jmp with no padding - so an IDA-measured size that guess_func_size cannot
+    reproduce is not wrong. None too when capstone is missing: no evidence.
+    """
+    try:
+        import capstone
+    except ImportError:
+        return None
+    md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+    md.skipdata = True
+    furthest_target = off
+    run_start, run_len = None, 0
+    for ins in md.disasm(data[off : min(len(data), off + limit)], off):
+        if ins.mnemonic in ("int3", "nop") and ins.size == 1:
+            if run_len == 0:
+                run_start = ins.address
+            run_len += 1
+            if run_len >= 2 and furthest_target <= run_start:
+                return run_start - off
+            continue
+        run_len = 0
+        if ins.mnemonic.startswith("j") and re.fullmatch(r"0x[0-9a-f]+|\d+", ins.op_str):
+            furthest_target = max(furthest_target, int(ins.op_str, 0))
+    return None
 
 
 def relocation_verdict(symbol: str, platform: str, func_va, binary_dir) -> str:
@@ -525,12 +566,15 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
         # ran past a tail jmp into the next function. Rule 14: an unknown size
         # costs nothing (it never reaches a plugin) and a wrong one is a defect.
         recorded_size = _parse_hex(y.get("func_size"))
+        # Only a size that runs past boundary evidence is wrong: from 14186 the
+        # pipeline records IDA's own size, which this byte scan often cannot
+        # reproduce (0x0 = unknown), and flagging those failed every build.
         if recorded_size and cur_off is not None:
-            honest_size = guess_func_size(data, cur_off)
-            if honest_size != recorded_size:
+            boundary = boundary_before(data, cur_off)
+            if boundary is not None and recorded_size > boundary:
                 problems.append(
-                    f"func_size {recorded_size:#x} is not measurable from {cur_va:#x}"
-                    f" (honest measurement: {honest_size:#x})"
+                    f"func_size {recorded_size:#x} runs past a function boundary at"
+                    f" +{boundary:#x} from {cur_va:#x}"
                 )
 
     if not problems:

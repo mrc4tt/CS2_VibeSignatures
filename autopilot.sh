@@ -102,6 +102,11 @@ hint_for() {  # hint_for <failure text>
             printf 'cd %s && uv run validate_artifacts.py -gamever %s -json | head -40\n' "$repo" "$ver" ;;
         *"audit"*)
             printf 'cd %s && uv run audit_duplicate_va.py -gamever %s\n' "$repo" "$ver" ;;
+        *"ABI identity"*)
+            printf 'cd %s && uv run abi_guard.py -gamever %s      # BAD lines name the symbol\n' "$repo" "$ver"
+            printf '"good_sig has 0 hits" = the guard table in abi_guard.py needs the new head\n' ;;
+        *"site datasets"*)
+            printf 'cd %s && uv run publish_site_data.py -check && uv run publish_site_data.py\n' "$repo" ;;
         *"snapshot"*|*"pack"*|*"contract"*)
             printf 'cd %s && uv run gamesymbol_snapshot.py pack -gamever %s -snapshot gamesymbols/%s.yaml\n' "$repo" "$ver" "$ver" ;;
         push)
@@ -264,6 +269,11 @@ step_resume "analysing linux" ./run_linux.sh "$TAG"
 step_resume "analysing windows" ./run_windows.sh "$TAG"
 
 # ---------------------------------------------------------------- battery, as a gate
+# ABI identity before the pack (CLAUDE.md rule 21): relocation reproduces a wrong
+# baseline faithfully, and nothing after this point would notice. --fix rewrites
+# an artifact onto the guarded head; a guard whose own pattern no longer matches
+# still fails, because that needs a person to update the table.
+step "checking ABI identity" uv run abi_guard.py -gamever "$TAG" --fix
 step "packing the snapshot" uv run gamesymbol_snapshot.py pack -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
 step "checking the snapshot against the config" uv run gamesymbol_snapshot.py check-contract \
     -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
@@ -429,6 +439,16 @@ else
 
 Verification battery green: 0 gamedata warnings, 0 validator errors, no
 duplicate-VA clusters." || die "commit"
+    # publishedAt is the date of the first commit that added gamedata/<build>/,
+    # which did not exist when the datasets were built above - so the newest
+    # build always went out as null and -check failed until the NEXT build's run
+    # repaired it. Now that the commit exists, re-derive the history only.
+    if uv run publish_site_data.py -history-only >/dev/null \
+            && ! git diff --quiet -- gamedata/history.json; then
+        git commit -q -m "chore($TAG): record publish date in site history" \
+            -- gamedata/history.json || die "commit"
+    fi
+    uv run publish_site_data.py -check || die "site datasets stale after commit"
     sync_push || die "push"
     log "    committed and pushed"
 fi

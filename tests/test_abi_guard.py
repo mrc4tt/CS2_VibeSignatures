@@ -156,3 +156,31 @@ class TestCheckSymbol(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestBoundaryBefore(unittest.TestCase):
+    def setUp(self):
+        try:
+            import capstone  # noqa: F401
+        except ImportError:
+            self.skipTest("capstone not installed")
+
+    def test_nop_bytes_inside_a_displacement_are_not_padding(self):
+        # call [rax+0x890]; ret; int3 int3 - the 90 08 is a displacement, not nops
+        code = bytes.fromhex("ff9090080000" "c3" "cccc")
+        self.assertEqual(abi_guard.boundary_before(code, 0), 7)
+
+    def test_padding_jumped_past_is_internal_alignment(self):
+        # jmp +2 over two int3, then the real end
+        code = bytes.fromhex("eb02" "cccc" "c3" "cccc")
+        self.assertEqual(abi_guard.boundary_before(code, 0), 5)
+
+
+class TestReadFlatYaml(unittest.TestCase):
+    def test_folded_func_sig_is_read_whole(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "X.windows.yaml"
+            path.write_text("func_va: '0x180ae3950'\nfunc_sig: 48 8B C4 0F 29 70 ??\n  48 8B F1\n", encoding="utf-8")
+            y = abi_guard.read_flat_yaml(str(path))
+        self.assertEqual(y["func_sig"], "48 8B C4 0F 29 70 ?? 48 8B F1")
+        self.assertEqual(y["func_va"], "0x180ae3950")
