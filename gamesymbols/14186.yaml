@@ -46480,12 +46480,12 @@ files:
     vtable_name: CCSPlayer_MovementServices
   server/vtidx_FinishMove.windows.yaml:
     func_name: vtidx_FinishMove
-    func_rva: '0xabff20'
-    func_sig: 48 89 6C 24 ?? 56 57 41 56 48 83 EC ?? 48 83 79 ?? ??
-    func_size: '0x227'
-    func_va: '0x180abff20'
-    vfunc_index: 39
-    vfunc_offset: '0x138'
+    func_rva: '0xabfe40'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 0F 29 74 24 ?? 49 8B F0 48 8B D9 E8 ?? ?? ?? ?? F3 0F 10 76 40 0F 57 35 ?? ?? ?? ?? F3 0F 10 83 5C 02 00 00
+    func_size: '0xde'
+    func_va: '0x180abfe40'
+    vfunc_index: 38
+    vfunc_offset: '0x130'
     vtable_name: CCSPlayer_MovementServices
   server/vtidx_PlayerRunCommand.linux.yaml:
     func_name: vtidx_PlayerRunCommand
@@ -46987,5 +46987,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14186'
-last_publish_time: '2026-10-01T21:14:15Z'
+last_publish_time: '2026-10-04T12:49:10Z'
 schema_version: 5

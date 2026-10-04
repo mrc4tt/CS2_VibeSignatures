@@ -566,18 +566,6 @@
       "updated": true
     },
     {
-      "changes": [
-        {
-          "after": 39,
-          "before": 38,
-          "line": 232,
-          "path": [
-            "vtidx::FinishMove",
-            "offsets",
-            "windows"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         232,
@@ -585,7 +573,7 @@
         235
       ],
       "name": "vtidx::FinishMove",
-      "updated": true
+      "updated": false
     },
     {
       "covered": true,
@@ -604,6 +592,6 @@
   "summary": {
     "covered": 33,
     "total": 33,
-    "updated": 13
+    "updated": 12
   }
 }
