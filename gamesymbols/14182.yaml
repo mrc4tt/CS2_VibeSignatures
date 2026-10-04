@@ -22618,13 +22618,12 @@ files:
     vtable_name: CBaseTrigger
   server/CBaseTrigger_PassesTriggerFilters.linux.yaml:
     func_name: CBaseTrigger_PassesTriggerFilters
-    func_rva: '0xd2ceb0'
-    func_sig: C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 55 48 89 E5 8B 47 ??
-    func_sig_allow_across_function_boundary: true
-    func_size: '0x1'
-    func_va: '0xd2ceb0'
-    vfunc_index: 273
-    vfunc_offset: '0x888'
+    func_rva: '0xd38e90'
+    func_sig: 55 48 89 E5 41 55 41 54 49 89 FC 53 48 89 F3 48 83 EC ?? 8B 97 ?? ?? ?? ??
+    func_size: '0x2f5'
+    func_va: '0xd38e90'
+    vfunc_index: 272
+    vfunc_offset: '0x880'
     vtable_name: CBaseTrigger
   server/CBaseTrigger_PassesTriggerFilters.windows.yaml:
     func_name: CBaseTrigger_PassesTriggerFilters
@@ -29529,8 +29528,8 @@ files:
     vtable_name: CEntityInstance
   server/CEntityInstance_GetDataDescMap.linux.yaml:
     func_name: CEntityInstance_GetDataDescMap
-    vfunc_index: 44
-    vfunc_offset: '0x160'
+    vfunc_index: 45
+    vfunc_offset: '0x168'
     vtable_name: CEntityInstance
   server/CEntityInstance_GetDataDescMap.windows.yaml:
     func_name: CEntityInstance_GetDataDescMap
@@ -33580,12 +33579,13 @@ files:
     vtable_va: '0x181946a38'
   server/CGameMoney_GetDataDescMap.linux.yaml:
     func_name: CGameMoney_GetDataDescMap
-    func_rva: '0x228bf80'
-    func_sig: 48 8B 77 ?? 48 85 F6 75 ?? C3 66 0F 1F 44 00 ?? 55
-    func_size: '0x1c4'
-    func_va: '0x228bf80'
-    vfunc_index: 44
-    vfunc_offset: '0x160'
+    func_rva: '0xba3cf0'
+    func_sig: 48 8D 05 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? C3
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0xba3cf0'
+    vfunc_index: 45
+    vfunc_offset: '0x168'
     vtable_name: CGameMoney_vtable
   server/CGameMoney_GetDataDescMap.windows.yaml:
     func_name: CGameMoney_GetDataDescMap
@@ -47134,5 +47134,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14182'
-last_publish_time: '2026-10-04T13:01:42Z'
+last_publish_time: '2026-10-04T14:17:59Z'
 schema_version: 5

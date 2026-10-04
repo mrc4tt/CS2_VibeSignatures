@@ -1,6 +1,6 @@
 func_name: CBasePlayerPawn_OnTakeDamage_Dead
 vtable_name: CBasePlayerPawn
-vfunc_offset: '0x808'
-vfunc_index: 257
-vfunc_sig: 48 FF A0 08 08 00 00 C6 05 ?? 77 61 01 ??
+vfunc_offset: '0x818'
+vfunc_index: 259
+vfunc_sig: 48 FF A0 18 08 00 00 48 8B 9C 24 ?? ?? ?? ??
 vfunc_sig_allow_across_function_boundary: true

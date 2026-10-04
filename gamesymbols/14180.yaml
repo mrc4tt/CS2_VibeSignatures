@@ -11070,9 +11070,9 @@ files:
     vtable_name: CNetworkGameServerBase
   engine/CNetworkGameServerBase_CheckPassword.linux.yaml:
     func_name: CNetworkGameServerBase_CheckPassword
-    vfunc_index: 85
-    vfunc_offset: '0x2a8'
-    vfunc_sig: FF 90 A8 02 00 00 84 C0
+    vfunc_index: 87
+    vfunc_offset: '0x2b8'
+    vfunc_sig: FF 90 B8 02 00 00 88 85 ?? FC FF FF 84 C0
     vtable_name: CNetworkGameServerBase
   engine/CNetworkGameServerBase_CheckPassword.windows.yaml:
     func_name: CNetworkGameServerBase_CheckPassword
@@ -46839,5 +46839,5 @@ files:
     vtable_symbol: ??_7CVPhys2World@@6B@
     vtable_va: '0x1803c57d0'
 game_version: '14180'
-last_publish_time: '2026-09-20T11:47:47Z'
+last_publish_time: '2026-10-04T14:31:49Z'
 schema_version: 5
