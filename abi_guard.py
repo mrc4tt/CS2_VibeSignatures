@@ -93,13 +93,28 @@ ABI_GUARDS = {
     # 0x14b36a0 on 14185) and calling it SIGSEGVs the server (MatchZy .spec -> .t/.ct).
     # Verified by the string xref on 14182 (0x1580e50) and 14185 (0x15828d0). Linux only: the
     # windows sig has not been re-checked.
+    # On 14181 the real function still had that `mov r14d, edx` (0x155e230, the string xref
+    # confirms it), so its prologue is the SAME as the wrong function's on 14182+: the two
+    # part only after the frame, `lea rax` in the real one against `movzx eax, word
+    # [rdi+0x11d4]` in the wrong one. The bad head therefore runs to there, and 14181's own
+    # head is accepted as the older form.
     "CBasePlayerController_HandleCommand_JoinTeam": {
         "linux": {
-            "good_sig": "55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? "
-            "48 8D 05 ? ? ? ? 89 95 ? ? ? ? 4C 8B 28 4C 89 EF E8 ? ? ? ? 84 C0 0F 85 ? ? ? ? "
-            "48 89 DF 45 31 FF E8",
-            "accept_heads": ["55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8D 05"],
-            "bad_heads": ["55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB"],
+            "good_sig": [
+                "55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? "
+                "48 8D 05 ? ? ? ? 89 95 ? ? ? ? 4C 8B 28 4C 89 EF E8 ? ? ? ? 84 C0 0F 85 ? ? ? ? "
+                "48 89 DF 45 31 FF E8",
+                "55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? "
+                "48 8D 05 ? ? ? ? 4C 8B 28 4C 89 EF E8 ? ? ? ? 84 C0 0F 85 ? ? ? ? "
+                "48 89 DF 45 31 FF E8",  # 14181
+            ],
+            "accept_heads": [
+                "55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8D 05",
+                "55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8D 05",
+            ],
+            "bad_heads": [
+                "55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 0F B7 87"
+            ],
         },
     },
     # Virtual CCSPlayer_MovementServices::ProcessMovement (vtable slot 29 linux / 28 windows on
@@ -218,6 +233,30 @@ ABI_GUARDS = {
             "bad_heads": ["55 BE ? ? ? ? 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53"],  # JS binding
         },
     },
+    # CCSPlayer_MovementServices::FinishMove(CPlayer*, CMoveData*): copies the move data back
+    # into the services (-mv->m_vecViewAngles.x... into +0x25c, then +0x1ac, +0x690). Slot 39
+    # linux / 38 windows on every build 14183..14188. On 14184 and from 14186 the windows
+    # artifact named slot 39, the next virtual (2 args, returns bool: the jump/stamina step
+    # that calls ForceButtonState(IN_JUMP)), and relocation carried it forward with a unique
+    # sig, so bot-controller and bot-improver shipped vtidx::FinishMove = 39 on windows.
+    # Its linux twin is slot 40; both heads are the bad_heads below.
+    "vtidx_FinishMove": {
+        "linux": {
+            "good_sig": "55 48 89 E5 41 55 41 54 49 89 D4 53 48 89 FB 48 83 EC ? E8 ? ? ? ? F3 41 0F 10",
+            "vtable_name": "CCSPlayer_MovementServices",
+            # Prologue only: relocation_verdict rejects anything outside accept_heads,
+            # so register allocation past the prologue must not be pinned here.
+            "accept_heads": ["55 48 89 E5 41 55 41 54"],
+            "bad_heads": ["55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 48 8B 47 38"],
+        },
+        "windows": {
+            "good_sig": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 0F 29 74 24 ? 49 8B F0 48 8B D9 "
+            "E8 ? ? ? ? F3 0F 10 76 40 0F 57 35 ? ? ? ? F3 0F 10 83 5C 02 00 00",
+            "vtable_name": "CCSPlayer_MovementServices",
+            "accept_heads": ["48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC"],
+            "bad_heads": ["48 89 6C 24 ? 56 57 41 56 48 83 EC ? 48 83 79 38 00"],
+        },
+    },
 }
 # The older key name for the same function (still produced by its own finder).
 ABI_GUARDS["CCSPlayerController_HandleCommand_JoinTeam"] = ABI_GUARDS["CBasePlayerController_HandleCommand_JoinTeam"]
@@ -322,8 +361,26 @@ def read_flat_yaml(path: str) -> dict:
         doc = yaml.safe_load(f) or {}
     if not isinstance(doc, dict):
         return {}
-    return {str(k): "" if v is None else (f"{v:#x}" if isinstance(v, int) and not isinstance(v, bool) else str(v))
-            for k, v in doc.items()}
+    # Values keep the type YAML gave them (vfunc_index: 38 stays an int, a bool a
+    # bool); write_func_yaml decides how each is spelled. Only a folded multi-line
+    # string needs normalising, and None reads as "" like an absent field.
+    return {str(k): "" if v is None else (" ".join(v.split()) if isinstance(v, str) else v) for k, v in doc.items()}
+
+
+# Fields the artifacts spell as a quoted hex string; every other int is written as a
+# decimal int (vfunc_index: 38), the way the pipeline's own emitter writes them.
+HEX_FIELD = re.compile(r"(_va|_rva|_size|_offset|^offset)$")
+
+
+def _yaml_scalar(key: str, value) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return f"'{value:#x}'" if HEX_FIELD.search(key) else str(value)
+    text = str(value)
+    if re.fullmatch(r"0x[0-9a-fA-F]+", text):
+        return f"'{text}'"
+    return text  # "" stays an empty (null) value, as it was read
 
 
 def write_func_yaml(
@@ -341,8 +398,7 @@ def write_func_yaml(
         for k, v in (extra or {}).items():
             if k in owned:
                 continue
-            quoted = f"'{v}'" if re.fullmatch(r"0x[0-9a-fA-F]+", str(v)) else str(v)
-            f.write(f"{k}: {quoted}\n")
+            f.write(f"{k}: {_yaml_scalar(k, v)}\n")
 
 
 def guess_func_size(data: bytes, off: int, limit: int = 0x2000) -> int:
@@ -530,6 +586,17 @@ def _load_binary(bindir: str, gamever: str, platform: str):
         return binary, f.read()
 
 
+def _parse_int(value):
+    """Int, hex or decimal string -> int, or None ('' and junk included)."""
+    if isinstance(value, int):
+        return value
+    text = str(value or "").strip()
+    try:
+        return int(text, 16) if text.lower().startswith("0x") else int(text, 10)
+    except ValueError:
+        return None
+
+
 def _parse_hex(value):
     """Hex string (or int) -> int, or None when it is neither."""
     if isinstance(value, int):
@@ -560,6 +627,24 @@ def good_sig_hit(rule: dict, data: bytes) -> tuple[str, list[int]]:
     return first
 
 
+def vtable_slots(artifactdir, gamever, vtable_name, platform, va) -> list[int]:
+    """Every index of *va* in ``<vtable_name>_vtable.<platform>.yaml`` ([] when unknown).
+
+    A list, not one index: a folded body (MSVC COMDAT folding, a shared thunk)
+    can fill several slots, and a recorded index is right when it is any of them.
+    """
+    if not vtable_name or va is None:
+        return []
+    path = os.path.join(artifactdir, gamever, "server", f"{vtable_name}_vtable.{platform}.yaml")
+    if not os.path.exists(path):
+        return []
+    import yaml
+
+    with open(path, "r", encoding="utf-8") as f:
+        entries = (yaml.safe_load(f) or {}).get("vtable_entries") or {}
+    return sorted(int(i) for i, v in entries.items() if _parse_hex(v) == va)
+
+
 def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> tuple[bool, str]:
     binary, data = _load_binary(bindir, gamever, platform)
     if data is None:
@@ -580,13 +665,21 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
     problems = []
     extra = {}
     cur_va = None
+    keep_size = 0
+    y = read_flat_yaml(art_yaml) if os.path.exists(art_yaml) else {}
+    # A virtual's slot is part of its identity: write_func_yaml keeps the
+    # vfunc_* fields, so repairing func_va alone would leave the wrong slot in
+    # the very field the plugins ship (vtidx_FinishMove.windows). The rule's
+    # vtable_name covers a missing artifact, which has no vtable_name to read.
+    vtable_name = y.get("vtable_name") or rule.get("vtable_name")
+    is_virtual = bool(vtable_name) or "vfunc_index" in y or "vfunc_offset" in y
+    head_ok = False
     if not os.path.exists(art_yaml):
         problems.append(f"missing {art_yaml}")
     else:
-        y = read_flat_yaml(art_yaml)
         extra = y
         try:
-            cur_va = int(y.get("func_va", "0"), 16)
+            cur_va = _parse_hex(y.get("func_va"))
         except ValueError:
             cur_va = None
         cur_off = va_to_offset(data, platform, cur_va) if cur_va else None
@@ -598,6 +691,8 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
             problems.append(
                 f"func_va {cur_va:#x} head matches no accepted pattern: {data[cur_off : cur_off + 16].hex(' ')}"
             )
+        else:
+            head_ok = True
         sig = y.get("func_sig")
         if not sig:
             problems.append("no func_sig (generators fall back to the template sig)")
@@ -623,6 +718,24 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
                     f"func_size {recorded_size:#x} runs past a function boundary at"
                     f" +{boundary:#x} from {cur_va:#x}"
                 )
+            elif boundary is not None:
+                # Kept by a repair only when checked: without capstone there is
+                # no boundary evidence, and rule 14 says unknown beats unverified.
+                keep_size = recorded_size
+
+        # Judged on func_va itself once its head is accepted: the artifact may
+        # rightly hold a slot thunk while good_sig names the body behind it
+        # (CBaseTrigger_EndTouch.linux). A rejected head is already a problem.
+        if is_virtual and head_ok:
+            slots = vtable_slots(artifactdir, gamever, vtable_name, platform, cur_va)
+            recorded_index = _parse_int(y.get("vfunc_index"))
+            recorded_offset = _parse_hex(y.get("vfunc_offset"))
+            if not slots:
+                problems.append(f"func_va {cur_va:#x} is in no {vtable_name}_vtable.{platform} slot")
+            elif recorded_index not in slots:
+                problems.append(f"vfunc_index {recorded_index} is not the slot of func_va ({', '.join(map(str, slots))})")
+            elif recorded_offset != recorded_index * 8:
+                problems.append(f"vfunc_offset {y.get('vfunc_offset')} is not 8 x vfunc_index ({recorded_index * 8:#x})")
 
     if not problems:
         return True, f"ok  {symbol}.{platform} @ {cur_va:#x}"
@@ -631,7 +744,20 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
     if not fix:
         return False, msg
 
-    size = guess_func_size(data, good_off)
+    if is_virtual:
+        slots = vtable_slots(artifactdir, gamever, vtable_name, platform, good_va)
+        if len(slots) != 1:
+            # Moving func_va while keeping a slot nobody checked is the defect
+            # this guard exists for, so refuse rather than half-repair.
+            return False, msg + (
+                f" -> NOT FIXED: {good_va:#x} is in {len(slots)} slots of {vtable_name}_vtable.{platform}.yaml"
+            )
+        good_slot = slots[0]
+        extra = {**extra, "vtable_name": vtable_name, "vfunc_offset": good_slot * 8, "vfunc_index": good_slot}
+    # A repair that only adds the sig (or fixes the slot) keeps a size nothing
+    # flagged: the pipeline records IDA's own, which the byte scan below often
+    # cannot reproduce and would replace with 0x0 (unknown).
+    size = keep_size if cur_va == good_va and keep_size else guess_func_size(data, good_off)
     write_func_yaml(art_yaml, symbol, good_va, platform, size, good_sig, extra)
     if os.path.isdir(os.path.dirname(bin_yaml)):
         write_func_yaml(bin_yaml, symbol, good_va, platform, size, good_sig, extra)

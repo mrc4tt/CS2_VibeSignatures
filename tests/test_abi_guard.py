@@ -102,6 +102,119 @@ class TestCheckSymbol(unittest.TestCase):
         ok, msg = self._run(fix=False)
         self.assertTrue(ok, msg)
 
+    def _write_vtable(self, entries):
+        (self.artifactdir / "14999" / "server" / "CFoo_vtable.linux.yaml").write_text(
+            "vtable_class: CFoo\nvtable_entries:\n"
+            + "".join(f"  {i}: '{va:#x}'\n" for i, va in entries.items()),
+            encoding="utf-8",
+        )
+
+    def test_fix_moves_the_vtable_slot_with_the_function(self):
+        # vtidx_FinishMove.windows: the wrong function sat in the NEXT slot, and a
+        # fix that kept vfunc_* would have shipped the wrong index regardless.
+        good, bad = self.text_vaddr, self.text_vaddr + 0x40
+        self._write_vtable({38: good, 39: bad})
+        abi_guard.write_func_yaml(
+            str(self.yaml), "NetworkStateChanged", bad, "linux", 0, "55 48 89 E5",
+            {"vtable_name": "CFoo", "vfunc_offset": "0x138", "vfunc_index": "39"},
+        )
+        ok, msg = self._run(fix=False)
+        self.assertFalse(ok)
+        self.assertIn("KNOWN-BAD", msg)
+
+        ok, msg = self._run(fix=True)
+        self.assertTrue(ok, msg)
+        text = self.yaml.read_text(encoding="utf-8")
+        self.assertIn("vfunc_index: 38\n", text)
+        self.assertIn("vfunc_offset: '0x130'\n", text)
+        ok, msg = self._run(fix=False)
+        self.assertTrue(ok, msg)
+
+    def test_fix_keeps_a_decimal_index_and_an_unflagged_size(self):
+        # A rewrite once turned vfunc_index: 38 into '0x26'. A repair that only
+        # adds the sig keeps the size.
+        good = self.text_vaddr
+        self._write_vtable({38: good})
+        self.yaml.write_text(
+            f"func_name: NetworkStateChanged\nfunc_va: '{good:#x}'\nfunc_rva: '{good:#x}'\n"
+            "func_size: '0xa'\nvtable_name: CFoo\nvfunc_offset: '0x130'\nvfunc_index: 38\n",
+            encoding="utf-8",
+        )
+        ok, msg = self._run(fix=True)
+        self.assertIn("no func_sig", msg)
+        text = self.yaml.read_text(encoding="utf-8")
+        self.assertIn("vfunc_index: 38\n", text)
+        self.assertIn("func_size: '0xa'\n", text)
+
+    def test_wrong_slot_on_the_right_function_is_reported(self):
+        good = self.text_vaddr
+        self._write_vtable({38: good})
+        abi_guard.write_func_yaml(
+            str(self.yaml), "NetworkStateChanged", good, "linux", 0, self.rule["good_sig"],
+            {"vtable_name": "CFoo", "vfunc_offset": "0x138", "vfunc_index": "39"},
+        )
+        ok, msg = self._run(fix=False)
+        self.assertFalse(ok)
+        self.assertIn("vfunc_index 39 is not the slot of func_va (38)", msg)
+
+    def test_offset_must_be_eight_times_the_index(self):
+        good = self.text_vaddr
+        self._write_vtable({38: good})
+        abi_guard.write_func_yaml(
+            str(self.yaml), "NetworkStateChanged", good, "linux", 0, self.rule["good_sig"],
+            {"vtable_name": "CFoo", "vfunc_offset": "0x138", "vfunc_index": "38"},
+        )
+        ok, msg = self._run(fix=False)
+        self.assertFalse(ok)
+        self.assertIn("is not 8 x vfunc_index (0x130)", msg)
+
+    def test_any_slot_holding_func_va_is_accepted(self):
+        # A slot thunk or a folded body can fill several slots.
+        good = self.text_vaddr
+        self._write_vtable({38: good, 40: good})
+        abi_guard.write_func_yaml(
+            str(self.yaml), "NetworkStateChanged", good, "linux", 0, self.rule["good_sig"],
+            {"vtable_name": "CFoo", "vfunc_offset": "0x140", "vfunc_index": "40"},
+        )
+        ok, msg = self._run(fix=False)
+        self.assertTrue(ok, msg)
+
+    def test_fix_refuses_when_the_slot_cannot_be_derived(self):
+        bad = self.text_vaddr + 0x40
+        abi_guard.write_func_yaml(
+            str(self.yaml), "NetworkStateChanged", bad, "linux", 0, "55 48 89 E5",
+            {"vtable_name": "CFoo", "vfunc_offset": "0x138", "vfunc_index": "39"},
+        )
+        before = self.yaml.read_text(encoding="utf-8")
+        for entries in ({39: bad}, {37: self.text_vaddr, 38: self.text_vaddr}):  # absent / ambiguous
+            self._write_vtable(entries)
+            ok, msg = self._run(fix=True)
+            self.assertFalse(ok)
+            self.assertIn("NOT FIXED", msg)
+            self.assertEqual(self.yaml.read_text(encoding="utf-8"), before)
+
+    def test_fix_of_a_missing_virtual_writes_its_slot(self):
+        self._write_vtable({38: self.text_vaddr})
+        rule = {**self.rule, "vtable_name": "CFoo"}
+        ok, msg = abi_guard.check_symbol(
+            "NetworkStateChanged", "linux", rule, "14999", str(self.bindir), str(self.artifactdir), True
+        )
+        self.assertTrue(ok, msg)
+        text = self.yaml.read_text(encoding="utf-8")
+        self.assertIn("vtable_name: CFoo\nvfunc_offset: '0x130'\nvfunc_index: 38\n", text)
+
+    def test_empty_vfunc_index_does_not_crash_the_fix(self):
+        good = self.text_vaddr
+        self._write_vtable({38: good})
+        self.yaml.write_text(
+            f"func_name: NetworkStateChanged\nfunc_va: '{good:#x}'\nfunc_rva: '{good:#x}'\n"
+            "func_size: '0x0'\nvtable_name: CFoo\nvfunc_offset:\nvfunc_index:\n",
+            encoding="utf-8",
+        )
+        ok, msg = self._run(fix=True)
+        self.assertTrue(ok, msg)
+        self.assertIn("vfunc_index: 38\n", self.yaml.read_text(encoding="utf-8"))
+
     def test_missing_yaml_reported(self):
         ok, msg = self._run(fix=False)
         self.assertFalse(ok)
@@ -184,6 +297,30 @@ class TestReadFlatYaml(unittest.TestCase):
             y = abi_guard.read_flat_yaml(str(path))
         self.assertEqual(y["func_sig"], "48 8B C4 0F 29 70 ?? 48 8B F1")
         self.assertEqual(y["func_va"], "0x180ae3950")
+
+
+    def test_values_keep_their_yaml_type_and_round_trip(self):
+        # It used to render every int as hex, so a rewrite turned vfunc_index: 38
+        # into '0x26' and func_sig_allow_across_function_boundary: true into True.
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "X.linux.yaml"
+            path.write_text(
+                "func_name: X\nfunc_va: '0x1000'\nfunc_rva: '0x1000'\nfunc_size: '0x10'\nfunc_sig: 55 48\n"
+                "func_sig_allow_across_function_boundary: true\nvtable_name: CFoo\n"
+                "vfunc_offset: 0x130\nvfunc_index: 38\nvfunc_sig:\n",
+                encoding="utf-8",
+            )
+            y = abi_guard.read_flat_yaml(str(path))
+            self.assertEqual(y["vfunc_index"], 38)
+            self.assertIs(y["func_sig_allow_across_function_boundary"], True)
+            self.assertEqual(y["vfunc_offset"], 0x130)  # unquoted hex is an int to YAML
+            self.assertEqual(y["vfunc_sig"], "")
+            abi_guard.write_func_yaml(str(path), "X", 0x1000, "linux", 0x10, "55 48", y)
+            text = path.read_text(encoding="utf-8")
+        self.assertIn("func_sig_allow_across_function_boundary: true\n", text)
+        self.assertIn("vfunc_offset: '0x130'\n", text)
+        self.assertIn("vfunc_index: 38\n", text)
+        self.assertIn("vfunc_sig: \n", text)
 
 
 class TestGoodSigHit(unittest.TestCase):
