@@ -8184,6 +8184,8 @@ async def _try_preprocess_func_without_llm(
                     func_data.get("vfunc_index"),
                     new_binary_dir,
                     old_path,
+                    func_data.get("func_va"),
+                    func_data.get("func_size"),
                 )
             except Exception as exc:
                 if debug:

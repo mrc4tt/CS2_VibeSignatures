@@ -22,6 +22,11 @@ Verdicts:
            build did, with nothing around it moving that way - one of the two
            builds is wrong (decide which with the other platform: on most
            vtables linux = windows + 1)
+  OK       also when the slot moved outside that range but the function provably
+           stayed the same one: every one of 2+ strings its previous body
+           referenced is referenced from the new address (CViewRender_Render.windows
+           5 -> 6 on 14182, one slot inserted below it and one removed above, on a
+           vtable with no other artifact to compare)
   SKIP     no previous artifact or index, or nothing bounds the top (an interface
            with no vtable artifact and no known slot above this one)
 
@@ -159,6 +164,36 @@ def _neighbours(old_dir, new_dir, vtable_name, platform, exclude):
     return pairs
 
 
+CARRIED = re.compile(r"(\d+)/(\d+) strings carried over")
+
+
+def strings_vouch(old_dir, old_doc, new_dir, new_va, new_size, platform) -> bool:
+    """True when the function at *new_va* references every one of the 2+ strings
+    the previous build's function did - identity, whatever its slot says.
+
+    Twins with no strings (FinishMove and the virtual after it) never vouch, so
+    the slot rule still decides them.
+    """
+    from audit_identity_drift import _cached_binary, compare, fingerprint
+    from audit_xref_identity import as_int, locate_binary
+
+    old_va, va = as_int((old_doc or {}).get("func_va")), as_int(new_va)
+    if old_va is None or va is None:
+        return False
+    old_path, *_ = locate_binary(old_dir, platform)
+    new_path, *_ = locate_binary(new_dir, platform)
+    if not old_path or not new_path:
+        return False
+    old_bin, new_bin = _cached_binary(old_path, platform), _cached_binary(new_path, platform)
+    verdict, why = compare(
+        fingerprint(old_bin, old_va, as_int(old_doc.get("func_size")) or 0),
+        fingerprint(new_bin, va, as_int(new_size) or 0),
+        new_bin,
+    )
+    m = CARRIED.match(why)
+    return verdict == "OK" and bool(m) and m.group(1) == m.group(2) and int(m.group(2)) >= 2
+
+
 OTHER_PLATFORM = {"linux": "windows", "windows": "linux"}
 
 
@@ -173,7 +208,8 @@ def _twin_shift(old_dir, new_dir, base, platform):
     return new[1] - old[1] if old and new and old[0] == new[0] else None
 
 
-def relocation_slot_verdict(platform, vtable_name, new_index, new_binary_dir, old_yaml_path):
+def relocation_slot_verdict(platform, vtable_name, new_index, new_binary_dir, old_yaml_path,
+                            func_va=None, func_size=None):
     """Judge a fresh relocation's slot inside a run: 'shifted' | 'ok' | None.
 
     Only 'shifted' is meant to reject. The neighbours come from whatever this run
@@ -194,6 +230,8 @@ def relocation_slot_verdict(platform, vtable_name, new_index, new_binary_dir, ol
         _neighbours(old_dir, new_binary_dir, vtable_name, platform, os.path.basename(old_yaml_path)),
         _twin_shift(old_dir, new_binary_dir, os.path.basename(old_yaml_path), platform),
     )
+    if verdict == "shifted" and strings_vouch(old_dir, old_doc, new_binary_dir, func_va, func_size, platform):
+        return "ok"
     return verdict
 
 
@@ -223,6 +261,10 @@ def audit(gamever, old, platforms, artifactdir, symbol_filter, verbose):
             _neighbours(old_dir, new_dir, vtable_name, platform, base),
             _twin_shift(old_dir, new_dir, base, platform),
         )
+        if verdict == "shifted" and strings_vouch(
+            old_dir, old_doc, new_dir, doc.get("func_va"), doc.get("func_size"), platform
+        ):
+            verdict, why = "ok", why + "; its strings all carried over"
         label = {"ok": "OK", "shifted": "SHIFTED"}.get(verdict, "SKIP")
         counts[label] += 1
         if label == "SHIFTED" or (verbose and label == "OK"):

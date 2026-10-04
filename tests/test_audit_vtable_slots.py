@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -90,6 +91,22 @@ class TestOnDisk(unittest.TestCase):
         self.assertEqual(verdict, "shifted")
         verdict = slots.relocation_slot_verdict("windows", "CCSPlayer_MovementServices", 38, str(self.new), old_yaml)
         self.assertEqual(verdict, "ok")
+
+    def test_carried_strings_overrule_the_slot_rule(self):
+        # CViewRender_Render.windows 14181 -> 14182: 5 -> 6 with the vtable -1,
+        # every string carried over - a layout change, not a misread.
+        self._build(38, 39)
+        old_yaml = str(self.old / "vtidx_FinishMove.windows.yaml")
+        with mock.patch.object(slots, "strings_vouch", return_value=True) as vouch:
+            verdict = slots.relocation_slot_verdict(
+                "windows", "CCSPlayer_MovementServices", 39, str(self.new), old_yaml, "0x1270", "0x10"
+            )
+        self.assertEqual(verdict, "ok")
+        self.assertEqual(vouch.call_args.args[3:], ("0x1270", "0x10", "windows"))
+
+    def test_strings_cannot_vouch_without_addresses(self):
+        self.assertFalse(slots.strings_vouch(str(self.old), {}, str(self.new), "0x10", 0, "windows"))
+        self.assertFalse(slots.strings_vouch(str(self.old), {"func_va": "0x10"}, str(self.new), None, 0, "windows"))
 
     def test_relocation_verdict_cannot_judge_without_a_baseline(self):
         self._build(38, 39)
