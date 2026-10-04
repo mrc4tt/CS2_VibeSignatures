@@ -103,6 +103,9 @@ hint_for() {  # hint_for <failure text>
         *"binary lock"*)
             printf 'cd %s && uv run write_binary_lock.py -gamever %s -check      # which module differs\n' "$repo" "$ver"
             printf 're-download the pinned manifests: uv run download_depot.py -tag %s, then copy_depot_bin.py\n' "$ver" ;;
+        *"slot shift"*)
+            printf 'cd %s && uv run audit_vtable_slots.py -gamever %s      # SHIFTED lines name the symbol and both slots\n' "$repo" "$ver"
+            printf 'decide which build is wrong with the other platform (most vtables: linux = windows + 1), then add an abi_guard.py rule and run it with --fix\n' ;;
         *"anchor drift"*)
             printf 'cd %s && uv run audit_identity_drift.py -gamever %s      # DRIFT lines name the symbol and where its strings went\n' "$repo" "$ver"
             printf 'decide which build is wrong: uv run audit_identity_drift.py -gamever %s -old <an earlier VER> -symbol <name> -v\n' "$ver" ;;
@@ -299,6 +302,12 @@ step "checking each function still holds its anchor" uv run audit_xref_identity.
 # function, so one of the two builds names the wrong one. The run already discards
 # such a relocation (CS2VIBE_RELOC_DRIFT_CHECK=0 turns that off).
 step "checking each function against the previous gamever (anchor drift)" uv run audit_identity_drift.py -gamever "$TAG"
+# And every virtual's slot: between two builds a slot only moves with its
+# neighbours, by at most the vtable's change in length, or the same way on both
+# platforms. vtidx_FinishMove.windows named the next virtual's slot on 14184 and
+# 14186-14188 and every other check passed it, because that slot does hold that
+# function. The run already discards such a relocation (CS2VIBE_RELOC_SLOT_CHECK=0).
+step "checking each virtual's slot against the previous gamever (slot shift)" uv run audit_vtable_slots.py -gamever "$TAG"
 step "packing the snapshot" uv run gamesymbol_snapshot.py pack -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
 step "checking the snapshot against the config" uv run gamesymbol_snapshot.py check-contract \
     -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"

@@ -8156,6 +8156,47 @@ async def _try_preprocess_func_without_llm(
             )
             func_data = None
 
+    # The slot question, for every relocated virtual. A slot only moves when
+    # virtuals are added or removed before it, and then with its neighbours; a sig
+    # that drifted onto the NEXT virtual still lands in the class vtable, so the
+    # FUNC_VTABLE_RELATIONS check above passes it (vtidx_FinishMove.windows named
+    # slot 39 instead of 38 on 14184 and 14186-14188 while the vtable kept its
+    # size). audit_vtable_slots says "shifted" only when the move is outside what
+    # the neighbours and the vtable's change in length allow.
+    # CS2VIBE_RELOC_SLOT_CHECK=0 turns it off.
+    if (
+        func_data is not None
+        and old_path
+        and func_data.get("vtable_name")
+        and func_data.get("vfunc_index") is not None
+        and os.environ.get("CS2VIBE_RELOC_SLOT_CHECK", "1") != "0"
+    ):
+        try:
+            from audit_vtable_slots import relocation_slot_verdict
+        except Exception:
+            relocation_slot_verdict = None
+        verdict = None
+        if relocation_slot_verdict is not None:
+            try:
+                verdict = relocation_slot_verdict(
+                    platform,
+                    func_data.get("vtable_name"),
+                    func_data.get("vfunc_index"),
+                    new_binary_dir,
+                    old_path,
+                )
+            except Exception as exc:
+                if debug:
+                    print(f"    Preprocess: slot check for {func_name} failed: {exc}")
+        if verdict == "shifted":
+            print(
+                f"    Preprocess: discarding relocation for {func_name} at"
+                f" {func_data.get('func_va')} - slot {func_data.get('vfunc_index')} of"
+                f" {func_data.get('vtable_name')} moved unlike its neighbours since the"
+                " previous build"
+            )
+            func_data = None
+
     if func_data is None and func_name in func_xrefs_map:
         xref_spec = func_xrefs_map[func_name]
         if debug:

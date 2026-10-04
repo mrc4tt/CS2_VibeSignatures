@@ -53,6 +53,8 @@ RELEASE_INTEGRATION_MODULES = frozenset(
 UNIT_MODULES = frozenset(
     {
         "test_abi_guard",
+        "test_audit_vtable_slots",
+        "test_relocation_slot_check",
         "test_consumer_drift_audit",
         "test_artifact_diagnostics",
         "test_validate_artifacts",

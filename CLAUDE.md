@@ -275,6 +275,13 @@ uv run audit_xref_identity.py -gamever $VER
 #     binaries: its strings must carry over. 0 drift. The run discards a drifting
 #     relocation itself (CS2VIBE_RELOC_DRIFT_CHECK=0 off).
 uv run audit_identity_drift.py -gamever $VER
+# 0d. every virtual's slot against the previous gamever: a slot moves only with its
+#     neighbours, by at most the vtable's change in length, or the same way on both
+#     platforms. 0 shifted. validate_artifacts cannot see this - the vtable really
+#     does hold func_va at a wrong index when it names the NEXT virtual
+#     (vtidx_FinishMove.windows 39 for 38 on 14184, 14186-14188, shipped by
+#     bot-controller). The run discards such a relocation (CS2VIBE_RELOC_SLOT_CHECK=0 off).
+uv run audit_vtable_slots.py -gamever $VER
 # 1. artifacts -> snapshot (every artifact or config change needs this)
 uv run gamesymbol_snapshot.py pack -gamever $VER -snapshot gamesymbols/$VER.yaml
 uv run gamesymbol_snapshot.py check-contract -gamever $VER -snapshot gamesymbols/$VER.yaml
@@ -826,6 +833,7 @@ Two guards now catch the class before the baseline does:
 |------|------|-------|
 | `abi_guard.py` | After `sync_upstream.sh`, before every pack, on every gamever | Catches a wrong *identification* that relocated cleanly; `--fix` rewrites the artifact. Also verifies `func_size` |
 | `audit_xref_identity.py` | After every run, before pack | Each anchored function must still reference its finder's string / byte pattern (or, for an `m_*` anchor, access the schema offset). The run applies the same judgement to every relocation and discards a `bad` one |
+| `audit_vtable_slots.py` | After every run, before pack | Every virtual's `vfunc_index` against the previous gamever. SHIFTED = moved unlike its neighbours / the vtable's length / the other platform; decide which build is wrong by the other platform (most vtables: linux = windows + 1). Still flags, on old builds nothing ships from: 14183 windows `OnTakeDamage_Dead`/`_Dying` swapped, 14182-14183 linux `CEntityInstance_GetDataDescMap` on `ReloadPrivateScripts`' slot, `CNetworkGameServerBase_CheckPassword.linux` / `CBaseTrigger_PassesTriggerFilters.linux` from 14182 |
 | `audit_identity_drift.py` | After every run, before pack | Every function artifact against the previous gamever: strings must carry over. DRIFT names the function that now holds them. Recognises outlining (the new body calls the holder). The run discards a drifting relocation |
 | `validate_artifacts.py` | After every artifact change | Re-checks every artifact against the binary; `-strict` fails on warnings. Needs `capstone` — degrades silently without it |
 | `verify_plugin_gamedata.py` | Before a deploy, and to answer "is this plugin's file OK" | Scans every shipped signature against the binaries and re-derives every offset; non-zero exit on broken/ambiguous/mismatch |
