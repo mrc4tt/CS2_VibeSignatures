@@ -159,6 +159,23 @@ sync_push() {
     git push -q origin HEAD
 }
 
+# A new build's push never starts deploy-pages.yml on its own. GitHub evaluates a
+# `paths:` filter against only the first 300 files of a push, and an analysis
+# commit changes ~3700, alphabetically all bin_artifacts/ - so the filter matched
+# nothing, no run was created, and sig.miksen.me kept showing 14188 after 14189
+# had been pushed. Dispatch it explicitly. Not fatal: the analysis is pushed, and
+# a missing gh login must not fail a green build.
+dispatch_pages() {
+    local slug
+    slug=$(git remote get-url origin | sed -E 's#^(git@github\.com:|https://github\.com/)##; s#\.git$##')
+    if command -v gh >/dev/null 2>&1 \
+            && gh workflow run deploy-pages.yml -R "$slug" --ref "$(git rev-parse --abbrev-ref HEAD)" >/dev/null 2>&1; then
+        log "    site build dispatched (deploy-pages.yml on $slug)"
+    else
+        log "    WARNING: could not dispatch deploy-pages.yml - run: gh workflow run deploy-pages.yml -R $slug --ref main"
+    fi
+}
+
 notify() {  # notify <outcome> <text>
     [ -x ./autopilot_notify.sh ] || return 0
     local took=""
@@ -492,13 +509,15 @@ duplicate-VA clusters." || die "commit"
     uv run publish_site_data.py -check || die "site datasets stale after commit"
     sync_push || die "push"
     log "    committed and pushed"
+    dispatch_pages
 fi
 
 # ---------------------------------------------------------------- publish the site
 # Independent of the plugin deploy gate below: that gate decides whether a build
 # is safe to put under a live server's plugins, which says nothing about showing
-# the numbers on a web page. GitHub Pages needs none of this - it builds from the
-# pushed commit - so the default is off and this only runs when asked.
+# the numbers on a web page. GitHub Pages needs none of this - dispatch_pages
+# starts its build from the pushed commit - so the default is off and this only
+# runs when asked.
 publish_site() {
     local target="$1" stamp release
     stamp="$TAG-$(date -u +%Y%m%dT%H%M%SZ)"

@@ -20,6 +20,30 @@ OUT_ROOT="$REPO/gamedata/$GAMEVER"
 [ -d "$OUT_ROOT" ] || { echo "❌ no gamedata output for $GAMEVER"; exit 1; }
 echo "==> Deploying gamedata/$GAMEVER outputs to local plugin repos"
 
+# Pull each target repo before copying into it. They get commits from elsewhere
+# (matchzy 13 and CounterStrikeSharp 15 behind on 14189), and commit_push only
+# pulls when it has something to push - so on a build whose files did not change
+# the clones were never refreshed, and check_deploy_drift compared against stale
+# working copies that could not show a gamedata edit made upstream. A pull that
+# fails (diverged history, no network) warns and the deploy goes on: commit_push
+# rebases before it pushes, and fails the run if that does not work either.
+pull_repo() {  # pull_repo <repo>
+    local repo="$1"
+    [ -d "$repo/.git" ] || return 0
+    if git -C "$repo" pull -q --rebase --autostash 2>/dev/null; then
+        echo "  ↓ pulled: $repo ($(git -C "$repo" log -1 --format=%h))"
+    else
+        git -C "$repo" rebase --abort 2>/dev/null || true
+        echo "  ⚠️  could not pull $repo - deploying into the local copy"
+    fi
+}
+
+for r in "$HOME/customGIT/weaponpaints" "$HOME/customGIT/matchzy" \
+         "$HOME/plugins/cs2-retakes-allocator"; do
+    pull_repo "$r"
+done
+# CounterStrikeSharp is pulled by update_css_gamedata.sh, before its merge.
+
 deploy() {  # deploy <dist-file> <target-file>
     local dist="$1" target="$2"
     [ -f "$dist" ] || { echo "  ⚠️  missing dist: $dist - skipped"; return; }

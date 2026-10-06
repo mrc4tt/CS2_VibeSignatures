@@ -171,6 +171,20 @@ uv run update_gamedata.py -gamever="$GAMEVER" -snapshot="$SNAPSHOT" -outputdir="
 [ -f "$DIST_GD" ] || die "dist gamedata not produced: $DIST_GD"
 
 # --- 4. merge dist -> install (preserve install-only symbols) + diff -------
+# Bring the install repo up to date first. The merge reads the install file, and
+# the repo gets commits from elsewhere (15 behind on 14189): merging into a stale
+# copy keeps install-only keys someone already changed upstream, and
+# check_deploy_drift then compares against that stale copy too. Not fatal - the
+# push in deploy_local_plugins.sh rebases anyway - but say so.
+if [ "${DRYRUN:-0}" != "1" ] && git -C "$CSS_INSTALL" rev-parse --git-dir >/dev/null 2>&1; then
+    if git -C "$CSS_INSTALL" pull -q --rebase --autostash 2>/dev/null; then
+        log "pulled $CSS_INSTALL ($(git -C "$CSS_INSTALL" log -1 --format=%h))"
+    else
+        git -C "$CSS_INSTALL" rebase --abort 2>/dev/null || true
+        log "WARNING: could not pull $CSS_INSTALL - merging into the local copy"
+    fi
+fi
+
 # No .bak: $INSTALL_GD is tracked in the CounterStrikeSharp repo, so the pre-merge
 # version is `git show HEAD:$INSTALL_REL`. Uncommitted edits are the exception, so
 # say so before the merge rewrites them in place.
