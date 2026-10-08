@@ -7,6 +7,10 @@ export interface SiteMetaBuild {
   symbolRecords: number
   pluginKeys: number
   pluginKeysCovered: number
+  /** Steam's number for the build (`14178b` -> 14178); see pages/siteMetaPlugin.ts. */
+  steamVersion?: number | null
+  /** `deployed` once every plugin repo carries this build's gamedata. */
+  status?: 'analysed' | 'deployed' | 'partial'
 }
 
 export interface SiteMeta {

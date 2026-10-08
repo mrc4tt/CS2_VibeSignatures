@@ -75,6 +75,7 @@ UNIT_MODULES = frozenset(
         "test_cs2fow_gamedata",
         "test_define_inputfunc_preprocessor",
         "test_deploy_targets",
+        "test_record_deploy",
         "test_disabled_generator_waiver",
         "test_pipeline_hunt",
         "test_parallel_jobs",
