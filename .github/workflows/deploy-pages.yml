@@ -6,6 +6,7 @@ on:
     paths:
       - 'pages/**'
       - 'gamesymbols/**'
+      - 'deployments/**'
       - 'gamedata/**'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:

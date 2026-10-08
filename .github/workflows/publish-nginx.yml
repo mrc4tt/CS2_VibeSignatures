@@ -19,6 +19,7 @@ on:
       - 'pages/**'
       - 'gamedata/**'
       - 'gamesymbols/**'
+      - 'deployments/**'
       - 'diagnostics/**'
       - '.github/workflows/publish-nginx.yml'
   workflow_dispatch:

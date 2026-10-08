@@ -16,6 +16,37 @@ export interface SiteMetaBuild {
   pluginKeysCovered: number
   /** Per-plugin key coverage, which is what a per-plugin badge is drawn from. */
   plugins: Record<string, { total: number; covered: number }>
+  /**
+   * The number Steam calls this build: `ISteamApps/UpToDateCheck`'s `required_version`
+   * and `ServerVersion` in a server's `steam.inf`. `gameVersion` adds a letter when one
+   * Steam version was analysed twice (`14178b`), so this is what a server is matched on.
+   */
+  steamVersion: number | null
+  /**
+   * `deployed` once `deployments/<build>.json` says every plugin repo carries this
+   * build's gamedata, `analysed` before that - which is also what a build held by the
+   * safe gate stays. Only `deployed` means the files are safe to put on a live server.
+   */
+  status: 'analysed' | 'deployed' | 'partial'
+  /** The deploy record itself, or null while the build is analysed only. */
+  deployment: DeploymentRecord | null
+}
+
+export interface DeploymentTarget {
+  repo?: string | null
+  path?: string
+  commit?: string
+  pushed?: boolean
+  error?: string
+}
+
+/** Written by `record_deploy.py` after a deploy passes the drift check. */
+export interface DeploymentRecord {
+  schemaVersion: 1
+  gameVersion: string
+  status: 'deployed' | 'partial'
+  recordedAt: string
+  targets: Record<string, DeploymentTarget>
 }
 
 export interface SiteMeta {
@@ -91,6 +122,32 @@ async function metadataSummaries(
   return { total, covered, plugins }
 }
 
+export function steamVersionOf(gameVersion: string): number | null {
+  const match = /^(\d+)[a-z]?$/.exec(gameVersion)
+  return match ? Number(match[1]) : null
+}
+
+/**
+ * A missing record is the normal state of a build that is analysed but not deployed,
+ * so it reads as null. A record that is present but unreadable is a broken deploy
+ * contract and fails the build instead of quietly reporting "analysed".
+ */
+export async function readDeploymentRecord(directory: string, gameVersion: string): Promise<DeploymentRecord | null> {
+  const path = join(directory, `${gameVersion}.json`)
+  if (!existsSync(path)) return null
+  const parsed = JSON.parse(await readFile(path, 'utf8')) as Partial<DeploymentRecord>
+  if (
+    parsed.schemaVersion !== 1
+    || parsed.gameVersion !== gameVersion
+    || (parsed.status !== 'deployed' && parsed.status !== 'partial')
+    || typeof parsed.targets !== 'object'
+    || parsed.targets === null
+  ) {
+    throw new Error(`${path}: expected a deploy record for ${gameVersion} (schema v1)`)
+  }
+  return parsed as DeploymentRecord
+}
+
 /** Shields-compatible flat badge, drawn rather than fetched so the page stays self-contained. */
 export function renderBadge(label: string, value: string, color = '#17636e'): string {
   const width = (text: string): number => Math.round(text.length * 6.6) + 14
@@ -111,7 +168,11 @@ export function renderBadge(label: string, value: string, color = '#17636e'): st
   ].join('')
 }
 
-export async function buildSiteMeta(symbolsDirectory: string, gamedataDirectory: string): Promise<SiteMeta> {
+export async function buildSiteMeta(
+  symbolsDirectory: string,
+  gamedataDirectory: string,
+  deploymentsDirectory?: string,
+): Promise<SiteMeta> {
   const entries = await readdir(symbolsDirectory, { withFileTypes: true })
   const versions = entries
     .filter((entry) => entry.isFile() && SNAPSHOT_FILE_PATTERN.test(entry.name))
@@ -124,6 +185,7 @@ export async function buildSiteMeta(symbolsDirectory: string, gamedataDirectory:
     `${latest}.yaml`,
   )
   const keys = await metadataSummaries(join(gamedataDirectory, latest))
+  const deployment = deploymentsDirectory ? await readDeploymentRecord(deploymentsDirectory, latest) : null
   return {
     schemaVersion: 1,
     latest: {
@@ -134,6 +196,9 @@ export async function buildSiteMeta(symbolsDirectory: string, gamedataDirectory:
       pluginKeys: keys.total,
       pluginKeysCovered: keys.covered,
       plugins: keys.plugins,
+      steamVersion: steamVersionOf(header.gameVersion),
+      status: deployment ? deployment.status : 'analysed',
+      deployment,
     },
     builds: versions,
     generatedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
@@ -178,6 +243,13 @@ async function extraFiles(inputRoot: string): Promise<Map<string, Buffer>> {
   const files = new Map<string, Buffer>()
   const history = join(inputRoot, 'gamedata', 'history.json')
   if (existsSync(history)) files.set('history.json', await readFile(history))
+  const deployments = join(inputRoot, 'deployments')
+  if (existsSync(deployments)) {
+    for (const entry of await readdir(deployments, { withFileTypes: true })) {
+      if (!entry.isFile() || !/^\d{4,10}[a-z]?\.json$/.test(entry.name)) continue
+      files.set(`deployments/${entry.name}`, await readFile(join(deployments, entry.name)))
+    }
+  }
   const diagnostics = join(inputRoot, 'diagnostics')
   if (existsSync(diagnostics)) {
     for (const entry of await readdir(diagnostics, { withFileTypes: true })) {
@@ -190,8 +262,9 @@ async function extraFiles(inputRoot: string): Promise<Map<string, Buffer>> {
 
 /**
  * Publishes what a script wants without scraping the page (`latest.json`,
- * `badge/<build>.svg`) plus the two committed datasets the site cannot derive
- * from a single snapshot (`history.json`, `diagnostics/<build>.json`).
+ * `badge/<build>.svg`) plus the committed datasets the site cannot derive from a
+ * single snapshot (`history.json`, `diagnostics/<build>.json`,
+ * `deployments/<build>.json`).
  */
 export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: string, inputRoot: string): Plugin {
   return {
@@ -201,10 +274,10 @@ export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: stri
         const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
         try {
           if (pathname.endsWith('/latest.json')) {
-            sendJson(response, await buildSiteMeta(symbolsDirectory, gamedataDirectory))
+            sendJson(response, await buildSiteMeta(symbolsDirectory, gamedataDirectory, join(inputRoot, 'deployments')))
             return
           }
-          const extra = /\/(history\.json|diagnostics\/\d{4,10}[a-z]?\.json)$/.exec(pathname)
+          const extra = /\/(history\.json|(?:diagnostics|deployments)\/\d{4,10}[a-z]?\.json)$/.exec(pathname)
           if (extra) {
             const files = await extraFiles(inputRoot)
             const bytes = files.get(extra[1])
@@ -222,7 +295,7 @@ export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: stri
             return
           }
           const badges = badgesFor(
-            await buildSiteMeta(symbolsDirectory, gamedataDirectory),
+            await buildSiteMeta(symbolsDirectory, gamedataDirectory, join(inputRoot, 'deployments')),
             await disabledPlugins(join(inputRoot, 'gamedata-generators')),
           )
           const svg = badges.get(`badge/${badge[1]}`)
@@ -238,7 +311,7 @@ export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: stri
       })
     },
     async generateBundle() {
-      const meta = await buildSiteMeta(symbolsDirectory, gamedataDirectory)
+      const meta = await buildSiteMeta(symbolsDirectory, gamedataDirectory, join(inputRoot, 'deployments'))
       this.emitFile({ type: 'asset', fileName: 'latest.json', source: JSON.stringify(meta) })
       const disabled = await disabledPlugins(join(inputRoot, 'gamedata-generators'))
       for (const [fileName, svg] of badgesFor(meta, disabled)) {

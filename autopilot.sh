@@ -54,6 +54,22 @@ deploy_all() {
     ./update_css_gamedata.sh "$1" || die "css deploy"
     ./deploy_local_plugins.sh "$1" || die "deploy"
     uv run check_deploy_drift.py -gamever "$1" || die "deploy drift: a target is still behind the generated gamedata"
+    record_deploy "$1"
+}
+
+# Write down which commit of each plugin repo now carries this build's gamedata
+# (deployments/<build>.json, served next to latest.json). The fshost panel installs
+# exactly that commit on live servers, and its absence is how a held build reads as
+# "analysed, not deployed". After the drift check, so a record means "verified in place".
+record_deploy() {
+    uv run record_deploy.py -gamever "$1" || die "deploy record: a target is missing or not pushed"
+    git add -- "deployments/$1.json"
+    if git diff --cached --quiet; then
+        return 0
+    fi
+    git commit -q -m "chore($1): record gamedata deploy" -- "deployments/$1.json" || die "commit"
+    sync_push || die "push"
+    dispatch_pages
 }
 PUBLISH_MODE="${AUTOPILOT_PUBLISH:-off}"
 PUBLISH_TARGET="${AUTOPILOT_PUBLISH_TARGET:-}"
@@ -128,8 +144,11 @@ hint_for() {  # hint_for <failure text>
         *"deploy drift"*)
             printf 'cd %s && uv run check_deploy_drift.py -gamever %s\n' "$repo" "$ver"
             printf 'the deploy scripts ran but a target still differs; the lines above name the keys\n' ;;
+        *"deploy record"*)
+            printf 'cd %s && uv run record_deploy.py -gamever %s      # ❌ lines name the target\n' "$repo" "$ver"
+            printf 'then: git add deployments/%s.json && git commit -m "chore(%s): record gamedata deploy" && git push\n' "$ver" "$ver" ;;
         *deploy*)
-            printf 'cd %s && ./update_css_gamedata.sh %s && ./deploy_local_plugins.sh %s\n' "$repo" "$ver" "$ver"
+            printf 'cd %s && ./update_css_gamedata.sh %s && ./deploy_local_plugins.sh %s && uv run record_deploy.py -gamever %s\n' "$repo" "$ver" "$ver" "$ver"
             printf 'the analysis itself is committed and pushed; only the copy out failed\n' ;;
         *"site publish"*|*AUTOPILOT_PUBLISH*)
             printf 'cd %s/pages && PAGES_RELEASE_INPUT_ROOT=%s npm run build\n' "$repo" "$repo" ;;

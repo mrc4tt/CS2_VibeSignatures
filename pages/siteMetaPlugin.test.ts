@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { badgesFor, buildSiteMeta, readSnapshotHeader, renderBadge } from './siteMetaPlugin'
+import { badgesFor, buildSiteMeta, readSnapshotHeader, renderBadge, steamVersionOf } from './siteMetaPlugin'
 
 const SNAPSHOT_HEAD = [
   'analysis_output_contract_version: 1',
@@ -64,6 +64,57 @@ describe('site meta publishing', () => {
     expect(meta.latest.pluginKeysCovered).toBe(74)
     expect(meta.builds).toEqual(['14181', '14180'])
     expect(meta.generatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
+  })
+
+  it('reads an analysed build as not deployed until a deploy record exists', async () => {
+    const { symbols, gamedata } = await fixture()
+    const deployments = join(symbols, '..', 'deployments')
+    const meta = await buildSiteMeta(symbols, gamedata, deployments)
+    expect(meta.latest.status).toBe('analysed')
+    expect(meta.latest.deployment).toBeNull()
+    expect(meta.latest.steamVersion).toBe(14181)
+  })
+
+  it('publishes the deploy record that names the commit for each plugin', async () => {
+    const { symbols, gamedata } = await fixture()
+    const deployments = join(symbols, '..', 'deployments')
+    await mkdir(deployments, { recursive: true })
+    const record = {
+      schemaVersion: 1,
+      gameVersion: '14181',
+      status: 'deployed',
+      recordedAt: '2026-10-08T12:00:00Z',
+      targets: {
+        CounterStrikeSharp: {
+          repo: 'https://github.com/mrc4tt/CounterStrikeSharp',
+          path: 'configs/addons/counterstrikesharp/gamedata/gamedata.json',
+          commit: 'a'.repeat(40),
+          pushed: true,
+        },
+      },
+    }
+    await writeFile(join(deployments, '14181.json'), JSON.stringify(record), 'utf8')
+    const meta = await buildSiteMeta(symbols, gamedata, deployments)
+    expect(meta.latest.status).toBe('deployed')
+    expect(meta.latest.deployment).toEqual(record)
+  })
+
+  it('fails the build on a deploy record for the wrong build rather than hiding it', async () => {
+    const { symbols, gamedata } = await fixture()
+    const deployments = join(symbols, '..', 'deployments')
+    await mkdir(deployments, { recursive: true })
+    await writeFile(
+      join(deployments, '14181.json'),
+      JSON.stringify({ schemaVersion: 1, gameVersion: '14180', status: 'deployed', targets: {} }),
+      'utf8',
+    )
+    await expect(buildSiteMeta(symbols, gamedata, deployments)).rejects.toThrow(/deploy record for 14181/)
+  })
+
+  it('maps a re-analysed build back to its Steam version', () => {
+    expect(steamVersionOf('14178b')).toBe(14178)
+    expect(steamVersionOf('14189')).toBe(14189)
+    expect(steamVersionOf('nightly')).toBeNull()
   })
 
   it('counts zero keys when a build has no gamedata companions', async () => {
