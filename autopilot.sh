@@ -221,8 +221,14 @@ sync_push() {
 dispatch_pages() {
     local slug
     slug=$(git remote get-url origin | sed -E 's#^(git@github\.com:|https://github\.com/)##; s#\.git$##')
+    # The stored `gh auth login` first: .env exports a GITHUB_TOKEN for other tools,
+    # a fine-grained PAT without actions:write, and gh prefers it - so every
+    # dispatch from systemd failed with "HTTP 403: Resource not accessible by
+    # personal access token" while the same command worked from a shell.
+    local ref; ref=$(git rev-parse --abbrev-ref HEAD)
     if command -v gh >/dev/null 2>&1 \
-            && gh workflow run deploy-pages.yml -R "$slug" --ref "$(git rev-parse --abbrev-ref HEAD)" >/dev/null 2>&1; then
+            && { env -u GITHUB_TOKEN -u GH_TOKEN gh workflow run deploy-pages.yml -R "$slug" --ref "$ref" >/dev/null 2>&1 \
+                 || gh workflow run deploy-pages.yml -R "$slug" --ref "$ref" >/dev/null 2>&1; }; then
         log "    site build dispatched (deploy-pages.yml on $slug)"
     else
         log "    WARNING: could not dispatch deploy-pages.yml - run: gh workflow run deploy-pages.yml -R $slug --ref main"
