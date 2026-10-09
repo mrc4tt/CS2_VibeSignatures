@@ -1,0 +1,8 @@
+func_name: CNetworkGameServerBase_CalculateCPUUsage
+func_va: '0x5031a0'
+func_rva: '0x5031a0'
+func_size: '0x5b'
+func_sig: 48 8B 05 81 BB 54 ??
+vtable_name: CNetworkGameServerBase
+vfunc_offset: '0x2c8'
+vfunc_index: 89

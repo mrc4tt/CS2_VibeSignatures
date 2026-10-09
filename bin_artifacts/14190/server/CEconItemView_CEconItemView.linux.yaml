@@ -1,0 +1,5 @@
+func_name: CEconItemView_CEconItemView
+func_va: '0x1c9f8c0'
+func_rva: '0x1c9f8c0'
+func_size: '0xc8e'
+func_sig: 55 48 8D 05 ?? ?? ?? ?? 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D 35 ?? ?? ?? ?? 41 55 41 54 45 31 E4 53 48 89 FB 48 83 EC 78 48 89 07 31 C0 48 83 3D ?? ?? ?? ?? 00

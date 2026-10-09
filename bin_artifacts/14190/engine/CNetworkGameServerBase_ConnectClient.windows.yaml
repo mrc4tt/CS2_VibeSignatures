@@ -1,0 +1,5 @@
+func_name: CNetworkGameServerBase_ConnectClient
+func_va: '0x1800a5e80'
+func_rva: '0xa5e80'
+func_size: '0xeb9'
+func_sig: '48 89 5C 24 18 44 89 4C 24 20 55 41 54 41 55 41 56 41 57 48 8D 6C 24 F1 48 81 EC 00 01 00 00 81 64 24 4C FF FF 0F FF'

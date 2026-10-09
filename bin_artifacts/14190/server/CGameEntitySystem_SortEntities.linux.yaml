@@ -1,0 +1,7 @@
+func_name: CGameEntitySystem_SortEntities
+func_va: '0x1717cc0'
+func_rva: '0x1717cc0'
+func_size: '0xbb7'
+vtable_name: CGameEntitySystem
+vfunc_offset: '0x98'
+vfunc_index: 19

@@ -1,0 +1,6 @@
+func_name: CBaseEntity_Script_GetTeamNumber
+func_va: '0xf9c810'
+func_rva: '0xf9c810'
+func_size: '0x8'
+func_sig: 0F B6 87 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 0F B6 87 ?? ?? ?? ?? 83 E8 ??
+func_sig_allow_across_function_boundary: true

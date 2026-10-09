@@ -1,0 +1,6 @@
+func_name: CEntityInstance_AssignChangeAccessorPathIdsPolymorphic
+vtable_name: CEntityInstance
+vfunc_offset: '0xf8'
+vfunc_index: 31
+vfunc_sig: FF 90 F8 00 00 00 81 7D BC FF FF FF 3F C7 45 A8 00 00 00 00 77 19 48 8B 75 B0 48 85 F6 74 10 48 8B 05 ?? ?? ?? ?? 48 8B 38 48 8B 07 FF 50 20 81 7D A4
+vfunc_sig_allow_across_function_boundary: true

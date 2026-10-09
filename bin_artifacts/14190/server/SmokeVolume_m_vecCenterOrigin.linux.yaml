@@ -1,0 +1,5 @@
+struct_name: SmokeVolume
+member_name: m_vecCenterOrigin
+offset: '0xd4'
+offset_sig: 48 89 87 D4 00 00 00
+offset_sig_disp: 0
