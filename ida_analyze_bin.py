@@ -145,7 +145,9 @@ DEFAULT_HOST = "127.0.0.1"
 # the reap has to kill the editor's server to get it back.
 DEFAULT_PORT = int(os.environ.get("CS2VIBE_MCP_PORT", "13337"))
 POST_PROCESS_FUNC_RENAME_BATCH_SIZE = 50
-MCP_STARTUP_TIMEOUT = 1200  # seconds to wait for MCP server
+# seconds to wait for MCP server on a cold start (no IDB): the full analysis of
+# server.dll alone runs past 20 minutes, so the old 1200 s cut it off
+MCP_STARTUP_TIMEOUT = int(os.environ.get("CS2VIBE_IDA_COLD_TIMEOUT", "3600"))
 # A warm IDB opens in seconds (2-30s measured on 14185), so waiting the full cold
 # timeout on one only hides a stuck start: 14185's linux engine open sat 20 minutes
 # at 15:21 and then opened in 2s when retried at 15:41.
@@ -1528,8 +1530,40 @@ def _invalidate_ida_database(binary_path, debug=False):
     return removed
 
 
+# every packed IDA database starts with one of these (IDA2 = .i64)
+IDA_DATABASE_MAGICS = (b"IDA0", b"IDA1", b"IDA2")
+
+
+def _is_ida_database_file(path):
+    try:
+        with open(path, "rb") as handle:
+            return handle.read(4) in IDA_DATABASE_MAGICS
+    except OSError:
+        return False
+
+
 def _has_ida_database(binary_path):
-    return any(os.path.isfile(path) for path in _ida_database_paths(binary_path)[:2])
+    """True only for a packed database IDA can open: an empty or truncated .i64
+    from an interrupted pack is not warm and must not get the warm timeout."""
+    return any(_is_ida_database_file(path) for path in _ida_database_paths(binary_path)[:2])
+
+
+def _ida_database_files_present(binary_path):
+    return any(os.path.isfile(path) for path in _ida_database_paths(binary_path))
+
+
+def _remove_broken_packed_databases(binary_path, debug=False):
+    """Delete a packed .i64/.idb that has no IDA header, so a cold start does not open it."""
+    removed = []
+    for path in _ida_database_paths(binary_path)[:2]:
+        if os.path.isfile(path) and not _is_ida_database_file(path):
+            try:
+                os.remove(path)
+                removed.append(path)
+            except OSError as exc:
+                if debug:
+                    print(f"  Warning: unable to remove broken IDA database {path}: {exc}")
+    return removed
 
 
 def resolve_oldgamever(gamever, artifact_dir):
@@ -3718,6 +3752,10 @@ def start_idalib_mcp(
 
     warm = _has_ida_database(binary_path)
     timeout = MCP_WARM_STARTUP_TIMEOUT if warm else MCP_STARTUP_TIMEOUT
+    if not warm:
+        removed = _remove_broken_packed_databases(binary_path, debug=debug)
+        if removed:
+            print(f"  Removed IDA database without a valid header: {', '.join(removed)}")
     for attempt in range(1, MCP_STARTUP_ATTEMPTS + 1):
         print(f"  Starting idalib-mcp: {' '.join(cmd)}")
         if not warm:
@@ -3768,8 +3806,19 @@ def start_idalib_mcp(
                 os.killpg(process.pid, signal.SIGKILL)
             except OSError:
                 pass
+        if not warm and code is None:
+            # a cold analysis that ran out of time would only run out again from
+            # scratch; the retry is for a start that died or a stuck warm open
+            print("  Not retrying: cold analysis exceeded its limit (raise CS2VIBE_IDA_COLD_TIMEOUT)")
+            _invalidate_ida_database(binary_path, debug=debug)
+            return None
         if attempt < MCP_STARTUP_ATTEMPTS:
             wait_for_port_release(host, port)
+            if not warm:
+                # the killed attempt left a half-built unpacked database behind
+                removed = _invalidate_ida_database(binary_path, debug=debug)
+                if removed:
+                    print(f"  Removed partial IDA database files: {', '.join(removed)}")
             print(f"  Retrying idalib-mcp start ({attempt + 1}/{MCP_STARTUP_ATTEMPTS})")
     return None
 
@@ -4195,7 +4244,7 @@ def _process_binary(
             recovery_budget=recovery_budget,
         )
         if not verified:
-            if _has_ida_database(binary_path) and not require_warm_idb:
+            if _ida_database_files_present(binary_path) and not require_warm_idb:
                 print(
                     "  Existing IDA database failed binary identity verification; rebuilding from the original binary"
                 )

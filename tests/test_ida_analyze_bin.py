@@ -2344,7 +2344,7 @@ class TestStartIdalibMcp(unittest.TestCase):
             patch.object(ida_analyze_bin, "wait_for_port", side_effect=[False, True]) as wait,
             patch("sys.stdout", new_callable=io.StringIO) as out,
         ):
-            Path(tmp, "libengine2.so.i64").write_bytes(b"")
+            Path(tmp, "libengine2.so.i64").write_bytes(b"IDA2\0\0m\0")
             process = ida_analyze_bin.start_idalib_mcp(
                 os.path.join(tmp, "libengine2.so"), host="127.0.0.1", port=13337, debug=False
             )
@@ -2374,16 +2374,111 @@ class TestStartIdalibMcp(unittest.TestCase):
         mock_popen.return_value = stuck
 
         with (
+            TemporaryDirectory() as tmp,
             patch.object(ida_analyze_bin, "is_port_in_use", return_value=False),
             patch.object(ida_analyze_bin, "wait_for_port", return_value=False) as wait,
             patch("sys.stdout", new_callable=io.StringIO),
         ):
+            Path(tmp, "libclient.so.i64").write_bytes(b"IDA2\0\0m\0")
             process = ida_analyze_bin.start_idalib_mcp(
-                "bin/14160/client/libclient.so", host="127.0.0.1", port=13337, debug=False
+                os.path.join(tmp, "libclient.so"), host="127.0.0.1", port=13337, debug=False
             )
 
         self.assertIsNone(process)
         self.assertEqual(ida_analyze_bin.MCP_STARTUP_ATTEMPTS, mock_popen.call_count)
+        self.assertEqual(ida_analyze_bin.MCP_WARM_STARTUP_TIMEOUT, wait.call_args.kwargs["timeout"])
+
+    @patch.object(ida_analyze_bin, "wait_for_port_release", return_value=True)
+    @patch.object(ida_analyze_bin, "_terminate_process_group")
+    @patch("ida_analyze_bin.os.killpg", create=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    def test_start_idalib_mcp_does_not_retry_a_cold_timeout(
+        self,
+        mock_popen,
+        _killpg,
+        _terminate,
+        _release,
+    ) -> None:
+        stuck = MagicMock(pid=333)
+        stuck.poll.return_value = None
+        mock_popen.return_value = stuck
+
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=False),
+            patch.object(ida_analyze_bin, "wait_for_port", return_value=False) as wait,
+            patch("sys.stdout", new_callable=io.StringIO) as out,
+        ):
+            binary = os.path.join(tmp, "server.dll")
+            # what a killed analysis leaves behind
+            Path(binary + ".id0").write_bytes(b"partial")
+            process = ida_analyze_bin.start_idalib_mcp(binary, host="127.0.0.1", port=13337, debug=False)
+            leftover = os.path.exists(binary + ".id0")
+
+        self.assertIsNone(process)
+        self.assertEqual(1, mock_popen.call_count)
+        self.assertEqual(ida_analyze_bin.MCP_STARTUP_TIMEOUT, wait.call_args.kwargs["timeout"])
+        self.assertIn(f"limit {ida_analyze_bin.MCP_STARTUP_TIMEOUT} s", out.getvalue())
+        self.assertIn("Not retrying: cold analysis exceeded its limit", out.getvalue())
+        self.assertFalse(leftover)
+
+    @patch.object(ida_analyze_bin, "wait_for_port_release", return_value=True)
+    @patch.object(ida_analyze_bin, "_terminate_process_group")
+    @patch("ida_analyze_bin.os.killpg", create=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    def test_start_idalib_mcp_clears_a_partial_database_before_a_cold_retry(
+        self,
+        mock_popen,
+        _killpg,
+        _terminate,
+        _release,
+    ) -> None:
+        dead = MagicMock(pid=111)
+        dead.poll.return_value = 1
+        alive = MagicMock(pid=222)
+        seen_at_retry = []
+
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=False),
+            patch.object(ida_analyze_bin, "wait_for_port", side_effect=[False, True]),
+            patch("sys.stdout", new_callable=io.StringIO),
+        ):
+            binary = os.path.join(tmp, "server.dll")
+
+            def popen(*_args, **_kwargs):
+                if mock_popen.call_count == 1:
+                    Path(binary + ".id0").write_bytes(b"partial")
+                    return dead
+                seen_at_retry.append(os.path.exists(binary + ".id0"))
+                return alive
+
+            mock_popen.side_effect = popen
+            process = ida_analyze_bin.start_idalib_mcp(binary, host="127.0.0.1", port=13337, debug=False)
+
+        self.assertIs(alive, process)
+        self.assertEqual([False], seen_at_retry)
+
+    def test_has_ida_database_rejects_a_file_without_an_ida_header(self) -> None:
+        with TemporaryDirectory() as tmp:
+            binary = os.path.join(tmp, "server.dll")
+            Path(binary + ".i64").write_bytes(b"")
+            self.assertFalse(ida_analyze_bin._has_ida_database(binary))
+            Path(binary + ".i64").write_bytes(b"IDA2\0\0m\0")
+            self.assertTrue(ida_analyze_bin._has_ida_database(binary))
+
+    @patch.object(ida_analyze_bin, "wait_for_port", return_value=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    def test_start_idalib_mcp_removes_a_truncated_i64_and_starts_cold(self, _popen, wait) -> None:
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=False),
+            patch("sys.stdout", new_callable=io.StringIO),
+        ):
+            binary = os.path.join(tmp, "server.dll")
+            Path(binary + ".i64").write_bytes(b"IDA")
+            ida_analyze_bin.start_idalib_mcp(binary, host="127.0.0.1", port=13337, debug=False)
+            self.assertFalse(os.path.exists(binary + ".i64"))
         self.assertEqual(ida_analyze_bin.MCP_STARTUP_TIMEOUT, wait.call_args.kwargs["timeout"])
 
     def test_wait_for_port_stops_when_the_process_exits(self) -> None:
@@ -4889,7 +4984,7 @@ class TestProcessBinaryOpenedBinaryVerification(unittest.TestCase):
             binary_path = Path(temp_dir) / "server.dll"
             binary_path.write_bytes(b"server-binary")
             database = Path(f"{binary_path}.i64")
-            database.write_bytes(b"invalid-idb")
+            database.write_bytes(b"IDA2invalid-idb")
             with (
                 patch.object(ida_analyze_bin, "start_idalib_mcp", return_value=fake_process) as start_ida,
                 patch.object(
