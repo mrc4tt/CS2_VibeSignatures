@@ -3836,7 +3836,39 @@ def _build_agent_progress_callback(reporting, job_id, skill_name):
     return report_progress
 
 
-def process_binary(
+_SKIP_NOTES = {}
+
+
+def _verbose_skips():
+    """CS2VIBE_VERBOSE_SKIPS=1 prints every skipped task as it happens."""
+    return os.environ.get("CS2VIBE_VERBOSE_SKIPS", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _note_skip(skill_name, reason, detail=None):
+    """Record a skipped task; one summary line per binary replaces a line per task."""
+    if _verbose_skips():
+        print(f"  Skipping skill: {skill_name} ({detail or reason})")
+        return
+    _SKIP_NOTES.setdefault(reason, []).append(skill_name)
+
+
+def _print_skip_summary():
+    if not _SKIP_NOTES:
+        return
+    parts = [f"{reason}: {len(names)}" for reason, names in sorted(_SKIP_NOTES.items(), key=lambda kv: -len(kv[1]))]
+    print(f"  Skipped tasks - {"; ".join(parts)} (CS2VIBE_VERBOSE_SKIPS=1 lists them)")
+    _SKIP_NOTES.clear()
+
+
+def process_binary(*args, **kwargs):
+    _SKIP_NOTES.clear()
+    try:
+        return _process_binary(*args, **kwargs)
+    finally:
+        _print_skip_summary()
+
+
+def _process_binary(
     binary_path,
     skills,
     agent,
@@ -3922,7 +3954,7 @@ def process_binary(
         # Skip skills restricted to a different platform
         skill_platform = skill.get("platform")
         if skill_platform and skill_platform != platform:
-            print(f"  Skipping skill: {skill_name} (platform '{skill_platform}' != '{platform}')")
+            _note_skip(skill_name, "other platform", f"platform '{skill_platform}' != '{platform}'")
             skip_count += 1
             _report_skill_status(
                 reporting,
@@ -3959,7 +3991,7 @@ def process_binary(
         # the open binary can produce an artifact, so a task whose every output belongs to
         # the other platform has nothing to do in this run.
         if outputs_target_other_platform(required_outputs, optional_outputs, platform):
-            print(f"  Skipping skill: {skill_name} (declares only non-{platform} outputs)")
+            _note_skip(skill_name, "other platform", f"declares only non-{platform} outputs")
             skip_count += 1
             _report_skill_status(
                 reporting,
@@ -3972,7 +4004,7 @@ def process_binary(
             continue
         # Check if configured output files already make the skill unnecessary.
         if not force_all and should_skip_skill_for_existing_outputs(required_outputs, optional_outputs):
-            print(f"  Skipping skill: {skill_name} (all outputs exist)")
+            _note_skip(skill_name, "all outputs exist")
             skip_count += 1
             _report_skill_status(
                 reporting,
@@ -4004,7 +4036,7 @@ def process_binary(
                 )
                 continue
             if skip_for_existing_artifacts and not force_all:
-                print(f"  Skipping skill: {skill_name} (all skip_if_exists artifacts exist)")
+                _note_skip(skill_name, "all outputs exist", "all skip_if_exists artifacts exist")
                 skip_count += 1
                 _report_skill_status(
                     reporting,
@@ -4208,7 +4240,7 @@ def process_binary(
             skill_max_retries,
         ) in enumerate(skills_to_process):
             if should_skip_skill_for_existing_outputs(required_outputs, optional_outputs):
-                print(f"  Skipping skill: {skill_name} (all outputs exist)")
+                _note_skip(skill_name, "all outputs exist")
                 skip_count += 1
                 _report_skill_status(
                     reporting,
@@ -4242,7 +4274,7 @@ def process_binary(
                 )
                 continue
             if skip_for_existing_artifacts and not force_all:
-                print(f"  Skipping skill: {skill_name} (all skip_if_exists artifacts exist)")
+                _note_skip(skill_name, "all outputs exist", "all skip_if_exists artifacts exist")
                 skip_count += 1
                 _report_skill_status(
                     reporting,
@@ -4607,7 +4639,7 @@ def process_binary(
                     break
                 elif not required_outputs and optional_outputs and not optional_output_generated:
                     skip_count += 1
-                    print(f"  Skipping skill: {skill_name} (optional outputs not generated)")
+                    _note_skip(skill_name, "optional, not produced")
                     _report_skill_status(
                         reporting,
                         job_id,
@@ -4676,7 +4708,7 @@ def process_binary(
                 continue
             if preprocess_status == PREPROCESS_STATUS_ABSENT_OK:
                 skip_count += 1
-                print(f"  Skipping skill: {skill_name} (preprocess reported absent_ok)")
+                _note_skip(skill_name, "absent on this build", "preprocess reported absent_ok")
                 _report_skill_status(
                     reporting,
                     job_id,
@@ -4686,11 +4718,11 @@ def process_binary(
                     reason=ProcessReason.PREPROCESS_ABSENT,
                 )
                 continue
-            if preprocess_status == PREPROCESS_STATUS_FAILED:
+            if preprocess_status == PREPROCESS_STATUS_FAILED and _verbose_skips():
                 print(f"    Preprocess failed: {skill_name}; falling back to AGENT SKILL")
 
             if should_skip_skill_for_existing_outputs(required_outputs, optional_outputs):
-                print(f"  Skipping skill: {skill_name} (all outputs exist)")
+                _note_skip(skill_name, "all outputs exist")
                 skip_count += 1
                 _report_skill_status(
                     reporting,
@@ -4715,7 +4747,7 @@ def process_binary(
                 if len(unpaid) == len(missing_required) and not paid_optional:
                     skip_count += 1
                     names = ", ".join(os.path.basename(path) for path in unpaid)
-                    print(f"  Skipping skill: {skill_name} (required outputs read only by disabled plugins - {names})")
+                    _note_skip(skill_name, "read only by disabled plugins", names)
                     _report_skill_status(
                         reporting,
                         job_id,
@@ -4751,12 +4783,13 @@ def process_binary(
                     skip_count += 1
                     if unread_optional_outputs:
                         unread_names = ", ".join(os.path.basename(path) for path in unread_optional_outputs)
-                        print(
-                            f"  Skipping skill: {skill_name} (optional outputs not generated; "
-                            f"{unread_names} has no consumer - no generator key, no task input)"
+                        _note_skip(
+                            skill_name,
+                            "optional, unread",
+                            f"{unread_names} has no consumer - no generator key, no task input",
                         )
                     else:
-                        print(f"  Skipping skill: {skill_name} (optional outputs not generated)")
+                        _note_skip(skill_name, "optional, no baseline")
                     _report_skill_status(
                         reporting,
                         job_id,
@@ -4771,6 +4804,9 @@ def process_binary(
                     f"    Optional outputs missing but produced on the baseline and read downstream "
                     f"({regressed_names}); hunting instead of skipping"
                 )
+
+            if preprocess_status == PREPROCESS_STATUS_FAILED and not _verbose_skips():
+                print(f"    Preprocess failed: {skill_name}; hunting")
 
             process, verified = verify_owned_mcp_with_single_recovery(
                 process,
