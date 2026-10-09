@@ -3716,9 +3716,17 @@ def start_idalib_mcp(
 
     cmd.append(binary_path)
 
-    timeout = MCP_WARM_STARTUP_TIMEOUT if _has_ida_database(binary_path) else MCP_STARTUP_TIMEOUT
+    warm = _has_ida_database(binary_path)
+    timeout = MCP_WARM_STARTUP_TIMEOUT if warm else MCP_STARTUP_TIMEOUT
     for attempt in range(1, MCP_STARTUP_ATTEMPTS + 1):
         print(f"  Starting idalib-mcp: {' '.join(cmd)}")
+        if not warm:
+            # a cold start is silent until the port opens, which on server.dll is
+            # long enough to look like a hang
+            print(
+                f"  No {os.path.basename(binary_path)}.i64 - full IDA analysis first, "
+                f"can take 20+ min (limit {timeout} s)"
+            )
         log_handle = None
         own_session = not (debug or stdout is not None or stderr is not None)
         try:
