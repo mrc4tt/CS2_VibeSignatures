@@ -3752,21 +3752,24 @@ def start_idalib_mcp(
 
     warm = _has_ida_database(binary_path)
     timeout = MCP_WARM_STARTUP_TIMEOUT if warm else MCP_STARTUP_TIMEOUT
+    own_session = not (debug or stdout is not None or stderr is not None)
     if not warm:
         removed = _remove_broken_packed_databases(binary_path, debug=debug)
         if removed:
             print(f"  Removed IDA database without a valid header: {', '.join(removed)}")
+        if own_session:
+            # a cold start is silent until the port opens, which on server.dll is
+            # long enough to look like a hang; with debug or explicit streams IDA's
+            # own output already shows progress
+            name = os.path.basename(binary_path)
+            if _ida_database_files_present(binary_path):
+                state = f"No packed IDA database for {name}, only unpacked files (IDA may restore them)"
+            else:
+                state = f"No {name}.i64 or .idb"
+            print(f"  {state} - full IDA analysis first, can take 20+ min (limit {timeout} s)")
     for attempt in range(1, MCP_STARTUP_ATTEMPTS + 1):
         print(f"  Starting idalib-mcp: {' '.join(cmd)}")
-        if not warm:
-            # a cold start is silent until the port opens, which on server.dll is
-            # long enough to look like a hang
-            print(
-                f"  No {os.path.basename(binary_path)}.i64 - full IDA analysis first, "
-                f"can take 20+ min (limit {timeout} s)"
-            )
         log_handle = None
-        own_session = not (debug or stdout is not None or stderr is not None)
         try:
             if not own_session:
                 process = subprocess.Popen(cmd, stdout=stdout, stderr=stderr)

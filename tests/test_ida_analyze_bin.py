@@ -2442,7 +2442,7 @@ class TestStartIdalibMcp(unittest.TestCase):
             TemporaryDirectory() as tmp,
             patch.object(ida_analyze_bin, "is_port_in_use", return_value=False),
             patch.object(ida_analyze_bin, "wait_for_port", side_effect=[False, True]),
-            patch("sys.stdout", new_callable=io.StringIO),
+            patch("sys.stdout", new_callable=io.StringIO) as out,
         ):
             binary = os.path.join(tmp, "server.dll")
 
@@ -2458,6 +2458,37 @@ class TestStartIdalibMcp(unittest.TestCase):
 
         self.assertIs(alive, process)
         self.assertEqual([False], seen_at_retry)
+        # the notice describes the state before the first attempt, once
+        self.assertEqual(1, out.getvalue().count("full IDA analysis first"))
+        self.assertIn("No server.dll.i64 or .idb", out.getvalue())
+
+    @patch.object(ida_analyze_bin, "wait_for_port", return_value=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    def test_start_idalib_mcp_names_an_unpacked_database_in_the_cold_notice(self, _popen, _wait) -> None:
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=False),
+            patch("sys.stdout", new_callable=io.StringIO) as out,
+        ):
+            binary = os.path.join(tmp, "server.dll")
+            Path(binary + ".id0").write_bytes(b"unpacked")
+            ida_analyze_bin.start_idalib_mcp(binary, host="127.0.0.1", port=13337, debug=False)
+
+        self.assertIn("only unpacked files", out.getvalue())
+
+    @patch.object(ida_analyze_bin, "wait_for_port", return_value=True)
+    @patch("ida_analyze_bin.subprocess.Popen")
+    def test_start_idalib_mcp_skips_the_cold_notice_when_ida_output_is_visible(self, _popen, _wait) -> None:
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ida_analyze_bin, "is_port_in_use", return_value=False),
+            patch("sys.stdout", new_callable=io.StringIO) as out,
+        ):
+            ida_analyze_bin.start_idalib_mcp(
+                os.path.join(tmp, "server.dll"), host="127.0.0.1", port=13337, debug=True
+            )
+
+        self.assertNotIn("full IDA analysis first", out.getvalue())
 
     def test_has_ida_database_rejects_a_file_without_an_ida_header(self) -> None:
         with TemporaryDirectory() as tmp:
