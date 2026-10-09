@@ -1,0 +1,32 @@
+{
+  "gameVersion": "14190",
+  "recordedAt": "2026-10-09T05:32:36Z",
+  "schemaVersion": 1,
+  "status": "deployed",
+  "targets": {
+    "CounterStrikeSharp": {
+      "commit": "3bcb60b4d859b718904758815483cb4a92a30e65",
+      "path": "configs/addons/counterstrikesharp/gamedata/gamedata.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/CounterStrikeSharp"
+    },
+    "cs2-retakes-allocator": {
+      "commit": "8c217bd2ae058410ffda8a25d2245e2ad3135b0d",
+      "path": "Resources/RetakesAllocator_gamedata.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/cs2-retakes-allocator"
+    },
+    "matchzy": {
+      "commit": "4cdec975129a4ba313983bf7e2c3cf138efb372a",
+      "path": "gamedata/matchzy.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/MatchZy"
+    },
+    "weaponpaints": {
+      "commit": "e0265856d66cb1a98a56c72ea8ad93f685a9753b",
+      "path": "gamedata/weaponpaints.json",
+      "pushed": true,
+      "repo": "https://git.miksen.me/mikkel/weaponpaints"
+    }
+  }
+}
