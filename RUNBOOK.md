@@ -40,6 +40,7 @@ sudo systemctl stop cs2vibe-autopilot.timer       # nødbremse
 ./autopilot.sh -n                                 # dry run
 ./autopilot.sh <VER>                              # tving én build
 rm -f .autopilot/attempts-<VER>                   # nulstil efter 2 fejlede forsøg
+rm -f .autopilot/finish-attempts-<VER>            # nulstil efter 6 fejlede push/deploy-genoptag
 ```
 
 Logs: `.autopilot/{gamedata,verify,gate,impact,missing}-<VER>.*`. En `failed`-besked indeholder

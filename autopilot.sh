@@ -77,6 +77,10 @@ PUBLISH_KEEP="${AUTOPILOT_PUBLISH_KEEP:-5}"
 STATE="${AUTOPILOT_STATE:-$REPO/.autopilot}"
 MIN_FREE_GB="${AUTOPILOT_MIN_FREE_GB:-40}"
 MAX_ATTEMPTS="${AUTOPILOT_MAX_ATTEMPTS:-2}"
+# A resume (push + deploy of a build already committed) is cheap, so it gets its
+# own, larger budget: one per timer tick until it lands or this runs out.
+MAX_FINISH_ATTEMPTS="${AUTOPILOT_MAX_FINISH_ATTEMPTS:-6}"
+RESUMING=0
 AUTOCOMMIT="${AUTOPILOT_AUTOCOMMIT:-1}"
 DRY=0
 TAG=""
@@ -138,7 +142,8 @@ hint_for() {  # hint_for <failure text>
         *"snapshot"*|*"pack"*|*"contract"*)
             printf 'cd %s && uv run gamesymbol_snapshot.py pack -gamever %s -snapshot gamesymbols/%s.yaml\n' "$repo" "$ver" "$ver" ;;
         push)
-            printf 'cd %s && git status -sb && git pull --rebase && git push\n' "$repo" ;;
+            printf 'autopilot already pulled with --autostash and retried 3 times; see why:\n'
+            printf 'cd %s && git status -sb && git stash list | head -3\n' "$repo" ;;
         commit)
             printf 'cd %s && git status --short\n' "$repo" ;;
         *"deploy drift"*)
@@ -155,7 +160,23 @@ hint_for() {  # hint_for <failure text>
         *)
             printf 'journalctl -u cs2vibe-autopilot -n 200 --no-pager\n' ;;
     esac
-    printf 'retry the whole chain: rm -f %s/attempts-%s; systemctl start cs2vibe-autopilot.service\n' "${STATE:-.autopilot}" "$ver"
+    # Say whether the timer will retry by itself, and only ask for a reset when
+    # the budget is spent - "rm the attempts file" is no use while it still has
+    # tries left, and none at all once the build is committed.
+    local state="${STATE:-.autopilot}"
+    if [ "${RESUMING:-0}" = 1 ] \
+            || [ -n "$(git log -1 --format=%h -F --grep="feat($ver): analysed by autopilot" HEAD 2>/dev/null)" ]; then
+        local used; used=$(cat "$state/finish-attempts-$ver" 2>/dev/null || echo 0)
+        if [ "$used" -lt "${MAX_FINISH_ATTEMPTS:-6}" ]; then
+            printf 'nothing to run: the next timer tick resumes at the push/deploy (%s of %s used)\n' "$used" "${MAX_FINISH_ATTEMPTS:-6}"
+        else
+            printf 'resume budget spent: rm -f %s/finish-attempts-%s; systemctl start cs2vibe-autopilot.service\n' "$state" "$ver"
+        fi
+    elif [ "$(( ${ATTEMPTS:-0} + 1 ))" -lt "${MAX_ATTEMPTS:-2}" ]; then
+        printf 'nothing to run: the next timer tick retries the chain (attempt %s of %s used)\n' "$(( ${ATTEMPTS:-0} + 1 ))" "${MAX_ATTEMPTS:-2}"
+    else
+        printf 'retry the whole chain: rm -f %s/attempts-%s; systemctl start cs2vibe-autopilot.service\n' "$state" "$ver"
+    fi
 }
 
 die() {
@@ -170,12 +191,25 @@ $(hint_for "$*")"
 # Rebase onto origin, then push. A push after hours of analysis must not fail just
 # because a commit landed on origin from the local PC in the meantime. A rebase
 # that conflicts is aborted, so the tree is never left mid-rebase for the next run.
+#
+# --autostash: a tracked file edited while the chain ran (somebody working in the
+# checkout) made the pull refuse - "cannot pull with rebase: You have unstaged
+# changes" - and 14190 stopped there. The edit is stashed, the rebase and push
+# go through, and the edit is put back untouched; it is never committed here.
+# Three tries with a pause, because a dropped connection or a push that lost a
+# race with another one is gone a minute later.
 sync_push() {
-    if ! git pull -q --rebase origin "$(git rev-parse --abbrev-ref HEAD)"; then
-        git rebase --abort 2>/dev/null
-        return 1
-    fi
-    git push -q origin HEAD
+    local branch try
+    branch=$(git rev-parse --abbrev-ref HEAD)
+    for try in 1 2 3; do
+        if git pull -q --rebase --autostash origin "$branch"; then
+            git push -q origin HEAD && return 0
+        else
+            git rebase --abort 2>/dev/null
+        fi
+        [ "$try" -lt 3 ] && { log "    push attempt $try failed; retrying in 60s"; sleep 60; }
+    done
+    return 1
 }
 
 # A new build's push never starts deploy-pages.yml on its own. GitHub evaluates a
@@ -206,6 +240,174 @@ notify() {  # notify <outcome> <text>
     ./autopilot_notify.sh "$1" "${TAG:-unknown}" "${took}$2" || true
 }
 
+# The two things that otherwise cost an SSH session: which keys actually moved,
+# and where to look at the result. Read from the metadata companions the
+# generator just wrote, so it is what the plugins really got.
+changed_keys_block() {
+    uv run python - "$TAG" <<'PYEOF' 2>/dev/null || true
+import glob, json, os, sys
+
+import publish_site_data as P
+
+tag = sys.argv[1]
+# Only plugins this fork still generates: the disabled ones keep their old
+# metadata on disk, and counting it would report keys no plugin here receives
+# (13 files instead of the 8 that ship).
+disabled = P.disabled_plugins()
+names, files = [], 0
+for path in sorted(glob.glob(os.path.join("gamedata", tag, "**", "*.metadata.json"), recursive=True)):
+    if os.path.relpath(path, os.path.join("gamedata", tag)).split(os.sep)[0] in disabled:
+        continue
+    try:
+        document = json.load(open(path, encoding="utf-8"))
+    except Exception:
+        continue
+    touched = set()
+    for entry in document.get("entries", []):
+        for change in entry.get("changes") or []:
+            path_parts = change.get("path") or []
+            if path_parts:
+                touched.add(str(path_parts[0]))
+    if touched:
+        files += 1
+        names.extend(sorted(touched))
+
+unique = sorted(set(names))
+if not unique:
+    print("no key changed value")
+else:
+    head = ", ".join(unique[:5])
+    rest = f" and {len(unique) - 5} more" if len(unique) > 5 else ""
+    print(f"{len(unique)} key(s) changed across {files} file(s): {head}{rest}")
+PYEOF
+}
+
+# printf, not a quoted "\n\n": inside double quotes those are two literal
+# characters, which is exactly how the first version reached Discord.
+final_body() {
+    printf '%s\n%s\n\n%s\n\n%s\n' "$(changed_keys_block)" "$IMPACT_LINE" "$(cat "$GATE_OUT")" "$(site_links)"
+}
+
+site_links() {
+    printf 'https://sig.miksen.me/game-data   the files, per build\n'
+    printf 'https://sig.miksen.me/check       drop your own file to compare it\n'
+}
+
+# Everything after the push: optional site publish, the deploy decision, and the
+# marker that says this build needs nothing more. A function because two paths
+# reach it - the end of a fresh chain, and a resume of a build whose analysis was
+# committed but whose push or deploy then failed (14190: "cannot pull with rebase:
+# You have unstaged changes", after which every tick said "already analysed" and
+# the build was never pushed or deployed).
+finish_build() {
+    # ---------------------------------------------------------------- publish the site
+    # Independent of the plugin deploy gate below: that gate decides whether a build
+    # is safe to put under a live server's plugins, which says nothing about showing
+    # the numbers on a web page. GitHub Pages needs none of this - dispatch_pages
+    # starts its build from the pushed commit - so the default is off and this only
+    # runs when asked.
+    publish_site() {
+        local target="$1" stamp release
+        stamp="$TAG-$(date -u +%Y%m%dT%H%M%SZ)"
+
+        if [ ! -d "$REPO/pages/node_modules" ]; then
+            log "    installing pages dependencies"
+            ( cd "$REPO/pages" && npm ci --silent ) || return 1
+        fi
+        log "    building"
+        ( cd "$REPO/pages" && PAGES_RELEASE_INPUT_ROOT="$REPO" npm run build --silent ) || return 1
+
+        # The same checks the workflow runs, because moving off Pages must not mean
+        # publishing unverified assets: both verifiers re-read every emitted file and
+        # match it against its index, and -check catches a stale committed dataset.
+        log "    verifying the emitted assets"
+        ( cd "$REPO/pages" && npm run verify:gamesymbols --silent && npm run verify:gamedata --silent ) || return 1
+        uv run publish_site_data.py -check || return 1
+
+        # Published as a new release directory with the serving symlink flipped at the
+        # end, so a visitor never sees a half-copied site and a rollback is one
+        # symlink. nginx must therefore have its root on <target>/current.
+        local remote="" base=""
+        case "$target" in
+            *:*) remote="${target%%:*}"; base="${target#*:}" ;;
+            *)   base="$target" ;;
+        esac
+        release="$base/releases/$stamp"
+
+        if [ -n "$remote" ]; then
+            ssh "$remote" "mkdir -p '$base/releases'" || return 1
+            rsync -a --delete "$REPO/pages/dist/" "$remote:$release/" || return 1
+            ssh "$remote" "ln -sfn '$release' '$base/current.new' && mv -T '$base/current.new' '$base/current' \
+                && ls -1dt '$base'/releases/* | tail -n +$((PUBLISH_KEEP + 1)) | xargs -r rm -rf" || return 1
+        else
+            mkdir -p "$base/releases" || return 1
+            rsync -a --delete "$REPO/pages/dist/" "$release/" || return 1
+            ln -sfn "$release" "$base/current.new" || return 1
+            mv -T "$base/current.new" "$base/current" || return 1
+            ls -1dt "$base"/releases/* | tail -n +$((PUBLISH_KEEP + 1)) | xargs -r rm -rf
+        fi
+        log "    serving $release"
+    }
+
+    case "$PUBLISH_MODE" in
+        off) : ;;
+        nginx)
+            [ -n "$PUBLISH_TARGET" ] || die "AUTOPILOT_PUBLISH=nginx needs AUTOPILOT_PUBLISH_TARGET"
+            log "==> publishing the site to $PUBLISH_TARGET"
+            if [ "$DRY" = 1 ]; then
+                log "    dry run: would build pages/, verify the assets and rsync to $PUBLISH_TARGET"
+            elif ! publish_site "$PUBLISH_TARGET"; then
+                die "site publish"
+            fi
+            ;;
+        *) die "unknown AUTOPILOT_PUBLISH: $PUBLISH_MODE" ;;
+    esac
+
+    # ---------------------------------------------------------------- deploy decision
+    GATE_OUT="$STATE/gate-$TAG.txt"
+    uv run autopilot_safe_gate.py -gamever "$TAG" > "$GATE_OUT" 2>&1
+    GATE=$?
+    cat "$GATE_OUT"
+
+    case "$DEPLOY_MODE" in
+        off)
+            log "deploy mode 'off': stopping here"
+            notify "analysed" "$(final_body)"
+            ;;
+        verified)
+            # What the gate refuses is CHANGE, not breakage: a new key or a moved
+            # slot holds a build back even when every shipped entry verifies. This
+            # mode trusts the battery instead - generation clean, every artifact
+            # checked against the binaries, no duplicate VAs, and every shipped
+            # entry re-scanned with unhealthy zero - and deploys on that.
+            log "deploy mode 'verified': battery green and every shipped entry holds, deploying"
+            deploy_all "$TAG"
+            notify "deployed" "$(final_body)"
+            ;;
+        auto)
+            log "deploy mode 'auto': deploying regardless of the gate"
+            deploy_all "$TAG"
+            notify "deployed" "$(final_body)"
+            ;;
+        safe|*)
+            if [ "$GATE" = 0 ]; then
+                log "gate says SAFE: deploying"
+                deploy_all "$TAG"
+                notify "deployed" "$(final_body)"
+            elif [ "$GATE" = 10 ]; then
+                log "gate says HOLD: analysed and pushed, deploy is yours"
+                notify "held" "$(final_body)"
+            else
+                die "the safe gate could not decide"
+            fi
+            ;;
+    esac
+
+    : > "$STATE/finished-$TAG"
+    rm -f "$ATTEMPTS_FILE" "$STATE/finish-attempts-$TAG"
+    log "done with $TAG"
+}
+
 # ---------------------------------------------------------------- single instance
 exec 9>"$STATE/lock"
 if ! flock -n 9; then
@@ -227,13 +429,46 @@ fi
 # the snapshot when they finish, so a build whose chain failed after analysis - or
 # was finished by hand - has the file on disk with the battery, commit and deploy
 # never run. Keyed on the file alone, the timer then skipped 14186 for good.
+#
+# Committed is still not finished, though. The chain commits before it pushes and
+# deploys, so a push or deploy that failed left a committed build every later tick
+# called done - 14190 sat analysed, unpushed and undeployed until someone typed
+# the commands from the notification. A build this script committed (its own
+# feat() commit is in HEAD) without reaching the end (no finished marker, no
+# deploy record) is resumed instead: push, then the deploy decision. Nothing
+# before the commit is repeated - the battery already passed, or the commit
+# would not exist. A commit made by hand carries no such message and stays done.
+ATTEMPTS_FILE="$STATE/attempts-$TAG"
 if git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1; then
-    log "build $TAG is already analysed; nothing to do"
+    if [ -f "$STATE/finished-$TAG" ] || [ -f "deployments/$TAG.json" ] \
+            || [ -z "$(git log -1 --format=%h -F --grep="feat($TAG): analysed by autopilot" HEAD)" ]; then
+        log "build $TAG is already analysed; nothing to do"
+        exit 0
+    fi
+    FINISH_FILE="$STATE/finish-attempts-$TAG"
+    FINISH_ATTEMPTS=$(cat "$FINISH_FILE" 2>/dev/null || echo 0)
+    if [ "$FINISH_ATTEMPTS" -ge "$MAX_FINISH_ATTEMPTS" ]; then
+        log "build $TAG: push/deploy failed $FINISH_ATTEMPTS times; not trying again (rm $FINISH_FILE to reset)"
+        exit 0
+    fi
+    log "build $TAG is committed but not finished; resuming at the push (attempt $((FINISH_ATTEMPTS + 1)) of $MAX_FINISH_ATTEMPTS)"
+    if [ "$DRY" = 1 ]; then
+        log "dry run: would push, then deploy mode '$DEPLOY_MODE'"
+        exit 0
+    fi
+    echo $((FINISH_ATTEMPTS + 1)) > "$FINISH_FILE"
+    RESUMING=1
+    STARTED_EPOCH=$(date +%s)
+    sync_push || die "push"
+    log "    pushed"
+    dispatch_pages
+    IMPACT_LINE=""
+    [ -f "$STATE/impact-$TAG.txt" ] && IMPACT_LINE="schema: $(grep -m1 '^summary:' "$STATE/impact-$TAG.txt" | sed 's/^summary: //')"
+    finish_build
     exit 0
 fi
 
 # ---------------------------------------------------------------- backoff
-ATTEMPTS_FILE="$STATE/attempts-$TAG"
 ATTEMPTS=$(cat "$ATTEMPTS_FILE" 2>/dev/null || echo 0)
 if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
     log "build $TAG has failed $ATTEMPTS times; not trying again (rm $ATTEMPTS_FILE to reset)"
@@ -451,59 +686,6 @@ if [ -n "${OLD_TAG:-}" ]; then
     log "    $IMPACT_LINE"
 fi
 
-# The two things that otherwise cost an SSH session: which keys actually moved,
-# and where to look at the result. Read from the metadata companions the
-# generator just wrote, so it is what the plugins really got.
-changed_keys_block() {
-    uv run python - "$TAG" <<'PYEOF' 2>/dev/null || true
-import glob, json, os, sys
-
-import publish_site_data as P
-
-tag = sys.argv[1]
-# Only plugins this fork still generates: the disabled ones keep their old
-# metadata on disk, and counting it would report keys no plugin here receives
-# (13 files instead of the 8 that ship).
-disabled = P.disabled_plugins()
-names, files = [], 0
-for path in sorted(glob.glob(os.path.join("gamedata", tag, "**", "*.metadata.json"), recursive=True)):
-    if os.path.relpath(path, os.path.join("gamedata", tag)).split(os.sep)[0] in disabled:
-        continue
-    try:
-        document = json.load(open(path, encoding="utf-8"))
-    except Exception:
-        continue
-    touched = set()
-    for entry in document.get("entries", []):
-        for change in entry.get("changes") or []:
-            path_parts = change.get("path") or []
-            if path_parts:
-                touched.add(str(path_parts[0]))
-    if touched:
-        files += 1
-        names.extend(sorted(touched))
-
-unique = sorted(set(names))
-if not unique:
-    print("no key changed value")
-else:
-    head = ", ".join(unique[:5])
-    rest = f" and {len(unique) - 5} more" if len(unique) > 5 else ""
-    print(f"{len(unique)} key(s) changed across {files} file(s): {head}{rest}")
-PYEOF
-}
-
-# printf, not a quoted "\n\n": inside double quotes those are two literal
-# characters, which is exactly how the first version reached Discord.
-final_body() {
-    printf '%s\n%s\n\n%s\n\n%s\n' "$(changed_keys_block)" "$IMPACT_LINE" "$(cat "$GATE_OUT")" "$(site_links)"
-}
-
-site_links() {
-    printf 'https://sig.miksen.me/game-data   the files, per build\n'
-    printf 'https://sig.miksen.me/check       drop your own file to compare it\n'
-}
-
 # ---------------------------------------------------------------- record it
 log "==> committing"
 git add -A -- "configs/$TAG.yaml" "bin_artifacts/$TAG" "gamesymbols/$TAG.yaml" "gamedata/$TAG" \
@@ -531,108 +713,4 @@ duplicate-VA clusters." || die "commit"
     dispatch_pages
 fi
 
-# ---------------------------------------------------------------- publish the site
-# Independent of the plugin deploy gate below: that gate decides whether a build
-# is safe to put under a live server's plugins, which says nothing about showing
-# the numbers on a web page. GitHub Pages needs none of this - dispatch_pages
-# starts its build from the pushed commit - so the default is off and this only
-# runs when asked.
-publish_site() {
-    local target="$1" stamp release
-    stamp="$TAG-$(date -u +%Y%m%dT%H%M%SZ)"
-
-    if [ ! -d "$REPO/pages/node_modules" ]; then
-        log "    installing pages dependencies"
-        ( cd "$REPO/pages" && npm ci --silent ) || return 1
-    fi
-    log "    building"
-    ( cd "$REPO/pages" && PAGES_RELEASE_INPUT_ROOT="$REPO" npm run build --silent ) || return 1
-
-    # The same checks the workflow runs, because moving off Pages must not mean
-    # publishing unverified assets: both verifiers re-read every emitted file and
-    # match it against its index, and -check catches a stale committed dataset.
-    log "    verifying the emitted assets"
-    ( cd "$REPO/pages" && npm run verify:gamesymbols --silent && npm run verify:gamedata --silent ) || return 1
-    uv run publish_site_data.py -check || return 1
-
-    # Published as a new release directory with the serving symlink flipped at the
-    # end, so a visitor never sees a half-copied site and a rollback is one
-    # symlink. nginx must therefore have its root on <target>/current.
-    local remote="" base=""
-    case "$target" in
-        *:*) remote="${target%%:*}"; base="${target#*:}" ;;
-        *)   base="$target" ;;
-    esac
-    release="$base/releases/$stamp"
-
-    if [ -n "$remote" ]; then
-        ssh "$remote" "mkdir -p '$base/releases'" || return 1
-        rsync -a --delete "$REPO/pages/dist/" "$remote:$release/" || return 1
-        ssh "$remote" "ln -sfn '$release' '$base/current.new' && mv -T '$base/current.new' '$base/current' \
-            && ls -1dt '$base'/releases/* | tail -n +$((PUBLISH_KEEP + 1)) | xargs -r rm -rf" || return 1
-    else
-        mkdir -p "$base/releases" || return 1
-        rsync -a --delete "$REPO/pages/dist/" "$release/" || return 1
-        ln -sfn "$release" "$base/current.new" || return 1
-        mv -T "$base/current.new" "$base/current" || return 1
-        ls -1dt "$base"/releases/* | tail -n +$((PUBLISH_KEEP + 1)) | xargs -r rm -rf
-    fi
-    log "    serving $release"
-}
-
-case "$PUBLISH_MODE" in
-    off) : ;;
-    nginx)
-        [ -n "$PUBLISH_TARGET" ] || die "AUTOPILOT_PUBLISH=nginx needs AUTOPILOT_PUBLISH_TARGET"
-        log "==> publishing the site to $PUBLISH_TARGET"
-        if [ "$DRY" = 1 ]; then
-            log "    dry run: would build pages/, verify the assets and rsync to $PUBLISH_TARGET"
-        elif ! publish_site "$PUBLISH_TARGET"; then
-            die "site publish"
-        fi
-        ;;
-    *) die "unknown AUTOPILOT_PUBLISH: $PUBLISH_MODE" ;;
-esac
-
-# ---------------------------------------------------------------- deploy decision
-GATE_OUT="$STATE/gate-$TAG.txt"
-uv run autopilot_safe_gate.py -gamever "$TAG" > "$GATE_OUT" 2>&1
-GATE=$?
-cat "$GATE_OUT"
-
-case "$DEPLOY_MODE" in
-    off)
-        log "deploy mode 'off': stopping here"
-        notify "analysed" "$(final_body)"
-        ;;
-    verified)
-        # What the gate refuses is CHANGE, not breakage: a new key or a moved
-        # slot holds a build back even when every shipped entry verifies. This
-        # mode trusts the battery instead - generation clean, every artifact
-        # checked against the binaries, no duplicate VAs, and every shipped
-        # entry re-scanned with unhealthy zero - and deploys on that.
-        log "deploy mode 'verified': battery green and every shipped entry holds, deploying"
-        deploy_all "$TAG"
-        notify "deployed" "$(final_body)"
-        ;;
-    auto)
-        log "deploy mode 'auto': deploying regardless of the gate"
-        deploy_all "$TAG"
-        notify "deployed" "$(final_body)"
-        ;;
-    safe|*)
-        if [ "$GATE" = 0 ]; then
-            log "gate says SAFE: deploying"
-            deploy_all "$TAG"
-            notify "deployed" "$(final_body)"
-        elif [ "$GATE" = 10 ]; then
-            log "gate says HOLD: analysed and pushed, deploy is yours"
-            notify "held" "$(final_body)"
-        else
-            die "the safe gate could not decide"
-        fi
-        ;;
-esac
-
-rm -f "$ATTEMPTS_FILE"
-log "done with $TAG"
+finish_build

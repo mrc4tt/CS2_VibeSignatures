@@ -65,6 +65,12 @@ The held ones are held for a reason worth seeing: CS2Fixes lost six keys in
 generation log, gate verdict and missing report. It is gitignored. Deleting
 `.autopilot/attempts-<build>` lets a failed build be tried again.
 
+A build the chain committed but did not finish (push or deploy failed) is not
+"done": the next tick resumes it at the push - `git pull --rebase --autostash`,
+three tries - and then the deploy decision, without re-running the analysis.
+`.autopilot/finish-attempts-<build>` caps that at `AUTOPILOT_MAX_FINISH_ATTEMPTS`
+(default 6); `.autopilot/finished-<build>` marks a build that reached the end.
+
 ## What stops the chain
 
 Any of these ends the run before a file reaches a plugin repo: uncommitted
