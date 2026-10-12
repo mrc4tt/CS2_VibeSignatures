@@ -70,7 +70,7 @@ that it should exist. Recovery is attempted in this order, cheapest first:
    a symbol with **no baseline** on windows, the same build's linux facts by string set
    (built once from the linux IDB). A symbol whose strings or callees now sit inside
    another function is reported `inlined into X` and costs no agent run.
-4. Hand analysis, with `idat` (headless IDA, `/root/ida-pro-9.1/idat -A -S"<script>" -L"<log>" <binary>`;
+4. Hand analysis, with `idat` (headless IDA, `/root/ida-pro-9.4/idat -A -S"<script>" -L"<log>" <binary>`;
    the IDB is `<binary>.i64`, e.g. `client.dll.i64`).
 
 **What an artifact holds.** `func_sig` + `func_va` for a function; `gv_va` for a global (the data
@@ -601,11 +601,27 @@ The session server runs as `systemd/cs2vibe-ida-session.service` (`ida_session.p
 run needs and always follows the newest analysed build. By hand, when the unit is not installed:
 
 ```bash
-uv run idalib-mcp --unsafe --host 127.0.0.1 --port 13337 bin/<VER>/server/libserver.so
+uv run python cs2vibe_ida_mcp.py --unsafe --host 127.0.0.1 --port 13337 bin/<VER>/server/libserver.so
 ```
 
-One supervisor holds several binaries - one worker each, opened with its `idalib_open` tool - so
+One server holds several binaries - one Nexus worker each, opened with `open_database` - so
 Windows work no longer needs a second instance.
+
+**The MCP server is Hex-Rays' `ida-mcp` (IDA 9.4+, IDA Nexus), carrying the fork's tools.**
+`cs2vibe_ida_mcp.py` serves Hex-Rays' six tools (`open_database`, `execute_python`, `reference`,
+`list_databases`, `save_database`, `close_database`) and lists every tool of the
+`mrc4tt/ida-pro-mcp` fork beside them, each run inside the Nexus worker through the fork's own
+dispatcher - so `py_eval`, `find_bytes`, `decompile` ... answer exactly as idalib-mcp did and
+neither the pipeline nor the skills changed. Three differences, all deliberate: the port opens
+only once the database is open and analysed (the readiness signal the launchers wait for);
+SIGTERM is where the database is saved, so `stop_idalib_mcp_process` waits
+`CS2VIBE_IDA_STOP_TIMEOUT` (300 s) instead of 10; and nothing is truncated - the fork cut any
+result over 50 000 characters to a preview plus a download URL nothing here ever fetched.
+`CS2VIBE_IDA_MCP=fork` starts the old `idalib-mcp` instead, same arguments, for a rollback
+without a code change. The reap patterns in the run scripts match both servers and both kinds of
+worker (`ida_pro_mcp.idalib_server`, `ida-nexus worker`). 9.4 upgrades an IDB it opens and 9.1
+cannot read it back: the 9.1 databases of every gamever up to 14190 are in
+`/root/ida91_i64_backup/` (taken 2026-10-12).
 
 **Within one run, binaries go side by side** (`-jobs` / `CS2VIBE_JOBS`, which the run
 scripts default to `auto`). IDA is single-threaded per database, so the only way to use
@@ -761,7 +777,7 @@ a CHandle load at a *different* offset per platform (0xE90 vs 0xBB0), which is w
 like through two compilers. Declared as a `structmember` with an `offset_sig` anchored on that
 instruction, so 56 is re-derived and checked every build instead of trusted. With `ida-pro-mcp`
 refusing connections, the decompilation was done headlessly:
-`~/ida-pro-9.1/idat -A -S<script> -L<log> bin/<VER>/server/libserver.so.i64` — note that a stale
+`~/ida-pro-9.4/idat -A -S<script> -L<log> bin/<VER>/server/libserver.so.i64` — note that a stale
 minidump in `/tmp/ida` makes `idat` block on a dialog even under `-A`, so clear it first.
 
 **The verifier had two blind spots of its own**, both found by pointing it at a file

@@ -21,11 +21,11 @@ LOG="refs_gen_$(date +%Y%m%d_%H%M%S).log"
 export CS2VIBE_MCP_PORT="${CS2VIBE_MCP_PORT:-13402}"
 if [ "${NO_REAP:-0}" != "1" ] && ss -tln 2>/dev/null | grep -q ":${CS2VIBE_MCP_PORT} "; then
     echo "[reap] port ${CS2VIBE_MCP_PORT} optaget - dræber kun den server og efterladte workers"
-    for _pid in $(pgrep -f "idalib-mcp --unsafe --host 127.0.0.1 --port ${CS2VIBE_MCP_PORT}" 2>/dev/null); do
+    for _pid in $(pgrep -f "(idalib-mcp|cs2vibe_ida_mcp\.py) --unsafe --host 127.0.0.1 --port ${CS2VIBE_MCP_PORT}" 2>/dev/null); do
         pkill -9 -P "$_pid" 2>/dev/null || true
         kill -9 "$_pid" 2>/dev/null || true
     done
-    for _pid in $(pgrep -f 'ida_pro_mcp\.idalib_server' 2>/dev/null); do
+    for _pid in $(pgrep -f 'ida_pro_mcp\.idalib_server|ida-nexus worker' 2>/dev/null); do
         [ "$(ps -o ppid= -p "$_pid" 2>/dev/null | tr -d ' ')" = "1" ] && kill -9 "$_pid" 2>/dev/null || true
     done
     sleep 2

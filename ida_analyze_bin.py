@@ -86,6 +86,7 @@ from ida_mcp_session import (
     McpDatabaseUnavailableError,
     McpToolCallError,
     check_ida_mcp_supervisor_health,
+    ida_mcp_server_command,
     normalize_binary_identity_path,
     open_ida_mcp_session,
 )
@@ -1480,6 +1481,9 @@ def quit_ida_gracefully(process, host, port, *, expected_binary, debug=False):
     )
 
 
+MCP_STOP_TIMEOUT = float(os.environ.get("CS2VIBE_IDA_STOP_TIMEOUT", "300"))
+
+
 def stop_idalib_mcp_process(process, debug=False):
     """Stop only the subprocess started by this runner, without using the MCP port."""
     if process is None or process.poll() is not None:
@@ -1488,7 +1492,9 @@ def stop_idalib_mcp_process(process, debug=False):
         print("  Stopping the current idalib-mcp process...")
     try:
         process.terminate()
-        process.wait(timeout=10)
+        # SIGTERM is where the server saves: Nexus packs the worker's database on
+        # the last lease's release, which for a 3 GB server IDB is not 10 s.
+        process.wait(timeout=MCP_STOP_TIMEOUT)
         return
     except (OSError, subprocess.TimeoutExpired):
         pass
@@ -3743,7 +3749,7 @@ def start_idalib_mcp(
         print(f"  Error: MCP port {host}:{port} is already in use")
         return None
 
-    cmd = ["idalib-mcp", "--unsafe", "--host", host, "--port", str(port)]
+    cmd = ida_mcp_server_command(host, port)
 
     if ida_args:
         cmd.extend(ida_args.split())

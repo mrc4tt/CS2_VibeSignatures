@@ -17,6 +17,27 @@ WORKER_TOOL_NAMES = frozenset(
 )
 MANAGEMENT_TOOL_NAMES = frozenset({"idb_open", "idb_list"})
 IDA_DATABASE_SUFFIXES = (".i64", ".idb")
+SERVER_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cs2vibe_ida_mcp.py")
+
+
+def ida_mcp_server_command(host: str, port: int | str) -> list[str]:
+    """The MCP server command line, without the binary.
+
+    Default is cs2vibe_ida_mcp.py: Hex-Rays' ida-mcp (IDA Nexus) carrying the fork's
+    tools. CS2VIBE_IDA_MCP=fork starts the old mrc4tt/ida-pro-mcp idalib-mcp instead.
+    Both take the same arguments and answer the same tool calls.
+    """
+    if os.environ.get("CS2VIBE_IDA_MCP", "").strip().lower() == "fork":
+        head = ["idalib-mcp"]
+    else:
+        import sys
+
+        # The project venv, not sys.executable: under `uv run --with ...` that is an
+        # overlay env, and Nexus starts its worker from the server interpreter's own
+        # bin/ (ida-nexus), which only the project venv has.
+        venv_python = os.path.join(os.path.dirname(SERVER_SCRIPT), ".venv", "bin", "python")
+        head = [venv_python if os.path.isfile(venv_python) else sys.executable, SERVER_SCRIPT]
+    return [*head, "--unsafe", "--host", str(host), "--port", str(port)]
 
 
 class McpContractError(RuntimeError):

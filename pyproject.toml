@@ -14,6 +14,7 @@ dependencies = [
     "fastapi>=0.139.0",
     "fastcrc>=0.3.6",
     "httpx",
+    "ida-mcp>=20261008.0.1",
     "ida-pro-mcp",
     "mcp",
     "openai",

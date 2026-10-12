@@ -23,10 +23,10 @@ The editor's IDA session is a second, independent unit:
     sudo systemctl daemon-reload
     sudo systemctl enable --now cs2vibe-ida-session.service
 
-It runs `ida_session.py`, which starts `idalib-mcp` on 127.0.0.1:13337 (where
-`.mcp.json` points) with the newest `bin/<VER>/server/libserver.so` that already
-has a `.i64`. Other binaries are opened on demand through the supervisor's
-`idalib_open` tool, one worker each. `run_linux.sh`, `run_windows.sh` and
+It runs `ida_session.py`, which starts `cs2vibe_ida_mcp.py` (Hex-Rays' ida-mcp plus
+the fork's tools) on 127.0.0.1:13337 (where `.mcp.json` points) with the newest
+`bin/<VER>/server/libserver.so` that already has a `.i64`. Other binaries are opened
+on demand with the `open_database` tool, one Nexus worker each. `run_linux.sh`, `run_windows.sh` and
 `gen_references.sh` stop it for the length of a run and start it again on exit,
 so it never holds a database a run needs, and each restart moves it to the build
 that run produced. `MemoryMax=16G` keeps it from competing with a run.

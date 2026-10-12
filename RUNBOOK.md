@@ -123,7 +123,7 @@ Fil: `gamedata-generators/<plugin>/gamedata/<plugin>.json`. Samme flow som A.
 | snapshot config digest mismatch | re-pack — ufarligt |
 | `unhealthy: N` i verify | `grep -B20 "^unhealthy: [1-9]" .autopilot/verify-<VER>.log` |
 | deploy drift | `uv run check_deploy_drift.py -gamever <VER>` navngiver nøglerne |
-| IDB lock / idalib start-fejl | run-scripts rydder kun ejerløse `.id0/.id1/.id2/.nam/.til` selv; re-run. Aldrig blind `pkill idalib-mcp` (dræber editor-sessionen på 13337) |
+| IDB lock / idalib start-fejl | run-scripts rydder kun ejerløse `.id0/.id1/.id2/.nam/.til` selv; re-run. Aldrig blind `pkill` af MCP-serveren (`cs2vibe_ida_mcp.py` / `idalib-mcp`) - det dræber editor-sessionen på 13337 |
 | duplicate symbol in module | kirurgisk, kun den navngivne — ALDRIG `fix_duplicate_symbols.py -all` |
 | unable to locate function address | mangler artefakt — `manual_todo/` / jagt — eller platform-eksklusiv |
 | add/add conflict på artefakter | `sync_upstream.sh` håndterer det (ADDITIVE_PATHS = vores) |

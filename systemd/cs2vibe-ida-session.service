@@ -1,5 +1,5 @@
 [Unit]
-Description=CS2_VibeSignatures editor IDA session (idalib-mcp on 127.0.0.1:13337)
+Description=CS2_VibeSignatures editor IDA session (Hex-Rays ida-mcp on 127.0.0.1:13337)
 Documentation=file:/root/CS2_VibeSignatures/systemd/README.md
 After=network-online.target
 

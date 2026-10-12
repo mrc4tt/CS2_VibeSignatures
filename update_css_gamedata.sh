@@ -64,14 +64,14 @@ SESSION_PORT="${CS2VIBE_SESSION_MCP_PORT:-13337}"
 
 reap_orphans() {
   local pid ppid
-  for pid in $(pgrep -f 'idalib-mcp --unsafe' 2>/dev/null); do
+  for pid in $(pgrep -f '(idalib-mcp|cs2vibe_ida_mcp\.py) --unsafe' 2>/dev/null); do
     ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
     [ "$ppid" = "1" ] || continue
     tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null | grep -qE -- "--port ${SESSION_PORT}( |$)" && continue
     pkill -9 -P "$pid" 2>/dev/null || true
     kill -9 "$pid" 2>/dev/null || true
   done
-  for pid in $(pgrep -f 'ida_pro_mcp\.idalib_server' 2>/dev/null); do
+  for pid in $(pgrep -f 'ida_pro_mcp\.idalib_server|ida-nexus worker' 2>/dev/null); do
     ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
     [ "$ppid" = "1" ] && kill -9 "$pid" 2>/dev/null || true
   done
@@ -79,8 +79,8 @@ reap_orphans() {
 
 held_idb_bases() {
   local pid link base arg
-  for pid in $(pgrep -f 'idalib-mcp --unsafe' 2>/dev/null) \
-             $(pgrep -f 'ida_pro_mcp\.idalib_server' 2>/dev/null); do
+  for pid in $(pgrep -f '(idalib-mcp|cs2vibe_ida_mcp\.py) --unsafe' 2>/dev/null) \
+             $(pgrep -f 'ida_pro_mcp\.idalib_server|ida-nexus worker' 2>/dev/null); do
     for link in /proc/"$pid"/fd/*; do
       base=$(readlink "$link" 2>/dev/null) || continue
       case "$base" in *.id0|*.id1|*.id2|*.nam|*.til|*.i64) printf '%s\n' "${base%.*}" ;; esac

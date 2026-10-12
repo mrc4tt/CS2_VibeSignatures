@@ -157,11 +157,11 @@ export CS2VIBE_MCP_PORT="${CS2VIBE_MCP_PORT:-13400}"
 #     those hold IDB locks and nothing owns them any more
 reap_mcp_port() {
     local port="$1" pid ppid
-    for pid in $(pgrep -f "idalib-mcp --unsafe --host 127.0.0.1 --port ${port}" 2>/dev/null); do
+    for pid in $(pgrep -f "(idalib-mcp|cs2vibe_ida_mcp\.py) --unsafe --host 127.0.0.1 --port ${port}" 2>/dev/null); do
         pkill -9 -P "$pid" 2>/dev/null || true
         kill -9 "$pid" 2>/dev/null || true
     done
-    for pid in $(pgrep -f 'ida_pro_mcp\.idalib_server' 2>/dev/null); do
+    for pid in $(pgrep -f 'ida_pro_mcp\.idalib_server|ida-nexus worker' 2>/dev/null); do
         ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
         [ "$ppid" = "1" ] && kill -9 "$pid" 2>/dev/null || true
     done
@@ -172,7 +172,7 @@ reap_mcp_port() {
     # (bin/<VER>/engine/libengine2.so.id0)" for a database no one is using.
     # The interactive session server is kept: it is orphaned too once its shell
     # exits, and .mcp.json points at it.
-    for pid in $(pgrep -f 'idalib-mcp --unsafe' 2>/dev/null); do
+    for pid in $(pgrep -f '(idalib-mcp|cs2vibe_ida_mcp\.py) --unsafe' 2>/dev/null); do
         ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
         [ "$ppid" = "1" ] || continue
         tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null \
@@ -187,7 +187,7 @@ reap_mcp_port() {
 # its IDB aux files to the cleanup below, so say so rather than corrupting it.
 warn_if_session_holds() {
     local ver="$1"
-    if pgrep -af "idalib-mcp --unsafe" 2>/dev/null | grep -q "bin/${ver}/"; then
+    if pgrep -af "(idalib-mcp|cs2vibe_ida_mcp\.py) --unsafe" 2>/dev/null | grep -q "bin/${ver}/"; then
         echo "ℹ  another idalib-mcp has a bin/${ver}/ binary open (probably the editor session)."
         echo "   Its database is left alone, but it holds that binary: a module this run"
         echo "   needs may fail with \"only <other>.so is open\" until you close it."
@@ -222,8 +222,8 @@ warn_if_session_holds "${NEW_VER}"
 # question is which BINARY a live idalib process owns.
 held_idb_bases() {
     local pid link base
-    for pid in $(pgrep -f 'idalib-mcp --unsafe' 2>/dev/null) \
-               $(pgrep -f 'ida_pro_mcp\.idalib_server' 2>/dev/null); do
+    for pid in $(pgrep -f '(idalib-mcp|cs2vibe_ida_mcp\.py) --unsafe' 2>/dev/null) \
+               $(pgrep -f 'ida_pro_mcp\.idalib_server|ida-nexus worker' 2>/dev/null); do
         for link in /proc/"$pid"/fd/*; do
             base=$(readlink "$link" 2>/dev/null) || continue
             case "$base" in

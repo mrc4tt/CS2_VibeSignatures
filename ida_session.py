@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Start the editor's ida-pro-mcp server (idalib-mcp on 13337) on the newest analysed build.
+"""Start the editor's IDA MCP server (cs2vibe_ida_mcp.py on 13337) on the newest analysed build.
 
 Run by systemd/cs2vibe-ida-session.service so the IDA tools in the editor are always
 there. The binary is the newest bin/<VER>/server/libserver.so that already has a
 .i64 next to it: a build with no database would first be auto-analysed from
 scratch, which takes as long as a run and is the run's job, not the editor's.
-Other binaries (server.dll, engine, client) are opened on demand through the
-supervisor's idalib_open tool, one worker each.
+Other binaries (server.dll, engine, client) are opened on demand with the
+open_database tool, one Nexus worker each.
 
 The run scripts stop this service while they analyse and start it again on exit,
 so it never holds a database a run needs; starting it then also moves it on to the
@@ -21,6 +21,8 @@ import os
 import re
 import sys
 from pathlib import Path
+
+from ida_mcp_session import ida_mcp_server_command
 
 REPO = Path(__file__).resolve().parent
 PORT = os.environ.get("CS2VIBE_SESSION_MCP_PORT", "13337")
@@ -53,7 +55,7 @@ def main(argv):
     if only_print:
         print(binary.relative_to(REPO))
         return 0
-    cmd = ["idalib-mcp", "--unsafe", "--host", "127.0.0.1", "--port", PORT, str(binary.relative_to(REPO))]
+    cmd = [*ida_mcp_server_command("127.0.0.1", PORT), str(binary.relative_to(REPO))]
     print(" ".join(cmd), flush=True)
     os.chdir(REPO)
     os.execvp(cmd[0], cmd)

@@ -209,7 +209,7 @@ class TestStopIdalibMcpProcess(unittest.TestCase):
         ida_analyze_bin.stop_idalib_mcp_process(process, debug=False)
 
         process.terminate.assert_called_once_with()
-        process.wait.assert_called_once_with(timeout=10)
+        process.wait.assert_called_once_with(timeout=ida_analyze_bin.MCP_STOP_TIMEOUT)
         process.kill.assert_not_called()
 
     def test_kills_owned_process_when_terminate_times_out(self) -> None:
@@ -221,7 +221,7 @@ class TestStopIdalibMcpProcess(unittest.TestCase):
 
         process.terminate.assert_called_once_with()
         process.kill.assert_called_once_with()
-        self.assertEqual([call(timeout=10), call(timeout=5)], process.wait.call_args_list)
+        self.assertEqual([call(timeout=ida_analyze_bin.MCP_STOP_TIMEOUT), call(timeout=5)], process.wait.call_args_list)
 
 
 class TestIsPortInUse(unittest.TestCase):
@@ -2292,15 +2292,7 @@ class TestStartIdalibMcp(unittest.TestCase):
         mock_popen.assert_called_once()
         args, kwargs = mock_popen.call_args
         self.assertEqual(
-            [
-                "idalib-mcp",
-                "--unsafe",
-                "--host",
-                "127.0.0.1",
-                "--port",
-                "13337",
-                "bin/14160/client/client.dll",
-            ],
+            [*ida_analyze_bin.ida_mcp_server_command("127.0.0.1", 13337), "bin/14160/client/client.dll"],
             args[0],
         )
         self.assertEqual(ida_analyze_bin.subprocess.DEVNULL, kwargs["stdout"])

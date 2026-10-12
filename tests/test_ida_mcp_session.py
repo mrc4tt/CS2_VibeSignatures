@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import ida_mcp_session
 import ast
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -318,3 +320,16 @@ class TestMcpSessionBoundary(unittest.TestCase):
                         violations.append(f"{path}:{node.lineno}")
 
         self.assertEqual([], violations)
+
+
+class TestIdaMcpServerCommand(unittest.TestCase):
+    def test_default_is_the_hexrays_server_from_the_project_venv(self) -> None:
+        with patch.dict(os.environ, {"CS2VIBE_IDA_MCP": ""}):
+            cmd = ida_mcp_session.ida_mcp_server_command("127.0.0.1", 13400)
+        self.assertTrue(cmd[1].endswith("cs2vibe_ida_mcp.py"))
+        self.assertEqual(["--unsafe", "--host", "127.0.0.1", "--port", "13400"], cmd[2:])
+
+    def test_fork_switch_starts_idalib_mcp(self) -> None:
+        with patch.dict(os.environ, {"CS2VIBE_IDA_MCP": "fork"}):
+            cmd = ida_mcp_session.ida_mcp_server_command("127.0.0.1", 13401)
+        self.assertEqual(["idalib-mcp", "--unsafe", "--host", "127.0.0.1", "--port", "13401"], cmd)
