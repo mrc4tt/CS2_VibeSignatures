@@ -82,6 +82,7 @@ UNIT_MODULES = frozenset(
         "test_parallel_jobs",
         "test_ensure_seed_preprocessors",
         "test_hunt_strategies",
+        "test_hunt_tables_chains",
         "test_review_issue",
         "test_css_generator_gv",
         "test_download_depot",

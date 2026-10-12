@@ -2981,7 +2981,7 @@ def agent_disabled(agent):
     return str(agent or "").strip().lower() in _NO_AGENT_NAMES
 
 
-async def _pipeline_hunt_via_mcp(host, port, expected_binary, symbols, out_dir, categories=None):
+async def _pipeline_hunt_via_mcp(host, port, expected_binary, symbols, out_dir, categories=None, baseline=None):
     repo = os.path.dirname(os.path.abspath(__file__))
     code = (
         "import json, sys\n"
@@ -2990,7 +2990,7 @@ async def _pipeline_hunt_via_mcp(host, port, expected_binary, symbols, out_dir, 
         "    sys.path.insert(0, repo)\n"
         "import pipeline_hunt\n"
         f"result = json.dumps(pipeline_hunt.hunt(repo, {json.dumps(list(symbols))}, {json.dumps(os.fspath(out_dir))}, "
-        f"{json.dumps(dict(categories or {}))}))\n"
+        f"{json.dumps(dict(categories or {}))}, {json.dumps(baseline)}))\n"
     )
     async with open_ida_mcp_session(host, port, expected_binary=expected_binary) as session:
         response = await session.call_tool(name="py_eval", arguments={"code": code})
@@ -3040,15 +3040,22 @@ def run_pipeline_hunt(*, host, port, binary_path, symbols, artifact_dir, old_art
     key = (str(binary_path), platform)
     if key in _pipeline_hunt_unavailable:
         return None
-    def ask():
-        return asyncio.run(_pipeline_hunt_via_mcp(host, port, binary_path, symbols, artifact_dir, categories))
+    # facts from exactly the gamever the run relocates from, not the newest that happen
+    # to exist (_session's "stale baseline facts")
+    want = os.path.basename(os.path.dirname(os.path.abspath(old_artifact_dir))) if old_artifact_dir else None
+
+    def ask(baseline=want):
+        return asyncio.run(_pipeline_hunt_via_mcp(host, port, binary_path, symbols, artifact_dir, categories, baseline))
 
     try:
         result = ask()
-        if result.get("error", "").startswith("no baseline facts") and _generate_baseline_facts(
-            old_artifact_dir, module_name, platform
-        ):
-            result = ask()
+        error = result.get("error", "")
+        if error.startswith(("no baseline facts", "stale baseline facts")):
+            if _generate_baseline_facts(old_artifact_dir, module_name, platform):
+                result = ask()
+            elif error.startswith("stale baseline facts"):
+                print(f"    Hunter: {error}; hunting with those instead")
+                result = ask(None)
         sister_key = (gamever, module_name)
         if result.get("sister_missing") and gamever and sister_key not in _sister_facts_tried:
             # a symbol windows never had: linux of this same build may carry its strings

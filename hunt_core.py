@@ -126,6 +126,88 @@ def rtti_class(name):
     return name[: -len("_vtable")] if name and name.endswith("_vtable") else name
 
 
+def vtable_artifact_stems(class_name):
+    """The names a class's <Class>_vtable artifact may be filed under.
+
+    A template is spelled CGameSystemReallocatingFactory<CSource2EntitySystem> in a
+    vfunc's vtable_name and CGameSystemReallocatingFactory_CSource2EntitySystem in
+    the vtable artifact's own file name."""
+    name = rtti_class(class_name or "")
+    flat = re.sub(r"[<>,:\s*&]+", "_", name).strip("_")
+    return list(dict.fromkeys(n for n in (name, flat) if n))
+
+
+def vtable_va_from_artifacts(backend, class_name, directories, platform):
+    """vtable_va of a <Class>_vtable artifact in one of `directories`, if its slot 0 holds code."""
+    for stem in vtable_artifact_stems(class_name):
+        for directory in directories:
+            path = os.path.join(directory, f"{stem}_vtable.{platform}.yaml")
+            if os.path.isfile(path):
+                va = to_int(parse_yaml(path).get("vtable_va"))
+                first = backend.qword(va) if va is not None else None
+                if first and backend.is_code(first):
+                    return va
+    return None
+
+
+def class_tokens(class_name):
+    """Identifiers of a C++ class name in order: A<B, ns::C> -> [A, B, ns, C]."""
+    return re.findall(r"[A-Za-z_][A-Za-z0-9_]*", rtti_class(class_name or ""))
+
+
+def itanium_tokens(mangled):
+    """Identifiers of an Itanium type name in order, back-references (S_, S0_) left out:
+    30CGameSystemReallocatingFactoryI11CCSEventLogS0_E -> [CGameSystemReallocatingFactory, CCSEventLog]."""
+    out, i = [], 0
+    while i < len(mangled):
+        if mangled[i].isdigit():
+            j = i
+            while j < len(mangled) and mangled[j].isdigit():
+                j += 1
+            n = int(mangled[i:j])
+            out.append(mangled[j:j + n])
+            i = j + n
+        elif mangled[i] == "S":
+            j = mangled.find("_", i)
+            i = len(mangled) if j == -1 else j + 1
+        else:
+            i += 1
+    return out
+
+
+def msvc_tokens(name):
+    """Identifiers of an MSVC type descriptor name in order, back-references (V1) left out:
+    .?AV?$CGameSystemReallocatingFactory@VCCheckClient@@V1@@@ -> [CGameSystemReallocatingFactory, CCheckClient]."""
+    core = name[4:] if name.startswith((".?AV", ".?AU")) else name
+    out = []
+    for index, part in enumerate(core.split("@")):
+        part = part[2:] if part.startswith("?$") else part
+        if not part or re.fullmatch(r"[VU]?\d", part):
+            continue
+        if index and re.match(r"[VU][A-Za-z_]", part):
+            part = part[1:]
+        out.extend(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", part))
+    return out
+
+
+def _template_name_matches(candidates, want):
+    """The candidates whose identifiers are `want`, else the single one they start with.
+
+    The game names a template by its first argument (CGameSystemReallocatingFactory<X>),
+    the binary spells all of them (<X, X>, or <CPVSManager, IPVSManager>), and the
+    repeated one is only a back-reference."""
+    exact = [ea for ea, tokens in candidates if tokens == want]
+    if exact:
+        return exact
+    prefix = [ea for ea, tokens in candidates if tokens[: len(want)] == want]
+    return prefix if len(prefix) == 1 else []
+
+
+def _cstring_at(blob, pos, limit=512):
+    end = blob.find(b"\x00", pos, pos + limit)
+    return blob[pos:end].decode("latin-1") if end != -1 else None
+
+
 # ----------------------------------------------------------------------------- scanning
 
 class Scan:
@@ -199,30 +281,46 @@ def msvc_rtti_vtables(backend, class_name, regions):
     subobject's place in the complete object, the analogue of Itanium's offset-to-top.
     """
     imagebase = backend.imagebase()
-    out = []
+    name_eas = []
     for prefix in (b".?AV", b".?AU"):
         name = prefix + class_name.encode() + b"@@\x00"
         for base, blob in regions:
             pos = blob.find(name)
             while pos != -1:
-                td_rva = base + pos - 0x10 - imagebase
-                needle = struct.pack("<I", td_rva & 0xFFFFFFFF)
-                for cbase, cblob in regions:
-                    hit = cblob.find(needle)
-                    while hit != -1:
-                        col_off = hit - 12
-                        if col_off >= 0 and struct.unpack_from("<I", cblob, col_off)[0] == 1:
-                            col = cbase + col_off
-                            self_rva = struct.unpack_from("<I", cblob, col_off + 20)[0] if col_off + 24 <= len(cblob) else None
-                            if self_rva in (None, col - imagebase):
-                                offset = struct.unpack_from("<I", cblob, col_off + 4)[0]
-                                for holder in find_qword_holders(col, regions):
-                                    address_point = holder + 8
-                                    first = backend.qword(address_point)
-                                    if first and backend.is_code(first):
-                                        out.append((address_point, offset))
-                        hit = cblob.find(needle, hit + 1)
+                name_eas.append(base + pos)
                 pos = blob.find(name, pos + 1)
+    if not name_eas and "<" in class_name:
+        want = class_tokens(class_name)
+        candidates = []
+        for prefix in (b".?AV?$", b".?AU?$"):
+            needle = prefix + want[0].encode() + b"@"
+            for base, blob in regions:
+                pos = blob.find(needle)
+                while pos != -1:
+                    text = _cstring_at(blob, pos)
+                    if text:
+                        candidates.append((base + pos, msvc_tokens(text)))
+                    pos = blob.find(needle, pos + 1)
+        name_eas = _template_name_matches(candidates, want)
+    out = []
+    for name_ea in name_eas:
+        td_rva = name_ea - 0x10 - imagebase
+        needle = struct.pack("<I", td_rva & 0xFFFFFFFF)
+        for cbase, cblob in regions:
+            hit = cblob.find(needle)
+            while hit != -1:
+                col_off = hit - 12
+                if col_off >= 0 and struct.unpack_from("<I", cblob, col_off)[0] == 1:
+                    col = cbase + col_off
+                    self_rva = struct.unpack_from("<I", cblob, col_off + 20)[0] if col_off + 24 <= len(cblob) else None
+                    if self_rva in (None, col - imagebase):
+                        offset = struct.unpack_from("<I", cblob, col_off + 4)[0]
+                        for holder in find_qword_holders(col, regions):
+                            address_point = holder + 8
+                            first = backend.qword(address_point)
+                            if first and backend.is_code(first):
+                                out.append((address_point, offset))
+                hit = cblob.find(needle, hit + 1)
     out = sorted(set(out), key=lambda item: (item[1] != 0, item[0]))
     return out
 
@@ -239,6 +337,20 @@ def rtti_vtables(backend, class_name, regions=None):
         while pos != -1:
             name_eas.append(base + pos + 1)
             pos = blob.find(b"\x00" + mangled + b"\x00", pos + 1)
+    if not name_eas and "<" in class_name:
+        # a template's typeinfo name is <len><name>I<args>E with back-references, so it is
+        # found by its identifiers, not spelled out (_template_name_matches)
+        want = class_tokens(class_name)
+        needle = b"\x00" + f"{len(want[0])}{want[0]}I".encode()
+        candidates = []
+        for base, blob in regions:
+            pos = blob.find(needle)
+            while pos != -1:
+                text = _cstring_at(blob, pos + 1)
+                if text:
+                    candidates.append((base + pos + 1, itanium_tokens(text)))
+                pos = blob.find(needle, pos + 1)
+        name_eas = _template_name_matches(candidates, want)
     out = []
     for name_ea in name_eas:
         for holder in find_qword_holders(name_ea, regions):
@@ -481,6 +593,61 @@ class FactsBuilder:
             "consts": self.consts(start),
         }
 
+    def data_holders(self, start, va_to_symbol, data_regions, radius=8, limit=6):
+        """Where the function's address is stored in data, with the known functions
+        stored around it: a callback table, a factory's vtable, a datadesc.
+
+        GameDataTracker's data-pointer finder, made table-relative: the table moves
+        between builds, but its entries stay in order, so a known neighbour k slots
+        away says where to read the target in the new build. A function stored in
+        many places (a shared stub) says nothing and is left out."""
+        holders = find_qword_holders(start, data_regions)
+        if not holders or len(holders) > limit:
+            return []
+        out = []
+        for holder in holders:
+            neighbours = []
+            for k in range(-radius, radius + 1):
+                if k == 0:
+                    continue
+                fn = self.b.qword(holder + 8 * k)
+                name = va_to_symbol.get(fn) if fn else None
+                if name:
+                    neighbours.append([k, name])
+            if neighbours:
+                out.append({"holder": hex(holder), "neighbours": neighbours})
+        return out
+
+    def call_chains(self, start, va_to_symbol, depth=3, max_chains=4, max_visit=60):
+        """Paths from a known function down to this one through unnamed callers.
+
+        GameDataTracker's call-chain reversal: when no direct caller is a known symbol,
+        a known grandparent still is, and the call ordinals along the way lead back to
+        the target in the new build. Each chain is [[name, ordinal], ordinal, ...] from
+        the known ancestor down."""
+        chains, visited = [], set()
+        frontier = [(start, [])]
+        for _ in range(depth):
+            nxt = []
+            for fn, path in frontier:
+                for caller in self.callers_of(fn, va_to_symbol):
+                    cva, ordinal = to_int(caller.get("va")), caller.get("ordinal")
+                    if cva is None or ordinal is None or cva in visited:
+                        continue
+                    visited.add(cva)
+                    if len(visited) > max_visit:
+                        return chains
+                    step = [ordinal] + path
+                    if caller.get("name"):
+                        if path:  # a direct caller is s_callgraph's, not a chain
+                            chains.append([[caller["name"], step[0]]] + step[1:])
+                            if len(chains) >= max_chains:
+                                return chains
+                    else:
+                        nxt.append((cva, step))
+            frontier = nxt
+        return chains
+
     def context_shapes(self, start, site_ea, before=3, after=3):
         items = self.b.func_items(start) if start is not None else [site_ea]
         try:
@@ -546,6 +713,7 @@ def extract_facts(backend, artifact_dir, platform, gamever, module, log=print):
         if va is not None and category_of(rec) in ("func", "vfunc"):
             va_to_symbol.setdefault(va, symbol)
     out = {"gamever": gamever, "module": module, "platform": platform, "imagebase": hex(backend.imagebase()), "symbols": {}, "vtables": {}}
+    data_regions = backend.data_regions()
     vtable_classes = set()
     for symbol, rec in records.items():
         category = category_of(rec)
@@ -555,6 +723,10 @@ def extract_facts(backend, artifact_dir, platform, gamever, module, log=print):
                 va = to_int(rec.get("func_va"))
                 if va is not None:
                     entry.update(fb.function_facts(va, va_to_symbol))
+                    start = to_int(entry.get("va"))
+                    if start is not None:
+                        entry["data_holders"] = fb.data_holders(start, va_to_symbol, data_regions)
+                        entry["call_chains"] = fb.call_chains(start, va_to_symbol)
                 if category == "vfunc":
                     entry["vtable_name"] = rec.get("vtable_name")
                     entry["vfunc_index"] = to_int(rec.get("vfunc_index"))
@@ -599,7 +771,11 @@ def extract_facts(backend, artifact_dir, platform, gamever, module, log=print):
     regions = backend.data_regions()
     for class_name in sorted(vtable_classes):
         try:
-            tables = [ap for ap, ott in rtti_vtables(backend, rtti_class(class_name), regions) if ott == 0]
+            # the build's own vtable artifact first, as the hunter does: RTTI names no template
+            # class the way the artifacts do, and may offer another table than the task chose
+            from_artifact = vtable_va_from_artifacts(backend, class_name, [artifact_dir], platform)
+            tables = [from_artifact] if from_artifact is not None else \
+                [ap for ap, ott in rtti_vtables(backend, rtti_class(class_name), regions) if ott == 0]
             if len(tables) != 1:
                 out["vtables"][class_name] = {"error": f"{len(tables)} primary vtables"}
                 continue
@@ -864,15 +1040,7 @@ class Hunter:
 
     def vtable_from_artifact(self, class_name):
         """vtable_va of this build's <Class>_vtable artifact, if its slot 0 holds code."""
-        name = class_name if class_name.endswith("_vtable") else f"{class_name}_vtable"
-        for directory in self.vtable_artifact_dirs:
-            path = os.path.join(directory, f"{name}.{self.platform}.yaml")
-            if os.path.isfile(path):
-                va = to_int(parse_yaml(path).get("vtable_va"))
-                first = self.b.qword(va) if va is not None else None
-                if first and self.b.is_code(first):
-                    return va
-        return None
+        return vtable_va_from_artifacts(self.b, class_name, self.vtable_artifact_dirs, self.platform)
 
     def measure_shift(self, class_name, index):
         """Shift that aligns the baseline vtable neighbourhood onto the live one.
@@ -1180,6 +1348,64 @@ class Hunter:
                     out.append((fn, f"calls {count} known callees"))
         return out
 
+    def s_dataptr(self, symbol, base, artifact):
+        """The table the function sat in: its known neighbours, found again here, are
+        stored k slots from where it must be (data_holders)."""
+        votes = {}
+        for entry in base.get("data_holders") or []:
+            for k, name in entry.get("neighbours") or []:
+                live = self.resolved.get(name)
+                if live is None:
+                    continue
+                holders = find_qword_holders(live, self.data_regions)
+                if not holders or len(holders) > 6:
+                    continue
+                for holder in holders:
+                    fn = self.b.qword(holder - 8 * int(k))
+                    if fn and self.b.is_code(fn):
+                        votes.setdefault(fn, set()).add(name)
+        if not votes:
+            return []
+        ranked = sorted(votes.items(), key=lambda kv: -len(kv[1]))
+        top, names = ranked[0]
+        if len(names) < 2 or (len(ranked) > 1 and len(ranked[1][1]) == len(names)):
+            return []
+        return [(top, f"data-ptr {len(names)} table neighbours")]
+
+    def s_callchain(self, symbol, base, artifact):
+        """Down from a known ancestor through unnamed callers, by call ordinal
+        (call_chains). Ordinals may drift by one at each step; only chains that end on
+        one function vote for it."""
+        votes = {}
+        for chain in base.get("call_chains") or []:
+            (name, first), rest = chain[0], chain[1:]
+            if name not in self.resolved:
+                continue
+            ends = set()
+            frontier = {self.resolved[name]}
+            for ordinal in [first] + list(rest):
+                nxt = set()
+                for fn in frontier:
+                    calls = self.fb.direct_calls(fn)
+                    for k in (ordinal, ordinal - 1, ordinal + 1):
+                        if 0 <= k < len(calls):
+                            nxt.add(calls[k][1])
+                frontier = nxt
+                if not frontier or len(frontier) > 27:
+                    break
+            else:
+                ends = frontier
+            for fn in ends:
+                votes.setdefault(fn, set()).add(name)
+        if not votes:
+            return []
+        out = []
+        for fn, names in votes.items():
+            if self.score(base, fn) >= self.min_score:
+                out.append((fn, f"callchain {len(names)} from {sorted(names)[0]}"))
+        out.sort(key=lambda item: -self.score(base, item[0]))
+        return out[:2]
+
     def s_calleeheads(self, symbol, base, artifact):
         callees = [c for c in (base.get("callees") or []) if c.get("head") and not c.get("name")]
         if len(callees) < 2:
@@ -1262,7 +1488,8 @@ class Hunter:
     def resolve_function(self, symbol, base, artifact):
         candidates = []
         for strat in (self.s_reloc, self.s_headreloc, self.s_samelayout, self.s_vtable, self.s_strings, self.s_callgraph,
-                      self.s_calleeheads, self.s_neighbour, self.s_siblingcallees, self.s_consts, self.s_slotwindow):
+                      self.s_calleeheads, self.s_neighbour, self.s_siblingcallees, self.s_consts, self.s_slotwindow,
+                      self.s_dataptr, self.s_callchain):
             try:
                 for va, how in strat(symbol, base, artifact):
                     head = self.func_start(va)
@@ -1312,8 +1539,12 @@ class Hunter:
         for how in hows:
             family = how.split()[0]
             if family in ("reloc", "callgraph", "calls", "callee-heads", "thunk", "sibling-callees", "consts",
-                          "vtable-window"):
+                          "vtable-window", "callchain"):
                 strong.add(family)
+            elif family == "data-ptr":
+                m = re.match(r"data-ptr (\d+)", how)
+                if m and int(m.group(1)) >= 2:
+                    strong.add(family)
             elif family == "strings":
                 m = re.match(r"strings (\d+)/(\d+)", how)
                 if m and int(m.group(1)) >= 2:

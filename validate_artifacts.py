@@ -324,19 +324,48 @@ def _read_slots(blob, info, relocs, vt_va, limit=512):
     return slots
 
 
+def _rtti_name_offsets(blob, class_name, exact, kind):
+    """File offsets of class_name's RTTI name string.
+
+    A template (CGameSystemReallocatingFactory<CSource2EntitySystem>) is spelled with
+    all its arguments and back-references in the binary (...I20CSource2EntitySystemS0_E,
+    ...@VCSource2EntitySystem@@V1@@@), so it is matched by its identifiers the way
+    hunt_core does; until it was, every template class's slots went unverified."""
+    hits = [m.start() for m in re.finditer(re.escape(exact), blob)]
+    if hits or "<" not in class_name:
+        return hits
+    from hunt_core import _template_name_matches, class_tokens, itanium_tokens, msvc_tokens
+    want = class_tokens(class_name)
+    if kind == "elf":
+        needle, parse, skip = b"\x00" + f"{len(want[0])}{want[0]}I".encode(), itanium_tokens, 1
+    else:
+        needle, parse, skip = b".?AV?$" + want[0].encode() + b"@", msvc_tokens, 0
+    candidates = []
+    pos = blob.find(needle)
+    while pos != -1:
+        start = pos + skip
+        end = blob.find(b"\x00", start, start + 512)
+        if end != -1:
+            candidates.append((start, parse(blob[start:end].decode("latin-1"))))
+        pos = blob.find(needle, pos + 1)
+    return _template_name_matches(candidates, want)
+
+
 def resolve_vtable(blob, info, relocs, class_name):
     """[(vtable_va, slots)] for class_name, via the platform's RTTI layout.
 
     ELF (Itanium ABI): name string -> typeinfo -> _ZTV, reported at +0x10.
     PE (MSVC): name -> TypeDescriptor -> CompleteObjectLocator -> vftable.
-    Returns [] when the name is not present or not uniquely resolvable, which is
-    normal for template instantiations whose artifact name is not the mangled one.
+    Returns [] when the name is not present or not uniquely resolvable. A template
+    named with <...> is found by its identifiers; one named with underscores
+    (CGameSystemReallocatingFactory_CSource2EntitySystem) is not, and check_vfunc
+    falls back to the build's own vtable artifact for it.
     """
     out = []
     if relocs is not None:
         tag = f"{len(class_name)}{class_name}".encode()
-        for m in re.finditer(re.escape(tag) + b"\x00", blob):
-            name_va = off_to_va(info, m.start())
+        for m in _rtti_name_offsets(blob, class_name, tag + b"\x00", "elf"):
+            name_va = off_to_va(info, m)
             if name_va is None:
                 continue
             for tinfo_plus8 in _pointer_sites(blob, info, name_va, relocs):
@@ -349,8 +378,8 @@ def resolve_vtable(blob, info, relocs, class_name):
                         out.append((vt + 0x10, slots))
     else:
         tag = f".?AV{class_name}@@".encode()
-        for m in re.finditer(re.escape(tag) + b"\x00", blob):
-            td_va = off_to_va(info, m.start() - 0x10)
+        for m in _rtti_name_offsets(blob, class_name, tag + b"\x00", "pe"):
+            td_va = off_to_va(info, m - 0x10)
             if td_va is None:
                 continue
             needle = struct.pack("<I", td_va - info["base"])
@@ -402,7 +431,7 @@ def _thunk_target(blob, info, va, depth=2):
     return va
 
 
-def verify_vfunc_slot(blob, info, relocs, class_name, index, func_va):
+def verify_vfunc_slot(blob, info, relocs, class_name, index, func_va, fallback_vtable_va=None):
     """'ok' | 'mismatch' | None (could not resolve).
 
     A class with multiple inheritance has one vtable per non-primary base as well
@@ -412,6 +441,9 @@ def verify_vfunc_slot(blob, info, relocs, class_name, index, func_va):
     that index, which keeps a pure-virtual (None) slot from being called wrong.
     """
     tables = resolve_vtable(blob, info, relocs, class_name)
+    if not tables and fallback_vtable_va is not None:
+        slots = _read_slots(blob, info, relocs, fallback_vtable_va)
+        tables = [(fallback_vtable_va, slots)] if len(slots) > 1 else []
     if not tables:
         return None
     decisive = False
@@ -541,6 +573,23 @@ def check_gv(rec, d, blob, info, out):
         out.warn(rec, f"gv_va {hex(gv_va)} lands in an executable section, not data")
 
 
+def _sibling_vtable_va(rec, class_name):
+    """vtable_va of the same build's <Class>_vtable artifact (itself checked by
+    check_vtable), for a class RTTI cannot name."""
+    from hunt_core import vtable_artifact_stems
+    directory = os.path.dirname(rec.get("path") or "")
+    for stem in vtable_artifact_stems(class_name):
+        path = os.path.join(directory, f"{stem}_vtable.{rec.get('platform')}.yaml")
+        if os.path.isfile(path):
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    va = (yaml.safe_load(handle) or {}).get("vtable_va")
+                return _hexint(va)
+            except (OSError, yaml.YAMLError):
+                return None
+    return None
+
+
 def check_vfunc(rec, d, blob, info, out, relocs=None):
     idx = d.get("vfunc_index")
     off = d.get("vfunc_offset")
@@ -552,7 +601,8 @@ def check_vfunc(rec, d, blob, info, out, relocs=None):
     # slot itself settles the index - far stronger than comparing modules.
     cls, fva = d.get("vtable_name"), _hexint(d.get("func_va"))
     if cls and idx is not None and fva is not None:
-        verdict = verify_vfunc_slot(blob, info, relocs, cls, int(idx), fva)
+        verdict = verify_vfunc_slot(blob, info, relocs, cls, int(idx), fva,
+                                    fallback_vtable_va=_sibling_vtable_va(rec, cls))
         if verdict == "mismatch":
             out.error(rec, f"{cls} vtable slot {idx} does not hold func_va "
                            f"{hex(fva)} in this module")

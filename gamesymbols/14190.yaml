@@ -34809,6 +34809,7 @@ files:
   server/CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.linux.yaml:
     func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
     func_rva: '0x16f4da0'
+    func_sig: 55 BE ?? ?? ?? ?? 48 89 E5 53 48 83 EC ?? 48 8B 05 0B 01 03 01
     func_size: '0x64'
     func_va: '0x16f4da0'
     vfunc_index: 3
@@ -34817,6 +34818,7 @@ files:
   server/CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.windows.yaml:
     func_name: CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem
     func_rva: '0xbc13c0'
+    func_sig: 40 53 48 83 EC ?? 48 8B 05 BB 30 BA 00
     func_size: '0x56'
     func_va: '0x180bc13c0'
     vfunc_index: 3
@@ -34886,6 +34888,7 @@ files:
   server/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.windows.yaml:
     func_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem
     func_rva: '0x55af00'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 33 C0 48 8D 7A ??
     func_size: '0x55'
     func_va: '0x18055af00'
     vfunc_index: 4
@@ -47006,5 +47009,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14190'
-last_publish_time: '2026-10-12T15:19:07Z'
+last_publish_time: '2026-10-12T15:43:06Z'
 schema_version: 5

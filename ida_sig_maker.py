@@ -452,33 +452,12 @@ def rtti_vtables(class_name):
     Returns a list of (address_point, offset_to_top); the primary vtable is the
     one with offset_to_top == 0.
     """
-    regions = data_regions()
-    if (ida_nalt.get_input_file_path() or "").lower().endswith((".dll", ".exe")):
-        # MSVC RTTI (TypeDescriptor -> Complete Object Locator -> vtable) lives in the
-        # tool-neutral hunt_core, so the emitter and the hunter resolve the same table
-        import hunt_core
-        import ida_backend
-        return hunt_core.msvc_rtti_vtables(ida_backend.IdaBackend(), class_name, regions)
-    mangled = f"{len(class_name)}{class_name}".encode()
-    name_eas = []
-    for base, blob in regions:
-        pos = blob.find(b"\x00" + mangled + b"\x00")
-        while pos != -1:
-            name_eas.append(base + pos + 1)
-            pos = blob.find(b"\x00" + mangled + b"\x00", pos + 1)
-    out = []
-    for name_ea in name_eas:
-        for holder in find_qword_holders(name_ea, regions):
-            typeinfo = holder - 8
-            for vt_holder in find_qword_holders(typeinfo, regions):
-                address_point = vt_holder + 8
-                first = ida_bytes.get_qword(address_point)
-                if not first or not is_code_ea(first):
-                    continue
-                offset_to_top = ida_bytes.get_qword(vt_holder - 8)
-                out.append((address_point, offset_to_top))
-    out.sort(key=lambda item: (item[1] != 0, item[0]))
-    return out
+    # Both ABIs live in the tool-neutral hunt_core, so the emitter and the hunter
+    # resolve the same table - templates included, which the length-prefixed name
+    # alone never found (CGameSystemReallocatingFactory<X> is ...I<X>S0_E in the binary)
+    import hunt_core
+    import ida_backend
+    return hunt_core.rtti_vtables(ida_backend.IdaBackend(), class_name, data_regions())
 
 
 def vtable_slot_func(class_name, index):
@@ -592,7 +571,10 @@ def displacement_operand(insn, index=None, ea=None):
     A [reg+disp] operand gives the offset directly. A member reached by pointer
     arithmetic (`add rdi, 70h ; jmp getter`, the shape of an accessor thunk)
     has it as the immediate of an add/sub/lea, so those are accepted when no
-    displacement operand exists.
+    displacement operand exists. Two more shapes the hunter met and refused on every
+    build: a member at offset 0 read through [reg] with no displacement at all
+    (CEntityIdentity::m_pInstance, `cmp qword ptr [rbx], 0`), and a struct's size as
+    the stride of an index (CEntityIdentity::Size, `imul r14, rdx, 70h`).
     """
     slots = [int(index)] if index is not None else range(len(insn.ops))
     for slot in slots:
@@ -604,7 +586,20 @@ def displacement_operand(insn, index=None, ea=None):
             if offset >= 0x80000000:
                 offset -= 0x100000000
             return offset, slot
+    for slot in slots:
+        op = insn.ops[slot]
+        if op.type == ida_ua.o_void:
+            break
+        if op.type == ida_ua.o_phrase:
+            return 0, slot
     mnem = idc.print_insn_mnem(ea) if ea is not None else None
+    if mnem == "imul":
+        for slot in range(len(insn.ops)):
+            op = insn.ops[slot]
+            if op.type == ida_ua.o_void:
+                break
+            if op.type == ida_ua.o_imm and 0 < int(op.value) < 0x10000:
+                return int(op.value), slot
     if mnem in ("add", "sub", "lea"):
         for slot in range(len(insn.ops)):
             op = insn.ops[slot]

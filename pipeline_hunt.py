@@ -36,8 +36,8 @@ def _sig_maker(repo):
     return namespace
 
 
-def _session(repo, gamever, module, platform):
-    key = (gamever, module, platform)
+def _session(repo, gamever, module, platform, want_baseline=None):
+    key = (gamever, module, platform, want_baseline)
     state = _STATE.get(key)
     if state is not None:
         if state["sister"] is None and os.path.isfile(state["sister_path"]):
@@ -55,6 +55,11 @@ def _session(repo, gamever, module, platform):
         # not cached: the caller may build the facts and ask again
         return {"error": f"no baseline facts for {module}.{platform} before {gamever} "
                          f"(uv run baseline_facts.py -gamever <prev> -module {module} -platform {platform})"}
+    if want_baseline and baseline != want_baseline:
+        # load_baseline_facts takes the newest facts that exist, and they were only ever
+        # built when none existed: 14190 was hunted against 14185's server facts and
+        # 14181's engine/client facts. The caller builds the right ones and asks again.
+        return {"error": f"stale baseline facts {baseline} for {module}.{platform}, want {want_baseline}"}
     backend = ida_backend.IdaBackend()
     sig_maker = _sig_maker(repo)
     sister_platform = "linux" if platform == "windows" else "windows"
@@ -71,7 +76,7 @@ def _session(repo, gamever, module, platform):
     return state
 
 
-def hunt(repo, symbols, out_dir, categories=None):
+def hunt(repo, symbols, out_dir, categories=None, baseline=None):
     """Hunt `symbols` on the open binary, writing artifacts to `out_dir`.
 
     Returns {"solved": [...], "unresolved": [...], "log": [...]} or {"error": ...}. Only
@@ -86,7 +91,7 @@ def hunt(repo, symbols, out_dir, categories=None):
     if not ctx:
         return {"error": "the open binary is not under bin/<gamever>/<module>/"}
     gamever, module, platform = ctx
-    state = _session(repo, gamever, module, platform)
+    state = _session(repo, gamever, module, platform, baseline)
     if state.get("error"):
         return {"error": state["error"]}
     facts = state["facts"]

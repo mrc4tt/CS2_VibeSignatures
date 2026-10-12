@@ -70,6 +70,22 @@ that it should exist. Recovery is attempted in this order, cheapest first:
    a symbol with **no baseline** on windows, the same build's linux facts by string set
    (built once from the linux IDB). A symbol whose strings or callees now sit inside
    another function is reported `inlined into X` and costs no agent run.
+   Two more, borrowed from K4ryuu's GameDataTracker (MIT): **data-ptr** (the function's
+   address sat in a data table - a callback list, a factory's vtable - between known
+   functions; two of them found again say where to read it, table-relative) and
+   **callchain** (down from a known grand-caller through unnamed callers by call ordinal,
+   when no direct caller is known). Both need facts built after this change.
+   **Template classes resolve through RTTI now.** The binary spells
+   `CGameSystemReallocatingFactory<X>` as `...I1XS0_E` / `?$...@VX@@V1@@@` (every
+   argument, back-references), never `<len><name>`, so hunter, emitter and validator all
+   missed it: `validate_artifacts` skipped 258 slots on 14190 (708 -> 966 verified) and
+   CreateGameSystem/DestroyGameSystem went to an agent on every build. Names are matched by
+   their identifiers (`hunt_core.itanium_tokens`/`msvc_tokens`), and `<...>` names also
+   find the `_`-spelled vtable artifact.
+   **Facts must be the previous gamever's.** `load_baseline_facts` takes the newest facts
+   that exist, and they were built only when none did, so 14190 was hunted against 14185's
+   server and 14181's engine/client facts. The run now asks for exactly the gamever it
+   relocates from and builds them when they are missing or older.
 4. Hand analysis, with `idat` (headless IDA, `/root/ida-pro-9.4/idat -A -S"<script>" -L"<log>" <binary>`;
    the IDB is `<binary>.i64`, e.g. `client.dll.i64`).
 
