@@ -43,7 +43,9 @@ def sig_maker():
 def loaded_context():
     import hunt_core
 
-    return hunt_core.bin_context(ida_nalt.get_input_file_path(), REPO)
+    import ida_backend
+
+    return hunt_core.bin_context(ida_backend.opened_binary_path(), REPO)
 
 
 def run(symbols=None, dry_run=False, out_dir=None, report_path=None, min_score=None, log=print):

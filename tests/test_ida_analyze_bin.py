@@ -2599,6 +2599,30 @@ class TestAgentFuncSignatureFinalization(unittest.IsolatedAsyncioTestCase):
                 debug=False,
             )
 
+    async def test_a_task_that_declares_the_boundary_flag_lets_the_signature_cross(self) -> None:
+        # CreateGameSystem.linux on 14190: without crossing, the generator pinned
+        # `48 8B 05 0B 01 03 01`; the task declares the flag, so crossing is allowed
+        with TemporaryDirectory() as temp_dir:
+            artifact_dir = Path(temp_dir) / "server"
+            artifact_dir.mkdir(parents=True)
+            output = artifact_dir / "Tiny.linux.yaml"
+            output.write_text("func_name: Tiny\nfunc_va: '0x1000'\nfunc_rva: '0x1000'\nfunc_size: '0x8'\n", encoding="utf-8")
+            generated = {"func_va": "0x1000", "func_rva": "0x1000", "func_size": "0x8",
+                         "func_sig": "55 48 89 E5 48 8B 05 ?? ?? ?? ?? C3 CC CC"}
+            contract = {"Tiny": (frozenset({"func_name", "func_va", "func_rva", "func_size", "func_sig"}),
+                                 frozenset({"func_sig_allow_across_function_boundary"}))}
+            with patch.object(ida_analyze_bin, "preprocess_gen_func_sig_via_mcp", AsyncMock(return_value=generated)) as gen, \
+                    patch.object(ida_analyze_bin, "declared_artifact_fields", return_value=contract):
+                issues = await ida_analyze_bin.regenerate_agent_func_signatures_via_session(
+                    session="session", artifact_paths=[str(output)], platform="linux",
+                    binary_dir=str(artifact_dir), debug=False, category_map={"Tiny": "func"},
+                )
+            self.assertEqual([], issues)
+            self.assertTrue(gen.await_args.kwargs["allow_across_function_boundary"])
+            written = output.read_text(encoding="utf-8")
+            self.assertIn("func_sig_allow_across_function_boundary: true", written)
+            self.assertIn("48 8B 05 ?? ?? ?? ??", written)
+
     async def test_fails_closed_when_agent_func_sig_cannot_be_regenerated(self) -> None:
         with TemporaryDirectory() as temp_dir:
             artifact_dir = Path(temp_dir) / "networksystem"

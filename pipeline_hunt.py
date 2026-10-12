@@ -20,16 +20,16 @@ class _NothingToHunt(Exception):
 
 def _context(repo=None):
     import hunt_core
-    import ida_nalt
+    import ida_backend
 
-    return hunt_core.bin_context(ida_nalt.get_input_file_path(), repo)
+    return hunt_core.bin_context(ida_backend.opened_binary_path(), repo)
 
 
 def _sig_maker(repo):
     namespace = _STATE.get("sig_maker")
     if namespace is None:
         path = os.path.join(repo, "ida_sig_maker.py")
-        namespace = {"__name__": "cs2_pipeline_sig_maker"}
+        namespace = {"__name__": "cs2_pipeline_sig_maker", "__file__": path}
         with open(path, "r", encoding="utf-8") as handle:
             exec(compile(handle.read(), path, "exec"), namespace)
         _STATE["sig_maker"] = namespace

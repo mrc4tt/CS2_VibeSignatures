@@ -14,6 +14,24 @@ import ida_ua
 import idautils
 import idc
 
+
+def opened_binary_path():
+    """Path of the binary this database was made from, with / separators.
+
+    A Nexus worker that opened an existing .i64 (open_database on a warm IDB) has no
+    input file path at all, so ida_nalt answers None and every caller that reads the
+    gamever and module from the path stopped there ("the open binary is not under
+    bin/<gamever>/<module>/"). The database sits next to its binary, so its path less
+    .i64 is the same answer."""
+    path = ida_nalt.get_input_file_path()
+    if not path:
+        idb = idc.get_idb_path() or ""
+        for suffix in (".i64", ".idb"):
+            if idb.lower().endswith(suffix):
+                path = idb[: -len(suffix)]
+                break
+    return (path or "").replace("\\", "/")
+
 _KIND = {}
 
 
@@ -81,7 +99,7 @@ class IdaBackend:
         return ida_nalt.get_imagebase()
 
     def input_path(self):
-        return (ida_nalt.get_input_file_path() or "").replace("\\", "/")
+        return opened_binary_path()
 
     # -- functions -----------------------------------------------------------------
     def get_func(self, ea):

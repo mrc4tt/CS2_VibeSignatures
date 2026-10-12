@@ -119,23 +119,45 @@ def count_matches(sig_str):
     return total
 
 
+def opened_binary_path():
+    """The binary this database was made from; ida_backend.opened_binary_path's twin,
+    kept here so this module needs only what the IDA plugin already imports. A Nexus
+    worker that opened an existing .i64 has no input file path, only the IDB's."""
+    path = ida_nalt.get_input_file_path()
+    if not path:
+        idb = idc.get_idb_path() or ""
+        for suffix in (".i64", ".idb"):
+            if idb.lower().endswith(suffix):
+                path = idb[: -len(suffix)]
+                break
+    return (path or "").replace("\\", "/")
+
+
 def detect_target():
     """Infer (dirs, platform) from the loaded input path, e.g.
     .../CS2_VibeSignatures/bin/14178b/server/server.dll -> windows + [bin/14178b/server,
     bin_artifacts/14178b/server]."""
-    input_path = (ida_nalt.get_input_file_path() or "").replace("\\", "/")
+    input_path = opened_binary_path()
+    binname = input_path.rsplit("/", 1)[-1]
+    if not binname.endswith((".dll", ".so")):
+        return None
+    platform = "windows" if binname.endswith(".dll") else "linux"
     # the gamever segment is whatever directory name bin/ uses, not only <digits><letter>
     m = re.search(r"/bin/([A-Za-z0-9_.\-]+)/(\w+)/([^/]+)$", input_path)
-    if not m:
-        return None
-    gamever, module, binname = m.groups()
-    if binname.endswith(".dll"):
-        platform = "windows"
-    elif binname.endswith(".so"):
-        platform = "linux"
+    if m:
+        gamever, module, _ = m.groups()
+        repo_root = input_path[: input_path.rfind("/bin/")]
     else:
-        return None
-    repo_root = input_path[: input_path.rfind("/bin/")]
+        # IDA stores the path with symlinks resolved: on the server bin/ points at
+        # /srv/cs2-binaries, so the path has no /bin/ in it. The repo is where this
+        # module lives (or the working directory, when it was exec'd without a file).
+        import hunt_core
+
+        repo_root = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+        context = hunt_core.bin_context(input_path, repo_root)
+        if not context:
+            return None
+        gamever, module, _ = context
     dirs = [os.path.join(repo_root, "bin", gamever, module)]
     if os.path.isdir(os.path.join(repo_root, "bin_artifacts")):
         dirs.append(os.path.join(repo_root, "bin_artifacts", gamever, module))

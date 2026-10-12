@@ -79,7 +79,7 @@ from ida_skill_preprocessor import (
     preprocess_single_skill_via_mcp,
     report_preprocess_exception,
 )
-from artifact_contract import artifact_contract_issues, strip_undeclared_fields
+from artifact_contract import artifact_contract_issues, declared_artifact_fields, strip_undeclared_fields
 from ida_mcp_session import (
     McpConnectionError,
     McpContractError,
@@ -517,12 +517,20 @@ async def regenerate_agent_func_signatures_via_session(
             issues.append(f"{artifact_path}: Agent func_sig requires func_va for trusted regeneration")
             continue
 
+        # Crossing into padding is what the producing task does when its field list
+        # declares the flag; without it the generator's last resort pins RIP and branch
+        # displacements, which move on every rebuild (CreateGameSystem.linux on 14190:
+        # `48 8B 05 0B 01 03 01`). A hunter or agent output lacks the flag whenever its
+        # baseline lacked a func_sig, so the task's contract decides, not the payload.
+        flag = "func_sig_allow_across_function_boundary"
+        contract = declared_artifact_fields().get(_derive_artifact_symbol_name(artifact_path, platform))
+        may_cross = payload.get(flag) is True or bool(contract and flag in (contract[0] | contract[1]))
         try:
             generated = await preprocess_gen_func_sig_via_mcp(
                 session=session,
                 func_va=func_va,
                 image_base=0,
-                allow_across_function_boundary=payload.get("func_sig_allow_across_function_boundary") is True,
+                allow_across_function_boundary=may_cross,
                 debug=debug,
             )
         except Exception as exc:
@@ -537,6 +545,14 @@ async def regenerate_agent_func_signatures_via_session(
             continue
 
         payload["func_sig"] = generated["func_sig"]
+        try:
+            size = int(str(generated.get("func_size") or "0"), 0)
+        except ValueError:
+            size = 0
+        if may_cross and size and len(generated["func_sig"].split()) > size:
+            payload[flag] = True
+        else:
+            payload.pop(flag, None)
         try:
             write_func_yaml(artifact_path, payload)
         except (OSError, UnicodeError, TypeError, SymbolArtifactError, yaml.YAMLError) as exc:
