@@ -261,20 +261,36 @@ def build_history(newest: str) -> dict:
         for key in sorted(keys):
             points: list[list[object]] = []
             changes: list[str] = []
+            # Builds in which the file exists but the key no longer does. Points record
+            # only changes, so without this a removed key carried its last value forward
+            # for ever: "Check my file" told CounterStrikeSharp users their file was
+            # missing CCSPlayer_WeaponServices_SelectItem (gone since 14168b) on 14190.
+            gone: list[str] = []
             previous: list[str] | None = None
+            present = False
             for build, values in series:
-                if not values or key not in values:
+                if not values:
+                    continue  # no file in this build at all: says nothing about the key
+                if key not in values:
+                    if present:
+                        gone.append(build)
+                        present = False
                     continue
                 current = [str(part) for part in values[key]]
-                if previous is None:
+                if previous is None or not present:
                     points.append([build, *values[key]])
+                    if previous is not None and current != previous:
+                        changes.append(build)
                 elif current != previous:
                     points.append([build, *values[key]])
                     changes.append(build)
                 previous = current
+                present = True
             for build in changes:
                 per_build[build] += 1
             entries[key] = {"points": points, "changes": changes}
+            if gone:
+                entries[key]["gone"] = gone
             symbol = index.get(fold(key))
             if symbol:
                 key_to_symbol[f"{relative}|{key}"] = symbol

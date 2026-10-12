@@ -138,7 +138,8 @@ export function keyVerdicts(
     const mine = values.get(key)
     const expected = valueAtBuild(history, file, key, build)
     if (!mine) {
-      out.push({ key, state: 'absent', expected })
+      // a key the file no longer had at this build is not missing from the user's copy
+      if (expected) out.push({ key, state: 'absent', expected })
       continue
     }
     if (!expected) {

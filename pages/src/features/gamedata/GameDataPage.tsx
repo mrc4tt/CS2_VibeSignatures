@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Explain } from '../../components/Explain'
-import { buildDate, differencesSince, getSiteHistory, lastChangedIn } from '../../api/siteData'
+import { buildDate, differencesSince, getSiteHistory, keyPresentAt, lastChangedIn } from '../../api/siteData'
 import { formatAgo, formatDay, formatWhen } from '../../components/whenText'
 import { getGameDataFile, getGameDataIndex, getGameDataMetadata } from './data'
 import { changedKeys, describeFiles, formatLabel, notProducedKeys } from './fileModel'
@@ -100,8 +100,10 @@ export function GameDataPage() {
   // descriptor id, so no mapping is needed.
   const keyHistory = selected ? history?.files[selected.descriptor.id] : undefined
   const fragility = useMemo(() => {
-    if (!keyHistory) return []
+    if (!keyHistory || !selected) return []
+    // keys the file still carries; a removed one is history, not a key to watch
     return Object.entries(keyHistory)
+      .filter(([name]) => keyPresentAt(history, selected.descriptor.id, name))
       .map(([name, entry]) => ({
         name,
         changes: entry.changes.length,
@@ -109,7 +111,7 @@ export function GameDataPage() {
         last: entry.changes[entry.changes.length - 1],
       }))
       .sort((left, right) => right.changes - left.changes || left.name.localeCompare(right.name))
-  }, [keyHistory])
+  }, [history, keyHistory, selected])
 
   const sinceBuild = params.get('since') ?? undefined
   const differences = useMemo(

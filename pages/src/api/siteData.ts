@@ -9,9 +9,13 @@ export interface BuildChangeCount {
 }
 
 export interface KeyHistory {
-  /** [build, linux, windows] at every point the value changed. */
+  /** [build, linux, windows] at every point the value changed, and where it came back. */
   points: Array<[string, unknown, unknown]>
   changes: string[]
+  /** Builds in which the file no longer had the key. Without it a removed key kept its
+   *  last value for ever (CCSPlayer_WeaponServices_SelectItem, gone from
+   *  CounterStrikeSharp since 14168b). Absent in datasets published before the field. */
+  gone?: string[]
 }
 
 export interface SiteHistory {
@@ -136,11 +140,30 @@ export function valueAtBuild(
   const order = history!.builds.map((item) => item.gameVersion)
   const at = order.indexOf(build)
   if (at < 0) return undefined
+  // the latest event at or before `build` decides: a value point, or the key going away
   let value: [unknown, unknown] | undefined
+  let latest = -1
   for (const point of entry.points) {
-    if (order.indexOf(point[0]) <= at) value = [point[1], point[2]]
+    const when = order.indexOf(point[0])
+    if (when <= at && when >= latest) {
+      value = [point[1], point[2]]
+      latest = when
+    }
+  }
+  for (const build of entry.gone ?? []) {
+    const when = order.indexOf(build)
+    if (when <= at && when > latest) {
+      value = undefined
+      latest = when
+    }
   }
   return value
+}
+
+/** Whether the file still had the key at `build` (defaults to the newest). */
+export function keyPresentAt(history: SiteHistory | undefined, file: string, key: string, build?: string): boolean {
+  if (!history) return false
+  return valueAtBuild(history, file, key, build ?? history.gameVersion) !== undefined
 }
 
 export interface KeyDifference {

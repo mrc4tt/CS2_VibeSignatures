@@ -160,3 +160,35 @@ describe('which platform is stale', () => {
     expect(joinTeam.windowsOk).toBeUndefined()
   })
 })
+
+describe('a key the file no longer has', () => {
+  // CCSPlayer_WeaponServices_SelectItem left CounterStrikeSharp's gamedata after 14168b
+  const withRemoval: SiteHistory = {
+    ...history,
+    files: {
+      [CSS]: {
+        JoinTeam: { points: [['14178b', 'OLD', 'W-OLD'], ['14181', 'NEW', 'W-NEW']], changes: ['14181'] },
+        SelectItem: { points: [['14178b', 31, 30]], changes: [], gone: ['14180'] },
+      },
+    },
+  }
+
+  it('is not reported missing from a current file', () => {
+    const verdicts = keyVerdicts(values({ JoinTeam: { linux: 'NEW', windows: 'W-NEW' } }), withRemoval, CSS, '14181')
+    expect(verdicts.map((verdict) => verdict.key)).toEqual(['JoinTeam'])
+    expect(summarise(verdicts).absent).toBe(0)
+  })
+
+  it('is still expected in a file from before it went', () => {
+    const verdicts = keyVerdicts(values({ JoinTeam: { linux: 'OLD', windows: 'W-OLD' } }), withRemoval, CSS, '14178b')
+    expect(verdicts.find((verdict) => verdict.key === 'SelectItem')?.state).toBe('absent')
+  })
+
+  it('is unknown, not current, when a copy still carries it', () => {
+    const verdicts = keyVerdicts(
+      values({ JoinTeam: { linux: 'NEW', windows: 'W-NEW' }, SelectItem: { linux: 31, windows: 30 } }),
+      withRemoval, CSS, '14181',
+    )
+    expect(verdicts.find((verdict) => verdict.key === 'SelectItem')?.state).toBe('unknown')
+  })
+})
