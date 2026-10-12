@@ -79,6 +79,7 @@ from ida_skill_preprocessor import (
     preprocess_single_skill_via_mcp,
     report_preprocess_exception,
 )
+from artifact_contract import artifact_contract_issues, strip_undeclared_fields
 from ida_mcp_session import (
     McpConnectionError,
     McpContractError,
@@ -4938,12 +4939,27 @@ def _process_binary(
                         regenerate_func_signatures=True,
                     )
                 check_protected_outputs()
-                return list(finalization_issues or []) + _entry_point_output_issues(
-                    list(required_outputs) + list(optional_outputs), binary_path
-                )
+                all_outputs = list(required_outputs) + list(optional_outputs)
+                # only what this step wrote: an output that existed before it is not
+                # this producer's work and is not its to answer for
+                produced_now = [path for path in all_outputs if path not in preexisting_outputs]
+                contract_issues = []
+                if not finalization_issues:
+                    for path, fields in strip_undeclared_fields(produced_now, platform).items():
+                        print(f"    Removed fields its task does not declare from {os.path.basename(path)}: {', '.join(fields)}")
+                        canonicalize_symbol_yaml_file(
+                            path,
+                            category=_lookup_expected_input_artifact_category(
+                                path, platform, config_path=config_path, category_map=category_map
+                            ),
+                        )
+                    contract_issues = artifact_contract_issues(produced_now, platform, old_artifact_dir)
+                finalization_issues = list(finalization_issues or []) + contract_issues
+                return list(finalization_issues) + _entry_point_output_issues(all_outputs, binary_path)
 
             # Ctrl-Alt-H's hunter first, in this same session: it writes only what its
             # evidence rule proves, so a symbol that merely moved costs no agent run.
+            preexisting_outputs = {path for path in output_paths if os.path.isfile(path)}
             wanted_outputs = list(required_outputs or regressed_optional_outputs)
             hunt_targets = [path for path in wanted_outputs if not os.path.exists(path)]
             hunted = None
@@ -5120,6 +5136,14 @@ def _process_binary(
             else:
                 fail_count += 1
                 print("    Failed")
+                if finalization_issues:
+                    # The agent's last attempt failed validation. Its files would
+                    # otherwise stay on disk and be packed as if they had passed, so
+                    # remove what this step wrote, as a rejected hunter output is.
+                    for path in output_paths:
+                        if path not in preexisting_outputs and os.path.isfile(path):
+                            os.remove(path)
+                            print(f"    Removed rejected output: {os.path.basename(path)}")
                 _report_skill_status(
                     reporting,
                     job_id,

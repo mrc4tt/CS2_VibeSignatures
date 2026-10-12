@@ -118,6 +118,9 @@ hint_for() {  # hint_for <failure text>
         *"verify_plugin_gamedata"*|*"do not hold against the binaries"*)
             printf 'grep -B20 "^unhealthy: [1-9]" %s/verify-%s.log\n' "${STATE:-.autopilot}" "$ver"
             printf 'cd %s && uv run verify_plugin_gamedata.py -gamever %s -gamedata <the file named above>\n' "$repo" "$ver" ;;
+        *"artifact contract"*)
+            printf 'cd %s && uv run audit_artifact_contract.py -gamever %s      # BAD lines name the artifact and what differs\n' "$repo" "$ver"
+            printf 're-run its task, never edit the artifact: uv run ida_analyze_bin.py -gamever %s -platform <p> -modules <m> -skill <task> -require_warm_idb\n' "$ver" ;;
         *"validate"*|*"artifact"*)
             printf 'cd %s && uv run validate_artifacts.py -gamever %s -json | head -40\n' "$repo" "$ver" ;;
         *"binary lock"*)
@@ -585,6 +588,13 @@ step "checking each function against the previous gamever (anchor drift)" uv run
 # 14186-14188 and every other check passed it, because that slot does hold that
 # function. The run already discards such a relocation (CS2VIBE_RELOC_SLOT_CHECK=0).
 step "checking each virtual's slot against the previous gamever (slot shift)" uv run audit_vtable_slots.py -gamever "$TAG"
+# And every artifact against its task's declared fields: a record that names
+# another symbol, another class's vtable, or carries fields its task never writes
+# resolves cleanly in the binary, so nothing above sees it. 14190 shipped thirteen
+# of those from an agent (CBaseEntity_OnTakeDamage.windows filed as
+# CBasePlayerPawn_OnTakeDamage). The run already rejects such a hunter or agent
+# output; this catches one that arrived any other way.
+step "checking each artifact against its task's fields (artifact contract)" uv run audit_artifact_contract.py -gamever "$TAG"
 step "packing the snapshot" uv run gamesymbol_snapshot.py pack -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
 step "checking the snapshot against the config" uv run gamesymbol_snapshot.py check-contract \
     -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
