@@ -11092,12 +11092,9 @@ files:
     vtable_name: CNetworkGameServerBase_vtable
   engine/CNetworkGameServerBase_CalculateCPUUsage.linux.yaml:
     func_name: CNetworkGameServerBase_CalculateCPUUsage
-    func_rva: '0x5031a0'
-    func_sig: 48 8B 05 81 BB 54 ??
-    func_size: '0x5b'
-    func_va: '0x5031a0'
     vfunc_index: 89
     vfunc_offset: '0x2c8'
+    vfunc_sig: 48 8B 80 C8 02 00 00
     vtable_name: CNetworkGameServerBase
   engine/CNetworkGameServerBase_CalculateCPUUsage.windows.yaml:
     func_name: CNetworkGameServerBase_CalculateCPUUsage
@@ -11113,12 +11110,9 @@ files:
     vtable_name: CNetworkGameServerBase
   engine/CNetworkGameServerBase_CheckPassword.windows.yaml:
     func_name: CNetworkGameServerBase_CheckPassword
-    func_rva: '0xadfd0'
-    func_sig: 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B 81 B8 03 00 00
-    func_size: '0xc3'
-    func_va: '0x1800adfd0'
     vfunc_index: 83
     vfunc_offset: '0x298'
+    vfunc_sig: FF 90 98 02 00 00 84 C0
     vtable_name: CNetworkGameServerBase
   engine/CNetworkGameServerBase_CheckTimeouts.linux.yaml:
     func_name: CNetworkGameServerBase_CheckTimeouts
@@ -18181,13 +18175,11 @@ files:
     vfunc_sig: FF 90 08 04 00 00 48 8D 05 ?? ?? ?? ??
     vtable_name: CBaseEntity
   server/CBaseEntity_OnTakeDamage.windows.yaml:
-    func_name: CBasePlayerPawn_OnTakeDamage
-    func_rva: '0xb5fc10'
-    func_size: '0x1ce'
-    func_va: '0x180b5fc10'
+    func_name: CBaseEntity_OnTakeDamage
     vfunc_index: 130
     vfunc_offset: '0x410'
-    vtable_name: CBasePlayerPawn
+    vfunc_sig: FF 90 10 04 00 00 48 63 05 ?? ?? ?? ??
+    vtable_name: CBaseEntity
   server/CBaseEntity_PhysicsTouch.linux.yaml:
     func_name: CBaseEntity_PhysicsTouch
     func_rva: '0x1a5c0e0'
@@ -21676,7 +21668,7 @@ files:
     func_name: CBasePlayerPawn_OnTakeDamage_Dead
     vfunc_index: 259
     vfunc_offset: '0x818'
-    vfunc_sig: 5F 48 FF A0 18 08 00 00
+    vfunc_sig: 48 FF A0 18 08 00 00 48 8B 9C 24 ?? ?? ?? ??
     vfunc_sig_allow_across_function_boundary: true
     vtable_name: CBasePlayerPawn
   server/CBasePlayerPawn_OnTakeDamage_Dying.linux.yaml:
@@ -21690,7 +21682,7 @@ files:
     func_name: CBasePlayerPawn_OnTakeDamage_Dying
     vfunc_index: 257
     vfunc_offset: '0x808'
-    vfunc_sig: 5F 48 FF A0 08 08 00 00
+    vfunc_sig: 48 FF A0 08 08 00 00 C6 05 ?? ?? ?? ?? ??
     vfunc_sig_allow_across_function_boundary: true
     vtable_name: CBasePlayerPawn
   server/CBasePlayerPawn_PhysicsSimulate.linux.yaml:
@@ -28884,7 +28876,7 @@ files:
   server/CEconItemView_CEconItemView.linux.yaml:
     func_name: CEconItemView_CEconItemView
     func_rva: '0x1c9f8c0'
-    func_sig: 55 48 8D 05 ?? ?? ?? ?? 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D 35 ?? ?? ?? ?? 41 55 41 54 45 31 E4 53 48 89 FB 48 83 EC 78 48 89 07 31 C0 48 83 3D ?? ?? ?? ?? 00
+    func_sig: 55 48 8D 05 ?? ?? ?? ?? 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D 35 ?? ?? ?? ?? 41 55 41 54 45 31 E4
     func_size: '0xc8e'
     func_va: '0x1c9f8c0'
   server/CEconItemView_CEconItemView.windows.yaml:
@@ -29340,11 +29332,10 @@ files:
     vtable_name: CEntityInstance
   server/CEntityInstance_AssignChangeAccessorPathIds.linux.yaml:
     func_name: CEntityInstance_AssignChangeAccessorPathIds
-    func_rva: '0x2281f60'
-    func_size: '0x1'
-    func_va: '0x2281f60'
     vfunc_index: 38
     vfunc_offset: '0x130'
+    vfunc_sig: 48 8B 80 30 01 00 00 48 39 D0 75 ?? 48 83 C4 ??
+    vfunc_sig_allow_across_function_boundary: true
     vtable_name: CEntityInstance
   server/CEntityInstance_AssignChangeAccessorPathIds.windows.yaml:
     func_name: CEntityInstance_AssignChangeAccessorPathIds
@@ -29357,7 +29348,7 @@ files:
     func_name: CEntityInstance_AssignChangeAccessorPathIdsPolymorphic
     vfunc_index: 31
     vfunc_offset: '0xf8'
-    vfunc_sig: FF 90 F8 00 00 00 81 7D BC FF FF FF 3F C7 45 A8 00 00 00 00 77 19 48 8B 75 B0 48 85 F6 74 10 48 8B 05 ?? ?? ?? ?? 48 8B 38 48 8B 07 FF 50 20 81 7D A4
+    vfunc_sig: FF 90 F8 00 00 00 81 7D ?? ?? ?? ?? ?? C7 45 ?? ?? ?? ?? ?? 77 ?? 48 8B 75 ?? 48 85 F6 74 ?? 48 8B 05 ?? ?? ?? ?? 48 8B 38 48 8B 07 FF 50 ?? 81 7D ?? ?? ?? ?? ??
     vfunc_sig_allow_across_function_boundary: true
     vtable_name: CEntityInstance
   server/CEntityInstance_AssignChangeAccessorPathIdsPolymorphic.windows.yaml:
@@ -29681,11 +29672,11 @@ files:
     vtable_name: CEntityInstance
   server/CEntityInstance_Schema_DynamicBinding.linux.yaml:
     func_name: CEntityInstance_Schema_DynamicBinding
-    func_rva: '0x2282190'
-    func_size: '0x19'
-    func_va: '0x2282190'
     vfunc_index: 48
     vfunc_offset: '0x180'
+    vfunc_sig: 48 8B 80 80 01 00 00 48 39 D0 0F 85 ?? ?? ?? ?? 48 8D 3D ?? ?? ?? ?? E8 ?? ?? ?? ?? C9 C3 BF ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 89 C7 48 89 45 ?? E8 ?? ?? ?? ?? 48 8B 45 ?? 48 8D 0D ?? ?? ?? ?? 48 8D 15 ?? ?? ?? ?? 48 C7 80 ?? ?? ?? ?? ?? ?? ?? ?? 48 83 C2 ?? 48 89 08 48 89 90 ?? ?? ?? ?? 48 C7 80 ?? ?? ?? ?? ?? ?? ?? ?? 48 C7 80 ?? ?? ?? ?? ?? ?? ?? ??
+    vfunc_sig_allow_across_function_boundary: true
+    vfunc_sig_max_match: 2
     vtable_name: CEntityInstance
   server/CEntityInstance_Schema_DynamicBinding.windows.yaml:
     func_name: CEntityInstance_Schema_DynamicBinding
@@ -29697,11 +29688,9 @@ files:
     vtable_name: CEntityInstance
   server/CEntityInstance_ScriptAcceptInput.linux.yaml:
     func_name: CEntityInstance_ScriptAcceptInput
-    func_rva: '0x227fd50'
-    func_size: '0x3'
-    func_va: '0x227fd50'
     vfunc_index: 18
     vfunc_offset: '0x90'
+    vfunc_sig: 48 8B 80 90 00 00 00 48 89 95 ?? ?? ?? ??
     vtable_name: CEntityInstance
   server/CEntityInstance_ScriptAcceptInput.windows.yaml:
     func_name: CEntityInstance_ScriptAcceptInput
@@ -29711,11 +29700,9 @@ files:
     vtable_name: CEntityInstance
   server/CEntityInstance_ScriptEntityIO.linux.yaml:
     func_name: CEntityInstance_ScriptEntityIO
-    func_rva: '0x227fd40'
-    func_size: '0x3'
-    func_va: '0x227fd40'
     vfunc_index: 17
     vfunc_offset: '0x88'
+    vfunc_sig: 48 8B 80 88 00 00 00 48 39 D0 75 ?? 48 8B 43 ?? 48 8D 15 ?? ?? ?? ?? 48 8B 80 ?? ?? ?? ?? 48 63 52 ?? 0F B7 04 50 66 83 F8 ?? 74 ?? 48 8B 3C 07 48 85 FF 74 ?? 48 83 C4 ??
     vtable_name: CEntityInstance
   server/CEntityInstance_ScriptEntityIO.windows.yaml:
     func_name: CEntityInstance_ScriptEntityIO
@@ -30238,6 +30225,9 @@ files:
     func_sig: 55 31 C0 48 89 E5 41 57 41 56 4C 63 F6
     func_size: '0x18a'
     func_va: '0x22ba4e0'
+    vfunc_index: 21
+    vfunc_offset: '0xa8'
+    vtable_name: CEntitySystem
   server/CEntitySystem_Activate.windows.yaml:
     func_name: CEntitySystem_Activate
     func_rva: '0x1373f40'
@@ -30333,12 +30323,10 @@ files:
     vtable_name: CEntitySystem_vtable
   server/CEntitySystem_BuildResourceManifestForEntity.linux.yaml:
     func_name: CEntitySystem_BuildResourceManifestForEntity
-    func_rva: '0x22d42e0'
-    func_size: '0x292'
-    func_va: '0x22d42e0'
     vfunc_index: 5
     vfunc_offset: '0x28'
-    vtable_name: CEntitySystem_vtable
+    vfunc_sig: 4C 8B 70 28 4D 85 C0
+    vtable_name: CEntitySystem
   server/CEntitySystem_BuildResourceManifestForEntity.windows.yaml:
     func_name: CEntitySystem_BuildResourceManifestForEntity
     vfunc_index: 5
@@ -30748,6 +30736,7 @@ files:
   server/CEntitySystem_PostDataUpdate.linux.yaml:
     func_name: CEntitySystem_PostDataUpdate
     func_rva: '0x22ba670'
+    func_sig: 55 48 89 E5 41 55 41 54 4C 63 E6
     func_size: '0x86'
     func_va: '0x22ba670'
     vfunc_index: 22
@@ -30872,11 +30861,9 @@ files:
     func_va: '0x181387c40'
   server/CEntitySystem_SortEntities.linux.yaml:
     func_name: CEntitySystem_SortEntities
-    func_rva: '0x22ba370'
-    func_size: '0x1'
-    func_va: '0x22ba370'
     vfunc_index: 19
     vfunc_offset: '0x98'
+    vfunc_sig: 48 8B 88 98 00 00 00 48 8D 15 ?? ?? ?? ??
     vtable_name: CEntitySystem
   server/CEntitySystem_SortEntities.windows.yaml:
     func_name: CEntitySystem_SortEntities
@@ -31113,7 +31100,7 @@ files:
   server/CEntitySystem_m_entityIONotifiers.linux.yaml:
     member_name: m_entityIONotifiers
     offset: '0xc18'
-    offset_sig: 4C 63 A3 ?? ?? ?? ?? 48 89 1D ?? ?? ?? ?? 44 89 E0
+    offset_sig: 4C 63 A3 18 0C 00 00
     offset_sig_allow_across_function_boundary: true
     offset_sig_disp: 0
     struct_name: CEntitySystem
@@ -34892,6 +34879,7 @@ files:
   server/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.linux.yaml:
     func_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem
     func_rva: '0xf256b0'
+    func_sig: 48 85 F6 74 ?? 55 48 8D 0D ?? ?? ?? ?? 48 89 E5 41 54 53 48 8B 46 ?? 4C 8D 66 ?? 48 89 F3 48 8B 90 ?? ?? ?? ??
     func_size: '0x7f'
     func_va: '0xf256b0'
     vfunc_index: 4
@@ -45633,10 +45621,10 @@ files:
     gv_inst_length: 7
     gv_inst_offset: 0
     gv_name: g_pGameEntitySystem
-    gv_rva: '0x2ba39f0'
-    gv_sig: 4C 8D 2D ?? ?? ?? ?? 49 8B 5D 00
-    gv_sig_va: '0x176e6ce'
-    gv_va: '0x2ba39f0'
+    gv_rva: '0x29bc170'
+    gv_sig: 48 89 1D ?? ?? ?? ?? 44 89 E0
+    gv_sig_va: '0x176e6e0'
+    gv_va: '0x29bc170'
   server/g_pGameEntitySystem.windows.yaml:
     gv_inst_disp: 3
     gv_inst_length: 7
@@ -47020,5 +47008,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14190'
-last_publish_time: '2026-10-09T03:53:20Z'
+last_publish_time: '2026-10-12T14:54:32Z'
 schema_version: 5

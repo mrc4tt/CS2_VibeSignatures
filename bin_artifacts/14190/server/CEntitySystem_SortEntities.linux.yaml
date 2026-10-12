@@ -1,7 +1,5 @@
 func_name: CEntitySystem_SortEntities
-func_va: '0x22ba370'
-func_rva: '0x22ba370'
-func_size: '0x1'
 vtable_name: CEntitySystem
 vfunc_offset: '0x98'
 vfunc_index: 19
+vfunc_sig: 48 8B 88 98 00 00 00 48 8D 15 ?? ?? ?? ??

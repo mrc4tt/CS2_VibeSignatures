@@ -1,7 +1,5 @@
-func_name: CBasePlayerPawn_OnTakeDamage
-func_va: '0x180b5fc10'
-func_rva: '0xb5fc10'
-func_size: '0x1ce'
-vtable_name: CBasePlayerPawn
+func_name: CBaseEntity_OnTakeDamage
+vtable_name: CBaseEntity
 vfunc_offset: '0x410'
 vfunc_index: 130
+vfunc_sig: FF 90 10 04 00 00 48 63 05 ?? ?? ?? ??
