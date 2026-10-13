@@ -26,6 +26,52 @@ DOWNLOAD_SOURCES = ()
 STATIC_SOURCES = (("templates/gamedata.json", GAMEDATA_PATH),)
 
 
+def _update_vtable_slot(entry, yaml_entry, platforms):
+    """Write the vtable slot of a virtual function next to its signature.
+
+    CounterStrikeSharp falls back to the slot when the byte pattern stops resolving and logs
+    when both resolve to different functions (src/core/gamedata_vtable.h there). Shape:
+
+        "vtable": {"class": "CBaseTrigger", "linux_index": 151, "windows_index": 152}
+
+    No "linux"/"windows" keys on purpose: every gamedata walker here (verify_plugin_gamedata,
+    consumer_drift_audit, publish_site_data, the Pages parser) treats an object holding
+    platform keys as an entry of its own.
+
+    The block is rebuilt from this build's artifacts for every processed platform, so a stale
+    index is dropped rather than carried forward; a platform outside `platforms` keeps its
+    value unless the class changed. Returns True when the block was written.
+    """
+    block = entry.get("vtable") if isinstance(entry.get("vtable"), dict) else {}
+    classes = {}
+    indices = {}
+    for platform in platforms:
+        record = yaml_entry.get(platform) or {}
+        name, index = record.get("vtable_name"), record.get("vfunc_index")
+        if isinstance(name, str) and name and isinstance(index, int) and not isinstance(index, bool) and index >= 0:
+            classes[platform] = name
+            indices[platform] = index
+
+    if len(set(classes.values())) > 1:
+        print(f"  Warning: vtable class differs between platforms ({classes}), dropping the vtable slot")
+        classes, indices = {}, {}
+
+    class_name = next(iter(classes.values()), None)
+    if class_name is not None and block.get("class") != class_name:
+        block = {"class": class_name}
+    for platform in platforms:
+        block.pop(f"{platform}_index", None)
+        if platform in indices:
+            block[f"{platform}_index"] = indices[platform]
+
+    if not any(key.endswith("_index") for key in block) or not block.get("class"):
+        entry.pop("vtable", None)
+        return False
+
+    entry["vtable"] = {"class": block["class"], **{k: block[k] for k in sorted(block) if k.endswith("_index")}}
+    return bool(indices)
+
+
 def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
     """
     Update CounterStrikeSharp gamedata.json file.
@@ -99,6 +145,11 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
                     updated_count += 1
                     if debug:
                         updated_symbols.append({"name": func_name, "type": "signature", "platform": platform})
+
+        if "signatures" in entry and _update_vtable_slot(entry, yaml_entry, platforms):
+            updated_count += 1
+            if debug:
+                updated_symbols.append({"name": func_name, "type": "vtable"})
 
         # Update offsets (vfunc_index or struct_member_offset)
         if "offsets" in entry:

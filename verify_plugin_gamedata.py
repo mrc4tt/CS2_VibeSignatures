@@ -17,6 +17,9 @@ Two independent checks per entry, because they catch different failures:
               folded (A::b, A.b and A_b are one key) because plugins and the
               analysis spell them differently.
 
+  vtable      a signature entry's "vtable" slot (CounterStrikeSharp) is re-read from the
+              class's PRIMARY vtable and must hold the function the signature resolves to.
+
 Exit code is non-zero when anything is broken or ambiguous, so it can gate a deploy.
 
   uv run verify_plugin_gamedata.py -gamever 14181 \
@@ -27,6 +30,7 @@ import argparse
 import json
 import os
 import re
+import struct
 import sys
 import zlib
 
@@ -437,6 +441,112 @@ def check_signature(binaries, module, platform, pattern, record=None):
     return {"status": "ok-midfunction", "at": hex(va or 0)}
 
 
+# A signature entry may carry the vtable slot of its function (the CounterStrikeSharp
+# generator writes it for virtual functions):
+#   "vtable": {"class": "CBaseTrigger", "linux_index": 151, "windows_index": 152}
+# CounterStrikeSharp cross-checks the signature against that slot and, when the file is
+# verified for the running build, uses the slot if the signature fails. A wrong slot would
+# then hook the wrong function, so the slot must name the signature's function here.
+VTABLE_BAD = ("mismatch", "out-of-range", "ambiguous", "unresolved")
+
+
+def primary_vtables(blob, info, relocs, class_name):
+    """[(vtable_va, slots)] for the class's PRIMARY vtable - the one CounterStrikeSharp's
+    CModule::FindVirtualTable returns. V.resolve_vtable also yields the secondary tables of
+    a multiple-inheritance class (and verify_vfunc_slot passes a hit in ANY of them), but
+    the runtime only reads the table whose offset-to-top (ELF) / COL offset (MSVC) is 0,
+    so an index that is right only for a secondary table is wrong for the consumer.
+    """
+    out = []
+    if relocs is not None:
+        tag = f"{len(class_name)}{class_name}".encode()
+        for m in V._rtti_name_offsets(blob, class_name, tag + b"\x00", "elf"):
+            name_va = V.off_to_va(info, m)
+            if name_va is None:
+                continue
+            for tinfo_plus8 in V._pointer_sites(blob, info, name_va, relocs):
+                for vt_plus8 in V._pointer_sites(blob, info, tinfo_plus8 - 8, relocs):
+                    vt = vt_plus8 - 8
+                    off = V.va_to_off(info, vt)
+                    if vt % 8 or off is None or struct.unpack_from("<q", blob, off)[0] != 0:
+                        continue
+                    slots = V._read_slots(blob, info, relocs, vt + 0x10)
+                    if len(slots) > 1:
+                        out.append((vt + 0x10, slots))
+    else:
+        tag = f".?AV{class_name}@@".encode()
+        for m in V._rtti_name_offsets(blob, class_name, tag + b"\x00", "pe"):
+            td_va = V.off_to_va(info, m - 0x10)
+            if td_va is None:
+                continue
+            needle = struct.pack("<I", td_va - info["base"])
+            i = blob.find(needle)
+            while i != -1:
+                col_off = i - 0x0C
+                col_va = V.off_to_va(info, col_off)
+                if (col_va is not None and col_off >= 0
+                        and struct.unpack_from("<I", blob, col_off)[0] == 1
+                        and struct.unpack_from("<i", blob, col_off + 4)[0] == 0):
+                    for site in V._pointer_sites(blob, info, col_va, None):
+                        slots = V._read_slots(blob, info, None, site + 8)
+                        if len(slots) > 1:
+                            out.append((site + 8, slots))
+                i = blob.find(needle, i + 1)
+    best = {}
+    for va, slots in out:
+        if va not in best or len(slots) > len(best[va]):
+            best[va] = slots
+    return sorted(best.items())
+
+
+def check_vtable_slot(binaries, module, platform, block, expected_va):
+    """Verdict for a "vtable" block on one platform, or None when it ships no index.
+
+    expected_va: where the entry's signature resolves, else this repo's func_va.
+    """
+    if not isinstance(block, dict):
+        return None
+    index = block.get(f"{platform}_index")
+    class_name = block.get("class")
+    if not isinstance(index, int) or isinstance(index, bool):
+        return None
+    if not isinstance(class_name, str) or not class_name or index < 0:
+        return "unresolved"
+    blob, info, relocs = binaries.get(module, platform)
+    if blob is None:
+        return "no-binary"
+    tables = primary_vtables(blob, info, relocs, class_name)
+    if not tables:
+        return "unresolved"
+    if len(tables) > 1:
+        return "ambiguous"
+    slots = tables[0][1]
+    if index >= len(slots):
+        return "out-of-range"
+    got = slots[index]
+    if got is None:
+        return "unresolved"
+    if expected_va is None:
+        return "unverified"
+    if got == expected_va or V._thunk_target(blob, info, got) == expected_va:
+        return "ok"
+    return "mismatch"
+
+
+def load_vtable_blocks(path):
+    """{entry key: its "vtable" block} for a JSON/JSONC gamedata file; {} otherwise."""
+    text = open(path, "r", encoding="utf-8-sig").read()
+    for parse in (json.loads, lambda t: json.loads(_strip_jsonc(t))):
+        try:
+            data = parse(text)
+        except Exception:
+            continue
+        if isinstance(data, dict):
+            return {k: v["vtable"] for k, v in data.items()
+                    if isinstance(v, dict) and isinstance(v.get("vtable"), dict)}
+    return {}
+
+
 def generator_offset_divisors(modules_dir="gamedata-generators"):
     """
     {symbol: divisor} declared by the generators themselves.
@@ -537,6 +647,8 @@ def main():
     config_path = args.configyaml or os.path.join("configs", f"{args.gamever}.yaml")
     aliases = load_alias_map(config_path) if os.path.isfile(config_path) else {}
 
+    vtable_blocks = load_vtable_blocks(args.gamedata)
+
     results = []
     for name in sorted(gamedata):
         entry = gamedata[name]
@@ -562,8 +674,15 @@ def main():
             record = (index.get(fold(name)) or {}).get(platform)
             if record is None and aliases.get(fold(name)):
                 record = (index.get(fold(aliases[fold(name)])) or {}).get(platform)
-            row["platforms"][platform] = check_signature(binaries, module, platform,
-                                                         value, record)
+            info = check_signature(binaries, module, platform, value, record)
+            if name in vtable_blocks:
+                expected = V._hexint(info["at"]) if info.get("status") == "ok" else None
+                if expected is None and record and record.get("func_va"):
+                    expected = V._hexint(record.get("func_va"))
+                verdict = check_vtable_slot(binaries, module, platform, vtable_blocks[name], expected)
+                if verdict:
+                    info["vtable"] = verdict
+            row["platforms"][platform] = info
         results.append(row)
 
     return _report(results, args, os.path.basename(args.gamedata))
@@ -575,7 +694,8 @@ def _report(results, args, filename):
     for row in results:
         for info in row["platforms"].values():
             if (info["status"] in ("broken", "ambiguous", "mismatch", "unparsable")
-                    or info.get("rtti") == "mismatch" or info.get("gv") == "mismatch"):
+                    or info.get("rtti") == "mismatch" or info.get("gv") == "mismatch"
+                    or info.get("vtable") in VTABLE_BAD):
                 bad += 1
 
     if args.json:
@@ -590,7 +710,8 @@ def _report(results, args, filename):
             counts[key] = counts.get(key, 0) + 1
         statuses = [i["status"] for i in row["platforms"].values()]
         if args.quiet and all(st in ("ok", "ok-globalref", "match", "not-shipped",
-                                     "symbol-name") for st in statuses):
+                                     "symbol-name") for st in statuses) \
+                and not any(i.get("vtable") in VTABLE_BAD for i in row["platforms"].values()):
             continue
         cells = []
         for platform in PLATFORMS:
@@ -606,6 +727,8 @@ def _report(results, args, filename):
                 cell += f" rtti={info['rtti']}"
             if info.get("gv"):
                 cell += f" gv={info['gv']}"
+            if info.get("vtable"):
+                cell += f" vtable={info['vtable']}"
             if info.get("points_at"):
                 cell += f" points_at={info['points_at']} expected={info.get('expected')}"
             cells.append(f"{platform} {cell}")
