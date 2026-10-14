@@ -753,6 +753,22 @@ esac
 log "    $(printf '%s' "$DECL_LINE" | head -1)"
 ARGS_LINE="${ARGS_LINE:+$ARGS_LINE
 }$DECL_LINE"
+# Shape drift: a shipped function whose named callees, strings or constants mostly did not
+# survive from the previous build - same place, same arguments, different meaning.
+# Informational, in the notification like the two lines above.
+if [ -n "${OLD_TAG:-}" ]; then
+    SHAPE_OUT="$STATE/shape-$TAG.txt"
+    uv run audit_shape_drift.py -gamever "$TAG" -prev "$OLD_TAG" -v > "$SHAPE_OUT" 2>&1
+    case $? in
+        0) SHAPE_LINE="shape: $(tail -1 "$SHAPE_OUT" | sed 's/^audit_shape_drift [^:]*: //')" ;;
+        1) SHAPE_LINE="SHAPE CHANGED: $(grep -c '^SHAPE CHANGED' "$SHAPE_OUT") shipped function(s) now do something else:
+$(grep '^SHAPE CHANGED' "$SHAPE_OUT" | sed 's/^SHAPE CHANGED /  /' | head -10)" ;;
+        *) SHAPE_LINE="shape drift skipped: $(tail -1 "$SHAPE_OUT")" ;;
+    esac
+    log "    $(printf '%s' "$SHAPE_LINE" | head -1)"
+    ARGS_LINE="$ARGS_LINE
+$SHAPE_LINE"
+fi
 
 # ---------------------------------------------------------------- record it
 log "==> committing"
