@@ -1,14 +1,16 @@
 [Unit]
-Description=Check Steam for a new CS2 build every 15 minutes
+Description=Check Steam for a new CS2 build every 5 minutes
 Documentation=file:/root/CS2_VibeSignatures/systemd/README.md
 
 [Timer]
 OnBootSec=5min
-OnUnitActiveSec=15min
+OnUnitActiveSec=5min
 # Catch up after a reboot or a suspend instead of waiting for the next window.
 Persistent=true
-# Spread the Steam query so it is not on the minute with everyone else.
-RandomizedDelaySec=90
+# Spread the Steam query so it is not on the minute with everyone else. A tick with no
+# new build is one UpToDateCheck request, so 5 minutes costs nothing and halves the
+# wait between Valve shipping a build and the analysis starting (avg 7.5 -> 2.5 min).
+RandomizedDelaySec=45
 AccuracySec=1min
 Unit=cs2vibe-autopilot.service
 

@@ -295,7 +295,7 @@ PYEOF
 # printf, not a quoted "\n\n": inside double quotes those are two literal
 # characters, which is exactly how the first version reached Discord.
 final_body() {
-    printf '%s\n%s\n\n%s\n\n%s\n' "$(changed_keys_block)" "$IMPACT_LINE" "$(cat "$GATE_OUT")" "$(site_links)"
+    printf '%s\n%s\n%s\n\n%s\n\n%s\n' "$(changed_keys_block)" "$IMPACT_LINE" "${ARGS_LINE:-}" "$(cat "$GATE_OUT")" "$(site_links)"
 }
 
 site_links() {
@@ -474,6 +474,8 @@ if git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1; then
     dispatch_pages
     IMPACT_LINE=""
     [ -f "$STATE/impact-$TAG.txt" ] && IMPACT_LINE="schema: $(grep -m1 '^summary:' "$STATE/impact-$TAG.txt" | sed 's/^summary: //')"
+    ARGS_LINE=""
+    [ -f "$STATE/args-$TAG.txt" ] && ARGS_LINE="arguments: $(tail -1 "$STATE/args-$TAG.txt" | sed 's/^audit_arg_fingerprint [^:]*: //')"
     finish_build
     exit 0
 fi
@@ -719,6 +721,24 @@ if [ -n "${OLD_TAG:-}" ]; then
         *) IMPACT_LINE="schema impact skipped: $(tail -1 "$IMPACT_OUT")" ;;
     esac
     log "    $IMPACT_LINE"
+fi
+
+# Argument fingerprints: did a shipped function's parameters change? Every check above
+# proves an address names the right function; none sees Valve add or drop a parameter,
+# after which the plugin calls it the old way and the server crashes. Informational like
+# the schema impact - the fix is in plugin code - but it is in the final notification.
+ARGS_OUT="$STATE/args-$TAG.txt"
+ARGS_LINE=""
+if [ -n "${OLD_TAG:-}" ]; then
+    log "==> argument fingerprints $OLD_TAG -> $TAG"
+    uv run audit_arg_fingerprint.py -gamever "$TAG" -prev "$OLD_TAG" > "$ARGS_OUT" 2>&1
+    case $? in
+        0) ARGS_LINE="arguments: $(tail -1 "$ARGS_OUT" | sed 's/^audit_arg_fingerprint [^:]*: //')" ;;
+        1) ARGS_LINE="ARGUMENTS CHANGED: $(grep -c '^ARGS CHANGED' "$ARGS_OUT") shipped function(s), check the plugins that call them:
+$(grep '^ARGS CHANGED' "$ARGS_OUT" | sed 's/^ARGS CHANGED /  /' | head -10)" ;;
+        *) ARGS_LINE="argument fingerprints skipped: $(tail -1 "$ARGS_OUT")" ;;
+    esac
+    log "    $(printf '%s' "$ARGS_LINE" | head -1)"
 fi
 
 # ---------------------------------------------------------------- record it
