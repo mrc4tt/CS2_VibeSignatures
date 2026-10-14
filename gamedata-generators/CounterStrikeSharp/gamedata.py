@@ -13,6 +13,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from gamedata_utils import convert_sig_to_css, normalize_func_name_colons_to_underscore
 
+# Version 2: the context names the game build, whose binaries prove each vtable slot.
+GENERATOR_API_VERSION = 2
+
 # Module metadata
 MODULE_NAME = "CounterStrikeSharp"
 MODULE_ENABLED = True
@@ -26,7 +29,43 @@ DOWNLOAD_SOURCES = ()
 STATIC_SOURCES = (("templates/gamedata.json", GAMEDATA_PATH),)
 
 
-def _update_vtable_slot(entry, yaml_entry, platforms):
+def _slot_prover(context, bindir="bin"):
+    """prove(library, platform, class_name, index, func_va) -> verdict, or None without a build.
+
+    The verdict is verify_plugin_gamedata.check_vtable_slot's, i.e. the slot read the way
+    CounterStrikeSharp reads it (literal RTTI name, primary vtable, raw pointer). The
+    artifact's index comes from validate_artifacts' verify_vfunc_slot, which accepts a hit in
+    ANY of a class's vtables and resolves template names by their identifiers, so an index it
+    passed can still be one the runtime cannot read or reads as another function. Shipping
+    such a slot would fail the publish gate and stop every plugin's deploy over metadata CSS
+    works fine without, so it is dropped here instead.
+    """
+    game_version = getattr(context, "game_version", None)
+    if not game_version:
+        return None
+    import verify_plugin_gamedata as VPG
+
+    binaries = VPG.Binaries(bindir, str(game_version))
+
+    def prove(library, platform, class_name, index, func_va):
+        module = VPG.LIBRARY_TO_MODULE.get(str(library or "server"), "server")
+        block = {"class": class_name, f"{platform}_index": index}
+        return VPG.check_vtable_slot(binaries, module, platform, block, func_va)
+
+    return prove
+
+
+def _func_va(record):
+    value = record.get("func_va")
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    try:
+        return int(str(value), 16) if value not in (None, "") else None
+    except ValueError:
+        return None
+
+
+def _update_vtable_slot(entry, yaml_entry, platforms, prove=None):
     """Write the vtable slot of a virtual function next to its signature.
 
     CounterStrikeSharp falls back to the slot when the byte pattern stops resolving and logs
@@ -41,6 +80,10 @@ def _update_vtable_slot(entry, yaml_entry, platforms):
     The block is rebuilt from this build's artifacts for every processed platform, so a stale
     index is dropped rather than carried forward; a platform outside `platforms` keeps its
     value unless the class changed. Returns True when the block was written.
+
+    With `prove` (see _slot_prover), an index is written only when its binary confirms it;
+    a missing binary ("no-binary") proves nothing either way and keeps it, which is also
+    what the verifier does.
     """
     block = entry.get("vtable") if isinstance(entry.get("vtable"), dict) else {}
     classes = {}
@@ -49,6 +92,12 @@ def _update_vtable_slot(entry, yaml_entry, platforms):
         record = yaml_entry.get(platform) or {}
         name, index = record.get("vtable_name"), record.get("vfunc_index")
         if isinstance(name, str) and name and isinstance(index, int) and not isinstance(index, bool) and index >= 0:
+            if prove is not None:
+                verdict = prove(yaml_entry.get("library"), platform, name, index, _func_va(record))
+                if verdict not in ("ok", "no-binary"):
+                    print(f"  Warning: vtable slot {name}[{index}] on {platform} is {verdict} as "
+                          f"CounterStrikeSharp reads it, dropping it")
+                    continue
             classes[platform] = name
             indices[platform] = index
 
@@ -72,7 +121,7 @@ def _update_vtable_slot(entry, yaml_entry, platforms):
     return bool(indices)
 
 
-def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
+def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False, *, context=None):
     """
     Update CounterStrikeSharp gamedata.json file.
 
@@ -96,6 +145,8 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
     # Load existing gamedata
     with open(gamedata_path, "r", encoding="utf-8") as f:
         gamedata = json.load(f)
+
+    prove = _slot_prover(context)
 
     updated_count = 0
     skipped_count = 0
@@ -146,7 +197,7 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
                     if debug:
                         updated_symbols.append({"name": func_name, "type": "signature", "platform": platform})
 
-        if "signatures" in entry and _update_vtable_slot(entry, yaml_entry, platforms):
+        if "signatures" in entry and _update_vtable_slot(entry, yaml_entry, platforms, prove):
             updated_count += 1
             if debug:
                 updated_symbols.append({"name": func_name, "type": "vtable"})

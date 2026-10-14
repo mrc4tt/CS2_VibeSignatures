@@ -16,6 +16,7 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "offset",
             "size",
             "offset_sig",
+            "offset_sig_disp",
         ],
     ),
 ]

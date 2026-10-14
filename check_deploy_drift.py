@@ -142,8 +142,13 @@ def _diff_keys(dist, installed, generated_only):
         elif install_leaves[key] != value:
             details.append(f"{key}:\n      generated {value!r}\n      deployed  {install_leaves[key]!r}")
 
-    if not generated_only:
-        for key in sorted(set(install_leaves) - set(dist_leaves)):
+    # A merge keeps install-only ENTRIES on purpose, but replaces a generated entry whole
+    # (update_css_gamedata.sh: merged[k] = v). So a leaf the install has inside an entry the
+    # generator wrote - a "vtable" slot it dropped as stale, say - is one the next merge
+    # removes, i.e. the install is behind.
+    generated_entries = set(dist) if isinstance(dist, dict) else set()
+    for key in sorted(set(install_leaves) - set(dist_leaves)):
+        if not generated_only or key.split(".", 1)[0] in generated_entries:
             details.append(f"{key}: present only in the deployed file")
 
     return details

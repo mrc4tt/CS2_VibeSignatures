@@ -637,7 +637,10 @@ while IFS= read -r plugin_file; do
     plugin_dir=${plugin_file#gamedata/$TAG/}
     plugin_dir=${plugin_dir%%/*}
     case " $DISABLED " in *" $plugin_dir "*) continue ;; esac
-    if ! uv run verify_plugin_gamedata.py -gamever "$TAG" -gamedata "$plugin_file" >> "$VERIFY_LOG" 2>&1; then
+    # -require-verified: every shipped value must be re-read from the binary by a method
+    # of its own (signature, vtable, call site, instruction, schema...), not merely equal
+    # what this pipeline produced - "match" alone is circular.
+    if ! uv run verify_plugin_gamedata.py -gamever "$TAG" -gamedata "$plugin_file" -require-verified >> "$VERIFY_LOG" 2>&1; then
         tail -20 "$VERIFY_LOG"
         die "verify_plugin_gamedata failed on $plugin_file"
     fi
@@ -653,7 +656,7 @@ EOF
 if [ "$UNHEALTHY_TOTAL" != "0" ]; then
     die "$UNHEALTHY_TOTAL shipped gamedata entr(ies) do not hold against the binaries"
 fi
-log "    $VERIFIED_FILES shipped file(s) checked, every entry holds"
+log "    $VERIFIED_FILES shipped file(s) checked, every entry holds and is verified on both platforms"
 
 uv run detect_aliases.py -gamever "$TAG" -platform linux || true
 uv run detect_aliases.py -gamever "$TAG" -platform windows || true

@@ -351,7 +351,21 @@ def _rtti_name_offsets(blob, class_name, exact, kind):
     return _template_name_matches(candidates, want)
 
 
-def resolve_vtable(blob, info, relocs, class_name):
+def _literal_name_offsets(blob, needle, require_string_start):
+    """File offsets of needle (a NUL-terminated RTTI name) as literal bytes only - how
+    CounterStrikeSharp's FindVirtualTable finds a class, which builds "<len><name>" /
+    ".?AV<name>@@" from the class string and has no template token matching. On ELF the
+    match must start its own string ("P12CCSGameRules" holds "12CCSGameRules\0" at offset 1)."""
+    hits = []
+    i = blob.find(needle)
+    while i != -1:
+        if not require_string_start or i == 0 or blob[i - 1] == 0:
+            hits.append(i)
+        i = blob.find(needle, i + 1)
+    return hits
+
+
+def resolve_vtable(blob, info, relocs, class_name, primary_only=False, literal_name=False):
     """[(vtable_va, slots)] for class_name, via the platform's RTTI layout.
 
     ELF (Itanium ABI): name string -> typeinfo -> _ZTV, reported at +0x10.
@@ -360,11 +374,21 @@ def resolve_vtable(blob, info, relocs, class_name):
     named with <...> is found by its identifiers; one named with underscores
     (CGameSystemReallocatingFactory_CSource2EntitySystem) is not, and check_vfunc
     falls back to the build's own vtable artifact for it.
+
+    primary_only keeps the table with offset-to-top (ELF) / COL offset (MSVC) 0 - the only
+    one CounterStrikeSharp reads; a multiple-inheritance class's secondary tables are
+    dropped. literal_name finds the class by its literal RTTI string, as that runtime does
+    (_literal_name_offsets), instead of matching template names by identifier.
     """
+    def names(tag, kind):
+        if literal_name:
+            return _literal_name_offsets(blob, tag + b"\x00", kind == "elf")
+        return _rtti_name_offsets(blob, class_name, tag + b"\x00", kind)
+
     out = []
     if relocs is not None:
         tag = f"{len(class_name)}{class_name}".encode()
-        for m in _rtti_name_offsets(blob, class_name, tag + b"\x00", "elf"):
+        for m in names(tag, "elf"):
             name_va = off_to_va(info, m)
             if name_va is None:
                 continue
@@ -373,12 +397,16 @@ def resolve_vtable(blob, info, relocs, class_name):
                     vt = vt_plus8 - 8
                     if vt % 8:
                         continue
+                    if primary_only:
+                        off = va_to_off(info, vt)
+                        if off is None or struct.unpack_from("<q", blob, off)[0] != 0:
+                            continue
                     slots = _read_slots(blob, info, relocs, vt + 0x10)
                     if len(slots) > 1:
                         out.append((vt + 0x10, slots))
     else:
         tag = f".?AV{class_name}@@".encode()
-        for m in _rtti_name_offsets(blob, class_name, tag + b"\x00", "pe"):
+        for m in names(tag, "pe"):
             td_va = off_to_va(info, m - 0x10)
             if td_va is None:
                 continue
@@ -388,7 +416,8 @@ def resolve_vtable(blob, info, relocs, class_name):
                 col_off = i - 0x0C
                 col_va = off_to_va(info, col_off)
                 if col_va is not None and col_off >= 0 \
-                        and struct.unpack_from("<I", blob, col_off)[0] == 1:
+                        and struct.unpack_from("<I", blob, col_off)[0] == 1 \
+                        and (not primary_only or struct.unpack_from("<i", blob, col_off + 4)[0] == 0):
                     for p in _pointer_sites(blob, info, col_va, None):
                         slots = _read_slots(blob, info, None, p + 8)
                         if len(slots) > 1:
@@ -431,8 +460,12 @@ def _thunk_target(blob, info, va, depth=2):
     return va
 
 
-def verify_vfunc_slot(blob, info, relocs, class_name, index, func_va, fallback_vtable_va=None):
+def verify_vfunc_slot(blob, info, relocs, class_name, index, func_va, fallback_vtable_va=None,
+                      primary_only=False):
     """'ok' | 'mismatch' | None (could not resolve).
+
+    primary_only: judge only the class's primary table - what a call through the object's
+    own vtable pointer reads (a plugin's vtable-index offset), see resolve_vtable.
 
     A class with multiple inheritance has one vtable per non-primary base as well
     as its primary, and the artifact index refers to whichever holds the method -
@@ -440,7 +473,7 @@ def verify_vfunc_slot(blob, info, relocs, class_name, index, func_va, fallback_v
     table holds it AND at least one table is long enough and fully resolved at
     that index, which keeps a pure-virtual (None) slot from being called wrong.
     """
-    tables = resolve_vtable(blob, info, relocs, class_name)
+    tables = resolve_vtable(blob, info, relocs, class_name, primary_only=primary_only)
     if not tables and fallback_vtable_va is not None:
         slots = _read_slots(blob, info, relocs, fallback_vtable_va)
         tables = [(fallback_vtable_va, slots)] if len(slots) > 1 else []
@@ -590,6 +623,78 @@ def _sibling_vtable_va(rec, class_name):
     return None
 
 
+def sig_holds_value(blob, info, sig, want, sig_disp=None, allow_imm=False, max_match=1):
+    """'ok' | 'mismatch' | 'ambiguous' | None: does every code hit of `sig` carry `want`?
+
+    Reads the value back out of the instruction a record was taken from: a memory
+    displacement ([rdi+0x38]), or with allow_imm an immediate (imul r14, rdx, 0x70 for a
+    struct size). Each hit passes when an instruction starting inside the pattern - the
+    one at sig_disp, when the record names it - holds `want`; it need not come first
+    (CEntitySystem_UpdateOnRemove loads [rax+0xc0] three instructions in). More code hits
+    than max_match is 'ambiguous'; None when nothing matches in code or capstone is missing.
+    """
+    pat = parse_sig(sig)
+    if not pat or _MD is None:
+        return None
+    hits = [h for h in find_all(blob, pat) if is_exec(info, h)]
+    if not hits:
+        return None
+    if max_match is not None and len(hits) > max_match:
+        return "ambiguous"
+    for h in hits:
+        va = off_to_va(info, h)
+        found = False
+        for ins in _MD.disasm(blob[h:h + len(pat) + 15], va):
+            rel = ins.address - va
+            if rel >= len(pat):
+                break
+            if sig_disp is not None and rel != int(sig_disp):
+                continue
+            for op in ins.operands:
+                if (op.type == capstone.x86.X86_OP_MEM and op.mem.disp == want) or \
+                        (allow_imm and op.type == capstone.x86.X86_OP_IMM and op.imm == want):
+                    found = True
+            if found:
+                break
+        if not found:
+            return "mismatch"
+    return "ok"
+
+
+def value_access(blob, info, sig, want, sig_disp=None):
+    """(mnemonic, access width in bytes, indexed) of the first instruction inside the code
+    hit of `sig` whose memory operand has displacement `want`, or None."""
+    pat = parse_sig(sig)
+    if not pat or _MD is None:
+        return None
+    hits = [h for h in find_all(blob, pat) if is_exec(info, h)]
+    if not hits:
+        return None
+    va = off_to_va(info, hits[0])
+    for ins in _MD.disasm(blob[hits[0]:hits[0] + len(pat) + 15], va):
+        rel = ins.address - va
+        if rel >= len(pat):
+            break
+        if sig_disp is not None and rel != int(sig_disp):
+            continue
+        for op in ins.operands:
+            if op.type == capstone.x86.X86_OP_MEM and op.mem.disp == want:
+                return ins.mnemonic, op.size, op.mem.index != 0
+    return None
+
+
+def vfunc_sig_calls_offset(blob, info, sig, want, sig_disp=None):
+    """'ok' | 'mismatch' | None: does every code hit of a vfunc_sig really use `want`?
+
+    A vfunc_sig is a call site - "FF 92 50 05 00 00" is call [rdx+0x550] - and the
+    index is read off that displacement, so a record with no func_va (a slot whose
+    function is a shared stub that cannot be signatured) is only as good as this
+    instruction. Repeats are expected (one slot is called from many places), so every
+    hit must carry it rather than exactly one existing.
+    """
+    return sig_holds_value(blob, info, sig, want, sig_disp, max_match=None)
+
+
 def check_vfunc(rec, d, blob, info, out, relocs=None):
     idx = d.get("vfunc_index")
     off = d.get("vfunc_offset")
@@ -612,6 +717,10 @@ def check_vfunc(rec, d, blob, info, out, relocs=None):
         check_func(rec, d, blob, info, out)
     elif d.get("vfunc_sig"):
         check_sig_field(rec, blob, info, "vfunc_sig", d["vfunc_sig"], None, out, out.pedantic)
+    if d.get("vfunc_sig") and off is not None:
+        want = int(str(off), 16)
+        if vfunc_sig_calls_offset(blob, info, d["vfunc_sig"], want, d.get("vfunc_sig_disp")) == "mismatch":
+            out.error(rec, f"vfunc_sig does not use vfunc_offset {off} at every place it matches")
     elif idx is None:
         out.error(rec, "vfunc artifact carries neither an address, a signature, nor an index")
 

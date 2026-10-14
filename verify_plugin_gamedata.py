@@ -260,8 +260,22 @@ class Binaries:
     """Lazily opened binaries, one per module and platform."""
 
     def __init__(self, bindir, gamever):
+        self.bindir, self.gamever = bindir, str(gamever)
         self.root = os.path.join(bindir, gamever)
         self.cache = {}
+        self.schemas = {}
+
+    def schema(self, module, platform):
+        """The game's schema classes for a module, or None when it has none here."""
+        key = (module, platform)
+        if key not in self.schemas:
+            try:
+                import schema_dump
+                self.schemas[key] = (schema_dump.load_or_dump(self.gamever, module, platform, self.bindir)
+                                     if key in schema_dump.BINARY_NAMES else None)
+            except Exception:  # noqa: BLE001 - no schema is "cannot confirm", not a failure
+                self.schemas[key] = None
+        return self.schemas[key]
 
     def get(self, module, platform):
         key = (module, platform)
@@ -362,8 +376,45 @@ def _value_index(index, field_names):
     return out
 
 
-def check_keyvalue_entries(entries, index, binaries, module="server"):
+# A generator's own field name -> the snapshot record field holding that value.
+_RECORD_FIELD = {"struct_member_offset": "offset", "func_rva": "func_rva", "vtable_rva": "vtable_rva",
+                 "gv_rva": "gv_rva", "vfunc_index": "vfunc_index"}
+
+
+def generator_keyvalue_bindings(plugin, modules_dir="gamedata-generators"):
+    """{key: (module, symbol, record field)} from the generator that writes a key=value
+    file (CS2FOW's SYMBOL_FIELDS). With it each key is checked against the ONE symbol it
+    was generated from; without it the value is looked up among every record, and small
+    numbers collide - smoke_storage_offset=112 matched three members and proved nothing."""
+    path = os.path.join(modules_dir, plugin or "", "gamedata.py")
+    if not plugin or not os.path.isfile(path):
+        return {}
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(f"_gen_{plugin}", path)
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+    except Exception:  # noqa: BLE001 - an unloadable generator just means no bindings
+        return {}
+    out = {}
+    for key, spec_tuple in (getattr(module, "SYMBOL_FIELDS", None) or {}).items():
+        lib, symbol, field = spec_tuple
+        out[key] = (lib, symbol, _RECORD_FIELD.get(field, field))
+    return out
+
+
+def plugin_of(gamedata_path):
+    """'CS2FOW' for gamedata/<VER>/CS2FOW/gamedata/cs2fow.games.txt, else None."""
+    parts = os.path.normpath(gamedata_path).split(os.sep)
+    for i, part in enumerate(parts[:-2]):
+        if part == "gamedata" and re.fullmatch(r"\d+[a-z]?", parts[i + 1]):
+            return parts[i + 2]
+    return None
+
+
+def check_keyvalue_entries(entries, index, binaries, module="server", bindings=None):
     """Verify an RVA/index/fingerprint file; returns rows shaped like the rest."""
+    bindings = bindings or {}
     rvas = _value_index(index, ("func_rva", "vtable_rva", "gv_rva"))
     idxs = _value_index(index, ("vfunc_index",))
     offs = _value_index(index, ("offset",))
@@ -382,9 +433,25 @@ def check_keyvalue_entries(entries, index, binaries, module="server"):
                     row["platforms"][platform] = {"status": "no-binary"}
                     continue
                 actual = len(blob) if entry["kind"] == "size" else zlib.crc32(blob)
-                row["platforms"][platform] = ({"status": "match", "value": value}
+                # computed from the file itself, so a match IS the confirmation
+                row["platforms"][platform] = ({"status": "match", "value": value, "binary": "ok"}
                                               if actual == value else
-                                              {"status": "mismatch", "reference": actual})
+                                              {"status": "mismatch", "reference": actual, "binary": "mismatch"})
+                continue
+            if name in bindings:
+                lib, symbol, field = bindings[name]
+                record = (index.get(fold(symbol)) or {}).get(platform)
+                reference = _int(record.get(field)) if record else None
+                if reference is None:
+                    row["platforms"][platform] = {"status": "no-reference", "resolved": symbol}
+                    continue
+                info = ({"status": "match", "value": value, "resolved": symbol}
+                        if int(reference) == int(value) else
+                        {"status": "mismatch", "reference": int(reference), "resolved": symbol})
+                if info["status"] == "match":
+                    info.update(confirm_record(binaries, dict(record, _module=record.get("_module") or lib),
+                                               platform))
+                row["platforms"][platform] = info
                 continue
             table = {"rva": rvas, "vfunc-index": idxs}.get(entry["kind"], offs)
             names = table.get((value, platform)) or []
@@ -402,6 +469,38 @@ def check_keyvalue_entries(entries, index, binaries, module="server"):
     return rows
 
 
+MIN_LITERAL_BYTES = 4
+
+# CounterStrikeSharp's CModule::IsStubAddress: a hit in one of these ELF sections is a
+# linker stub, not code, so the scanner skips it and keeps looking.
+STUB_SECTIONS = {".init", ".plt", ".plt.got", ".plt.sec", ".fini", ".got", ".got.plt"}
+_STUB_RANGES = {}
+
+
+def elf_stub_ranges(blob):
+    """[(file offset, size)] of the linker-stub sections of an ELF64 image; [] otherwise."""
+    cached = _STUB_RANGES.get(id(blob))
+    if cached is not None and cached[0] is blob:
+        return cached[1]
+    ranges = []
+    if blob[:4] == b"\x7fELF" and blob[4] == 2:
+        shoff = struct.unpack_from("<Q", blob, 0x28)[0]
+        shentsize, shnum, shstrndx = struct.unpack_from("<HHH", blob, 0x3A)
+        if shoff and shnum and shstrndx < shnum and shoff + shnum * shentsize <= len(blob):
+            def header(i):
+                # sh_name, sh_type, sh_flags, sh_addr, sh_offset, sh_size
+                return struct.unpack_from("<IIQQQQ", blob, shoff + i * shentsize)
+            strtab = header(shstrndx)[4]
+            for i in range(shnum):
+                name_off, _type, _flags, _addr, offset, size = header(i)
+                end = blob.find(b"\x00", strtab + name_off)
+                name = blob[strtab + name_off:end].decode("latin-1", "replace")
+                if name in STUB_SECTIONS and size:
+                    ranges.append((offset, size))
+    _STUB_RANGES[id(blob)] = (blob, ranges)
+    return ranges
+
+
 def check_signature(binaries, module, platform, pattern, record=None):
     """record: this repo's payload for the same symbol, when we have one."""
     blob, info, _ = binaries.get(module, platform)
@@ -412,12 +511,28 @@ def check_signature(binaries, module, platform, pattern, record=None):
     # a defect, so it is reported rather than scanned.
     if isinstance(pattern, str) and pattern.startswith("@"):
         return {"status": "symbol-name", "value": pattern[:48]}
+    # Parsed the way CounterStrikeSharp's CGameConfig::HexToByte does: every byte exactly
+    # two hex digits ("488B" or "4" makes it discard the WHOLE pattern, where V.parse_sig
+    # would read a number), and at least MIN_LITERAL_BYTES literal bytes, below which
+    # CModule::ScanSignature refuses the pattern rather than resolve its first hit.
+    tokens = str(pattern).split()
+    if any(tok not in ("?", "??") and len(tok) != 2 for tok in tokens):
+        return {"status": "unparsable", "value": str(pattern)[:40]}
     parsed = V.parse_sig(pattern)
     if not parsed:
         return {"status": "unparsable", "value": str(pattern)[:40]}
-    hits = V.find_all(blob, parsed)
+    literals = sum(b is not None for b in parsed)
+    if literals < MIN_LITERAL_BYTES:
+        return {"status": "too-few-literals", "literals": literals}
+    # Only executable memory is scanned at runtime (CSS walks the module's code segments)
+    # and a hit in a linker stub is skipped (STUB_SECTIONS), so neither one resolves the
+    # entry nor makes it ambiguous.
+    all_hits = V.find_all(blob, parsed)
+    stubs = elf_stub_ranges(blob)
+    hits = [h for h in all_hits if V.is_exec(info, h)
+            and not any(start <= h < start + size for start, size in stubs)]
     if not hits:
-        return {"status": "broken"}
+        return {"status": "broken", **({"outside_code": len(all_hits)} if all_hits else {})}
     if len(hits) > 1:
         return {"status": "ambiguous", "count": len(hits),
                 "at": [hex(V.off_to_va(info, h) or 0) for h in hits[:4]]}
@@ -450,59 +565,31 @@ def check_signature(binaries, module, platform, pattern, record=None):
 VTABLE_BAD = ("mismatch", "out-of-range", "ambiguous", "unresolved")
 
 
+_PRIMARY_CACHE = {}
+
+
 def primary_vtables(blob, info, relocs, class_name):
-    """[(vtable_va, slots)] for the class's PRIMARY vtable - the one CounterStrikeSharp's
-    CModule::FindVirtualTable returns. V.resolve_vtable also yields the secondary tables of
-    a multiple-inheritance class (and verify_vfunc_slot passes a hit in ANY of them), but
-    the runtime only reads the table whose offset-to-top (ELF) / COL offset (MSVC) is 0,
-    so an index that is right only for a secondary table is wrong for the consumer.
+    """[(vtable_va, slots)] for the class's PRIMARY vtable, found the way CounterStrikeSharp's
+    CModule::FindVirtualTable finds it: by the literal RTTI name, and only the table whose
+    offset-to-top (ELF) / COL offset (MSVC) is 0. verify_vfunc_slot passes a hit in ANY of a
+    multiple-inheritance class's tables and resolves template names by their identifiers, so
+    an index it accepts can be one the runtime cannot read or reads as another function.
+    Cached per binary and class: one class usually carries several keys.
     """
-    out = []
-    if relocs is not None:
-        tag = f"{len(class_name)}{class_name}".encode()
-        for m in V._rtti_name_offsets(blob, class_name, tag + b"\x00", "elf"):
-            name_va = V.off_to_va(info, m)
-            if name_va is None:
-                continue
-            for tinfo_plus8 in V._pointer_sites(blob, info, name_va, relocs):
-                for vt_plus8 in V._pointer_sites(blob, info, tinfo_plus8 - 8, relocs):
-                    vt = vt_plus8 - 8
-                    off = V.va_to_off(info, vt)
-                    if vt % 8 or off is None or struct.unpack_from("<q", blob, off)[0] != 0:
-                        continue
-                    slots = V._read_slots(blob, info, relocs, vt + 0x10)
-                    if len(slots) > 1:
-                        out.append((vt + 0x10, slots))
-    else:
-        tag = f".?AV{class_name}@@".encode()
-        for m in V._rtti_name_offsets(blob, class_name, tag + b"\x00", "pe"):
-            td_va = V.off_to_va(info, m - 0x10)
-            if td_va is None:
-                continue
-            needle = struct.pack("<I", td_va - info["base"])
-            i = blob.find(needle)
-            while i != -1:
-                col_off = i - 0x0C
-                col_va = V.off_to_va(info, col_off)
-                if (col_va is not None and col_off >= 0
-                        and struct.unpack_from("<I", blob, col_off)[0] == 1
-                        and struct.unpack_from("<i", blob, col_off + 4)[0] == 0):
-                    for site in V._pointer_sites(blob, info, col_va, None):
-                        slots = V._read_slots(blob, info, None, site + 8)
-                        if len(slots) > 1:
-                            out.append((site + 8, slots))
-                i = blob.find(needle, i + 1)
-    best = {}
-    for va, slots in out:
-        if va not in best or len(slots) > len(best[va]):
-            best[va] = slots
-    return sorted(best.items())
+    key = (id(blob), relocs is None, class_name)
+    cached = _PRIMARY_CACHE.get(key)
+    if cached is not None and cached[0] is blob:
+        return cached[1]
+    tables = V.resolve_vtable(blob, info, relocs, class_name, primary_only=True, literal_name=True)
+    _PRIMARY_CACHE[key] = (blob, tables)
+    return tables
 
 
 def check_vtable_slot(binaries, module, platform, block, expected_va):
     """Verdict for a "vtable" block on one platform, or None when it ships no index.
 
-    expected_va: where the entry's signature resolves, else this repo's func_va.
+    expected_va: where the entry's signature matches (CounterStrikeSharp compares the slot
+    with the scanned address itself, head or not), else this repo's func_va.
     """
     if not isinstance(block, dict):
         return None
@@ -528,7 +615,10 @@ def check_vtable_slot(binaries, module, platform, block, expected_va):
         return "unresolved"
     if expected_va is None:
         return "unverified"
-    if got == expected_va or V._thunk_target(blob, info, got) == expected_va:
+    # Raw pointer compare, as ApplyVtableFallback does: a slot holding a thunk to the
+    # function is a different address to the runtime, which then warns on every load and,
+    # as a fallback, would hook the thunk instead of the body.
+    if got == expected_va:
         return "ok"
     return "mismatch"
 
@@ -583,12 +673,33 @@ def generator_offset_divisors(modules_dir="gamedata-generators"):
 OFFSET_DIVISORS = None
 
 
+GENERATOR_ALIASES = {}
+_SNAPSHOT_INDEX = {}
+
+
+def load_generator_aliases(config_path):
+    """{folded key: symbol} exactly as the generators resolve a key: aliases only, the
+    last declaration winning (gamedata_symbol_data.build_alias_to_name_map)."""
+    from gamedata_symbol_data import build_alias_to_name_map, load_config
+    return {fold(alias): name for alias, name in build_alias_to_name_map(load_config(config_path)).items()}
+
+
+def resolve_record(index, name, platform, aliases=None):
+    """The record a generator wrote `name` from. Its alias target comes FIRST
+    (normalize_func_name_colons_to_underscore's order), then the name itself, then the
+    looser alias map. Name-first judged the ClientPrint key against the ClientPrint
+    record while the generator writes it from ClientPrintToController, whose alias it is
+    (CLAUDE.md rule 15)."""
+    for candidate in (GENERATOR_ALIASES.get(fold(name)), name, (aliases or {}).get(fold(name))):
+        if candidate:
+            record = (index.get(fold(candidate)) or {}).get(platform)
+            if record is not None:
+                return record
+    return None
+
+
 def check_offset(index, binaries, name, platform, value, aliases=None):
-    record = (index.get(fold(name)) or {}).get(platform)
-    if record is None and aliases:
-        canonical = aliases.get(fold(name))
-        if canonical:
-            record = (index.get(fold(canonical)) or {}).get(platform)
+    record = resolve_record(index, name, platform, aliases)
     if record is None:
         return {"status": "no-reference"}
     reference = record.get("vfunc_index")
@@ -606,16 +717,276 @@ def check_offset(index, binaries, name, platform, value, aliases=None):
     if int(reference) != int(value):
         return {"status": "mismatch", "reference": int(reference)}
     out = {"status": "match", "value": int(value)}
-    # A vtable-backed record can be re-read straight out of the binary.
-    vtable_class, func_va = record.get("vtable_name"), record.get("func_va")
-    if vtable_class and func_va and record.get("vfunc_index") is not None:
-        module_hint = record.get("_module") or "server"
-        blob, info, relocs = binaries.get(module_hint, platform)
-        if blob is not None:
-            verdict = V.verify_vfunc_slot(blob, info, relocs, vtable_class,
-                                          int(record["vfunc_index"]), V._hexint(func_va))
-            out["rtti"] = verdict or "unresolved"
+    out.update(confirm_record(binaries, record, platform))
     return out
+
+
+# -- independent confirmation -----------------------------------------------
+# "match" alone only says the plugin file equals what this pipeline produced, which is
+# circular: a wrong analysis matches itself. Each method below re-reads the value from
+# the binary (or the game's schema) by a route of its own; a key is VERIFIED when at
+# least one confirms it and none contradicts it.
+CONFIRM_METHODS = ("func", "sig", "rtti", "callsite", "inherit", "insn", "anchor", "xplat", "schema", "gv",
+                   "binary", "align", "width", "unique")
+
+# Plain reads/writes/compares of a field: when one of them touches FEWER bytes than the
+# field has, it is touching a different, narrower field. Partial updates (or/and/bt...)
+# and wider combined copies (movups over two qwords) are left alone.
+PLAIN_ACCESS = ("mov", "movzx", "movsx", "movsxd", "cmp", "test")
+_MEMBERS = {}
+
+
+def _members(platform):
+    """{(module, struct): {offset: {member,...}}} and {(module, struct, member): size} for
+    one platform, over every struct-member record of this build."""
+    if platform in _MEMBERS:
+        return _MEMBERS[platform]
+    by_offset, sizes = {}, {}
+    for per_platform in _SNAPSHOT_INDEX.values():
+        for plat, record in per_platform.items():
+            if not isinstance(record, dict) or not record.get("struct_name") or record.get("offset") is None:
+                continue
+            key = (record.get("_module") or "server", record["struct_name"])
+            if plat == platform:
+                by_offset.setdefault(key, {}).setdefault(_int(record["offset"]), set()).add(record.get("member_name"))
+            sizes[(plat,) + key + (record.get("member_name"),)] = _int(record.get("size"))
+    _MEMBERS[platform] = (by_offset, sizes)
+    return _MEMBERS[platform]
+# Methods that only re-read a value from the instruction it was taken from. They catch a
+# stale or misread value, not a wrong identification (CEntityIdentity::m_designerName
+# shipped the neighbouring EHandle's 0x10 from a correctly matching instruction), so a
+# value they alone confirm is reported as instruction-only.
+INSTRUCTION_ONLY = {"insn", "callsite"}
+
+_FUNC_RANGES = {}
+
+
+def _identified_functions(binaries, module, platform):
+    """[(start, end, symbol)] of this build's function records whose own signature still
+    lands on their address - the functions an instruction can be anchored in."""
+    key = (module, platform)
+    if key in _FUNC_RANGES:
+        return _FUNC_RANGES[key]
+    blob, info, _ = binaries.get(module, platform)
+    out = []
+    if blob is not None:
+        for name, per_platform in _SNAPSHOT_INDEX.items():
+            record = per_platform.get(platform)
+            if not isinstance(record, dict) or (record.get("_module") or "server") != module:
+                continue
+            start, size = _int(record.get("func_va")), _int(record.get("func_size"))
+            if not start or not size or not record.get("func_sig"):
+                continue
+            hits = [V.off_to_va(info, h) for h in _code_hits(blob, info, record["func_sig"])]
+            if hits == [start]:
+                out.append((start, start + size, record.get("func_name") or name))
+    _FUNC_RANGES[key] = out
+    return out
+
+_INHERITS = None
+
+
+def inherit_bases(scripts_dir="ida_preprocessor_scripts"):
+    """{target symbol: base vfunc symbol} from every preprocessor's INHERIT_VFUNCS - the
+    record a slot-only virtual took its index from."""
+    global _INHERITS
+    if _INHERITS is not None:
+        return _INHERITS
+    import ast
+    _INHERITS = {}
+    if not os.path.isdir(scripts_dir):
+        return _INHERITS
+    for name in sorted(os.listdir(scripts_dir)):
+        if not name.endswith(".py"):
+            continue
+        try:
+            tree = ast.parse(open(os.path.join(scripts_dir, name), encoding="utf-8").read())
+        except (OSError, SyntaxError, ValueError):
+            continue
+        for node in tree.body:
+            if (isinstance(node, ast.Assign) and any(getattr(t, "id", None) == "INHERIT_VFUNCS" for t in node.targets)):
+                try:
+                    for spec in ast.literal_eval(node.value):
+                        _INHERITS.setdefault(fold(spec[0]), spec[2])
+                except (ValueError, IndexError, TypeError):
+                    pass
+    return _INHERITS
+
+
+def _int(value):
+    return V._hexint(value) if isinstance(value, str) else value
+
+
+def _code_hits(blob, info, sig):
+    pattern = V.parse_sig(sig)
+    if not pattern:
+        return []
+    return [h for h in V.find_all(blob, pattern) if V.is_exec(info, h)]
+
+
+def confirm_record(binaries, record, platform):
+    """{method: 'ok' | 'mismatch' | 'ambiguous'} for what a snapshot record can prove
+    from the binary on its own. Methods that do not apply are left out."""
+    out = {}
+    if not record:
+        return out
+    module = record.get("_module") or "server"
+    blob, info, relocs = binaries.get(module, platform)
+    if blob is None:
+        return out
+
+    func_va = _int(record.get("func_va"))
+    # sig: the record's own function signature lands exactly on its address.
+    if record.get("func_sig") and func_va is not None:
+        hits = [V.off_to_va(info, h) for h in _code_hits(blob, info, record["func_sig"])]
+        if func_va in hits:
+            out["sig"] = "ok" if len(hits) == 1 else "ambiguous"
+        elif hits:
+            out["sig"] = "mismatch"
+
+    # rtti: a virtual sits in that slot of the class's primary vtable (thunks followed -
+    # calling a thunk reaches the function).
+    index = record.get("vfunc_index")
+    if record.get("vtable_name") and func_va is not None and index is not None:
+        verdict = V.verify_vfunc_slot(blob, info, relocs, record["vtable_name"], int(index),
+                                      func_va, primary_only=True)
+        if verdict:
+            out["rtti"] = verdict
+
+    # callsite: a slot-only record's index is the displacement of the call it came from.
+    if record.get("vfunc_sig") and func_va is None and index is not None:
+        verdict = V.vfunc_sig_calls_offset(blob, info, record["vfunc_sig"], 8 * int(index),
+                                           record.get("vfunc_sig_disp"))
+        if verdict:
+            out["callsite"] = verdict
+
+    # inherit: a slot-only virtual (an empty stub with no address of its own) took its
+    # index from a base virtual that has one, so the base class's primary vtable must
+    # hold that function at the same slot, and the record's own class must reach it.
+    if func_va is None and index is not None and record.get("vtable_name") and record.get("func_name"):
+        base_name = inherit_bases().get(fold(record["func_name"]))
+        base = (_SNAPSHOT_INDEX.get(fold(base_name)) or {}).get(platform) if base_name else None
+        base_va = _int(base.get("func_va")) if base else None
+        if base and base_va is not None and base.get("vtable_name") and _int(base.get("vfunc_index")) == int(index):
+            own = V.resolve_vtable(blob, info, relocs, record["vtable_name"], primary_only=True)
+            if own and int(index) >= len(own[0][1]):
+                out["inherit"] = "mismatch"
+            else:
+                verdict = V.verify_vfunc_slot(blob, info, relocs, base["vtable_name"], int(index),
+                                              base_va, primary_only=True)
+                if verdict:
+                    out["inherit"] = verdict
+
+    # insn: a struct offset is read back out of the instruction it was taken from.
+    offset = _int(record.get("offset"))
+    if record.get("offset_sig") and offset is not None:
+        try:
+            max_match = max(1, int(record.get("offset_sig_max_match") or 1))
+        except (TypeError, ValueError):
+            max_match = 1
+        verdict = V.sig_holds_value(blob, info, record["offset_sig"], offset,
+                                    record.get("offset_sig_disp"), allow_imm=True, max_match=max_match)
+        if verdict:
+            out["insn"] = verdict
+        # anchor: that instruction sits inside a function this repo has identified on its
+        # own (strings, callers, vtable - and its signature still lands on it), so the
+        # value is tied to a known function, not to any instruction that happens to match.
+        if verdict == "ok":
+            hits = _code_hits(blob, info, record["offset_sig"])
+            if len(hits) == 1:
+                at = V.off_to_va(info, hits[0])
+                owner = next((n for a, b, n in _identified_functions(binaries, module, platform) if a <= at < b), None)
+                if owner:
+                    out["anchor"] = "ok"
+                    out["anchored_in"] = owner
+
+    size = _int(record.get("size"))
+    # align: a 2/4/8-byte scalar sits on a multiple of its size - unless the compiler itself
+    # addresses it there (CServerSideClient is packed: both builds store a qword at 0xb3),
+    # so it only speaks when the instruction does not confirm the value. Contradicts only.
+    if offset is not None and size in (2, 4, 8) and offset % size and out.get("insn") != "ok":
+        out["align"] = "mismatch"
+
+    struct, member = record.get("struct_name"), record.get("member_name")
+    if struct and member and offset is not None:
+        by_offset, sizes = _members(platform)
+        # unique: two members of one struct cannot share an offset. linux
+        # CServerSideClient shipped m_NetChannel AND m_SteamID at 0xa0 for 14182-14190.
+        others = by_offset.get((module, struct), {}).get(offset, set()) - {member}
+        if others and size:
+            out["unique"] = "mismatch"
+            out["shares_offset_with"] = ", ".join(sorted(map(str, others)))
+        # width: the instruction the value was read from must touch the whole field. Only
+        # when both platforms agree on the field's size (that metadata is not always right:
+        # BotProfile::m_difficultyFlags is 1 byte on linux and 4 on windows) and it is not
+        # an array element access.
+        other_platform = "windows" if platform == "linux" else "linux"
+        other_size = sizes.get((other_platform, module, struct, member))
+        if record.get("offset_sig") and size in (1, 2, 4, 8) and other_size == size:
+            access = V.value_access(blob, info, record["offset_sig"], offset, record.get("offset_sig_disp"))
+            if access and access[0] in PLAIN_ACCESS and not access[2] and access[1] < size:
+                out["width"] = "mismatch"
+                out["accessed_bytes"] = access[1]
+
+    # schema: the game's own schema places the member at that offset.
+    if record.get("struct_name") and record.get("member_name") and offset is not None:
+        classes = binaries.schema(module, platform)
+        if classes:
+            import schema_dump
+            hit = schema_dump.field_offset(classes, str(record["struct_name"]), str(record["member_name"]))
+            if hit is not None:  # (owning class, absolute offset)
+                out["schema"] = "ok" if hit[1] == offset else "mismatch"
+
+    # gv: the global's signature still addresses that global.
+    gv_va = _int(record.get("gv_va"))
+    if record.get("gv_sig") and gv_va is not None:
+        hits = _code_hits(blob, info, record["gv_sig"])
+        if len(hits) == 1:
+            inst = V.off_to_va(info, hits[0]) + int(_int(record.get("gv_inst_offset")) or 0)
+            target = _rip_target(blob, info, inst)
+            if target is not None:
+                out["gv"] = "ok" if target == gv_va else "mismatch"
+        elif hits:
+            out["gv"] = "ambiguous"
+
+    # rtti for a vtable record: the class's primary vtable is at that address.
+    vtable_va = _int(record.get("vtable_va"))
+    if record.get("vtable_class") and vtable_va is not None:
+        tables = V.resolve_vtable(blob, info, relocs, record["vtable_class"], primary_only=True)
+        if tables:
+            out["rtti"] = "ok" if any(va == vtable_va for va, _slots in tables) else "mismatch"
+    return out
+
+
+PASSING = ("ok", "ok-globalref", "match")
+
+
+def cross_platform(row):
+    """xplat: two compilers, one value. When linux and windows each re-read the same
+    offset from an instruction of their own, both builds agree on the layout - and the
+    one known misidentification (linux m_designerName 0x10 against windows 0x20) is the
+    case where they do not. Platforms that legitimately differ just get no xplat."""
+    linux, windows = row["platforms"].get("linux") or {}, row["platforms"].get("windows") or {}
+    if linux.get("status") != "match" or windows.get("status") != "match":
+        return
+    if linux.get("insn") != "ok" or windows.get("insn") != "ok":
+        return
+    if linux.get("value") is not None and linux.get("value") == windows.get("value"):
+        linux["xplat"] = windows["xplat"] = "ok"
+
+
+def verification(info):
+    """'verified' | 'contradicted' | 'unverified' | None (nothing shipped to judge)."""
+    status = info.get("status")
+    if status in ("not-shipped", "no-binary", "symbol-name"):
+        return None
+    if (status in ("broken", "ambiguous", "mismatch", "unparsable", "too-few-literals")
+            or any(info.get(m) == "mismatch" for m in CONFIRM_METHODS)
+            or info.get("vtable") in VTABLE_BAD):
+        return "contradicted"
+    if status in PASSING and any(info.get(m) == "ok" for m in CONFIRM_METHODS):
+        return "verified"
+    return "unverified"
 
 
 def main():
@@ -629,23 +1000,29 @@ def main():
                         help="default: configs/<gamever>.yaml; supplies the alias map")
     parser.add_argument("-json", action="store_true")
     parser.add_argument("-quiet", action="store_true", help="only print what is not ok")
+    parser.add_argument("-require-verified", dest="require_verified", action="store_true",
+                        help="also fail on any shipped entry no method could confirm from the binary")
     args = parser.parse_args()
 
     snapshot = args.snapshot or os.path.join("gamesymbols", f"{args.gamever}.yaml")
     index = load_snapshot_index(snapshot)
+    _SNAPSHOT_INDEX.update(index)
     binaries = Binaries(args.bindir, args.gamever)
     gamedata, note = load_gamedata(args.gamedata)
     if note and "key=value" in note:
         text = open(args.gamedata, "r", encoding="utf-8-sig").read()
         kv_entries = parse_keyvalue_file(text)
         if kv_entries:
-            results = check_keyvalue_entries(kv_entries, index, binaries)
+            results = check_keyvalue_entries(kv_entries, index, binaries,
+                                             bindings=generator_keyvalue_bindings(plugin_of(args.gamedata)))
             return _report(results, args, os.path.basename(args.gamedata))
     if note:
         print(f"{os.path.basename(args.gamedata)}: {note}")
         return 2
     config_path = args.configyaml or os.path.join("configs", f"{args.gamever}.yaml")
     aliases = load_alias_map(config_path) if os.path.isfile(config_path) else {}
+    if os.path.isfile(config_path):
+        GENERATOR_ALIASES.update(load_generator_aliases(config_path))
 
     vtable_blocks = load_vtable_blocks(args.gamedata)
 
@@ -671,12 +1048,17 @@ def main():
                 # honestly beats calling a working patch broken.
                 row["platforms"][platform] = {"status": "patch-unverifiable"}
                 continue
-            record = (index.get(fold(name)) or {}).get(platform)
-            if record is None and aliases.get(fold(name)):
-                record = (index.get(fold(aliases[fold(name)])) or {}).get(platform)
+            record = resolve_record(index, name, platform, aliases)
             info = check_signature(binaries, module, platform, value, record)
+            if record and info.get("status") == "ok" and record.get("func_va"):
+                # func: the plugin's pattern lands on the function this repo identified
+                info["func"] = "ok" if V._hexint(info["at"]) == _int(record["func_va"]) else "mismatch"
+            if record and info.get("status") in PASSING:
+                for method, verdict in confirm_record(binaries, record, platform).items():
+                    info.setdefault(method, verdict)
             if name in vtable_blocks:
-                expected = V._hexint(info["at"]) if info.get("status") == "ok" else None
+                expected = (V._hexint(info["at"]) if info.get("status") in ("ok", "ok-midfunction")
+                            else None)
                 if expected is None and record and record.get("func_va"):
                     expected = V._hexint(record.get("func_va"))
                 verdict = check_vtable_slot(binaries, module, platform, vtable_blocks[name], expected)
@@ -691,16 +1073,29 @@ def main():
 def _report(results, args, filename):
     """Shared rendering for both the symbol-keyed and the key=value paths."""
     bad = 0
+    tally = {"verified": 0, "unverified": 0, "contradicted": 0}
+    unverified = []
     for row in results:
-        for info in row["platforms"].values():
-            if (info["status"] in ("broken", "ambiguous", "mismatch", "unparsable")
-                    or info.get("rtti") == "mismatch" or info.get("gv") == "mismatch"
-                    or info.get("vtable") in VTABLE_BAD):
+        cross_platform(row)
+    for row in results:
+        for platform, info in row["platforms"].items():
+            state = verification(info)
+            if state:
+                info["verification"] = state
+                tally[state] += 1
+            if state == "unverified":
+                unverified.append(f"{row['name']}.{platform}")
+            if state == "verified" and {m for m in CONFIRM_METHODS if info.get(m) == "ok"} <= INSTRUCTION_ONLY:
+                info["instruction_only"] = True
+                tally["instruction_only"] = tally.get("instruction_only", 0) + 1
+            if (info["status"] in ("broken", "ambiguous", "mismatch", "unparsable", "too-few-literals")
+                    or state == "contradicted"
+                    or (state == "unverified" and getattr(args, "require_verified", False))):
                 bad += 1
 
     if args.json:
         print(json.dumps({"gamever": args.gamever, "gamedata": args.gamedata,
-                          "results": results, "unhealthy": bad}, indent=1))
+                          "results": results, "unhealthy": bad, "verification": tally}, indent=1))
         return 1 if bad else 0
 
     counts = {}
@@ -723,10 +1118,9 @@ def _report(results, args, filename):
                 cell += f" ref={info['reference']}"
             if info.get("resolved"):
                 cell += f" as {info['resolved']}"
-            if info.get("rtti"):
-                cell += f" rtti={info['rtti']}"
-            if info.get("gv"):
-                cell += f" gv={info['gv']}"
+            for method in CONFIRM_METHODS:
+                if info.get(method):
+                    cell += f" {method}={info[method]}"
             if info.get("vtable"):
                 cell += f" vtable={info['vtable']}"
             if info.get("points_at"):
@@ -739,6 +1133,10 @@ def _report(results, args, filename):
     # only to say WHY they pass.
     print(f"{len(results)} entries in {filename}: "
           + ", ".join(f"{n} {k}" for k, n in sorted(counts.items())))
+    print(f"verified: {tally['verified']} ({tally.get('instruction_only', 0)} by instruction only), "
+          f"unverified: {tally['unverified']}, contradicted: {tally['contradicted']}")
+    if unverified and not args.quiet:
+        print("  unverified: " + ", ".join(unverified[:40]) + (" ..." if len(unverified) > 40 else ""))
     print(f"unhealthy: {bad}")
     return 1 if bad else 0
 

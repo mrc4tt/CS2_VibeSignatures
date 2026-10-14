@@ -150,6 +150,13 @@ def desired_fields(paths, category):
         if isinstance(doc, dict):
             present.update(doc.keys())
     present.update(CATEGORY_REQUIRED_FIELDS.get(category, ()))
+    # A struct member's offset is read from ONE instruction inside offset_sig; without
+    # offset_sig_disp naming it, relocation falls back to whichever instruction carries the
+    # previous build's value - and once that value is wrong it stays wrong. linux
+    # CServerSideClient m_Server/m_SteamID/m_NetChannel/m_nEntityIndex shipped a
+    # neighbour's offset from 14182 to 14190 that way.
+    if category == "structmember" and "offset_sig" in present:
+        present.add("offset_sig_disp")
     order = SYMBOL_ARTIFACT_FIELD_ORDER.get(category, ())
     return [field for field in order if field in present]
 

@@ -87,6 +87,8 @@ UNIT_MODULES = frozenset(
         "test_review_issue",
         "test_css_generator_gv",
         "test_css_generator_vtable",
+        "test_css_vtable_slot_verify",
+        "test_verify_confirmation",
         "test_download_depot",
         "test_fork_owned_modules",
         "test_identity_audits",
