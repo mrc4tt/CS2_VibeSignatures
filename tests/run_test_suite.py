@@ -95,6 +95,7 @@ UNIT_MODULES = frozenset(
         "test_seed_force_safe",
         "test_plugin_declarations",
         "test_shape_drift",
+        "test_sync_plugin_templates",
         "test_download_depot",
         "test_fork_owned_modules",
         "test_identity_audits",

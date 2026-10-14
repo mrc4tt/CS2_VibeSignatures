@@ -295,7 +295,7 @@ PYEOF
 # printf, not a quoted "\n\n": inside double quotes those are two literal
 # characters, which is exactly how the first version reached Discord.
 final_body() {
-    printf '%s\n%s\n%s\n\n%s\n\n%s\n' "$(changed_keys_block)" "$IMPACT_LINE" "${ARGS_LINE:-}" "$(cat "$GATE_OUT")" "$(site_links)"
+    printf '%s\n%s\n%s\n%s\n\n%s\n\n%s\n' "$(changed_keys_block)" "$IMPACT_LINE" "${ARGS_LINE:-}" "${TEMPLATES_LINE:-}" "$(cat "$GATE_OUT")" "$(site_links)"
 }
 
 site_links() {
@@ -453,6 +453,10 @@ if git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1; then
     if [ -f "$STATE/finished-$TAG" ] || [ -f "deployments/$TAG.json" ] \
             || [ -z "$(git log -1 --format=%h -F --grep="feat($TAG): analysed by autopilot" HEAD)" ]; then
         log "build $TAG is already analysed; nothing to do"
+        # Between builds: follow the plugins' own gamedata files (at most every 6 h) and
+        # republish this build when one changed and the result still verifies.
+        [ "$DRY" = 1 ] || [ "${AUTOPILOT_TEMPLATE_REFRESH:-1}" = "0" ] \
+            || uv run template_refresh.py -gamever "$TAG" 2>&1 | while IFS= read -r line; do log "    $line"; done
         exit 0
     fi
     FINISH_FILE="$STATE/finish-attempts-$TAG"
@@ -601,6 +605,23 @@ step "checking each artifact against its task's fields (artifact contract)" uv r
 step "packing the snapshot" uv run gamesymbol_snapshot.py pack -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
 step "checking the snapshot against the config" uv run gamesymbol_snapshot.py check-contract \
     -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
+
+# Follow the plugins' own gamedata files before generating: a plugin that added, renamed or
+# dropped a key since the template was taken gets it from this build on, and a value its
+# author changed is compared with ours (it found bot-hider's m_UserIDString/m_bIsHLTV
+# misreads). Keys we have no record for ship the author's value and are reported as
+# "upstream" by the verify gate below. Never a failure: a plugin repo that is down just
+# leaves the template as it was.
+SYNC_OUT="$STATE/templates-$TAG.txt"
+log "==> following the plugins' gamedata files"
+uv run sync_plugin_templates.py -gamever "$TAG" -apply > "$SYNC_OUT" 2>&1
+case $? in
+    0) TEMPLATES_LINE="plugin templates: in step" ;;
+    1) TEMPLATES_LINE="PLUGIN TEMPLATES: $(grep -cE '^  [+-] ' "$SYNC_OUT") key(s) added/removed, $(grep -c '^  ! ' "$SYNC_OUT") value(s) where the plugin author disagrees:
+$(grep -E '^\[|^  [+!-] ' "$SYNC_OUT" | cut -c1-200 | head -14)" ;;
+    *) TEMPLATES_LINE="plugin templates: $(tail -1 "$SYNC_OUT")" ;;
+esac
+log "    $(printf '%s' "$TEMPLATES_LINE" | head -1)"
 
 GEN_LOG="$STATE/gamedata-$TAG.log"
 log "==> generating gamedata"
@@ -773,7 +794,7 @@ fi
 # ---------------------------------------------------------------- record it
 log "==> committing"
 git add -A -- "configs/$TAG.yaml" "bin_artifacts/$TAG" "gamesymbols/$TAG.yaml" "gamedata/$TAG" \
-    gamedata/history.json "diagnostics/$TAG.json" \
+    gamedata/history.json "diagnostics/$TAG.json" gamedata-generators/*/gamedata \
     "binary_locks/$TAG.json" download.yaml ida_preprocessor_scripts .claude/skills 2>/dev/null || true
 if git diff --cached --quiet; then
     log "    nothing to commit"

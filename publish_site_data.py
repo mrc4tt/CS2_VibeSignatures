@@ -441,11 +441,11 @@ def build_plugin_checks(build: str) -> dict:
                 state = verdict.get("verification")
                 if state:
                     tally = verification.setdefault(platform, {"verified": 0, "unverified": 0, "contradicted": 0,
-                                                               "instructionOnly": 0})
+                                                               "instructionOnly": 0, "upstream": 0})
                     tally[state] = tally.get(state, 0) + 1
                     if verdict.get("instruction_only"):
                         tally["instructionOnly"] += 1
-                if status not in PLUGIN_PASS_STATUSES or state in ("unverified", "contradicted"):
+                if status not in PLUGIN_PASS_STATUSES or state in ("unverified", "contradicted", "upstream"):
                     problem = {"name": result.get("name"), "platform": platform, "status": status}
                     if state:
                         problem["verification"] = state

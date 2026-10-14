@@ -1060,6 +1060,11 @@ def verification(info):
         return "contradicted"
     if status in PASSING and any(info.get(m) == "ok" for m in CONFIRM_METHODS):
         return "verified"
+    # A key this repo has no record for at all: the plugin author's value, shipped as the
+    # plugin publishes it (sync_plugin_templates). Not verified by us - reported, but not a
+    # gate failure, since leaving it out would break the plugin feature that reads it.
+    if info.get("unrecorded") and status in ("ok", "ok-midfunction", "ok-globalref", "no-reference"):
+        return "upstream"
     return "unverified"
 
 
@@ -1116,6 +1121,8 @@ def main():
             if kind == "offset":
                 row["platforms"][platform] = check_offset(index, binaries, name, platform,
                                                           value, aliases)
+                if resolve_record(index, name, platform, aliases) is None:
+                    row["platforms"][platform]["unrecorded"] = True
                 continue
             if kind == "patch":
                 # A patch value is what the plugin WRITES, not where it writes
@@ -1126,6 +1133,8 @@ def main():
                 continue
             record = resolve_record(index, name, platform, aliases)
             info = check_signature(binaries, module, platform, value, record)
+            if record is None:
+                info["unrecorded"] = True
             if record and info.get("status") == "ok" and record.get("func_va"):
                 # func: the plugin's pattern lands on the function this repo identified
                 info["func"] = "ok" if V._hexint(info["at"]) == _int(record["func_va"]) else "mismatch"
@@ -1150,8 +1159,8 @@ def main():
 def _report(results, args, filename):
     """Shared rendering for both the symbol-keyed and the key=value paths."""
     bad = 0
-    tally = {"verified": 0, "unverified": 0, "contradicted": 0}
-    unverified = []
+    tally = {"verified": 0, "unverified": 0, "contradicted": 0, "upstream": 0}
+    unverified, upstream = [], []
     for row in results:
         cross_platform(row)
     for row in results:
@@ -1162,6 +1171,8 @@ def _report(results, args, filename):
                 tally[state] += 1
             if state == "unverified":
                 unverified.append(f"{row['name']}.{platform}")
+            if state == "upstream":
+                upstream.append(f"{row['name']}.{platform}")
             if state == "verified" and {m for m in CONFIRM_METHODS if info.get(m) == "ok"} <= INSTRUCTION_ONLY:
                 info["instruction_only"] = True
                 tally["instruction_only"] = tally.get("instruction_only", 0) + 1
@@ -1211,9 +1222,11 @@ def _report(results, args, filename):
     print(f"{len(results)} entries in {filename}: "
           + ", ".join(f"{n} {k}" for k, n in sorted(counts.items())))
     print(f"verified: {tally['verified']} ({tally.get('instruction_only', 0)} by instruction only), "
-          f"unverified: {tally['unverified']}, contradicted: {tally['contradicted']}")
+          f"unverified: {tally['unverified']}, contradicted: {tally['contradicted']}, upstream: {tally['upstream']}")
     if unverified and not args.quiet:
         print("  unverified: " + ", ".join(unverified[:40]) + (" ..." if len(unverified) > 40 else ""))
+    if upstream:
+        print(f"upstream (the plugin author's value, no record here): {', '.join(upstream[:40])}")
     print(f"unhealthy: {bad}")
     return 1 if bad else 0
 
