@@ -415,15 +415,16 @@ implicit default, by design, so a run can never write to the wrong gamever.
 **Current clean baseline** (re-measured 2026-10-14 on the newest build, which is the only one this
 fork maintains - older gamevers are history, not repaired). 14190 generates gamedata with **0 warning
 diagnostics** and **0 errors**, `validate_artifacts.py` reports **0 errors**, and every value of the
-10 enabled plugins' files verifies on both platforms (`verify_plugin_gamedata.py -require-verified`):
+9 enabled plugins' files verifies on both platforms (`verify_plugin_gamedata.py -require-verified`):
 
 | gamever | gamedata updates | artifacts | validator | vfunc indices RTTI-confirmed | shipped values verified |
 |---------|------------------|-----------|-----------|------------------------------|-------------------------|
-| 14190   | 379 | 3744 | 0 errors, 10 warnings (9 `func_size 0x0`, 1 padding advisory) | 966 | 374 / 374, 0 contradicted |
+| 14190   | 313 | 3744 | 0 errors, 10 warnings (9 `func_size 0x0`, 1 padding advisory) | 966 | 308 / 308, 0 contradicted |
 
 For comparison, the two builds before it measured 3744 artifacts / 966 slots / 0 errors with 10 (14189)
 and 12 (14188) warnings. The update count is not comparable with the 480-ish of 14178b-14181: five
-generators were disabled since (and the table that held those numbers was a month old).
+generators were disabled since, and bot-improver was removed on 2026-10-15 (the table that held those
+numbers was a month old).
 
 **`capstone` must be installed for these numbers to mean anything.** It is a declared
 dependency now, but `validate_artifacts.py`, `verify_plugin_gamedata.py` and
