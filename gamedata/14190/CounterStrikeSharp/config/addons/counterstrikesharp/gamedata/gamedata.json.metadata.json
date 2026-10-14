@@ -3,9 +3,9 @@
     {
       "covered": true,
       "covered_lines": [
-        150,
-        151,
-        152
+        160,
+        161,
+        162
       ],
       "name": "CBaseEntity_DispatchSpawn",
       "updated": false
@@ -15,7 +15,7 @@
         {
           "after": "48 B8 00 00 00 00 FF FF FF FF 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ? ? ? ? 48 89 07 48 8D 05 ? ? ? ? 48 C7 47 08 00 00 00 00",
           "before": "55 48 89 E5 53 48 89 FB 48 83 EC ? E8 ? ? ? ? 48 89 D8 48 8B 5D ? C9 C3 CC CC CC CC CC CC 48 B8",
-          "line": 159,
+          "line": 169,
           "path": [
             "CBaseEntity_EmitSoundFilter",
             "signatures",
@@ -25,9 +25,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        157,
-        158,
-        159
+        167,
+        168,
+        169
       ],
       "name": "CBaseEntity_EmitSoundFilter",
       "updated": true
@@ -37,7 +37,7 @@
         {
           "after": 171,
           "before": 169,
-          "line": 171,
+          "line": 181,
           "path": [
             "CBaseEntity_IsPlayerPawn",
             "offsets",
@@ -47,7 +47,7 @@
         {
           "after": 170,
           "before": 168,
-          "line": 172,
+          "line": 182,
           "path": [
             "CBaseEntity_IsPlayerPawn",
             "offsets",
@@ -57,8 +57,8 @@
       ],
       "covered": true,
       "covered_lines": [
-        171,
-        172
+        181,
+        182
       ],
       "name": "CBaseEntity_IsPlayerPawn",
       "updated": true
@@ -66,9 +66,9 @@
     {
       "covered": true,
       "covered_lines": [
-        210,
-        211,
-        212
+        220,
+        221,
+        222
       ],
       "name": "CBaseEntity_TakeDamageOld",
       "updated": false
@@ -78,7 +78,7 @@
         {
           "after": 165,
           "before": 163,
-          "line": 204,
+          "line": 214,
           "path": [
             "CBaseEntity_Teleport",
             "offsets",
@@ -88,7 +88,7 @@
         {
           "after": 164,
           "before": 162,
-          "line": 205,
+          "line": 215,
           "path": [
             "CBaseEntity_Teleport",
             "offsets",
@@ -98,8 +98,8 @@
       ],
       "covered": true,
       "covered_lines": [
-        204,
-        205
+        214,
+        215
       ],
       "name": "CBaseEntity_Teleport",
       "updated": true
@@ -109,7 +109,7 @@
         {
           "after": "40 53 48 83 EC ? 48 8B D9 4C 8B C2 48 8B 0D ? ? ? ? 48 8D 54 24 ? 48 8B 01 FF 50 ? 48 8B 54 24 ? 48 8B CB E8 ? ? ? ? 48 83 C4 ? 5B C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 ?",
           "before": "40 53 48 83 EC ? 48 8B D9 4C 8B C2 48 8B 0D ? ? ? ? 48 8D 54 24 ? 48 8B 01 FF 50 ? 48 8B 54 24 ? 48 8B CB E8 ? ? ? ? 48 83 C4 ? 5B C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 8B 01",
-          "line": 73,
+          "line": 78,
           "path": [
             "CBaseModelEntity_SetModel",
             "signatures",
@@ -119,7 +119,7 @@
         {
           "after": "55 48 89 E5 53 48 89 FB 48 83 EC ? 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 50 ? 48 89 DF 48 8B 5D ? C9 48 89 C6 E9 ? ? ? ? ? ? ? ? 55",
           "before": "55 48 89 E5 53 48 89 FB 48 83 EC ? 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 50 ? 48 89 DF 48 8B 5D ? C9 48 89 C6 E9 ? ? ? ? CC CC CC CC 55",
-          "line": 74,
+          "line": 79,
           "path": [
             "CBaseModelEntity_SetModel",
             "signatures",
@@ -129,9 +129,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        72,
-        73,
-        74
+        77,
+        78,
+        79
       ],
       "name": "CBaseModelEntity_SetModel",
       "updated": true
@@ -173,7 +173,7 @@
         {
           "after": 387,
           "before": 384,
-          "line": 191,
+          "line": 201,
           "path": [
             "CBasePlayerPawn_CommitSuicide",
             "offsets",
@@ -183,7 +183,7 @@
         {
           "after": 387,
           "before": 384,
-          "line": 192,
+          "line": 202,
           "path": [
             "CBasePlayerPawn_CommitSuicide",
             "offsets",
@@ -193,8 +193,8 @@
       ],
       "covered": true,
       "covered_lines": [
-        191,
-        192
+        201,
+        202
       ],
       "name": "CBasePlayerPawn_CommitSuicide",
       "updated": true
@@ -204,7 +204,7 @@
         {
           "after": "48 85 D2 0F 84 ? ? ? ? 48 89 5C 24 ? 57 48 83 EC ? 48 8B DA 48 8B F9 E8 ? ? ? ?",
           "before": "48 85 D2 0F 84 ? ? ? ? 48 89 5C 24 ? 57 48 83 EC ? 48 8B DA 48 8B F9 E8",
-          "line": 198,
+          "line": 208,
           "path": [
             "CBasePlayerPawn_RemovePlayerItem",
             "signatures",
@@ -214,7 +214,7 @@
         {
           "after": "48 85 F6 74 ? E9 ? ? ? ? 66 0F 1F 44 00 00 C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 55 48 89 E5 41 54 41 89 F4",
           "before": "55 48 89 E5 41 54 49 89 FC 53 48 89 F3 E8 ? ? ? ? 48 39 C3",
-          "line": 199,
+          "line": 209,
           "path": [
             "CBasePlayerPawn_RemovePlayerItem",
             "signatures",
@@ -224,9 +224,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        197,
-        198,
-        199
+        207,
+        208,
+        209
       ],
       "name": "CBasePlayerPawn_RemovePlayerItem",
       "updated": true
@@ -236,19 +236,52 @@
         {
           "after": "48 85 F6 74 ? E9 ? ? ? ? 66 0F 1F 44 00 ? C3 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 55 48 89 E5 41 55",
           "before": "55 BA ? ? ? ? 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 49 89 FC",
-          "line": 226,
+          "line": 241,
           "path": [
             "CBaseTrigger_EndTouch",
             "signatures",
             "linux"
           ]
+        },
+        {
+          "after": "CBaseTrigger",
+          "before": null,
+          "line": 244,
+          "path": [
+            "CBaseTrigger_EndTouch",
+            "vtable",
+            "class"
+          ]
+        },
+        {
+          "after": 151,
+          "before": null,
+          "line": 245,
+          "path": [
+            "CBaseTrigger_EndTouch",
+            "vtable",
+            "linux_index"
+          ]
+        },
+        {
+          "after": 152,
+          "before": null,
+          "line": 246,
+          "path": [
+            "CBaseTrigger_EndTouch",
+            "vtable",
+            "windows_index"
+          ]
         }
       ],
       "covered": true,
       "covered_lines": [
-        224,
-        225,
-        226
+        239,
+        240,
+        241,
+        244,
+        245,
+        246
       ],
       "name": "CBaseTrigger_EndTouch",
       "updated": true
@@ -258,19 +291,52 @@
         {
           "after": "55 48 89 E5 41 54 49 89 F4 53 48 8B 07 48 89 FB FF 90 ? ? ? ? 84 C0 75 ? 5B 41 5C 5D C3 90 4C 89 E6 48 89 DF 5B 41 5C 5D E9 ? ? ? ? ? 49 8B 40 ?",
           "before": "55 48 89 E5 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 83 EC ? 48 8B 07 FF 90 ? ? ? ? 84 C0",
-          "line": 219,
+          "line": 229,
           "path": [
             "CBaseTrigger_StartTouch",
             "signatures",
             "linux"
           ]
+        },
+        {
+          "after": "CBaseTrigger",
+          "before": null,
+          "line": 232,
+          "path": [
+            "CBaseTrigger_StartTouch",
+            "vtable",
+            "class"
+          ]
+        },
+        {
+          "after": 149,
+          "before": null,
+          "line": 233,
+          "path": [
+            "CBaseTrigger_StartTouch",
+            "vtable",
+            "linux_index"
+          ]
+        },
+        {
+          "after": 150,
+          "before": null,
+          "line": 234,
+          "path": [
+            "CBaseTrigger_StartTouch",
+            "vtable",
+            "windows_index"
+          ]
         }
       ],
       "covered": true,
       "covered_lines": [
-        217,
-        218,
-        219
+        227,
+        228,
+        229,
+        232,
+        233,
+        234
       ],
       "name": "CBaseTrigger_StartTouch",
       "updated": true
@@ -280,7 +346,7 @@
         {
           "after": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F0 33 ED 4C 8D 44 24 ? 66 89 6C 24 ? 49 8B F9",
           "before": "",
-          "line": 304,
+          "line": 329,
           "path": [
             "CCSCustomHudLayout_SetDialogVariableString",
             "signatures",
@@ -290,7 +356,7 @@
         {
           "after": "55 48 89 E5 41 55 49 89 CD 41 54 49 89 D4 31 D2",
           "before": "55 48 89 E5 41 55 49 89 CD 41 54 49 89 D4 31 D2 53 48 89 FB 48 83 EC 18",
-          "line": 305,
+          "line": 330,
           "path": [
             "CCSCustomHudLayout_SetDialogVariableString",
             "signatures",
@@ -300,9 +366,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        303,
-        304,
-        305
+        328,
+        329,
+        330
       ],
       "name": "CCSCustomHudLayout_SetDialogVariableString",
       "updated": true
@@ -312,7 +378,7 @@
         {
           "after": "85 D2 0F 88 ? ? ? ? 53 55 56 48 83 EC ? 48 63 DA 49 8B E9 49 8B C0 48 8B F1 48 89 7C 24 ? 3B 99 ? ? ? ? 0F 8D ? ? ? ? 4C 89 74 24 ? 4C 8D 44 24 ? 45 33 F6 48 8B D0 66 44 89 74 24 ? E8 ? ? ? ? 84 C0 74 ? 4C 8D 44 24 ? 66 44 89 74 24 ? 48 8B D5 48 8B CE E8 ? ? ? ? 84 C0 74 ? 0F B6 86 ? ? ? ? A8 02 74 ? A8 01 75 ? 4C 8D 44 24 ? 48 C7 44 24 ? FF FF FF FF B2 03 48 8D 8E ? ? ? ? E8 ? ? ? ? 4C 8B 4C 24 ?",
           "before": "",
-          "line": 311,
+          "line": 336,
           "path": [
             "CCSCustomHudLayout_SetDialogVariableStringForPlayer",
             "signatures",
@@ -322,7 +388,7 @@
         {
           "after": "55 48 89 E5 41 56 41 55 41 54 53 89 F3 48 83 EC ? 85 F6 78 ? 49 89 FD 39 B7 ? ? ? ? 7F ? 48 83 C4 ? 5B 41 5C 41 5D 41 5E 5D C3 0F 1F 00 48 89 D6 31 D2 49 89 CE 66 89 55 ? 48 8D 55 ? 4D 89 C4",
           "before": "55 48 89 E5 41 56 41 55 41 54 41 89 F4 53 48 83 EC 10 3B B7 90 07 00 00 7C",
-          "line": 312,
+          "line": 337,
           "path": [
             "CCSCustomHudLayout_SetDialogVariableStringForPlayer",
             "signatures",
@@ -332,9 +398,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        310,
-        311,
-        312
+        335,
+        336,
+        337
       ],
       "name": "CCSCustomHudLayout_SetDialogVariableStringForPlayer",
       "updated": true
@@ -344,7 +410,7 @@
         {
           "after": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F0 33 ED 4C 8D 44 24 ? 66 89 6C 24 ? 41 8B F9",
           "before": "",
-          "line": 318,
+          "line": 343,
           "path": [
             "CCSCustomHudLayout_SetHasClass",
             "signatures",
@@ -354,7 +420,7 @@
         {
           "after": "55 48 89 E5 41 57 49 89 D7 41 56 48 8D 55 ?",
           "before": "55 48 89 E5 41 57 49 89 D7 41 56 48 8D 55 ? 41 55 41 54 49 89 FC 53 48 83 EC 48",
-          "line": 319,
+          "line": 344,
           "path": [
             "CCSCustomHudLayout_SetHasClass",
             "signatures",
@@ -364,9 +430,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        317,
-        318,
-        319
+        342,
+        343,
+        344
       ],
       "name": "CCSCustomHudLayout_SetHasClass",
       "updated": true
@@ -376,7 +442,7 @@
         {
           "after": "85 D2 0F 88 ? ? ? ? 53 55 56 48 83 EC ? 48 63 DA 49 8B E9 49 8B C0 48 8B F1 48 89 7C 24 ? 3B 99 ? ? ? ? 0F 8D ? ? ? ? 4C 89 74 24 ? 4C 8D 44 24 ? 45 33 F6 48 8B D0 66 44 89 74 24 ? E8 ? ? ? ? 84 C0 74 ? 4C 8D 44 24 ? 66 44 89 74 24 ? 48 8B D5 48 8B CE E8 ? ? ? ? 84 C0 74 ? 0F B6 86 ? ? ? ? A8 02 74 ? A8 01 75 ? 4C 8D 44 24 ? 48 C7 44 24 ? FF FF FF FF B2 03 48 8D 8E ? ? ? ? E8 ? ? ? ? 44 8B 4C 24 ?",
           "before": "",
-          "line": 325,
+          "line": 350,
           "path": [
             "CCSCustomHudLayout_SetHasClassForPlayer",
             "signatures",
@@ -386,7 +452,7 @@
         {
           "after": "55 48 89 E5 41 56 41 55 41 54 53 89 F3 48 83 EC ? 85 F6 78 ? 49 89 FD 39 B7 ? ? ? ? 7F ? 48 83 C4 ? 5B 41 5C 41 5D 41 5E 5D C3 0F 1F 00 48 89 D6 31 D2 49 89 CE 66 89 55 ? 48 8D 55 ? 45 89 C4",
           "before": "49 89 CD 45 89 C6 E8 ? ? ? ? 84 C0",
-          "line": 326,
+          "line": 351,
           "path": [
             "CCSCustomHudLayout_SetHasClassForPlayer",
             "signatures",
@@ -396,9 +462,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        324,
-        325,
-        326
+        349,
+        350,
+        351
       ],
       "name": "CCSCustomHudLayout_SetHasClassForPlayer",
       "updated": true
@@ -408,7 +474,7 @@
         {
           "after": "85 D2 78 ? 48 89 5C 24 ? 56",
           "before": "",
-          "line": 339,
+          "line": 364,
           "path": [
             "CCSCustomHudLayout_SetInputCaptureEnabled",
             "signatures",
@@ -418,7 +484,7 @@
         {
           "after": "55 48 89 E5 41 55 41 54 53 48 63 DE 48 83 EC ?",
           "before": "3B B7 90 07 00 00 0F 8D ? ? ? ? 55 48 89 E5 41 55 41 54 41 89 D4 53 48 63 DE 48 69 DB A0 01 00 00",
-          "line": 340,
+          "line": 365,
           "path": [
             "CCSCustomHudLayout_SetInputCaptureEnabled",
             "signatures",
@@ -428,9 +494,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        338,
-        339,
-        340
+        363,
+        364,
+        365
       ],
       "name": "CCSCustomHudLayout_SetInputCaptureEnabled",
       "updated": true
@@ -440,7 +506,7 @@
         {
           "after": 25,
           "before": 26,
-          "line": 131,
+          "line": 141,
           "path": [
             "CCSGameRules_FindPickerEntity",
             "offsets",
@@ -450,7 +516,7 @@
         {
           "after": 26,
           "before": 27,
-          "line": 132,
+          "line": 142,
           "path": [
             "CCSGameRules_FindPickerEntity",
             "offsets",
@@ -460,8 +526,8 @@
       ],
       "covered": true,
       "covered_lines": [
-        131,
-        132
+        141,
+        142
       ],
       "name": "CCSGameRules_FindPickerEntity",
       "updated": true
@@ -471,7 +537,7 @@
         {
           "after": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? F3 0F 11 85 ? ? ? ? 89 B5 ? ? ? ?",
           "before": "55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 8D 35 ? ? ?",
-          "line": 126,
+          "line": 136,
           "path": [
             "CCSGameRules_TerminateRound",
             "signatures",
@@ -481,9 +547,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        124,
-        125,
-        126
+        134,
+        135,
+        136
       ],
       "name": "CCSGameRules_TerminateRound",
       "updated": true
@@ -493,7 +559,7 @@
         {
           "after": "48 83 3D ? ? ? ? ? 0F 95 C0 C3 ? ? ? ? C2 ? ?",
           "before": "48 83 3D ? ? ? ? ? 0F 95 C0 C3 CC CC CC CC C2",
-          "line": 297,
+          "line": 322,
           "path": [
             "CCSNavArea_IsValidNavMesh",
             "signatures",
@@ -503,9 +569,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        296,
-        297,
-        298
+        321,
+        322,
+        323
       ],
       "name": "CCSNavArea_IsValidNavMesh",
       "updated": true
@@ -515,7 +581,7 @@
         {
           "after": "44 89 44 24 ? 48 89 54 24 ? 48 89 4C 24 ? 55 53 56 57 41 54 41 55 41 56 41 57 48 8B EC",
           "before": "44 89 44 24 ? 48 89 54 24 ? 48 89 4C 24 ? 55 53 56 57 41 55 41 56 41 57 48 8B EC",
-          "line": 87,
+          "line": 97,
           "path": [
             "CCSPlayer_ItemServices_CanAcquire",
             "signatures",
@@ -525,7 +591,7 @@
         {
           "after": "55 48 89 E5 41 57 41 56 49 89 F6 41 55 41 54 49 89 CC 53 48 89 FB 48 83 EC ? 4C 8B 6F ?",
           "before": "55 48 89 E5 41 57 41 56 41 55 49 89 CD 41 54 49 89 FC 53 48 89 F3 48 83 EC",
-          "line": 88,
+          "line": 98,
           "path": [
             "CCSPlayer_ItemServices_CanAcquire",
             "signatures",
@@ -535,9 +601,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        86,
-        87,
-        88
+        96,
+        97,
+        98
       ],
       "name": "CCSPlayer_ItemServices_CanAcquire",
       "updated": true
@@ -545,8 +611,8 @@
     {
       "covered": true,
       "covered_lines": [
-        106,
-        107
+        116,
+        117
       ],
       "name": "CCSPlayer_ItemServices_DropActivePlayerWeapon",
       "updated": false
@@ -554,8 +620,8 @@
     {
       "covered": true,
       "covered_lines": [
-        100,
-        101
+        110,
+        111
       ],
       "name": "CCSPlayer_ItemServices_GiveNamedItem",
       "updated": false
@@ -563,8 +629,8 @@
     {
       "covered": true,
       "covered_lines": [
-        112,
-        113
+        122,
+        123
       ],
       "name": "CCSPlayer_ItemServices_RemoveWeapons",
       "updated": false
@@ -574,19 +640,52 @@
         {
           "after": "55 48 8D 15 ? ? ? ? 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 48 8B 07 48 8B 80 ? ? ? ? 48 39 D0 0F 85 ? ? ? ? 80 BF ? ? ? ? ?",
           "before": "55 48 8D 15 ? ? ? ? 48 89 E5 41 55 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 07 48 8B 80",
-          "line": 81,
+          "line": 86,
           "path": [
             "CCSPlayer_WeaponServices_CanUse",
             "signatures",
             "linux"
           ]
+        },
+        {
+          "after": "CCSPlayer_WeaponServices",
+          "before": null,
+          "line": 89,
+          "path": [
+            "CCSPlayer_WeaponServices_CanUse",
+            "vtable",
+            "class"
+          ]
+        },
+        {
+          "after": 28,
+          "before": null,
+          "line": 90,
+          "path": [
+            "CCSPlayer_WeaponServices_CanUse",
+            "vtable",
+            "linux_index"
+          ]
+        },
+        {
+          "after": 27,
+          "before": null,
+          "line": 91,
+          "path": [
+            "CCSPlayer_WeaponServices_CanUse",
+            "vtable",
+            "windows_index"
+          ]
         }
       ],
       "covered": true,
       "covered_lines": [
-        79,
-        80,
-        81
+        84,
+        85,
+        86,
+        89,
+        90,
+        91
       ],
       "name": "CCSPlayer_WeaponServices_CanUse",
       "updated": true
@@ -684,13 +783,46 @@
             "signatures",
             "linux"
           ]
+        },
+        {
+          "after": "CCSPlayerPawn",
+          "before": null,
+          "line": 49,
+          "path": [
+            "CCSPlayerPawnBase_PostThink",
+            "vtable",
+            "class"
+          ]
+        },
+        {
+          "after": 356,
+          "before": null,
+          "line": 50,
+          "path": [
+            "CCSPlayerPawnBase_PostThink",
+            "vtable",
+            "linux_index"
+          ]
+        },
+        {
+          "after": 355,
+          "before": null,
+          "line": 51,
+          "path": [
+            "CCSPlayerPawnBase_PostThink",
+            "vtable",
+            "windows_index"
+          ]
         }
       ],
       "covered": true,
       "covered_lines": [
         44,
         45,
-        46
+        46,
+        49,
+        50,
+        51
       ],
       "name": "CCSPlayerPawnBase_PostThink",
       "updated": true
@@ -700,7 +832,7 @@
         {
           "after": "4C 89 4C 24 ? 55 53 41 54",
           "before": "",
-          "line": 332,
+          "line": 357,
           "path": [
             "CCSPointScript_OnCustomHudClicked",
             "signatures",
@@ -710,7 +842,7 @@
         {
           "after": "55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB 48 83 EC ? 0F B6 05 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7B 30 00",
           "before": "55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB 48 83 EC 68 0F B6 05 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7B 30 00",
-          "line": 333,
+          "line": 358,
           "path": [
             "CCSPointScript_OnCustomHudClicked",
             "signatures",
@@ -720,9 +852,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        331,
-        332,
-        333
+        356,
+        357,
+        358
       ],
       "name": "CCSPointScript_OnCustomHudClicked",
       "updated": true
@@ -732,7 +864,7 @@
         {
           "after": "48 89 5C 24 ? 48 89 6C 24 ? 56 57 41 56 48 81 EC ? ? ? ? 4D 8B F0 48 8B F1",
           "before": "89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F0 48 8B D9 48 8B 0D",
-          "line": 165,
+          "line": 175,
           "path": [
             "CEntityInstance_AcceptInput",
             "signatures",
@@ -742,7 +874,7 @@
         {
           "after": "55 48 89 E5 41 57 49 89 FF 41 56 48 8D BD ? ? ? ? 41 55 4C 8D AD ? ? ? ?",
           "before": "55 48 89 E5 41 56 49 89 FE 41 55 48 8D 7D",
-          "line": 166,
+          "line": 176,
           "path": [
             "CEntityInstance_AcceptInput",
             "signatures",
@@ -752,9 +884,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        164,
-        165,
-        166
+        174,
+        175,
+        176
       ],
       "name": "CEntityInstance_AcceptInput",
       "updated": true
@@ -764,7 +896,7 @@
         {
           "after": "48 8B C4 48 89 58 ? 48 89 70 ? 48 89 48 ? 55",
           "before": "4C 89 4C 24 ? 48 89 4C 24 ? 53 56",
-          "line": 238,
+          "line": 258,
           "path": [
             "CEntityIOOutput_FireOutputInternal",
             "signatures",
@@ -774,113 +906,9 @@
         {
           "after": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 49 89 D4 53 48 89 F3 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ?",
           "before": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 49 89 D4 53 48 89 F3 48 83 EC ? 48 8D 05",
-          "line": 239,
-          "path": [
-            "CEntityIOOutput_FireOutputInternal",
-            "signatures",
-            "linux"
-          ]
-        }
-      ],
-      "covered": true,
-      "covered_lines": [
-        237,
-        238,
-        239
-      ],
-      "name": "CEntityIOOutput_FireOutputInternal",
-      "updated": true
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        251,
-        252
-      ],
-      "name": "CEntityResourceManifest_AddResource",
-      "updated": false
-    },
-    {
-      "changes": [
-        {
-          "after": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F1 48 8B F9",
-          "before": "48 89 5C 24 ? 4C 89 4C 24 ? 48 89 4C 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ? 49 8B F9",
-          "line": 178,
-          "path": [
-            "CEntitySystem_AddEntityIOEvent",
-            "signatures",
-            "windows"
-          ]
-        },
-        {
-          "after": "55 48 89 E5 41 55 49 89 CD 41 54 49 89 FC 53 BB ? ? ? ?",
-          "before": "55 48 89 E5 41 55 49 89 CD 41 54 49 89 FC 53 BB",
-          "line": 179,
-          "path": [
-            "CEntitySystem_AddEntityIOEvent",
-            "signatures",
-            "linux"
-          ]
-        }
-      ],
-      "covered": true,
-      "covered_lines": [
-        177,
-        178,
-        179
-      ],
-      "name": "CEntitySystem_AddEntityIOEvent",
-      "updated": true
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        51,
-        52,
-        53
-      ],
-      "name": "CGameEventManager_Init",
-      "updated": false
-    },
-    {
-      "changes": [
-        {
-          "after": 14,
-          "before": 13,
-          "line": 119,
-          "path": [
-            "CGameSceneNode_GetSkeletonInstance",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
-      "covered": true,
-      "covered_lines": [
-        118,
-        119
-      ],
-      "name": "CGameSceneNode_GetSkeletonInstance",
-      "updated": true
-    },
-    {
-      "changes": [
-        {
-          "after": "48 8B C4 4C 89 48 ? 48 89 50 ? 48 89 48 ? 55 48 8D A8 ? ? ? ?",
-          "before": "48 8B C4 4C 89 48 ? 48 89 50 ? 48 89 48 ? 55 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 48 89 58 ? 48 89 70",
-          "line": 258,
-          "path": [
-            "CheckTransmit",
-            "signatures",
-            "windows"
-          ]
-        },
-        {
-          "after": "55 49 89 CA 48 89 E5 41 57 41 89 D7",
-          "before": "55 48 89 E5 41 57 49 89 FF 41 56 48 8D 3D ? ? ? ? 41 55 4C 63 EA",
           "line": 259,
           "path": [
-            "CheckTransmit",
+            "CEntityIOOutput_FireOutputInternal",
             "signatures",
             "linux"
           ]
@@ -892,14 +920,151 @@
         258,
         259
       ],
+      "name": "CEntityIOOutput_FireOutputInternal",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        271,
+        272
+      ],
+      "name": "CEntityResourceManifest_AddResource",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F1 48 8B F9",
+          "before": "48 89 5C 24 ? 4C 89 4C 24 ? 48 89 4C 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ? 49 8B F9",
+          "line": 188,
+          "path": [
+            "CEntitySystem_AddEntityIOEvent",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 55 49 89 CD 41 54 49 89 FC 53 BB ? ? ? ?",
+          "before": "55 48 89 E5 41 55 49 89 CD 41 54 49 89 FC 53 BB",
+          "line": 189,
+          "path": [
+            "CEntitySystem_AddEntityIOEvent",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        187,
+        188,
+        189
+      ],
+      "name": "CEntitySystem_AddEntityIOEvent",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        56,
+        57,
+        58
+      ],
+      "name": "CGameEventManager_Init",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": 14,
+          "before": 13,
+          "line": 129,
+          "path": [
+            "CGameSceneNode_GetSkeletonInstance",
+            "offsets",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        128,
+        129
+      ],
+      "name": "CGameSceneNode_GetSkeletonInstance",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 4C 89 48 ? 48 89 50 ? 48 89 48 ? 55 48 8D A8 ? ? ? ?",
+          "before": "48 8B C4 4C 89 48 ? 48 89 50 ? 48 89 48 ? 55 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 48 89 58 ? 48 89 70",
+          "line": 278,
+          "path": [
+            "CheckTransmit",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 49 89 CA 48 89 E5 41 57 41 89 D7",
+          "before": "55 48 89 E5 41 57 49 89 FF 41 56 48 8D 3D ? ? ? ? 41 55 4C 63 EA",
+          "line": 279,
+          "path": [
+            "CheckTransmit",
+            "signatures",
+            "linux"
+          ]
+        },
+        {
+          "after": "CSource2GameEntities",
+          "before": null,
+          "line": 282,
+          "path": [
+            "CheckTransmit",
+            "vtable",
+            "class"
+          ]
+        },
+        {
+          "after": 13,
+          "before": null,
+          "line": 283,
+          "path": [
+            "CheckTransmit",
+            "vtable",
+            "linux_index"
+          ]
+        },
+        {
+          "after": 12,
+          "before": null,
+          "line": 284,
+          "path": [
+            "CheckTransmit",
+            "vtable",
+            "windows_index"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        277,
+        278,
+        279,
+        282,
+        283,
+        284
+      ],
       "name": "CheckTransmit",
       "updated": true
     },
     {
       "covered": true,
       "covered_lines": [
-        264,
-        265
+        289,
+        290
       ],
       "name": "CheckTransmitPlayerSlot",
       "updated": false
@@ -939,8 +1104,8 @@
     {
       "covered": true,
       "covered_lines": [
-        137,
-        138
+        147,
+        148
       ],
       "name": "CTakeDamageInfo_HitGroup",
       "updated": false
@@ -948,8 +1113,8 @@
     {
       "covered": true,
       "covered_lines": [
-        231,
-        232
+        251,
+        252
       ],
       "name": "GameEntitySystem",
       "updated": false
@@ -957,9 +1122,9 @@
     {
       "covered": true,
       "covered_lines": [
-        93,
-        94,
-        95
+        103,
+        104,
+        105
       ],
       "name": "GetCSWeaponDataFromKey",
       "updated": false
@@ -969,7 +1134,7 @@
         {
           "after": "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 44 89 44 24 ?",
           "before": "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 44 89 44 24",
-          "line": 59,
+          "line": 64,
           "path": [
             "GiveNamedItem",
             "signatures",
@@ -979,7 +1144,7 @@
         {
           "after": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? 48 89 BD ? ? ? ? 89 95 ? ? ? ? 48 89 8D ? ? ? ? 44 89 85 ? ? ? ?",
           "before": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? 48 89 BD ? ? ? ? 89 95 ? ? ? ? 48 89 8D ? ? ? ? 44 89 85",
-          "line": 60,
+          "line": 65,
           "path": [
             "GiveNamedItem",
             "signatures",
@@ -989,9 +1154,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        58,
-        59,
-        60
+        63,
+        64,
+        65
       ],
       "name": "GiveNamedItem",
       "updated": true
@@ -1001,7 +1166,7 @@
         {
           "after": "44 89 4C 24 ? 44 88 44 24 ?",
           "before": "44 89 4C 24 ? 44 88 44 24",
-          "line": 290,
+          "line": 315,
           "path": [
             "Host_Say",
             "signatures",
@@ -1011,9 +1176,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        289,
-        290,
-        291
+        314,
+        315,
+        316
       ],
       "name": "Host_Say",
       "updated": true
@@ -1023,7 +1188,7 @@
         {
           "after": "48 8B 1D ? ? ? ? 48 85 DB 0F 84 ? ? ? ? BD ? ? ? ?",
           "before": "48 8B 1D ? ? ? ? 48 85 DB 0F 84 ? ? ? ? BD",
-          "line": 245,
+          "line": 265,
           "path": [
             "IGameSystem_InitAllSystems_pFirst",
             "signatures",
@@ -1033,7 +1198,7 @@
         {
           "after": "4C 8B 35 ? ? ? ? 4D 85 F6 75 ? E9 ? ? ? ?",
           "before": "4C 8B 35 ? ? ? ? 4D 85 F6 75",
-          "line": 246,
+          "line": 266,
           "path": [
             "IGameSystem_InitAllSystems_pFirst",
             "signatures",
@@ -1043,9 +1208,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        244,
-        245,
-        246
+        264,
+        265,
+        266
       ],
       "name": "IGameSystem_InitAllSystems_pFirst",
       "updated": true
@@ -1053,8 +1218,8 @@
     {
       "covered": true,
       "covered_lines": [
-        283,
-        284
+        308,
+        309
       ],
       "name": "ISource2GameEntities::CheckTransmit",
       "updated": false
@@ -1064,7 +1229,7 @@
         {
           "after": "48 8B 05 ? ? ? ? 48 85 C0 74 ? 83 FF ? 77 ? 48 63 FF 48 C1 E7 ? 48 8D 44 38 ?",
           "before": "48 8B 05 ? ? ? ? 48 85 C0 74 ? 83 FF ? 77 ? 48 63 FF 48 C1 E7 ? 48 8D 44 38",
-          "line": 186,
+          "line": 196,
           "path": [
             "LegacyGameEventListener",
             "signatures",
@@ -1074,9 +1239,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        184,
-        185,
-        186
+        194,
+        195,
+        196
       ],
       "name": "LegacyGameEventListener",
       "updated": true
@@ -1084,9 +1249,9 @@
     {
       "covered": true,
       "covered_lines": [
-        270,
-        271,
-        272
+        295,
+        296,
+        297
       ],
       "name": "NetworkStateChanged",
       "updated": false
@@ -1094,8 +1259,8 @@
     {
       "covered": true,
       "covered_lines": [
-        277,
-        278
+        302,
+        303
       ],
       "name": "SetStateChanged",
       "updated": false
@@ -1125,9 +1290,9 @@
     {
       "covered": true,
       "covered_lines": [
-        143,
-        144,
-        145
+        153,
+        154,
+        155
       ],
       "name": "UTIL_CreateEntityByName",
       "updated": false
@@ -1137,7 +1302,7 @@
         {
           "after": "48 85 C9 74 ? 48 8B D1 48 8B 0D ? ? ? ?",
           "before": "48 85 C9 74 ? 48 8B D1 48 8B 0D",
-          "line": 66,
+          "line": 71,
           "path": [
             "UTIL_Remove",
             "signatures",
@@ -1147,7 +1312,7 @@
         {
           "after": "48 89 FE 48 85 FF",
           "before": "48 89 FE 48 85 FF 74 ? 48 8D 05 ? ? ? ? 48",
-          "line": 67,
+          "line": 72,
           "path": [
             "UTIL_Remove",
             "signatures",
@@ -1157,9 +1322,9 @@
       ],
       "covered": true,
       "covered_lines": [
-        65,
-        66,
-        67
+        70,
+        71,
+        72
       ],
       "name": "UTIL_Remove",
       "updated": true

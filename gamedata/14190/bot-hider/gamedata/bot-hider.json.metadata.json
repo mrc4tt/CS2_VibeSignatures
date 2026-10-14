@@ -230,18 +230,6 @@
       "updated": true
     },
     {
-      "changes": [
-        {
-          "after": 2552,
-          "before": 160,
-          "line": 176,
-          "path": [
-            "CServerSideClient::m_bFakePlayer",
-            "offsets",
-            "windows"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         176,
@@ -249,7 +237,7 @@
         179
       ],
       "name": "CServerSideClient::m_bFakePlayer",
-      "updated": true
+      "updated": false
     },
     {
       "changes": [
@@ -314,18 +302,6 @@
       "updated": false
     },
     {
-      "changes": [
-        {
-          "after": 72,
-          "before": 76,
-          "line": 135,
-          "path": [
-            "CServerSideClient::m_nEntityIndex",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         134,
@@ -333,21 +309,9 @@
         137
       ],
       "name": "CServerSideClient::m_nEntityIndex",
-      "updated": true
+      "updated": false
     },
     {
-      "changes": [
-        {
-          "after": 160,
-          "before": 88,
-          "line": 149,
-          "path": [
-            "CServerSideClient::m_NetChannel",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         148,
@@ -355,7 +319,7 @@
         151
       ],
       "name": "CServerSideClient::m_NetChannel",
-      "updated": true
+      "updated": false
     },
     {
       "covered": true,
@@ -378,18 +342,6 @@
       "updated": false
     },
     {
-      "changes": [
-        {
-          "after": 76,
-          "before": 80,
-          "line": 142,
-          "path": [
-            "CServerSideClient::m_Server",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         141,
@@ -397,21 +349,9 @@
         144
       ],
       "name": "CServerSideClient::m_Server",
-      "updated": true
+      "updated": false
     },
     {
-      "changes": [
-        {
-          "after": 160,
-          "before": 171,
-          "line": 191,
-          "path": [
-            "CServerSideClient::m_SteamID",
-            "offsets",
-            "linux"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         190,
@@ -419,7 +359,7 @@
         193
       ],
       "name": "CServerSideClient::m_SteamID",
-      "updated": true
+      "updated": false
     },
     {
       "covered": true,
@@ -558,6 +498,6 @@
   "summary": {
     "covered": 28,
     "total": 28,
-    "updated": 16
+    "updated": 11
   }
 }

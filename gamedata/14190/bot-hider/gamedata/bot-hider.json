@@ -132,21 +132,21 @@
   "CServerSideClient::m_nEntityIndex": {
     "offsets": {
       "windows": 76,
-      "linux": 72
+      "linux": 76
     },
     "comment": "entity index"
   },
   "CServerSideClient::m_Server": {
     "offsets": {
       "windows": 80,
-      "linux": 76
+      "linux": 80
     },
     "comment": "network server pointer"
   },
   "CServerSideClient::m_NetChannel": {
     "offsets": {
       "windows": 88,
-      "linux": 160
+      "linux": 88
     },
     "comment": "network channel pointer"
   },
@@ -173,7 +173,7 @@
   },
   "CServerSideClient::m_bFakePlayer": {
     "offsets": {
-      "windows": 2552,
+      "windows": 160,
       "linux": 160
     },
     "comment": "fake player flag"
@@ -188,7 +188,7 @@
   "CServerSideClient::m_SteamID": {
     "offsets": {
       "windows": 171,
-      "linux": 160
+      "linux": 171
     },
     "comment": "steam id"
   },

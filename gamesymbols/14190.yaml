@@ -13499,8 +13499,8 @@ files:
     struct_name: CServerSideClient
   engine/CServerSideClient_m_NetChannel.linux.yaml:
     member_name: m_NetChannel
-    offset: '0xa0'
-    offset_sig: 41 80 BF A0 00 00 00 00 49 89 5F 58 45 88 67 60 75 28 48 8B
+    offset: '0x58'
+    offset_sig: 49 89 5F 58 45 88 67 ??
     size: 8
     struct_name: CServerSideClient
   engine/CServerSideClient_m_NetChannel.windows.yaml:
@@ -13511,8 +13511,8 @@ files:
     struct_name: CServerSideClient
   engine/CServerSideClient_m_Server.linux.yaml:
     member_name: m_Server
-    offset: '0x4c'
-    offset_sig: 89 57 4C 31 D2 48 89 77 50 31 F6 66 89 47 60 66 89 57 68 0F 29 47 70 0F 29
+    offset: '0x50'
+    offset_sig: 48 89 77 50 31 F6
     size: 8
     struct_name: CServerSideClient
   engine/CServerSideClient_m_Server.windows.yaml:
@@ -13523,8 +13523,8 @@ files:
     struct_name: CServerSideClient
   engine/CServerSideClient_m_SteamID.linux.yaml:
     member_name: m_SteamID
-    offset: '0xa0'
-    offset_sig: 0F B6 87 A0 00 00 00 84 C0 75 6B 48 8B 83 AB 00 00 00 C7 45 D4 01 00 00 00 48
+    offset: '0xab'
+    offset_sig: 48 8B 83 AB 00 00 00 C7 45 ?? ?? ?? ?? ??
     size: 8
     struct_name: CServerSideClient
   engine/CServerSideClient_m_SteamID.windows.yaml:
@@ -13577,8 +13577,8 @@ files:
     struct_name: CServerSideClient
   engine/CServerSideClient_m_bFakePlayer.windows.yaml:
     member_name: m_bFakePlayer
-    offset: '0x9f8'
-    offset_sig: 0F B6 81 F8 09 00 00
+    offset: '0xa0'
+    offset_sig: 41 88 AE A0 00 00 00
     size: 1
     struct_name: CServerSideClient
   engine/CServerSideClient_m_bIsHLTV.linux.yaml:
@@ -13619,8 +13619,8 @@ files:
     struct_name: CServerSideClient
   engine/CServerSideClient_m_nEntityIndex.linux.yaml:
     member_name: m_nEntityIndex
-    offset: '0x48'
-    offset_sig: 8B 43 48 48 89 DF 83 C0 01 89 43 4C
+    offset: '0x4c'
+    offset_sig: 89 43 4C 48 8B 5D ??
     size: 4
     struct_name: CServerSideClient
   engine/CServerSideClient_m_nEntityIndex.windows.yaml:
@@ -47009,5 +47009,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14190'
-last_publish_time: '2026-10-12T15:43:06Z'
+last_publish_time: '2026-10-14T19:07:40Z'
 schema_version: 5
