@@ -166,6 +166,11 @@ ALIAS_OVERRIDES = {
     # Without the key that binding fails on the server, so ship it as an alias, not a
     # second record.
     "CBaseEntity_TakeDamage": "CBaseEntity_TakeDamageOld",
+    # bot-hider renamed its key CCSGameRules::SameMapTeardown -> CCSGameRules::EndMatchState
+    # (XBribo/CS2-Bot-Hider, 2026-09) for the same function: its signature lands on our
+    # CCSGameRules_SameMapTeardown on both platforms (14190 linux 0x13eda00, windows
+    # 0x18090e470), the only function using "mg_skirmish_%s" / "nextmode %s;".
+    "CCSGameRules::EndMatchState": "CCSGameRules_SameMapTeardown",
     # CounterStrikeSharp ships this offset under the short name its schema code uses
     # (schema.cpp:167 reads GetOffset("SetStateChanged")), while the analysis files the
     # virtual as CEntityInstance_NetworkStateChanged. Same values - windows 28 from

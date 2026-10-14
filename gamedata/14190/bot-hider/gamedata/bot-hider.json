@@ -47,17 +47,13 @@
     },
     "comment": "packs network entities for clients"
   },
-  "CCSGameRules::SameMapTeardown": {
+  "CCSGameRules::EndMatchState": {
     "signatures": {
       "library": "server",
       "windows": "48 8B C4 55 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 80 3D ? ? ? ? ?",
       "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? 48 89 BD ? ? ? ? E8 ? ? ? ?"
     },
-    "offsets": {
-      "windows": -43,
-      "linux": 22
-    },
-    "comment": "restores bot identity before same-map teardown"
+    "comment": "temporarily restores bot identity during end-match team resets"
   },
   "CServerSideClient::SetName": {
     "offsets": {
@@ -65,13 +61,6 @@
       "linux": 63
     },
     "comment": "updates the client display name"
-  },
-  "GameResourceServiceServer::m_pEntitySystem": {
-    "offsets": {
-      "windows": 88,
-      "linux": 80
-    },
-    "comment": "resolves the game entity system"
   },
   "CEntitySystem::m_EntityList": {
     "offsets": {
@@ -110,8 +99,8 @@
   },
   "CServerSideClient::m_UserIDString": {
     "offsets": {
-      "windows": 187,
-      "linux": 187
+      "windows": 56,
+      "linux": 56
     },
     "comment": "user id string"
   },
@@ -201,8 +190,8 @@
   },
   "CServerSideClient::m_bIsHLTV": {
     "offsets": {
-      "windows": 104,
-      "linux": 104
+      "windows": 322,
+      "linux": 322
     },
     "comment": "SourceTV flag"
   }

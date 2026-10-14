@@ -10406,6 +10406,7 @@ modules:
         category: func
         alias:
           - CCSGameRules::SameMapTeardown
+          - CCSGameRules::EndMatchState
       - name: CEntityIdentity_Size
         category: structmember
         struct: CEntityIdentity

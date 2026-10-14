@@ -13559,14 +13559,14 @@ files:
     struct_name: CServerSideClient
   engine/CServerSideClient_m_UserIDString.linux.yaml:
     member_name: m_UserIDString
-    offset: '0xbb'
-    offset_sig: 49 89 97 BB 00 00 00
+    offset: '0x38'
+    offset_sig: 48 83 7B 38 00 4C 8D 63 ??
     size: 8
     struct_name: CServerSideClient
   engine/CServerSideClient_m_UserIDString.windows.yaml:
     member_name: m_UserIDString
-    offset: '0xbb'
-    offset_sig: 49 89 9E BB 00 00 00
+    offset: '0x38'
+    offset_sig: 48 8D 4B 38 FF 15 ?? ?? ?? ?? 48 8D 43 ??
     size: 8
     struct_name: CServerSideClient
   engine/CServerSideClient_m_bFakePlayer.linux.yaml:
@@ -13583,14 +13583,14 @@ files:
     struct_name: CServerSideClient
   engine/CServerSideClient_m_bIsHLTV.linux.yaml:
     member_name: m_bIsHLTV
-    offset: '0x68'
-    offset_sig: 0F B6 47 68 C3
+    offset: '0x142'
+    offset_sig: 88 87 42 01 00 00
     size: 1
     struct_name: CServerSideClient
   engine/CServerSideClient_m_bIsHLTV.windows.yaml:
     member_name: m_bIsHLTV
-    offset: '0x68'
-    offset_sig: 0F B6 41 68 C3
+    offset: '0x142'
+    offset_sig: 88 81 42 01 00 00
     size: 1
     struct_name: CServerSideClient
   engine/CServerSideClient_m_nClientSlot.linux.yaml:
@@ -47009,5 +47009,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14190'
-last_publish_time: '2026-10-14T19:07:40Z'
+last_publish_time: '2026-10-14T21:53:17Z'
 schema_version: 5
