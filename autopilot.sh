@@ -116,6 +116,7 @@ hint_for() {  # hint_for <failure text>
             printf 'less %s/gamedata-%s.log\n' "${STATE:-.autopilot}" "$ver"
             printf 'cd %s && uv run update_gamedata.py -gamever %s -snapshot gamesymbols/%s.yaml -outputdir gamedata/%s -debug\n' "$repo" "$ver" "$ver" "$ver" ;;
         *"verify_plugin_gamedata"*|*"do not hold against the binaries"*)
+            printf 'grep -E "^\\[(repair|left)\\]|still " %s/repair-%s.log\n' "${STATE:-.autopilot}" "$ver"
             printf 'grep -B20 "^unhealthy: [1-9]" %s/verify-%s.log\n' "${STATE:-.autopilot}" "$ver"
             printf 'cd %s && uv run verify_plugin_gamedata.py -gamever %s -gamedata <the file named above>\n' "$repo" "$ver" ;;
         *"artifact contract"*)
@@ -653,6 +654,21 @@ while IFS= read -r plugin_file; do
 done <<EOF
 $(find "gamedata/$TAG" -type f \( -name '*.json' -o -name '*.jsonc' -o -name '*.txt' \) ! -name '*.metadata.json' | sort)
 EOF
+if [ "$UNHEALTHY_TOTAL" != "0" ] && [ "${AUTOPILOT_AUTO_REPAIR:-1}" != "0" ]; then
+    # Most contradicted values are a record read from the wrong instruction of a right
+    # signature. auto_repair.py rebuilds such an artifact from the binary when an
+    # independent signal (the other platform, an identified function) backs the repair,
+    # then packs, generates and verifies again. AUTOPILOT_AUTO_REPAIR=0 turns it off.
+    REPAIR_LOG="$STATE/repair-$TAG.log"
+    log "    $UNHEALTHY_TOTAL unhealthy - trying auto-repair (log: $REPAIR_LOG)"
+    if uv run auto_repair.py -gamever "$TAG" -apply > "$REPAIR_LOG" 2>&1; then
+        log "    auto-repair: $(grep -c '^\[repair\]' "$REPAIR_LOG") value(s) repaired, every entry verifies now"
+        grep '^\[repair\]' "$REPAIR_LOG" | sed 's/^/      /' | while IFS= read -r line; do log "$line"; done
+        UNHEALTHY_TOTAL=0
+    else
+        tail -20 "$REPAIR_LOG"
+    fi
+fi
 if [ "$UNHEALTHY_TOTAL" != "0" ]; then
     die "$UNHEALTHY_TOTAL shipped gamedata entr(ies) do not hold against the binaries"
 fi

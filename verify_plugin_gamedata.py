@@ -116,7 +116,7 @@ def load_snapshot_index(path):
             suffix = f".{platform}.yaml"
             if base.endswith(suffix):
                 if isinstance(payload, dict) and module:
-                    payload = dict(payload, _module=module)
+                    payload = dict(payload, _module=module, _symbol=base[: -len(suffix)])
                 index.setdefault(fold(base[: -len(suffix)]), {})[platform] = payload
     return index
 
@@ -909,6 +909,8 @@ def confirm_record(binaries, record, platform):
 
     struct, member = record.get("struct_name"), record.get("member_name")
     if struct and member and offset is not None:
+        out["record"] = {"module": module, "struct": struct, "member": member, "offset": offset,
+                         "size": size, "symbol": record.get("_symbol")}
         by_offset, sizes = _members(platform)
         # unique: two members of one struct cannot share an offset. linux
         # CServerSideClient shipped m_NetChannel AND m_SteamID at 0xa0 for 14182-14190.
@@ -975,6 +977,58 @@ def cross_platform(row):
         linux["xplat"] = windows["xplat"] = "ok"
 
 
+def _field_accesses(blob, info, start, end, size):
+    """{displacement: first VA} of plain, non-indexed memory accesses `size` bytes wide
+    in [start, end)."""
+    import capstone
+    out = {}
+    off = V.va_to_off(info, start)
+    if off is None or V._MD is None:
+        return out
+    for ins in V._MD.disasm(blob[off:off + (end - start)], start):
+        if ins.mnemonic not in PLAIN_ACCESS:
+            continue
+        for op in ins.operands:
+            if (op.type == capstone.x86.X86_OP_MEM and op.mem.index == 0 and op.size == size
+                    and op.mem.base not in (capstone.x86.X86_REG_RIP, capstone.x86.X86_REG_RSP)
+                    and op.mem.disp > 0):
+                out.setdefault(op.mem.disp, ins.address)
+    return out
+
+
+def anchor_disagreement(row, binaries):
+    """xplat=mismatch with evidence: one platform's value sits in an identified function F,
+    the other platform disagrees and has no anchor or schema of its own, and F on the other
+    platform accesses the anchored platform's value at the field's width - but not its own.
+    windows CServerSideClient::m_bFakePlayer shipped 0x9f8 (a getter of another field)
+    while CServerSideClientBase_Connect stores the flag at 0xa0 on BOTH platforms. A layout
+    that really differs (smoke 3008 / 3736) uses its own value in F and is left alone."""
+    cells = row["platforms"]
+    for anchored, other in (("linux", "windows"), ("windows", "linux")):
+        a, b = cells.get(anchored) or {}, cells.get(other) or {}
+        ra, rb = a.get("record"), b.get("record")
+        if not ra or not rb or a.get("anchor") != "ok" or not a.get("anchored_in"):
+            continue
+        if b.get("anchor") == "ok" or b.get("schema") == "ok" or ra["offset"] == rb["offset"]:
+            continue
+        size = rb.get("size") or ra.get("size")
+        if size not in (1, 2, 4, 8):
+            continue
+        blob, info, _ = binaries.get(rb["module"], other)
+        if blob is None:
+            continue
+        span = next(((x, y) for x, y, n in _identified_functions(binaries, rb["module"], other)
+                     if n == a["anchored_in"]), None)
+        if not span:
+            continue
+        seen = _field_accesses(blob, info, span[0], span[1], size)
+        if ra["offset"] in seen and rb["offset"] not in seen:
+            b["xplat"] = "mismatch"
+            b["expected"] = ra["offset"]
+            b["evidence_at"] = hex(seen[ra["offset"]])
+            b["evidence_in"] = a["anchored_in"]
+
+
 def verification(info):
     """'verified' | 'contradicted' | 'unverified' | None (nothing shipped to judge)."""
     status = info.get("status")
@@ -1015,6 +1069,8 @@ def main():
         if kv_entries:
             results = check_keyvalue_entries(kv_entries, index, binaries,
                                              bindings=generator_keyvalue_bindings(plugin_of(args.gamedata)))
+            for row in results:
+                anchor_disagreement(row, binaries)
             return _report(results, args, os.path.basename(args.gamedata))
     if note:
         print(f"{os.path.basename(args.gamedata)}: {note}")
@@ -1065,6 +1121,7 @@ def main():
                 if verdict:
                     info["vtable"] = verdict
             row["platforms"][platform] = info
+        anchor_disagreement(row, binaries)
         results.append(row)
 
     return _report(results, args, os.path.basename(args.gamedata))
