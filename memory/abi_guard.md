@@ -1,3 +1,9 @@
+---
+title: abi_guard
+type: note
+permalink: cs2-vibesignatures/abi-guard
+---
+
 # abi_guard.py — ABI-identity guard
 
 - Problem class: relocation propagates a wrong *identification*. Sig stays unique/valid per
