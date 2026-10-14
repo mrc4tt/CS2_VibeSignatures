@@ -90,6 +90,7 @@ UNIT_MODULES = frozenset(
         "test_css_vtable_slot_verify",
         "test_verify_confirmation",
         "test_auto_repair",
+        "test_defect_museum",
         "test_download_depot",
         "test_fork_owned_modules",
         "test_identity_audits",

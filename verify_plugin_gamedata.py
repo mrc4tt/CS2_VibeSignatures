@@ -852,6 +852,26 @@ def confirm_record(binaries, record, platform):
                                       func_va, primary_only=True)
         if verdict:
             out["rtti"] = verdict
+        if verdict == "mismatch":
+            # where the function really sits, for auto_repair: its slot in the primary vtable
+            tables = primary_vtables(blob, info, relocs, record["vtable_name"])
+            if len(tables) == 1:
+                slots = [i for i, got in enumerate(tables[0][1])
+                         if got == func_va or (got is not None and V._thunk_target(blob, info, got) == func_va)]
+                if len(slots) == 1:
+                    out["slot_found"] = slots[0]
+                    # independent evidence for that slot: the function's own signature lands
+                    # on it, or a call site of this virtual uses exactly that slot's offset
+                    if record.get("func_sig"):
+                        hits = [V.off_to_va(info, h) for h in _code_hits(blob, info, record["func_sig"])]
+                        if hits == [func_va]:
+                            out["slot_evidence"] = "sig"
+                    if "slot_evidence" not in out and record.get("vfunc_sig"):
+                        if V.vfunc_sig_calls_offset(blob, info, record["vfunc_sig"], 8 * slots[0],
+                                                    record.get("vfunc_sig_disp")) == "ok":
+                            out["slot_evidence"] = "callsite"
+            out["vrecord"] = {"module": module, "class": record["vtable_name"], "func_va": func_va,
+                              "index": int(index), "symbol": record.get("_symbol")}
 
     # callsite: a slot-only record's index is the displacement of the call it came from.
     if record.get("vfunc_sig") and func_va is None and index is not None:
@@ -910,7 +930,7 @@ def confirm_record(binaries, record, platform):
     struct, member = record.get("struct_name"), record.get("member_name")
     if struct and member and offset is not None:
         out["record"] = {"module": module, "struct": struct, "member": member, "offset": offset,
-                         "size": size, "symbol": record.get("_symbol")}
+                         "size": size, "symbol": record.get("_symbol"), "offset_sig": record.get("offset_sig")}
         by_offset, sizes = _members(platform)
         # unique: two members of one struct cannot share an offset. linux
         # CServerSideClient shipped m_NetChannel AND m_SteamID at 0xa0 for 14182-14190.

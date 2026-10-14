@@ -18,6 +18,10 @@ A repair is planned only with evidence that does not come from the repair itself
   in-signature    another instruction inside this record's own offset_sig touches the
                   whole field, AND its value equals the other platform's verified value
 
+  rtti            a virtual's index is wrong: the class's primary vtable names the slot
+                  that holds its function, taken only when the function's own signature
+                  lands on it or a call site of it uses exactly that slot
+
 A value flagged only by "unique" (it shares an offset with a wrong neighbour) is not
 touched: it clears once the neighbour is repaired. Anything else is reported and left
 for a person - the build stays held.
@@ -78,16 +82,18 @@ def _in_signature(binaries, platform, record_cell, other_cell, artifact):
         return None
     rec, want = record_cell["record"], (other_cell.get("record") or {}).get("offset")
     size = rec.get("size")
-    if want is None or size not in (1, 2, 4, 8) or not artifact.get("offset_sig"):
+    # the signature of the record that was JUDGED, not whatever the artifact says now
+    sig = rec.get("offset_sig") or artifact.get("offset_sig")
+    if want is None or size not in (1, 2, 4, 8) or not sig:
         return None
     blob, info, _ = binaries.get(rec["module"], platform)
     if blob is None:
         return None
-    hits = P._code_hits(blob, info, artifact["offset_sig"])
+    hits = P._code_hits(blob, info, sig)
     if len(hits) != 1:
         return None
     start = V.off_to_va(info, hits[0])
-    pattern = V.parse_sig(artifact["offset_sig"])
+    pattern = V.parse_sig(sig)
     accesses = P._field_accesses(blob, info, start, start + len(pattern), size)
     if want in accesses and want != rec["offset"]:
         return accesses[want], want
@@ -102,6 +108,23 @@ def plan(gamever, reports, binaries):
         for row in report.get("results", []):
             for platform, cell in row["platforms"].items():
                 if cell.get("verification") != "contradicted":
+                    continue
+                vrec = cell.get("vrecord")
+                if vrec and vrec.get("symbol") and cell.get("rtti") == "mismatch":
+                    # A virtual's index: RTTI names the slot that holds the function. Taken
+                    # only when the function's own signature still lands on it (sig ok), so
+                    # the index follows an identified function, not a guess.
+                    key = (vrec["symbol"], platform)
+                    if key not in seen:
+                        seen.add(key)
+                        if cell.get("slot_found") is not None and cell.get("slot_evidence"):
+                            repairs.append((vrec["symbol"], platform, cell["slot_found"], cell["slot_found"],
+                                            dict(vrec, kind="vfunc", offset=vrec["index"]),
+                                            f"rtti: {vrec['class']} primary vtable holds it at slot "
+                                            f"{cell['slot_found']}, confirmed by its {cell['slot_evidence']}"))
+                        else:
+                            left.append((vrec["symbol"], platform,
+                                         "slot mismatch without a uniquely placed, identified function"))
                     continue
                 rec = cell.get("record")
                 if not rec or not rec.get("symbol"):
@@ -146,9 +169,15 @@ def plan(gamever, reports, binaries):
 
 
 def emit(gamever, symbol, platform, ea, rec):
-    cmd = [sys.executable, "emit_artifact.py", "-gamever", gamever, "-module", rec["module"],
-           "-platform", platform, "-symbol", symbol, "-kind", "structmember", "-ea", hex(ea),
-           "-struct", rec["struct"], "-member", rec["member"], "-size", str(rec["size"])]
+    if rec.get("kind") == "vfunc":
+        # ea is the slot index here; emit_artifact reads the function out of that slot
+        cmd = [sys.executable, "emit_artifact.py", "-gamever", gamever, "-module", rec["module"],
+               "-platform", platform, "-symbol", symbol, "-kind", "vfunc", "-class", rec["class"],
+               "-index", str(ea)]
+    else:
+        cmd = [sys.executable, "emit_artifact.py", "-gamever", gamever, "-module", rec["module"],
+               "-platform", platform, "-symbol", symbol, "-kind", "structmember", "-ea", hex(ea),
+               "-struct", rec["struct"], "-member", rec["member"], "-size", str(rec["size"])]
     done = subprocess.run(cmd, capture_output=True, text=True)
     ok = done.returncode == 0 and ": ok ->" in done.stdout
     return ok, (done.stdout + done.stderr)[-400:]
@@ -188,7 +217,10 @@ def main():
     binaries = P.Binaries("bin", args.gamever)
     repairs, left = plan(args.gamever, reports, binaries)
     for symbol, platform, ea, value, rec, strategy in repairs:
-        print(f"[repair] {symbol}.{platform}: {hex(rec['offset'])} -> {hex(value)} at {hex(ea)} ({strategy})")
+        if rec.get("kind") == "vfunc":
+            print(f"[repair] {symbol}.{platform}: vfunc_index {rec['offset']} -> {value} ({strategy})")
+        else:
+            print(f"[repair] {symbol}.{platform}: {hex(rec['offset'])} -> {hex(value)} at {hex(ea)} ({strategy})")
     for symbol, platform, why in left:
         print(f"[left]   {symbol}.{platform}: {why}")
     if args.json:
