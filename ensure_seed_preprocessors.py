@@ -131,7 +131,12 @@ def newest_baseline(module, short, gamever):
 # what makes it that category.
 CATEGORY_REQUIRED_FIELDS = {
     "func": ("func_name", "func_va", "func_sig"),
-    "vfunc": ("func_name", "func_va", "func_sig", "vtable_name", "vfunc_offset", "vfunc_index"),
+    # func_va/func_sig are NOT floored for a vfunc: a slot-only virtual (an empty stub,
+    # a two-instruction thunk identical to its twin) cannot be uniquely signatured, and
+    # upstream records that decision in the field list. Flooring them made -force add a
+    # signature request to 7 slot-only tasks (vtidx_PlayerRunCommand, IGameSystem_vdtor,
+    # ...) that the preprocessor then cannot satisfy. The slot fields are what define it.
+    "vfunc": ("func_name", "vtable_name", "vfunc_offset", "vfunc_index"),
     "gv": ("gv_name", "gv_va", "gv_sig"),
     "structmember": ("struct_name", "member_name", "offset"),
     "patch": ("patch_name", "patch_va", "patch_sig"),
@@ -158,7 +163,52 @@ def desired_fields(paths, category):
     if category == "structmember" and "offset_sig" in present:
         present.add("offset_sig_disp")
     order = SYMBOL_ARTIFACT_FIELD_ORDER.get(category, ())
-    return [field for field in order if field in present]
+    fields = [field for field in order if field in present]
+    # A *_allow_across_function_boundary flag is requested as "<field>:true" - the bare
+    # name asks for the field without enabling it, and a short body then pins RIP and
+    # branch displacements that move every build (CLAUDE.md, find-CFlashbangProjectile_Spawn).
+    enabled = set()
+    for path in paths:
+        try:
+            doc = yaml.safe_load(open(path, encoding="utf-8")) or {}
+        except Exception:
+            continue
+        if isinstance(doc, dict):
+            enabled |= {k for k, v in doc.items()
+                        if k.endswith("_allow_across_function_boundary") and str(v).lower() == "true"}
+    return [f"{field}:true" if field in enabled else field for field in fields]
+
+
+def merge_fields(current, derived, category):
+    """`current` plus whatever `derived` adds, in canonical order; ":true" kept from either."""
+    def bare(field):
+        return field.split(":", 1)[0]
+    flagged = {bare(f) for f in current + derived if f.endswith(":true")}
+    names = {bare(f) for f in current} | {bare(f) for f in derived}
+    order = list(SYMBOL_ARTIFACT_FIELD_ORDER.get(category, ()))
+    ordered = [f for f in order if f in names] + sorted(names - set(order))
+    merged = [f"{f}:true" if f in flagged else f for f in ordered]
+    # nothing to add: keep the file's own order, it may not be canonical
+    return current if {bare(f) for f in current} == names and \
+        {f for f in current if f.endswith(":true")} == {f for f in merged if f.endswith(":true")} else merged
+
+
+def existing_fields(path):
+    """The field list an existing preprocessor already requests (comments ignored), or None."""
+    import ast
+    try:
+        tree = ast.parse(open(path, encoding="utf-8").read())
+    except (OSError, SyntaxError, ValueError):
+        return None
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(getattr(t, "id", None) == "GENERATE_YAML_DESIRED_FIELDS"
+                                                for t in node.targets):
+            try:
+                value = ast.literal_eval(node.value)
+                return [list(fields) for _symbol, fields in value]
+            except (ValueError, TypeError):
+                return None
+    return None
 
 
 def target_name(paths, category, short):
@@ -289,6 +339,19 @@ def main():
             if not fields:
                 no_baseline.append(short)
                 continue
+
+            # -force only ever ADDS requested fields. A field the existing preprocessor
+            # asks for is a decision (find-CGameSystemReallocatingFactory_..._CreateGameSystem
+            # requests func_sig with a boundary-crossing flag although its baseline has
+            # none), and dropping it because one baseline lacks it is the ratchet the
+            # floor above exists to stop. An unchanged list keeps the file byte for byte,
+            # so the comments people add beside a field survive.
+            current = existing_fields(existing) if existing else None
+            if current is not None and len(current) == 1:
+                fields = merge_fields(current[0], fields, category)
+                if fields == current[0]:
+                    skipped += 1
+                    continue
 
             path = existing or os.path.join(pp_dir, f"find-{short}.py")
             with open(path, "w", encoding="utf-8") as handle:
