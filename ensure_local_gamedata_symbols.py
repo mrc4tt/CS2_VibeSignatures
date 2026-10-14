@@ -160,6 +160,12 @@ ALIAS_OVERRIDES = {
     # sibling GiveNamedItemBool, which is what the withdrawn GiveNamedItem2 records
     # pointed at (FORK_OWNED_OBSOLETE_TASKS, audit_duplicate_va.DECLARED_ALIAS_PAIRS).
     "GiveNamedItem2": "CCSPlayer_ItemServices_GiveNamedItem",
+    # CounterStrikeSharp keeps CBaseEntity_TakeDamageFunc for older plugins (WC3) that
+    # hook TakeDamage with (entity, info); it reads GetSignature("CBaseEntity_TakeDamage"),
+    # the same native function as CBaseEntity_TakeDamageOldFunc (VirtualFunctions.cs:110).
+    # Without the key that binding fails on the server, so ship it as an alias, not a
+    # second record.
+    "CBaseEntity_TakeDamage": "CBaseEntity_TakeDamageOld",
     # CounterStrikeSharp ships this offset under the short name its schema code uses
     # (schema.cpp:167 reads GetOffset("SetStateChanged")), while the analysis files the
     # virtual as CEntityInstance_NetworkStateChanged. Same values - windows 28 from

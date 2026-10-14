@@ -10911,6 +10911,7 @@ modules:
         category: func
         alias:
           - CBaseEntity::TakeDamageOld
+          - CBaseEntity_TakeDamage
       - name: CBaseEntity_OnTakeDamage
         category: vfunc
         alias:

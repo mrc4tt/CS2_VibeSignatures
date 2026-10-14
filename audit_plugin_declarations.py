@@ -36,6 +36,16 @@ DEFAULT_ROOTS = ("~/CounterStrikeSharp/managed", "~/customGIT", "~/plugins")
 SKIP_DIRS = {"bin", "obj", ".git", "node_modules"}
 FLOAT_TYPES = {"float", "double", "single", "system.single", "system.double"}
 
+# Declarations that pass fewer arguments on purpose, with the reason. A known shortfall is
+# listed, not counted - the same treatment as an [Obsolete] binding.
+KNOWN_SHORT = {
+    # CounterStrikeSharp VirtualFunctions.cs:110 - a compatibility alias older plugins (WC3)
+    # HOOK with (entity, info); DynamicHook reads parameters by index, so the declared
+    # arity does not matter there, and direct calls are pointed at the 3-argument
+    # CBaseEntity_TakeDamageOldFunc.
+    "CBaseEntity_TakeDamage": "hook-only compatibility alias; call CBaseEntity_TakeDamageOld",
+}
+
 KEY = r'GameData\.Get(?P<kind>Signature|Offset)\(\s*"(?P<key>[^"]+)"\s*\)'
 GEN = r"<(?P<generics>[^;{}()]*?)>"
 PATTERNS = (
@@ -163,17 +173,19 @@ def main():
         print("audit_plugin_declarations: capstone is required", file=sys.stderr)
         return 2
     rows, unresolved = audit(args.gamever, args.root or DEFAULT_ROOTS)
-    bad = [r for r in rows if r["short"] and not r["obsolete"]]
-    known = [r for r in rows if r["short"] and r["obsolete"]]
+    for r in rows:
+        r["known"] = r["obsolete"] or r["key"] in KNOWN_SHORT
+    bad = [r for r in rows if r["short"] and not r["known"]]
+    known = [r for r in rows if r["short"] and r["known"]]
     for r in (rows if args.v else bad + known):
         where = f"{os.path.relpath(r['file'], os.path.expanduser('~'))}:{r['line']}"
-        verdict = ("known" if r["obsolete"] else "SHORT") if r["short"] else "ok"
+        verdict = ("known" if r["known"] else "SHORT") if r["short"] else "ok"
         print(f"{verdict:5} {r['key']}.{r['platform']}: plugin passes {r['declared']}, function reads "
               f"{r['observed']} ({'+'.join(r['reads']) or '-'}{' +%d stack' % r['stack'] if r['stack'] else ''})"
               f"  [{where}]")
     print(f"audit_plugin_declarations {args.gamever}: {len(rows)} declaration(s) checked on their platforms, "
           f"{len(bad)} pass fewer arguments than the function reads"
-          + (f" ({len(known)} more known: [Obsolete])" if known else "")
+          + (f" ({len(known)} more known: [Obsolete] or KNOWN_SHORT)" if known else "")
           + (f"; no function record for {len(unresolved)} key(s)" if unresolved else ""))
     return 1 if bad else 0
 
