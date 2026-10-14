@@ -52,10 +52,23 @@ def _parent(name):
         return "xmm" + name[3:]
     if name.startswith("r") and name[1:2].isdigit():
         return "r" + "".join(ch for ch in name[1:] if ch.isdigit())
+    # the 8-bit halves: al/bl/cl/dl and ah/bh/ch/dh -> rax/rbx/rcx/rdx; a windows bool
+    # argument arrives exactly as dl or cl ("movzx esi, dl" in RemoveWeapons)
+    if len(name) == 2 and name[0] in "abcd" and name[1] in "lh":
+        return table[name[0] + "x"]
     core = name.lstrip("er")
     core = core[:-1] if core.endswith("l") and core[:-1] in table else core
     core = core[:-1] if core.endswith("h") and core[:-1] in table else core
     return table.get(core, name)
+
+
+def _calls_empty(md, blob, info, ins):
+    """True when `ins` is a direct call/jmp to a function that only returns."""
+    if ins is None or not ins.operands or ins.operands[0].type != x86.X86_OP_IMM:
+        return False
+    off = V.va_to_off(info, ins.operands[0].imm)
+    first = next(md.disasm(blob[off:off + 16], ins.operands[0].imm), None) if off is not None else None
+    return first is not None and first.mnemonic.startswith("ret")
 
 
 def fingerprint(blob, info, va, platform):
@@ -67,8 +80,8 @@ def fingerprint(blob, info, va, platform):
         return None
     md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
     md.detail = True
-    written, read_int, read_float, stack = set(), set(), set(), set()
-    delta, end, count = 0, None, 0
+    written, read_int, read_float, stack, normalised = set(), set(), set(), set(), set()
+    delta, end, count, end_ins = 0, None, 0, None
     int_args, float_args = INT_ARGS[platform], FLOAT_ARGS[platform]
     # A thunk (an entry that only jumps, after at most a few register moves) is followed
     # into its body: CCSPlayer_ItemServices_GiveNamedItem.linux is "jmp <body>", which
@@ -90,6 +103,13 @@ def fingerprint(blob, info, va, platform):
         except capstone.CsError:
             break
         reads = {_parent(ins.reg_name(r)) for r in regs_read}
+        # "movzx ecx, cl": a register normalised in place. Not a use on its own - it only
+        # counts if what follows uses it, or hands it to a callee that is not empty.
+        if ins.mnemonic in ("movzx", "movsx", "movsxd", "mov") and len(ins.operands) == 2 \
+                and all(op.type == x86.X86_OP_REG for op in ins.operands) \
+                and _parent(ins.reg_name(ins.operands[0].reg)) == _parent(ins.reg_name(ins.operands[1].reg)):
+            normalised |= reads - written - read_int - read_float
+            continue
         # "xor eax, eax" / "xorps xmm0, xmm0" read nothing - they zero the register
         if ins.mnemonic in ("xor", "xorps", "pxor", "sub") and len(ins.operands) == 2 \
                 and ins.operands[0].type == x86.X86_OP_REG and ins.operands[1].type == x86.X86_OP_REG \
@@ -114,8 +134,13 @@ def fingerprint(blob, info, va, platform):
                 and ins.operands[0].reg == x86.X86_REG_RSP and ins.operands[1].type == x86.X86_OP_IMM:
             delta += ins.operands[1].imm if ins.mnemonic == "sub" else -ins.operands[1].imm
         if ins.mnemonic in ("call", "ret", "jmp") or ins.mnemonic.startswith("ret") or count >= WINDOW:
-            end = ins.mnemonic
+            end, end_ins = ins.mnemonic, ins
             break
+    # A normalised register handed to a real callee is a parameter; handed to an empty one
+    # (DropActivePlayerWeapon.linux: "movzx ecx, cl" then a call to a bare ret) it is not.
+    if normalised and end in ("call", "jmp"):
+        if not _calls_empty(md, blob, info, end_ins):
+            read_int |= {r for r in normalised if r in int_args}
     # Pass-through: at the call or tail jump that ends the window, an argument register
     # BELOW the lowest one this code set up for its callee was handed on untouched - a
     # parameter. GiveNamedItem.linux zeroes rdx/rcx/r8/r9 and jumps, passing rdi/rsi on.

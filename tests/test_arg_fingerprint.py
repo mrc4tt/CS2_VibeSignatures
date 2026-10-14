@@ -36,6 +36,20 @@ class FingerprintTests(unittest.TestCase):
         # jmp +2 ; (int3 int3) ; mov rax, rdx ; ret  -> reads rdx (and rdi/rsi pass-through? no call)
         self.assertEqual(fp("EB02 CCCC 4889D0 C3")["int"], ["rdx"])
 
+    def test_byte_register_counts_as_its_argument(self):
+        # movzx esi, dl ; ret   -> windows second argument (rdx), as RemoveWeapons reads it
+        self.assertEqual(fp("0FB6F2 C3", "windows")["int"], ["rdx"])
+        # movzx eax, cl ; ret
+        self.assertEqual(fp("0FB6C1 C3", "windows")["int"], ["rcx"])
+
+    def test_bool_normalised_for_an_empty_callee_is_not_a_parameter(self):
+        # movzx ecx, cl ; mov rbx, rdi ; call +3 ; int3 ; int3 ; int3 ; ret   (callee is a bare ret)
+        self.assertEqual(fp("0FB6C9 4889FB E803000000 CCCCCC C3")["int"], ["rdi"])
+
+    def test_bool_normalised_for_a_real_callee_is_a_parameter(self):
+        # movzx ecx, cl ; call +3 ; int3*3 ; mov eax, ecx ; ret
+        self.assertIn("rcx", fp("0FB6C9 E803000000 CCCCCC 89C8 C3")["int"])
+
     def test_windows_stack_argument(self):
         # mov rax, [rsp+0x28] ; ret   -> the fifth argument
         got = fp("488B442428 C3", "windows")
