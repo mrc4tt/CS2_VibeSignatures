@@ -153,18 +153,6 @@
       "updated": false
     },
     {
-      "changes": [
-        {
-          "after": "48 8B C4 55 53 57 41 54",
-          "before": "4C 89 4C 24 ? 44 89 44 24 ? 48 89 54 24 ? 48 89 4C 24 ? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ? ? ? ? B8 ? ? ? ? E8 ? ? ? ? 48 2B E0 4C 8B E9",
-          "line": 45,
-          "path": [
-            "CNetworkGameServer::PackEntities",
-            "signatures",
-            "windows"
-          ]
-        }
-      ],
       "covered": true,
       "covered_lines": [
         44,
@@ -173,7 +161,7 @@
         48
       ],
       "name": "CNetworkGameServer::PackEntities",
-      "updated": true
+      "updated": false
     },
     {
       "covered": true,
@@ -388,6 +376,6 @@
   "summary": {
     "covered": 27,
     "total": 27,
-    "updated": 7
+    "updated": 6
   }
 }

@@ -12175,10 +12175,10 @@ files:
     func_va: '0x5752c0'
   engine/CNetworkGameServer_PackEntities.windows.yaml:
     func_name: CNetworkGameServer_PackEntities
-    func_rva: '0xe8060'
-    func_sig: 48 8B C4 55 53 57 41 54
-    func_size: '0xa61'
-    func_va: '0x1800e8060'
+    func_rva: '0xe8ad0'
+    func_sig: 4C 89 4C 24 ?? 44 89 44 24 ?? 48 89 54 24 ?? 48 89 4C 24 ?? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? B8 ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 2B E0 4C 8B E9
+    func_size: '0x429'
+    func_va: '0x1800e8ad0'
   engine/CNetworkGameServer_PreWorldUpdate.linux.yaml:
     func_name: CNetworkGameServer_PreWorldUpdate
     func_rva: '0x521610'
@@ -47009,5 +47009,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14190'
-last_publish_time: '2026-10-14T21:53:17Z'
+last_publish_time: '2026-10-14T22:16:47Z'
 schema_version: 5
