@@ -51,6 +51,17 @@ export interface PluginCheckProblem {
   name: string
   platform: string
   status: string
+  /** Whether a method re-read the value from the binary; absent before that check. */
+  verification?: 'verified' | 'unverified' | 'contradicted'
+}
+
+/** Shipped values per platform that a method re-read from the binary. */
+export interface PluginVerificationTally {
+  verified: number
+  unverified: number
+  contradicted: number
+  /** Of the verified: confirmed only by re-reading the instruction they came from. */
+  instructionOnly?: number
 }
 
 /** verify_plugin_gamedata's verdict for one file an enabled plugin ships. */
@@ -63,6 +74,8 @@ export interface PluginCheckFile {
   statuses?: Record<string, number>
   unhealthy?: number
   problems?: PluginCheckProblem[]
+  /** Absent in diagnostics published before verification existed. */
+  verification?: Partial<Record<'linux' | 'windows', PluginVerificationTally>>
   reason?: string
 }
 

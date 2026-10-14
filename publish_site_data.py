@@ -51,6 +51,11 @@ KIND_WORDS = {
     "addresses", "address", "games", "csgo", "library", "keys",
 }
 PLATFORM_KEYS = ("linux", "windows", "linuxsteamrt64", "win64")
+# A CounterStrikeSharp entry's "vtable" block ({"class", "linux_index", "windows_index"})
+# carries no platform keys on purpose (it would read as an entry of its own), so it is
+# published as a key of its own, "<entry>.vtable", with the two indices as its values.
+# Without it the site could neither show when a slot moved nor patch a stale one.
+VTABLE_KEY_SUFFIX = ".vtable"
 
 
 def sort_key(tag: str) -> tuple[int, str]:
@@ -150,6 +155,9 @@ def read_values(path: str) -> dict[str, list[object]] | None:
     def walk(node: dict, prefix: tuple[str, ...] = ()) -> None:
         for key, value in node.items():
             if not isinstance(value, dict):
+                continue
+            if key == "vtable" and prefix and isinstance(value.get("class"), str):
+                out[key_name(prefix) + VTABLE_KEY_SUFFIX] = [value.get("linux_index"), value.get("windows_index")]
                 continue
             if any(platform in value for platform in PLATFORM_KEYS):
                 out[key_name(prefix + (key,))] = [
@@ -292,6 +300,8 @@ def build_history(newest: str) -> dict:
             if gone:
                 entries[key]["gone"] = gone
             symbol = index.get(fold(key))
+            if not symbol and key.endswith(VTABLE_KEY_SUFFIX):
+                symbol = index.get(fold(key[: -len(VTABLE_KEY_SUFFIX)]))
             if symbol:
                 key_to_symbol[f"{relative}|{key}"] = symbol
         files[relative] = entries
@@ -421,18 +431,32 @@ def build_plugin_checks(build: str) -> dict:
             continue
         counts: collections.Counter = collections.Counter()
         problems = []
+        # Per platform: how many shipped values a method re-read from the binary
+        # (verified), none could (unverified), or one contradicted.
+        verification: dict = {}
         for result in report.get("results", []):
             for platform, verdict in sorted(result.get("platforms", {}).items()):
                 status = verdict.get("status", "unknown")
                 counts[status] += 1
-                if status not in PLUGIN_PASS_STATUSES:
-                    problems.append({"name": result.get("name"), "platform": platform, "status": status})
+                state = verdict.get("verification")
+                if state:
+                    tally = verification.setdefault(platform, {"verified": 0, "unverified": 0, "contradicted": 0,
+                                                               "instructionOnly": 0})
+                    tally[state] = tally.get(state, 0) + 1
+                    if verdict.get("instruction_only"):
+                        tally["instructionOnly"] += 1
+                if status not in PLUGIN_PASS_STATUSES or state in ("unverified", "contradicted"):
+                    problem = {"name": result.get("name"), "platform": platform, "status": status}
+                    if state:
+                        problem["verification"] = state
+                    problems.append(problem)
         entry.update(
             ran=True,
             entries=len(report.get("results", [])),
             statuses=dict(sorted(counts.items())),
             unhealthy=int(report.get("unhealthy", 0)),
             problems=problems,
+            verification=dict(sorted(verification.items())),
         )
         files.append(entry)
     return {"ran": True, "files": files}

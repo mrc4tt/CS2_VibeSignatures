@@ -14,6 +14,7 @@
  * can trust what it says.
  */
 
+import { VTABLE_KEY_SUFFIX } from './parse'
 import type { KeyVerdict } from './verdict'
 
 export interface PatchResult {
@@ -26,6 +27,12 @@ export interface PatchResult {
 const PLATFORM_NAMES: Record<'linux' | 'windows', string[]> = {
   linux: ['linux', 'linuxsteamrt64'],
   windows: ['windows', 'win64'],
+}
+
+/** A `<entry>.vtable` key's values live under these names inside the entry's "vtable" block. */
+const VTABLE_INDEX_NAMES: Record<'linux' | 'windows', string[]> = {
+  linux: ['linux_index'],
+  windows: ['windows_index'],
 }
 
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -61,9 +68,10 @@ function replaceInWindow(
   platform: 'linux' | 'windows',
   oldValue: string | number,
   newValue: unknown,
+  platformNames: Record<'linux' | 'windows', string[]> = PLATFORM_NAMES,
 ): { text: string; outcome: 'applied' | 'notFound' | 'ambiguous' } {
   const slice = text.slice(window.from, window.to)
-  const names = PLATFORM_NAMES[platform].map(escape).join('|')
+  const names = platformNames[platform].map(escape).join('|')
   const quoted = typeof oldValue === 'string'
   const body = quoted ? `"${escape(String(oldValue))}"` : `${escape(String(oldValue))}\\b`
   // JSON and JSONC use `"linux": value`; KeyValues uses `"linux"  "value"`.
@@ -81,6 +89,18 @@ function replaceInWindow(
 }
 
 /**
+ * Where a verdict's values sit: the key's own block, or for `<entry>.vtable` the "vtable"
+ * block inside the entry's - so an index can never be written into the signatures.
+ */
+function verdictWindow(text: string, key: string): { from: number; to: number } | null {
+  if (!key.endsWith(VTABLE_KEY_SUFFIX)) return keyWindow(text, key)
+  const entry = keyWindow(text, key.slice(0, -VTABLE_KEY_SUFFIX.length))
+  if (!entry) return null
+  const inner = keyWindow(text.slice(entry.from, entry.to), 'vtable')
+  return inner ? { from: entry.from + inner.from, to: entry.from + inner.to } : null
+}
+
+/**
  * Replace every stale value in `text` with the published one.
  *
  * Only keys the check marked outdated are touched, and only the platform that is
@@ -94,7 +114,8 @@ export function patchFile(text: string, verdicts: KeyVerdict[]): PatchResult {
 
   for (const verdict of verdicts) {
     if (verdict.state !== 'outdated' || !verdict.mine || !verdict.expected) continue
-    const window = keyWindow(out, verdict.key)
+    const names = verdict.key.endsWith(VTABLE_KEY_SUFFIX) ? VTABLE_INDEX_NAMES : PLATFORM_NAMES
+    const window = verdictWindow(out, verdict.key)
     if (!window) {
       for (const platform of ['linux', 'windows'] as const) {
         const ok = platform === 'linux' ? verdict.linuxOk : verdict.windowsOk
@@ -109,12 +130,12 @@ export function patchFile(text: string, verdicts: KeyVerdict[]): PatchResult {
       const theirs = verdict.expected[index]
       if (mine === null || theirs === null || theirs === undefined) continue
       // Re-find the window each time: an earlier replacement shifts offsets.
-      const fresh = keyWindow(out, verdict.key)
+      const fresh = verdictWindow(out, verdict.key)
       if (!fresh) {
         skipped.push({ key: verdict.key, platform, reason: 'notFound' })
         continue
       }
-      const result = replaceInWindow(out, fresh, platform, mine, theirs)
+      const result = replaceInWindow(out, fresh, platform, mine, theirs, names)
       if (result.outcome === 'applied') {
         out = result.text
         applied += 1

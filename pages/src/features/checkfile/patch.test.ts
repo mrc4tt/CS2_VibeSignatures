@@ -34,6 +34,22 @@ describe('rewriting a file with the published values', () => {
     expect(result.text).toBe(text.replace('OLD-L', 'NEW-L'))
   })
 
+  it('patches a stale vtable index inside the entry\'s vtable block, not its signatures', () => {
+    const text = `{
+  "CBaseTrigger_EndTouch": {
+    "signatures": { "library": "server", "linux": "151", "windows": "40 53" },
+    "vtable": { "class": "CBaseTrigger", "linux_index": 151, "windows_index": 152 }
+  }
+}`
+    const result = patchFile(text, [
+      outdated('CBaseTrigger_EndTouch.vtable', { linux: 151, windows: 152 }, [151, 153], { linuxOk: true, windowsOk: false }),
+    ])
+    expect(result.applied).toBe(1)
+    expect(result.skipped).toEqual([])
+    expect(result.text).toBe(text.replace('"windows_index": 152', '"windows_index": 153'))
+    expect(parseGameData(result.text).values.get('CBaseTrigger_EndTouch.vtable')).toEqual({ linux: 151, windows: 153 })
+  })
+
   it('keeps comments, which is the whole reason it is text surgery', () => {
     const text = `{
   // CS2Fixes explains its patches in comments; a reserialised file loses them

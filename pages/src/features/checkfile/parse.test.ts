@@ -18,6 +18,18 @@ describe('reading a dropped gamedata file', () => {
     expect(values.size).toBe(1)
   })
 
+  it('reads a CounterStrikeSharp vtable block as its own <entry>.vtable key', () => {
+    const { values } = parseGameData(JSON.stringify({
+      CBaseTrigger_EndTouch: {
+        signatures: { library: 'server', linux: '55 48', windows: '40 53' },
+        vtable: { class: 'CBaseTrigger', linux_index: 151, windows_index: 152 },
+      },
+    }))
+    expect(values.get('CBaseTrigger_EndTouch')).toEqual({ linux: '55 48', windows: '40 53' })
+    expect(values.get('CBaseTrigger_EndTouch.vtable')).toEqual({ linux: 151, windows: 152 })
+    expect(values.size).toBe(2)
+  })
+
   it('reads a sectioned JSONC file, comments and trailing commas included', () => {
     const text = `{
       // CS2Fixes style

@@ -24,6 +24,14 @@ export interface ParsedGameData {
 
 const PLATFORM_KEYS = ['linux', 'windows', 'linuxsteamrt64', 'win64'] as const
 
+/**
+ * A CounterStrikeSharp entry's `"vtable": {"class", "linux_index", "windows_index"}` block
+ * has no platform keys on purpose, so publish_site_data.py publishes it as a key of its own,
+ * `<entry>.vtable`, valued by the two indices. Read the same way here, or a file whose
+ * signatures were patched would keep a slot index from an older build with nothing saying so.
+ */
+export const VTABLE_KEY_SUFFIX = '.vtable'
+
 const KIND_WORDS = new Set([
   'signatures', 'signature', 'offsets', 'offset', 'patches', 'patch',
   'addresses', 'address', 'games', 'csgo', 'library', 'keys',
@@ -60,7 +68,12 @@ function flattenJson(document: unknown): Map<string, FileValue> {
     for (const [key, value] of Object.entries(node)) {
       if (!isPlainObject(value)) continue
       const next = [...path, key]
-      if (PLATFORM_KEYS.some((platform) => platform in value)) {
+      if (key === 'vtable' && path.length > 0 && typeof value.class === 'string') {
+        out.set(keyName(path) + VTABLE_KEY_SUFFIX, {
+          linux: scalar(value.linux_index ?? null),
+          windows: scalar(value.windows_index ?? null),
+        })
+      } else if (PLATFORM_KEYS.some((platform) => platform in value)) {
         out.set(keyName(next), {
           linux: scalar(value.linux ?? value.linuxsteamrt64 ?? null),
           windows: scalar(value.windows ?? value.win64 ?? null),

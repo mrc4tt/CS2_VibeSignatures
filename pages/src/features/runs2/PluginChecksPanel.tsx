@@ -9,7 +9,12 @@ import { Explain } from '../../components/Explain'
  * (ok, match, ok-midfunction, ok-globalref) or "could not check" (no-reference,
  * ambiguous-reference, patch-unverifiable) - listed, but not counted against the file.
  */
-const DEFECTS = new Set(['broken', 'ambiguous', 'mismatch', 'unparsable'])
+const DEFECTS = new Set(['broken', 'ambiguous', 'mismatch', 'unparsable', 'too-few-literals'])
+
+const PLATFORMS = ['linux', 'windows'] as const
+
+/** Statuses that resolve; on these the verification state is the interesting part. */
+const PLUGIN_PASSES = new Set(['ok', 'ok-globalref', 'match'])
 
 /** The build published before `build`, from history.json's build list. */
 function previousBuild(builds: string[], build: string): string | undefined {
@@ -24,6 +29,32 @@ function Verdict({ file }: { file?: PluginCheckFile }) {
   return (file.unhealthy ?? 0) === 0
     ? <Tag tone="ok">{t('runs2.plugins.holds')}</Tag>
     : <Tag tone="bad">{t('runs2.plugins.unhealthy', { count: file.unhealthy })}</Tag>
+}
+
+/**
+ * Verified per platform: a value counts only when a method re-read it from the binary
+ * (its own signature, the vtable, the instruction it came from, the game's schema...).
+ * "It equals what the pipeline produced" alone is not shown as verified.
+ */
+function Verified({ file }: { file?: PluginCheckFile }) {
+  const { t } = useTranslation()
+  const tallies = file?.verification
+  if (!file?.ran || !tallies || Object.keys(tallies).length === 0) return <span className="text-faint">-</span>
+  return (
+    <span className="flex flex-wrap gap-1">
+      {PLATFORMS.filter((platform) => tallies[platform]).map((platform) => {
+        const tally = tallies[platform]!
+        const total = tally.verified + tally.unverified + tally.contradicted
+        const tone = tally.contradicted > 0 ? 'bad' : tally.unverified > 0 ? 'qualify' : 'ok'
+        return (
+          <Tag key={platform} tone={tone}>
+            {t('runs2.plugins.verifiedOn', { platform, verified: tally.verified, total })}
+            {tally.instructionOnly ? ` · ${t('runs2.plugins.instructionOnly', { count: tally.instructionOnly })}` : ''}
+          </Tag>
+        )
+      })}
+    </span>
+  )
 }
 
 /**
@@ -82,6 +113,7 @@ export function PluginChecksPanel({ diagnostics }: { diagnostics: SiteDiagnostic
               <tr>
                 <th>{t('runs2.plugins.tFile')}</th>
                 <th>{t('runs2.plugins.tEntries')}</th>
+                <th>{t('runs2.plugins.tVerified')}</th>
                 <th>{t('runs2.plugins.tThis', { build: diagnostics.gameVersion })}</th>
                 <th>{previous ? t('runs2.plugins.tBefore', { build: previous }) : t('runs2.plugins.tBeforeNone')}</th>
               </tr>
@@ -107,7 +139,11 @@ export function PluginChecksPanel({ diagnostics }: { diagnostics: SiteDiagnostic
                             {(file.problems ?? []).map((problem) => (
                               <li key={`${problem.name}/${problem.platform}`}>
                                 <span className="mono">{problem.name}</span> {problem.platform}{' '}
-                                <Tag tone={DEFECTS.has(problem.status) ? 'bad' : 'qualify'}>{problem.status}</Tag>
+                                <Tag tone={DEFECTS.has(problem.status) || problem.verification === 'contradicted' ? 'bad' : 'qualify'}>
+                                  {problem.verification && problem.verification !== 'verified' && PLUGIN_PASSES.has(problem.status)
+                                    ? t(`runs2.plugins.state.${problem.verification}`)
+                                    : problem.status}
+                                </Tag>
                               </li>
                             ))}
                           </ul>
@@ -118,6 +154,7 @@ export function PluginChecksPanel({ diagnostics }: { diagnostics: SiteDiagnostic
                     </details>
                   </td>
                   <td className="mono">{file.entries ?? '-'}</td>
+                  <td><Verified file={file} /></td>
                   <td><Verdict file={file} /></td>
                   <td><Verdict file={before.get(file.path)} /></td>
                 </tr>

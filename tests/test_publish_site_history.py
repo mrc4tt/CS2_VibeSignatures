@@ -49,3 +49,35 @@ class RemovedKeyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VtableKeyTests(unittest.TestCase):
+    """A CounterStrikeSharp "vtable" block is published as "<entry>.vtable", so the site can
+    show when a slot moved and patch a stale index, and it maps to the entry's symbol."""
+
+    def test_vtable_block_is_its_own_key(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "gamedata.json")
+            with open(path, "w", encoding="utf-8") as handle:
+                json.dump({"CBaseTrigger_EndTouch": {
+                    "signatures": {"library": "server", "linux": "55 48", "windows": "40 53"},
+                    "vtable": {"class": "CBaseTrigger", "linux_index": 151, "windows_index": 152}}}, handle)
+            values = P.read_values(path)
+        self.assertEqual(values, {"CBaseTrigger_EndTouch": ["55 48", "40 53"],
+                                  "CBaseTrigger_EndTouch.vtable": [151, 152]})
+
+    def test_vtable_key_maps_to_the_entry_symbol(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "1", FILE)
+            os.makedirs(os.path.dirname(path))
+            with open(path, "w", encoding="utf-8") as handle:
+                json.dump({"K": {"signatures": {"linux": "55", "windows": "40"},
+                                 "vtable": {"class": "C", "linux_index": 3, "windows_index": 4}}}, handle)
+            with patch.object(P, "GAMEDATA_ROOT", root), \
+                    patch.object(P, "builds", return_value=["1"]), \
+                    patch.object(P, "generated_files", return_value=[FILE]), \
+                    patch.object(P, "symbol_index", return_value={P.fold("K"): "server/K"}), \
+                    patch.object(P, "_committed_dates", return_value={}):
+                history = P.build_history("1")
+        self.assertEqual(history["keyToSymbol"][f"{FILE}|K.vtable"], "server/K")
+        self.assertEqual(history["files"][FILE]["K.vtable"]["points"], [["1", 3, 4]])
