@@ -740,6 +740,19 @@ $(grep '^ARGS CHANGED' "$ARGS_OUT" | sed 's/^ARGS CHANGED /  /' | head -10)" ;;
     esac
     log "    $(printf '%s' "$ARGS_LINE" | head -1)"
 fi
+# The plugins' own declarations against this build: a function that reads more
+# arguments than a plugin passes reads garbage. Informational, in the notification.
+DECL_OUT="$STATE/declarations-$TAG.txt"
+uv run audit_plugin_declarations.py -gamever "$TAG" > "$DECL_OUT" 2>&1
+case $? in
+    0) DECL_LINE="plugin calls: $(tail -1 "$DECL_OUT" | sed 's/^audit_plugin_declarations [^:]*: //')" ;;
+    1) DECL_LINE="PLUGIN CALLS SHORT: $(grep -c '^SHORT' "$DECL_OUT") declaration(s) pass fewer arguments than the function reads:
+$(grep '^SHORT' "$DECL_OUT" | sed 's/^SHORT /  /' | head -10)" ;;
+    *) DECL_LINE="plugin declarations skipped: $(tail -1 "$DECL_OUT")" ;;
+esac
+log "    $(printf '%s' "$DECL_LINE" | head -1)"
+ARGS_LINE="${ARGS_LINE:+$ARGS_LINE
+}$DECL_LINE"
 
 # ---------------------------------------------------------------- record it
 log "==> committing"
