@@ -32,6 +32,7 @@ vcall_finder
 !run_windows.sh
 !gen_references.sh
 !update_css_gamedata.sh
+!add_gamever.sh
 libtier0.so
 libtier0.so.*
 hm

@@ -226,29 +226,33 @@ downloads:
         self.assertIn("-manifest", command)
         self.assertIn("-filelist", command)
 
-    def test_download_manifests_appends_auth_arguments(self) -> None:
-        manifests = {"2347771": "111"}
-        filelist = ["game/bin/win64/SDL3.dll"]
-
-        with patch(
-            "depot_util.subprocess.run",
-            side_effect=self._filelist_capture_side_effect([]),
-        ) as mock_run:
+    def test_download_manifests_tries_anonymous_first(self) -> None:
+        """The current manifest is served to anonymous accounts: no login is sent."""
+        with patch("download_depot.run_command") as run:
             download_depot.download_manifests(
-                manifests=manifests,
-                app="730",
-                os_name="all-platform",
-                depot_dir="cs2_depot",
-                filelist=filelist,
-                username="user",
-                password="secret",
-                remember_password=True,
+                manifests={"2347771": "111"}, app="730", os_name="all-platform",
+                depot_dir="cs2_depot", filelist=["game/bin/win64/SDL3.dll"],
+                username="user", password="secret", remember_password=True,
             )
+        self.assertEqual(run.call_count, 1)
+        command = run.call_args.args[0]
+        self.assertNotIn("-username", command)
+        self.assertNotIn("secret", command)
+        self.assertEqual(run.call_args.kwargs.get("max_attempts"), 1)
 
-        command = mock_run.call_args.args[0]
-        self.assertIn("-username", command)
+    def test_download_manifests_falls_back_to_the_login(self) -> None:
+        """A historical manifest is refused anonymously (401): retry with the login."""
+        import subprocess as sp
+        with patch("download_depot.run_command",
+                   side_effect=[sp.CalledProcessError(1, "DepotDownloader"), None]) as run:
+            download_depot.download_manifests(
+                manifests={"2347771": "111"}, app="730", os_name="all-platform",
+                depot_dir="cs2_depot", filelist=["game/bin/win64/SDL3.dll"],
+                username="user", password="secret", remember_password=True,
+            )
+        command = run.call_args.args[0]
+        self.assertEqual(run.call_count, 2)
         self.assertEqual("user", command[command.index("-username") + 1])
-        self.assertIn("-password", command)
         self.assertEqual("secret", command[command.index("-password") + 1])
         self.assertIn("-remember-password", command)
 

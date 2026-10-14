@@ -200,10 +200,23 @@ def download_manifests(
             ]
             if branch:
                 command.extend(["-branch", branch])
-            append_auth_args(command, username, password, remember_password)
-            command.extend(["-manifest", str(manifest)])
-            command.extend(["-filelist", str(filelist_path)])
-            run_command(command)
+            tail = ["-manifest", str(manifest), "-filelist", str(filelist_path)]
+            # Anonymous first: Steam serves the CURRENT manifest to anonymous
+            # (dedicated-server) accounts, which is every build autopilot fetches, so an
+            # expired or locked Steam login no longer stops a new build. Only a historical
+            # manifest needs the login (anonymous gets "Encountered 401"), so the
+            # credentials are the fallback, not the default. Upstream reached the same
+            # boundary for bump discovery (HLND2T 6e985a0b5, issue #1130).
+            if username and not branch:
+                try:
+                    run_command(command + tail, max_attempts=1)
+                    continue
+                except subprocess.CalledProcessError:
+                    print(f"Anonymous download of depot {depot} manifest {manifest} failed; "
+                          f"retrying with the Steam login")
+            authed = list(command)
+            append_auth_args(authed, username, password, remember_password)
+            run_command(authed + tail)
     finally:
         filelist_path.unlink(missing_ok=True)
 
