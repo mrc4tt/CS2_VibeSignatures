@@ -30,6 +30,8 @@ import argparse
 import json
 import os
 import signal
+import socket
+import time
 import sys
 import threading
 import uuid
@@ -169,6 +171,50 @@ def parse_args(argv):
     return parser.parse_args(argv)
 
 
+PORT_WAIT = 120
+
+
+def wait_for_free_port(host, port, timeout=PORT_WAIT):
+    """True once host:port can be bound. The database must not be opened before that:
+    serve_http opens it eagerly and binds afterwards, so a taken port (a previous
+    instance not yet gone) made the server die WITH the database open - its worker was
+    killed mid-pack and 14191's libserver.so.i64 could not be opened again."""
+    deadline = time.monotonic() + timeout
+    while True:
+        probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            probe.bind((host, port))
+            return True
+        except OSError:
+            if time.monotonic() > deadline:
+                return False
+            time.sleep(2)
+        finally:
+            probe.close()
+
+
+def close_open_databases():
+    """Close every database the server holds - close_database waits for the pack."""
+    manager = getattr(hx.mcp, "DATABASE_MANAGER", None) if hasattr(hx, "mcp") else None
+    manager = manager or getattr(hx, "DATABASE_MANAGER", None)
+    if manager is None:
+        return
+    try:
+        instances = (manager.list_databases() or {}).get("instances") or []
+    except Exception as exc:
+        print(f"could not list databases to close: {exc}", file=sys.stderr, flush=True)
+        return
+    for instance in instances:
+        instance_id = instance.get("instance_id")
+        if instance_id:
+            try:
+                manager.close_database(instance_id)
+                print(f"closed database {instance_id} before exiting", file=sys.stderr, flush=True)
+            except Exception as exc:
+                print(f"could not close database {instance_id}: {exc}", file=sys.stderr, flush=True)
+
+
 def main(argv=None):
     args = parse_args(sys.argv[1:] if argv is None else argv)
     startup = None
@@ -176,7 +222,21 @@ def main(argv=None):
         if not args.input_path.exists():
             raise SystemExit(f"Input file not found: {args.input_path}")
         startup = str(args.input_path.resolve())
+    if not wait_for_free_port(args.host, args.port):
+        raise SystemExit(f"{args.host}:{args.port} stayed in use for {PORT_WAIT} s; not opening the database")
     install_fork_tools()
+    try:
+        serve(args, startup)
+    except SystemExit:
+        raise  # SIGTERM/SIGINT: Hex-Rays' own shutdown path (ExecStop has closed the databases)
+    except BaseException:
+        # dying of an error with a database open must not leave it half-packed
+        close_open_databases()
+        raise
+    return 0
+
+
+def serve(args, startup):
     hx.serve_http(
         args.host,
         args.port,
@@ -191,7 +251,6 @@ def main(argv=None):
         agent=args.agent,
         background=False,
     )
-    return 0
 
 
 if __name__ == "__main__":
