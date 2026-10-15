@@ -1,0 +1,6 @@
+struct_name: CServerSideClient
+member_name: m_nSignonState
+offset: '0x64'
+size: 4
+offset_sig: 39 51 64
+offset_sig_disp: 0

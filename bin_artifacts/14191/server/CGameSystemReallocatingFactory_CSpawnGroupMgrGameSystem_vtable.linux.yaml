@@ -1,0 +1,17 @@
+vtable_class: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
+vtable_symbol: _ZTV30CGameSystemReallocatingFactoryI24CSpawnGroupMgrGameSystemS0_E + 0x10
+vtable_va: '0x2562068'
+vtable_rva: '0x2562068'
+vtable_size: '0x50'
+vtable_numvfunc: 10
+vtable_entries:
+  0: '0xf1d080'
+  1: '0xf1d090'
+  2: '0xf1d0a0'
+  3: '0xf47730'
+  4: '0xf25770'
+  5: '0xf1d0b0'
+  6: '0xf1d0c0'
+  7: '0xf1d0d0'
+  8: '0xf1d0e0'
+  9: '0xf1d0f0'

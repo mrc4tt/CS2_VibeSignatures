@@ -1,0 +1,5 @@
+func_name: INetworkSystem_CloseSocket
+vtable_name: INetworkSystem
+vfunc_offset: '0x88'
+vfunc_index: 17
+vfunc_sig: FF 90 88 00 00 00 48 81 C4 D8 01 00 00 5B 41 5C
