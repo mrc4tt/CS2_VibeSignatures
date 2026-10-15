@@ -20,6 +20,11 @@ RestartSec=30
 # what is left after it exits is killed.
 KillMode=mixed
 TimeoutStopSec=600
+# ...but the server exits on SIGTERM BEFORE its workers have packed, and mixed then kills
+# them: 14191's libserver.so.i64 was left unopenable that way on 2026-10-15. ExecStop runs
+# first and closes every database through the server (close_database waits for the pack),
+# so the signal that follows finds nothing still writing.
+ExecStop=/root/.local/bin/uv run python ida_session_stop.py --port 13337 --timeout 540
 # One worker per open binary, each single-threaded; the cap keeps the editor from
 # competing with an analysis run for memory.
 MemoryHigh=12G

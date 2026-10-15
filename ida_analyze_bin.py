@@ -3853,6 +3853,25 @@ def start_idalib_mcp(
                 if removed:
                     print(f"  Removed partial IDA database files: {', '.join(removed)}")
             print(f"  Retrying idalib-mcp start ({attempt + 1}/{MCP_STARTUP_ATTEMPTS})")
+    if warm and own_session and "Failed to open database" in (_idalib_mcp_log_tail(binary_path) or ""):
+        # A packed database IDA cannot open at all ("Database initialization failed with
+        # error 4") is not going to open on a third try. 14191's libserver.so.i64 was left
+        # that way by an IDA session killed while it packed the database on stop, and the
+        # CSS deploy then died on it. Keep the file for inspection, analyse from scratch.
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        quarantined = []
+        for suffix in (".i64", ".idb"):
+            path = binary_path + suffix
+            if os.path.isfile(path):
+                os.replace(path, f"{path}.unopenable-{stamp}")
+                quarantined.append(os.path.basename(path))
+        _invalidate_ida_database(binary_path, debug=debug)
+        if quarantined:
+            print(f"  IDA cannot open {', '.join(quarantined)}; set aside as .unopenable-{stamp}, "
+                  f"analysing {os.path.basename(binary_path)} from scratch")
+            wait_for_port_release(host, port)
+            return start_idalib_mcp(binary_path, host=host, port=port, ida_args=ida_args, debug=debug,
+                                    stdout=stdout, stderr=stderr)
     return None
 
 
