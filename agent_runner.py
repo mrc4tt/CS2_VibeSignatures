@@ -766,15 +766,36 @@ def _run_skill_attempts(
                 if not stopped_for_outputs:
                     output_issues = list(output_validator() or []) if output_validator is not None else []
             if stopped_for_outputs:
-                print("    Expected outputs arrived while the agent was running; stopped it")
+                # The files that made us stop are held to the same contract as any other
+                # output. "Arrived from elsewhere" cannot be told from "written by this agent
+                # a moment ago": on 14191 the agent itself wrote DestroyGameSystem.linux with
+                # the class spelled <...> and no func_sig, this path accepted it unchecked,
+                # and autopilot's audit_artifact_contract then failed the whole build twice.
+                output_issues = list(output_validator() or []) if output_validator is not None else []
+                if not output_issues:
+                    print("    Expected outputs arrived while the agent was running; stopped it")
+                    _notify_progress(
+                        progress_callback,
+                        "succeeded",
+                        attempt=attempt_number,
+                        max_attempts=max_retries,
+                        reason="outputs_arrived",
+                    )
+                    return True
+                reason = ("invalid_output", " | ".join(output_issues))
+                print("    Expected outputs arrived while the agent was running, but they break the task's contract")
+                _report_result_failure(reason, None, debug)
                 _notify_progress(
                     progress_callback,
-                    "succeeded",
+                    "attempt_failed",
                     attempt=attempt_number,
                     max_attempts=max_retries,
-                    reason="outputs_arrived",
+                    will_retry=attempt < max_retries - 1,
+                    reason="invalid_output",
+                    error=reason[1],
                 )
-                return True
+                _retry_if_available(attempt, max_retries, command.retry_target_desc)
+                continue
             if agent_kind == "opencode" and opencode_session_id is None:
                 opencode_session_id = _extract_opencode_session_id(result.stdout)
             reason = _result_failure_reason(result, expected_yaml_paths)

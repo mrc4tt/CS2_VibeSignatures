@@ -601,7 +601,19 @@ step "checking each virtual's slot against the previous gamever (slot shift)" uv
 # of those from an agent (CBaseEntity_OnTakeDamage.windows filed as
 # CBasePlayerPawn_OnTakeDamage). The run already rejects such a hunter or agent
 # output; this catches one that arrived any other way.
-step "checking each artifact against its task's fields (artifact contract)" uv run audit_artifact_contract.py -gamever "$TAG"
+# A BAD artifact is re-made, not just reported: heal_contract.py removes it and re-runs the
+# tasks that declare it (preprocessor -> hunter -> agent, all held to the contract), then
+# the audit runs again. Without this a retry re-audited the same file and failed again -
+# 14191 at 01:46 and 03:48, over one artifact an agent had written with the class spelled
+# <...> and no func_sig. AUTOPILOT_HEAL_CONTRACT=0 turns it off.
+log "==> checking each artifact against its task's fields (artifact contract)"
+if ! uv run audit_artifact_contract.py -gamever "$TAG"; then
+    if [ "${AUTOPILOT_HEAL_CONTRACT:-1}" != "0" ] && [ -n "${OLD_TAG:-}" ]; then
+        log "    contract broken - re-making the artifacts it names"
+        uv run heal_contract.py -gamever "$TAG" -oldgamever "$OLD_TAG" 2>&1 | while IFS= read -r line; do log "    $line"; done
+    fi
+    step "checking each artifact against its task's fields (artifact contract)" uv run audit_artifact_contract.py -gamever "$TAG"
+fi
 step "packing the snapshot" uv run gamesymbol_snapshot.py pack -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
 step "checking the snapshot against the config" uv run gamesymbol_snapshot.py check-contract \
     -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"

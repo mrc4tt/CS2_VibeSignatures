@@ -499,7 +499,7 @@ def enforce_fork_owned_modules(text):
 # optional_output (not expected_output) is the correct lever: expected_output makes the
 # path REQUIRED and pack then fails with "Missing required symbol YAML".
 FORK_OWNED_OPTIONAL_TASKS = [
-    # (task_name, module, artifact_path)
+    # (task_name, module, artifact_path[, expected_input paths])
     # One entry per platform, not one {platform} entry: every task in this table is a
     # bare DECLARATION task - no preprocessor, no platform: key - existing only so
     # gamesymbol_snapshot does not drop the artifact as undeclared. The name says
@@ -541,10 +541,15 @@ FORK_OWNED_OPTIONAL_TASKS = [
         "server",
         "CGameSystemReallocatingFactory_CSource2EntitySystem_CreateGameSystem.{platform}.yaml",
     ),
+    # The vtable is an (optional) INPUT: the task ran before find-..._vtable-server had
+    # written it, so the hunter could not find the slot (a template class is not found by
+    # its _-spelled name through RTTI), an agent was started, and 14191 failed twice on the
+    # artifact it wrote. Declared, the run orders the vtable task first.
     (
         "find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem-linux",
         "server",
         "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.linux.yaml",
+        ["CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.{platform}.yaml"],
     ),
     (
         "find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable-server",
@@ -582,6 +587,7 @@ FORK_OWNED_OPTIONAL_TASKS = [
         "find-CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem",
         "server",
         "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.windows.yaml",
+        ["CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.{platform}.yaml"],
     ),
 ]
 
@@ -738,7 +744,16 @@ def enforce_fork_owned_optional_tasks(text):
     """Re-insert the bare optional_output tasks that declare recovered artifacts."""
     added = 0
     lines = text.split("\n")
-    for task, module, path in FORK_OWNED_OPTIONAL_TASKS:
+    for entry in FORK_OWNED_OPTIONAL_TASKS:
+        task, module, path = entry[:3]
+        inputs = list(entry[3]) if len(entry) > 3 else []
+        block = [f"      - name: {task}", "        optional_output:", f"          - {path}"]
+        if inputs:
+            # optional_input, not expected_input: an ORDER edge (the run sorts tasks
+            # topologically on it) without making the input required - config
+            # validation only accepts a required input from an expected_output, and the
+            # vtable task's output is optional
+            block += ["        optional_input:"] + [f"          - {i}" for i in inputs]
         for start, end, name in _module_blocks(lines):
             if name != module:
                 continue
@@ -755,18 +770,19 @@ def enforce_fork_owned_optional_tasks(text):
                 to = have + 1
                 while to < end and lines[to].startswith("        "):
                     to += 1
-                if any(l.strip() == f"- {path}" for l in lines[have:to]):
-                    break
                 if not any(l.strip() == "optional_output:" for l in lines[have:to]):
                     break  # a real find-task with expected_output - leave it alone
-                lines[have:to] = [f"      - name: {task}", "        optional_output:", f"          - {path}"]
+                if any(l.strip() == f"- {path}" for l in lines[have:to]) and \
+                        all(any(l.strip() == f"- {i}" for l in lines[have:to]) for i in inputs):
+                    break
+                lines[have:to] = block
                 added += 1
                 break
             try:
                 at = next(i for i in range(start, end) if lines[i] == "    skills:")
             except StopIteration:
                 continue
-            lines[at + 1 : at + 1] = [f"      - name: {task}", "        optional_output:", f"          - {path}"]
+            lines[at + 1 : at + 1] = block
             added += 1
             break
     return "\n".join(lines), added
