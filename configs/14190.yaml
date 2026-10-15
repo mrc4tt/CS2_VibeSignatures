@@ -6699,6 +6699,15 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-DropReleasePose_OuterDrop
+        expected_output:
+          - DropReleasePose_OuterDrop.{platform}.yaml
+      - name: find-DropReleasePose_BuildTransform
+        expected_output:
+          - DropReleasePose_BuildTransform.{platform}.yaml
+      - name: find-vtidx_ControllerCommandSetup
+        expected_output:
+          - vtidx_ControllerCommandSetup.{platform}.yaml
       - name: find-CPlayer_MovementServices_UpdateInputState
         expected_output:
           - CPlayer_MovementServices_UpdateInputState.{platform}.yaml
@@ -10131,6 +10140,18 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: DropReleasePose_OuterDrop
+        category: func
+        alias:
+          - DropReleasePose::OuterDrop
+      - name: DropReleasePose_BuildTransform
+        category: func
+        alias:
+          - DropReleasePose::BuildTransform
+      - name: vtidx_ControllerCommandSetup
+        category: vfunc
+        alias:
+          - vtidx::ControllerCommandSetup
       - name: CPlayer_MovementServices_UpdateInputState
         category: func
         alias:
