@@ -97,6 +97,7 @@ UNIT_MODULES = frozenset(
         "test_shape_drift",
         "test_sync_plugin_templates",
         "test_heal_contract",
+        "test_safe_gate_shipped",
         "test_download_depot",
         "test_fork_owned_modules",
         "test_identity_audits",

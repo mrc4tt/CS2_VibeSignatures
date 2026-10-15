@@ -157,6 +157,17 @@ def snapshot_platforms(version: str) -> dict[str, set[str]]:
     return platforms
 
 
+def shipped_symbols() -> set[str] | None:
+    """'module/Symbol' of every key an enabled plugin ships (gamedata/history.json), or
+    None when the dataset is unavailable - then every symbol counts, as before."""
+    path = os.path.join(GAMEDATA_ROOT, "history.json")
+    try:
+        with open(path, encoding="utf-8") as handle:
+            return set(json.load(handle).get("keyToSymbol", {}).values())
+    except (OSError, ValueError):
+        return None
+
+
 def decide(version: str, previous: str) -> dict:
     holds: list[dict] = []
     notes: list[str] = []
@@ -211,13 +222,27 @@ def decide(version: str, previous: str) -> dict:
     new_platforms = snapshot_platforms(version)
     old_platforms = snapshot_platforms(previous)
     if new_platforms and old_platforms:
+        shipped = shipped_symbols()
+        unshipped = []
         for symbol, platforms in sorted(old_platforms.items()):
             current = new_platforms.get(symbol, set())
             if len(platforms) == 2 and len(current) < 2:
+                # Only a symbol an enabled plugin ships can break a plugin by losing a
+                # platform. The rest are read by disabled plugins or nobody, so their
+                # producers are not hunted (the payer rule) and a lost relocation simply
+                # drops them - 14191 lost IsCommandWhitelisted and
+                # CCSGameRules__sm_mapGcBanInformation this way, held a build over
+                # nothing shipped, and is now a note.
+                if shipped is not None and symbol not in shipped:
+                    unshipped.append(f"{symbol} {sorted(platforms)} -> {sorted(current)}")
+                    continue
                 holds.append({
                     "reason": "symbol_lost_platform", "symbol": symbol,
                     "before": sorted(platforms), "after": sorted(current),
                 })
+        if unshipped:
+            notes.append(f"{len(unshipped)} symbol(s) no enabled plugin ships lost a platform: "
+                         + "; ".join(unshipped[:6]))
     else:
         notes.append("no snapshot for one of the two builds; platform check skipped")
 

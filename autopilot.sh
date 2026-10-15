@@ -478,8 +478,39 @@ if git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1; then
     dispatch_pages
     IMPACT_LINE=""
     [ -f "$STATE/impact-$TAG.txt" ] && IMPACT_LINE="schema: $(grep -m1 '^summary:' "$STATE/impact-$TAG.txt" | sed 's/^summary: //')"
+    # A resumed build rebuilds every summary line from the files the analysed run left,
+    # so its message says what a fresh run's would (14191's resume said only "arguments").
     ARGS_LINE=""
     [ -f "$STATE/args-$TAG.txt" ] && ARGS_LINE="arguments: $(tail -1 "$STATE/args-$TAG.txt" | sed 's/^audit_arg_fingerprint [^:]*: //')"
+    if [ -f "$STATE/declarations-$TAG.txt" ]; then
+        if grep -q '^SHORT' "$STATE/declarations-$TAG.txt"; then
+            ARGS_LINE="$ARGS_LINE
+PLUGIN CALLS SHORT: $(grep -c '^SHORT' "$STATE/declarations-$TAG.txt") declaration(s) pass fewer arguments than the function reads:
+$(grep '^SHORT' "$STATE/declarations-$TAG.txt" | sed 's/^SHORT /  /' | head -10)"
+        else
+            ARGS_LINE="$ARGS_LINE
+plugin calls: $(tail -1 "$STATE/declarations-$TAG.txt" | sed 's/^audit_plugin_declarations [^:]*: //')"
+        fi
+    fi
+    if [ -f "$STATE/shape-$TAG.txt" ]; then
+        if grep -q '^SHAPE CHANGED' "$STATE/shape-$TAG.txt"; then
+            ARGS_LINE="$ARGS_LINE
+SHAPE CHANGED: $(grep -c '^SHAPE CHANGED' "$STATE/shape-$TAG.txt") shipped function(s) now do something else:
+$(grep '^SHAPE CHANGED' "$STATE/shape-$TAG.txt" | sed 's/^SHAPE CHANGED /  /' | head -10)"
+        else
+            ARGS_LINE="$ARGS_LINE
+shape: $(tail -1 "$STATE/shape-$TAG.txt" | sed 's/^audit_shape_drift [^:]*: //')"
+        fi
+    fi
+    TEMPLATES_LINE=""
+    if [ -f "$STATE/templates-$TAG.txt" ]; then
+        if grep -qE '^  [+!-] ' "$STATE/templates-$TAG.txt"; then
+            TEMPLATES_LINE="PLUGIN TEMPLATES: $(grep -cE '^  [+-] ' "$STATE/templates-$TAG.txt") key(s) added/removed, $(grep -c '^  ! ' "$STATE/templates-$TAG.txt") value(s) where the plugin author disagrees:
+$(grep -E '^\[|^  [+!-] ' "$STATE/templates-$TAG.txt" | cut -c1-200 | head -14)"
+        else
+            TEMPLATES_LINE="plugin templates: in step"
+        fi
+    fi
     finish_build
     exit 0
 fi
