@@ -1,0 +1,5 @@
+func_name: CLoggingSystem_LogDirect
+func_va: '0x20ca60'
+func_rva: '0x20ca60'
+func_size: '0xc51'
+func_sig: 55 89 D0 49 89 FA

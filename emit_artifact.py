@@ -43,6 +43,7 @@ BINARY_NAMES = {
     ("vphysics2", "linux"): "libvphysics2.so", ("vphysics2", "windows"): "vphysics2.dll",
     ("scenesystem", "linux"): "libscenesystem.so", ("scenesystem", "windows"): "scenesystem.dll",
     ("worldrenderer", "linux"): "libworldrenderer.so", ("worldrenderer", "windows"): "worldrenderer.dll",
+    ("tier0", "linux"): "libtier0.so", ("tier0", "windows"): "tier0.dll",
     ("SDL3", "linux"): "libSDL3.so.0", ("SDL3", "windows"): "SDL3.dll",
 }
 

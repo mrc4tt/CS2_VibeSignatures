@@ -564,6 +564,17 @@ literal in the plugin's own source is stale for 14181 (`48 83 EC ?` where the fu
 converter for it: `KHook` wants space-separated hex with one `?` per wildcard, which is exactly the
 `??` -> `?` that function does.
 
+`tier0` is the second entry: it carries `CLoggingSystem::LogDirect`, the unexported funnel every
+console line passes through, which CleanerCS2 hooks to drop lines by regex. Hooking the exported
+`LoggingSystem_LogDirect` instead would miss most output: `Msg`/`Warning`/`ConMsg`/`DevMsg` format
+first and call the internal function directly. The anchor is `Exiting due to logging LR_ABORT
+request.`, referenced by that function alone on both platforms (14191: linux `0x20ca60`, windows
+`0x180127e10`; the exported wrapper calls each). Unlike `stripper`, the `cleanercs2` generator's
+file is **a drop-in**: the plugin (from v2.1) reads `addons/cleanercs2/gamedata.json` and falls back
+to its compiled-in signature, and `deploy_local_plugins.sh` commits it to `package/gamedata.json`
+in `~/customGIT/CleanerCS2` (mrc4tt/CleanerCS2), which xmake packs to that path. The generator has
+no `# Seed source:` line on purpose - that file is our own output, so syncing from it is circular.
+
 ## TAKING A NEW GAMEVER THROUGH
 
 ```bash

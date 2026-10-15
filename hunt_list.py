@@ -42,6 +42,7 @@ BINARY_NAMES = {
     ("vphysics2", "linux"): "libvphysics2.so", ("vphysics2", "windows"): "vphysics2.dll",
     ("scenesystem", "linux"): "libscenesystem.so", ("scenesystem", "windows"): "scenesystem.dll",
     ("worldrenderer", "linux"): "libworldrenderer.so", ("worldrenderer", "windows"): "worldrenderer.dll",
+    ("tier0", "linux"): "libtier0.so", ("tier0", "windows"): "tier0.dll",
 }
 SIG_FIELDS = ("func_sig", "vfunc_sig", "gv_sig", "offset_sig", "patch_sig")
 ANCHOR_PATTERNS = (

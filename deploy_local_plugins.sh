@@ -39,7 +39,7 @@ pull_repo() {  # pull_repo <repo>
 }
 
 for r in "$HOME/customGIT/weaponpaints" "$HOME/customGIT/matchzy" \
-         "$HOME/plugins/cs2-retakes-allocator"; do
+         "$HOME/customGIT/CleanerCS2" "$HOME/plugins/cs2-retakes-allocator"; do
     pull_repo "$r"
 done
 # CounterStrikeSharp is pulled by update_css_gamedata.sh, before its merge.
@@ -74,6 +74,10 @@ deploy "$OUT_ROOT/weaponpaints/gamedata/weaponpaints.json" \
 
 deploy "$OUT_ROOT/matchzy/gamedata/matchzy.json" \
        "$HOME/customGIT/matchzy/gamedata/matchzy.json"
+
+# CleanerCS2 reads addons/cleanercs2/gamedata.json; xmake packs package/ there.
+deploy "$OUT_ROOT/cleanercs2/addons/cleanercs2/gamedata.json" \
+       "$HOME/customGIT/CleanerCS2/package/gamedata.json"
 
 # Took over from rosetta (/root/rosetta, retired), which was the only thing
 # refreshing it. (Ray-Trace, its other target, is archived: CounterStrikeSharp
@@ -120,6 +124,7 @@ commit_push() {  # commit_push <repo> <path inside repo>
 
 commit_push "$HOME/customGIT/weaponpaints" gamedata/weaponpaints.json
 commit_push "$HOME/customGIT/matchzy" gamedata/matchzy.json
+commit_push "$HOME/customGIT/CleanerCS2" package/gamedata.json
 commit_push "$HOME/plugins/cs2-retakes-allocator" Resources/RetakesAllocator_gamedata.json
 # CounterStrikeSharp's file is written by update_css_gamedata.sh, which has to
 # run first; only configs/ is ours there.

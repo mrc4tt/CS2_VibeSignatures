@@ -105,6 +105,21 @@ binaries:
       path: game/csgo/bin/win64/server.dll
       sha256: '09e8c04c5f44040155d04fa79a3f43491d542a386f45807ed77785729e5925a9'
       size: 34628248
+  tier0:
+    linux:
+      crc32: '024f04ea'
+      crc64: '59b508c218cde5f0'
+      md5: '3ef1f4a377cb367f6cb3ce2f06de5504'
+      path: game/bin/linuxsteamrt64/libtier0.so
+      sha256: '5e2ac91894daaab117b05196d3d4b79f4dba6be2143b5de78f49c149c95354c4'
+      size: 5028700
+    windows:
+      crc32: 'e9bac93f'
+      crc64: '09236829cb2e796a'
+      md5: '450b7fcd7efcddc55039fb0e7fbf7400'
+      path: game/bin/win64/tier0.dll
+      sha256: '990ea56bf1626d299ba54b64b423f2e409bd592bb737c7a5edf7972ad5c7143e'
+      size: 3979928
   vphysics2:
     linux:
       crc32: '7b74bdf1'
@@ -136,8 +151,8 @@ binaries:
       sha256: 'f9eeff50acb10a89ab78c98d2726d3e5e6b5adf7a8b11be2a41cb5ebded11dac'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:ed7af63c9560c895994aec09dd3a8f22651b005d1e0ffbb2d66b799355ffd541
-file_count: 3747
+config_sha256: sha256:196a3399441ab9412ab16f29d949f1c9d34cb6e4ca6abfdef928c48babd06040
+file_count: 3749
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -46617,6 +46632,18 @@ files:
     vfunc_index: 25
     vfunc_offset: '0xc8'
     vtable_name: CCSPlayer_MovementServices
+  tier0/CLoggingSystem_LogDirect.linux.yaml:
+    func_name: CLoggingSystem_LogDirect
+    func_rva: '0x20ca60'
+    func_sig: 55 89 D0 49 89 FA
+    func_size: '0xc51'
+    func_va: '0x20ca60'
+  tier0/CLoggingSystem_LogDirect.windows.yaml:
+    func_name: CLoggingSystem_LogDirect
+    func_rva: '0x127e10'
+    func_sig: 4C 89 4C 24 ?? 44 89 44 24 ?? 89 54 24 ??
+    func_size: '0xa04'
+    func_va: '0x180127e10'
   vphysics2/CVPhys2World_vtable.linux.yaml:
     vtable_class: CVPhys2World
     vtable_entries:
@@ -47097,5 +47124,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14191'
-last_publish_time: '2026-10-15T04:12:13Z'
+last_publish_time: '2026-10-15T09:59:44Z'
 schema_version: 5

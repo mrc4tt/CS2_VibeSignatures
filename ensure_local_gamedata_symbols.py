@@ -110,6 +110,12 @@ FORK_OWNED_SYMBOLS = [
     # is the base the CCSPlayer_MovementServices override calls first (linux slot 24,
     # windows 23). Not PlayerRunCommand (slot 26/25), which modsharp calls RunCommand.
     ("CPlayer_MovementServices_UpdateInputState", "func", None, "RunCommand"),
+    # CleanerCS2 hooks tier0's internal logging funnel to drop console lines that
+    # match a regex. Every path ends here - Msg/Warning/ConMsg/DevMsg format first and
+    # call it directly, LoggingSystem_Log and the exported LoggingSystem_LogDirect call
+    # it too - so the export alone would miss most output. The plugin's key is
+    # "LogDirect"; the module is fork-owned, see FORK_OWNED_MODULES.
+    ("CLoggingSystem_LogDirect", "func", "tier0", "LogDirect"),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
@@ -445,6 +451,14 @@ FORK_OWNED_MODULES = [
         "game/bin/win64/worldrenderer.dll",
         "game/bin/linuxsteamrt64/libworldrenderer.so",
         [("CWorldRendererMgr_CreateWorld_Internal", "func", "CWorldRendererMgr::CreateWorld_Internal")],
+    ),
+    # tier0 carries CLoggingSystem::LogDirect, the unexported function every console
+    # line passes through and the one CleanerCS2 hooks. Upstream analyses no tier0.
+    (
+        "tier0",
+        "game/bin/win64/tier0.dll",
+        "game/bin/linuxsteamrt64/libtier0.so",
+        [("CLoggingSystem_LogDirect", "func", "LogDirect")],
     ),
 ]
 
@@ -1032,6 +1046,7 @@ LIB_MODULE = {
     "engine": "engine",
     "client": "client",
     "worldrenderer": "worldrenderer",
+    "tier0": "tier0",
 }
 ENGINE_CLASSES = (
     "CNetworkGameServerBase",

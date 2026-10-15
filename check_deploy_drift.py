@@ -69,6 +69,15 @@ DEPLOY_TARGETS = (
         "deployed_by": "deploy_local_plugins.sh",
     },
     {
+        "plugin": "cleanercs2",
+        "dist": "addons/cleanercs2/gamedata.json",
+        "root_env": "CUSTOMGIT_ROOT",
+        "root_default": "~/customGIT",
+        "install": "CleanerCS2/package/gamedata.json",
+        "mode": "copy",
+        "deployed_by": "deploy_local_plugins.sh",
+    },
+    {
         "plugin": "cs2-retakes-allocator",
         "dist": "Resources/RetakesAllocator_gamedata.json",
         "root_env": "PLUGINS_ROOT",
