@@ -352,7 +352,7 @@ byte (bar a trailing newline); `update_css_gamedata.sh` **merges by key**, so in
 are kept on purpose and only generated keys are compared. `tests/test_deploy_targets.py` asserts
 `DEPLOY_TARGETS` against both scripts, so adding a plugin to one without the other fails the suite
 rather than silently dropping it from the check. `.gitignore` excludes `*.sh` but tracks, by
-name, `sync_upstream.sh` and the pipeline's own entry points: `autopilot.sh`,
+name, the pipeline's own entry points: `autopilot.sh`,
 `deploy_local_plugins.sh`, `update_css_gamedata.sh`, `run_linux.sh`, `run_windows.sh`,
 `gen_references.sh`. `autopilot.sh` runs it after every deploy —
 running the scripts is not evidence the files moved.
@@ -470,62 +470,47 @@ warnings that turned into `0x0`: a larger unknown count here is the fix, not a r
 `validate_artifacts.py` also takes `-module`, `-platform`, `-json`, `-quiet` and `-pedantic`
 (the last promotes advisory size checks, so expect more of the same noise).
 
-## AFTER AN UPSTREAM MERGE (the fork's own state is re-asserted, not merged)
+## THE FORK'S CONFIG TABLES
 
-`sync_upstream.sh` does a plain merge and resolves each conflicted path by the class it is in:
+This fork no longer merges from upstream (`sync_upstream.sh` is left in place but unused).
+Upstream's code is still the reference for the task model and its conventions; nothing of it
+arrives any more.
 
-| Class | Paths | On conflict |
-|-------|-------|-------------|
-| `PROTECTED_PATHS` | `pages`, `gamedata`, `gamesymbols`, `hl2sdk_cs2`, `.gitmodules`, the disabled generators | ours, exactly; upstream's additions inside are removed |
-| `ADDITIVE_PATHS` | `bin_artifacts`, `binary_locks` | ours for every file the fork has; files only upstream has arrive |
-| `THEIRS_ON_CONFLICT` | `configs`, `download.yaml` | upstream wins the conflicting hunks |
-| everything else | code | the script stops with the markers in place; resolve, `git add`, `./sync_upstream.sh --continue` |
+A new gamever's config is a copy of the newest one (`run_linux.sh` scaffolds
+`configs/<VER>.yaml` from it), so a hand edit carries forward. The fork's decisions are still
+kept as declarative tables in `ensure_local_gamedata_symbols.py`, which `run_linux.sh` and
+autopilot replay onto every new config. They are idempotent, and they are the one place that
+says what this fork decided and why:
 
-It used to be `-X theirs` across the board. That held while upstream produced the artifacts; once
-this fork analysed gamevers itself it meant 3060 conflicted files decided for upstream in one run
-(3040 of them the fork's own artifacts, 1284 on 14182 alone), and in `ida_analyze_bin.py` upstream's
-import block replaced the fork's, dropping `import functools` — the module stopped importing and
-nothing reported it. Two gates now follow the resolution: before the commit, no markers, the
-analysis modules import, and no undefined name in any Python file both sides changed (failing here
-leaves an uncommitted merge, so `git merge --abort` undoes it); after the commit and the table
-replay, the test suite (`SYNC_SKIP_TESTS=1` skips it). Expect the second gate to fail on a test
-upstream added for a file inside a protected path: `tests/test_legacy_inputs_tool.py` loads
-`pages/legacy_inputs_tool.py`, which exact protection of `pages` removes. That is a decision to
-make per file (`git checkout <upstream> -- pages/<file>`), not a reason to skip the gate.
-
-Upstream's config still overwrites this fork's local decisions in every conflicting hunk. Those
-decisions therefore live in code, as declarative tables in `ensure_local_gamedata_symbols.py`,
-and are replayed after each merge:
-
-| Table | What it re-asserts |
-|-------|--------------------|
-| `FORK_OWNED_SYMBOLS` | symbols upstream does not carry |
+| Table | What it asserts |
+|-------|-----------------|
+| `FORK_OWNED_SYMBOLS` | symbols upstream never carried |
 | `FORK_OWNED_TASKS` | the find-tasks that declare them (as `optional_output` — see rule 11) |
 | `FORK_OWNED_OPTIONAL_TASKS` | upstream tasks downgraded to optional here |
 | `FORK_OWNED_REMOVALS` | declarations this fork has deliberately retired |
-| `FORK_OWNED_MOVES` | symbols that belong in a different module than upstream says |
+| `FORK_OWNED_MOVES` | symbols that belong in a different module than upstream said |
 | `FORK_OWNED_PLATFORM_PINS` | single-platform symbols (`platform:`) |
 | `FORK_OWNED_OBSOLETE_TASKS` | tasks whose target no longer exists |
 | `ALIAS_OVERRIDES` | downstream key renames |
 | `FORK_OWNED_MODULES` | whole analysis modules upstream does not have |
 
-The other three re-generators, also run from `sync_upstream.sh` or by hand:
+When you change a config by hand, put the same change in the matching table, so the decision is
+recorded and re-asserted rather than surviving only by being copied.
+
+The other three re-generators, run by the run scripts or by hand:
 `ensure_agent_fallback_skills.py` (agent finder skills; `-force` rewrites only AUTO-GENERATED
 ones, never hand-written), `ensure_seed_preprocessors.py` (relocation preprocessors for every
 symbol that has a baseline in the previous gamever), and `ensure_reference_base_tasks.py`
-(`-config configs/<VER>.yaml` — creates the base find-task for reference targets upstream only
-gave a `-decompiles` task, so their artifact can actually materialize).
-
-**A local fix that is not in one of these tables will be silently lost on the next merge.** When
-you change a config by hand, put the same change in the matching table.
+(`-config configs/<VER>.yaml` — creates the base find-task for reference targets that only
+had a `-decompiles` task, so their artifact can actually materialize).
 
 `FORK_OWNED_MODULES` is the odd one out: every other table patches a module upstream already has,
 this one creates the module. It has to run FIRST, before `inject()` and the other enforcers, because
 `inject()` resolves a symbol's module with `next(name == module)` and raises `StopIteration` on a
 module the config does not contain — so a fork-owned symbol in a fork-owned module cannot be
 declared at all until the block exists. The block is appended at the END of `modules:` (immediately
-before the next top-level key, `cpp_tests:`), so the insert does not depend on upstream's module
-order, which changes between gamevers and carries staging meaning this fork has no say over.
+before the next top-level key, `cpp_tests:`), so the insert does not depend on the module order,
+which carries staging meaning of its own.
 
 Adding a module means **four** places, not one: the table here, plus `LIB_MODULE` so `module_for()`
 routes the library to it, plus the two hand-maintained module→filename maps — `auto_hunt_headless.py`
@@ -853,7 +838,7 @@ because 14178b's artifact still held it. `find-NetworkStateChanged` and
 `find-CCSPlayer_MovementServices_FullWalkMove` regressed the same way.
 
 `abi_guard.py` is the answer to this and it is not optional: run
-`uv run abi_guard.py -gamever <VER> --fix` after `sync_upstream.sh` and **before**
+`uv run abi_guard.py -gamever <VER> --fix` after every run and **before**
 `gamesymbol_snapshot.py pack`, on **every** gamever. 14178b had never been through it,
 which is precisely why it was still poisoning re-runs on 14180.
 
@@ -875,7 +860,7 @@ Two guards now catch the class before the baseline does:
 - **Run `audit_duplicate_va.py` after every hunt round** — catches batch-contamination (same VA under multiple names, the 0x20c2700 incident)
 - **Check `git check-ignore` before committing working files** — missing lists, logs, and alias candidates are now in .gitignore but weren't always
 - **Use `git push` immediately after committing on server** — unpushed commits cause divergent branches that produce messy add/add conflicts later
-- **Check what upstream actually does before writing a task, a preprocessor or a name** — `git show upstream/main:configs/<ver>.yaml` and grep `ida_preprocessor_scripts/` for a task that already emits the field combination you want. Task names carry the platform they were made for (`-linux` / `-windows`), and a fallback skill only loads when its name equals the task name — so let `ensure_agent_fallback_skills.py` generate them
+- **Check how the existing tasks do it before writing a task, a preprocessor or a name** — grep `configs/<ver>.yaml` and `ida_preprocessor_scripts/` for a task that already emits the field combination you want. Task names carry the platform they were made for (`-linux` / `-windows`), and a fallback skill only loads when its name equals the task name — so let `ensure_agent_fallback_skills.py` generate them
 - **Verify a find before you write it** — unique sig match plus boundary plus one semantic signal (string set, call graph, decompile). See rules 12 and 13
 - **Leave `func_size: 0x0` when unsure** — unknown is safe, wrong is a defect
 - **Never pin a relative branch target or a RIP-relative displacement in a shipped sig** — those bytes move on every rebuild; `enrich_vfunc_sigs.py` wildcards them, and you must re-run `validate_artifacts.py` after it and drop any sig that then matches more than one place
@@ -885,7 +870,7 @@ Two guards now catch the class before the baseline does:
 
 | Tool | When | Notes |
 |------|------|-------|
-| `abi_guard.py` | After `sync_upstream.sh`, before every pack, on every gamever | Catches a wrong *identification* that relocated cleanly; `--fix` rewrites the artifact. Also verifies `func_size` |
+| `abi_guard.py` | After every run, before every pack | Catches a wrong *identification* that relocated cleanly; `--fix` rewrites the artifact. Also verifies `func_size` |
 | `audit_xref_identity.py` | After every run, before pack | Each anchored function must still reference its finder's string / byte pattern (or, for an `m_*` anchor, access the schema offset). The run applies the same judgement to every relocation and discards a `bad` one |
 | `audit_vtable_slots.py` | After every run, before pack | Every virtual's `vfunc_index` against the previous gamever. SHIFTED = moved unlike its neighbours / the vtable's length / the other platform; decide which build is wrong by the other platform (most vtables: linux = windows + 1). Still flags, on old builds nothing ships from: 14183 windows `OnTakeDamage_Dead`/`_Dying` swapped, 14182-14183 linux `CEntityInstance_GetDataDescMap` on `ReloadPrivateScripts`' slot, `CNetworkGameServerBase_CheckPassword.linux` / `CBaseTrigger_PassesTriggerFilters.linux` from 14182 |
 | `audit_identity_drift.py` | After every run, before pack | Every function artifact against the previous gamever: strings must carry over. DRIFT names the function that now holds them. Recognises outlining (the new body calls the holder). The run discards a drifting relocation |
@@ -896,7 +881,6 @@ Two guards now catch the class before the baseline does:
 | `sync_plugin_templates.py` / `template_refresh.py` | autopilot: before every generation, and on idle ticks at most every 6 h | Follows each generator's `# Seed source:` (the plugin's own gamedata file): added/removed keys reach the template, a key the plugin author's value disagrees with ours is reported with where each lands (found bot-hider's m_UserIDString/m_bIsHLTV misreads, and two plugin-side errors), an alias is suggested when a new key's signature lands on one of our functions. A key with no record here ships the author's value as `upstream` - reported, not a gate failure. Between builds the idle tick regenerates the newest build, gates it with `-require-verified` and commits, or rolls back |
 | `auto_repair.py` | When the verified gate fails (autopilot runs it; `AUTOPILOT_AUTO_REPAIR=0` off) | Rebuilds a contradicted struct offset with `emit_artifact.py` only on independent evidence: the other platform's anchored function holds its value, or another instruction in the same `offset_sig` touches the whole field AND equals the other platform. Then pack, generate, verify. Plan only without `-apply`. Repaired 14190's five `CServerSideClient` misreads unaided, identical to the hand fix |
 | `check_deploy_drift.py` | After every deploy | Diffs `gamedata/<VER>/<plugin>/` against the deployed file; catches a generation that never left the repo, which no entry-level check can see |
-| `check_upstream_drift.py` | After `sync_upstream.sh`, before a hunt round | Skills and YAMLs upstream has that this fork lacks (exit 1), plus what differs and what is fork-only; `-fetch`, `-full`, `-json`. Adds nothing — a missing artifact with no declaring find-task would only be dropped at pack time |
 | `gamesymbol_snapshot.py` | `pack` after changes, `check-contract` to verify | Pack is what generation reads, not `bin_artifacts/` |
 | `missing_report.py` | After runs / before hunts | Writes `missing_<plat>_<ver>.txt` |
 | `audit_duplicate_va.py` | After every hunt round | 0 suspect clusters = clean |
