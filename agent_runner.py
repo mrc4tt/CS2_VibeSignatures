@@ -891,6 +891,17 @@ def _split_agent_chain(agent) -> list[str]:
     return [part.strip() for part in str(agent or "").split(",") if part.strip()]
 
 
+def _split_agent_model(entry: str) -> tuple[str, str | None]:
+    """'opencode@zai-coding-plan/glm-5.3' -> ('opencode', 'zai-coding-plan/glm-5.3').
+
+    A chain entry may pin its own model, so one CLI can appear twice with a cheap
+    model first and a stronger one as the fallback. Without '@' the model is None
+    and the caller decides (agent_model for the first entry, the CLI default after).
+    """
+    name, sep, model = entry.partition("@")
+    return name.strip(), (model.strip() or None) if sep else None
+
+
 def run_skill(
     skill_name,
     agent="claude",
@@ -909,16 +920,21 @@ def run_skill(
     its own ``max_retries`` budget; the next one starts only when the previous
     one exhausted it or failed for good, so a cheap agent can go first and the
     expensive one only pays for what it could not do. ``agent_model`` applies to
-    the first agent only, since model ids are CLI-specific.
+    the first agent only, since model ids are CLI-specific. An entry written
+    ``agent@model`` (``opencode@zai-coding-plan/glm-5.3``) uses that model instead,
+    which is how one CLI falls back from a cheap model to a stronger one.
     """
     chain = _split_agent_chain(agent)
     if not chain:
         print("    Error: no agent configured")
         _notify_progress(progress_callback, "failed", reason="unknown_agent")
         return False
-    for position, one_agent in enumerate(chain, start=1):
+    for position, entry in enumerate(chain, start=1):
+        one_agent, entry_model = _split_agent_model(entry)
+        if entry_model is None:
+            entry_model = agent_model if position == 1 else DEFAULT_AGENT_MODEL
         if position > 1:
-            print(f"    Falling back to agent '{one_agent}' ({position}/{len(chain)})")
+            print(f"    Falling back to agent '{entry}' ({position}/{len(chain)})")
             _notify_progress(
                 progress_callback,
                 "agent_fallback",
@@ -932,7 +948,7 @@ def run_skill(
             debug=debug,
             expected_yaml_paths=expected_yaml_paths,
             max_retries=max_retries,
-            agent_model=agent_model if position == 1 else DEFAULT_AGENT_MODEL,
+            agent_model=entry_model,
             progress_callback=progress_callback,
             mcp_url=mcp_url,
             output_validator=output_validator,

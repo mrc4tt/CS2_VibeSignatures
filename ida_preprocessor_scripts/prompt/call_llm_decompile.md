@@ -1,14 +1,4 @@
-I have disassembly outputs and procedure code for multiple related functions.
-
-These are the reference functions:
-
-{reference_blocks}
-
-These are the target functions you need to reverse-engineering:
-
-{target_blocks}
-
-What you need to do is to collect all references to "{symbol_name_list}" in the target functions you need to reverse-engineering and output those references as YAML.
+I will give you disassembly outputs and procedure code for multiple related functions: reference functions first, then the target functions you need to reverse-engineer. Your task is to collect references to the requested symbols in the target functions and output those references as YAML, following these rules.
 
 Return exactly one YAML mapping. The only permitted top-level keys are `found_vcall`, `found_call`, `found_funcptr`, `found_gv`, and `found_struct_offset`. Never use a requested symbol name as a top-level key. For batched requests, place every result under its result-category list. If no references are found, return all five top-level keys with empty lists. Do not return blank YAML, null, or an empty mapping.
 
@@ -85,3 +75,13 @@ found_struct_offset: []
 ```
 
 DO NOT output anything other than the desired YAML. DO NOT collect unrelated symbols.
+
+These are the reference functions:
+
+{reference_blocks}
+
+These are the target functions you need to reverse-engineering:
+
+{target_blocks}
+
+What you need to do is to collect all references to "{symbol_name_list}" in the target functions you need to reverse-engineering and output those references as YAML, following the rules above.

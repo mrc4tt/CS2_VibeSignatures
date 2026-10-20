@@ -924,7 +924,9 @@ Two guards now catch the class before the baseline does:
 ## AGENT SETUP
 
 - **Local PC**: `CS2VIBE_AGENT=claude` (Max 5x, Sonnet default)
-- **Server**: `CS2VIBE_AGENT=opencode` (z.ai coding plan, glm-5.3-flash)
+- **Server**: `CS2VIBE_AGENT=opencode,opencode@zai-coding-plan/glm-5.3,codex,claude` with
+  `CS2VIBE_AGENT_MODEL=zai-coding-plan/glm-5.3-flash` (z.ai coding plan): flash first, glm-5.3 only
+  after flash used its attempts. A chain entry `agent@model` pins its own model (`agent_runner._split_agent_model`)
 - **LLM_DECOMPILE** (pay-per-token, separate from the agent subscriptions above):
   `run_linux.sh` / `run_windows.sh` read `LLM_APIKEY`, `LLM_MODEL`, `LLM_BASEURL` and pass them as
   `-llm_apikey` / `-llm_model` / `-llm_baseurl`; if unset, `ida_analyze_bin.py` falls back to
@@ -937,7 +939,9 @@ Two guards now catch the class before the baseline does:
   (`ida_preprocessor_scripts/references/`, median 12.5 KB, p90 53 KB) plus the target blocks —
   roughly 10k input tokens median, ~30k at p90, and a few hundred output tokens. Validation
   failures retry, so budget ~1.3 calls per spec. Nothing is metered in-repo; there is no token
-  accounting
+  accounting. `prompt/call_llm_decompile.md` keeps its fixed rules and examples FIRST and the
+  placeholders last, so every call shares one byte-identical prefix that z.ai's KV prompt cache
+  serves; a placeholder moved above the rules ends that
 - Agent auto-select: if CS2VIBE_AGENT unset, scripts pick first installed CLI
 - `CS2VIBE_AGENT=none` (or `manual`/`off`): no agent at all - preprocessors and the in-session
   hunter only, everything else written to `manual_todo/` for Ctrl-Alt-D

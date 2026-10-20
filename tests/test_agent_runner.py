@@ -1218,6 +1218,28 @@ class AgentChainTests(unittest.TestCase):
             [{"event": "agent_fallback", "agent": "claude", "position": 2, "chain_length": 3}],
         )
 
+    def test_chain_entry_pins_its_own_model(self) -> None:
+        calls = []
+
+        def fake_single(skill_name, agent, **kwargs):
+            calls.append((agent, kwargs["agent_model"]))
+            return False
+
+        with patch.object(agent_runner, "_run_skill_with_agent", side_effect=fake_single):
+            agent_runner.run_skill(
+                "find-X",
+                "opencode,opencode@zai-coding-plan/glm-5.3,claude",
+                agent_model="zai-coding-plan/glm-5.3-flash",
+            )
+        self.assertEqual(
+            calls,
+            [
+                ("opencode", "zai-coding-plan/glm-5.3-flash"),
+                ("opencode", "zai-coding-plan/glm-5.3"),
+                ("claude", ""),
+            ],
+        )
+
     def test_run_skill_returns_false_when_whole_chain_fails(self) -> None:
         with patch.object(agent_runner, "_run_skill_with_agent", return_value=False) as single:
             self.assertFalse(agent_runner.run_skill("find-X", "opencode,claude"))
