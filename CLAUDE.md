@@ -908,7 +908,7 @@ Two guards now catch the class before the baseline does:
 ## AGENT SETUP
 
 - **Local PC**: `CS2VIBE_AGENT=claude` (Max 5x, Sonnet default)
-- **Server**: `CS2VIBE_AGENT=opencode,opencode@zai-coding-plan/glm-5.3,codex,claude` with
+- **Server**: `CS2VIBE_AGENT=opencode,opencode@zai-coding-plan/glm-5.3,claude` with
   `CS2VIBE_AGENT_MODEL=zai-coding-plan/glm-5.3-flash` (z.ai coding plan): flash first, glm-5.3 only
   after flash used its attempts. A chain entry `agent@model` pins its own model (`agent_runner._split_agent_model`)
 - **LLM_DECOMPILE** (pay-per-token, separate from the agent subscriptions above):
