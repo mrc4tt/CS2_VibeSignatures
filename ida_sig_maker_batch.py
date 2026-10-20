@@ -59,7 +59,7 @@ def run(args):
     report_dir = args.report_dir.resolve() if args.report_dir else root.parent.parent / "sig_maker_reports" / root.name
     ida = shutil.which(args.ida) or (str(Path(args.ida).resolve()) if Path(args.ida).is_file() else None)
     if not args.dry_run and not ida:
-        raise ValueError("IDA executable not found; set --ida to IDA Pro 9.1's idat/ida executable")
+        raise ValueError("IDA executable not found; set --ida to IDA Pro 9.4's idat/ida executable")
     if args.timeout <= 0:
         raise ValueError("--timeout must be positive")
     selected_modules = {module for _, module, _ in jobs}
@@ -124,7 +124,7 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, help="bin/<gamever> directory; searched recursively")
-    parser.add_argument("--ida", default=os.environ.get("IDA_EXE", "idat"), help="IDA Pro 9.1 executable")
+    parser.add_argument("--ida", default=os.environ.get("IDA_EXE", "idat"), help="IDA Pro 9.4 executable")
     parser.add_argument("--queue", type=Path, help="UTF-8 file; one symbol or module!symbol per line")
     parser.add_argument("--rules", type=Path, help="JSON locator rules keyed by symbol")
     parser.add_argument("--output", type=Path, help="Artifact game-version root (contains module folders)")

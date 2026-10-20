@@ -50,10 +50,7 @@ BINARY_NAMES = {
 
 def find_ida(explicit):
     for candidate in (explicit, os.environ.get("IDA_EXE"), shutil.which("idat"),
-                      # 9.4 first: the warm IDBs were upgraded on 2026-10-12 and 9.1 cannot
-                      # read them back ("the database format is newer than expected").
-                      os.path.expanduser("~/ida-pro-9.4/idat"), "/root/ida-pro-9.4/idat",
-                      os.path.expanduser("~/ida-pro-9.1/idat"), "/root/ida-pro-9.1/idat", "/opt/ida-pro/idat"):
+                      os.path.expanduser("~/ida-pro-9.4/idat"), "/root/ida-pro-9.4/idat", "/opt/ida-pro/idat"):
         if candidate and Path(candidate).is_file():
             return str(candidate)
     raise SystemExit("IDA not found: pass -ida or set IDA_EXE")

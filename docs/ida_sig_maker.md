@@ -16,7 +16,7 @@ python ida_sig_maker_batch.py bin/14178b --ida "C:/Program Files/IDA Professiona
 Linux:
 
 ```sh
-python3 ida_sig_maker_batch.py bin/14178b --ida /opt/ida-pro-9.1/idat
+python3 ida_sig_maker_batch.py bin/14178b --ida ~/ida-pro-9.4/idat
 ```
 
 Erstat version og IDA-sti med dine egne. GUI-programmet `ida.exe`/`ida` kan også

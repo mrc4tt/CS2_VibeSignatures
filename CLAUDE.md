@@ -642,9 +642,8 @@ SIGTERM is where the database is saved, so `stop_idalib_mcp_process` waits
 result over 50 000 characters to a preview plus a download URL nothing here ever fetched.
 `CS2VIBE_IDA_MCP=fork` starts the old `idalib-mcp` instead, same arguments, for a rollback
 without a code change. The reap patterns in the run scripts match both servers and both kinds of
-worker (`ida_pro_mcp.idalib_server`, `ida-nexus worker`). 9.4 upgrades an IDB it opens and 9.1
-cannot read it back: the 9.1 databases of every gamever up to 14190 are in
-`/root/ida91_i64_backup/` (taken 2026-10-12).
+worker (`ida_pro_mcp.idalib_server`, `ida-nexus worker`). IDA 9.1 and its IDB backup were removed
+on 2026-10-20; 9.4 is the only install (`~/ida-pro-9.4`).
 
 **Within one run, binaries go side by side** (`-jobs` / `CS2VIBE_JOBS`, which the run
 scripts default to `auto`). IDA is single-threaded per database, so the only way to use
