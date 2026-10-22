@@ -62,10 +62,12 @@ def shipped_files(gamever, gamedata_root="gamedata"):
     return sorted(out)
 
 
-def verify(gamever, path, snapshot=None):
+def verify(gamever, path, snapshot=None, platform=None):
     """verify_plugin_gamedata's JSON report for one file."""
     cmd = [sys.executable, "verify_plugin_gamedata.py", "-gamever", gamever, "-gamedata", path,
            "-require-verified", "-json"]
+    if platform:
+        cmd += ["-platform", platform]
     if snapshot:
         cmd += ["-snapshot", snapshot]
     done = subprocess.run(cmd, capture_output=True, text=True)
@@ -183,13 +185,17 @@ def emit(gamever, symbol, platform, ea, rec):
     return ok, (done.stdout + done.stderr)[-400:]
 
 
-def rebuild(gamever):
-    """Pack and generate exactly as autopilot does."""
+def rebuild(gamever, platform=None):
+    """Pack and generate exactly as autopilot does. With one platform (the linux-first
+    release) pack and generate only that one; check-contract stays red until both exist."""
     snapshot = os.path.join("gamesymbols", f"{gamever}.yaml")
-    for cmd in (["gamesymbol_snapshot.py", "pack", "-gamever", gamever, "-snapshot", snapshot],
-                ["gamesymbol_snapshot.py", "check-contract", "-gamever", gamever, "-snapshot", snapshot],
-                ["update_gamedata.py", "-gamever", gamever, "-snapshot", snapshot,
-                 "-outputdir", os.path.join("gamedata", gamever)]):
+    only = ["-platform", platform] if platform else []
+    steps = [["gamesymbol_snapshot.py", "pack", "-gamever", gamever, "-snapshot", snapshot] + only]
+    if not platform:
+        steps.append(["gamesymbol_snapshot.py", "check-contract", "-gamever", gamever, "-snapshot", snapshot])
+    steps.append(["update_gamedata.py", "-gamever", gamever, "-snapshot", snapshot,
+                  "-outputdir", os.path.join("gamedata", gamever)] + only)
+    for cmd in steps:
         done = subprocess.run([sys.executable] + cmd, capture_output=True, text=True)
         if done.returncode != 0:
             return f"{cmd[0]} failed: {(done.stdout + done.stderr)[-300:]}"
@@ -203,11 +209,13 @@ def main():
     parser.add_argument("-snapshot", default=None, help="judge against this snapshot (plan only)")
     parser.add_argument("-gamedata", action="append", default=None,
                         help="only these shipped files (default: every enabled file of the build)")
+    parser.add_argument("-platform", choices=("linux", "windows"), default=None,
+                        help="judge and repair only this platform (autopilot's linux-first release)")
     parser.add_argument("-json", action="store_true")
     args = parser.parse_args()
 
     files = args.gamedata or shipped_files(args.gamever)
-    reports = [verify(args.gamever, path, args.snapshot) for path in files]
+    reports = [verify(args.gamever, path, args.snapshot, args.platform) for path in files]
     unhealthy = sum(max(0, r.get("unhealthy", 0)) for r in reports)
     if unhealthy == 0 and all(r.get("unhealthy", 0) >= 0 for r in reports):
         print(f"auto-repair {args.gamever}: every shipped value verifies, nothing to repair")
@@ -240,11 +248,11 @@ def main():
             print(tail)
             return 2
     if repairs:
-        failure = rebuild(args.gamever)
+        failure = rebuild(args.gamever, args.platform)
         if failure:
             print(f"auto-repair: {failure}")
             return 2
-    after = [verify(args.gamever, path) for path in files]
+    after = [verify(args.gamever, path, platform=args.platform) for path in files]
     still = sum(max(0, r.get("unhealthy", 0)) for r in after)
     print(f"auto-repair {args.gamever}: {len(repairs)} repaired, {still} still unhealthy")
     for report in after:

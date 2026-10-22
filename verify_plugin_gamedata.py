@@ -1083,7 +1083,12 @@ def main():
     parser.add_argument("-quiet", action="store_true", help="only print what is not ok")
     parser.add_argument("-require-verified", dest="require_verified", action="store_true",
                         help="also fail on any shipped entry no method could confirm from the binary")
+    parser.add_argument("-platform", default="linux,windows",
+                        help="only judge these platforms (autopilot's linux-first release checks "
+                             "linux alone while the windows values are still the previous build's)")
     args = parser.parse_args()
+    global PLATFORMS
+    PLATFORMS = tuple(p for p in ("linux", "windows") if p in args.platform.split(","))
 
     snapshot = args.snapshot or os.path.join("gamesymbols", f"{args.gamever}.yaml")
     index = load_snapshot_index(snapshot)

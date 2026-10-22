@@ -51,6 +51,7 @@ that run produced. `MemoryMax=16G` keeps it from competing with a run.
     AUTOPILOT_MIN_FREE_GB=40     # refuse to start a depot download below this
     AUTOPILOT_MAX_ATTEMPTS=2     # then stop retrying that build
     AUTOPILOT_IMPACT_PLUGINS=    # plugin dirs (a:b) for the schema impact line in the notification
+    AUTOPILOT_LINUX_FIRST=1      # release linux as soon as it holds, windows after; 0 = both at once
 
 `safe` deploys only when the build is a rebuild relocation and nothing more:
 no key appeared or disappeared, no offset or vtable slot moved, coverage did not

@@ -15,7 +15,9 @@ når en besked siger `failed` eller `held`, eller når du vil tilføje symboler.
 | 0 | preflight: disk ≥40G, DepotDownloader, agent-CLI; tracked ændringer committes + pushes | stop |
 | 1 | `add_gamever.sh` → download.yaml | stop |
 | 2 | `ensure_local_gamedata_symbols.py` + `ensure_seed_preprocessors.py` | stop |
-| 3 | `run_linux.sh`, så `run_windows.sh` (aldrig samtidig) | resume op til 2× |
+| 3 | `run_linux.sh` | resume op til 2× |
+| 3L | **linux først** (`AUTOPILOT_LINUX_FIRST=1`, default): trin 4–13 for linux alene (`-platform linux` på audits, pack, generering, verify, auto-repair og gate), oven på forrige builds gamedata-filer så windows beholder de værdier der allerede er deployet. Commit `feat(<VER>): linux analysed by autopilot`, push, deploy, Discord `linux-deployed`/`linux-held` | kører i en subshell: fejl giver `linux-failed` og kæden fortsætter — windows-releasen bærer så begge platforme som før |
+| 3W | `run_windows.sh` (aldrig samtidig med linux) | resume op til 2× |
 | 4 | `write_binary_lock.py -check` når låsen findes (bin/ skal være de låste filer), så `abi_guard.py --fix` (ABI-identitet, før pack — regel 21), så `audit_xref_identity.py` (hver funktion skal stadig rumme sit ankers streng/mønster) og `audit_identity_drift.py` (hver funktion mod forrige gamever: strengene skal følge med) | stop |
 | 5 | snapshot `pack` + `check-contract` | stop |
 | 6 | `update_gamedata.py` — 0 warnings krævet | stop |
@@ -26,6 +28,11 @@ når en besked siger `failed` eller `held`, eller når du vil tilføje symboler.
 | 11 | `schema_dump.py impact` (info, linje i beskeden) | — |
 | 12 | commit `feat(<VER>): analysed by autopilot`; derefter `publish_site_data.py -history-only` + commit `chore(<VER>): record publish date` (publishedAt kræver at commit'en findes); `-check`; push | stop |
 | 13 | deploy efter `AUTOPILOT_DEPLOY` (`verified` her): `update_css_gamedata.sh` → `deploy_local_plugins.sh` (commit + push i plugin-repos) → `check_deploy_drift.py` | stop |
+
+Trin 4–13 kører derefter for begge platforme med fuld regenerering fra templates — slutresultatet er
+det samme som uden linux-først. En build med linux-commit men ingen `feat(<VER>): analysed by
+autopilot` er ikke færdig: næste tick genoptager ved `run_windows.sh` (og prøver linux-deployet
+igen hvis det fejlede), også selvom `deployments/<VER>.json` findes fra linux-releasen.
 
 Sitet (sig.miksen.me) bygges af `deploy-pages.yml` fra push'et; `check-datasets`-jobbet fejler hvis
 history.json er stale.
@@ -43,11 +50,12 @@ rm -f .autopilot/attempts-<VER>                   # nulstil efter 2 fejlede fors
 rm -f .autopilot/finish-attempts-<VER>            # nulstil efter 6 fejlede push/deploy-genoptag
 ```
 
-Logs: `.autopilot/{gamedata,verify,gate,impact,missing}-<VER>.*`. En `failed`-besked indeholder
+Logs: `.autopilot/{gamedata,verify,gate,impact,missing}-<VER>.*` (linux-releasen: `-<VER>-linux.*`). En `failed`-besked indeholder
 allerede de 2–3 kommandoer der skal køres (`hint_for()` i autopilot.sh) — start der.
 
 Indstillinger i `.env` (se `systemd/README.md`): `AUTOPILOT_DEPLOY`, `AUTOPILOT_NOTIFY_URL`,
-`AUTOPILOT_MIN_FREE_GB`, `AUTOPILOT_MAX_ATTEMPTS`, `AUTOPILOT_IMPACT_PLUGINS`, `AUTOPILOT_PUBLISH`.
+`AUTOPILOT_MIN_FREE_GB`, `AUTOPILOT_MAX_ATTEMPTS`, `AUTOPILOT_IMPACT_PLUGINS`, `AUTOPILOT_PUBLISH`,
+`AUTOPILOT_LINUX_FIRST` (0 = vent på windows før noget releases).
 
 ## 3 — EFTER EN BUILD (tjek, 1 min)
 

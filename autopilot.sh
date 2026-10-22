@@ -34,6 +34,8 @@
 #   AUTOPILOT_IMPACT_CSS=path        CounterStrikeSharp checkout, default /root/CounterStrikeSharp
 #   AUTOPILOT_AUTOCOMMIT=0           refuse a dirty tree instead of committing and
 #                                    pushing the tracked changes before a run
+#   AUTOPILOT_LINUX_FIRST=0          analyse both platforms before releasing anything,
+#                                    instead of releasing linux while windows still runs
 #   DEPOTDOWNLOADER_STEAM_USERNAME / _PASSWORD
 #   CS2VIBE_AGENT, CS2VIBE_LLM_APIKEY ...
 set -uo pipefail
@@ -41,6 +43,7 @@ cd "$(dirname "$0")"
 REPO="$PWD"
 
 DEPLOY_MODE="${AUTOPILOT_DEPLOY:-safe}"
+LINUX_FIRST="${AUTOPILOT_LINUX_FIRST:-1}"
 
 # Deploy, then prove it landed. Running the scripts is not evidence that the files
 # moved: update_css_gamedata.sh merges by key and deploy_local_plugins.sh skips a
@@ -185,6 +188,16 @@ hint_for() {  # hint_for <failure text>
 
 die() {
     log "FAILED: $*"
+    # Inside the linux-first release (a subshell): this exits that release only. The
+    # chain goes on to windows, whose release carries both platforms as it always did.
+    if [ "${PHASE:-}" = linux ]; then
+        notify "linux-failed" "$*
+the windows analysis goes ahead and its release carries both platforms.
+
+what to run:
+$(hint_for "$*")"
+        exit 1
+    fi
     notify "failed" "$*
 
 what to run:
@@ -449,7 +462,17 @@ fi
 # before the commit is repeated - the battery already passed, or the commit
 # would not exist. A commit made by hand carries no such message and stays done.
 ATTEMPTS_FILE="$STATE/attempts-$TAG"
-if git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1; then
+# Linux-first leaves a third state: linux committed (and usually deployed), windows not
+# analysed yet. That build is not done - a deployments/<build>.json from the linux
+# release must not read as finished - so it resumes at the windows analysis.
+WINDOWS_PENDING=0
+if git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1 \
+        && [ ! -f "$STATE/finished-$TAG" ] \
+        && [ -n "$(git log -1 --format=%h -F --grep="feat($TAG): linux analysed by autopilot" HEAD)" ] \
+        && [ -z "$(git log -1 --format=%h -F --grep="feat($TAG): analysed by autopilot" HEAD)" ]; then
+    WINDOWS_PENDING=1
+    log "build $TAG: linux is committed, windows is not; resuming at the windows analysis"
+elif git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1; then
     if [ -f "$STATE/finished-$TAG" ] || [ -f "deployments/$TAG.json" ] \
             || [ -z "$(git log -1 --format=%h -F --grep="feat($TAG): analysed by autopilot" HEAD)" ]; then
         log "build $TAG is already analysed; nothing to do"
@@ -525,7 +548,13 @@ fi
 log "new build detected: $TAG (attempt $((ATTEMPTS + 1)) of $MAX_ATTEMPTS)"
 STARTED_EPOCH=$(date +%s)
 if [ "$DRY" = 1 ]; then
-    log "dry run: would run add_gamever, run_linux, run_windows, the battery, then deploy mode '$DEPLOY_MODE'"
+    if [ "$WINDOWS_PENDING" = 1 ]; then
+        log "dry run: would run run_windows, the battery, then deploy mode '$DEPLOY_MODE'"
+    elif [ "$LINUX_FIRST" != 0 ]; then
+        log "dry run: would run add_gamever, run_linux, release linux (deploy mode '$DEPLOY_MODE'), then run_windows, the battery, and release both"
+    else
+        log "dry run: would run add_gamever, run_linux, run_windows, the battery, then deploy mode '$DEPLOY_MODE'"
+    fi
     exit 0
 fi
 
@@ -591,11 +620,164 @@ step_resume() {  # step_resume <label> <command...>
     done
 }
 
+
+# ---------------------------------------------------------------- linux first
+# Linux is analysed first and is done hours before windows, and most servers run
+# linux. So linux goes out on its own as soon as it holds: its half of the battery,
+# its own pack and generation, every shipped linux value verified, committed, pushed
+# and deployed. Windows keeps the values it shipped with on the previous build - the
+# deployed files already carry those - until the windows release below regenerates
+# everything from both platforms, exactly as a chain without this step does.
+#
+# Run in a subshell: any failure here (die exits the subshell) stops the linux release
+# only, notifies, and the windows analysis goes ahead. So this can bring a build to
+# linux servers earlier, never later. AUTOPILOT_LINUX_FIRST=0 turns it off.
+linux_release() {
+    PHASE=linux
+    if [ -f "binary_locks/$TAG.json" ]; then
+        step "linux: checking bin/ against the binary lock" uv run write_binary_lock.py -gamever "$TAG" -check
+    fi
+    step "linux: checking ABI identity" uv run abi_guard.py -gamever "$TAG" -platform linux --fix
+    step "linux: checking each function still holds its anchor" uv run audit_xref_identity.py -gamever "$TAG" -platform linux
+    step "linux: checking each function against the previous gamever (anchor drift)" uv run audit_identity_drift.py -gamever "$TAG" -platform linux
+    step "linux: checking each virtual's slot against the previous gamever (slot shift)" uv run audit_vtable_slots.py -gamever "$TAG" -platform linux
+    log "==> linux: checking each artifact against its task's fields (artifact contract)"
+    if ! uv run audit_artifact_contract.py -gamever "$TAG" -platform linux; then
+        if [ "${AUTOPILOT_HEAL_CONTRACT:-1}" != "0" ] && [ -n "${OLD_TAG:-}" ]; then
+            log "    contract broken - re-making the artifacts it names"
+            uv run heal_contract.py -gamever "$TAG" -oldgamever "$OLD_TAG" 2>&1 | while IFS= read -r line; do log "    $line"; done
+        fi
+        step "linux: checking each artifact against its task's fields (artifact contract)" uv run audit_artifact_contract.py -gamever "$TAG" -platform linux
+    fi
+    # run_linux.sh packed already, but --fix and the heal above may have rewritten artifacts
+    step "linux: packing the snapshot" uv run gamesymbol_snapshot.py pack -gamever "$TAG" \
+        -snapshot "gamesymbols/$TAG.yaml" -platform linux
+
+    # update_gamedata -platform linux starts each file from the one already in the output
+    # directory. A new build has none, so it would start from the templates and ship their
+    # windows values; start from the previous build's files instead, so windows keeps
+    # exactly what is deployed today.
+    local disabled dir
+    disabled=$(uv run python -c "import publish_site_data as P; print(' '.join(sorted(P.disabled_plugins())))" 2>/dev/null || echo "")
+    if [ ! -d "gamedata/$TAG" ] && [ -n "${OLD_TAG:-}" ] && [ -d "gamedata/$OLD_TAG" ]; then
+        log "    starting gamedata/$TAG from $OLD_TAG's files (windows keeps its values until the windows release)"
+        mkdir -p "gamedata/$TAG"
+        for dir in "gamedata/$OLD_TAG"/*/; do
+            case " $disabled " in *" $(basename "$dir") "*) continue ;; esac
+            cp -a "$dir" "gamedata/$TAG/"
+        done
+    fi
+    local gen_log="$STATE/gamedata-$TAG-linux.log" warnings
+    log "==> linux: generating gamedata"
+    if ! uv run update_gamedata.py -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml" \
+            -outputdir "gamedata/$TAG" -platform linux > "$gen_log" 2>&1; then
+        tail -20 "$gen_log"
+        die "linux: gamedata generation"
+    fi
+    warnings=$(grep -oP 'Unique warning diagnostics:\s*\K\d+' "$gen_log" | tail -1 || echo 0)
+    [ "${warnings:-0}" = "0" ] || { tail -20 "$gen_log"; die "linux: gamedata generation reported $warnings warning diagnostics"; }
+    log "    $(grep -oP 'Total: \K.*' "$gen_log" | tail -1)"
+
+    step "linux: validating every artifact against the binaries" uv run validate_artifacts.py -gamever "$TAG" -platform linux
+    step "linux: auditing for batch contamination" uv run audit_duplicate_va.py -gamever "$TAG" -platform linux
+
+    log "==> linux: verifying every shipped plugin file"
+    local verify_log="$STATE/verify-$TAG-linux.log" unhealthy=0 files=0 plugin_file plugin_dir bad
+    : > "$verify_log"
+    for plugin_file in $(find "gamedata/$TAG" -type f \( -name '*.json' -o -name '*.jsonc' -o -name '*.txt' \) ! -name '*.metadata.json' | sort); do
+        plugin_dir=${plugin_file#gamedata/$TAG/}
+        plugin_dir=${plugin_dir%%/*}
+        case " $disabled " in *" $plugin_dir "*) continue ;; esac
+        if ! uv run verify_plugin_gamedata.py -gamever "$TAG" -gamedata "$plugin_file" -require-verified \
+                -platform linux >> "$verify_log" 2>&1; then
+            tail -20 "$verify_log"
+            die "linux: verify_plugin_gamedata failed on $plugin_file"
+        fi
+        files=$((files + 1))
+        bad=$(grep -oP '^unhealthy:\s*\K\d+' "$verify_log" | tail -1 || echo 0)
+        [ "${bad:-0}" = "0" ] || unhealthy=$((unhealthy + bad))
+    done
+    if [ "$unhealthy" != "0" ] && [ "${AUTOPILOT_AUTO_REPAIR:-1}" != "0" ]; then
+        log "    $unhealthy unhealthy - trying auto-repair (log: $STATE/repair-$TAG-linux.log)"
+        if uv run auto_repair.py -gamever "$TAG" -platform linux -apply > "$STATE/repair-$TAG-linux.log" 2>&1; then
+            unhealthy=0
+        else
+            tail -20 "$STATE/repair-$TAG-linux.log"
+        fi
+    fi
+    [ "$unhealthy" = "0" ] || die "linux: $unhealthy shipped gamedata entr(ies) do not hold against the binaries"
+    log "    $files shipped file(s) checked, every linux entry holds and is verified"
+
+    step "linux: publishing the site datasets" uv run publish_site_data.py -gamever "$TAG"
+    if [ -f "binary_locks/$TAG.json" ]; then
+        step "linux: checking the binary lock" uv run write_binary_lock.py -gamever "$TAG" -check
+    else
+        step "linux: writing the binary lock" uv run write_binary_lock.py -gamever "$TAG"
+    fi
+
+    log "==> linux: committing"
+    git add -A -- "configs/$TAG.yaml" "bin_artifacts/$TAG" "gamesymbols/$TAG.yaml" "gamedata/$TAG" \
+        gamedata/history.json "diagnostics/$TAG.json" gamedata-generators/*/gamedata \
+        "binary_locks/$TAG.json" download.yaml ida_preprocessor_scripts .claude/skills 2>/dev/null || true
+    git diff --cached --quiet && die "linux: nothing to commit"
+    # The windows release keys "done" on its own message, "feat(<build>): analysed by
+    # autopilot", which this one must not contain.
+    git commit -q -m "feat($TAG): linux analysed by autopilot
+
+Linux half of the verification battery green; windows values are still
+${OLD_TAG:-the previous build}'s until the windows analysis is released." || die "linux: commit"
+    if uv run publish_site_data.py -history-only >/dev/null \
+            && ! git diff --quiet -- gamedata/history.json; then
+        git commit -q -m "chore($TAG): record publish date in site history" \
+            -- gamedata/history.json || die "linux: commit"
+    fi
+    uv run publish_site_data.py -check || die "linux: site datasets stale after commit"
+    linux_finish
+}
+
+# Push and the deploy decision for the linux release. A function of its own because a
+# build whose linux commit exists but whose linux push or deploy failed retries it.
+linux_finish() {
+    PHASE=linux
+    sync_push || die "linux: push"
+    log "    linux committed and pushed"
+    dispatch_pages
+    GATE_OUT="$STATE/gate-$TAG-linux.txt"
+    uv run autopilot_safe_gate.py -gamever "$TAG" -platform linux > "$GATE_OUT" 2>&1
+    local gate=$?
+    cat "$GATE_OUT"
+    IMPACT_LINE="windows: ${OLD_TAG:-the previous build}'s values until the windows release"
+    case "$DEPLOY_MODE" in
+        off) notify "linux-analysed" "$(final_body)" ;;
+        verified|auto) deploy_all "$TAG"; notify "linux-deployed" "$(final_body)" ;;
+        safe|*)
+            if [ "$gate" = 0 ]; then
+                deploy_all "$TAG"; notify "linux-deployed" "$(final_body)"
+            elif [ "$gate" = 10 ]; then
+                notify "linux-held" "$(final_body)"
+            else
+                die "linux: the safe gate could not decide"
+            fi ;;
+    esac
+    : > "$STATE/linux-finished-$TAG"
+    log "linux release of $TAG done; windows next"
+}
+
 # ---------------------------------------------------------------- the chain
-step "registering $TAG in download.yaml" ./add_gamever.sh "$TAG"
-step "re-asserting this fork's config decisions" uv run ensure_local_gamedata_symbols.py
-step "seeding relocation preprocessors" uv run ensure_seed_preprocessors.py
-step_resume "analysing linux" ./run_linux.sh "$TAG"
+if [ "$WINDOWS_PENDING" = 1 ]; then
+    if [ "$LINUX_FIRST" != 0 ] && [ ! -f "$STATE/linux-finished-$TAG" ]; then
+        ( linux_finish ) || log "    linux release still not finished; the windows release carries both platforms"
+    fi
+else
+    step "registering $TAG in download.yaml" ./add_gamever.sh "$TAG"
+    step "re-asserting this fork's config decisions" uv run ensure_local_gamedata_symbols.py
+    step "seeding relocation preprocessors" uv run ensure_seed_preprocessors.py
+    step_resume "analysing linux" ./run_linux.sh "$TAG"
+    if [ "$LINUX_FIRST" != 0 ]; then
+        log "==> linux first: releasing linux before the windows analysis"
+        ( linux_release ) || log "    linux release stopped; the windows release carries both platforms"
+    fi
+fi
 step_resume "analysing windows" ./run_windows.sh "$TAG"
 
 # ---------------------------------------------------------------- battery, as a gate

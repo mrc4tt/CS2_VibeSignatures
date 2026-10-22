@@ -168,7 +168,7 @@ def shipped_symbols() -> set[str] | None:
         return None
 
 
-def decide(version: str, previous: str) -> dict:
+def decide(version: str, previous: str, platforms: tuple[str, ...] = ("linux", "windows")) -> dict:
     holds: list[dict] = []
     notes: list[str] = []
 
@@ -191,7 +191,7 @@ def decide(version: str, previous: str) -> dict:
         for gained in sorted(set(new_keys) - set(old_keys)):
             holds.append({"reason": "key_added", "file": relative, "key": gained})
         for key in sorted(set(new_keys) & set(old_keys)):
-            for platform in ("linux", "windows"):
+            for platform in platforms:
                 before, after = old_keys[key][platform], new_keys[key][platform]
                 if before == after:
                     continue
@@ -224,9 +224,9 @@ def decide(version: str, previous: str) -> dict:
     if new_platforms and old_platforms:
         shipped = shipped_symbols()
         unshipped = []
-        for symbol, platforms in sorted(old_platforms.items()):
+        for symbol, before_platforms in sorted(old_platforms.items()):
             current = new_platforms.get(symbol, set())
-            if len(platforms) == 2 and len(current) < 2:
+            if len(before_platforms) == 2 and not set(platforms) <= current:
                 # Only a symbol an enabled plugin ships can break a plugin by losing a
                 # platform. The rest are read by disabled plugins or nobody, so their
                 # producers are not hunted (the payer rule) and a lost relocation simply
@@ -234,11 +234,11 @@ def decide(version: str, previous: str) -> dict:
                 # CCSGameRules__sm_mapGcBanInformation this way, held a build over
                 # nothing shipped, and is now a note.
                 if shipped is not None and symbol not in shipped:
-                    unshipped.append(f"{symbol} {sorted(platforms)} -> {sorted(current)}")
+                    unshipped.append(f"{symbol} {sorted(before_platforms)} -> {sorted(current)}")
                     continue
                 holds.append({
                     "reason": "symbol_lost_platform", "symbol": symbol,
-                    "before": sorted(platforms), "after": sorted(current),
+                    "before": sorted(before_platforms), "after": sorted(current),
                 })
         if unshipped:
             notes.append(f"{len(unshipped)} symbol(s) no enabled plugin ships lost a platform: "
@@ -264,6 +264,9 @@ def main() -> int:
     parser.add_argument("-gamever", required=True, help="the freshly generated build")
     parser.add_argument("-prev", help="build to compare against (default: the previous published one)")
     parser.add_argument("-json", action="store_true", help="machine-readable verdict on stdout")
+    parser.add_argument("-platform", default="linux,windows",
+                        help="judge only these platforms (the linux-first release: windows still "
+                             "carries the previous build's values and no windows artifacts)")
     args = parser.parse_args()
 
     versions = published_versions()
@@ -281,7 +284,8 @@ def main() -> int:
         print(f"no generated gamedata for {previous}", file=sys.stderr)
         return 1
 
-    verdict = decide(args.gamever, previous)
+    verdict = decide(args.gamever, previous,
+                     tuple(p for p in ("linux", "windows") if p in args.platform.split(",")))
     if args.json:
         print(json.dumps(verdict, indent=1))
     else:
