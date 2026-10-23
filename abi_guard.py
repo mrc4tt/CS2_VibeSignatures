@@ -242,6 +242,9 @@ ABI_GUARDS = {
                 "55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB "
                 "48 83 EC ? 0F B6 05 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7B 30 00",
             ],
+            # The generator caps its length and so pins a RIP displacement byte
+            # (`0F B6 05 ?? 98 ?? ??` on 14192) that moves next build; ship this one.
+            "ship_good_sig": True,
             "accept_heads": [
                 "55 48 89 E5 41 57 41 56 49 89 F6 41 55 49 89 D5 41 54 49 89 CC 53 48 89 FB",
                 "55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB",
@@ -742,6 +745,9 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
                 problems.append(f"func_sig has {len(sh)} hits")
             elif cur_off is not None and sh[0] != cur_off:
                 problems.append(f"func_sig resolves to {offset_to_va(data, platform, sh[0]):#x}, not func_va")
+            elif rule.get("ship_good_sig") and cur_off == good_off and to_yaml_sig(sig) != to_yaml_sig(good_sig):
+                # the generator stops at a length limit and pins a displacement byte instead
+                problems.append("func_sig is not the guard's wildcarded sig (ship_good_sig)")
 
         # A func_size written by the old guess_func_size can span a function
         # boundary even when func_va and func_sig are right, because that scan

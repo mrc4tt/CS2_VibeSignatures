@@ -32,6 +32,15 @@ def main():
     args = ap.parse_args()
     binary = REPO / args.bindir / args.gamever / args.module / BINARY_NAMES[(args.module, args.platform)]
     idb = Path(f"{binary}.i64")
+    if not idb.is_file() and binary.is_file():
+        # The previous build's databases can be gone (14191's were deleted with the IDA 9.1
+        # cleanup), and without facts the hunter hands every symbol to an agent. One cold
+        # analysis here is far cheaper than that.
+        print(f"[facts] no warm IDB for {binary}; analysing it first (warmup_idb_worker)")
+        subprocess.run(
+            [sys.executable, str(REPO / "warmup_idb_worker.py"), str(binary)],
+            cwd=REPO, timeout=args.timeout * 3, check=False,
+        )
     if not idb.is_file():
         raise SystemExit(f"no warm IDB: {idb}")
     artifact_dir = REPO / args.artifactdir / args.gamever / args.module

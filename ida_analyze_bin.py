@@ -3035,7 +3035,8 @@ def _generate_baseline_facts(old_artifact_dir, module_name, platform, gamever=No
         completed = subprocess.run(
             [sys.executable, os.path.join(repo, "baseline_facts.py"), "-gamever", baseline,
              "-module", module_name, "-platform", platform],
-            cwd=repo, capture_output=True, text=True, timeout=2400,
+            # room for a cold analysis first when the baseline's .i64 is gone (server.dll)
+            cwd=repo, capture_output=True, text=True, timeout=7800,
         )
     except (OSError, subprocess.TimeoutExpired) as error:
         print(f"    Hunter: baseline facts failed ({error})")
@@ -3915,6 +3916,36 @@ def _changed_existing_outputs(existing_digests):
         if not candidate.is_file() or _sha256_file(candidate) != expected_digest:
             changed.append(path)
     return changed
+
+
+def _snapshot_input_files(paths):
+    snapshot = {}
+    for path in paths:
+        try:
+            with open(path, "rb") as handle:
+                snapshot[path] = handle.read()
+        except OSError:
+            continue
+    return snapshot
+
+
+def _restore_input_files(snapshot):
+    """Put back every input whose bytes changed (or that vanished); returns those paths."""
+    restored = []
+    for path, data in snapshot.items():
+        try:
+            with open(path, "rb") as handle:
+                if handle.read() == data:
+                    continue
+        except OSError:
+            pass
+        try:
+            with open(path, "wb") as handle:
+                handle.write(data)
+            restored.append(path)
+        except OSError:
+            continue
+    return restored
 
 
 def _newly_materialized_outputs(paths, existing_digests):
@@ -5106,6 +5137,11 @@ def _process_binary(
                     )
                 print(f"    Starting agent skill: {skill_name}")
                 _report_skill_status(reporting, job_id, skill_name, TaskStatus.RUNNING, ProcessPhase.AGENT_FALLBACK)
+                # An agent may rewrite what it only reads: on 14192 the -decompiles agents
+                # rewrote PickupItem/ClientDisconnect.windows without their func_sig.
+                input_snapshot = _snapshot_input_files(
+                    [path for path in list(expected_inputs) + list(optional_inputs) if path not in output_paths]
+                )
                 agent_succeeded = run_skill(
                     skill_name,
                     agent,
@@ -5120,6 +5156,8 @@ def _process_binary(
                     mcp_url=mcp_url,
                     output_validator=validate_agent_outputs,
                 )
+                for path in _restore_input_files(input_snapshot):
+                    print(f"    Restored input the agent modified: {os.path.basename(path)}")
                 if todo_entries:
                     # failed: what neither the hunter nor the agent could do is left for a
                     # person; succeeded: its artifacts exist, so the entries drop out
