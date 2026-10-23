@@ -72,11 +72,31 @@ SDK_HEAD=$(git -C hl2sdk_cs2 log -1 --format='%h %s')
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
+# clang takes the newest GCC under /usr/lib/gcc even when only an older one has its
+# libstdc++ headers installed (Ubuntu 24.04: gcc 14 without libstdc++-14-dev). Point
+# the linux tests at the newest GCC that has them, when the default finds none.
+GCC_DIR=""
+if ! echo '#include <cstdlib>' | "$CLANG" -x c++ -fsyntax-only --target=x86_64-pc-linux-gnu - 2> /dev/null; then
+    for d in $(ls -d /usr/lib/gcc/x86_64-linux-gnu/* 2> /dev/null | sort -V -r); do
+        if [ -d "/usr/include/c++/$(basename "$d")" ] || [ -d "/usr/include/x86_64-linux-gnu/c++/$(basename "$d")" ]; then
+            GCC_DIR="$d"
+            break
+        fi
+    done
+fi
+
 # The config with its cpp_tests: block (always the last top-level key) swapped for the
 # fork's own list
 {
     sed '/^cpp_tests:/,$d' "$CONFIG"
-    grep -v '^#' "$FORK_TESTS"
+    grep -v '^#' "$FORK_TESTS" | awk -v gcc="$GCC_DIR" '
+        /- name:/ { linux = 0 }
+        /target: x86_64-[^ ]*-linux-gnu/ { linux = 1 }
+        { print }
+        linux && gcc != "" && /additional_compiler_options:/ {
+            indent = $0; sub(/[^ ].*/, "", indent)
+            print indent "  - --gcc-install-dir=" gcc
+        }'
 } > "$tmp/config.yaml"
 
 uv run run_cpp_tests.py -gamever "$GAMEVER" -snapshot "$SNAPSHOT" -configyaml "$tmp/config.yaml" \

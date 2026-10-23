@@ -1,17 +1,84 @@
 # Accepted cpp_tests mismatches (sdk_abi_check.sh --accept).
 # gamever 14192, hl2sdk 690008be Add a local CI run through act
+CEntityInstance_Linux | Index 11 mismatch: YAML expects 'PostDataUpdateDelta' but compiler reports 'DispatchPostDataUpdate'.
+CEntityInstance_Linux | Index 13 mismatch: YAML expects 'PostDataUpdatePreserve' but compiler reports 'OnDataUnchangedInPVS'.
+CEntityInstance_Linux | Index 30 mismatch: YAML expects 'AddChangeAccessorPathPolymorphic' but compiler reports 'NetworkStateChangedBranch'.
+CEntityInstance_Linux | Index 31 mismatch: YAML expects 'AssignChangeAccessorPathIdsPolymorphic' but compiler reports 'NetworkStateChangedRemove'.
 CEntityInstance_MSVC | Index 10 mismatch: YAML expects 'PostDataUpdateDelta' but compiler reports 'DispatchPostDataUpdate'.
 CEntityInstance_MSVC | Index 12 mismatch: YAML expects 'PostDataUpdatePreserve' but compiler reports 'OnDataUnchangedInPVS'.
 CEntityInstance_MSVC | Index 29 mismatch: YAML expects 'AddChangeAccessorPathPolymorphic' but compiler reports 'NetworkStateChangedBranch'.
 CEntityInstance_MSVC | Index 30 mismatch: YAML expects 'AssignChangeAccessorPathIdsPolymorphic' but compiler reports 'NetworkStateChangedRemove'.
+CEntitySystem_Linux | Index 2 missing in compiler output (reference: CGameEntitySystem_BuildResourceManifest_KeyValuesVectors, file: server/CGameEntitySystem_BuildResourceManifest_KeyValuesVectors.linux.yaml).
+CEntitySystem_Linux | Index 3 missing in compiler output (reference: CGameEntitySystem_BuildResourceManifest_ManifestNameOrGroupName, file: server/CGameEntitySystem_BuildResourceManifest_ManifestNameOrGroupName.linux.yaml).
+CEntitySystem_Linux | Index 5 missing in compiler output (reference: CEntitySystem_BuildResourceManifestForEntity, file: server/CEntitySystem_BuildResourceManifestForEntity.linux.yaml).
+CEntitySystem_Linux | Index 6 missing in compiler output (reference: CEntitySystem_InvokePrecacheCallback, file: server/CEntitySystem_InvokePrecacheCallback.linux.yaml).
+CEntitySystem_Linux | Index 7 missing in compiler output (reference: CEntitySystem_AddRefKeyValues, file: server/CEntitySystem_AddRefKeyValues.linux.yaml).
+CEntitySystem_Linux | Index 8 missing in compiler output (reference: CEntitySystem_ReleaseKeyValues, file: server/CEntitySystem_ReleaseKeyValues.linux.yaml).
+CEntitySystem_Linux | Member 'm_bEnableAutoDeletionExecution' missing in compiler record layout (reference offset: 0xc63, file: server/CEntitySystem_m_bEnableAutoDeletionExecution.linux.yaml).
+CEntitySystem_Linux | Member 'm_entityNames' offset mismatch: YAML=0xaf8 vs compiler=0xaf0.
+CEntitySystem_Linux | vtable_numvfunc mismatch: YAML=25 vs compiler=15.
+CEntitySystem_Linux | vtable_size mismatch: YAML=0xc8 vs compiler=0x78 (entry_count=15, ptr_size=8).
 CEntitySystem_MSVC | Member 'm_bEnableAutoDeletionExecution' missing in compiler record layout (reference offset: 0xc63, file: server/CEntitySystem_m_bEnableAutoDeletionExecution.windows.yaml).
+CNetworkGameServerBase_Linux | Index 0 missing in compiler output (reference: CNetworkGameServerBase_Init, file: engine/CNetworkGameServerBase_Init.linux.yaml).
+CNetworkGameServerBase_Linux | Index 12 missing in compiler output (reference: CNetworkGameServerBase_GetMaxClients, file: engine/CNetworkGameServerBase_GetMaxClients.linux.yaml).
+CNetworkGameServerBase_Linux | Index 13 missing in compiler output (reference: CNetworkGameServerBase_ServerAdvanceTick, file: engine/CNetworkGameServerBase_ServerAdvanceTick.linux.yaml).
+CNetworkGameServerBase_Linux | Index 14 missing in compiler output (reference: CNetworkGameServerBase_ServerPollNetworking, file: engine/CNetworkGameServerBase_ServerPollNetworking.linux.yaml).
+CNetworkGameServerBase_Linux | Index 15 missing in compiler output (reference: CNetworkGameServerBase_ServerProcessNetworking, file: engine/CNetworkGameServerBase_ServerProcessNetworking.linux.yaml).
+CNetworkGameServerBase_Linux | Index 16 missing in compiler output (reference: CNetworkGameServerBase_ServerSimulate, file: engine/CNetworkGameServerBase_ServerSimulate.linux.yaml).
+CNetworkGameServerBase_Linux | Index 17 missing in compiler output (reference: CNetworkGameServerBase_ServerEndSimulate, file: engine/CNetworkGameServerBase_ServerEndSimulate.linux.yaml).
+CNetworkGameServerBase_Linux | Index 18 missing in compiler output (reference: CNetworkGameServerBase_ServerPostSimulate, file: engine/CNetworkGameServerBase_ServerPostSimulate.linux.yaml).
+CNetworkGameServerBase_Linux | Index 19 missing in compiler output (reference: CNetworkGameServerBase_LoadSpawnGroup, file: engine/CNetworkGameServerBase_LoadSpawnGroup.linux.yaml).
+CNetworkGameServerBase_Linux | Index 1 missing in compiler output (reference: CNetworkGameServerBase_SetGameSpawnGroupMgr, file: engine/CNetworkGameServerBase_SetGameSpawnGroupMgr.linux.yaml).
+CNetworkGameServerBase_Linux | Index 20 missing in compiler output (reference: CNetworkGameServerBase_AsyncUnloadSpawnGroup, file: engine/CNetworkGameServerBase_AsyncUnloadSpawnGroup.linux.yaml).
+CNetworkGameServerBase_Linux | Index 21 missing in compiler output (reference: CNetworkGameServerBase_PrintSpawnGroupStatus, file: engine/CNetworkGameServerBase_PrintSpawnGroupStatus.linux.yaml).
+CNetworkGameServerBase_Linux | Index 22 missing in compiler output (reference: CNetworkGameServerBase_GetTimescale, file: engine/CNetworkGameServerBase_GetTimescale.linux.yaml).
+CNetworkGameServerBase_Linux | Index 23 missing in compiler output (reference: CNetworkGameServerBase_IsSaveRestoreAllowed, file: engine/CNetworkGameServerBase_IsSaveRestoreAllowed.linux.yaml).
+CNetworkGameServerBase_Linux | Index 25 missing in compiler output (reference: CNetworkGameServerBase_GetMapName, file: engine/CNetworkGameServerBase_GetMapName.linux.yaml).
+CNetworkGameServerBase_Linux | Index 27 missing in compiler output (reference: CNetworkGameServerBase_IsBackgroundMap, file: engine/CNetworkGameServerBase_IsBackgroundMap.linux.yaml).
+CNetworkGameServerBase_Linux | Index 35 missing in compiler output (reference: CNetworkGameServerBase_SetServerState, file: engine/CNetworkGameServerBase_SetServerState.linux.yaml).
+CNetworkGameServerBase_Linux | Index 3 missing in compiler output (reference: CNetworkGameServerBase_RegisterLoadingSpawnGroups, file: engine/CNetworkGameServerBase_RegisterLoadingSpawnGroups.linux.yaml).
+CNetworkGameServerBase_Linux | Index 40 missing in compiler output (reference: CNetworkGameServerBase_StartChangeLevel, file: engine/CNetworkGameServerBase_StartChangeLevel.linux.yaml).
+CNetworkGameServerBase_Linux | Index 41 missing in compiler output (reference: CNetworkGameServerBase_FinishChangeLevel, file: engine/CNetworkGameServerBase_FinishChangeLevel.linux.yaml).
+CNetworkGameServerBase_Linux | Index 42 missing in compiler output (reference: CNetworkGameServerBase_IsChangelevelPending, file: engine/CNetworkGameServerBase_IsChangelevelPending.linux.yaml).
+CNetworkGameServerBase_Linux | Index 46 missing in compiler output (reference: CNetworkGameServerBase_ReserveServerForQueuedGame, file: engine/CNetworkGameServerBase_ReserveServerForQueuedGame.linux.yaml).
+CNetworkGameServerBase_Linux | Index 4 missing in compiler output (reference: CNetworkGameServerBase_Shutdown, file: engine/CNetworkGameServerBase_Shutdown.linux.yaml).
+CNetworkGameServerBase_Linux | Index 50 missing in compiler output (reference: CNetworkGameServerBase_BroadcastPrintf, file: engine/CNetworkGameServerBase_BroadcastPrintf.linux.yaml).
+CNetworkGameServerBase_Linux | Index 54 missing in compiler output (reference: CNetworkGameServerBase_BroadcastMessage, file: engine/CNetworkGameServerBase_BroadcastMessage.linux.yaml).
+CNetworkGameServerBase_Linux | Index 56 missing in compiler output (reference: CNetworkGameServerBase_GetClientConnectionType, file: engine/CNetworkGameServerBase_GetClientConnectionType.linux.yaml).
+CNetworkGameServerBase_Linux | Index 62 missing in compiler output (reference: CNetworkGameServerBase_BroadcastEntityVoice, file: engine/CNetworkGameServerBase_BroadcastEntityVoice.linux.yaml).
+CNetworkGameServerBase_Linux | vtable_numvfunc mismatch: YAML=90 vs compiler=27.
+CNetworkGameServerBase_Linux | vtable_size mismatch: YAML=0x2d0 vs compiler=0xd8 (entry_count=27, ptr_size=8).
 CNetworkGameServerBase_MSVC | Index 16 mismatch: YAML expects 'ServerSimulate' but compiler reports 'ServerBeginSimulate'.
+IEngineServiceMgr_Linux | Index 4 missing in compiler output (reference: CEngineServiceMgr_Shutdown, file: engine/CEngineServiceMgr_Shutdown.linux.yaml).
+IEngineServiceMgr_Linux | vtable_numvfunc mismatch: YAML=61 vs compiler=50.
+IEngineServiceMgr_Linux | vtable_size mismatch: YAML=0x1e8 vs compiler=0x190 (entry_count=50, ptr_size=8).
+IGameSystem_Linux | Index 24 mismatch: YAML expects 'SetGameSystemGlobalPtrs' but compiler reports 'OnClientPostOutputParallelWithServer'.
+IGameSystem_Linux | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTickWork' but compiler reports 'OnServerBeginAsyncPostTickWork'.
+IGameSystem_Linux | Index 42 mismatch: YAML expects 'OnServerBeginAsyncPostTickWork' but compiler reports 'OnServerGameBeginAsyncPostTickWork'.
 IGameSystem_MSVC | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTickWork' but compiler reports 'OnServerBeginAsyncPostTickWork'.
 IGameSystem_MSVC | Index 42 mismatch: YAML expects 'OnServerBeginAsyncPostTickWork' but compiler reports 'OnServerGameBeginAsyncPostTickWork'.
+INetworkGameServer_Linux | Index 59 mismatch: YAML expects 'PreWorldUpdate' but compiler reports 'PrepareSendClientUpdatesMainThread'.
 INetworkGameServer_MSVC | Index 59 mismatch: YAML expects 'PreWorldUpdate' but compiler reports 'PrepareSendClientUpdatesMainThread'.
+INetworkServerService_Linux | Index 33 mismatch: YAML expects 'SetFinalSimulationTickThisFrame' but compiler reports 'GetServerNetworkAddress'.
+INetworkServerService_Linux | Index 3 missing in compiler output (reference: CNetworkServerService_Init, file: engine/CNetworkServerService_Init.linux.yaml).
+INetworkServerService_Linux | Index 42 mismatch: YAML expects 'GetServerSerializersCRC' but compiler reports 'GetServerSerializersMsg'.
+INetworkServerService_Linux | vtable_numvfunc mismatch: YAML=53 vs compiler=30.
+INetworkServerService_Linux | vtable_size mismatch: YAML=0x1a8 vs compiler=0xf0 (entry_count=30, ptr_size=8).
 INetworkServerService_MSVC | Index 32 mismatch: YAML expects 'SetFinalSimulationTickThisFrame' but compiler reports 'GetServerNetworkAddress'.
 INetworkServerService_MSVC | Index 41 mismatch: YAML expects 'GetServerSerializersCRC' but compiler reports 'GetServerSerializersMsg'.
+ISource2Server_Linux | Index 0 missing in compiler output (reference: CSource2Server_Connect, file: server/CSource2Server_Connect.linux.yaml).
+ISource2Server_Linux | Index 3 missing in compiler output (reference: CSource2Server_Init, file: server/CSource2Server_Init.linux.yaml).
+ISource2Server_Linux | Index 4 missing in compiler output (reference: CSource2Server_Shutdown, file: server/CSource2Server_Shutdown.linux.yaml).
+ISource2Server_Linux | Index 57 mismatch: YAML expects 'Save' but compiler reports 'SaveGame'.
+ISource2Server_Linux | Index 5 missing in compiler output (reference: CSource2Server_PreShutdown, file: server/CSource2Server_PreShutdown.linux.yaml).
+ISource2Server_Linux | Index 80 mismatch: YAML expects 'BroadcastServerFrameTime' but compiler reports 'SendServerFrameTime'.
+ISource2Server_Linux | Index 83 mismatch: YAML expects 'GetEntityReport' but compiler reports 'FormatSerializerFieldValue'.
+ISource2Server_Linux | vtable_numvfunc mismatch: YAML=104 vs compiler=92.
+ISource2Server_Linux | vtable_size mismatch: YAML=0x340 vs compiler=0x2e0 (entry_count=92, ptr_size=8).
 ISource2Server_MSVC | Index 57 mismatch: YAML expects 'Save' but compiler reports 'SaveGame'.
 ISource2Server_MSVC | Index 80 mismatch: YAML expects 'BroadcastServerFrameTime' but compiler reports 'SendServerFrameTime'.
 ISource2Server_MSVC | Index 83 mismatch: YAML expects 'GetEntityReport' but compiler reports 'FormatSerializerFieldValue'.
+IVEngineServer2_Linux | Index 60 mismatch: YAML expects 'UnloadSpawnGroup' but compiler reports 'LoadSpawnGroup'.
+IVEngineServer2_Linux | vtable_numvfunc mismatch: YAML=123 vs compiler=105.
+IVEngineServer2_Linux | vtable_size mismatch: YAML=0x3d8 vs compiler=0x348 (entry_count=105, ptr_size=8).
 IVEngineServer2_MSVC | Index 60 mismatch: YAML expects 'UnloadSpawnGroup' but compiler reports 'LoadSpawnGroup'.

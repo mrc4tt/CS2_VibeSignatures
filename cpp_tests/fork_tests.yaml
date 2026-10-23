@@ -471,3 +471,595 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - engine  # bin_artifacts/{gamever}/engine/CEngineServiceMgr_*.{platform}.yaml
+
+  # Linux variants of the tests above: the same headers with the SDK's Linux defines.
+  # run_cpp_tests reads only a class's own virtuals from clang's Itanium dump, so slots
+  # inherited from a base show as missing and vtable_numvfunc comes out short; those
+  # lines sit in the baseline. A slot that moves still shows as a new Index mismatch.
+  - name: CEntityInstance_Linux
+    symbol: CEntityInstance
+    cpp: cpp_tests/centityinstance.cpp
+    headers:
+      - hl2sdk_cs2/public/entity2/entityinstance.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - server
+      - client
+  - name: IGameSystem_Linux
+    symbol: IGameSystem
+    cpp: cpp_tests/igamesystem.cpp
+    headers:
+      - hl2sdk_cs2/game/shared/igamesystem.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - server
+      - client
+  - name: INetworkMessages_Linux
+    symbol: INetworkMessages
+    alias_symbols:
+      - CNetworkMessages
+    cpp: cpp_tests/inetworkmessages.cpp
+    headers:
+      - hl2sdk_cs2/public/networksystem/inetworkmessages.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - networksystem
+      - engine
+      - server
+      - client
+  - name: ILoopMode_Linux
+    symbol: ILoopMode
+    cpp: cpp_tests/iloopmode.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - client
+      - server
+      - engine
+  - name: ILoopType_Linux
+    symbol: ILoopType
+    cpp: cpp_tests/ilooptype.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+  - name: IVEngineServer2_Linux
+    symbol: IVEngineServer2
+    alias_symbols:
+      - CEngineServer
+    cpp: cpp_tests/ivengineserver2.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/ivengineserver2.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+      - client
+      - server
+  - name: IGameSystemFactory_Linux
+    symbol: IGameSystemFactory
+    cpp: cpp_tests/igamesystemfactory.cpp
+    headers:
+      - hl2sdk_cs2/game/shared/igamesystemfactory.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - server
+      - client
+  - name: CEntitySystem_Linux
+    symbol: CEntitySystem
+    alias_symbols:
+      - CGameEntitySystem
+    cpp: cpp_tests/centitysystem.cpp
+    headers:
+      - hl2sdk_cs2/public/entity2/entitysystem.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+      - Xclang
+      - fdump-record-layouts
+    reference_modules:
+      - server
+      - client
+  - name: SDL_Mouse_Linux
+    symbol: SDL_Mouse
+    cpp: cpp_tests/SDL_Mouse.cpp
+    headers:
+      - cpp_tests/stubs/SDL3.stub.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-record-layouts
+    reference_modules:
+      - SDL3
+  - name: INetworkGameServer_Linux
+    symbol: INetworkGameServer
+    cpp: cpp_tests/inetworkgameserver.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/inetworkgameserver.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+    merge_reference_modules: false
+  - name: CNetworkGameServerBase_Linux
+    symbol: CNetworkGameServerBase
+    reference_vtable_owners:
+      - CNetworkGameServer
+    cpp: cpp_tests/inetworkgameserver.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/networkgameserverbase.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+  - name: IGameEventManager2_Linux
+    symbol: IGameEventManager2
+    alias_symbols:
+      - CGameEventManager
+    cpp: cpp_tests/igameeventmanager2.cpp
+    headers:
+      - hl2sdk_cs2/public/igameevents.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - client
+  - name: ISource2Server_Linux
+    symbol: ISource2Server
+    alias_symbols:
+      - CSource2Server
+    exclude_reference_vtables:
+      - CSource2Server_vtable2
+    cpp: cpp_tests/isource2server.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/isource2server.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+      - server
+  - name: INetworkServerService_Linux
+    symbol: INetworkServerService
+    alias_symbols:
+      - CNetworkServerService
+    cpp: cpp_tests/inetworkserverservice.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/inetworkserverservice.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+      - server
+  - name: ICommandLine_Linux
+    symbol: ICommandLine
+    cpp: cpp_tests/icommandline.cpp
+    headers:
+      - hl2sdk_cs2/public/tier0/icommandline.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+  - name: IEngineServiceMgr_Linux
+    symbol: IEngineServiceMgr
+    alias_symbols:
+      - CEngineServiceMgr
+    cpp: cpp_tests/iengineservicemgr.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
