@@ -424,9 +424,7 @@ def generate_gamedata(
         total_skipped += skipped
         all_updated_symbols[contract.name] = updated_symbols
         all_skipped_symbols[contract.name] = skipped_symbols
-        # a generator's own key routing (KEY_SYMBOL_OVERRIDES) counts as covered too
-        own_keys = getattr(contract.module, "KEY_SYMBOL_OVERRIDES", None) or {}
-        module_metadata_sources.append((contract, yaml_data, {**alias_map, **own_keys}, before_map))
+        module_metadata_sources.append((contract, yaml_data, alias_map, before_map))
 
     canonicalize_output_text(output_root)
     for contract, yaml_data, alias_map, before_map in module_metadata_sources:
@@ -437,6 +435,11 @@ def generate_gamedata(
             if after_text is None:
                 continue
             rel_path = f"{contract.directory}/{path}"
+            # a generator's own key routing (KEY_SYMBOL_OVERRIDES) counts as covered too
+            from gamedata_utils import generator_key_overrides
+            own_keys = generator_key_overrides(
+                contract.directory, os.path.dirname(contract.source_dir), output=path
+            )
             metadata_path = os.path.join(module_output_root, *(path + ".metadata.json").split("/"))
             try:
                 write_file_metadata(
@@ -445,7 +448,7 @@ def generate_gamedata(
                     rel_path=rel_path,
                     gamever=gamever,
                     yaml_data=yaml_data,
-                    alias_to_name_map=alias_map,
+                    alias_to_name_map={**alias_map, **own_keys},
                     metadata_path=metadata_path,
                 )
             except Exception as exc:

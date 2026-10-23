@@ -36,9 +36,10 @@ STATIC_SOURCES = (
 # ALIAS_OVERRIDES so they reach no other plugin's file. verify_plugin_gamedata.py and
 # sync_plugin_templates.py read this table too.
 KEY_SYMBOL_OVERRIDES = {
-    # anchored on "#SFUI_Notice_YouDroppedWeapon"; its own signature lands on the
-    # non-virtual handler, not the vtable slot CounterStrikeSharp and bot-controller read
-    "CCSPlayer_WeaponServices::DropWeapon": "CCSPlayer_WeaponServices_HandleDropWeapon",
+    # the (entity, info) TakeDamage, which the analysis files as CBaseEntity_TakeDamageOld;
+    # the author's own signature lands on it on both platforms (14192 linux 0xd6d9c0,
+    # windows 0x1803f3ae0). Until now the key was never generated, only shipped as written.
+    "CBaseEntity::TakeDamage": "CBaseEntity_TakeDamageOld",
     # its spelling; the windows signature is byte-identical to ours (14192 0x1805506f0)
     "GetWeaponCSDataFromKey": "GetCSWeaponDataFromKey",
     # the static projectile factories, anchored on the same "<x>_projectile" strings our
@@ -48,6 +49,15 @@ KEY_SYMBOL_OVERRIDES = {
     "CMolotovProjectile::EmitGrenade": "CMolotovProjectile_Create",
     "CDecoyProjectile::EmitGrenade": "CDecoyProjectile_Create",
     "CSmokeGrenadeProjectile::EmitGrenade": "CSmokeGrenadeProjectile_Create",
+}
+
+# Routing for one file only. CCSPlayer_WeaponServices::DropWeapon is the vtable slot in
+# offsets.jsonc but, in signatures.jsonc, a pattern anchored on "#SFUI_Notice_YouDroppedWeapon"
+# that lands on the non-virtual handler.
+KEY_SYMBOL_OVERRIDES_BY_OUTPUT = {
+    "signatures.jsonc": {
+        "CCSPlayer_WeaponServices::DropWeapon": "CCSPlayer_WeaponServices_HandleDropWeapon",
+    },
 }
 
 
@@ -111,7 +121,8 @@ def _update_signatures(yaml_data, func_lib_map, platforms, sig_path, alias_to_na
 
     for func_name, entry in signatures.items():
         # Convert :: to _ for matching with YAML data
-        yaml_func_name = KEY_SYMBOL_OVERRIDES.get(func_name) or normalize_func_name_colons_to_underscore(
+        own = {**KEY_SYMBOL_OVERRIDES, **KEY_SYMBOL_OVERRIDES_BY_OUTPUT["signatures.jsonc"]}
+        yaml_func_name = own.get(func_name) or normalize_func_name_colons_to_underscore(
             func_name, alias_to_name_map
         )
 

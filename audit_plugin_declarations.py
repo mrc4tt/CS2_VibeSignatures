@@ -141,6 +141,10 @@ def audit(gamever, roots):
     config = os.path.join("configs", f"{gamever}.yaml")
     if os.path.isfile(config):
         P.GENERATOR_ALIASES.update(P.load_generator_aliases(config))
+    # plugin keys routed by their own generator; the source trees here span several plugins
+    from gamedata_utils import enabled_generator_key_overrides
+    for overrides in enabled_generator_key_overrides().values():
+        P.GENERATOR_ALIASES.update({P.fold(key): symbol for key, symbol in overrides.items()})
     binaries = P.Binaries("bin", gamever)
     rows, unresolved = [], set()
     for decl in declarations(roots):

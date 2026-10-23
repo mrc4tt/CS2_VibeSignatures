@@ -40,6 +40,17 @@ OUTPUT_PATHS = (GAMEDATA_PATH,)
 STATIC_SOURCES = ((GAMEDATA_PATH, GAMEDATA_PATH),)
 
 
+# This plugin's own key names routed to our records - kept out of the shared ALIAS_OVERRIDES
+# so they reach no other plugin's file (verify_plugin_gamedata and the template sync read it too).
+KEY_SYMBOL_OVERRIDES = {
+    # its own signature lands on this artifact's func_va on both platforms (14188 linux
+    # 0x1586d10 slot 24, windows 0x180ac1a90 slot 23) - the thunk that zeroes the trailing
+    # args. Not the slot-25 sibling GiveNamedItemBool, which the withdrawn GiveNamedItem2
+    # records pointed at (FORK_OWNED_OBSOLETE_TASKS, audit_duplicate_va.DECLARED_ALIAS_PAIRS).
+    "GiveNamedItem2": "CCSPlayer_ItemServices_GiveNamedItem",
+}
+
+
 def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
     """
     Update RetakesAllocator_gamedata.json.
@@ -59,6 +70,7 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
     Returns:
         Tuple of (updated_count, skipped_count, updated_symbols, skipped_symbols)
     """
+    alias_to_name_map = {**(alias_to_name_map or {}), **KEY_SYMBOL_OVERRIDES}
     gamedata_path = os.path.join(output_dir, GAMEDATA_PATH)
 
     if not os.path.exists(gamedata_path):

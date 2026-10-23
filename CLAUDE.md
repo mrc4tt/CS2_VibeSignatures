@@ -445,7 +445,14 @@ swiftlys2 master through two `# Seed source: <url> template=<path> output=<path>
 `KEY_SYMBOL_OVERRIDES` (DropWeapon is the non-virtual HandleDropWeapon there, plus its own
 spellings GetWeaponCSDataFromKey and C*Projectile::EmitGrenade) is read by the verifier, the template
 sync and the metadata coverage as well. A key only one plugin uses belongs in that plugin's
-`KEY_SYMBOL_OVERRIDES`, not in the shared `ALIAS_OVERRIDES`, so it can reach no other plugin's file. Re-enabling it surfaced `CCSPlayer_MovementServices_WaterMove.windows`
+`KEY_SYMBOL_OVERRIDES`, not in the shared `ALIAS_OVERRIDES`, so it can reach no other plugin's file.
+bot-controller (GetSlot, vtidx::DropWeapon), bot-hider (EndMatchState), cs2-retakes-allocator
+(GiveNamedItem2) and CounterStrikeSharp (CBaseEntity_TakeDamage) moved there on 2026-10-23 with
+byte-identical output. `gamedata_utils.generator_key_overrides` is the one reader; the seed
+injector, the payer rule (`generator_consumed_names`), metadata coverage, the site's key index,
+the verifier, the template sync and `audit_plugin_declarations` all go through it - miss one and
+the seed injector, for one, invents a symbol for the moved key (it did, until it learned).
+`tests/test_generator_key_overrides.py` fails if a key is both shared and plugin-owned. Re-enabling it surfaced `CCSPlayer_MovementServices_WaterMove.windows`
 sitting on `CCSCustomHudLayout_SetDialogVariableStringForPlayer`'s address since 14182 - relocated
 faithfully every build, and `audit_duplicate_va.py` calls a two-name cluster with one copied signature an
 alias pair (and only audits linux unless given `-platform windows`). Artifacts and slots fell when

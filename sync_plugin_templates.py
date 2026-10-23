@@ -192,7 +192,7 @@ def main():
 
         added, removed = sorted(set(upstream) - set(template)), sorted(set(template) - set(upstream))
         shared = dict(P.GENERATOR_ALIASES)
-        P.GENERATOR_ALIASES.update(P.generator_key_overrides(plugin))  # this plugin's own key routing
+        P.GENERATOR_ALIASES.update(P.generator_key_overrides(plugin, output=relative))  # this plugin's own key routing
         try:
             disagree = disagreements(index, binaries, upstream, generated, aliases)
         finally:

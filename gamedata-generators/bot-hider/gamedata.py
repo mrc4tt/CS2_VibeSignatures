@@ -48,6 +48,16 @@ LIBRARY_ALIASES = {
 }
 
 
+# This plugin's own key names routed to our records - kept out of the shared ALIAS_OVERRIDES
+# so they reach no other plugin's file (verify_plugin_gamedata and the template sync read it too).
+KEY_SYMBOL_OVERRIDES = {
+    # renamed from CCSGameRules::SameMapTeardown (XBribo/CS2-Bot-Hider, 2026-09) for the same
+    # function: its signature lands on our CCSGameRules_SameMapTeardown on both platforms
+    # (14190 linux 0x13eda00, windows 0x18090e470), the only user of "mg_skirmish_%s".
+    "CCSGameRules::EndMatchState": "CCSGameRules_SameMapTeardown",
+}
+
+
 def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
     """
     Update WeaponPaints weaponpaints.json file.
@@ -67,6 +77,7 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
     Returns:
         Tuple of (updated_count, skipped_count, updated_symbols, skipped_symbols)
     """
+    alias_to_name_map = {**(alias_to_name_map or {}), **KEY_SYMBOL_OVERRIDES}
     gamedata_path = os.path.join(output_dir, GAMEDATA_PATH)
 
     if not os.path.exists(gamedata_path):

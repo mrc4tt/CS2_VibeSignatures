@@ -61,10 +61,25 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": "40 55 53 56 57 41 54 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4D 8B E0",
+          "before": "40 55 53 56 57 41 54 48 8D 6C 24 ? 48 81 EC 70 01 00 00",
+          "line": 101,
+          "path": [
+            "CBaseEntity::TakeDamage",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        100,
+        101,
+        102
+      ],
       "name": "CBaseEntity::TakeDamage",
-      "updated": false
+      "updated": true
     },
     {
       "changes": [
@@ -997,8 +1012,8 @@
   "gamever": "14192",
   "schema_version": 2,
   "summary": {
-    "covered": 37,
+    "covered": 38,
     "total": 67,
-    "updated": 32
+    "updated": 33
   }
 }

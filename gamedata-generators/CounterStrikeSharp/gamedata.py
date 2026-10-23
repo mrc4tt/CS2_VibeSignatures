@@ -121,6 +121,17 @@ def _update_vtable_slot(entry, yaml_entry, platforms, prove=None):
     return bool(indices)
 
 
+# This plugin's own key names routed to our records - kept out of the shared ALIAS_OVERRIDES
+# so they reach no other plugin's file (verify_plugin_gamedata and the template sync read it too).
+KEY_SYMBOL_OVERRIDES = {
+    # CBaseEntity_TakeDamageFunc is kept for older plugins (WC3) that hook TakeDamage with
+    # (entity, info); it reads GetSignature("CBaseEntity_TakeDamage"), the same native
+    # function as CBaseEntity_TakeDamageOldFunc (VirtualFunctions.cs:110). Without the key
+    # that binding fails on the server.
+    "CBaseEntity_TakeDamage": "CBaseEntity_TakeDamageOld",
+}
+
+
 def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False, *, context=None):
     """
     Update CounterStrikeSharp gamedata.json file.
@@ -136,6 +147,7 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
     Returns:
         Tuple of (updated_count, skipped_count, updated_symbols, skipped_symbols)
     """
+    alias_to_name_map = {**(alias_to_name_map or {}), **KEY_SYMBOL_OVERRIDES}
     return update_file(os.path.join(output_dir, GAMEDATA_PATH), yaml_data, func_lib_map, platforms,
                        alias_to_name_map, debug, context=context)
 

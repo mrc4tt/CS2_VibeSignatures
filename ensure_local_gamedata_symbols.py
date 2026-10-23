@@ -28,6 +28,8 @@ import os
 import re
 import sys
 
+from gamedata_utils import generator_key_overrides
+
 SEEDS = [
     "gamedata-generators/weaponpaints/gamedata/weaponpaints.json",
     "gamedata-generators/matchzy/gamedata/matchzy.json",
@@ -157,50 +159,25 @@ CATEGORY_DECISIONS = {
 
 # Renamed engine symbols: old gamedata keys map to the canonical analyzed symbol via
 # config aliases instead of separate analysis tasks.
+# Shared downstream key renames: a key here becomes an alias for EVERY plugin. A key only
+# one plugin reads belongs in that generator's KEY_SYMBOL_OVERRIDES instead
+# (gamedata-generators/<plugin>/gamedata.py), so it cannot reach another plugin's file.
 ALIAS_OVERRIDES = {
     # bot-hider bruger GameResourceServiceServer; upstream analyserer klassen som
     # CGameResourceService (engine-modulet, linux 0x50 / windows 0x58).
     "GameResourceServiceServer::m_pEntitySystem": "CGameResourceService_m_pEntitySystem",
     "CCSPlayerController_HandleCommandJoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
     "CCSPlayerController_HandleCommand_JoinTeam": "CBasePlayerController_HandleCommand_JoinTeam",
-    # IDA-verified 14178b: matchzy's GetSlot sig targets the same function upstream
-    # analyzes as CCSPlayer_WeaponServices_Weapon_GetSlot (pseudocode confirmed).
-    "CCSPlayer_WeaponServices::GetSlot": "CCSPlayer_WeaponServices_Weapon_GetSlot",
     # ShowHudHint was refactored into CEnvHudHint_API::ShowHudHint in 14168; the old
     # key survives as an alias instead of a second declaration (the config validator
     # rejects two symbols sourcing one artifact).
     "ShowHudHint": "CEnvHudHint_API_ShowHudHint",
-    # cs2-retakes-allocator's GiveNamedItem2: its own signature lands on this
-    # artifact's func_va on both platforms (14188 linux 0x1586d10 slot 24, windows
-    # 0x180ac1a90 slot 23) - the thunk that zeroes the trailing args. Not the slot-25
-    # sibling GiveNamedItemBool, which is what the withdrawn GiveNamedItem2 records
-    # pointed at (FORK_OWNED_OBSOLETE_TASKS, audit_duplicate_va.DECLARED_ALIAS_PAIRS).
-    "GiveNamedItem2": "CCSPlayer_ItemServices_GiveNamedItem",
-    # CounterStrikeSharp keeps CBaseEntity_TakeDamageFunc for older plugins (WC3) that
-    # hook TakeDamage with (entity, info); it reads GetSignature("CBaseEntity_TakeDamage"),
-    # the same native function as CBaseEntity_TakeDamageOldFunc (VirtualFunctions.cs:110).
-    # Without the key that binding fails on the server, so ship it as an alias, not a
-    # second record.
-    "CBaseEntity_TakeDamage": "CBaseEntity_TakeDamageOld",
-    # bot-hider renamed its key CCSGameRules::SameMapTeardown -> CCSGameRules::EndMatchState
-    # (XBribo/CS2-Bot-Hider, 2026-09) for the same function: its signature lands on our
-    # CCSGameRules_SameMapTeardown on both platforms (14190 linux 0x13eda00, windows
-    # 0x18090e470), the only function using "mg_skirmish_%s" / "nextmode %s;".
-    "CCSGameRules::EndMatchState": "CCSGameRules_SameMapTeardown",
     # CounterStrikeSharp ships this offset under the short name its schema code uses
     # (schema.cpp:167 reads GetOffset("SetStateChanged")), while the analysis files the
     # virtual as CEntityInstance_NetworkStateChanged. Same values - windows 28 from
     # vfunc_offset 0xe0, linux 29 from 0xe8 - so the alias only moves the key from the
     # frozen template into pipeline control.
     "SetStateChanged": "CEntityInstance_NetworkStateChanged",
-    # bot-controller asks for the CCSPlayer_WeaponServices::DropWeapon vtable index
-    # under its own short key. A separate vtidx_DropWeapon record carried the same
-    # func_va on both platforms (linux 0x15cde70 / windows 0x180acf6f0) - one
-    # function, two records, which is the ClientPrint trap again. Its own artifacts
-    # then lost vfunc_index (see the seeder ratchet), so the key fell back to the
-    # template's stale 24/25 while RTTI says 29/28. Aliased onto the canonical
-    # symbol, which carries the index, and the duplicate is retired below.
-    "vtidx::DropWeapon": "CCSPlayer_WeaponServices_DropWeapon",
     # CS2Fixes ships an Offsets entry under the bare method name; the analysis files
     # the virtual as CBaseEntity_Teleport (whose only alias was CBaseEntity::Teleport,
     # which does not fold to "Teleport").
@@ -836,7 +813,11 @@ def load_seed_specs():
             continue
         with open(seed, "r", encoding="utf-8") as f:
             gamedata = json.load(f)
+        own_keys = generator_key_overrides(seed.split("/")[1])
         for key, entry in gamedata.items():
+            if key in own_keys:
+                # routed by that generator's KEY_SYMBOL_OVERRIDES onto an existing record
+                continue
             if key in ALIAS_OVERRIDES:
                 # alias: kanon-symbolet er allerede i configen (upstream-ejet) -
                 # generatoren resolver via aliaset, ingen separat injektion noedvendig

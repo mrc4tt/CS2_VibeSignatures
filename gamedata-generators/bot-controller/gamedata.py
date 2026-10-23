@@ -37,6 +37,20 @@ OUTPUT_PATHS = (GAMEDATA_PATH,)
 STATIC_SOURCES = ((GAMEDATA_PATH, GAMEDATA_PATH),)
 
 
+# This plugin's own key names routed to our records - kept out of the shared ALIAS_OVERRIDES
+# so they reach no other plugin's file (verify_plugin_gamedata and the template sync read it too).
+KEY_SYMBOL_OVERRIDES = {
+    # IDA-verified 14178b: the GetSlot sig targets the function the analysis files as
+    # CCSPlayer_WeaponServices_Weapon_GetSlot (pseudocode confirmed).
+    "CCSPlayer_WeaponServices::GetSlot": "CCSPlayer_WeaponServices_Weapon_GetSlot",
+    # the CCSPlayer_WeaponServices::DropWeapon vtable index under its own short key. A
+    # separate vtidx_DropWeapon record once carried the same func_va (the ClientPrint trap)
+    # and, after losing vfunc_index, let the key fall back to the template's stale 24/25
+    # while RTTI says 29/28; the duplicate is retired in FORK_OWNED_REMOVALS.
+    "vtidx::DropWeapon": "CCSPlayer_WeaponServices_DropWeapon",
+}
+
+
 def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
     """
     Update WeaponPaints weaponpaints.json file.
@@ -56,6 +70,7 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
     Returns:
         Tuple of (updated_count, skipped_count, updated_symbols, skipped_symbols)
     """
+    alias_to_name_map = {**(alias_to_name_map or {}), **KEY_SYMBOL_OVERRIDES}
     gamedata_path = os.path.join(output_dir, GAMEDATA_PATH)
 
     if not os.path.exists(gamedata_path):

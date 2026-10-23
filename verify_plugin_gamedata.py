@@ -676,21 +676,11 @@ def generator_offset_divisors(modules_dir="gamedata-generators"):
 OFFSET_DIVISORS = None
 
 
-def generator_key_overrides(plugin, modules_dir="gamedata-generators"):
-    """{folded key: symbol} from one generator's KEY_SYMBOL_OVERRIDES.
-
-    A key a plugin means as a different function than the config's alias says (SwiftlyS2's
-    CCSPlayer_WeaponServices::DropWeapon is the non-virtual HandleDropWeapon). It is
-    per-plugin, so only the generator that owns the file being checked is read.
-    """
-    path = os.path.join(modules_dir, plugin or "", "gamedata.py")
-    if not plugin or not os.path.isfile(path):
-        return {}
-    text = open(path, encoding="utf-8").read()
-    block = re.search(r"^KEY_SYMBOL_OVERRIDES\s*=\s*\{(.*?)^\}", text, re.S | re.M)
-    if not block:
-        return {}
-    return {fold(key): symbol for key, symbol in re.findall(r'"([^"]+)"\s*:\s*"([^"]+)"', block.group(1))}
+def generator_key_overrides(plugin, modules_dir="gamedata-generators", output=None):
+    """{folded key: symbol} from the KEY_SYMBOL_OVERRIDES of the generator that owns the file
+    being checked - per plugin, so one plugin's key routing never judges another's file."""
+    from gamedata_utils import generator_key_overrides as overrides
+    return {fold(key): symbol for key, symbol in overrides(plugin, modules_dir, output).items()}
 
 
 GENERATOR_ALIASES = {}
@@ -1133,7 +1123,7 @@ def main():
     aliases = load_alias_map(config_path) if os.path.isfile(config_path) else {}
     if os.path.isfile(config_path):
         GENERATOR_ALIASES.update(load_generator_aliases(config_path))
-    GENERATOR_ALIASES.update(generator_key_overrides(plugin_of(args.gamedata)))
+    GENERATOR_ALIASES.update(generator_key_overrides(plugin_of(args.gamedata), output=args.gamedata))
 
     vtable_blocks = load_vtable_blocks(args.gamedata)
 

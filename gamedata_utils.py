@@ -5,8 +5,10 @@ Gamedata Utilities for CS2_VibeSignatures
 Shared utility functions for gamedata update modules.
 """
 
+import ast
 import json
 import os
+import re
 import tempfile
 from dataclasses import dataclass
 
@@ -98,6 +100,58 @@ def normalize_func_name_colons_to_underscore(name, alias_to_name_map=None):
 
     # Fallback: simple replacement
     return name.replace("::", "_")
+
+
+def generator_key_overrides(plugin, generators_dir="gamedata-generators", output=None):
+    """{plugin key: symbol} from one generator's KEY_SYMBOL_OVERRIDES.
+
+    A key only that plugin reads, routed to our record without making it an alias for
+    every plugin (the shared ALIAS_OVERRIDES does that). Read from the source rather than
+    imported, so a tool can ask about a generator without loading it.
+
+    KEY_SYMBOL_OVERRIDES_BY_OUTPUT ({file name: {key: symbol}}) holds routing that applies
+    to one of the plugin's files only - SwiftlyS2 uses one key for the handler in
+    signatures.jsonc and for the vtable slot in offsets.jsonc. With ``output`` (a path to
+    that file) only its table is added; without it every file's table is, which is what a
+    "does anything read this symbol" question needs.
+    """
+    path = os.path.join(generators_dir, plugin or "", "gamedata.py")
+    if not plugin or not os.path.isfile(path):
+        return {}
+    with open(path, "r", encoding="utf-8") as handle:
+        tree = ast.parse(handle.read(), path)
+    tables = {}
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in ("KEY_SYMBOL_OVERRIDES", "KEY_SYMBOL_OVERRIDES_BY_OUTPUT"):
+                    tables[target.id] = ast.literal_eval(node.value)
+    out = dict(tables.get("KEY_SYMBOL_OVERRIDES", {}))
+    by_output = tables.get("KEY_SYMBOL_OVERRIDES_BY_OUTPUT", {})
+    if output is None:
+        for table in by_output.values():
+            out.update(table)
+    else:
+        out.update(by_output.get(os.path.basename(str(output)), {}))
+    return out
+
+
+def enabled_generator_key_overrides(generators_dir="gamedata-generators"):
+    """{plugin: KEY_SYMBOL_OVERRIDES} for every generator not switched off."""
+    out = {}
+    if not os.path.isdir(generators_dir):
+        return out
+    for plugin in sorted(os.listdir(generators_dir)):
+        path = os.path.join(generators_dir, plugin, "gamedata.py")
+        if not os.path.isfile(path):
+            continue
+        with open(path, "r", encoding="utf-8") as handle:
+            if re.search(r"^MODULE_ENABLED\s*=\s*False\b", handle.read(), re.M):
+                continue
+        overrides = generator_key_overrides(plugin, generators_dir)
+        if overrides:
+            out[plugin] = overrides
+    return out
 
 
 # =============================================================================

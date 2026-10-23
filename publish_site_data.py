@@ -255,6 +255,8 @@ def build_history(newest: str) -> dict:
     order = builds()
     known_dates = _committed_dates()
     index = symbol_index(newest)
+    from gamedata_utils import generator_key_overrides
+    own_keys = {r: generator_key_overrides(r.split(os.sep)[0], output=r) for r in generated_files(newest)}
     per_build = collections.Counter()
     files: dict[str, dict] = {}
     key_to_symbol: dict[str, str] = {}
@@ -299,7 +301,8 @@ def build_history(newest: str) -> dict:
             entries[key] = {"points": points, "changes": changes}
             if gone:
                 entries[key]["gone"] = gone
-            symbol = index.get(fold(key))
+            own = own_keys.get(relative, {}).get(key)
+            symbol = index.get(fold(own)) if own else index.get(fold(key))
             if not symbol and key.endswith(VTABLE_KEY_SUFFIX):
                 symbol = index.get(fold(key[: -len(VTABLE_KEY_SUFFIX)]))
             if symbol:

@@ -2902,6 +2902,10 @@ def generator_consumed_names(generators_root):
                 continue
             for token in _GENERATOR_KEY_RE.findall(text):
                 names.add(token.replace("::", "_"))
+    # a key a generator routes itself (KEY_SYMBOL_OVERRIDES) pays for the record it names
+    from gamedata_utils import enabled_generator_key_overrides
+    for overrides in enabled_generator_key_overrides(generators_root).values():
+        names.update(overrides.values())
     return frozenset(names)
 
 
