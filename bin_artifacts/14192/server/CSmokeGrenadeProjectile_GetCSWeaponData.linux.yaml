@@ -1,0 +1,5 @@
+func_name: CSmokeGrenadeProjectile_GetCSWeaponData
+func_va: '0x14622b0'
+func_rva: '0x14622b0'
+func_size: '0x33'
+func_sig: 48 85 FF 74 ?? 55 48 89 E5 E8 ?? ?? ?? ?? 48 85 C0 74 ?? 48 8B B0 60 02 00 00 BF 01 00 00 00 5D E9 ?? ?? ??

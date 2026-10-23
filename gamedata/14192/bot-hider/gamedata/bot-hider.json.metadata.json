@@ -1,0 +1,289 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        20,
+        21,
+        22,
+        24
+      ],
+      "name": "CBaseIssue::CountPotentialVoters",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        12,
+        13,
+        14,
+        16
+      ],
+      "name": "CCSBotManager::MaintainBotQuota",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        52,
+        53,
+        54,
+        56
+      ],
+      "name": "CCSGameRules::EndMatchState",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        28,
+        29,
+        30,
+        32
+      ],
+      "name": "CCSPlayerController::HandleCommand_JoinTeam",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        88,
+        89,
+        91
+      ],
+      "name": "CEntityIdentity::m_designerName",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        81,
+        82,
+        84
+      ],
+      "name": "CEntityIdentity::m_pInstance",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        74,
+        75,
+        77
+      ],
+      "name": "CEntityIdentity::Size",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        67,
+        68,
+        70
+      ],
+      "name": "CEntitySystem::m_EntityList",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        44,
+        45,
+        46,
+        48
+      ],
+      "name": "CNetworkGameServer::PackEntities",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        95,
+        96,
+        98
+      ],
+      "name": "CNetworkGameServerBase::m_Clients",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        165,
+        166,
+        168
+      ],
+      "name": "CServerSideClient::m_bFakePlayer",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        193,
+        194,
+        196
+      ],
+      "name": "CServerSideClient::m_bIsHLTV",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        109,
+        110,
+        112
+      ],
+      "name": "CServerSideClient::m_Name",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        116,
+        117,
+        119
+      ],
+      "name": "CServerSideClient::m_nClientSlot",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        144,
+        145,
+        147
+      ],
+      "name": "CServerSideClient::m_nConnectionTypeFlags",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        123,
+        124,
+        126
+      ],
+      "name": "CServerSideClient::m_nEntityIndex",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        137,
+        138,
+        140
+      ],
+      "name": "CServerSideClient::m_NetChannel",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        151,
+        152,
+        154
+      ],
+      "name": "CServerSideClient::m_nSignonState",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        158,
+        159,
+        161
+      ],
+      "name": "CServerSideClient::m_pAttachedTo",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        130,
+        131,
+        133
+      ],
+      "name": "CServerSideClient::m_Server",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        179,
+        180,
+        182
+      ],
+      "name": "CServerSideClient::m_SteamID",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        186,
+        187,
+        189
+      ],
+      "name": "CServerSideClient::m_SteamIDMirror",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        172,
+        173,
+        175
+      ],
+      "name": "CServerSideClient::m_UserID",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        102,
+        103,
+        105
+      ],
+      "name": "CServerSideClient::m_UserIDString",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        60,
+        61,
+        63
+      ],
+      "name": "CServerSideClient::SetName",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        36,
+        37,
+        38,
+        40
+      ],
+      "name": "MpHumanTeam_ApplyRestriction",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6,
+        8
+      ],
+      "name": "UTIL_Remove",
+      "updated": false
+    }
+  ],
+  "file": "bot-hider/gamedata/bot-hider.json",
+  "gamever": "14192",
+  "schema_version": 2,
+  "summary": {
+    "covered": 27,
+    "total": 27,
+    "updated": 0
+  }
+}

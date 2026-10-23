@@ -1,0 +1,7 @@
+func_name: vtidx_ControllerCommandSetup
+func_va: '0x180b6d640'
+func_rva: '0xb6d640'
+func_size: '0x108'
+vtable_name: CBasePlayerController
+vfunc_offset: '0x780'
+vfunc_index: 240

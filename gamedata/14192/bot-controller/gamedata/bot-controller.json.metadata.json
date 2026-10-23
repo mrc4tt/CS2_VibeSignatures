@@ -1,0 +1,394 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        135,
+        136,
+        138
+      ],
+      "name": "BotProfile::Aggression",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        191,
+        192,
+        194
+      ],
+      "name": "BotProfile::AttackDelay",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        170,
+        171,
+        173
+      ],
+      "name": "BotProfile::Cost",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        177,
+        178,
+        180
+      ],
+      "name": "BotProfile::Difficulty",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        212,
+        213,
+        215
+      ],
+      "name": "BotProfile::LookAngleDampingAttacking",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        198,
+        199,
+        201
+      ],
+      "name": "BotProfile::LookAngleMaxAccelAttacking",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        205,
+        206,
+        208
+      ],
+      "name": "BotProfile::LookAngleStiffnessAttacking",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        184,
+        185,
+        187
+      ],
+      "name": "BotProfile::ReactionTime",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        142,
+        143,
+        145
+      ],
+      "name": "BotProfile::Skill",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        149,
+        150,
+        152
+      ],
+      "name": "BotProfile::Teamwork",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        156,
+        157,
+        159
+      ],
+      "name": "BotProfile::WeaponPref",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        163,
+        164,
+        166
+      ],
+      "name": "BotProfile::WeaponPrefCount",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        73,
+        74,
+        76
+      ],
+      "name": "BuyState::DoneBuying",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        66,
+        67,
+        69
+      ],
+      "name": "BuyState::InitialDelay",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        58,
+        59,
+        60,
+        62
+      ],
+      "name": "BuyState::OnUpdate",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        4,
+        5
+      ],
+      "name": "CBaseEntity_Teleport",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        104,
+        105,
+        106,
+        108
+      ],
+      "name": "CBasePlayerController::OnSimulateUserCommands",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        10,
+        11,
+        12,
+        14
+      ],
+      "name": "CCSBot::EquipBestWeapon",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        18,
+        19,
+        20,
+        22
+      ],
+      "name": "CCSBot::EquipPistol",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        128,
+        129,
+        131
+      ],
+      "name": "CCSBot::Profile",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        42,
+        43,
+        44,
+        46
+      ],
+      "name": "CCSBot::Update",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        80,
+        81,
+        82,
+        84
+      ],
+      "name": "CCSBot::UpdateLookAngles",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        50,
+        51,
+        52,
+        54
+      ],
+      "name": "CCSBot::Upkeep",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        226,
+        227,
+        229
+      ],
+      "name": "CCSPlayer_MovementServices::Pawn",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        96,
+        97,
+        98,
+        100
+      ],
+      "name": "CCSPlayer_MovementServices::ProcessMovement",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        34,
+        35,
+        36,
+        38
+      ],
+      "name": "CCSPlayer_WeaponServices::GetSlot",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        26,
+        27,
+        28,
+        30
+      ],
+      "name": "CCSPlayer_WeaponServices::SelectItem",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        88,
+        89,
+        90,
+        92
+      ],
+      "name": "CCSPlayerPawn::SetEyeAngles",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        219,
+        220,
+        222
+      ],
+      "name": "CEntityIdentity::EHandle",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        240,
+        241,
+        243
+      ],
+      "name": "CMoveData::AbsOrigin",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        233,
+        234,
+        236
+      ],
+      "name": "CMoveData::Velocity",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        120,
+        121,
+        122,
+        124
+      ],
+      "name": "DropReleasePose::BuildTransform",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        112,
+        113,
+        114,
+        116
+      ],
+      "name": "DropReleasePose::OuterDrop",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        268,
+        269,
+        271
+      ],
+      "name": "vtidx::ControllerCommandSetup",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        261,
+        262,
+        264
+      ],
+      "name": "vtidx::DropWeapon",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        254,
+        255,
+        257
+      ],
+      "name": "vtidx::FinishMove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        247,
+        248,
+        250
+      ],
+      "name": "vtidx::PlayerRunCommand",
+      "updated": false
+    }
+  ],
+  "file": "bot-controller/gamedata/bot-controller.json",
+  "gamever": "14192",
+  "schema_version": 2,
+  "summary": {
+    "covered": 37,
+    "total": 37,
+    "updated": 0
+  }
+}
