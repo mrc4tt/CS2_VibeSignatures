@@ -1,3 +1,4 @@
+import { pluginLabel } from '../features/gamedata/pluginLabel'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -93,7 +94,7 @@ export function CommandPalette({ open, onClose, onHelp }: { open: boolean; onClo
       if (!`${file.plugin} ${file.fileName}`.toLowerCase().includes(needle)) continue
       found.push({
         group: 'files',
-        title: `${file.plugin} / ${file.fileName}`,
+        title: `${pluginLabel(file.plugin)} / ${file.fileName}`,
         detail: file.metadata ? `${file.metadata.summary.covered}/${file.metadata.summary.total}` : '',
         go: () => requestNavigation({ view: 'gamedata', params: { file: file.id } }),
       })

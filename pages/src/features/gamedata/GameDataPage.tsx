@@ -11,6 +11,7 @@ import { formatAgo, formatDay, formatWhen } from '../../components/whenText'
 import { getGameDataFile, getGameDataIndex, getGameDataMetadata } from './data'
 import { changedKeys, describeFiles, formatLabel, notProducedKeys } from './fileModel'
 import { FileView } from './FileView'
+import { pluginLabel } from './pluginLabel'
 import { Pattern } from '../symbols/Pattern'
 import type { GameDataChange } from './types'
 
@@ -183,7 +184,7 @@ export function GameDataPage() {
               onClick={() => setParam('file', file.descriptor.id, true)}
             >
               <span className="fh">
-                <span className="pl">{file.descriptor.plugin}</span>
+                <span className="pl">{pluginLabel(file.descriptor.plugin)}</span>
                 <span className="fmt">{formatLabel(file.descriptor.language)}</span>
               </span>
               <span className="fn">{file.descriptor.fileName}</span>
@@ -228,7 +229,7 @@ export function GameDataPage() {
       <section className="panel" style={{ marginBottom: 0 }}>
         <div className="fdhead">
           <span className="who">
-            <span className="p1">{descriptor.plugin}</span>
+            <span className="p1">{pluginLabel(descriptor.plugin)}</span>
             <span className="p2">{descriptor.id}</span>
             <span className="p3">
               <span>{formatLabel(descriptor.language)}</span>

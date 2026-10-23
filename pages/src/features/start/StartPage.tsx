@@ -1,3 +1,4 @@
+import { pluginLabel } from '../gamedata/pluginLabel'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -194,7 +195,7 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
               >
                 <span className="w-[3px] shrink-0 rounded bg-accent-fill" />
                 <span className="flex min-w-0 grow flex-col gap-0.5">
-                  <span className="truncate font-mono text-[13px] text-ink">{file.descriptor.plugin}</span>
+                  <span className="truncate font-mono text-[13px] text-ink">{pluginLabel(file.descriptor.plugin)}</span>
                   <span className="text-[11.5px] text-muted-foreground">{t('start.fileKeys', { covered: file.covered, total: file.total })}</span>
                 </span>
                 <span className="flex items-center"><Tag tone="accent">{t('start.fileChanged', { count: file.updated })}</Tag></span>
@@ -215,7 +216,7 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
             {files.map((file) => (
               <div key={file.descriptor.id} className="flex items-center gap-2.5 text-[12.5px]">
                 <Dot tone={file.gap === 0 ? 'ok' : 'warn'} />
-                <span className="min-w-0 grow truncate font-mono text-ink-2">{file.descriptor.plugin}</span>
+                <span className="min-w-0 grow truncate font-mono text-ink-2">{pluginLabel(file.descriptor.plugin)}</span>
                 <span className="shrink-0 text-faint">{t('start.fileKeys', { covered: file.covered, total: file.total })}</span>
               </div>
             ))}
