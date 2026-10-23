@@ -86,6 +86,17 @@ DEPLOY_TARGETS = (
         "mode": "copy",
         "deployed_by": "deploy_local_plugins.sh",
     },
+    {
+        # No gamedata file in the plugin: patch_mam_source.py writes the values into
+        # constexpr literals, so the source is compared literal by literal.
+        "plugin": "multiaddonmanager",
+        "dist": "gamedata/multiaddonmanager.json",
+        "root_env": "CUSTOMGIT_ROOT",
+        "root_default": "~/customGIT",
+        "install": "MultiAddonManager/src/multiaddonmanager.cpp",
+        "mode": "source",
+        "deployed_by": "deploy_local_plugins.sh",
+    },
 )
 
 
@@ -120,6 +131,21 @@ def _leaves(node, trail=()):
 
 def _compare(target, dist_path, install_path):
     """Returns (status, [detail lines])."""
+    if target["mode"] == "source":
+        import patch_mam_source
+
+        with open(install_path, encoding="utf-8") as handle:
+            text = handle.read()
+        try:
+            diffs = patch_mam_source.differences(_load(dist_path), text)
+        except patch_mam_source.PatchError as error:
+            return "DRIFT", [str(error)]
+        details = [
+            f"{var} [{platform or 'both'}]:\n      generated {want!r}\n      deployed  {have!r}"
+            for var, platform, have, want in diffs
+        ]
+        return ("DRIFT", details) if details else ("in sync", [])
+
     if target["mode"] == "copy":
         # Byte-exact except for a missing final newline, which is what the deploy script
         # forgives and nothing else.

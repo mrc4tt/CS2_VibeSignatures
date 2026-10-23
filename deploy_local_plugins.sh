@@ -39,7 +39,8 @@ pull_repo() {  # pull_repo <repo>
 }
 
 for r in "$HOME/customGIT/weaponpaints" "$HOME/customGIT/matchzy" \
-         "$HOME/customGIT/CleanerCS2" "$HOME/plugins/cs2-retakes-allocator"; do
+         "$HOME/customGIT/CleanerCS2" "$HOME/customGIT/MultiAddonManager" \
+         "$HOME/plugins/cs2-retakes-allocator"; do
     pull_repo "$r"
 done
 # CounterStrikeSharp is pulled by update_css_gamedata.sh, before its merge.
@@ -85,6 +86,19 @@ deploy "$OUT_ROOT/cleanercs2/addons/cleanercs2/gamedata.json" \
 deploy "$OUT_ROOT/cs2-retakes-allocator/Resources/RetakesAllocator_gamedata.json" \
        "$HOME/plugins/cs2-retakes-allocator/Resources/RetakesAllocator_gamedata.json"
 
+# MultiAddonManager reads no gamedata: its signatures and offsets are constexpr
+# literals in src/multiaddonmanager.cpp. patch_mam_source.py rewrites only those
+# literals from the generated file; a value it cannot place (an offset that differs
+# per platform, a literal it cannot find) fails the deploy instead of guessing.
+MAM_SOURCE="$HOME/customGIT/MultiAddonManager/src/multiaddonmanager.cpp"
+MAM_FAILED=""
+if [ -f "$MAM_SOURCE" ]; then
+    (cd "$REPO" && uv run --quiet patch_mam_source.py -gamever "$GAMEVER" -source "$MAM_SOURCE") \
+        || { echo "  ❌ could not patch $MAM_SOURCE"; MAM_FAILED=1; }
+else
+    echo "  ⚠️  missing: $MAM_SOURCE - skipped"
+fi
+
 # Commit and push exactly the generated path in a plugin repo, nothing else: a
 # workflow being edited or a scratch file in the same repo is left as it is.
 # The plugin repos get commits from elsewhere too (matchzy was three behind on
@@ -126,10 +140,15 @@ commit_push "$HOME/customGIT/weaponpaints" gamedata/weaponpaints.json
 commit_push "$HOME/customGIT/matchzy" gamedata/matchzy.json
 commit_push "$HOME/customGIT/CleanerCS2" package/gamedata.json
 commit_push "$HOME/plugins/cs2-retakes-allocator" Resources/RetakesAllocator_gamedata.json
+[ -n "$MAM_FAILED" ] || commit_push "$HOME/customGIT/MultiAddonManager" src/multiaddonmanager.cpp
 # CounterStrikeSharp's file is written by update_css_gamedata.sh, which has to
 # run first; only configs/ is ours there.
 commit_push "$HOME/CounterStrikeSharp" configs/
 
+if [ -n "$MAM_FAILED" ]; then
+    echo "==> Deployed, but MultiAddonManager's source was not patched"
+    exit 1
+fi
 if [ -n "$PUSH_FAILED" ]; then
     echo "==> Deployed, but not pushed:$PUSH_FAILED"
     exit 1
