@@ -424,7 +424,9 @@ def generate_gamedata(
         total_skipped += skipped
         all_updated_symbols[contract.name] = updated_symbols
         all_skipped_symbols[contract.name] = skipped_symbols
-        module_metadata_sources.append((contract, yaml_data, alias_map, before_map))
+        # a generator's own key routing (KEY_SYMBOL_OVERRIDES) counts as covered too
+        own_keys = getattr(contract.module, "KEY_SYMBOL_OVERRIDES", None) or {}
+        module_metadata_sources.append((contract, yaml_data, {**alias_map, **own_keys}, before_map))
 
     canonicalize_output_text(output_root)
     for contract, yaml_data, alias_map, before_map in module_metadata_sources:

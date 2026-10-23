@@ -10271,16 +10271,10 @@ modules:
         category: func
       - name: CHEGrenadeProjectile_Create
         category: func
-        alias:
-          - CHEGrenadeProjectile::EmitGrenade
       - name: CMolotovProjectile_Create
         category: func
-        alias:
-          - CMolotovProjectile::EmitGrenade
       - name: CDecoyProjectile_Create
         category: func
-        alias:
-          - CDecoyProjectile::EmitGrenade
       - name: CCSBot_EquipBestWeapon
         category: func
         alias:
@@ -11028,7 +11022,6 @@ modules:
         category: func
         alias:
           - CSmokeGrenadeProjectile::Create
-          - CSmokeGrenadeProjectile::EmitGrenade
       - name: CSmokeGrenadeProjectile
         category: struct
       - name: CSmokeGrenadeProjectile_m_SmokeVolume
@@ -11678,8 +11671,6 @@ modules:
           - CTakeDamageInfo_HitGroup
       - name: GetCSWeaponDataFromKey
         category: func
-        alias:
-          - GetWeaponCSDataFromKey
       - name: GiveNamedItem
         category: func
       - name: CEntitySystem_vtable

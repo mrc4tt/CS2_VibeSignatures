@@ -32,12 +32,22 @@ STATIC_SOURCES = (
 )
 
 
-# A key SwiftlyS2 means as a different function than the shared alias map says. Its
-# CCSPlayer_WeaponServices::DropWeapon is anchored on "#SFUI_Notice_YouDroppedWeapon" and its
-# own signature lands on the non-virtual handler, not the vtable slot CounterStrikeSharp and
-# bot-controller read under that name. verify_plugin_gamedata.py reads this table too.
+# SwiftlyS2's own key names routed to our records. Kept here rather than in the shared
+# ALIAS_OVERRIDES so they reach no other plugin's file. verify_plugin_gamedata.py and
+# sync_plugin_templates.py read this table too.
 KEY_SYMBOL_OVERRIDES = {
+    # anchored on "#SFUI_Notice_YouDroppedWeapon"; its own signature lands on the
+    # non-virtual handler, not the vtable slot CounterStrikeSharp and bot-controller read
     "CCSPlayer_WeaponServices::DropWeapon": "CCSPlayer_WeaponServices_HandleDropWeapon",
+    # its spelling; the windows signature is byte-identical to ours (14192 0x1805506f0)
+    "GetWeaponCSDataFromKey": "GetCSWeaponDataFromKey",
+    # the static projectile factories, anchored on the same "<x>_projectile" strings our
+    # find-C*Projectile_Create preprocessors use. No flashbang Create record exists, so
+    # CFlashbangProjectile::EmitGrenade stays the author's value.
+    "CHEGrenadeProjectile::EmitGrenade": "CHEGrenadeProjectile_Create",
+    "CMolotovProjectile::EmitGrenade": "CMolotovProjectile_Create",
+    "CDecoyProjectile::EmitGrenade": "CDecoyProjectile_Create",
+    "CSmokeGrenadeProjectile::EmitGrenade": "CSmokeGrenadeProjectile_Create",
 }
 
 

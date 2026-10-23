@@ -442,8 +442,10 @@ two sessions old and made new advisories look like regressions. The update count
 they are no longer comparable with the 800-ish numbers above them. swiftlys2 was re-enabled on
 2026-10-23 (14192: 525 updates, its two files verify with `-require-verified`); its templates follow
 swiftlys2 master through two `# Seed source: <url> template=<path> output=<path>` lines, and its
-`KEY_SYMBOL_OVERRIDES` (DropWeapon is the non-virtual HandleDropWeapon there) is read by the
-verifier and the template sync as well. Re-enabling it surfaced `CCSPlayer_MovementServices_WaterMove.windows`
+`KEY_SYMBOL_OVERRIDES` (DropWeapon is the non-virtual HandleDropWeapon there, plus its own
+spellings GetWeaponCSDataFromKey and C*Projectile::EmitGrenade) is read by the verifier, the template
+sync and the metadata coverage as well. A key only one plugin uses belongs in that plugin's
+`KEY_SYMBOL_OVERRIDES`, not in the shared `ALIAS_OVERRIDES`, so it can reach no other plugin's file. Re-enabling it surfaced `CCSPlayer_MovementServices_WaterMove.windows`
 sitting on `CCSCustomHudLayout_SetDialogVariableStringForPlayer`'s address since 14182 - relocated
 faithfully every build, and `audit_duplicate_va.py` calls a two-name cluster with one copied signature an
 alias pair (and only audits linux unless given `-platform windows`). Artifacts and slots fell when
