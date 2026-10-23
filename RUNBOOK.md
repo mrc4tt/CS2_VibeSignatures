@@ -126,7 +126,11 @@ Fil: `gamedata-generators/<plugin>/gamedata/<plugin>.json`. Samme flow som A.
 
 | Symptom | Fix |
 |---------|-----|
-| `failed: checking ABI identity` | `uv run abi_guard.py -gamever <VER>`; "good_sig has 0 hits" = opdatér guard-tabellen i abi_guard.py |
+| `failed: checking ABI identity` | `uv run abi_guard.py -gamever <VER>`; BAD-linjen navngiver symbolet. En forældet guard (`good_sig has 0 hits`) stopper ikke længere kæden, når artefaktets egen sig er unik og hovedet ikke er kendt-dårligt - den står som `WARN`; opdatér guard-tabellen i abi_guard.py når det passer |
+| `Autoanalysis was cancelled before completion` (windows DLL uden `.i64`) | Fejl i Hex-Rays' `ida_nexus`; `cs2vibe_ida_mcp.py` afslutter selv med `auto_wait()` (log: `finishing it with auto_wait()`). Ses fejlen stadig efter en opgradering af ida-mcp, er workaround'en brudt |
+| `indeterminate unpacked state ... without .id0` | ida_analyze_bin fjerner selv de rester før første forsøg; ses den igen, `rm bin/<VER>/<modul>/<binær>.{id1,id2,nam,til}` |
+| `Hunter: baseline facts failed: no warm IDB` | baseline_facts.py analyserer nu selv forrige builds binær først; manuelt: `uv run warmup_idb.py <PREV> --python $PWD/.venv/bin/python` |
+| `audit_artifact_contract`: `dropped since the previous gamever: <felt>` | Ret aldrig i hånden: slet artefaktet i `bin/` og `bin_artifacts/` (intet må køre), kør igen - dens egen task genskaber det gratis. Agenter kan ikke længere ændre deres inputs (`Restored input the agent modified`) |
 | `site datasets stale` / CI `check-datasets` rød | `uv run publish_site_data.py` + commit `gamedata/history.json` |
 | snapshot config digest mismatch | re-pack — ufarligt |
 | `unhealthy: N` i verify | `grep -B20 "^unhealthy: [1-9]" .autopilot/verify-<VER>.log` |
