@@ -1,16 +1,16 @@
 {
   "repository": "https://github.com/swiftly-solution/swiftlys2",
-  "commit": "ce37bdc8f26ce98059eb2cef72bbd479c4504b1e",
+  "commit": "bfffbdb137b94eb7dc0e06786b499a185066e285",
   "files": [
     {
       "source_path": "plugin_files/gamedata/cs2/core/offsets.jsonc",
       "template": "offsets.jsonc",
-      "sha256": "2f08b1f63f822a456fef7c2b54454ed780efaef99a52d6997ea1b8d47cb3d1ad"
+      "sha256": "b314729eabc90375712389f7bd1187c1e608c860647531265ec0ec0d5e582819"
     },
     {
       "source_path": "plugin_files/gamedata/cs2/core/signatures.jsonc",
       "template": "signatures.jsonc",
-      "sha256": "df312b3cfa2c802bef38549cf5b8bdaa2ce4b541d1e99d238ec52f6991d54012"
+      "sha256": "16feebe00a85d0e8d16a97008e32fdab82409fa2ec0ea73f91ce1dc981ed6760"
     }
   ]
 }

@@ -14,13 +14,10 @@ from gamedata_utils import convert_sig_to_swiftly, normalize_func_name_colons_to
 
 # Module metadata
 MODULE_NAME = "SwiftlyS2"
-# Fork-owned: this server does not run the plugin, so its gamedata is not
-# generated, shipped or published. The file is listed in sync_upstream.sh's
-# PROTECTED_PATHS and in .gitattributes as merge=ours, because -X theirs would
-# otherwise flip this back to True on the next upstream merge without a word.
-# Re-enabling means removing both protections and syncing this file fresh -
-# it stops receiving upstream fixes while it is protected.
-MODULE_ENABLED = False
+MODULE_ENABLED = True
+
+# Seed source: https://raw.githubusercontent.com/swiftly-solution/swiftlys2/master/plugin_files/gamedata/cs2/core/signatures.jsonc template=templates/signatures.jsonc output=plugin_files/gamedata/cs2/core/signatures.jsonc
+# Seed source: https://raw.githubusercontent.com/swiftly-solution/swiftlys2/master/plugin_files/gamedata/cs2/core/offsets.jsonc template=templates/offsets.jsonc output=plugin_files/gamedata/cs2/core/offsets.jsonc
 
 # Relative paths to gamedata files within the module output directory
 SIGNATURES_PATH = "plugin_files/gamedata/cs2/core/signatures.jsonc"
@@ -33,6 +30,15 @@ STATIC_SOURCES = (
     ("templates/offsets.jsonc", OFFSETS_PATH),
     ("templates/signatures.jsonc", SIGNATURES_PATH),
 )
+
+
+# A key SwiftlyS2 means as a different function than the shared alias map says. Its
+# CCSPlayer_WeaponServices::DropWeapon is anchored on "#SFUI_Notice_YouDroppedWeapon" and its
+# own signature lands on the non-virtual handler, not the vtable slot CounterStrikeSharp and
+# bot-controller read under that name. verify_plugin_gamedata.py reads this table too.
+KEY_SYMBOL_OVERRIDES = {
+    "CCSPlayer_WeaponServices::DropWeapon": "CCSPlayer_WeaponServices_HandleDropWeapon",
+}
 
 
 def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
@@ -95,7 +101,9 @@ def _update_signatures(yaml_data, func_lib_map, platforms, sig_path, alias_to_na
 
     for func_name, entry in signatures.items():
         # Convert :: to _ for matching with YAML data
-        yaml_func_name = normalize_func_name_colons_to_underscore(func_name, alias_to_name_map)
+        yaml_func_name = KEY_SYMBOL_OVERRIDES.get(func_name) or normalize_func_name_colons_to_underscore(
+            func_name, alias_to_name_map
+        )
 
         # Determine library
         library = entry.get("lib")

@@ -439,7 +439,14 @@ The counts move whenever symbols are added or retired, so re-measure rather than
 table: the numbers above replace an earlier set (775/767/778 updates, 25/42/42 warnings) that was
 two sessions old and made new advisories look like regressions. The update counts dropped by roughly 320 when five generators were disabled
 (`MODULE_ENABLED = False` for swiftlys2, plugify, modsharp, cs2surf, cs2kz — 620 of 871 keys), so
-they are no longer comparable with the 800-ish numbers above them. Artifacts and slots fell when
+they are no longer comparable with the 800-ish numbers above them. swiftlys2 was re-enabled on
+2026-10-23 (14192: 525 updates, its two files verify with `-require-verified`); its templates follow
+swiftlys2 master through two `# Seed source: <url> template=<path> output=<path>` lines, and its
+`KEY_SYMBOL_OVERRIDES` (DropWeapon is the non-virtual HandleDropWeapon there) is read by the
+verifier and the template sync as well. Re-enabling it surfaced `CCSPlayer_MovementServices_WaterMove.windows`
+sitting on `CCSCustomHudLayout_SetDialogVariableStringForPlayer`'s address since 14182 - relocated
+faithfully every build, and `audit_duplicate_va.py` calls a two-name cluster with one copied signature an
+alias pair (and only audits linux unless given `-platform windows`). Artifacts and slots fell when
 `CCSPlayer_MovementServices_Pawn` and `vtidx_DropWeapon` were retired (see FORK_OWNED_REMOVALS), and
 14181 gained two when the `worldrenderer` module was added (3761 -> 3763; the warning count did not
 move, and no gamedata update did either — nothing ships that key yet). Re-measure with the VERIFICATION BATTERY and

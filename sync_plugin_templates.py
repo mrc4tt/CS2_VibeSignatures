@@ -8,7 +8,9 @@ adds keys (bot-controller gained four), drops or renames them (bot-hider renamed
 SameMapTeardown to EndMatchState), and its author fixes values. Our file then ships keys
 the plugin no longer reads and lacks the ones it does.
 
-For every generator that names its source with a "# Seed source: <url>" line this fetches
+For every generator that names its source with a "# Seed source: <url>" line (one per file;
+a generator whose template lives apart from its output, like SwiftlyS2's two files, writes
+"# Seed source: <url> template=<path> output=<path>") this fetches
 the plugin's current file and reports, per plugin:
 
   added      keys the plugin reads that the template lacks - with whether this repo has a
@@ -30,6 +32,7 @@ Exit 0 nothing to do, 1 something changed or disagrees, 2 a fetch failed.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -40,7 +43,7 @@ import validate_artifacts as V
 import verify_plugin_gamedata as P
 
 GENERATORS = "gamedata-generators"
-SEED = re.compile(r"^#\s*Seed source:\s*(\S+)", re.M)
+SEED = re.compile(r"^#\s*Seed source:\s*(\S+)(?:\s+template=(\S+)\s+output=(\S+))?", re.M)
 
 
 def sources(generators_dir=GENERATORS):
@@ -51,16 +54,37 @@ def sources(generators_dir=GENERATORS):
         if not os.path.isfile(module):
             continue
         text = open(module, encoding="utf-8").read()
-        found = SEED.search(text)
-        if not found or re.search(r"^MODULE_ENABLED\s*=\s*False\b", text, re.M):
+        if re.search(r"^MODULE_ENABLED\s*=\s*False\b", text, re.M):
             continue
-        if not found.group(1).startswith(("http://", "https://")):
-            continue  # "local": the template IS the source (matchzy)
         path = re.search(r'^GAMEDATA_PATH\s*=\s*"([^"]+)"', text, re.M)
-        if not path:
-            continue
-        out.append((plugin, found.group(1), os.path.join(generators_dir, plugin, path.group(1)), path.group(1)))
+        for found in SEED.finditer(text):
+            url, template, output = found.groups()
+            if not url.startswith(("http://", "https://")):
+                continue  # "local": the template IS the source (matchzy)
+            if template and output:
+                out.append((plugin, url, os.path.join(generators_dir, plugin, template), output))
+            elif path:
+                out.append((plugin, url, os.path.join(generators_dir, plugin, path.group(1)), path.group(1)))
     return out
+
+
+def record_provenance(template_path, text):
+    """Keep templates/upstream.json's sha256 for this template true after a refresh."""
+    meta_path = os.path.join(os.path.dirname(template_path), "upstream.json")
+    if not os.path.isfile(meta_path):
+        return
+    meta = json.load(open(meta_path, encoding="utf-8"))
+    name = os.path.basename(template_path)
+    for entry in meta.get("files", []):
+        if entry.get("template") == name:
+            entry["sha256"] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    with open(meta_path, "w", encoding="utf-8") as handle:
+        handle.write(json.dumps(meta, indent=2) + "\n")
+
+
+def _load(path):
+    """JSON or JSONC (SwiftlyS2 comments its files)."""
+    return json.loads(P._strip_jsonc(open(path, encoding="utf-8").read()))
 
 
 def fetch(url, timeout=30):
@@ -73,6 +97,12 @@ def _values(entry):
     for kind in ("signatures", "offsets"):
         if isinstance(entry.get(kind), dict):
             return kind, {p: entry[kind].get(p) for p in ("linux", "windows")}, entry[kind].get("library")
+    # flat {"lib", "linux", "windows"} (SwiftlyS2): the value type names the kind
+    values = {p: entry.get(p) for p in ("linux", "windows") if entry.get(p) is not None}
+    if values:
+        sample = next(iter(values.values()))
+        kind = "offsets" if isinstance(sample, int) and not isinstance(sample, bool) else "signatures"
+        return kind, values, entry.get("lib") or entry.get("library")
     return None, {}, None
 
 
@@ -156,12 +186,18 @@ def main():
             print(f"[{plugin}] could not fetch {url}: {error}")
             failed += 1
             continue
-        template = json.load(open(template_path, encoding="utf-8"))
+        template = _load(template_path)
         generated_path = os.path.join("gamedata", args.gamever, plugin, relative)
-        generated = json.load(open(generated_path, encoding="utf-8")) if os.path.isfile(generated_path) else {}
+        generated = _load(generated_path) if os.path.isfile(generated_path) else {}
 
         added, removed = sorted(set(upstream) - set(template)), sorted(set(template) - set(upstream))
-        disagree = disagreements(index, binaries, upstream, generated, aliases)
+        shared = dict(P.GENERATOR_ALIASES)
+        P.GENERATOR_ALIASES.update(P.generator_key_overrides(plugin))  # this plugin's own key routing
+        try:
+            disagree = disagreements(index, binaries, upstream, generated, aliases)
+        finally:
+            P.GENERATOR_ALIASES.clear()
+            P.GENERATOR_ALIASES.update(shared)
         if not (added or removed or disagree) and upstream == template:
             print(f"[{plugin}] in step with {url}")
             continue
@@ -180,8 +216,10 @@ def main():
         for key, platform, theirs, mine, why in disagree:
             print(f"  ! {key}.{platform}: plugin {theirs!r}, ours {mine!r} - {why}")
         if args.apply and upstream != template:
+            text = text if text.endswith("\n") else text + "\n"
             with open(template_path, "w", encoding="utf-8") as handle:
-                handle.write(text if text.endswith("\n") else text + "\n")
+                handle.write(text)
+            record_provenance(template_path, text)
             print(f"  template refreshed: {template_path}")
     print(f"sync_plugin_templates {args.gamever}: {changed} plugin(s) changed or disagree"
           + (f", {failed} could not be fetched" if failed else ""))

@@ -187,6 +187,18 @@ ALIAS_OVERRIDES = {
     # CCSGameRules_SameMapTeardown on both platforms (14190 linux 0x13eda00, windows
     # 0x18090e470), the only function using "mg_skirmish_%s" / "nextmode %s;".
     "CCSGameRules::EndMatchState": "CCSGameRules_SameMapTeardown",
+    # SwiftlyS2 spells the key GetWeaponCSDataFromKey; its windows signature is
+    # byte-identical to our GetCSWeaponDataFromKey.windows func_sig (14192 0x1805506f0),
+    # while its linux one predates the function's current shape and matches nothing.
+    "GetWeaponCSDataFromKey": "GetCSWeaponDataFromKey",
+    # SwiftlyS2 calls the static projectile factories EmitGrenade; each is anchored on the
+    # same "<x>_projectile" string our find-C*Projectile_Create preprocessors use, and on
+    # 14192 its decoy/smoke values no longer matched while ours did. No Create record
+    # exists for the flashbang, so CFlashbangProjectile::EmitGrenade stays the author's.
+    "CHEGrenadeProjectile::EmitGrenade": "CHEGrenadeProjectile_Create",
+    "CMolotovProjectile::EmitGrenade": "CMolotovProjectile_Create",
+    "CDecoyProjectile::EmitGrenade": "CDecoyProjectile_Create",
+    "CSmokeGrenadeProjectile::EmitGrenade": "CSmokeGrenadeProjectile_Create",
     # CounterStrikeSharp ships this offset under the short name its schema code uses
     # (schema.cpp:167 reads GetOffset("SetStateChanged")), while the analysis files the
     # virtual as CEntityInstance_NetworkStateChanged. Same values - windows 28 from

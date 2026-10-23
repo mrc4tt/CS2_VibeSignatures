@@ -26,8 +26,24 @@ class SourcesTests(unittest.TestCase):
             found = S.sources(root)
         self.assertEqual([(p, u.split("/")[2]) for p, u, _t, _r in found], [("bot-hider", "raw.githubusercontent.com")])
 
+    def test_a_generator_with_two_files_names_each(self):
+        with tempfile.TemporaryDirectory() as root:
+            os.makedirs(os.path.join(root, "swiftlys2"))
+            with open(os.path.join(root, "swiftlys2", "gamedata.py"), "w") as handle:
+                handle.write("MODULE_ENABLED = True\n"
+                             "# Seed source: https://h/x/signatures.jsonc template=templates/s.jsonc output=core/signatures.jsonc\n"
+                             "# Seed source: https://h/x/offsets.jsonc template=templates/o.jsonc output=core/offsets.jsonc\n")
+            found = S.sources(root)
+        self.assertEqual([(t.split(os.sep)[-1], r) for _p, _u, t, r in found],
+                         [("s.jsonc", "core/signatures.jsonc"), ("o.jsonc", "core/offsets.jsonc")])
+
 
 class DisagreementTests(unittest.TestCase):
+    def test_flat_lib_entries_are_read(self):
+        self.assertEqual(S._values({"lib": "tier0", "linux": "55 89", "windows": "4C 89"}),
+                         ("signatures", {"linux": "55 89", "windows": "4C 89"}, "tier0"))
+        self.assertEqual(S._values({"linux": 13, "windows": 14})[0], "offsets")
+
     def test_an_offset_we_analyse_that_differs_is_reported(self):
         index = {P.fold("CServerSideClient::m_bIsHLTV"): {"linux": {"offset": "0x142"}}}
         plugin = {"CServerSideClient::m_bIsHLTV": {"offsets": {"linux": 322}}}
@@ -56,6 +72,10 @@ class UpstreamStateTests(unittest.TestCase):
 
     def test_unrecorded_broken_signature_still_fails(self):
         self.assertEqual(P.verification({"status": "broken", "unrecorded": True}), "contradicted")
+
+    def test_a_patch_site_landing_on_the_record_is_verified(self):
+        self.assertEqual(P.verification({"status": "ok-midfunction", "func": "ok"}), "verified")
+        self.assertEqual(P.verification({"status": "ok-midfunction", "func": "mismatch"}), "contradicted")
 
     def test_recorded_but_unconfirmed_is_still_unverified(self):
         self.assertEqual(P.verification({"status": "match", "value": 8}), "unverified")
