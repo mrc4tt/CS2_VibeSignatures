@@ -624,6 +624,15 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-CHostStateMgr_StartNewRequest
+        expected_output:
+          - CHostStateMgr_StartNewRequest.{platform}.yaml
+      - name: find-CNetworkGameServerBase_ReplyConnection
+        expected_output:
+          - CNetworkGameServerBase_ReplyConnection.{platform}.yaml
+      - name: find-CNetworkGameServer_ServerAddons
+        expected_output:
+          - CNetworkGameServer_ServerAddons.{platform}.yaml
       - name: find-CEntityResourceManifest_AddResource-windows
         optional_output:
           - CEntityResourceManifest_AddResource.windows.yaml
@@ -2585,6 +2594,18 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
+      - name: CHostStateMgr_StartNewRequest
+        category: func
+        alias:
+          - CHostStateMgr::StartNewRequest
+      - name: CNetworkGameServerBase_ReplyConnection
+        category: func
+        alias:
+          - CNetworkGameServer::ReplyConnection
+      - name: CNetworkGameServer_ServerAddons
+        category: structmember
+        struct: CNetworkGameServer
+        member: ServerAddons
       - name: CEntityResourceManifest_AddResource
         category: vfunc
       - name: CNetworkGameServerBase
@@ -6699,6 +6720,9 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-ScriptGetAddon
+        expected_output:
+          - ScriptGetAddon.{platform}.yaml
       - name: find-CPlayer_ObserverServices_IsValidObserverTarget
         expected_output:
           - CPlayer_ObserverServices_IsValidObserverTarget.{platform}.yaml
@@ -10147,6 +10171,8 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: ScriptGetAddon
+        category: func
       - name: CPlayer_ObserverServices_IsValidObserverTarget
         category: func
         alias:

@@ -1,0 +1,5 @@
+func_name: CNetworkGameServerBase_ReplyConnection
+func_va: '0x1800a5930'
+func_rva: '0xa5930'
+func_size: '0x544'
+func_sig: "48 8B C4 55 41 55 41 56"

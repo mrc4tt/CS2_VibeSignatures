@@ -128,6 +128,27 @@ FORK_OWNED_SYMBOLS = [
         None,
         "CPlayer_ObserverServices::IsValidObserverTarget",
     ),
+    # MultiAddonManager's three signatures (src/multiaddonmanager.cpp), published by the
+    # multiaddonmanager generator. Both engine ones print a string of their own and
+    # are string-anchored; ReplyConnection names itself "CNetworkGameServerBase::
+    # ReplyConnection" in its profiling scope, the key keeps the plugins' spelling.
+    # 14192 baseline: linux 0x38d360 / 0x515a10, windows 0x18021e480 / 0x1800a5930.
+    ("CHostStateMgr_StartNewRequest", "func", "engine", "CHostStateMgr::StartNewRequest"),
+    ("CNetworkGameServerBase_ReplyConnection", "func", "engine", "CNetworkGameServer::ReplyConnection"),
+    # Takes no arguments and returns the first mounted addon's workshop id
+    # (IVApplication vfunc 312, then V_atoui64). No string of its own: it is the first
+    # call in the function printing "Saving existing workshop save file from %s\n".
+    # 14192 baseline: linux 0xb88db0, windows 0x18026e4a0.
+    ("ScriptGetAddon", "func", "server", None),
+]
+
+# Fork-owned struct members: FORK_OWNED_SYMBOLS has no struct/member slot.
+FORK_OWNED_STRUCTMEMBERS = [
+    # (symbol_name, struct, member, lib, alias)
+    # The server's addon string (CUtlString) that ReplyConnection sends as
+    # "[addons:'%s']"; MultiAddonManager swaps it per client. 0x178 on both platforms
+    # on 14192, read in ReplyConnection: linux 0x515b92, windows 0x1800a5aeb.
+    ("CNetworkGameServer_ServerAddons", "CNetworkGameServer", "ServerAddons", "engine", None),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
@@ -1290,6 +1311,10 @@ def main():
 
     specs = load_seed_specs()
     specs += [(name, category, None, None, alias, lib) for name, category, lib, alias in FORK_OWNED_SYMBOLS]
+    specs += [
+        (name, "structmember", struct, member, alias, lib)
+        for name, struct, member, lib, alias in FORK_OWNED_STRUCTMEMBERS
+    ]
 
     with open(config_path, "r", encoding="utf-8") as f:
         text = f.read()

@@ -576,6 +576,18 @@ to its compiled-in signature, and `deploy_local_plugins.sh` commits it to `packa
 in `~/customGIT/CleanerCS2` (mrc4tt/CleanerCS2), which xmake packs to that path. The generator has
 no `# Seed source:` line on purpose - that file is our own output, so syncing from it is circular.
 
+`multiaddonmanager` is the third reference-file generator, like `stripper`: MultiAddonManager
+(mrc4tt fork) keeps three signatures and two offsets as `constexpr` literals in
+`src/multiaddonmanager.cpp` and reads no gamedata. Its symbols are fork-owned:
+`CHostStateMgr_StartNewRequest` and `CNetworkGameServerBase_ReplyConnection` (engine,
+string-anchored), `ScriptGetAddon` (server, relocation only - no string of its own; the agent
+anchor is the first call in the function printing `Saving existing workshop save file from %s`),
+`CNetworkGameServer_ServerAddons` (engine struct member 0x178, read in ReplyConnection; in
+`FORK_OWNED_STRUCTMEMBERS`, since `FORK_OWNED_SYMBOLS` has no struct/member slot) and the existing
+`CNetworkGameServer_ClientList`. The 14192 baselines came from `emit_artifact.py`. The plugin's
+linux ReplyConnection literal `55 B9 ? ? ? ? 41 B8` matched twice on 14192; the generated one is
+unique.
+
 ## TAKING A NEW GAMEVER THROUGH
 
 ```bash
