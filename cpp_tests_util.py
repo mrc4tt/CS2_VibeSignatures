@@ -10,9 +10,9 @@ from typing import Any, Dict, List, Optional, Sequence
 from gamesymbol_store import SymbolStore
 
 
-VFTABLE_HEADER_RE = re.compile(r"^\s*(?:VFTable|VTable) indices for '([^']+)' \((\d+) (?:entry|entries)\)\.\s*$")
+VFTABLE_HEADER_RE = re.compile(r"^\s*(?:VFTable|VTable|Vtable) indices for '([^']+)' \((\d+) (?:entry|entries)\)\.\s*$")
 VFTABLE_LAYOUT_HEADER_RE = re.compile(
-    r"^\s*(?:VFTable|VTable) for '([^']+)'((?: in '[^']+')*) "
+    r"^\s*(?:VFTable|VTable|Vtable) for '([^']+)'((?: in '[^']+')*) "
     r"\((\d+) (?:entry|entries)\)\.\s*$"
 )
 VFTABLE_LAYOUT_IN_CLASS_RE = re.compile(r" in '([^']+)'")
@@ -170,7 +170,10 @@ def parse_vftable_layouts(compiler_output: str) -> Dict[str, Dict[str, Any]]:
         if current_section_kind == "complete" and _is_vftable_metadata_entry(signature):
             if not parsed[current_class]["methods_by_index"]:
                 current_metadata_entries += 1
-            if current_raw_entries >= current_raw_declared_entries:
+            # Itanium dumps the whole vtable group as one table: an offset_to_top
+            # after the first method opens a secondary vtable, which is not part of
+            # the primary one the reference YAML describes.
+            if parsed[current_class]["methods_by_index"] or current_raw_entries >= current_raw_declared_entries:
                 current_class = None
                 current_declared_entries = 0
                 current_raw_declared_entries = 0

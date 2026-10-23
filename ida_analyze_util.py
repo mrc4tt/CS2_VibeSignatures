@@ -307,6 +307,13 @@ else:
         count += 1
         continue
 
+    # A zero inside a linux vtable is a slot (GCC writes 0 for an abstract
+    # class's deleting destructor), but zeros after the last function are the
+    # data that follows the table.
+    while is_linux and count and entries[count - 1] == "0x0":
+        count -= 1
+        del entries[count]
+
     size_in_bytes = count * ptr_size
     result = json.dumps({
         "vtable_class": class_name,

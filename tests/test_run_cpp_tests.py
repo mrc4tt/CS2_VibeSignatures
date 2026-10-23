@@ -110,6 +110,34 @@ class TestParseVftableLayouts(unittest.TestCase):
             parsed["CDerived"]["methods_by_index"][3]["member_name"],
         )
 
+    def test_itanium_complete_vtable_counts_primary_table_only(self) -> None:
+        # Itanium spells the header "Vtable for" and dumps secondary vtables in the
+        # same table; the "VTable indices" after it lists only the class's own methods.
+        compiler_output = (
+            "Vtable for 'CDerived' (9 entries).\n"
+            "   0 | offset_to_top (0)\n"
+            "   1 | CDerived RTTI\n"
+            "       -- (IBase, 0) vtable address --\n"
+            "   2 | void IBase::BaseVirtual() [pure]\n"
+            "   3 | void CDerived::ChildVirtual() [pure]\n"
+            "   4 | void CDerived::ChildTailVirtual() [pure]\n"
+            "   5 | offset_to_top (-8)\n"
+            "   6 | CDerived RTTI\n"
+            "       -- (IOther, 8) vtable address --\n"
+            "   7 | void CDerived::OtherVirtual() [pure]\n"
+            "   8 | void CDerived::OtherTailVirtual() [pure]\n"
+            "\n"
+            "VTable indices for 'CDerived' (2 entries).\n"
+            "   1 | void CDerived::ChildVirtual()\n"
+            "   2 | void CDerived::ChildTailVirtual()\n"
+        )
+
+        parsed = cpp_tests_util.parse_vftable_layouts(compiler_output)
+
+        self.assertEqual(3, parsed["CDerived"]["entry_count"])
+        self.assertEqual("BaseVirtual", parsed["CDerived"]["methods_by_index"][0]["member_name"])
+        self.assertEqual("ChildTailVirtual", parsed["CDerived"]["methods_by_index"][2]["member_name"])
+
 
 class TestCompareVtableWithYaml(unittest.TestCase):
     def test_complete_derived_vftable_matches_inherited_overload_reference(self) -> None:
