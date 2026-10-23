@@ -1,6 +1,18 @@
 {
   "entries": [
     {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 31 DB 48 83 EC ? 4C 8D 2D ? ? ? ? 49 8B 45 ? 44 8B 60 ? 45 85 E4 0F 8E ? ? ? ? C7 45 ? ? ? ? ? 31 FF E8 ? ? ? ? 49 8B 55 ? 44 8B 62 ? 48 85 C0 0F 84 ? ? ? ? 45 31 FF 44 39 E3 0F 85 ? ? ? ?",
+          "before": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 31 DB 48 83 EC ? 4C 8D 2D ? ? ? ? 49 8B 45 ? 44 8B 60 ? 45 85 E4 0F 8E ? ? ? ? C7 45 ? ? ? ? ? 31 FF E8 ? ? ? ? 49 8B 55 ? 44 8B 62 ? 48 85 C0 0F 84 ? ? ? ? 45 31 FF 44 39 E3 0F 85",
+          "line": 22,
+          "path": [
+            "CBaseIssue::CountPotentialVoters",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         20,
@@ -9,9 +21,21 @@
         24
       ],
       "name": "CBaseIssue::CountPotentialVoters",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": "40 55 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F9 FF 15 ? ? ? ?",
+          "before": "40 55 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F9 FF 15",
+          "line": 13,
+          "path": [
+            "CCSBotManager::MaintainBotQuota",
+            "signatures",
+            "windows"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         12,
@@ -20,9 +44,31 @@
         16
       ],
       "name": "CCSBotManager::MaintainBotQuota",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": "48 8B C4 55 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 80 3D ? ? ? ? ?",
+          "before": "48 8B C4 55 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 80 3D",
+          "line": 53,
+          "path": [
+            "CCSGameRules::EndMatchState",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? 48 89 BD ? ? ? ? E8 ? ? ? ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? 48 89 BD ? ? ? ? E8",
+          "line": 54,
+          "path": [
+            "CCSGameRules::EndMatchState",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         52,
@@ -31,9 +77,31 @@
         56
       ],
       "name": "CCSGameRules::EndMatchState",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D ? ? ? ?",
+          "before": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D",
+          "line": 29,
+          "path": [
+            "CCSPlayerController::HandleCommand_JoinTeam",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? 89 95 ? ? ? ? 4C 8B 28 4C 89 EF E8 ? ? ? ? 84 C0 0F 85 ? ? ? ? 48 89 DF 45 31 FF E8",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8D 05",
+          "line": 30,
+          "path": [
+            "CCSPlayerController::HandleCommand_JoinTeam",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         28,
@@ -42,7 +110,7 @@
         32
       ],
       "name": "CCSPlayerController::HandleCommand_JoinTeam",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -256,6 +324,18 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": "40 55 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 8D 0D ? ? ? ?",
+          "before": "40 55 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 8D 0D",
+          "line": 37,
+          "path": [
+            "MpHumanTeam_ApplyRestriction",
+            "signatures",
+            "windows"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         36,
@@ -264,9 +344,21 @@
         40
       ],
       "name": "MpHumanTeam_ApplyRestriction",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": "48 89 FE 48 85 FF",
+          "before": "48 89 FE 48 85 FF 74 ? 48 8D 05 ? ? ? ? 48",
+          "line": 6,
+          "path": [
+            "UTIL_Remove",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         4,
@@ -275,7 +367,7 @@
         8
       ],
       "name": "UTIL_Remove",
-      "updated": false
+      "updated": true
     }
   ],
   "file": "bot-hider/gamedata/bot-hider.json",
@@ -284,6 +376,6 @@
   "summary": {
     "covered": 27,
     "total": 27,
-    "updated": 0
+    "updated": 6
   }
 }

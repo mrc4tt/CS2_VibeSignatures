@@ -10,7 +10,7 @@
   "CCSBotManager::MaintainBotQuota": {
     "signatures": {
       "library": "server",
-      "windows": "40 55 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F9 FF 15",
+      "windows": "40 55 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F9 FF 15 ? ? ? ?",
       "linux": "55 31 F6 48 89 E5 41 57 49 89 FF"
     },
     "comment": "runs the bot quota pass"
@@ -26,7 +26,7 @@
   "CCSPlayerController::HandleCommand_JoinTeam": {
     "signatures": {
       "library": "server",
-      "windows": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D",
+      "windows": "48 89 5C 24 ? 44 88 44 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D ? ? ? ?",
       "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 41 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? 89 95 ? ? ? ? 4C 8B 28 4C 89 EF E8 ? ? ? ? 84 C0 0F 85 ? ? ? ? 48 89 DF 45 31 FF E8"
     },
     "comment": "handles player team join requests"
@@ -34,7 +34,7 @@
   "MpHumanTeam_ApplyRestriction": {
     "signatures": {
       "library": "server",
-      "windows": "40 55 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 8D 0D",
+      "windows": "40 55 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 8D 0D ? ? ? ?",
       "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? E8 ? ? ? ? 89 C3"
     },
     "comment": "applies the human team restriction"
@@ -50,7 +50,7 @@
   "CCSGameRules::EndMatchState": {
     "signatures": {
       "library": "server",
-      "windows": "48 8B C4 55 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 80 3D",
+      "windows": "48 8B C4 55 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 80 3D ? ? ? ? ?",
       "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 81 EC ? ? ? ? 48 89 BD ? ? ? ? E8 ? ? ? ?"
     },
     "comment": "temporarily restores bot identity during end-match team resets"
