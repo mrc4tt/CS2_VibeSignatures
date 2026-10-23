@@ -219,6 +219,9 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_va",
             "func_rva",
             "func_size",
+            # windows: a 5-byte `jmp` thunk, so the sig has to run on into the padding
+            # and the next head (14192 failed regenerating it body-only).
+            "func_sig_allow_across_function_boundary:true",
         ],
     ),
     (

@@ -106,6 +106,28 @@ class TestArtifactContract(unittest.TestCase):
         path = self._write(self.new, "Unknown.windows.yaml", {"func_name": "Unknown", "x": 1})
         self.assertEqual({}, artifact_contract.strip_undeclared_fields([path], "windows", declared=CONTRACT))
 
+    def test_strip_holds_an_undeclared_symbol_to_the_previous_gamever(self):
+        # 14192 vtidx_ControllerCommandSetup.linux: no preprocessor yet, agent added a func_sig
+        old = {"func_name": "vtidx_X", "func_va": "0x1", "vtable_name": "C", "vfunc_index": 2, "vfunc_offset": "0x10"}
+        self._write(self.old, "vtidx_X.linux.yaml", old)
+        path = self._write(self.new, "vtidx_X.linux.yaml", dict(old, func_sig="48 8B"))
+        removed = artifact_contract.strip_undeclared_fields([path], "linux", declared={}, old_artifact_dir=self.old)
+        self.assertEqual({path: ["func_sig"]}, removed)
+        self.assertEqual([], artifact_contract_issues([path], "linux", self.old, declared={}))
+
+    def test_a_template_class_spelled_with_underscores_is_the_same_class(self):
+        old = dict(VFUNC, vtable_name="CGameSystemReallocatingFactory<CSpawnGroupMgrGameSystem>")
+        self._write(self.old, "CBaseEntity_OnTakeDamage.windows.yaml", old)
+        path = self._write(
+            self.new,
+            "CBaseEntity_OnTakeDamage.windows.yaml",
+            dict(old, vtable_name="CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem"),
+        )
+        self.assertEqual([], artifact_contract_issues([path], "windows", self.old, declared=CONTRACT))
+        artifact_contract.strip_undeclared_fields([path], "windows", declared=CONTRACT, old_artifact_dir=self.old)
+        with open(path, encoding="utf-8") as handle:
+            self.assertEqual(old, yaml.safe_load(handle))
+
     def test_declared_fields_parse_optional_markers(self):
         artifact_contract.declared_artifact_fields.cache_clear()
         declared = artifact_contract.declared_artifact_fields()

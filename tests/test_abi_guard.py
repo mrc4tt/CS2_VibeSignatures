@@ -220,6 +220,34 @@ class TestCheckSymbol(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("missing", msg)
 
+    def _stale_rule(self, **extra):
+        return dict(self.rule, good_sig="11 22 33 44 55 66", **extra)
+
+    def test_a_stale_guard_keeps_an_artifact_that_stands(self):
+        # 14192 OnCustomHudClicked.linux: new head, guard had 0 hits, artifact right
+        abi_guard.write_func_yaml(str(self.yaml), "NetworkStateChanged", self.text_vaddr, "linux", 0, "48 8B 07 48 85 C0")
+        ok, msg = abi_guard.check_symbol(
+            "NetworkStateChanged", "linux", self._stale_rule(), "14999", str(self.bindir), str(self.artifactdir), False
+        )
+        self.assertTrue(ok, msg)
+        self.assertIn("WARN", msg)
+
+    def test_a_stale_guard_still_fails_a_known_bad_head(self):
+        abi_guard.write_func_yaml(
+            str(self.yaml), "NetworkStateChanged", self.text_vaddr + 0x40, "linux", 0, "55 48 89 E5 41 56"
+        )
+        ok, msg = abi_guard.check_symbol(
+            "NetworkStateChanged", "linux", self._stale_rule(), "14999", str(self.bindir), str(self.artifactdir), False
+        )
+        self.assertFalse(ok)
+        self.assertIn("guard table needs updating", msg)
+
+    def test_a_stale_guard_still_fails_a_missing_artifact(self):
+        ok, msg = abi_guard.check_symbol(
+            "NetworkStateChanged", "linux", self._stale_rule(), "14999", str(self.bindir), str(self.artifactdir), False
+        )
+        self.assertFalse(ok)
+
     def test_relocation_verdict_rejects_the_known_bad_head(self):
         """The lock ida_analyze_util puts on a relocation for a NON-virtual symbol.
 

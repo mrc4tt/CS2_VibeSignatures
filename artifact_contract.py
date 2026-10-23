@@ -15,6 +15,7 @@ from __future__ import annotations
 import ast
 import functools
 import os
+import re
 from pathlib import Path
 
 import yaml
@@ -53,7 +54,23 @@ def _load_yaml_dict(path):
     return doc if isinstance(doc, dict) else None
 
 
-def strip_undeclared_fields(paths, platform, declared=None):
+def _same_class(a, b):
+    """One class under its two spellings: ``CGameSystemReallocatingFactory<X>``
+    (RTTI) and ``CGameSystemReallocatingFactory_X`` (the artifact filename), which
+    an agent writes interchangeably."""
+    if not isinstance(a, str) or not isinstance(b, str):
+        return a == b
+    return re.sub(r"[^A-Za-z0-9]+", "_", a).strip("_") == re.sub(r"[^A-Za-z0-9]+", "_", b).strip("_")
+
+
+def _previous_artifact(path, old_artifact_dir):
+    if not old_artifact_dir:
+        return None
+    old_path = os.path.join(old_artifact_dir, os.path.basename(str(path)))
+    return _load_yaml_dict(old_path) if os.path.isfile(old_path) else None
+
+
+def strip_undeclared_fields(paths, platform, declared=None, old_artifact_dir=None):
     """Remove fields the symbol's task does not declare, in place.
 
     A deterministic run writes exactly GENERATE_YAML_DESIRED_FIELDS; the hunter
@@ -62,26 +79,44 @@ def strip_undeclared_fields(paths, platform, declared=None):
     current - and the next deterministic run drops them anyway. Removing them
     keeps the record the task would have written; rejecting it instead lost
     CEntitySystem_Activate.linux, which the hunter had found correctly.
-    Only symbols with a declared contract are touched. Returns {path: [removed]}.
+    A symbol with no declared contract is held to the previous gamever's fields,
+    as artifact_contract_issues does: on 14192 vtidx_ControllerCommandSetup's
+    preprocessor did not exist yet, the agent's correct record carried a func_sig
+    and was rejected instead of trimmed. A class spelled the other way round
+    (``X<Y>`` / ``X_Y``) is put back to the previous gamever's spelling.
+    Returns {path: [removed or respelled]}.
     """
     declared = declared_artifact_fields() if declared is None else declared
     removed = {}
     for path in paths:
         if not os.path.isfile(path):
             continue
-        contract = declared.get(_symbol_of(path, platform))
         doc = _load_yaml_dict(path)
-        if contract is None or doc is None:
+        if doc is None:
             continue
-        allowed = set(contract[0]) | set(contract[1]) | _ARTIFACT_SHAPE_IGNORED_KEYS
+        contract = declared.get(_symbol_of(path, platform))
+        previous = _previous_artifact(path, old_artifact_dir)
+        if contract is not None:
+            allowed = set(contract[0]) | set(contract[1]) | _ARTIFACT_SHAPE_IGNORED_KEYS
+        elif previous:
+            allowed = set(previous) | _ARTIFACT_SHAPE_IGNORED_KEYS
+        else:
+            continue
         extra = [key for key in doc if key not in allowed and not _is_signature_flag(key)]
-        if not extra:
+        respelled = [
+            key
+            for key in _ARTIFACT_IDENTITY_KEYS
+            if previous and key in previous and key in doc and doc[key] != previous[key] and _same_class(doc[key], previous[key])
+        ]
+        if not extra and not respelled:
             continue
         for key in extra:
             del doc[key]
+        for key in respelled:
+            doc[key] = previous[key]
         with open(path, "w", encoding="utf-8") as handle:
             yaml.safe_dump(doc, handle, sort_keys=False, allow_unicode=True)
-        removed[path] = sorted(extra)
+        removed[path] = sorted(extra) + [f"{key} (spelling)" for key in respelled]
     return removed
 
 
@@ -180,7 +215,7 @@ def artifact_contract_issues(produced_paths, platform, old_artifact_dir, declare
                 )
         if previous:
             for key in _ARTIFACT_IDENTITY_KEYS:
-                if key in previous and key in current and current[key] != previous[key]:
+                if key in previous and key in current and not _same_class(current[key], previous[key]):
                     issues.append(
                         f"{name}: {key} is {current[key]!r}, the previous gamever has {previous[key]!r} - "
                         "the class does not change between builds"

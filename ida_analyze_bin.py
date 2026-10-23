@@ -4987,8 +4987,8 @@ def _process_binary(
                 produced_now = [path for path in all_outputs if path not in preexisting_outputs]
                 contract_issues = []
                 if not finalization_issues:
-                    for path, fields in strip_undeclared_fields(produced_now, platform).items():
-                        print(f"    Removed fields its task does not declare from {os.path.basename(path)}: {', '.join(fields)}")
+                    for path, fields in strip_undeclared_fields(produced_now, platform, old_artifact_dir=old_artifact_dir).items():
+                        print(f"    Removed/respelled fields its task does not declare in {os.path.basename(path)}: {', '.join(fields)}")
                         canonicalize_symbol_yaml_file(
                             path,
                             category=_lookup_expected_input_artifact_category(

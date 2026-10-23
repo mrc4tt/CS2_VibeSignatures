@@ -224,12 +224,28 @@ ABI_GUARDS = {
     # shipped that. IDA-verified on 14185 (0xb4ce10 real, 0xb27a80 binding); the good sig is
     # unique on every build 14178b..14185 and equals the plugin's own template head.
     # windows kept a 4-argument head (mov [rsp+20h],r9) since 14178b and is not guarded.
+    # 14192 swapped the argument registers (r14=rsi, r13=rdx, r12=rcx) and the head is then
+    # shared with CCSPointScript::OnBulletImpact (weapon/position/hitEntity), so the newest
+    # sig runs on to the first stack slot that differs ([rbp-0x80] here, [rbp-0x78] there).
+    # IDA-free check on 14192: 0xb05580 loads "player"/"layout"/"buttonId"/"OnCustomHudClicked"
+    # and sits in the class vtable.
     "CCSPointScript_OnCustomHudClicked": {
         "css_template_key": "CCSPointScript_OnCustomHudClicked",
         "linux": {
-            "good_sig": "55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB "
-            "48 83 EC ? 0F B6 05 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7B 30 00",
-            "accept_heads": ["55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB"],
+            "good_sig": [
+                "55 48 89 E5 41 57 41 56 49 89 F6 41 55 49 89 D5 41 54 49 89 CC 53 48 89 FB "
+                "48 83 EC ? 0F B6 05 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7B 30 00 75 ? 48 83 C4 58 "
+                "5B 41 5C 41 5D 41 5E 41 5F 5D C3 0F 1F 80 00 00 00 00 4C 8B 3D ? ? ? ? 48 8D 45 B0 "
+                "48 89 DF 48 89 C6 48 89 45 90 4C 89 7D B0 E8 ? ? ? ? 84 C0 74 ? 48 89 DF E8 ? ? ? ? "
+                "E8 ? ? ? ? 48 89 C7 48 89 45 98 E8 ? ? ? ? 48 8B 75 98 48 8B 7D 90 E8 ? ? ? ? "
+                "48 89 DF E8 ? ? ? ? 48 89 C7 48 89 45 80",
+                "55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB "
+                "48 83 EC ? 0F B6 05 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7B 30 00",
+            ],
+            "accept_heads": [
+                "55 48 89 E5 41 57 41 56 49 89 F6 41 55 49 89 D5 41 54 49 89 CC 53 48 89 FB",
+                "55 48 89 E5 41 57 41 56 49 89 CE 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB",
+            ],
             "bad_heads": ["55 BE ? ? ? ? 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53"],  # JS binding
         },
     },
@@ -645,6 +661,26 @@ def vtable_slots(artifactdir, gamever, vtable_name, platform, va) -> list[int]:
     return sorted(int(i) for i, v in entries.items() if _parse_hex(v) == va)
 
 
+def _artifact_stands(data, platform, art_yaml, rule) -> str:
+    """Why the artifact holds without a good_sig, or '' when it does not.
+
+    Its func_sig must resolve uniquely to its own func_va, and that head must not
+    be one the rule knows to be wrong.
+    """
+    if not os.path.exists(art_yaml):
+        return ""
+    y = read_flat_yaml(art_yaml)
+    va = _parse_hex(y.get("func_va"))
+    off = va_to_offset(data, platform, va) if va else None
+    sig = y.get("func_sig")
+    if off is None or not sig or head_matches(data, off, rule.get("bad_heads") or []):
+        return ""
+    hits = sig_hits(sig, data)
+    if hits != [off]:
+        return ""
+    return f"func_sig unique at {va:#x}, no known-bad head"
+
+
 def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> tuple[bool, str]:
     binary, data = _load_binary(bindir, gamever, platform)
     if data is None:
@@ -655,10 +691,14 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
 
     good_sig, good_hits = good_sig_hit(rule, data)
     if len(good_hits) != 1:
-        return (
-            False,
-            f"BAD {symbol}.{platform}: good_sig has {len(good_hits)} hits on {binary} - guard table needs updating",
-        )
+        msg = f"{symbol}.{platform}: good_sig has {len(good_hits)} hits on {binary} - guard table needs updating"
+        # A stale guard is not evidence against the artifact: a new head (register
+        # allocation) is the usual cause, and stopping the chain over it cost 14192
+        # an unattended night. Only an artifact the guard can still clear passes.
+        stands = _artifact_stands(data, platform, art_yaml, rule)
+        if stands:
+            return True, f"WARN {msg}; artifact kept ({stands})"
+        return False, f"BAD {msg}"
     good_off = good_hits[0]
     good_va = offset_to_va(data, platform, good_off)
 
@@ -764,7 +804,7 @@ def check_symbol(symbol, platform, rule, gamever, bindir, artifactdir, fix) -> t
     return True, msg + f" -> FIXED (rewrote {art_yaml})"
 
 
-def check_template(symbol, rule_all, gamever, bindir, template_path, fix) -> list[tuple[bool, str]]:
+def check_template(symbol, rule_all, gamever, bindir, template_path, fix, artifactdir=None) -> list[tuple[bool, str]]:
     """The CS# generator keeps the template sig when the artifact lacks func_sig - keep it correct."""
     key = rule_all.get("css_template_key")
     if not key or not os.path.exists(template_path):
@@ -799,10 +839,18 @@ def check_template(symbol, rule_all, gamever, bindir, template_path, fix) -> lis
             else f"lands on {offset_to_va(data, platform, hits[0]):#x} (not an accepted head)"
         )
         msg = f"BAD template {key}.{platform}: {where}"
+        # The generator ships the template only when the artifact has no func_sig,
+        # so a stale template under an artifact that stands is harmless.
+        art_yaml = os.path.join(artifactdir, gamever, "server", f"{key}.{platform}.yaml") if artifactdir else ""
+        good_sig, good_hits = good_sig_hit(rule, data)
+        if len(good_hits) != 1 and art_yaml:
+            stands = _artifact_stands(data, platform, art_yaml, rule)
+            if stands:
+                results.append((True, f"WARN template {key}.{platform}: {where}; artifact ships instead ({stands})"))
+                continue
         if not fix:
             results.append((False, msg))
             continue
-        good_sig, good_hits = good_sig_hit(rule, data)
         if len(good_hits) != 1:
             results.append((False, msg + f" (no good_sig is unique on {gamever}; cannot fix)"))
             continue
@@ -859,7 +907,7 @@ def main(argv=None) -> int:
         # --fix there would write that build's sig into the shared template.
         if gamever != newest_gamever(args.artifactdir):
             continue
-        for ok, msg in check_template(symbol, per_plat, gamever, args.bindir, args.template, args.fix):
+        for ok, msg in check_template(symbol, per_plat, gamever, args.bindir, args.template, args.fix, args.artifactdir):
             print("  " + msg)
             failed += 0 if ok else 1
     if failed:
