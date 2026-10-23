@@ -1,14 +1,17 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 /**
- * A note for someone meeting this data for the first time. Hidden in one place
- * by the Explain everything switch in the top bar, so the page reads clean once
- * the notes stop being useful.
+ * A note for someone meeting this data for the first time, folded away by
+ * default. It used to be an open callout on every page behind a site-wide
+ * "Explain everything" switch; folded, it costs one line and needs no switch.
  */
-export function Explain({ children, html }: { children?: ReactNode; html?: string }) {
+export function Explain({ children, html, summary }: { children?: ReactNode; html?: string; summary?: string }) {
+  const { t } = useTranslation()
   return (
-    <p className="explain">
-      {html ? <span dangerouslySetInnerHTML={{ __html: html }} /> : <span>{children}</span>}
-    </p>
+    <details className="explain">
+      <summary>{summary ?? t('shell2.whatIsThis')}</summary>
+      {html ? <p dangerouslySetInnerHTML={{ __html: html }} /> : <p>{children}</p>}
+    </details>
   )
 }

@@ -253,7 +253,8 @@ async function extraFiles(inputRoot: string): Promise<Map<string, Buffer>> {
   const diagnostics = join(inputRoot, 'diagnostics')
   if (existsSync(diagnostics)) {
     for (const entry of await readdir(diagnostics, { withFileTypes: true })) {
-      if (!entry.isFile() || !/^\d{4,10}[a-z]?\.json$/.test(entry.name)) continue
+      // status.json: what autopilot is doing now, see src/api/siteStatus.ts
+      if (!entry.isFile() || !/^(?:\d{4,10}[a-z]?|status)\.json$/.test(entry.name)) continue
       files.set(`diagnostics/${entry.name}`, await readFile(join(diagnostics, entry.name)))
     }
   }
@@ -277,7 +278,7 @@ export function siteMetaPlugin(symbolsDirectory: string, gamedataDirectory: stri
             sendJson(response, await buildSiteMeta(symbolsDirectory, gamedataDirectory, join(inputRoot, 'deployments')))
             return
           }
-          const extra = /\/(history\.json|(?:diagnostics|deployments)\/\d{4,10}[a-z]?\.json)$/.exec(pathname)
+          const extra = /\/(history\.json|diagnostics\/status\.json|(?:diagnostics|deployments)\/\d{4,10}[a-z]?\.json)$/.exec(pathname)
           if (extra) {
             const files = await extraFiles(inputRoot)
             const bytes = files.get(extra[1])

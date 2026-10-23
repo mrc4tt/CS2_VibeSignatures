@@ -35,8 +35,23 @@ export const VIEW_PATHS: Record<AppView, string> = {
  */
 export const RESERVED_PATHS = [
   'assets', 'badge', 'diagnostics', 'gamedata', 'gamesymbols',
-  'history.json', 'latest.json', 'vite.svg',
+  'history.json', 'latest', 'latest.json', 'vite.svg',
 ]
+
+/** One plugin's page lives under this prefix; it is part of the Plugins section. */
+export const PLUGIN_PATH_PREFIX = '/plugins/'
+
+export function pluginPath(plugin: string): string {
+  return `${PLUGIN_PATH_PREFIX}${encodeURIComponent(plugin)}`
+}
+
+/** The plugin a /plugins/<id> path names, or undefined. */
+export function pluginFromPath(pathname: string): string | undefined {
+  const path = `/${pathname.replace(/^\/+|\/+$/g, '')}`
+  if (!path.startsWith(PLUGIN_PATH_PREFIX)) return undefined
+  const plugin = decodeURIComponent(path.slice(PLUGIN_PATH_PREFIX.length))
+  return plugin.length > 0 && !plugin.includes('/') ? plugin : undefined
+}
 
 /** Which view a pathname names; anything unrecognised is Start. */
 export function viewFromPath(pathname: string): AppView {
@@ -81,23 +96,5 @@ export function forgetStoredView(): void {
     localStorage.removeItem(LEGACY_VIEW_KEY)
   } catch {
     // a private window is not a reason to fail a load
-  }
-}
-
-const EXPLAIN_KEY = 'cs2vibe.explain'
-
-export function readExplain(): boolean {
-  try {
-    return localStorage.getItem(EXPLAIN_KEY) !== '0'
-  } catch {
-    return true
-  }
-}
-
-export function persistExplain(enabled: boolean): void {
-  try {
-    localStorage.setItem(EXPLAIN_KEY, enabled ? '1' : '0')
-  } catch {
-    // same
   }
 }

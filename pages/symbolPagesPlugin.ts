@@ -176,9 +176,34 @@ export function symbolPagesPlugin(): Plugin {
         await mkdir(directory, { recursive: true })
         await writeFile(join(directory, 'index.html'), renderRouteShell(shell, route), 'utf8')
       }
+      // One page per plugin (/plugins/<id>), for the same reason as the routes:
+      // the link a server owner bookmarks or pastes should answer 200.
+      let plugins: string[] = []
+      try {
+        const gamedata = JSON.parse(await read(join(dist, 'gamedata', 'index.json'), 'utf8')) as {
+          versions?: Array<{ files?: Array<{ plugin?: string }> }>
+        }
+        plugins = [...new Set((gamedata.versions?.[0]?.files ?? []).map((file) => file.plugin ?? ''))]
+          .filter((plugin) => /^[A-Za-z0-9._-]+$/.test(plugin))
+      } catch {
+        plugins = []
+      }
+      for (const plugin of plugins) {
+        const directory = join(dist, 'plugins', plugin)
+        await mkdir(directory, { recursive: true })
+        await writeFile(
+          join(directory, 'index.html'),
+          renderRouteShell(shell, {
+            path: `plugins/${plugin}`,
+            title: `${plugin} gamedata`,
+            description: `The gamedata file ${plugin} reads, for the newest CS2 build: download, always-newest link and what changed.`,
+          }),
+          'utf8',
+        )
+      }
       this.info?.(
         `symbol permalinks: ${summaries.length} pages for ${dataset.source.gameVersion},`
-        + ` plus ${ROUTE_PAGES.length} route pages`,
+        + ` plus ${ROUTE_PAGES.length} route pages and ${plugins.length} plugin pages`,
       )
     },
   }

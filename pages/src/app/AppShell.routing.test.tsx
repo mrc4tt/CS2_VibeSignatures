@@ -35,10 +35,10 @@ describe('the browser Back button', () => {
     paint()
     // The navigation is anchors, not buttons: a destination should survive
     // middle-click, ctrl-click and "copy link address".
-    expect(screen.getByRole('link', { name: 'Game Data' })).toHaveAttribute('href', '/game-data')
+    expect(screen.getByRole('link', { name: 'All Game Data files' })).toHaveAttribute('href', '/game-data')
     // Views used to be shell state on a single route: nothing was pushed, so the
     // first Back took you off the site altogether.
-    await userEvent.click(screen.getByRole('link', { name: 'Game Data' }))
+    await userEvent.click(screen.getByRole('link', { name: 'All Game Data files' }))
     await waitFor(() => expect(window.location.pathname).toBe('/game-data'))
 
     await userEvent.click(screen.getByRole('link', { name: 'Check my file' }))
@@ -62,13 +62,21 @@ describe('the browser Back button', () => {
   it('opens a pasted deep link on that page', async () => {
     window.history.pushState({}, '', '/words')
     paint()
-    await waitFor(() => expect(screen.getByRole('link', { name: 'Words' })).toHaveAttribute('aria-current', 'page'))
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Glossary' })).toHaveAttribute('aria-current', 'page'))
   })
 
   it('shows Start for a path it does not know, rather than nothing at all', async () => {
     window.history.pushState({}, '', '/no-such-page')
     paint()
-    await waitFor(() => expect(screen.getByRole('link', { name: 'Start here' })).toHaveAttribute('aria-current', 'page'))
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Plugins' })).toHaveAttribute('aria-current', 'page'))
+  })
+
+  it('keeps the top bar to three destinations and files a plugin page under Plugins', async () => {
+    window.history.pushState({}, '', '/plugins/CounterStrikeSharp')
+    paint()
+    const main = screen.getByRole('navigation', { name: 'Main' })
+    expect(main.querySelectorAll('a')).toHaveLength(3)
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Plugins' })).toHaveAttribute('aria-current', 'page'))
   })
 })
 

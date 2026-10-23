@@ -8,10 +8,11 @@ import { ConnectionGate } from '../components/ConnectionGate'
 import { APP_LANGUAGES, changeLanguage, resolveLanguage, type AppLanguage } from '../i18n'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { useApiConfig } from './apiContext'
-import { forgetStoredView, persistExplain, readExplain, VIEW_PATHS, viewFromPath, type AppView } from './appViews'
+import { forgetStoredView, pluginFromPath, VIEW_PATHS, viewFromPath, type AppView } from './appViews'
 import { onNavigation } from './navigate'
-import { ApiIcon, BookIcon, ChartIcon, FileCheckIcon, OverviewIcon, SearchIcon, SettingsIcon, TableIcon, type IconProps } from '../ui/icons'
-import { Button, Dot, Select, Switch, Toaster } from '../ui/primitives'
+import { ApiIcon, SearchIcon, SettingsIcon } from '../ui/icons'
+import { Button, Dot, Key, Select, Toaster } from '../ui/primitives'
+import { BuildStatusBanner } from '../components/BuildStatusBanner'
 
 const RunListPage = lazy(() => import('../features/runs/RunListPage').then((module) => ({ default: module.RunListPage })))
 const RunDetailPage = lazy(() => import('../features/run-detail/RunDetailPage').then((module) => ({ default: module.RunDetailPage })))
@@ -21,18 +22,8 @@ const DiffPage = lazy(() => import('../features/diff/DiffPage').then((module) =>
 const CheckFilePage = lazy(() => import('../features/checkfile/CheckFilePage').then((module) => ({ default: module.CheckFilePage })))
 const RunReportPage = lazy(() => import('../features/runs2/RunReportPage').then((module) => ({ default: module.RunReportPage })))
 const StartPage = lazy(() => import('../features/start/StartPage').then((module) => ({ default: module.StartPage })))
+const PluginPage = lazy(() => import('../features/plugins/PluginPage').then((module) => ({ default: module.PluginPage })))
 const WordsPage = lazy(() => import('../features/words/WordsPage').then((module) => ({ default: module.WordsPage })))
-
-const NAV_ICONS: Record<AppView, (props: IconProps) => React.ReactElement> = {
-  start: OverviewIcon,
-  symbols: SearchIcon,
-  gamedata: TableIcon,
-  diff: ChartIcon,
-  check: FileCheckIcon,
-  runs: ChartIcon,
-  'runs-live': ChartIcon,
-  words: BookIcon,
-}
 
 const LANGUAGE_LABELS: Record<AppLanguage, string> = {
   en: 'English',
@@ -56,14 +47,10 @@ export function AppShell() {
   // The URL is the single source of truth for which view is showing, which is
   // what makes Back and Forward work and a link to a page shareable.
   const view = viewFromPath(location.pathname)
-  const [explain, setExplain] = useState<boolean>(readExplain)
+  const plugin = pluginFromPath(location.pathname)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const selectedLanguage = resolveLanguage(i18n.resolvedLanguage)
-
-  useEffect(() => {
-    document.body.classList.toggle('noexplain', !explain)
-  }, [explain])
 
   useEffect(forgetStoredView, [])
 
@@ -110,75 +97,39 @@ export function AppShell() {
     window.scrollTo({ top: 0 })
   }
 
-  const tabs: AppView[] = ['start', 'symbols', 'gamedata', 'diff', 'check', 'runs', 'words']
+  // Three destinations a server owner comes for. Everything else is a footer
+  // link: still one click away, no longer competing for the top bar.
+  const tabs: AppView[] = ['start', 'symbols', 'check']
+  const footer: AppView[] = ['gamedata', 'diff', 'runs', 'words']
+  const section: AppView = plugin || view === 'gamedata' ? 'start' : view
   const loading = <div className="page-spinner">{t('app.loadingPage')}</div>
 
   return (
     <div className="app-layout">
-      {/*
-        A rail rather than a top bar: the nav is a fixed six, the pages below are
-        wide data surfaces, and vertical space is the scarce one on a page of
-        tables. Below lg it lies down into the old horizontal bar, because 244px
-        of chrome on a phone is most of the screen.
-      */}
-      <header className="rail">
-        <div className="rail-inner">
-          <a
-            className="brand"
-            href="https://github.com/mrc4tt/CS2_VibeSignatures"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+      <header className="topbar">
+        <div className="topbar-inner">
+          <Link className="brand" to={VIEW_PATHS.start} onClick={() => window.scrollTo({ top: 0 })}>
             <span className="mark">◆</span>
             <span className="brand-name">{t('brand')}</span>
-          </a>
-          <nav className="nav" aria-label={t('brand')}>
-            {tabs.map((tab) => {
-              const Icon = NAV_ICONS[tab]
-              return (
-                <Link
-                  key={tab}
-                  to={VIEW_PATHS[tab]}
-                  aria-current={view === tab ? 'page' : undefined}
-                  onClick={() => window.scrollTo({ top: 0 })}
-                >
-                  <Icon size={16} className="nav-icon" />
-                  <span>{t(`nav2.${tab}`)}</span>
-                </Link>
-              )
-            })}
-          </nav>
-          <div className="railtools">
-            <Button size="small" className="lg:justify-start" onClick={() => setPaletteOpen(true)}>
-              <SearchIcon size={14} /> <span className="sw-label">{t('shell.search')}</span>
-            </Button>
-            {/* The label keeps the whole pill clickable; the switch carries the
-                name itself too, because the text is hidden on narrow screens. */}
-            <label className="sw" data-on={explain}>
-              <Switch
-                checked={explain}
-                onCheckedChange={(next) => {
-                  setExplain(next)
-                  persistExplain(next)
-                }}
-                label={t('shell.explain')}
-              />
-              <span className="sw-label">{t('shell.explain')}</span>
-            </label>
-            <div className="railtools-row">
-              <Select
-                aria-label={t('language.selector')}
-                value={selectedLanguage}
-                onChange={(event) => void changeLanguage(event.target.value as AppLanguage)}
-                wrapperClassName="min-w-0 flex-grow"
-                className="px-2 py-1 text-[12.5px]"
+          </Link>
+          <nav className="nav" aria-label={t('shell2.main')}>
+            {tabs.map((tab) => (
+              <Link
+                key={tab}
+                to={VIEW_PATHS[tab]}
+                aria-current={section === tab ? 'page' : undefined}
+                onClick={() => window.scrollTo({ top: 0 })}
               >
-                {APP_LANGUAGES.map((language) => (
-                  <option key={language} value={language}>{LANGUAGE_LABELS[language]}</option>
-                ))}
-              </Select>
-              <ThemeToggle />
-            </div>
+                {t(`shell2.nav.${tab}`)}
+              </Link>
+            ))}
+          </nav>
+          <div className="topbar-tools">
+            <Button className="searchbtn" onClick={() => setPaletteOpen(true)} aria-label={t('shell.search')}>
+              <SearchIcon size={15} /> <span className="sw-label">{t('shell.search')}</span>
+              <span className="sw-label"><Key>Ctrl K</Key></span>
+            </Button>
+            <ThemeToggle />
           </div>
         </div>
         {view === 'runs-live' && (
@@ -195,7 +146,9 @@ export function AppShell() {
       </header>
 
       <main className="app-content">
-        {view === 'start' && <Suspense fallback={loading}><StartPage onGo={go} /></Suspense>}
+        <BuildStatusBanner />
+        {plugin && <Suspense fallback={loading}><PluginPage plugin={plugin} /></Suspense>}
+        {!plugin && view === 'start' && <Suspense fallback={loading}><StartPage onGo={go} /></Suspense>}
         {view === 'symbols' && <Suspense fallback={loading}><FindSymbolPage /></Suspense>}
         {view === 'gamedata' && <Suspense fallback={loading}><GameDataPage /></Suspense>}
         {view === 'diff' && <Suspense fallback={loading}><DiffPage /></Suspense>}
@@ -210,6 +163,34 @@ export function AppShell() {
           </Routes>
         )}
       </main>
+      <footer className="sitefoot">
+        <div className="sitefoot-inner">
+          <nav className="footnav" aria-label={t('shell2.more')}>
+            {footer.map((item) => (
+              <Link
+                key={item}
+                to={VIEW_PATHS[item]}
+                aria-current={view === item && !plugin ? 'page' : undefined}
+                onClick={() => window.scrollTo({ top: 0 })}
+              >
+                {t(`shell2.nav.${item}`)}
+              </Link>
+            ))}
+            <a href="https://github.com/mrc4tt/CS2_VibeSignatures" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <Select
+            aria-label={t('language.selector')}
+            value={selectedLanguage}
+            onChange={(event) => void changeLanguage(event.target.value as AppLanguage)}
+            wrapperClassName="w-auto"
+            className="px-2 py-1 text-[13px]"
+          >
+            {APP_LANGUAGES.map((language) => (
+              <option key={language} value={language}>{LANGUAGE_LABELS[language]}</option>
+            ))}
+          </Select>
+        </div>
+      </footer>
       <ApiSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <CommandPalette
         open={paletteOpen}

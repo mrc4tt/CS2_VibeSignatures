@@ -98,3 +98,9 @@ export const InfoIcon = (props: IconProps) => (
 export const CheckIcon = (props: IconProps) => (
   <Glyph strokeWidth={2.6} {...props}><path d="M20 6L9 17l-5-5" /></Glyph>
 )
+
+export const StarIcon = ({ filled, ...props }: IconProps & { filled?: boolean }) => (
+  <Glyph fill={filled ? 'currentColor' : 'none'} {...props}>
+    <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z" />
+  </Glyph>
+)

@@ -202,6 +202,9 @@ $(hint_for "$*")"
 
 what to run:
 $(hint_for "$*")"
+    # Only once the run has really started (the status file says "started"):
+    # a refusal in the preflight is not news for the site.
+    if [ -n "${STATUS_PUBLISHED:-}" ]; then site_status failed; fi
     exit 1
 }
 
@@ -249,6 +252,32 @@ dispatch_pages() {
         log "    site build dispatched (deploy-pages.yml on $slug)"
     else
         log "    WARNING: could not dispatch deploy-pages.yml - run: gh workflow run deploy-pages.yml -R $slug --ref main"
+    fi
+}
+
+# The site's "CS2 updated, gamedata is on the way" banner reads this file
+# (pages/src/api/siteStatus.ts). A run takes hours and publishes only at the end,
+# so without it a server owner checking the site after an update sees the old
+# build and no sign that a new one is coming. Only `started` and `failed` are
+# written: on success the published build catches up and the banner hides itself.
+# Best effort throughout - a status that does not reach the site must never fail
+# or stall the run it describes.
+site_status() {  # site_status <started|failed>
+    [ "${AUTOPILOT_SITE_STATUS:-1}" = "0" ] && return 0
+    [ -n "${TAG:-}" ] || return 0
+    local now started
+    now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    started=$(date -u -d "@${STARTED_EPOCH:-$(date +%s)}" +%Y-%m-%dT%H:%M:%SZ)
+    mkdir -p diagnostics
+    printf '{\n  "schemaVersion": 1,\n  "build": "%s",\n  "state": "%s",\n  "startedAt": "%s",\n  "updatedAt": "%s"\n}\n' \
+        "$TAG" "$1" "$started" "$now" > diagnostics/status.json
+    git add -- diagnostics/status.json 2>/dev/null || return 0
+    git diff --cached --quiet -- diagnostics/status.json && return 0
+    git commit -q -m "chore($TAG): site status $1" -- diagnostics/status.json >/dev/null 2>&1 || return 0
+    if sync_push; then
+        dispatch_pages
+    else
+        log "    WARNING: site status '$1' committed but not pushed"
     fi
 }
 
@@ -590,6 +619,12 @@ if [ "$DRY" != 1 ] && [ "${AUTOPILOT_NOTIFY_START:-1}" != "0" ]; then
 deploy mode   : $DEPLOY_MODE
 attempt       : $((ATTEMPTS + 1)) of $MAX_ATTEMPTS
 expect the next message when the chain finishes, or if a step fails."
+fi
+# The windows half of a linux-first release is not news: linux already published
+# this build, so the site has nothing to announce.
+if [ "$DRY" != 1 ] && [ "${WINDOWS_PENDING:-0}" != 1 ]; then
+    site_status started
+    STATUS_PUBLISHED=1
 fi
 
 
