@@ -624,6 +624,9 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-CGameEventSystem_vtable
+        optional_output:
+          - CGameEventSystem_vtable.{platform}.yaml
       - name: find-CHostStateMgr_StartNewRequest
         expected_output:
           - CHostStateMgr_StartNewRequest.{platform}.yaml
@@ -2594,6 +2597,8 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
+      - name: CGameEventSystem_vtable
+        category: vtable
       - name: CHostStateMgr_StartNewRequest
         category: func
         alias:
@@ -14563,14 +14568,39 @@ modules:
     path_windows: game/bin/win64/tier0.dll
     path_linux: game/bin/linuxsteamrt64/libtier0.so
     skills:
+      - name: find-CCvar_vtable
+        optional_output:
+          - CCvar_vtable.{platform}.yaml
       - name: find-CLoggingSystem_LogDirect
         optional_output:
           - CLoggingSystem_LogDirect.{platform}.yaml
     symbols:
+      - name: CCvar_vtable
+        category: vtable
       - name: CLoggingSystem_LogDirect
         category: func
         alias:
           - LogDirect
+  - name: schemasystem
+    path_windows: game/bin/win64/schemasystem.dll
+    path_linux: game/bin/linuxsteamrt64/libschemasystem.so
+    skills:
+      - name: find-CSchemaSystem_vtable
+        optional_output:
+          - CSchemaSystem_vtable.{platform}.yaml
+    symbols:
+      - name: CSchemaSystem_vtable
+        category: vtable
+  - name: filesystem_stdio
+    path_windows: game/bin/win64/filesystem_stdio.dll
+    path_linux: game/bin/linuxsteamrt64/libfilesystem_stdio.so
+    skills:
+      - name: find-CFileSystem_Stdio_vtable
+        optional_output:
+          - CFileSystem_Stdio_vtable.{platform}.yaml
+    symbols:
+      - name: CFileSystem_Stdio_vtable
+        category: vtable
 cpp_tests:
   - name: CEntityInstance_MSVC
     symbol: CEntityInstance
