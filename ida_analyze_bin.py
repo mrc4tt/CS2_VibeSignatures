@@ -3792,6 +3792,12 @@ def start_idalib_mcp(
         removed = _remove_broken_packed_databases(binary_path, debug=debug)
         if removed:
             print(f"  Removed IDA database without a valid header: {', '.join(removed)}")
+        if _ida_database_files_present(binary_path) and not os.path.exists(binary_path + ".id0"):
+            # Unpacked parts without .id0 cannot be restored, and Nexus refuses them
+            # ("indeterminate unpacked state"), which used up the one retry on 14192.
+            removed = _invalidate_ida_database(binary_path, debug=debug)
+            if removed:
+                print(f"  Removed unrestorable IDA database files (no .id0): {', '.join(removed)}")
         if own_session:
             # a cold start is silent until the port opens, which on server.dll is
             # long enough to look like a hang; with debug or explicit streams IDA's

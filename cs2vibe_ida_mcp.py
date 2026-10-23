@@ -38,6 +38,7 @@ import uuid
 from pathlib import Path
 
 from ida_nexus import DatabaseManager
+from ida_nexus.errors import RemoteError
 
 import ida_mcp.mcp as hx
 
@@ -81,8 +82,33 @@ json.dumps(_cs2vibe_fork._mcp_tools_call({name!r}, json.loads({arguments!r})))
 """
 
 
+# Nexus waits by stepping auto_make_step() until it returns False and then asks
+# auto_is_ok(). On a fresh PE that loop stops with one AU_PROC item still queued,
+# so every first open of a windows DLL failed as "Autoanalysis was cancelled" right
+# as analysis finished (14192: all ten, from worldrenderer.dll in 8 s to client.dll
+# in 2.5 min), and the half-written database then failed the reopen as well.
+# The native auto_wait() drains that item; Nexus's own wait then completes.
+_FINISH_AUTOANALYSIS = """
+import ida_auto
+ida_auto.auto_wait()
+ida_auto.auto_is_ok()
+"""
+AUTOANALYSIS_RETRIES = 3
+
+
 class EagerDatabaseManager(DatabaseManager):
     """Opens the startup database and waits for analysis before the port binds."""
+
+    def ensure_autoanalysis(self, instance_id, *, operation_id=None):
+        for attempt in range(AUTOANALYSIS_RETRIES + 1):
+            try:
+                return super().ensure_autoanalysis(instance_id, operation_id=operation_id)
+            except RemoteError as exc:
+                if exc.code != "analysis_cancelled" or attempt == AUTOANALYSIS_RETRIES:
+                    raise
+            print("autoanalysis stopped with work queued; finishing it with auto_wait()", file=sys.stderr, flush=True)
+            self.execute_python(_FINISH_AUTOANALYSIS, instance_id, timeout=OPEN_TIMEOUT)
+            operation_id = uuid.uuid4().hex
 
     def __init__(self, *, startup_path=None, **kwargs):
         super().__init__(**kwargs)
