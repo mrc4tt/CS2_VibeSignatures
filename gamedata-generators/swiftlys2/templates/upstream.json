@@ -5,12 +5,12 @@
     {
       "source_path": "plugin_files/gamedata/cs2/core/offsets.jsonc",
       "template": "offsets.jsonc",
-      "sha256": "b314729eabc90375712389f7bd1187c1e608c860647531265ec0ec0d5e582819"
+      "sha256": "47ed5aebb00549cad9d5079e239dde3f90b0a11da9faef690bddede35151d831"
     },
     {
       "source_path": "plugin_files/gamedata/cs2/core/signatures.jsonc",
       "template": "signatures.jsonc",
-      "sha256": "16feebe00a85d0e8d16a97008e32fdab82409fa2ec0ea73f91ce1dc981ed6760"
+      "sha256": "270b13c231eb46b4f89e354e27e05cee524e911a8096ec29980ec8b3e0d176eb"
     }
   ]
 }

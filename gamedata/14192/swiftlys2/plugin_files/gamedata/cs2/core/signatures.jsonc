@@ -50,12 +50,6 @@
         "windows": "48 85 C9 74 ? 48 8B D1 48 8B 0D ? ? ? ?",
         "linux": "48 89 FE 48 85 FF"
     },
-    // search for "CSource2GameClients::StartHLTVServer: game event %s not found.\n"
-    "LegacyGameEventListener": {
-        "lib": "server",
-        "windows": "48 8B 15 ? ? ? ? 48 85 D2 74 ? 85 C9",
-        "linux": "48 8B 05 ? ? ? ? 48 85 C0 74 ? 83 FF ? 77 ? 48 63 FF 48 C1 E7 ? 48 8D 44 38 ?"
-    },
     // search for "set item texture prefab", "set item texture wear", "set item texture seed" or "kill eater"
     // enter in that function, enter in the nested one and you found the sig
     "CAttributeList::SetOrAddAttributeValueByName": {
