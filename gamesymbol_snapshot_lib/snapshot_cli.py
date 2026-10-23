@@ -74,9 +74,10 @@ def _run(args) -> None:
             other = "windows" if args.platform == "linux" else "linux"
             pending = missing_required_by_platform(*common, artifactdir=args.artifactdir).get(other, [])
             if pending:
-                print(f"WARNING: {other} is not complete yet: {len(pending)} required {other} YAML(s) missing. "
-                      f"This snapshot is {args.platform}-complete only; check-contract stays red and the "
-                      f"generators keep their previous {other} values until the {other} run packs.")
+                # Expected, not a problem: linux runs (and releases) first, windows packs
+                # its half when its own run finishes.
+                print(f"{args.platform} packed; {other} follows when its run packs "
+                      f"({len(pending)} {other} YAML(s) still to come, previous {other} values kept until then).")
     elif args.command == "restore":
         restore_snapshot(*common, replace=args.replace, artifactdir=args.artifactdir)
         print(f"Restored game-symbol snapshot for {args.gamever}")

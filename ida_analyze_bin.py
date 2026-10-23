@@ -511,6 +511,11 @@ async def regenerate_agent_func_signatures_via_session(
         fill_only = payload.get("func_sig") is None
         if fill_only and not payload.get("func_va"):
             continue
+        # Never fill a field the task leaves out on purpose: ConnectClient's head is
+        # not unique, and a filled func_sig failed the contract audit on 14192.
+        contract = declared_artifact_fields().get(_derive_artifact_symbol_name(artifact_path, platform))
+        if fill_only and contract and "func_sig" not in (contract[0] | contract[1]):
+            continue
 
         func_va = str(payload.get("func_va") or "").strip()
         if not func_va:
