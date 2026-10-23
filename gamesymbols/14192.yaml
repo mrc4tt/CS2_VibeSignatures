@@ -151,8 +151,8 @@ binaries:
       sha256: 'e0b1ed04a652f8268fd9d6b75b5a97910ab57197e2cdb8a0a4966703a5ec8322'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:196a3399441ab9412ab16f29d949f1c9d34cb6e4ca6abfdef928c48babd06040
-file_count: 3749
+config_sha256: sha256:d766c7d4043243fe61c85c5bff1c45b637e8ec5f77ca85c9731399c18ca37c9c
+file_count: 3751
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -38407,6 +38407,24 @@ files:
     gv_sig: 4C 39 05 ?? ?? ?? ?? 48 89 BC 24 ?? ?? ?? ??
     gv_sig_va: '0x180c75d81'
     gv_va: '0x18219b360'
+  server/CPlayer_ObserverServices_IsValidObserverTarget.linux.yaml:
+    func_name: CPlayer_ObserverServices_IsValidObserverTarget
+    func_rva: '0x17c3620'
+    func_sig: 55 48 89 E5 41 56 41 55 41 54 53 48 85 F6 0F 84 ?? ?? ?? ?? 48 8B 06
+    func_size: '0x161'
+    func_va: '0x17c3620'
+    vfunc_index: 35
+    vfunc_offset: '0x118'
+    vtable_name: CPlayer_ObserverServices
+  server/CPlayer_ObserverServices_IsValidObserverTarget.windows.yaml:
+    func_name: CPlayer_ObserverServices_IsValidObserverTarget
+    func_rva: '0xc7df70'
+    func_sig: 40 53 56 57 48 83 EC ?? 48 8B FA 48 8B F1
+    func_size: '0x147'
+    func_va: '0x180c7df70'
+    vfunc_index: 34
+    vfunc_offset: '0x110'
+    vtable_name: CPlayer_ObserverServices
   server/CPointTeleportAPI_TeleportEntityInternal.linux.yaml:
     func_name: CPointTeleportAPI_TeleportEntityInternal
     func_rva: '0x1aca180'
@@ -47127,5 +47145,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14192'
-last_publish_time: '2026-10-23T03:16:23Z'
+last_publish_time: '2026-10-23T06:21:59Z'
 schema_version: 5

@@ -116,6 +116,16 @@ FORK_OWNED_SYMBOLS = [
     # it too - so the export alone would miss most output. The plugin's key is
     # "LogDirect"; the module is fork-owned, see FORK_OWNED_MODULES.
     ("CLoggingSystem_LogDirect", "func", "tier0", "LogDirect"),
+    # Virtual of CPlayer_ObserverServices (14192: linux slot 35, windows 34); the key
+    # is the plugin's own spelling. No string to anchor on, so the preprocessor
+    # relocates under FUNC_VTABLE_RELATIONS; the first baseline came from the plugin's
+    # signatures via emit_artifact.py, see the preprocessor's docstring.
+    (
+        "CPlayer_ObserverServices_IsValidObserverTarget",
+        "func",
+        None,
+        "CPlayer_ObserverServices::IsValidObserverTarget",
+    ),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a

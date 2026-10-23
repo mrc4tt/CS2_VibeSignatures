@@ -6699,6 +6699,9 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CPlayer_ObserverServices_IsValidObserverTarget
+        expected_output:
+          - CPlayer_ObserverServices_IsValidObserverTarget.{platform}.yaml
       - name: find-DropReleasePose_OuterDrop
         expected_output:
           - DropReleasePose_OuterDrop.{platform}.yaml
@@ -10144,6 +10147,10 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CPlayer_ObserverServices_IsValidObserverTarget
+        category: func
+        alias:
+          - CPlayer_ObserverServices::IsValidObserverTarget
       - name: DropReleasePose_OuterDrop
         category: func
         alias:
