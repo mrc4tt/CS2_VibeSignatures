@@ -136,8 +136,13 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
     Returns:
         Tuple of (updated_count, skipped_count, updated_symbols, skipped_symbols)
     """
-    gamedata_path = os.path.join(output_dir, GAMEDATA_PATH)
+    return update_file(os.path.join(output_dir, GAMEDATA_PATH), yaml_data, func_lib_map, platforms,
+                       alias_to_name_map, debug, context=context)
 
+
+def update_file(gamedata_path, yaml_data, func_lib_map, platforms, alias_to_name_map, debug=False, *, context=None):
+    """update() for a gamedata.json at an explicit path: the CounterStrikeSharp-roflmuffin
+    generator ships the same schema from roflmuffin's own template and reuses this."""
     if not os.path.exists(gamedata_path):
         print(f"  Warning: CounterStrikeSharp gamedata not found: {gamedata_path}")
         return 0, 0, [], []

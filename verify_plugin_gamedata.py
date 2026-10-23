@@ -1128,7 +1128,10 @@ def main():
             if kind == "offset":
                 row["platforms"][platform] = check_offset(index, binaries, name, platform,
                                                           value, aliases)
-                if resolve_record(index, name, platform, aliases) is None:
+                # A record that carries no index or offset says nothing about this value either:
+                # stock CounterStrikeSharp's GameEventManager (93, read by no code) folds onto one.
+                if (resolve_record(index, name, platform, aliases) is None
+                        or row["platforms"][platform].get("reason") == "record carries no index or offset"):
                     row["platforms"][platform]["unrecorded"] = True
                 continue
             if kind == "patch":

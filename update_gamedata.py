@@ -188,7 +188,8 @@ def print_debug_info(title, updated_symbols, skipped_symbols):
         if symbols:
             print(f"\n[{target_name}] Updated Symbols ({len(symbols)} items)")
             for item in symbols:
-                print(f"  + {item['name']} ({item['type']}/{item['platform']})")
+                where = f"{item['type']}/{item['platform']}" if 'platform' in item else item['type']
+                print(f"  + {item['name']} ({where})")
 
     for target_name, symbols in skipped_symbols.items():
         if symbols:
