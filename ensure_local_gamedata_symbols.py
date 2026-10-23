@@ -468,7 +468,65 @@ FORK_OWNED_MODULES = [
         "game/bin/linuxsteamrt64/libtier0.so",
         [("CLoggingSystem_LogDirect", "func", "LogDirect")],
     ),
+    # schemasystem and filesystem_stdio carry only the vtable of the class behind
+    # ISchemaSystem / IFileSystem, for the hl2sdk fork's ABI check (sdk_abi_check.sh):
+    # the cpp_tests compare the SDK header's slot count with it.
+    (
+        "schemasystem",
+        "game/bin/win64/schemasystem.dll",
+        "game/bin/linuxsteamrt64/libschemasystem.so",
+        [("CSchemaSystem_vtable", "vtable", None)],
+    ),
+    (
+        "filesystem_stdio",
+        "game/bin/win64/filesystem_stdio.dll",
+        "game/bin/linuxsteamrt64/libfilesystem_stdio.so",
+        [("CFileSystem_Stdio_vtable", "vtable", None)],
+    ),
 ]
+
+
+# Vtables of interface implementations in modules that already exist (upstream's or
+# the fork's), for the hl2sdk fork's ABI check: CCvar implements ICvar, CGameEventSystem
+# IGameEventSystem. FORK_OWNED_MODULES only builds a module that is missing, so these
+# are re-inserted into the module block on every run. optional_output, not
+# expected_output: a vtable the SDK check wants must never stop a gamedata release.
+FORK_OWNED_VTABLES = [
+    # (class, module)
+    ("CCvar", "tier0"),
+    ("CGameEventSystem", "engine"),
+]
+
+
+def enforce_fork_owned_vtables(text):
+    """Declare a find-<class>_vtable task and a <class>_vtable symbol where missing."""
+    added = 0
+    lines = text.split("\n")
+    for cls, module in FORK_OWNED_VTABLES:
+        symbol = f"{cls}_vtable"
+        # the first block of that name: engine appears again later as a staging block
+        block = next(((s, e) for s, e, name in _module_blocks(lines) if name == module), None)
+        if block is None:
+            continue
+        start, end = block
+        inserts = []
+        if not any(lines[i] == f"      - name: find-{symbol}" for i in range(start, end)):
+            inserts.append((
+                "    skills:",
+                [f"      - name: find-{symbol}", "        optional_output:", f"          - {symbol}.{{platform}}.yaml"],
+            ))
+        if not any(lines[i] == f"      - name: {symbol}" for i in range(start, end)):
+            inserts.append(("    symbols:", [f"      - name: {symbol}", "        category: vtable"]))
+        # bottom-up, so the earlier anchor's index stays valid
+        for anchor, new in sorted(
+            inserts, key=lambda a: -next((i for i in range(start, end) if lines[i] == a[0]), -1)
+        ):
+            at = next((i for i in range(start, end) if lines[i] == anchor), None)
+            if at is None:
+                continue
+            lines[at + 1 : at + 1] = new
+            added += 1
+    return "\n".join(lines), added
 
 
 def enforce_fork_owned_modules(text):
@@ -1059,6 +1117,8 @@ LIB_MODULE = {
     "client": "client",
     "worldrenderer": "worldrenderer",
     "tier0": "tier0",
+    "schemasystem": "schemasystem",
+    "filesystem_stdio": "filesystem_stdio",
 }
 ENGINE_CLASSES = (
     "CNetworkGameServerBase",
@@ -1349,6 +1409,9 @@ def main():
     patched, opt_tasked = enforce_fork_owned_optional_tasks(patched)
     if opt_tasked:
         print(f"  re-asserted: {opt_tasked} fork-owned optional_output task(s)")
+    patched, vtabled = enforce_fork_owned_vtables(patched)
+    if vtabled:
+        print(f"  re-asserted: {vtabled} fork-owned vtable declaration(s)")
     patched, repaired = repair_missing_structs(patched)
     if repaired:
         print(f"  repaired: {repaired} missing struct declaration(s)")

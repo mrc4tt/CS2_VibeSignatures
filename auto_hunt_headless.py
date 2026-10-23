@@ -485,11 +485,13 @@ def strat_string_anchor(repo, gamever, module, symbol, platform, blob, info):
 BIN_LINUX = {"SDL3": "libSDL3.so.0", "client": "libclient.so", "engine": "libengine2.so",
              "matchmaking": "libmatchmaking.so", "networksystem": "libnetworksystem.so",
              "scenesystem": "libscenesystem.so", "server": "libserver.so", "vphysics2": "libvphysics2.so",
-             "worldrenderer": "libworldrenderer.so", "tier0": "libtier0.so"}
+             "worldrenderer": "libworldrenderer.so", "tier0": "libtier0.so",
+             "schemasystem": "libschemasystem.so", "filesystem_stdio": "libfilesystem_stdio.so"}
 BIN_WIN = {"SDL3": "SDL3.dll", "client": "client.dll", "engine": "engine2.dll",
            "matchmaking": "matchmaking.dll", "networksystem": "networksystem.dll",
            "scenesystem": "scenesystem.dll", "server": "server.dll", "vphysics2": "vphysics2.dll",
-           "worldrenderer": "worldrenderer.dll", "tier0": "tier0.dll"}
+           "worldrenderer": "worldrenderer.dll", "tier0": "tier0.dll",
+           "schemasystem": "schemasystem.dll", "filesystem_stdio": "filesystem_stdio.dll"}
 
 STRATEGIES = [
     ("reloc", strat_relocation),

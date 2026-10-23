@@ -59,7 +59,41 @@ class TestForkOwnedModules(unittest.TestCase):
                 self.assertEqual(task["optional_output"], [f"{symbol_name}.{{platform}}.yaml"])
                 entry = next(s for s in block["symbols"] if s["name"] == symbol_name)
                 self.assertEqual(entry["category"], category)
-                self.assertEqual(entry["alias"], [alias])
+                if alias:
+                    self.assertEqual(entry["alias"], [alias])
+                else:
+                    self.assertNotIn("alias", entry)
+
+    def test_vtables_land_in_existing_modules_once(self):
+        config = UPSTREAM.replace("cpp_tests:\n", (
+            "  - name: engine\n"
+            "    path_windows: game/bin/win64/engine2.dll\n"
+            "    path_linux: game/bin/linuxsteamrt64/libengine2.so\n"
+            "    skills:\n"
+            "      - name: find-CEngineServer_vtable\n"
+            "        expected_output:\n"
+            "          - CEngineServer_vtable.{platform}.yaml\n"
+            "    symbols:\n"
+            "      - name: CEngineServer_vtable\n"
+            "        category: vtable\n"
+            "cpp_tests:\n"
+        ), 1)
+        config, _ = ensure.enforce_fork_owned_modules(config)
+        once, added = ensure.enforce_fork_owned_vtables(config)
+        self.assertGreater(added, 0)
+        twice, again = ensure.enforce_fork_owned_vtables(once)
+        self.assertEqual(again, 0)
+        self.assertEqual(twice, once)
+
+        document = yaml.safe_load(once)
+        for cls, module in ensure.FORK_OWNED_VTABLES:
+            block = next(m for m in document["modules"] if m["name"] == module)
+            task = next(s for s in block["skills"] if s["name"] == f"find-{cls}_vtable")
+            # optional: a vtable for the SDK check must never stop a gamedata release
+            self.assertNotIn("expected_output", task)
+            self.assertEqual(task["optional_output"], [f"{cls}_vtable.{{platform}}.yaml"])
+            entry = next(s for s in block["symbols"] if s["name"] == f"{cls}_vtable")
+            self.assertEqual(entry["category"], "vtable")
 
     def test_adds_nothing_on_a_config_that_already_has_it(self):
         once, _ = ensure.enforce_fork_owned_modules(UPSTREAM)
