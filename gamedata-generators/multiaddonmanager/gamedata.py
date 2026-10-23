@@ -7,8 +7,10 @@ offsets are `constexpr` literals in `src/multiaddonmanager.cpp`, chosen by
 `#ifdef PLATFORM_WINDOWS` and resolved with `CModule::LookupSignature`. The file
 this generator emits is not a drop-in: deploy_local_plugins.sh hands it to
 patch_mam_source.py, which writes the values into those literals in the plugin's
-repo and pushes the change. The plugin is then rebuilt from that source. The linux ReplyConnection
-literal in the plugin ("55 B9 ? ? ? ? 41 B8") already matched twice on 14192.
+repo and pushes the change. The plugin is then rebuilt from that source.
+
+The linux ReplyConnection literal the plugin carried ("55 B9 ? ? ? ? 41 B8")
+matched twice on 14192, which is what prompted tracking these values.
 
 Signatures use one `?` per wildcard, the form the plugin's literals use
 (`convert_sig_to_css`). Offsets are byte offsets into CNetworkGameServer.
