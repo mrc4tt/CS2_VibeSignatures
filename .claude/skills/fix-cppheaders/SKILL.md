@@ -18,6 +18,14 @@ Repair `hl2sdk_cs2` declarations from compiler-versus-YAML layout differences. T
 Resolve `GAMEVER` from the user's explicit request or `CS2VIBE_GAMEVER`; use only
 `configs/$GAMEVER.yaml` for test definitions and fail if it is missing.
 
+In this fork the test definitions are `cpp_tests/fork_tests.yaml`, not the config's own
+`cpp_tests:` block (upstream configs still name the old header layout). Wherever this
+skill says the `configs/<GAMEVER>.yaml` `cpp_tests` entry, read it from that file, and
+get the diff from `./sdk_abi_check.sh <GAMEVER> --no-update` (it splices the file into
+the config). Only differences it lists as NEW need a header change; the baseline in
+`cpp_tests/abi_baseline.txt` holds accepted naming differences. The fixed header goes to
+mrc4tt/hl2sdk (branch `cs2`), never to alliedmodders/s2sdk.
+
 ## Constraints
 
 - Edit only header paths listed in the failing `configs/<GAMEVER>.yaml` `cpp_tests` entry.

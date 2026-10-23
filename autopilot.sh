@@ -866,6 +866,23 @@ step "packing the snapshot" uv run gamesymbol_snapshot.py pack -gamever "$TAG" -
 step "checking the snapshot against the config" uv run gamesymbol_snapshot.py check-contract \
     -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
 
+# The hl2sdk fork's headers against this build's vtables. Not a gate: gamedata does not
+# depend on the SDK, but a plugin built against a header with a moved slot calls the
+# wrong function (1.41.9.2: IVEngineServer2::GetClientSteamID returned the app id). A
+# new mismatch is reported so the header is fixed in mrc4tt/hl2sdk the same day.
+# AUTOPILOT_SDK_ABI=0 turns it off.
+if [ "${AUTOPILOT_SDK_ABI:-1}" != "0" ]; then
+    SDK_ABI_OUT="$STATE/sdk-abi-$TAG.txt"
+    log "==> checking the hl2sdk fork's headers against the binaries"
+    ./sdk_abi_check.sh "$TAG" > "$SDK_ABI_OUT" 2>&1
+    case $? in
+        0) log "    $(head -1 "$SDK_ABI_OUT")" ;;
+        1) log "    $(head -1 "$SDK_ABI_OUT")"
+           notify "sdk-abi" "$(cut -c1-200 "$SDK_ABI_OUT" | head -16)" ;;
+        *) log "    sdk abi check could not run: $(head -1 "$SDK_ABI_OUT")" ;;
+    esac
+fi
+
 # Follow the plugins' own gamedata files before generating: a plugin that added, renamed or
 # dropped a key since the template was taken gets it from this build on, and a value its
 # author changed is compared with ours (it found bot-hider's m_UserIDString/m_bIsHLTV

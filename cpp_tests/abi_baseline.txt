@@ -1,0 +1,17 @@
+# Accepted cpp_tests mismatches (sdk_abi_check.sh --accept).
+# gamever 14192, hl2sdk 690008be Add a local CI run through act
+CEntityInstance_MSVC | Index 10 mismatch: YAML expects 'PostDataUpdateDelta' but compiler reports 'DispatchPostDataUpdate'.
+CEntityInstance_MSVC | Index 12 mismatch: YAML expects 'PostDataUpdatePreserve' but compiler reports 'OnDataUnchangedInPVS'.
+CEntityInstance_MSVC | Index 29 mismatch: YAML expects 'AddChangeAccessorPathPolymorphic' but compiler reports 'NetworkStateChangedBranch'.
+CEntityInstance_MSVC | Index 30 mismatch: YAML expects 'AssignChangeAccessorPathIdsPolymorphic' but compiler reports 'NetworkStateChangedRemove'.
+CEntitySystem_MSVC | Member 'm_bEnableAutoDeletionExecution' missing in compiler record layout (reference offset: 0xc63, file: server/CEntitySystem_m_bEnableAutoDeletionExecution.windows.yaml).
+CNetworkGameServerBase_MSVC | Index 16 mismatch: YAML expects 'ServerSimulate' but compiler reports 'ServerBeginSimulate'.
+IGameSystem_MSVC | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTickWork' but compiler reports 'OnServerBeginAsyncPostTickWork'.
+IGameSystem_MSVC | Index 42 mismatch: YAML expects 'OnServerBeginAsyncPostTickWork' but compiler reports 'OnServerGameBeginAsyncPostTickWork'.
+INetworkGameServer_MSVC | Index 59 mismatch: YAML expects 'PreWorldUpdate' but compiler reports 'PrepareSendClientUpdatesMainThread'.
+INetworkServerService_MSVC | Index 32 mismatch: YAML expects 'SetFinalSimulationTickThisFrame' but compiler reports 'GetServerNetworkAddress'.
+INetworkServerService_MSVC | Index 41 mismatch: YAML expects 'GetServerSerializersCRC' but compiler reports 'GetServerSerializersMsg'.
+ISource2Server_MSVC | Index 57 mismatch: YAML expects 'Save' but compiler reports 'SaveGame'.
+ISource2Server_MSVC | Index 80 mismatch: YAML expects 'BroadcastServerFrameTime' but compiler reports 'SendServerFrameTime'.
+ISource2Server_MSVC | Index 83 mismatch: YAML expects 'GetEntityReport' but compiler reports 'FormatSerializerFieldValue'.
+IVEngineServer2_MSVC | Index 60 mismatch: YAML expects 'UnloadSpawnGroup' but compiler reports 'LoadSpawnGroup'.

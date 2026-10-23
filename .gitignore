@@ -28,6 +28,8 @@ vcall_finder
 # secret - credentials come from .env - and upstream has no file of these names.
 !autopilot.sh
 !deploy_local_plugins.sh
+# autopilot calls it: the hl2sdk fork's ABI check
+!sdk_abi_check.sh
 !run_linux.sh
 !run_windows.sh
 !gen_references.sh

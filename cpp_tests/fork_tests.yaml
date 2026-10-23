@@ -1,0 +1,473 @@
+# The fork's cpp_tests list (sdk_abi_check.sh). It replaces the cpp_tests: block of
+# configs/<gamever>.yaml for the check, so a config upstream publishes with the old
+# header layout (eiface.h, iserver.h, iloopmode.h) cannot undo the port to the
+# hl2sdk fork's engine2/ headers.
+cpp_tests:
+  - name: CEntityInstance_MSVC
+    symbol: CEntityInstance
+    cpp: cpp_tests/centityinstance.cpp
+    headers:
+      - hl2sdk_cs2/public/entity2/entityinstance.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - server  # bin_artifacts/{gamever}/server/CEntityInstance_*.{platform}.yaml
+      - client  # bin_artifacts/{gamever}/client/CEntityInstance_*.{platform}.yaml
+  - name: IGameSystem_MSVC
+    symbol: IGameSystem
+    cpp: cpp_tests/igamesystem.cpp
+    headers:
+      - hl2sdk_cs2/game/shared/igamesystem.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - server  # bin_artifacts/{gamever}/server/IGameSystem_*.{platform}.yaml
+      - client  # bin_artifacts/{gamever}/client/IGameSystem_*.{platform}.yaml
+
+  # - name: INetworkSystem_MSVC
+  #   symbol: INetworkSystem
+  #   cpp: cpp_tests/inetworksystem.cpp
+  #   headers:
+  #   - hl2sdk_cs2/public/networksystem/inetworksystem.h  # Used by the fix-cppheaders SKILL
+  #   target: x86_64-pc-windows-msvc
+  #   include_directories:
+  #     - hl2sdk_cs2/game/shared
+  #     - hl2sdk_cs2/public
+  #     - hl2sdk_cs2/public/tier0
+  #     - hl2sdk_cs2/public/tier1
+  #   defines:
+  #     - COMPILER_MSVC=1
+  #     - COMPILER_MSVC64=1
+  #     - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+  #   additional_compiler_options:
+  #     - fms-extensions
+  #     - fms-compatibility
+  #     - Xclang
+  #     - fdump-vtable-layouts
+  #   reference_modules:
+  #     - networksystem  # bin_artifacts/{gamever}/networksystem/CNetworkSystem_*.{platform}.yaml
+  - name: INetworkMessages_MSVC
+    symbol: INetworkMessages
+    alias_symbols:
+      - CNetworkMessages
+    cpp: cpp_tests/inetworkmessages.cpp
+    headers:
+      - hl2sdk_cs2/public/networksystem/inetworkmessages.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - networksystem  # bin_artifacts/{gamever}/networksystem/CNetworkMessages_*.{platform}.yaml
+      - engine  # bin_artifacts/{gamever}/engine/CNetworkMessages_*.{platform}.yaml
+      - server  # bin_artifacts/{gamever}/server/CNetworkMessages_*.{platform}.yaml
+      - client  # bin_artifacts/{gamever}/client/CNetworkMessages_*.{platform}.yaml
+  - name: ILoopMode_MSVC
+    symbol: ILoopMode
+    cpp: cpp_tests/iloopmode.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - client  # bin_artifacts/{gamever}/client/ILoopModeGame_*.{platform}.yaml
+      - server  # bin_artifacts/{gamever}/server/ILoopModeGame_*.{platform}.yaml
+      - engine  # bin_artifacts/{gamever}/engine/ILoopModeGame_*.{platform}.yaml
+  - name: ILoopType_MSVC
+    symbol: ILoopType
+    cpp: cpp_tests/ilooptype.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CLoopTypeClientServer_*.{platform}.yaml
+  - name: IVEngineServer2_MSVC
+    symbol: IVEngineServer2
+    alias_symbols:
+      - CEngineServer
+    cpp: cpp_tests/ivengineserver2.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/ivengineserver2.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CEngineServer_*.{platform}.yaml
+      - client  # bin_artifacts/{gamever}/client/IVEngineServer2_*.{platform}.yaml
+      - server  # bin_artifacts/{gamever}/server/IVEngineServer2_*.{platform}.yaml
+  - name: IGameSystemFactory_MSVC
+    symbol: IGameSystemFactory
+    cpp: cpp_tests/igamesystemfactory.cpp
+    headers:
+      - hl2sdk_cs2/game/shared/igamesystemfactory.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - server  # bin_artifacts/{gamever}/server/IGameSystemFactory_*.{platform}.yaml
+      - client  # bin_artifacts/{gamever}/client/IGameSystemFactory_*.{platform}.yaml
+  - name: CEntitySystem_MSVC
+    symbol: CEntitySystem
+    alias_symbols:
+      - CGameEntitySystem
+    cpp: cpp_tests/centitysystem.cpp
+    headers:
+      - hl2sdk_cs2/public/entity2/entitysystem.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+      - Xclang
+      - fdump-record-layouts
+    reference_modules:
+      - server  # bin_artifacts/{gamever}/server/{CEntitySystem,CGameEntitySystem}_*.{platform}.yaml
+      - client  # bin_artifacts/{gamever}/client/{CEntitySystem,CGameEntitySystem}_*.{platform}.yaml
+  - name: SDL_Mouse_MSVC
+    symbol: SDL_Mouse
+    cpp: cpp_tests/SDL_Mouse.cpp
+    headers:
+      - cpp_tests/stubs/SDL3.stub.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-record-layouts
+    reference_modules:
+      - SDL3  # bin_artifacts/{gamever}/SDL3/SDL_Mouse_*.{platform}.yaml
+  - name: INetworkGameServer_MSVC
+    symbol: INetworkGameServer
+    cpp: cpp_tests/inetworkgameserver.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/inetworkgameserver.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/INetworkGameServer_*.{platform}.yaml
+    merge_reference_modules: false  # Avoid stale duplicate INetworkGameServer_ClientUpdate at index 58
+  - name: CNetworkGameServerBase_MSVC
+    symbol: CNetworkGameServerBase
+    reference_vtable_owners:
+      - CNetworkGameServer
+    cpp: cpp_tests/inetworkgameserver.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/networkgameserverbase.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CNetworkGameServerBase_*.{platform}.yaml
+  - name: IGameEventManager2_MSVC
+    symbol: IGameEventManager2
+    alias_symbols:
+      - CGameEventManager
+    cpp: cpp_tests/igameeventmanager2.cpp
+    headers:
+      - hl2sdk_cs2/public/igameevents.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - client  # bin_artifacts/{gamever}/client/CGameEventManager_*.{platform}.yaml
+  - name: ISource2Server_MSVC
+    symbol: ISource2Server
+    alias_symbols:
+      - CSource2Server
+    exclude_reference_vtables:
+      - CSource2Server_vtable2
+    cpp: cpp_tests/isource2server.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/isource2server.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/ISource2Server_*.{platform}.yaml
+      - server  # bin_artifacts/{gamever}/server/CSource2Server_*.{platform}.yaml
+  - name: INetworkServerService_MSVC
+    symbol: INetworkServerService
+    alias_symbols:
+      - CNetworkServerService
+    cpp: cpp_tests/inetworkserverservice.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/inetworkserverservice.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CNetworkServerService_*.{platform}.yaml
+      - server  # bin_artifacts/{gamever}/server/CNetworkServerService_*.{platform}.yaml
+  - name: ICommandLine_MSVC
+    symbol: ICommandLine
+    cpp: cpp_tests/icommandline.cpp
+    headers:
+      - hl2sdk_cs2/public/tier0/icommandline.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    # No reference_modules yet: ICommandLine has no binary reference YAMLs
+    # (tier0/vstdlib is not an analyzed module). Compile-only validation.
+  - name: IEngineServiceMgr_MSVC
+    symbol: IEngineServiceMgr
+    alias_symbols:
+      - CEngineServiceMgr
+    cpp: cpp_tests/iengineservicemgr.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CEngineServiceMgr_*.{platform}.yaml
