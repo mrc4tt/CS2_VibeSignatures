@@ -87,13 +87,24 @@ class MakerTests(unittest.TestCase):
             self.m.signature(100, MagicMock())
 
     def test_short_unique_function(self):
+        # four literal bytes is the floor (MIN_LITERAL_BYTES)
+        self.m.ida_funcs.get_func.return_value = types.SimpleNamespace(start_ea=100, end_ea=104)
+        self.m.ida_ua.decode_insn.return_value = 4
+        self.m.ida_ua.insn_t.return_value = types.SimpleNamespace(ops=[])
+        self.m.ida_bytes.get_bytes.return_value = b"\x31\xc0\x90\xc3"
+        scan = MagicMock()
+        scan.matches.return_value = [100]
+        self.assertEqual(self.m.signature(100, scan), "31 C0 90 C3")
+
+    def test_signature_needs_four_literal_bytes(self):
         self.m.ida_funcs.get_func.return_value = types.SimpleNamespace(start_ea=100, end_ea=101)
         self.m.ida_ua.decode_insn.return_value = 1
         self.m.ida_ua.insn_t.return_value = types.SimpleNamespace(ops=[])
         self.m.ida_bytes.get_bytes.return_value = b"\xc3"
         scan = MagicMock()
         scan.matches.return_value = [100]
-        self.assertEqual(self.m.signature(100, scan), "C3")
+        with self.assertRaises(ValueError):
+            self.m.signature(100, scan)
 
     def test_member_cannot_be_emitted_as_function_by_default(self):
         with self.assertRaisesRegex(ValueError, "typed instruction"):

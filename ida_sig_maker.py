@@ -40,6 +40,9 @@ STEP = 16
 MIN_SIG_BYTES = 24
 
 # operand types whose bytes must be wildcarded (relocated/variable content)
+# Same floor as ida_analyze_util.MIN_SIG_LITERAL_BYTES and
+# verify_plugin_gamedata.MIN_LITERAL_BYTES.
+MIN_LITERAL_BYTES = 4
 MASK_OP_TYPES = {ida_ua.o_displ, ida_ua.o_mem, ida_ua.o_near, ida_ua.o_far, ida_ua.o_imm}
 
 DEFAULT_QUEUE = """CAttributeList_SetOrAddAttributeValueByName
@@ -335,7 +338,8 @@ def _grow_signature(func_ea, scan, end_ea, pin_low_bytes=0, max_bytes=None):
                 break
         tokens.extend(masked)
         ea += size
-        if len(scan.matches(" ".join(tokens), limit=2)) == 1:
+        # at least MIN_LITERAL_BYTES literal bytes: a plugin scanner refuses fewer
+        if sum(t != "??" for t in tokens) >= MIN_LITERAL_BYTES and len(scan.matches(" ".join(tokens), limit=2)) == 1:
             return " ".join(tokens)
         if max_bytes is not None and len(tokens) >= max_bytes:
             break

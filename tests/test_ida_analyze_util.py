@@ -8362,13 +8362,21 @@ found_struct_offset: []
                                 "size": 7,
                                 "bytes": "488b0d78563412",
                                 "wild": [3, 4, 5, 6],
-                            }
+                            },
+                            # "48 8B 0D ?? ?? ?? ?? 48 85 C9" alone has three literal bytes,
+                            # below MIN_SIG_LITERAL_BYTES, so the signature grows
+                            {
+                                "ea": "0x180123457",
+                                "size": 3,
+                                "bytes": "4885c9",
+                                "wild": [],
+                            },
                         ],
                     }
                 )
             if name == "find_bytes":
                 self.assertEqual(
-                    ["48 8B 0D ?? ?? ?? ??"],
+                    ["48 8B 0D ?? ?? ?? ?? 48 85 C9"],
                     arguments["patterns"],
                 )
                 return _FakeCallToolResult(
@@ -8396,7 +8404,7 @@ found_struct_offset: []
                 "func_va": "0x180123450",
                 "func_rva": "0x123450",
                 "func_size": "0x40",
-                "func_sig": "48 8B 0D ?? ?? ?? ??",
+                "func_sig": "48 8B 0D ?? ?? ?? ?? 48 85 C9",
             },
             result,
         )
@@ -8435,13 +8443,21 @@ found_struct_offset: []
                                 "size": 7,
                                 "bytes": "488b0d78563412",
                                 "wild": [3, 4, 5, 6],
-                            }
+                            },
+                            # "48 8B 0D ?? ?? ?? ?? 48 85 C9" alone has three literal bytes,
+                            # below MIN_SIG_LITERAL_BYTES, so the signature grows
+                            {
+                                "ea": "0x180123457",
+                                "size": 3,
+                                "bytes": "4885c9",
+                                "wild": [],
+                            },
                         ],
                     }
                 )
             if name == "find_bytes":
                 self.assertEqual(
-                    ["48 8B 0D ?? ?? ?? ??"],
+                    ["48 8B 0D ?? ?? ?? ?? 48 85 C9"],
                     arguments["patterns"],
                 )
                 return _FakeCallToolResult(
@@ -8470,7 +8486,7 @@ found_struct_offset: []
                 "func_va": "0x180123450",
                 "func_rva": "0x123450",
                 "func_size": "0x40",
-                "func_sig": "48 8B 0D ?? ?? ?? ??",
+                "func_sig": "48 8B 0D ?? ?? ?? ?? 48 85 C9",
             },
             result,
         )
@@ -8501,13 +8517,21 @@ found_struct_offset: []
                                 "size": 7,
                                 "bytes": "488b0d78563412",
                                 "wild": [3, 4, 5, 6],
-                            }
+                            },
+                            # "48 8B 0D ?? ?? ?? ?? 48 85 C9" alone has three literal bytes,
+                            # below MIN_SIG_LITERAL_BYTES, so the signature grows
+                            {
+                                "ea": "0x180123457",
+                                "size": 3,
+                                "bytes": "4885c9",
+                                "wild": [],
+                            },
                         ],
                     }
                 )
             if name == "find_bytes":
                 self.assertEqual(
-                    ["48 8B 0D ?? ?? ?? ??"],
+                    ["48 8B 0D ?? ?? ?? ?? 48 85 C9"],
                     arguments["patterns"],
                 )
                 return _FakeCallToolResult(
@@ -8536,7 +8560,7 @@ found_struct_offset: []
                 "func_va": "0x180123450",
                 "func_rva": "0x123450",
                 "func_size": "0x40",
-                "func_sig": "48 8B 0D ?? ?? ?? ??",
+                "func_sig": "48 8B 0D ?? ?? ?? ?? 48 85 C9",
             },
             result,
         )

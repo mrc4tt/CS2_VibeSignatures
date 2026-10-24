@@ -326,6 +326,16 @@ else:
 """
 
 DEFAULT_IDA_STRING_MIN_LENGTH = 4
+# A generated pattern must carry at least this many literal (non-wildcard) bytes.
+# CounterStrikeSharp's CModule::ScanSignature refuses a shorter one rather than take
+# its first hit, and verify_plugin_gamedata.MIN_LITERAL_BYTES fails it the same way:
+# "49 BB ?? ?? ?? ?? ?? ?? ?? ?? 55" (CTakeDamageInfo_ctor, linux 14192) is unique
+# but useless to a plugin.
+MIN_SIG_LITERAL_BYTES = 4
+
+
+def _too_few_literals(tokens):
+    return sum(token != "??" for token in tokens) < MIN_SIG_LITERAL_BYTES
 IDA_STRING_MIN_LENGTH_ENV_VAR = "CS2VIBE_STRING_MIN_LENGTH"
 IDA_STRING_SETUP_STATE_NODE = "$CS2VIBE_STRING_SETUP_STATE"
 IDA_STRING_SETUP_STATE_VERSION = 1
@@ -3928,7 +3938,7 @@ async def preprocess_gen_func_sig_via_mcp(
         prefix_tokens = sig_tokens[:prefix_len]
 
         # Skip signatures that are all wildcards.
-        if all(token == "??" for token in prefix_tokens):
+        if _too_few_literals(prefix_tokens):
             continue
 
         candidate_sig = " ".join(prefix_tokens)
@@ -4049,7 +4059,7 @@ async def preprocess_gen_func_sig_via_mcp(
                         if prefix_len > full_len:
                             break
                         prefix = refined_tokens[:prefix_len]
-                        if all(t == "??" for t in prefix):
+                        if _too_few_literals(prefix):
                             continue
                         candidate_sig = " ".join(prefix)
                         try:
@@ -4484,7 +4494,7 @@ async def preprocess_gen_vfunc_sig_via_mcp(
         if prefix_len < search_start:
             continue
         prefix_tokens = sig_tokens[:prefix_len]
-        if all(token == "??" for token in prefix_tokens):
+        if _too_few_literals(prefix_tokens):
             continue
 
         candidate_sig = " ".join(prefix_tokens)
