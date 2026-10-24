@@ -1,5 +1,5 @@
 # Accepted cpp_tests mismatches (sdk_abi_check.sh --accept).
-# gamever 14192, hl2sdk c1cc9d30 local-ci.sh: refuse to run from a submodule checkout
+# gamever 14192, hl2sdk cc5df2f4 Merge remote-tracking branch 'upstream/cs2' into cs2
 CEntityInstance_Linux | Index 11 mismatch: YAML expects 'PostDataUpdateDelta' but compiler reports 'DispatchPostDataUpdate'.
 CEntityInstance_Linux | Index 13 mismatch: YAML expects 'PostDataUpdatePreserve' but compiler reports 'OnDataUnchangedInPVS'.
 CEntityInstance_Linux | Index 30 mismatch: YAML expects 'AddChangeAccessorPathPolymorphic' but compiler reports 'NetworkStateChangedBranch'.
@@ -24,6 +24,8 @@ IGameSystem_MSVC | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTic
 IGameSystem_MSVC | Index 42 mismatch: YAML expects 'OnServerBeginAsyncPostTickWork' but compiler reports 'OnServerGameBeginAsyncPostTickWork'.
 INetworkGameServer_Linux | Index 59 mismatch: YAML expects 'PreWorldUpdate' but compiler reports 'PrepareSendClientUpdatesMainThread'.
 INetworkGameServer_MSVC | Index 59 mismatch: YAML expects 'PreWorldUpdate' but compiler reports 'PrepareSendClientUpdatesMainThread'.
+INetworkMessages_Linux | Index 21 mismatch: YAML expects 'GetNetworkSerializationContextData' but compiler reports 'LookupNetworkSerializationContextDataId'.
+INetworkMessages_MSVC | Index 21 mismatch: YAML expects 'GetNetworkSerializationContextData' but compiler reports 'LookupNetworkSerializationContextDataId'.
 INetworkServerService_Linux | Index 33 mismatch: YAML expects 'SetFinalSimulationTickThisFrame' but compiler reports 'GetServerNetworkAddress'.
 INetworkServerService_Linux | Index 42 mismatch: YAML expects 'GetServerSerializersCRC' but compiler reports 'GetServerSerializersMsg'.
 INetworkServerService_Linux | vtable_numvfunc mismatch: YAML=53 vs compiler=52.
