@@ -189,9 +189,13 @@ downloads:
             )
             self.assertEqual("-depot", command[3])
             self.assertIn(command[4], manifests.keys())
-            self.assertEqual("-manifest", command[-4])
-            self.assertEqual(manifests[command[4]], command[-3])
-            self.assertEqual("-filelist", command[-2])
+            self.assertEqual("-manifest", command[-5])
+            self.assertEqual(manifests[command[4]], command[-4])
+            self.assertEqual("-filelist", command[-3])
+            # DepotDownloader otherwise trusts the manifest it stored last time, so a
+            # file the previous filelist never fetched keeps its old build (cs2_depot/
+            # held a May soundsystem through 14192).
+            self.assertEqual("-validate", command[-1])
 
         # All depots share the same temp filelist file path
         self.assertEqual(1, len(observed_filelist_paths))

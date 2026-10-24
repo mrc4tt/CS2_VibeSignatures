@@ -15203,6 +15203,16 @@ modules:
     symbols:
       - name: CFileSystem_Stdio_vtable
         category: vtable
+  - name: soundsystem
+    path_windows: game/bin/win64/soundsystem.dll
+    path_linux: game/bin/linuxsteamrt64/libsoundsystem.so
+    skills:
+      - name: find-CSoundSystem_vtable
+        optional_output:
+          - CSoundSystem_vtable.{platform}.yaml
+    symbols:
+      - name: CSoundSystem_vtable
+        category: vtable
 cpp_tests:
   - name: CEntityInstance_MSVC
     symbol: CEntityInstance

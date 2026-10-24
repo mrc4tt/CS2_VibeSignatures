@@ -645,6 +645,17 @@ FORK_OWNED_MODULES = [
         "game/bin/linuxsteamrt64/libfilesystem_stdio.so",
         [("CFileSystem_Stdio_vtable", "vtable", None)],
     ),
+    # soundsystem carries CSoundSystem's vtable, the object behind SoundSystem001.
+    # SwiftlyS2's CSoundSystem::TakeGuid slot is read in server (the call site), and
+    # this is the binary that slot points into: without the module the depot filelist
+    # never fetches it, and cs2_depot/ kept a May soundsystem whose slot 77 is a
+    # different function.
+    (
+        "soundsystem",
+        "game/bin/win64/soundsystem.dll",
+        "game/bin/linuxsteamrt64/libsoundsystem.so",
+        [("CSoundSystem_vtable", "vtable", None)],
+    ),
 ]
 
 
@@ -1282,6 +1293,7 @@ LIB_MODULE = {
     "schemasystem": "schemasystem",
     "filesystem_stdio": "filesystem_stdio",
     "networksystem": "networksystem",
+    "soundsystem": "soundsystem",
 }
 ENGINE_CLASSES = (
     "CNetworkGameServerBase",

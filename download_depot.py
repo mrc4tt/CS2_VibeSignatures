@@ -200,7 +200,12 @@ def download_manifests(
             ]
             if branch:
                 command.extend(["-branch", branch])
-            tail = ["-manifest", str(manifest), "-filelist", str(filelist_path)]
+            # -validate: DepotDownloader otherwise diffs the new manifest against the one it
+            # stored last time and skips every file that entry says is current - including
+            # a file the previous filelist never fetched, which then stays whatever build
+            # it came from (cs2_depot/ kept a May soundsystem through 14192). Checksumming
+            # the ~26 listed files is cheap next to analysing a wrong binary.
+            tail = ["-manifest", str(manifest), "-filelist", str(filelist_path), "-validate"]
             # Anonymous first: Steam serves the CURRENT manifest to anonymous
             # (dedicated-server) accounts, which is every build autopilot fetches, so an
             # expired or locked Steam login no longer stops a new build. Only a historical

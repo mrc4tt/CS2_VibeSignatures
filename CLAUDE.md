@@ -459,10 +459,16 @@ cannot be signatured or lives in a module we do not analyse:
   offset **+ 1** (`mov qword ptr [rbp-0x38], 0x141`); `vfunc_sig_calls_offset` accepts that form
   on ELF only.
 - `CSoundSystem_TakeGuid` (77/78) sits in **server**, where EmitSoundFilter's guid helper calls
-  `g_pSoundSystem` (SoundSystem001), so no soundsystem module was needed. Linux slot 77 of the
-  14192 libsoundsystem increments `[this+0x3c]` and returns it. Beware `cs2_depot/`: it refreshes
-  only the files its filelist names, so its soundsystem is a May build whose slot 77 is a void flag
-  setter; the 14192 one was in `/srv/gp/base/cs2/26144732`.
+  `g_pSoundSystem` (SoundSystem001). The slot points into `soundsystem`, a fork-owned module that
+  carries only `CSoundSystem_vtable` (like schemasystem), so the binary is downloaded and locked
+  every build: linux slot 77 (`0x391ee0` on 14192) and windows slot 78 (`0x18005b290`) both bump
+  a counter at `[this+0x3c]` and wrap it to 0, windows writing it through the out pointer.
+  `validate_artifacts.resolve_vtable` finds no windows vtable for the class (a second COL at
+  this-offset 40 sits just before the primary one); IDA's vtable task does.
+- **`download_depot.py` passes `-validate`.** DepotDownloader otherwise diffs the manifest against
+  the one it stored last time, so a file the previous filelist never fetched stays whatever build
+  it came from: `cs2_depot/` held a May soundsystem through 14192 (slot 77 there is a void flag
+  setter), and `binary_locks/14192.json` never pinned schemasystem or filesystem_stdio.
 - `INetChannelInfo::GetAvgPacketBytes` routes to `CNetChan_GetAvgData` (15). SwiftlyS2 has no
   GetPeakJitter, so its names from slot 14 on are one early: 14 is a running `maxss` of 0.1 ms
   frame-time samples feeding the jitter histogram, 15 is bytes/sec. Both keys ship 15.
