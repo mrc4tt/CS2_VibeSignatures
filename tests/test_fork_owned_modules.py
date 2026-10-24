@@ -50,11 +50,12 @@ class TestForkOwnedModules(unittest.TestCase):
             block = next(m for m in document["modules"] if m["name"] == name)
             self.assertEqual(block["path_windows"], path_windows)
             self.assertEqual(block["path_linux"], path_linux)
-            for symbol_name, category, alias in symbols:
+            for symbol_name, category, alias, *task_name in symbols:
                 # A real hunting task, declared optional: the older gamevers carry no
                 # artifact for a symbol this fork added, and expected_output would make
                 # pack fail with "Missing required symbol YAML" (rule 11).
-                task = next(s for s in block["skills"] if s["name"] == f"find-{symbol_name}")
+                task_name = task_name[0] if task_name else f"find-{symbol_name}"
+                task = next(s for s in block["skills"] if s["name"] == task_name)
                 self.assertNotIn("expected_output", task)
                 self.assertEqual(task["optional_output"], [f"{symbol_name}.{{platform}}.yaml"])
                 entry = next(s for s in block["symbols"] if s["name"] == symbol_name)
@@ -100,6 +101,29 @@ class TestForkOwnedModules(unittest.TestCase):
         twice, added = ensure.enforce_fork_owned_modules(once)
         self.assertEqual(added, 0)
         self.assertEqual(twice, once)
+
+    def test_completes_a_block_built_before_its_entry_was_listed(self):
+        full, _ = ensure.enforce_fork_owned_modules(UPSTREAM)
+        lines = full.split("\n")
+        # drop the last symbol and task of soundsystem, as an older config would lack them
+        symbol_name, _category, _alias, task_name = next(
+            symbols for name, _w, _l, symbols in ensure.FORK_OWNED_MODULES if name == "soundsystem"
+        )[-1]
+        at = lines.index(f"      - name: {task_name}")
+        del lines[at:at + 3]
+        at = lines.index(f"      - name: {symbol_name}", lines.index("  - name: soundsystem"))
+        del lines[at:at + 2]
+        stale = "\n".join(lines)
+
+        completed, added = ensure.enforce_fork_owned_modules(stale)
+        self.assertEqual(added, 2)
+        def by_name(text):
+            return {m["name"]: {key: sorted(map(repr, m[key])) if isinstance(m[key], list) else m[key]
+                                for key in m}
+                    for m in yaml.safe_load(text)["modules"]}
+        self.assertEqual(by_name(completed), by_name(full))
+        again, more = ensure.enforce_fork_owned_modules(completed)
+        self.assertEqual((again, more), (completed, 0))
 
     def test_every_fork_owned_module_routes_and_resolves_to_a_binary(self):
         for name, path_windows, path_linux, _ in ensure.FORK_OWNED_MODULES:

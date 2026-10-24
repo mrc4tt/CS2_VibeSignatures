@@ -463,8 +463,13 @@ cannot be signatured or lives in a module we do not analyse:
   carries only `CSoundSystem_vtable` (like schemasystem), so the binary is downloaded and locked
   every build: linux slot 77 (`0x391ee0` on 14192) and windows slot 78 (`0x18005b290`) both bump
   a counter at `[this+0x3c]` and wrap it to 0, windows writing it through the out pointer.
-  `validate_artifacts.resolve_vtable` finds no windows vtable for the class (a second COL at
-  this-offset 40 sits just before the primary one); IDA's vtable task does.
+  soundsystem carries its own `CSoundSystem_TakeGuid` too (task
+  `find-CSoundSystem_TakeGuid-soundsystem`), found by the function's body and placed by RTTI,
+  so `cross_platform_vfunc_check` compares the server call site's slot with the real one every
+  build and errors when they part. A `FORK_OWNED_MODULES` symbol may name its task (4th
+  element) when another module already uses `find-<Symbol>`, and an existing module block is
+  completed with entries added to the table later. `emit_artifact.py` now takes its binary
+  names from `auto_hunt_headless`, so it covers every module the validator does.
 - **`download_depot.py` passes `-validate`.** DepotDownloader otherwise diffs the manifest against
   the one it stored last time, so a file the previous filelist never fetched stays whatever build
   it came from: `cs2_depot/` held a May soundsystem through 14192 (slot 77 there is a void flag

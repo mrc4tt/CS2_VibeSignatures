@@ -614,8 +614,10 @@ FORK_OWNED_MOVES = [
 # verify_plugin_gamedata.py).
 FORK_OWNED_MODULES = [
     # (module, path_windows, path_linux, symbols)
-    #   symbols: (symbol_name, category, alias) - a real hunting task named
-    #   find-<symbol> is generated for each, matching its preprocessor's filename.
+    #   symbols: (symbol_name, category, alias[, task_name]) - a real hunting task named
+    #   find-<symbol> (or task_name) is generated for each, matching its preprocessor's
+    #   filename. task_name is for a symbol another module already declares under
+    #   find-<symbol>: preprocessors are one flat directory, so the name must differ.
     (
         "worldrenderer",
         "game/bin/win64/worldrenderer.dll",
@@ -654,7 +656,14 @@ FORK_OWNED_MODULES = [
         "soundsystem",
         "game/bin/win64/soundsystem.dll",
         "game/bin/linuxsteamrt64/libsoundsystem.so",
-        [("CSoundSystem_vtable", "vtable", None)],
+        [
+            ("CSoundSystem_vtable", "vtable", None),
+            # TakeGuid again, found here by its own body (linux slot 77 bumps [this+0x3c]
+            # and returns it, windows slot 78 writes it through rdx) and placed by RTTI.
+            # Server reads the same slot off a call site; validate_artifacts'
+            # cross-module check fails the build when the two disagree.
+            ("CSoundSystem_TakeGuid", "vfunc", None, "find-CSoundSystem_TakeGuid-soundsystem"),
+        ],
     ),
 ]
 
@@ -717,9 +726,12 @@ def enforce_fork_owned_modules(text):
     added = 0
     for module, path_windows, path_linux, symbols in FORK_OWNED_MODULES:
         if re.search(rf"^  - name: {re.escape(module)}\b", text, re.M):
+            text, n = _complete_fork_owned_module(text, module, symbols)
+            added += n
             continue
         tasks, entries = [], []
-        for symbol_name, category, alias in symbols:
+        for symbol_name, category, alias, *task_name in symbols:
+            task = task_name[0] if task_name else f"find-{symbol_name}"
             # No platform: key and a {platform} output path - the shape upstream uses
             # for a task that runs on both platforms, which this one does: its anchor
             # is a string literal present in both binaries. optional_output, not
@@ -727,7 +739,7 @@ def enforce_fork_owned_modules(text):
             # symbol this fork added and expected_output makes the path REQUIRED, at
             # which point pack dies with "Missing required symbol YAML" (rule 11).
             tasks.append(
-                f"      - name: find-{symbol_name}\n"
+                f"      - name: {task}\n"
                 "        optional_output:\n"
                 f"          - {symbol_name}.{{platform}}.yaml\n"
             )
@@ -744,6 +756,30 @@ def enforce_fork_owned_modules(text):
         text = text[:at] + block + text[at:]
         added += 1
     return text, added
+
+
+def _complete_fork_owned_module(text, module, symbols):
+    """Add the tasks and symbols of an existing fork-owned module block that it lacks.
+
+    A config scaffolded before an entry joined the module's list keeps the old block,
+    since the block is only built when the module is missing."""
+    added = 0
+    lines = text.split("\n")
+    for symbol_name, category, alias, *task_name in symbols:
+        task = task_name[0] if task_name else f"find-{symbol_name}"
+        start, end = next((s, e) for s, e, name in _module_blocks(lines) if name == module)
+        block = lines[start:end]
+        if f"      - name: {symbol_name}" not in block and "    symbols:" in block:
+            at = start + block.index("    symbols:") + 1
+            lines[at:at] = symbol_entry_block(symbol_name, category, None, None, alias).rstrip("\n").split("\n")
+            added += 1
+        start, end = next((s, e) for s, e, name in _module_blocks(lines) if name == module)
+        block = lines[start:end]
+        if f"      - name: {task}" not in block and "    skills:" in block:
+            at = start + block.index("    skills:") + 1
+            lines[at:at] = [f"      - name: {task}", "        optional_output:", f"          - {symbol_name}.{{platform}}.yaml"]
+            added += 1
+    return "\n".join(lines), added
 
 
 # Fork-owned bare optional_output tasks. These declare artifacts recovered headlessly
@@ -1563,7 +1599,7 @@ def main():
     # to a module, and inject() raises StopIteration on a module that is not there.
     patched, new_modules = enforce_fork_owned_modules(text)
     if new_modules:
-        print(f"  created: {new_modules} fork-owned module block(s)")
+        print(f"  fork-owned modules: {new_modules} block(s), task(s) or symbol(s) added")
 
     patched, reclassified = enforce_category_decisions(patched)
     if reclassified:

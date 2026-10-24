@@ -196,8 +196,8 @@ binaries:
       sha256: 'e0b1ed04a652f8268fd9d6b75b5a97910ab57197e2cdb8a0a4966703a5ec8322'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:ae6edec13b3e6ab8edcf2ab3aa3b46007962ae4ab67ce264dff7174bd6c047be
-file_count: 3983
+config_sha256: sha256:d30fa95fbd2668e5ee486a1f560eb4fe8c6548721b310047635ee1bea8d693e7
+file_count: 3985
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -48803,6 +48803,26 @@ files:
     vfunc_index: 25
     vfunc_offset: '0xc8'
     vtable_name: CCSPlayer_MovementServices
+  soundsystem/CSoundSystem_TakeGuid.linux.yaml:
+    func_name: CSoundSystem_TakeGuid
+    func_rva: '0x391ee0'
+    func_sig: 8B 47 ?? BA ?? ?? ?? ?? 83 C0 ?? 0F 49 D0 89 57 ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 83 3D ?? ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x12'
+    func_va: '0x391ee0'
+    vfunc_index: 77
+    vfunc_offset: '0x268'
+    vtable_name: CSoundSystem
+  soundsystem/CSoundSystem_TakeGuid.windows.yaml:
+    func_name: CSoundSystem_TakeGuid
+    func_rva: '0x5b290'
+    func_sig: FF 41 ?? 8B 41 ?? 3D ?? ?? ?? ?? 89 02 48 8B C2 72 ?? C7 41 ?? ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? 48 83 3D ?? ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x1a'
+    func_va: '0x18005b290'
+    vfunc_index: 78
+    vfunc_offset: '0x270'
+    vtable_name: CSoundSystem
   soundsystem/CSoundSystem_vtable.linux.yaml:
     vtable_class: CSoundSystem
     vtable_entries:
@@ -49708,5 +49728,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14192'
-last_publish_time: '2026-10-24T12:03:18Z'
+last_publish_time: '2026-10-24T13:19:01Z'
 schema_version: 5

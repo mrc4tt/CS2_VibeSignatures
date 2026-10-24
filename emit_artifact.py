@@ -31,20 +31,15 @@ import sys
 import tempfile
 from pathlib import Path
 
+from auto_hunt_headless import BIN_LINUX, BIN_WIN
+
 REPO = Path(__file__).resolve().parent
 SCRIPT = REPO / "ida_sig_maker.py"
 
+# validate_artifacts reads the same maps, so a module it can check can be emitted
 BINARY_NAMES = {
-    ("server", "linux"): "libserver.so", ("server", "windows"): "server.dll",
-    ("engine", "linux"): "libengine2.so", ("engine", "windows"): "engine2.dll",
-    ("client", "linux"): "libclient.so", ("client", "windows"): "client.dll",
-    ("networksystem", "linux"): "libnetworksystem.so", ("networksystem", "windows"): "networksystem.dll",
-    ("matchmaking", "linux"): "libmatchmaking.so", ("matchmaking", "windows"): "matchmaking.dll",
-    ("vphysics2", "linux"): "libvphysics2.so", ("vphysics2", "windows"): "vphysics2.dll",
-    ("scenesystem", "linux"): "libscenesystem.so", ("scenesystem", "windows"): "scenesystem.dll",
-    ("worldrenderer", "linux"): "libworldrenderer.so", ("worldrenderer", "windows"): "worldrenderer.dll",
-    ("tier0", "linux"): "libtier0.so", ("tier0", "windows"): "tier0.dll",
-    ("SDL3", "linux"): "libSDL3.so.0", ("SDL3", "windows"): "SDL3.dll",
+    **{(module, "linux"): name for module, name in BIN_LINUX.items()},
+    **{(module, "windows"): name for module, name in BIN_WIN.items()},
 }
 
 

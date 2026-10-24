@@ -15207,10 +15207,15 @@ modules:
     path_windows: game/bin/win64/soundsystem.dll
     path_linux: game/bin/linuxsteamrt64/libsoundsystem.so
     skills:
+      - name: find-CSoundSystem_TakeGuid-soundsystem
+        optional_output:
+          - CSoundSystem_TakeGuid.{platform}.yaml
       - name: find-CSoundSystem_vtable
         optional_output:
           - CSoundSystem_vtable.{platform}.yaml
     symbols:
+      - name: CSoundSystem_TakeGuid
+        category: vfunc
       - name: CSoundSystem_vtable
         category: vtable
 cpp_tests:
