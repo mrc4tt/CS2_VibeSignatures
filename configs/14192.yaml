@@ -799,6 +799,9 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-CServerSideClient_ProcessRespondCvarValue
+        expected_output:
+          - CServerSideClient_ProcessRespondCvarValue.{platform}.yaml
       - name: find-CServerSideClientBase_Reconnect
         expected_output:
           - CServerSideClientBase_Reconnect.{platform}.yaml
@@ -2904,6 +2907,8 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
+      - name: CServerSideClient_ProcessRespondCvarValue
+        category: vfunc
       - name: CServerSideClientBase
         category: struct
       - name: CServerSideClientBase_Reconnect
@@ -7180,6 +7185,9 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CSoundSystem_TakeGuid
+        expected_output:
+          - CSoundSystem_TakeGuid.{platform}.yaml
       - name: find-CSPlayerController_ScriptIsBot
         expected_output:
           - CSPlayerController_ScriptIsBot.{platform}.yaml
@@ -10709,6 +10717,8 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CSoundSystem_TakeGuid
+        category: vfunc
       - name: CSPlayerController_ScriptIsBot
         category: func
         alias:
@@ -10840,7 +10850,7 @@ modules:
       - name: UpdateItemView
         category: func
       - name: CCSPlayerInventory_GetItemInLoadout
-        category: func
+        category: vfunc
         alias:
           - CCSPlayerInventory::GetItemInLoadout
       - name: CEconItemView_CEconItemView

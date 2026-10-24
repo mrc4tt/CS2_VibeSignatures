@@ -181,8 +181,8 @@ binaries:
       sha256: 'e0b1ed04a652f8268fd9d6b75b5a97910ab57197e2cdb8a0a4966703a5ec8322'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:46138a4266d9b7a6f18fa071ccc77512820b7f60f6d1ed0598e597eb314206cc
-file_count: 3977
+config_sha256: sha256:0811b3c151dba46230801a7c023f1b2b29d1e1b958e7660bb3dd1d7aabed0cde
+file_count: 3981
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -14182,6 +14182,18 @@ files:
     vfunc_offset: '0x98'
     vfunc_sig: FF 90 98 00 00 00 83 4F ?? ?? 49 8B CF
     vtable_name: CServerSideClient
+  engine/CServerSideClient_ProcessRespondCvarValue.linux.yaml:
+    func_name: CServerSideClient_ProcessRespondCvarValue
+    vfunc_index: 40
+    vfunc_offset: '0x140'
+    vfunc_sig: 48 C7 45 ?? 41 01 00 00 48 C7 45 ?? 00 00 00 00 4D 85 C0
+    vtable_name: CServerSideClient
+  engine/CServerSideClient_ProcessRespondCvarValue.windows.yaml:
+    func_name: CServerSideClient_ProcessRespondCvarValue
+    vfunc_index: 38
+    vfunc_offset: '0x130'
+    vfunc_sig: 48 8B 01 FF A0 30 01 00 00
+    vtable_name: CServerSideClient
   engine/CServerSideClient_SendNetMessage.linux.yaml:
     func_name: CServerSideClient_SendNetMessage
     func_rva: '0x55a370'
@@ -27181,12 +27193,18 @@ files:
     func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 83 EC ?? 83 FA ??
     func_size: '0x29a'
     func_va: '0x1514f90'
+    vfunc_index: 9
+    vfunc_offset: '0x48'
+    vtable_name: CCSPlayerInventory
   server/CCSPlayerInventory_GetItemInLoadout.windows.yaml:
     func_name: CCSPlayerInventory_GetItemInLoadout
     func_rva: '0xa3a3d0'
     func_sig: 48 8B C4 56 48 83 EC ?? 49 63 F0
     func_size: '0x224'
     func_va: '0x180a3a3d0'
+    vfunc_index: 8
+    vfunc_offset: '0x40'
+    vtable_name: CCSPlayerInventory
   server/CCSPlayerInventory_SendInventoryUpdateEvent.linux.yaml:
     func_name: CCSPlayerInventory_SendInventoryUpdateEvent
     func_rva: '0x1c38630'
@@ -43235,6 +43253,18 @@ files:
     vtable_size: '0xa20'
     vtable_symbol: ??_7CSmokeGrenadeProjectile@@6B@
     vtable_va: '0x1818ee818'
+  server/CSoundSystem_TakeGuid.linux.yaml:
+    func_name: CSoundSystem_TakeGuid
+    vfunc_index: 77
+    vfunc_offset: '0x268'
+    vfunc_sig: FF 90 68 02 00 00 F2 0F 10 4D ?? 66 0F EF C0 89 C1
+    vtable_name: CSoundSystem
+  server/CSoundSystem_TakeGuid.windows.yaml:
+    func_name: CSoundSystem_TakeGuid
+    vfunc_index: 78
+    vfunc_offset: '0x270'
+    vfunc_sig: FF 90 70 02 00 00 F2 0F 10 84 24 ?? ?? ?? ?? 66 0F 2E C6 8B 18 7A
+    vtable_name: CSoundSystem
   server/CSource2EntitySystem_StaticInit.linux.yaml:
     func_name: CSource2EntitySystem_StaticInit
     func_rva: '0x1781840'
@@ -49376,5 +49406,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14192'
-last_publish_time: '2026-10-24T10:43:29Z'
+last_publish_time: '2026-10-24T11:52:43Z'
 schema_version: 5

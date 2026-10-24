@@ -691,8 +691,18 @@ def vfunc_sig_calls_offset(blob, info, sig, want, sig_disp=None):
     function is a shared stub that cannot be signatured) is only as good as this
     instruction. Repeats are expected (one slot is called from many places), so every
     hit must carry it rather than exactly one existing.
+
+    A slot can also be named where a member-function pointer to it is built: Itanium
+    encodes a pointer to a virtual as offset + 1 (`mov qword ptr [rbp-0x38], 0x141` is
+    slot 40), which is how CServerSideClientBase binds its net message handlers and the
+    only place a shared `return true` stub's slot can be read from.
     """
-    return sig_holds_value(blob, info, sig, want, sig_disp, max_match=None)
+    verdict = sig_holds_value(blob, info, sig, want, sig_disp, max_match=None)
+    if verdict == "mismatch" and info.get("type") == "elf":
+        pointer = sig_holds_value(blob, info, sig, want + 1, sig_disp, allow_imm=True, max_match=None)
+        if pointer == "ok":
+            return "ok"
+    return verdict
 
 
 def check_vfunc(rec, d, blob, info, out, relocs=None):

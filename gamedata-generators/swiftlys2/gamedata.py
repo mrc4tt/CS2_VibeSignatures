@@ -110,8 +110,11 @@ KEY_SYMBOL_OVERRIDES = {
     # where the dtor takes two slots (CanPacket 48 holds "!CanPacket()", SetTimeout 56
     # "NetChan Setting Timeout"). SuppressTransmit / IsSuppressingTransmit store and load
     # the byte CanPacket tests (linux 82/83, windows 81/82); the author's 80/81 and 79/80
-    # are the pending-disconnect reason. INetChannelInfo::GetAvgPacketBytes has no slot
-    # in the SDK and is left as the author wrote it.
+    # are the pending-disconnect reason. SwiftlyS2's INetChannelInfo has no GetPeakJitter,
+    # so its names from 14 on are one slot early: slot 14 is a running maxss of 0.1 ms
+    # frame-time samples, reset to -1 and bucketed into the jitter histogram (linux
+    # networksystem 0x29b130 writes flow+0x10), and the slot it calls GetAvgPacketBytes
+    # (15) is the bytes/sec function. Both keys therefore ship slot 15.
     "INetChannelInfo::GetName": "CNetChan_GetName",
     "INetChannelInfo::GetAddress": "CNetChan_GetAddress",
     "INetChannelInfo::GetRemoteAddress": "CNetChan_GetRemoteAddress",
@@ -127,6 +130,7 @@ KEY_SYMBOL_OVERRIDES = {
     "INetChannelInfo::GetAvgLoss": "CNetChan_GetAvgLoss",
     "INetChannelInfo::GetAvgChoke": "CNetChan_GetAvgChoke",
     "INetChannelInfo::GetAvgData": "CNetChan_GetAvgData",
+    "INetChannelInfo::GetAvgPacketBytes": "CNetChan_GetAvgData",
     "INetChannelInfo::GetAvgPackets": "CNetChan_GetAvgPackets",
     "INetChannelInfo::GetTotalData": "CNetChan_GetTotalData",
     "INetChannelInfo::GetTotalPackets": "CNetChan_GetTotalPackets",

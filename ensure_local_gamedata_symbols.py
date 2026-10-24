@@ -161,6 +161,18 @@ FORK_OWNED_SYMBOLS = [
     ("CServerSideClientBase_MarkToKick", "vfunc", "engine", None),
     ("CServerSideClientBase_UnmarkToKick", "vfunc", "engine", None),
     ("CServerSideClient_SendNetMessage", "vfunc", "engine", None),
+    # No function to signature: linux's override is `return 1` and windows folds the slot
+    # into a `mov al,1; ret` shared by dozens. The slot is read where the handler for
+    # CCLCMsg_RespondCvarValue (message 25) is bound - a member pointer 0x141 on linux
+    # (Itanium offset + 1), the only `jmp [rax+0x130]` vcall thunk in engine2.dll.
+    ("CServerSideClient_ProcessRespondCvarValue", "vfunc", "engine", None),
+    # SoundSystem001's guid counter (linux slot 77 increments [this+0x3c] and returns
+    # it, wrapping to 0); SwiftlyS2 calls it to stamp a sound event. Read where the
+    # server takes a guid for EmitSoundFilter's result - linux sub_F97520 calls
+    # g_pSoundSystem [rax+0x268] and passes eax on as the guid, windows sub_1805CAD20
+    # [rax+0x270] returns it by pointer - so it lives in server, where the call is,
+    # and no soundsystem module is needed. Slot-only: vtable_name is metadata here.
+    ("CSoundSystem_TakeGuid", "vfunc", "server", None),
     # CServerSideClientBase's FilterMessage as reached through its
     # INetworkMessageProcessingPreFilter subobject (this-48 copy, RebroadcastSourceId
     # check), which SwiftlyS2 hooks by signature: linux 0x5430d0, windows 0x1800c4210.
@@ -322,6 +334,10 @@ CATEGORY_DECISIONS = {
     # (CCSBot::m_profile, offset 0x8, size 8; windows write is "mov [rdi+8], rax").
     # As vfunc, generation takes the vfunc path for a structmember payload.
     "CCSBot_Profile": ("structmember", "CCSBot", "m_profile"),
+    # Upstream files it as a plain func, so the record had a signature but no slot and
+    # SwiftlyS2's CCSPlayerInventory::GetItemInLoadout offset kept the author's 9/8.
+    # It is a CCSPlayerInventory virtual (CPlayerInventory's slot, overridden).
+    "CCSPlayerInventory_GetItemInLoadout": ("vfunc", None, None),
 }
 
 # Renamed engine symbols: old gamedata keys map to the canonical analyzed symbol via

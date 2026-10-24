@@ -219,8 +219,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        181,
+        182
+      ],
       "name": "CServerSideClient::ProcessRespondCvarValue",
       "updated": false
     },
@@ -702,8 +705,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        53,
+        54
+      ],
       "name": "CSoundSystem::TakeGuid",
       "updated": false
     },
@@ -1025,8 +1031,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        272,
+        273
+      ],
       "name": "INetChannelInfo::GetAvgPacketBytes",
       "updated": false
     },
@@ -1341,7 +1350,7 @@
   "gamever": "14192",
   "schema_version": 2,
   "summary": {
-    "covered": 130,
+    "covered": 133,
     "total": 133,
     "updated": 11
   }

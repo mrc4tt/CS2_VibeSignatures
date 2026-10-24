@@ -446,14 +446,34 @@ swiftlys2 master through two `# Seed source: <url> template=<path> output=<path>
 spellings GetWeaponCSDataFromKey and C*Projectile::EmitGrenade) is read by the verifier, the template
 sync and the metadata coverage as well. A key only one plugin uses belongs in that plugin's
 `KEY_SYMBOL_OVERRIDES`, not in the shared `ALIAS_OVERRIDES`, so it can reach no other plugin's file.
-On 2026-10-24 swiftlys2 went from 57 to 196 of its 199 keys produced here: 105 new fork-owned
+On 2026-10-24 swiftlys2 went from 57 to all 199 of its keys produced here: 107 new fork-owned
 records (CServerSideClientBase members and slots, CNetChan's INetChannel(Info) slots, the movement
 functions) plus overrides onto records that existed under other names. The binary disagreed with the
 author on 14192 for every linux INetChannel slot (linux has two dtor slots), the
-SuppressTransmit pair on both platforms and GetAvgData - ours ships. Left as the author's:
-CSoundSystem::TakeGuid (no soundsystem module), INetChannelInfo::GetAvgPacketBytes (no such slot)
-and CServerSideClient::ProcessRespondCvarValue (windows folds it into a shared `return true` stub,
-nothing to anchor). bot-hider, bot-controller and CS2FOW were disabled the same day.
+SuppressTransmit pair on both platforms and GetAvgData - ours ships. The last three are slot-only
+records read off a **call site** (`vfunc_sig`, no `func_va`), the answer for a slot whose function
+cannot be signatured or lives in a module we do not analyse:
+- `CServerSideClient_ProcessRespondCvarValue` (40/38): linux's override is `return 1`, windows folds
+  it into a shared `mov al,1; ret`. Read where CServerSideClientBase binds message 25's handler -
+  windows' only `jmp [rax+0x130]` vcall thunk, and on linux an Itanium member pointer, which is
+  offset **+ 1** (`mov qword ptr [rbp-0x38], 0x141`); `vfunc_sig_calls_offset` accepts that form
+  on ELF only.
+- `CSoundSystem_TakeGuid` (77/78) sits in **server**, where EmitSoundFilter's guid helper calls
+  `g_pSoundSystem` (SoundSystem001), so no soundsystem module was needed. Linux slot 77 of the
+  14192 libsoundsystem increments `[this+0x3c]` and returns it. Beware `cs2_depot/`: it refreshes
+  only the files its filelist names, so its soundsystem is a May build whose slot 77 is a void flag
+  setter; the 14192 one was in `/srv/gp/base/cs2/26144732`.
+- `INetChannelInfo::GetAvgPacketBytes` routes to `CNetChan_GetAvgData` (15). SwiftlyS2 has no
+  GetPeakJitter, so its names from slot 14 on are one early: 14 is a running `maxss` of 0.1 ms
+  frame-time samples feeding the jitter histogram, 15 is bytes/sec. Both keys ship 15.
+- `CCSPlayerInventory_GetItemInLoadout` was upstream's plain `func`: the metadata called the key
+  covered while the offset was the author's 9/8. `CATEGORY_DECISIONS` makes it a vfunc, its task
+  asks for the slot (RTTI-confirmed 9/8). Coverage in `*.metadata.json` means "a record exists",
+  not "the field this key needs exists" - `verify_plugin_gamedata`'s `upstream:` list is the test.
+  Its one remaining entry, `CSource2Server::g_GameEventManager`, is a false alarm: the alias sits
+  in the generator's own `config.yaml`, which the verifier does not read, and the shipped
+  signature is `CSource2Server_Init`'s byte for byte.
+bot-hider, bot-controller and CS2FOW were disabled the same day.
 bot-controller (GetSlot, vtidx::DropWeapon), bot-hider (EndMatchState), cs2-retakes-allocator
 (GiveNamedItem2) and CounterStrikeSharp (CBaseEntity_TakeDamage) moved there on 2026-10-23 with
 byte-identical output. `gamedata_utils.generator_key_overrides` is the one reader; the seed

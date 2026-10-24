@@ -214,9 +214,9 @@ class ScanLikeCssTests(unittest.TestCase):
 class CallSiteOffsetTests(unittest.TestCase):
     """A slot-only offset is checked through the call site its index was read from."""
 
-    def _verdict(self, sig_bytes, want, sig_disp=None):
+    def _verdict(self, sig_bytes, want, sig_disp=None, kind="pe"):
         blob = b"\xCC" * 16 + sig_bytes + b"\xCC" * 16
-        info = {"segs": [(0, 0, len(blob), 0x1)], "base": 0}
+        info = {"segs": [(0, 0, len(blob), 0x1)], "base": 0, "type": kind}
         sig = " ".join(f"{b:02X}" for b in sig_bytes)
         return VPG.V.vfunc_sig_calls_offset(blob, info, sig, want, sig_disp)
 
@@ -229,6 +229,14 @@ class CallSiteOffsetTests(unittest.TestCase):
     def test_offset_may_sit_in_a_later_instruction(self):
         # mov rax,[rdi]; mov rax,[rax+0xc0]
         self.assertEqual(self._verdict(bytes.fromhex("488B07488B80C0000000"), 0xC0), "ok")
+
+    def test_itanium_member_pointer_is_offset_plus_one(self):
+        # mov qword ptr [rbp-0x38], 0x141: a pointer to virtual slot 40 (0x140)
+        sig = bytes.fromhex("48C745C841010000")
+        self.assertEqual(self._verdict(sig, 0x140, kind="elf"), "ok")
+        self.assertEqual(self._verdict(sig, 0x148, kind="elf"), "mismatch")
+        # MSVC has no such encoding: the same immediate is not a slot there
+        self.assertEqual(self._verdict(sig, 0x140, kind="pe"), "mismatch")
 
     def test_offset_reported_and_unhealthy(self):
         index = {VPG.fold("K"): {"linux": {"vfunc_index": 170, "vtable_name": "C",

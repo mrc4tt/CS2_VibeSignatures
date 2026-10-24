@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Preprocess script for find-CCSPlayerInventory_GetItemInLoadout skill (auto-generated, func)."""
+"""Preprocess script for find-CCSPlayerInventory_GetItemInLoadout skill (auto-generated, vfunc)."""
 
 from ida_analyze_util import preprocess_common_skill
 
 TARGETS = [
     "CCSPlayerInventory_GetItemInLoadout",
+]
+
+FUNC_VTABLE_RELATIONS = [
+    # The baseline was a plain func artifact with no vtable_name to carry forward.
+    ("CCSPlayerInventory_GetItemInLoadout", "CCSPlayerInventory"),
 ]
 
 GENERATE_YAML_DESIRED_FIELDS = [
@@ -16,6 +21,9 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_rva",
             "func_size",
             "func_sig",
+            "vtable_name",
+            "vfunc_offset",
+            "vfunc_index",
         ],
     ),
 ]
@@ -31,7 +39,7 @@ async def preprocess_skill(
     image_base,
     debug=False,
 ):
-    """Relocate the previous gamever's func artifact onto this build."""
+    """Relocate the previous gamever's vfunc artifact onto this build."""
     return await preprocess_common_skill(
         session=session,
         expected_outputs=expected_outputs,
@@ -40,6 +48,7 @@ async def preprocess_skill(
         platform=platform,
         image_base=image_base,
         func_names=TARGETS,
+        func_vtable_relations=FUNC_VTABLE_RELATIONS,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
         debug=debug,
     )
