@@ -115,9 +115,9 @@
     {
       "covered": true,
       "covered_lines": [
-        88,
-        89,
-        91
+        100,
+        101,
+        103
       ],
       "name": "CEntityIdentity::m_designerName",
       "updated": false
@@ -125,9 +125,9 @@
     {
       "covered": true,
       "covered_lines": [
-        81,
-        82,
-        84
+        93,
+        94,
+        96
       ],
       "name": "CEntityIdentity::m_pInstance",
       "updated": false
@@ -135,9 +135,9 @@
     {
       "covered": true,
       "covered_lines": [
-        74,
-        75,
-        77
+        86,
+        87,
+        89
       ],
       "name": "CEntityIdentity::Size",
       "updated": false
@@ -145,9 +145,9 @@
     {
       "covered": true,
       "covered_lines": [
-        67,
-        68,
-        70
+        79,
+        80,
+        82
       ],
       "name": "CEntitySystem::m_EntityList",
       "updated": false
@@ -166,9 +166,9 @@
     {
       "covered": true,
       "covered_lines": [
-        95,
-        96,
-        98
+        107,
+        108,
+        110
       ],
       "name": "CNetworkGameServerBase::m_Clients",
       "updated": false
@@ -176,9 +176,9 @@
     {
       "covered": true,
       "covered_lines": [
-        165,
-        166,
-        168
+        142,
+        143,
+        145
       ],
       "name": "CServerSideClient::m_bFakePlayer",
       "updated": false
@@ -186,9 +186,9 @@
     {
       "covered": true,
       "covered_lines": [
-        193,
-        194,
-        196
+        170,
+        171,
+        173
       ],
       "name": "CServerSideClient::m_bIsHLTV",
       "updated": false
@@ -196,9 +196,9 @@
     {
       "covered": true,
       "covered_lines": [
-        109,
-        110,
-        112
+        114,
+        115,
+        117
       ],
       "name": "CServerSideClient::m_Name",
       "updated": false
@@ -206,19 +206,9 @@
     {
       "covered": true,
       "covered_lines": [
-        116,
-        117,
-        119
-      ],
-      "name": "CServerSideClient::m_nClientSlot",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        144,
-        145,
-        147
+        135,
+        136,
+        138
       ],
       "name": "CServerSideClient::m_nConnectionTypeFlags",
       "updated": false
@@ -226,9 +216,9 @@
     {
       "covered": true,
       "covered_lines": [
-        123,
-        124,
-        126
+        121,
+        122,
+        124
       ],
       "name": "CServerSideClient::m_nEntityIndex",
       "updated": false
@@ -236,9 +226,9 @@
     {
       "covered": true,
       "covered_lines": [
-        137,
-        138,
-        140
+        128,
+        129,
+        131
       ],
       "name": "CServerSideClient::m_NetChannel",
       "updated": false
@@ -246,39 +236,9 @@
     {
       "covered": true,
       "covered_lines": [
-        151,
-        152,
-        154
-      ],
-      "name": "CServerSideClient::m_nSignonState",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        158,
-        159,
-        161
-      ],
-      "name": "CServerSideClient::m_pAttachedTo",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        130,
-        131,
-        133
-      ],
-      "name": "CServerSideClient::m_Server",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        179,
-        180,
-        182
+        156,
+        157,
+        159
       ],
       "name": "CServerSideClient::m_SteamID",
       "updated": false
@@ -286,9 +246,9 @@
     {
       "covered": true,
       "covered_lines": [
-        186,
-        187,
-        189
+        163,
+        164,
+        166
       ],
       "name": "CServerSideClient::m_SteamIDMirror",
       "updated": false
@@ -296,9 +256,9 @@
     {
       "covered": true,
       "covered_lines": [
-        172,
-        173,
-        175
+        149,
+        150,
+        152
       ],
       "name": "CServerSideClient::m_UserID",
       "updated": false
@@ -306,21 +266,17 @@
     {
       "covered": true,
       "covered_lines": [
-        102,
-        103,
-        105
+        72,
+        73,
+        75
       ],
-      "name": "CServerSideClient::m_UserIDString",
+      "name": "CServerSideClient::SetName",
       "updated": false
     },
     {
-      "covered": true,
-      "covered_lines": [
-        60,
-        61,
-        63
-      ],
-      "name": "CServerSideClient::SetName",
+      "covered": false,
+      "covered_lines": [],
+      "name": "CSPlayerController::ScriptIsBot",
       "updated": false
     },
     {
@@ -374,8 +330,8 @@
   "gamever": "14192",
   "schema_version": 2,
   "summary": {
-    "covered": 27,
-    "total": 27,
+    "covered": 22,
+    "total": 23,
     "updated": 6
   }
 }
