@@ -72,6 +72,14 @@ SDK_HEAD=$(git -C hl2sdk_cs2 log -1 --format='%h %s')
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
+# Headers that hold a protobuf message by value (networkgameserverbase.h through
+# gamesessionconfiguration.h) need the generated .pb.h; build them with the SDK's own
+# protoc so they match its protobuf headers
+rm -rf cpp_tests/protos && mkdir -p cpp_tests/protos
+hl2sdk_cs2/devtools/bin/linux/protoc -Ihl2sdk_cs2/common -Ihl2sdk_cs2/thirdparty/protobuf-3.21.8/src \
+    --cpp_out=cpp_tests/protos hl2sdk_cs2/common/*.proto > "$tmp/protoc.log" 2>&1 \
+    || { echo "could not generate the hl2sdk_cs2 protos:" >&2; cat "$tmp/protoc.log" >&2; exit 2; }
+
 # clang takes the newest GCC under /usr/lib/gcc even when only an older one has its
 # libstdc++ headers installed (Ubuntu 24.04: gcc 14 without libstdc++-14-dev). Point
 # the linux tests at the newest GCC that has them, when the default finds none.
