@@ -1,0 +1,8 @@
+func_name: CNetChan_GetAvgData
+func_va: '0x1800c5a40'
+func_rva: '0xc5a40'
+func_size: '0xa0'
+func_sig: "40 57 48 83 EC ?? 48 89 74 24 ?? 48 8B F9 8B F2 8B 91 C8 8E 00 ?? 85 D2 74 ?? F2 0F 10 05 86 B7 1C ??"
+vtable_name: CNetChan
+vfunc_offset: '0x78'
+vfunc_index: 15

@@ -1,0 +1,8 @@
+func_name: CServerSideClientBase_MarkToKick
+func_va: '0x5412a0'
+func_rva: '0x5412a0'
+func_size: '0x11'
+func_sig: "48 83 7F ?? ?? C6 47 ?? ?? 74 ?? E9 ?? ?? ?? ??"
+vtable_name: CServerSideClientBase
+vfunc_offset: '0x268'
+vfunc_index: 77

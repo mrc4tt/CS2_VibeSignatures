@@ -1,0 +1,8 @@
+func_name: CNetChan_IsLocalHost
+func_va: '0x2838b0'
+func_rva: '0x2838b0'
+func_size: '0x1c'
+func_sig: "8B 87 ?? ?? ?? ?? 85 C0 74 ?? 31 C0"
+vtable_name: CNetChan
+vfunc_offset: '0x30'
+vfunc_index: 6

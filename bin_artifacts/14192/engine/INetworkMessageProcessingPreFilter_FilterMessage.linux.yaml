@@ -1,0 +1,5 @@
+func_name: INetworkMessageProcessingPreFilter_FilterMessage
+func_va: '0x5430d0'
+func_rva: '0x5430d0'
+func_size: '0x85'
+func_sig: "55 48 89 E5 41 54 53 48 8B 06 48 89 FB 48 89 F7 FF 50 ?? 48 8D 15 ?? ?? ?? ?? 31 C9 48 8B 12 48 85 D2 74 ?? 48 3B 42 ??"

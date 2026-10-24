@@ -1,0 +1,9 @@
+func_name: CNetChan_SetShowNetMessages
+func_va: '0x282f60'
+func_rva: '0x282f60'
+func_size: '0x8'
+func_sig: "40 88 B7 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 89 D0"
+func_sig_allow_across_function_boundary: true
+vtable_name: CNetChan
+vfunc_offset: '0xf0'
+vfunc_index: 30

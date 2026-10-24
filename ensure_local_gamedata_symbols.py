@@ -140,6 +140,118 @@ FORK_OWNED_SYMBOLS = [
     # call in the function printing "Saving existing workshop save file from %s\n".
     # 14192 baseline: linux 0xb88db0, windows 0x18026e4a0.
     ("ScriptGetAddon", "func", "server", None),
+    # SwiftlyS2 (core/offsets.jsonc + core/signatures.jsonc). Each identified on 14192
+    # on both platforms by its body, not only by the author's value; the generator's
+    # KEY_SYMBOL_OVERRIDES routes SwiftlyS2's interface spellings onto these.
+    # CServerSideClientBase slots (SDK serversideclientbase.h order; linux has two
+    # dtor slots, windows one): Reconnect prints "Forcing client reconnect", SetRate
+    # "setting rate to %d", ShouldSendMessages names itself, SetUpdateRate writes the
+    # snapshot interval, FreeBaselines frees "BaseLine", MarkToKick/UnmarkToKick set and
+    # clear one byte. Slot 58/56 re-reads "rate" from userinfo: the SDK's
+    # UpdateRateFromUserInfo, which SwiftlyS2 calls ResetUserSettings.
+    ("CServerSideClientBase_Reconnect", "vfunc", "engine", None),
+    ("CServerSideClientBase_SetRate", "vfunc", "engine", None),
+    ("CServerSideClientBase_SetUpdateRate", "vfunc", "engine", None),
+    ("CServerSideClientBase_GetRate", "vfunc", "engine", None),
+    ("CServerSideClientBase_ShouldSendMessages", "vfunc", "engine", None),
+    ("CServerSideClientBase_UpdateSendState", "vfunc", "engine", None),
+    ("CServerSideClientBase_UpdateUserSettings", "vfunc", "engine", None),
+    ("CServerSideClientBase_UpdateRateFromUserInfo", "vfunc", "engine", None),
+    ("CServerSideClientBase_FreeBaselines", "vfunc", "engine", None),
+    ("CServerSideClientBase_MarkToKick", "vfunc", "engine", None),
+    ("CServerSideClientBase_UnmarkToKick", "vfunc", "engine", None),
+    ("CServerSideClient_SendNetMessage", "vfunc", "engine", None),
+    # CServerSideClientBase's FilterMessage as reached through its
+    # INetworkMessageProcessingPreFilter subobject (this-48 copy, RebroadcastSourceId
+    # check), which SwiftlyS2 hooks by signature: linux 0x5430d0, windows 0x1800c4210.
+    ("INetworkMessageProcessingPreFilter_FilterMessage", "func", "engine", None),
+    # Interface slots filed under the implementing class. SetClientListening writes the
+    # VoiceStreams bit vector (SetClientProximity, one later, writes VoiceProximity);
+    # PostEventAbstract is the client-array overload (count + uint64*), linux 15 /
+    # windows 16 since MSVC reverses overloads; DispatchConCommand takes the uint16
+    # command handle (0xFFFF = invalid).
+    ("CEngineServer_SetClientListening", "vfunc", "engine", None),
+    ("CGameEventSystem_PostEventAbstract", "vfunc", "engine", None),
+    ("CCvar_DispatchConCommand", "vfunc", "tier0", None),
+    # CNetChan's INetChannelInfo / INetChannel slots (SDK inetchannel(info).h order,
+    # anchored in the binary by GetLateFrameJitterThreshold at 24 returning what slot
+    # 59/58 stores, CNetChan::SendNetMessage/Transmit/CanPacket/SetTimeout strings, and
+    # the suppress byte CanPacket tests, which SuppressTransmit stores). INetChannel
+    # slots are one higher on linux (two dtor slots).
+    ("CNetChan_GetName", "vfunc", "networksystem", None),
+    ("CNetChan_GetAddress", "vfunc", "networksystem", None),
+    ("CNetChan_GetRemoteAddress", "vfunc", "networksystem", None),
+    ("CNetChan_GetTime", "vfunc", "networksystem", None),
+    ("CNetChan_GetTimeConnected", "vfunc", "networksystem", None),
+    ("CNetChan_GetDataRate", "vfunc", "networksystem", None),
+    ("CNetChan_IsLocalHost", "vfunc", "networksystem", None),
+    ("CNetChan_IsLoopback", "vfunc", "networksystem", None),
+    ("CNetChan_IsTimingOut", "vfunc", "networksystem", None),
+    ("CNetChan_IsPlayback", "vfunc", "networksystem", None),
+    ("CNetChan_GetAvgLatency", "vfunc", "networksystem", None),
+    ("CNetChan_GetEngineLatency", "vfunc", "networksystem", None),
+    ("CNetChan_GetAvgLoss", "vfunc", "networksystem", None),
+    ("CNetChan_GetAvgChoke", "vfunc", "networksystem", None),
+    ("CNetChan_GetAvgData", "vfunc", "networksystem", None),
+    ("CNetChan_GetAvgPackets", "vfunc", "networksystem", None),
+    ("CNetChan_GetTotalData", "vfunc", "networksystem", None),
+    ("CNetChan_GetTotalPackets", "vfunc", "networksystem", None),
+    ("CNetChan_GetSequenceNr", "vfunc", "networksystem", None),
+    ("CNetChan_GetTimeSinceLastReceived", "vfunc", "networksystem", None),
+    ("CNetChan_GetRemoteFramerate", "vfunc", "networksystem", None),
+    ("CNetChan_GetTimeoutSeconds", "vfunc", "networksystem", None),
+    ("CNetChan_GetTimeUntilTimeout", "vfunc", "networksystem", None),
+    ("CNetChan_SetInterpolationAmount", "vfunc", "networksystem", None),
+    ("CNetChan_SetNumPredictionErrors", "vfunc", "networksystem", None),
+    ("CNetChan_SetShowNetMessages", "vfunc", "networksystem", None),
+    ("CNetChan_CanPacket", "vfunc", "networksystem", None),
+    ("CNetChan_IsOverflowed", "vfunc", "networksystem", None),
+    ("CNetChan_HasPendingReliableData", "vfunc", "networksystem", None),
+    ("CNetChan_SetMinDataRate", "vfunc", "networksystem", None),
+    ("CNetChan_SetMaxDataRate", "vfunc", "networksystem", None),
+    ("CNetChan_SetTimeout", "vfunc", "networksystem", None),
+    ("CNetChan_IsTimedOut", "vfunc", "networksystem", None),
+    ("CNetChan_SuppressTransmit", "vfunc", "networksystem", None),
+    ("CNetChan_IsSuppressingTransmit", "vfunc", "networksystem", None),
+    # FireEvent prints "Game Event Fired: %s"; GetViewVectors returns the static
+    # CViewVectors (view 64, hull 16/72, duck 54/46, dead 14); ClientVoice is
+    # ISource2GameClients slot 27 (26 is GetBugReportInfo); CNavPhysicsInterface's
+    # TraceShape forwards to TraceShape(g_GameTraceManager, ...).
+    ("CGameEventManager_FireEvent", "vfunc", "server", None),
+    ("CCSGameRules_GetViewVectors", "vfunc", "server", None),
+    ("CSource2GameClients_ClientVoice", "vfunc", "server", None),
+    ("CNavPhysicsInterface_TraceShape", "vfunc", "server", None),
+    # Movement functions: SwiftlyS2's signatures, and cs2kz's where they still resolve,
+    # land on the same heads; each pair carries the same strings and float constants on
+    # both platforms (CategorizePosition 140, CheckFalling 580/350/250, GroundAccelerate
+    # "flAccelSpeed", AirMove "PreSource1AirMove", PlayerMove "Can't move", TryPlayerMove
+    # 1/32 and the overbounce); CheckJumpButtonLegacy calls the "player_jump" function
+    # upstream files as CCSPlayer_MovementServices_CheckJumpButton (OnJumpLegacy there),
+    # SetupMove calls CPlayer_MovementServices_ForceButtons. Relocation preprocessors,
+    # 14192 baseline. CFlashbangProjectile_Create is the flashbang twin of the
+    # C*Projectile_Create factories, but its string is also used by an inlined copy, so
+    # it relocates instead of string-anchoring like CHEGrenadeProjectile_Create.
+    ("CCSPlayer_MovementServices_AirAccelerate", "func", "server", None),
+    ("CCSPlayer_MovementServices_AirMove", "func", "server", None),
+    ("CCSPlayer_MovementServices_CanUnduck", "func", "server", None),
+    ("CCSPlayer_MovementServices_CategorizePosition", "func", "server", None),
+    ("CCSPlayer_MovementServices_CheckFalling", "func", "server", None),
+    ("CCSPlayer_MovementServices_CheckJumpButtonLegacy", "func", "server", None),
+    ("CCSPlayer_MovementServices_CheckJumpButtonModern", "func", "server", None),
+    ("CCSPlayer_MovementServices_CheckParameters", "func", "server", None),
+    ("CCSPlayer_MovementServices_CheckWater", "func", "server", None),
+    ("CCSPlayer_MovementServices_Duck", "func", "server", None),
+    ("CCSPlayer_MovementServices_Friction", "func", "server", None),
+    ("CCSPlayer_MovementServices_GroundAccelerate", "func", "server", None),
+    ("CCSPlayer_MovementServices_LadderMove", "func", "server", None),
+    ("CCSPlayer_MovementServices_MoveInit", "func", "server", None),
+    ("CCSPlayer_MovementServices_OnJumpModern", "func", "server", None),
+    ("CCSPlayer_MovementServices_PlayerMove", "func", "server", None),
+    ("CCSPlayer_MovementServices_SetupMove", "func", "server", None),
+    ("CCSPlayer_MovementServices_TryPlayerMove", "func", "server", None),
+    ("CCSPlayerPawn_CanMove", "func", "server", None),
+    ("CCSCustomHudLayout_RemoveDialogVariableStringForPlayer", "func", "server", None),
+    ("CFlashbangProjectile_Create", "func", "server", None),
 ]
 
 # Fork-owned struct members: FORK_OWNED_SYMBOLS has no struct/member slot.
@@ -149,6 +261,40 @@ FORK_OWNED_STRUCTMEMBERS = [
     # "[addons:'%s']"; MultiAddonManager swaps it per client. 0x178 on both platforms
     # on 14192, read in ReplyConnection: linux 0x515b92, windows 0x1800a5aeb.
     ("CNetworkGameServer_ServerAddons", "CNetworkGameServer", "ServerAddons", "engine", None),
+    # SwiftlyS2's CServerSideClientBase members, each anchored on an instruction of a
+    # function identified above or by its own string (m_fAuthenticatedTime and
+    # m_bFullyAuthenticated in the Steam auth-ticket handlers, m_nAddr where
+    # netadr_t::IsLocalhost reads it, m_Trace in the message-trace printf). Offsets agree
+    # with SwiftlyS2's and the SDK's on both platforms on 14192.
+    ("CServerSideClientBase_m_AuthTicketSteamID", "CServerSideClientBase", "m_AuthTicketSteamID", "engine", None),
+    ("CServerSideClientBase_m_BaselinesSent", "CServerSideClientBase", "m_BaselinesSent", "engine", None),
+    ("CServerSideClientBase_m_bConVarsChanged", "CServerSideClientBase", "m_bConVarsChanged", "engine", None),
+    ("CServerSideClientBase_m_bFullyAuthenticated", "CServerSideClientBase", "m_bFullyAuthenticated", "engine", None),
+    ("CServerSideClientBase_m_bLowViolence", "CServerSideClientBase", "m_bLowViolence", "engine", None),
+    ("CServerSideClientBase_m_bMarkedToKick", "CServerSideClientBase", "m_bMarkedToKick", "engine", None),
+    ("CServerSideClientBase_m_bReceivedPacket", "CServerSideClientBase", "m_bReceivedPacket", "engine", None),
+    ("CServerSideClientBase_m_bSendingSnapshot", "CServerSideClientBase", "m_bSendingSnapshot", "engine", None),
+    ("CServerSideClientBase_m_ConVars", "CServerSideClientBase", "m_ConVars", "engine", None),
+    ("CServerSideClientBase_m_fAuthenticatedTime", "CServerSideClientBase", "m_fAuthenticatedTime", "engine", None),
+    ("CServerSideClientBase_m_fNextMessageTime", "CServerSideClientBase", "m_fNextMessageTime", "engine", None),
+    ("CServerSideClientBase_m_fSnapshotInterval", "CServerSideClientBase", "m_fSnapshotInterval", "engine", None),
+    ("CServerSideClientBase_m_lastExecutedCommand", "CServerSideClientBase", "m_lastExecutedCommand", "engine", None),
+    ("CServerSideClientBase_m_nAddr", "CServerSideClientBase", "m_nAddr", "engine", None),
+    ("CServerSideClientBase_m_nAsyncDisconnectFlags", "CServerSideClientBase", "m_nAsyncDisconnectFlags", "engine", None),
+    ("CServerSideClientBase_m_nBaselineUpdateTick", "CServerSideClientBase", "m_nBaselineUpdateTick", "engine", None),
+    ("CServerSideClientBase_m_nBaselineUsed", "CServerSideClientBase", "m_nBaselineUsed", "engine", None),
+    ("CServerSideClientBase_m_pBaseline", "CServerSideClientBase", "m_pBaseline", "engine", None),
+    ("CServerSideClientBase_m_nDeltaTick", "CServerSideClientBase", "m_nDeltaTick", "engine", None),
+    ("CServerSideClientBase_m_nForceWaitForTick", "CServerSideClientBase", "m_nForceWaitForTick", "engine", None),
+    ("CServerSideClientBase_m_nFriendsID", "CServerSideClientBase", "m_nFriendsID", "engine", None),
+    ("CServerSideClientBase_m_nLoadingProgress", "CServerSideClientBase", "m_nLoadingProgress", "engine", None),
+    ("CServerSideClientBase_m_nSendtableCRC", "CServerSideClientBase", "m_nSendtableCRC", "engine", None),
+    ("CServerSideClientBase_m_nSignonTick", "CServerSideClientBase", "m_nSignonTick", "engine", None),
+    ("CServerSideClientBase_m_nStringTableAckTick", "CServerSideClientBase", "m_nStringTableAckTick", "engine", None),
+    ("CServerSideClientBase_m_spamCommandsCount", "CServerSideClientBase", "m_spamCommandsCount", "engine", None),
+    ("CServerSideClientBase_m_Trace", "CServerSideClientBase", "m_Trace", "engine", None),
+    ("CServerSideClientBase_m_uChallengeNumber", "CServerSideClientBase", "m_uChallengeNumber", "engine", None),
+    ("CServerSideClientBase_m_vecLoadedSpawnGroups", "CServerSideClientBase", "m_vecLoadedSpawnGroups", "engine", None),
 ]
 
 # Fork-owned find-tasks for symbols upstream DOES declare. inject() skips a
@@ -1119,6 +1265,7 @@ LIB_MODULE = {
     "tier0": "tier0",
     "schemasystem": "schemasystem",
     "filesystem_stdio": "filesystem_stdio",
+    "networksystem": "networksystem",
 }
 ENGINE_CLASSES = (
     "CNetworkGameServerBase",
@@ -1334,7 +1481,12 @@ def inject(text, config_path, specs):
 
     result = text
     for module in sorted(touched):
-        btext, m_start, m_end = next((bt, s, e) for name, bt, s, e in blocks if name == module)
+        # Locate the block in `result`, not `text`: an earlier module's insertion
+        # shifts every block after it, and the stale offsets cut tier0 mid-block.
+        current = list(re.finditer(r"^  - name: ([\w]+)", result, re.M))
+        k = next(i for i, m in enumerate(current) if m.group(1) == module)
+        m_start = current[k].start()
+        m_end = current[k + 1].start() if k + 1 < len(current) else len(result)
         block = result[m_start:m_end]
         skills_match = re.search(r"^    skills:\n", block, re.M)
         symbols_match = re.search(r"^    symbols:\n", block, re.M)

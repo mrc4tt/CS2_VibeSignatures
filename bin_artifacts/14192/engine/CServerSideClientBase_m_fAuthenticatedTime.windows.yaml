@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_fAuthenticatedTime
+offset: '0xa08'
+size: 4
+offset_sig: "F3 0F 10 89 08 0A 00 00"

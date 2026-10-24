@@ -181,8 +181,8 @@ binaries:
       sha256: 'e0b1ed04a652f8268fd9d6b75b5a97910ab57197e2cdb8a0a4966703a5ec8322'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:d798060a1596ffa36b42b546f81db4d48cf5d2741fd5b4e333189812a981ab09
-file_count: 3767
+config_sha256: sha256:46138a4266d9b7a6f18fa071ccc77512820b7f60f6d1ed0598e597eb314206cc
+file_count: 3977
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -6892,6 +6892,24 @@ files:
     vfunc_index: 45
     vfunc_offset: '0x168'
     vtable_name: CEngineServer
+  engine/CEngineServer_SetClientListening.linux.yaml:
+    func_name: CEngineServer_SetClientListening
+    func_rva: '0x539a50'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 89 CD 41 54 4C 63 E2 53 89 F3 48 83 EC ?? 4C 8D 35 ?? ?? ?? ??
+    func_size: '0x119'
+    func_va: '0x539a50'
+    vfunc_index: 92
+    vfunc_offset: '0x2e0'
+    vtable_name: CEngineServer
+  engine/CEngineServer_SetClientListening.windows.yaml:
+    func_name: CEngineServer_SetClientListening
+    func_rva: '0xa3020'
+    func_sig: 48 89 5C 24 ?? 4C 8B 15 ?? ?? ?? ?? 45 33 DB 41 0F B6 D9 4D 85 D2 74 ?? 45 85 C0 78 ?? 45 3B 82 ?? ?? ?? ?? 7D ?? 49 8B 82 ?? ?? ?? ?? 49 63 C8 4C 8B 0C C8
+    func_size: '0xbf'
+    func_va: '0x1800a3020'
+    vfunc_index: 92
+    vfunc_offset: '0x2e0'
+    vtable_name: CEngineServer
   engine/CEngineServer_SetFakeClientConVarValue.linux.yaml:
     func_name: CEngineServer_SetFakeClientConVarValue
     func_rva: '0x538d00'
@@ -7781,6 +7799,24 @@ files:
     vtable_size: '0x40'
     vtable_symbol: ??_7CGameClientConnectPrerequisite@@6B@
     vtable_va: '0x180613de8'
+  engine/CGameEventSystem_PostEventAbstract.linux.yaml:
+    func_name: CGameEventSystem_PostEventAbstract
+    func_rva: '0x388800'
+    func_sig: 55 48 89 E5 41 57 41 56 41 89 D6 41 55 41 54 41 89 F4
+    func_size: '0x550'
+    func_va: '0x388800'
+    vfunc_index: 15
+    vfunc_offset: '0x78'
+    vtable_name: CGameEventSystem
+  engine/CGameEventSystem_PostEventAbstract.windows.yaml:
+    func_name: CGameEventSystem_PostEventAbstract
+    func_rva: '0x218f80'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 54 41 55 41 56 41 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 4C 8B 65 ??
+    func_size: '0x31b'
+    func_va: '0x180218f80'
+    vfunc_index: 16
+    vfunc_offset: '0x80'
+    vtable_name: CGameEventSystem
   engine/CGameEventSystem_vtable.linux.yaml:
     vtable_class: CGameEventSystem
     vtable_entries:
@@ -13162,6 +13198,24 @@ files:
     vfunc_index: 2
     vfunc_offset: '0x10'
     vtable_name: CServerSideClientBase_vtable
+  engine/CServerSideClientBase_FreeBaselines.linux.yaml:
+    func_name: CServerSideClientBase_FreeBaselines
+    func_rva: '0x5411d0'
+    func_sig: 55 48 89 E5 53 48 89 FB 48 83 EC ?? 48 8B BF ?? ?? ?? ?? 48 85 FF 74 ?? 48 8D 35 ?? ?? ?? ??
+    func_size: '0x5b'
+    func_va: '0x5411d0'
+    vfunc_index: 65
+    vfunc_offset: '0x208'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_FreeBaselines.windows.yaml:
+    func_name: CServerSideClientBase_FreeBaselines
+    func_rva: '0xc4980'
+    func_sig: 40 53 48 83 EC ?? 48 8B D9 48 8B 89 ?? ?? ?? ?? 48 85 C9 74 ?? B8 ?? ?? ?? ??
+    func_size: '0x7a'
+    func_va: '0x1800c4980'
+    vfunc_index: 63
+    vfunc_offset: '0x1f8'
+    vtable_name: CServerSideClientBase
   engine/CServerSideClientBase_GetNetworkIDString.linux.yaml:
     func_name: CServerSideClientBase_GetNetworkIDString
     func_rva: '0x547670'
@@ -13192,6 +13246,25 @@ files:
     vfunc_index: 9
     vfunc_offset: '0x48'
     vtable_name: CServerSideClientBase_vtable
+  engine/CServerSideClientBase_GetRate.linux.yaml:
+    func_name: CServerSideClientBase_GetRate
+    func_rva: '0x541030'
+    func_sig: 48 8B 7F ?? 48 85 FF 74 ?? 48 8B 07 FF 60 ?? 90 31 C0 C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 8D 87 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x13'
+    func_va: '0x541030'
+    vfunc_index: 13
+    vfunc_offset: '0x68'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_GetRate.windows.yaml:
+    func_name: CServerSideClientBase_GetRate
+    func_rva: '0xc3cf0'
+    func_sig: 48 8B 49 ?? 48 85 C9 74 ?? 48 8B 01 48 FF 60 ?? 33 C0
+    func_size: '0x13'
+    func_va: '0x1800c3cf0'
+    vfunc_index: 12
+    vfunc_offset: '0x60'
+    vtable_name: CServerSideClientBase
   engine/CServerSideClientBase_GetUserIDString.linux.yaml:
     func_name: CServerSideClientBase_GetUserIDString
     func_rva: '0x547580'
@@ -13210,6 +13283,24 @@ files:
     func_sig: 85 D2 0F 84 ?? ?? ?? ?? 89 54 24 ??
     func_size: '0x242'
     func_va: '0x1800c9220'
+  engine/CServerSideClientBase_MarkToKick.linux.yaml:
+    func_name: CServerSideClientBase_MarkToKick
+    func_rva: '0x5412a0'
+    func_sig: 48 83 7F ?? ?? C6 47 ?? ?? 74 ?? E9 ?? ?? ?? ??
+    func_size: '0x11'
+    func_va: '0x5412a0'
+    vfunc_index: 77
+    vfunc_offset: '0x268'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_MarkToKick.windows.yaml:
+    func_name: CServerSideClientBase_MarkToKick
+    func_rva: '0xc1cf0'
+    func_sig: 48 83 79 ?? ?? C6 41 ?? ??
+    func_size: '0x13'
+    func_va: '0x1800c1cf0'
+    vfunc_index: 75
+    vfunc_offset: '0x258'
+    vtable_name: CServerSideClientBase
   engine/CServerSideClientBase_ProcessBaselineAck.linux.yaml:
     func_name: CServerSideClientBase_ProcessBaselineAck
     func_rva: '0x546e90'
@@ -13330,6 +13421,24 @@ files:
     vfunc_index: 23
     vfunc_offset: '0xb8'
     vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_Reconnect.linux.yaml:
+    func_name: CServerSideClientBase_Reconnect
+    func_rva: '0x544d90'
+    func_sig: 55 BE ?? ?? ?? ?? 48 89 E5 41 56 41 55 41 54 53
+    func_size: '0x19f'
+    func_va: '0x544d90'
+    vfunc_index: 7
+    vfunc_offset: '0x38'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_Reconnect.windows.yaml:
+    func_name: CServerSideClientBase_Reconnect
+    func_rva: '0xc5440'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 55 57 41 56 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B F9
+    func_size: '0x21f'
+    func_va: '0x1800c5440'
+    vfunc_index: 6
+    vfunc_offset: '0x30'
+    vtable_name: CServerSideClientBase
   engine/CServerSideClientBase_SendServerInfo.linux.yaml:
     func_name: CServerSideClientBase_SendServerInfo
     func_rva: '0x5497d0'
@@ -13354,6 +13463,134 @@ files:
     func_sig: 55 48 89 E5 41 55 49 89 F5 41 54 49 89 FC 53 48 89 D3
     func_size: '0x106'
     func_va: '0x545bf0'
+  engine/CServerSideClientBase_SetRate.linux.yaml:
+    func_name: CServerSideClientBase_SetRate
+    func_rva: '0x5412c0'
+    func_sig: 55 48 89 E5 41 55 41 54 53 48 89 FB 48 83 EC ?? 48 8B 7F ?? 48 85 FF 0F 84 ?? ?? ?? ??
+    func_size: '0xc3'
+    func_va: '0x5412c0'
+    vfunc_index: 11
+    vfunc_offset: '0x58'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_SetRate.windows.yaml:
+    func_name: CServerSideClientBase_SetRate
+    func_rva: '0xc3c50'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B D9 8B FA 48 8B 49 ?? 48 85 C9 74 ?? 48 8B 01
+    func_size: '0x9b'
+    func_va: '0x1800c3c50'
+    vfunc_index: 10
+    vfunc_offset: '0x50'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_SetUpdateRate.linux.yaml:
+    func_name: CServerSideClientBase_SetUpdateRate
+    func_rva: '0x541060'
+    func_sig: F3 0F 10 0D ?? ?? ?? ?? 0F 28 D1 F3 0F 5F D0
+    func_size: '0x1c'
+    func_va: '0x541060'
+    vfunc_index: 12
+    vfunc_offset: '0x60'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_SetUpdateRate.windows.yaml:
+    func_name: CServerSideClientBase_SetUpdateRate
+    func_rva: '0xc4930'
+    func_sig: F3 0F 11 4C 24 ?? 53 48 83 EC ?? 48 8B D9 0F 29 74 24 ?? F3 0F 10 35 ?? ?? ?? ??
+    func_size: '0x49'
+    func_va: '0x1800c4930'
+    vfunc_index: 11
+    vfunc_offset: '0x58'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_ShouldSendMessages.linux.yaml:
+    func_name: CServerSideClientBase_ShouldSendMessages
+    func_rva: '0x5489f0'
+    func_sig: 55 48 8D 15 ?? ?? ?? ?? 48 89 E5 41 54 53 48 89 FB 48 83 EC ?? 48 8B 07 48 8B 80 ?? ?? ?? ?? 48 39 D0 0F 85 ?? ?? ?? ?? 0F B6 87 ?? ?? ?? ??
+    func_size: '0x1f1'
+    func_va: '0x5489f0'
+    vfunc_index: 54
+    vfunc_offset: '0x1b0'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_ShouldSendMessages.windows.yaml:
+    func_name: CServerSideClientBase_ShouldSendMessages
+    func_rva: '0xca620'
+    func_sig: 40 53 41 56 48 83 EC ?? 48 8B 01
+    func_size: '0x193'
+    func_va: '0x1800ca620'
+    vfunc_index: 52
+    vfunc_offset: '0x1a0'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_UnmarkToKick.linux.yaml:
+    func_name: CServerSideClientBase_UnmarkToKick
+    func_rva: '0x541090'
+    func_sig: C6 47 ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 8B 46 ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x5'
+    func_va: '0x541090'
+    vfunc_index: 78
+    vfunc_offset: '0x270'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_UnmarkToKick.windows.yaml:
+    func_name: CServerSideClientBase_UnmarkToKick
+    func_rva: '0xc1d10'
+    func_sig: C6 41 ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 89 5C 24 ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x5'
+    func_va: '0x1800c1d10'
+    vfunc_index: 76
+    vfunc_offset: '0x260'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_UpdateRateFromUserInfo.linux.yaml:
+    func_name: CServerSideClientBase_UpdateRateFromUserInfo
+    func_rva: '0x543610'
+    func_sig: 55 48 8D 35 ?? ?? ?? ?? BA ?? ?? ?? ?? 48 89 E5 41 55 41 54 53
+    func_size: '0x10d'
+    func_va: '0x543610'
+    vfunc_index: 58
+    vfunc_offset: '0x1d0'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_UpdateRateFromUserInfo.windows.yaml:
+    func_name: CServerSideClientBase_UpdateRateFromUserInfo
+    func_rva: '0xca920'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 01 48 8D 15 ?? ?? ?? ?? 48 8B F9 41 B8 ?? ?? ?? ??
+    func_size: '0x43'
+    func_va: '0x1800ca920'
+    vfunc_index: 56
+    vfunc_offset: '0x1c0'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_UpdateSendState.linux.yaml:
+    func_name: CServerSideClientBase_UpdateSendState
+    func_rva: '0x542c00'
+    func_sig: 55 48 89 E5 53 48 89 FB 48 83 EC ?? 48 8D 05 ?? ?? ?? ?? C6 87 ?? ?? ?? ?? ??
+    func_size: '0xf9'
+    func_va: '0x542c00'
+    vfunc_index: 55
+    vfunc_offset: '0x1b8'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_UpdateSendState.windows.yaml:
+    func_name: CServerSideClientBase_UpdateSendState
+    func_rva: '0xca7c0'
+    func_sig: 40 53 48 83 EC ?? C6 81 ?? ?? ?? ?? ??
+    func_size: '0xae'
+    func_va: '0x1800ca7c0'
+    vfunc_index: 53
+    vfunc_offset: '0x1a8'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_UpdateUserSettings.linux.yaml:
+    func_name: CServerSideClientBase_UpdateUserSettings
+    func_rva: '0x542d00'
+    func_sig: 55 48 8D 35 ?? ?? ?? ?? 48 89 E5 41 54 53 48 89 FB 48 8B 07
+    func_size: '0x8b'
+    func_va: '0x542d00'
+    vfunc_index: 57
+    vfunc_offset: '0x1c8'
+    vtable_name: CServerSideClientBase
+  engine/CServerSideClientBase_UpdateUserSettings.windows.yaml:
+    func_name: CServerSideClientBase_UpdateUserSettings
+    func_rva: '0xca870'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 01 48 8D 15 ?? ?? ?? ?? 48 8B F9 48 8B 89 ?? ?? ?? ??
+    func_size: '0xa1'
+    func_va: '0x1800ca870'
+    vfunc_index: 55
+    vfunc_offset: '0x1b8'
+    vtable_name: CServerSideClientBase
   engine/CServerSideClientBase_dtor.linux.yaml:
     func_name: CServerSideClientBase_dtor
     func_rva: '0x5517e0'
@@ -13366,6 +13603,355 @@ files:
     func_sig: 40 57 48 83 EC ?? 48 8D 05 ?? ?? ?? ?? 48 89 5C 24 ??
     func_size: '0x45e'
     func_va: '0x1800c37f0'
+  engine/CServerSideClientBase_m_AuthTicketSteamID.linux.yaml:
+    member_name: m_AuthTicketSteamID
+    offset: '0xbb'
+    offset_sig: 49 8B 97 BB 00 00 00
+    size: 8
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_AuthTicketSteamID.windows.yaml:
+    member_name: m_AuthTicketSteamID
+    offset: '0xbb'
+    offset_sig: 49 8B 9E BB 00 00 00
+    size: 8
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_BaselinesSent.linux.yaml:
+    member_name: m_BaselinesSent
+    offset: '0x1d4'
+    offset_sig: 48 8D BB D4 01 00 00 BA ?? ?? ?? ?? 31 F6 C7 83 ?? ?? ?? ?? ?? ?? ?? ?? C7 83 ?? ?? ?? ?? ?? ?? ?? ?? 48 8B 5D ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_BaselinesSent.windows.yaml:
+    member_name: m_BaselinesSent
+    offset: '0x1d4'
+    offset_sig: 48 8D 8B D4 01 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_ConVars.linux.yaml:
+    member_name: m_ConVars
+    offset: '0x110'
+    offset_sig: 4C 89 A3 10 01 00 00 FF 90 ?? ?? ?? ??
+    size: 8
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_ConVars.windows.yaml:
+    member_name: m_ConVars
+    offset: '0x110'
+    offset_sig: 49 89 86 10 01 00 00
+    size: 8
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_Trace.linux.yaml:
+    member_name: m_Trace
+    offset: '0xb80'
+    offset_sig: 4C 63 A3 80 0B 00 00 2B 83 ?? ?? ?? ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_Trace.windows.yaml:
+    member_name: m_Trace
+    offset: '0xb80'
+    offset_sig: 4C 63 BF 80 0B 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bConVarsChanged.linux.yaml:
+    member_name: m_bConVarsChanged
+    offset: '0x140'
+    offset_sig: C6 83 40 01 00 00 00 5B
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bConVarsChanged.windows.yaml:
+    member_name: m_bConVarsChanged
+    offset: '0x140'
+    offset_sig: C6 87 40 01 00 00 00 48 83 C4 ?? 5F C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 89 5C 24 ??
+    offset_sig_allow_across_function_boundary: true
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bFullyAuthenticated.linux.yaml:
+    member_name: m_bFullyAuthenticated
+    offset: '0x9fa'
+    offset_sig: 41 C6 87 FA 09 00 00 00
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bFullyAuthenticated.windows.yaml:
+    member_name: m_bFullyAuthenticated
+    offset: '0x9fa'
+    offset_sig: C6 83 FA 09 00 00 01
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bLowViolence.linux.yaml:
+    member_name: m_bLowViolence
+    offset: '0x9f8'
+    offset_sig: 0F B6 87 F8 09 00 00 C3
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bLowViolence.windows.yaml:
+    member_name: m_bLowViolence
+    offset: '0x9f8'
+    offset_sig: 0F B6 81 F8 09 00 00
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bMarkedToKick.linux.yaml:
+    member_name: m_bMarkedToKick
+    offset: '0x62'
+    offset_sig: C6 47 62 01 74 ?? E9 ?? ?? ?? ??
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bMarkedToKick.windows.yaml:
+    member_name: m_bMarkedToKick
+    offset: '0x62'
+    offset_sig: C6 41 62 01 74 ??
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bReceivedPacket.linux.yaml:
+    member_name: m_bReceivedPacket
+    offset: '0xaa'
+    offset_sig: C6 87 AA 00 00 00 00
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bReceivedPacket.windows.yaml:
+    member_name: m_bReceivedPacket
+    offset: '0xaa'
+    offset_sig: C6 81 AA 00 00 00 00
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bSendingSnapshot.linux.yaml:
+    member_name: m_bSendingSnapshot
+    offset: '0xa1'
+    offset_sig: 41 C6 87 A1 00 00 00 01
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_bSendingSnapshot.windows.yaml:
+    member_name: m_bSendingSnapshot
+    offset: '0xa1'
+    offset_sig: C6 86 A1 00 00 00 01
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_fAuthenticatedTime.linux.yaml:
+    member_name: m_fAuthenticatedTime
+    offset: '0xa08'
+    offset_sig: F3 0F 11 83 08 0A 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_fAuthenticatedTime.windows.yaml:
+    member_name: m_fAuthenticatedTime
+    offset: '0xa08'
+    offset_sig: F3 0F 10 89 08 0A 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_fNextMessageTime.linux.yaml:
+    member_name: m_fNextMessageTime
+    offset: '0xa00'
+    offset_sig: F3 0F 11 8B 00 0A 00 00 C6 83 ?? ?? ?? ?? ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_fNextMessageTime.windows.yaml:
+    member_name: m_fNextMessageTime
+    offset: '0xa00'
+    offset_sig: F3 0F 11 B3 00 0A 00 00 0F 28 74 24 ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_fSnapshotInterval.linux.yaml:
+    member_name: m_fSnapshotInterval
+    offset: '0xa04'
+    offset_sig: F3 0F 11 8F 04 0A 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_fSnapshotInterval.windows.yaml:
+    member_name: m_fSnapshotInterval
+    offset: '0xa04'
+    offset_sig: F3 0F 11 B3 04 0A 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_lastExecutedCommand.linux.yaml:
+    member_name: m_lastExecutedCommand
+    offset: '0xbb0'
+    offset_sig: F2 0F 11 83 B0 0B 00 00 C7 83 ?? ?? ?? ?? ?? ?? ?? ??
+    size: 8
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_lastExecutedCommand.windows.yaml:
+    member_name: m_lastExecutedCommand
+    offset: '0xbb0'
+    offset_sig: F2 0F 11 83 B0 0B 00 00
+    size: 8
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nAddr.linux.yaml:
+    member_name: m_nAddr
+    offset: '0xcc'
+    offset_sig: 48 8D BB CC 00 00 00 E8 ?? ?? ?? ?? 48 C7 83 ?? ?? ?? ?? ?? ?? ?? ?? 48 C7 83 ?? ?? ?? ?? ?? ?? ?? ?? 48 81 C4 ?? ?? ?? ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nAddr.windows.yaml:
+    member_name: m_nAddr
+    offset: '0xcc'
+    offset_sig: 48 8D 8A CC 00 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nAsyncDisconnectFlags.linux.yaml:
+    member_name: m_nAsyncDisconnectFlags
+    offset: '0x61'
+    offset_sig: 80 7B 61 01
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nAsyncDisconnectFlags.windows.yaml:
+    member_name: m_nAsyncDisconnectFlags
+    offset: '0x61'
+    offset_sig: 80 7E 61 01
+    size: 1
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nBaselineUpdateTick.linux.yaml:
+    member_name: m_nBaselineUpdateTick
+    offset: '0x1d0'
+    offset_sig: C7 83 D0 01 00 00 FF FF FF FF C7 83 ?? ?? ?? ?? ?? ?? ?? ?? 48 8B 5D ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nBaselineUpdateTick.windows.yaml:
+    member_name: m_nBaselineUpdateTick
+    offset: '0x1d0'
+    offset_sig: C7 83 D0 01 00 00 FF FF FF FF
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nBaselineUsed.linux.yaml:
+    member_name: m_nBaselineUsed
+    offset: '0x9d4'
+    offset_sig: C7 83 D4 09 00 00 00 00 00 00 48 8B 5D ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nBaselineUsed.windows.yaml:
+    member_name: m_nBaselineUsed
+    offset: '0x9d4'
+    offset_sig: C7 83 D4 09 00 00 00 00 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nDeltaTick.linux.yaml:
+    member_name: m_nDeltaTick
+    offset: '0x15c'
+    offset_sig: 89 83 5C 01 00 00 89 83 ?? ?? ?? ?? 41 BC ?? ?? ?? ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nDeltaTick.windows.yaml:
+    member_name: m_nDeltaTick
+    offset: '0x15c'
+    offset_sig: 89 87 5C 01 00 00 89 87 ?? ?? ?? ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nForceWaitForTick.linux.yaml:
+    member_name: m_nForceWaitForTick
+    offset: '0x9dc'
+    offset_sig: C7 83 DC 09 00 00 FF FF FF FF 8B 45 ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nForceWaitForTick.windows.yaml:
+    member_name: m_nForceWaitForTick
+    offset: '0x9dc'
+    offset_sig: C7 87 DC 09 00 00 FF FF FF FF C7 87 ?? ?? ?? ?? ?? ?? ?? ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nFriendsID.linux.yaml:
+    member_name: m_nFriendsID
+    offset: '0xc3'
+    offset_sig: 89 93 C3 00 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nFriendsID.windows.yaml:
+    member_name: m_nFriendsID
+    offset: '0xc3'
+    offset_sig: 89 87 C3 00 00 00 8B 87 ?? ?? ?? ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nLoadingProgress.linux.yaml:
+    member_name: m_nLoadingProgress
+    offset: '0x9d8'
+    offset_sig: 89 87 D8 09 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nLoadingProgress.windows.yaml:
+    member_name: m_nLoadingProgress
+    offset: '0x9d8'
+    offset_sig: 89 81 D8 09 00 00 B0 ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nSendtableCRC.linux.yaml:
+    member_name: m_nSendtableCRC
+    offset: '0x150'
+    offset_sig: 89 87 50 01 00 00 0F B6 46 ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nSendtableCRC.windows.yaml:
+    member_name: m_nSendtableCRC
+    offset: '0x150'
+    offset_sig: 89 81 50 01 00 00 48 8B F9
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nSignonTick.linux.yaml:
+    member_name: m_nSignonTick
+    offset: '0x158'
+    offset_sig: 41 89 84 24 58 01 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nSignonTick.windows.yaml:
+    member_name: m_nSignonTick
+    offset: '0x158'
+    offset_sig: 89 8B 58 01 00 00 45 8B 6F ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nStringTableAckTick.linux.yaml:
+    member_name: m_nStringTableAckTick
+    offset: '0x164'
+    offset_sig: 89 83 64 01 00 00 41 BC ?? ?? ?? ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_nStringTableAckTick.windows.yaml:
+    member_name: m_nStringTableAckTick
+    offset: '0x164'
+    offset_sig: 89 87 64 01 00 00 B0 ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_pBaseline.linux.yaml:
+    member_name: m_pBaseline
+    offset: '0x1c8'
+    offset_sig: 48 C7 83 C8 01 00 00 00 00 00 00 48 8D BB ?? ?? ?? ?? BA ?? ?? ?? ?? 31 F6 C7 83 ?? ?? ?? ?? ?? ?? ?? ?? C7 83 ?? ?? ?? ?? ?? ?? ?? ?? 48 8B 5D ??
+    size: 8
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_pBaseline.windows.yaml:
+    member_name: m_pBaseline
+    offset: '0x1c8'
+    offset_sig: 48 C7 83 C8 01 00 00 00 00 00 00 48 8D 8B ?? ?? ?? ??
+    size: 8
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_spamCommandsCount.linux.yaml:
+    member_name: m_spamCommandsCount
+    offset: '0xba8'
+    offset_sig: C7 83 A8 0B 00 00 01 00 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_spamCommandsCount.windows.yaml:
+    member_name: m_spamCommandsCount
+    offset: '0xba8'
+    offset_sig: C7 83 A8 0B 00 00 00 00 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_uChallengeNumber.linux.yaml:
+    member_name: m_uChallengeNumber
+    offset: '0x154'
+    offset_sig: 41 89 87 54 01 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_uChallengeNumber.windows.yaml:
+    member_name: m_uChallengeNumber
+    offset: '0x154'
+    offset_sig: 41 89 86 54 01 00 00
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_vecLoadedSpawnGroups.linux.yaml:
+    member_name: m_vecLoadedSpawnGroups
+    offset: '0x178'
+    offset_sig: 41 8B 8D 78 01 00 00 4C 63 E1 85 C9 0F 8E ?? ?? ?? ?? 49 8B 95 ?? ?? ?? ?? 4C 63 E1 31 C0 EB ?? 66 0F 1F 44 00 ??
+    size: 4
+    struct_name: CServerSideClientBase
+  engine/CServerSideClientBase_m_vecLoadedSpawnGroups.windows.yaml:
+    member_name: m_vecLoadedSpawnGroups
+    offset: '0x178'
+    offset_sig: 4C 63 BF 78 01 00 00
+    size: 4
+    struct_name: CServerSideClientBase
   engine/CServerSideClientBase_vtable.linux.yaml:
     vtable_class: CServerSideClientBase
     vtable_entries:
@@ -13595,6 +14181,24 @@ files:
     vfunc_index: 19
     vfunc_offset: '0x98'
     vfunc_sig: FF 90 98 00 00 00 83 4F ?? ?? 49 8B CF
+    vtable_name: CServerSideClient
+  engine/CServerSideClient_SendNetMessage.linux.yaml:
+    func_name: CServerSideClient_SendNetMessage
+    func_rva: '0x55a370'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 49 89 FD 41 54 41 89 D4 53 48 89 F3 48 83 EC ?? 80 BF ?? ?? ?? ?? ??
+    func_size: '0x2c7'
+    func_va: '0x55a370'
+    vfunc_index: 16
+    vfunc_offset: '0x80'
+    vtable_name: CServerSideClient
+  engine/CServerSideClient_SendNetMessage.windows.yaml:
+    func_name: CServerSideClient_SendNetMessage
+    func_rva: '0xbe800'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 55 57 41 56 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 33 FF
+    func_size: '0x345'
+    func_va: '0x1800be800'
+    vfunc_index: 15
+    vfunc_offset: '0x78'
     vtable_name: CServerSideClient
   engine/CServerSideClient_SetName.linux.yaml:
     func_name: CServerSideClient_SetName
@@ -14632,6 +15236,18 @@ files:
     vfunc_index: 1
     vfunc_offset: '0x8'
     vtable_name: INetworkGameServer
+  engine/INetworkMessageProcessingPreFilter_FilterMessage.linux.yaml:
+    func_name: INetworkMessageProcessingPreFilter_FilterMessage
+    func_rva: '0x5430d0'
+    func_sig: 55 48 89 E5 41 54 53 48 8B 06 48 89 FB 48 89 F7 FF 50 ?? 48 8D 15 ?? ?? ?? ?? 31 C9 48 8B 12 48 85 D2 74 ?? 48 3B 42 ??
+    func_size: '0x85'
+    func_va: '0x5430d0'
+  engine/INetworkMessageProcessingPreFilter_FilterMessage.windows.yaml:
+    func_name: INetworkMessageProcessingPreFilter_FilterMessage
+    func_rva: '0xc4210'
+    func_sig: 40 53 48 83 EC ?? 48 8B 02 48 8B D9 48 8B CA
+    func_size: '0x77'
+    func_va: '0x1800c4210'
   engine/INetworkMessages_FindNetworkGroup.linux.yaml:
     func_name: INetworkMessages_FindNetworkGroup
     vfunc_index: 15
@@ -16548,6 +17164,531 @@ files:
     vtable_size: '0x168'
     vtable_symbol: CFlattenedSerializers_vtable
     vtable_va: '0x180233a08'
+  networksystem/CNetChan_CanPacket.linux.yaml:
+    func_name: CNetChan_CanPacket
+    func_rva: '0x286b20'
+    func_sig: 55 48 89 E5 41 54 53 48 89 FB 48 83 EC ?? 80 BF ?? ?? ?? ?? ??
+    func_size: '0x197'
+    func_va: '0x286b20'
+    vfunc_index: 48
+    vfunc_offset: '0x180'
+    vtable_name: CNetChan
+  networksystem/CNetChan_CanPacket.windows.yaml:
+    func_name: CNetChan_CanPacket
+    func_rva: '0xbd150'
+    func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 80 B9 ?? ?? ?? ?? ??
+    func_size: '0x285'
+    func_va: '0x1800bd150'
+    vfunc_index: 47
+    vfunc_offset: '0x178'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAddress.linux.yaml:
+    func_name: CNetChan_GetAddress
+    func_rva: '0x2866e0'
+    func_sig: 55 48 89 E5 53 48 89 FB 48 83 EC ?? 8B 87 ?? ?? ?? ?? 83 F8 ?? 0F 87 ?? ?? ?? ??
+    func_size: '0x149'
+    func_va: '0x2866e0'
+    vfunc_index: 1
+    vfunc_offset: '0x8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAddress.windows.yaml:
+    func_name: CNetChan_GetAddress
+    func_rva: '0xbd040'
+    func_sig: 40 53 48 83 EC ?? 48 8B D9 48 81 C1 ?? ?? ?? ?? 8B 51 ?? 85 D2 0F 84 ?? ?? ?? ?? 83 EA ?? 74 ?? 83 EA ?? 74 ?? 83 EA ?? 74 ?? 83 FA ?? E9 ?? ?? ?? ??
+    func_size: '0x101'
+    func_va: '0x1800bd040'
+    vfunc_index: 1
+    vfunc_offset: '0x8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAvgChoke.linux.yaml:
+    func_name: CNetChan_GetAvgChoke
+    func_rva: '0x283160'
+    func_sig: 48 8D 47 ?? 48 81 C7 ?? ?? ?? ?? 83 FE ?? 48 0F 44 F8 F3 0F 10 47 ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 48 8D 47 ?? 48 81 C7 ?? ?? ?? ?? 83 FE ?? 48 0F 44 F8 F3 0F 10 47 ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x18'
+    func_va: '0x283160'
+    vfunc_index: 13
+    vfunc_offset: '0x68'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAvgChoke.windows.yaml:
+    func_name: CNetChan_GetAvgChoke
+    func_rva: '0xc5e90'
+    func_sig: 83 FA ?? B8 ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 41 0F 45 C0 F3 0F 10 04 08 C3 ?? ?? ?? ?? ?? ?? ?? ?? 83 FA ?? B8 ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 41 0F 45 C0 F3 0F 10 04 08 C3 ?? ?? ?? ?? ?? ?? ?? ?? F2 0F 10 05 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x18'
+    func_va: '0x1800c5e90'
+    vfunc_index: 13
+    vfunc_offset: '0x68'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAvgData.linux.yaml:
+    func_name: CNetChan_GetAvgData
+    func_rva: '0x286f40'
+    func_sig: 55 48 89 E5 41 54 41 89 F4 53 48 89 FB 48 83 EC ?? 8B B7 D0 8E 00 ?? 85 F6 74 ?? 48 8D 05 5E C1 26 ??
+    func_size: '0xb0'
+    func_va: '0x286f40'
+    vfunc_index: 15
+    vfunc_offset: '0x78'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAvgData.windows.yaml:
+    func_name: CNetChan_GetAvgData
+    func_rva: '0xc5a40'
+    func_sig: 40 57 48 83 EC ?? 48 89 74 24 ?? 48 8B F9 8B F2 8B 91 C8 8E 00 ?? 85 D2 74 ?? F2 0F 10 05 86 B7 1C ??
+    func_size: '0xa0'
+    func_va: '0x1800c5a40'
+    vfunc_index: 15
+    vfunc_offset: '0x78'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAvgLatency.linux.yaml:
+    func_name: CNetChan_GetAvgLatency
+    func_rva: '0x287ad0'
+    func_sig: 8B B7 ?? ?? ?? ?? 85 F6 75 ?? 66 0F EF C0 C3
+    func_size: '0xab'
+    func_va: '0x287ad0'
+    vfunc_index: 10
+    vfunc_offset: '0x50'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAvgLatency.windows.yaml:
+    func_name: CNetChan_GetAvgLatency
+    func_rva: '0xc5c10'
+    func_sig: 40 57 48 83 EC ?? 8B 91 ?? ?? ?? ??
+    func_size: '0xbc'
+    func_va: '0x1800c5c10'
+    vfunc_index: 10
+    vfunc_offset: '0x50'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAvgLoss.linux.yaml:
+    func_name: CNetChan_GetAvgLoss
+    func_rva: '0x283140'
+    func_sig: 48 8D 47 ?? 48 81 C7 ?? ?? ?? ?? 83 FE ?? 48 0F 44 F8 F3 0F 10 47 ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 48 8D 47 ?? 48 81 C7 ?? ?? ?? ?? 83 FE ?? 48 0F 44 F8 F3 0F 10 47 ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 48 8D 47 ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x18'
+    func_va: '0x283140'
+    vfunc_index: 12
+    vfunc_offset: '0x60'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAvgLoss.windows.yaml:
+    func_name: CNetChan_GetAvgLoss
+    func_rva: '0xc5e70'
+    func_sig: 83 FA ?? B8 ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 41 0F 45 C0 F3 0F 10 04 08 C3 ?? ?? ?? ?? ?? ?? ?? ?? 83 FA ?? B8 ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 41 0F 45 C0 F3 0F 10 04 08 C3 ?? ?? ?? ?? ?? ?? ?? ?? 83 FA ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x18'
+    func_va: '0x1800c5e70'
+    vfunc_index: 12
+    vfunc_offset: '0x60'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAvgPackets.linux.yaml:
+    func_name: CNetChan_GetAvgPackets
+    func_rva: '0x286ff0'
+    func_sig: 55 48 89 E5 41 54 41 89 F4 53 48 89 FB 48 83 EC ?? 8B B7 D0 8E 00 ?? 85 F6 74 ?? 48 8D 05 AE C0 26 ??
+    func_size: '0xb0'
+    func_va: '0x286ff0'
+    vfunc_index: 16
+    vfunc_offset: '0x80'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetAvgPackets.windows.yaml:
+    func_name: CNetChan_GetAvgPackets
+    func_rva: '0xc5ae0'
+    func_sig: 40 57 48 83 EC ?? 48 89 74 24 ?? 48 8B F9 8B F2 8B 91 C8 8E 00 ?? 85 D2 74 ?? F2 0F 10 05 E6 B6 1C ??
+    func_size: '0xa0'
+    func_va: '0x1800c5ae0'
+    vfunc_index: 16
+    vfunc_offset: '0x80'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetDataRate.linux.yaml:
+    func_name: CNetChan_GetDataRate
+    func_rva: '0x282e50'
+    func_sig: 8B 87 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x7'
+    func_va: '0x282e50'
+    vfunc_index: 5
+    vfunc_offset: '0x28'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetDataRate.windows.yaml:
+    func_name: CNetChan_GetDataRate
+    func_rva: '0xc3d50'
+    func_sig: 8B 81 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? 40 57
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x7'
+    func_va: '0x1800c3d50'
+    vfunc_index: 5
+    vfunc_offset: '0x28'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetEngineLatency.linux.yaml:
+    func_name: CNetChan_GetEngineLatency
+    func_rva: '0x287da0'
+    func_sig: F3 0F 10 87 ?? ?? ?? ?? 66 0F EF C9
+    func_size: '0xcb'
+    func_va: '0x287da0'
+    vfunc_index: 11
+    vfunc_offset: '0x58'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetEngineLatency.windows.yaml:
+    func_name: CNetChan_GetEngineLatency
+    func_rva: '0xc5cd0'
+    func_sig: 48 83 EC ?? F3 0F 10 89 ?? ?? ?? ??
+    func_size: '0x3b'
+    func_va: '0x1800c5cd0'
+    vfunc_index: 11
+    vfunc_offset: '0x58'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetName.linux.yaml:
+    func_name: CNetChan_GetName
+    func_rva: '0x282db0'
+    func_sig: 48 8B 87 ?? ?? ?? ?? 48 8D 15 ?? ?? ?? ?? 48 85 C0 48 0F 44 C2 C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? F3 0F 10 4F ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x16'
+    func_va: '0x282db0'
+    vfunc_index: 0
+    vfunc_offset: '0x0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetName.windows.yaml:
+    func_name: CNetChan_GetName
+    func_rva: '0xbd020'
+    func_sig: 48 8B 91 ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ??
+    func_size: '0x16'
+    func_va: '0x1800bd020'
+    vfunc_index: 0
+    vfunc_offset: '0x0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetRemoteAddress.linux.yaml:
+    func_name: CNetChan_GetRemoteAddress
+    func_rva: '0x282e90'
+    func_sig: 48 8D 87 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? F3 0F 10 87 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x282e90'
+    vfunc_index: 2
+    vfunc_offset: '0x10'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetRemoteAddress.windows.yaml:
+    func_name: CNetChan_GetRemoteAddress
+    func_rva: '0xc3e10'
+    func_sig: 48 8D 81 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? F3 0F 10 81 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x1800c3e10'
+    vfunc_index: 2
+    vfunc_offset: '0x10'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetRemoteFramerate.linux.yaml:
+    func_name: CNetChan_GetRemoteFramerate
+    func_rva: '0x2830b0'
+    func_sig: 48 85 F6 74 ?? F3 0F 10 87 ?? ?? ?? ??
+    func_size: '0x34'
+    func_va: '0x2830b0'
+    vfunc_index: 21
+    vfunc_offset: '0xa8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetRemoteFramerate.windows.yaml:
+    func_name: CNetChan_GetRemoteFramerate
+    func_rva: '0xc5be0'
+    func_sig: 48 85 D2 74 ?? 8B 81 ?? ?? ?? ??
+    func_size: '0x2a'
+    func_va: '0x1800c5be0'
+    vfunc_index: 21
+    vfunc_offset: '0xa8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetSequenceNr.linux.yaml:
+    func_name: CNetChan_GetSequenceNr
+    func_rva: '0x283080'
+    func_sig: 85 F6 74 ?? 31 C0 83 FE ??
+    func_size: '0x27'
+    func_va: '0x283080'
+    vfunc_index: 19
+    vfunc_offset: '0x98'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetSequenceNr.windows.yaml:
+    func_name: CNetChan_GetSequenceNr
+    func_rva: '0xc5bc0'
+    func_sig: 85 D2 75 ?? 8B 81 ?? ?? ?? ??
+    func_size: '0x1a'
+    func_va: '0x1800c5bc0'
+    vfunc_index: 19
+    vfunc_offset: '0x98'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTime.linux.yaml:
+    func_name: CNetChan_GetTime
+    func_rva: '0x2831a0'
+    func_sig: 48 8D 05 ?? ?? ?? ?? 66 0F EF C0 F2 0F 5A 40 ??
+    func_size: '0x11'
+    func_va: '0x2831a0'
+    vfunc_index: 3
+    vfunc_offset: '0x18'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTime.windows.yaml:
+    func_name: CNetChan_GetTime
+    func_rva: '0xc5ed0'
+    func_sig: F2 0F 10 05 ?? ?? ?? ?? 66 0F 5A C0
+    func_size: '0xd'
+    func_va: '0x1800c5ed0'
+    vfunc_index: 3
+    vfunc_offset: '0x18'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTimeConnected.linux.yaml:
+    func_name: CNetChan_GetTimeConnected
+    func_rva: '0x282e60'
+    func_sig: 48 8D 05 ?? ?? ?? ?? 66 0F EF C9 F2 0F 10 40 ?? F2 0F 5C 87 ?? ?? ?? ?? F2 0F 5A C0 F3 0F 5F C1 C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 8D 87 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x21'
+    func_va: '0x282e60'
+    vfunc_index: 4
+    vfunc_offset: '0x20'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTimeConnected.windows.yaml:
+    func_name: CNetChan_GetTimeConnected
+    func_rva: '0xc3df0'
+    func_sig: F2 0F 10 05 ?? ?? ?? ?? 0F 57 C9 F2 0F 5C 81 ?? ?? ?? ?? 66 0F 5A C0 F3 0F 5F C1 C3 ?? ?? ?? ?? 48 8D 81 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x1c'
+    func_va: '0x1800c3df0'
+    vfunc_index: 4
+    vfunc_offset: '0x20'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTimeSinceLastReceived.linux.yaml:
+    func_name: CNetChan_GetTimeSinceLastReceived
+    func_rva: '0x283000'
+    func_sig: 48 8D 05 ?? ?? ?? ?? 66 0F EF C9 F2 0F 10 40 ?? F2 0F 5C 87 ?? ?? ?? ?? F2 0F 5A C0 F3 0F 5F C1 C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 0F B6 87 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x21'
+    func_va: '0x283000'
+    vfunc_index: 20
+    vfunc_offset: '0xa0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTimeSinceLastReceived.windows.yaml:
+    func_name: CNetChan_GetTimeSinceLastReceived
+    func_rva: '0xc5a10'
+    func_sig: F2 0F 10 05 ?? ?? ?? ?? 0F 57 C9 F2 0F 5C 81 ?? ?? ?? ?? 66 0F 5A C0 F3 0F 5F C1 C3 ?? ?? ?? ?? 0F B6 81 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x1c'
+    func_va: '0x1800c5a10'
+    vfunc_index: 20
+    vfunc_offset: '0xa0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTimeUntilTimeout.linux.yaml:
+    func_name: CNetChan_GetTimeUntilTimeout
+    func_rva: '0x282ee0'
+    func_sig: F3 0F 10 8F ?? ?? ?? ??
+    func_size: '0x59'
+    func_va: '0x282ee0'
+    vfunc_index: 23
+    vfunc_offset: '0xb8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTimeUntilTimeout.windows.yaml:
+    func_name: CNetChan_GetTimeUntilTimeout
+    func_rva: '0xc3ea0'
+    func_sig: 48 83 EC ?? F3 0F 10 81 ?? ?? ?? ??
+    func_size: '0x5e'
+    func_va: '0x1800c3ea0'
+    vfunc_index: 23
+    vfunc_offset: '0xb8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTimeoutSeconds.linux.yaml:
+    func_name: CNetChan_GetTimeoutSeconds
+    func_rva: '0x282ff0'
+    func_sig: F3 0F 10 87 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x9'
+    func_va: '0x282ff0'
+    vfunc_index: 22
+    vfunc_offset: '0xb0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTimeoutSeconds.windows.yaml:
+    func_name: CNetChan_GetTimeoutSeconds
+    func_rva: '0xc5a00'
+    func_sig: F3 0F 10 81 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? F2 0F 10 05 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x9'
+    func_va: '0x1800c5a00'
+    vfunc_index: 22
+    vfunc_offset: '0xb0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTotalData.linux.yaml:
+    func_name: CNetChan_GetTotalData
+    func_rva: '0x283040'
+    func_sig: 48 8D 47 ?? 48 81 C7 ?? ?? ?? ?? 83 FE ?? 48 0F 44 F8 48 8B 47 ??
+    func_size: '0x17'
+    func_va: '0x283040'
+    vfunc_index: 17
+    vfunc_offset: '0x88'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTotalData.windows.yaml:
+    func_name: CNetChan_GetTotalData
+    func_rva: '0xc5b80'
+    func_sig: 83 FA ?? B8 ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 41 0F 45 C0 48 8B 04 08
+    func_size: '0x17'
+    func_va: '0x1800c5b80'
+    vfunc_index: 17
+    vfunc_offset: '0x88'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTotalPackets.linux.yaml:
+    func_name: CNetChan_GetTotalPackets
+    func_rva: '0x283060'
+    func_sig: 48 8D 47 ?? 48 81 C7 ?? ?? ?? ?? 83 FE ?? 48 0F 44 F8 8B 47 ??
+    func_size: '0x16'
+    func_va: '0x283060'
+    vfunc_index: 18
+    vfunc_offset: '0x90'
+    vtable_name: CNetChan
+  networksystem/CNetChan_GetTotalPackets.windows.yaml:
+    func_name: CNetChan_GetTotalPackets
+    func_rva: '0xc5ba0'
+    func_sig: 83 FA ?? B8 ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 41 0F 45 C0 8B 04 08
+    func_size: '0x16'
+    func_va: '0x1800c5ba0'
+    vfunc_index: 18
+    vfunc_offset: '0x90'
+    vtable_name: CNetChan
+  networksystem/CNetChan_HasPendingReliableData.linux.yaml:
+    func_name: CNetChan_HasPendingReliableData
+    func_rva: '0x286390'
+    func_sig: 8B 97 ?? ?? ?? ?? 85 D2 7E ??
+    func_size: '0x8c'
+    func_va: '0x286390'
+    vfunc_index: 50
+    vfunc_offset: '0x190'
+    vtable_name: CNetChan
+  networksystem/CNetChan_HasPendingReliableData.windows.yaml:
+    func_name: CNetChan_HasPendingReliableData
+    func_rva: '0xc3d60'
+    func_sig: 40 57 48 83 EC ?? 83 B9 ?? ?? ?? ?? ??
+    func_size: '0x88'
+    func_va: '0x1800c3d60'
+    vfunc_index: 49
+    vfunc_offset: '0x188'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsLocalHost.linux.yaml:
+    func_name: CNetChan_IsLocalHost
+    func_rva: '0x2838b0'
+    func_sig: 8B 87 ?? ?? ?? ?? 85 C0 74 ?? 31 C0
+    func_size: '0x1c'
+    func_va: '0x2838b0'
+    vfunc_index: 6
+    vfunc_offset: '0x30'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsLocalHost.windows.yaml:
+    func_name: CNetChan_IsLocalHost
+    func_rva: '0xbb550'
+    func_sig: 48 83 EC ?? 48 81 C1 ?? ?? ?? ?? 83 79 ?? ??
+    func_size: '0x29'
+    func_va: '0x1800bb550'
+    vfunc_index: 6
+    vfunc_offset: '0x30'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsLoopback.linux.yaml:
+    func_name: CNetChan_IsLoopback
+    func_rva: '0x282cc0'
+    func_sig: 83 BF ?? ?? ?? ?? ?? 0F 94 C0
+    func_size: '0xb'
+    func_va: '0x282cc0'
+    vfunc_index: 7
+    vfunc_offset: '0x38'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsLoopback.windows.yaml:
+    func_name: CNetChan_IsLoopback
+    func_rva: '0xbb540'
+    func_sig: 83 B9 ?? ?? ?? ?? ?? 0F 94 C0
+    func_size: '0xb'
+    func_va: '0x1800bb540'
+    vfunc_index: 7
+    vfunc_offset: '0x38'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsOverflowed.linux.yaml:
+    func_name: CNetChan_IsOverflowed
+    func_rva: '0x283030'
+    func_sig: 0F B6 87 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 48 8D 47 ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x283030'
+    vfunc_index: 49
+    vfunc_offset: '0x188'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsOverflowed.windows.yaml:
+    func_name: CNetChan_IsOverflowed
+    func_rva: '0xc5a30'
+    func_sig: 0F B6 81 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 40 57
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x1800c5a30'
+    vfunc_index: 48
+    vfunc_offset: '0x180'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsPlayback.linux.yaml:
+    func_name: CNetChan_IsPlayback
+    func_rva: '0x283260'
+    func_sig: 0F B6 87 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 89 B7 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x283260'
+    vfunc_index: 9
+    vfunc_offset: '0x48'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsPlayback.windows.yaml:
+    func_name: CNetChan_IsPlayback
+    func_rva: '0xc6ef0'
+    func_sig: 0F B6 81 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 89 91 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x1800c6ef0'
+    vfunc_index: 9
+    vfunc_offset: '0x48'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsSuppressingTransmit.linux.yaml:
+    func_name: CNetChan_IsSuppressingTransmit
+    func_rva: '0x2832a0'
+    func_sig: 0F B6 87 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 55
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x2832a0'
+    vfunc_index: 83
+    vfunc_offset: '0x298'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsSuppressingTransmit.windows.yaml:
+    func_name: CNetChan_IsSuppressingTransmit
+    func_rva: '0xc7130'
+    func_sig: 0F B6 81 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 48 89 5C 24 ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x1800c7130'
+    vfunc_index: 82
+    vfunc_offset: '0x290'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsTimedOut.linux.yaml:
+    func_name: CNetChan_IsTimedOut
+    func_rva: '0x282ea0'
+    func_sig: F3 0F 10 87 ?? ?? ?? ?? 0F 2E 05 ?? ?? ?? ??
+    func_size: '0x38'
+    func_va: '0x282ea0'
+    vfunc_index: 57
+    vfunc_offset: '0x1c8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsTimedOut.windows.yaml:
+    func_name: CNetChan_IsTimedOut
+    func_rva: '0xc3e20'
+    func_sig: F3 0F 10 81 ?? ?? ?? ?? 0F 2E 05 ?? ?? ?? ?? 7A ?? 75 ?? 32 C0 C3 0F 5A C8
+    func_size: '0x31'
+    func_va: '0x1800c3e20'
+    vfunc_index: 56
+    vfunc_offset: '0x1c0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsTimingOut.linux.yaml:
+    func_name: CNetChan_IsTimingOut
+    func_rva: '0x2853e0'
+    func_sig: F3 0F 10 05 ?? ?? ?? ?? 0F 2E 87 ?? ?? ?? ??
+    func_size: '0x3c'
+    func_va: '0x2853e0'
+    vfunc_index: 8
+    vfunc_offset: '0x40'
+    vtable_name: CNetChan
+  networksystem/CNetChan_IsTimingOut.windows.yaml:
+    func_name: CNetChan_IsTimingOut
+    func_rva: '0xc3e60'
+    func_sig: F3 0F 10 81 ?? ?? ?? ?? 0F 2E 05 ?? ?? ?? ?? 7A ?? 75 ?? 32 C0 C3 F2 0F 10 89 ?? ?? ?? ??
+    func_size: '0x36'
+    func_va: '0x1800c3e60'
+    vfunc_index: 8
+    vfunc_offset: '0x40'
+    vtable_name: CNetChan
   networksystem/CNetChan_ParseMessagesDemo.linux.yaml:
     func_name: CNetChan_ParseMessagesDemo
     func_rva: '0x29b010'
@@ -16607,6 +17748,136 @@ files:
     func_va: '0x1800c10b0'
     vfunc_index: 72
     vfunc_offset: '0x240'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetInterpolationAmount.linux.yaml:
+    func_name: CNetChan_SetInterpolationAmount
+    func_rva: '0x2831f0'
+    func_sig: 0F 14 C1 0F 13 87 ?? ?? ?? ??
+    func_size: '0xb'
+    func_va: '0x2831f0'
+    vfunc_index: 28
+    vfunc_offset: '0xe0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetInterpolationAmount.windows.yaml:
+    func_name: CNetChan_SetInterpolationAmount
+    func_rva: '0xc65c0'
+    func_sig: F3 0F 11 89 ?? ?? ?? ?? F3 0F 11 91 ?? ?? ?? ??
+    func_size: '0x11'
+    func_va: '0x1800c65c0'
+    vfunc_index: 28
+    vfunc_offset: '0xe0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetMaxDataRate.linux.yaml:
+    func_name: CNetChan_SetMaxDataRate
+    func_rva: '0x282d40'
+    func_sig: 8B 8F ?? ?? ?? ?? 85 C9 74 ?? 55
+    func_size: '0x41'
+    func_va: '0x282d40'
+    vfunc_index: 55
+    vfunc_offset: '0x1b8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetMaxDataRate.windows.yaml:
+    func_name: CNetChan_SetMaxDataRate
+    func_rva: '0xbcfb0'
+    func_sig: 48 83 EC ?? 44 8B 81 ?? ?? ?? ?? 45 85 C0
+    func_size: '0x49'
+    func_va: '0x1800bcfb0'
+    vfunc_index: 54
+    vfunc_offset: '0x1b0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetMinDataRate.linux.yaml:
+    func_name: CNetChan_SetMinDataRate
+    func_rva: '0x282cf0'
+    func_sig: 8B 8F ?? ?? ?? ?? 89 B7 ?? ?? ?? ??
+    func_size: '0x49'
+    func_va: '0x282cf0'
+    vfunc_index: 54
+    vfunc_offset: '0x1b0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetMinDataRate.windows.yaml:
+    func_name: CNetChan_SetMinDataRate
+    func_rva: '0xbcf60'
+    func_sig: 48 83 EC ?? 44 8B 81 ?? ?? ?? ?? 89 91 ?? ?? ?? ??
+    func_size: '0x4f'
+    func_va: '0x1800bcf60'
+    vfunc_index: 53
+    vfunc_offset: '0x1a8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetNumPredictionErrors.linux.yaml:
+    func_name: CNetChan_SetNumPredictionErrors
+    func_rva: '0x2831c0'
+    func_sig: 8B 87 ?? ?? ?? ?? 83 E0 ??
+    func_size: '0x15'
+    func_va: '0x2831c0'
+    vfunc_index: 29
+    vfunc_offset: '0xe8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetNumPredictionErrors.windows.yaml:
+    func_name: CNetChan_SetNumPredictionErrors
+    func_rva: '0xc6240'
+    func_sig: 8B 81 ?? ?? ?? ?? 83 E0 ?? 4C 6B C0 ??
+    func_size: '0x1e'
+    func_va: '0x1800c6240'
+    vfunc_index: 29
+    vfunc_offset: '0xe8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetShowNetMessages.linux.yaml:
+    func_name: CNetChan_SetShowNetMessages
+    func_rva: '0x282f60'
+    func_sig: 40 88 B7 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 89 D0
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x282f60'
+    vfunc_index: 30
+    vfunc_offset: '0xf0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetShowNetMessages.windows.yaml:
+    func_name: CNetChan_SetShowNetMessages
+    func_rva: '0xc3f20'
+    func_sig: 88 91 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 89 5C 24 ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x7'
+    func_va: '0x1800c3f20'
+    vfunc_index: 30
+    vfunc_offset: '0xf0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetTimeout.linux.yaml:
+    func_name: CNetChan_SetTimeout
+    func_rva: '0x2849f0'
+    func_sig: 55 0F 28 C8
+    func_size: '0x115'
+    func_va: '0x2849f0'
+    vfunc_index: 56
+    vfunc_offset: '0x1c0'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SetTimeout.windows.yaml:
+    func_name: CNetChan_SetTimeout
+    func_rva: '0xbce50'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? F3 0F 10 91 ?? ?? ?? ??
+    func_size: '0x103'
+    func_va: '0x1800bce50'
+    vfunc_index: 55
+    vfunc_offset: '0x1b8'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SuppressTransmit.linux.yaml:
+    func_name: CNetChan_SuppressTransmit
+    func_rva: '0x283290'
+    func_sig: 40 88 B7 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 0F B6 87 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 55
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x283290'
+    vfunc_index: 82
+    vfunc_offset: '0x290'
+    vtable_name: CNetChan
+  networksystem/CNetChan_SuppressTransmit.windows.yaml:
+    func_name: CNetChan_SuppressTransmit
+    func_rva: '0xc70e0'
+    func_sig: 88 91 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? 40 53
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x7'
+    func_va: '0x1800c70e0'
+    vfunc_index: 81
+    vfunc_offset: '0x288'
     vtable_name: CNetChan
   networksystem/CNetChan_vtable.linux.yaml:
     vtable_class: CNetChan
@@ -24409,11 +25680,15 @@ files:
   server/CCSBotManager_AddBot_BotNavIgnore.linux.yaml:
     patch_bytes: E9 12 00 00 00 90
     patch_name: CCSBotManager_AddBot_BotNavIgnore
-    patch_sig: 0F 84 B9 00 00 00 44 0F B6 B8 ?? 01 00 00
+    patch_rva: '0xc17da1'
+    patch_sig: 0F 84 ?? ?? ?? ?? 44 0F B6 B8 ?? ?? ?? ??
+    patch_va: '0xc17da1'
   server/CCSBotManager_AddBot_BotNavIgnore.windows.yaml:
     patch_bytes: E9 2C 00 00 00 90
     patch_name: CCSBotManager_AddBot_BotNavIgnore
+    patch_rva: '0x2c3aba'
     patch_sig: 0F 84 ?? ?? ?? ?? 80 B8 ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ?? 80 3D ?? ?? ?? ?? ?? 74 ??
+    patch_va: '0x1802c3aba'
   server/CCSBotManager_BotPlaceCommand.linux.yaml:
     func_name: CCSBotManager_BotPlaceCommand
     func_rva: '0xc2d8d0'
@@ -24620,6 +25895,18 @@ files:
     func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ??
     func_size: '0x5dc'
     func_va: '0x1802f3c00'
+  server/CCSCustomHudLayout_RemoveDialogVariableStringForPlayer.linux.yaml:
+    func_name: CCSCustomHudLayout_RemoveDialogVariableStringForPlayer
+    func_rva: '0x1334420'
+    func_sig: 55 48 89 E5 41 55 41 54 53 89 F3 48 83 EC ?? 85 F6
+    func_size: '0xb7'
+    func_va: '0x1334420'
+  server/CCSCustomHudLayout_RemoveDialogVariableStringForPlayer.windows.yaml:
+    func_name: CCSCustomHudLayout_RemoveDialogVariableStringForPlayer
+    func_rva: '0x8c7cf0'
+    func_sig: 85 D2 0F 88 ?? ?? ?? ?? 53 56 41 56
+    func_size: '0x136'
+    func_va: '0x1808c7cf0'
   server/CCSCustomHudLayout_SetDialogVariableString.linux.yaml:
     func_name: CCSCustomHudLayout_SetDialogVariableString
     func_rva: '0x13394a0'
@@ -24709,6 +25996,26 @@ files:
     func_va: '0x180ded350'
     vfunc_index: 25
     vfunc_offset: '0xc8'
+    vtable_name: CCSGameRules
+  server/CCSGameRules_GetViewVectors.linux.yaml:
+    func_name: CCSGameRules_GetViewVectors
+    func_rva: '0x1350ef0'
+    func_sig: 48 8D 05 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 31 C0 C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? B8 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x1350ef0'
+    vfunc_index: 33
+    vfunc_offset: '0x108'
+    vtable_name: CCSGameRules
+  server/CCSGameRules_GetViewVectors.windows.yaml:
+    func_name: CCSGameRules_GetViewVectors
+    func_rva: '0x931290'
+    func_sig: 48 8D 05 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? B8 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 33 C0
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x8'
+    func_va: '0x180931290'
+    vfunc_index: 32
+    vfunc_offset: '0x100'
     vtable_name: CCSGameRules
   server/CCSGameRules_GoToIntermission.linux.yaml:
     func_name: CCSGameRules_GoToIntermission
@@ -26782,6 +28089,18 @@ files:
     vtable_size: '0xce8'
     vtable_symbol: ??_7CCSPlayerPawnBase@@6B@
     vtable_va: '0x181799758'
+  server/CCSPlayerPawn_CanMove.linux.yaml:
+    func_name: CCSPlayerPawn_CanMove
+    func_rva: '0x15a64c0'
+    func_sig: 55 48 89 E5 41 55 41 54 53 48 83 EC ?? 48 8B 05 ?? ?? ?? ?? 80 78 ?? ?? 74 ??
+    func_size: '0x10b'
+    func_va: '0x15a64c0'
+  server/CCSPlayerPawn_CanMove.windows.yaml:
+    func_name: CCSPlayerPawn_CanMove
+    func_rva: '0xabfe00'
+    func_sig: 48 89 74 24 ?? 57 48 83 EC ?? 48 8B 05 ?? ?? ?? ?? 48 8B F9 80 78 ?? ??
+    func_size: '0x102'
+    func_va: '0x180abfe00'
   server/CCSPlayerPawn_ClientCommand.linux.yaml:
     func_name: CCSPlayerPawn_ClientCommand
     func_rva: '0xb64a60'
@@ -28072,6 +29391,66 @@ files:
     vtable_size: '0xe0'
     vtable_symbol: ??_7CCSPlayer_ItemServices@@6B@
     vtable_va: '0x181929530'
+  server/CCSPlayer_MovementServices_AirAccelerate.linux.yaml:
+    func_name: CCSPlayer_MovementServices_AirAccelerate
+    func_rva: '0x159f460'
+    func_sig: 55 48 89 E5 41 55 49 89 D5 41 54 49 89 FC 53 48 89 F3 48 83 EC ?? 48 8B 7F ??
+    func_size: '0x267'
+    func_va: '0x159f460'
+  server/CCSPlayer_MovementServices_AirAccelerate.windows.yaml:
+    func_name: CCSPlayer_MovementServices_AirAccelerate
+    func_rva: '0xabcb00'
+    func_sig: F3 0F 11 5C 24 ?? 53 56 57 48 83 EC ?? 48 83 79 ?? ??
+    func_size: '0x27a'
+    func_va: '0x180abcb00'
+  server/CCSPlayer_MovementServices_AirMove.linux.yaml:
+    func_name: CCSPlayer_MovementServices_AirMove
+    func_rva: '0x15ea6c0'
+    func_sig: 55 48 8D 15 ?? ?? ?? ?? 48 89 E5 41 57 41 56 4C 8D BD ?? ?? ?? ??
+    func_size: '0x6a9'
+    func_va: '0x15ea6c0'
+  server/CCSPlayer_MovementServices_AirMove.windows.yaml:
+    func_name: CCSPlayer_MovementServices_AirMove
+    func_rva: '0xae8b30'
+    func_sig: 48 8B C4 55 53 56 57 41 56 48 8D 68 ?? 48 81 EC ?? ?? ?? ?? 0F 29 70 ?? 4C 8D 05 ?? ?? ?? ??
+    func_size: '0x6b9'
+    func_va: '0x180ae8b30'
+  server/CCSPlayer_MovementServices_CanUnduck.linux.yaml:
+    func_name: CCSPlayer_MovementServices_CanUnduck
+    func_rva: '0x159d3d0'
+    func_sig: 55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC ?? ?? ?? ?? 48 8B 7F ??
+    func_size: '0x51a'
+    func_va: '0x159d3d0'
+  server/CCSPlayer_MovementServices_CanUnduck.windows.yaml:
+    func_name: CCSPlayer_MovementServices_CanUnduck
+    func_rva: '0xac0230'
+    func_sig: 40 55 56 41 55 48 8D AC 24 ?? ?? ?? ??
+    func_size: '0x46e'
+    func_va: '0x180ac0230'
+  server/CCSPlayer_MovementServices_CategorizePosition.linux.yaml:
+    func_name: CCSPlayer_MovementServices_CategorizePosition
+    func_rva: '0x15ba2c0'
+    func_sig: 48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56 41 55 41 89 D5
+    func_size: '0xc6f'
+    func_va: '0x15ba2c0'
+  server/CCSPlayer_MovementServices_CategorizePosition.windows.yaml:
+    func_name: CCSPlayer_MovementServices_CategorizePosition
+    func_rva: '0xac08b0'
+    func_sig: 40 55 56 57 41 54 41 55 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 48 8B F9
+    func_size: '0x66f'
+    func_va: '0x180ac08b0'
+  server/CCSPlayer_MovementServices_CheckFalling.linux.yaml:
+    func_name: CCSPlayer_MovementServices_CheckFalling
+    func_rva: '0x15c9830'
+    func_sig: 55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ?? 48 8B 7F ?? 48 85 FF 0F 84 ?? ?? ?? ?? 48 8B 07 FF 90 ?? ?? ?? ?? 48 85 C0 0F 84 ?? ?? ?? ?? F3 0F 10 8B ?? ?? ?? ??
+    func_size: '0x751'
+    func_va: '0x15c9830'
+  server/CCSPlayer_MovementServices_CheckFalling.windows.yaml:
+    func_name: CCSPlayer_MovementServices_CheckFalling
+    func_rva: '0xac0f20'
+    func_sig: 40 53 55 48 81 EC ?? ?? ?? ?? 48 83 79 ?? ??
+    func_size: '0x46b'
+    func_va: '0x180ac0f20'
   server/CCSPlayer_MovementServices_CheckJumpButton.linux.yaml:
     func_name: CCSPlayer_MovementServices_CheckJumpButton
     func_rva: '0x15bde70'
@@ -28084,6 +29463,30 @@ files:
     func_sig: 40 55 53 56 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 71 ??
     func_size: '0x901'
     func_va: '0x180ac1ad0'
+  server/CCSPlayer_MovementServices_CheckJumpButtonLegacy.linux.yaml:
+    func_name: CCSPlayer_MovementServices_CheckJumpButtonLegacy
+    func_rva: '0x15becc0'
+    func_sig: 55 48 89 E5 41 55 41 54 49 89 F4 BE ?? ?? ?? ?? 53 48 89 FB 48 83 EC ?? 48 8B 7F ??
+    func_size: '0x31e'
+    func_va: '0x15becc0'
+  server/CCSPlayer_MovementServices_CheckJumpButtonLegacy.windows.yaml:
+    func_name: CCSPlayer_MovementServices_CheckJumpButtonLegacy
+    func_rva: '0xac1390'
+    func_sig: 48 89 5C 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC ?? 4C 8B F2
+    func_size: '0x1a5'
+    func_va: '0x180ac1390'
+  server/CCSPlayer_MovementServices_CheckJumpButtonModern.linux.yaml:
+    func_name: CCSPlayer_MovementServices_CheckJumpButtonModern
+    func_rva: '0x15c9200'
+    func_sig: 55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 89 F3 48 83 EC ?? 48 8B 7F ??
+    func_size: '0x627'
+    func_va: '0x15c9200'
+  server/CCSPlayer_MovementServices_CheckJumpButtonModern.windows.yaml:
+    func_name: CCSPlayer_MovementServices_CheckJumpButtonModern
+    func_rva: '0xac1540'
+    func_sig: 40 55 53 56 57 41 54 41 55 41 56 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 8B 9A ?? ?? ?? ??
+    func_size: '0x58d'
+    func_va: '0x180ac1540'
   server/CCSPlayer_MovementServices_CheckJumpButton_WaterPatch.linux.yaml:
     patch_bytes: 41 C7 44 24 40 00 00 11 43
     patch_name: CCSPlayer_MovementServices_CheckJumpButton_WaterPatch
@@ -28092,6 +29495,18 @@ files:
     patch_bytes: C7 46 40 00 00 11 43
     patch_name: CCSPlayer_MovementServices_CheckJumpButton_WaterPatch
     patch_sig: C7 47 ?? ?? ?? ?? ?? EB ?? 4C 8B 73 ??
+  server/CCSPlayer_MovementServices_CheckParameters.linux.yaml:
+    func_name: CCSPlayer_MovementServices_CheckParameters
+    func_rva: '0x15b6f30'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 89 F3 48 81 EC ?? ?? ?? ?? E8 ?? ?? ?? ?? 49 8B 44 24 ??
+    func_size: '0xb35'
+    func_va: '0x15b6f30'
+  server/CCSPlayer_MovementServices_CheckParameters.windows.yaml:
+    func_name: CCSPlayer_MovementServices_CheckParameters
+    func_rva: '0xac25f0'
+    func_sig: 48 8B C4 55 53 56 57 41 56 41 57 48 8D 68 ??
+    func_size: '0x757'
+    func_va: '0x180ac25f0'
   server/CCSPlayer_MovementServices_CheckVelocity.linux.yaml:
     func_name: CCSPlayer_MovementServices_CheckVelocity
     func_rva: '0x15e75e0'
@@ -28104,6 +29519,42 @@ files:
     func_sig: 48 8B C4 48 89 58 ?? 4C 89 40 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D 68 ??
     func_size: '0x7d5'
     func_va: '0x180ac3190'
+  server/CCSPlayer_MovementServices_CheckWater.linux.yaml:
+    func_name: CCSPlayer_MovementServices_CheckWater
+    func_rva: '0x159a7b0'
+    func_sig: 55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 81 EC ?? ?? ?? ?? 48 8B 7F ??
+    func_size: '0x3e9'
+    func_va: '0x159a7b0'
+  server/CCSPlayer_MovementServices_CheckWater.windows.yaml:
+    func_name: CCSPlayer_MovementServices_CheckWater
+    func_rva: '0xac3970'
+    func_sig: 48 8B C4 48 89 58 ?? 55 48 8D 6C 24 ??
+    func_size: '0x29b'
+    func_va: '0x180ac3970'
+  server/CCSPlayer_MovementServices_Duck.linux.yaml:
+    func_name: CCSPlayer_MovementServices_Duck
+    func_rva: '0x15c53c0'
+    func_sig: 55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 89 F3 48 81 EC ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? F3 0F 10 05 ?? ?? ?? ??
+    func_size: '0x15e2'
+    func_va: '0x15c53c0'
+  server/CCSPlayer_MovementServices_Duck.windows.yaml:
+    func_name: CCSPlayer_MovementServices_Duck
+    func_rva: '0xac75a0'
+    func_sig: 48 8B C4 55 53 56 41 54 41 56 48 8D A8 ?? ?? ?? ??
+    func_size: '0xb9d'
+    func_va: '0x180ac75a0'
+  server/CCSPlayer_MovementServices_Friction.linux.yaml:
+    func_name: CCSPlayer_MovementServices_Friction
+    func_rva: '0x159fb20'
+    func_sig: 55 48 89 E5 41 54 49 89 FC 53 48 89 F3 48 83 EC ?? 48 8B 47 ??
+    func_size: '0x466'
+    func_va: '0x159fb20'
+  server/CCSPlayer_MovementServices_Friction.windows.yaml:
+    func_name: CCSPlayer_MovementServices_Friction
+    func_rva: '0xaca9f0'
+    func_sig: 48 89 5C 24 ?? 57 48 81 EC ?? ?? ?? ?? 48 83 79 ?? ??
+    func_size: '0x322'
+    func_va: '0x180aca9f0'
   server/CCSPlayer_MovementServices_FullWalkMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_FullWalkMove
     func_rva: '0x15ead70'
@@ -28124,6 +29575,54 @@ files:
     patch_bytes: E9 B0 00 00 00 90
     patch_name: CCSPlayer_MovementServices_FullWalkMove_SpeedClamp
     patch_sig: 0F 86 ?? ?? ?? ?? 0F 57 C0 0F 2E C2
+  server/CCSPlayer_MovementServices_GroundAccelerate.linux.yaml:
+    func_name: CCSPlayer_MovementServices_GroundAccelerate
+    func_rva: '0x159ff90'
+    func_sig: 55 0F 28 F9 48 89 E5
+    func_size: '0x6c9'
+    func_va: '0x159ff90'
+  server/CCSPlayer_MovementServices_GroundAccelerate.windows.yaml:
+    func_name: CCSPlayer_MovementServices_GroundAccelerate
+    func_rva: '0xabc410'
+    func_sig: 40 53 41 54 41 55 41 57
+    func_size: '0x565'
+    func_va: '0x180abc410'
+  server/CCSPlayer_MovementServices_LadderMove.linux.yaml:
+    func_name: CCSPlayer_MovementServices_LadderMove
+    func_rva: '0x15c1190'
+    func_sig: 48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56 41 55 4C 8D AD ?? ?? ?? ?? 41 54 49 89 F4
+    func_size: '0x177d'
+    func_va: '0x15c1190'
+  server/CCSPlayer_MovementServices_LadderMove.windows.yaml:
+    func_name: CCSPlayer_MovementServices_LadderMove
+    func_rva: '0xada830'
+    func_sig: 40 55 53 56 57 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 48 8B F9
+    func_size: '0x1293'
+    func_va: '0x180ada830'
+  server/CCSPlayer_MovementServices_MoveInit.linux.yaml:
+    func_name: CCSPlayer_MovementServices_MoveInit
+    func_rva: '0x15c4c30'
+    func_sig: 55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 89 F7 48 83 EC ?? 48 C7 86 ?? ?? ?? ?? ?? ?? ?? ??
+    func_size: '0x78e'
+    func_va: '0x15c4c30'
+  server/CCSPlayer_MovementServices_MoveInit.windows.yaml:
+    func_name: CCSPlayer_MovementServices_MoveInit
+    func_rva: '0xae24c0'
+    func_sig: 48 8B C4 48 89 58 ?? 48 89 68 ?? 56 57 41 54 48 81 EC ?? ?? ?? ??
+    func_size: '0x5ba'
+    func_va: '0x180ae24c0'
+  server/CCSPlayer_MovementServices_OnJumpModern.linux.yaml:
+    func_name: CCSPlayer_MovementServices_OnJumpModern
+    func_rva: '0x15c8820'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 81 EC ?? ?? ?? ?? 4C 8B 77 ?? 4D 8B 66 ??
+    func_size: '0x9da'
+    func_va: '0x15c8820'
+  server/CCSPlayer_MovementServices_OnJumpModern.windows.yaml:
+    func_name: CCSPlayer_MovementServices_OnJumpModern
+    func_rva: '0xaebd40'
+    func_sig: 40 55 56 57 41 56 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 4C 8B 71 ??
+    func_size: '0x782'
+    func_va: '0x180aebd40'
   server/CCSPlayer_MovementServices_Pawn.linux.yaml:
     member_name: m_pawn
     offset: '0x38'
@@ -28138,6 +29637,18 @@ files:
     offset_sig_disp: 0
     size: 8
     struct_name: CCSPlayer_MovementServices
+  server/CCSPlayer_MovementServices_PlayerMove.linux.yaml:
+    func_name: CCSPlayer_MovementServices_PlayerMove
+    func_rva: '0x15eb020'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ?? 48 8B 7F ?? 48 85 FF 0F 84 ?? ?? ?? ?? 48 8B 07
+    func_size: '0x473'
+    func_va: '0x15eb020'
+  server/CCSPlayer_MovementServices_PlayerMove.windows.yaml:
+    func_name: CCSPlayer_MovementServices_PlayerMove
+    func_rva: '0xae1a20'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 83 79 ?? ?? 48 8B FA 48 8B D9 75 ?? E8 ?? ?? ?? ?? 48 8B 4B ?? 48 89 74 24 ??
+    func_size: '0x4cb'
+    func_va: '0x180ae1a20'
   server/CCSPlayer_MovementServices_ProcessMovement.linux.yaml:
     func_name: CCSPlayer_MovementServices_ProcessMovement
     func_rva: '0x15eb4a0'
@@ -28150,6 +29661,30 @@ files:
     func_sig: 40 57 41 57 48 81 EC ?? ?? ?? ?? 48 83 79
     func_size: '0x66b'
     func_va: '0x180ae4ec0'
+  server/CCSPlayer_MovementServices_SetupMove.linux.yaml:
+    func_name: CCSPlayer_MovementServices_SetupMove
+    func_rva: '0x15e62e0'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB 48 83 EC ?? E8 ?? ?? ?? ?? 48 8B 43 ??
+    func_size: '0x45f'
+    func_va: '0x15e62e0'
+  server/CCSPlayer_MovementServices_SetupMove.windows.yaml:
+    func_name: CCSPlayer_MovementServices_SetupMove
+    func_rva: '0xae79b0'
+    func_sig: 40 53 56 48 83 EC ?? 48 89 6C 24 ?? 49 8B F0
+    func_size: '0x389'
+    func_va: '0x180ae79b0'
+  server/CCSPlayer_MovementServices_TryPlayerMove.linux.yaml:
+    func_name: CCSPlayer_MovementServices_TryPlayerMove
+    func_rva: '0x15a23e0'
+    func_sig: 48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56 49 89 F6
+    func_size: '0x1929'
+    func_va: '0x15a23e0'
+  server/CCSPlayer_MovementServices_TryPlayerMove.windows.yaml:
+    func_name: CCSPlayer_MovementServices_TryPlayerMove
+    func_rva: '0xaec4d0'
+    func_sig: 48 8B C4 4C 89 48 ?? 4C 89 40 ?? 48 89 50 ?? 48 89 48 ?? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D A8 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 0F 29 70 ??
+    func_size: '0xe18'
+    func_va: '0x180aec4d0'
   server/CCSPlayer_MovementServices_WalkMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_WalkMove
     func_rva: '0x15e9530'
@@ -32983,6 +34518,18 @@ files:
     vtable_size: '0x770'
     vtable_symbol: ??_7CEnvShake@@6B@
     vtable_va: '0x18198b3f0'
+  server/CFlashbangProjectile_Create.linux.yaml:
+    func_name: CFlashbangProjectile_Create
+    func_rva: '0xd389f0'
+    func_sig: 55 4C 89 C1 48 89 E5 41 57 45 89 CF 41 56 49 89 FE 41 55 49 89 D5 48 89 F2 48 89 FE 41 54 48 8D 3D ?? ?? ?? ?? 4D 89 C4 53 48 83 EC ?? E8 ?? ?? ?? ?? 4C 89 EE
+    func_size: '0xa3'
+    func_va: '0xd389f0'
+  server/CFlashbangProjectile_Create.windows.yaml:
+    func_name: CFlashbangProjectile_Create
+    func_rva: '0x3aab90'
+    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B 6C 24 ?? 49 8B F8
+    func_size: '0xaf'
+    func_va: '0x1803aab90'
   server/CFlashbangProjectile_Detonate.linux.yaml:
     func_name: CFlashbangProjectile_Detonate
     func_rva: '0xd3bbf0'
@@ -34013,6 +35560,24 @@ files:
     vtable_size: '0xc0'
     vtable_symbol: ??_7CGameEntitySystem@@6B@
     vtable_va: '0x18194b700'
+  server/CGameEventManager_FireEvent.linux.yaml:
+    func_name: CGameEventManager_FireEvent
+    func_rva: '0x172db00'
+    func_sig: 55 48 89 E5 41 55 49 89 FD 41 54 49 89 F4 53 89 D3
+    func_size: '0x8a'
+    func_va: '0x172db00'
+    vfunc_index: 8
+    vfunc_offset: '0x40'
+    vtable_name: CGameEventManager
+  server/CGameEventManager_FireEvent.windows.yaml:
+    func_name: CGameEventManager_FireEvent
+    func_rva: '0xc05720'
+    func_sig: 40 53 57 41 54 41 55 48 83 EC ?? 48 8B 05 ?? ?? ?? ??
+    func_size: '0x28e'
+    func_va: '0x180c05720'
+    vfunc_index: 7
+    vfunc_offset: '0x38'
+    vtable_name: CGameEventManager
   server/CGameEventManager_Init.linux.yaml:
     func_name: CGameEventManager_Init
     func_rva: '0x172c7e0'
@@ -36978,6 +38543,24 @@ files:
     func_sig: 48 89 5C 24 ?? 44 89 4C 24 ?? 48 89 54 24 ?? 48 89 4C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ??
     func_size: '0x26e9'
     func_va: '0x1814c09f0'
+  server/CNavPhysicsInterface_TraceShape.linux.yaml:
+    func_name: CNavPhysicsInterface_TraceShape
+    func_rva: '0x1cc3150'
+    func_sig: 48 8D 05 ?? ?? ?? ?? 48 8B 38 4D 85 C0
+    func_size: '0x24'
+    func_va: '0x1cc3150'
+    vfunc_index: 5
+    vfunc_offset: '0x28'
+    vtable_name: CNavPhysicsInterface
+  server/CNavPhysicsInterface_TraceShape.windows.yaml:
+    func_name: CNavPhysicsInterface_TraceShape
+    func_rva: '0x1097ae0'
+    func_sig: 48 8B 44 24 ?? 48 8D 0D ?? ?? ?? ?? 48 85 C0 48 0F 45 C8 48 89 4C 24 ??
+    func_size: '0x24'
+    func_va: '0x181097ae0'
+    vfunc_index: 3
+    vfunc_offset: '0x18'
+    vtable_name: CNavPhysicsInterface
   server/CNavPhysicsInterface_vtable.linux.yaml:
     vtable_class: CNavPhysicsInterface
     vtable_entries:
@@ -41842,6 +43425,24 @@ files:
     vfunc_index: 20
     vfunc_offset: '0xa0'
     vtable_name: CSource2GameClients_vtable
+  server/CSource2GameClients_ClientVoice.linux.yaml:
+    func_name: CSource2GameClients_ClientVoice
+    func_rva: '0x19a25d0'
+    func_sig: 55 89 F7 48 89 E5 53 48 83 EC ?? E8 ?? ?? ?? ?? 48 85 C0 74 ?? 48 89 C3 E8 ?? ?? ?? ??
+    func_size: '0x36'
+    func_va: '0x19a25d0'
+    vfunc_index: 27
+    vfunc_offset: '0xd8'
+    vtable_name: CSource2GameClients
+  server/CSource2GameClients_ClientVoice.windows.yaml:
+    func_name: CSource2GameClients_ClientVoice
+    func_rva: '0xdeb5e0'
+    func_sig: 40 53 48 83 EC ?? 8B CA E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 74 ?? E8 ?? ?? ?? ??
+    func_size: '0x30'
+    func_va: '0x180deb5e0'
+    vfunc_index: 27
+    vfunc_offset: '0xd8'
+    vtable_name: CSource2GameClients
   server/CSource2GameClients_GetBugReportInfo.linux.yaml:
     func_name: CSource2GameClients_GetBugReportInfo
     func_rva: '0x19a4140'
@@ -43317,7 +44918,7 @@ files:
   server/CTakeDamageInfo_ctor.linux.yaml:
     func_name: CTakeDamageInfo_ctor
     func_rva: '0x1bf74f0'
-    func_sig: 49 BB ?? ?? ?? ?? ?? ?? ?? ?? 55
+    func_sig: 49 BB ?? ?? ?? ?? ?? ?? ?? ?? 55 48 89 E5
     func_size: '0xf9'
     func_va: '0x1bf74f0'
   server/CTakeDamageInfo_ctor.windows.yaml:
@@ -47157,6 +48758,24 @@ files:
     vfunc_index: 25
     vfunc_offset: '0xc8'
     vtable_name: CCSPlayer_MovementServices
+  tier0/CCvar_DispatchConCommand.linux.yaml:
+    func_name: CCvar_DispatchConCommand
+    func_rva: '0x15a280'
+    func_sig: 66 83 FE ?? 0F 84 ?? ?? ?? ?? 48 B8 ?? ?? ?? ?? ?? ?? ?? ??
+    func_size: '0x4a3'
+    func_va: '0x15a280'
+    vfunc_index: 20
+    vfunc_offset: '0xa0'
+    vtable_name: CCvar
+  tier0/CCvar_DispatchConCommand.windows.yaml:
+    func_name: CCvar_DispatchConCommand
+    func_rva: '0x6d030'
+    func_sig: 48 8B C4 4C 89 48 ?? 4C 89 40 ?? 55
+    func_size: '0x3af'
+    func_va: '0x18006d030'
+    vfunc_index: 20
+    vfunc_offset: '0xa0'
+    vtable_name: CCvar
   tier0/CCvar_vtable.linux.yaml:
     vtable_class: CCvar
     vtable_entries:
@@ -47757,5 +49376,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14192'
-last_publish_time: '2026-10-23T16:18:23Z'
+last_publish_time: '2026-10-24T10:43:29Z'
 schema_version: 5

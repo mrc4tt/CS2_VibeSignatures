@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_nAddr
+offset: '0xcc'
+size: 4
+offset_sig: "48 8D 8A CC 00 00 00"

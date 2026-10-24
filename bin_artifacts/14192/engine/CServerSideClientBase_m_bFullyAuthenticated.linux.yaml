@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_bFullyAuthenticated
+offset: '0x9fa'
+size: 1
+offset_sig: "41 C6 87 FA 09 00 00 00"

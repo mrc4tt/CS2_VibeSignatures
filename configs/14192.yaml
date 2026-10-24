@@ -240,6 +240,111 @@ modules:
     path_windows: game/bin/win64/networksystem.dll
     path_linux: game/bin/linuxsteamrt64/libnetworksystem.so
     skills:
+      - name: find-CNetChan_GetName
+        expected_output:
+          - CNetChan_GetName.{platform}.yaml
+      - name: find-CNetChan_GetAddress
+        expected_output:
+          - CNetChan_GetAddress.{platform}.yaml
+      - name: find-CNetChan_GetRemoteAddress
+        expected_output:
+          - CNetChan_GetRemoteAddress.{platform}.yaml
+      - name: find-CNetChan_GetTime
+        expected_output:
+          - CNetChan_GetTime.{platform}.yaml
+      - name: find-CNetChan_GetTimeConnected
+        expected_output:
+          - CNetChan_GetTimeConnected.{platform}.yaml
+      - name: find-CNetChan_GetDataRate
+        expected_output:
+          - CNetChan_GetDataRate.{platform}.yaml
+      - name: find-CNetChan_IsLocalHost
+        expected_output:
+          - CNetChan_IsLocalHost.{platform}.yaml
+      - name: find-CNetChan_IsLoopback
+        expected_output:
+          - CNetChan_IsLoopback.{platform}.yaml
+      - name: find-CNetChan_IsTimingOut
+        expected_output:
+          - CNetChan_IsTimingOut.{platform}.yaml
+      - name: find-CNetChan_IsPlayback
+        expected_output:
+          - CNetChan_IsPlayback.{platform}.yaml
+      - name: find-CNetChan_GetAvgLatency
+        expected_output:
+          - CNetChan_GetAvgLatency.{platform}.yaml
+      - name: find-CNetChan_GetEngineLatency
+        expected_output:
+          - CNetChan_GetEngineLatency.{platform}.yaml
+      - name: find-CNetChan_GetAvgLoss
+        expected_output:
+          - CNetChan_GetAvgLoss.{platform}.yaml
+      - name: find-CNetChan_GetAvgChoke
+        expected_output:
+          - CNetChan_GetAvgChoke.{platform}.yaml
+      - name: find-CNetChan_GetAvgData
+        expected_output:
+          - CNetChan_GetAvgData.{platform}.yaml
+      - name: find-CNetChan_GetAvgPackets
+        expected_output:
+          - CNetChan_GetAvgPackets.{platform}.yaml
+      - name: find-CNetChan_GetTotalData
+        expected_output:
+          - CNetChan_GetTotalData.{platform}.yaml
+      - name: find-CNetChan_GetTotalPackets
+        expected_output:
+          - CNetChan_GetTotalPackets.{platform}.yaml
+      - name: find-CNetChan_GetSequenceNr
+        expected_output:
+          - CNetChan_GetSequenceNr.{platform}.yaml
+      - name: find-CNetChan_GetTimeSinceLastReceived
+        expected_output:
+          - CNetChan_GetTimeSinceLastReceived.{platform}.yaml
+      - name: find-CNetChan_GetRemoteFramerate
+        expected_output:
+          - CNetChan_GetRemoteFramerate.{platform}.yaml
+      - name: find-CNetChan_GetTimeoutSeconds
+        expected_output:
+          - CNetChan_GetTimeoutSeconds.{platform}.yaml
+      - name: find-CNetChan_GetTimeUntilTimeout
+        expected_output:
+          - CNetChan_GetTimeUntilTimeout.{platform}.yaml
+      - name: find-CNetChan_SetInterpolationAmount
+        expected_output:
+          - CNetChan_SetInterpolationAmount.{platform}.yaml
+      - name: find-CNetChan_SetNumPredictionErrors
+        expected_output:
+          - CNetChan_SetNumPredictionErrors.{platform}.yaml
+      - name: find-CNetChan_SetShowNetMessages
+        expected_output:
+          - CNetChan_SetShowNetMessages.{platform}.yaml
+      - name: find-CNetChan_CanPacket
+        expected_output:
+          - CNetChan_CanPacket.{platform}.yaml
+      - name: find-CNetChan_IsOverflowed
+        expected_output:
+          - CNetChan_IsOverflowed.{platform}.yaml
+      - name: find-CNetChan_HasPendingReliableData
+        expected_output:
+          - CNetChan_HasPendingReliableData.{platform}.yaml
+      - name: find-CNetChan_SetMinDataRate
+        expected_output:
+          - CNetChan_SetMinDataRate.{platform}.yaml
+      - name: find-CNetChan_SetMaxDataRate
+        expected_output:
+          - CNetChan_SetMaxDataRate.{platform}.yaml
+      - name: find-CNetChan_SetTimeout
+        expected_output:
+          - CNetChan_SetTimeout.{platform}.yaml
+      - name: find-CNetChan_IsTimedOut
+        expected_output:
+          - CNetChan_IsTimedOut.{platform}.yaml
+      - name: find-CNetChan_SuppressTransmit
+        expected_output:
+          - CNetChan_SuppressTransmit.{platform}.yaml
+      - name: find-CNetChan_IsSuppressingTransmit
+        expected_output:
+          - CNetChan_IsSuppressingTransmit.{platform}.yaml
       - name: find-CNetChan_vtable
         expected_output:
           - CNetChan_vtable.{platform}.yaml
@@ -403,6 +508,76 @@ modules:
         expected_output:
           - CNetworkMessages_ConfirmAllMessageHandlersInstalled.{platform}.yaml
     symbols:
+      - name: CNetChan_GetName
+        category: vfunc
+      - name: CNetChan_GetAddress
+        category: vfunc
+      - name: CNetChan_GetRemoteAddress
+        category: vfunc
+      - name: CNetChan_GetTime
+        category: vfunc
+      - name: CNetChan_GetTimeConnected
+        category: vfunc
+      - name: CNetChan_GetDataRate
+        category: vfunc
+      - name: CNetChan_IsLocalHost
+        category: vfunc
+      - name: CNetChan_IsLoopback
+        category: vfunc
+      - name: CNetChan_IsTimingOut
+        category: vfunc
+      - name: CNetChan_IsPlayback
+        category: vfunc
+      - name: CNetChan_GetAvgLatency
+        category: vfunc
+      - name: CNetChan_GetEngineLatency
+        category: vfunc
+      - name: CNetChan_GetAvgLoss
+        category: vfunc
+      - name: CNetChan_GetAvgChoke
+        category: vfunc
+      - name: CNetChan_GetAvgData
+        category: vfunc
+      - name: CNetChan_GetAvgPackets
+        category: vfunc
+      - name: CNetChan_GetTotalData
+        category: vfunc
+      - name: CNetChan_GetTotalPackets
+        category: vfunc
+      - name: CNetChan_GetSequenceNr
+        category: vfunc
+      - name: CNetChan_GetTimeSinceLastReceived
+        category: vfunc
+      - name: CNetChan_GetRemoteFramerate
+        category: vfunc
+      - name: CNetChan_GetTimeoutSeconds
+        category: vfunc
+      - name: CNetChan_GetTimeUntilTimeout
+        category: vfunc
+      - name: CNetChan_SetInterpolationAmount
+        category: vfunc
+      - name: CNetChan_SetNumPredictionErrors
+        category: vfunc
+      - name: CNetChan_SetShowNetMessages
+        category: vfunc
+      - name: CNetChan_CanPacket
+        category: vfunc
+      - name: CNetChan_IsOverflowed
+        category: vfunc
+      - name: CNetChan_HasPendingReliableData
+        category: vfunc
+      - name: CNetChan_SetMinDataRate
+        category: vfunc
+      - name: CNetChan_SetMaxDataRate
+        category: vfunc
+      - name: CNetChan_SetTimeout
+        category: vfunc
+      - name: CNetChan_IsTimedOut
+        category: vfunc
+      - name: CNetChan_SuppressTransmit
+        category: vfunc
+      - name: CNetChan_IsSuppressingTransmit
+        category: vfunc
       - name: CNetworkMessages_vtable
         category: vtable
         shared: true
@@ -624,6 +799,138 @@ modules:
     path_windows: game/bin/win64/engine2.dll
     path_linux: game/bin/linuxsteamrt64/libengine2.so
     skills:
+      - name: find-CServerSideClientBase_Reconnect
+        expected_output:
+          - CServerSideClientBase_Reconnect.{platform}.yaml
+      - name: find-CServerSideClientBase_SetRate
+        expected_output:
+          - CServerSideClientBase_SetRate.{platform}.yaml
+      - name: find-CServerSideClientBase_SetUpdateRate
+        expected_output:
+          - CServerSideClientBase_SetUpdateRate.{platform}.yaml
+      - name: find-CServerSideClientBase_GetRate
+        expected_output:
+          - CServerSideClientBase_GetRate.{platform}.yaml
+      - name: find-CServerSideClientBase_ShouldSendMessages
+        expected_output:
+          - CServerSideClientBase_ShouldSendMessages.{platform}.yaml
+      - name: find-CServerSideClientBase_UpdateSendState
+        expected_output:
+          - CServerSideClientBase_UpdateSendState.{platform}.yaml
+      - name: find-CServerSideClientBase_UpdateUserSettings
+        expected_output:
+          - CServerSideClientBase_UpdateUserSettings.{platform}.yaml
+      - name: find-CServerSideClientBase_UpdateRateFromUserInfo
+        expected_output:
+          - CServerSideClientBase_UpdateRateFromUserInfo.{platform}.yaml
+      - name: find-CServerSideClientBase_FreeBaselines
+        expected_output:
+          - CServerSideClientBase_FreeBaselines.{platform}.yaml
+      - name: find-CServerSideClientBase_MarkToKick
+        expected_output:
+          - CServerSideClientBase_MarkToKick.{platform}.yaml
+      - name: find-CServerSideClientBase_UnmarkToKick
+        expected_output:
+          - CServerSideClientBase_UnmarkToKick.{platform}.yaml
+      - name: find-CServerSideClient_SendNetMessage
+        expected_output:
+          - CServerSideClient_SendNetMessage.{platform}.yaml
+      - name: find-INetworkMessageProcessingPreFilter_FilterMessage
+        expected_output:
+          - INetworkMessageProcessingPreFilter_FilterMessage.{platform}.yaml
+      - name: find-CEngineServer_SetClientListening
+        expected_output:
+          - CEngineServer_SetClientListening.{platform}.yaml
+      - name: find-CGameEventSystem_PostEventAbstract
+        expected_output:
+          - CGameEventSystem_PostEventAbstract.{platform}.yaml
+      - name: find-CServerSideClientBase_m_AuthTicketSteamID
+        expected_output:
+          - CServerSideClientBase_m_AuthTicketSteamID.{platform}.yaml
+      - name: find-CServerSideClientBase_m_BaselinesSent
+        expected_output:
+          - CServerSideClientBase_m_BaselinesSent.{platform}.yaml
+      - name: find-CServerSideClientBase_m_bConVarsChanged
+        expected_output:
+          - CServerSideClientBase_m_bConVarsChanged.{platform}.yaml
+      - name: find-CServerSideClientBase_m_bFullyAuthenticated
+        expected_output:
+          - CServerSideClientBase_m_bFullyAuthenticated.{platform}.yaml
+      - name: find-CServerSideClientBase_m_bLowViolence
+        expected_output:
+          - CServerSideClientBase_m_bLowViolence.{platform}.yaml
+      - name: find-CServerSideClientBase_m_bMarkedToKick
+        expected_output:
+          - CServerSideClientBase_m_bMarkedToKick.{platform}.yaml
+      - name: find-CServerSideClientBase_m_bReceivedPacket
+        expected_output:
+          - CServerSideClientBase_m_bReceivedPacket.{platform}.yaml
+      - name: find-CServerSideClientBase_m_bSendingSnapshot
+        expected_output:
+          - CServerSideClientBase_m_bSendingSnapshot.{platform}.yaml
+      - name: find-CServerSideClientBase_m_ConVars
+        expected_output:
+          - CServerSideClientBase_m_ConVars.{platform}.yaml
+      - name: find-CServerSideClientBase_m_fAuthenticatedTime
+        expected_output:
+          - CServerSideClientBase_m_fAuthenticatedTime.{platform}.yaml
+      - name: find-CServerSideClientBase_m_fNextMessageTime
+        expected_output:
+          - CServerSideClientBase_m_fNextMessageTime.{platform}.yaml
+      - name: find-CServerSideClientBase_m_fSnapshotInterval
+        expected_output:
+          - CServerSideClientBase_m_fSnapshotInterval.{platform}.yaml
+      - name: find-CServerSideClientBase_m_lastExecutedCommand
+        expected_output:
+          - CServerSideClientBase_m_lastExecutedCommand.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nAddr
+        expected_output:
+          - CServerSideClientBase_m_nAddr.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nAsyncDisconnectFlags
+        expected_output:
+          - CServerSideClientBase_m_nAsyncDisconnectFlags.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nBaselineUpdateTick
+        expected_output:
+          - CServerSideClientBase_m_nBaselineUpdateTick.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nBaselineUsed
+        expected_output:
+          - CServerSideClientBase_m_nBaselineUsed.{platform}.yaml
+      - name: find-CServerSideClientBase_m_pBaseline
+        expected_output:
+          - CServerSideClientBase_m_pBaseline.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nDeltaTick
+        expected_output:
+          - CServerSideClientBase_m_nDeltaTick.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nForceWaitForTick
+        expected_output:
+          - CServerSideClientBase_m_nForceWaitForTick.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nFriendsID
+        expected_output:
+          - CServerSideClientBase_m_nFriendsID.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nLoadingProgress
+        expected_output:
+          - CServerSideClientBase_m_nLoadingProgress.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nSendtableCRC
+        expected_output:
+          - CServerSideClientBase_m_nSendtableCRC.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nSignonTick
+        expected_output:
+          - CServerSideClientBase_m_nSignonTick.{platform}.yaml
+      - name: find-CServerSideClientBase_m_nStringTableAckTick
+        expected_output:
+          - CServerSideClientBase_m_nStringTableAckTick.{platform}.yaml
+      - name: find-CServerSideClientBase_m_spamCommandsCount
+        expected_output:
+          - CServerSideClientBase_m_spamCommandsCount.{platform}.yaml
+      - name: find-CServerSideClientBase_m_Trace
+        expected_output:
+          - CServerSideClientBase_m_Trace.{platform}.yaml
+      - name: find-CServerSideClientBase_m_uChallengeNumber
+        expected_output:
+          - CServerSideClientBase_m_uChallengeNumber.{platform}.yaml
+      - name: find-CServerSideClientBase_m_vecLoadedSpawnGroups
+        expected_output:
+          - CServerSideClientBase_m_vecLoadedSpawnGroups.{platform}.yaml
       - name: find-CGameEventSystem_vtable
         optional_output:
           - CGameEventSystem_vtable.{platform}.yaml
@@ -2597,6 +2904,154 @@ modules:
         expected_input:
           - CNetworkGameClientBase_vtable.{platform}.yaml
     symbols:
+      - name: CServerSideClientBase
+        category: struct
+      - name: CServerSideClientBase_Reconnect
+        category: vfunc
+      - name: CServerSideClientBase_SetRate
+        category: vfunc
+      - name: CServerSideClientBase_SetUpdateRate
+        category: vfunc
+      - name: CServerSideClientBase_GetRate
+        category: vfunc
+      - name: CServerSideClientBase_ShouldSendMessages
+        category: vfunc
+      - name: CServerSideClientBase_UpdateSendState
+        category: vfunc
+      - name: CServerSideClientBase_UpdateUserSettings
+        category: vfunc
+      - name: CServerSideClientBase_UpdateRateFromUserInfo
+        category: vfunc
+      - name: CServerSideClientBase_FreeBaselines
+        category: vfunc
+      - name: CServerSideClientBase_MarkToKick
+        category: vfunc
+      - name: CServerSideClientBase_UnmarkToKick
+        category: vfunc
+      - name: CServerSideClient_SendNetMessage
+        category: vfunc
+      - name: INetworkMessageProcessingPreFilter_FilterMessage
+        category: func
+      - name: CEngineServer_SetClientListening
+        category: vfunc
+      - name: CGameEventSystem_PostEventAbstract
+        category: vfunc
+      - name: CServerSideClientBase_m_AuthTicketSteamID
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_AuthTicketSteamID
+      - name: CServerSideClientBase_m_BaselinesSent
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_BaselinesSent
+      - name: CServerSideClientBase_m_bConVarsChanged
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_bConVarsChanged
+      - name: CServerSideClientBase_m_bFullyAuthenticated
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_bFullyAuthenticated
+      - name: CServerSideClientBase_m_bLowViolence
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_bLowViolence
+      - name: CServerSideClientBase_m_bMarkedToKick
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_bMarkedToKick
+      - name: CServerSideClientBase_m_bReceivedPacket
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_bReceivedPacket
+      - name: CServerSideClientBase_m_bSendingSnapshot
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_bSendingSnapshot
+      - name: CServerSideClientBase_m_ConVars
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_ConVars
+      - name: CServerSideClientBase_m_fAuthenticatedTime
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_fAuthenticatedTime
+      - name: CServerSideClientBase_m_fNextMessageTime
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_fNextMessageTime
+      - name: CServerSideClientBase_m_fSnapshotInterval
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_fSnapshotInterval
+      - name: CServerSideClientBase_m_lastExecutedCommand
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_lastExecutedCommand
+      - name: CServerSideClientBase_m_nAddr
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nAddr
+      - name: CServerSideClientBase_m_nAsyncDisconnectFlags
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nAsyncDisconnectFlags
+      - name: CServerSideClientBase_m_nBaselineUpdateTick
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nBaselineUpdateTick
+      - name: CServerSideClientBase_m_nBaselineUsed
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nBaselineUsed
+      - name: CServerSideClientBase_m_pBaseline
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_pBaseline
+      - name: CServerSideClientBase_m_nDeltaTick
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nDeltaTick
+      - name: CServerSideClientBase_m_nForceWaitForTick
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nForceWaitForTick
+      - name: CServerSideClientBase_m_nFriendsID
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nFriendsID
+      - name: CServerSideClientBase_m_nLoadingProgress
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nLoadingProgress
+      - name: CServerSideClientBase_m_nSendtableCRC
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nSendtableCRC
+      - name: CServerSideClientBase_m_nSignonTick
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nSignonTick
+      - name: CServerSideClientBase_m_nStringTableAckTick
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_nStringTableAckTick
+      - name: CServerSideClientBase_m_spamCommandsCount
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_spamCommandsCount
+      - name: CServerSideClientBase_m_Trace
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_Trace
+      - name: CServerSideClientBase_m_uChallengeNumber
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_uChallengeNumber
+      - name: CServerSideClientBase_m_vecLoadedSpawnGroups
+        category: structmember
+        struct: CServerSideClientBase
+        member: m_vecLoadedSpawnGroups
       - name: CGameEventSystem_vtable
         category: vtable
       - name: CHostStateMgr_StartNewRequest
@@ -6725,6 +7180,84 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CSPlayerController_ScriptIsBot
+        expected_output:
+          - CSPlayerController_ScriptIsBot.{platform}.yaml
+      - name: find-CGameEventManager_FireEvent
+        expected_output:
+          - CGameEventManager_FireEvent.{platform}.yaml
+      - name: find-CCSGameRules_GetViewVectors
+        expected_output:
+          - CCSGameRules_GetViewVectors.{platform}.yaml
+      - name: find-CSource2GameClients_ClientVoice
+        expected_output:
+          - CSource2GameClients_ClientVoice.{platform}.yaml
+      - name: find-CNavPhysicsInterface_TraceShape
+        expected_output:
+          - CNavPhysicsInterface_TraceShape.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_AirAccelerate
+        expected_output:
+          - CCSPlayer_MovementServices_AirAccelerate.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_AirMove
+        expected_output:
+          - CCSPlayer_MovementServices_AirMove.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_CanUnduck
+        expected_output:
+          - CCSPlayer_MovementServices_CanUnduck.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_CategorizePosition
+        expected_output:
+          - CCSPlayer_MovementServices_CategorizePosition.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_CheckFalling
+        expected_output:
+          - CCSPlayer_MovementServices_CheckFalling.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_CheckJumpButtonLegacy
+        expected_output:
+          - CCSPlayer_MovementServices_CheckJumpButtonLegacy.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_CheckJumpButtonModern
+        expected_output:
+          - CCSPlayer_MovementServices_CheckJumpButtonModern.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_CheckParameters
+        expected_output:
+          - CCSPlayer_MovementServices_CheckParameters.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_CheckWater
+        expected_output:
+          - CCSPlayer_MovementServices_CheckWater.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_Duck
+        expected_output:
+          - CCSPlayer_MovementServices_Duck.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_Friction
+        expected_output:
+          - CCSPlayer_MovementServices_Friction.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_GroundAccelerate
+        expected_output:
+          - CCSPlayer_MovementServices_GroundAccelerate.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_LadderMove
+        expected_output:
+          - CCSPlayer_MovementServices_LadderMove.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_MoveInit
+        expected_output:
+          - CCSPlayer_MovementServices_MoveInit.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_OnJumpModern
+        expected_output:
+          - CCSPlayer_MovementServices_OnJumpModern.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_PlayerMove
+        expected_output:
+          - CCSPlayer_MovementServices_PlayerMove.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_SetupMove
+        expected_output:
+          - CCSPlayer_MovementServices_SetupMove.{platform}.yaml
+      - name: find-CCSPlayer_MovementServices_TryPlayerMove
+        expected_output:
+          - CCSPlayer_MovementServices_TryPlayerMove.{platform}.yaml
+      - name: find-CCSPlayerPawn_CanMove
+        expected_output:
+          - CCSPlayerPawn_CanMove.{platform}.yaml
+      - name: find-CCSCustomHudLayout_RemoveDialogVariableStringForPlayer
+        expected_output:
+          - CCSCustomHudLayout_RemoveDialogVariableStringForPlayer.{platform}.yaml
+      - name: find-CFlashbangProjectile_Create
+        expected_output:
+          - CFlashbangProjectile_Create.{platform}.yaml
       - name: find-ScriptGetAddon
         expected_output:
           - ScriptGetAddon.{platform}.yaml
@@ -10176,6 +10709,60 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CSPlayerController_ScriptIsBot
+        category: func
+        alias:
+          - CSPlayerController::ScriptIsBot
+      - name: CGameEventManager_FireEvent
+        category: vfunc
+      - name: CCSGameRules_GetViewVectors
+        category: vfunc
+      - name: CSource2GameClients_ClientVoice
+        category: vfunc
+      - name: CNavPhysicsInterface_TraceShape
+        category: vfunc
+      - name: CCSPlayer_MovementServices_AirAccelerate
+        category: func
+      - name: CCSPlayer_MovementServices_AirMove
+        category: func
+      - name: CCSPlayer_MovementServices_CanUnduck
+        category: func
+      - name: CCSPlayer_MovementServices_CategorizePosition
+        category: func
+      - name: CCSPlayer_MovementServices_CheckFalling
+        category: func
+      - name: CCSPlayer_MovementServices_CheckJumpButtonLegacy
+        category: func
+      - name: CCSPlayer_MovementServices_CheckJumpButtonModern
+        category: func
+      - name: CCSPlayer_MovementServices_CheckParameters
+        category: func
+      - name: CCSPlayer_MovementServices_CheckWater
+        category: func
+      - name: CCSPlayer_MovementServices_Duck
+        category: func
+      - name: CCSPlayer_MovementServices_Friction
+        category: func
+      - name: CCSPlayer_MovementServices_GroundAccelerate
+        category: func
+      - name: CCSPlayer_MovementServices_LadderMove
+        category: func
+      - name: CCSPlayer_MovementServices_MoveInit
+        category: func
+      - name: CCSPlayer_MovementServices_OnJumpModern
+        category: func
+      - name: CCSPlayer_MovementServices_PlayerMove
+        category: func
+      - name: CCSPlayer_MovementServices_SetupMove
+        category: func
+      - name: CCSPlayer_MovementServices_TryPlayerMove
+        category: func
+      - name: CCSPlayerPawn_CanMove
+        category: func
+      - name: CCSCustomHudLayout_RemoveDialogVariableStringForPlayer
+        category: func
+      - name: CFlashbangProjectile_Create
+        category: func
       - name: ScriptGetAddon
         category: func
       - name: CPlayer_ObserverServices_IsValidObserverTarget
@@ -14568,6 +15155,9 @@ modules:
     path_windows: game/bin/win64/tier0.dll
     path_linux: game/bin/linuxsteamrt64/libtier0.so
     skills:
+      - name: find-CCvar_DispatchConCommand
+        expected_output:
+          - CCvar_DispatchConCommand.{platform}.yaml
       - name: find-CCvar_vtable
         optional_output:
           - CCvar_vtable.{platform}.yaml
@@ -14575,6 +15165,8 @@ modules:
         optional_output:
           - CLoggingSystem_LogDirect.{platform}.yaml
     symbols:
+      - name: CCvar_DispatchConCommand
+        category: vfunc
       - name: CCvar_vtable
         category: vtable
       - name: CLoggingSystem_LogDirect

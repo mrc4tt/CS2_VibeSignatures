@@ -1,0 +1,8 @@
+func_name: CNetChan_GetSequenceNr
+func_va: '0x1800c5bc0'
+func_rva: '0xc5bc0'
+func_size: '0x1a'
+func_sig: "85 D2 75 ?? 8B 81 ?? ?? ?? ??"
+vtable_name: CNetChan
+vfunc_offset: '0x98'
+vfunc_index: 19

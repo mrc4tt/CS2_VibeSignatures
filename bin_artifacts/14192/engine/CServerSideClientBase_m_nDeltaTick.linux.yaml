@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_nDeltaTick
+offset: '0x15c'
+size: 4
+offset_sig: "89 83 5C 01 00 00 89 83 ?? ?? ?? ?? 41 BC ?? ?? ?? ??"

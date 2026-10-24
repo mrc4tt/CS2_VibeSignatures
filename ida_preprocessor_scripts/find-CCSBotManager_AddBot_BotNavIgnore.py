@@ -10,10 +10,14 @@ TARGET_PATCH_NAMES = [
 
 GENERATE_YAML_DESIRED_FIELDS = [
     # (symbol_name, generate_yaml_fields)
+    # patch_va: SwiftlyS2 ships patch_sig as BotNavIgnore1-3, and without the address
+    # verify_plugin_gamedata cannot confirm the site, only that the pattern is unique.
     (
         "CCSBotManager_AddBot_BotNavIgnore",
         [
             "patch_name",
+            "patch_va",
+            "patch_rva",
             "patch_sig",
             "patch_bytes",
         ],

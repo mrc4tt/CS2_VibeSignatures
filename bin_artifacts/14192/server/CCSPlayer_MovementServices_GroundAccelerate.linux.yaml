@@ -1,0 +1,5 @@
+func_name: CCSPlayer_MovementServices_GroundAccelerate
+func_va: '0x159ff90'
+func_rva: '0x159ff90'
+func_size: '0x6c9'
+func_sig: "55 0F 28 F9 48 89 E5"

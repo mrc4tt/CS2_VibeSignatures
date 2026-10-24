@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_BaselinesSent
+offset: '0x1d4'
+size: 4
+offset_sig: "48 8D 8B D4 01 00 00"

@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_lastExecutedCommand
+offset: '0xbb0'
+size: 8
+offset_sig: "F2 0F 11 83 B0 0B 00 00 C7 83 ?? ?? ?? ?? ?? ?? ?? ??"

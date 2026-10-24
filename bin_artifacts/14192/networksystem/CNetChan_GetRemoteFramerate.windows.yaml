@@ -1,0 +1,8 @@
+func_name: CNetChan_GetRemoteFramerate
+func_va: '0x1800c5be0'
+func_rva: '0xc5be0'
+func_size: '0x2a'
+func_sig: "48 85 D2 74 ?? 8B 81 ?? ?? ?? ??"
+vtable_name: CNetChan
+vfunc_offset: '0xa8'
+vfunc_index: 21

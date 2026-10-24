@@ -1,0 +1,8 @@
+func_name: CNetChan_IsTimingOut
+func_va: '0x2853e0'
+func_rva: '0x2853e0'
+func_size: '0x3c'
+func_sig: "F3 0F 10 05 ?? ?? ?? ?? 0F 2E 87 ?? ?? ?? ??"
+vtable_name: CNetChan
+vfunc_offset: '0x40'
+vfunc_index: 8

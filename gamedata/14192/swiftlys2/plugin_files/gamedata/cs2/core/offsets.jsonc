@@ -265,8 +265,8 @@
         "linux": 13
     },
     "INetChannelInfo::GetAvgData": {
-        "windows": 14,
-        "linux": 14
+        "windows": 15,
+        "linux": 15
     },
     "INetChannelInfo::GetAvgPacketBytes": {
         "windows": 15,
@@ -318,39 +318,39 @@
     },
     "INetChannel::CanPacket": {
         "windows": 47,
-        "linux": 47
+        "linux": 48
     },
     "INetChannel::IsOverflowed": {
         "windows": 48,
-        "linux": 48
+        "linux": 49
     },
     "INetChannel::HasPendingReliableData": {
         "windows": 49,
-        "linux": 49
+        "linux": 50
     },
     "INetChannel::IsTimedOut": {
         "windows": 56,
-        "linux": 56
+        "linux": 57
     },
     "INetChannel::IsSuppressingTransmit": {
-        "windows": 81,
-        "linux": 81
+        "windows": 82,
+        "linux": 83
     },
     "INetChannel::SetMinDataRate": {
         "windows": 53,
-        "linux": 53
+        "linux": 54
     },
     "INetChannel::SetMaxDataRate": {
         "windows": 54,
-        "linux": 54
+        "linux": 55
     },
     "INetChannel::SetTimeout": {
         "windows": 55,
-        "linux": 55
+        "linux": 56
     },
     "INetChannel::SuppressTransmit": {
-        "windows": 80,
-        "linux": 80
+        "windows": 81,
+        "linux": 82
     },
     "CServerSideClientBase::m_UserIDString": {
         "windows": 56,

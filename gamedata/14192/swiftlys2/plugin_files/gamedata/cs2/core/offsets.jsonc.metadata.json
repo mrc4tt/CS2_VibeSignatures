@@ -55,8 +55,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        65,
+        66
+      ],
       "name": "CCSPlayer_ItemServices::DropActiveItem",
       "updated": false
     },
@@ -97,8 +100,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        85,
+        86
+      ],
       "name": "CCSPlayer_WeaponServices::SelectWeapon",
       "updated": false
     },
@@ -148,8 +154,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        204,
+        205
+      ],
       "name": "CGameRules::GetViewVectors",
       "updated": false
     },
@@ -183,8 +192,11 @@
       "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        197,
+        198
+      ],
       "name": "CNavPhysicsInterface::TraceShape",
       "updated": false
     },
@@ -198,8 +210,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        99,
+        100
+      ],
       "name": "CPlayer_MovementServices::RunCommand",
       "updated": false
     },
@@ -210,38 +225,56 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        177,
+        178
+      ],
       "name": "CServerSideClient::SendNetMessage",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        525,
+        526
+      ],
       "name": "CServerSideClientBase::FreeBaselines",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        529,
+        530
+      ],
       "name": "CServerSideClientBase::GetRate",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        416,
+        417
+      ],
       "name": "CServerSideClientBase::m_AuthTicketSteamID",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        472,
+        473
+      ],
       "name": "CServerSideClientBase::m_BaselinesSent",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        432,
+        433
+      ],
       "name": "CServerSideClientBase::m_bConVarsChanged",
       "updated": false
     },
@@ -255,8 +288,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        492,
+        493
+      ],
       "name": "CServerSideClientBase::m_bFullyAuthenticated",
       "updated": false
     },
@@ -270,68 +306,101 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        488,
+        489
+      ],
       "name": "CServerSideClientBase::m_bLowViolence",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        384,
+        385
+      ],
       "name": "CServerSideClientBase::m_bMarkedToKick",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        404,
+        405
+      ],
       "name": "CServerSideClientBase::m_bReceivedPacket",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        396,
+        397
+      ],
       "name": "CServerSideClientBase::m_bSendingSnapshot",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        428,
+        429
+      ],
       "name": "CServerSideClientBase::m_ConVars",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        412,
+        413
+      ],
       "name": "CServerSideClientBase::m_DisconnectedSteamID",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        501,
+        502
+      ],
       "name": "CServerSideClientBase::m_fAuthenticatedTime",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        496,
+        497
+      ],
       "name": "CServerSideClientBase::m_fNextMessageTime",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        505,
+        506
+      ],
       "name": "CServerSideClientBase::m_fSnapshotInterval",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        517,
+        518
+      ],
       "name": "CServerSideClientBase::m_lastExecutedCommand",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        424,
+        425
+      ],
       "name": "CServerSideClientBase::m_nAddr",
       "updated": false
     },
@@ -345,20 +414,29 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        380,
+        381
+      ],
       "name": "CServerSideClientBase::m_nAsyncDisconnectFlags",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        468,
+        469
+      ],
       "name": "CServerSideClientBase::m_nBaselineUpdateTick",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        476,
+        477
+      ],
       "name": "CServerSideClientBase::m_nBaselineUsed",
       "updated": false
     },
@@ -381,8 +459,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        452,
+        453
+      ],
       "name": "CServerSideClientBase::m_nDeltaTick",
       "updated": false
     },
@@ -405,26 +486,38 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        484,
+        485
+      ],
       "name": "CServerSideClientBase::m_nForceWaitForTick",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        420,
+        421
+      ],
       "name": "CServerSideClientBase::m_nFriendsID",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        480,
+        481
+      ],
       "name": "CServerSideClientBase::m_nLoadingProgress",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        440,
+        441
+      ],
       "name": "CServerSideClientBase::m_nSendtableCRC",
       "updated": false
     },
@@ -438,26 +531,38 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        448,
+        449
+      ],
       "name": "CServerSideClientBase::m_nSignonTick",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        456,
+        457
+      ],
       "name": "CServerSideClientBase::m_nStringTableAckTick",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        464,
+        465
+      ],
       "name": "CServerSideClientBase::m_pBaseline",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        513,
+        514
+      ],
       "name": "CServerSideClientBase::m_spamCommandsCount",
       "updated": false
     },
@@ -471,14 +576,20 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        509,
+        510
+      ],
       "name": "CServerSideClientBase::m_Trace",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        444,
+        445
+      ],
       "name": "CServerSideClientBase::m_uChallengeNumber",
       "updated": false
     },
@@ -501,62 +612,92 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        460,
+        461
+      ],
       "name": "CServerSideClientBase::m_vecLoadedSpawnGroups",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        533,
+        534
+      ],
       "name": "CServerSideClientBase::MarkToKick",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        537,
+        538
+      ],
       "name": "CServerSideClientBase::Reconnect",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        541,
+        542
+      ],
       "name": "CServerSideClientBase::ResetUserSettings",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        545,
+        546
+      ],
       "name": "CServerSideClientBase::SetRate",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        549,
+        550
+      ],
       "name": "CServerSideClientBase::SetUpdateRate",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        521,
+        522
+      ],
       "name": "CServerSideClientBase::ShouldSendMessages",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        553,
+        554
+      ],
       "name": "CServerSideClientBase::UnmarkToKick",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        557,
+        558
+      ],
       "name": "CServerSideClientBase::UpdateSendState",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        561,
+        562
+      ],
       "name": "CServerSideClientBase::UpdateUserSettings",
       "updated": false
     },
@@ -576,20 +717,29 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        104,
+        105
+      ],
       "name": "ICvar::DispatchConCommand",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        169,
+        170
+      ],
       "name": "IGameEventManager2::FireEvent",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        125,
+        126
+      ],
       "name": "IGameEventSystem::PostEventAbstract",
       "updated": false
     },
@@ -612,86 +762,265 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 48,
+          "before": 47,
+          "line": 321,
+          "path": [
+            "INetChannel::CanPacket",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        320,
+        321
+      ],
       "name": "INetChannel::CanPacket",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 50,
+          "before": 49,
+          "line": 329,
+          "path": [
+            "INetChannel::HasPendingReliableData",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        328,
+        329
+      ],
       "name": "INetChannel::HasPendingReliableData",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 49,
+          "before": 48,
+          "line": 325,
+          "path": [
+            "INetChannel::IsOverflowed",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        324,
+        325
+      ],
       "name": "INetChannel::IsOverflowed",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 82,
+          "before": 81,
+          "line": 336,
+          "path": [
+            "INetChannel::IsSuppressingTransmit",
+            "windows"
+          ]
+        },
+        {
+          "after": 83,
+          "before": 81,
+          "line": 337,
+          "path": [
+            "INetChannel::IsSuppressingTransmit",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        336,
+        337
+      ],
       "name": "INetChannel::IsSuppressingTransmit",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 57,
+          "before": 56,
+          "line": 333,
+          "path": [
+            "INetChannel::IsTimedOut",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        332,
+        333
+      ],
       "name": "INetChannel::IsTimedOut",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 55,
+          "before": 54,
+          "line": 345,
+          "path": [
+            "INetChannel::SetMaxDataRate",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        344,
+        345
+      ],
       "name": "INetChannel::SetMaxDataRate",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 54,
+          "before": 53,
+          "line": 341,
+          "path": [
+            "INetChannel::SetMinDataRate",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        340,
+        341
+      ],
       "name": "INetChannel::SetMinDataRate",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 56,
+          "before": 55,
+          "line": 349,
+          "path": [
+            "INetChannel::SetTimeout",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        348,
+        349
+      ],
       "name": "INetChannel::SetTimeout",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 81,
+          "before": 80,
+          "line": 352,
+          "path": [
+            "INetChannel::SuppressTransmit",
+            "windows"
+          ]
+        },
+        {
+          "after": 82,
+          "before": 80,
+          "line": 353,
+          "path": [
+            "INetChannel::SuppressTransmit",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        352,
+        353
+      ],
       "name": "INetChannel::SuppressTransmit",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        216,
+        217
+      ],
       "name": "INetChannelInfo::GetAddress",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        264,
+        265
+      ],
       "name": "INetChannelInfo::GetAvgChoke",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "changes": [
+        {
+          "after": 15,
+          "before": 14,
+          "line": 268,
+          "path": [
+            "INetChannelInfo::GetAvgData",
+            "windows"
+          ]
+        },
+        {
+          "after": 15,
+          "before": 14,
+          "line": 269,
+          "path": [
+            "INetChannelInfo::GetAvgData",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        268,
+        269
+      ],
       "name": "INetChannelInfo::GetAvgData",
-      "updated": false
+      "updated": true
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        252,
+        253
+      ],
       "name": "INetChannelInfo::GetAvgLatency",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        260,
+        261
+      ],
       "name": "INetChannelInfo::GetAvgLoss",
       "updated": false
     },
@@ -702,128 +1031,191 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        276,
+        277
+      ],
       "name": "INetChannelInfo::GetAvgPackets",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        232,
+        233
+      ],
       "name": "INetChannelInfo::GetDataRate",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        256,
+        257
+      ],
       "name": "INetChannelInfo::GetEngineLatency",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        212,
+        213
+      ],
       "name": "INetChannelInfo::GetName",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        220,
+        221
+      ],
       "name": "INetChannelInfo::GetRemoteAddress",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        316,
+        317
+      ],
       "name": "INetChannelInfo::GetRemoteFramerate",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        288,
+        289
+      ],
       "name": "INetChannelInfo::GetSequenceNr",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        224,
+        225
+      ],
       "name": "INetChannelInfo::GetTime",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        228,
+        229
+      ],
       "name": "INetChannelInfo::GetTimeConnected",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        308,
+        309
+      ],
       "name": "INetChannelInfo::GetTimeoutSeconds",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        292,
+        293
+      ],
       "name": "INetChannelInfo::GetTimeSinceLastReceived",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        312,
+        313
+      ],
       "name": "INetChannelInfo::GetTimeUntilTimeout",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        280,
+        281
+      ],
       "name": "INetChannelInfo::GetTotalData",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        284,
+        285
+      ],
       "name": "INetChannelInfo::GetTotalPackets",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        236,
+        237
+      ],
       "name": "INetChannelInfo::IsLocalHost",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        240,
+        241
+      ],
       "name": "INetChannelInfo::IsLoopback",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        248,
+        249
+      ],
       "name": "INetChannelInfo::IsPlayback",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        244,
+        245
+      ],
       "name": "INetChannelInfo::IsTimingOut",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        296,
+        297
+      ],
       "name": "INetChannelInfo::SetInterpolationAmount",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        300,
+        301
+      ],
       "name": "INetChannelInfo::SetNumPredictionErrors",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        304,
+        305
+      ],
       "name": "INetChannelInfo::SetShowNetMessages",
       "updated": false
     },
@@ -873,8 +1265,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        141,
+        142
+      ],
       "name": "IServerGameClients::ClientVoice",
       "updated": false
     },
@@ -933,8 +1328,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        133,
+        134
+      ],
       "name": "IVEngineServer2::SetClientListening",
       "updated": false
     }
@@ -943,8 +1341,8 @@
   "gamever": "14192",
   "schema_version": 2,
   "summary": {
-    "covered": 43,
+    "covered": 130,
     "total": 133,
-    "updated": 1
+    "updated": 11
   }
 }

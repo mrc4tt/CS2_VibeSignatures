@@ -1,0 +1,8 @@
+func_name: CNetChan_SetMaxDataRate
+func_va: '0x1800bcfb0'
+func_rva: '0xbcfb0'
+func_size: '0x49'
+func_sig: "48 83 EC ?? 44 8B 81 ?? ?? ?? ?? 45 85 C0"
+vtable_name: CNetChan
+vfunc_offset: '0x1b0'
+vfunc_index: 54

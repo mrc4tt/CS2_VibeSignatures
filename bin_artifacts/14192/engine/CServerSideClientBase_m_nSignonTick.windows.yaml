@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_nSignonTick
+offset: '0x158'
+size: 4
+offset_sig: "89 8B 58 01 00 00 45 8B 6F ??"

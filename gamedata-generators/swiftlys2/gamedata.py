@@ -76,6 +76,77 @@ KEY_SYMBOL_OVERRIDES = {
     "CServerSideClientBase::m_SteamID": "CServerSideClient_m_SteamID",
     "CServerSideClientBase::m_UserID": "CServerSideClient_m_UserID",
     "CServerSideClientBase::m_UserIDString": "CServerSideClient_m_UserIDString",
+    "CServerSideClientBase::m_DisconnectedSteamID": "CServerSideClient_m_SteamIDMirror",
+    # Records the analysis already had under its own names. DropActiveItem, SelectWeapon
+    # and RunCommand are the same slots on both platforms; OnJumpLegacy is the
+    # "player_jump" function upstream files as CheckJumpButton (CheckJumpButtonLegacy
+    # calls it); ProcessUserCmd and Cmd_ExecuteCommand land on these heads with the
+    # author's own signatures. BotNavIgnore1-3 are one patch site in CCSBotManager::AddBot
+    # (SwiftlyS2 lists the same signature three times).
+    "CCSPlayer_ItemServices::DropActiveItem": "CCSPlayer_ItemServices_DropActivePlayerWeapon",
+    "CCSPlayer_WeaponServices::SelectWeapon": "CCSPlayer_WeaponServices_SelectItem",
+    "CPlayer_MovementServices::RunCommand": "vtidx_PlayerRunCommand",
+    "CCSPlayer_MovementServices::OnJumpLegacy": "CCSPlayer_MovementServices_CheckJumpButton",
+    "CCSPlayerController::ProcessUserCmd": "CBasePlayerController_ProcessUsercmds",
+    "Cmd_ExecuteCommand": "CInputService_ProcessCommand",
+    "CTakeDamageInfo::Constructor": "CTakeDamageInfo_ctor",
+    "CFlashbangProjectile::EmitGrenade": "CFlashbangProjectile_Create",
+    "BotNavIgnore1": "CCSBotManager_AddBot_BotNavIgnore",
+    "BotNavIgnore2": "CCSBotManager_AddBot_BotNavIgnore",
+    "BotNavIgnore3": "CCSBotManager_AddBot_BotNavIgnore",
+    # Interface slots, filed under the implementing class.
+    "IVEngineServer2::SetClientListening": "CEngineServer_SetClientListening",
+    "IGameEventSystem::PostEventAbstract": "CGameEventSystem_PostEventAbstract",
+    "ICvar::DispatchConCommand": "CCvar_DispatchConCommand",
+    "IGameEventManager2::FireEvent": "CGameEventManager_FireEvent",
+    "IServerGameClients::ClientVoice": "CSource2GameClients_ClientVoice",
+    "CGameRules::GetViewVectors": "CCSGameRules_GetViewVectors",
+    # SwiftlyS2's ResetUserSettings re-reads "rate" from userinfo: the SDK's
+    # UpdateRateFromUserInfo.
+    "CServerSideClientBase::ResetUserSettings": "CServerSideClientBase_UpdateRateFromUserInfo",
+    # CNetChan's INetChannelInfo / INetChannel slots. Where these differ from the
+    # author's 14192 values, the binary decides: GetAvgData is slot 15 (Steam's bytes/sec;
+    # 14 is a plain per-flow float), and every INetChannel slot is one higher on linux,
+    # where the dtor takes two slots (CanPacket 48 holds "!CanPacket()", SetTimeout 56
+    # "NetChan Setting Timeout"). SuppressTransmit / IsSuppressingTransmit store and load
+    # the byte CanPacket tests (linux 82/83, windows 81/82); the author's 80/81 and 79/80
+    # are the pending-disconnect reason. INetChannelInfo::GetAvgPacketBytes has no slot
+    # in the SDK and is left as the author wrote it.
+    "INetChannelInfo::GetName": "CNetChan_GetName",
+    "INetChannelInfo::GetAddress": "CNetChan_GetAddress",
+    "INetChannelInfo::GetRemoteAddress": "CNetChan_GetRemoteAddress",
+    "INetChannelInfo::GetTime": "CNetChan_GetTime",
+    "INetChannelInfo::GetTimeConnected": "CNetChan_GetTimeConnected",
+    "INetChannelInfo::GetDataRate": "CNetChan_GetDataRate",
+    "INetChannelInfo::IsLocalHost": "CNetChan_IsLocalHost",
+    "INetChannelInfo::IsLoopback": "CNetChan_IsLoopback",
+    "INetChannelInfo::IsTimingOut": "CNetChan_IsTimingOut",
+    "INetChannelInfo::IsPlayback": "CNetChan_IsPlayback",
+    "INetChannelInfo::GetAvgLatency": "CNetChan_GetAvgLatency",
+    "INetChannelInfo::GetEngineLatency": "CNetChan_GetEngineLatency",
+    "INetChannelInfo::GetAvgLoss": "CNetChan_GetAvgLoss",
+    "INetChannelInfo::GetAvgChoke": "CNetChan_GetAvgChoke",
+    "INetChannelInfo::GetAvgData": "CNetChan_GetAvgData",
+    "INetChannelInfo::GetAvgPackets": "CNetChan_GetAvgPackets",
+    "INetChannelInfo::GetTotalData": "CNetChan_GetTotalData",
+    "INetChannelInfo::GetTotalPackets": "CNetChan_GetTotalPackets",
+    "INetChannelInfo::GetSequenceNr": "CNetChan_GetSequenceNr",
+    "INetChannelInfo::GetTimeSinceLastReceived": "CNetChan_GetTimeSinceLastReceived",
+    "INetChannelInfo::GetRemoteFramerate": "CNetChan_GetRemoteFramerate",
+    "INetChannelInfo::GetTimeoutSeconds": "CNetChan_GetTimeoutSeconds",
+    "INetChannelInfo::GetTimeUntilTimeout": "CNetChan_GetTimeUntilTimeout",
+    "INetChannelInfo::SetInterpolationAmount": "CNetChan_SetInterpolationAmount",
+    "INetChannelInfo::SetNumPredictionErrors": "CNetChan_SetNumPredictionErrors",
+    "INetChannelInfo::SetShowNetMessages": "CNetChan_SetShowNetMessages",
+    "INetChannel::CanPacket": "CNetChan_CanPacket",
+    "INetChannel::IsOverflowed": "CNetChan_IsOverflowed",
+    "INetChannel::HasPendingReliableData": "CNetChan_HasPendingReliableData",
+    "INetChannel::SetMinDataRate": "CNetChan_SetMinDataRate",
+    "INetChannel::SetMaxDataRate": "CNetChan_SetMaxDataRate",
+    "INetChannel::SetTimeout": "CNetChan_SetTimeout",
+    "INetChannel::IsTimedOut": "CNetChan_IsTimedOut",
+    "INetChannel::SuppressTransmit": "CNetChan_SuppressTransmit",
+    "INetChannel::IsSuppressingTransmit": "CNetChan_IsSuppressingTransmit",
 }
 
 # Routing for one file only. CCSPlayer_WeaponServices::DropWeapon is the vtable slot in
@@ -172,10 +243,12 @@ def _update_signatures(yaml_data, func_lib_map, platforms, sig_path, alias_to_na
                 skipped_symbols.append({"name": func_name, "reason": "no matching YAML data"})
             continue
 
-        # Update platform signatures
+        # Update platform signatures; a patch site (BotNavIgnore) ships its patch_sig
         for platform in platforms:
-            if platform in yaml_entry and "func_sig" in yaml_entry[platform]:
-                sig = convert_sig_to_swiftly(yaml_entry[platform]["func_sig"])
+            payload = yaml_entry.get(platform) or {}
+            raw = payload.get("func_sig") or payload.get("patch_sig")
+            if raw:
+                sig = convert_sig_to_swiftly(raw)
                 entry[platform] = sig
                 updated_count += 1
                 if debug:

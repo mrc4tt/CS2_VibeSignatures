@@ -1,0 +1,8 @@
+func_name: CServerSideClientBase_UpdateRateFromUserInfo
+func_va: '0x1800ca920'
+func_rva: '0xca920'
+func_size: '0x43'
+func_sig: "48 89 5C 24 ?? 57 48 83 EC ?? 48 8B 01 48 8D 15 ?? ?? ?? ?? 48 8B F9 41 B8 ?? ?? ?? ??"
+vtable_name: CServerSideClientBase
+vfunc_offset: '0x1c0'
+vfunc_index: 56

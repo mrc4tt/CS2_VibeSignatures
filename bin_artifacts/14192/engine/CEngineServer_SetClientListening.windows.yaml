@@ -1,0 +1,8 @@
+func_name: CEngineServer_SetClientListening
+func_va: '0x1800a3020'
+func_rva: '0xa3020'
+func_size: '0xbf'
+func_sig: "48 89 5C 24 ?? 4C 8B 15 ?? ?? ?? ?? 45 33 DB 41 0F B6 D9 4D 85 D2 74 ?? 45 85 C0 78 ?? 45 3B 82 ?? ?? ?? ?? 7D ?? 49 8B 82 ?? ?? ?? ?? 49 63 C8 4C 8B 0C C8"
+vtable_name: CEngineServer
+vfunc_offset: '0x2e0'
+vfunc_index: 92

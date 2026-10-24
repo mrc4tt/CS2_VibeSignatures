@@ -1,0 +1,8 @@
+func_name: CSource2GameClients_ClientVoice
+func_va: '0x180deb5e0'
+func_rva: '0xdeb5e0'
+func_size: '0x30'
+func_sig: "40 53 48 83 EC ?? 8B CA E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 74 ?? E8 ?? ?? ?? ??"
+vtable_name: CSource2GameClients
+vfunc_offset: '0xd8'
+vfunc_index: 27

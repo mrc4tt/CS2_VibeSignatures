@@ -34,8 +34,8 @@
     // Function that only has "hammerUniqueId" string, signature points to the outer if statement that determines if hammerid gets written to schema
     "SetSchemaHammerUniqueId": {
         "lib": "server",
-        "windows": "75 ? 48 8B 03 48 8B CB FF 90 ? ? ? ? 84 C0 74 ? 48 8D 05",
-        "linux": "75 ? 48 8B 03 48 89 DF FF 90 ? ? ? ? 84 C0 74 ? 48 8D 05"
+        "windows": "75 ? 48 8B 03 48 8B CB FF 90 ? ? ? ? 84 C0 74 ? 48 8D 05 ? ? ? ?",
+        "linux": "75 ? 48 8B 03 48 89 DF FF 90 ? ? ? ? 84 C0 74 ? 48 8D 05 ? ? ? ?"
     },
     // The function has "classname" in it. It can be found when searching for UTIL::CreateEntityByName
     // or, in GiveNamedItem it's in a bunch of if blocks
@@ -61,8 +61,8 @@
     // More simple is to search for the VTable and see when it's being set
     "CTakeDamageInfo::Constructor": {
         "lib": "server",
-        "windows": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC 60 45 33 F6",
-        "linux": "49 BB 00 00 00 00 00 00 80 3F 55"
+        "windows": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 45 33 F6 48 C7 41 ? ? ? ? ? 48 8D 05 ? ? ? ? 4C 89 71 ?",
+        "linux": "49 BB ? ? ? ? ? ? ? ? 55 48 89 E5"
     },
     // Search for "No conversion from %s to float now\n", the function should be the last one being called
     "CEntityIOOutput::FireOutputInternal": {
@@ -98,20 +98,20 @@
     // "Error - cannot add bots after game is over."
     "BotNavIgnore1": {
         "lib": "server",
-        "windows": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74",
-        "linux": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ? 45 84 FF 0F 84"
+        "windows": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74 ?",
+        "linux": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ?"
     },
     // "Error - cannot add bots after game is over."
     "BotNavIgnore2": {
         "lib": "server",
-        "windows": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74",
-        "linux": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ? 45 84 FF 0F 84"
+        "windows": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74 ?",
+        "linux": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ?"
     },
     // "Error - cannot add bots after game is over."
     "BotNavIgnore3": {
         "lib": "server",
-        "windows": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74",
-        "linux": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ? 45 84 FF 0F 84"
+        "windows": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74 ?",
+        "linux": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ?"
     },
     // Search "Game System %s is defined twice!\n" and get the sig to the first qword referenced
     "IGameSystem::InitAllSystems->pFirst": {
@@ -122,8 +122,8 @@
     // Find string "%sRecv usercmd %d.  Margin:%5.1fms net +%2d queue =%5.1f total\n"
     "CCSPlayerController::ProcessUserCmd": {
         "lib": "server",
-        "windows": "48 8B C4 44 88 48 20 44 89 40 18 48 89 50 10 53",
-        "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 89 4D"
+        "windows": "48 8B C4 44 88 48 ? 44 89 40 ? 48 89 50 ? 53",
+        "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 89 4D ?"
     },
     // Find strng "gameeventmanager->Init()".
     "CSource2Server::g_GameEventManager": {
@@ -187,7 +187,7 @@
     // Search for "flashbang_projectile" and it should be at the top of the function used
     "CFlashbangProjectile::EmitGrenade": {
         "lib": "server",
-        "windows": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B 6C 24 ? 49 8B F8 4C 8B C2 48 8B D9",
+        "windows": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B 6C 24 ? 49 8B F8",
         "linux": "55 4C 89 C1 48 89 E5 41 57 45 89 CF 41 56 49 89 FE 41 55 49 89 D5 48 89 F2 48 89 FE 41 54 48 8D 3D ? ? ? ? 4D 89 C4 53 48 83 EC ? E8 ? ? ? ? 4C 89 EE"
     },
     // Search for "hegrenade_projectile" and it should be at the top of the function used
@@ -217,8 +217,8 @@
     // First function being called after a function with "PlayerMove_PostMove" has it as an argument, or if it contains "Land_WaterVol.StepLeft"
     "CCSPlayer_MovementServices::CheckFalling": {
         "lib": "server",
-        "windows": "40 53 55 48 81 EC 88 00 00 00 48 83 79",
-        "linux": "55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 48 8B 7F ? 48 85 FF 0F 84 ? ? ? ? 48 8B 07 FF 90 ? ? ? ? 48 85 C0 0F 84 ? ? ? ? F3 0F 10 8B"
+        "windows": "40 53 55 48 81 EC ? ? ? ? 48 83 79 ? ?",
+        "linux": "55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 48 8B 7F ? 48 85 FF 0F 84 ? ? ? ? 48 8B 07 FF 90 ? ? ? ? 48 85 C0 0F 84 ? ? ? ? F3 0F 10 8B ? ? ? ?"
     },
     // The function exactly before the one which has in argument "PlayerMove_PostMove"
     "CCSPlayer_MovementServices::CategorizePosition": {
@@ -229,7 +229,7 @@
     // Third function being called after a function with "PlayerMove_PostMove" has it as an argument
     "CCSPlayer_MovementServices::TryPlayerMove": {
         "lib": "server",
-        "windows": "48 8B C4 4C 89 48 ? 4C 89 40 ? 48 89 50 ? 48 89 48 ? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 0F 29 70",
+        "windows": "48 8B C4 4C 89 48 ? 4C 89 40 ? 48 89 50 ? 48 89 48 ? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 0F 29 70 ?",
         "linux": "48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56 49 89 F6"
     },
     // Function containing "PreWalkMove"
@@ -241,53 +241,53 @@
     // In the function containing "PreWalkMove", exactly the function above the one containing the string as an argument
     "CCSPlayer_MovementServices::Friction": {
         "lib": "server",
-        "windows": "48 89 5C 24 ? 57 48 81 EC A0 00 00 00 48 83 79",
-        "linux": "55 48 89 E5 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 47"
+        "windows": "48 89 5C 24 ? 57 48 81 EC ? ? ? ? 48 83 79 ? ?",
+        "linux": "55 48 89 E5 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 47 ?"
     },
     // In the function containing "PreSource1AirMove", there's a group of 3 functions called. The one that we want has 5 arguments
     "CCSPlayer_MovementServices::AirAccelerate": {
         "lib": "server",
-        "windows": "F3 0F 11 5C 24 20 53 56 57 48 83 EC 60",
-        "linux": "55 48 89 E5 41 55 49 89 D5 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 7F"
+        "windows": "F3 0F 11 5C 24 ? 53 56 57 48 83 EC ? 48 83 79 ? ?",
+        "linux": "55 48 89 E5 41 55 49 89 D5 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 7F ?"
     },
     // Find by string "------- flAccelSpeed = %f, flGoalSpeed = %f, flStoredAccel = %f\n"
     "CCSPlayer_MovementServices::GroundAccelerate": {
         "lib": "server",
-        "windows": "40 53 41 54 41 55 41 57 48 81 EC ? ? ? ? F2 41 0F 10 01",
+        "windows": "40 53 41 54 41 55 41 57",
         "linux": "55 0F 28 F9 48 89 E5"
     },
     // The function containing "PreSource1AirMove"
     "CCSPlayer_MovementServices::AirMove": {
         "lib": "server",
-        "windows": "48 8B C4 55 53 56 57 41 56 48 8D 68 ? 48 81 EC 10 01 00 00",
-        "linux": "55 48 8D 15 ? ? ? ? 48 89 E5 41 57 41 56 4C 8D BD"
+        "windows": "48 8B C4 55 53 56 57 41 56 48 8D 68 ? 48 81 EC ? ? ? ? 0F 29 70 ? 4C 8D 05 ? ? ? ?",
+        "linux": "55 48 8D 15 ? ? ? ? 48 89 E5 41 57 41 56 4C 8D BD ? ? ? ?"
     },
     // The function is located at the end of function CheckJumpButtonModern
     // And immediately after it there's a return, it's in an if branch which checks a variable against -1
     "CCSPlayer_MovementServices::OnJumpModern": {
         "lib": "server",
-        "windows": "40 55 56 57 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B 71",
-        "linux": "55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 81 EC ? ? ? ? 4C 8B 77 ? 4D 8B 66"
+        "windows": "40 55 56 57 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B 71 ?",
+        "linux": "55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 81 EC ? ? ? ? 4C 8B 77 ? 4D 8B 66 ?"
     },
     // The function contains "player_jump" game event call
     "CCSPlayer_MovementServices::OnJumpLegacy": {
         "lib": "server",
-        "windows": "40 55 53 56 57 48 8D 6C 24 ? 48 81 EC A8 00 00 00 48 8B 71",
-        "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC 88 00 00 00 4C 8B 6F"
+        "windows": "40 55 53 56 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 71 ?",
+        "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 4C 8B 6F ? 49 8B 7D ?"
     },
     // The function CheckJumpButtonModern is located in a if-else branch, at the else branch, having the first argument `a1+1744`
     // The if-else branch is located into a function which has "Water.PlayerEnter" and "Water.PlayerExit"
     "CCSPlayer_MovementServices::CheckJumpButtonModern": {
         "lib": "server",
-        "windows": "40 55 53 56 57 41 54 41 55 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 8B 9A",
-        "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 89 F3 48 83 EC 78 48 8B 7F"
+        "windows": "40 55 53 56 57 41 54 41 55 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 8B 9A ? ? ? ?",
+        "linux": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 89 F3 48 83 EC ? 48 8B 7F ?"
     },
     // The function CheckJumpButtonLegacy is located in a if-else branch, at the if branch, having the first argument `a1+1720`
     // The if-else branch is located into a function which has "Water.PlayerEnter" and "Water.PlayerExit"
     "CCSPlayer_MovementServices::CheckJumpButtonLegacy": {
         "lib": "server",
-        "windows": "48 89 5C 24 ? 48 89 7C 24 ? 41 56 48 83 EC 30 4C 8B F2",
-        "linux": "55 48 89 E5 41 55 41 54 49 89 F4 BE 02 00 00 00 53 48 89 FB 48 83 EC 58"
+        "windows": "48 89 5C 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 4C 8B F2",
+        "linux": "55 48 89 E5 41 55 41 54 49 89 F4 BE ? ? ? ? 53 48 89 FB 48 83 EC ? 48 8B 7F ?"
     },
     // The function LadderMove is the second one called into the last if block which is at the level of the return
     // The function containing it is CCSPlayer_MovementServices::MoveInit
@@ -299,14 +299,14 @@
     // The only function getting the VTable for CTraceFilterForPlayerHeadCollision
     "CCSPlayer_MovementServices::CanUnduck": {
         "lib": "server",
-        "windows": "40 55 56 41 55 48 8D AC 24",
-        "linux": "55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8B 7F"
+        "windows": "40 55 56 41 55 48 8D AC 24 ? ? ? ?",
+        "linux": "55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8B 7F ?"
     },
     // The only function getting the VTable for CCSTraceFilterSimple or bot_crouch ref
     "CCSPlayer_MovementServices::Duck": {
         "lib": "server",
-        "windows": "48 8B C4 55 53 56 41 54 41 56 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 80 B9",
-        "linux": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 89 F3 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? F3 0F 10 05"
+        "windows": "48 8B C4 55 53 56 41 54 41 56 48 8D A8 ? ? ? ?",
+        "linux": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 89 F3 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? F3 0F 10 05 ? ? ? ?"
     },
     // The function has the string "CCSPlayer_MovementServices(%s):  %d/%s Got a NaN velocity on %s\n"
     "CCSPlayer_MovementServices::CheckVelocity": {
@@ -323,15 +323,15 @@
     // It's called after CCSPlayer_MovementServices::TryPlayerMove gets called
     "CCSPlayer_MovementServices::CheckWater": {
         "lib": "server",
-        "windows": "48 8B C4 48 89 58 ? 55 48 8D 6C 24",
-        "linux": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 81 EC 70 01 00 00"
+        "windows": "48 8B C4 48 89 58 ? 55 48 8D 6C 24 ?",
+        "linux": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8B 7F ?"
     },
     // The function is the first one called in the function which has "Water.PlayerEnter" and "Water.PlayerExit"
     // sv_optimizedmovement ref and sv_use_playercache ref
     "CCSPlayer_MovementServices::MoveInit": {
         "lib": "server",
-        "windows": "48 8B C4 48 89 58 ? 48 89 68 ? 56 57 41 54 48 81 EC D0 00 00 00",
-        "linux": "55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 89 F7 48 83 EC 70"
+        "windows": "48 8B C4 48 89 58 ? 48 89 68 ? 56 57 41 54 48 81 EC ? ? ? ?",
+        "linux": "55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 89 F7 48 83 EC ? 48 C7 86 ? ? ? ? ? ? ? ?"
     },
     // Contains "Water.PlayerEnter" and "Water.PlayerExit", and it's kinda short ngl
     "CCSPlayer_MovementServices::FullWalkMove": {
@@ -342,19 +342,19 @@
     // Has a dynamic cast for CCSWeaponBase and CC4, via dev_cs_force_disable_move ref
     "CCSPlayerPawn::CanMove": {
         "lib": "server",
-        "windows": "48 89 74 24 ? 57 48 83 EC 30 48 8B 05 ? ? ? ? 48 8B F9",
-        "linux": "55 48 89 E5 41 55 41 54 53 48 83 EC 08 48 8B 05 ? ? ? ? 80 78 ? ? 74"
+        "windows": "48 89 74 24 ? 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 8B F9 80 78 ? ?",
+        "linux": "55 48 89 E5 41 55 41 54 53 48 83 EC ? 48 8B 05 ? ? ? ? 80 78 ? ? 74 ?"
     },
     // In CCSPlayer_MovementServices::PlayerMove, it's the first function call after the call with "Can't move"
     "CCSPlayer_MovementServices::CheckParameters": {
         "lib": "server",
-        "windows": "48 8B C4 55 53 56 57 41 56 41 57 48 8D 68 A1",
-        "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 89 F3 48 81 EC ? ? ? ? E8 ? ? ? ? 49 8B 44 24"
+        "windows": "48 8B C4 55 53 56 57 41 56 41 57 48 8D 68 ?",
+        "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 89 F3 48 81 EC ? ? ? ? E8 ? ? ? ? 49 8B 44 24 ?"
     },
     // The function contains "Can't move", "dead"
     "CCSPlayer_MovementServices::PlayerMove": {
         "lib": "server",
-        "windows": "48 89 5C 24 ? 57 48 83 EC 50 48 83 79",
+        "windows": "48 89 5C 24 ? 57 48 83 EC ? 48 83 79 ? ? 48 8B FA 48 8B D9 75 ? E8 ? ? ? ? 48 8B 4B ? 48 89 74 24 ?",
         "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 48 8B 7F ? 48 85 FF 0F 84 ? ? ? ? 48 8B 07"
     },
     // Contains "following entity %d" and "PlayerMovementTraces"
@@ -367,7 +367,7 @@
     "CCSPlayer_MovementServices::SetupMove": {
         "lib": "server",
         "windows": "40 53 56 48 83 EC ? 48 89 6C 24 ? 49 8B F0",
-        "linux": "55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB 48 83 EC ? E8 ? ? ? ? 48 8B 43"
+        "linux": "55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB 48 83 EC ? E8 ? ? ? ? 48 8B 43 ?"
     },
     // Via string "CBasePlayerController::OnSimulateUserCommands"
     "CBasePlayerController::OnSimulateUserCommands": {

@@ -1,0 +1,8 @@
+func_name: CNetChan_GetTime
+func_va: '0x2831a0'
+func_rva: '0x2831a0'
+func_size: '0x11'
+func_sig: "48 8D 05 ?? ?? ?? ?? 66 0F EF C0 F2 0F 5A 40 ??"
+vtable_name: CNetChan
+vfunc_offset: '0x18'
+vfunc_index: 3

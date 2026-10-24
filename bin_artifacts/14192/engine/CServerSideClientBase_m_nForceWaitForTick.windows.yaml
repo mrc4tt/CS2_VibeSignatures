@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_nForceWaitForTick
+offset: '0x9dc'
+size: 4
+offset_sig: "C7 87 DC 09 00 00 FF FF FF FF C7 87 ?? ?? ?? ?? ?? ?? ?? ??"

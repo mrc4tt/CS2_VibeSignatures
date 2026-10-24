@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_bReceivedPacket
+offset: '0xaa'
+size: 1
+offset_sig: "C6 87 AA 00 00 00 00"

@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_bConVarsChanged
+offset: '0x140'
+size: 1
+offset_sig: "C6 83 40 01 00 00 00 5B"

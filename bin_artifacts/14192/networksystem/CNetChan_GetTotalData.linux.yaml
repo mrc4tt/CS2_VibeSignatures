@@ -1,0 +1,8 @@
+func_name: CNetChan_GetTotalData
+func_va: '0x283040'
+func_rva: '0x283040'
+func_size: '0x17'
+func_sig: "48 8D 47 ?? 48 81 C7 ?? ?? ?? ?? 83 FE ?? 48 0F 44 F8 48 8B 47 ??"
+vtable_name: CNetChan
+vfunc_offset: '0x88'
+vfunc_index: 17

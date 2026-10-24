@@ -1,0 +1,8 @@
+func_name: CNetChan_HasPendingReliableData
+func_va: '0x286390'
+func_rva: '0x286390'
+func_size: '0x8c'
+func_sig: "8B 97 ?? ?? ?? ?? 85 D2 7E ??"
+vtable_name: CNetChan
+vfunc_offset: '0x190'
+vfunc_index: 50

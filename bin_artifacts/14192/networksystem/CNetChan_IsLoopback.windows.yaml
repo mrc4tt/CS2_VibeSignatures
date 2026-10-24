@@ -1,0 +1,8 @@
+func_name: CNetChan_IsLoopback
+func_va: '0x1800bb540'
+func_rva: '0xbb540'
+func_size: '0xb'
+func_sig: "83 B9 ?? ?? ?? ?? ?? 0F 94 C0"
+vtable_name: CNetChan
+vfunc_offset: '0x38'
+vfunc_index: 7

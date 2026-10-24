@@ -446,6 +446,14 @@ swiftlys2 master through two `# Seed source: <url> template=<path> output=<path>
 spellings GetWeaponCSDataFromKey and C*Projectile::EmitGrenade) is read by the verifier, the template
 sync and the metadata coverage as well. A key only one plugin uses belongs in that plugin's
 `KEY_SYMBOL_OVERRIDES`, not in the shared `ALIAS_OVERRIDES`, so it can reach no other plugin's file.
+On 2026-10-24 swiftlys2 went from 57 to 196 of its 199 keys produced here: 105 new fork-owned
+records (CServerSideClientBase members and slots, CNetChan's INetChannel(Info) slots, the movement
+functions) plus overrides onto records that existed under other names. The binary disagreed with the
+author on 14192 for every linux INetChannel slot (linux has two dtor slots), the
+SuppressTransmit pair on both platforms and GetAvgData - ours ships. Left as the author's:
+CSoundSystem::TakeGuid (no soundsystem module), INetChannelInfo::GetAvgPacketBytes (no such slot)
+and CServerSideClient::ProcessRespondCvarValue (windows folds it into a shared `return true` stub,
+nothing to anchor). bot-hider, bot-controller and CS2FOW were disabled the same day.
 bot-controller (GetSlot, vtidx::DropWeapon), bot-hider (EndMatchState), cs2-retakes-allocator
 (GiveNamedItem2) and CounterStrikeSharp (CBaseEntity_TakeDamage) moved there on 2026-10-23 with
 byte-identical output. `gamedata_utils.generator_key_overrides` is the one reader; the seed

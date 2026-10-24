@@ -1,0 +1,8 @@
+func_name: CNetChan_GetTimeUntilTimeout
+func_va: '0x282ee0'
+func_rva: '0x282ee0'
+func_size: '0x59'
+func_sig: "F3 0F 10 8F ?? ?? ?? ??"
+vtable_name: CNetChan
+vfunc_offset: '0xb8'
+vfunc_index: 23

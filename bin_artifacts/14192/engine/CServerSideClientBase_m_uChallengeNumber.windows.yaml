@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_uChallengeNumber
+offset: '0x154'
+size: 4
+offset_sig: "41 89 86 54 01 00 00"

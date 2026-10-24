@@ -1,0 +1,8 @@
+func_name: CNetChan_SetMinDataRate
+func_va: '0x282cf0'
+func_rva: '0x282cf0'
+func_size: '0x49'
+func_sig: "8B 8F ?? ?? ?? ?? 89 B7 ?? ?? ?? ??"
+vtable_name: CNetChan
+vfunc_offset: '0x1b0'
+vfunc_index: 54

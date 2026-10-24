@@ -1,0 +1,8 @@
+func_name: CNetChan_GetAvgLatency
+func_va: '0x287ad0'
+func_rva: '0x287ad0'
+func_size: '0xab'
+func_sig: "8B B7 ?? ?? ?? ?? 85 F6 75 ?? 66 0F EF C0 C3"
+vtable_name: CNetChan
+vfunc_offset: '0x50'
+vfunc_index: 10

@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_bSendingSnapshot
+offset: '0xa1'
+size: 1
+offset_sig: "C6 86 A1 00 00 00 01"

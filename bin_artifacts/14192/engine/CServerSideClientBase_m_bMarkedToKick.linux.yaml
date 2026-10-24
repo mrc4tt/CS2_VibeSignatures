@@ -1,0 +1,5 @@
+struct_name: CServerSideClientBase
+member_name: m_bMarkedToKick
+offset: '0x62'
+size: 1
+offset_sig: "C6 47 62 01 74 ?? E9 ?? ?? ?? ??"

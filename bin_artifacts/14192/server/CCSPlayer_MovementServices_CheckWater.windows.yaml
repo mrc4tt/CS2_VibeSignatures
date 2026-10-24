@@ -1,0 +1,5 @@
+func_name: CCSPlayer_MovementServices_CheckWater
+func_va: '0x180ac3970'
+func_rva: '0xac3970'
+func_size: '0x29b'
+func_sig: "48 8B C4 48 89 58 ?? 55 48 8D 6C 24 ??"

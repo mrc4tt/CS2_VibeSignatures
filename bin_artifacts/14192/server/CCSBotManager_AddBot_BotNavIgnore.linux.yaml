@@ -1,3 +1,5 @@
 patch_name: CCSBotManager_AddBot_BotNavIgnore
-patch_sig: 0F 84 B9 00 00 00 44 0F B6 B8 ?? 01 00 00
+patch_va: '0xc17da1'
+patch_rva: '0xc17da1'
+patch_sig: "0F 84 ?? ?? ?? ?? 44 0F B6 B8 ?? ?? ?? ??"
 patch_bytes: E9 12 00 00 00 90
