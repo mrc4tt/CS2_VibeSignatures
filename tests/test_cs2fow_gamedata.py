@@ -66,10 +66,15 @@ class TestCS2FOWGamedata(unittest.TestCase):
     def setUpClass(cls) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         cls.contract = next(
-            contract
-            for contract in discover_generator_modules(repo_root / "gamedata-generators")
-            if contract.directory == "CS2FOW"
+            (
+                contract
+                for contract in discover_generator_modules(repo_root / "gamedata-generators")
+                if contract.directory == "CS2FOW"
+            ),
+            None,
         )
+        if cls.contract is None:
+            raise unittest.SkipTest("CS2FOW generator is disabled (MODULE_ENABLED = False)")
         cls.module = cls.contract.module
 
     @staticmethod

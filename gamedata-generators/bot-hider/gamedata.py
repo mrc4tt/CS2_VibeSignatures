@@ -24,7 +24,7 @@ from gamedata_utils import convert_sig_to_css, normalize_func_name_colons_to_und
 
 # Module metadata
 MODULE_NAME = "bot-hider"
-MODULE_ENABLED = True
+MODULE_ENABLED = False
 
 # Relative path to the gamedata file within the module output directory
 GAMEDATA_PATH = "gamedata/bot-hider.json"

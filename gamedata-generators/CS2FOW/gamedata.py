@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 MODULE_NAME = "CS2FOW"
-MODULE_ENABLED = True
+MODULE_ENABLED = False
 GENERATOR_API_VERSION = 2
 
 GAMEDATA_PATH = "gamedata/cs2fow.games.txt"
