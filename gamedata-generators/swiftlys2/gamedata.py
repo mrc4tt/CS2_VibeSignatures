@@ -49,6 +49,33 @@ KEY_SYMBOL_OVERRIDES = {
     "CMolotovProjectile::EmitGrenade": "CMolotovProjectile_Create",
     "CDecoyProjectile::EmitGrenade": "CDecoyProjectile_Create",
     "CSmokeGrenadeProjectile::EmitGrenade": "CSmokeGrenadeProjectile_Create",
+    # Interface slots, filed under the class that implements them. Each index equals
+    # the author's on 14192 on both platforms.
+    "IServerGameClients::ClientCommand": "CSource2GameClients_ClientCommand",
+    "IServerGameClients::ClientConnect": "CSource2GameClients_ClientConnect",
+    "IServerGameClients::ClientDisconnect": "CSource2GameClients_ClientDisconnect",
+    "IServerGameClients::ClientPutInServer": "CSource2GameClients_ClientPutInServer",
+    "IServerGameClients::OnClientConnected": "CSource2GameClients_OnClientConnected",
+    "IServerGameDLL::GameFrame": "CSource2Server_GameFrame",
+    "IServerGameDLL::GameServerSteamAPIActivated": "CSource2Server_GameServerSteamAPIActivated",
+    "IServerGameDLL::GameServerSteamAPIDeactivated": "CSource2Server_GameServerSteamAPIDeactivated",
+    "IServerGameDLL::PreWorldUpdate": "CSource2Server_PreWorldUpdate",
+    "INetworkServerService::StartupServer": "CNetworkServerService_StartupServer",
+    "CGameRules::GoToIntermission": "CCSGameRules_GoToIntermission",
+    # Members the analysis files under the derived class (CServerSideClientBase sits at
+    # offset 0 of CServerSideClient) or the base server; same offsets as the author's.
+    "CNetworkGameServer::m_Clients": "CNetworkGameServerBase_m_Clients",
+    "CServerSideClientBase::m_bFakePlayer": "CServerSideClient_m_bFakePlayer",
+    "CServerSideClientBase::m_bIsHLTV": "CServerSideClient_m_bIsHLTV",
+    "CServerSideClientBase::m_Name": "CServerSideClient_m_Name",
+    "CServerSideClientBase::m_nClientSlot": "CServerSideClient_m_nClientSlot",
+    "CServerSideClientBase::m_nConnectionTypeFlags": "CServerSideClient_m_nConnectionTypeFlags",
+    "CServerSideClientBase::m_nEntityIndex": "CServerSideClient_m_nEntityIndex",
+    "CServerSideClientBase::m_NetChannel": "CServerSideClient_m_NetChannel",
+    "CServerSideClientBase::m_nSignonState": "CServerSideClient_m_nSignonState",
+    "CServerSideClientBase::m_SteamID": "CServerSideClient_m_SteamID",
+    "CServerSideClientBase::m_UserID": "CServerSideClient_m_UserID",
+    "CServerSideClientBase::m_UserIDString": "CServerSideClient_m_UserIDString",
 }
 
 # Routing for one file only. CCSPlayer_WeaponServices::DropWeapon is the vtable slot in
@@ -171,7 +198,10 @@ def _update_offsets(yaml_data, func_lib_map, platforms, off_path, alias_to_name_
 
     for func_name, entry in offsets.items():
         # Convert :: to _ for matching with YAML data
-        yaml_func_name = normalize_func_name_colons_to_underscore(func_name, alias_to_name_map)
+        own = {**KEY_SYMBOL_OVERRIDES, **KEY_SYMBOL_OVERRIDES_BY_OUTPUT.get("offsets.jsonc", {})}
+        yaml_func_name = own.get(func_name) or normalize_func_name_colons_to_underscore(
+            func_name, alias_to_name_map
+        )
 
         # Find matching YAML data
         yaml_entry = yaml_data.get(yaml_func_name)

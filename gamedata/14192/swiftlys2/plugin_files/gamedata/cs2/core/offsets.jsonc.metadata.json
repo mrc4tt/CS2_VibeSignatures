@@ -154,8 +154,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        61,
+        62
+      ],
       "name": "CGameRules::GoToIntermission",
       "updated": false
     },
@@ -186,8 +189,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        208,
+        209
+      ],
       "name": "CNetworkGameServer::m_Clients",
       "updated": false
     },
@@ -240,8 +246,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        392,
+        393
+      ],
       "name": "CServerSideClientBase::m_bFakePlayer",
       "updated": false
     },
@@ -252,8 +261,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        436,
+        437
+      ],
       "name": "CServerSideClientBase::m_bIsHLTV",
       "updated": false
     },
@@ -324,8 +336,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        360,
+        361
+      ],
       "name": "CServerSideClientBase::m_Name",
       "updated": false
     },
@@ -348,14 +363,20 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        364,
+        365
+      ],
       "name": "CServerSideClientBase::m_nClientSlot",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        376,
+        377
+      ],
       "name": "CServerSideClientBase::m_nConnectionTypeFlags",
       "updated": false
     },
@@ -366,14 +387,20 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        368,
+        369
+      ],
       "name": "CServerSideClientBase::m_nEntityIndex",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        372,
+        373
+      ],
       "name": "CServerSideClientBase::m_NetChannel",
       "updated": false
     },
@@ -402,8 +429,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        388,
+        389
+      ],
       "name": "CServerSideClientBase::m_nSignonState",
       "updated": false
     },
@@ -432,8 +462,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        408,
+        409
+      ],
       "name": "CServerSideClientBase::m_SteamID",
       "updated": false
     },
@@ -450,14 +483,20 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        400,
+        401
+      ],
       "name": "CServerSideClientBase::m_UserID",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        356,
+        357
+      ],
       "name": "CServerSideClientBase::m_UserIDString",
       "updated": false
     },
@@ -789,32 +828,47 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        129,
+        130
+      ],
       "name": "INetworkServerService::StartupServer",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        137,
+        138
+      ],
       "name": "IServerGameClients::ClientCommand",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        145,
+        146
+      ],
       "name": "IServerGameClients::ClientConnect",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        153,
+        154
+      ],
       "name": "IServerGameClients::ClientDisconnect",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        157,
+        158
+      ],
       "name": "IServerGameClients::ClientPutInServer",
       "updated": false
     },
@@ -825,32 +879,47 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        149,
+        150
+      ],
       "name": "IServerGameClients::OnClientConnected",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        113,
+        114
+      ],
       "name": "IServerGameDLL::GameFrame",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        117,
+        118
+      ],
       "name": "IServerGameDLL::GameServerSteamAPIActivated",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        121,
+        122
+      ],
       "name": "IServerGameDLL::GameServerSteamAPIDeactivated",
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        109,
+        110
+      ],
       "name": "IServerGameDLL::PreWorldUpdate",
       "updated": false
     },
@@ -874,7 +943,7 @@
   "gamever": "14192",
   "schema_version": 2,
   "summary": {
-    "covered": 20,
+    "covered": 43,
     "total": 133,
     "updated": 1
   }
