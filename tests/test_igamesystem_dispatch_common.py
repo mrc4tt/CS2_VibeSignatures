@@ -2,7 +2,7 @@ import importlib
 import json
 import types
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 
 def _load_module():
@@ -202,3 +202,113 @@ class TestDedupEntriesByOffset(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSourceString(unittest.IsolatedAsyncioTestCase):
+    """source_string: the dispatch source is the one function referencing a string."""
+
+    async def _run(self, located, tmpdir):
+        import os
+        import yaml
+
+        module = _load_module()
+        with open(os.path.join(tmpdir, "IGameSystem_vtable.linux.yaml"), "w", encoding="utf-8") as handle:
+            yaml.safe_dump({"vtable_entries": {51: "0xa347f0"}}, handle)
+        built = []
+
+        def build(source_func_va, via_internal_wrapper, platform):
+            built.append(source_func_va)
+            return "dispatch"
+
+        # the second py_eval (the dispatch scan) answers nothing, so the run stops there
+        calls = AsyncMock(side_effect=[located, None])
+        with patch.object(module, "_call_py_eval_json", calls), patch.object(module, "_build_dispatch_py_eval", build):
+            ok = await module.preprocess_igamesystem_dispatch_skill(
+                session=object(),
+                expected_outputs=[os.path.join(tmpdir, "IGameSystem_OnRestoreGame.linux.yaml")],
+                new_binary_dir=tmpdir,
+                platform="linux",
+                image_base=0,
+                source_yaml_stem="CSource2Server_OnStreamEntitiesFromFileCompleted",  # no YAML on purpose
+                target_specs=[{"target_name": "IGameSystem_OnRestoreGame"}],
+                via_internal_wrapper=False,
+                internal_rename_to=None,
+                multi_order="scan",
+                source_string="%s:  EndRestoreEntities( %s%s )\n",
+            )
+        return ok, built, calls
+
+    async def test_the_one_referencing_function_is_scanned(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as tmpdir:
+            ok, built, calls = await self._run({"funcs": ["0x170d090"]}, tmpdir)
+        self.assertFalse(ok)
+        self.assertEqual(["0x170d090"], built)
+        self.assertIn("EndRestoreEntities", calls.call_args_list[0].args[1])
+
+    async def test_an_ambiguous_string_stops_before_scanning(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as tmpdir:
+            ok, built, calls = await self._run({"funcs": ["0x1", "0x2"]}, tmpdir)
+        self.assertFalse(ok)
+        self.assertEqual([], built)
+        self.assertEqual(1, calls.call_count)
+
+
+class TestFuncSigPlatforms(unittest.IsolatedAsyncioTestCase):
+    """func_sig_platforms: a boundary-crossing func_sig on the named platforms only."""
+
+    async def _run(self, platform):
+        import os
+        from tempfile import TemporaryDirectory
+
+        import yaml
+
+        module = _load_module()
+        with TemporaryDirectory() as tmpdir:
+            with open(os.path.join(tmpdir, f"IGameSystem_vtable.{platform}.yaml"), "w", encoding="utf-8") as handle:
+                yaml.safe_dump({"vtable_entries": {51: "0x180158980"}}, handle)
+            output = os.path.join(tmpdir, f"IGameSystem_OnRestoreGame.{platform}.yaml")
+            located = {"funcs": ["0x180bfa370"]}
+            scanned = {"entries": [{"vfunc_offset": 408, "vfunc_index": 51}]}
+            gen = AsyncMock(return_value={"func_sig": "C2 ?? ?? CC 40 55"})
+            with (
+                patch.object(module, "_call_py_eval_json", AsyncMock(side_effect=[located, scanned])),
+                patch.object(
+                    module, "_query_func_info", AsyncMock(return_value={"func_va": "0x180158980", "func_size": "0x3"})
+                ),
+                patch.object(module, "_rename_func_best_effort", AsyncMock()),
+                patch.object(module, "preprocess_gen_func_sig_via_mcp", gen),
+            ):
+                ok = await module.preprocess_igamesystem_dispatch_skill(
+                    session=object(),
+                    expected_outputs=[output],
+                    new_binary_dir=tmpdir,
+                    platform=platform,
+                    image_base=0x180000000,
+                    source_yaml_stem="unused",
+                    target_specs=[{"target_name": "IGameSystem_OnRestoreGame", "func_sig_platforms": ["windows"]}],
+                    via_internal_wrapper=False,
+                    internal_rename_to=None,
+                    multi_order="scan",
+                    source_string="%s:  EndRestoreEntities( %s%s )\n",
+                )
+            with open(output, encoding="utf-8") as handle:
+                written = yaml.safe_load(handle)
+        return ok, written, gen
+
+    async def test_named_platform_gets_a_boundary_crossing_sig(self) -> None:
+        ok, written, gen = await self._run("windows")
+        self.assertTrue(ok)
+        self.assertEqual(51, written["vfunc_index"])
+        self.assertEqual("C2 ?? ?? CC 40 55", written["func_sig"])
+        self.assertTrue(written["func_sig_allow_across_function_boundary"])
+        self.assertTrue(gen.call_args.kwargs["allow_across_function_boundary"])
+
+    async def test_other_platform_stays_slot_only(self) -> None:
+        ok, written, gen = await self._run("linux")
+        self.assertTrue(ok)
+        self.assertNotIn("func_sig", written)
+        gen.assert_not_called()

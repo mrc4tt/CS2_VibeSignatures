@@ -8,11 +8,22 @@ from ida_preprocessor_scripts._igamesystem_dispatch_common import (
 
 SOURCE_YAML_STEM = "CSource2Server_OnStreamEntitiesFromFileCompleted"
 TARGET_SPECS = [
-    {"target_name": "IGameSystem_OnRestoreGame", "rename_to": "GameSystem_OnRestoreGame"},
+    # windows carries a func_sig across the boundary (the body is `ret 0`) since 14185
+    {
+        "target_name": "IGameSystem_OnRestoreGame",
+        "rename_to": "GameSystem_OnRestoreGame",
+        "func_sig_platforms": ["windows"],
+    },
 ]
 VIA_INTERNAL_WRAPPER = False
 INTERNAL_RENAME_TO = None
 MULTI_ORDER = "scan"
+# CSource2Server_OnStreamEntitiesFromFileCompleted, the upstream source, is a bare `ret` by
+# 14185, so the dispatch (linux `mov esi, 0x199` + IGameSystem dispatch call, windows a
+# callback doing `jmp [rax+0x198]`) is found in the function that prints its own name:
+# CEntity2SaveRestore's EndRestoreEntities (14192: linux 0x170d090, windows 0x180bfa370).
+# Both reference this string alone and carry exactly one dispatch, slot 51.
+SOURCE_STRING = '%s:  EndRestoreEntities( %s%s )\n'
 
 
 async def preprocess_skill(
@@ -38,5 +49,6 @@ async def preprocess_skill(
         via_internal_wrapper=VIA_INTERNAL_WRAPPER,
         internal_rename_to=INTERNAL_RENAME_TO,
         multi_order=MULTI_ORDER,
+        source_string=SOURCE_STRING,
         debug=debug,
     )

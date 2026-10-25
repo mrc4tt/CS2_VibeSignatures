@@ -9,7 +9,7 @@ try:
 except ImportError:
     yaml = None
 
-from ida_analyze_util import parse_mcp_result, write_func_yaml
+from ida_analyze_util import parse_mcp_result, preprocess_gen_func_sig_via_mcp, write_func_yaml
 
 
 def _read_yaml(path):
@@ -268,6 +268,22 @@ async def _query_func_info(session, target_addr_hex, target_name, debug=False):
     return data if isinstance(data, dict) else None
 
 
+def _build_source_by_string_py_eval(source_string):
+    """py_eval locating the one function that references `source_string` exactly."""
+    return (
+        "import idautils, ida_funcs, json\n"
+        f"needle = {json.dumps(source_string)}\n"
+        "funcs = set()\n"
+        "for s in idautils.Strings():\n"
+        "    if str(s) == needle:\n"
+        "        for x in idautils.XrefsTo(s.ea):\n"
+        "            f = ida_funcs.get_func(x.frm)\n"
+        "            if f:\n"
+        "                funcs.add(f.start_ea)\n"
+        "result = json.dumps({'funcs': [hex(ea) for ea in sorted(funcs)]})\n"
+    )
+
+
 async def preprocess_igamesystem_dispatch_skill(
     session,
     expected_outputs,
@@ -281,6 +297,7 @@ async def preprocess_igamesystem_dispatch_skill(
     multi_order,
     expected_dispatch_count=None,
     debug=False,
+    source_string=None,
 ):
     """Common preprocess routine for dispatch-like IGameSystem skills.
 
@@ -291,6 +308,11 @@ async def preprocess_igamesystem_dispatch_skill(
         platform: "windows" or "linux".
         image_base: Binary image base integer.
         source_yaml_stem: Source YAML filename stem (without .{platform}.yaml).
+        source_string: When set, the source function is instead the one function that
+            references this exact string, found in the open binary. For a dispatch that
+            moved out of the function an artifact names: 14192's
+            CSource2Server_OnStreamEntitiesFromFileCompleted is a bare `ret`, so the
+            OnRestoreGame dispatch is found through its caller's own debug string.
         target_specs: List[dict] with keys:
             - target_name (required)
             - rename_to (optional)
@@ -345,6 +367,9 @@ async def preprocess_igamesystem_dispatch_skill(
                 "target_name": str(target_name),
                 "rename_to": str(rename_to) if rename_to else None,
                 "dispatch_rank": dispatch_rank,
+                # a signature across the function boundary, on these platforms only: the
+                # body is often a bare `ret` that cannot be signatured on its own
+                "func_sig_platforms": tuple(item.get("func_sig_platforms") or ()),
             }
         )
 
@@ -407,13 +432,28 @@ async def preprocess_igamesystem_dispatch_skill(
             return False
         matched_outputs[target_name] = matched[0]
 
-    src_path = os.path.join(new_binary_dir, f"{source_yaml_stem}.{platform}.yaml")
-    src_data = _read_yaml(src_path)
-    if not isinstance(src_data, dict) or not src_data.get("func_va"):
-        if debug:
-            print(f"    Preprocess: failed to read {source_yaml_stem} YAML")
-        return False
-    src_func_va = str(src_data["func_va"])
+    source_label = f"the function referencing {source_string!r}" if source_string else source_yaml_stem
+    if source_string:
+        located = await _call_py_eval_json(
+            session,
+            _build_source_by_string_py_eval(source_string),
+            debug=debug,
+            error_label="py_eval locating the source function by string",
+        )
+        funcs = (located or {}).get("funcs") if isinstance(located, dict) else None
+        if not isinstance(funcs, list) or len(funcs) != 1:
+            if debug:
+                print(f"    Preprocess: expected one function referencing {source_string!r}, got {funcs}")
+            return False
+        src_func_va = str(funcs[0])
+    else:
+        src_path = os.path.join(new_binary_dir, f"{source_label}.{platform}.yaml")
+        src_data = _read_yaml(src_path)
+        if not isinstance(src_data, dict) or not src_data.get("func_va"):
+            if debug:
+                print(f"    Preprocess: failed to read {source_yaml_stem} YAML")
+            return False
+        src_func_va = str(src_data["func_va"])
 
     vtable_path = os.path.join(new_binary_dir, f"IGameSystem_vtable.{platform}.yaml")
     vtable_data = _read_yaml(vtable_path)
@@ -452,33 +492,33 @@ async def preprocess_igamesystem_dispatch_skill(
 
     if not isinstance(parsed, dict):
         if debug:
-            print(f"    Preprocess: failed to determine vfunc entries from {source_yaml_stem}")
+            print(f"    Preprocess: failed to determine vfunc entries from {source_label}")
         return False
 
     entries = parsed.get("entries")
     if not isinstance(entries, list):
         if debug:
             print(
-                f"    Preprocess: invalid entry count from {source_yaml_stem}, "
+                f"    Preprocess: invalid entry count from {source_label}, "
                 f"expected {expected_dispatch_count}, got N/A"
             )
         return False
 
     deinlined_dispatchers = parsed.get("deinlined_dispatchers")
     if debug and deinlined_dispatchers:
-        print(f"    Preprocess: {source_yaml_stem} dispatch de-inlined into {deinlined_dispatchers}")
+        print(f"    Preprocess: {source_label} dispatch de-inlined into {deinlined_dispatchers}")
 
     entries = _dedup_entries_by_offset(entries)
     if len(entries) != expected_dispatch_count:
         if debug:
             print(
-                f"    Preprocess: invalid entry count from {source_yaml_stem}, "
+                f"    Preprocess: invalid entry count from {source_label}, "
                 f"expected {expected_dispatch_count}, got {len(entries)}"
             )
         return False
 
     if debug:
-        print(f"    Preprocess: collected {len(entries)} dispatch entries from {source_yaml_stem}")
+        print(f"    Preprocess: collected {len(entries)} dispatch entries from {source_label}")
 
     internal_addr = parsed.get("internal_addr")
     should_sort_by_index = has_dispatch_rank or (target_count > 1 and multi_order == "index")
@@ -583,6 +623,21 @@ async def preprocess_igamesystem_dispatch_skill(
             "vfunc_offset": hex(vfunc_offset),
             "vfunc_index": vfunc_index,
         }
+
+        if platform in spec.get("func_sig_platforms", ()):
+            sig_info = await preprocess_gen_func_sig_via_mcp(
+                session=session,
+                func_va=func_va_int,
+                image_base=image_base,
+                allow_across_function_boundary=True,
+                debug=debug,
+            )
+            if not isinstance(sig_info, dict) or not sig_info.get("func_sig"):
+                if debug:
+                    print(f"    Preprocess: failed to generate func_sig for {target_name}")
+                return False
+            payload["func_sig"] = sig_info["func_sig"]
+            payload["func_sig_allow_across_function_boundary"] = True
 
         output_path = matched_outputs[target_name]
         write_func_yaml(output_path, payload)

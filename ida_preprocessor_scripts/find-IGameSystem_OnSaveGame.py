@@ -12,6 +12,10 @@ TARGET_SPECS = [
 VIA_INTERNAL_WRAPPER = False
 INTERNAL_RENAME_TO = None
 MULTI_ORDER = "scan"
+# CEntitySaveRestoreBlockHandler_PreSave, the upstream source, no longer dispatches it;
+# CEntity2SaveRestore::StreamEntitiesToFile does (14192: linux 0x1752250, windows
+# 0x180c32b30). Both reference this string alone and carry exactly one dispatch, slot 50.
+SOURCE_STRING = "%s:  StreamEntitiesToFile:  '%s' [%d entities]\n"
 
 
 async def preprocess_skill(
@@ -37,5 +41,6 @@ async def preprocess_skill(
         via_internal_wrapper=VIA_INTERNAL_WRAPPER,
         internal_rename_to=INTERNAL_RENAME_TO,
         multi_order=MULTI_ORDER,
+        source_string=SOURCE_STRING,
         debug=debug,
     )
