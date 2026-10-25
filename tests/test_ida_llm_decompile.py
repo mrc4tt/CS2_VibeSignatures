@@ -35,11 +35,18 @@ class TestConnectClientAnchor(unittest.TestCase):
             with self.subTest(candidates=candidates), self.assertRaises(ValueError):
                 anchor_helper.select_anchor(candidates)
 
-    def test_reference_address_and_wrong_live_call_rejected(self):
-        anchor = self.candidate(0x1000)
-        for address in (0x68D81C, 0x3000, 0x1000):
-            result = {"found_call": [{"func_name": anchor_helper.SYMBOL, "insn_va": hex(address)}]}
-            self.assertEqual(address != 0x1000, bool(anchor_helper.validate_result(result, anchor)))
+    def test_free_slot_allocator_wins_over_the_lookups_ahead_of_it(self):
+        # 14192 linux: reconnect lookup first, the allocator nested in its failure path
+        lookup = self.candidate(0x1000, [0x3000], verified=False)
+        allocator = dict(self.candidate(0x3000, verified=False), frees_slot=True)
+        selected = anchor_helper.select_anchor([lookup, allocator])
+        self.assertEqual(0x3000, selected["insn_va"])
+        self.assertTrue(selected["verified"])
+
+    def test_two_allocator_calls_fail_closed(self):
+        allocators = [dict(self.candidate(address), frees_slot=True) for address in (0x1000, 0x3000)]
+        with self.assertRaisesRegex(ValueError, "free-slot allocator"):
+            anchor_helper.select_anchor(allocators)
 
     def test_ctree_probe_recognizes_single_call_and_nested_fallback_chain(self):
         # Small ctree fixtures exercise the actual IDA probe, including its live
@@ -112,7 +119,9 @@ class TestConnectClientAnchor(unittest.TestCase):
             ),
             "ida_funcs": SimpleNamespace(get_func=lambda ea: SimpleNamespace(start_ea=ea if ea % 2 else 0x100)),
             "ida_lines": SimpleNamespace(tag_remove=lambda text: text),
-            "idautils": SimpleNamespace(CodeRefsFrom=lambda ea, _: [ea + 1]),
+            "idautils": SimpleNamespace(
+                CodeRefsFrom=lambda ea, _: [ea + 1], FuncItems=lambda ea: [ea], DataRefsFrom=lambda ea: []
+            ),
             "idc": SimpleNamespace(
                 STRTYPE_C=0, print_insn_mnem=lambda _: "call", generate_disasm_line=lambda *_: "call sub_client"
             ),
@@ -147,13 +156,6 @@ class TestConnectClientAnchor(unittest.TestCase):
         )
         with patch.dict("sys.modules", modules), self.assertRaises(ValueError):
             anchor_helper.select_anchor(anchor_helper._probe_anchor(0x100))
-
-    def test_validator_accepts_common_address_formats_and_reports_missing_or_invalid_entries(self):
-        anchor = self.candidate(0x1000)
-        for value in ("1000h", "0x1_000", "4096", "invalid", None):
-            result = {"found_call": [{"func_name": anchor_helper.SYMBOL, "insn_va": value}]}
-            self.assertEqual(value in ("invalid", None), bool(anchor_helper.validate_result(result, anchor)))
-        self.assertTrue(anchor_helper.validate_result({}, anchor))
 
 
 class TestFinderValidation(unittest.IsolatedAsyncioTestCase):

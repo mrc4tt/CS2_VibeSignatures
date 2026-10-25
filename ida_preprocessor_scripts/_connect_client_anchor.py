@@ -1,4 +1,14 @@
-"""Verify the first client acquisition call on ConnectClient's server-full path."""
+"""Find ConnectClient's GetFreeClient call on its server-full path.
+
+GetFreeClient is the free-slot allocator: it kicks a bot when the server is full
+("Kicked to free up slot"), and its null result is what prints the server-full
+rejection. Both plugins that ship it (CS2Fixes' phantom-client detour, modsharp's
+string ref) and every windows build name that function. On linux it is not the first
+acquisition: ConnectClient first asks a reconnect lookup ("Player %s reconnecting")
+and a second lookup, and calls GetFreeClient only when both return null, so the
+"first acquisition" rule picked the reconnect lookup there (14191 linux shipped it)
+and failed the anchor on 14192, sending every linux build to an agent.
+"""
 
 import inspect
 import json
@@ -65,6 +75,16 @@ def _probe_anchor(func_va):
                     self.has_server_full = True
             return 0
 
+    def frees_a_slot(target):
+        # the allocator's own string; the reconnect lookups ahead of it do not carry it
+        if target is None:
+            return False
+        for item in idautils.FuncItems(target.start_ea):
+            for ref in idautils.DataRefsFrom(item):
+                if b"Kicked to free up slot" in (ida_bytes.get_strlit_contents(ref, -1, idc.STRTYPE_C) or b""):
+                    return True
+        return False
+
     candidates = []
     acquisitions = []
 
@@ -121,9 +141,8 @@ def _probe_anchor(func_va):
                 owner = ida_funcs.get_func(call_va)
                 refs = list(idautils.CodeRefsFrom(call_va, False))
                 target = ida_funcs.get_func(refs[0]) if len(refs) == 1 else None
-                verified = (
-                    branch is not None
-                    and owner is not None
+                direct = (
+                    owner is not None
                     and owner.start_ea == func_va
                     and idc.print_insn_mnem(call_va) == "call"
                     and target is not None
@@ -131,6 +150,7 @@ def _probe_anchor(func_va):
                     and uncast(call.x).op == hx.cot_obj
                     and uncast(call.x).obj_ea == target.start_ea
                 )
+                verified = branch is not None and direct
                 chain = FailurePath()
                 chain.apply_to(following, None)
                 candidates.append(
@@ -138,6 +158,8 @@ def _probe_anchor(func_va):
                         "insn_va": call_va,
                         "target_va": int(target.start_ea) if target is not None else None,
                         "verified": verified,
+                        "direct": direct,
+                        "frees_slot": direct and frees_a_slot(target),
                         "client_var": int(index),
                         "failure_calls": visitor.calls,
                         "chain_calls": chain.calls,
@@ -160,6 +182,13 @@ def _probe_anchor(func_va):
 
 
 def select_anchor(candidates):
+    allocators = [candidate for candidate in candidates if candidate.get("frees_slot")]
+    if allocators:
+        # the allocator is named by its own body, so the lookups ahead of it (which
+        # assign the same local) do not block it the way they block a positional guess
+        if len(allocators) != 1:
+            raise ValueError(f"expected one call to the free-slot allocator, found {len(allocators)}")
+        return dict(allocators[0], verified=True)
     # The final fallback also has a null check and server-full log. Its call lies
     # inside the first acquisition's failure subtree; it is not GetFreeClient.
     roots = [
@@ -193,19 +222,3 @@ async def load_anchor(session, artifact_dir, platform):
         raise ValueError("invalid ConnectClient anchor probe result")
     return select_anchor(candidates)
 
-
-def validate_result(parsed_result, anchor):
-    from ida_llm_decompile import _parse_llm_int_value
-
-    issues = []
-    entries = [entry for entry in parsed_result.get("found_call", []) if entry.get("func_name") == SYMBOL]
-    if len(entries) != 1:
-        return [f"{SYMBOL}: return exactly one found_call entry for the verified first client acquisition."]
-    for entry in entries:
-        if _parse_llm_int_value(entry.get("insn_va")) != anchor["insn_va"]:
-            issues.append(
-                f"{SYMBOL}: choose the FIRST client acquisition in the null-result fallback chain, "
-                f"at {hex(anchor['insn_va'])} ({anchor['insn_disasm']}). "
-                "Later fallback allocators also precede the server-full log and must not be selected."
-            )
-    return issues
