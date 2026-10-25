@@ -35,6 +35,8 @@
 #   AUTOPILOT_IMPACT_PLUGINS=a:b     plugin dirs (colon-separated) for the schema impact
 #                                    report; the CounterStrikeSharp API is always checked
 #   AUTOPILOT_IMPACT_CSS=path        CounterStrikeSharp checkout, default /root/CounterStrikeSharp
+#   AUTOPILOT_HL2SDK=0               do not bump hl2sdk_cs2 to the fork's cs2 head, nor
+#                                    report CounterStrikeSharp's hl2sdk lagging behind it
 #   AUTOPILOT_AUTOCOMMIT=0           refuse a dirty tree instead of committing and
 #                                    pushing the tracked changes before a run
 #   AUTOPILOT_LINUX_FIRST=0          analyse both platforms before releasing anything,
@@ -850,6 +852,28 @@ fi
 step "packing the snapshot" uv run gamesymbol_snapshot.py pack -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
 step "checking the snapshot against the config" uv run gamesymbol_snapshot.py check-contract \
     -gamever "$TAG" -snapshot "gamesymbols/$TAG.yaml"
+
+# Every repository's mrc4tt/hl2sdk pointer against the fork's cs2 head. Here it is bumped
+# and committed (the build's own push carries it): sdk_abi_check.sh below moves the
+# checkout to that head anyway, and without the bump the pointer was left behind and the
+# submodule showed as modified until someone noticed. CounterStrikeSharp is only checked -
+# a new SDK there needs a build before it is trusted - and a lag is reported to the admin
+# channel. Not a gate. AUTOPILOT_HL2SDK=0 turns both off.
+if [ "${AUTOPILOT_HL2SDK:-1}" != "0" ] && [ -x ./update_hl2sdk_submodules.sh ]; then
+    log "==> bringing hl2sdk_cs2 to the fork's cs2 head"
+    ./update_hl2sdk_submodules.sh --no-push "$PWD" 2>&1 | sed 's/^/    /'
+    CSS_REPO="${AUTOPILOT_IMPACT_CSS:-/root/CounterStrikeSharp}"
+    if [ -d "$CSS_REPO" ]; then
+        HL2SDK_OUT="$STATE/hl2sdk-css-$TAG.txt"
+        if ! ./update_hl2sdk_submodules.sh --check "$CSS_REPO" > "$HL2SDK_OUT" 2>&1; then
+            log "    CounterStrikeSharp's hl2sdk is behind the fork"
+            notify "hl2sdk-behind" "$(grep -E 'BEHIND|skip' "$HL2SDK_OUT")
+
+to bump it (then build CounterStrikeSharp before a release):
+./update_hl2sdk_submodules.sh $CSS_REPO"
+        fi
+    fi
+fi
 
 # The hl2sdk fork's headers against this build's vtables. Not a gate: gamedata does not
 # depend on the SDK, but a plugin built against a header with a moved slot calls the

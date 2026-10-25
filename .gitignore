@@ -35,6 +35,7 @@ vcall_finder
 !gen_references.sh
 !update_css_gamedata.sh
 !add_gamever.sh
+!update_hl2sdk_submodules.sh
 !autopilot_notify.sh
 libtier0.so
 libtier0.so.*
