@@ -787,15 +787,20 @@ and stop there, so they are skipped with the reason printed. Beware the near-mis
 `g_pGameEntitySystem` look consumed: CounterStrikeSharp ships a `GameEntitySystem` key, but it
 carries `offsets` (88/80) for a member of another class, not this global's address.
 
-**A disabled plugin stops paying for symbols.** `MODULE_ENABLED = False` (CS2Fixes joined the
-others on 14182) removes the plugin's keys from `generator_consumed_names`, so an optional
-output only it read is no longer hunted. A *required* output whose only readers are
-switched-off plugins is waived as well: the run skips its agent hunt after the free
-preprocessor fails (`required outputs read only by disabled plugins`), and pack does not
-insist on it (`artifact_only_disabled_consumers`, `gamesymbol_snapshot_lib.operations._waived`).
-On 14182 that is 58 of 1979 required outputs. The other 1135 that no plugin ever read stay
-required - that is upstream's declaration, not a plugin choice. Re-enabling a plugin
-restores both halves; existing artifacts are packed either way.
+**A required output nothing reads is not paid for.** A reader is an enabled plugin's key
+(`generator_consumed_names`; `MODULE_ENABLED = False` removes a plugin's keys), another task's
+`expected_input`/`optional_input`, or a **cpp test**: `cpp_tests` compare each class's SDK header
+with every `<Class>_*` record (and its `alias_symbols`) for the hl2sdk ABI check
+(`cpp_test_class_prefixes`), which is why `IGameSystem_OnRestoreGame` is read although no plugin
+ships it. A required output with no reader gets the free preprocessor only: the run skips the
+hunter and the agent (`no reader (plugin, task input or cpp test)`), and pack does not insist on
+it (`artifact_unpaid`, `gamesymbol_snapshot_lib.operations._waived`) but packs it wherever it
+exists. On 14192 that is 1609 of 3921 required outputs; over opencode's ledger up to 2026-10-25,
+294 of 609 agent runs ($68 of $141 at the API list price) went to such outputs. Until then only
+outputs read solely by disabled plugins were waived and the rest stayed required as upstream's
+declaration - the fork no longer syncs upstream, so it decides. `CS2VIBE_HUNT_UNREAD=1` restores
+that rule. A symbol that gains a reader is hunted again on the next run; re-enabling a plugin
+does the same for its keys.
 
 ### 12. NEVER stop at the boundary check — confirm the function is the one you named
 A clean boundary only proves you found *a* function head. Two real cases: `0x4ac3e0` was
@@ -963,7 +968,7 @@ Two guards now catch the class before the baseline does:
 | `auto_repair.py` | When the verified gate fails (autopilot runs it; `AUTOPILOT_AUTO_REPAIR=0` off) | Rebuilds a contradicted struct offset with `emit_artifact.py` only on independent evidence: the other platform's anchored function holds its value, or another instruction in the same `offset_sig` touches the whole field AND equals the other platform. Then pack, generate, verify. Plan only without `-apply`. Repaired 14190's five `CServerSideClient` misreads unaided, identical to the hand fix |
 | `check_deploy_drift.py` | After every deploy | Diffs `gamedata/<VER>/<plugin>/` against the deployed file; catches a generation that never left the repo, which no entry-level check can see |
 | `update_hl2sdk_submodules.sh` | autopilot, before `sdk_abi_check.sh`; by hand after a fork push | Moves every repo's `mrc4tt/hl2sdk` gitlink to the branch head `.gitmodules` names, fast-forward only, and commits that path alone. Autopilot bumps this repo (the build's push carries it) and only `--check`s CounterStrikeSharp, reporting `hl2sdk-behind` to the admin channel - a new SDK there needs a build. `_work/` runner checkouts are skipped |
-| `agent_cost.py` | autopilot after the analysis (`.autopilot/agent-cost-<VER>-<epoch>.json` + the journal); by hand `-since "<time>"` | Agent hunts from opencode's ledger: billed cost, and the same tokens at z.ai's API list price (`LIST_PRICES`), per model and per skill - the most expensive skills are the next candidates for a deterministic preprocessor. Not counted: LLM_DECOMPILE, claude, codex |
+| `agent_cost.py` | autopilot after the analysis (`.autopilot/agent-cost-<VER>-<epoch>.json` + the journal); by hand `-since "<time>"` | Agent hunts from opencode's ledger: billed cost, and the same tokens at z.ai's API list price (`LIST_PRICES`), per model and per skill - the most expensive skills are the next candidates for a deterministic preprocessor. `-recurring` (autopilot, every run) writes `.autopilot/needs-preprocessor.txt`: skills paid for in 2+ of the last 5 builds, whose free path fails every build - the work list for a stronger anchor. Not counted: LLM_DECOMPILE, claude, codex |
 | `gamesymbol_snapshot.py` | `pack` after changes, `check-contract` to verify | Pack is what generation reads, not `bin_artifacts/` |
 | `missing_report.py` | After runs / before hunts | Writes `missing_<plat>_<ver>.txt` |
 | `audit_duplicate_va.py` | After every hunt round | 0 suspect clusters = clean |
@@ -1003,6 +1008,9 @@ Two guards now catch the class before the baseline does:
   - IDA tools: `.opencode/agents/sig-finder.md` allows the 32 ida-pro-mcp tools the skills and past
     hunts use, not all 69 (~27k -> ~9k a step). A skill that needs a tool not on the list fails to
     call it - add it there.
+  - step cap: `steps: 60` on the opencode agent. 48 of 625 hunts went past 60 steps (up to 129),
+    each re-reading a longer context; at the cap the agent must answer, the runner validates.
+  - unread outputs: see rule 11 - an output nothing reads gets no agent at all.
   - hunter leads: `run_skill(hunter_leads=...)` puts the hunter's best candidate and why it stopped
     into the first prompt, marked UNVERIFIED, so the agent starts there instead of rediscovering it.
   - `AGENTS.md` tells a skill run to stop reading; `.claude/agents/sig-finder.md` (claude, codex)

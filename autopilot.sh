@@ -806,6 +806,9 @@ step_resume "analysing windows" ./run_windows.sh "$TAG"
 # per run, since a resumed build starts a new run. Never a gate.
 uv run agent_cost.py -since "$STARTED_EPOCH" -json > ".autopilot/agent-cost-$TAG-$STARTED_EPOCH.json" 2>/dev/null || true
 log "$(uv run agent_cost.py -since "$STARTED_EPOCH" -top 5 2>/dev/null || echo 'agent cost: unavailable')"
+# The work list that makes the next build cheaper: skills paid for again and again.
+uv run agent_cost.py -recurring -out .autopilot/needs-preprocessor.txt >/dev/null 2>&1 \
+    && log "    recurring agent skills: $(grep -cv '^#' .autopilot/needs-preprocessor.txt) (.autopilot/needs-preprocessor.txt)" || true
 
 # ---------------------------------------------------------------- battery, as a gate
 # ABI identity before the pack (CLAUDE.md rule 21): relocation reproduces a wrong

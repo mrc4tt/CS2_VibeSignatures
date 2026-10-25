@@ -67,10 +67,10 @@ def _actual_yaml_keys(contract) -> set[str]:
 
 
 def _waived(contract, path: str) -> bool:
-    """A required output whose only readers are switched-off plugins.
+    """A required output nothing reads: no enabled plugin, task input or cpp test.
 
-    The run no longer hunts those (ida_analyze_bin.artifact_only_disabled_consumers), so
-    pack must not insist on them either. Everything else stays required.
+    The run no longer hunts those (ida_analyze_bin.artifact_unpaid), so pack must not
+    insist on them either; it still packs them wherever they exist.
     """
     import ida_analyze_bin
 
@@ -79,7 +79,7 @@ def _waived(contract, path: str) -> bool:
         return False
     platform = "windows" if path.endswith(".windows.yaml") else "linux"
     try:
-        return ida_analyze_bin.artifact_only_disabled_consumers(
+        return ida_analyze_bin.artifact_unpaid(
             str(path_from_key(contract.artifact_game_root, path)), platform, str(config_path)
         )
     except Exception:

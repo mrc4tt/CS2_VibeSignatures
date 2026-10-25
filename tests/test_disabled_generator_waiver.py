@@ -5,6 +5,7 @@ Uses the repository's own generators and 14182 config, so it tracks the real swi
 """
 import os
 import unittest
+import unittest.mock
 
 import ida_analyze_bin as I
 
@@ -33,13 +34,44 @@ class DisabledGeneratorWaiverTests(unittest.TestCase):
         self.assertTrue(I.artifact_has_consumer(path, "linux", CONFIG))
         self.assertFalse(I.artifact_only_disabled_consumers(path, "linux", CONFIG))
 
-    def test_symbol_no_plugin_ever_read_stays_required(self):
-        # never consumed by any generator, enabled or not: upstream's declaration stands
+    def test_symbol_no_plugin_ever_read_is_not_a_disabled_plugin_waiver(self):
+        # never consumed by any generator, enabled or not: artifact_unpaid decides those
         path = _artifact("server", "CEntityInstance_OnSetDormant")
         self.assertFalse(I.artifact_only_disabled_consumers(path, "linux", CONFIG))
 
     def test_no_config_never_waives(self):
         self.assertFalse(I.artifact_only_disabled_consumers(_artifact("server", "X"), "linux", None))
+
+
+CONFIG_14192 = os.path.join(REPO, "configs", "14192.yaml")
+
+
+@unittest.skipUnless(os.path.isfile(CONFIG_14192), "needs configs/14192.yaml")
+class UnreadOutputWaiverTests(unittest.TestCase):
+    """A required output nothing reads is not hunted by an agent and not insisted on by pack."""
+
+    def _path(self, symbol):
+        return os.path.join(REPO, "bin_artifacts", "14192", "server", f"{symbol}.linux.yaml")
+
+    def test_output_nothing_reads_is_unpaid(self):
+        self.assertTrue(I.artifact_unpaid(self._path("CBaseEntity_GetChangeAccessorPathInfo_1"), "linux", CONFIG_14192))
+
+    def test_cpp_test_class_records_are_read(self):
+        # IGameSystem_MSVC compares the SDK header against every IGameSystem_* record
+        path = self._path("IGameSystem_OnRestoreGame")
+        self.assertTrue(I.artifact_has_consumer(path, "linux", CONFIG_14192))
+        self.assertFalse(I.artifact_unpaid(path, "linux", CONFIG_14192))
+
+    def test_plugin_key_is_read(self):
+        self.assertFalse(I.artifact_unpaid(self._path("CCSPlayer_ItemServices_GiveNamedItem"), "linux", CONFIG_14192))
+
+    def test_switch_restores_the_disabled_plugins_only_rule(self):
+        path = self._path("CBaseEntity_GetChangeAccessorPathInfo_1")
+        with unittest.mock.patch.dict(os.environ, {I.HUNT_UNREAD_ENV: "1"}):
+            self.assertFalse(I.artifact_unpaid(path, "linux", CONFIG_14192))
+
+    def test_no_config_never_waives(self):
+        self.assertFalse(I.artifact_unpaid(self._path("X"), "linux", None))
 
 
 if __name__ == "__main__":

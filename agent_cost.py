@@ -7,10 +7,17 @@ provider's dashboard. Not counted: LLM_DECOMPILE (a direct API call, not opencod
 and the claude/codex agents, which keep no such ledger.
 
     uv run agent_cost.py -since "2026-10-25 12:00"
-    uv run agent_cost.py -since 1761393600 -json > .autopilot/agent-cost-14193.json
+    uv run agent_cost.py -since 1761393600 -json > .autopilot/agent-cost-14193-1761393600.json
+    uv run agent_cost.py -recurring -out .autopilot/needs-preprocessor.txt
+
+`-recurring` turns those per-run files into the work list: a skill an agent was paid
+for in two or more of the recent builds is one whose free path fails every build, so
+it needs a stronger deterministic anchor (a string, INHERIT_VFUNCS, an offset_sig).
+A symbol that merely moved costs one agent run and relocates for free after that.
 """
 
 import argparse
+import glob
 import json
 import os
 import re
@@ -111,6 +118,49 @@ def render(report, top):
     return "\n".join(lines)
 
 
+RUN_FILE = re.compile(r"agent-cost-(?P<ver>[^-]+)-(?P<epoch>\d+)\.json$")
+
+
+def recurring(report_dir, builds=5, minimum=2):
+    """Skills an agent was paid for in at least `minimum` of the last `builds` gamevers."""
+    per_ver = {}
+    for path in glob.glob(os.path.join(report_dir, "agent-cost-*.json")):
+        match = RUN_FILE.search(os.path.basename(path))
+        if not match:
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                skills = json.load(handle).get("by_skill") or {}
+        except (OSError, ValueError):
+            continue
+        bucket = per_ver.setdefault(match.group("ver"), {})
+        for skill, row in skills.items():
+            seen = bucket.setdefault(skill, {"hunts": 0, "list_cost": 0.0})
+            seen["hunts"] += row.get("hunts", 0)
+            seen["list_cost"] += row.get("list_cost", 0.0)
+    recent = sorted(per_ver, key=lambda ver: (len(ver), ver))[-builds:]
+    rows = {}
+    for ver in recent:
+        for skill, seen in per_ver[ver].items():
+            row = rows.setdefault(skill, {"builds": [], "hunts": 0, "list_cost": 0.0})
+            row["builds"].append(ver)
+            row["hunts"] += seen["hunts"]
+            row["list_cost"] += seen["list_cost"]
+    hits = {skill: row for skill, row in rows.items() if len(row["builds"]) >= minimum}
+    return recent, dict(sorted(hits.items(), key=lambda item: (-len(item[1]["builds"]), -item[1]["list_cost"])))
+
+
+def render_recurring(recent, hits):
+    lines = [
+        "# Skills an agent was paid for in 2+ of the recent builds: the free path fails every",
+        "# build, so each needs a deterministic anchor (string, INHERIT_VFUNCS, offset_sig).",
+        f"# builds read: {', '.join(recent) or 'none'}   (written by agent_cost.py -recurring)",
+    ]
+    for skill, row in hits.items():
+        lines.append(f"{skill}  builds={','.join(row['builds'])}  hunts={row['hunts']}  list=${row['list_cost']:.2f}")
+    return "\n".join(lines) + "\n"
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("-since", help="epoch seconds or ISO time (default: all)")
@@ -118,7 +168,19 @@ def main(argv=None):
     parser.add_argument("-db", default=os.environ.get("CS2VIBE_OPENCODE_DB", DEFAULT_DB))
     parser.add_argument("-top", type=int, default=10, help="skills listed in the text report")
     parser.add_argument("-json", action="store_true", help="print the full report as JSON")
+    parser.add_argument("-recurring", action="store_true",
+                        help="list skills hunted in 2+ recent builds, from the per-run reports")
+    parser.add_argument("-reports", default=".autopilot", help="where the per-run agent-cost-*.json live")
+    parser.add_argument("-builds", type=int, default=5, help="recent gamevers -recurring looks at")
+    parser.add_argument("-out", help="write the -recurring list here as well as printing it")
     args = parser.parse_args(argv)
+    if args.recurring:
+        text = render_recurring(*recurring(args.reports, args.builds))
+        if args.out:
+            with open(args.out, "w", encoding="utf-8") as handle:
+                handle.write(text)
+        print(text, end="")
+        return 0
     if not os.path.isfile(args.db):
         print(f"no opencode database at {args.db}", file=sys.stderr)
         return 0  # no ledger is not a failure: the agents may simply not be opencode

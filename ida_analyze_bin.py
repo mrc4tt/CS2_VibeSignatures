@@ -2931,6 +2931,24 @@ def task_input_artifact_names(config_path):
     return frozenset(stems)
 
 
+@functools.lru_cache(maxsize=8)
+def cpp_test_class_prefixes(config_path):
+    """``<Class>_`` prefixes the config's cpp_tests read, for the hl2sdk ABI check.
+
+    A cpp test compares a class's SDK header against every ``<Class>_*`` record of its
+    reference modules (and its ``alias_symbols``), so those records have a payer even
+    when no plugin ships them - IGameSystem_OnRestoreGame is one.
+    """
+    prefixes = set()
+    for test in _load_config_document(config_path).get("cpp_tests", []) or []:
+        if not isinstance(test, dict):
+            continue
+        for name in [test.get("symbol")] + list(test.get("alias_symbols") or []):
+            if name:
+                prefixes.add(f"{name}_")
+    return tuple(sorted(prefixes))
+
+
 def artifact_has_consumer(artifact_path, platform, config_path, repo_root=None):
     """True when something downstream actually reads this artifact.
 
@@ -2942,6 +2960,8 @@ def artifact_has_consumer(artifact_path, platform, config_path, repo_root=None):
     if not symbol_name:
         return False
     if symbol_name in task_input_artifact_names(config_path):
+        return True
+    if symbol_name.startswith(cpp_test_class_prefixes(config_path)):
         return True
 
     # A symbol's own name and every entry in its alias list are downstream keys (rule 15).
@@ -3126,6 +3146,27 @@ def artifact_only_disabled_consumers(artifact_path, platform, config_path, repo_
         candidate_names & generator_consumed_names(directory)
         for directory in disabled_generator_dirs(generators_root)
     )
+
+
+HUNT_UNREAD_ENV = "CS2VIBE_HUNT_UNREAD"
+
+
+def artifact_unpaid(artifact_path, platform, config_path, repo_root=None):
+    """True when nothing reads the artifact: no enabled plugin, no task input, no cpp test.
+
+    Such a required output gets the free preprocessor and nothing more: no agent hunt,
+    and pack does not insist on it (it is packed wherever it exists). Measured over
+    opencode's ledger on 2026-10-25, 294 of 609 agent runs - $68 of $141 at the API list
+    price - went to outputs nothing read. A symbol that gains a reader is hunted again
+    on the next run, since this is asked every time. CS2VIBE_HUNT_UNREAD=1 restores the
+    old rule, under which only outputs read solely by disabled plugins were waived.
+    """
+    if not config_path:
+        return False
+    if os.environ.get(HUNT_UNREAD_ENV, "0") == "1":
+        return artifact_only_disabled_consumers(artifact_path, platform, config_path, repo_root)
+    symbol_name = _derive_artifact_symbol_name(artifact_path, platform)
+    return bool(symbol_name) and not artifact_has_consumer(artifact_path, platform, config_path, repo_root)
 
 
 def outputs_target_other_platform(required_outputs, optional_outputs, platform):
@@ -4891,10 +4932,11 @@ def _process_binary(
 
             missing_required = [path for path in required_outputs if not os.path.exists(path)]
             if missing_required and preprocess_status == PREPROCESS_STATUS_FAILED and not skip_pp:
-                # A required output read only by switched-off plugins has no payer, and
-                # pack waives it too (collect_actual_files). The free preprocessor already
-                # had its try; an agent hunt would be work for nobody.
-                unpaid = [path for path in missing_required if artifact_only_disabled_consumers(path, platform, config_path)]
+                # A required output nothing reads (no enabled plugin, task input or cpp
+                # test) has no payer, and pack waives it too (collect_actual_files). The
+                # free preprocessor already had its try; an agent hunt would be work for
+                # nobody.
+                unpaid = [path for path in missing_required if artifact_unpaid(path, platform, config_path)]
                 paid_optional = [
                     path for path in optional_outputs
                     if not os.path.exists(path) and artifact_has_consumer(path, platform, config_path)
@@ -4902,7 +4944,7 @@ def _process_binary(
                 if len(unpaid) == len(missing_required) and not paid_optional:
                     skip_count += 1
                     names = ", ".join(os.path.basename(path) for path in unpaid)
-                    _note_skip(skill_name, "read only by disabled plugins", names)
+                    _note_skip(skill_name, "no reader (plugin, task input or cpp test)", names)
                     _report_skill_status(
                         reporting,
                         job_id,

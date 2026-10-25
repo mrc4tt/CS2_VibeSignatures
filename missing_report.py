@@ -46,7 +46,7 @@ def is_needed(module, filename, notask, platform, config_path):
         return True
     if notask:
         return False
-    return not I.artifact_only_disabled_consumers(path, platform, config_path)
+    return not I.artifact_unpaid(path, platform, config_path)
 
 
 def main():

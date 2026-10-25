@@ -55,6 +55,23 @@ class AgentCostTests(unittest.TestCase):
         self.assertEqual(["find-Foo"], list(report["by_skill"]))
         self.assertEqual(["zai/glm-5.3-flash"], list(report["by_model"]))
 
+    def test_recurring_lists_skills_paid_for_in_two_builds(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            def report(ver, epoch, skills):
+                rows = {skill: {"hunts": 1, "list_cost": 0.5} for skill in skills}
+                Path(tmp, f"agent-cost-{ver}-{epoch}.json").write_text(json.dumps({"by_skill": rows}))
+
+            report("14191", 1, ["find-Twice", "find-Once"])
+            report("14192", 2, ["find-Twice"])
+            report("14192", 3, ["find-Twice"])  # a resumed run of the same build counts once
+
+            recent, hits = agent_cost.recurring(tmp)
+
+        self.assertEqual(["14191", "14192"], recent)
+        self.assertEqual(["find-Twice"], list(hits))
+        self.assertEqual(["14191", "14192"], hits["find-Twice"]["builds"])
+        self.assertEqual(3, hits["find-Twice"]["hunts"])
+
     def test_missing_database_is_not_a_failure(self):
         self.assertEqual(0, agent_cost.main(["-db", "/nonexistent/opencode.db"]))
 

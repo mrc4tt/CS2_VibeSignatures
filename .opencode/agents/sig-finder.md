@@ -1,6 +1,10 @@
 ---
 description: Find signatures and related reverse-engineering targets in the IDA database currently open through ida-pro-mcp.
 mode: primary
+# A hunt past ~60 steps is usually going in circles, and every step re-reads a longer
+# context: 48 of 625 hunts went past 60, up to 129. At the cap the agent must answer,
+# the runner validates what it wrote, and an unproven symbol goes to manual_todo/.
+steps: 60
 # Only the IDA tools the skills and past hunts use. Every listed tool's schema is
 # re-sent on every step: all 69 cost ~27k tokens a step, these ~9k.
 # Keep the body below identical to .claude/agents/sig-finder.md (claude, codex).
