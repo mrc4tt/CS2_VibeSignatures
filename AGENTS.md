@@ -1,5 +1,7 @@
 # AGENTS.md
 
+**Started with `Run SKILL: ...`? Stop reading here.** Follow that SKILL and your agent prompt only: this file is for coding in the repository, and every line of it is re-sent on every step of a hunt.
+
 This file provides guidance for Agent Coding in this repository, using progressive disclosure.
 
 ## Basic Memory Knowledge Base (Keep Context Compact)

@@ -493,6 +493,39 @@ class TestOutputFinalizationRetry(unittest.TestCase):
                 self.assertIn("Do not skip", prompt)
                 self.assertEqual([2], [e["attempt"] for e in self.events if e["event"] == "succeeded"])
 
+    def test_hunter_leads_reach_the_first_prompt_only(self):
+        leads = {"CFoo_Bar": "func | best 0x1234 (0.8) | two candidates tie"}
+        for kind in ("claude", "codex", "opencode"):
+            with (
+                self.subTest(agent=kind),
+                patch.object(
+                    agent_runner,
+                    "_run_process_with_stream_capture",
+                    return_value=subprocess.CompletedProcess([], 0, "", ""),
+                ) as run,
+            ):
+                validator = unittest.mock.Mock(side_effect=[["test.yaml: invalid"], []])
+                self.assertTrue(
+                    agent_runner._run_skill_attempts(
+                        skill_name="find-test",
+                        agent=kind,
+                        agent_kind=kind,
+                        session_id="owned-session",
+                        developer_instructions="instructions",
+                        debug=False,
+                        expected_yaml_paths=[],
+                        max_retries=3,
+                        agent_model="",
+                        mcp_url=None,
+                        output_validator=validator,
+                        hunter_leads=leads,
+                    )
+                )
+                first, second = (call.kwargs["agent_input"] or " ".join(call.args[0]) for call in run.call_args_list)
+                self.assertIn("UNVERIFIED", first)
+                self.assertIn("CFoo_Bar: func | best 0x1234", first)
+                self.assertNotIn("CFoo_Bar", second)
+
     def test_invalid_outputs_exhaust_the_same_attempt_budget(self):
         with patch.object(
             agent_runner, "_run_process_with_stream_capture", return_value=subprocess.CompletedProcess([], 0, "", "")

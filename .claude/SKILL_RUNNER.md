@@ -15,3 +15,5 @@ For example:
 `<skill_error>Failed to connect to headless idalib via ida-pro-mcp.</skill_error>`
 
 `<skill_error>The "ShowHudHint" is no longer a thing in current version of server.dll</skill_error>`
+
+- Read the SKILL file named in the initial prompt with your file-read tool; do not look for it in the skill list. Under opencode the skill tool lists only the shared helper skills (`write-*`, `generate-*`, `get-*`): listing all ~1450 `find-*` skills put ~245k tokens in front of every step.

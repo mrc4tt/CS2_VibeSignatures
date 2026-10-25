@@ -963,6 +963,7 @@ Two guards now catch the class before the baseline does:
 | `auto_repair.py` | When the verified gate fails (autopilot runs it; `AUTOPILOT_AUTO_REPAIR=0` off) | Rebuilds a contradicted struct offset with `emit_artifact.py` only on independent evidence: the other platform's anchored function holds its value, or another instruction in the same `offset_sig` touches the whole field AND equals the other platform. Then pack, generate, verify. Plan only without `-apply`. Repaired 14190's five `CServerSideClient` misreads unaided, identical to the hand fix |
 | `check_deploy_drift.py` | After every deploy | Diffs `gamedata/<VER>/<plugin>/` against the deployed file; catches a generation that never left the repo, which no entry-level check can see |
 | `update_hl2sdk_submodules.sh` | autopilot, before `sdk_abi_check.sh`; by hand after a fork push | Moves every repo's `mrc4tt/hl2sdk` gitlink to the branch head `.gitmodules` names, fast-forward only, and commits that path alone. Autopilot bumps this repo (the build's push carries it) and only `--check`s CounterStrikeSharp, reporting `hl2sdk-behind` to the admin channel - a new SDK there needs a build. `_work/` runner checkouts are skipped |
+| `agent_cost.py` | autopilot after the analysis (`.autopilot/agent-cost-<VER>-<epoch>.json` + the journal); by hand `-since "<time>"` | Agent hunts from opencode's ledger: billed cost, and the same tokens at z.ai's API list price (`LIST_PRICES`), per model and per skill - the most expensive skills are the next candidates for a deterministic preprocessor. Not counted: LLM_DECOMPILE, claude, codex |
 | `gamesymbol_snapshot.py` | `pack` after changes, `check-contract` to verify | Pack is what generation reads, not `bin_artifacts/` |
 | `missing_report.py` | After runs / before hunts | Writes `missing_<plat>_<ver>.txt` |
 | `audit_duplicate_va.py` | After every hunt round | 0 suspect clusters = clean |
@@ -990,9 +991,26 @@ Two guards now catch the class before the baseline does:
 ## AGENT SETUP
 
 - **Local PC**: `CS2VIBE_AGENT=claude` (Max 5x, Sonnet default)
-- **Server**: `CS2VIBE_AGENT=opencode,opencode@zai-coding-plan/glm-5.3,claude` with
-  `CS2VIBE_AGENT_MODEL=zai-coding-plan/glm-5.3-flash` (z.ai coding plan): flash first, glm-5.3 only
+- **Server**: `CS2VIBE_AGENT=opencode,opencode@zai/glm-5.3,claude` with
+  `CS2VIBE_AGENT_MODEL=zai/glm-5.3-flash` (z.ai pay-per-token API since 2026-10-25, not the coding plan;
+  opencode cost per session is in `session.cost` of `~/.local/share/opencode/opencode.db`): flash first, glm-5.3 only
   after flash used its attempts. A chain entry `agent@model` pins its own model (`agent_runner._split_agent_model`)
+- **Agent token economy** (an agent re-reads its whole context on every step, ~30 steps a hunt, so
+  a fixed prompt cost is paid ~30 times; measured 2026-10-25 on opencode, per step):
+  - skill list: `.opencode/skill_runner.config.json` lets the skill tool list only the helper skills
+    (`write-*`/`generate-*`/`get-*`). All ~1450 `find-*` skills cost ~245k tokens a step (252k -> 8k);
+    the agent reads its own `find-*` SKILL.md by the path in its prompt.
+  - IDA tools: `.opencode/agents/sig-finder.md` allows the 32 ida-pro-mcp tools the skills and past
+    hunts use, not all 69 (~27k -> ~9k a step). A skill that needs a tool not on the list fails to
+    call it - add it there.
+  - hunter leads: `run_skill(hunter_leads=...)` puts the hunter's best candidate and why it stopped
+    into the first prompt, marked UNVERIFIED, so the agent starts there instead of rediscovering it.
+  - `AGENTS.md` tells a skill run to stop reading; `.claude/agents/sig-finder.md` (claude, codex)
+    carries the same body as the opencode agent: proof rules first, then economy rules.
+  - Not done, on purpose: opencode `compaction.prune` (deprecated, applies between user turns while
+    a hunt is one turn, and pruning would break the cached prefix that makes cache-read 20% of the
+    input price); trimming the `generate-signature-*` skills (loaded only on demand, and they carry
+    the masking rules a correct signature needs).
 - **LLM_DECOMPILE** (pay-per-token, separate from the agent subscriptions above):
   `run_linux.sh` / `run_windows.sh` read `LLM_APIKEY`, `LLM_MODEL`, `LLM_BASEURL` and pass them as
   `-llm_apikey` / `-llm_model` / `-llm_baseurl`; if unset, `ida_analyze_bin.py` falls back to

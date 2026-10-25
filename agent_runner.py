@@ -89,6 +89,23 @@ class NonRetryableOutputError(RuntimeError):
     """A producer changed protected outputs; further attempts must not run."""
 
 
+def _with_hunter_leads(command, agent_kind, leads):
+    """Append the hunter's leads to the first prompt: its best candidate and why it stopped.
+
+    Every agent step re-reads its whole context, so starting at the hunter's candidate
+    instead of rediscovering the neighbourhood is the cheapest step saved. A lead is
+    not evidence - the hunter stopped because it could not prove it.
+    """
+    if not leads:
+        return command
+    note = (
+        "\n\nHunter leads (UNVERIFIED - the automatic hunter stopped because it could not prove them; "
+        "start here, but confirm with the skill's own checks before writing anything):\n"
+        + "\n".join(f"- {symbol}: {detail}" for symbol, detail in sorted(leads.items()))
+    )
+    return _append_to_prompt(command, agent_kind, note)
+
+
 def _with_output_feedback(command, agent_kind, issues):
     if not issues:
         return command
@@ -99,6 +116,10 @@ def _with_output_feedback(command, agent_kind, issues):
         "Do not skip an artifact merely because it already exists: the listed outputs are invalid. "
         "Keep unrelated and previously produced artifacts unchanged."
     )
+    return _append_to_prompt(command, agent_kind, feedback)
+
+
+def _append_to_prompt(command, agent_kind, feedback):
     args = command.args.copy()
     if command.input_text is not None:
         return AgentCommand(args, command.input_text + feedback, command.retry_target_desc)
@@ -685,6 +706,7 @@ def _run_skill_attempts(
     mcp_url: str | None,
     progress_callback=None,
     output_validator=None,
+    hunter_leads=None,
 ) -> bool:
     opencode_session_id = None
     output_issues = []
@@ -735,6 +757,9 @@ def _run_skill_attempts(
             agent_model=agent_model,
             mcp_url=mcp_url,
         )
+        if attempt == 0:
+            # a retry continues the same session, which already holds them
+            command = _with_hunter_leads(command, agent_kind, hunter_leads)
         command = _with_output_feedback(command, agent_kind, output_issues)
         _print_command(command, attempt, max_retries)
 
@@ -912,6 +937,7 @@ def run_skill(
     progress_callback=None,
     mcp_url=None,
     output_validator=None,
+    hunter_leads=None,
 ) -> bool:
     """Run the skill with each agent of a fallback chain until one succeeds.
 
@@ -952,6 +978,7 @@ def run_skill(
             progress_callback=progress_callback,
             mcp_url=mcp_url,
             output_validator=output_validator,
+            hunter_leads=hunter_leads,
         ):
             return True
     return False
@@ -968,6 +995,7 @@ def _run_skill_with_agent(
     progress_callback=None,
     mcp_url=None,
     output_validator=None,
+    hunter_leads=None,
 ) -> bool:
     """Execute and validate each attempt of ONE agent within one retry budget.
 
@@ -1014,4 +1042,5 @@ def _run_skill_with_agent(
         mcp_url=mcp_url,
         progress_callback=progress_callback,
         output_validator=output_validator,
+        hunter_leads=hunter_leads,
     )

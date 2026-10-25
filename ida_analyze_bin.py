@@ -5159,6 +5159,10 @@ def _process_binary(
                     progress_callback=progress_callback,
                     mcp_url=mcp_url,
                     output_validator=validate_agent_outputs,
+                    hunter_leads={
+                        symbol: detail for symbol, (_task, detail) in todo_entries.items()
+                        if symbol in unresolved_rows
+                    },
                 )
                 for path in _restore_input_files(input_snapshot):
                     print(f"    Restored input the agent modified: {os.path.basename(path)}")

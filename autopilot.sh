@@ -801,6 +801,11 @@ else
     fi
 fi
 step_resume "analysing windows" ./run_windows.sh "$TAG"
+# What this run's agents cost, from opencode's own ledger: billed, and what the same
+# tokens cost at the API list price. Kept beside the run's logs, sent nowhere; one file
+# per run, since a resumed build starts a new run. Never a gate.
+uv run agent_cost.py -since "$STARTED_EPOCH" -json > ".autopilot/agent-cost-$TAG-$STARTED_EPOCH.json" 2>/dev/null || true
+log "$(uv run agent_cost.py -since "$STARTED_EPOCH" -top 5 2>/dev/null || echo 'agent cost: unavailable')"
 
 # ---------------------------------------------------------------- battery, as a gate
 # ABI identity before the pack (CLAUDE.md rule 21): relocation reproduces a wrong
