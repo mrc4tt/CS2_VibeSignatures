@@ -371,8 +371,12 @@ the failure is silent by design — a dead webhook must not fail a green run, so
 `notification not delivered` to the journal.
 
 A finished message carries the two things that otherwise cost an SSH session: **which keys moved**
-(read from the metadata companions the generator just wrote, so it is what the plugins actually
-got, and skipping the disabled plugins whose old metadata still sits on disk — 9 files, not 15) and
+(`publish_site_data.build_key_changes`: each generated file against the builds before it, the
+rule the site's `keyChanges` counts, skipping disabled plugins). **Not** the `*.metadata.json`
+companions: their "before" is the plugin's template, not the previous build, so they called every
+key the template spells differently "changed" on every build — 14192 reported 13 files where 5
+changed, and 14191's matchzy file, byte-identical to 14190's, listed 8. The Discord bot (`bot/`)
+reads the same rule from `gamedata/history.json`. And
 **links to the site** for the files and the file check. Assemble that body with `printf`, never a
 quoted `"\n\n"`: inside double quotes those are two literal characters, and the first version
 reached Discord showing them.

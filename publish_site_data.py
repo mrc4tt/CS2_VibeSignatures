@@ -251,6 +251,39 @@ def symbol_index(build: str) -> dict[str, str]:
 from abi_guard import ABI_GUARDS
 
 
+def build_key_changes(build: str) -> dict[str, list[str]]:
+    """Keys each generated file of `build` changed against the builds before it.
+
+    The same rule build_history counts as keyChanges: a key's value is compared with
+    its last value in an earlier build whose file had it. Not the generator's
+    *.metadata.json - its "before" is the plugin's template, not the previous build,
+    so every key the template spells differently shows as changed on every build
+    (14191's matchzy file is identical to 14190's, its metadata lists 8 changes).
+    """
+    order = builds()
+    earlier = order[: order.index(build)] if build in order else []
+    out: dict[str, list[str]] = {}
+    for relative in generated_files(build):
+        current = read_values(os.path.join(GAMEDATA_ROOT, build, relative))
+        if not current:
+            continue
+        last: dict[str, list[str]] = {}
+        for older in reversed(earlier):
+            if len(last) == len(current):
+                break
+            values = read_values(os.path.join(GAMEDATA_ROOT, older, relative)) or {}
+            for key in current.keys() - last.keys():
+                if key in values:
+                    last[key] = [str(part) for part in values[key]]
+        changed = sorted(
+            key for key, value in current.items()
+            if key in last and [str(part) for part in value] != last[key]
+        )
+        if changed:
+            out[relative] = changed
+    return out
+
+
 def build_history(newest: str) -> dict:
     order = builds()
     known_dates = _committed_dates()

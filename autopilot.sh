@@ -296,44 +296,26 @@ notify() {  # notify <outcome> <text>
 }
 
 # The two things that otherwise cost an SSH session: which keys actually moved,
-# and where to look at the result. Read from the metadata companions the
-# generator just wrote, so it is what the plugins really got.
+# and where to look at the result. Compared against the builds before this one
+# (publish_site_data.build_key_changes, the rule the site's keyChanges counts),
+# NOT read from the *.metadata.json companions: their "before" is the plugin's
+# template, so they reported every key the template spells differently as
+# changed on every build - 14192 said 13 files where 5 changed.
 changed_keys_block() {
     uv run python - "$TAG" <<'PYEOF' 2>/dev/null || true
-import glob, json, os, sys
+import sys
 
 import publish_site_data as P
 
-tag = sys.argv[1]
-# Only plugins this fork still generates: the disabled ones keep their old
-# metadata on disk, and counting it would report keys no plugin here receives
-# (13 files instead of the 8 that ship).
-disabled = P.disabled_plugins()
-names, files = [], 0
-for path in sorted(glob.glob(os.path.join("gamedata", tag, "**", "*.metadata.json"), recursive=True)):
-    if os.path.relpath(path, os.path.join("gamedata", tag)).split(os.sep)[0] in disabled:
-        continue
-    try:
-        document = json.load(open(path, encoding="utf-8"))
-    except Exception:
-        continue
-    touched = set()
-    for entry in document.get("entries", []):
-        for change in entry.get("changes") or []:
-            path_parts = change.get("path") or []
-            if path_parts:
-                touched.add(str(path_parts[0]))
-    if touched:
-        files += 1
-        names.extend(sorted(touched))
-
-unique = sorted(set(names))
-if not unique:
+changes = P.build_key_changes(sys.argv[1])
+names = sorted({key for keys in changes.values() for key in keys})
+if not names:
     print("no key changed value")
 else:
-    head = ", ".join(unique[:5])
-    rest = f" and {len(unique) - 5} more" if len(unique) > 5 else ""
-    print(f"{len(unique)} key(s) changed across {files} file(s): {head}{rest}")
+    total = sum(len(keys) for keys in changes.values())
+    head = ", ".join(names[:5])
+    rest = f" and {len(names) - 5} more" if len(names) > 5 else ""
+    print(f"{total} key(s) changed across {len(changes)} file(s): {head}{rest}")
 PYEOF
 }
 

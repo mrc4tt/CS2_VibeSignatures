@@ -60,6 +60,7 @@ UNIT_MODULES = frozenset(
         "test_validate_artifacts",
         "test_agent_runner",
         "test_publish_site_history",
+        "test_build_key_changes",
         "test_artifact_contract",
         "test_agent_input_restore",
         "test_cs2vibe_ida_mcp_autoanalysis",
