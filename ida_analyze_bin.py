@@ -3058,14 +3058,25 @@ def agent_disabled(agent):
 
 async def _pipeline_hunt_via_mcp(host, port, expected_binary, symbols, out_dir, categories=None, baseline=None):
     repo = os.path.dirname(os.path.abspath(__file__))
+    # The arguments travel as one JSON string parsed inside IDA: pasted in as JSON
+    # literals, a None (no baseline gamever, an unknown category) became `null`, a
+    # NameError in Python, and the hunter was "unavailable" for the rest of the binary
+    # on 14192 - every stale-facts retry on server and engine sent its symbols to an agent.
+    arguments = json.dumps({
+        "repo": repo,
+        "symbols": list(symbols),
+        "out_dir": os.fspath(out_dir),
+        "categories": dict(categories or {}),
+        "baseline": baseline,
+    })
     code = (
         "import json, sys\n"
-        f"repo = {json.dumps(repo)}\n"
-        "if repo not in sys.path:\n"
-        "    sys.path.insert(0, repo)\n"
+        f"args = json.loads({arguments!r})\n"
+        "if args['repo'] not in sys.path:\n"
+        "    sys.path.insert(0, args['repo'])\n"
         "import pipeline_hunt\n"
-        f"result = json.dumps(pipeline_hunt.hunt(repo, {json.dumps(list(symbols))}, {json.dumps(os.fspath(out_dir))}, "
-        f"{json.dumps(dict(categories or {}))}, {json.dumps(baseline)}))\n"
+        "result = json.dumps(pipeline_hunt.hunt(args['repo'], args['symbols'], args['out_dir'], "
+        "args['categories'], args['baseline']))\n"
     )
     async with open_ida_mcp_session(host, port, expected_binary=expected_binary) as session:
         response = await session.call_tool(name="py_eval", arguments={"code": code})

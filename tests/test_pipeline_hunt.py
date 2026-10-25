@@ -64,6 +64,43 @@ class ManualTodoTests(unittest.TestCase):
         self.assertEqual(set(self._rows()), {"B_y"})
 
 
+class HuntCodeTests(unittest.TestCase):
+    """The py_eval the host sends must run as Python whatever the arguments hold."""
+
+    def _sent_code(self, **kwargs):
+        import asyncio
+        import contextlib
+        import json
+
+        sent = []
+
+        class Session:
+            async def call_tool(self, name, arguments):
+                sent.append(arguments["code"])
+                return None
+
+        @contextlib.asynccontextmanager
+        async def fake_session(*_args, **_kwargs):
+            yield Session()
+
+        with mock.patch.object(I, "open_ida_mcp_session", fake_session), \
+                mock.patch.object(I, "_parse_py_eval_result_json", return_value={"solved": []}):
+            asyncio.run(I._pipeline_hunt_via_mcp("h", 1, "bin", ["A"], "/out", **kwargs))
+        return sent[0]
+
+    def test_none_baseline_and_category_run_as_python(self):
+        # 14192: baseline=None (stale facts retry) was pasted as `null` -> NameError
+        code = self._sent_code(categories={"A": None}, baseline=None)
+        calls = []
+        fake = mock.MagicMock()
+        fake.hunt = lambda *args: calls.append(args) or {"solved": []}
+        namespace = {}
+        with mock.patch.dict("sys.modules", {"pipeline_hunt": fake}):
+            exec(code, namespace)
+        self.assertEqual([(os.path.dirname(os.path.abspath(I.__file__)), ["A"], "/out", {"A": None}, None)], calls)
+        self.assertEqual({"solved": []}, __import__("json").loads(namespace["result"]))
+
+
 class RunPipelineHuntTests(unittest.TestCase):
     KW = dict(host="127.0.0.1", port=1, symbols=["A_x"], artifact_dir="/nonexistent",
               old_artifact_dir="bin_artifacts/14181/server", module_name="server", platform="windows")
