@@ -789,7 +789,10 @@ carries `offsets` (88/80) for a member of another class, not this global's addre
 
 **A required output nothing reads is not paid for.** A reader is an enabled plugin's key
 (`generator_consumed_names`; `MODULE_ENABLED = False` removes a plugin's keys), another task's
-`expected_input`/`optional_input`, or a **cpp test**: `cpp_tests` compare each class's SDK header
+`expected_input`/`optional_input` (or a `_linux`/`_windows` one) **in the module it reads from** - the
+runner resolves an input under the reader's own module, and a `../client/X` entry names its module,
+so server's copy of a symbol only client's tasks read is unread (47 artifacts on 14192, among them
+the `CGameSystemReallocatingFactory_*` copies an agent hunted on windows every build) - or a **cpp test**: `cpp_tests` compare each class's SDK header
 with every `<Class>_*` record (and its `alias_symbols`) for the hl2sdk ABI check
 (`cpp_test_class_prefixes`), which is why `IGameSystem_OnRestoreGame` is read although no plugin
 ships it. A required output with no reader gets the free preprocessor only: the run skips the

@@ -2910,25 +2910,51 @@ def generator_consumed_names(generators_root):
 
 
 @functools.lru_cache(maxsize=8)
-def task_input_artifact_names(config_path):
-    """Artifact stems some task declares as an input.
+def task_input_artifacts(config_path):
+    """(module, stem) of every artifact some task declares as an input.
 
     The second kind of payer: a symbol no plugin ships can still be required because
     another find-task reads it, the way an anchored vtable feeds its -decompiles sibling.
+    The module is where the input is read from - the reader's own, or the one a
+    ``../client/X`` entry names - because one symbol is often declared in two modules
+    and a reader in one pays nothing for the other's copy: server's
+    CGameSystemReallocatingFactory_* copies were hunted by an agent on windows every
+    build, read by no server task, because client's tasks read client's.
     """
-    stems = set()
+    found = set()
     document = _load_config_document(config_path)
     for module_entry in document.get("modules", []) or []:
         if not isinstance(module_entry, dict):
             continue
+        module_name = str(module_entry.get("name") or "")
         for skill_entry in module_entry.get("skills", []) or []:
             if not isinstance(skill_entry, dict):
                 continue
-            for key in ("expected_input", "optional_input"):
+            for key in (
+                "expected_input", "optional_input",
+                "expected_input_linux", "expected_input_windows",
+                "optional_input_linux", "optional_input_windows",
+            ):
                 for entry in skill_entry.get(key) or []:
-                    basename = os.path.basename(str(entry))
-                    stems.add(_ARTIFACT_PLATFORM_SUFFIX_RE.sub("", basename))
-    return frozenset(stems)
+                    entry = str(entry)
+                    stem = _ARTIFACT_PLATFORM_SUFFIX_RE.sub("", os.path.basename(entry))
+                    source = os.path.normpath(os.path.join(module_name, os.path.dirname(entry)))
+                    found.add((source.replace(os.sep, "/"), stem))
+    return frozenset(found)
+
+
+def task_input_artifact_names(config_path):
+    """Artifact stems some task declares as an input, in any module."""
+    return frozenset(stem for _module, stem in task_input_artifacts(config_path))
+
+
+@functools.lru_cache(maxsize=8)
+def _config_module_names(config_path):
+    return frozenset(
+        str(entry.get("name"))
+        for entry in _load_config_document(config_path).get("modules", []) or []
+        if isinstance(entry, dict) and entry.get("name")
+    )
 
 
 @functools.lru_cache(maxsize=8)
@@ -2959,8 +2985,12 @@ def artifact_has_consumer(artifact_path, platform, config_path, repo_root=None):
     symbol_name = _derive_artifact_symbol_name(artifact_path, platform)
     if not symbol_name:
         return False
-    if symbol_name in task_input_artifact_names(config_path):
-        return True
+    module_name = os.path.basename(os.path.dirname(os.path.normpath(str(artifact_path))))
+    if module_name in _config_module_names(config_path):
+        if (module_name, symbol_name) in task_input_artifacts(config_path):
+            return True
+    elif symbol_name in task_input_artifact_names(config_path):
+        return True  # no module to tell readers apart by: any reader counts
     if symbol_name.startswith(cpp_test_class_prefixes(config_path)):
         return True
 

@@ -7495,7 +7495,8 @@ class TestArtifactHasConsumer(unittest.TestCase):
         ])
         # The caches are keyed by path, and each test builds a fresh temporary one.
         ida_analyze_bin.generator_consumed_names.cache_clear()
-        ida_analyze_bin.task_input_artifact_names.cache_clear()
+        ida_analyze_bin.task_input_artifacts.cache_clear()
+        ida_analyze_bin._config_module_names.cache_clear()
         return str(config), str(root)
 
     def test_symbol_a_generator_ships_has_a_consumer(self) -> None:
@@ -7525,6 +7526,40 @@ class TestArtifactHasConsumer(unittest.TestCase):
             self.assertTrue(
                 ida_analyze_bin.artifact_has_consumer("Target.linux.yaml", "linux", config, repo_root)
             )
+
+    @staticmethod
+    def _add_module(config, name):
+        import yaml
+
+        document = yaml.safe_load(Path(config).read_text(encoding="utf-8"))
+        document["modules"].append({"name": name, "stage_index": 1, "skills": [], "symbols": []})
+        Path(config).write_text(yaml.safe_dump(document), encoding="utf-8")
+        ida_analyze_bin.task_input_artifacts.cache_clear()
+        ida_analyze_bin._config_module_names.cache_clear()
+
+    def _consumed(self, config, repo_root, module):
+        return ida_analyze_bin.artifact_has_consumer(
+            f"bin_artifacts/1/{module}/Target.linux.yaml", "linux", config, repo_root
+        )
+
+    def test_a_reader_pays_only_for_the_module_it_reads_from(self) -> None:
+        """server's task reads server's copy; engine's copy of the symbol is unread."""
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config, repo_root = self._fixture(root, task_input="Target.{platform}.yaml")
+            self._add_module(config, "engine")
+
+            self.assertTrue(self._consumed(config, repo_root, "server"))
+            self.assertFalse(self._consumed(config, repo_root, "engine"))
+
+    def test_a_relative_input_pays_for_the_module_it_names(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config, repo_root = self._fixture(root, task_input="../engine/Target.{platform}.yaml")
+            self._add_module(config, "engine")
+
+            self.assertTrue(self._consumed(config, repo_root, "engine"))
+            self.assertFalse(self._consumed(config, repo_root, "server"))
 
     def test_symbol_nothing_reads_has_no_consumer(self) -> None:
         with TemporaryDirectory() as temporary:
