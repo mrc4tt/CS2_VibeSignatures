@@ -302,6 +302,8 @@ downloads:
             username=None,
             password=None,
             remember_password=False,
+            no_prune=False,
+            prune_only=False,
         )
         fake_entry = {
             "tag": "14168",
@@ -325,6 +327,62 @@ downloads:
         printed = [" ".join(str(part) for part in one_call.args) for one_call in mock_print.call_args_list]
         self.assertTrue(any("DepotDownloader executable not found" in line for line in printed))
 
+
+
+class TestPruneDepot(unittest.TestCase):
+    """The depot directory keeps only what a module lists: a file outside the filelist
+    is never fetched again, so without the prune it stays for ever (2.6 GB of maps)."""
+
+    def _tree(self, root: Path, files: list[str]) -> None:
+        for relative in files:
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"x" * 10)
+
+    def test_removes_what_no_module_lists_and_keeps_the_rest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            listed = ["game/bin/linuxsteamrt64/libserver.so", "game/csgo/bin/win64/server.dll"]
+            self._tree(root, listed + [
+                "game/csgo/steam.inf",
+                "game/csgo_community_addons/de_sanctum/de_sanctum_000.vpk",
+                "game/csgo/shaders_pc_000.vpk",
+                "game/cs2.sh",
+                ".DepotDownloader/depot.config",
+            ])
+            removed = download_depot.prune_depot(tmp, listed)
+            left = sorted(p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file())
+            self.assertEqual(3, len(removed))
+            self.assertEqual(sorted(listed + ["game/csgo/steam.inf", ".DepotDownloader/depot.config"]), left)
+            self.assertFalse((root / "game/csgo_community_addons").exists())
+
+    def test_a_missing_depot_is_not_an_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual([], download_depot.prune_depot(os.path.join(tmp, "absent"), ["game/x"]))
+
+    def test_main_prunes_only_after_a_successful_download(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            stray = Path(tmp) / "game/csgo_community_addons/m.vpk"
+            self._tree(Path(tmp), ["game/csgo_community_addons/m.vpk"])
+            args = argparse.Namespace(tag="t", config="c", configyaml=None, depotdir=tmp, app="730", os="all-platform",
+                                      username=None, password=None, remember_password=False,
+                                      no_prune=False, prune_only=False)
+            entry = {"tag": "t", "manifests": {"2347773": "1"}}
+            with patch.object(download_depot, "parse_args", return_value=args), \
+                    patch.object(download_depot, "resolve_analysis_config", return_value="cfg.yaml"), \
+                    patch.object(download_depot, "load_downloads", return_value=[entry]), \
+                    patch.object(download_depot, "load_module_filelist", return_value=["game/bin/x.so"]), \
+                    patch.object(download_depot, "download_manifests",
+                                 side_effect=subprocess.CalledProcessError(2, "DepotDownloader")):
+                self.assertEqual(2, download_depot.main())
+                self.assertTrue(stray.exists())
+            with patch.object(download_depot, "parse_args", return_value=args), \
+                    patch.object(download_depot, "resolve_analysis_config", return_value="cfg.yaml"), \
+                    patch.object(download_depot, "load_downloads", return_value=[entry]), \
+                    patch.object(download_depot, "load_module_filelist", return_value=["game/bin/x.so"]), \
+                    patch.object(download_depot, "download_manifests", return_value=None):
+                self.assertEqual(0, download_depot.main())
+                self.assertFalse(stray.exists())
 
 if __name__ == "__main__":
     unittest.main()

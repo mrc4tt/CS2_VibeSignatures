@@ -478,6 +478,12 @@ cannot be signatured or lives in a module we do not analyse:
   the one it stored last time, so a file the previous filelist never fetched stays whatever build
   it came from: `cs2_depot/` held a May soundsystem through 14192 (slot 77 there is a void flag
   setter), and `binary_locks/14192.json` never pinned schemasystem or filesystem_stdio.
+- **`download_depot.py` prunes `cs2_depot/game/` to the filelist** after every successful download
+  (`-no-prune` keeps it, `-prune-only` prunes without downloading). A file outside the filelist is
+  never read and never fetched again, so it stayed for ever: one full download on 2026-05-03 left
+  2.6 GB of community maps and shader packs, and 139 May binaries no module lists (544 MB). Kept:
+  `game/csgo/steam.inf` (`bump_download.py` reads it) and everything outside `game/`
+  (`.DepotDownloader/`).
 - `INetChannelInfo::GetAvgPacketBytes` routes to `CNetChan_GetAvgData` (15). SwiftlyS2 has no
   GetPeakJitter, so its names from slot 14 on are one early: 14 is a running `maxss` of 0.1 ms
   frame-time samples feeding the jitter histogram, 15 is bytes/sec. Both keys ship 15.

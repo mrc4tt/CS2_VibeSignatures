@@ -30,6 +30,8 @@ DEFAULT_CONFIG_FILE = "download.yaml"
 DEFAULT_DEPOT_DIR = "cs2_depot"
 DEFAULT_APP_ID = "730"
 DEFAULT_OS = "all-platform"
+# Kept by the prune although no module lists it: bump_download.py reads PatchVersion from it.
+PRUNE_KEEP = frozenset({"game/csgo/steam.inf"})
 
 
 class ConfigError(Exception):
@@ -64,6 +66,16 @@ def parse_args() -> argparse.Namespace:
         "-os",
         default=DEFAULT_OS,
         help=f"DepotDownloader -os value (default: {DEFAULT_OS})",
+    )
+    parser.add_argument(
+        "-no-prune",
+        action="store_true",
+        help="Keep files under <depotdir>/game that the filelist does not name",
+    )
+    parser.add_argument(
+        "-prune-only",
+        action="store_true",
+        help="Only remove files under <depotdir>/game that the filelist does not name; download nothing",
     )
     parser.add_argument(
         "-username",
@@ -165,6 +177,47 @@ def load_module_filelist(configyaml_path: str) -> list[str]:
     return sorted(paths)
 
 
+def prune_depot(depot_dir: str, filelist: list[str]) -> list[Path]:
+    """Remove every file under <depot_dir>/game that the filelist does not name.
+
+    The depot directory is a download cache for the analysed binaries only. A file
+    outside the filelist is never read by the pipeline, and a filelist download never
+    touches it again, so it stays for ever: cs2_depot/ carried 2.6 GB of community maps
+    and shader packs from one full download on 2026-05-03. Only game/ is pruned, so
+    DepotDownloader's own .DepotDownloader/ state and anything beside it stay.
+    """
+    root = Path(depot_dir)
+    game = root / "game"
+    if not game.is_dir():
+        return []
+    wanted = {entry.strip().replace("\\", "/").lstrip("/") for entry in filelist} | PRUNE_KEEP
+    removed: list[Path] = []
+    for path in sorted(game.rglob("*")):
+        if path.is_symlink() or path.is_file():
+            if path.relative_to(root).as_posix() not in wanted:
+                path.unlink()
+                removed.append(path)
+    # Deepest first, so a directory emptied by its children goes too.
+    for path in sorted((p for p in game.rglob("*") if p.is_dir()), key=lambda p: len(p.parts), reverse=True):
+        if not any(path.iterdir()):
+            path.rmdir()
+    return removed
+
+
+def report_prune(removed: list[Path], sizes: dict[Path, int]) -> None:
+    if not removed:
+        return
+    total = sum(sizes.get(path, 0) for path in removed)
+    print(f"Pruned {len(removed)} file(s), {total / 1024 / 1024:.1f} MB, that no module lists")
+
+
+def file_sizes(depot_dir: str) -> dict[Path, int]:
+    game = Path(depot_dir) / "game"
+    if not game.is_dir():
+        return {}
+    return {path: path.stat().st_size for path in game.rglob("*") if path.is_file() and not path.is_symlink()}
+
+
 def download_manifests(
     manifests: dict,
     app: str,
@@ -249,6 +302,11 @@ def main() -> int:
         print(f"Manifest count: {len(manifests)}")
         print(f"Filelist source: {args.configyaml} ({len(filelist)} paths)")
 
+        if args.prune_only:
+            sizes = file_sizes(args.depotdir)
+            report_prune(prune_depot(args.depotdir, filelist), sizes)
+            return 0
+
         download_manifests(
             manifests=manifests,
             app=args.app,
@@ -269,6 +327,11 @@ def main() -> int:
     except subprocess.CalledProcessError as exc:
         print(f"Error: DepotDownloader failed with exit code {exc.returncode}")
         return exc.returncode or 1
+
+    # Only after every depot downloaded: a failed run leaves the cache as it was.
+    if not args.no_prune:
+        sizes = file_sizes(args.depotdir)
+        report_prune(prune_depot(args.depotdir, filelist), sizes)
 
     print("All manifest downloads completed successfully.")
     return 0
