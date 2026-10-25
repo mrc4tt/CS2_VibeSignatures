@@ -1,0 +1,19 @@
+{
+  "name": "cs2vibe-discord-bot",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "start": "node --env-file=.env src/index.ts",
+    "register": "node --env-file=.env src/register.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "discord.js": "14.27.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,22 @@
+[Unit]
+Description=CS2_VibeSignatures Discord bot (#gamedata-updates, slash commands)
+Documentation=file:/root/CS2_VibeSignatures/bot/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/CS2_VibeSignatures/bot
+ExecStart=/usr/bin/node --env-file=/root/CS2_VibeSignatures/bot/.env src/index.ts
+Restart=on-failure
+RestartSec=15
+# The bot only reads the repository; state.json beside it is the one file it writes.
+ProtectSystem=strict
+ReadWritePaths=/root/CS2_VibeSignatures/bot
+NoNewPrivileges=true
+PrivateTmp=true
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

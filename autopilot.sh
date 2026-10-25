@@ -29,6 +29,9 @@
 #   AUTOPILOT_PUBLISH_KEEP=N         releases to keep on the target, default 5
 #   AUTOPILOT_NOTIFY_URL=...         optional outgoing webhook (ntfy or Discord)
 #   AUTOPILOT_NOTIFY_START=0         do not announce detection; only the outcome
+#   AUTOPILOT_BOT_URL=...            the Discord bot's event endpoint (bot/), e.g.
+#                                    http://127.0.0.1:13410/event
+#   AUTOPILOT_BOT_SECRET=...         its shared secret (BOT_EVENT_SECRET in bot/.env)
 #   AUTOPILOT_IMPACT_PLUGINS=a:b     plugin dirs (colon-separated) for the schema impact
 #                                    report; the CounterStrikeSharp API is always checked
 #   AUTOPILOT_IMPACT_CSS=path        CounterStrikeSharp checkout, default /root/CounterStrikeSharp
