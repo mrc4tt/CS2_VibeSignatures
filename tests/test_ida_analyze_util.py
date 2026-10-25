@@ -14268,3 +14268,39 @@ class TestAlreadyGeneratedTargetSkip(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSlotOnlyRelocationVtableGuard(unittest.IsolatedAsyncioTestCase):
+    """A vfunc_sig record (no func_va) is judged by its slot, not as an address."""
+
+    async def _relocate(self, vfunc_index):
+        import ida_analyze_util as util
+
+        relocated = {
+            "func_name": "CFoo_Bar",
+            "vtable_name": "CFoo",
+            "vfunc_offset": hex(8 * vfunc_index),
+            "vfunc_index": vfunc_index,
+            "vfunc_sig": "FF 90 10 00 00 00 84 C0",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(util._build_vtable_yaml_path(tmp, "CFoo", "linux")).write_text(
+                "vtable_class: CFoo\nvtable_entries:\n  0: '0x1000'\n  1: '0x1010'\n  2: '0x1020'\n"
+            )
+            env = {"CS2VIBE_RELOC_XREF_CHECK": "0", "CS2VIBE_RELOC_DRIFT_CHECK": "0", "CS2VIBE_RELOC_SLOT_CHECK": "0"}
+            with patch.object(util, "preprocess_func_sig_via_mcp", AsyncMock(return_value=dict(relocated))), \
+                    patch.dict(os.environ, env):
+                return await util._try_preprocess_func_without_llm(
+                    session=None, target_output=os.path.join(tmp, "CFoo_Bar.linux.yaml"), old_path=None,
+                    image_base=0, new_binary_dir=tmp, platform="linux", func_name="CFoo_Bar",
+                    func_xrefs_map={}, vtable_relations_map={"CFoo_Bar": "CFoo"},
+                    normalized_mangled_class_names={},
+                )
+
+    async def test_slot_in_the_vtable_keeps_the_free_relocation(self):
+        # every build, CheckPassword's call-site relocation was thrown away as
+        # "at None - not an entry" and paid for with LLM_DECOMPILE instead
+        self.assertEqual(2, (await self._relocate(2))["vfunc_index"])
+
+    async def test_slot_past_the_vtable_is_discarded(self):
+        self.assertIsNone(await self._relocate(7))

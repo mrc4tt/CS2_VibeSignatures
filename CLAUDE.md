@@ -937,7 +937,10 @@ Two guards now catch the class before the baseline does:
   rather than only the `func_xrefs` fallback beneath it. This only works for symbols that
   declare the relation — `find-NetworkStateChanged` and
   `find-CCSPlayer_MovementServices_FullWalkMove` declare none, so they still depend on the
-  guard table.
+  guard table. A slot-only record (`vfunc_sig`, no `func_va`) is judged by its **slot**:
+  judged as an address it was always "at None - not an entry", so ~150 tasks (300 slot-only
+  artifacts on 14192) threw away their free call-site relocation and paid LLM_DECOMPILE
+  every build (fixed 2026-10-25).
 - `abi_guard.check_symbol` verifies `func_size` as well, which is how four over-measurements
   surfaced that `validate_artifacts` had missed (its swallow check needs a recognisable
   prologue with no branch into it).

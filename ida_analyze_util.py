@@ -7986,8 +7986,8 @@ async def _rename_gv_in_ida(session, gv_va_hex, gv_name, debug=False):
             print(f"    Preprocess: failed to rename gv {gv_va_hex} -> {gv_name}: {e}")
 
 
-def _declared_vtable_addr_set(new_binary_dir, vtable_class, platform, debug=False):
-    """Addresses held by *vtable_class*'s vtable artifact, or None when unreadable.
+def _declared_vtable_entries(new_binary_dir, vtable_class, platform, debug=False):
+    """{slot: address} of *vtable_class*'s vtable artifact, or None when unreadable.
 
     Read from the artifact the task already declares as expected_input, so the
     check costs no IDA work.
@@ -8003,13 +8003,19 @@ def _declared_vtable_addr_set(new_binary_dir, vtable_class, platform, debug=Fals
         if debug:
             print(f"    Preprocess: vtable YAML missing for {vtable_class}; cannot constrain relocation")
         return None
-    addrs = set()
-    for _idx, addr in (vtable_data.get("vtable_entries") or {}).items():
+    entries = {}
+    for idx, addr in (vtable_data.get("vtable_entries") or {}).items():
         try:
-            addrs.add(int(str(addr), 16))
+            entries[int(str(idx), 0)] = int(str(addr), 16)
         except (TypeError, ValueError):
             continue
-    return addrs or None
+    return entries or None
+
+
+def _declared_vtable_addr_set(new_binary_dir, vtable_class, platform, debug=False):
+    """Addresses held by *vtable_class*'s vtable artifact, or None when unreadable."""
+    entries = _declared_vtable_entries(new_binary_dir, vtable_class, platform, debug=debug)
+    return set(entries.values()) if entries else None
 
 
 async def _try_preprocess_func_without_llm(
@@ -8052,10 +8058,26 @@ async def _try_preprocess_func_without_llm(
     # vtable-constrained xref path run.
     if func_data is not None and func_name in vtable_relations_map:
         vtable_class = vtable_relations_map[func_name]
-        vtable_addrs = _declared_vtable_addr_set(
+        vtable_entries = _declared_vtable_entries(
             new_binary_dir, vtable_class, platform, debug=debug
         )
-        if vtable_addrs:
+        if vtable_entries and func_data.get("func_va") is None and func_data.get("vfunc_index") is not None:
+            # A slot read off a call site (vfunc_sig, no func_va) names an index, not an
+            # address, so the slot is what must exist. Judged as an address it was always
+            # "None - not an entry", which sent CheckPassword to the LLM on every build.
+            try:
+                slot = int(str(func_data.get("vfunc_index")), 0)
+            except (TypeError, ValueError):
+                slot = None
+            if slot not in vtable_entries:
+                if debug:
+                    print(
+                        f"    Preprocess: discarding relocation for {func_name} at slot"
+                        f" {func_data.get('vfunc_index')} - not a slot of the {vtable_class} vtable"
+                    )
+                func_data = None
+        elif vtable_entries:
+            vtable_addrs = set(vtable_entries.values())
             try:
                 relocated_va = int(str(func_data.get("func_va")), 16)
             except (TypeError, ValueError):
