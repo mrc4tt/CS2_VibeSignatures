@@ -991,6 +991,23 @@ if [ "$UNHEALTHY_TOTAL" != "0" ]; then
 fi
 log "    $VERIFIED_FILES shipped file(s) checked, every entry holds and is verified on both platforms"
 
+# The same SDK and CounterStrikeSharp gamedata inside a running Linux server: CS2SDKTest
+# calls the interfaces and the gamedata's functions, slots and offsets under a fault
+# guard. Not a gate yet: a regression against runtime/cs2sdktest/baseline.txt is
+# reported. Needs the slim server setup runtime_smoke.sh describes; AUTOPILOT_RUNTIME=0
+# turns it off.
+if [ "${AUTOPILOT_RUNTIME:-1}" != "0" ]; then
+    RUNTIME_OUT="$STATE/runtime-$TAG.txt"
+    log "==> running CS2SDKTest in a live server"
+    ./runtime_smoke.sh "$TAG" > "$RUNTIME_OUT" 2>&1
+    case $? in
+        0) log "    $(grep '^compare: .*completed' "$RUNTIME_OUT")" ;;
+        1) log "    runtime regressions: $(grep -c '^REGRESSION' "$RUNTIME_OUT")"
+           notify "runtime" "$(grep -E '^compare: .*completed|^REGRESSION' "$RUNTIME_OUT" | cut -c1-200 | head -16)" ;;
+        *) log "    runtime smoke could not run: $(tail -1 "$RUNTIME_OUT")" ;;
+    esac
+fi
+
 uv run detect_aliases.py -gamever "$TAG" -platform linux || true
 uv run detect_aliases.py -gamever "$TAG" -platform windows || true
 uv run missing_report.py -gamever "$TAG" -all > "$STATE/missing-$TAG.txt" 2>&1 || true
