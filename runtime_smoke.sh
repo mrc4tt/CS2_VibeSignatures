@@ -20,7 +20,8 @@
 #   ./runtime_smoke.sh 14192
 #   ./runtime_smoke.sh 14192 --accept  take the outcomes of this run as the baseline
 #   ./runtime_smoke.sh --no-update     no depot download, release fetch or source update
-#   CST_HOME=<dir> SDK_DIR=<hl2sdk checkout> ./runtime_smoke.sh
+#   SDK_REF=<commit> ./runtime_smoke.sh   test that fork commit instead of the cs2 head
+#   CST_HOME=<dir> SDK_DIR=<hl2sdk checkout> ./runtime_smoke.sh   SDK_DIR is used as it is
 #
 # Exit: 0 nothing new, 1 regressions or a run that crashed, 2 no usable setup or build.
 
@@ -30,6 +31,8 @@ cd "$(dirname "$0")"
 CST_REPO="https://github.com/zqunagi/CS2SDKTest"
 CST_COMMIT="1860617474ac6206534920b0fe8df42accf440c7"
 MMS_REPO="mrc4tt/metamod-source"
+SDK_REMOTE="https://github.com/mrc4tt/hl2sdk"
+SDK_BRANCH="cs2"
 
 GAMEVER=""
 ACCEPT=0
@@ -38,7 +41,7 @@ for arg in "$@"; do
     case "$arg" in
         --accept) ACCEPT=1 ;;
         --no-update) UPDATE=0 ;;
-        -h|--help) sed -n '3,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '3,27p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*) echo "unknown option $arg" >&2; exit 2 ;;
         *) GAMEVER="$arg" ;;
     esac
@@ -51,6 +54,13 @@ RUNTIME="$PWD/runtime/cs2sdktest"
 BASELINE="$RUNTIME/baseline.txt"
 CSS_JSON="$PWD/gamedata/$GAMEVER/CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json"
 CST_HOME="${CST_HOME:-$HOME/cs2test}"
+# Like sdk_abi_check.sh: hl2sdk_cs2 moves to the fork's cs2 head (or SDK_REF), the
+# SDK our patches are written against
+if [ -z "${SDK_DIR:-}" ] && [ "$UPDATE" = 1 ]; then
+    git -C hl2sdk_cs2 remote set-url origin "$SDK_REMOTE"
+    git -C hl2sdk_cs2 fetch -q origin "$SDK_BRANCH" && git -C hl2sdk_cs2 checkout -q "${SDK_REF:-FETCH_HEAD}" \
+        || fail "could not move hl2sdk_cs2 to ${SDK_REF:-origin/$SDK_BRANCH}"
+fi
 SDK_DIR=$(realpath "${SDK_DIR:-hl2sdk_cs2}")
 SERVER="$CST_HOME/server"
 GAME="$SERVER/game"
