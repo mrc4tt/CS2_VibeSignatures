@@ -10,8 +10,8 @@
 # against the live server. Outcomes are compared with runtime/cs2sdktest/baseline.txt.
 #
 # The server is a slim Linux install in $CST_HOME/server (about 11G instead of 73G):
-# runtime/cs2sdktest/slim.txt plus the pak01 archives the build turns out to need.
-# A boot that dies on a missing archive adds it to $CST_HOME/slim_archives.txt,
+# runtime/cs2sdktest/slim.txt plus the pak01 archives and map prefabs the build turns
+# out to need. A boot that misses one adds it to $CST_HOME/slim_archives.txt,
 # downloads it and boots again. Needs DepotDownloader, curl, jq, cmake, clang and
 # ~/.steam/sdk64/steamclient.so.
 #
@@ -143,19 +143,26 @@ else
     echo "no CSS gamedata for $GAMEVER, testing upstream's gamedata.toml"
 fi
 
-# 5. Run; a boot that dies on a missing pak01 archive downloads it and boots again
+# 5. Run; a boot that needs a pak01 archive or world vpk (the prefabs a map pulls in)
+# the install lacks downloads it and boots again
 echo "running CS2SDKTest: server $PATCH, metamod $MMS_TAG, sdk $(git -C "$SDK_DIR" log -1 --format='%h %s')"
 for _ in $(seq 1 100); do
     rm -rf "$RESULTS" && mkdir -p "$RESULTS"
     (cd "$GAME" && ulimit -c 0 && CST_AUTORUN=1 CST_RESULT_DIR="$RESULTS" timeout "${CST_TIMEOUT:-300}" \
         ./cs2.sh -dedicated -insecure +ip 127.0.0.1 -port 27099 +game_type 0 +game_mode 1 +map de_dust2 \
         +bot_quota 1 +sv_hibernate_when_empty 0 +mp_warmup_pausetimer 1 +mp_freezetime 0) > "$LOGS/server.log" 2>&1
-    missing=$(grep -oE 'packed store "[^"]+/pak01_[0-9]+\.vpk"' "$LOGS/server.log" | head -1 \
-        | sed -E 's|.*/game/(.+/pak01_[0-9]+)\.vpk"|\1|')
+    missing=$({
+        grep -oE 'packed store "[^"]+/pak01_[0-9]+\.vpk"' "$LOGS/server.log" | head -1 \
+            | sed -E 's|.*/game/(.+/pak01_[0-9]+)\.vpk"|\1|'
+        grep -oE 'Failed to mount world vpk file [^,]+\.vpk' "$LOGS/server.log" \
+            | sed -E 's|.* file (.+)\.vpk|csgo/\1|'
+    } | sort -u)
     [ -n "$missing" ] || break
-    [ "$UPDATE" = 1 ] || fail "server needs game/$missing.vpk, run without --no-update"
-    echo "server needs game/$missing.vpk, downloading it"
-    echo "regex:^game/$missing\\.vpk\$" >> "$CST_HOME/slim_archives.txt"
+    [ "$UPDATE" = 1 ] || fail "server needs $(echo $missing), run without --no-update"
+    for f in $missing; do
+        echo "server needs game/$f.vpk, downloading it"
+        echo "regex:^game/$f\\.vpk\$" >> "$CST_HOME/slim_archives.txt"
+    done
     depot_update
 done
 

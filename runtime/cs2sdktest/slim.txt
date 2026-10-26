@@ -1,5 +1,4 @@
 regex:^game/(bin|core)/
 regex:^game/csgo/(?!maps/|pak01_\d{3}\.vpk$)
 regex:^game/csgo/maps/de_dust2\.vpk$
-regex:^game/csgo/maps/prefabs/
 regex:^game/[^/]+$
