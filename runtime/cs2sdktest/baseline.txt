@@ -1,0 +1,1820 @@
+# CS2SDKTest outcomes accepted by runtime_smoke.sh --accept: outcome<TAB>suite<TAB>call
+N/A	event	IGameEvent::GetBool
+N/A	event	IGameEvent::GetDataKeys
+N/A	event	IGameEvent::GetEHandle
+N/A	event	IGameEvent::GetEntity
+N/A	event	IGameEvent::GetEntityIndex
+N/A	event	IGameEvent::GetFloat
+N/A	event	IGameEvent::GetID
+N/A	event	IGameEvent::GetInt
+N/A	event	IGameEvent::GetName
+N/A	event	IGameEvent::GetPawnEHandle
+N/A	event	IGameEvent::GetPawnEntityIndex
+N/A	event	IGameEvent::GetPlayerController
+N/A	event	IGameEvent::GetPlayerPawn
+N/A	event	IGameEvent::GetPlayerSlot
+N/A	event	IGameEvent::GetPtr
+N/A	event	IGameEvent::GetString
+N/A	event	IGameEvent::GetUint64
+N/A	event	IGameEvent::HasKey
+N/A	event	IGameEvent::IsEmpty
+N/A	event	IGameEvent::IsLocal
+N/A	event	IGameEvent::IsReliable
+N/A	event	IGameEvent::SetBool
+N/A	event	IGameEvent::SetEntity [CEntityIndex]
+N/A	event	IGameEvent::SetEntity [CEntityInstance*]
+N/A	event	IGameEvent::SetFloat
+N/A	event	IGameEvent::SetInt
+N/A	event	IGameEvent::SetPlayer [CEntityInstance*]
+N/A	event	IGameEvent::SetPlayer [CPlayerSlot]
+N/A	event	IGameEvent::SetPlayerRaw
+N/A	event	IGameEvent::SetPtr
+N/A	event	IGameEvent::SetString
+N/A	event	IGameEvent::SetUint64
+N/A	event	IGameEvent::unk001
+N/A	event	IGameEvent::~IGameEvent
+N/A	event	IGameEventListener2::FireGameEvent
+N/A	event	IGameEventListener2::~IGameEventListener2
+N/A	event	IGameEventManager2::AddListener
+N/A	event	IGameEventManager2::CreateEvent
+N/A	event	IGameEventManager2::DuplicateEvent
+N/A	event	IGameEventManager2::FindListener
+N/A	event	IGameEventManager2::FireEvent
+N/A	event	IGameEventManager2::FireEventClientSide
+N/A	event	IGameEventManager2::FreeEvent
+N/A	event	IGameEventManager2::HasEventDescriptor
+N/A	event	IGameEventManager2::LoadEventsFromFile
+N/A	event	IGameEventManager2::LookupEventId
+N/A	event	IGameEventManager2::PrintEventToString
+N/A	event	IGameEventManager2::RemoveListener
+N/A	event	IGameEventManager2::Reset
+N/A	event	IGameEventManager2::SerializeEvent
+N/A	event	IGameEventManager2::UnserializeEvent
+N/A	event	IGameEventManager2::~IGameEventManager2
+OK	clients	IAppSystem::GetBuildType
+OK	clients	IAppSystem::GetDependencies
+OK	clients	IAppSystem::GetTier
+OK	clients	IAppSystem::IsSingleton
+OK	clients	IAppSystem::QueryInterface
+OK	clients	ISource2GameClients::CanHLTVClientConnect
+OK	clients	ISource2GameClients::CheckHltvPasswordMatch
+OK	clients	ISource2GameClients::ClientCanPause
+OK	clients	ISource2GameClients::ClientEarPosition
+OK	clients	ISource2GameClients::GetBugReportInfo
+OK	clients	ISource2GameClients::GetHLTVDirector
+OK	clients	ISource2GameClients::GetPlayerHltvDelay
+OK	clients	ISource2GameClients::GetPlayerScore
+OK	clients	ISource2GameClients::GetPlayerTickBase
+OK	clients	ISource2GameClients::IsPlayerAlive
+OK	clients	ISource2GameClients::IsPlayerSlotOccupied
+OK	clients	ISource2GameClients::ValidateConfigCommands
+OK	clients	IVEngineServer2::GetServerGlobals (for maxClients)
+OK	convar	CCommand (argc/argv constructor)
+OK	convar	CCommand (default constructed)
+OK	convar	CCommand::Arg (out of range)
+OK	convar	CCommand::FindArg / FindArgInt
+OK	convar	CCommand::MaxCommandLength / DefaultBreakSet
+OK	convar	CCommand::Tokenize (and every accessor it feeds)
+OK	convar	CCommand::Tokenize (empty string) / Reset
+OK	convar	CCommand::Tokenize (with the engine's break set)
+OK	convar	CCommandContext round-trip
+OK	convar	CConCommandMemberAccessor<T>::CConCommandMemberAccessor
+OK	convar	CConCommandMemberAccessor<T>::SetOwner
+OK	convar	CConVar<T>::CConVar (built after load)
+OK	convar	CConVar<T>::~CConVar
+OK	convar	CConVarRef<Color/Vector>::Get (non-primitive types)
+OK	convar	CConVarRef<T> (type mismatch falls back to invalid data)
+OK	convar	CConVarRef<Vector>::Set
+OK	convar	CConVarRef<bool/float32/int64>::Get
+OK	convar	CConVarRef<int32> (by name, the FCVAR_REFERENCE path)
+OK	convar	CConVarRef<int32> (from a plain ConVarRef)
+OK	convar	CConVarRef<int32>::Get / GetDefault / GetMin / GetMax
+OK	convar	CConVarRef<int32>::Set (and read back)
+OK	convar	CConVarRef<int32>::Set (per-splitscreen-slot storage)
+OK	convar	CCvar::<hexdump>
+OK	convar	CCvar::m_CallbackInfoList
+OK	convar	CCvar::m_CharacterSet (address vs ICvar::GetCharacterSet)
+OK	convar	CCvar::m_CharacterSet (head)
+OK	convar	CCvar::m_ConCommandCount
+OK	convar	CCvar::m_ConCommandCount (vs walking the command list)
+OK	convar	CCvar::m_ConCommandHashes
+OK	convar	CCvar::m_ConCommandList
+OK	convar	CCvar::m_ConVarChangeCBList
+OK	convar	CCvar::m_ConVarCompletionCBList
+OK	convar	CCvar::m_ConVarCount
+OK	convar	CCvar::m_ConVarCount (vs walking the convar list)
+OK	convar	CCvar::m_ConVarFilterCBList
+OK	convar	CCvar::m_ConVarHashes
+OK	convar	CCvar::m_ConVarList
+OK	convar	CCvar::m_CurrentMemoryBufferSize
+OK	convar	CCvar::m_CurrentStringsBufferSize
+OK	convar	CCvar::m_CvarCreationListeners
+OK	convar	CCvar::m_CvarCreationListeners (count follows register/remove)
+OK	convar	CCvar::m_CvarDefaultValues (head of %zu bytes)
+OK	convar	CCvar::m_CvarListCmd (vtable)
+OK	convar	CCvar::m_DifferencesCmd (vtable)
+OK	convar	CCvar::m_DumpChannelsCmd (vtable)
+OK	convar	CCvar::m_FindCmd (vtable)
+OK	convar	CCvar::m_FindFlagsCmd (vtable)
+OK	convar	CCvar::m_GameInfoKV
+OK	convar	CCvar::m_GlobalChangeCBList
+OK	convar	CCvar::m_GlobalChangeCBList (count follows install/remove)
+OK	convar	CCvar::m_HelpCmd (vtable)
+OK	convar	CCvar::m_LockDefaultValueInit
+OK	convar	CCvar::m_LockDefaultValueInit (driven through the interface)
+OK	convar	CCvar::m_LogColorCmd (vtable)
+OK	convar	CCvar::m_LogFlagsCmd (vtable)
+OK	convar	CCvar::m_LogLevelCmd (vtable)
+OK	convar	CCvar::m_LogVerbosityCmd (vtable)
+OK	convar	CCvar::m_MemoryBuffer
+OK	convar	CCvar::m_Mutex
+OK	convar	CCvar::m_SetToDefaultValueQueue
+OK	convar	CCvar::m_SetValueQueue
+OK	convar	CCvar::m_StringsBuffer
+OK	convar	CCvar::m_UserInfoCvarsTotalByteSize
+OK	convar	CCvar::m_UserInfoCvarsTotalByteSize (vs the getter)
+OK	convar	CVValue_t::InvalidValue (vs ConVarData::HasDefaultValue)
+OK	convar	CVarTypeTraits (this module's copy of the table)
+OK	convar	CompletionCallbackInfo_t (ICommandCompletionCallback form)
+OK	convar	CompletionCallbackInfo_t (default constructed)
+OK	convar	CompletionCallbackInfo_t (function form)
+OK	convar	ConCommand::Create (via the constructor)
+OK	convar	ConCommand::Destroy / ConCommand::~ConCommand
+OK	convar	ConCommandCallbackInfo_t (ICommandCallback form)
+OK	convar	ConCommandCallbackInfo_t (context-taking form)
+OK	convar	ConCommandCallbackInfo_t (contextless form)
+OK	convar	ConCommandCallbackInfo_t (default constructed)
+OK	convar	ConCommandCallbackInfo_t (void form)
+OK	convar	ConCommandData::<hexdump past end>
+OK	convar	ConCommandData::<hexdump>
+OK	convar	ConCommandData::AddFlags / RemoveFlags (round-trip)
+OK	convar	ConCommandData::GetName / GetHelpText / HasHelpText / GetFlags / IsFlagSet / HasCallback / HasCompletionCallback
+OK	convar	ConCommandData::m_CallbackInfoIndex
+OK	convar	ConCommandData::m_CompletionCB.callback
+OK	convar	ConCommandData::m_CompletionCB.m_bIsInterface
+OK	convar	ConCommandData::m_CompletionCBCmdIndex
+OK	convar	ConCommandData::m_nFlags
+OK	convar	ConCommandData::m_pszHelpString
+OK	convar	ConCommandData::m_pszName
+OK	convar	ConCommandRef (by-name constructor)
+OK	convar	ConCommandRef handle round-trip
+OK	convar	ConCommandRef::AddFlags / RemoveFlags (round-trip)
+OK	convar	ConCommandRef::Dispatch (the tier1 wrapper)
+OK	convar	ConCommandRef::GetAutoCompleteSuggestions / ConCommandData::GetAutoCompleteSuggestions
+OK	convar	ConCommandRef::GetName / GetHelpText / HasHelpText / GetFlags
+OK	convar	ConCommandRef::GetRawData (vs ICvar::GetConCommandData)
+OK	convar	ConCommandRef::HasCallback / HasCompletionCallback / GetCallbackIndex / GetCompletionCommandIndex
+OK	convar	ConVarData captured offsets are usable
+OK	convar	ConVarData pointer chain (located by value, vs captured offsets)
+OK	convar	ConVarData::<hexdump past end>
+OK	convar	ConVarData::<hexdump>
+OK	convar	ConVarData::Clamp (already inside its bounds)
+OK	convar	ConVarData::DefaultValue (contents vs what we registered)
+OK	convar	ConVarData::GetDataTypeName / GetDataByteSize / IsPrimitiveType
+OK	convar	ConVarData::GetFlags / IsFlagSet
+OK	convar	ConVarData::GetMaxSplitScreenSlots (vs ICvar)
+OK	convar	ConVarData::GetName / GetHelpText / HasHelpText / GetType
+OK	convar	ConVarData::GetTimesChanged / IncrementTimesChanged / SetTimesChanged
+OK	convar	ConVarData::GetVersion / GetGameInfoFlags / GetCallbackIndex / GetUserInfoByteIndex
+OK	convar	ConVarData::HasDefaultValue / HasMinValue / HasMaxValue and DefaultValue / MinValue / MaxValue
+OK	convar	ConVarData::HasEnumInfo
+OK	convar	ConVarData::IsSetToDefault / IsAllSetToDefault / IsEqual
+OK	convar	ConVarData::RemoveMinValue / RemoveMaxValue / RemoveDefaultValue
+OK	convar	ConVarData::SetDefaultValue
+OK	convar	ConVarData::SetMinValue / SetMaxValue
+OK	convar	ConVarData::UpdateDefaultValueString / UpdateMinValueString / UpdateMaxValueString
+OK	convar	ConVarData::Value / ValueOrDefault (slot bounds)
+OK	convar	ConVarData::ValueToString / DefaultValueToString / MinValueToString / MaxValueToString
+OK	convar	ConVarData::m_GameInfoFlags
+OK	convar	ConVarData::m_UserInfoByteIndex
+OK	convar	ConVarData::m_Values (derived)
+OK	convar	ConVarData::m_Values (offset derived from Value(0))
+OK	convar	ConVarData::m_Version
+OK	convar	ConVarData::m_defaultValue
+OK	convar	ConVarData::m_eVarType
+OK	convar	ConVarData::m_fnGetEnumInfoHandle
+OK	convar	ConVarData::m_iCallbackIndex
+OK	convar	ConVarData::m_iCompletionCBIndex
+OK	convar	ConVarData::m_iFilterCBIndex
+OK	convar	ConVarData::m_iTimesChanged
+OK	convar	ConVarData::m_maxValue
+OK	convar	ConVarData::m_minValue
+OK	convar	ConVarData::m_nFlags
+OK	convar	ConVarData::m_nFlags (offset located by value)
+OK	convar	ConVarData::m_pszHelpString
+OK	convar	ConVarData::m_pszName
+OK	convar	ConVarRef (by-name constructor)
+OK	convar	ConVarRef handle round-trip
+OK	convar	ConVarRef::m_ConVarAccessIndex
+OK	convar	ConVarRef::m_ConVarRegisteredIndex
+OK	convar	ConVarRefAbstract (by name, string type on an engine convar)
+OK	convar	ConVarRefAbstract (by-name and copy constructors)
+OK	convar	ConVarRefAbstract member offsets (getter vs offsetof)
+OK	convar	ConVarRefAbstract::<hexdump past end>
+OK	convar	ConVarRefAbstract::<hexdump>
+OK	convar	ConVarRefAbstract::AddFlags / RemoveFlags (round-trip)
+OK	convar	ConVarRefAbstract::Clamp
+OK	convar	ConVarRefAbstract::Clamp (engine convars)
+OK	convar	ConVarRefAbstract::GetAs (cross-type, the primitive conversion path)
+OK	convar	ConVarRefAbstract::GetAs (typed) vs GetInt
+OK	convar	ConVarRefAbstract::GetDefaultAsString / GetMinAsString / GetMaxAsString
+OK	convar	ConVarRefAbstract::GetMinAsString (convar with no min)
+OK	convar	ConVarRefAbstract::GetName / GetHelpText / HasHelpText
+OK	convar	ConVarRefAbstract::GetValueAsString / GetInt / GetBool / GetFloat / GetString
+OK	convar	ConVarRefAbstract::HasDefault / HasMin / HasMax
+OK	convar	ConVarRefAbstract::IsConVarDataValid / IsConVarDataAvailable
+OK	convar	ConVarRefAbstract::IsFlagSet (FCVAR_SNAPSHOT_IGNORED, FCVAR_GAMEINFO_CANNOT_OVERRIDE)
+OK	convar	ConVarRefAbstract::IsFlagSet / GetFlags
+OK	convar	ConVarRefAbstract::IsSetToDefault / IsAllSetToDefault
+OK	convar	ConVarRefAbstract::IsValuePrimitive
+OK	convar	ConVarRefAbstract::Revert
+OK	convar	ConVarRefAbstract::SetAs<Color> (a non-primitive type)
+OK	convar	ConVarRefAbstract::SetBool
+OK	convar	ConVarRefAbstract::SetFloat
+OK	convar	ConVarRefAbstract::SetInt (clamped to the declared max)
+OK	convar	ConVarRefAbstract::SetInt (clamped to the declared min)
+OK	convar	ConVarRefAbstract::SetInt (converted into a float32 convar)
+OK	convar	ConVarRefAbstract::SetString (parsed into an int32 convar)
+OK	convar	ConVarRefAbstract::SetString (unparseable)
+OK	convar	ConVarRefAbstract::ShouldBeHidden
+OK	convar	ConVarRefAbstract::TypeTraits
+OK	convar	ConVarRefAbstract::m_ConVarData
+OK	convar	ConVarValueInfo_t (bounds and callbacks that crossed)
+OK	convar	ConVarValueInfo_t::SetCompletionCallback
+OK	convar	IAppSystem::GetBuildType
+OK	convar	IAppSystem::GetDependencies
+OK	convar	IAppSystem::GetTier
+OK	convar	IAppSystem::IsSingleton
+OK	convar	IAppSystem::QueryInterface
+OK	convar	IConVarListener::OnConVarCreated / OnConCommandCreated
+OK	convar	ICvar <-> g_pCVar (module factory vs Metamod)
+OK	convar	ICvar::CallChangeCallback
+OK	convar	ICvar::CallFilterCallback (convar with a filter)
+OK	convar	ICvar::CallFilterCallback (convar with no filter)
+OK	convar	ICvar::CallGlobalChangeCallbacks
+OK	convar	ICvar::CopyUserInfoCvarDefaults
+OK	convar	ICvar::DispatchConCommand
+OK	convar	ICvar::FindConCommand (defensive, both parameter values)
+OK	convar	ICvar::FindConCommand (nonexistent name)
+OK	convar	ICvar::FindConCommand (this plugin's own commands)
+OK	convar	ICvar::FindConVar (defensive, allow_defensive=false)
+OK	convar	ICvar::FindConVar (defensive, allow_defensive=true)
+OK	convar	ICvar::FindConVar (nonexistent name)
+OK	convar	ICvar::FindConVar (one of ours)
+OK	convar	ICvar::FindConVar (the directly registered convar)
+OK	convar	ICvar::FindFirstConCommand / FindNextConCommand
+OK	convar	ICvar::FindFirstConVar
+OK	convar	ICvar::FindNextConVar (walk the whole list)
+OK	convar	ICvar::GetCharacterSet
+OK	convar	ICvar::GetCompletionResults
+OK	convar	ICvar::GetCompletionResults (a command with a completion callback)
+OK	convar	ICvar::GetCompletionResults (without the successful out-param)
+OK	convar	ICvar::GetConCommandData (invalid ref)
+OK	convar	ICvar::GetConCommandData (the directly registered command)
+OK	convar	ICvar::GetConVarData (invalid ref)
+OK	convar	ICvar::GetConVarData (vs ConVarRefAbstract::GetConVarData)
+OK	convar	ICvar::GetConVarData (vs the RegisterConVar out-param)
+OK	convar	ICvar::GetTotalUserInfoCvarsByteSize
+OK	convar	ICvar::InstallGlobalChangeCallback / RemoveGlobalChangeCallback
+OK	convar	ICvar::IterateConVarCallbacks
+OK	convar	ICvar::LockConVarValueInitialisation (false)
+OK	convar	ICvar::LockConVarValueInitialisation (true)
+OK	convar	ICvar::QueueThreadSetValue
+OK	convar	ICvar::RegisterConCommand (direct, once per plugin load)
+OK	convar	ICvar::RegisterConVar (direct, once per plugin load)
+OK	convar	ICvar::RegisterCreationListeners
+OK	convar	ICvar::RemoveCreationListeners
+OK	convar	ICvar::ResetConVarsToDefaultValuesByFlag
+OK	convar	ICvar::ResetConVarsToDefaultValuesByName (our prefix only)
+OK	convar	ICvar::ResetConVarsToSnapshot (fresh snapshot, nothing changed)
+OK	convar	ICvar::SetMaxSplitScreenSlots (the current value)
+OK	convar	ICvar::TakeConVarSnapshot / ICvar::DestroyConVarSnapshot
+OK	convar	ICvar::UnregisterConCommandCallbacks
+OK	convar	ICvar::UnregisterConVarCallbacks
+OK	convar	ICvar::__vftable (ABI: offset 0)
+OK	convar	ICvar::m_MaxSplitScreenSlots (captured offset)
+OK	convar	ICvar::m_MaxSplitScreenSlots (private, captured)
+OK	convar	change and filter callbacks fire on a write
+OK	convar	characterset_t contents
+OK	convar	characterset_t::<hexdump>
+OK	convar	characterset_t::set[0..15] (control)
+OK	convar	characterset_t::set[32..47] (space and punctuation)
+OK	convar	characterset_t::set[48..63] (digits)
+OK	convar	characterset_t::set[64..79] (uppercase)
+OK	convar	characterset_t::set[96..111] (lowercase)
+OK	convar	declared type vs ICvar-stored type
+OK	convar	handle type sizes
+OK	convar	registered convar: cs2sdktest_bool
+OK	convar	registered convar: cs2sdktest_color
+OK	convar	registered convar: cs2sdktest_defensive
+OK	convar	registered convar: cs2sdktest_float
+OK	convar	registered convar: cs2sdktest_int
+OK	convar	registered convar: cs2sdktest_int64
+OK	convar	registered convar: cs2sdktest_peruser
+OK	convar	registered convar: cs2sdktest_vec3
+OK	convar	restore every probe convar to its declared default
+OK	engine	CGlobalVars::<hexdump past end>
+OK	engine	CGlobalVars::<hexdump>
+OK	engine	CGlobalVars::eLoadType
+OK	engine	CGlobalVars::mapname
+OK	engine	CGlobalVars::maxEntities
+OK	engine	CGlobalVars::mp_teamplay
+OK	engine	CGlobalVars::serverCount
+OK	engine	CGlobalVars::startspot
+OK	engine	CGlobalVarsBase::absoluteframetime
+OK	engine	CGlobalVarsBase::absoluteframetime_unbounded
+OK	engine	CGlobalVarsBase::curtime
+OK	engine	CGlobalVarsBase::framecount
+OK	engine	CGlobalVarsBase::frametime
+OK	engine	CGlobalVarsBase::interpolation_amount
+OK	engine	CGlobalVarsBase::m_bEnableAssertions
+OK	engine	CGlobalVarsBase::m_bInSimulation
+OK	engine	CGlobalVarsBase::m_bIsOncePerFrameAsyncWorkPhase
+OK	engine	CGlobalVarsBase::m_flClientTime
+OK	engine	CGlobalVarsBase::m_flSubtickFraction
+OK	engine	CGlobalVarsBase::m_flUsercmdTickFraction
+OK	engine	CGlobalVarsBase::m_flUsercmdTickInterval
+OK	engine	CGlobalVarsBase::m_flUsercmdTickStartTime
+OK	engine	CGlobalVarsBase::m_nClientTickCount
+OK	engine	CGlobalVarsBase::m_nCurrentTickThisFrame
+OK	engine	CGlobalVarsBase::m_nThreadId
+OK	engine	CGlobalVarsBase::m_nTotalTicksThisFrame
+OK	engine	CGlobalVarsBase::m_pfnWarningFunc
+OK	engine	CGlobalVarsBase::maxClients
+OK	engine	CGlobalVarsBase::realtime
+OK	engine	CGlobalVarsBase::tickcount
+OK	engine	IAppSystem::GetBuildType
+OK	engine	IAppSystem::GetDependencies
+OK	engine	IAppSystem::GetTier
+OK	engine	IAppSystem::IsSingleton
+OK	engine	IAppSystem::QueryInterface
+OK	engine	ISource2Engine::GetStatsAppID
+OK	engine	ISource2Engine::GetTimescale
+OK	engine	ISource2Engine::IsPaused
+OK	engine	ISource2Engine::RequestScreenshot
+OK	engine	ISource2Engine::WriteJpegScreenshot
+OK	engine	IVEngineServer2::<probe slot occupancy>
+OK	engine	IVEngineServer2::AddHltvRelayProxyWhitelist
+OK	engine	IVEngineServer2::CanStartHltvReplay
+OK	engine	IVEngineServer2::FindSpawnGroupByName
+OK	engine	IVEngineServer2::FindWorldGroupByName
+OK	engine	IVEngineServer2::GetAchievementMgr
+OK	engine	IVEngineServer2::GetAllSpawnGroupsWithPVS
+OK	engine	IVEngineServer2::GetAppID
+OK	engine	IVEngineServer2::GetBuildVersion
+OK	engine	IVEngineServer2::GetClientConVarValue
+OK	engine	IVEngineServer2::GetClientDeltaTick
+OK	engine	IVEngineServer2::GetClientHltvReplayDelay
+OK	engine	IVEngineServer2::GetClientListening
+OK	engine	IVEngineServer2::GetClientSignonState
+OK	engine	IVEngineServer2::GetClientSteamID
+OK	engine	IVEngineServer2::GetClientUserInfo
+OK	engine	IVEngineServer2::GetClientXUID
+OK	engine	IVEngineServer2::GetEntityTransmitBitsForClient
+OK	engine	IVEngineServer2::GetFirstWorldGroupId
+OK	engine	IVEngineServer2::GetFrameTimeAmnesty
+OK	engine	IVEngineServer2::GetGameDir
+OK	engine	IVEngineServer2::GetGameServerSteamID
+OK	engine	IVEngineServer2::GetGamestatsData
+OK	engine	IVEngineServer2::GetLongFrameCount
+OK	engine	IVEngineServer2::GetMainLoopTimes
+OK	engine	IVEngineServer2::GetMapName
+OK	engine	IVEngineServer2::GetPVSForSpawnGroup
+OK	engine	IVEngineServer2::GetPlayerInfo
+OK	engine	IVEngineServer2::GetPlayerNetInfo
+OK	engine	IVEngineServer2::GetPlayerNetworkIDString
+OK	engine	IVEngineServer2::GetPlayerUserId
+OK	engine	IVEngineServer2::GetServerGlobals
+OK	engine	IVEngineServer2::GetSharedEdictChangeInfo
+OK	engine	IVEngineServer2::GetSplitScreenPlayerAttachToEdict
+OK	engine	IVEngineServer2::GetSplitScreenPlayerForEdict
+OK	engine	IVEngineServer2::GetSteamUniverse
+OK	engine	IVEngineServer2::GetTvRecordingDemoFilename
+OK	engine	IVEngineServer2::GetWorldGroupName
+OK	engine	IVEngineServer2::IsAnyClientLowViolence
+OK	engine	IVEngineServer2::IsAnyHltvReplayActive
+OK	engine	IVEngineServer2::IsClientFullyAuthenticated
+OK	engine	IVEngineServer2::IsClientLowViolence
+OK	engine	IVEngineServer2::IsDedicatedServer
+OK	engine	IVEngineServer2::IsGenericPrecached
+OK	engine	IVEngineServer2::IsHLTVRelay
+OK	engine	IVEngineServer2::IsHltvReplayBufferAvailable
+OK	engine	IVEngineServer2::IsLogEnabled
+OK	engine	IVEngineServer2::IsLowViolence
+OK	engine	IVEngineServer2::IsMapValid
+OK	engine	IVEngineServer2::IsRecordingDemo
+OK	engine	IVEngineServer2::IsServerLocalOnly
+OK	engine	IVEngineServer2::IsSpawnGroupLoaded
+OK	engine	IVEngineServer2::IsSpawnGroupLoadedForClient
+OK	engine	IVEngineServer2::IsSpawnGroupLoading
+OK	engine	IVEngineServer2::IsSplitScreenPlayer
+OK	engine	IVEngineServer2::IsTvRecording
+OK	engine	IVEngineServer2::IsWorldGroupValid
+OK	engine	IVEngineServer2::LogPrint
+OK	engine	IVEngineServer2::MaxWorldGroupId
+OK	engine	IVEngineServer2::Message_DetermineMulticastRecipients
+OK	engine	IVEngineServer2::PrecacheGeneric
+OK	engine	IVEngineServer2::ServerCommand
+OK	engine	IVEngineServer2::SetAchievementMgr
+OK	engine	IVEngineServer2::SetDedicatedServerBenchmarkMode
+OK	engine	IVEngineServer2::SetFramePerformanceTag
+OK	engine	IVEngineServer2::SetFrameTimeAmnesty
+OK	engine	IVEngineServer2::SetGamestatsData
+OK	engine	IVEngineServer2::SetHLTVChatBan
+OK	engine	IVEngineServer2::SetTimescale
+OK	engine	IVEngineServer2::ShouldForceMaxFrametimeToTickInterval
+OK	engine	IVEngineServer2::StashHltvReplay
+OK	engine	IVEngineServer2::StopAllHltvReplays
+OK	engine	IVEngineServer2::WasShutDownRequested
+OK	entity	CConcreteEntityList::m_PVSBits (head)
+OK	entity	CConcreteEntityList::m_dormantList count vs head
+OK	entity	CConcreteEntityList::m_dormantList.m_nCount
+OK	entity	CConcreteEntityList::m_dormantList.m_pHead
+OK	entity	CConcreteEntityList::m_dormantList.m_pTail
+OK	entity	CConcreteEntityList::m_freeNetworkableList count vs head
+OK	entity	CConcreteEntityList::m_freeNetworkableList.m_nCount
+OK	entity	CConcreteEntityList::m_freeNetworkableList.m_pHead
+OK	entity	CConcreteEntityList::m_freeNetworkableList.m_pTail
+OK	entity	CConcreteEntityList::m_freeNonNetworkableList count vs head
+OK	entity	CConcreteEntityList::m_freeNonNetworkableList.m_nCount
+OK	entity	CConcreteEntityList::m_freeNonNetworkableList.m_pHead
+OK	entity	CConcreteEntityList::m_freeNonNetworkableList.m_pTail
+OK	entity	CConcreteEntityList::m_nMaxPlayers
+OK	entity	CConcreteEntityList::m_nNetworkableEntityLimit
+OK	entity	CConcreteEntityList::m_nNonNetworkableEntityLimit
+OK	entity	CConcreteEntityList::m_pFirstActiveEntity
+OK	entity	CConcreteEntityList::m_pIdentityChunks (all chunks)
+OK	entity	CConcreteEntityList::m_pIdentityChunks[0]
+OK	entity	CConcreteEntityList::m_pIdentityChunks[1]
+OK	entity	CConcreteEntityList::m_pIdentityChunks[2]
+OK	entity	CConcreteEntityList::m_pIdentityChunks[3]
+OK	entity	CConcreteEntityList::m_usedList count vs head
+OK	entity	CConcreteEntityList::m_usedList.m_nCount
+OK	entity	CConcreteEntityList::m_usedList.m_pHead
+OK	entity	CConcreteEntityList::m_usedList.m_pTail
+OK	entity	CEntityClass::<hexdump past end>
+OK	entity	CEntityClass::<hexdump>
+OK	entity	CEntityClass::GetDataDescMap
+OK	entity	CEntityClass::GetSchemaBinding
+OK	entity	CEntityClass::m_AllHelpers
+OK	entity	CEntityClass::m_ComponentOffsets
+OK	entity	CEntityClass::m_NameToThinkFunc
+OK	entity	CEntityClass::m_NetworkSerializerInfo
+OK	entity	CEntityClass::m_SpawnOrder
+OK	entity	CEntityClass::m_ThinkFuncToName
+OK	entity	CEntityClass::m_classOutputInfos
+OK	entity	CEntityClass::m_componentUnserializerClassInfo
+OK	entity	CEntityClass::m_designerName
+OK	entity	CEntityClass::m_designerName vs CEntityIdentity::GetClassname
+OK	entity	CEntityClass::m_flags
+OK	entity	CEntityClass::m_flattenedSerializer
+OK	entity	CEntityClass::m_nAllHelpersFlags
+OK	entity	CEntityClass::m_nClassIndex
+OK	entity	CEntityClass::m_nInputCount
+OK	entity	CEntityClass::m_nInputCount vs m_pInputs
+OK	entity	CEntityClass::m_nOutputCount
+OK	entity	CEntityClass::m_pBaseClassInfo
+OK	entity	CEntityClass::m_pClassInfo
+OK	entity	CEntityClass::m_pClassInfo->m_pszCPPClassname (probe)
+OK	entity	CEntityClass::m_pComponentOverrides
+OK	entity	CEntityClass::m_pFirstEntity
+OK	entity	CEntityClass::m_pFirstEntity#2
+OK	entity	CEntityClass::m_pInputs
+OK	entity	CEntityClass::m_pNext
+OK	entity	CEntityClass::m_pOutputs
+OK	entity	CEntityClass::m_pScriptDesc
+OK	entity	CEntityClass::m_pServerClass
+OK	entity	CEntityClass::m_pSharedPulseSignature
+OK	entity	CEntityClass::m_pfnEnumerateComponents
+OK	entity	CEntityClass::m_pfnRegisterPulseBindings
+OK	entity	CEntityClass::m_requiredEHandle
+OK	entity	CEntityClassInfo::<hexdump past end>
+OK	entity	CEntityClassInfo::<hexdump>
+OK	entity	CEntityClassInfo::m_nFlags
+OK	entity	CEntityClassInfo::m_pBaseClassInfo
+OK	entity	CEntityClassInfo::m_pClass
+OK	entity	CEntityClassInfo::m_pClass (round trip)
+OK	entity	CEntityClassInfo::m_pDataDescMap
+OK	entity	CEntityClassInfo::m_pSchemaBinding
+OK	entity	CEntityClassInfo::m_pszCPPClassname
+OK	entity	CEntityClassInfo::m_pszClassname
+OK	entity	CEntityIdentity::<hexdump past end>
+OK	entity	CEntityIdentity::<hexdump>
+OK	entity	CEntityIdentity::ClassMatches
+OK	entity	CEntityIdentity::GetSpawnGroup vs the private field
+OK	entity	CEntityIdentity::NameMatches
+OK	entity	CEntityIdentity::m_EHandle
+OK	entity	CEntityIdentity::m_PathIndex
+OK	entity	CEntityIdentity::m_designerName
+OK	entity	CEntityIdentity::m_fDataObjectTypes
+OK	entity	CEntityIdentity::m_flags
+OK	entity	CEntityIdentity::m_flags (declared bits)
+OK	entity	CEntityIdentity::m_hPublicScope (private)
+OK	entity	CEntityIdentity::m_hSpawnGroup (private)
+OK	entity	CEntityIdentity::m_name
+OK	entity	CEntityIdentity::m_nameStringTableIndex
+OK	entity	CEntityIdentity::m_pAttributes (private)
+OK	entity	CEntityIdentity::m_pClass
+OK	entity	CEntityIdentity::m_pInstance
+OK	entity	CEntityIdentity::m_pNext
+OK	entity	CEntityIdentity::m_pNextByClass
+OK	entity	CEntityIdentity::m_pPrev
+OK	entity	CEntityIdentity::m_pPrevByClass
+OK	entity	CEntityIdentity::m_worldGroupId
+OK	entity	CEntityInstance::<hexdump past end>
+OK	entity	CEntityInstance::<hexdump>
+OK	entity	CEntityInstance::EnumerateVisitor
+OK	entity	CEntityInstance::FindComponent
+OK	entity	CEntityInstance::FullEdictChanged
+OK	entity	CEntityInstance::GetAlternateBaselineName
+OK	entity	CEntityInstance::GetChangeAccessorPathInfo
+OK	entity	CEntityInstance::GetChangeAccessorPathInfo (const)
+OK	entity	CEntityInstance::GetClassname
+OK	entity	CEntityInstance::GetDataDescMap
+OK	entity	CEntityInstance::GetEntityIndex
+OK	entity	CEntityInstance::GetNetworkSerializerInfo
+OK	entity	CEntityInstance::GetRefEHandle vs CEntityIdentity::GetRefEHandle
+OK	entity	CEntityInstance::GetScriptDesc
+OK	entity	CEntityInstance::InvalidatePolymorphicMetadataHelper
+OK	entity	CEntityInstance::NetworkStateChangedLog
+OK	entity	CEntityInstance::ObjectCaps
+OK	entity	CEntityInstance::RequiredEdictIndex
+OK	entity	CEntityInstance::Schema_DynamicBinding
+OK	entity	CEntityInstance::UpdateNestedWorldGroupIds
+OK	entity	CEntityInstance::m_CScriptComponent
+OK	entity	CEntityInstance::m_hPrivateScope (private)
+OK	entity	CEntityInstance::m_iszPrivateVScripts
+OK	entity	CEntityInstance::m_pEntity
+OK	entity	CEntityInstance::m_pEntity (round trip)
+OK	entity	CEntityInstance::m_pKeyValues
+OK	entity	CEntityInstance::unk101
+OK	entity	CEntitySystem::AddEntityKeyValuesAllocatorRef
+OK	entity	CEntitySystem::AllocPooledString
+OK	entity	CEntitySystem::FindClassByDesignName (live entity)
+OK	entity	CEntitySystem::FindClassByDesignName (probe names)
+OK	entity	CEntitySystem::FindClassByName (absent name)
+OK	entity	CEntitySystem::FindClassByName (live entity)
+OK	entity	CEntitySystem::FindClassByName (probe names)
+OK	entity	CEntitySystem::FindEntityProcedural
+OK	entity	CEntitySystem::FindFirstEntityHandleByName
+OK	entity	CEntitySystem::FindFirstEntityHandleByName (absent)
+OK	entity	CEntitySystem::FindPooledString (absent)
+OK	entity	CEntitySystem::FindPooledString (empty)
+OK	entity	CEntitySystem::FindPooledString (live name)
+OK	entity	CEntitySystem::GetCurTime
+OK	entity	CEntitySystem::GetCurTime vs CGlobalVars::curtime
+OK	entity	CEntitySystem::GetEntityIdentity (out of range)
+OK	entity	CEntitySystem::GetEntityIdentity(CEntityHandle)
+OK	entity	CEntitySystem::GetEntityIdentity(CEntityIndex)
+OK	entity	CEntitySystem::GetEntityInstance(CEntityHandle)
+OK	entity	CEntitySystem::GetEntityInstance(CEntityIdentity*)
+OK	entity	CEntitySystem::GetEntityInstance(CEntityIndex)
+OK	entity	CEntitySystem::GetEntityKeyValuesAllocator
+OK	entity	CEntitySystem::GetSpawnGroupWorldId
+OK	entity	CEntitySystem::m_Accessors (all slots)
+OK	entity	CEntitySystem::m_Accessors[0]
+OK	entity	CEntitySystem::m_Accessors[1]
+OK	entity	CEntitySystem::m_Accessors[2]
+OK	entity	CEntitySystem::m_Accessors[3]
+OK	entity	CEntitySystem::m_ComponentUnserializerInfoAllocator
+OK	entity	CEntitySystem::m_DataDescKeyUnserializers
+OK	entity	CEntitySystem::m_EntityKeyValuesAllocator
+OK	entity	CEntitySystem::m_EntityList (head)
+OK	entity	CEntitySystem::m_EntityList.m_pFirstActiveEntity (walk)
+OK	entity	CEntitySystem::m_EntityMaterialAttributes
+OK	entity	CEntitySystem::m_EntityPostSpawnCallback
+OK	entity	CEntitySystem::m_EventQueue (head)
+OK	entity	CEntitySystem::m_Symbols
+OK	entity	CEntitySystem::m_bAutoExecuteQueuedDeletion
+OK	entity	CEntitySystem::m_bInRestoreActivation
+OK	entity	CEntitySystem::m_bInvokePostDataUpdates
+OK	entity	CEntitySystem::m_bPerformDeallocationPostCreation
+OK	entity	CEntitySystem::m_bPerformDeletionPostCreation
+OK	entity	CEntitySystem::m_bProcessingQueuedActivatesAndPostDataUpdates
+OK	entity	CEntitySystem::m_bProfilingResourceSystem
+OK	entity	CEntitySystem::m_eNetworkSerializationMode
+OK	entity	CEntitySystem::m_entClassesByCPPClassname
+OK	entity	CEntitySystem::m_entClassesByCPPClassname.Count
+OK	entity	CEntitySystem::m_entClassesByClassname
+OK	entity	CEntitySystem::m_entClassesByClassname.Count
+OK	entity	CEntitySystem::m_entityComponentHelpers
+OK	entity	CEntitySystem::m_entityComponentHelpers.Count
+OK	entity	CEntitySystem::m_entityIONotifiers
+OK	entity	CEntitySystem::m_entityNames
+OK	entity	CEntitySystem::m_entityNames.Count
+OK	entity	CEntitySystem::m_flChangeCallbackSpewThreshold
+OK	entity	CEntitySystem::m_hActiveSpawnGroup
+OK	entity	CEntitySystem::m_nEntityKeyValuesAllocatorRefCount
+OK	entity	CEntitySystem::m_nExecuteQueuedCreationDepth
+OK	entity	CEntitySystem::m_nExecuteQueuedDeletionDepth
+OK	entity	CEntitySystem::m_nSuppressAutoDeletionExecutionCount
+OK	entity	CEntitySystem::m_nSuppressDestroyImmediateCount
+OK	entity	CEntitySystem::m_nSuppressDormancyChangeCount
+OK	entity	CEntitySystem::m_pCurrentManifest (private)
+OK	entity	CEntitySystem::m_pFieldChangeLimitSpew
+OK	entity	CEntitySystem::m_pNetworkFieldChangedEventQueue
+OK	entity	CEntitySystem::m_pNetworkFieldScratchData
+OK	entity	CEntitySystem::m_queuedCreations
+OK	entity	CEntitySystem::m_queuedDeallocations
+OK	entity	CEntitySystem::m_queuedDeferredDeletions
+OK	entity	CEntitySystem::m_queuedDeletions
+OK	entity	CEntitySystem::m_queuedDormancyChanges
+OK	entity	CEntitySystem::m_queuedPostDataUpdates
+OK	entity	CEntitySystem::m_sEntSystemName
+OK	entity	CEntitySystem::m_unk101
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[0][0]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[0][1]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[0][2]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[0][3]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[1][0]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[1][1]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[1][2]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[1][3]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[2][0]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[2][1]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[2][2]
+OK	entity	CEntitySystem::m_vSpawnOriginOffset[2][3]
+OK	entity	CEventQueue::m_Events.m_PulseArguments (sentinel: uninitialized)
+OK	entity	CEventQueue::m_Events.m_WorldGroupId (sentinel: unset)
+OK	entity	CEventQueue::m_Events.m_flFireTime (sentinel: -FLT_MAX)
+OK	entity	CEventQueue::m_Events.m_hActivator (sentinel: unset)
+OK	entity	CEventQueue::m_Events.m_hCaller (sentinel: unset)
+OK	entity	CEventQueue::m_Events.m_hEntTarget (sentinel: unset)
+OK	entity	CEventQueue::m_Events.m_pNext
+OK	entity	CEventQueue::m_Events.m_pPrev
+OK	entity	CEventQueue::m_Events.m_pTarget (sentinel: unset)
+OK	entity	CEventQueue::m_Events.m_pTargetInput (sentinel: unset)
+OK	entity	CEventQueue::m_Events.m_paramMap (sentinel: uninitialized)
+OK	entity	CEventQueue::m_Events.m_targetType (sentinel: unset)
+OK	entity	CEventQueue::m_Events.m_variantValue (sentinel: unset)
+OK	entity	CEventQueue::m_Mutex
+OK	entity	CGameEntitySystem @ the assumed offset
+OK	entity	CGameEntitySystem offset verdict
+OK	entity	CGameEntitySystem vs the SDK's own GameEntitySystem()
+OK	entity	CGameEntitySystem::<hexdump>
+OK	entity	CGameEntitySystem::m_entityListeners
+OK	entity	CGameEntitySystem::m_entityListeners (bounds)
+OK	entity	CGameEntitySystem::m_iNetworkedEntCount
+OK	entity	CGameEntitySystem::m_iNonNetworkedSavedEntCount
+OK	entity	CGameEntitySystem::m_pEntity2Networkables
+OK	entity	CGameEntitySystem::m_pEntity2SaveRestore
+OK	entity	CGameEntitySystem::m_spawnGroupEntityFilters
+OK	entity	CGameEntitySystem::m_spawnGroupEntityFilters.Count
+OK	entity	EntityInstance*Iter_t::SetWorldGroupId
+OK	entity	EntityInstanceByClassIter_t(CEntityInstance* start, ...)
+OK	entity	EntityInstanceByClassIter_t::First / Next
+OK	entity	EntityInstanceByNameIter_t (wildcard)
+OK	entity	EntityInstanceByNameIter_t::First / Next
+OK	entity	EntityInstanceIter_t (dormant)
+OK	entity	EntityInstanceIter_t + IEntityFindFilter::ShouldFindEntity
+OK	entity	EntityInstanceIter_t::First / Next
+OK	entity	IGameResourceService raw pointer slots
+OK	entity	IGameResourceService::GetBuildType
+OK	entity	IGameResourceService::GetDependencies
+OK	entity	IGameResourceService::GetTier
+OK	entity	IGameResourceService::IsSingleton
+OK	entity	IGameResourceService::QueryInterface
+OK	event	CreateInterface("GAMEEVENTSMANAGER001")
+OK	event	CreateInterface("GAMEEVENTSMANAGER002")
+OK	event	CreateInterface("GameEventManagerServerV001")
+OK	event	CreateInterface("GameEventsManager002")
+OK	event	IAppSystem::GetBuildType
+OK	event	IAppSystem::GetDependencies
+OK	event	IAppSystem::GetTier
+OK	event	IAppSystem::IsSingleton
+OK	event	IAppSystem::QueryInterface
+OK	event	IGameEventSystem::GetEventSource
+OK	event	INetworkMessageInternal::GetNetMessageInfo
+OK	event	INetworkMessageInternal::GetUnscopedName
+OK	event	INetworkMessages::FindNetworkMessage (nonexistent name)
+OK	event	INetworkMessages::FindNetworkMessage("CMsgSource1LegacyGameEvent")
+OK	event	INetworkMessages::FindNetworkMessage("CMsgSource1LegacyGameEventList")
+OK	event	INetworkMessages::FindNetworkMessage("CMsgSource1LegacyListenEvents")
+OK	event	INetworkMessages::FindNetworkMessagePartial
+OK	event	IProtobufBinding::GetBufType
+OK	event	IProtobufBinding::GetGroup
+OK	event	IProtobufBinding::GetGroupColor
+OK	event	IProtobufBinding::GetName
+OK	event	IProtobufBinding::GetSize
+OK	event	IProtobufBinding::OkToRedispatch
+OK	event	NetMessageInfo_t (fetch)
+OK	event	NetMessageInfo_t::<hexdump past end>
+OK	event	NetMessageInfo_t::<hexdump>
+OK	event	NetMessageInfo_t::m_GroupId
+OK	event	NetMessageInfo_t::m_MessageId
+OK	event	NetMessageInfo_t::m_bOkayToRedispatch
+OK	event	NetMessageInfo_t::m_nBufType/m_bCannotBeNetworked/m_unk001 (packed byte)
+OK	event	NetMessageInfo_t::m_nCategories
+OK	event	NetMessageInfo_t::m_nRequiredHandlerCategories
+OK	event	NetMessageInfo_t::m_pBinding
+OK	event	NetMessageInfo_t::m_szGroup
+OK	filesystem	IAppSystem::GetBuildType
+OK	filesystem	IAppSystem::GetDependencies
+OK	filesystem	IAppSystem::GetTier
+OK	filesystem	IAppSystem::IsSingleton
+OK	filesystem	IAppSystem::QueryInterface
+OK	filesystem	IFileSystem::AddSearchPath
+OK	filesystem	IFileSystem::AllocOptimalReadBuffer + FreeOptimalReadBuffer
+OK	filesystem	IFileSystem::Close
+OK	filesystem	IFileSystem::CopyAFile
+OK	filesystem	IFileSystem::CreateDirHierarchy
+OK	filesystem	IFileSystem::CreateDirHierarchyForFile
+OK	filesystem	IFileSystem::CreateFilenameForUGCFile
+OK	filesystem	IFileSystem::CreateMemoryMap(FileHandle_t,flags)
+OK	filesystem	IFileSystem::CreateMemoryMap(name,pathID,flags)
+OK	filesystem	IFileSystem::DeleteDirectory
+OK	filesystem	IFileSystem::DeleteDirectoryAndContents_R
+OK	filesystem	IFileSystem::EnableAutoVPKFileLoading
+OK	filesystem	IFileSystem::EndOfFile
+OK	filesystem	IFileSystem::FPrintf
+OK	filesystem	IFileSystem::FileExists
+OK	filesystem	IFileSystem::FileTimeToString
+OK	filesystem	IFileSystem::FindFileAbsoluteList
+OK	filesystem	IFileSystem::FindFileName
+OK	filesystem	IFileSystem::FindFirst + FindNext + FindIsDirectory + FindClose
+OK	filesystem	IFileSystem::FindFirstEx
+OK	filesystem	IFileSystem::FindOrAddFileName
+OK	filesystem	IFileSystem::Flush
+OK	filesystem	IFileSystem::FullPathToRelativePath
+OK	filesystem	IFileSystem::GetAutoVPKFileLoading
+OK	filesystem	IFileSystem::GetAvailableDrives
+OK	filesystem	IFileSystem::GetCurrentDirectory
+OK	filesystem	IFileSystem::GetFileTime
+OK	filesystem	IFileSystem::GetFileTypeForFullPath
+OK	filesystem	IFileSystem::GetFilesystemStatistics
+OK	filesystem	IFileSystem::GetMergeTokenForPath + GetMergedPaths
+OK	filesystem	IFileSystem::GetOptimalIOConstraints
+OK	filesystem	IFileSystem::GetPathIndex
+OK	filesystem	IFileSystem::GetPathTime
+OK	filesystem	IFileSystem::GetSearchPath
+OK	filesystem	IFileSystem::GetSearchPathID
+OK	filesystem	IFileSystem::GetSearchPathsForPathID
+OK	filesystem	IFileSystem::IsDirectory
+OK	filesystem	IFileSystem::IsFileInReadOnlySearchPath
+OK	filesystem	IFileSystem::IsFileInUntrustedAddon
+OK	filesystem	IFileSystem::IsFileWritable
+OK	filesystem	IFileSystem::IsOk
+OK	filesystem	IFileSystem::IsPathInvalidForFilesystem
+OK	filesystem	IFileSystem::IsUGCLoaded
+OK	filesystem	IFileSystem::IsUGCVPKFileLoaded
+OK	filesystem	IFileSystem::LoadKeyValues(type,filename,pathID)
+OK	filesystem	IFileSystem::MarkPathIDByRequestOnly
+OK	filesystem	IFileSystem::Open
+OK	filesystem	IFileSystem::OpenEx
+OK	filesystem	IFileSystem::OpenUGCFile
+OK	filesystem	IFileSystem::ParseUGCHandleFromFilename
+OK	filesystem	IFileSystem::Precache
+OK	filesystem	IFileSystem::PrintSearchPaths
+OK	filesystem	IFileSystem::Read
+OK	filesystem	IFileSystem::ReadEx
+OK	filesystem	IFileSystem::ReadFile
+OK	filesystem	IFileSystem::ReadFileEx
+OK	filesystem	IFileSystem::ReadLine(CUtlString)
+OK	filesystem	IFileSystem::ReadLine(char*)
+OK	filesystem	IFileSystem::ReadToBuffer
+OK	filesystem	IFileSystem::RelativePathToFullPath
+OK	filesystem	IFileSystem::RelativePathToFullWritePath
+OK	filesystem	IFileSystem::RemoveFile
+OK	filesystem	IFileSystem::RemoveSearchPath
+OK	filesystem	IFileSystem::RemoveSearchPaths
+OK	filesystem	IFileSystem::RenameFile
+OK	filesystem	IFileSystem::SaveSearchPathState + RestoreSearchPathState + DestroySearchPathState
+OK	filesystem	IFileSystem::Seek
+OK	filesystem	IFileSystem::SetBufferSize
+OK	filesystem	IFileSystem::SetFileWritable
+OK	filesystem	IFileSystem::SetIODelayAlarm
+OK	filesystem	IFileSystem::SetSearchPathReadOnly
+OK	filesystem	IFileSystem::Size(handle)
+OK	filesystem	IFileSystem::Size(name)
+OK	filesystem	IFileSystem::String
+OK	filesystem	IFileSystem::SuppressAsyncFileRequestFlushOnPathChange
+OK	filesystem	IFileSystem::Tell
+OK	filesystem	IFileSystem::Trace_DumpUnclosedFiles
+OK	filesystem	IFileSystem::ValidateLoadedVPKs
+OK	filesystem	IFileSystem::Write
+OK	filesystem	IFileSystem::WriteFile
+OK	gamedata	offsets.CTakeDamageInfo_HitGroup
+OK	gamedata	offsets.CheckTransmitPlayerSlot
+OK	gamedata	offsets.GameEntitySystem
+OK	gamedata	signatures.CBaseEntity_DispatchSpawn
+OK	gamedata	signatures.CBaseEntity_EmitSoundFilter
+OK	gamedata	signatures.CBaseEntity_TakeDamageOld
+OK	gamedata	signatures.CBaseModelEntity_SetModel
+OK	gamedata	signatures.CBasePlayerController_SetPawn
+OK	gamedata	signatures.CBasePlayerPawn_RemovePlayerItem
+OK	gamedata	signatures.CBaseTrigger_EndTouch
+OK	gamedata	signatures.CBaseTrigger_StartTouch
+OK	gamedata	signatures.CCSGameRules_TerminateRound
+OK	gamedata	signatures.CCSNavArea_IsValidNavMesh
+OK	gamedata	signatures.CCSPlayerController_SwitchTeam
+OK	gamedata	signatures.CCSPlayerPawnBase_PostThink
+OK	gamedata	signatures.CCSPlayer_ItemServices_CanAcquire
+OK	gamedata	signatures.CCSPlayer_WeaponServices_CanUse
+OK	gamedata	signatures.CEntityIOOutput_FireOutputInternal
+OK	gamedata	signatures.CEntityInstance_AcceptInput
+OK	gamedata	signatures.CEntitySystem_AddEntityIOEvent
+OK	gamedata	signatures.CGameEventManager_Init
+OK	gamedata	signatures.CTakeDamageInfo_Constructor
+OK	gamedata	signatures.ClientPrint
+OK	gamedata	signatures.GetCSWeaponDataFromKey
+OK	gamedata	signatures.GiveNamedItem
+OK	gamedata	signatures.Host_Say
+OK	gamedata	signatures.IGameSystem_InitAllSystems_pFirst
+OK	gamedata	signatures.LegacyGameEventListener
+OK	gamedata	signatures.NetworkStateChanged
+OK	gamedata	signatures.UTIL_ClientPrintAll
+OK	gamedata	signatures.UTIL_CreateEntityByName
+OK	gamedata	signatures.UTIL_Remove
+OK	gamedata	vtables.CBaseEntity_IsPlayerPawn
+OK	gamedata	vtables.CBaseEntity_Teleport
+OK	gamedata	vtables.CBasePlayerPawn_CommitSuicide
+OK	gamedata	vtables.CCSGameRules_FindPickerEntity
+OK	gamedata	vtables.CCSPlayerController_ChangeTeam
+OK	gamedata	vtables.CCSPlayerController_Respawn
+OK	gamedata	vtables.CCSPlayer_ItemServices_DropActivePlayerWeapon
+OK	gamedata	vtables.CCSPlayer_ItemServices_GiveNamedItem
+OK	gamedata	vtables.CCSPlayer_ItemServices_RemoveWeapons
+OK	gamedata	vtables.CEntityResourceManifest_AddResource
+OK	gamedata	vtables.CGameSceneNode_GetSkeletonInstance
+OK	gamedata	vtables.CServerSideClient
+OK	gamedata	vtables.ISource2GameEntities_CheckTransmit
+OK	gamedata	vtables.SetStateChanged
+OK	metamod	ISmmAPI (engine/physics/filesystem raw factories agree)
+OK	metamod	ISmmAPI::FindUserMessage
+OK	metamod	ISmmAPI::Format
+OK	metamod	ISmmAPI::FormatIface
+OK	metamod	ISmmAPI::GetApiVersions
+OK	metamod	ISmmAPI::GetBaseDir
+OK	metamod	ISmmAPI::GetCGlobals
+OK	metamod	ISmmAPI::GetDetourInterface
+OK	metamod	ISmmAPI::GetEngineFactory
+OK	metamod	ISmmAPI::GetFileSystemFactory
+OK	metamod	ISmmAPI::GetGameDLLVersion
+OK	metamod	ISmmAPI::GetPhysicsFactory
+OK	metamod	ISmmAPI::GetServerFactory
+OK	metamod	ISmmAPI::GetSourceEngineBuild
+OK	metamod	ISmmAPI::GetUserMessage
+OK	metamod	ISmmAPI::GetUserMessageCount
+OK	metamod	ISmmAPI::GetVSPInfo
+OK	metamod	ISmmAPI::GetVSPVersion
+OK	metamod	ISmmAPI::MetaFactory(IPluginManager)
+OK	metamod	ISmmAPI::MetaFactory(ISourceHook)
+OK	metamod	ISmmAPI::MetaFactory(unknown)
+OK	metamod	ISmmAPI::PathFormat
+OK	metamod	ISmmAPI::VInterfaceMatch
+OK	netmessages	CLoggingSystem::LoggingChannel_t::<hexdump past end>
+OK	netmessages	CLoggingSystem::LoggingChannel_t::<hexdump>
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_DefaultFlags
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_DefaultVerbosity
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_Flags
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_ID
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_Name
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_SpewColor
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_Verbosity
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_bLastLineComplete
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_nIndent
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_nModifiedFields
+OK	netmessages	CLoggingSystem::LoggingChannel_t::m_pFirstTag
+OK	netmessages	CNetMessage::AsProto
+OK	netmessages	CNetMessage::AsProto2
+OK	netmessages	CNetMessage::CopyConstruct
+OK	netmessages	CNetMessage::GetMargin
+OK	netmessages	CNetMessage::GetMessageId
+OK	netmessages	CNetMessage::GetName
+OK	netmessages	CNetMessage::GetNetMessage
+OK	netmessages	CNetMessagePB<CNETMsg_Tick>::set_tick
+OK	netmessages	CNetMessagePB<CNETMsg_Tick>::tick (forwarded read)
+OK	netmessages	CNetMessagePB<CNETMsg_Tick>::tick (typed read)
+OK	netmessages	INetworkMessageInternal::AllocateMessage
+OK	netmessages	INetworkMessageInternal::AllocateMessage (round trip)
+OK	netmessages	INetworkMessageInternal::GetNetMessageInfo
+OK	netmessages	INetworkMessageInternal::GetNetMessageInfo (binding fetch)
+OK	netmessages	INetworkMessageInternal::GetUnscopedName
+OK	netmessages	INetworkMessageInternal::Serialize
+OK	netmessages	INetworkMessageInternal::Unserialize
+OK	netmessages	INetworkMessages::AllocateAndCopyConstructNetMessageAbstract
+OK	netmessages	INetworkMessages::ComputeOrderForPriority
+OK	netmessages	INetworkMessages::DeallocateNetMessageAbstract
+OK	netmessages	INetworkMessages::DeallocateNetMessageAbstract (copy)
+OK	netmessages	INetworkMessages::DeallocateNetMessageAbstract (filled)
+OK	netmessages	INetworkMessages::DeallocateNetMessageAbstract (forwarded)
+OK	netmessages	INetworkMessages::DeallocateNetMessageAbstract (typed)
+OK	netmessages	INetworkMessages::FindNetworkGroup
+OK	netmessages	INetworkMessages::FindNetworkGroup (nonexistent)
+OK	netmessages	INetworkMessages::FindNetworkMessage (nonexistent name)
+OK	netmessages	INetworkMessages::FindNetworkMessage("CMsgSource1LegacyGameEvent")
+OK	netmessages	INetworkMessages::FindNetworkMessage("CNETMsg_Tick")
+OK	netmessages	INetworkMessages::FindNetworkMessage("CSVCMsg_EncryptedData")
+OK	netmessages	INetworkMessages::FindNetworkMessage("CSVCMsg_GameEvent")
+OK	netmessages	INetworkMessages::FindNetworkMessageById
+OK	netmessages	INetworkMessages::FindNetworkMessageById (unused id)
+OK	netmessages	INetworkMessages::FindNetworkMessagePartial
+OK	netmessages	INetworkMessages::FindOrCreateNetMessage (lookup, no create)
+OK	netmessages	INetworkMessages::GetCoordSizeParams
+OK	netmessages	INetworkMessages::GetFieldChangeCallbackOrderCount
+OK	netmessages	INetworkMessages::GetFieldChangeCallbackPriorities
+OK	netmessages	INetworkMessages::GetIsForServer
+OK	netmessages	INetworkMessages::GetLoggingChannel
+OK	netmessages	INetworkMessages::GetNetMessageInfo
+OK	netmessages	INetworkMessages::GetNetworkGroupColor
+OK	netmessages	INetworkMessages::GetNetworkGroupCount
+OK	netmessages	INetworkMessages::GetNetworkGroupName
+OK	netmessages	INetworkMessages::GetNetworkGroupName (unused group)
+OK	netmessages	INetworkMessages::GetNetworkSerializationContextData
+OK	netmessages	INetworkMessages::GetNetworkSerializationContextData#2
+OK	netmessages	INetworkMessages::IsAdditionalMessageRegistrationAllowed
+OK	netmessages	INetworkMessages::Serialize (public)
+OK	netmessages	INetworkMessages::SerializeAbstract
+OK	netmessages	INetworkMessages::SerializeMessageInternal
+OK	netmessages	INetworkMessages::UnserializeFromStream
+OK	netmessages	INetworkMessages::UnserializeMessageInternal
+OK	netmessages	IProtobufBinding::GetBufType
+OK	netmessages	IProtobufBinding::GetGroup
+OK	netmessages	IProtobufBinding::GetGroupColor
+OK	netmessages	IProtobufBinding::GetName
+OK	netmessages	IProtobufBinding::GetSize
+OK	netmessages	IProtobufBinding::OkToRedispatch
+OK	netmessages	IProtobufBinding::ToString
+OK	netmessages	IProtobufBinding::descriptor (generated header)
+OK	netmessages	LoggingChannel_t::m_Name (read)
+OK	netmessages	LoggingChannel_t::m_bLastLineComplete vs LoggingSystem_GetLastChannelLineComplete
+OK	netmessages	LoggingSystem_GetChannel (tier0)
+OK	netserver	CNetworkGameServerBase -> IConVarListener (base adjustment)
+OK	netserver	CNetworkGameServerBase::GetHostName
+OK	netserver	CNetworkGameServerBase::GetNetStats
+OK	netserver	CNetworkGameServerBase::GetPassword
+OK	netserver	CNetworkGameServerBase::GetPlayerNetworkIDString
+OK	netserver	CNetworkGameServerBase::GetPlayerUserId
+OK	netserver	CNetworkGameServerBase::GetUDPPort
+OK	netserver	CNetworkGameServerBase::GetUDPPort vs netadr_t::GetPort
+OK	netserver	CNetworkGameServerBase::IsHLTV
+OK	netserver	CNetworkGameServerBase::IsPausable
+OK	netserver	GameSessionConfiguration_t::m_pKeyValues
+OK	netserver	IAppSystem::GetBuildType
+OK	netserver	IAppSystem::GetDependencies
+OK	netserver	IAppSystem::GetTier
+OK	netserver	IAppSystem::IsSingleton
+OK	netserver	IAppSystem::QueryInterface
+OK	netserver	IEngineService::GetName
+OK	netserver	IEngineService::GetServiceDependencies
+OK	netserver	IEngineService::GetServiceIndex
+OK	netserver	IEngineService::IsActive
+OK	netserver	IEngineService::ShouldActivate
+OK	netserver	IEngineServiceMgr::FindService (round trip through GetName)
+OK	netserver	INetworkGameServer::FindSpawnGroupByName
+OK	netserver	INetworkGameServer::GetAddonName
+OK	netserver	INetworkGameServer::GetAllLoadingSpawnGroups
+OK	netserver	INetworkGameServer::GetAverageFrameTime
+OK	netserver	INetworkGameServer::GetClientConnectionType
+OK	netserver	INetworkGameServer::GetClientSignonState
+OK	netserver	INetworkGameServer::GetGameServerSteamID
+OK	netserver	INetworkGameServer::GetGameSessionConfig
+OK	netserver	INetworkGameServer::GetGlobals
+OK	netserver	INetworkGameServer::GetMapName
+OK	netserver	INetworkGameServer::GetMaxClients
+OK	netserver	INetworkGameServer::GetServerNetworkAddress
+OK	netserver	INetworkGameServer::GetServerState
+OK	netserver	INetworkGameServer::GetServerTick
+OK	netserver	INetworkGameServer::GetSpawnGroupLoadingStatus
+OK	netserver	INetworkGameServer::GetTime
+OK	netserver	INetworkGameServer::GetTimescale
+OK	netserver	INetworkGameServer::HasPendingServerGameFrameJob
+OK	netserver	INetworkGameServer::IsActive
+OK	netserver	INetworkGameServer::IsBackgroundMap
+OK	netserver	INetworkGameServer::IsChangelevelPending
+OK	netserver	INetworkGameServer::IsMultiplayer
+OK	netserver	INetworkGameServer::IsPaused
+OK	netserver	INetworkGameServer::IsPlayingSoloAgainstBots
+OK	netserver	INetworkGameServer::IsRecordingDemo
+OK	netserver	INetworkGameServer::IsReserved
+OK	netserver	INetworkServerService::GameLoadFailed
+OK	netserver	INetworkServerService::GetEntityReport
+OK	netserver	INetworkServerService::GetGameSpawnGroupMgr
+OK	netserver	INetworkServerService::GetIGameServer
+OK	netserver	INetworkServerService::GetServerNetworkAddress
+OK	netserver	INetworkServerService::GetServerSerializersCRC
+OK	netserver	INetworkServerService::GetServerSerializersMsg
+OK	netserver	INetworkServerService::IsActiveInGame
+OK	netserver	INetworkServerService::IsChangelevelPending
+OK	netserver	INetworkServerService::IsEntityReportActive
+OK	netserver	INetworkServerService::IsMultiplayer
+OK	netserver	INetworkServerService::IsServerRunning
+OK	netserver	INetworkServerService::ThreadInPrimaryOrSecondaryMainThread
+OK	netserver	INetworkServerService::unk101
+OK	netserver	INetworkServerService::unk102
+OK	netserver	IVEngineServer2::GetServerGlobals (for the cross-checks)
+OK	netserver	netadr_t::<hexdump past end>
+OK	netserver	netadr_t::<hexdump>
+OK	netserver	netadr_t::Clear (on a copy)
+OK	netserver	netadr_t::Clear / SetType / SetIP(b1..b4) / SetPort (build the local set)
+OK	netserver	netadr_t::CompareAdr (against itself)
+OK	netserver	netadr_t::CompareAdr (onlyBase against a port-only difference)
+OK	netserver	netadr_t::CompareClassBAdr / CompareClassCAdr
+OK	netserver	netadr_t::GetIPHostByteOrder / GetIPNetworkByteOrder vs ip[4]
+OK	netserver	netadr_t::GetPort vs the port field
+OK	netserver	netadr_t::GetType vs the type field
+OK	netserver	netadr_t::IsBaseAdrValid (the SDK states: ip != 0)
+OK	netserver	netadr_t::IsLoopback / IsLocalhost / IsReservedAdr
+OK	netserver	netadr_t::IsValid (the SDK states: ip & port != 0)
+OK	netserver	netadr_t::SetFromString (literal address, no DNS)
+OK	netserver	netadr_t::SetIP(uint) / SetIPAndPort
+OK	netserver	netadr_t::ToString (both overloads)
+OK	netserver	netadr_t::ip
+OK	netserver	netadr_t::operator< (against itself)
+OK	netserver	netadr_t::operator< (two distinct addresses)
+OK	netserver	netadr_t::operator== (against itself)
+OK	netserver	netadr_t::port
+OK	netserver	netadr_t::type
+OK	schema	CSchemaSystem (container counts)
+OK	schema	CSchemaSystem (registration counters)
+OK	schema	CSchemaSystem::m_BindingsAddressRanges
+OK	schema	CSchemaSystem::m_DetectedSchemaMismatches
+OK	schema	CSchemaSystem::m_LoadedModules
+OK	schema	CSchemaSystem::m_ResourceManifestDescs
+OK	schema	CSchemaSystem::m_TypeScopes
+OK	schema	CSchemaSystem::m_TypeScopes.GetNumStrings
+OK	schema	CSchemaSystem::m_bDefaultTypeScopeIsLocal
+OK	schema	CSchemaSystem::m_bDefaultTypeScopeIsLocal vs DefaultTypeScopeIsLocal()
+OK	schema	CSchemaSystem::m_bSchemaSystemIsReady
+OK	schema	CSchemaSystem::m_bSchemaSystemIsReady vs SchemaSystemIsReady()
+OK	schema	CSchemaSystem::m_nIgnored
+OK	schema	CSchemaSystem::m_nIgnoredBytes
+OK	schema	CSchemaSystem::m_nNumConnections
+OK	schema	CSchemaSystem::m_nRedundant
+OK	schema	CSchemaSystem::m_nRegistrations
+OK	schema	CSchemaSystemTypeScope (probe classes resolved)
+OK	schema	CSchemaSystemTypeScope::FindDeclaredClass("CBaseEntity")
+OK	schema	CSchemaSystemTypeScope::FindDeclaredClass("CBaseModelEntity")
+OK	schema	CSchemaSystemTypeScope::FindDeclaredClass("CBasePlayerController")
+OK	schema	CSchemaSystemTypeScope::FindDeclaredClass("CCSPlayerController")
+OK	schema	CSchemaSystemTypeScope::FindDeclaredClass("CCSPlayerPawn")
+OK	schema	CSchemaSystemTypeScope::FindDeclaredEnum("MoveCollide_t")
+OK	schema	CSchemaSystemTypeScope::FindDeclaredEnum("MoveType_t")
+OK	schema	CSchemaSystemTypeScope::FindDeclaredEnum("SolidType_t")
+OK	schema	CSchemaSystemTypeScope::FindDeclaredEnum("gear_slot_t")
+OK	schema	CSchemaSystemTypeScope::FindRawClassBinding(name)
+OK	schema	CSchemaSystemTypeScope::FindRawEnumBinding(name)
+OK	schema	CSchemaSystemTypeScope::FindType_Atomic_CollectionOfT (key from m_AtomicsCollectionOfT)
+OK	schema	CSchemaSystemTypeScope::FindType_Atomic_I (key from m_AtomicsI)
+OK	schema	CSchemaSystemTypeScope::FindType_Atomic_T (key from m_AtomicsT)
+OK	schema	CSchemaSystemTypeScope::FindType_Atomic_TT (key from m_AtomicsTT)
+OK	schema	CSchemaSystemTypeScope::FindType_DeclaredClass(name)
+OK	schema	CSchemaSystemTypeScope::FindType_DeclaredEnum(name)
+OK	schema	CSchemaSystemTypeScope::GetScopeName
+OK	schema	CSchemaSystemTypeScope::GetScopeName (global scope)
+OK	schema	CSchemaSystemTypeScope::IsGlobalScope
+OK	schema	CSchemaSystemTypeScope::IsGlobalScope (global scope)
+OK	schema	CSchemaSystemTypeScope::ResolveAtomicInfoThreadsafe
+OK	schema	CSchemaSystemTypeScope::ResolveClassInfoThreadsafe
+OK	schema	CSchemaSystemTypeScope::ResolveEnumInfoThreadsafe
+OK	schema	CSchemaSystemTypeScope::Type_Atomic (existing key)
+OK	schema	CSchemaSystemTypeScope::Type_Atomic_CollectionOfT (existing key)
+OK	schema	CSchemaSystemTypeScope::Type_Atomic_I (existing key)
+OK	schema	CSchemaSystemTypeScope::Type_Atomic_T (existing key)
+OK	schema	CSchemaSystemTypeScope::Type_Atomic_TT (existing key)
+OK	schema	CSchemaSystemTypeScope::Type_Bitfield (existing key)
+OK	schema	CSchemaSystemTypeScope::Type_DeclaredClass (existing key)
+OK	schema	CSchemaSystemTypeScope::Type_DeclaredEnum (existing key)
+OK	schema	CSchemaSystemTypeScope::Type_FixedArray (existing key)
+OK	schema	CSchemaSystemTypeScope::Type_Ptr (existing key)
+OK	schema	CSchemaSystemTypeScope::m_AtomicInfos
+OK	schema	CSchemaSystemTypeScope::m_AtomicInfos.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_Atomics
+OK	schema	CSchemaSystemTypeScope::m_Atomics.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_AtomicsCollectionOfT
+OK	schema	CSchemaSystemTypeScope::m_AtomicsCollectionOfT.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_AtomicsI
+OK	schema	CSchemaSystemTypeScope::m_AtomicsI.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_AtomicsT
+OK	schema	CSchemaSystemTypeScope::m_AtomicsT.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_AtomicsTT
+OK	schema	CSchemaSystemTypeScope::m_AtomicsTT.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_Bitfields
+OK	schema	CSchemaSystemTypeScope::m_Bitfields.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_BuiltinTypes[0].vptr
+OK	schema	CSchemaSystemTypeScope::m_ClassBindings
+OK	schema	CSchemaSystemTypeScope::m_ClassBindings.Count
+OK	schema	CSchemaSystemTypeScope::m_ClassBindings.GetElements
+OK	schema	CSchemaSystemTypeScope::m_DeclaredClasses
+OK	schema	CSchemaSystemTypeScope::m_DeclaredClasses (walk)
+OK	schema	CSchemaSystemTypeScope::m_DeclaredClasses.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_DeclaredEnums
+OK	schema	CSchemaSystemTypeScope::m_DeclaredEnums (walk)
+OK	schema	CSchemaSystemTypeScope::m_DeclaredEnums.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_EnumBindings
+OK	schema	CSchemaSystemTypeScope::m_EnumBindings.Count
+OK	schema	CSchemaSystemTypeScope::m_FixedArrays
+OK	schema	CSchemaSystemTypeScope::m_FixedArrays.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_Pointers
+OK	schema	CSchemaSystemTypeScope::m_Pointers.m_Map.Count
+OK	schema	CSchemaSystemTypeScope::m_bBuiltinTypesInitialized
+OK	schema	CSchemaSystemTypeScope::m_bBuiltinTypesInitialized (global)
+OK	schema	CSchemaSystemTypeScope::m_bBuiltinTypesInitialized (module)
+OK	schema	CSchemaSystemTypeScope::m_pGlobalTypeScope
+OK	schema	CSchemaSystemTypeScope::m_pGlobalTypeScope vs GlobalTypeScope()
+OK	schema	CSchemaSystemTypeScope::m_szScopeName vs GetScopeName()
+OK	schema	CSchemaSystemTypeScope::m_szScopeName[0..15]
+OK	schema	CSchemaType[atomic]::<fields>
+OK	schema	CSchemaType[atomic]::CanReinterpretAs(itself)
+OK	schema	CSchemaType[atomic]::DependsOnlyOnUnresolvedOrGlobalTypes
+OK	schema	CSchemaType[atomic]::GetInnerType
+OK	schema	CSchemaType[atomic]::GetInnermostType
+OK	schema	CSchemaType[atomic]::GetSizeAndAlignment
+OK	schema	CSchemaType[atomic]::InternalMatchInnerAs(its own categories)
+OK	schema	CSchemaType[atomic]::IsA(itself)
+OK	schema	CSchemaType[atomic]::IsA<T> / ReinterpretAs<T>
+OK	schema	CSchemaType[atomic]::IsAtomicType
+OK	schema	CSchemaType[atomic]::IsBuiltinType
+OK	schema	CSchemaType[atomic]::IsDeclaredClass
+OK	schema	CSchemaType[atomic]::IsDeclaredEnum
+OK	schema	CSchemaType[atomic]::IsTypeByName(a name it cannot have)
+OK	schema	CSchemaType[atomic]::IsTypeByName(its own name)
+OK	schema	CSchemaType[atomic]::IsTypeByType(itself)
+OK	schema	CSchemaType[atomic]::IsValid
+OK	schema	CSchemaType[atomic]::ToString
+OK	schema	CSchemaType[builtin]::<fields>
+OK	schema	CSchemaType[builtin]::CanReinterpretAs(itself)
+OK	schema	CSchemaType[builtin]::DependsOnlyOnUnresolvedOrGlobalTypes
+OK	schema	CSchemaType[builtin]::GetInnerType
+OK	schema	CSchemaType[builtin]::GetInnermostType
+OK	schema	CSchemaType[builtin]::GetSizeAndAlignment
+OK	schema	CSchemaType[builtin]::InternalMatchInnerAs(its own categories)
+OK	schema	CSchemaType[builtin]::IsA(itself)
+OK	schema	CSchemaType[builtin]::IsA<T> / ReinterpretAs<T>
+OK	schema	CSchemaType[builtin]::IsAtomicType
+OK	schema	CSchemaType[builtin]::IsBuiltinType
+OK	schema	CSchemaType[builtin]::IsDeclaredClass
+OK	schema	CSchemaType[builtin]::IsDeclaredEnum
+OK	schema	CSchemaType[builtin]::IsTypeByName(a name it cannot have)
+OK	schema	CSchemaType[builtin]::IsTypeByName(its own name)
+OK	schema	CSchemaType[builtin]::IsTypeByType(itself)
+OK	schema	CSchemaType[builtin]::IsValid
+OK	schema	CSchemaType[builtin]::ToString
+OK	schema	CSchemaType[class]::<fields>
+OK	schema	CSchemaType[class]::CanReinterpretAs(itself)
+OK	schema	CSchemaType[class]::DependsOnlyOnUnresolvedOrGlobalTypes
+OK	schema	CSchemaType[class]::GetInnerType
+OK	schema	CSchemaType[class]::GetInnermostType
+OK	schema	CSchemaType[class]::GetSizeAndAlignment
+OK	schema	CSchemaType[class]::InternalMatchInnerAs(its own categories)
+OK	schema	CSchemaType[class]::IsA(itself)
+OK	schema	CSchemaType[class]::IsA<T> / ReinterpretAs<T>
+OK	schema	CSchemaType[class]::IsAtomicType
+OK	schema	CSchemaType[class]::IsBuiltinType
+OK	schema	CSchemaType[class]::IsDeclaredClass
+OK	schema	CSchemaType[class]::IsDeclaredEnum
+OK	schema	CSchemaType[class]::IsTypeByName(a name it cannot have)
+OK	schema	CSchemaType[class]::IsTypeByName(its own name)
+OK	schema	CSchemaType[class]::IsTypeByType(itself)
+OK	schema	CSchemaType[class]::IsValid
+OK	schema	CSchemaType[class]::ToString
+OK	schema	CSchemaType[enum]::<fields>
+OK	schema	CSchemaType[enum]::CanReinterpretAs(itself)
+OK	schema	CSchemaType[enum]::DependsOnlyOnUnresolvedOrGlobalTypes
+OK	schema	CSchemaType[enum]::GetInnerType
+OK	schema	CSchemaType[enum]::GetInnermostType
+OK	schema	CSchemaType[enum]::GetSizeAndAlignment
+OK	schema	CSchemaType[enum]::InternalMatchInnerAs(its own categories)
+OK	schema	CSchemaType[enum]::IsA(itself)
+OK	schema	CSchemaType[enum]::IsA<T> / ReinterpretAs<T>
+OK	schema	CSchemaType[enum]::IsAtomicType
+OK	schema	CSchemaType[enum]::IsBuiltinType
+OK	schema	CSchemaType[enum]::IsDeclaredClass
+OK	schema	CSchemaType[enum]::IsDeclaredEnum
+OK	schema	CSchemaType[enum]::IsTypeByName(a name it cannot have)
+OK	schema	CSchemaType[enum]::IsTypeByName(its own name)
+OK	schema	CSchemaType[enum]::IsTypeByType(itself)
+OK	schema	CSchemaType[enum]::IsValid
+OK	schema	CSchemaType[enum]::ToString
+OK	schema	CSchemaType[pointer]::<fields>
+OK	schema	CSchemaType[pointer]::CanReinterpretAs(itself)
+OK	schema	CSchemaType[pointer]::DependsOnlyOnUnresolvedOrGlobalTypes
+OK	schema	CSchemaType[pointer]::GetInnerType
+OK	schema	CSchemaType[pointer]::GetInnermostType
+OK	schema	CSchemaType[pointer]::GetSizeAndAlignment
+OK	schema	CSchemaType[pointer]::InternalMatchInnerAs(its own categories)
+OK	schema	CSchemaType[pointer]::IsA(itself)
+OK	schema	CSchemaType[pointer]::IsA<T> / ReinterpretAs<T>
+OK	schema	CSchemaType[pointer]::IsAtomicType
+OK	schema	CSchemaType[pointer]::IsBuiltinType
+OK	schema	CSchemaType[pointer]::IsDeclaredClass
+OK	schema	CSchemaType[pointer]::IsDeclaredEnum
+OK	schema	CSchemaType[pointer]::IsTypeByName(a name it cannot have)
+OK	schema	CSchemaType[pointer]::IsTypeByName(its own name)
+OK	schema	CSchemaType[pointer]::IsTypeByType(itself)
+OK	schema	CSchemaType[pointer]::IsValid
+OK	schema	CSchemaType[pointer]::ToString
+OK	schema	CSchemaType_Atomic (fields of a live atomic type)
+OK	schema	IAppSystem::GetBuildType
+OK	schema	IAppSystem::GetDependencies
+OK	schema	IAppSystem::GetTier
+OK	schema	IAppSystem::IsSingleton
+OK	schema	IAppSystem::QueryInterface
+OK	schema	ISchemaSystem::DefaultTypeScopeIsLocal
+OK	schema	ISchemaSystem::FindClassByScopedName
+OK	schema	ISchemaSystem::FindClassesByMeta("MNetworkEnable")
+OK	schema	ISchemaSystem::FindClassesByMeta("MNetworkVarNames")
+OK	schema	ISchemaSystem::FindDescendentsOfClass
+OK	schema	ISchemaSystem::FindOrCreateTypeScopeForModule
+OK	schema	ISchemaSystem::FindTypeScopeForModule (binding-name out param)
+OK	schema	ISchemaSystem::GetClassModuleName
+OK	schema	ISchemaSystem::GetClassProjectName
+OK	schema	ISchemaSystem::GetEnumModuleName
+OK	schema	ISchemaSystem::GetEnumProjectName
+OK	schema	ISchemaSystem::GetTypeScopeForBinding(DEFAULT)
+OK	schema	ISchemaSystem::GetTypeScopeForBinding(GLOBAL)
+OK	schema	ISchemaSystem::GetTypeScopeForBinding(MODULE_LOCAL)
+OK	schema	ISchemaSystem::GlobalTypeScope
+OK	schema	ISchemaSystem::PrintSchemaMetaStats
+OK	schema	ISchemaSystem::PrintSchemaStats
+OK	schema	ISchemaSystem::SchemaSystemIsReady
+OK	schema	ISchemaSystem::ScopedNameForClass
+OK	schema	ISchemaSystem::ScopedNameForClass -> FindClassByScopedName
+OK	schema	ISchemaSystem::ScopedNameForEnum
+OK	schema	ISchemaSystem::ScopedNameForEnum -> FindEnumByScopedName
+OK	schema	SchemaAtomicTypeInfo_t (fields)
+OK	schema	SchemaAtomicTypeInfo_t::m_nAtomicID
+OK	schema	SchemaAtomicTypeInfo_t::m_nStaticMetadataCount
+OK	schema	SchemaAtomicTypeInfo_t::m_pStaticMetadata
+OK	schema	SchemaAtomicTypeInfo_t::m_pszName
+OK	schema	SchemaAtomicTypeInfo_t::m_pszTokenName
+OK	schema	SchemaBaseClassInfoData_t[0]
+OK	schema	SchemaBaseClassInfoData_t[0]::m_nOffset
+OK	schema	SchemaBaseClassInfoData_t[0]::m_pClass
+OK	schema	SchemaClassFieldData_t (all offsets in range)
+OK	schema	SchemaClassFieldData_t (harvest one type per category)
+OK	schema	SchemaClassFieldData_t[0]
+OK	schema	SchemaClassFieldData_t[0]::<hexdump past end>
+OK	schema	SchemaClassFieldData_t[0]::<hexdump>
+OK	schema	SchemaClassFieldData_t[0]::m_nNumMetadata
+OK	schema	SchemaClassFieldData_t[0]::m_nSingleInheritanceOffset
+OK	schema	SchemaClassFieldData_t[0]::m_pMetadata
+OK	schema	SchemaClassFieldData_t[0]::m_pName
+OK	schema	SchemaClassFieldData_t[0]::m_pType
+OK	schema	SchemaClassFieldData_t[1]
+OK	schema	SchemaClassFieldData_t[2]
+OK	schema	SchemaClassFieldData_t[3]
+OK	schema	SchemaClassFieldData_t[4]
+OK	schema	SchemaClassFieldData_t[5]
+OK	schema	SchemaClassFieldData_t[6]
+OK	schema	SchemaClassFieldData_t[7]
+OK	schema	SchemaClassInfoData_t (size / alignment / counts)
+OK	schema	SchemaClassInfoData_t::<hexdump past end>
+OK	schema	SchemaClassInfoData_t::<hexdump>
+OK	schema	SchemaClassInfoData_t::m_nClassFlags1
+OK	schema	SchemaClassInfoData_t::m_nClassFlags1 (declared bits only)
+OK	schema	SchemaClassInfoData_t::m_nClassFlags2
+OK	schema	SchemaClassInfoData_t::m_nSizeOf
+OK	schema	SchemaClassInfoData_t::m_pBaseClasses
+OK	schema	SchemaClassInfoData_t::m_pBaseClasses (bounds)
+OK	schema	SchemaClassInfoData_t::m_pClassOpsFn
+OK	schema	SchemaClassInfoData_t::m_pDataDesc
+OK	schema	SchemaClassInfoData_t::m_pFields
+OK	schema	SchemaClassInfoData_t::m_pFields (bounds)
+OK	schema	SchemaClassInfoData_t::m_pMetadata
+OK	schema	SchemaClassInfoData_t::m_pMetadata (bounds)
+OK	schema	SchemaClassInfoData_t::m_pName
+OK	schema	SchemaClassInfoData_t::m_pName vs the name looked up
+OK	schema	SchemaClassInfoData_t::m_pOuterTypeScope
+OK	schema	SchemaClassInfoData_t::m_pOuterTypeScope vs the scope searched
+OK	schema	SchemaClassInfoData_t::m_pPrimaryBinding
+OK	schema	SchemaClassInfoData_t::m_pPrimaryBinding vs itself
+OK	schema	SchemaClassInfoData_t::m_pProjectName
+OK	schema	SchemaClassInfoData_t::m_pTypeOf
+OK	schema	SchemaClassInfoData_t::m_pszCPPName
+OK	schema	SchemaEnumInfoData_t (name / size / range)
+OK	schema	SchemaEnumInfoData_t::<hexdump past end>
+OK	schema	SchemaEnumInfoData_t::<hexdump>
+OK	schema	SchemaEnumInfoData_t::m_nMaxValue
+OK	schema	SchemaEnumInfoData_t::m_nMinValue
+OK	schema	SchemaEnumInfoData_t::m_pEnumerators
+OK	schema	SchemaEnumInfoData_t::m_pEnumerators (bounds)
+OK	schema	SchemaEnumInfoData_t::m_pMetadata
+OK	schema	SchemaEnumInfoData_t::m_pName
+OK	schema	SchemaEnumInfoData_t::m_pOuterTypeScope
+OK	schema	SchemaEnumInfoData_t::m_pPrimaryBinding
+OK	schema	SchemaEnumInfoData_t::m_pPrimaryBinding vs itself
+OK	schema	SchemaEnumInfoData_t::m_pProjectName
+OK	schema	SchemaEnumeratorInfoData_t vs m_nMin/MaxEnumeratorValue
+OK	schema	SchemaEnumeratorInfoData_t[0]
+OK	schema	SchemaEnumeratorInfoData_t[0]::<hexdump past end>
+OK	schema	SchemaEnumeratorInfoData_t[0]::<hexdump>
+OK	schema	SchemaEnumeratorInfoData_t[0]::m_nNumMetadata
+OK	schema	SchemaEnumeratorInfoData_t[0]::m_nValue
+OK	schema	SchemaEnumeratorInfoData_t[0]::m_pMetadata
+OK	schema	SchemaEnumeratorInfoData_t[0]::m_pName
+OK	schema	SchemaEnumeratorInfoData_t[1]
+OK	schema	SchemaEnumeratorInfoData_t[2]
+OK	schema	SchemaEnumeratorInfoData_t[3]
+OK	schema	SchemaEnumeratorInfoData_t[4]
+OK	schema	SchemaEnumeratorInfoData_t[5]
+OK	schema	SchemaEnumeratorInfoData_t[6]
+OK	schema	SchemaEnumeratorInfoData_t[7]
+OK	schema	builtin int32 (kept for the CSchemaType sweep)
+OK	schema	builtin[0] invalid
+OK	schema	builtin[10] uint64
+OK	schema	builtin[11] float32
+OK	schema	builtin[12] float64
+OK	schema	builtin[13] bool
+OK	schema	builtin[1] void
+OK	schema	builtin[2] char
+OK	schema	builtin[3] int8
+OK	schema	builtin[4] uint8
+OK	schema	builtin[5] int16
+OK	schema	builtin[6] uint16
+OK	schema	builtin[7] int32
+OK	schema	builtin[8] uint32
+OK	schema	builtin[9] int64
+OK	schema	m_TypeScopes[0]
+OK	schema	m_TypeScopes[10]
+OK	schema	m_TypeScopes[11]
+OK	schema	m_TypeScopes[12]
+OK	schema	m_TypeScopes[13]
+OK	schema	m_TypeScopes[14]
+OK	schema	m_TypeScopes[15]
+OK	schema	m_TypeScopes[16]
+OK	schema	m_TypeScopes[1]
+OK	schema	m_TypeScopes[2]
+OK	schema	m_TypeScopes[3]
+OK	schema	m_TypeScopes[4]
+OK	schema	m_TypeScopes[5]
+OK	schema	m_TypeScopes[6]
+OK	schema	m_TypeScopes[7]
+OK	schema	m_TypeScopes[8]
+OK	schema	m_TypeScopes[9]
+OK	server	IAppSystem::GetBuildType
+OK	server	IAppSystem::GetDependencies
+OK	server	IAppSystem::GetTier
+OK	server	IAppSystem::IsSingleton
+OK	server	IAppSystem::QueryInterface
+OK	server	ISource2Server::ClientConnectionValidatePreNetChan
+OK	server	ISource2Server::FilterPlayerCounts
+OK	server	ISource2Server::GetActiveWorldName
+OK	server	ISource2Server::GetAddonForMap
+OK	server	ISource2Server::GetAllServerClasses
+OK	server	ISource2Server::GetAllSubclassNames
+OK	server	ISource2Server::GetAnimationActivityList
+OK	server	ISource2Server::GetAnimationEventList
+OK	server	ISource2Server::GetBugReportAttachment
+OK	server	ISource2Server::GetClientConnectRejectReason
+OK	server	ISource2Server::GetDebugOverlays
+OK	server	ISource2Server::GetDesignerNamesForClass
+OK	server	ISource2Server::GetEconItemSystem
+OK	server	ISource2Server::GetEntity2Networkable
+OK	server	ISource2Server::GetEntity2Networkables
+OK	server	ISource2Server::GetEntityUniqueHammerID
+OK	server	ISource2Server::GetHitGroupInfo
+OK	server	ISource2Server::GetMatchID
+OK	server	ISource2Server::GetMatchmakingGameData
+OK	server	ISource2Server::GetMatchmakingTags
+OK	server	ISource2Server::GetNativeClassForScriptClass
+OK	server	ISource2Server::GetRequiredAddonsFromSaveFile
+OK	server	ISource2Server::GetScriptClassForDesignerName
+OK	server	ISource2Server::GetServerGCLobby
+OK	server	ISource2Server::GetServerGameDLLFlags
+OK	server	ISource2Server::GetSteamGroupAccountID
+OK	server	ISource2Server::GetSubclassDesignerName
+OK	server	ISource2Server::GetSubclassNamesInScope
+OK	server	ISource2Server::GetSubclassNamesInScopeByDataType
+OK	server	ISource2Server::GetToolGameSimulationAPI
+OK	server	ISource2Server::GetVDataClassName
+OK	server	ISource2Server::GetVDataClassNameByDataType
+OK	server	ISource2Server::HasPendingSaveRequest
+OK	server	ISource2Server::IsAsyncSaveInProgress
+OK	server	ISource2Server::IsPaused
+OK	server	ISource2Server::IsScriptClassDerivedFrom
+OK	server	ISource2Server::IsValveDS
+OK	server	ISource2Server::LogForHTTPListeners
+OK	server	ISource2Server::OnSteamAuthWarning
+OK	server	ISource2Server::PrintStatus
+OK	server	ISource2Server::ProcessPendingSaveRequest
+OK	server	ISource2Server::SaveGame_CalcFileName
+OK	server	ISource2Server::ServerConVarChanged
+OK	server	ISource2Server::ShouldHideFromMasterServer
+OK	server	ISource2Server::ShouldHoldGameServerReservation
+OK	server	ISource2Server::ShouldTimeoutClient
+OK	server	ISource2Server::unk_301
+OK	server	ISource2Server::unk_302
+OK	server	ISource2Server::unk_303
+OK	server	ISource2Server::unk_304
+OK	serverconfig	IAppSystem::GetBuildType
+OK	serverconfig	IAppSystem::GetDependencies
+OK	serverconfig	IAppSystem::GetTier
+OK	serverconfig	IAppSystem::IsSingleton
+OK	serverconfig	IAppSystem::QueryInterface
+OK	serverconfig	IAppSystem::QueryInterface (unknown name)
+OK	serverconfig	ISource2ServerConfig::AllowDedicatedServers
+OK	serverconfig	ISource2ServerConfig::AllowDedicatedServers [k_EUniverseBeta]
+OK	serverconfig	ISource2ServerConfig::AllowDedicatedServers [k_EUniverseDev]
+OK	serverconfig	ISource2ServerConfig::AllowDedicatedServers [k_EUniverseInternal]
+OK	serverconfig	ISource2ServerConfig::AllowSaveRestore
+OK	serverconfig	ISource2ServerConfig::GetCommandQueueDilationPercentage [slot 24, float]
+OK	serverconfig	ISource2ServerConfig::GetConVarPrefixesToResetToDefaults
+OK	serverconfig	ISource2ServerConfig::GetGameDescription
+OK	serverconfig	ISource2ServerConfig::GetHostStateLoopModeInfo [GAME]
+OK	serverconfig	ISource2ServerConfig::GetHostStateLoopModeInfo [IDLE]
+OK	serverconfig	ISource2ServerConfig::GetHostStateLoopModeInfo [SOURCETV_RELAY]
+OK	serverconfig	ISource2ServerConfig::GetMaxHumanPlayers
+OK	serverconfig	ISource2ServerConfig::GetMaxSplitscreenPlayers
+OK	serverconfig	ISource2ServerConfig::GetNetworkVersion
+OK	serverconfig	ISource2ServerConfig::GetPlayerLimits
+OK	serverconfig	ISource2ServerConfig::InitGameEvents [slot 28, bool]
+OK	serverconfig	ISource2ServerConfig::IsCommandQueueEnabled [slot 23, bool]
+OK	serverconfig	ISource2ServerConfig::ShouldAllocateNewClients [slot 26, bool]
+OK	serverconfig	ISource2ServerConfig::ShouldMapCommandChangeLevel [slot 25, bool]
+OK	serverconfig	ISource2ServerConfig::ShouldNotifyLocalClientConnectionStateChanges
+OK	serverconfig	ISource2ServerConfig::Uses64TickInterval [slot 27, bool]
+OK	serverconfig	ISource2ServerConfig::unk101 [slot 22, bool]
+SKIP	clients	IAppSystem::Connect
+SKIP	clients	IAppSystem::Disconnect
+SKIP	clients	IAppSystem::Init
+SKIP	clients	IAppSystem::PreShutdown
+SKIP	clients	IAppSystem::Reconnect
+SKIP	clients	IAppSystem::Shutdown
+SKIP	clients	ISource2GameClients::<empty-slot calls>
+SKIP	clients	ISource2GameClients::ClientActive
+SKIP	clients	ISource2GameClients::ClientCommandKeyValues
+SKIP	clients	ISource2GameClients::ClientConnect
+SKIP	clients	ISource2GameClients::ClientFullyConnect
+SKIP	clients	ISource2GameClients::ClientFullyConnect (engine side)
+SKIP	clients	ISource2GameClients::ClientPutInServer
+SKIP	clients	ISource2GameClients::HLTVClientFullyConnect
+SKIP	clients	ISource2GameClients::OnClientConnected
+SKIP	clients	ISource2GameClients::SendHLTVStatusMessage
+SKIP	clients	ISource2GameClients::StartHLTVServer
+SKIP	convar	ConVarData::Construct
+SKIP	convar	ConVarData::Destruct
+SKIP	convar	ConVarData::Invalidate
+SKIP	convar	ConVarRefAbstract::SetAs<CUtlString>
+SKIP	convar	ConVarRefAbstract::SetOrQueueValueInternal (from inside a callback)
+SKIP	convar	ConVarRefAbstract::SetString (EConVarType_String convars)
+SKIP	convar	IAppSystem::Connect
+SKIP	convar	IAppSystem::Disconnect
+SKIP	convar	IAppSystem::Init
+SKIP	convar	IAppSystem::PreShutdown
+SKIP	convar	IAppSystem::Reconnect
+SKIP	convar	IAppSystem::Shutdown
+SKIP	convar	ICvar::DispatchConCommand (invalid ConCommandRef)
+SKIP	convar	ICvar::SetConVarsFromGameInfo
+SKIP	convar	ICvar::StripDevelopmentFlags
+SKIP	engine	IAppSystem::Connect
+SKIP	engine	IAppSystem::Disconnect
+SKIP	engine	IAppSystem::Init
+SKIP	engine	IAppSystem::PreShutdown
+SKIP	engine	IAppSystem::Reconnect
+SKIP	engine	IAppSystem::Shutdown
+SKIP	engine	ISource2Engine::FindOrCreateWorldSession
+SKIP	engine	ISource2Engine::GetEntityLumpForTemplate
+SKIP	engine	ISource2Engine::UnknownFunc1
+SKIP	engine	ISource2Engine::UnknownFunc2
+SKIP	engine	IVEngineServer2::<empty-slot mutators>
+SKIP	engine	IVEngineServer2::BanClient
+SKIP	engine	IVEngineServer2::BroadcastEvent
+SKIP	engine	IVEngineServer2::ChangeLevel
+SKIP	engine	IVEngineServer2::ClientCommandKeyValues
+SKIP	engine	IVEngineServer2::CreateClient
+SKIP	engine	IVEngineServer2::CreateFakeClient
+SKIP	engine	IVEngineServer2::DisconnectAllClients
+SKIP	engine	IVEngineServer2::DumpNetStats
+SKIP	engine	IVEngineServer2::LoadSpawnGroup
+SKIP	engine	IVEngineServer2::MakeSpawnGroupActive
+SKIP	engine	IVEngineServer2::RecordDemo
+SKIP	engine	IVEngineServer2::SetFakeClientConVarValue
+SKIP	engine	IVEngineServer2::SetSpawnGroupDescription
+SKIP	engine	IVEngineServer2::ShowFrameTimeReport
+SKIP	engine	IVEngineServer2::StartAutoRecording
+SKIP	engine	IVEngineServer2::StopRecordingDemo
+SKIP	engine	IVEngineServer2::SynchronizeAndBlockUntilLoaded
+SKIP	engine	IVEngineServer2::SynchronouslySpawnGroup
+SKIP	engine	IVEngineServer2::UnloadSpawnGroup
+SKIP	engine	IVEngineServer2::unk101
+SKIP	entity	CEntityInstance::Activate
+SKIP	entity	CEntityInstance::AddChangeAccessorPath
+SKIP	entity	CEntityInstance::AddedToEntityDatabase
+SKIP	entity	CEntityInstance::AssignChangeAccessorPathIds
+SKIP	entity	CEntityInstance::Connect
+SKIP	entity	CEntityInstance::Disconnect
+SKIP	entity	CEntityInstance::DispatchPostDataUpdate
+SKIP	entity	CEntityInstance::DrawDebugTextOverlays
+SKIP	entity	CEntityInstance::DrawEntityDebugOverlays
+SKIP	entity	CEntityInstance::GetFieldPathChildIndices
+SKIP	entity	CEntityInstance::KV3TransferLoad
+SKIP	entity	CEntityInstance::KV3TransferSave
+SKIP	entity	CEntityInstance::NetworkStateChanged
+SKIP	entity	CEntityInstance::NetworkStateChangedBranch
+SKIP	entity	CEntityInstance::NetworkStateChangedRemove
+SKIP	entity	CEntityInstance::NetworkUpdateState
+SKIP	entity	CEntityInstance::OnDataUnchangedInPVS
+SKIP	entity	CEntityInstance::OnRestore
+SKIP	entity	CEntityInstance::OnSave
+SKIP	entity	CEntityInstance::OnSetDormant
+SKIP	entity	CEntityInstance::PostDataUpdate
+SKIP	entity	CEntityInstance::PreDataUpdate
+SKIP	entity	CEntityInstance::Precache
+SKIP	entity	CEntityInstance::Pulse_OnDynamicAttributeChanged
+SKIP	entity	CEntityInstance::ReloadPrivateScripts
+SKIP	entity	CEntityInstance::Restore
+SKIP	entity	CEntityInstance::Save
+SKIP	entity	CEntityInstance::ScriptAcceptInput
+SKIP	entity	CEntityInstance::ScriptEntityIO
+SKIP	entity	CEntityInstance::Spawn
+SKIP	entity	CEntityInstance::UpdateOnRemove
+SKIP	entity	CEntityInstance::~CEntityInstance
+SKIP	entity	CEntitySystem::Activate
+SKIP	entity	CEntitySystem::ClearEntityDatabase
+SKIP	entity	CEntitySystem::OnAddEntity
+SKIP	entity	CEntitySystem::OnEntityParentChanged
+SKIP	entity	CEntitySystem::OnRemoveEntity
+SKIP	entity	CEntitySystem::OnSetDormant
+SKIP	entity	CEntitySystem::PostDataUpdate
+SKIP	entity	CEntitySystem::ReleaseEntityKeyValuesAllocatorRef
+SKIP	entity	CEntitySystem::SortEntities
+SKIP	entity	CEntitySystem::Spawn
+SKIP	entity	CEntitySystem::UpdateOnRemove
+SKIP	entity	CEntitySystem::~CEntitySystem
+SKIP	entity	CGameEntitySystem::AddListenerEntity
+SKIP	entity	CGameEntitySystem::RemoveListenerEntity
+SKIP	entity	CGameEntitySystem::~CGameEntitySystem
+SKIP	entity	IEntityResourceManifestBuilder::AddRefKeyValues
+SKIP	entity	IEntityResourceManifestBuilder::BuildResourceManifest(callback)
+SKIP	entity	IEntityResourceManifestBuilder::BuildResourceManifest(manifest or group name)
+SKIP	entity	IEntityResourceManifestBuilder::BuildResourceManifest(spawn group, CEntityKeyValues[])
+SKIP	entity	IEntityResourceManifestBuilder::BuildResourceManifest(spawn group, EntitySpawnInfo_t[])
+SKIP	entity	IEntityResourceManifestBuilder::BuildResourceManifest(spawn group, keyvalues vector, filter)
+SKIP	entity	IEntityResourceManifestBuilder::BuildResourceManifestForEntity
+SKIP	entity	IEntityResourceManifestBuilder::InvokePrecacheCallback
+SKIP	entity	IEntityResourceManifestBuilder::LockResourceManifest
+SKIP	entity	IEntityResourceManifestBuilder::ReleaseKeyValues
+SKIP	entity	IGameResourceService::Connect
+SKIP	entity	IGameResourceService::Disconnect
+SKIP	entity	IGameResourceService::Init
+SKIP	entity	IGameResourceService::PreShutdown
+SKIP	entity	IGameResourceService::Reconnect
+SKIP	entity	IGameResourceService::Shutdown
+SKIP	event	IAppSystem::Connect
+SKIP	event	IAppSystem::Disconnect
+SKIP	event	IAppSystem::Init
+SKIP	event	IAppSystem::PreShutdown
+SKIP	event	IAppSystem::Reconnect
+SKIP	event	IAppSystem::Shutdown
+SKIP	event	IGameEventSystem::PostEntityEventAbstract
+SKIP	event	IGameEventSystem::PostEventAbstract [clients]
+SKIP	event	IGameEventSystem::PostEventAbstract [filter]
+SKIP	event	IGameEventSystem::PostEventAbstract_Local
+SKIP	event	IGameEventSystem::ProcessQueuedEvents
+SKIP	event	IGameEventSystem::PurgeQueuedEvents
+SKIP	event	IGameEventSystem::RegisterGameEvent
+SKIP	event	IGameEventSystem::RegisterGameEventHandlerAbstract
+SKIP	event	IGameEventSystem::UnregisterGameEventHandlerAbstract
+SKIP	event	INetworkMessageInternal::AddCategoryMask
+SKIP	event	INetworkMessageInternal::AllocateMessage
+SKIP	event	INetworkMessageInternal::Serialize
+SKIP	event	INetworkMessageInternal::SetMessageId
+SKIP	event	INetworkMessageInternal::SwitchMode
+SKIP	event	INetworkMessageInternal::Unserialize
+SKIP	event	INetworkMessageInternal::~INetworkMessageInternal
+SKIP	event	IProtobufBinding::AllocateMessage
+SKIP	event	IProtobufBinding::ToString
+SKIP	event	IProtobufBinding::unk001
+SKIP	filesystem	IAppSystem::Connect
+SKIP	filesystem	IAppSystem::Disconnect
+SKIP	filesystem	IAppSystem::Init
+SKIP	filesystem	IAppSystem::PreShutdown
+SKIP	filesystem	IAppSystem::Reconnect
+SKIP	filesystem	IAppSystem::Shutdown
+SKIP	filesystem	IFileSystem::AddUGCVPKFile
+SKIP	filesystem	IFileSystem::LoadKeyValues(head,type,filename,pathID)
+SKIP	filesystem	IFileSystem::LoadModule
+SKIP	filesystem	IFileSystem::LoadUGC
+SKIP	filesystem	IFileSystem::MarkContentCorrupt
+SKIP	filesystem	IFileSystem::MarkVPKAsUntrustedAddon
+SKIP	filesystem	IFileSystem::RemoveAllSearchPaths
+SKIP	filesystem	IFileSystem::RemoveUGCVPKFile
+SKIP	filesystem	IFileSystem::SetContentCorruptionReportingEnabled
+SKIP	filesystem	IFileSystem::SetVPKSignatureVerification
+SKIP	filesystem	IFileSystem::SetWarningFunc
+SKIP	filesystem	IFileSystem::SetWarningLevel
+SKIP	filesystem	IFileSystem::UnloadModule
+SKIP	filesystem	IFileSystem::UnloadUGC
+SKIP	filesystem	IFileSystem::UnzipFile
+SKIP	filesystem	IFileSystem::WriteFileAccessLog
+SKIP	gamedata	vtables.GameEventManager
+SKIP	metamod	ISmmAPI::AddListener
+SKIP	metamod	ISmmAPI::ClientConPrintf
+SKIP	metamod	ISmmAPI::ConPrint
+SKIP	metamod	ISmmAPI::ConPrintf
+SKIP	metamod	ISmmAPI::EnableVSPListener
+SKIP	metamod	ISmmAPI::FormatArgs
+SKIP	metamod	ISmmAPI::InterfaceSearch
+SKIP	metamod	ISmmAPI::LogMsg
+SKIP	metamod	ISmmAPI::RegisterConCommand
+SKIP	metamod	ISmmAPI::RegisterConCommandBase
+SKIP	metamod	ISmmAPI::RegisterConVar
+SKIP	metamod	ISmmAPI::UnregisterConCommand
+SKIP	metamod	ISmmAPI::UnregisterConCommandBase
+SKIP	metamod	ISmmAPI::UnregisterConVar
+SKIP	netmessages	CNetMessage::~CNetMessage
+SKIP	netmessages	INetworkMessageInternal::AddCategoryMask
+SKIP	netmessages	INetworkMessageInternal::SetMessageId
+SKIP	netmessages	INetworkMessageInternal::SwitchMode
+SKIP	netmessages	INetworkMessageInternal::~INetworkMessageInternal
+SKIP	netmessages	INetworkMessages::AllowAdditionalMessageRegistration
+SKIP	netmessages	INetworkMessages::AssociateNetMessageGroupIdWithChannelCategory
+SKIP	netmessages	INetworkMessages::AssociateNetMessageWithChannelCategoryAbstract
+SKIP	netmessages	INetworkMessages::FindOrCreateNetMessage (create)
+SKIP	netmessages	INetworkMessages::RegisterFieldChangeCallbackPriority
+SKIP	netmessages	INetworkMessages::RegisterNetworkArrayFieldSerializer
+SKIP	netmessages	INetworkMessages::RegisterNetworkCategory
+SKIP	netmessages	INetworkMessages::RegisterNetworkChangeTagCallback
+SKIP	netmessages	INetworkMessages::RegisterNetworkFieldChangeCallbackInternal
+SKIP	netmessages	INetworkMessages::RegisterNetworkFieldSerializer
+SKIP	netmessages	INetworkMessages::RegisterSchemaTypeOverride
+SKIP	netmessages	INetworkMessages::SetCoordSizeParams
+SKIP	netmessages	INetworkMessages::SetIsForServer
+SKIP	netmessages	INetworkMessages::SetNetworkSerializationContextData
+SKIP	netmessages	INetworkMessages::~INetworkMessages
+SKIP	netmessages	IProtobufBinding::AllocateMessage
+SKIP	netmessages	IProtobufBinding::unk001
+SKIP	netserver	CNetworkGameServerBase::CalculateCPUUsage
+SKIP	netserver	CNetworkGameServerBase::CheckPassword
+SKIP	netserver	CNetworkGameServerBase::ConnectClient
+SKIP	netserver	CNetworkGameServerBase::CreateClient
+SKIP	netserver	CNetworkGameServerBase::CreateNewClient
+SKIP	netserver	CNetworkGameServerBase::FillKV3ServerInfo
+SKIP	netserver	CNetworkGameServerBase::FillServerInfo
+SKIP	netserver	CNetworkGameServerBase::FinishCertificateCheck
+SKIP	netserver	CNetworkGameServerBase::GetChallengeType
+SKIP	netserver	CNetworkGameServerBase::GetClassBaseline
+SKIP	netserver	CNetworkGameServerBase::OnConCommandCreated
+SKIP	netserver	CNetworkGameServerBase::OnConVarCreated
+SKIP	netserver	CNetworkGameServerBase::ProcessConnectionlessPacket
+SKIP	netserver	CNetworkGameServerBase::RemoveClientFromGame
+SKIP	netserver	CNetworkGameServerBase::SetMaxClients
+SKIP	netserver	CNetworkGameServerBase::StartHLTVMaster
+SKIP	netserver	CNetworkGameServerBase::UserInfoChanged
+SKIP	netserver	CNetworkGameServerBase::~CNetworkGameServerBase
+SKIP	netserver	IAppSystem::Connect
+SKIP	netserver	IAppSystem::Disconnect
+SKIP	netserver	IAppSystem::Init
+SKIP	netserver	IAppSystem::PreShutdown
+SKIP	netserver	IAppSystem::Reconnect
+SKIP	netserver	IAppSystem::Shutdown
+SKIP	netserver	IConVarListener::OnConCommandCreated
+SKIP	netserver	IConVarListener::OnConVarCreated
+SKIP	netserver	IConnectionlessPacketHandler::ProcessConnectionlessPacket
+SKIP	netserver	IConnectionlessPacketHandler::~IConnectionlessPacketHandler
+SKIP	netserver	IEngineService::OnLoopActivate
+SKIP	netserver	IEngineService::OnLoopDeactivate
+SKIP	netserver	IEngineService::RegisterEventMap
+SKIP	netserver	IEngineService::SetActive
+SKIP	netserver	IEngineService::SetName
+SKIP	netserver	IEngineService::SetServiceIndex
+SKIP	netserver	INetworkGameServer::ActivateServer
+SKIP	netserver	INetworkGameServer::AddRef
+SKIP	netserver	INetworkGameServer::AsyncUnloadSpawnGroup
+SKIP	netserver	INetworkGameServer::BroadcastEntityVoice
+SKIP	netserver	INetworkGameServer::BroadcastMessage
+SKIP	netserver	INetworkGameServer::BroadcastPrintf
+SKIP	netserver	INetworkGameServer::DirectUpdate
+SKIP	netserver	INetworkGameServer::FinishChangeLevel
+SKIP	netserver	INetworkGameServer::Init
+SKIP	netserver	INetworkGameServer::IsSaveRestoreAllowed
+SKIP	netserver	INetworkGameServer::LoadSpawnGroup
+SKIP	netserver	INetworkGameServer::MakeSpawnGroupActive
+SKIP	netserver	INetworkGameServer::PreWorldUpdate
+SKIP	netserver	INetworkGameServer::PrepareForAssetLoad
+SKIP	netserver	INetworkGameServer::PrepareSendClientUpdatesAsync
+SKIP	netserver	INetworkGameServer::PrepareSendClientUpdatesMainThread
+SKIP	netserver	INetworkGameServer::PreserveSteamID
+SKIP	netserver	INetworkGameServer::PrintSpawnGroupStatus
+SKIP	netserver	INetworkGameServer::RegisterLoadingSpawnGroups
+SKIP	netserver	INetworkGameServer::Release
+SKIP	netserver	INetworkGameServer::ReserveServerForQueuedGame
+SKIP	netserver	INetworkGameServer::ServerAdvanceTick
+SKIP	netserver	INetworkGameServer::ServerBeginSimulate
+SKIP	netserver	INetworkGameServer::ServerEndSimulate
+SKIP	netserver	INetworkGameServer::ServerPollNetworking
+SKIP	netserver	INetworkGameServer::ServerPostSimulate
+SKIP	netserver	INetworkGameServer::ServerProcessNetworking
+SKIP	netserver	INetworkGameServer::ServerSimulate
+SKIP	netserver	INetworkGameServer::SetBroadcastDebugOverlays
+SKIP	netserver	INetworkGameServer::SetGameSessionManifest
+SKIP	netserver	INetworkGameServer::SetGameSpawnGroupMgr
+SKIP	netserver	INetworkGameServer::SetMapName
+SKIP	netserver	INetworkGameServer::SetRecyclePlayerSlot
+SKIP	netserver	INetworkGameServer::SetServerState
+SKIP	netserver	INetworkGameServer::SetServerTick
+SKIP	netserver	INetworkGameServer::SetSpawnGroupDescription
+SKIP	netserver	INetworkGameServer::Shutdown
+SKIP	netserver	INetworkGameServer::SpawnServer
+SKIP	netserver	INetworkGameServer::StartChangeLevel
+SKIP	netserver	INetworkGameServer::SynchronouslySpawnGroup
+SKIP	netserver	INetworkServerService::AddServerPrerequisites
+SKIP	netserver	INetworkServerService::DisconnectGameNow
+SKIP	netserver	INetworkServerService::EnterSyncInterval
+SKIP	netserver	INetworkServerService::ExitSyncInterval
+SKIP	netserver	INetworkServerService::FinishChangeLevel
+SKIP	netserver	INetworkServerService::IsSaveRestoreAllowed
+SKIP	netserver	INetworkServerService::PreserveSteamID
+SKIP	netserver	INetworkServerService::PrintSpawnGroupStatus
+SKIP	netserver	INetworkServerService::SetGameLoadFailed
+SKIP	netserver	INetworkServerService::SetGameLoadStarted
+SKIP	netserver	INetworkServerService::SetGameSpawnGroupMgr
+SKIP	netserver	INetworkServerService::StartChangeLevel
+SKIP	netserver	INetworkServerService::StartupServer
+SKIP	netserver	INetworkServerService::~INetworkServerService
+SKIP	netserver	netadr_t::GetIP
+SKIP	netserver	netadr_t::Serialize
+SKIP	netserver	netadr_t::SetFromSockadr
+SKIP	netserver	netadr_t::SetFromSocket
+SKIP	netserver	netadr_t::ToSockadr
+SKIP	netserver	netadr_t::Unserialize
+SKIP	schema	CSchemaSystemTypeScope::FindType_Atomic
+SKIP	schema	CSchemaSystemTypeScope::InstallSchemaClassBinding
+SKIP	schema	CSchemaSystemTypeScope::InstallSchemaEnumBinding
+SKIP	schema	CSchemaSystemTypeScope::MarkClassAsRequiringGlobalPromotion
+SKIP	schema	CSchemaSystemTypeScope::MarkEnumAsRequiringGlobalPromotion
+SKIP	schema	CSchemaSystemTypeScope::Type_FixedArray_Multidimensional
+SKIP	schema	CSchemaType::SpewDescription
+SKIP	schema	CSchemaType::~CSchemaType
+SKIP	schema	CSchemaType[atomic]::SpewDescription
+SKIP	schema	CSchemaType[builtin]::SpewDescription
+SKIP	schema	CSchemaType[class]::SpewDescription
+SKIP	schema	CSchemaType[enum]::SpewDescription
+SKIP	schema	CSchemaType[pointer]::SpewDescription
+SKIP	schema	IAppSystem::Connect
+SKIP	schema	IAppSystem::Disconnect
+SKIP	schema	IAppSystem::Init
+SKIP	schema	IAppSystem::PreShutdown
+SKIP	schema	IAppSystem::Reconnect
+SKIP	schema	IAppSystem::Shutdown
+SKIP	schema	ISchemaSystem::CompleteModuleRegistration
+SKIP	schema	ISchemaSystem::ConvertOldIntrospectedResourceDataToKV3
+SKIP	schema	ISchemaSystem::LoadSchemaDataForModules
+SKIP	schema	ISchemaSystem::RegisterAtomicType
+SKIP	schema	ISchemaSystem::RegisterAtomics
+SKIP	schema	ISchemaSystem::RegisterClasses
+SKIP	schema	ISchemaSystem::RegisterEnums
+SKIP	schema	ISchemaSystem::ValidateClasses
+SKIP	schema	ISchemaSystem::VerifySchemaBindingConsistency
+SKIP	schema	ISchemaSystem::~ISchemaSystem
+SKIP	schema	SchemaClassInfoData_t::m_pClassOpsFn (call)
+SKIP	schema	SchemaClassInfoData_t::m_pDataDesc (walk)
+SKIP	schema	SchemaMetadataEntryData_t (layout)
+SKIP	schema	SchemaStaticFieldData_t
+SKIP	server	IAppSystem::Connect
+SKIP	server	IAppSystem::Disconnect
+SKIP	server	IAppSystem::Init
+SKIP	server	IAppSystem::PreShutdown
+SKIP	server	IAppSystem::Reconnect
+SKIP	server	IAppSystem::Shutdown
+SKIP	server	ISource2Server::AppendSaveGameResources
+SKIP	server	ISource2Server::AppendTransitionResources
+SKIP	server	ISource2Server::ApplyGameSettings
+SKIP	server	ISource2Server::CaptureUserCommands
+SKIP	server	ISource2Server::ClearSaveDirectory
+SKIP	server	ISource2Server::CreateUserCommandsMessage
+SKIP	server	ISource2Server::FinishAsyncSave
+SKIP	server	ISource2Server::FormatSerializerFieldValue
+SKIP	server	ISource2Server::GameCreateNetworkStringTables
+SKIP	server	ISource2Server::GameFrame
+SKIP	server	ISource2Server::GameServerSteamAPIActivated
+SKIP	server	ISource2Server::GameServerSteamAPIDeactivated
+SKIP	server	ISource2Server::GetLevelsFromSaveFile
+SKIP	server	ISource2Server::GetNavMeshData
+SKIP	server	ISource2Server::GetTaggedConVarList
+SKIP	server	ISource2Server::OnBroadcastRelayRequestSucceeded
+SKIP	server	ISource2Server::OnClientHltvReplayStart
+SKIP	server	ISource2Server::OnClientHltvReplayStop
+SKIP	server	ISource2Server::OnHostNameChanged
+SKIP	server	ISource2Server::OnNetworkGameServerActivated
+SKIP	server	ISource2Server::OnPreMatchInterfaceCommand
+SKIP	server	ISource2Server::PreFatalShutdown
+SKIP	server	ISource2Server::PreSaveGameLoaded
+SKIP	server	ISource2Server::PreWorldUpdate
+SKIP	server	ISource2Server::ProcessClientStringCommand
+SKIP	server	ISource2Server::RegisterClientNetMessageHandlers
+SKIP	server	ISource2Server::RegisterNavListener
+SKIP	server	ISource2Server::ReportGCQueuedMatchStart
+SKIP	server	ISource2Server::SaveGame
+SKIP	server	ISource2Server::SendServerFrameTime
+SKIP	server	ISource2Server::ServerConVarChanged#2
+SKIP	server	ISource2Server::ServerHibernationUpdate
+SKIP	server	ISource2Server::SetGlobals
+SKIP	server	ISource2Server::SetNavMeshData
+SKIP	server	ISource2Server::SetPlayerTeammatePreferredColor
+SKIP	server	ISource2Server::UnregisterNavListener
+SKIP	server	ISource2Server::UpdateCompTeammateColors
+SKIP	server	ISource2Server::UpdateGCInformation
+SKIP	server	ISource2Server::UpdateWhenNotInGame
+SKIP	server	ISource2Server::WriteSignonMessages
+SKIP	server	ISource2Server::WriteStatusJson
+SKIP	server	ISource2Server::unk_101
+SKIP	server	ISource2Server::unk_201
+SKIP	serverconfig	IAppSystem::Connect
+SKIP	serverconfig	IAppSystem::Disconnect
+SKIP	serverconfig	IAppSystem::Init
+SKIP	serverconfig	IAppSystem::PreShutdown
+SKIP	serverconfig	IAppSystem::Reconnect
+SKIP	serverconfig	IAppSystem::Shutdown
+SKIP	serverconfig	ISource2ServerConfig::OnClientFullyConnect

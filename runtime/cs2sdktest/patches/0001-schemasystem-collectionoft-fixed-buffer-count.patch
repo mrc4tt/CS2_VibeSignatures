@@ -1,0 +1,18 @@
+From: mrc4tt <mikkel.linddk@gmail.com>
+Subject: [PATCH] Pass m_nFixedBufferCount to FindType_Atomic_CollectionOfT
+
+mrc4tt/hl2sdk 577483b92 added the fixed buffer count argument.
+---
+diff --git a/src/suites/SchemaSystemSuite.cpp b/src/suites/SchemaSystemSuite.cpp
+index 89be26a..4b2d02a 100644
+--- a/src/suites/SchemaSystemSuite.cpp
++++ b/src/suites/SchemaSystemSuite.cpp
+@@ -1694,7 +1694,7 @@ void SchemaSystemSuite::ExerciseInternLookups(TestContext& context)
+ 		}
+ 		ReportInternHit(context,
+ 			probe_scope_->FindType_Atomic_CollectionOfT(entry->m_nAtomicID,
+-				entry->m_pTemplateType, entry->m_pfnManipulator).Get(), entry);
++				entry->m_pTemplateType, entry->m_nFixedBufferCount, entry->m_pfnManipulator).Get(), entry);
+ 	});
+ 
+ 	CS2ST_CALL(context, "CSchemaSystemTypeScope::Type_Atomic_TT (existing key)", {
