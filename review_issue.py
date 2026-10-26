@@ -259,6 +259,16 @@ def _issues(gamever, platform, state):
             for i in found if i["title"] == title_for(gamever, platform) and "pull_request" not in i]
 
 
+def read_issue(number):
+    """The issue, or None when it no longer exists: deleted on GitHub (410) or gone (404)."""
+    try:
+        return gh_api("GET", f"repos/{{repo}}/issues/{number}")
+    except RuntimeError as error:
+        if re.search(r"HTTP (404|410)", str(error)):
+            return None
+        raise
+
+
 def _remembered_path(gamever, platform):
     return REPO / "manual_todo" / str(gamever) / f"review-issue.{platform}"
 
@@ -269,7 +279,7 @@ def remembered_closed(gamever, platform):
     number = path.read_text(encoding="utf-8").strip() if path.is_file() else ""
     if not number.isdigit():
         return None
-    current = gh_api("GET", f"repos/{{repo}}/issues/{number}") or {}
+    current = read_issue(number) or {}
     return {"number": int(number)} if current.get("state") == "closed" else None
 
 
@@ -289,11 +299,13 @@ def find_issue(gamever, platform):
     path = _remembered_path(gamever, platform)
     if path.is_file():
         number = path.read_text(encoding="utf-8").strip()
-        current = gh_api("GET", f"repos/{{repo}}/issues/{number}") if number.isdigit() else None
+        current = read_issue(number) if number.isdigit() else None
+        if number.isdigit() and current is None:
+            path.unlink()   # deleted on GitHub: forget it, the next publish opens a new issue
         if current and current.get("state") == "open" and current.get("title") == title_for(gamever, platform):
             return {"number": int(number), "title": current["title"], "state": "OPEN"}
     for issue in _issues(gamever, platform, "open"):
-        current = gh_api("GET", f"repos/{{repo}}/issues/{issue['number']}") or {}
+        current = read_issue(issue["number"]) or {}
         if current.get("state") == "open":
             return issue
     return None
