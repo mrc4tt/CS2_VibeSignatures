@@ -7188,9 +7188,6 @@ modules:
       - name: find-CSoundSystem_TakeGuid
         expected_output:
           - CSoundSystem_TakeGuid.{platform}.yaml
-      - name: find-CSPlayerController_ScriptIsBot
-        expected_output:
-          - CSPlayerController_ScriptIsBot.{platform}.yaml
       - name: find-CGameEventManager_FireEvent
         expected_output:
           - CGameEventManager_FireEvent.{platform}.yaml
@@ -10719,10 +10716,6 @@ modules:
     symbols:
       - name: CSoundSystem_TakeGuid
         category: vfunc
-      - name: CSPlayerController_ScriptIsBot
-        category: func
-        alias:
-          - CSPlayerController::ScriptIsBot
       - name: CGameEventManager_FireEvent
         category: vfunc
       - name: CCSGameRules_GetViewVectors

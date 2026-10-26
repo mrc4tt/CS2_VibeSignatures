@@ -283,6 +283,13 @@ def remembered_closed(gamever, platform):
     return {"number": int(number)} if current.get("state") == "closed" else None
 
 
+def issue_deleted(gamever, platform):
+    """A person deleted this round's issue on GitHub: they do not want one, so none is reopened
+    until the next game version."""
+    path = _remembered_path(gamever, platform)
+    return path.is_file() and path.read_text(encoding="utf-8").strip() == "deleted"
+
+
 def remember_issue(gamever, platform, number):
     path = _remembered_path(gamever, platform)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -301,7 +308,7 @@ def find_issue(gamever, platform):
         number = path.read_text(encoding="utf-8").strip()
         current = read_issue(number) if number.isdigit() else None
         if number.isdigit() and current is None:
-            path.unlink()   # deleted on GitHub: forget it, the next publish opens a new issue
+            path.write_text("deleted\n", encoding="utf-8")   # see publish()
         if current and current.get("state") == "open" and current.get("title") == title_for(gamever, platform):
             return {"number": int(number), "title": current["title"], "state": "OPEN"}
     for issue in _issues(gamever, platform, "open"):
@@ -338,6 +345,9 @@ def publish(gamever, platform=None, rows=None):
     if issue is None:
         if not rows:
             print(f"[review] nothing to review for {gamever} {platform}")
+            return None
+        if issue_deleted(gamever, platform):
+            print(f"[review] the {platform} issue for {gamever} was deleted on GitHub: no new one this round")
             return None
         ensure_label()
         earlier = remembered_closed(gamever, platform) or previous_issue(gamever, platform)
