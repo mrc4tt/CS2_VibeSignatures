@@ -3,7 +3,7 @@
 rehunt_queue.py - re-run only the tasks a tracker says went stale.
 
 A new game build is not the only reason to re-analyse. The tracker at
-git.miksen.me/mikkel/cs2-signatures compares what plugins ship against what this
+github.com/mrc4tt/cs2-signatures compares what plugins ship against what this
 repo publishes, and it knows something this box does not: WHICH symbols stopped
 resolving. Re-running the whole pipeline for three symbols is hours; re-running
 the three tasks that produce them is minutes.
@@ -16,7 +16,7 @@ A symbol is mapped to its producing task by searching every task's
 `expected_output`, never by guessing `find-<Symbol>`: tasks are named after their
 anchor and one task emits several symbols (CLAUDE.md).
 
-    uv run rehunt_queue.py -queue https://git.miksen.me/mikkel/cs2-signatures/raw/branch/main/rehunt.json
+    uv run rehunt_queue.py -queue https://raw.githubusercontent.com/mrc4tt/cs2-signatures/main/rehunt.json
     uv run rehunt_queue.py -queue .autopilot/rehunt.json -run
     uv run rehunt_queue.py -gamever 14181 -symbols ClientPrint -run
 

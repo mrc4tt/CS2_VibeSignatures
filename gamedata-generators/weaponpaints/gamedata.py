@@ -30,7 +30,7 @@ OUTPUT_PATHS = (GAMEDATA_PATH,)
 # Seed new output roots with the current file from the plugin repo. The static
 # copy is refreshed from upstream (merge semantics: only signatures/offsets of
 # symbols with analysis YAML data are rewritten):
-#   https://git.miksen.me/mikkel/weaponpaints/raw/branch/main/gamedata/weaponpaints.json
+#   https://raw.githubusercontent.com/mrc4tt/cs2-WeaponPaints/main/gamedata/weaponpaints.json
 STATIC_SOURCES = ((GAMEDATA_PATH, GAMEDATA_PATH),)
 
 
