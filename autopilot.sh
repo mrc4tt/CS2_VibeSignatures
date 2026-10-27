@@ -991,6 +991,21 @@ if [ "$UNHEALTHY_TOTAL" != "0" ]; then
 fi
 log "    $VERIFIED_FILES shipped file(s) checked, every entry holds and is verified on both platforms"
 
+# A second opinion on the signatures the gate above just passed: gdc (tools/gdc) scans
+# the same files with its own ELF/PE reader and scanner, and gdc_compare.py reports
+# where it and verify_plugin_gamedata disagree. Warn-only; AUTOPILOT_GDC=0 turns it off.
+if [ "${AUTOPILOT_GDC:-1}" != "0" ]; then
+    GDC_OUT="$STATE/gdc-$TAG.txt"
+    log "==> second-opinion signature scan (gdc)"
+    AUTOPILOT_STATE="$STATE" ./gdc_check.sh "$TAG" > "$GDC_OUT" 2>&1
+    case $? in
+        0) log "    $(head -1 "$GDC_OUT")" ;;
+        1) log "    $(head -1 "$GDC_OUT")"
+           notify "gdc" "$(cut -c1-200 "$GDC_OUT" | head -16)" ;;
+        *) log "    gdc check could not run: $(head -1 "$GDC_OUT")" ;;
+    esac
+fi
+
 # The same SDK and CounterStrikeSharp gamedata inside a running Linux server: CS2SDKTest
 # calls the interfaces and the gamedata's functions, slots and offsets under a fault
 # guard. Not a gate yet: a regression against runtime/cs2sdktest/baseline.txt is
