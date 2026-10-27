@@ -19,11 +19,19 @@ export type MarkNote =
   | { kind: 'hits'; count: number }
   | { kind: 'vtable'; state: string }
   | { kind: 'status'; status: string }
+  | { kind: 'name'; to: string }
+
+/** A key spelled differently from the published key it evidently stands for. */
+export interface KeyRename {
+  from: string
+  to: string
+}
 
 export interface LineMark {
   line: number
   key: string
-  platform: Platform
+  /** Absent when the mark is about the key itself rather than one platform's value. */
+  platform?: Platform
   tone: MarkTone
   note?: MarkNote
   /**
@@ -32,6 +40,7 @@ export interface LineMark {
    * the scan only reports (a mismatch with no fix) is not one: the scan withheld it.
    */
   fix?: DeepFix
+  rename?: KeyRename
 }
 
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -136,6 +145,49 @@ export function browserMarks(text: string, verdicts: KeyVerdict[]): LineMark[] {
     }
   }
   return marks
+}
+
+/** Edit distance, for key names only: short strings, so the plain table is fine. */
+function distance(a: string, b: string): number {
+  let previous = Array.from({ length: b.length + 1 }, (_, index) => index)
+  for (let i = 1; i <= a.length; i += 1) {
+    const current = [i]
+    for (let j = 1; j <= b.length; j += 1) {
+      current[j] = Math.min(previous[j]! + 1, current[j - 1]! + 1, previous[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1))
+    }
+    previous = current
+  }
+  return previous[b.length]!
+}
+
+/**
+ * Keys the file most likely misspells. A key the published file does not have is
+ * often the user's own, so a name alone is never enough: it must also sit a typo
+ * or two away from a published key the file is missing, and from exactly one such
+ * key. The plugin looks up the published name, so a misspelled one is as good as
+ * absent, whatever its value says.
+ */
+export function misnamedKeys(verdicts: KeyVerdict[]): KeyRename[] {
+  const missing = verdicts.filter((verdict) => verdict.state === 'absent').map((verdict) => verdict.key)
+  const out: KeyRename[] = []
+  const taken = new Set<string>()
+  for (const verdict of verdicts) {
+    if (verdict.state !== 'unknown') continue
+    const limit = Math.max(1, Math.min(3, Math.floor(verdict.key.length / 8)))
+    const near = missing.filter((key) => distance(verdict.key.toLowerCase(), key.toLowerCase()) <= limit)
+    if (near.length !== 1 || taken.has(near[0]!)) continue
+    taken.add(near[0]!)
+    out.push({ from: verdict.key, to: near[0]! })
+  }
+  return out
+}
+
+/** One mark on the line of each misspelled key, carrying the rename that fixes it. */
+export function renameMarks(text: string, renames: KeyRename[]): LineMark[] {
+  return renames.flatMap((rename) => {
+    const at = text.indexOf(`"${rename.from}"`)
+    return at < 0 ? [] : [{ line: lineAt(text, at), key: rename.from, tone: 'bad' as const, note: { kind: 'name' as const, to: rename.to }, rename }]
+  })
 }
 
 const RANK: Record<MarkTone, number> = { bad: 0, warn: 1, ok: 2 }

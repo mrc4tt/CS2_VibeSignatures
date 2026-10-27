@@ -155,6 +155,17 @@ export function patchFile(text: string, verdicts: KeyVerdict[]): PatchResult {
  * there is nothing to decide here beyond placing it: `from` must be found once in
  * that key's block under that platform, or the fix is left to a human.
  */
+/**
+ * `text` with the key `from` renamed to `to`, or null when that cannot be done
+ * safely: the old name must be quoted exactly once and the new one not at all.
+ */
+export function renameKey(text: string, from: string, to: string): string | null {
+  const quoted = `"${from}"`
+  const at = text.indexOf(quoted)
+  if (at < 0 || text.indexOf(quoted, at + 1) >= 0 || text.includes(`"${to}"`)) return null
+  return text.slice(0, at) + `"${to}"` + text.slice(at + quoted.length)
+}
+
 export function applyFixes(text: string, fixes: DeepFix[]): PatchResult {
   let out = text
   let applied = 0

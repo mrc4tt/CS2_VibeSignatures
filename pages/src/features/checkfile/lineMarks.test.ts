@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DeepScanResult } from './deepScan'
-import { browserMarks, changedLines, locateValue, marksByLine, problemLines, scanMarks } from './lineMarks'
+import { browserMarks, changedLines, locateValue, marksByLine, misnamedKeys, problemLines, renameMarks, scanMarks } from './lineMarks'
 import type { KeyVerdict } from './verdict'
 
 const FILE = [
@@ -104,5 +104,31 @@ describe('the fixed copy', () => {
       { line: 1, key: 'A', platform: 'windows', tone: 'bad' },
     ])
     expect(byLine.get(1)?.map((m) => m.tone)).toEqual(['bad', 'ok'])
+  })
+})
+
+describe('misnamedKeys', () => {
+  const v = (key: string, state: KeyVerdict['state']): KeyVerdict => ({ key, state })
+
+  it('pairs a misspelled key with the published key the file is missing', () => {
+    const verdicts = [v('CSmokeGrenadeProjectile_Create', 'absent'), v('CSmokerenadeProjectile_Create', 'unknown')]
+    expect(misnamedKeys(verdicts)).toEqual([{ from: 'CSmokerenadeProjectile_Create', to: 'CSmokeGrenadeProjectile_Create' }])
+  })
+
+  it('leaves the file\'s own keys alone', () => {
+    // nothing missing: an extra key is the user's own
+    expect(misnamedKeys([v('CSmokeGrenadeProjectile_Create', 'current'), v('CSmokerenadeProjectile_Create', 'unknown')])).toEqual([])
+    // too far from the missing key to be a typo
+    expect(misnamedKeys([v('CSmokeGrenadeProjectile_Create', 'absent'), v('MyOwnHook', 'unknown')])).toEqual([])
+    // two missing keys equally near: no guessing which
+    expect(misnamedKeys([v('Hook_A1', 'absent'), v('Hook_A2', 'absent'), v('Hook_A3', 'unknown')])).toEqual([])
+  })
+
+  it('marks the key line with the rename', () => {
+    const text = '{\n  "CSmokerenadeProjectile_Create": {\n    "linux": "55"\n  }\n}'
+    const rename = { from: 'CSmokerenadeProjectile_Create', to: 'CSmokeGrenadeProjectile_Create' }
+    expect(renameMarks(text, [rename])).toEqual([
+      { line: 2, key: rename.from, tone: 'bad', note: { kind: 'name', to: rename.to }, rename },
+    ])
   })
 })

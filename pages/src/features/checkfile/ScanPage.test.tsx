@@ -137,6 +137,26 @@ describe('Scanner', () => {
     expect(document.querySelector('.annotated .rl.m-bad')).toBeNull()
   })
 
+  it('catches a misspelled key and renames it to the published one', async () => {
+    const typo = JSON.stringify({
+      JoinTeam: { signatures: { linux: 'NEW-L', windows: 'OLD-W' } },
+      PostClenUp: { signatures: { linux: 'SAME-L', windows: 'SAME-W' } },
+      SelectItem: { offsets: { linux: 31, windows: 30 } },
+      Untouched: { signatures: { linux: 'U-L', windows: 'U-W' } },
+    }, null, 2)
+    vi.mocked(getGameDataFile).mockResolvedValueOnce(typo)
+    paint()
+    await waitFor(() => expect(document.querySelector('.annotated .rl.m-bad')).not.toBeNull())
+    const editor = screen.getByLabelText('The file, editable') as HTMLTextAreaElement
+    editor.setSelectionRange(typo.indexOf('PostClenUp'), typo.indexOf('PostClenUp'))
+    fireEvent.select(editor)
+    const card = await screen.findByRole('group', { name: /Verdicts on line/ })
+    expect(card).toHaveTextContent('Did you mean PostCleanUp?')
+    await userEvent.click(screen.getByRole('button', { name: 'Rename to PostCleanUp' }))
+    await waitFor(() => expect(editor.value).toContain('"PostCleanUp"'))
+    expect(editor.value).not.toContain('PostClenUp')
+  })
+
   it('closes the card on Escape', async () => {
     vi.mocked(getGameDataFile).mockResolvedValueOnce(behindFile)
     paint()

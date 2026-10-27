@@ -499,6 +499,11 @@ const resources = {
           applied_other: '{{count}} values replaced.',
           notPlaced: 'That value could not be placed in the file, so change it by hand.',
           hint: 'Put the cursor on a marked line for suggestions',
+          keyName: 'Key name',
+          misnamed: 'Not a key the plugin looks up. Did you mean {{name}}?',
+          rename: 'Rename to {{name}}',
+          renamed: 'Key renamed to {{name}}.',
+          fromRecord: 'from our analysis of this build',
         },
         side: {
           h: 'Scan settings',
@@ -1040,6 +1045,11 @@ const resources = {
           applied_other: '{{count}} værdier er erstattet.',
           notPlaced: 'Værdien kunne ikke placeres i filen, så ret den i hånden.',
           hint: 'Sæt markøren på en markeret linje for forslag',
+          keyName: 'Nøglenavn',
+          misnamed: 'Pluginet slår ikke denne nøgle op. Mente du {{name}}?',
+          rename: 'Omdøb til {{name}}',
+          renamed: 'Nøglen er omdøbt til {{name}}.',
+          fromRecord: 'fra vores analyse af dette build',
         },
         side: {
           h: 'Scanning',

@@ -6,7 +6,7 @@ import { Button, ChipGroup } from '../../ui/primitives'
 import { TokenText } from '../gamedata/FileView'
 import { tokenizeLine } from '../gamedata/fileModel'
 import type { DeepFix } from './deepScan'
-import { changedLines, marksByLine, type LineMark, type MarkNote } from './lineMarks'
+import { changedLines, marksByLine, type KeyRename, type LineMark, type MarkNote } from './lineMarks'
 import type { GameDataFormat } from './parse'
 
 /** A text typed into the editor that is not valid JSON, and where it breaks. */
@@ -37,6 +37,8 @@ interface Props {
   broken?: BrokenText | null
   /** Replaces the given values in the file; offered on a marked line the caret is on. */
   onApply?(fixes: DeepFix[]): void
+  /** Rename a misspelled key to the published name. */
+  onRename?(rename: KeyRename): void
 }
 
 /** A value short enough to sit on a button. */
@@ -66,7 +68,7 @@ const shortValue = (value: string | number): string => {
  * come from the rows beneath. Once typing pauses the text is checked again; the
  * marks belong to the checked text, so they are hidden while it differs.
  */
-export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusLine, onStep, onEdit, blankEdit = 0, broken, onApply }: Props) {
+export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusLine, onStep, onEdit, blankEdit = 0, broken, onApply, onRename }: Props) {
   const { t } = useTranslation()
   const [showFixed, setShowFixed] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -131,6 +133,8 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
         return t('check.deep.hits', { count: note.count })
       case 'vtable':
         return t('check.deep.vtable', { state: note.state })
+      case 'name':
+        return t('check.pop.misnamed', { name: note.to })
       default:
         return note.status
     }
@@ -212,11 +216,18 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
             >
               <div className="font-mono text-[12px] text-ink">{popMarks[0]!.key}</div>
               {popMarks.map((mark) => (
-                <div className="lprow" key={`${mark.key}:${mark.platform}`}>
+                <div className="lprow" key={`${mark.key}:${mark.platform ?? 'name'}`}>
                   <i className={mark.tone === 'bad' ? 'b' : 'w'} />
-                  <span className="text-muted-foreground">{t(`check.platform.${mark.platform}`)}</span>
-                  <span className="min-w-0 flex-1">{mark.note ? noteText(mark.note) : t(`check.view.legend${mark.tone === 'bad' ? 'Bad' : 'Warn'}`)}</span>
-                  {mark.fix && onApply ? (
+                  <span className="text-muted-foreground">{mark.platform ? t(`check.platform.${mark.platform}`) : t('check.pop.keyName')}</span>
+                  <span className="min-w-0 flex-1">
+                    {mark.note ? noteText(mark.note) : t(`check.view.legend${mark.tone === 'bad' ? 'Bad' : 'Warn'}`)}
+                    {mark.fix?.source === 'record' && <span className="text-muted-foreground"> ({t('check.pop.fromRecord')})</span>}
+                  </span>
+                  {mark.rename && onRename ? (
+                    <Button size="small" variant="primary" onClick={() => onRename(mark.rename!)}>
+                      {t('check.pop.rename', { name: shortValue(mark.rename.to) })}
+                    </Button>
+                  ) : mark.fix && onApply ? (
                     <Button size="small" variant="primary" onClick={() => onApply([mark.fix!])}>
                       {t('check.pop.apply', { value: shortValue(mark.fix.to) })}
                     </Button>
@@ -238,7 +249,7 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
             const worst = here[0]?.tone
             const tip = here.map((mark) => {
               const what = mark.note ? noteText(mark.note) : t(`check.view.legend${mark.tone === 'bad' ? 'Bad' : mark.tone === 'warn' ? 'Warn' : 'Ok'}`)
-              return `${t(`check.platform.${mark.platform}`)}: ${what}`
+              return `${mark.platform ? t(`check.platform.${mark.platform}`) : t('check.pop.keyName')}: ${what}`
             }).join('\n')
             const classes = ['rl']
             if (worst) classes.push(`m-${worst}`)

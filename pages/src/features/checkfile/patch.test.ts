@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseGameData } from './parse'
-import { applyFixes, patchFile } from './patch'
+import { applyFixes, patchFile, renameKey } from './patch'
 import type { KeyVerdict } from './verdict'
 
 const outdated = (
@@ -175,5 +175,14 @@ describe('applying the deep scan\'s fixes', () => {
       { key: 'A', platform: 'linux', reason: 'notFound' },
       { key: 'Gone', platform: 'windows', reason: 'notFound' },
     ])
+  })
+})
+
+describe('renameKey', () => {
+  it('renames the one quoted key and nothing else', () => {
+    expect(renameKey('{"Ab": {"linux": "Ab"}}', 'Ab', 'Abc')).toBeNull() // "Ab" twice: which one is unclear
+    expect(renameKey('{"Ab": {"linux": "55"}}', 'Ab', 'Abc')).toBe('{"Abc": {"linux": "55"}}')
+    expect(renameKey('{"Ab": {}, "Abc": {}}', 'Ab', 'Abc')).toBeNull()
+    expect(renameKey('{"X": {}}', 'Ab', 'Abc')).toBeNull()
   })
 })

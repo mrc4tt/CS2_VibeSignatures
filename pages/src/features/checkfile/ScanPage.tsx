@@ -11,8 +11,8 @@ import { AnnotatedFile, type BrokenText } from './AnnotatedFile'
 import { fetchScanBuilds, fetchScanHealth, requestDeepScan, type DeepFix } from './deepScan'
 import { fileDetails } from './details'
 import { clearHandoff, peekHandoff } from './handoff'
-import { browserMarks, problemLines, scanMarks } from './lineMarks'
-import { applyFixes } from './patch'
+import { browserMarks, misnamedKeys, problemLines, renameMarks, scanMarks, type KeyRename } from './lineMarks'
+import { applyFixes, renameKey } from './patch'
 import { ResultSheet } from './ResultSheet'
 import { readAutoOpen, type SheetSize } from './sheetModel'
 import { ScanPanel, type ScanPlatform } from './ScanPanel'
@@ -99,8 +99,10 @@ export function ScanPage() {
   )
   const marks = useMemo(() => {
     if (!loaded) return []
-    if (scanResult && !scanResult.note) return scanMarks(loaded.text, scanResult)
-    return file ? browserMarks(loaded.text, verdicts) : []
+    // A misspelled key is found from the published file alone, so it is marked in both modes.
+    const names = file ? renameMarks(loaded.text, misnamedKeys(verdicts)) : []
+    if (scanResult && !scanResult.note) return [...scanMarks(loaded.text, scanResult), ...names]
+    return file ? [...browserMarks(loaded.text, verdicts), ...names] : names
   }, [loaded, scanResult, file, verdicts])
   const problems = useMemo(() => problemLines(marks), [marks])
   const fixedText = deepPatched?.applied ? deepPatched.text : patched?.applied ? patched.text : null
@@ -175,6 +177,16 @@ export function ScanPage() {
       return
     }
     placeFixed(result.text, t('check.pop.applied', { count: result.applied }))
+  }
+
+  function renameOne(rename: KeyRename) {
+    if (!loaded) return
+    const next = renameKey(loaded.text, rename.from, rename.to)
+    if (next === null) {
+      toast.error(t('check.pop.notPlaced'))
+      return
+    }
+    placeFixed(next, t('check.pop.renamed', { name: rename.to }))
   }
 
   async function accept(input: File | string, name: string, fromEditor = false) {
@@ -312,6 +324,7 @@ export function ScanPage() {
               blankEdit={blankEdit}
               broken={broken}
               onApply={applyOne}
+              onRename={renameOne}
             />
           ) : (
             <div className="scanempty">
