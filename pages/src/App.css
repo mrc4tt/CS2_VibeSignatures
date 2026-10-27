@@ -115,6 +115,9 @@
 .legend i.b { background: var(--bad); }
 .legend i.w { background: var(--warn); }
 .annotated .rawscroll { max-height: calc(100dvh - 260px); }
+.rawedit { display: block; width: 100%; min-height: 360px; height: calc(100dvh - 260px); padding: 10px 16px;
+  border: 0; resize: vertical; background: var(--sunk); color: var(--ink); font-family: var(--mono);
+  font-size: 11.5px; line-height: 1.62; white-space: pre; tab-size: 2; outline: none; }
 .rawstatus { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 7px 17px; border-top: 1px solid var(--rule-soft);
   background: var(--card-2); font-size: 12px; color: var(--muted); }
 .raw .jk { color: var(--ink); }

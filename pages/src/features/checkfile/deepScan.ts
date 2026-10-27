@@ -126,6 +126,19 @@ export async function fetchScanBuilds(signal?: AbortSignal, base: string = DEEP_
   return Array.isArray(body.builds) ? body.builds.filter((build): build is string => typeof build === 'string') : []
 }
 
+/** How busy the scan server is: scans running against how many it takes before it queues no more. */
+export interface ScanHealth {
+  inflight: number
+  capacity: number
+}
+
+export async function fetchScanHealth(signal?: AbortSignal, base: string = DEEP_SCAN_API): Promise<ScanHealth> {
+  const response = await fetch(`${base}/health`, { headers: { Accept: 'application/json' }, signal })
+  if (!response.ok) throw new Error(`health ${response.status}`)
+  const body = (await response.json()) as Partial<ScanHealth>
+  return { inflight: Number(body.inflight) || 0, capacity: Number(body.capacity) || 0 }
+}
+
 export type DeepTone = 'ok' | 'bad' | 'warn' | 'neutral'
 
 /**

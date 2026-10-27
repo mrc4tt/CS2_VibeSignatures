@@ -4,7 +4,7 @@ import { buttonClass } from '../../ui/buttonStyle'
 import { copyText } from '../../ui/clipboard'
 import { saveText } from '../../ui/download'
 import { Alert, Button, ChipGroup, Select, Skeleton, Tabs } from '../../ui/primitives'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Explain } from '../../components/Explain'
 import { ValueChange } from '../../components/ValueChange'
@@ -14,7 +14,8 @@ import { Pattern } from '../symbols/Pattern'
 import { parseGameData, type FileValue, type GameDataFormat } from './parse'
 import { AnnotatedFile } from './AnnotatedFile'
 import { DeepScan } from './DeepScan'
-import { DEEP_SCAN_API, fetchScanBuilds, requestDeepScan } from './deepScan'
+import { DEEP_SCAN_API, fetchScanBuilds, fetchScanHealth, requestDeepScan } from './deepScan'
+import { fileDetails } from './details'
 import { browserMarks, problemLines, scanMarks } from './lineMarks'
 import { applyFixes, patchFile } from './patch'
 import { ScanPanel, type ScanPlatform } from './ScanPanel'
@@ -26,6 +27,8 @@ interface Loaded {
   /** Kept so the fixed file can be produced from the original bytes. */
   text: string
   values: Map<string, FileValue>
+  /** Set when the page filled itself with a published file, so it can say so. */
+  example?: { plugin: string; build: string }
 }
 
 const STATES: KeyState[] = ['outdated', 'current', 'unknown', 'absent']
@@ -63,6 +66,8 @@ export function CheckFilePage() {
   const [platform, setPlatform] = useState<ScanPlatform>('both')
   const [build, setBuild] = useState('')
   const [focusIndex, setFocusIndex] = useState(-1)
+  // Once someone drops, pastes or edits, the example must never land on top of it.
+  const userActed = useRef(false)
 
   const newest = history?.builds[history.builds.length - 1]?.gameVersion
   const identification = useMemo(
@@ -80,12 +85,11 @@ export function CheckFilePage() {
     [loaded, history, file, newest],
   )
   const summary = useMemo(() => summarise(verdicts), [verdicts])
-  // Only fetched once a file has been identified: someone who never drops a file
-  // should not pay for the gamedata index.
+  // Fetched up front: the page opens on a published file so the editor and the
+  // side panel show what they do before anyone has a file of their own at hand.
   const { data: index } = useQuery({
     queryKey: ['gamedata-index'],
     queryFn: ({ signal }) => getGameDataIndex(signal),
-    enabled: Boolean(file),
   })
   const publishedFile = useMemo(
     () => index?.versions.find((version) => version.gameVersion === newest)?.files.find((entry) => entry.id === file),
@@ -106,6 +110,14 @@ export function CheckFilePage() {
     retry: false,
     staleTime: 5 * 60_000,
   })
+  const { data: health } = useQuery({
+    queryKey: ['scan-health'],
+    queryFn: ({ signal }) => fetchScanHealth(signal),
+    enabled: Boolean(loaded),
+    retry: false,
+    refetchInterval: 15_000,
+  })
+  const details = useMemo(() => (loaded ? fileDetails(loaded.text, loaded.values) : null), [loaded])
   const scan = useMutation({
     mutationFn: (input: Loaded) =>
       requestDeepScan(input.text, input.name, {
@@ -132,6 +144,26 @@ export function CheckFilePage() {
   const problems = useMemo(() => problemLines(marks), [marks])
   const fixedText = deepPatched?.applied ? deepPatched.text : patched?.applied ? patched.text : null
 
+  useEffect(() => {
+    if (loaded || userActed.current || !index || !newest) return
+    const files = (index.versions.find((version) => version.gameVersion === newest) ?? index.versions[0])?.files ?? []
+    const pick = files.find((entry) => entry.plugin === 'matchzy') ?? files[0]
+    if (!pick) return
+    let cancelled = false
+    void getGameDataFile(pick).then((text) => {
+      if (cancelled || userActed.current) return
+      try {
+        const parsed = parseGameData(text)
+        if (parsed.values.size === 0) return
+        setLoaded({ name: pick.fileName, format: parsed.format, text, values: parsed.values, example: { plugin: pick.plugin, build: newest } })
+        setView('file')
+      } catch {
+        // an example that does not parse is simply not shown
+      }
+    }).catch(() => undefined)
+    return () => { cancelled = true }
+  }, [index, newest, loaded])
+
   function stepProblem(direction: 1 | -1): void {
     if (problems.length === 0) return
     const start = focusIndex < 0 ? (direction === 1 ? -1 : 0) : focusIndex
@@ -142,12 +174,13 @@ export function CheckFilePage() {
   const shown = filtered.slice(0, limit)
 
 
-  async function accept(input: File | string, name: string) {
+  async function accept(input: File | string, name: string, nextView: 'list' | 'file' = 'list') {
+    userActed.current = true
     setError(null)
     setChosenFile(null)
     setLimit(ROWS)
     setCopied(false)
-    setView('list')
+    setView(nextView)
     setFocusIndex(-1)
     scan.reset()
     try {
@@ -335,13 +368,21 @@ jq -n --rawfile g gamedata/matchzy.json '{gamedata: $g, filename: "matchzy.json"
             )}
           </div>
           <div className="panel-body">
+            {loaded.example && (
+              <Alert
+                tone="qualify"
+                title={t('check.example', { plugin: loaded.example.plugin, build: loaded.example.build })}
+                description={t('check.exampleHow')}
+              />
+            )}
             {/* Settings and verdict on the left, the answer on the right: as a
                 list of entries, or as the file itself with every verdict on its line. */}
             <div className="grid items-start gap-4 lg:grid-cols-[290px_minmax(0,1fr)]">
               <ScanPanel
                 plugin={file?.split('/')[0]}
                 format={loaded.format}
-                keys={loaded.values.size}
+                details={details!}
+                health={health}
                 platform={platform}
                 onPlatform={setPlatform}
                 builds={scanBuilds ?? []}
@@ -595,6 +636,7 @@ jq -n --rawfile g gamedata/matchzy.json '{gamedata: $g, filename: "matchzy.json"
                           problems={problems}
                           focusIndex={focusIndex}
                           onStep={stepProblem}
+                          onEdit={(text) => void accept(text, loaded.name, 'file')}
                         />
                       ),
                     },

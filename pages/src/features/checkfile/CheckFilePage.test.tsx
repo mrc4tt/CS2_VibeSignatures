@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../i18n'
 import type { SiteHistory } from '../../api/siteData'
+import { getGameDataFile } from '../gamedata/data'
 import { CheckFilePage } from './CheckFilePage'
 
 const MATCHZY = 'matchzy/gamedata/matchzy.json'
@@ -286,6 +287,58 @@ describe('Check my file', () => {
       // only the contradicted row is listed until asked for the rest
       const rows = [...document.querySelectorAll('.deepscan details.krow .kname')].map((n) => n.textContent)
       expect(rows).toEqual(['SelectItem'])
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('opens on a published example in the editor, and lets it be edited and checked', async () => {
+    vi.mocked(getGameDataFile).mockResolvedValueOnce(JSON.stringify(JSON.parse(behindFile), null, 2))
+    paint()
+    await screen.findByText('Example: the published matchzy file for build 14181')
+    // the editor view, filled, with the browser check's marks on it
+    expect(screen.getByRole('tab', { name: 'File' })).toHaveAttribute('aria-selected', 'true')
+    expect(document.querySelector('.annotated .rl.m-bad .rnote')?.textContent).toBe('should be NEW-L')
+    // the details read off the file itself
+    await waitFor(() => expect([...document.querySelectorAll('.details dd')].map((n) => n.textContent)).toEqual(['matchzy', '14192', 'JSON', '3', '1', '-', '0 / 24 busy']))
+
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.change(screen.getByLabelText('The file, editable'), {
+      target: { value: JSON.stringify({ JoinTeam: { signatures: { linux: 'NEW-L', windows: 'OLD-W' } } }, null, 2) },
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Check this text' }))
+    await waitFor(() => expect(screen.queryByText(/^Example:/)).toBeNull())
+    expect(screen.getByRole('tab', { name: 'File' })).toHaveAttribute('aria-selected', 'true')
+    expect(document.querySelector('.annotated .rl.m-bad')).toBeNull()
+  })
+
+  it('never puts the example over a file someone dropped', async () => {
+    let release: (text: string) => void = () => undefined
+    vi.mocked(getGameDataFile).mockImplementationOnce(() => new Promise((resolve) => { release = resolve }))
+    paint()
+    await screen.findByText('Check your own Game Data file')
+    await drop(behindFile, 'mine.json')
+    release(JSON.stringify(JSON.parse(behindFile), null, 2))
+    await screen.findByText('mine.json')
+    expect(screen.queryByText(/^Example:/)).toBeNull()
+  })
+
+  it('scans for the platform picked in the filled segments', async () => {
+    const fetch = vi.fn(async (url: string) => new Response(
+      url.endsWith('/verify') ? JSON.stringify({ build: '14192', results: [] }) : JSON.stringify({ builds: ['14192'] }),
+      { status: 200 },
+    ))
+    vi.stubGlobal('fetch', fetch)
+    try {
+      paint()
+      await screen.findByText('Check your own Game Data file')
+      await drop(behindFile)
+      await userEvent.click(await screen.findByRole('radio', { name: 'Linux' }))
+      expect(screen.getByRole('radio', { name: 'Linux' })).toHaveAttribute('aria-checked', 'true')
+      await userEvent.click(screen.getByRole('button', { name: 'Scan it' }))
+      await waitFor(() => expect(fetch.mock.calls.some(([url]) => String(url).endsWith('/verify'))).toBe(true))
+      const [, init] = fetch.mock.calls.find(([url]) => String(url).endsWith('/verify')) as unknown as [string, RequestInit]
+      expect(JSON.parse(init.body as string)).toMatchObject({ platform: 'linux' })
     } finally {
       vi.unstubAllGlobals()
     }

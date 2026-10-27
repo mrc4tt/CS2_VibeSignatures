@@ -91,6 +91,14 @@ export const DownloadIcon = (props: IconProps) => (
   <Glyph {...props}><path d="M12 3v12" /><path d="M7 11l5 5 5-5" /><path d="M4 20h16" /></Glyph>
 )
 
+export const PlayIcon = (props: IconProps) => (
+  <Glyph {...props}><path d="M7 5v14l11-7z" fill="currentColor" /></Glyph>
+)
+
+export const EditIcon = (props: IconProps) => (
+  <Glyph {...props}><path d="M4 20h4L19 9l-4-4L4 16v4z" /><path d="M13 7l4 4" /></Glyph>
+)
+
 export const InfoIcon = (props: IconProps) => (
   <Glyph {...props}><circle cx="12" cy="12" r="9" /><path d="M12 11v5" /><path d="M12 8h.01" /></Glyph>
 )
