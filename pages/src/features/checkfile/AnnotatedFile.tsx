@@ -23,6 +23,8 @@ interface Props {
   onStep(direction: 1 | -1): void
   /** Called with the edited text; the page reads it again as if it had been dropped. */
   onEdit(text: string): void
+  /** Bumped by the page's Paste button: opens the editor empty, ready for a paste. */
+  blankEdit?: number
 }
 
 /**
@@ -32,7 +34,7 @@ interface Props {
  * is what someone fixing it by hand needs. It reuses the published-file viewer's
  * look and tokenizer, and only adds the gutter colours and a note at line end.
  */
-export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusIndex, onStep, onEdit }: Props) {
+export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusIndex, onStep, onEdit, blankEdit = 0 }: Props) {
   const { t } = useTranslation()
   const [showFixed, setShowFixed] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -47,6 +49,7 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
 
   useEffect(() => { if (!fixed) setShowFixed(false) }, [fixed])
   useEffect(() => { setDraft(null) }, [text])
+  useEffect(() => { if (blankEdit > 0) setDraft('') }, [blankEdit])
   useEffect(() => {
     if (focusLine) viewRef.current?.querySelector<HTMLElement>(`[data-line="${focusLine}"]`)?.scrollIntoView?.({ block: 'center' })
   }, [focusLine])

@@ -115,6 +115,7 @@ export const ROUTE_PAGES: Array<{ path: string; title: string; description: stri
   { path: 'game-data', title: 'Game Data', description: 'The gamedata file each plugin reads, with the lines this build produced marked.' },
   { path: 'diff', title: 'Between builds', description: 'Everything that moved between two CS2 builds, key by key, across every plugin file.' },
   { path: 'check', title: 'Check my file', description: 'Drop a plugin gamedata file and see which of its keys this build has moved.' },
+  { path: 'scan', title: 'Scanner', description: 'Scan a plugin gamedata file against the actual CS2 binaries, with every verdict on its own line.' },
   { path: 'words', title: 'Words', description: 'Plain meanings for signature, vtable slot, struct member offset and the rest.' },
   { path: 'analysis', title: 'Analysis runs', description: 'What the run that produced this build actually did.' },
   { path: 'runs', title: 'Live runs', description: 'Progress of an analysis run in flight.' },

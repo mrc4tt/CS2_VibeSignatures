@@ -15,7 +15,7 @@ const resources = {
         main: 'Main',
         more: 'More',
         whatIsThis: 'What does this mean?',
-        nav: { start: 'Plugins', symbols: 'Find a symbol', check: 'Check my file', gamedata: 'All Game Data files', diff: 'Between builds', runs: 'Analysis runs', words: 'Glossary' },
+        nav: { start: 'Plugins', symbols: 'Find a symbol', check: 'Check my file', scan: 'Scanner', gamedata: 'All Game Data files', diff: 'Between builds', runs: 'Analysis runs', words: 'Glossary' },
       },
       buildStatus: {
         updated: 'CS2 updated to build {{build}}.',
@@ -338,6 +338,16 @@ const resources = {
         noGap: 'Every key in this file has a value in this build.',
         gapSummary: '{{count}} keys in this file have no value in this build.',
       },
+      scan: {
+        h1: 'Scan a gamedata file against the game binaries',
+        noFile: 'No file yet',
+        example: 'Example: {{plugin}} {{build}}',
+        dropHint: 'Drop a file anywhere on this page',
+        open: 'Open file',
+        paste: 'Paste',
+        back: 'Quick check',
+        noList: 'This file matches no published plugin, so there is nothing to list until it is scanned.',
+      },
       check: {
         h1: 'Check your own Game Data file',
         lede: 'Drop the file your server actually runs. It is read here in your browser and compared against build {{build}}, key by key.',
@@ -349,7 +359,7 @@ const resources = {
         pasteLabel: 'Paste the contents of the file',
         checkIt: 'Check it',
         clear: 'Clear',
-        private: 'The check is done in this browser and nothing is uploaded. Only the deep scan below sends the file anywhere, and only when you start it.',
+        private: 'The check is done in this browser and nothing is uploaded. Only the scanner sends the file anywhere, and only when you start a scan.',
         pasted: 'pasted text',
         ciH: 'Run this check from CI instead',
         ciBody: 'Every published file is addressed in the index with its own digest, so fetching it and diffing is enough for CI. To check against the game binaries instead, POST the file to the deep scan API (rate limited per address).',
@@ -390,8 +400,12 @@ const resources = {
         pick: 'Pick the plugin yourself',
         tied: 'Every build from {{oldest}} to {{build}} fits it equally well, because nothing in this file changed between them.',
         none: 'Nothing in this group.',
-        example: 'Example: the published {{plugin}} file for build {{build}}',
-        exampleHow: 'Drop or paste your own file above, or edit this one right here and check it.',
+        toScan: {
+          h: 'Scan it against the game binaries',
+          body: 'The scanner runs your file against the actual binaries of the newest build and shows every verdict on its own line, in an editor you can fix it in.',
+          open: 'Open the scanner',
+          withFile: 'Open this file in the scanner',
+        },
         view: {
           list: 'List',
           file: 'File',
@@ -501,7 +515,7 @@ const resources = {
         main: 'Hovedmenu',
         more: 'Mere',
         whatIsThis: 'Hvad betyder det?',
-        nav: { start: 'Plugins', symbols: 'Find et symbol', check: 'Tjek min fil', gamedata: 'Alle Game Data-filer', diff: 'Mellem builds', runs: 'Analysekørsler', words: 'Ordliste' },
+        nav: { start: 'Plugins', symbols: 'Find et symbol', check: 'Tjek min fil', scan: 'Scanner', gamedata: 'Alle Game Data-filer', diff: 'Mellem builds', runs: 'Analysekørsler', words: 'Ordliste' },
       },
       buildStatus: {
         updated: 'CS2 er opdateret til build {{build}}.',
@@ -798,6 +812,16 @@ const resources = {
         noGap: 'Hver nøgle i denne fil har en værdi i dette build.',
         gapSummary: '{{count}} nøgler i denne fil har ingen værdi i dette build.',
       },
+      scan: {
+        h1: 'Scan en gamedata-fil mod spilfilerne',
+        noFile: 'Ingen fil endnu',
+        example: 'Eksempel: {{plugin}} {{build}}',
+        dropHint: 'Slip en fil hvor som helst på siden',
+        open: 'Åbn fil',
+        paste: 'Indsæt',
+        back: 'Hurtigt tjek',
+        noList: 'Filen matcher intet udgivet plugin, så der er intet at vise, før den er scannet.',
+      },
       check: {
         h1: 'Tjek din egen Game Data-fil',
         lede: 'Smid den fil din server faktisk kører. Den læses her i din browser og sammenlignes med build {{build}}, nøgle for nøgle.',
@@ -809,7 +833,7 @@ const resources = {
         pasteLabel: 'Indsæt indholdet af filen',
         checkIt: 'Tjek den',
         clear: 'Ryd',
-        private: 'Tjekket sker i denne browser, og intet uploades. Kun den dybe scanning nedenfor sender filen videre, og kun når du starter den.',
+        private: 'Tjekket sker i denne browser, og intet bliver uploadet. Kun scanneren sender filen nogen steder hen, og kun når du starter en scan.',
         pasted: 'indsat tekst',
         ciH: 'Kør tjekket fra CI i stedet',
         ciBody: 'Hver udgivet fil er adresseret i indekset med sit eget digest, så for CI er det nok at hente den og diffe. Vil du i stedet tjekke mod spilfilerne, så POST filen til API\'et for den dybe scanning (rate-limit pr. adresse).',
@@ -850,8 +874,12 @@ const resources = {
         pick: 'Vælg selv pluginet',
         tied: 'Alle builds fra {{oldest}} til {{build}} passer lige godt, fordi intet i denne fil ændrede sig mellem dem.',
         none: 'Intet i denne gruppe.',
-        example: 'Eksempel: den udgivne {{plugin}}-fil til build {{build}}',
-        exampleHow: 'Slip eller indsæt din egen fil ovenfor, eller rediger denne her og tjek den.',
+        toScan: {
+          h: 'Scan den mod spilfilerne',
+          body: 'Scanneren kører din fil mod de rigtige binære filer for den nyeste build og viser hver dom på sin egen linje, i en editor du kan rette den i.',
+          open: 'Åbn scanneren',
+          withFile: 'Åbn filen i scanneren',
+        },
         view: {
           list: 'Liste',
           file: 'Fil',
@@ -951,7 +979,7 @@ const resources = {
       shell: { search: '搜索' },
       shell2: {
         main: '主菜单', more: '更多', whatIsThis: '这是什么意思？',
-        nav: { start: '插件', symbols: '查找符号', check: '检查我的文件', gamedata: '全部 Game Data 文件', diff: '版本之间', runs: '分析记录', words: '术语表' },
+        nav: { start: '插件', symbols: '查找符号', check: '检查我的文件', scan: '扫描器', gamedata: '全部 Game Data 文件', diff: '版本之间', runs: '分析记录', words: '术语表' },
       },
       buildStatus: {
         updated: 'CS2 已更新到版本 {{build}}。',
@@ -1030,7 +1058,7 @@ const resources = {
       shell: { search: '搜尋' },
       shell2: {
         main: '主選單', more: '更多', whatIsThis: '這是什麼意思？',
-        nav: { start: '外掛', symbols: '查找符號', check: '檢查我的檔案', gamedata: '所有 Game Data 檔案', diff: '版本之間', runs: '分析紀錄', words: '詞彙表' },
+        nav: { start: '外掛', symbols: '查找符號', check: '檢查我的檔案', scan: '掃描器', gamedata: '所有 Game Data 檔案', diff: '版本之間', runs: '分析紀錄', words: '詞彙表' },
       },
       buildStatus: {
         updated: 'CS2 已更新至版本 {{build}}。',

@@ -71,11 +71,11 @@ describe('the browser Back button', () => {
     await waitFor(() => expect(screen.getByRole('link', { name: 'Plugins' })).toHaveAttribute('aria-current', 'page'))
   })
 
-  it('keeps the top bar to three destinations and files a plugin page under Plugins', async () => {
+  it('keeps the top bar to four destinations and files a plugin page under Plugins', async () => {
     window.history.pushState({}, '', '/plugins/CounterStrikeSharp')
     paint()
     const main = screen.getByRole('navigation', { name: 'Main' })
-    expect(main.querySelectorAll('a')).toHaveLength(3)
+    expect(main.querySelectorAll('a')).toHaveLength(4)
     await waitFor(() => expect(screen.getByRole('link', { name: 'Plugins' })).toHaveAttribute('aria-current', 'page'))
   })
 })

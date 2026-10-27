@@ -1,214 +1,64 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { FileCheckIcon } from '../../ui/icons'
+import { useQuery } from '@tanstack/react-query'
+import { FileCheckIcon, PlayIcon } from '../../ui/icons'
 import { buttonClass } from '../../ui/buttonStyle'
 import { copyText } from '../../ui/clipboard'
 import { saveText } from '../../ui/download'
-import { Alert, Button, ChipGroup, Select, Skeleton, Tabs } from '../../ui/primitives'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Alert, Button, Select, Skeleton, Tabs } from '../../ui/primitives'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Explain } from '../../components/Explain'
-import { ValueChange } from '../../components/ValueChange'
-import { getSiteHistory } from '../../api/siteData'
+import { requestNavigation } from '../../app/navigate'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
-import { Pattern } from '../symbols/Pattern'
-import { parseGameData, type FileValue, type GameDataFormat } from './parse'
-import { AnnotatedFile } from './AnnotatedFile'
-import { DeepScan } from './DeepScan'
-import { DEEP_SCAN_API, fetchScanBuilds, fetchScanHealth, requestDeepScan } from './deepScan'
-import { fileDetails } from './details'
-import { browserMarks, problemLines, scanMarks } from './lineMarks'
-import { applyFixes, patchFile } from './patch'
-import { ScanPanel, type ScanPlatform } from './ScanPanel'
-import { bestFit, identifyFile, keyVerdicts, scoreBuilds, summarise, type KeyState } from './verdict'
+import { DEEP_SCAN_API } from './deepScan'
+import { handOff } from './handoff'
+import { KeyList } from './KeyList'
+import { isLoaded, readGameData, useFileCheck, type Loaded } from './useFileCheck'
 
-interface Loaded {
-  name: string
-  format: GameDataFormat
-  /** Kept so the fixed file can be produced from the original bytes. */
-  text: string
-  values: Map<string, FileValue>
-  /** Set when the page filled itself with a published file, so it can say so. */
-  example?: { plugin: string; build: string }
-}
-
-const STATES: KeyState[] = ['outdated', 'current', 'unknown', 'absent']
-
-/** One tone per state, so a number reads the same here as anywhere else on the site. */
-const STATE_TONE: Record<KeyState, 'bad' | 'ok' | 'warn' | 'neutral'> = {
-  outdated: 'bad',
-  current: 'ok',
-  unknown: 'warn',
-  absent: 'neutral',
-}
-const STATE_NUMBER = { bad: 'text-bad', ok: 'text-ok', warn: 'text-warn', neutral: 'text-ink' } as const
-/** Signatures are long; a page of them at a time keeps the list readable. */
-const ROWS = 25
-
-function Value({ value }: { value: unknown }) {
-  if (value === null || value === undefined) return <em>—</em>
-  const text = typeof value === 'string' ? value : String(value)
-  return /^[0-9A-Fa-f?\s\\x]{8,}$/.test(text) ? <Pattern pattern={text} /> : <span>{text}</span>
-}
-
+/**
+ * The quick check: drop a file, see which keys are out of date for the newest
+ * build, take the fixed file. All of it in this browser. The deep scan against
+ * the game binaries and the file view with a verdict on every line are their own
+ * page (/scan), one button away, so this one stays short.
+ */
 export function CheckFilePage() {
   const { t } = useTranslation()
-  const { data: history, isLoading } = useQuery({ queryKey: ['site-history'], queryFn: ({ signal }) => getSiteHistory(signal) })
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [chosenFile, setChosenFile] = useState<string | null>(null)
-  const [show, setShow] = useState<KeyState>('outdated')
-  const [limit, setLimit] = useState(ROWS)
   const [dragging, setDragging] = useState(false)
   const [mode, setMode] = useState<'file' | 'paste'>('file')
   const [pasted, setPasted] = useState('')
   const [copied, setCopied] = useState(false)
-  const [view, setView] = useState<'list' | 'file'>('list')
-  const [platform, setPlatform] = useState<ScanPlatform>('both')
-  const [build, setBuild] = useState('')
-  const [focusIndex, setFocusIndex] = useState(-1)
-  // Once someone drops, pastes or edits, the example must never land on top of it.
-  const userActed = useRef(false)
-
-  const newest = history?.builds[history.builds.length - 1]?.gameVersion
-  const identification = useMemo(
-    () => (loaded ? identifyFile(loaded.values, history) : null),
-    [loaded, history],
-  )
-  const file = chosenFile ?? (identification?.decisive ? identification.best?.file : undefined)
-  const scores = useMemo(
-    () => (loaded && file ? scoreBuilds(loaded.values, history, file) : []),
-    [loaded, history, file],
-  )
-  const fit = useMemo(() => bestFit(scores), [scores])
-  const verdicts = useMemo(
-    () => (loaded && file && newest ? keyVerdicts(loaded.values, history, file, newest) : []),
-    [loaded, history, file, newest],
-  )
-  const summary = useMemo(() => summarise(verdicts), [verdicts])
-  // Fetched up front: the page opens on a published file so the editor and the
-  // side panel show what they do before anyone has a file of their own at hand.
+  const { history, isLoading, newest, identification, chosenFile, setChosenFile, file, fit, verdicts, summary, patched, behind } = useFileCheck(loaded)
   const { data: index } = useQuery({
     queryKey: ['gamedata-index'],
     queryFn: ({ signal }) => getGameDataIndex(signal),
+    enabled: Boolean(file),
   })
   const publishedFile = useMemo(
     () => index?.versions.find((version) => version.gameVersion === newest)?.files.find((entry) => entry.id === file),
     [index, newest, file],
   )
-  const patched = useMemo(
-    () => (loaded && summary.outdated > 0 ? patchFile(loaded.text, verdicts) : null),
-    [loaded, verdicts, summary.outdated],
-  )
-  const filtered = useMemo(() => verdicts.filter((verdict) => verdict.state === show), [verdicts, show])
 
-  // The deep scan, started from the side panel. Asking which builds it can scan
-  // against sends nothing about the file; the file itself only goes on a click.
-  const { data: scanBuilds } = useQuery({
-    queryKey: ['scan-builds'],
-    queryFn: ({ signal }) => fetchScanBuilds(signal),
-    enabled: Boolean(loaded),
-    retry: false,
-    staleTime: 5 * 60_000,
-  })
-  const { data: health } = useQuery({
-    queryKey: ['scan-health'],
-    queryFn: ({ signal }) => fetchScanHealth(signal),
-    enabled: Boolean(loaded),
-    retry: false,
-    refetchInterval: 15_000,
-  })
-  const details = useMemo(() => (loaded ? fileDetails(loaded.text, loaded.values) : null), [loaded])
-  const scan = useMutation({
-    mutationFn: (input: Loaded) =>
-      requestDeepScan(input.text, input.name, {
-        platform: platform === 'both' ? undefined : platform,
-        build: build || undefined,
-      }),
-    onSuccess: (data) => {
-      if (data.note) return
-      setView('file')
-      setFocusIndex(-1)
-    },
-  })
-  // A result belongs to the text it was run on; a new file must not inherit the last one's.
-  const scanResult = scan.data && scan.variables?.text === loaded?.text ? scan.data : undefined
-  const deepPatched = useMemo(
-    () => (loaded && scanResult?.fixes?.length ? applyFixes(loaded.text, scanResult.fixes) : null),
-    [loaded, scanResult],
-  )
-  const marks = useMemo(() => {
-    if (!loaded) return []
-    if (scanResult && !scanResult.note) return scanMarks(loaded.text, scanResult)
-    return file ? browserMarks(loaded.text, verdicts) : []
-  }, [loaded, scanResult, file, verdicts])
-  const problems = useMemo(() => problemLines(marks), [marks])
-  const fixedText = deepPatched?.applied ? deepPatched.text : patched?.applied ? patched.text : null
-
-  useEffect(() => {
-    if (loaded || userActed.current || !index || !newest) return
-    const files = (index.versions.find((version) => version.gameVersion === newest) ?? index.versions[0])?.files ?? []
-    const pick = files.find((entry) => entry.plugin === 'matchzy') ?? files[0]
-    if (!pick) return
-    let cancelled = false
-    void getGameDataFile(pick).then((text) => {
-      if (cancelled || userActed.current) return
-      try {
-        const parsed = parseGameData(text)
-        if (parsed.values.size === 0) return
-        setLoaded({ name: pick.fileName, format: parsed.format, text, values: parsed.values, example: { plugin: pick.plugin, build: newest } })
-        setView('file')
-      } catch {
-        // an example that does not parse is simply not shown
-      }
-    }).catch(() => undefined)
-    return () => { cancelled = true }
-  }, [index, newest, loaded])
-
-  function stepProblem(direction: 1 | -1): void {
-    if (problems.length === 0) return
-    const start = focusIndex < 0 ? (direction === 1 ? -1 : 0) : focusIndex
-    setFocusIndex((start + direction + problems.length) % problems.length)
-    setView('file')
-  }
-
-  const shown = filtered.slice(0, limit)
-
-
-  async function accept(input: File | string, name: string, nextView: 'list' | 'file' = 'list') {
-    userActed.current = true
+  async function accept(input: File | string, name: string) {
     setError(null)
     setChosenFile(null)
-    setLimit(ROWS)
     setCopied(false)
-    setView(nextView)
-    setFocusIndex(-1)
-    scan.reset()
+    let text: string
     try {
-      const text = typeof input === 'string' ? input : await input.text()
-      if (!text.trim()) throw new Error('empty')
-      const parsed = parseGameData(text)
-      // A file with no platform entries is readable and still useless here, and
-      // it is the likeliest mistake - a README, the wrong file from the plugin
-      // folder. Saying that is more use than offering a plugin to compare it
-      // against. The KeyValues reader never throws, so this is the only way an
-      // unusable file shows up.
-      if (parsed.values.size === 0) {
-        setLoaded(null)
-        setError(t('check.noEntries', { format: parsed.format.toUpperCase() }))
-        return
-      }
-      setLoaded({ name, format: parsed.format, text, values: parsed.values })
+      text = typeof input === 'string' ? input : await input.text()
     } catch {
-      setLoaded(null)
-      setError(t('check.unreadable'))
+      text = ''
     }
+    const read = readGameData(text, name)
+    if (isLoaded(read)) {
+      setLoaded(read)
+      return
+    }
+    setLoaded(null)
+    setError(read.reason === 'noEntries' ? t('check.noEntries', { format: read.format.toUpperCase() }) : t('check.unreadable'))
   }
 
   if (isLoading) return <div className="handbook"><Skeleton rows={6} /></div>
-
-  const behind = fit && newest && fit.build !== newest
-    ? history!.builds.length - 1 - history!.builds.findIndex((entry) => entry.gameVersion === fit.build)
-    : 0
 
   return (
     <div className="handbook">
@@ -368,285 +218,134 @@ jq -n --rawfile g gamedata/matchzy.json '{gamedata: $g, filename: "matchzy.json"
             )}
           </div>
           <div className="panel-body">
-            {loaded.example && (
+            {!file && (
               <Alert
-                tone="qualify"
-                title={t('check.example', { plugin: loaded.example.plugin, build: loaded.example.build })}
-                description={t('check.exampleHow')}
+                tone="warn"
+                title={t('check.unknownPlugin')}
+                description={
+                  <>
+                    {identification?.best
+                      ? t('check.closest', { plugin: identification.best.plugin, shared: identification.best.shared, keys: loaded.values.size })
+                      : t('check.noOverlap')}
+                    <div className="pickplugin">
+                      <label htmlFor="check-plugin" className="sr-only">{t('check.pick')}</label>
+                      <Select
+                        id="check-plugin"
+                        className="min-w-[260px]"
+                        defaultValue=""
+                        onChange={(event) => setChosenFile(event.target.value)}
+                      >
+                        <option value="" disabled>{t('check.pick')}</option>
+                        {Object.keys(history?.files ?? {}).sort().map((path) => (
+                          <option key={path} value={path}>{path.split('/')[0]}</option>
+                        ))}
+                      </Select>
+                    </div>
+                  </>
+                }
               />
             )}
-            {/* Settings and verdict on the left, the answer on the right: as a
-                list of entries, or as the file itself with every verdict on its line. */}
-            <div className="grid items-start gap-4 lg:grid-cols-[290px_minmax(0,1fr)]">
-              <ScanPanel
-                plugin={file?.split('/')[0]}
-                format={loaded.format}
-                details={details!}
-                health={health}
-                platform={platform}
-                onPlatform={setPlatform}
-                builds={scanBuilds ?? []}
-                build={build}
-                onBuild={setBuild}
-                pending={scan.isPending}
-                error={scan.error}
-                result={scanResult}
-                onScan={() => scan.mutate(loaded)}
-                summary={file ? summary : undefined}
-                problems={problems.length}
-                onNext={() => stepProblem(1)}
-              />
-              <div className="min-w-0">
-                <Tabs
-                  value={view}
-                  onValueChange={(next) => setView(next as 'list' | 'file')}
-                  items={[
-                    {
-                      key: 'list',
-                      label: t('check.view.list'),
-                      children: (
-                        <div className="flex flex-col gap-4">
-                  {!file && (
-                    <Alert
-                      tone="warn"
-               
-                      title={t('check.unknownPlugin')}
-                      description={
-                        <>
-                          {identification?.best
-                            ? t('check.closest', { plugin: identification.best.plugin, shared: identification.best.shared, keys: loaded.values.size })
-                            : t('check.noOverlap')}
-                          <div className="pickplugin">
-                            <label htmlFor="check-plugin" className="sr-only">{t('check.pick')}</label>
-                            <Select
-                              id="check-plugin"
-                              className="min-w-[260px]"
-                              defaultValue=""
-                              onChange={(event) => setChosenFile(event.target.value)}
-                            >
-                              <option value="" disabled>{t('check.pick')}</option>
-                              {Object.keys(history?.files ?? {}).sort().map((path) => (
-                                <option key={path} value={path}>{path.split('/')[0]}</option>
-                              ))}
-                            </Select>
-                          </div>
-                        </>
-                      }
-                    />
-                  )}
 
-                  {file && (
-                    <>
-                      {/* The headline verdict moved into the bar above; what is left
-                          here is which build your file looks like and how far back
-                          that is - the part you act on. */}
-                      {fit && (
-                        <p className="fitnote m-0 text-[12.5px] leading-relaxed text-muted-foreground">
-                          {identification?.decisive && !chosenFile
-                            ? `${t('check.sharedKeys', { shared: identification.best!.shared, keys: loaded.values.size })}. `
-                            : ''}
-                          {behind === 0
-                            ? t('check.fitCurrent', { build: fit.build })
-                            : t('check.fitBehind', { build: fit.build, builds: behind })}
-                          {fit.tied ? ` ${t('check.tied', { oldest: fit.oldest, build: fit.build })}` : ''}
-                        </p>
-                      )}
+            {file && (
+              <>
+                {/* The headline verdict is in the bar above; what is left here is
+                    which build your file looks like and how far back that is. */}
+                {fit && (
+                  <p className="fitnote m-0 text-[12.5px] leading-relaxed text-muted-foreground">
+                    {identification?.decisive && !chosenFile
+                      ? `${t('check.sharedKeys', { shared: identification.best!.shared, keys: loaded.values.size })}. `
+                      : ''}
+                    {behind === 0
+                      ? t('check.fitCurrent', { build: fit.build })
+                      : t('check.fitBehind', { build: fit.build, builds: behind })}
+                    {fit.tied ? ` ${t('check.tied', { oldest: fit.oldest, build: fit.build })}` : ''}
+                  </p>
+                )}
 
-                      {patched && patched.applied > 0 && (
-                        <div className="fixit">
-                          <div className="fixhead">
-                            <strong>{t('check.fixH')}</strong>
-                            <span>{t('check.fixSub', { applied: patched.applied })}</span>
-                          </div>
-                          <ol className="fixsteps">
-                            <li>{t('check.step1')}</li>
-                            <li>{t('check.step2')}</li>
-                            <li>{t('check.step3')}</li>
-                          </ol>
-                          <div className="pactions">
-                            <Button variant="primary" onClick={() => saveText(patched.text, `${newest}-${loaded.name}`)}>
-                              {t('check.download')}
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                void copyText(patched.text, { ok: t('clipboard.ok'), failed: t('clipboard.failed') }).then(setCopied)
-                              }}
-                            >
-                              {copied ? t('check.copied') : t('check.copy')}
-                            </Button>
-                          </div>
-                          {patched.skipped.length > 0 && (
-                            <p className="dznote">
-                              {t('check.manual', { count: patched.skipped.length })}{' '}
-                              {[...new Set(patched.skipped.map((entry) => entry.key))].join(', ')}
-                            </p>
-                          )}
-                        </div>
-                      )}
+                {patched && patched.applied > 0 && (
+                  <div className="fixit">
+                    <div className="fixhead">
+                      <strong>{t('check.fixH')}</strong>
+                      <span>{t('check.fixSub', { applied: patched.applied })}</span>
+                    </div>
+                    <ol className="fixsteps">
+                      <li>{t('check.step1')}</li>
+                      <li>{t('check.step2')}</li>
+                      <li>{t('check.step3')}</li>
+                    </ol>
+                    <div className="pactions">
+                      <Button variant="primary" onClick={() => saveText(patched.text, `${newest}-${loaded.name}`)}>
+                        {t('check.download')}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          void copyText(patched.text, { ok: t('clipboard.ok'), failed: t('clipboard.failed') }).then(setCopied)
+                        }}
+                      >
+                        {copied ? t('check.copied') : t('check.copy')}
+                      </Button>
+                    </div>
+                    {patched.skipped.length > 0 && (
+                      <p className="dznote">
+                        {t('check.manual', { count: patched.skipped.length })}{' '}
+                        {[...new Set(patched.skipped.map((entry) => entry.key))].join(', ')}
+                      </p>
+                    )}
+                  </div>
+                )}
 
-                      {publishedFile && (
-                        <p className="dznote takeours">
-                          {t('check.orTakeOurs')}{' '}
-                          <button
-                            type="button"
-                            className="linkish"
-                            onClick={() => {
-                              void getGameDataFile(publishedFile).then((text) =>
-                                saveText(text, `${newest}-${publishedFile.fileName}`),
-                              )
-                            }}
-                          >
-                            {t('check.downloadPublished', { name: publishedFile.fileName })}
-                          </button>
-                        </p>
-                      )}
+                {publishedFile && (
+                  <p className="dznote takeours">
+                    {t('check.orTakeOurs')}{' '}
+                    <button
+                      type="button"
+                      className="linkish"
+                      onClick={() => {
+                        void getGameDataFile(publishedFile).then((text) =>
+                          saveText(text, `${newest}-${publishedFile.fileName}`),
+                        )
+                      }}
+                    >
+                      {t('check.downloadPublished', { name: publishedFile.fileName })}
+                    </button>
+                  </p>
+                )}
 
-                      {fit && behind === 0 && fit.share < 1 && (
-                        <Alert
-                          tone="qualify"
-                   
-                          title={t('check.maybeNewer')}
-                          description={t('check.maybeNewerWhy', { build: newest })}
-                        />
-                      )}
+                {fit && behind === 0 && fit.share < 1 && (
+                  <Alert
+                    tone="qualify"
+                    title={t('check.maybeNewer')}
+                    description={t('check.maybeNewerWhy', { build: newest })}
+                  />
+                )}
 
-                      {/*
-                        Four states, and they are this checker's own: it compares your
-                        file against published values, so it can say a value is current
-                        or out of date, but not the things verify_plugin_gamedata says
-                        after scanning the binaries. Naming them its way would claim a
-                        distinction this data cannot support.
-                      */}
-                      <ChipGroup
-                        variant="card"
-                        label={t('check.statesLabel')}
-                        value={show}
-                        onValueChange={(state) => { setShow(state as KeyState); setLimit(ROWS) }}
-                        className="grid w-full grid-cols-2 items-stretch gap-3 lg:grid-cols-4"
-                        items={STATES.map((state) => ({
-                          value: state,
-                          disabled: summary[state] === 0,
-                          label: (
-                            <>
-                              {/* `v` is the hook CheckFilePage.test.tsx reads the count through. */}
-                              <span className={`v font-display text-[28px] font-bold leading-none ${STATE_NUMBER[STATE_TONE[state]]}`}>
-                                {summary[state]}
-                              </span>
-                              <span className="text-[12px] uppercase tracking-wide text-muted-foreground">{t(`check.state.${state}`)}</span>
-                            </>
-                          ),
-                        }))}
-                      />
-
-                      <p className="plain prose dznote">{t(`check.meaning.${show}`)}</p>
-
-                      {/*
-                        A table's header over a list of <details>, not a real <table>.
-                        The rows stay disclosures because a signature is 40+ bytes and
-                        dumping every one inline is what the folding was for; the
-                        header and the column grid are what make it scannable.
-                      */}
-                      <div className="krowhead" aria-hidden="true">
-                        <span>{t('check.col.entry')}</span>
-                        <span>{t('check.col.kind')}</span>
-                        <span>{t('check.col.platform')}</span>
-                      </div>
-                      <div className="krows">
-                        {shown.map((verdict) => (
-                          <details className="krow" data-state={verdict.state} key={`${verdict.state}-${verdict.key}`}>
-                            <summary>
-                              <code className="kname">{verdict.key}</code>
-                              <span className="kindbadge">
-                                {t(`check.kind.${
-                                  typeof (verdict.expected?.[0] ?? verdict.mine?.linux ?? verdict.expected?.[1] ?? verdict.mine?.windows) === 'number'
-                                    ? 'offset'
-                                    : 'signature'
-                                }`)}
-                              </span>
-                              {/* One grid cell, so the badges line up down the column. */}
-                              <span className="pbadges">
-                                {(['linux', 'windows'] as const).map((platform) => {
-                                  const ok = platform === 'linux' ? verdict.linuxOk : verdict.windowsOk
-                                  if (verdict.state !== 'outdated' && verdict.state !== 'current') return null
-                                  if (ok === undefined) return null
-                                  return (
-                                    <span className={`pbadge ${ok ? 'ok' : 'bad'}`} key={platform}>
-                                      {t(`check.platform.${platform}`)}
-                                    </span>
-                                  )
-                                })}
-                              </span>
-                            </summary>
-                            <div className="kdiff">
-                              {(['linux', 'windows'] as const).map((platform, index) => {
-                                const mineValue = verdict.mine?.[platform]
-                                const theirsValue = verdict.expected?.[index]
-                                if (mineValue == null && theirsValue == null) return null
-                                const ok = platform === 'linux' ? verdict.linuxOk : verdict.windowsOk
-                                return (
-                                  <div className="kline" key={platform}>
-                                    <span className="pl">{t(`check.platform.${platform}`)}</span>
-                                    <span className="vals">
-                                      {verdict.state === 'outdated' && ok === false ? (
-                                        // `was`/`now` are the hooks CheckFilePage.test.tsx reads the two values through.
-                                        <ValueChange
-                                          before={mineValue}
-                                          after={theirsValue}
-                                          beforeLabel={t('check.yours')}
-                                          afterLabel={`${t('check.published')} ${newest ?? ''}`.trim()}
-                                          oldClassName="was"
-                                          newClassName="now"
-                                          copyable
-                                        />
-                                      ) : (
-                                        <span className="same"><Value value={verdict.state === 'unknown' ? mineValue : theirsValue} /></span>
-                                      )}
-                                    </span>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          </details>
-                        ))}
-                        {shown.length === 0 && <p className="plain">{t('check.none')}</p>}
-                      </div>
-
-                      {filtered.length > shown.length && (
-                        <Button onClick={() => setLimit(filtered.length)}>
-                          {t('check.showAll', { count: filtered.length - shown.length })}
-                        </Button>
-                      )}
-                    </>
-                  )}
-                          {scanResult && <DeepScan name={loaded.name} result={scanResult} patched={deepPatched} />}
-                        </div>
-                      ),
-                    },
-                    {
-                      key: 'file',
-                      label: t('check.view.file'),
-                      children: (
-                        <AnnotatedFile
-                          text={loaded.text}
-                          fixed={fixedText}
-                          name={loaded.name}
-                          format={loaded.format}
-                          marks={marks}
-                          source={scanResult && !scanResult.note ? 'scan' : file ? 'browser' : null}
-                          problems={problems}
-                          focusIndex={focusIndex}
-                          onStep={stepProblem}
-                          onEdit={(text) => void accept(text, loaded.name, 'file')}
-                        />
-                      ),
-                    },
-                  ]}
-                />
-              </div>
-            </div>
+                <KeyList key={loaded.text} verdicts={verdicts} summary={summary} newest={newest} />
+              </>
+            )}
           </div>
         </section>
       )}
+
+      {/* The way on to the scanner: same file, the binaries instead of our
+          published values, and every verdict on its own line. */}
+      <section className="scancta">
+        <span className="flex size-[38px] shrink-0 items-center justify-center rounded-[9px] bg-card-2 text-[color:var(--accent-text)]">
+          <PlayIcon size={16} />
+        </span>
+        <span className="flex min-w-0 grow flex-col gap-0.5">
+          <strong className="font-display text-[15px] text-ink">{t('check.toScan.h')}</strong>
+          <span className="text-[13px] leading-relaxed text-ink-2">{t('check.toScan.body')}</span>
+        </span>
+        <Button
+          variant="primary"
+          onClick={() => {
+            if (loaded) handOff(loaded.text, loaded.name)
+            requestNavigation({ view: 'scan' })
+          }}
+        >
+          {loaded ? t('check.toScan.withFile') : t('check.toScan.open')}
+        </Button>
+      </section>
     </div>
   )
 }

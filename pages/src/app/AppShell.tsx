@@ -19,6 +19,7 @@ const RunDetailPage = lazy(() => import('../features/run-detail/RunDetailPage').
 const FindSymbolPage = lazy(() => import('../features/symbols/FindSymbolPage').then((module) => ({ default: module.FindSymbolPage })))
 const GameDataPage = lazy(() => import('../features/gamedata/GameDataPage').then((module) => ({ default: module.GameDataPage })))
 const DiffPage = lazy(() => import('../features/diff/DiffPage').then((module) => ({ default: module.DiffPage })))
+const ScanPage = lazy(() => import('../features/checkfile/ScanPage').then((module) => ({ default: module.ScanPage })))
 const CheckFilePage = lazy(() => import('../features/checkfile/CheckFilePage').then((module) => ({ default: module.CheckFilePage })))
 const RunReportPage = lazy(() => import('../features/runs2/RunReportPage').then((module) => ({ default: module.RunReportPage })))
 const StartPage = lazy(() => import('../features/start/StartPage').then((module) => ({ default: module.StartPage })))
@@ -97,9 +98,9 @@ export function AppShell() {
     window.scrollTo({ top: 0 })
   }
 
-  // Three destinations a server owner comes for. Everything else is a footer
+  // The destinations a server owner comes for. Everything else is a footer
   // link: still one click away, no longer competing for the top bar.
-  const tabs: AppView[] = ['start', 'symbols', 'check']
+  const tabs: AppView[] = ['start', 'symbols', 'check', 'scan']
   const footer: AppView[] = ['gamedata', 'diff', 'runs', 'words']
   const section: AppView = plugin || view === 'gamedata' ? 'start' : view
   const loading = <div className="page-spinner">{t('app.loadingPage')}</div>
@@ -145,7 +146,7 @@ export function AppShell() {
         )}
       </header>
 
-      <main className="app-content">
+      <main className={view === 'scan' ? 'app-content wide' : 'app-content'}>
         <BuildStatusBanner />
         {plugin && <Suspense fallback={loading}><PluginPage plugin={plugin} /></Suspense>}
         {!plugin && view === 'start' && <Suspense fallback={loading}><StartPage onGo={go} /></Suspense>}
@@ -153,6 +154,7 @@ export function AppShell() {
         {view === 'gamedata' && <Suspense fallback={loading}><GameDataPage /></Suspense>}
         {view === 'diff' && <Suspense fallback={loading}><DiffPage /></Suspense>}
         {view === 'check' && <Suspense fallback={loading}><CheckFilePage /></Suspense>}
+        {view === 'scan' && <Suspense fallback={loading}><ScanPage /></Suspense>}
         {view === 'words' && <Suspense fallback={loading}><WordsPage /></Suspense>}
         {view === 'runs' && <Suspense fallback={loading}><RunReportPage /></Suspense>}
         {view === 'runs-live' && (

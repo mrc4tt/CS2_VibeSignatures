@@ -114,7 +114,13 @@
 .rl.m-warn .rnote { color: var(--warn); }
 .legend i.b { background: var(--bad); }
 .legend i.w { background: var(--warn); }
-.annotated .rawscroll { max-height: calc(100dvh - 260px); }
+/* The annotated file wraps every line instead of scrolling sideways. With
+   white-space: pre the rows were only as wide as the pane while their text ran
+   past it, so the sticky gutter scrolled away with its row and the colour bars
+   ended up drawn across the code. Wrapping keeps gutter, bar and note in place. */
+.annotated .rawscroll { max-height: calc(100dvh - 260px); overflow-x: hidden; }
+.annotated .rl .lc { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.annotated .rl .rnote { white-space: normal; display: inline-block; }
 .rawedit { display: block; width: 100%; min-height: 360px; height: calc(100dvh - 260px); padding: 10px 16px;
   border: 0; resize: vertical; background: var(--sunk); color: var(--ink); font-family: var(--mono);
   font-size: 11.5px; line-height: 1.62; white-space: pre; tab-size: 2; outline: none; }
@@ -622,3 +628,29 @@ html[data-theme="light"] .starbtn.on { color: var(--accent); }
   .chgtable td.vals { grid-column: 1 / -1; padding-bottom: 10px; }
 }
 .platchip { display: inline-block; padding: 1px 8px; border: 1px solid var(--rule-strong); border-radius: 6px; font-size: 12px; color: var(--muted); }
+
+/* Check my file: the way on to the scanner. */
+.scancta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; margin-top: 20px; padding: 16px 18px;
+  border: 1px solid var(--rule-strong); border-radius: 12px; background: var(--card); }
+
+/* The scanner: the whole width of the window, the file as tall as it allows. */
+.app-content.wide { max-width: 1680px; padding-top: 20px; }
+.scanpage { display: flex; flex-direction: column; gap: 14px; border-radius: 14px; outline: 2px dashed transparent;
+  outline-offset: 6px; transition: outline-color 0.15s; }
+.scanpage[data-dragging] { outline-color: var(--accent); }
+.scanbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 14px;
+  border: 1px solid var(--rule-strong); border-radius: 12px; background: var(--card); }
+.scanverdict { padding: 5px 11px; border-radius: 999px; border: 1px solid var(--rule); font-size: 13px; font-weight: 600; }
+.scanverdict.ok { color: var(--ok); background: var(--ok-bg); border-color: var(--ok-line); }
+.scanverdict.warn { color: var(--warn); background: var(--warn-bg); border-color: var(--warn-line); }
+.scanverdict.bad { color: var(--bad); background: var(--bad-bg); border-color: var(--bad-line); }
+.scangrid { display: grid; gap: 16px; align-items: start; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1024px) {
+  .scangrid { grid-template-columns: 300px minmax(0, 1fr); }
+  .scangrid .scanpanel { position: sticky; top: 76px; }
+}
+.scanpage .annotated .rawscroll, .scanpage .rawedit { height: calc(100dvh - 300px); max-height: none; min-height: 420px; }
+.scanempty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px 20px; text-align: center;
+  border: 1px dashed var(--rule-strong); border-radius: 12px; background: var(--card); }
+.scanpage .scanempty .rawedit { height: 260px; min-height: 0; text-align: left; border: 1px solid var(--rule); border-radius: 9px; }
+.scanempty .dzmain { margin: 0; font-family: var(--serif); font-size: 17px; }
