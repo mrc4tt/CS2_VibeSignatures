@@ -7,7 +7,7 @@ import { ArrowLeftIcon, EditIcon, FileCheckIcon } from '../../ui/icons'
 import { buttonClass } from '../../ui/buttonStyle'
 import { Alert, Button, Tag } from '../../ui/primitives'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
-import { AnnotatedFile } from './AnnotatedFile'
+import { AnnotatedFile, type BrokenText } from './AnnotatedFile'
 import { fetchScanBuilds, fetchScanHealth, requestDeepScan } from './deepScan'
 import { fileDetails } from './details'
 import { clearHandoff, peekHandoff } from './handoff'
@@ -16,7 +16,7 @@ import { applyFixes } from './patch'
 import { ResultSheet } from './ResultSheet'
 import { readAutoOpen, type SheetSize } from './sheetModel'
 import { ScanPanel, type ScanPlatform } from './ScanPanel'
-import { isLoaded, readGameData, useFileCheck, type Loaded } from './useFileCheck'
+import { failureText, isLoaded, readGameData, useFileCheck, type Loaded } from './useFileCheck'
 import { agedValue } from './verdict'
 
 /**
@@ -38,6 +38,7 @@ export function ScanPage() {
     return isLoaded(read) ? read : null
   })
   const [error, setError] = useState<string | null>(null)
+  const [broken, setBroken] = useState<BrokenText | null>(null)
   const [dragging, setDragging] = useState(false)
   const [platform, setPlatform] = useState<ScanPlatform>('both')
   const [build, setBuild] = useState('')
@@ -162,9 +163,10 @@ export function ScanPage() {
     })
   }
 
-  async function accept(input: File | string, name: string) {
+  async function accept(input: File | string, name: string, fromEditor = false) {
     userActed.current = true
     setError(null)
+    setBroken(null)
     setFocusLine(undefined)
     setSheet('closed')
     scan.reset()
@@ -179,7 +181,12 @@ export function ScanPage() {
       setLoaded(read)
       return
     }
-    setError(read.reason === 'noEntries' ? t('check.noEntries', { format: read.format.toUpperCase() }) : t('check.unreadable'))
+    // A typo made while typing is shown on its line in the editor, not above the page.
+    if (fromEditor && read.reason === 'badJson') {
+      setBroken({ text, line: read.line, message: failureText(read, t) })
+      return
+    }
+    setError(failureText(read, t))
   }
 
   const verdict = scanResult && !scanResult.note
@@ -287,8 +294,9 @@ export function ScanPage() {
               problems={problems}
               focusLine={focusLine}
               onStep={stepProblem}
-              onEdit={(text) => void accept(text, loaded.example ? t('check.pasted') : loaded.name)}
+              onEdit={(text) => void accept(text, loaded.example ? t('check.pasted') : loaded.name, true)}
               blankEdit={blankEdit}
+              broken={broken}
             />
           ) : (
             <div className="scanempty">

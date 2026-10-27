@@ -96,6 +96,22 @@ describe('Scanner', () => {
     expect(document.querySelector('.annotated .rl.m-bad')).toBeNull()
   })
 
+  it('points at the line of a JSON slip, in the editor while typing and above the page on a drop', async () => {
+    vi.mocked(getGameDataFile).mockResolvedValueOnce(behindFile)
+    paint()
+    await screen.findByText('Example: matchzy 14181')
+    fireEvent.change(screen.getByLabelText('The file, editable'), {
+      target: { value: '{\n  "A": { "linux": "55", "windows": "40" }\n  "B": { "linux": "1", "windows": "2" }\n}' },
+    })
+    const said = 'Invalid JSON at line 3, column 3: a comma is missing before this.'
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(said), { timeout: 2000 })
+    expect(document.querySelector('.annotated .rl.m-bad')?.getAttribute('data-line')).toBe('3')
+    expect(screen.queryByRole('alert')).toBeNull()
+
+    await drop('{ "A": { "linux": "55" }', 'broken.json')
+    expect(await screen.findByText('Invalid JSON at line 1, column 25: the file ends too early, a closing } or ] is missing.')).toBeInTheDocument()
+  })
+
   it('opens on the file handed over from Check my file, not the example', async () => {
     handOff(behindFile, 'mine.json')
     paint()

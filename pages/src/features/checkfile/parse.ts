@@ -108,6 +108,113 @@ function flattenVdf(text: string): Map<string, FileValue> {
   return out
 }
 
+export type JsonProblem = 'end' | 'comma' | 'colon' | 'key' | 'value' | 'string' | 'extra'
+
+/** Where a JSON or JSONC text first stops being valid, 1-based like an editor. */
+export class JsonSyntaxError extends Error {
+  readonly line: number
+  readonly column: number
+  readonly problem: JsonProblem
+
+  constructor(line: number, column: number, problem: JsonProblem) {
+    super(`invalid JSON at ${line}:${column} (${problem})`)
+    this.line = line
+    this.column = column
+    this.problem = problem
+  }
+}
+
+/** True when the first thing that is not whitespace or a comment opens a JSON object or array. */
+export function looksLikeJson(text: string): boolean {
+  const start = text.replace(/^\uFEFF/, '').replace(/^(?:\s|\/\/[^\n]*|\/\*[\s\S]*?\*\/)*/, '')
+  return start.startsWith('{') || start.startsWith('[')
+}
+
+/**
+ * The first syntax error in a JSON text, read leniently as JSONC (comments and
+ * trailing commas are fine), or null when it reads.
+ *
+ * JSON.parse knows where it failed, but every browser words and places that
+ * differently (Safari gives no position at all), so the text is walked here and
+ * the page can always point at a line.
+ */
+export function findJsonError(text: string): JsonSyntaxError | null {
+  let at = text.charCodeAt(0) === 0xfeff ? 1 : 0
+  const fail = (problem: JsonProblem, where = at): never => {
+    const before = text.slice(0, where).split('\n')
+    throw new JsonSyntaxError(before.length, before[before.length - 1]!.length + 1, problem)
+  }
+  const skip = () => {
+    for (;;) {
+      while (at < text.length && /\s/.test(text[at]!)) at += 1
+      if (text.startsWith('//', at)) {
+        const end = text.indexOf('\n', at)
+        at = end < 0 ? text.length : end
+      } else if (text.startsWith('/*', at)) {
+        const end = text.indexOf('*/', at + 2)
+        if (end < 0) fail('end', text.length)
+        at = end + 2
+      } else {
+        return
+      }
+    }
+  }
+  const string = () => {
+    const start = at
+    at += 1
+    while (at < text.length && text[at] !== '"') {
+      if (text[at] === '\n') fail('string', start)
+      at += text[at] === '\\' ? 2 : 1
+    }
+    if (at >= text.length) fail('string', start)
+    at += 1
+  }
+  const value = (): void => {
+    skip()
+    if (at >= text.length) fail('end')
+    const char = text[at]
+    if (char === '{' || char === '[') {
+      const close = char === '{' ? '}' : ']'
+      at += 1
+      skip()
+      while (text[at] !== close) {
+        if (at >= text.length) fail('end')
+        if (close === '}') {
+          if (text[at] !== '"') fail('key')
+          string()
+          skip()
+          if (text[at] !== ':') fail(at >= text.length ? 'end' : 'colon')
+          at += 1
+        }
+        value()
+        skip()
+        if (text[at] === ',') {
+          at += 1
+          skip()
+        } else if (text[at] !== close) {
+          fail(at >= text.length ? 'end' : 'comma')
+        }
+      }
+      at += 1
+    } else if (char === '"') {
+      string()
+    } else {
+      const literal = /^(?:-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null)/.exec(text.slice(at, at + 400))
+      if (!literal) fail('value')
+      at += literal![0].length
+    }
+  }
+  try {
+    value()
+    skip()
+    if (at < text.length) fail('extra')
+    return null
+  } catch (error) {
+    if (error instanceof JsonSyntaxError) return error
+    throw error
+  }
+}
+
 /**
  * Parse without trusting the file name.
  *
@@ -118,6 +225,10 @@ function flattenVdf(text: string): Map<string, FileValue> {
  * that succeeds but finds nothing is a real answer, not a failure — CS2FOW's
  * `games.txt` genuinely carries no platform entries — so only a file no parser
  * can read at all throws.
+ *
+ * A text that opens like JSON and that neither JSON reader takes is broken JSON,
+ * not KeyValues: the KeyValues reader would find nothing in it and the page would
+ * say "no entries" about a missing comma. That throws a JsonSyntaxError instead.
  */
 export function parseGameData(text: string): ParsedGameData {
   const attempts: Array<[GameDataFormat, () => Map<string, FileValue>]> = [
@@ -135,5 +246,9 @@ export function parseGameData(text: string): ParsedGameData {
     }
   }
   if (!best) throw new Error('unreadable')
+  if (best.format === 'vdf' && best.values.size === 0 && looksLikeJson(text)) {
+    const broken = findJsonError(text)
+    if (broken) throw broken
+  }
   return best
 }

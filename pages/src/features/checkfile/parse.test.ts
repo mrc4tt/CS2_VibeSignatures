@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { keyName, parseGameData, stripJsonc } from './parse'
+import { findJsonError, JsonSyntaxError, keyName, parseGameData, stripJsonc } from './parse'
 
 describe('reading a dropped gamedata file', () => {
   it('takes the entry name from the innermost segment that is not a kind word', () => {
@@ -98,5 +98,36 @@ describe('reading a dropped gamedata file', () => {
 
   it('strips block comments, line comments and trailing commas', () => {
     expect(stripJsonc('{"a":1, /* x */ "b":2,}').replace(/\s+/g, '')).toBe('{"a":1,"b":2}')
+  })
+})
+
+describe('pointing at broken JSON', () => {
+  const broken = (text: string) => {
+    try {
+      parseGameData(text)
+    } catch (error) {
+      if (error instanceof JsonSyntaxError) return [error.line, error.column, error.problem]
+      throw error
+    }
+    return null
+  }
+
+  it('names the line and column of a missing comma instead of reading it as KeyValues', () => {
+    expect(broken('{\n  "A": { "linux": "55", "windows": "40" }\n  "B": { "linux": "1", "windows": "2" }\n}')).toEqual([3, 3, 'comma'])
+  })
+
+  it('tells each common slip apart', () => {
+    expect(broken('{ "A": { "linux": "55" }')).toEqual([1, 25, 'end'])
+    expect(broken('{ "A" { "linux": "55" } }')).toEqual([1, 7, 'colon'])
+    expect(broken('{ A: { "linux": "55" } }')).toEqual([1, 3, 'key'])
+    expect(broken('{ "A": { "linux": 55 48 } }')).toEqual([1, 22, 'comma'])
+    expect(broken('{ "A": { "linux": \'55\' } }')).toEqual([1, 19, 'value'])
+    expect(broken('{ "A": { "linux": "55 } }\n')).toEqual([1, 19, 'string'])
+    expect(broken('{ "A": { "linux": "55" } } }')).toEqual([1, 28, 'extra'])
+  })
+
+  it('still takes JSONC comments and trailing commas, and still reads KeyValues', () => {
+    expect(findJsonError('// x\n{ "A": { "linux": "55", }, /* y */ }')).toBeNull()
+    expect(parseGameData('"Games"\n{\n\t"csgo"\n\t{\n\t\t"linux"\t"55"\n\t}\n}').format).toBe('vdf')
   })
 })

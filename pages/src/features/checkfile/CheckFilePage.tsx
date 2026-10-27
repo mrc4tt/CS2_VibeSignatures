@@ -12,7 +12,7 @@ import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { DEEP_SCAN_API } from './deepScan'
 import { handOff } from './handoff'
 import { KeyList } from './KeyList'
-import { isLoaded, readGameData, useFileCheck, type Loaded } from './useFileCheck'
+import { failureText, isLoaded, readGameData, useFileCheck, type Loaded } from './useFileCheck'
 
 /**
  * The quick check: drop a file, see which keys are out of date for the newest
@@ -55,7 +55,7 @@ export function CheckFilePage() {
       return
     }
     setLoaded(null)
-    setError(read.reason === 'noEntries' ? t('check.noEntries', { format: read.format.toUpperCase() }) : t('check.unreadable'))
+    setError(failureText(read, t))
   }
 
   if (isLoading) return <div className="handbook"><Skeleton rows={6} /></div>

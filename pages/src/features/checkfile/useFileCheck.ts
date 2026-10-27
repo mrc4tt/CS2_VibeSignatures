@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { getSiteHistory } from '../../api/siteData'
-import { parseGameData, type FileValue, type GameDataFormat } from './parse'
+import type { TFunction } from 'i18next'
+import { JsonSyntaxError, parseGameData, type FileValue, type GameDataFormat, type JsonProblem } from './parse'
 import { patchFile } from './patch'
 import { bestFit, identifyFile, keyVerdicts, scoreBuilds, summarise } from './verdict'
 
@@ -15,8 +16,23 @@ export interface Loaded {
   example?: { plugin: string; build: string }
 }
 
-/** Why a text could not be taken; the page words each one itself. */
-export type ReadFailure = { reason: 'unreadable' } | { reason: 'noEntries'; format: GameDataFormat }
+/** Why a text could not be taken. */
+export type ReadFailure =
+  | { reason: 'unreadable' }
+  | { reason: 'noEntries'; format: GameDataFormat }
+  | { reason: 'badJson'; line: number; column: number; problem: JsonProblem }
+
+/** A read failure as one sentence, the same on both pages. */
+export function failureText(failure: ReadFailure, t: TFunction): string {
+  switch (failure.reason) {
+    case 'noEntries':
+      return t('check.noEntries', { format: failure.format.toUpperCase() })
+    case 'badJson':
+      return t('check.badJson', { line: failure.line, column: failure.column, problem: t(`check.jsonProblem.${failure.problem}`) })
+    default:
+      return t('check.unreadable')
+  }
+}
 
 /**
  * A dropped or pasted text as this page can use it, or why it cannot.
@@ -31,7 +47,8 @@ export function readGameData(text: string, name: string): Loaded | ReadFailure {
     const parsed = parseGameData(text)
     if (parsed.values.size === 0) return { reason: 'noEntries', format: parsed.format }
     return { name, format: parsed.format, text, values: parsed.values }
-  } catch {
+  } catch (error) {
+    if (error instanceof JsonSyntaxError) return { reason: 'badJson', line: error.line, column: error.column, problem: error.problem }
     return { reason: 'unreadable' }
   }
 }

@@ -8,6 +8,13 @@ import { tokenizeLine } from '../gamedata/fileModel'
 import { changedLines, marksByLine, type LineMark, type MarkNote } from './lineMarks'
 import type { GameDataFormat } from './parse'
 
+/** A text typed into the editor that is not valid JSON, and where it breaks. */
+export interface BrokenText {
+  text: string
+  line: number
+  message: string
+}
+
 interface Props {
   text: string
   /** The file with every fix placed, when there is one to offer. */
@@ -25,6 +32,8 @@ interface Props {
   onEdit(text: string): void
   /** Bumped by the page's Paste button: empties the editor and puts the caret in it, ready for a paste. */
   blankEdit?: number
+  /** Set when the last text handed to onEdit did not parse: its line is marked and the reason shown. */
+  broken?: BrokenText | null
 }
 
 /**
@@ -43,7 +52,7 @@ interface Props {
  * come from the rows beneath. Once typing pauses the text is checked again; the
  * marks belong to the checked text, so they are hidden while it differs.
  */
-export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusLine, onStep, onEdit, blankEdit = 0 }: Props) {
+export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusLine, onStep, onEdit, blankEdit = 0, broken }: Props) {
   const { t } = useTranslation()
   const [showFixed, setShowFixed] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -59,6 +68,8 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
   const viewingFixed = showFixed && !!fixed
   const shown = viewingFixed ? fixed : draft
   const dirty = !viewingFixed && draft !== text
+  // Only while the editor still holds exactly the text that failed: typing on clears it.
+  const brokenHere = dirty && broken?.text === draft ? broken : null
   const lines = useMemo(() => shown.split('\n'), [shown])
   const byLine = useMemo(() => (dirty ? new Map<number, LineMark[]>() : marksByLine(marks)), [dirty, marks])
   const changed = useMemo(() => (fixed ? changedLines(text, fixed) : new Set<number>()), [text, fixed])
@@ -84,6 +95,9 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
     }, 700)
     return () => window.clearTimeout(timer)
   }, [draft, text])
+  useEffect(() => {
+    if (brokenHere) viewRef.current?.querySelector<HTMLElement>(`[data-line="${brokenHere.line}"]`)?.scrollIntoView?.({ block: 'nearest' })
+  }, [brokenHere])
   useEffect(() => {
     if (focusLine) viewRef.current?.querySelector<HTMLElement>(`[data-line="${focusLine}"]`)?.scrollIntoView?.({ block: 'start' })
   }, [focusLine])
@@ -173,11 +187,12 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
             if (worst) classes.push(`m-${worst}`)
             if (isChanged) classes.push('upd')
             if (focusLine === lineNumber) classes.push('foc')
+            if (brokenHere?.line === lineNumber) classes.push('m-bad')
             return (
               <div className={classes.join(' ')} key={lineNumber} data-line={lineNumber}>
                 <span className="ln">{lineNumber}</span>
                 <span className="fold"> </span>
-                <span className="st" title={tip || undefined} />
+                <span className="st" title={(brokenHere?.line === lineNumber ? brokenHere.message : tip) || undefined} />
                 <span className="lc">
                   {tokenizeLine(line, format).map((token, tokenIndex) => <TokenText token={token} key={tokenIndex} />)}
                 </span>
@@ -190,7 +205,9 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
       <div className="rawstatus">
         <span>{format.toUpperCase()}</span>
         <span>{t('check.view.lines', { count: lines.length })}</span>
-        {dirty ? (
+        {brokenHere ? (
+          <span className="text-bad" role="status">{brokenHere.message}</span>
+        ) : dirty ? (
           <span className="text-muted-foreground">{t('check.view.typing')}</span>
         ) : (
           <span className={problems.length ? 'text-bad' : 'text-ok'}>
