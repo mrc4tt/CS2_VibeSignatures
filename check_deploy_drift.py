@@ -87,6 +87,18 @@ DEPLOY_TARGETS = (
         "deployed_by": "deploy_local_plugins.sh",
     },
     {
+        # KeyValues, not JSON: generated as .txt (the contract's KeyValues suffix) and
+        # deployed under the name the plugin loads. Copy mode compares bytes; a
+        # difference is reported as unparseable rather than by key.
+        "plugin": "cs2-menus",
+        "dist": "configs/signatures.txt",
+        "root_env": "CUSTOMGIT_ROOT",
+        "root_default": "~/customGIT",
+        "install": "cs2-menus/configs/signatures.ini",
+        "mode": "copy",
+        "deployed_by": "deploy_local_plugins.sh",
+    },
+    {
         # No gamedata file in the plugin: patch_mam_source.py writes the values into
         # constexpr literals, so the source is compared literal by literal.
         "plugin": "multiaddonmanager",

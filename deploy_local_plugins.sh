@@ -40,6 +40,7 @@ pull_repo() {  # pull_repo <repo>
 
 for r in "$HOME/customGIT/weaponpaints" "$HOME/customGIT/matchzy" \
          "$HOME/customGIT/CleanerCS2" "$HOME/customGIT/MultiAddonManager" \
+         "$HOME/customGIT/cs2-menus" \
          "$HOME/plugins/cs2-retakes-allocator"; do
     pull_repo "$r"
 done
@@ -79,6 +80,11 @@ deploy "$OUT_ROOT/matchzy/gamedata/matchzy.json" \
 # CleanerCS2 reads addons/cleanercs2/gamedata.json; xmake packs package/ there.
 deploy "$OUT_ROOT/cleanercs2/addons/cleanercs2/gamedata.json" \
        "$HOME/customGIT/CleanerCS2/package/gamedata.json"
+
+# cs2-menus loads configs/signatures.ini (KeyValues). Generated as .txt, the
+# suffix the gamedata contract and tooling treat as KeyValues.
+deploy "$OUT_ROOT/cs2-menus/configs/signatures.txt" \
+       "$HOME/customGIT/cs2-menus/configs/signatures.ini"
 
 # Took over from rosetta (/root/rosetta, retired), which was the only thing
 # refreshing it. (Ray-Trace, its other target, is archived: CounterStrikeSharp
@@ -139,6 +145,7 @@ commit_push() {  # commit_push <repo> <path inside repo>
 commit_push "$HOME/customGIT/weaponpaints" gamedata/weaponpaints.json
 commit_push "$HOME/customGIT/matchzy" gamedata/matchzy.json
 commit_push "$HOME/customGIT/CleanerCS2" package/gamedata.json
+commit_push "$HOME/customGIT/cs2-menus" configs/signatures.ini
 commit_push "$HOME/plugins/cs2-retakes-allocator" Resources/RetakesAllocator_gamedata.json
 [ -n "$MAM_FAILED" ] || commit_push "$HOME/customGIT/MultiAddonManager" src/multiaddonmanager.cpp
 # CounterStrikeSharp's file is written by update_css_gamedata.sh, which has to

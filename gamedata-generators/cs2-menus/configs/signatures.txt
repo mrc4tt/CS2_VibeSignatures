@@ -1,0 +1,214 @@
+"Gamedata"
+{
+    // Every entry: "linux" and "windows" sig (or vtable offset). Written by CS2_VibeSignatures.
+
+    "GetGameTraceManager"
+    {
+        "linux"                 "48 8D 05 ? ? ? ? 0F 2E D1"
+        "windows"               ""
+    }
+    "UTIL_TraceShape"
+    {
+        "linux"                 "55 48 8D 05 ? ? ? ? 48 89 E5 41 57 49 89 F7 41 56 48 8D 35 ? ? ? ? 49 89 CE"
+        "windows"               ""
+    }
+
+    "UTIL_RespawnPlayer"
+    {
+        "linux"                 "55 48 8D 87 ? ? ? ? 48 89 E5 41 57 41 56 41 89 CE 41 55 45 89 CD"
+        "windows"               ""
+    }
+
+    // Search: "CCSPlayerPawnBase::SwitchTeam( %d ) - invalid team index.\n"
+    // We need the shortest function, at the time of the search the function consists of 11 lines
+    "SwitchTeam"
+    {
+        "linux"                 "55 48 89 E5 41 54 49 89 FC 89 F7"
+        "windows"               ""
+    }
+
+    // Search: "weapons/models/c4/weapon_c4.vmdl"
+    // function: sub_8577C0(a1, 0LL, 0LL);
+    //
+    //      sub_D01CA0();
+    //      sub_8577C0(a1, 0LL, 0LL);
+    //      sub_EA25D0(a1 + 2280, 0LL);
+    //      sub_856740(a1, 0x2000000LL);
+    //      sub_E9D470(a1 + 2280, 1LL);
+    //      sub_D09AF0(a1, (__int64)"weapons/models/c4/weapon_c4.vmdl");
+    //
+    "SetMoveType"
+    {
+        "linux"                 "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 89 D3 48 81 EC ? ? ? ? 40 38 B7"
+        "windows"               ""
+    }
+
+
+    // Search: "Script_StopSoundOn" or "Stop named sound on Entity" or "StopSoundOn"
+    // Function: return sub_1005700(result, a1);
+    "StopSoundEvent"
+    {
+        "linux"                 "55 48 89 E5 41 56 41 55 41 54 53 48 89 F3 48 83 EC 20 E8 ? ? ? ? 48 85 DB"
+        "windows"               ""
+    }
+
+    // Search: "CBaseEntity::EmitSound"
+    // We need the shortest function, at the time of the search the function consists of 10 lines
+    "EmitSoundFilter"
+    {
+        "linux"                 "55 48 89 E5 53 48 89 FB 48 83 EC ? E8 ? ? ? ? 48 89 D8 48 8B 5D ? C9 C3 CC CC CC CC CC CC 48 B8"
+        "windows"               ""
+    }
+
+
+    "IsHearingClient"
+    {
+        "linux"                 "55 48 89 E5 41 55 41 54 48 83 EC"
+        "windows"               ""
+    }
+
+    // Search: "Display player message" (say) / "Display player message to team" (say_team)
+    // UTIL_Say = the say command handler, UTIL_SayTeam = say_team, one unique sig each.
+    // With no UTIL_SayTeam entry the UTIL_Say sig must match exactly TWO functions
+    // (say_team first, then say).
+    "UTIL_Say"
+    {
+        "linux"                 "55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC 08 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 90 F0 00 00 00 84 C0 74 ? 48 89 DF E8 ? ? ? ? 48 89 C3 48 85 C0"
+        "windows"               ""
+    }
+    "UTIL_SayTeam"
+    {
+        "linux"                 ""
+        "windows"               ""
+    }
+
+
+
+    // Search: "hltv_versioninfo"
+    "GetGameEventManager"
+    {
+        "linux"                 "4C 8D 2D ? ? ? ? 49 8B 7D ? 48 8B 07 FF 50 ? 48 85 C0 74 ? 48 8D 0D ? ? ? ? 48 89 C3 48 8B 00 BA"
+        "windows"               ""
+    }
+
+    // Search: "CSource2GameClients::StartHLTVServer: game event %s not found.\n"
+    // function: sub_D94D80(a2)
+    "GetLegacyGameEventListener"
+    {
+        "linux"                 "48 8B 05 ? ? ? ? 48 85 C0 74 ? 83 FF ? 77 ? 48 63 FF 48 C1 E7 ? 48 8D 44 38"
+        "windows"               ""
+    }
+
+    // Search: "models/weapons/w_bullet.vmdl"
+    // We need the longest function, at the time of the search the function consists of 77 lines
+    "CBaseModelEntity_SetModel"
+    {
+        "linux"                 "55 48 89 E5 53 48 89 FB 48 83 EC ? 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 50 ? 48 89 DF"
+        "windows"               ""
+    }
+
+    // Search: "OnRescueZoneTouch"
+    // function: sub_1320870(v6, (__int64)"OnRescueZoneTouch", 0LL, 0LL, (__int64)&v17, 0)
+    "UTIL_AcceptInput"
+    {
+        "linux"                 "55 48 89 E5 41 57 49 89 FF 41 56 48 8D BD ? ? ? ? 41 55 4C 8D AD"
+        "windows"               ""
+    }
+
+    "UTIL_DispatchSpawn"
+    {
+        "linux"                 "48 85 FF 74 ? 55 48 89 E5 41 55 41 54 49 89 FC"
+        "windows"               ""
+    }
+
+    // Search: "info_hostage_rescue_zone_hint"
+    // function: sub_D91D60("info_hostage_rescue_zone_hint", 0xFFFFFFFFLL);
+    "UTIL_CreateEntity"
+    {
+        "linux"                 "48 8D 05 ? ? ? ? 55 48 89 FA 41 89 F0 48 89 E5 48 83 EC 08"
+        "windows"               ""
+    }
+
+    // Search: "Scorch"
+    //
+    //      sub_E19E00(v37, "Scorch")
+    //      sub_C05C50(a1)
+    //      return sub_D92060(a1)
+    //
+    // function: sub_D92060(a1)
+    "UTIL_Remove"
+    {
+        "linux"                 "48 89 FE 48 85 FF"
+        "windows"               ""
+    }
+
+    // Search: "CBaseEntity::TakeDamageOld: damagetype %d with info.GetDamageForce() == vec3_origin\n"
+    // function: __int64 __fastcall sub_860720(__int64 a1)
+    // How to search: find a line, go to the first line, find that function and go over the function with jmp
+    "OnTakeDamagePre"
+    {
+        "linux"                 "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 4C 8B 6F ? 4D 85 ED 0F 84 ? ? ? ? 41 80 BD"
+        "windows"               ""
+    }
+
+    "TerminateRound"
+    {
+        "linux"                 "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? F3 0F 11 85 ? ? ? ? 89 B5"
+        "windows"               ""
+    }
+
+    // Search: CCSPlayer_ItemServices::CanAcquire
+    "CanAcquire"
+    {
+        "linux"                 "55 48 89 E5 41 57 41 56 49 89 F6 41 55 41 54 49 89 CC 53 48 89 FB 48 83 EC ? 4C 8B 6F 38"
+        "windows"               ""
+    }
+
+    // CCSPlayerController::ProcessUsercmds(CCSPlayerController*, CCSGOUserCmd* cmds, int numcmds, bool paused, float margin)
+    "ProcessUsercmds"
+    {
+        "linux"                 "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 89 4D"
+        "windows"               ""
+    }
+
+    "OnTakeDamage_Alive"
+    {
+        "linux"                 "256"
+        "windows"               ""
+    }
+    "CommitSuicide"
+    {
+        "linux"                 "387"
+        "windows"               ""
+    }
+    "CollisionRulesChanged"
+    {
+        "linux"                 "187"
+        "windows"               ""
+    }
+    "Teleport"
+    {
+        "linux"                 "164"
+        "windows"               ""
+    }
+    "ChangeTeam"
+    {
+        "linux"                 "104"
+        "windows"               ""
+    }
+    "Respawn"
+    {
+        "linux"                 "276"
+        "windows"               ""
+    }
+    "DropWeapon"
+    {
+        "linux"                 "29"
+        "windows"               ""
+    }
+    "RemoveWeapons"
+    {
+        "linux"                 "28"
+        "windows"               ""
+    }
+}

@@ -140,6 +140,14 @@ FORK_OWNED_SYMBOLS = [
     # call in the function printing "Saving existing workshop save file from %s\n".
     # 14192 baseline: linux 0xb88db0, windows 0x18026e4a0.
     ("ScriptGetAddon", "func", "server", None),
+    # cs2-menus (configs/signatures.ini, cs2-menus generator). It hooks the say and
+    # say_team ConCommand handlers as UTIL_Say / UTIL_SayTeam - string-anchored on the
+    # registration's help text; 14183 linux 0x1870910 / 0x1870840. OnTakeDamagePre is
+    # CCSPlayer_DamageReactServices' TakeDamage (14183 linux 0x157f5a0), no string of
+    # its own and no baseline artifact yet - see its preprocessor's docstring.
+    ("Say_CommandHandler", "func", "server", None),
+    ("SayTeam_CommandHandler", "func", "server", None),
+    ("CCSPlayer_DamageReactServices_TakeDamage", "func", "server", None),
     # SwiftlyS2 (core/offsets.jsonc + core/signatures.jsonc). Each identified on 14192
     # on both platforms by its body, not only by the author's value; the generator's
     # KEY_SYMBOL_OVERRIDES routes SwiftlyS2's interface spellings onto these.

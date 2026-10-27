@@ -35,6 +35,8 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_va",
             "func_rva",
             "func_size",
+            # fork: cs2-menus hooks it by signature (engine "IsHearingClient")
+            "func_sig",
             "vfunc_sig",
             "vfunc_offset",
             "vfunc_index",
