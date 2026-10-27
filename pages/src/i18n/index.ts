@@ -490,6 +490,16 @@ const resources = {
           editLabel: 'The file, editable',
           typing: 'Edited: checked again when you pause',
         },
+        pop: {
+          label: 'Verdicts on line {{line}}',
+          apply: 'Use {{value}}',
+          applyAll: 'Use all {{count}}',
+          noFix: 'No confirmed replacement',
+          applied_one: 'Value replaced.',
+          applied_other: '{{count}} values replaced.',
+          notPlaced: 'That value could not be placed in the file, so change it by hand.',
+          hint: 'Put the cursor on a marked line for suggestions',
+        },
         side: {
           h: 'Scan settings',
           platform: 'Platform',
@@ -1020,6 +1030,16 @@ const resources = {
           noMarks: 'Ingen markeringer: vælg plugin eller kør en scanning',
           editLabel: 'Filen, redigerbar',
           typing: 'Ændret: tjekkes igen, når du holder pause',
+        },
+        pop: {
+          label: 'Vurderinger på linje {{line}}',
+          apply: 'Brug {{value}}',
+          applyAll: 'Brug alle {{count}}',
+          noFix: 'Ingen bekræftet erstatning',
+          applied_one: 'Værdien er erstattet.',
+          applied_other: '{{count}} værdier er erstattet.',
+          notPlaced: 'Værdien kunne ikke placeres i filen, så ret den i hånden.',
+          hint: 'Sæt markøren på en markeret linje for forslag',
         },
         side: {
           h: 'Scanning',

@@ -8,7 +8,7 @@ import { buttonClass } from '../../ui/buttonStyle'
 import { Alert, Button, Tag } from '../../ui/primitives'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { AnnotatedFile, type BrokenText } from './AnnotatedFile'
-import { fetchScanBuilds, fetchScanHealth, requestDeepScan } from './deepScan'
+import { fetchScanBuilds, fetchScanHealth, requestDeepScan, type DeepFix } from './deepScan'
 import { fileDetails } from './details'
 import { clearHandoff, peekHandoff } from './handoff'
 import { browserMarks, problemLines, scanMarks } from './lineMarks'
@@ -150,17 +150,31 @@ export function ScanPage() {
     setLoaded(next)
   }
 
-  function placeFixed(fixed: string) {
+  function placeFixed(fixed: string, message = t('scan.result.usedFixed')) {
     if (!loaded) return
     const before = loaded
     const read = readGameData(fixed, loaded.name)
     if (!isLoaded(read)) return
     userActed.current = true
-    swapText(read)
-    toast.success(t('scan.result.usedFixed'), {
-      action: { label: t('scan.result.undo'), onClick: () => swapText(before) },
+    // Marks from the deep scan belong to the text it scanned, so the changed text is
+    // scanned again. Marks from the published values follow the text by themselves,
+    // and a file must never be sent off by anything but a scan the user asked for.
+    const swap = scanResult && !scanResult.note ? swapText : setLoaded
+    swap(read)
+    toast.success(message, {
+      action: { label: t('scan.result.undo'), onClick: () => swap(before) },
       duration: 10_000,
     })
+  }
+
+  function applyOne(fixes: DeepFix[]) {
+    if (!loaded) return
+    const result = applyFixes(loaded.text, fixes)
+    if (result.applied === 0) {
+      toast.error(t('check.pop.notPlaced'))
+      return
+    }
+    placeFixed(result.text, t('check.pop.applied', { count: result.applied }))
   }
 
   async function accept(input: File | string, name: string, fromEditor = false) {
@@ -297,6 +311,7 @@ export function ScanPage() {
               onEdit={(text) => void accept(text, loaded.example ? t('check.pasted') : loaded.name, true)}
               blankEdit={blankEdit}
               broken={broken}
+              onApply={applyOne}
             />
           ) : (
             <div className="scanempty">

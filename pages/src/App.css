@@ -129,6 +129,17 @@
   tab-size: 2; overflow-wrap: normal; }
 .rawinput::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: transparent; }
 .rawinput[readonly] { caret-color: transparent; }
+/* The card under a marked line the caret is on. It floats over the lines below
+   (top is the line count in line heights) so opening it never moves the text. */
+.annotated .raw { --lh: calc(11.5px * 1.62); }
+.linepop { position: absolute; z-index: 5; left: 92px; min-width: 300px; max-width: min(560px, calc(100% - 108px));
+  display: flex; flex-direction: column; gap: 6px; padding: 9px 11px; border: 1px solid var(--rule-strong);
+  border-radius: 10px; background: var(--card); box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  font-family: var(--sans, inherit); font-size: 12.5px; line-height: 1.4; white-space: normal; }
+.linepop .lprow { display: flex; align-items: center; gap: 8px; }
+.linepop .lprow i { flex: 0 0 8px; height: 8px; border-radius: 50%; }
+.linepop .lprow i.b { background: var(--bad); }
+.linepop .lprow i.w { background: var(--warn); transform: rotate(45deg); border-radius: 1px; }
 .annotated .rl .ln, .annotated .rl .fold, .annotated .rl .st { z-index: 3; }
 /* Shape as well as colour: dot = wrong, diamond = unconfirmed, thin bar = holds. */
 .annotated .rl .st { flex: 0 0 14px; display: flex; align-items: center; justify-content: center; background: var(--sunk); }

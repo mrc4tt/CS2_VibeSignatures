@@ -67,6 +67,15 @@ describe('deep scan marks', () => {
     expect(marks.some((m) => m.key === 'Touch' && m.platform === 'windows')).toBe(false)
     expect(problemLines(marks)).toEqual([5, 10, 11])
   })
+
+  it('carries the confirmed fix on the line it replaces, and no fix the scan withheld', () => {
+    const marks = scanMarks(FILE, result)
+    expect(marks.find((m) => m.line === 5)?.fix).toMatchObject({ key: 'SelectItem', from: 31, to: 33 })
+    expect(marks.find((m) => m.key === 'Touch.vtable')?.fix).toMatchObject({ from: 7, to: 9 })
+    // contradicted, but nothing confirmed replaces the signature itself
+    expect(marks.find((m) => m.key === 'Touch' && m.platform === 'linux')?.fix).toBeUndefined()
+    expect(marks.find((m) => m.line === 6)?.fix).toBeUndefined()
+  })
 })
 
 describe('browser check marks', () => {
@@ -79,6 +88,8 @@ describe('browser check marks', () => {
     expect(byLine.get(5)?.[0]).toMatchObject({ tone: 'bad', note: { kind: 'expected', value: 32 } })
     expect(byLine.get(6)?.[0]?.tone).toBe('ok')
     expect(byLine.has(10)).toBe(false)
+    expect(byLine.get(5)?.[0]?.fix).toEqual({ key: 'SelectItem', platform: 'linux', from: 31, to: 32, source: 'shipped' })
+    expect(byLine.get(6)?.[0]?.fix).toBeUndefined()
   })
 })
 

@@ -112,6 +112,43 @@ describe('Scanner', () => {
     expect(await screen.findByText('Invalid JSON at line 1, column 25: the file ends too early, a closing } or ] is missing.')).toBeInTheDocument()
   })
 
+  it('offers the replacement for the marked line the cursor is on, and puts in only that value', async () => {
+    vi.mocked(getGameDataFile).mockResolvedValueOnce(behindFile)
+    paint()
+    await screen.findByText('Example: matchzy 14181')
+    await waitFor(() => expect(document.querySelector('.annotated .rl.m-bad')).not.toBeNull())
+    expect(screen.getByText('Put the cursor on a marked line for suggestions')).toBeInTheDocument()
+
+    const editor = screen.getByLabelText('The file, editable') as HTMLTextAreaElement
+    // a line that holds offers nothing
+    editor.setSelectionRange(behindFile.indexOf('SAME-L'), behindFile.indexOf('SAME-L'))
+    fireEvent.select(editor)
+    expect(document.querySelector('.linepop')).toBeNull()
+
+    editor.setSelectionRange(behindFile.indexOf('OLD-L'), behindFile.indexOf('OLD-L'))
+    fireEvent.select(editor)
+    const card = await screen.findByRole('group', { name: 'Verdicts on line 4' })
+    expect(card).toHaveTextContent('JoinTeam')
+    await userEvent.click(screen.getByRole('button', { name: 'Use NEW-L' }))
+
+    await waitFor(() => expect(editor.value).toContain('"linux": "NEW-L"'))
+    // windows was right and stays exactly as it was
+    expect(editor.value).toContain('"windows": "OLD-W"')
+    expect(document.querySelector('.annotated .rl.m-bad')).toBeNull()
+  })
+
+  it('closes the card on Escape', async () => {
+    vi.mocked(getGameDataFile).mockResolvedValueOnce(behindFile)
+    paint()
+    await waitFor(() => expect(document.querySelector('.annotated .rl.m-bad')).not.toBeNull())
+    const editor = screen.getByLabelText('The file, editable') as HTMLTextAreaElement
+    editor.setSelectionRange(behindFile.indexOf('OLD-L'), behindFile.indexOf('OLD-L'))
+    fireEvent.select(editor)
+    expect(await screen.findByRole('group', { name: 'Verdicts on line 4' })).toBeInTheDocument()
+    fireEvent.keyDown(editor, { key: 'Escape' })
+    expect(document.querySelector('.linepop')).toBeNull()
+  })
+
   it('opens on the file handed over from Check my file, not the example', async () => {
     handOff(behindFile, 'mine.json')
     paint()

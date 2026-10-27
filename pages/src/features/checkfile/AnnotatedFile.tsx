@@ -5,6 +5,7 @@ import { saveText } from '../../ui/download'
 import { Button, ChipGroup } from '../../ui/primitives'
 import { TokenText } from '../gamedata/FileView'
 import { tokenizeLine } from '../gamedata/fileModel'
+import type { DeepFix } from './deepScan'
 import { changedLines, marksByLine, type LineMark, type MarkNote } from './lineMarks'
 import type { GameDataFormat } from './parse'
 
@@ -34,6 +35,14 @@ interface Props {
   blankEdit?: number
   /** Set when the last text handed to onEdit did not parse: its line is marked and the reason shown. */
   broken?: BrokenText | null
+  /** Replaces the given values in the file; offered on a marked line the caret is on. */
+  onApply?(fixes: DeepFix[]): void
+}
+
+/** A value short enough to sit on a button. */
+const shortValue = (value: string | number): string => {
+  const text = String(value)
+  return text.length > 32 ? `${text.slice(0, 31)}…` : text
 }
 
 /**
@@ -46,17 +55,23 @@ interface Props {
  * and not only by colour. What a marker means is in its tooltip and in the
  * result sheet; lines are never pushed apart by notes, so the file reads as itself.
  *
+ * Putting the caret on a wrong or unconfirmed line opens a small card under it:
+ * what each platform's verdict is, and, where a replacement is confirmed, a
+ * button that puts just that value in. It floats over the lines below rather
+ * than between them, for the same reason.
+ *
  * It is typed into directly. A transparent textarea lies exactly over the
  * highlighted lines (same font, line height and padding, inside the same
  * scroller), so the caret and selection are the browser's own while the colours
  * come from the rows beneath. Once typing pauses the text is checked again; the
  * marks belong to the checked text, so they are hidden while it differs.
  */
-export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusLine, onStep, onEdit, blankEdit = 0, broken }: Props) {
+export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusLine, onStep, onEdit, blankEdit = 0, broken, onApply }: Props) {
   const { t } = useTranslation()
   const [showFixed, setShowFixed] = useState(false)
   const [copied, setCopied] = useState(false)
   const [draft, setDraft] = useState(text)
+  const [caretLine, setCaretLine] = useState<number | null>(null)
   const viewRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   // The last text handed to onEdit: when it comes back as `text` it must not
@@ -74,6 +89,11 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
   const byLine = useMemo(() => (dirty ? new Map<number, LineMark[]>() : marksByLine(marks)), [dirty, marks])
   const changed = useMemo(() => (fixed ? changedLines(text, fixed) : new Set<number>()), [text, fixed])
   const focusIndex = focusLine !== undefined ? problems.indexOf(focusLine) : -1
+  const popMarks = useMemo(
+    () => (caretLine === null ? [] : (byLine.get(caretLine) ?? []).filter((mark) => mark.tone !== 'ok')),
+    [byLine, caretLine],
+  )
+  const popFixes = popMarks.flatMap((mark) => (mark.fix ? [mark.fix] : []))
 
   useEffect(() => { if (!fixed) setShowFixed(false) }, [fixed])
   useEffect(() => {
@@ -85,6 +105,7 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
     if (blankEdit === 0) return
     setShowFixed(false)
     setDraft('')
+    setCaretLine(null)
     inputRef.current?.focus()
   }, [blankEdit])
   useEffect(() => {
@@ -172,7 +193,43 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
             readOnly={viewingFixed}
             value={shown}
             onChange={(event) => setDraft(event.target.value)}
+            onSelect={(event) => {
+              const input = event.currentTarget
+              setCaretLine(input.value.slice(0, input.selectionStart).split('\n').length)
+            }}
+            onBlur={(event) => {
+              // A click on the card must not close it before its button gets the click.
+              if (!event.relatedTarget || !(event.relatedTarget as HTMLElement).closest('.linepop')) setCaretLine(null)
+            }}
+            onKeyDown={(event) => { if (event.key === 'Escape') setCaretLine(null) }}
           />
+          {popMarks.length > 0 && caretLine !== null && (
+            <div
+              className="linepop"
+              role="group"
+              aria-label={t('check.pop.label', { line: caretLine })}
+              style={{ top: `calc(${caretLine} * var(--lh))` }}
+            >
+              <div className="font-mono text-[12px] text-ink">{popMarks[0]!.key}</div>
+              {popMarks.map((mark) => (
+                <div className="lprow" key={`${mark.key}:${mark.platform}`}>
+                  <i className={mark.tone === 'bad' ? 'b' : 'w'} />
+                  <span className="text-muted-foreground">{t(`check.platform.${mark.platform}`)}</span>
+                  <span className="min-w-0 flex-1">{mark.note ? noteText(mark.note) : t(`check.view.legend${mark.tone === 'bad' ? 'Bad' : 'Warn'}`)}</span>
+                  {mark.fix && onApply ? (
+                    <Button size="small" variant="primary" onClick={() => onApply([mark.fix!])}>
+                      {t('check.pop.apply', { value: shortValue(mark.fix.to) })}
+                    </Button>
+                  ) : (
+                    <span className="text-[11px] text-muted-foreground">{t('check.pop.noFix')}</span>
+                  )}
+                </div>
+              ))}
+              {popFixes.length > 1 && onApply && (
+                <Button size="small" onClick={() => onApply(popFixes)}>{t('check.pop.applyAll', { count: popFixes.length })}</Button>
+              )}
+            </div>
+          )}
           {lines.map((line, index) => {
             const lineNumber = index + 1
             const isChanged = showFixed && changed.has(lineNumber)
@@ -213,6 +270,9 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
           <span className={problems.length ? 'text-bad' : 'text-ok'}>
             {problems.length ? t('check.view.problems', { count: problems.length }) : t('check.view.clean')}
           </span>
+        )}
+        {!brokenHere && !dirty && problems.length > 0 && (
+          <span className="text-muted-foreground">{t('check.pop.hint')}</span>
         )}
         <span className="ml-auto">
           {source === 'scan' ? t('check.view.fromScan') : source === 'browser' ? t('check.view.fromBrowser') : t('check.view.noMarks')}

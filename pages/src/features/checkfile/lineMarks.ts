@@ -26,6 +26,12 @@ export interface LineMark {
   platform: Platform
   tone: MarkTone
   note?: MarkNote
+  /**
+   * The replacement for exactly this value, when one is confirmed: a deep-scan fix,
+   * or the published value the browser check compared against. A reference value
+   * the scan only reports (a mismatch with no fix) is not one: the scan withheld it.
+   */
+  fix?: DeepFix
 }
 
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -81,7 +87,7 @@ export function scanMarks(text: string, result: DeepScanResult): LineMark[] {
               : info.vtable && info.vtable !== 'ok'
                 ? { kind: 'vtable', state: info.vtable }
                 : { kind: 'status', status: info.status }
-      marks.push({ line, key: row.name, platform, tone, note })
+      marks.push({ line, key: row.name, platform, tone, note, ...(tone !== 'ok' && fix ? { fix } : {}) })
 
       if (tone === 'bad' && info.vtable && info.vtable !== 'ok') {
         const vtableKey = `${row.name}${VTABLE_KEY_SUFFIX}`
@@ -94,6 +100,7 @@ export function scanMarks(text: string, result: DeepScanResult): LineMark[] {
             platform,
             tone,
             note: vtableFix ? { kind: 'expected', value: vtableFix.to } : { kind: 'vtable', state: info.vtable },
+            ...(vtableFix ? { fix: vtableFix } : {}),
           })
         }
       }
@@ -113,6 +120,9 @@ export function browserMarks(text: string, verdicts: KeyVerdict[]): LineMark[] {
       const line = locateValue(text, verdict.key, platform)
       if (line === null) continue
       const expected = verdict.expected?.[index]
+      const mine = verdict.mine?.[platform]
+      const replaceable = !ok && (typeof expected === 'string' || typeof expected === 'number')
+        && mine !== null && mine !== undefined
       marks.push({
         line,
         key: verdict.key,
@@ -121,6 +131,7 @@ export function browserMarks(text: string, verdicts: KeyVerdict[]): LineMark[] {
         note: !ok && (typeof expected === 'string' || typeof expected === 'number')
           ? { kind: 'expected', value: expected }
           : undefined,
+        ...(replaceable ? { fix: { key: verdict.key, platform, from: mine, to: expected, source: 'shipped' as const } } : {}),
       })
     }
   }
