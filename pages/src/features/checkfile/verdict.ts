@@ -56,11 +56,19 @@ export function identifyFile(values: Map<string, FileValue>, history: SiteHistor
   }
   ranked.sort((left, right) => right.shared - left.shared || right.ofTheirs - left.ofTheirs)
   const [best, second] = ranked
+  // A fork usually ships its upstream's keys plus a few of its own, so the two
+  // can share every key of a file. Then the file still says which it is: it
+  // holds keys only one of them ships, or it is exactly one of their key sets.
+  const covers = (match: FileMatch) => match.ofMine >= 0.9
   const decisive = Boolean(
     best &&
       best.shared >= 3 &&
       best.ofMine >= 0.5 &&
-      (!second || best.shared >= second.shared * 1.5 || best.shared - second.shared >= 5),
+      (!second ||
+        best.shared >= second.shared * 1.5 ||
+        best.shared - second.shared >= 5 ||
+        (covers(best) && best.shared > second.shared) ||
+        (covers(best) && best.ofTheirs >= 0.9 && best.ofTheirs > second.ofTheirs)),
   )
   return { best, second, decisive, ranked }
 }

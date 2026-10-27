@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { PlayIcon } from '../../ui/icons'
+import { pluginLabel } from '../gamedata/pluginLabel'
 import { Alert, Button, Dot, Select } from '../../ui/primitives'
 import { DEEP_SCAN_API, DeepScanError, type DeepScanResult, type Platform, type ScanHealth } from './deepScan'
 import type { FileDetails } from './details'
@@ -44,6 +45,7 @@ export function ScanPanel({
   const { t } = useTranslation()
   const failure = error instanceof DeepScanError ? error : null
   const host = new URL(DEEP_SCAN_API).host
+  const pluginName = result?.matched?.plugin ?? plugin
 
   return (
     <aside className="scanpanel flex flex-col gap-4 self-start rounded-[12px] border border-rule-strong bg-card p-4">
@@ -88,7 +90,7 @@ export function ScanPanel({
         <strong className="text-[13px] text-ink">{t('check.side.details')}</strong>
         <dl className="details grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 text-[13px]">
           <dt className="text-muted-foreground">{t('check.side.plugin')}</dt>
-          <dd className="m-0 truncate text-right font-mono text-ink">{result?.matched?.plugin ?? plugin ?? t('check.side.unknown')}</dd>
+          <dd className="m-0 text-right font-mono text-ink [overflow-wrap:anywhere]">{pluginName ? pluginLabel(pluginName) : t('check.side.unknown')}</dd>
           <dt className="text-muted-foreground">{t('check.side.version')}</dt>
           <dd className="m-0 text-right font-mono text-ink">{result?.build ?? (build || builds[0] || '-')}</dd>
           <dt className="text-muted-foreground">{t('check.side.format')}</dt>
@@ -117,7 +119,7 @@ export function ScanPanel({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Button variant="primary" size="large" className="w-full" disabled={pending} onClick={onScan}>
+        <Button variant="primary" size="large" className="h-auto min-h-11 w-full whitespace-normal py-2 text-center leading-snug" disabled={pending} onClick={onScan}>
           <PlayIcon size={14} />
           {pending ? t('check.deep.running') : result ? t('check.deep.again') : t('check.deep.run')}
         </Button>

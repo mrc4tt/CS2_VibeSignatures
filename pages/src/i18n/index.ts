@@ -472,10 +472,8 @@ const resources = {
           fromScan: 'Marks from the deep scan',
           fromBrowser: 'Marks from the published values',
           noMarks: 'No marks: pick the plugin or run a scan',
-          edit: 'Edit',
-          apply: 'Check this text',
-          cancel: 'Cancel',
           editLabel: 'The file, editable',
+          typing: 'Edited: checked again when you pause',
         },
         side: {
           h: 'Scan settings',
@@ -990,10 +988,8 @@ const resources = {
           fromScan: 'Markeringer fra den dybe scanning',
           fromBrowser: 'Markeringer fra de udgivne værdier',
           noMarks: 'Ingen markeringer: vælg plugin eller kør en scanning',
-          edit: 'Rediger',
-          apply: 'Tjek denne tekst',
-          cancel: 'Annuller',
           editLabel: 'Filen, redigerbar',
+          typing: 'Ændret: tjekkes igen, når du holder pause',
         },
         side: {
           h: 'Scanning',

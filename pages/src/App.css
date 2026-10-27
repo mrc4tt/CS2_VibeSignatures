@@ -118,6 +118,18 @@
 .annotated .raw { width: max-content; min-width: 100%; }
 .annotated .rl { scroll-margin-top: 120px; }
 .annotated .rl .lc { white-space: pre; }
+/* The editor: a transparent textarea over the rows, metric for metric, so
+   typing happens in the browser's own control while the colours show through.
+   It starts after the 80px gutter and sits under the sticky gutter cells. */
+.annotated .raw { position: relative; tab-size: 2; }
+.annotated .raw .hex { letter-spacing: 0; }
+.rawinput { position: absolute; z-index: 1; top: 0; left: 80px; right: 0; bottom: 0; margin: 0; padding: 0 16px 0 11px;
+  border: 0; outline: none; resize: none; overflow: hidden; background: transparent; color: transparent;
+  caret-color: var(--ink); font-family: var(--mono); font-size: 11.5px; line-height: 1.62; white-space: pre;
+  tab-size: 2; overflow-wrap: normal; }
+.rawinput::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: transparent; }
+.rawinput[readonly] { caret-color: transparent; }
+.annotated .rl .ln, .annotated .rl .fold, .annotated .rl .st { z-index: 3; }
 /* Shape as well as colour: dot = wrong, diamond = unconfirmed, thin bar = holds. */
 .annotated .rl .st { flex: 0 0 14px; display: flex; align-items: center; justify-content: center; background: var(--sunk); }
 .annotated .rl .st::before { content: ''; display: block; }

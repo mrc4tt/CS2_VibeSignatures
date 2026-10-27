@@ -83,14 +83,16 @@ describe('Scanner', () => {
     // the editor view, filled, with the browser check's marks on it
     await waitFor(() => expect(document.querySelector('.annotated .rl.m-bad .st')?.getAttribute('title')).toBe('linux: should be NEW-L'))
     // the details read off the file itself
-    await waitFor(() => expect([...document.querySelectorAll('.details dd')].map((n) => n.textContent)).toEqual(['matchzy', '14192', 'JSON', '3', '1', '-', '0 / 24 busy']))
+    await waitFor(() => expect([...document.querySelectorAll('.details dd')].map((n) => n.textContent)).toEqual(['matchzy (mrc4tt fork)', '14192', 'JSON', '3', '1', '-', '0 / 24 busy']))
 
-    await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    // typed straight into, no edit mode: the marks step aside until the pause re-checks it
     fireEvent.change(screen.getByLabelText('The file, editable'), {
       target: { value: JSON.stringify({ JoinTeam: { signatures: { linux: 'NEW-L', windows: 'OLD-W' } } }, null, 2) },
     })
-    await userEvent.click(screen.getByRole('button', { name: 'Check this text' }))
-    await waitFor(() => expect(screen.queryByText(/^Example:/)).toBeNull())
+    expect(document.querySelector('.annotated .rl.m-bad')).toBeNull()
+    expect(screen.getByText('Edited: checked again when you pause')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText(/^Example:/)).toBeNull(), { timeout: 2000 })
+    expect(screen.queryByText('Edited: checked again when you pause')).toBeNull()
     expect(document.querySelector('.annotated .rl.m-bad')).toBeNull()
   })
 

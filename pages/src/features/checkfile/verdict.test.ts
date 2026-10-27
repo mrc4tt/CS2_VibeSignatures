@@ -30,6 +30,8 @@ const history: SiteHistory = {
   symbolToKeys: {},
 }
 
+type KeyPoints = SiteHistory['files'][string][string]['points']
+
 const values = (entries: Record<string, FileValue>): Map<string, FileValue> => new Map(Object.entries(entries))
 
 describe('identifying which published file an upload is', () => {
@@ -48,6 +50,23 @@ describe('identifying which published file an upload is', () => {
   it('refuses to guess when the only shared key is one both plugins ship', () => {
     const result = identifyFile(values({ JoinTeam: { linux: 'NEW', windows: 'W-NEW' } }), history)
     expect(result.decisive).toBe(false)
+  })
+
+  it('tells a stock file from a fork that ships the same keys plus its own', () => {
+    const shared = { A: { points: [['14178b', 'a', 'a']] as KeyPoints, changes: [] }, B: { points: [['14178b', 'b', 'b']] as KeyPoints, changes: [] }, C: { points: [['14178b', 'c', 'c']] as KeyPoints, changes: [] } }
+    const forked: SiteHistory = {
+      ...history,
+      files: {
+        'stock/gamedata.json': shared,
+        'fork/gamedata.json': { ...shared, D: { points: [['14178b', 'd', 'd']], changes: [] } },
+      },
+    }
+    const stock = identifyFile(values({ A: { linux: 'a', windows: 'a' }, B: { linux: 'b', windows: 'b' }, C: { linux: 'c', windows: 'c' } }), forked)
+    expect(stock.decisive).toBe(true)
+    expect(stock.best?.plugin).toBe('stock')
+    const fork = identifyFile(values({ A: { linux: 'a', windows: 'a' }, B: { linux: 'b', windows: 'b' }, C: { linux: 'c', windows: 'c' }, D: { linux: 'd', windows: 'd' } }), forked)
+    expect(fork.decisive).toBe(true)
+    expect(fork.best?.plugin).toBe('fork')
   })
 
   it('has nothing to say about an empty file', () => {
