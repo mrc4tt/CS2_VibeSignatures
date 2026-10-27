@@ -234,7 +234,11 @@ def _walk_entries(node, path=()):
 
 def load_gamedata(path):
     """-> (entries, note). entries: {key: {kind, library, values{platform: value}}}."""
-    text = open(path, "r", encoding="utf-8-sig").read()
+    return load_gamedata_text(open(path, "r", encoding="utf-8-sig").read())
+
+
+def load_gamedata_text(text):
+    """load_gamedata for a file already in memory (verify_service never writes uploads to disk)."""
     data = None
     for parse in (json.loads, lambda t: json.loads(_strip_jsonc(t))):
         try:
@@ -634,7 +638,10 @@ def check_vtable_slot(binaries, module, platform, block, expected_va):
 
 def load_vtable_blocks(path):
     """{entry key: its "vtable" block} for a JSON/JSONC gamedata file; {} otherwise."""
-    text = open(path, "r", encoding="utf-8-sig").read()
+    return vtable_blocks_of(open(path, "r", encoding="utf-8-sig").read())
+
+
+def vtable_blocks_of(text):
     for parse in (json.loads, lambda t: json.loads(_strip_jsonc(t))):
         try:
             data = parse(text)
@@ -1112,26 +1119,41 @@ def main():
     index = load_snapshot_index(snapshot)
     _SNAPSHOT_INDEX.update(index)
     binaries = Binaries(args.bindir, args.gamever)
-    gamedata, note = load_gamedata(args.gamedata)
-    if note and "key=value" in note:
-        text = open(args.gamedata, "r", encoding="utf-8-sig").read()
-        kv_entries = parse_keyvalue_file(text)
-        if kv_entries:
-            results = check_keyvalue_entries(kv_entries, index, binaries,
-                                             bindings=generator_keyvalue_bindings(plugin_of(args.gamedata)))
-            for row in results:
-                anchor_disagreement(row, binaries)
-            return _report(results, args, os.path.basename(args.gamedata))
+    config_path = args.configyaml or os.path.join("configs", f"{args.gamever}.yaml")
+    text = open(args.gamedata, "r", encoding="utf-8-sig").read()
+    results, note = verify_text(text, index, binaries, config_path,
+                                plugin=plugin_of(args.gamedata), output=args.gamedata)
     if note:
         print(f"{os.path.basename(args.gamedata)}: {note}")
         return 2
-    config_path = args.configyaml or os.path.join("configs", f"{args.gamever}.yaml")
+    return _report(results, args, os.path.basename(args.gamedata))
+
+
+def verify_text(text, index, binaries, config_path, plugin=None, output=None):
+    """-> (results, note): every entry of one gamedata file judged against this build.
+
+    plugin and output name the generator and shipped file the keys were written for, so
+    its KEY_SYMBOL_OVERRIDES route them; a file uploaded to verify_service names neither
+    until it is matched to a shipped file. GENERATOR_ALIASES is rebuilt per call because
+    one long-lived worker judges many plugins' files."""
+    gamedata, note = load_gamedata_text(text)
+    if note and "key=value" in note:
+        kv_entries = parse_keyvalue_file(text)
+        if kv_entries:
+            results = check_keyvalue_entries(kv_entries, index, binaries,
+                                             bindings=generator_keyvalue_bindings(plugin))
+            for row in results:
+                anchor_disagreement(row, binaries)
+            return results, None
+    if note:
+        return [], note
     aliases = load_alias_map(config_path) if os.path.isfile(config_path) else {}
+    GENERATOR_ALIASES.clear()
     if os.path.isfile(config_path):
         GENERATOR_ALIASES.update(load_generator_aliases(config_path))
-    GENERATOR_ALIASES.update(generator_key_overrides(plugin_of(args.gamedata), output=args.gamedata))
+    GENERATOR_ALIASES.update(generator_key_overrides(plugin, output=output))
 
-    vtable_blocks = load_vtable_blocks(args.gamedata)
+    vtable_blocks = vtable_blocks_of(text)
 
     results = []
     for name in sorted(gamedata):
@@ -1186,11 +1208,11 @@ def main():
         anchor_disagreement(row, binaries)
         results.append(row)
 
-    return _report(results, args, os.path.basename(args.gamedata))
+    return results, None
 
 
-def _report(results, args, filename):
-    """Shared rendering for both the symbol-keyed and the key=value paths."""
+def summarize(results, require_verified=False):
+    """-> (unhealthy, tally, unverified, upstream), stamping each verdict's verification state."""
     bad = 0
     tally = {"verified": 0, "unverified": 0, "contradicted": 0, "upstream": 0}
     unverified, upstream = [], []
@@ -1211,8 +1233,14 @@ def _report(results, args, filename):
                 tally["instruction_only"] = tally.get("instruction_only", 0) + 1
             if (info["status"] in ("broken", "ambiguous", "mismatch", "unparsable", "too-few-literals")
                     or state == "contradicted"
-                    or (state == "unverified" and getattr(args, "require_verified", False))):
+                    or (state == "unverified" and require_verified)):
                 bad += 1
+    return bad, tally, unverified, upstream
+
+
+def _report(results, args, filename):
+    """Shared rendering for both the symbol-keyed and the key=value paths."""
+    bad, tally, unverified, upstream = summarize(results, getattr(args, "require_verified", False))
 
     if args.json:
         print(json.dumps({"gamever": args.gamever, "gamedata": args.gamedata,
