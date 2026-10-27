@@ -49,6 +49,8 @@ export interface DeepScanResult {
   results: DeepRow[]
   fixes?: DeepFix[]
   note?: string
+  /** Answered from the service's cache: the same text was scanned against this build before. */
+  cached?: boolean
 }
 
 /** Why a scan did not come back; each has its own sentence on the page. */

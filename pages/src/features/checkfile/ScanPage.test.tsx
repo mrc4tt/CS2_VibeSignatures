@@ -192,6 +192,44 @@ describe('Scanner', () => {
     }
   })
 
+  it('says which build a stale value is from, and places the fixes and scans again on one click', async () => {
+    const reply = (fixed: boolean) => JSON.stringify({
+      build: '14192',
+      platforms: ['linux', 'windows'],
+      matched: { plugin: 'matchzy', file: 'gamedata/14192/matchzy/gamedata/matchzy.json' },
+      unhealthy: fixed ? 0 : 1,
+      results: [
+        { name: 'JoinTeam', kind: 'signature', platforms: {
+          linux: fixed ? { status: 'ok', verification: 'verified' } : { status: 'mismatch', verification: 'contradicted' },
+          windows: { status: 'ok', verification: 'verified' } } },
+      ],
+      fixes: fixed ? [] : [{ key: 'JoinTeam', platform: 'linux', from: 'OLD-L', to: 'NEW-L', source: 'shipped' }],
+    })
+    const sent: string[] = []
+    const fetch = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith('/builds')) return new Response(JSON.stringify({ builds: ['14192'] }), { status: 200 })
+      const text = JSON.parse(String(init?.body)).gamedata as string
+      sent.push(text)
+      return new Response(reply(text.includes('NEW-L')), { status: 200 })
+    })
+    vi.stubGlobal('fetch', fetch)
+    try {
+      handOff(behindFile, 'matchzy.json')
+      paint()
+      await userEvent.click(await screen.findByRole('button', { name: 'Scan it' }))
+      await userEvent.click(await screen.findByRole('button', { name: 'Show result' }))
+      const sheet = screen.getByRole('region', { name: 'Scan result' })
+      expect(sheet.querySelector('.rsheet-aged')?.textContent).toBe('Your value is the one from build 14180; it changed in 14181.')
+
+      await userEvent.click(screen.getByRole('button', { name: 'Use fixed file' }))
+      await waitFor(() => expect(sent).toHaveLength(2))
+      expect(sent[1]).toContain('"NEW-L"')
+      await waitFor(() => expect(screen.getByRole('region', { name: 'Scan result' }).textContent).toContain('Ready for 14192.'))
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('scans for the platform picked in the filled segments', async () => {
     const fetch = vi.fn(async (url: string) => new Response(
       url.endsWith('/verify') ? JSON.stringify({ build: '14192', results: [] }) : JSON.stringify({ builds: ['14192'] }),

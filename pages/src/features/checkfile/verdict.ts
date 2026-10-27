@@ -219,3 +219,38 @@ export function bestFit(scores: BuildScore[]): BestFit | undefined {
     tied: tiedRun.length > 1,
   }
 }
+
+export interface AgedValue {
+  /** The first build of the stretch in which the published file held this value. */
+  since: string
+  /** The build that changed it. */
+  until: string
+}
+
+/**
+ * When the published file last held the value an upload carries, for one platform.
+ *
+ * A wrong value is most often not a typo but an old one: the file was right for
+ * an earlier build and nobody updated it. Saying which build it is from turns
+ * "wrong" into "out of date since X", which tells the reader what happened.
+ * Null when the value was never published, or is still the current one.
+ */
+export function agedValue(
+  history: SiteHistory | undefined,
+  file: string | undefined,
+  key: string,
+  platform: 'linux' | 'windows',
+  value: string | number | null | undefined,
+): AgedValue | null {
+  const points = file ? history?.files[file]?.[key]?.points : undefined
+  if (!points?.length || value === null || value === undefined) return null
+  const side = platform === 'linux' ? 1 : 2
+  let last = -1
+  for (let index = 0; index < points.length; index += 1) if (same(value, points[index]![side])) last = index
+  if (last < 0) return null
+  const next = points.findIndex((point, index) => index > last && !same(value, point[side]))
+  if (next < 0) return null
+  let first = last
+  while (first > 0 && same(value, points[first - 1]![side])) first -= 1
+  return { since: points[first]![0], until: points[next]![0] }
+}

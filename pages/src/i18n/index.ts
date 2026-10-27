@@ -369,6 +369,11 @@ const resources = {
           view: { label: 'View', table: 'Overview', log: 'Raw log' },
           autoOpen: 'Open by itself after a scan',
           download: 'Download fixed file',
+          useFixed: 'Use fixed file',
+          usedFixed: 'Fixes placed in the file. Scanning it again.',
+          undo: 'Undo',
+          cached: 'from cache',
+          aged: 'Your value is the one from build {{since}}; it changed in {{until}}.',
           legend: {
             bad: 'must be fixed, or the function does not work in the plugin',
             warn: 'may work, but could point at the wrong place',
@@ -885,6 +890,11 @@ const resources = {
           view: { label: 'Visning', table: 'Oversigt', log: 'Rå log' },
           autoOpen: 'Åbn selv efter scan',
           download: 'Hent rettet fil',
+          useFixed: 'Brug rettet fil',
+          usedFixed: 'Rettelserne er sat ind i filen. Scanner igen.',
+          undo: 'Fortryd',
+          cached: 'fra cache',
+          aged: 'Din værdi er den fra build {{since}}; den blev ændret i {{until}}.',
           legend: {
             bad: 'skal rettes, ellers virker funktionen ikke i pluginet',
             warn: 'virker måske, men kan pege forkert',

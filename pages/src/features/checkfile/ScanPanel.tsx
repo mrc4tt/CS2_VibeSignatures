@@ -88,7 +88,7 @@ export function ScanPanel({
 
       <div className="flex flex-col gap-2 rounded-[10px] bg-card-2 p-3.5">
         <strong className="text-[13px] text-ink">{t('check.side.details')}</strong>
-        <dl className="details grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 text-[13px]">
+        <dl className="details grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-[13px]">
           <dt className="text-muted-foreground">{t('check.side.plugin')}</dt>
           <dd className="m-0 text-right font-mono text-ink [overflow-wrap:anywhere]">{pluginName ? pluginLabel(pluginName) : t('check.side.unknown')}</dd>
           <dt className="text-muted-foreground">{t('check.side.version')}</dt>

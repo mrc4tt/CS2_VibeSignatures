@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { SiteHistory } from '../../api/siteData'
 import type { FileValue } from './parse'
-import { bestFit, identifyFile, keyVerdicts, scoreBuilds, summarise } from './verdict'
+import { agedValue, bestFit, identifyFile, keyVerdicts, scoreBuilds, summarise } from './verdict'
 
 const MATCHZY = 'matchzy/gamedata/matchzy.json'
 const CSS = 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json'
@@ -209,5 +209,28 @@ describe('a key the file no longer has', () => {
       withRemoval, CSS, '14181',
     )
     expect(verdicts.find((verdict) => verdict.key === 'SelectItem')?.state).toBe('unknown')
+  })
+})
+
+describe('saying which build an old value is from', () => {
+  const aged: SiteHistory = {
+    ...history,
+    files: {
+      [MATCHZY]: {
+        Moved: { points: [['14170', 10, 20], ['14175', 11, 20], ['14181', 12, 21]], changes: ['14175', '14181'] },
+      },
+    },
+  }
+
+  it('names the stretch the value held and the build that changed it', () => {
+    expect(agedValue(aged, MATCHZY, 'Moved', 'linux', 11)).toEqual({ since: '14175', until: '14181' })
+    expect(agedValue(aged, MATCHZY, 'Moved', 'windows', 20)).toEqual({ since: '14170', until: '14181' })
+  })
+
+  it('says nothing for a current, unknown or never-published value', () => {
+    expect(agedValue(aged, MATCHZY, 'Moved', 'linux', 12)).toBeNull()
+    expect(agedValue(aged, MATCHZY, 'Moved', 'linux', 99)).toBeNull()
+    expect(agedValue(aged, MATCHZY, 'Missing', 'linux', 11)).toBeNull()
+    expect(agedValue(aged, undefined, 'Moved', 'linux', 11)).toBeNull()
   })
 })

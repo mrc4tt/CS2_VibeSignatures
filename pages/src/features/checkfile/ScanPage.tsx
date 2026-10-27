@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { requestNavigation } from '../../app/navigate'
 import { ArrowLeftIcon, EditIcon, FileCheckIcon } from '../../ui/icons'
 import { buttonClass } from '../../ui/buttonStyle'
@@ -16,6 +17,7 @@ import { ResultSheet } from './ResultSheet'
 import { readAutoOpen, type SheetSize } from './sheetModel'
 import { ScanPanel, type ScanPlatform } from './ScanPanel'
 import { isLoaded, readGameData, useFileCheck, type Loaded } from './useFileCheck'
+import { agedValue } from './verdict'
 
 /**
  * The scanner: one file, the settings and verdict in a column on the left, the
@@ -47,7 +49,9 @@ export function ScanPage() {
   const [pasted, setPasted] = useState('')
   // Once someone drops, pastes or edits, the example must never land on top of it.
   const userActed = useRef(loaded !== null)
-  const { newest, file, verdicts, summary, patched } = useFileCheck(loaded)
+  const { history, newest, file, verdicts, summary, patched } = useFileCheck(loaded)
+  // Set when the text was replaced by its fixed copy: that copy is scanned as soon as it is in.
+  const rescan = useRef(false)
 
   useEffect(clearHandoff, [])
 
@@ -128,6 +132,34 @@ export function ScanPage() {
             return before >= 0 ? before : problems.length - 1
           })()
     setFocusLine(problems[next])
+  }
+
+  const runScan = scan.mutate
+  useEffect(() => {
+    if (!rescan.current || !loaded) return
+    rescan.current = false
+    runScan(loaded)
+  }, [loaded, runScan])
+
+  function swapText(next: Loaded) {
+    rescan.current = true
+    setFocusLine(undefined)
+    setSheet('closed')
+    scan.reset()
+    setLoaded(next)
+  }
+
+  function placeFixed(fixed: string) {
+    if (!loaded) return
+    const before = loaded
+    const read = readGameData(fixed, loaded.name)
+    if (!isLoaded(read)) return
+    userActed.current = true
+    swapText(read)
+    toast.success(t('scan.result.usedFixed'), {
+      action: { label: t('scan.result.undo'), onClick: () => swapText(before) },
+      duration: 10_000,
+    })
   }
 
   async function accept(input: File | string, name: string) {
@@ -289,6 +321,8 @@ export function ScanPage() {
           onSize={setSheet}
           ms={scanMs}
           onJump={setFocusLine}
+          onUseFixed={deepPatched?.applied ? () => placeFixed(deepPatched.text) : undefined}
+          aged={(key, platform) => agedValue(history, file, key, platform, loaded.values.get(key)?.[platform])}
         />
       )}
     </div>

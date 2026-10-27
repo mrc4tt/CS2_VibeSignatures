@@ -738,6 +738,7 @@ button.rsheet-tr:disabled { cursor: default; }
 .rsheet-item.t-bad { background: color-mix(in srgb, var(--bad) 5%, transparent); }
 .rsheet-item.t-warn { background: color-mix(in srgb, var(--warn) 5%, transparent); }
 .rsheet-why { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 0 18px 12px 44px; font-size: 13px; color: var(--ink-2); }
+.rsheet-why .rsheet-aged { flex-basis: 100%; color: var(--muted); font-size: 12.5px; }
 .rsheet-fix { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .rsheet-fix .lbl { font-size: 12px; color: var(--muted); }
 .rsheet-fix code { font-family: var(--mono); font-size: 12px; padding: 3px 8px; border-radius: 6px; background: var(--sunk);

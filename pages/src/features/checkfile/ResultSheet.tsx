@@ -6,6 +6,7 @@ import { Button, ChipGroup } from '../../ui/primitives'
 import { platformTone, rowTone, sortRows, type DeepFix, type DeepPlatform, type DeepRow, type DeepScanResult, type DeepTone, type Platform } from './deepScan'
 import { locateValue } from './lineMarks'
 import { VTABLE_KEY_SUFFIX } from './parse'
+import type { AgedValue } from './verdict'
 import { PLATFORM_LABEL, PLATFORMS, readAutoOpen, scanLog, writeAutoOpen, type SheetSize } from './sheetModel'
 
 const NEXT_SIZE: Record<SheetSize, SheetSize> = { closed: 'min', min: 'half', half: 'full', full: 'min' }
@@ -54,6 +55,10 @@ interface Props {
   /** How long the scan took, for the header. */
   ms?: number
   onJump(line: number): void
+  /** Puts the fixed file in the editor and scans it again; absent when there is nothing to place. */
+  onUseFixed?(): void
+  /** Which build an entry's wrong value is from, when the published history knows it. */
+  aged?(key: string, platform: Platform): AgedValue | null
 }
 
 /**
@@ -65,7 +70,7 @@ interface Props {
  * worst first, each with what is wrong in plain words and the value that fixes
  * it. A row click marks its line in the file above.
  */
-export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJump }: Props) {
+export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJump, onUseFixed, aged }: Props) {
   const { t, i18n } = useTranslation()
   const [filter, setFilter] = useState<Filter>('all')
   const [view, setView] = useState<'table' | 'log'>('table')
@@ -92,7 +97,9 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
   if (size === 'closed') return null
 
   const platforms = (result.platforms ?? PLATFORMS).map((platform) => PLATFORM_LABEL[platform]).join(' + ')
-  const seconds = ms !== undefined ? t('scan.result.seconds', { value: (ms / 1000).toLocaleString(i18n.language, { maximumFractionDigits: 1 }) }) : null
+  const seconds = result.cached
+    ? t('scan.result.cached')
+    : ms !== undefined ? t('scan.result.seconds', { value: (ms / 1000).toLocaleString(i18n.language, { maximumFractionDigits: 1 }) }) : null
   const meta = [result.build, platforms, seconds].filter(Boolean).join(' · ')
   const problems = [
     counts.bad ? t('scan.result.errors', { count: counts.bad }) : null,
@@ -195,8 +202,11 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
                 </label>
               </>
             )}
+            {fixed && onUseFixed && (
+              <Button size="small" variant="primary" onClick={onUseFixed}>{t('scan.result.useFixed')}</Button>
+            )}
             {fixed && (
-              <Button size="small" variant="primary" onClick={() => saveText(fixed, name)}>{t('scan.result.download')}</Button>
+              <Button size="small" variant={onUseFixed ? 'default' : 'primary'} onClick={() => saveText(fixed, name)}>{t('scan.result.download')}</Button>
             )}
             {open && (
               <>
@@ -267,6 +277,10 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
                         {flaggedRow && (
                           <div className="rsheet-why">
                             <span>{reason(item)}</span>
+                            {(() => {
+                              const old = item.worst && aged?.(item.row.name, item.worst.platform)
+                              return old ? <span className="rsheet-aged">{t('scan.result.aged', { since: old.since, until: old.until })}</span> : null
+                            })()}
                             {item.fixes.length > 0 ? item.fixes.map((fix) => {
                               const key = `${fix.key}:${fix.platform}`
                               return (
