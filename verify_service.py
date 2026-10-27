@@ -93,15 +93,20 @@ def match_shipped(entries, filename, candidates):
 
     By key overlap: plugins rename files, but a stale copy of a plugin's file still
     carries that plugin's keys. A same-named file wins a tie, so the two matchzy
-    variants are told apart by name when their keys agree.
+    variants are told apart by name when their keys agree. Past that, the shipped
+    file with fewer keys the upload lacks wins: a fork ships its upstream's keys
+    plus its own, so stock CounterStrikeSharp and the mrc4tt fork both hold every
+    key of a stock file, and only this tells the stock one is the copy.
     """
     keys = set(entries)
     if not keys:
         return None
-    best, best_score = None, (0.0, False)
+    best, best_score = None, (0.0, False, 0.0)
     for plugin, path, shipped in candidates:
-        share = len(keys & set(shipped)) / len(keys)
-        score = (share, os.path.basename(path) == os.path.basename(filename or ""))
+        shared = len(keys & set(shipped))
+        share = shared / len(keys)
+        score = (share, os.path.basename(path) == os.path.basename(filename or ""),
+                 shared / len(shipped) if shipped else 0.0)
         if score > best_score:
             best, best_score = (plugin, path, shipped), score
     return best if best_score[0] >= MATCH_SHARE else None
@@ -267,7 +272,7 @@ class Service:
         with self.lock:
             if cache_key in self.cache:
                 self.cache.move_to_end(cache_key)
-                return 200, self.cache[cache_key]
+                return 200, {**self.cache[cache_key], "cached": True}
             if self.inflight >= self.capacity:
                 return 429, {"error": "busy, try again shortly"}
             self.inflight += 1

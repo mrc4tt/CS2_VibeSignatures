@@ -96,6 +96,14 @@ class MatchTests(unittest.TestCase):
         self.assertIn(plugin, ("matchzy", "matchzy-original"))
         self.assertEqual(os.path.basename(path), "matchzy.json")
 
+    def test_stock_css_is_not_taken_for_the_fork(self):
+        # The fork ships every stock key plus its own, so both cover a stock file.
+        stock = [(p, path, e) for p, path, e in _shipped(BUILD) if p == "CounterStrikeSharp-roflmuffin"]
+        if not stock:
+            self.skipTest("no stock CounterStrikeSharp file shipped for this build")
+        plugin, _, _ = S.match_shipped(dict(stock[0][2]), "gamedata.json", _shipped(BUILD))
+        self.assertEqual(plugin, "CounterStrikeSharp-roflmuffin")
+
     def test_unrelated_keys_match_nothing(self):
         entries = {"NotARealKey": {"values": {"linux": 1}}, "AlsoNot": {"values": {"linux": 2}}}
         self.assertIsNone(S.match_shipped(entries, "x.json", _shipped(BUILD)))
@@ -148,7 +156,7 @@ class EndToEndTests(unittest.TestCase):
         self.assertGreaterEqual(body["unhealthy"], 1)
         # the same upload again comes from the cache
         self.assertEqual(self.post("/api/verify", {"gamedata": json.dumps(data), "filename": "matchzy.json"}),
-                         (status, body))
+                         (status, {**body, "cached": True}))
 
     def test_rejections(self):
         self.assertEqual(self.post("/api/verify", None, raw=b"not json")[0], 400)
