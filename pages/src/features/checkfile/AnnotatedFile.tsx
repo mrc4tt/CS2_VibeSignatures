@@ -19,7 +19,8 @@ interface Props {
   /** Where the marks came from, said in the status line so nobody mistakes one check for the other. */
   source: 'scan' | 'browser' | null
   problems: number[]
-  focusIndex: number
+  /** The line to mark and scroll to: a problem stepped to, or a row picked in the scan result. */
+  focusLine?: number
   onStep(direction: 1 | -1): void
   /** Called with the edited text; the page reads it again as if it had been dropped. */
   onEdit(text: string): void
@@ -30,11 +31,14 @@ interface Props {
 /**
  * The dropped file itself, with every verdict on the line it is about.
  *
- * The list view answers "what is wrong"; this answers "where in my file", which
- * is what someone fixing it by hand needs. It reuses the published-file viewer's
- * look and tokenizer, and only adds the gutter colours and a note at line end.
+ * The scan result answers "what is wrong"; this answers "where in my file",
+ * which is what someone fixing it by hand needs. It reuses the published-file
+ * viewer's look and tokenizer and adds a marker in the gutter: a dot for wrong,
+ * a diamond for unconfirmed, a thin bar for holds, so the three differ by shape
+ * and not only by colour. What a marker means is in its tooltip and in the
+ * result sheet; lines are never pushed apart by notes, so the file reads as itself.
  */
-export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusIndex, onStep, onEdit, blankEdit = 0 }: Props) {
+export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusLine, onStep, onEdit, blankEdit = 0 }: Props) {
   const { t } = useTranslation()
   const [showFixed, setShowFixed] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -45,13 +49,13 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
   const lines = useMemo(() => shown.split('\n'), [shown])
   const byLine = useMemo(() => marksByLine(marks), [marks])
   const changed = useMemo(() => (fixed ? changedLines(text, fixed) : new Set<number>()), [text, fixed])
-  const focusLine = focusIndex >= 0 ? problems[focusIndex] : undefined
+  const focusIndex = focusLine !== undefined ? problems.indexOf(focusLine) : -1
 
   useEffect(() => { if (!fixed) setShowFixed(false) }, [fixed])
   useEffect(() => { setDraft(null) }, [text])
   useEffect(() => { if (blankEdit > 0) setDraft('') }, [blankEdit])
   useEffect(() => {
-    if (focusLine) viewRef.current?.querySelector<HTMLElement>(`[data-line="${focusLine}"]`)?.scrollIntoView?.({ block: 'center' })
+    if (focusLine) viewRef.current?.querySelector<HTMLElement>(`[data-line="${focusLine}"]`)?.scrollIntoView?.({ block: 'start' })
   }, [focusLine])
 
   function noteText(note: MarkNote): string {
@@ -140,28 +144,21 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
               // In the fixed copy a rewritten line is no longer wrong, so it is shown as changed instead.
               const here = isChanged ? [] : byLine.get(lineNumber) ?? []
               const worst = here[0]?.tone
-              const notes = here.filter((mark) => mark.note)
+              const tip = here.map((mark) => {
+                const what = mark.note ? noteText(mark.note) : t(`check.view.legend${mark.tone === 'bad' ? 'Bad' : mark.tone === 'warn' ? 'Warn' : 'Ok'}`)
+                return `${t(`check.platform.${mark.platform}`)}: ${what}`
+              }).join('\n')
               const classes = ['rl']
               if (worst) classes.push(`m-${worst}`)
               if (isChanged) classes.push('upd')
               if (focusLine === lineNumber) classes.push('foc')
-              if (line.length > 110) classes.push('longline')
               return (
                 <div className={classes.join(' ')} key={lineNumber} data-line={lineNumber}>
                   <span className="ln">{lineNumber}</span>
                   <span className="fold"> </span>
-                  <span className="st" />
+                  <span className="st" title={tip || undefined} />
                   <span className="lc">
                     {tokenizeLine(line, format).map((token, tokenIndex) => <TokenText token={token} key={tokenIndex} />)}
-                    {notes.length > 0 && (
-                      <span className="rnote">
-                        {notes.map((mark) => (
-                          notes.length > 1 || here.some((other) => other.platform !== mark.platform)
-                            ? `${t(`check.platform.${mark.platform}`)}: ${noteText(mark.note!)}`
-                            : noteText(mark.note!)
-                        )).join(' · ')}
-                      </span>
-                    )}
                   </span>
                 </div>
               )

@@ -81,8 +81,7 @@ describe('Scanner', () => {
     paint()
     await screen.findByText('Example: matchzy 14181')
     // the editor view, filled, with the browser check's marks on it
-    await waitFor(() => expect(document.querySelector('.annotated .rl.m-bad .rnote')?.textContent).toBe('should be NEW-L'))
-    expect(screen.getByRole('tab', { name: 'File' })).toHaveAttribute('aria-selected', 'true')
+    await waitFor(() => expect(document.querySelector('.annotated .rl.m-bad .st')?.getAttribute('title')).toBe('linux: should be NEW-L'))
     // the details read off the file itself
     await waitFor(() => expect([...document.querySelectorAll('.details dd')].map((n) => n.textContent)).toEqual(['matchzy', '14192', 'JSON', '3', '1', '-', '0 / 24 busy']))
 
@@ -92,7 +91,6 @@ describe('Scanner', () => {
     })
     await userEvent.click(screen.getByRole('button', { name: 'Check this text' }))
     await waitFor(() => expect(screen.queryByText(/^Example:/)).toBeNull())
-    expect(screen.getByRole('tab', { name: 'File' })).toHaveAttribute('aria-selected', 'true')
     expect(document.querySelector('.annotated .rl.m-bad')).toBeNull()
   })
 
@@ -122,7 +120,7 @@ describe('Scanner', () => {
     expect(screen.getByLabelText('The file, editable')).toHaveValue('')
   })
 
-  it('runs the deep scan only when asked, and offers the file it fixed', async () => {
+  it('runs the deep scan only when asked, and keeps the result in a bar until asked for', async () => {
     const verifyReply = JSON.stringify({
       build: '14192',
       platforms: ['linux', 'windows'],
@@ -153,7 +151,7 @@ describe('Scanner', () => {
 
       await userEvent.click(screen.getByRole('button', { name: 'Scan it' }))
       // the file view shows the scan's marks, on the very line that is wrong
-      await waitFor(() => expect(document.querySelector('.annotated .rl.m-bad .rnote')?.textContent).toBe('should be 32'))
+      await waitFor(() => expect(document.querySelector('.annotated .rl.m-bad .st')?.getAttribute('title')).toBe('linux: should be 32'))
       expect(scans()).toBe(1)
       const bad = document.querySelector<HTMLElement>('.annotated .rl.m-bad')!
       expect(bad.textContent).toContain('"linux"')
@@ -161,11 +159,32 @@ describe('Scanner', () => {
       // the bar says what the scan said
       expect(document.querySelector('.scanverdict')?.textContent).toBe('1 value is wrong for build 14192')
 
-      await userEvent.click(screen.getByRole('tab', { name: 'List' }))
-      expect(screen.getByText('Fixed file from the scan')).toBeInTheDocument()
-      // only the contradicted row is listed until asked for the rest
-      const rows = [...document.querySelectorAll('.deepscan details.krow .kname')].map((n) => n.textContent)
-      expect(rows).toEqual(['SelectItem'])
+      // nothing opens by itself: the bar says the verdict and waits
+      const sheet = screen.getByRole('region', { name: 'Scan result' })
+      expect(sheet).toHaveAttribute('data-size', 'min')
+      expect(sheet.textContent).toContain('Not ready for 14192.')
+      expect(sheet.textContent).toContain('1 error. It can be fixed automatically.')
+      expect(screen.getByRole('button', { name: 'Download fixed file' })).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show result' }))
+      expect(sheet).toHaveAttribute('data-size', 'half')
+      // worst first, with the reason in plain words and the value that fixes it
+      expect([...sheet.querySelectorAll('.rsheet-item .nm')].map((n) => n.textContent)).toEqual(['SelectItem', 'PostCleanUp'])
+      expect(sheet.querySelector('.rsheet-why')?.textContent).toContain('The value no longer matches this build.')
+      expect(sheet.querySelector('.rsheet-fix code')?.textContent).toBe('32')
+
+      // a row marks its line in the file
+      await userEvent.click(screen.getByRole('button', { name: /^SelectItem: show line/ }))
+      expect(document.querySelector('.annotated .rl.foc')?.textContent).toContain('"linux"')
+
+      // the filter narrows, the raw log speaks the scanner's own words
+      await userEvent.click(screen.getByRole('radio', { name: /^OK/ }))
+      expect([...sheet.querySelectorAll('.rsheet-item .nm')].map((n) => n.textContent)).toEqual(['PostCleanUp'])
+      await userEvent.click(screen.getByRole('radio', { name: 'Raw log' }))
+      expect(sheet.querySelector('.rsheet-log')?.textContent).toContain('[SelectItem]')
+
+      fireEvent.keyDown(sheet, { key: 'Escape' })
+      expect(sheet).toHaveAttribute('data-size', 'min')
     } finally {
       vi.unstubAllGlobals()
     }

@@ -109,18 +109,29 @@
 .rl.m-bad { background: color-mix(in srgb, var(--bad) 8%, transparent); }
 .rl.m-warn .st { background: var(--warn); }
 .rl.m-ok .st { background: var(--ok); }
-.rl .rnote { margin-left: 18px; font-size: 11px; color: var(--muted); white-space: nowrap; }
-.rl.m-bad .rnote { color: var(--bad); }
-.rl.m-warn .rnote { color: var(--warn); }
 .legend i.b { background: var(--bad); }
 .legend i.w { background: var(--warn); }
-/* The annotated file wraps every line instead of scrolling sideways. With
-   white-space: pre the rows were only as wide as the pane while their text ran
-   past it, so the sticky gutter scrolled away with its row and the colour bars
-   ended up drawn across the code. Wrapping keeps gutter, bar and note in place. */
-.annotated .rawscroll { max-height: calc(100dvh - 260px); overflow-x: hidden; }
-.annotated .rl .lc { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-.annotated .rl .rnote { white-space: normal; display: inline-block; }
+/* The annotated file scrolls sideways like any editor. The rows are as wide as
+   the longest line (max-content), not the pane, so the sticky gutter stays put
+   on every row instead of scrolling off with a row that ends at the pane edge. */
+.annotated .rawscroll { max-height: calc(100dvh - 260px); }
+.annotated .raw { width: max-content; min-width: 100%; }
+.annotated .rl { scroll-margin-top: 120px; }
+.annotated .rl .lc { white-space: pre; }
+/* Shape as well as colour: dot = wrong, diamond = unconfirmed, thin bar = holds. */
+.annotated .rl .st { flex: 0 0 14px; display: flex; align-items: center; justify-content: center; background: var(--sunk); }
+.annotated .rl .st::before { content: ''; display: block; }
+.annotated .rl.m-bad .st, .annotated .rl.m-warn .st, .annotated .rl.m-ok .st, .annotated .rl.upd .st,
+.annotated .rl.foc .st { background: var(--sunk); }
+.annotated .rl.m-bad .st::before { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
+.annotated .rl.m-warn .st::before { width: 7px; height: 7px; transform: rotate(45deg); background: var(--warn); }
+.annotated .rl.m-ok .st::before { width: 3px; height: 12px; border-radius: 2px; background: var(--ok); opacity: 0.7; }
+.annotated .rl.upd .st::before { width: 3px; height: 12px; border-radius: 2px; background: var(--accent-fill); }
+.annotated .rl.m-warn { background: color-mix(in srgb, var(--warn) 6%, transparent); }
+.annotated .rl.foc { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 0 1px 0 var(--accent), inset 0 -1px 0 var(--accent); }
+.annotated .legend i.b { width: 8px; height: 8px; border-radius: 50%; }
+.annotated .legend i.w { width: 7px; height: 7px; transform: rotate(45deg); }
+.annotated .legend i.c { border-radius: 2px; }
 .rawedit { display: block; width: 100%; min-height: 360px; height: calc(100dvh - 260px); padding: 10px 16px;
   border: 0; resize: vertical; background: var(--sunk); color: var(--ink); font-family: var(--mono);
   font-size: 11.5px; line-height: 1.62; white-space: pre; tab-size: 2; outline: none; }
@@ -654,3 +665,80 @@ html[data-theme="light"] .starbtn.on { color: var(--accent); }
   border: 1px dashed var(--rule-strong); border-radius: 12px; background: var(--card); }
 .scanpage .scanempty .rawedit { height: 260px; min-height: 0; text-align: left; border: 1px solid var(--rule); border-radius: 9px; }
 .scanempty .dzmain { margin: 0; font-family: var(--serif); font-size: 17px; }
+
+/* The scan result: a slim bar over the bottom of the page after a scan, opened
+   on request to half or full height over both the side panel and the file. */
+.scanpage[data-sheet] { padding-bottom: 84px; }
+/* With the sheet open over the lower half, a line picked in it must be able to
+   scroll to the top of the file even near the end, so the file gets room below. */
+.scanpage[data-sheet='half'] .annotated .raw, .scanpage[data-sheet='full'] .annotated .raw { padding-bottom: 60dvh; }
+.rsheet-dim { position: fixed; inset: 0; z-index: 40; background: rgb(5 7 10 / 0.42); }
+.rsheet { position: fixed; z-index: 41; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: min(1648px, calc(100vw - 32px)); display: flex; flex-direction: column; background: var(--card);
+  border: 1px solid var(--rule-strong); border-bottom: 0; border-radius: 14px 14px 0 0;
+  box-shadow: 0 -20px 50px rgb(0 0 0 / 0.35); outline: none; }
+.rsheet[data-size='half'] { height: min(560px, 62dvh); }
+.rsheet[data-size='full'] { height: calc(100dvh - 72px); }
+.rsheet-handle { align-self: center; width: 80px; height: 16px; border: 0; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; }
+.rsheet-handle span { width: 44px; height: 4px; border-radius: 2px; background: var(--rule-strong); }
+.rsheet-handle:hover span { background: var(--muted); }
+.rsheet-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 0 18px 12px; }
+.rsheet-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+.rsheet-meta { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.rsheet-acts { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.rsheet-auto { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); cursor: pointer; }
+.rsheet-auto input { accent-color: var(--accent); }
+.rsheet-verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: 13px; color: var(--ink-2); }
+.rsheet-verdict i { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; vertical-align: -1px; }
+.rsheet-verdict.bad i { background: var(--bad); }
+.rsheet-verdict.warn i { background: var(--warn); }
+.rsheet-verdict.ok i { background: var(--ok); }
+.rsheet-verdict.bad strong { color: var(--bad); }
+.rsheet-verdict.warn strong { color: var(--warn); }
+.rsheet-verdict.ok strong { color: var(--ok); }
+.rsheet-legend { display: flex; flex-wrap: wrap; gap: 6px 20px; padding: 8px 18px; font-size: 12px; color: var(--muted);
+  border-top: 1px solid var(--rule-soft); background: var(--card-2); }
+.rsheet-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.rsheet-legend strong { color: var(--ink); font-weight: 600; }
+.rsheet-legend i, .rsheet-tr .mk { display: block; flex: none; }
+.rsheet-legend i.b, .rsheet-item.t-bad .mk { width: 9px; height: 9px; border-radius: 50%; background: var(--bad); }
+.rsheet-legend i.w, .rsheet-item.t-warn .mk { width: 8px; height: 8px; transform: rotate(45deg); background: var(--warn); }
+.rsheet-legend i.c, .rsheet-item.t-ok .mk { width: 3px; height: 12px; border-radius: 2px; background: var(--ok); }
+.rsheet-body { flex: 1 1 auto; min-height: 0; overflow: auto; border-top: 1px solid var(--rule-soft); }
+.rsheet-tr { display: grid; grid-template-columns: 14px minmax(0, 1.5fr) 90px minmax(0, 1fr) minmax(0, 1fr) 56px;
+  gap: 12px; align-items: center; width: 100%; padding: 9px 18px; border: 0; background: none; text-align: left;
+  font: inherit; color: var(--ink-2); }
+button.rsheet-tr { cursor: pointer; }
+button.rsheet-tr:hover:not(:disabled) { background: var(--card-2); }
+button.rsheet-tr:disabled { cursor: default; }
+.rsheet-th { position: sticky; top: 0; z-index: 1; background: var(--card); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule-soft); }
+.rsheet-tr .num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.rsheet-tr .nm { font-family: var(--mono); font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rsheet-tr .kd { font-size: 12px; color: var(--muted); }
+.rsheet-tr .pc { font-size: 12.5px; }
+.rsheet-tr .pc.t-ok { color: var(--ok); }
+.rsheet-tr .pc.t-bad { color: var(--bad); font-weight: 600; }
+.rsheet-tr .pc.t-warn { color: var(--warn); font-weight: 600; }
+.rsheet-tr .pc.t-neutral { color: var(--faint); }
+.rsheet-item { border-bottom: 1px solid var(--rule-soft); }
+.rsheet-item.t-bad { background: color-mix(in srgb, var(--bad) 5%, transparent); }
+.rsheet-item.t-warn { background: color-mix(in srgb, var(--warn) 5%, transparent); }
+.rsheet-why { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 0 18px 12px 44px; font-size: 13px; color: var(--ink-2); }
+.rsheet-fix { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.rsheet-fix .lbl { font-size: 12px; color: var(--muted); }
+.rsheet-fix code { font-family: var(--mono); font-size: 12px; padding: 3px 8px; border-radius: 6px; background: var(--sunk);
+  color: var(--ok); overflow-wrap: anywhere; }
+.rsheet-empty { padding: 24px 18px; color: var(--muted); }
+.rsheet-log { margin: 0; padding: 12px 18px; font-family: var(--mono); font-size: 12px; line-height: 1.6; color: var(--ink-2); white-space: pre; }
+.rsheet-log .ok { color: var(--ok); }
+.rsheet-log .bad { color: var(--bad); }
+.rsheet-log .warn { color: var(--warn); }
+@media (max-width: 760px) {
+  .rsheet { width: 100vw; border-radius: 14px 14px 0 0; }
+  .rsheet[data-size='half'] { height: 70dvh; }
+  .rsheet-tr { grid-template-columns: 14px minmax(0, 1fr) auto auto; }
+  .rsheet-tr .kd, .rsheet-tr .num { display: none; }
+  .rsheet-why { padding-left: 18px; }
+}

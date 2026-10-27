@@ -4,16 +4,16 @@ import { useTranslation } from 'react-i18next'
 import { requestNavigation } from '../../app/navigate'
 import { ArrowLeftIcon, EditIcon, FileCheckIcon } from '../../ui/icons'
 import { buttonClass } from '../../ui/buttonStyle'
-import { Alert, Button, Tabs, Tag } from '../../ui/primitives'
+import { Alert, Button, Tag } from '../../ui/primitives'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { AnnotatedFile } from './AnnotatedFile'
-import { DeepScan } from './DeepScan'
 import { fetchScanBuilds, fetchScanHealth, requestDeepScan } from './deepScan'
 import { fileDetails } from './details'
 import { clearHandoff, peekHandoff } from './handoff'
-import { KeyList } from './KeyList'
 import { browserMarks, problemLines, scanMarks } from './lineMarks'
 import { applyFixes } from './patch'
+import { ResultSheet } from './ResultSheet'
+import { readAutoOpen, type SheetSize } from './sheetModel'
 import { ScanPanel, type ScanPlatform } from './ScanPanel'
 import { isLoaded, readGameData, useFileCheck, type Loaded } from './useFileCheck'
 
@@ -24,7 +24,8 @@ import { isLoaded, readGameData, useFileCheck, type Loaded } from './useFileChec
  * It used to sit under Check my file, below the hero, the upload panel and the
  * file's identity bar, all inside the narrow reading column, so the editor was
  * the fifth thing down a long page. Here it is the page: full width, a toolbar
- * instead of an upload panel, and the file in view from the first paint.
+ * instead of an upload panel, and the file in view from the first paint. A
+ * scan's result waits in a bar at the bottom until it is asked for.
  */
 export function ScanPage() {
   const { t } = useTranslation()
@@ -36,10 +37,12 @@ export function ScanPage() {
   })
   const [error, setError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [view, setView] = useState<'file' | 'list'>('file')
   const [platform, setPlatform] = useState<ScanPlatform>('both')
   const [build, setBuild] = useState('')
-  const [focusIndex, setFocusIndex] = useState(-1)
+  const [focusLine, setFocusLine] = useState<number | undefined>(undefined)
+  const [sheet, setSheet] = useState<SheetSize>('closed')
+  const [scanMs, setScanMs] = useState<number | undefined>(undefined)
+  const scanStarted = useRef(0)
   const [blankEdit, setBlankEdit] = useState(0)
   const [pasted, setPasted] = useState('')
   // Once someone drops, pastes or edits, the example must never land on top of it.
@@ -69,15 +72,18 @@ export function ScanPage() {
   })
   const details = useMemo(() => (loaded ? fileDetails(loaded.text, loaded.values) : null), [loaded])
   const scan = useMutation({
-    mutationFn: (input: Loaded) =>
-      requestDeepScan(input.text, input.name, {
+    mutationFn: (input: Loaded) => {
+      scanStarted.current = performance.now()
+      return requestDeepScan(input.text, input.name, {
         platform: platform === 'both' ? undefined : platform,
         build: build || undefined,
-      }),
+      })
+    },
     onSuccess: (data) => {
+      setScanMs(performance.now() - scanStarted.current)
       if (data.note) return
-      setView('file')
-      setFocusIndex(-1)
+      setFocusLine(undefined)
+      setSheet(readAutoOpen() ? 'half' : 'min')
     },
   })
   // A result belongs to the text it was run on; a new file must not inherit the last one's.
@@ -111,16 +117,24 @@ export function ScanPage() {
 
   function stepProblem(direction: 1 | -1): void {
     if (problems.length === 0) return
-    const start = focusIndex < 0 ? (direction === 1 ? -1 : 0) : focusIndex
-    setFocusIndex((start + direction + problems.length) % problems.length)
-    setView('file')
+    const at = focusLine !== undefined ? problems.indexOf(focusLine) : -1
+    // From a line that is not a problem (or none), step to the nearest problem in that direction.
+    const next = at >= 0
+      ? (at + direction + problems.length) % problems.length
+      : direction === 1
+        ? Math.max(0, problems.findIndex((line) => focusLine === undefined || line > focusLine))
+        : (() => {
+            const before = problems.filter((line) => focusLine !== undefined && line < focusLine).length - 1
+            return before >= 0 ? before : problems.length - 1
+          })()
+    setFocusLine(problems[next])
   }
 
   async function accept(input: File | string, name: string) {
     userActed.current = true
     setError(null)
-    setView('file')
-    setFocusIndex(-1)
+    setFocusLine(undefined)
+    setSheet('closed')
     scan.reset()
     let text: string
     try {
@@ -150,6 +164,7 @@ export function ScanPage() {
     <div
       className="scanpage"
       data-dragging={dragging || undefined}
+      data-sheet={scanResult && !scanResult.note && sheet !== 'closed' ? sheet : undefined}
       onDragOver={(event) => { event.preventDefault(); setDragging(true) }}
       onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false) }}
       onDrop={(event) => {
@@ -191,7 +206,6 @@ export function ScanPage() {
           </label>
           <Button
             onClick={() => {
-              setView('file')
               setBlankEdit((n) => n + 1)
               if (!loaded) document.getElementById('scan-paste')?.focus()
             }}
@@ -231,43 +245,18 @@ export function ScanPage() {
         ) : null}
         <div className="min-w-0">
           {loaded ? (
-            <Tabs
-              value={view}
-              onValueChange={(next) => setView(next as 'list' | 'file')}
-              items={[
-                {
-                  key: 'file',
-                  label: t('check.view.file'),
-                  children: (
-                    <AnnotatedFile
-                      text={loaded.text}
-                      fixed={fixedText}
-                      name={loaded.name}
-                      format={loaded.format}
-                      marks={marks}
-                      source={scanResult && !scanResult.note ? 'scan' : file ? 'browser' : null}
-                      problems={problems}
-                      focusIndex={focusIndex}
-                      onStep={stepProblem}
-                      onEdit={(text) => void accept(text, loaded.example ? t('check.pasted') : loaded.name)}
-                      blankEdit={blankEdit}
-                    />
-                  ),
-                },
-                {
-                  key: 'list',
-                  label: t('check.view.list'),
-                  children: (
-                    <div className="flex flex-col gap-4">
-                      {scanResult
-                        ? <DeepScan name={loaded.name} result={scanResult} patched={deepPatched} />
-                        : file
-                          ? <KeyList key={loaded.text} verdicts={verdicts} summary={summary} newest={newest} />
-                          : <p className="plain">{t('scan.noList')}</p>}
-                    </div>
-                  ),
-                },
-              ]}
+            <AnnotatedFile
+              text={loaded.text}
+              fixed={fixedText}
+              name={loaded.name}
+              format={loaded.format}
+              marks={marks}
+              source={scanResult && !scanResult.note ? 'scan' : file ? 'browser' : null}
+              problems={problems}
+              focusLine={focusLine}
+              onStep={stepProblem}
+              onEdit={(text) => void accept(text, loaded.example ? t('check.pasted') : loaded.name)}
+              blankEdit={blankEdit}
             />
           ) : (
             <div className="scanempty">
@@ -289,6 +278,19 @@ export function ScanPage() {
           )}
         </div>
       </div>
+
+      {loaded && scanResult && !scanResult.note && (
+        <ResultSheet
+          result={scanResult}
+          text={loaded.text}
+          name={loaded.name}
+          fixed={deepPatched?.applied ? deepPatched.text : null}
+          size={sheet}
+          onSize={setSheet}
+          ms={scanMs}
+          onJump={setFocusLine}
+        />
+      )}
     </div>
   )
 }
