@@ -1,0 +1,6 @@
+[Unit]
+Description=Let cs2vibe-verify read new pipeline output (mkstemp leaves it 0600)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/cs2vibe-verify-acl

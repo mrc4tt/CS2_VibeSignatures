@@ -1,0 +1,9 @@
+[Unit]
+Description=Safety net for files the path unit misses (writes deep inside a build folder)
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target

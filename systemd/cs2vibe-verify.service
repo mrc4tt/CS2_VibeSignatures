@@ -1,0 +1,44 @@
+[Unit]
+Description=CS2_VibeSignatures gamedata checker API (127.0.0.1:8787, behind nginx as sig-api.miksen.me)
+Documentation=file:/root/CS2_VibeSignatures/verify_service.py
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/CS2_VibeSignatures
+# The project venv uv run keeps for autopilot (capstone, fastcrc, pyyaml). Not uv run
+# itself: it would try to sync the venv, and this unit cannot write to the repository.
+ExecStart=/root/CS2_VibeSignatures/.venv/bin/python verify_service.py -host 127.0.0.1 -port 8787 -workers 4 -queue 20 -timeout 60
+Environment=PYTHONDONTWRITEBYTECODE=1
+Restart=on-failure
+RestartSec=10
+# It serves uploads from the internet, so it only reads: the repository, the binaries
+# and the snapshots, and talks to nothing but loopback (nginx in front of it).
+ProtectSystem=strict
+ProtectHome=read-only
+# ida_analyze_bin (imported for the alias map) calls load_dotenv() at import. The real
+# .env holds pipeline tokens this service must never see, and without capabilities root
+# cannot open mikkel's 0600 file anyway, so the import died with PermissionError.
+BindReadOnlyPaths=/dev/null:/root/CS2_VibeSignatures/.env
+PrivateTmp=true
+PrivateDevices=true
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+IPAddressDeny=any
+IPAddressAllow=localhost
+RestrictNamespaces=true
+LockPersonality=true
+SystemCallArchitectures=native
+# Each worker holds one build's snapshot and binaries in memory.
+MemoryMax=4G
+Nice=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

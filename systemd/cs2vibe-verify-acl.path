@@ -1,0 +1,12 @@
+[Unit]
+Description=Re-grant cs2vibe-verify read access when a build lands
+
+[Path]
+PathChanged=/root/CS2_VibeSignatures/gamesymbols
+PathChanged=/root/CS2_VibeSignatures/gamedata
+PathChanged=/srv/cs2-binaries
+TriggerLimitIntervalSec=30
+TriggerLimitBurst=4
+
+[Install]
+WantedBy=paths.target
