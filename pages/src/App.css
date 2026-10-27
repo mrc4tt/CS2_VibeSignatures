@@ -104,6 +104,19 @@
 .rl.upd { background: color-mix(in srgb, var(--accent-fill) 7%, transparent); }
 .rl.hit .st { background: var(--qualify); }
 .rl.foc .st { background: var(--ink); }
+/* Check-my-file's annotated view: the gutter says which verdict a line got, the note says why. */
+.rl.m-bad .st { background: var(--bad); }
+.rl.m-bad { background: color-mix(in srgb, var(--bad) 8%, transparent); }
+.rl.m-warn .st { background: var(--warn); }
+.rl.m-ok .st { background: var(--ok); }
+.rl .rnote { margin-left: 18px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.rl.m-bad .rnote { color: var(--bad); }
+.rl.m-warn .rnote { color: var(--warn); }
+.legend i.b { background: var(--bad); }
+.legend i.w { background: var(--warn); }
+.annotated .rawscroll { max-height: calc(100dvh - 260px); }
+.rawstatus { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 7px 17px; border-top: 1px solid var(--rule-soft);
+  background: var(--card-2); font-size: 12px; color: var(--muted); }
 .raw .jk { color: var(--ink); }
 .raw .jp { color: var(--faint); }
 .raw .jn { color: var(--pe); }

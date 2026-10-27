@@ -83,7 +83,7 @@ describe('Check my file', () => {
     // showing "46 of 47 match 14168b" beside "35 need updating" was the
     // confusion this layout replaced.
     await waitFor(() => expect(screen.getByText('1 key(s) need updating for build 14181')).toBeInTheDocument())
-    expect(screen.getByText('matchzy')).toBeInTheDocument()
+    expect(screen.getAllByText('matchzy').length).toBeGreaterThan(0)
     expect(screen.getByText(/matches build 14180, 1 build\(s\) back/)).toBeInTheDocument()
     // and no raw markdown leaking into the page
     expect(document.body.textContent).not.toContain('**')
@@ -242,7 +242,7 @@ describe('Check my file', () => {
     expect(screen.queryByText('Cannot tell which plugin this file belongs to')).not.toBeInTheDocument()
   })
   it('runs the deep scan only when asked, and offers the file it fixed', async () => {
-    const fetch = vi.fn(async () => new Response(JSON.stringify({
+    const verifyReply = JSON.stringify({
       build: '14192',
       platforms: ['linux', 'windows'],
       matched: { plugin: 'matchzy', file: 'gamedata/14192/matchzy/gamedata/matchzy.json' },
@@ -256,24 +256,36 @@ describe('Check my file', () => {
           linux: { status: 'ok', verification: 'verified' }, windows: { status: 'ok', verification: 'verified' } } },
       ],
       fixes: [{ key: 'SelectItem', platform: 'linux', from: 31, to: 32, source: 'shipped' }],
-    }), { status: 200 }))
+    })
+    const fetch = vi.fn(async (url: string) => new Response(
+      url.endsWith('/builds') ? JSON.stringify({ builds: ['14192', '14191'] }) : verifyReply,
+      { status: 200 },
+    ))
+    const scans = () => fetch.mock.calls.filter(([url]) => String(url).endsWith('/verify')).length
     vi.stubGlobal('fetch', fetch)
     try {
       paint()
       await screen.findByText('Check your own Game Data file')
-      await drop(behindFile)
-      await screen.findByText('Deep scan against the game binaries')
+      await drop(JSON.stringify(JSON.parse(behindFile), null, 2))
+      await screen.findByRole('button', { name: 'Scan it' })
       // dropping a file sends nothing anywhere
-      expect(fetch).not.toHaveBeenCalled()
+      expect(scans()).toBe(0)
 
       await userEvent.click(screen.getByRole('button', { name: 'Scan it' }))
-      await screen.findByText('1 value is wrong for build 14192')
-      expect(fetch).toHaveBeenCalledTimes(1)
+      // the file view opens on the scan's marks, on the very line that is wrong
+      await waitFor(() => expect(document.querySelector('.annotated .rl.m-bad .rnote')).not.toBeNull())
+      expect(scans()).toBe(1)
+      const bad = document.querySelector<HTMLElement>('.annotated .rl.m-bad')!
+      expect(bad.textContent).toContain('"linux"')
+      expect(bad.querySelector('.rnote')?.textContent).toBe('should be 32')
+      expect(screen.getByText('Marks from the deep scan')).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('tab', { name: 'List' }))
+      expect(screen.getByText('1 value is wrong for build 14192')).toBeInTheDocument()
       expect(screen.getByText('Fixed file from the scan')).toBeInTheDocument()
       // only the contradicted row is listed until asked for the rest
       const rows = [...document.querySelectorAll('.deepscan details.krow .kname')].map((n) => n.textContent)
       expect(rows).toEqual(['SelectItem'])
-      expect(screen.getByText('should be 32')).toBeInTheDocument()
     } finally {
       vi.unstubAllGlobals()
     }

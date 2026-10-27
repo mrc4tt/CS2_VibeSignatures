@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { DeepScanError, platformTone, requestDeepScan, rowTone, sortRows, type DeepRow } from './deepScan'
+import {
+  DeepScanError, fetchScanBuilds, platformTone, requestDeepScan, rowTone, sortRows, type DeepRow,
+} from './deepScan'
 
 const row = (name: string, linux: string | undefined, windows?: string): DeepRow => ({
   name,
@@ -35,10 +37,23 @@ describe('asking the scan server', () => {
   it('posts the text and the file name', async () => {
     const fetch = reply(200, { build: '14192', results: [] })
     vi.stubGlobal('fetch', fetch)
-    await requestDeepScan('{"A":1}', 'matchzy.json', undefined, 'https://api.test/api')
+    await requestDeepScan('{"A":1}', 'matchzy.json', { base: 'https://api.test/api' })
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
     expect(url).toBe('https://api.test/api/verify')
     expect(JSON.parse(init.body as string)).toEqual({ gamedata: '{"A":1}', filename: 'matchzy.json' })
+  })
+
+  it('narrows the scan only when a platform or build was picked', async () => {
+    const fetch = reply(200, { build: '14191', results: [] })
+    vi.stubGlobal('fetch', fetch)
+    await requestDeepScan('{}', 'a.json', { platform: 'windows', build: '14191' })
+    const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect(JSON.parse(init.body as string)).toEqual({ gamedata: '{}', filename: 'a.json', platform: 'windows', build: '14191' })
+  })
+
+  it('lists the builds it can scan against, and nothing it does not understand', async () => {
+    vi.stubGlobal('fetch', reply(200, { builds: ['14192', 14191, '14190'] }))
+    expect(await fetchScanBuilds()).toEqual(['14192', '14190'])
   })
 
   it.each([

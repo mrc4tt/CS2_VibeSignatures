@@ -6,7 +6,7 @@ import {
 } from './fileModel'
 import type { GameDataFileDescriptor, GameDataMetadata } from './types'
 
-function TokenText({ token }: { token: Token }) {
+export function TokenText({ token }: { token: Token }) {
   if (token.kind === 'hex') {
     return (
       <span className="hex">

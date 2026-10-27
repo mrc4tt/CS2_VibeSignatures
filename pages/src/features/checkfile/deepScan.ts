@@ -76,18 +76,30 @@ function failureFor(status: number, retryAfter: string | null): DeepScanFailure 
   return 'failed'
 }
 
+/** What the side panel can narrow a scan to; the service defaults to its newest build and both platforms. */
+export interface DeepScanOptions {
+  platform?: Platform
+  build?: string
+  signal?: AbortSignal
+  base?: string
+}
+
 export async function requestDeepScan(
   text: string,
   filename: string,
-  signal?: AbortSignal,
-  base: string = DEEP_SCAN_API,
+  { platform, build, signal, base = DEEP_SCAN_API }: DeepScanOptions = {},
 ): Promise<DeepScanResult> {
   let response: Response
   try {
     response = await fetch(`${base}/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ gamedata: text, filename }),
+      body: JSON.stringify({
+        gamedata: text,
+        filename,
+        ...(platform ? { platform } : {}),
+        ...(build ? { build } : {}),
+      }),
       signal,
     })
   } catch (error) {
@@ -104,6 +116,14 @@ export async function requestDeepScan(
     throw new DeepScanError(failureFor(response.status, response.headers.get('Retry-After')), detail)
   }
   return (await response.json()) as DeepScanResult
+}
+
+/** The builds the service holds binaries for, newest first. Empty when it cannot be reached. */
+export async function fetchScanBuilds(signal?: AbortSignal, base: string = DEEP_SCAN_API): Promise<string[]> {
+  const response = await fetch(`${base}/builds`, { headers: { Accept: 'application/json' }, signal })
+  if (!response.ok) throw new Error(`builds ${response.status}`)
+  const body = (await response.json()) as { builds?: unknown }
+  return Array.isArray(body.builds) ? body.builds.filter((build): build is string => typeof build === 'string') : []
 }
 
 export type DeepTone = 'ok' | 'bad' | 'warn' | 'neutral'

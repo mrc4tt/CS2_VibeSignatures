@@ -25,13 +25,13 @@ export interface PatchResult {
   skipped: Array<{ key: string; platform: 'linux' | 'windows'; reason: 'notFound' | 'ambiguous' }>
 }
 
-const PLATFORM_NAMES: Record<'linux' | 'windows', string[]> = {
+export const PLATFORM_NAMES: Record<'linux' | 'windows', string[]> = {
   linux: ['linux', 'linuxsteamrt64'],
   windows: ['windows', 'win64'],
 }
 
 /** A `<entry>.vtable` key's values live under these names inside the entry's "vtable" block. */
-const VTABLE_INDEX_NAMES: Record<'linux' | 'windows', string[]> = {
+export const VTABLE_INDEX_NAMES: Record<'linux' | 'windows', string[]> = {
   linux: ['linux_index'],
   windows: ['windows_index'],
 }
@@ -93,7 +93,7 @@ function replaceInWindow(
  * Where a verdict's values sit: the key's own block, or for `<entry>.vtable` the "vtable"
  * block inside the entry's - so an index can never be written into the signatures.
  */
-function verdictWindow(text: string, key: string): { from: number; to: number } | null {
+export function verdictWindow(text: string, key: string): { from: number; to: number } | null {
   if (!key.endsWith(VTABLE_KEY_SUFFIX)) return keyWindow(text, key)
   const entry = keyWindow(text, key.slice(0, -VTABLE_KEY_SUFFIX.length))
   if (!entry) return null
