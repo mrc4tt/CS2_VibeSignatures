@@ -10,7 +10,7 @@ Object.assign(process.env, {
     REPO_ROOT: path.resolve(import.meta.dirname, "..", ".."),
 });
 const { Repo } = await import("../src/repo.ts");
-const { changesEmbed, fileEmbed, keyEmbed, statusEmbed } = await import("../src/render.ts");
+const { changesEmbed, fileEmbed, keyEmbed, statusEmbed, verifyEmbed } = await import("../src/render.ts");
 const { parseEvent } = await import("../src/server.ts");
 
 const repo = new Repo(process.env.REPO_ROOT!);
@@ -38,6 +38,7 @@ test("the newest build lists its shipped files and their changes", () => {
     for (const file of repo.shippedFiles(latest)) {
         assert.ok(repo.filePath(latest, file), file);
         assert.ok(size(fileEmbed(repo, latest, file)) <= 6000);
+        assert.ok(size(verifyEmbed(repo, latest, file)) <= 6000);
     }
     assert.ok(size(statusEmbed(repo, null)) <= 6000);
 });
@@ -47,6 +48,8 @@ test("a path outside the shipped list is refused", () => {
     assert.equal(repo.filePath(latest, "../../etc/passwd"), null);
     assert.equal(repo.filePath(latest, "history.json"), null);
     assert.equal(repo.diagnostics("../x"), null);
+    assert.equal(repo.binaryPath("../x", "server", "linux"), null);
+    assert.equal(repo.binaryPath(latest, "../../etc", "linux"), null);
 });
 
 test("every key in the history renders", () => {

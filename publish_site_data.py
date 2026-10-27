@@ -470,11 +470,19 @@ def build_plugin_checks(build: str) -> dict:
         # Per platform: how many shipped values a method re-read from the binary
         # (verified), none could (unverified), or one contradicted.
         verification: dict = {}
+        # Every entry's verdict, not only the problems, so the Discord bot's /verify
+        # can answer "does key X resolve, and where" without re-running the scan.
+        keys = []
         for result in report.get("results", []):
             for platform, verdict in sorted(result.get("platforms", {}).items()):
                 status = verdict.get("status", "unknown")
                 counts[status] += 1
                 state = verdict.get("verification")
+                key = {"name": result.get("name"), "platform": platform, "status": status}
+                for field in ("at", "count", "verification"):
+                    if verdict.get(field) is not None:
+                        key[field] = verdict[field]
+                keys.append(key)
                 if state:
                     tally = verification.setdefault(platform, {"verified": 0, "unverified": 0, "contradicted": 0,
                                                                "instructionOnly": 0, "upstream": 0})
@@ -492,6 +500,7 @@ def build_plugin_checks(build: str) -> dict:
             statuses=dict(sorted(counts.items())),
             unhealthy=int(report.get("unhealthy", 0)),
             problems=problems,
+            keys=keys,
             verification=dict(sorted(verification.items())),
         )
         files.append(entry)

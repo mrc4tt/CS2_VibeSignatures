@@ -1,7 +1,8 @@
 import path from "node:path";
 import { EmbedBuilder } from "discord.js";
 import { config } from "./config.ts";
-import { pluginOf, type DiagnosticsFile, type PlatformVerification, type Repo } from "./repo.ts";
+import { pluginOf, type DiagnosticsFile, type KeyVerdict, type PlatformVerification, type Repo } from "./repo.ts";
+import type { ScanResult } from "./scan.ts";
 
 export function fileLabel(file: string): string {
     return `${pluginOf(file)} · ${path.basename(file)}`;
@@ -160,4 +161,80 @@ export function fileEmbed(repo: Repo, gamever: string, file: string): EmbedBuild
             { name: "Verification", value: verificationLine(diagnostics) },
             { name: "Changed in this build", value: keys.size ? clip([...keys].map((k) => `\`${k}\``).join(", "), 1024) : "nothing" },
         );
+}
+
+// verify_plugin_gamedata statuses that pass; the same set publish_site_data.py uses.
+const PASS_STATUSES = new Set(["ok", "match", "ok-midfunction", "ok-globalref"]);
+
+function verdictText(v: KeyVerdict): string {
+    const where = v.at ? ` ${v.at}` : "";
+    if (v.status === "ambiguous") return `**AMBIGUOUS** (${v.count ?? "2+"} hits)`;
+    if (v.status === "broken") return "**BROKEN** (0 hits)";
+    if (!PASS_STATUSES.has(v.status)) return `**${v.status}**`;
+    const state = v.verification && v.verification !== "verified" ? ` (${v.verification})` : "";
+    return `${v.status}${where}${state}`;
+}
+
+// Every entry of one shipped file and whether it resolves on each platform, so
+// "is key X still good" needs no scan and no AI.
+export function verifyEmbed(repo: Repo, gamever: string, file: string): EmbedBuilder {
+    const diagnostics = repo.diagnostics(gamever)?.plugins.files.find((f) => f.path === file);
+    const embed = new EmbedBuilder()
+        .setTitle(`${fileLabel(file)} - verify on CS2 ${gamever}`)
+        .setURL(`${config.siteUrl}/game-data`);
+    if (!diagnostics) return embed.setColor(0x95a5a6).setDescription("No verification for this file and build.");
+
+    const bad = (v: KeyVerdict) => !PASS_STATUSES.has(v.status) || v.verification === "contradicted";
+    const summary = verificationLine(diagnostics);
+    let body: string;
+    if (diagnostics.keys) {
+        const byKey = new Map<string, KeyVerdict[]>();
+        for (const v of diagnostics.keys) {
+            if (!byKey.has(v.name)) byKey.set(v.name, []);
+            byKey.get(v.name)!.push(v);
+        }
+        // Broken keys first: they are what the asker is looking for.
+        const rows = [...byKey].sort(([, a], [, b]) => Number(b.some(bad)) - Number(a.some(bad)));
+        body = rows.map(([key, verdicts]) =>
+            `\`${key}\`\n` + verdicts.map((v) => `  ${v.platform}: ${verdictText(v)}`).join("\n")).join("\n");
+    } else {
+        // Published before every verdict was kept: only the problems are known.
+        const problems = diagnostics.problems ?? [];
+        body = (problems.length
+            ? problems.map((v) => `\`${v.name}\` ${v.platform}: ${verdictText(v)}`).join("\n")
+            : "Every entry passed.")
+            + "\n\n*Per-key detail starts with the next published build.*";
+    }
+    const broken = diagnostics.unhealthy || diagnostics.keys?.some(bad);
+    return embed
+        .setColor(broken ? 0xe74c3c : 0x2ecc71)
+        .setDescription(clip(`${summary}\n\n${body}`, 4096))
+        .setFooter({ text: "Scan any pattern yourself: /check" });
+}
+
+export function checkEmbed(gamever: string, module: string, platform: string, pattern: string, result: ScanResult): EmbedBuilder {
+    let verdict: string, color: number;
+    switch (result.status) {
+        case "ok":
+            [verdict, color] = [`**1 hit** at \`${result.at}\`, on a function head. Resolves.`, 0x2ecc71];
+            break;
+        case "ok-midfunction":
+            [verdict, color] = [`**1 hit** at \`${result.at}\`, inside a function (not on its head). Resolves, but check it is meant to.`, 0xf1c40f];
+            break;
+        case "ambiguous":
+            [verdict, color] = [`**${result.count}${result.count >= 64 ? "+" : ""} hits** - ambiguous, a plugin may resolve the wrong one: ${result.at.map((a) => `\`${a}\``).join(", ")}`, 0xe74c3c];
+            break;
+        case "broken":
+            [verdict, color] = [`**0 hits** in code - broken.${result.outsideCode ? ` (${result.outsideCode} outside executable code, which plugins do not scan.)` : ""}`, 0xe74c3c];
+            break;
+        case "too-few-literals":
+            [verdict, color] = [`Only ${result.literals} literal byte(s); CounterStrikeSharp refuses fewer than 4.`, 0xe74c3c];
+            break;
+        default:
+            [verdict, color] = ["Not a pattern: use hex bytes with `?` wildcards (`55 48 89 E5 ? ?`) or `\\x55\\x2A` escapes.", 0xe74c3c];
+    }
+    return new EmbedBuilder()
+        .setTitle(`Signature check - ${module} ${platform}, CS2 ${gamever}`)
+        .setColor(color)
+        .setDescription(clip(`${verdict}\n\n\`\`\`\n${pattern}\n\`\`\``, 4096));
 }

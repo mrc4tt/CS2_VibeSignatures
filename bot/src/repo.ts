@@ -18,14 +18,36 @@ export type History = {
 export type PlatformVerification = {
     verified: number; contradicted: number; unverified: number; upstream: number; instructionOnly: number;
 };
+// One entry's verdict on one platform. `keys` is absent in diagnostics published
+// before publish_site_data.py kept every verdict (only `problems` were stored).
+export type KeyVerdict = { name: string; platform: string; status: string; at?: string; count?: number; verification?: string };
 export type DiagnosticsFile = {
     path: string; plugin: string; entries: number; unhealthy: number;
     verification?: { linux?: PlatformVerification; windows?: PlatformVerification };
+    problems?: KeyVerdict[];
+    keys?: KeyVerdict[];
 };
 export type Diagnostics = {
     gameVersion: string;
     plugins: { files: DiagnosticsFile[] };
     validator?: { artifacts?: number; errors?: number; warnings?: number };
+};
+
+// The binaries a signature can name, by module (the "library" a gamedata entry
+// names). Same table as verify_plugin_gamedata.py's BIN_LINUX / BIN_WIN.
+export const BINARIES: Record<string, { linux: string; windows: string }> = {
+    server: { linux: "libserver.so", windows: "server.dll" },
+    engine: { linux: "libengine2.so", windows: "engine2.dll" },
+    client: { linux: "libclient.so", windows: "client.dll" },
+    networksystem: { linux: "libnetworksystem.so", windows: "networksystem.dll" },
+    scenesystem: { linux: "libscenesystem.so", windows: "scenesystem.dll" },
+    matchmaking: { linux: "libmatchmaking.so", windows: "matchmaking.dll" },
+    vphysics2: { linux: "libvphysics2.so", windows: "vphysics2.dll" },
+    tier0: { linux: "libtier0.so", windows: "tier0.dll" },
+    schemasystem: { linux: "libschemasystem.so", windows: "schemasystem.dll" },
+    filesystem_stdio: { linux: "libfilesystem_stdio.so", windows: "filesystem_stdio.dll" },
+    soundsystem: { linux: "libsoundsystem.so", windows: "soundsystem.dll" },
+    worldrenderer: { linux: "libworldrenderer.so", windows: "worldrenderer.dll" },
 };
 
 export type KeyChange = { key: string; platform: string; before: unknown; after: unknown };
@@ -73,6 +95,15 @@ export class Repo {
     filePath(gamever: string, file: string): string | null {
         if (!this.shippedFiles(gamever).includes(file)) return null;
         const full = path.join(this.root, "gamedata", gamever, file);
+        return fs.existsSync(full) ? full : null;
+    }
+
+    // The binary the pipeline analysed for a build (bin/<build>/<module>/<file>), or
+    // null when it is not on disk: bin/ is a cache, so older builds may be gone.
+    binaryPath(gamever: string, module: string, platform: "linux" | "windows"): string | null {
+        if (!GAMEVER_RE.test(gamever) || !Object.hasOwn(BINARIES, module)) return null;
+        const names = BINARIES[module];
+        const full = path.join(this.root, "bin", gamever, module, names[platform]);
         return fs.existsSync(full) ? full : null;
     }
 

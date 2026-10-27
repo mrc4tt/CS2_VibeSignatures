@@ -36,7 +36,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
     } catch (error) {
         console.error("interaction failed:", error);
-        if (interaction.isRepliable() && !interaction.replied) {
+        // A deferred reply (/check) can only be edited, not replied to again.
+        if (interaction.isRepliable() && interaction.deferred && !interaction.replied) {
+            await interaction.editReply({ content: "Something went wrong." }).catch(() => undefined);
+        } else if (interaction.isRepliable() && !interaction.replied) {
             await interaction.reply({ content: "Something went wrong.", flags: MessageFlags.Ephemeral }).catch(() => undefined);
         }
     }

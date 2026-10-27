@@ -59,6 +59,8 @@ and re-reads the repository every 5 minutes.
 | `/changes [build] [file]` | which plugins need a new file, or one file's changed keys |
 | `/gamedata file [build]` | the generated file as an attachment |
 | `/key key` | current linux/windows value and the builds it changed in |
+| `/verify file [build]` | every key of one shipped file: resolves (and where), broken or ambiguous, per platform. Read from `diagnostics/<build>.json` (`keys`, written by `publish_site_data.py`) |
+| `/check signature platform [module] [build]` | scans any pattern against `bin/<build>/<module>/` with the same rules as `verify_plugin_gamedata.py`: 1 hit good, 0 broken, 2+ ambiguous. Only builds whose binaries are still in `bin/` |
 
 | `/settings` | admins (Manage Server) only: files attached to build messages |
 

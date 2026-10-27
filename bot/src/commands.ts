@@ -7,8 +7,12 @@ import {
 import { settingsDefinition } from "./admin.ts";
 import { latestEvent } from "./announce.ts";
 import { config } from "./config.ts";
-import { GAMEVER_RE, type Repo } from "./repo.ts";
-import { changesEmbed, fileChangesEmbed, fileEmbed, fileLabel, keyEmbed, statusEmbed } from "./render.ts";
+import { BINARIES, GAMEVER_RE, type Repo } from "./repo.ts";
+import { changesEmbed, checkEmbed, fileChangesEmbed, fileEmbed, fileLabel, keyEmbed, statusEmbed, verifyEmbed } from "./render.ts";
+import { loadImage, scan, type Image } from "./scan.ts";
+
+// A Discord option is capped at 6000 characters; a real signature is far shorter.
+const MAX_PATTERN = 600;
 
 export const definitions = [
     new SlashCommandBuilder().setName("help").setDescription("What this bot can do"),
@@ -27,6 +31,20 @@ export const definitions = [
         .setName("key")
         .setDescription("Current signature/offset of one key and the builds it changed in")
         .addStringOption((o) => o.setName("key").setDescription("Key name").setRequired(true).setAutocomplete(true)),
+    new SlashCommandBuilder()
+        .setName("verify")
+        .setDescription("Does every key of a plugin's gamedata file resolve on a build, and where")
+        .addStringOption((o) => o.setName("file").setDescription("Plugin file").setRequired(true).setAutocomplete(true))
+        .addStringOption((o) => o.setName("build").setDescription("Game build (default: newest)").setAutocomplete(true)),
+    new SlashCommandBuilder()
+        .setName("check")
+        .setDescription("Scan a signature against a build's binary: 1 hit is good, 0 is broken, 2+ is ambiguous")
+        .addStringOption((o) => o.setName("signature").setDescription("Hex bytes with ? wildcards, or \\x escapes").setRequired(true).setMaxLength(MAX_PATTERN))
+        .addStringOption((o) => o.setName("platform").setDescription("Binary platform").setRequired(true)
+            .addChoices({ name: "linux", value: "linux" }, { name: "windows", value: "windows" }))
+        .addStringOption((o) => o.setName("module").setDescription("Binary (default: server)")
+            .addChoices(...Object.keys(BINARIES).map((m) => ({ name: m, value: m }))))
+        .addStringOption((o) => o.setName("build").setDescription("Game build (default: newest)").setAutocomplete(true)),
 ]
     // Answers are visible to the asker only unless they choose to share, so a
     // channel does not fill up with everyone's lookups.
@@ -63,6 +81,14 @@ function digest(text: string): string {
 }
 
 const COOLDOWN_MS = 3000;
+
+// The last binary scanned (~40 MB). /check is usually asked several times in a
+// row against the same build, so one cached image saves re-reading the file.
+let cachedImage: { file: string; image: Image | null } | null = null;
+function image(file: string): Image | null {
+    if (cachedImage?.file !== file) cachedImage = { file, image: loadImage(file) };
+    return cachedImage.image;
+}
 const lastUse = new Map<string, number>();
 
 export class Commands {
@@ -132,6 +158,20 @@ export class Commands {
                 });
                 return;
             }
+            case "verify": {
+                const build = this.build(interaction);
+                if (!build) return this.unknownBuild(interaction);
+                const id = interaction.options.getString("file", true);
+                const file = this.repo.shippedFiles(build).find((f) => digest(f) === id || f === id);
+                if (!file) {
+                    await interaction.reply({ content: `No such file in build ${build}.`, flags: MessageFlags.Ephemeral });
+                    return;
+                }
+                await interaction.reply({ embeds: [verifyEmbed(this.repo, build, file)], flags });
+                return;
+            }
+            case "check":
+                return this.check(interaction, flags);
             case "key": {
                 const id = interaction.options.getString("key", true);
                 const record = this.keyRecords().find((r) => digest(`${r.file}|${r.key}`) === id)
@@ -145,6 +185,28 @@ export class Commands {
                 return;
             }
         }
+    }
+
+    private async check(interaction: ChatInputCommandInteraction, flags: MessageFlags.Ephemeral | undefined): Promise<void> {
+        const build = this.build(interaction);
+        if (!build) return this.unknownBuild(interaction);
+        const platform = interaction.options.getString("platform", true) as "linux" | "windows";
+        const module = interaction.options.getString("module") ?? "server";
+        // Shown back in a code block: no backticks, so it cannot close the block.
+        const pattern = interaction.options.getString("signature", true).replaceAll("`", "").trim().slice(0, MAX_PATTERN);
+        const file = this.repo.binaryPath(build, module, platform);
+        if (!file) {
+            await interaction.reply({ content: `The ${module} ${platform} binary of build ${build} is not on the server (only recent builds are kept).`, flags: MessageFlags.Ephemeral });
+            return;
+        }
+        // Reading and scanning a cold 40 MB binary can pass Discord's 3 s reply window.
+        await interaction.deferReply({ flags });
+        const loaded = image(file);
+        if (!loaded) {
+            await interaction.editReply({ content: `Could not read the ${module} ${platform} binary of build ${build}.` });
+            return;
+        }
+        await interaction.editReply({ embeds: [checkEmbed(build, module, platform, pattern, scan(loaded, pattern))] });
     }
 
     private async unknownBuild(interaction: ChatInputCommandInteraction): Promise<void> {
