@@ -196,7 +196,7 @@ binaries:
       sha256: 'e0b1ed04a652f8268fd9d6b75b5a97910ab57197e2cdb8a0a4966703a5ec8322'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:d30fa95fbd2668e5ee486a1f560eb4fe8c6548721b310047635ee1bea8d693e7
+config_sha256: sha256:a9096a4507cf9d3a9acc61aad1a5ef1f1687c3cc01749100ed215e610d9dd3d9
 file_count: 3985
 files:
   SDL3/SDL_GetMouse.windows.yaml:
@@ -49728,5 +49728,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14192'
-last_publish_time: '2026-10-24T13:19:01Z'
+last_publish_time: '2026-10-27T08:03:02Z'
 schema_version: 5
