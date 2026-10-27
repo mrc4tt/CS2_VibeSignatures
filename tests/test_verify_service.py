@@ -86,6 +86,35 @@ class FixTests(unittest.TestCase):
                                   "source": "shipped"}])
 
 
+class RecordSignatureTests(unittest.TestCase):
+    ENTRIES = {"Sig": {"kind": "signature", "values": {"linux": "55 48 8B", "windows": "40 53"}}}
+    RECORD = {"func_sig": "55 48 89 E5 41 57", "func_va": "0x1000", "_module": "server"}
+
+    def fixes(self, info, record=RECORD, hit=None, existing=()):
+        results = [{"name": "Sig", "kind": "signature", "module": "server", "platforms": {"linux": info}}]
+        hit = hit or {"status": "ok", "at": "0x1000"}
+        return S.record_signature_fixes(results, self.ENTRIES, list(existing),
+                                        lambda name, platform: record, lambda module, platform, pattern: hit)
+
+    def test_a_broken_signature_takes_the_record_signature_that_lands_on_its_function(self):
+        self.assertEqual(self.fixes({"status": "broken"}), [
+            {"key": "Sig", "platform": "linux", "from": "55 48 8B", "to": "55 48 89 E5 41 57", "source": "record"}])
+        self.assertEqual(len(self.fixes({"status": "ok", "func": "mismatch"})), 1)
+
+    def test_nothing_unconfirmed_is_offered(self):
+        self.assertEqual(self.fixes({"status": "ok", "func": "ok"}), [])
+        self.assertEqual(self.fixes({"status": "broken"}, hit={"status": "ok", "at": "0x2000"}), [])
+        self.assertEqual(self.fixes({"status": "broken"}, hit={"status": "ambiguous", "count": 2}), [])
+        self.assertEqual(self.fixes({"status": "broken"}, hit={"status": "ok-midfunction", "at": "0x1000"}), [])
+        self.assertEqual(self.fixes({"status": "broken"}, record=None), [])
+        self.assertEqual(self.fixes({"status": "broken"}, record={**self.RECORD, "func_sig": None}), [])
+        self.assertEqual(self.fixes({"status": "broken"}, record={**self.RECORD, "_module": "engine"}), [])
+
+    def test_a_shipped_fix_wins(self):
+        shipped = [{"key": "Sig", "platform": "linux", "from": "55 48 8B", "to": "55", "source": "shipped"}]
+        self.assertEqual(self.fixes({"status": "broken"}, existing=shipped), [])
+
+
 @unittest.skipUnless(HAVE_BUILD, "needs gamedata/14192 and its snapshot")
 class MatchTests(unittest.TestCase):
     def test_a_stale_copy_finds_its_plugin(self):

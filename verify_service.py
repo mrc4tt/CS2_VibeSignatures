@@ -149,6 +149,44 @@ def suggest_fixes(results, entries, shipped=None, vtables=None, shipped_vtables=
     return fixes
 
 
+def record_signature_fixes(results, entries, fixes, lookup, scan):
+    """[{key, platform, from, to, source: 'record'}] for bad signatures no shipped value fixes.
+
+    A plugin key this repo has a function record for gets that record's own signature,
+    but only where the signature, scanned now and the way CounterStrikeSharp scans it,
+    lands once and exactly on the function the record identified. That is the same
+    evidence a verified value carries, so it is not a guess; a record without a
+    signature, with one that no longer resolves, or for another module offers nothing.
+
+    lookup(name, platform) -> record or None; scan(module, platform, pattern) -> check_signature.
+    """
+    taken = {(fix["key"], fix["platform"]) for fix in fixes}
+    out = []
+    for row in results:
+        if row.get("kind") != "signature":
+            continue
+        name = row["name"]
+        for platform, info in row["platforms"].items():
+            current = ((entries.get(name) or {}).get("values") or {}).get(platform)
+            bad = (info.get("status") in ("broken", "ambiguous") or info.get("func") == "mismatch"
+                   or info.get("verification") == "contradicted")
+            if not bad or current in (None, "") or (name, platform) in taken:
+                continue
+            record = lookup(name, platform)
+            if not record or not record.get("func_sig") or VPG._int(record.get("func_va")) is None:
+                continue
+            if (record.get("_module") or "server") != row.get("module", "server"):
+                continue
+            pattern = str(record["func_sig"]).strip()
+            if pattern == str(current).strip():
+                continue
+            hit = scan(row.get("module", "server"), platform, pattern)
+            if hit.get("status") == "ok" and VPG._int(hit.get("at")) == VPG._int(record["func_va"]):
+                out.append({"key": name, "platform": platform, "from": current, "to": pattern,
+                            "source": "record"})
+    return out
+
+
 # -- worker side: one long-lived process holds one build ----------------------
 
 _STATE = {"build": None}
@@ -203,6 +241,15 @@ def job_verify(gamever, bindir, text, filename, platforms):
     shipped_vtables = next((v for p, sp, _, v in state["shipped"] if sp == path), {})
     fixes = suggest_fixes(results, entries, match[2] if match else None,
                           VPG.vtable_blocks_of(text), shipped_vtables)
+    # A KeyValues file writes signatures as \x escapes; a spaced pattern placed into
+    # one would read as a different value, so record signatures are only offered to
+    # files that write patterns the way the records do.
+    if "\\x" not in text:
+        aliases = VPG.load_alias_map(state["config"]) if os.path.isfile(state["config"]) else {}
+        fixes += record_signature_fixes(
+            results, entries, fixes,
+            lambda name, platform: VPG.resolve_record(state["index"], name, platform, aliases),
+            lambda module, platform, pattern: VPG.check_signature(state["binaries"], module, platform, pattern))
     return {"build": gamever, "platforms": list(platforms),
             "matched": ({"plugin": plugin, "file": os.path.relpath(path, REPO_ROOT)} if match else None),
             "unhealthy": unhealthy, "verification": tally, "results": results, "fixes": fixes}
