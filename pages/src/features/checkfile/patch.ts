@@ -14,6 +14,7 @@
  * can trust what it says.
  */
 
+import type { DeepFix } from './deepScan'
 import { VTABLE_KEY_SUFFIX } from './parse'
 import type { KeyVerdict } from './verdict'
 
@@ -142,6 +143,35 @@ export function patchFile(text: string, verdicts: KeyVerdict[]): PatchResult {
       } else {
         skipped.push({ key: verdict.key, platform, reason: result.outcome })
       }
+    }
+  }
+  return { text: out, applied, skipped }
+}
+
+/**
+ * Replace the values the deep scan proposed, by the same surgery as patchFile.
+ *
+ * The scan already says exactly which value is wrong and what replaces it, so
+ * there is nothing to decide here beyond placing it: `from` must be found once in
+ * that key's block under that platform, or the fix is left to a human.
+ */
+export function applyFixes(text: string, fixes: DeepFix[]): PatchResult {
+  let out = text
+  let applied = 0
+  const skipped: PatchResult['skipped'] = []
+  for (const fix of fixes) {
+    const window = verdictWindow(out, fix.key)
+    if (!window) {
+      skipped.push({ key: fix.key, platform: fix.platform, reason: 'notFound' })
+      continue
+    }
+    const names = fix.key.endsWith(VTABLE_KEY_SUFFIX) ? VTABLE_INDEX_NAMES : PLATFORM_NAMES
+    const result = replaceInWindow(out, window, fix.platform, fix.from, fix.to, names)
+    if (result.outcome === 'applied') {
+      out = result.text
+      applied += 1
+    } else {
+      skipped.push({ key: fix.key, platform: fix.platform, reason: result.outcome })
     }
   }
   return { text: out, applied, skipped }

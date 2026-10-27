@@ -241,4 +241,41 @@ describe('Check my file', () => {
     await waitFor(() => expect(screen.getByText(/No gamedata entries found/)).toBeInTheDocument())
     expect(screen.queryByText('Cannot tell which plugin this file belongs to')).not.toBeInTheDocument()
   })
+  it('runs the deep scan only when asked, and offers the file it fixed', async () => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify({
+      build: '14192',
+      platforms: ['linux', 'windows'],
+      matched: { plugin: 'matchzy', file: 'gamedata/14192/matchzy/gamedata/matchzy.json' },
+      unhealthy: 1,
+      verification: { verified: 3, contradicted: 1, unverified: 0, upstream: 0 },
+      results: [
+        { name: 'SelectItem', kind: 'offset', platforms: {
+          linux: { status: 'mismatch', reference: 32, verification: 'contradicted' },
+          windows: { status: 'match', value: 30, verification: 'verified' } } },
+        { name: 'PostCleanUp', kind: 'signature', platforms: {
+          linux: { status: 'ok', verification: 'verified' }, windows: { status: 'ok', verification: 'verified' } } },
+      ],
+      fixes: [{ key: 'SelectItem', platform: 'linux', from: 31, to: 32, source: 'shipped' }],
+    }), { status: 200 }))
+    vi.stubGlobal('fetch', fetch)
+    try {
+      paint()
+      await screen.findByText('Check your own Game Data file')
+      await drop(behindFile)
+      await screen.findByText('Deep scan against the game binaries')
+      // dropping a file sends nothing anywhere
+      expect(fetch).not.toHaveBeenCalled()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Scan it' }))
+      await screen.findByText('1 value is wrong for build 14192')
+      expect(fetch).toHaveBeenCalledTimes(1)
+      expect(screen.getByText('Fixed file from the scan')).toBeInTheDocument()
+      // only the contradicted row is listed until asked for the rest
+      const rows = [...document.querySelectorAll('.deepscan details.krow .kname')].map((n) => n.textContent)
+      expect(rows).toEqual(['SelectItem'])
+      expect(screen.getByText('should be 32')).toBeInTheDocument()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })

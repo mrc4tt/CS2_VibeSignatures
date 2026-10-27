@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseGameData } from './parse'
-import { patchFile } from './patch'
+import { applyFixes, patchFile } from './patch'
 import type { KeyVerdict } from './verdict'
 
 const outdated = (
@@ -135,5 +135,45 @@ describe('rewriting a file with the published values', () => {
     const { values } = parseGameData(result.text)
     expect(values.get('A')).toEqual({ linux: 'NEW-A', windows: 'NEW-AW' })
     expect(values.get('B')).toEqual({ linux: 20, windows: 11 })
+  })
+})
+
+describe('applying the deep scan\'s fixes', () => {
+  it('replaces exactly the proposed value and leaves the rest of the file alone', () => {
+    const text = `{
+  // the weapon switch
+  "SelectItem": { "offsets": { "linux": 99, "windows": 30 } },
+  "Other": { "offsets": { "linux": 99, "windows": 99 } }
+}`
+    const result = applyFixes(text, [
+      { key: 'SelectItem', platform: 'linux', from: 99, to: 31, source: 'shipped' },
+    ])
+    expect(result.applied).toBe(1)
+    expect(result.text).toBe(text.replace('"linux": 99, "windows": 30', '"linux": 31, "windows": 30'))
+  })
+
+  it('writes a vtable index into the vtable block, not the signatures', () => {
+    const text = `{
+  "Fn": {
+    "signatures": { "linux": "55 48", "windows": "48 89" },
+    "vtable": { "class": "C", "linux_index": 150, "windows_index": 149 }
+  }
+}`
+    const result = applyFixes(text, [{ key: 'Fn.vtable', platform: 'linux', from: 150, to: 151, source: 'shipped' }])
+    expect(result.applied).toBe(1)
+    expect(result.text).toContain('"linux_index": 151')
+    expect(result.text).toContain('"linux": "55 48"')
+  })
+
+  it('leaves a fix it cannot place to a human', () => {
+    const result = applyFixes('{ "A": { "signatures": { "linux": "XX" } } }', [
+      { key: 'A', platform: 'linux', from: 'YY', to: 'ZZ', source: 'shipped' },
+      { key: 'Gone', platform: 'windows', from: 1, to: 2, source: 'record' },
+    ])
+    expect(result.applied).toBe(0)
+    expect(result.skipped).toEqual([
+      { key: 'A', platform: 'linux', reason: 'notFound' },
+      { key: 'Gone', platform: 'windows', reason: 'notFound' },
+    ])
   })
 })

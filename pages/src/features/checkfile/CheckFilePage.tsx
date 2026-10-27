@@ -12,6 +12,8 @@ import { getSiteHistory } from '../../api/siteData'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { Pattern } from '../symbols/Pattern'
 import { parseGameData, type FileValue, type GameDataFormat } from './parse'
+import { DeepScan } from './DeepScan'
+import { DEEP_SCAN_API } from './deepScan'
 import { patchFile } from './patch'
 import { bestFit, identifyFile, keyVerdicts, scoreBuilds, summarise, type KeyState } from './verdict'
 
@@ -220,10 +222,9 @@ export function CheckFilePage() {
           <Explain>{t('check.explain')}</Explain>
 
           {/*
-            There is no server here to POST a file to - the site is static, and
-            this check runs in your browser. What CI needs instead is the
-            published file itself, and the index already addresses every one of
-            them with a sha256, so the recipe is two requests and a diff.
+            The check on this page runs in your browser. CI can either diff
+            against the published file (the index addresses every one with a
+            sha256) or POST the file to the same deep scan the page offers.
           */}
           <details className="ci">
             <summary>{t('check.ciH')}</summary>
@@ -234,7 +235,12 @@ url=$(curl -sS ${window.location.origin}/gamedata/index.json \\
 curl -sS ${window.location.origin}/gamedata/$url -o published.json
 
 # fail the build when what you ship no longer matches it
-diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
+diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)
+
+# or scan it against the game binaries; fail on anything contradicted
+jq -n --rawfile g gamedata/matchzy.json '{gamedata: $g, filename: "matchzy.json"}' \\
+  | curl -sS ${DEEP_SCAN_API}/verify -H 'Content-Type: application/json' -d @- \\
+  | jq -e '.unhealthy == 0'`}</pre>
           </details>
         </div>
       </section>
@@ -488,6 +494,8 @@ diff <(jq -S . published.json) <(jq -S . gamedata/matchzy.json)`}</pre>
                 )}
               </>
             )}
+
+            <DeepScan key={loaded.text} text={loaded.text} name={loaded.name} />
           </div>
         </section>
       )}
