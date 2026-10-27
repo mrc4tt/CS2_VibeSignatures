@@ -149,16 +149,29 @@ def suggest_fixes(results, entries, shipped=None, vtables=None, shipped_vtables=
     return fixes
 
 
+# What a record can offer for a signature key: its own pattern, the address that
+# pattern must land on, and which landings count (a global's pattern anchors the
+# instruction that references it, a patch's anchors the patched bytes, so neither
+# sits on a function head).
+RECORD_PATTERNS = (
+    ("func_sig", "func_va", ("ok",)),
+    ("gv_sig", "gv_sig_va", ("ok", "ok-midfunction", "ok-globalref")),
+    ("patch_sig", "patch_va", ("ok", "ok-midfunction")),
+)
+
+
 def record_signature_fixes(results, entries, fixes, lookup, scan):
     """[{key, platform, from, to, source: 'record'}] for bad signatures no shipped value fixes.
 
-    A plugin key this repo has a function record for gets that record's own signature,
-    but only where the signature, scanned now and the way CounterStrikeSharp scans it,
-    lands once and exactly on the function the record identified. That is the same
-    evidence a verified value carries, so it is not a guess; a record without a
-    signature, with one that no longer resolves, or for another module offers nothing.
+    A plugin key this repo has a record for gets that record's own pattern (function,
+    global reference or patch site), but only where the pattern, scanned now and the
+    way CounterStrikeSharp scans it, lands once and exactly where the record says, and
+    a global's reference still addresses that global. That is the same evidence a
+    verified value carries, so it is not a guess; a record without a pattern, with one
+    that no longer resolves, or for another module offers nothing.
 
-    lookup(name, platform) -> record or None; scan(module, platform, pattern) -> check_signature.
+    lookup(name, platform) -> record or None;
+    scan(module, platform, pattern, record) -> check_signature.
     """
     taken = {(fix["key"], fix["platform"]) for fix in fixes}
     out = []
@@ -166,6 +179,7 @@ def record_signature_fixes(results, entries, fixes, lookup, scan):
         if row.get("kind") != "signature":
             continue
         name = row["name"]
+        module = row.get("module", "server")
         for platform, info in row["platforms"].items():
             current = ((entries.get(name) or {}).get("values") or {}).get(platform)
             bad = (info.get("status") in ("broken", "ambiguous") or info.get("func") == "mismatch"
@@ -173,17 +187,21 @@ def record_signature_fixes(results, entries, fixes, lookup, scan):
             if not bad or current in (None, "") or (name, platform) in taken:
                 continue
             record = lookup(name, platform)
-            if not record or not record.get("func_sig") or VPG._int(record.get("func_va")) is None:
+            if not record or (record.get("_module") or "server") != module:
                 continue
-            if (record.get("_module") or "server") != row.get("module", "server"):
-                continue
-            pattern = str(record["func_sig"]).strip()
-            if pattern == str(current).strip():
-                continue
-            hit = scan(row.get("module", "server"), platform, pattern)
-            if hit.get("status") == "ok" and VPG._int(hit.get("at")) == VPG._int(record["func_va"]):
-                out.append({"key": name, "platform": platform, "from": current, "to": pattern,
-                            "source": "record"})
+            for sig_field, va_field, landings in RECORD_PATTERNS:
+                where = VPG._int(record.get(va_field))
+                if not record.get(sig_field) or where is None:
+                    continue
+                pattern = str(record[sig_field]).strip()
+                if pattern == str(current).strip():
+                    break
+                hit = scan(module, platform, pattern, record)
+                if (hit.get("status") in landings and VPG._int(hit.get("at")) == where
+                        and hit.get("gv") != "mismatch"):
+                    out.append({"key": name, "platform": platform, "from": current, "to": pattern,
+                                "source": "record"})
+                break
     return out
 
 
@@ -249,7 +267,8 @@ def job_verify(gamever, bindir, text, filename, platforms):
         fixes += record_signature_fixes(
             results, entries, fixes,
             lambda name, platform: VPG.resolve_record(state["index"], name, platform, aliases),
-            lambda module, platform, pattern: VPG.check_signature(state["binaries"], module, platform, pattern))
+            lambda module, platform, pattern, record: VPG.check_signature(
+                state["binaries"], module, platform, pattern, record))
     return {"build": gamever, "platforms": list(platforms),
             "matched": ({"plugin": plugin, "file": os.path.relpath(path, REPO_ROOT)} if match else None),
             "unhealthy": unhealthy, "verification": tally, "results": results, "fixes": fixes}

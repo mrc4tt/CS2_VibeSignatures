@@ -94,7 +94,7 @@ class RecordSignatureTests(unittest.TestCase):
         results = [{"name": "Sig", "kind": "signature", "module": "server", "platforms": {"linux": info}}]
         hit = hit or {"status": "ok", "at": "0x1000"}
         return S.record_signature_fixes(results, self.ENTRIES, list(existing),
-                                        lambda name, platform: record, lambda module, platform, pattern: hit)
+                                        lambda name, platform: record, lambda module, platform, pattern, rec: hit)
 
     def test_a_broken_signature_takes_the_record_signature_that_lands_on_its_function(self):
         self.assertEqual(self.fixes({"status": "broken"}), [
@@ -109,6 +109,17 @@ class RecordSignatureTests(unittest.TestCase):
         self.assertEqual(self.fixes({"status": "broken"}, record=None), [])
         self.assertEqual(self.fixes({"status": "broken"}, record={**self.RECORD, "func_sig": None}), [])
         self.assertEqual(self.fixes({"status": "broken"}, record={**self.RECORD, "_module": "engine"}), [])
+
+    def test_a_global_or_patch_record_offers_its_own_pattern(self):
+        gv = {"gv_sig": "48 8B 05 ? ? ? ? 48 85 C0", "gv_sig_va": "0x2000", "gv_va": "0x9000", "_module": "server"}
+        hit = {"status": "ok-globalref", "at": "0x2000", "gv": "ok"}
+        self.assertEqual(self.fixes({"status": "broken"}, record=gv, hit=hit)[0]["to"], gv["gv_sig"])
+        # the reference no longer addresses the global
+        self.assertEqual(self.fixes({"status": "broken"}, record=gv, hit={**hit, "gv": "mismatch"}), [])
+        patch = {"patch_sig": "74 0E 48 8B 07", "patch_va": "0x3004", "_module": "server"}
+        hit = {"status": "ok-midfunction", "at": "0x3004"}
+        self.assertEqual(self.fixes({"status": "broken"}, record=patch, hit=hit)[0]["to"], patch["patch_sig"])
+        self.assertEqual(self.fixes({"status": "broken"}, record=patch, hit={**hit, "at": "0x3008"}), [])
 
     def test_a_shipped_fix_wins(self):
         shipped = [{"key": "Sig", "platform": "linux", "from": "55 48 8B", "to": "55", "source": "shipped"}]
