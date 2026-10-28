@@ -105,7 +105,10 @@ log() { printf '%s %s\n' "$(date -Is)" "$*"; }
 # still costs an SSH session to find out which command to run, and at 03:00 the
 # useful message is the one you can act on from a phone.
 hint_for() {  # hint_for <failure text>
-    local repo="$PWD" ver="${TAG:-<VER>}"
+    local repo="$PWD" ver="${TAG:-<VER>}" sfx=""
+    # The linux early release writes verify-<VER>-linux.log / repair-<VER>-linux.log,
+    # the full gate the unsuffixed pair; its failures start with "linux:".
+    case "$1" in linux:*) sfx="-linux" ;; esac
     case "$1" in
         *"uncommitted changes"*)
             printf 'git -C %s status --short\n' "$repo"
@@ -124,8 +127,8 @@ hint_for() {  # hint_for <failure text>
             printf 'less %s/gamedata-%s.log\n' "${STATE:-.autopilot}" "$ver"
             printf 'cd %s && uv run update_gamedata.py -gamever %s -snapshot gamesymbols/%s.yaml -outputdir gamedata/%s -debug\n' "$repo" "$ver" "$ver" "$ver" ;;
         *"verify_plugin_gamedata"*|*"do not hold against the binaries"*)
-            printf 'grep -E "^\\[(repair|left)\\]|still " %s/repair-%s.log\n' "${STATE:-.autopilot}" "$ver"
-            printf 'grep -B20 "^unhealthy: [1-9]" %s/verify-%s.log\n' "${STATE:-.autopilot}" "$ver"
+            printf 'grep -E "^\\[(repair|left)\\]|still " %s/repair-%s%s.log\n' "${STATE:-.autopilot}" "$ver" "$sfx"
+            printf 'grep -B20 "^unhealthy: [1-9]" %s/verify-%s%s.log\n' "${STATE:-.autopilot}" "$ver" "$sfx"
             printf 'cd %s && uv run verify_plugin_gamedata.py -gamever %s -gamedata <the file named above>\n' "$repo" "$ver" ;;
         *"artifact contract"*)
             printf 'cd %s && uv run audit_artifact_contract.py -gamever %s      # BAD lines name the artifact and what differs\n' "$repo" "$ver"

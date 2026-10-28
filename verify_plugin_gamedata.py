@@ -158,10 +158,16 @@ def _kv_wildcards(raw):
 
 def _parse_kv(text):
     """Minimal Valve KeyValues -> nested dicts. Quoted keys, braces, // comments."""
-    tokens = re.findall(r'"((?:[^"\\]|\\.)*)"|([{}])', text)
+    # Comments are their own alternative, not stripped beforehand: a // inside a quoted
+    # value must survive, and a quoted word inside a comment (cs2-menus writes
+    # `// Search: "CBaseEntity::EmitSound"`, and our own header names "linux") must not
+    # become a key - a stray "linux" made the whole root one unparsable entry.
     stack, root, pending = [{}], {}, None
     stack[0] = root
-    for quoted, brace in tokens:
+    for match in re.finditer(r'"((?:[^"\\]|\\.)*)"|([{}])|//[^\n]*', text):
+        quoted, brace = match.group(1), match.group(2)
+        if quoted is None and brace is None:
+            continue
         if brace == "{":
             child = {}
             if pending is not None:
@@ -1183,6 +1189,12 @@ def verify_text(text, index, binaries, config_path, plugin=None, output=None):
                 row["platforms"][platform] = {"status": "patch-unverifiable"}
                 continue
             record = resolve_record(index, name, platform, aliases)
+            if not entry.get("library") and record and record.get("_module"):
+                # The file names no library when the plugin hard-codes it (cs2-menus looks
+                # IsHearingClient up in libengine2 itself): scanning the "server" default
+                # matched the short pattern somewhere in libserver.so and then called it a
+                # func mismatch against the engine record. The record knows its module.
+                module = row["module"] = record["_module"]
             info = check_signature(binaries, module, platform, value, record)
             if record is None:
                 info["unrecorded"] = True
