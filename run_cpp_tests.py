@@ -125,6 +125,43 @@ def _to_list(value: Any) -> List[str]:
     return [str(value).strip()]
 
 
+PROTOS_DIR = "cpp_tests/protos"
+SDK_DIR = "hl2sdk_cs2"
+PROTOBUF_SRC = "hl2sdk_cs2/thirdparty/protobuf-3.21.8/src"
+
+
+def ensure_generated_protos(cpp_tests, source_root: Path) -> None:
+    """Generate cpp_tests/protos with the SDK's own protoc when a test needs it.
+
+    The directory is gitignored and sdk_abi_check.sh regenerates it on every run, so a
+    direct run on a fresh checkout would otherwise fail on every header that holds a
+    protobuf message by value. An existing directory is left alone."""
+    needed = any(
+        str(entry).split("#")[0].strip() == PROTOS_DIR
+        for item in cpp_tests
+        for entry in _to_list(item.get("include_directories"))
+    )
+    out_dir = source_root / PROTOS_DIR
+    if not needed or any(out_dir.glob("*.pb.h")):
+        return
+    protoc = source_root / SDK_DIR / "devtools" / "bin" / "linux" / "protoc"
+    protos = sorted((source_root / SDK_DIR / "common").glob("*.proto"))
+    if os.name == "nt" or not protoc.is_file() or not protos:
+        print(f"warning: {PROTOS_DIR} is missing and cannot be generated here; run sdk_abi_check.sh")
+        return
+    out_dir.mkdir(parents=True, exist_ok=True)
+    result = subprocess.run(
+        [str(protoc), f"-I{source_root / SDK_DIR / 'common'}", f"-I{source_root / PROTOBUF_SRC}",
+         f"--cpp_out={out_dir}"] + [str(p) for p in protos],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print(f"warning: could not generate {PROTOS_DIR}: {result.stderr.strip()}")
+    else:
+        print(f"Generated {PROTOS_DIR} from {SDK_DIR}/common/*.proto")
+
+
 def _resolve_source_path(value: str, source_root: Path) -> Path:
     path = Path(value)
     if path.is_absolute():
@@ -596,6 +633,7 @@ def main():
         print("Error: No runnable tests for current clang++ environment.")
         return 1
 
+    ensure_generated_protos(runnable_tests, source_root)
     print("=== running cpp_tests ===")
     print(f"Parallel jobs: {worker_count}")
     compile_failed_count = 0

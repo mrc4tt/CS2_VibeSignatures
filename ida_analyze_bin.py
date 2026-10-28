@@ -2963,10 +2963,16 @@ def cpp_test_class_prefixes(config_path):
 
     A cpp test compares a class's SDK header against every ``<Class>_*`` record of its
     reference modules (and its ``alias_symbols``), so those records have a payer even
-    when no plugin ships them - IGameSystem_OnRestoreGame is one.
+    when no plugin ships them - IGameSystem_OnRestoreGame is one. cpp_tests/fork_tests.yaml
+    is read too: it is the list sdk_abi_check.sh runs, and a config that has not been
+    through ensure_local_gamedata_symbols.py since it grew carries an older copy.
     """
+    fork_tests = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cpp_tests", "fork_tests.yaml")
+    fork_document = load_yaml_file(fork_tests, cache=True, copy_result=False) if os.path.isfile(fork_tests) else None
     prefixes = set()
-    for test in _load_config_document(config_path).get("cpp_tests", []) or []:
+    tests = list(_load_config_document(config_path).get("cpp_tests", []) or [])
+    tests += list((fork_document or {}).get("cpp_tests", []) or [])
+    for test in tests:
         if not isinstance(test, dict):
             continue
         for name in [test.get("symbol")] + list(test.get("alias_symbols") or []):

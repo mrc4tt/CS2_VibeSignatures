@@ -766,6 +766,34 @@ def enforce_fork_owned_modules(text):
     return text, added
 
 
+FORK_CPP_TESTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cpp_tests", "fork_tests.yaml")
+
+
+def enforce_fork_cpp_tests(text, fork_tests_path=FORK_CPP_TESTS):
+    """Replace the config's cpp_tests: block with cpp_tests/fork_tests.yaml.
+
+    sdk_abi_check.sh runs fork_tests.yaml, while run_cpp_tests.py -configyaml and the
+    payer rule (ida_analyze_bin.cpp_test_class_prefixes) read the config's block. A
+    config scaffolded from the previous one kept a 16-test copy that had fallen behind
+    the 50 the check runs, so one list is the source and the config carries a copy."""
+    if not os.path.isfile(fork_tests_path):
+        return text, 0
+    with open(fork_tests_path, "r", encoding="utf-8") as f:
+        fork = f.read()
+    start = re.search(r"^cpp_tests:", fork, re.M)
+    if not start:
+        return text, 0
+    block = fork[start.start() :].rstrip("\n") + "\n"
+    current = re.search(r"^cpp_tests:", text, re.M)
+    if current:
+        following = re.search(r"^[A-Za-z_][\w]*:", text[current.end() :], re.M)
+        end = current.end() + following.start() if following else len(text)
+        if text[current.start() : end] == block:
+            return text, 0
+        return text[: current.start()] + block + text[end:], 1
+    return text.rstrip("\n") + "\n" + block, 1
+
+
 def _complete_fork_owned_module(text, module, symbols):
     """Add the tasks and symbols of an existing fork-owned module block that it lacks.
 
@@ -1654,6 +1682,9 @@ def main():
     if dropped_again:
         print(f"  dropped after inject: {dropped_again} obsolete task declaration(s)")
         dropped += dropped_again
+    patched, cpp_tested = enforce_fork_cpp_tests(patched)
+    if cpp_tested:
+        print("  re-asserted: cpp_tests block from cpp_tests/fork_tests.yaml")
     if (
         patched == text
         and not repaired

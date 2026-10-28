@@ -84,6 +84,7 @@ UNIT_MODULES = frozenset(
         "test_patch_mam_source",
         "test_record_deploy",
         "test_disabled_generator_waiver",
+        "test_fork_cpp_tests",
         "test_pipeline_hunt",
         "test_parallel_jobs",
         "test_ensure_seed_preprocessors",

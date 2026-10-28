@@ -15237,14 +15237,15 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15263,14 +15264,15 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15280,28 +15282,6 @@ cpp_tests:
       - server  # bin_artifacts/{gamever}/server/IGameSystem_*.{platform}.yaml
       - client  # bin_artifacts/{gamever}/client/IGameSystem_*.{platform}.yaml
 
-  # - name: INetworkSystem_MSVC
-  #   symbol: INetworkSystem
-  #   cpp: cpp_tests/inetworksystem.cpp
-  #   headers:
-  #   - hl2sdk_cs2/public/networksystem/inetworksystem.h  # Used by the fix-cppheaders SKILL
-  #   target: x86_64-pc-windows-msvc
-  #   include_directories:
-  #     - hl2sdk_cs2/game/shared
-  #     - hl2sdk_cs2/public
-  #     - hl2sdk_cs2/public/tier0
-  #     - hl2sdk_cs2/public/tier1
-  #   defines:
-  #     - COMPILER_MSVC=1
-  #     - COMPILER_MSVC64=1
-  #     - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
-  #   additional_compiler_options:
-  #     - fms-extensions
-  #     - fms-compatibility
-  #     - Xclang
-  #     - fdump-vtable-layouts
-  #   reference_modules:
-  #     - networksystem  # bin_artifacts/{gamever}/networksystem/CNetworkSystem_*.{platform}.yaml
   - name: INetworkMessages_MSVC
     symbol: INetworkMessages
     alias_symbols:
@@ -15314,14 +15294,15 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15336,20 +15317,21 @@ cpp_tests:
     symbol: ILoopMode
     cpp: cpp_tests/iloopmode.cpp
     headers:
-      - hl2sdk_cs2/public/iloopmode.h  # Used by the fix-cppheaders SKILL
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15363,20 +15345,21 @@ cpp_tests:
     symbol: ILoopType
     cpp: cpp_tests/ilooptype.cpp
     headers:
-      - hl2sdk_cs2/public/iloopmode.h  # Used by the fix-cppheaders SKILL
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15390,20 +15373,21 @@ cpp_tests:
       - CEngineServer
     cpp: cpp_tests/ivengineserver2.cpp
     headers:
-      - hl2sdk_cs2/public/eiface.h  # Used by the fix-cppheaders SKILL
+      - hl2sdk_cs2/public/engine2/ivengineserver2.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15423,14 +15407,15 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15451,14 +15436,15 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15477,10 +15463,12 @@ cpp_tests:
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15492,20 +15480,22 @@ cpp_tests:
     symbol: INetworkGameServer
     cpp: cpp_tests/inetworkgameserver.cpp
     headers:
-      - hl2sdk_cs2/public/iserver.h  # Used by the fix-cppheaders SKILL
+      - hl2sdk_cs2/public/engine2/inetworkgameserver.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
-      - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+      - cpp_tests/protos  # sdk_abi_check.sh generates it from hl2sdk_cs2/common/*.proto
+      - hl2sdk_cs2/thirdparty/protobuf-3.21.8/src
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15520,20 +15510,22 @@ cpp_tests:
       - CNetworkGameServer
     cpp: cpp_tests/inetworkgameserver.cpp
     headers:
-      - hl2sdk_cs2/public/iserver.h  # Used by the fix-cppheaders SKILL
+      - hl2sdk_cs2/public/engine2/networkgameserverbase.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
-      - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+      - cpp_tests/protos  # sdk_abi_check.sh generates it from hl2sdk_cs2/common/*.proto
+      - hl2sdk_cs2/thirdparty/protobuf-3.21.8/src
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15553,14 +15545,15 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15576,20 +15569,21 @@ cpp_tests:
       - CSource2Server_vtable2
     cpp: cpp_tests/isource2server.cpp
     headers:
-      - hl2sdk_cs2/public/eiface.h  # Used by the fix-cppheaders SKILL
+      - hl2sdk_cs2/public/engine2/isource2server.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15604,20 +15598,21 @@ cpp_tests:
       - CNetworkServerService
     cpp: cpp_tests/inetworkserverservice.cpp
     headers:
-      - hl2sdk_cs2/public/iserver.h  # Used by the fix-cppheaders SKILL
+      - hl2sdk_cs2/public/engine2/inetworkserverservice.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15636,14 +15631,15 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15657,20 +15653,21 @@ cpp_tests:
       - CEngineServiceMgr
     cpp: cpp_tests/iengineservicemgr.cpp
     headers:
-      - hl2sdk_cs2/public/engine/IEngineService.h  # Used by the fix-cppheaders SKILL
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
-      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
     defines:
       - COMPILER_MSVC=1
       - COMPILER_MSVC64=1
       - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
     additional_compiler_options:
       - fms-extensions
       - fms-compatibility
@@ -15678,3 +15675,1259 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - engine  # bin_artifacts/{gamever}/engine/CEngineServiceMgr_*.{platform}.yaml
+  # Interfaces checked only against their implementing class's vtable (the fork's
+  # FORK_OWNED_VTABLES / FORK_OWNED_MODULES tasks): a slot count, not slot names.
+  - name: ICvar_MSVC
+    symbol: ICvar
+    alias_symbols:
+      - CCvar
+    cpp: cpp_tests/icvar.cpp
+    headers:
+      - hl2sdk_cs2/public/tier0/icvar.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - tier0
+  - name: ISchemaSystem_MSVC
+    symbol: ISchemaSystem
+    alias_symbols:
+      - CSchemaSystem
+    cpp: cpp_tests/ischemasystem.cpp
+    headers:
+      - hl2sdk_cs2/public/schemasystem/ischemasystem.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - schemasystem
+  - name: IFileSystem_MSVC
+    symbol: IFileSystem
+    alias_symbols:
+      - CFileSystem_Stdio
+    cpp: cpp_tests/ifilesystem.cpp
+    headers:
+      - hl2sdk_cs2/public/filesystem/ifilesystem.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - filesystem_stdio
+  - name: IGameEventSystem_MSVC
+    symbol: IGameEventSystem
+    alias_symbols:
+      - CGameEventSystem
+    cpp: cpp_tests/igameeventsystem.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/igameeventsystem.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+
+  # Linux variants of the tests above: the same headers with the SDK's Linux defines.
+  # run_cpp_tests reads only a class's own virtuals from clang's Itanium dump, so slots
+  # inherited from a base show as missing and vtable_numvfunc comes out short; those
+  # lines sit in the baseline. A slot that moves still shows as a new Index mismatch.
+  - name: CEntityInstance_Linux
+    symbol: CEntityInstance
+    cpp: cpp_tests/centityinstance.cpp
+    headers:
+      - hl2sdk_cs2/public/entity2/entityinstance.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - server
+      - client
+  - name: IGameSystem_Linux
+    symbol: IGameSystem
+    cpp: cpp_tests/igamesystem.cpp
+    headers:
+      - hl2sdk_cs2/game/shared/igamesystem.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - server
+      - client
+  - name: INetworkMessages_Linux
+    symbol: INetworkMessages
+    alias_symbols:
+      - CNetworkMessages
+    cpp: cpp_tests/inetworkmessages.cpp
+    headers:
+      - hl2sdk_cs2/public/networksystem/inetworkmessages.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - networksystem
+      - engine
+      - server
+      - client
+  - name: ILoopMode_Linux
+    symbol: ILoopMode
+    cpp: cpp_tests/iloopmode.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - client
+      - server
+      - engine
+  - name: ILoopType_Linux
+    symbol: ILoopType
+    cpp: cpp_tests/ilooptype.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+  - name: IVEngineServer2_Linux
+    symbol: IVEngineServer2
+    alias_symbols:
+      - CEngineServer
+    cpp: cpp_tests/ivengineserver2.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/ivengineserver2.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+      - client
+      - server
+  - name: IGameSystemFactory_Linux
+    symbol: IGameSystemFactory
+    cpp: cpp_tests/igamesystemfactory.cpp
+    headers:
+      - hl2sdk_cs2/game/shared/igamesystemfactory.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - server
+      - client
+  - name: CEntitySystem_Linux
+    symbol: CEntitySystem
+    alias_symbols:
+      - CGameEntitySystem
+    cpp: cpp_tests/centitysystem.cpp
+    headers:
+      - hl2sdk_cs2/public/entity2/entitysystem.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+      - Xclang
+      - fdump-record-layouts
+    reference_modules:
+      - server
+      - client
+  - name: SDL_Mouse_Linux
+    symbol: SDL_Mouse
+    cpp: cpp_tests/SDL_Mouse.cpp
+    headers:
+      - cpp_tests/stubs/SDL3.stub.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-record-layouts
+    reference_modules:
+      - SDL3
+  - name: INetworkGameServer_Linux
+    symbol: INetworkGameServer
+    cpp: cpp_tests/inetworkgameserver.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/inetworkgameserver.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+      - cpp_tests/protos  # sdk_abi_check.sh generates it from hl2sdk_cs2/common/*.proto
+      - hl2sdk_cs2/thirdparty/protobuf-3.21.8/src
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+    merge_reference_modules: false
+  - name: CNetworkGameServerBase_Linux
+    symbol: CNetworkGameServerBase
+    reference_vtable_owners:
+      - CNetworkGameServer
+    cpp: cpp_tests/inetworkgameserver.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/networkgameserverbase.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+      - cpp_tests/protos  # sdk_abi_check.sh generates it from hl2sdk_cs2/common/*.proto
+      - hl2sdk_cs2/thirdparty/protobuf-3.21.8/src
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+  - name: IGameEventManager2_Linux
+    symbol: IGameEventManager2
+    alias_symbols:
+      - CGameEventManager
+    cpp: cpp_tests/igameeventmanager2.cpp
+    headers:
+      - hl2sdk_cs2/public/igameevents.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - client
+  - name: ISource2Server_Linux
+    symbol: ISource2Server
+    alias_symbols:
+      - CSource2Server
+    exclude_reference_vtables:
+      - CSource2Server_vtable2
+    cpp: cpp_tests/isource2server.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/isource2server.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+      - server
+  - name: INetworkServerService_Linux
+    symbol: INetworkServerService
+    alias_symbols:
+      - CNetworkServerService
+    cpp: cpp_tests/inetworkserverservice.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/inetworkserverservice.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+      - server
+  - name: ICommandLine_Linux
+    symbol: ICommandLine
+    cpp: cpp_tests/icommandline.cpp
+    headers:
+      - hl2sdk_cs2/public/tier0/icommandline.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+  - name: IEngineServiceMgr_Linux
+    symbol: IEngineServiceMgr
+    alias_symbols:
+      - CEngineServiceMgr
+    cpp: cpp_tests/iengineservicemgr.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/iengineservicemgr.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+  - name: ICvar_Linux
+    symbol: ICvar
+    alias_symbols:
+      - CCvar
+    cpp: cpp_tests/icvar.cpp
+    headers:
+      - hl2sdk_cs2/public/tier0/icvar.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - tier0
+  - name: ISchemaSystem_Linux
+    symbol: ISchemaSystem
+    alias_symbols:
+      - CSchemaSystem
+    cpp: cpp_tests/ischemasystem.cpp
+    headers:
+      - hl2sdk_cs2/public/schemasystem/ischemasystem.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - schemasystem
+  - name: IFileSystem_Linux
+    symbol: IFileSystem
+    alias_symbols:
+      - CFileSystem_Stdio
+    cpp: cpp_tests/ifilesystem.cpp
+    headers:
+      - hl2sdk_cs2/public/filesystem/ifilesystem.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - filesystem_stdio
+  - name: IGameEventSystem_Linux
+    symbol: IGameEventSystem
+    alias_symbols:
+      - CGameEventSystem
+    cpp: cpp_tests/igameeventsystem.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/igameeventsystem.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine
+  - name: INetChannel_MSVC
+    symbol: INetChannel
+    alias_symbols:
+      - CNetChan
+    cpp: cpp_tests/inetchannel.cpp
+    headers:
+      - hl2sdk_cs2/public/networksystem/inetchannel.h
+      - hl2sdk_cs2/public/inetchannelinfo.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - networksystem  # bin_artifacts/{gamever}/networksystem/CNetChan_*.{platform}.yaml
+  - name: INetworkStringTableContainer_MSVC
+    symbol: INetworkStringTableContainer
+    alias_symbols:
+      - CNetworkStringTableContainer
+    cpp: cpp_tests/inetworkstringtablecontainer.cpp
+    headers:
+      - hl2sdk_cs2/public/networkstringtabledefs.h
+      - hl2sdk_cs2/public/appframework/iappsystem.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CNetworkStringTableContainer_*.{platform}.yaml
+  - name: CHostStateMgr_MSVC
+    symbol: CHostStateMgrVTableProbe
+    alias_symbols:
+      - CHostStateMgr
+    cpp: cpp_tests/hoststatemgr.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/hoststate.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CHostStateMgr_*.{platform}.yaml
+  - name: CServerSideClientBase_MSVC
+    symbol: CServerSideClientBaseVTableProbe
+    alias_symbols:
+      - CServerSideClientBase
+    cpp: cpp_tests/serversideclientbase.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/serversideclientbase.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+      - cpp_tests/protos  # sdk_abi_check.sh generates it from hl2sdk_cs2/common/*.proto
+      - hl2sdk_cs2/thirdparty/protobuf-3.21.8/src
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CServerSideClientBase_*.{platform}.yaml
+  - name: CServerSideClient_MSVC
+    symbol: CServerSideClientVTableProbe
+    alias_symbols:
+      - CServerSideClient
+    cpp: cpp_tests/serversideclient.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/serversideclient.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+      - cpp_tests/protos  # sdk_abi_check.sh generates it from hl2sdk_cs2/common/*.proto
+      - hl2sdk_cs2/thirdparty/protobuf-3.21.8/src
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CServerSideClient_*.{platform}.yaml
+  - name: INetChannel_Linux
+    symbol: INetChannel
+    alias_symbols:
+      - CNetChan
+    cpp: cpp_tests/inetchannel.cpp
+    headers:
+      - hl2sdk_cs2/public/networksystem/inetchannel.h
+      - hl2sdk_cs2/public/inetchannelinfo.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - networksystem  # bin_artifacts/{gamever}/networksystem/CNetChan_*.{platform}.yaml
+  - name: INetworkStringTableContainer_Linux
+    symbol: INetworkStringTableContainer
+    alias_symbols:
+      - CNetworkStringTableContainer
+    cpp: cpp_tests/inetworkstringtablecontainer.cpp
+    headers:
+      - hl2sdk_cs2/public/networkstringtabledefs.h
+      - hl2sdk_cs2/public/appframework/iappsystem.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CNetworkStringTableContainer_*.{platform}.yaml
+  - name: CHostStateMgr_Linux
+    symbol: CHostStateMgrVTableProbe
+    alias_symbols:
+      - CHostStateMgr
+    cpp: cpp_tests/hoststatemgr.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/hoststate.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CHostStateMgr_*.{platform}.yaml
+  - name: CServerSideClientBase_Linux
+    symbol: CServerSideClientBaseVTableProbe
+    alias_symbols:
+      - CServerSideClientBase
+    cpp: cpp_tests/serversideclientbase.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/serversideclientbase.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+      - cpp_tests/protos  # sdk_abi_check.sh generates it from hl2sdk_cs2/common/*.proto
+      - hl2sdk_cs2/thirdparty/protobuf-3.21.8/src
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CServerSideClientBase_*.{platform}.yaml
+  - name: CServerSideClient_Linux
+    symbol: CServerSideClientVTableProbe
+    alias_symbols:
+      - CServerSideClient
+    cpp: cpp_tests/serversideclient.cpp
+    headers:
+      - hl2sdk_cs2/public/engine2/serversideclient.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+      - cpp_tests/protos  # sdk_abi_check.sh generates it from hl2sdk_cs2/common/*.proto
+      - hl2sdk_cs2/thirdparty/protobuf-3.21.8/src
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - engine  # bin_artifacts/{gamever}/engine/CServerSideClient_*.{platform}.yaml
+  - name: INetworkSystem_MSVC
+    symbol: INetworkSystem
+    alias_symbols:
+      - CNetworkSystem
+    cpp: cpp_tests/inetworksystem.cpp
+    headers:
+      - hl2sdk_cs2/public/networksystem/inetworksystem.h
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+      - cpp_tests/protos  # sdk_abi_check.sh generates it from hl2sdk_cs2/common/*.proto
+      - hl2sdk_cs2/thirdparty/protobuf-3.21.8/src
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - networksystem  # bin_artifacts/{gamever}/networksystem/CNetworkSystem_*.{platform}.yaml
+  - name: INetworkSystem_Linux
+    symbol: INetworkSystem
+    alias_symbols:
+      - CNetworkSystem
+    cpp: cpp_tests/inetworksystem.cpp
+    headers:
+      - hl2sdk_cs2/public/networksystem/inetworksystem.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+      - cpp_tests/protos  # sdk_abi_check.sh generates it from hl2sdk_cs2/common/*.proto
+      - hl2sdk_cs2/thirdparty/protobuf-3.21.8/src
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - networksystem  # bin_artifacts/{gamever}/networksystem/CNetworkSystem_*.{platform}.yaml

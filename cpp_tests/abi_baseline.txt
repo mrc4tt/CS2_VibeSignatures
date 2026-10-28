@@ -42,6 +42,14 @@ INetworkServerService_Linux | vtable_numvfunc mismatch: YAML=53 vs compiler=52.
 INetworkServerService_Linux | vtable_size mismatch: YAML=0x1a8 vs compiler=0x1a0 (entry_count=52, ptr_size=8).
 INetworkServerService_MSVC | Index 32 mismatch: YAML expects 'SetFinalSimulationTickThisFrame' but compiler reports 'GetServerNetworkAddress'.
 INetworkServerService_MSVC | Index 41 mismatch: YAML expects 'GetServerSerializersCRC' but compiler reports 'GetServerSerializersMsg'.
+INetworkSystem_Linux | Index 18 mismatch: YAML expects 'EnableLoopbackBetweenSockets' but compiler reports 'ConnectLoopback'.
+INetworkSystem_Linux | Index 25 mismatch: YAML expects 'PrintNetworkStats' but compiler reports 'SetTime'.
+INetworkSystem_Linux | Index 51 mismatch: YAML expects 'InitNetworkSystem' but compiler reports 'InitSteamNetworking'.
+INetworkSystem_Linux | vtable_numvfunc mismatch: YAML=57 vs compiler=56.
+INetworkSystem_Linux | vtable_size mismatch: YAML=0x1c8 vs compiler=0x1c0 (entry_count=56, ptr_size=8).
+INetworkSystem_MSVC | Index 18 mismatch: YAML expects 'EnableLoopbackBetweenSockets' but compiler reports 'ConnectLoopback'.
+INetworkSystem_MSVC | Index 25 mismatch: YAML expects 'PrintNetworkStats' but compiler reports 'SetTime'.
+INetworkSystem_MSVC | Index 51 mismatch: YAML expects 'InitNetworkSystem' but compiler reports 'InitSteamNetworking'.
 ISource2Server_Linux | Index 57 mismatch: YAML expects 'Save' but compiler reports 'SaveGame'.
 ISource2Server_Linux | Index 80 mismatch: YAML expects 'BroadcastServerFrameTime' but compiler reports 'SendServerFrameTime'.
 ISource2Server_Linux | Index 83 mismatch: YAML expects 'GetEntityReport' but compiler reports 'FormatSerializerFieldValue'.

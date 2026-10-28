@@ -795,7 +795,12 @@ so server's copy of a symbol only client's tasks read is unread (47 artifacts on
 the `CGameSystemReallocatingFactory_*` copies an agent hunted on windows every build) - or a **cpp test**: `cpp_tests` compare each class's SDK header
 with every `<Class>_*` record (and its `alias_symbols`) for the hl2sdk ABI check
 (`cpp_test_class_prefixes`), which is why `IGameSystem_OnRestoreGame` is read although no plugin
-ships it. A required output with no reader gets the free preprocessor only: the run skips the
+ships it. The test list is **`cpp_tests/fork_tests.yaml`** alone: `sdk_abi_check.sh` runs it,
+`ensure_local_gamedata_symbols.py` copies it over every config's `cpp_tests:` block, and the
+payer rule reads it directly. Add a test there, never in a config (the config block had fallen to
+16 of the check's 50 tests). `run_cpp_tests.py` generates the gitignored `cpp_tests/protos` itself
+when a test needs it, but it fails on every accepted mismatch: compare against
+`cpp_tests/abi_baseline.txt` with `sdk_abi_check.sh`. A required output with no reader gets the free preprocessor only: the run skips the
 hunter and the agent (`no reader (plugin, task input or cpp test)`), and pack does not insist on
 it (`artifact_unpaid`, `gamesymbol_snapshot_lib.operations._waived`) but packs it wherever it
 exists. On 14192 that is 1609 of 3921 required outputs; over opencode's ledger up to 2026-10-25,
