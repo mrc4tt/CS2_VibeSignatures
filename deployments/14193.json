@@ -1,0 +1,50 @@
+{
+  "gameVersion": "14193",
+  "recordedAt": "2026-10-28T22:56:46Z",
+  "schemaVersion": 1,
+  "status": "deployed",
+  "targets": {
+    "CounterStrikeSharp": {
+      "commit": "a0cba98c89bacd6eedbebf3a47df2c4013e50933",
+      "path": "configs/addons/counterstrikesharp/gamedata/gamedata.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/CounterStrikeSharp"
+    },
+    "cleanercs2": {
+      "commit": "87cebf3c14afe98b2a218bb9a60ff0152f0c136b",
+      "path": "package/gamedata.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/CleanerCS2"
+    },
+    "cs2-menus": {
+      "commit": "e27f2eb2c210856a6b68012a5136c537dd2ddb15",
+      "path": "configs/signatures.ini",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/cs2-menus"
+    },
+    "cs2-retakes-allocator": {
+      "commit": "cfc4a7d9ceb76115f0d428369e4d71b4abe0e441",
+      "path": "Resources/RetakesAllocator_gamedata.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/cs2-retakes-allocator"
+    },
+    "matchzy": {
+      "commit": "e8dd50f7a1ff8fe885c6d2a061e468cffc217085",
+      "path": "gamedata/matchzy.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/MatchZy"
+    },
+    "multiaddonmanager": {
+      "commit": "60c9a75dddee6546e8c49be34fc38545089c93be",
+      "path": "src/multiaddonmanager.cpp",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/MultiAddonManager"
+    },
+    "weaponpaints": {
+      "commit": "16a2c4457cebcae9ff446a79cb68331c07d2997a",
+      "path": "gamedata/weaponpaints.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/cs2-WeaponPaints"
+    }
+  }
+}
