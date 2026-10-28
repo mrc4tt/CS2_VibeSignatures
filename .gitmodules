@@ -2,3 +2,8 @@
 	path = hl2sdk_cs2
 	url = https://github.com/mrc4tt/hl2sdk
 	branch = cs2
+[submodule "Wend4r_sourcesdk"]
+	path = Wend4r_sourcesdk
+	url = https://github.com/Wend4r/sourcesdk
+	branch = main
+	shallow = true

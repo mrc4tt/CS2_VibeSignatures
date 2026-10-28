@@ -11,6 +11,54 @@ CEntityInstance_MSVC | Index 30 mismatch: YAML expects 'AssignChangeAccessorPath
 CEntitySystem_Linux | Member 'm_bEnableAutoDeletionExecution' missing in compiler record layout (reference offset: 0xc63, file: server/CEntitySystem_m_bEnableAutoDeletionExecution.linux.yaml).
 CEntitySystem_Linux | Member 'm_entityNames' offset mismatch: YAML=0xaf8 vs compiler=0xaf0.
 CEntitySystem_MSVC | Member 'm_bEnableAutoDeletionExecution' missing in compiler record layout (reference offset: 0xc63, file: server/CEntitySystem_m_bEnableAutoDeletionExecution.windows.yaml).
+CNetworkGameClientBase_Linux | Index 100 mismatch: YAML expects 'ProcessSpawnGroup_ManifestUpdate' but compiler reports 'unk100'.
+CNetworkGameClientBase_Linux | Index 102 mismatch: YAML expects 'ProcessSpawnGroup_SetCreationTick' but compiler reports 'ProcessClassInfo'.
+CNetworkGameClientBase_Linux | Index 114 mismatch: YAML expects 'ProcessCreateStringTable' but compiler reports 'unk114'.
+CNetworkGameClientBase_Linux | Index 115 mismatch: YAML expects 'ProcessUpdateStringTable' but compiler reports 'unk115'.
+CNetworkGameClientBase_Linux | Index 118 mismatch: YAML expects 'ProcessSplitScreen' but compiler reports 'unk118'.
+CNetworkGameClientBase_Linux | Index 119 mismatch: YAML expects 'ProcessCmdKeyValues' but compiler reports 'unk119'.
+CNetworkGameClientBase_Linux | Index 13 mismatch: YAML expects 'DisconnectGame' but compiler reports 'Disconnect'.
+CNetworkGameClientBase_Linux | Index 23 mismatch: YAML expects '_ProcessNetworking' but compiler reports 'ClientProcessNetworking'.
+CNetworkGameClientBase_Linux | Index 96 mismatch: YAML expects 'ProcessSetConVar' but compiler reports 'ProcessSpawnGroup_SetCreationTick'.
+CNetworkGameClientBase_Linux | Index 99 mismatch: YAML expects 'ProcessSpawnGroup_Load' but compiler reports 'unk099'.
+CNetworkGameClientBase_Linux | vtable_numvfunc mismatch: YAML=150 vs compiler=143.
+CNetworkGameClientBase_Linux | vtable_size mismatch: YAML=0x4b0 vs compiler=0x478 (entry_count=143, ptr_size=8).
+CNetworkGameClientBase_MSVC | Index 109 mismatch: YAML expects 'ProcessCreateStringTable' but compiler reports 'ProcessUpdateStringTable'.
+CNetworkGameClientBase_MSVC | Index 110 mismatch: YAML expects 'ProcessUpdateStringTable' but compiler reports 'unk110'.
+CNetworkGameClientBase_MSVC | Index 113 mismatch: YAML expects 'ProcessSplitScreen' but compiler reports 'ProcessCmdKeyValues'.
+CNetworkGameClientBase_MSVC | Index 114 mismatch: YAML expects 'ProcessCmdKeyValues' but compiler reports 'unk114'.
+CNetworkGameClientBase_MSVC | Index 13 mismatch: YAML expects 'DisconnectGame' but compiler reports 'Disconnect'.
+CNetworkGameClientBase_MSVC | Index 23 mismatch: YAML expects '_ProcessNetworking' but compiler reports 'ClientProcessNetworking'.
+CNetworkGameClientBase_MSVC | Index 91 mismatch: YAML expects 'ProcessSetConVar' but compiler reports 'ProcessSignonState'.
+CNetworkGameClientBase_MSVC | Index 94 mismatch: YAML expects 'ProcessSpawnGroup_Load' but compiler reports 'ProcessSpawnGroup_ManifestUpdate'.
+CNetworkGameClientBase_MSVC | Index 95 mismatch: YAML expects 'ProcessSpawnGroup_ManifestUpdate' but compiler reports 'ProcessSpawnGroup_Unload'.
+CNetworkGameClientBase_MSVC | Index 97 mismatch: YAML expects 'ProcessSpawnGroup_SetCreationTick' but compiler reports 'unk097'.
+CNetworkGameClientBase_MSVC | vtable_numvfunc mismatch: YAML=145 vs compiler=143.
+CNetworkGameClientBase_MSVC | vtable_size mismatch: YAML=0x488 vs compiler=0x478 (entry_count=143, ptr_size=8).
+CNetworkGameClient_Linux | Index 107 mismatch: YAML expects 'ProcessServerInfo' but compiler reports 'unk107'.
+CNetworkGameClient_Linux | Index 108 mismatch: YAML expects 'ProcessClassInfo' but compiler reports 'ProcessCreateStringTable'.
+CNetworkGameClient_Linux | Index 138 mismatch: YAML expects 'FullConnect' but compiler reports 'OnPreserveEntity'.
+CNetworkGameClient_Linux | Index 13 mismatch: YAML expects 'DisconnectGame' but compiler reports 'Disconnect'.
+CNetworkGameClient_Linux | Index 141 mismatch: YAML expects 'InstallStringTableCallback' but compiler reports 'OnReceivedUncompressedPacket'.
+CNetworkGameClient_Linux | Index 142 mismatch: YAML expects 'HookClientStringTable' but compiler reports 'unk142'.
+CNetworkGameClient_Linux | vtable_numvfunc mismatch: YAML=151 vs compiler=143.
+CNetworkGameClient_Linux | vtable_size mismatch: YAML=0x4b8 vs compiler=0x478 (entry_count=143, ptr_size=8).
+CNetworkGameClient_MSVC | Index 102 mismatch: YAML expects 'ProcessServerInfo' but compiler reports 'ProcessClassInfo'.
+CNetworkGameClient_MSVC | Index 103 mismatch: YAML expects 'ProcessClassInfo' but compiler reports 'unk103'.
+CNetworkGameClient_MSVC | Index 132 mismatch: YAML expects 'Clear' but compiler reports 'SetSignonState'.
+CNetworkGameClient_MSVC | Index 133 mismatch: YAML expects 'FullConnect' but compiler reports 'unk133'.
+CNetworkGameClient_MSVC | Index 134 mismatch: YAML expects 'SetSignonState' but compiler reports 'unk134'.
+CNetworkGameClient_MSVC | Index 136 mismatch: YAML expects 'InstallStringTableCallback' but compiler reports 'unk136'.
+CNetworkGameClient_MSVC | Index 137 mismatch: YAML expects 'HookClientStringTable' but compiler reports 'ProcessPacketEntities'.
+CNetworkGameClient_MSVC | Index 139 mismatch: YAML expects 'ProcessReadPacketEntitiesWorkItems' but compiler reports 'CopyNewEntity'.
+CNetworkGameClient_MSVC | Index 13 mismatch: YAML expects 'DisconnectGame' but compiler reports 'Disconnect'.
+CNetworkGameClient_MSVC | Index 140 mismatch: YAML expects 'OnPreserveEntity' but compiler reports 'CopyExistingEntity'.
+CNetworkGameClient_MSVC | Index 141 mismatch: YAML expects 'CopyNewEntity' but compiler reports 'OnReceivedUncompressedPacket'.
+CNetworkGameClient_MSVC | Index 142 mismatch: YAML expects 'CopyExistingEntity' but compiler reports 'unk142'.
+CNetworkGameClient_MSVC | Index 143 missing in compiler output (reference: CNetworkGameClient_OnReceivedUncompressedPacket, file: engine/CNetworkGameClient_OnReceivedUncompressedPacket.windows.yaml).
+CNetworkGameClient_MSVC | Index 77 mismatch: YAML expects 'CreateMove' but compiler reports 'unk077'.
+CNetworkGameClient_MSVC | vtable_numvfunc mismatch: YAML=145 vs compiler=143.
+CNetworkGameClient_MSVC | vtable_size mismatch: YAML=0x488 vs compiler=0x478 (entry_count=143, ptr_size=8).
 CNetworkGameServerBase_Linux | Index 16 mismatch: YAML expects 'ServerSimulate' but compiler reports 'ServerBeginSimulate'.
 CNetworkGameServerBase_MSVC | Index 16 mismatch: YAML expects 'ServerSimulate' but compiler reports 'ServerBeginSimulate'.
 CServerSideClientBase_Linux | Index 10 mismatch: YAML expects 'GetPlayerInfo' but compiler reports 'Create'.
@@ -58,5 +106,10 @@ ISource2Server_Linux | vtable_size mismatch: YAML=0x340 vs compiler=0x338 (entry
 ISource2Server_MSVC | Index 57 mismatch: YAML expects 'Save' but compiler reports 'SaveGame'.
 ISource2Server_MSVC | Index 80 mismatch: YAML expects 'BroadcastServerFrameTime' but compiler reports 'SendServerFrameTime'.
 ISource2Server_MSVC | Index 83 mismatch: YAML expects 'GetEntityReport' but compiler reports 'FormatSerializerFieldValue'.
+IVEngineClient2_Linux | Index 101 mismatch: YAML expects 'ExecuteClientCmd' but compiler reports 'IsLocalPlayerResolvable'.
+IVEngineClient2_Linux | Index 184 mismatch: YAML expects 'DumpNetStats' but compiler reports 'PrintNetworkSummaryReport'.
+IVEngineClient2_MSVC | Index 184 mismatch: YAML expects 'DumpNetStats' but compiler reports 'PrintNetworkSummaryReport'.
+IVEngineClient2_MSVC | Index 50 mismatch: YAML expects 'ExecuteClientCmd' but compiler reports 'ServerCmd'.
+IVEngineClient2_MSVC | Index 51 mismatch: YAML expects 'ClientCmd_Unrestricted' but compiler reports 'ClientCommand'.
 IVEngineServer2_Linux | Index 60 mismatch: YAML expects 'UnloadSpawnGroup' but compiler reports 'LoadSpawnGroup'.
 IVEngineServer2_MSVC | Index 60 mismatch: YAML expects 'UnloadSpawnGroup' but compiler reports 'LoadSpawnGroup'.

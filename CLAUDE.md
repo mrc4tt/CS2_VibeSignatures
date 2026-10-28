@@ -800,7 +800,11 @@ ships it. The test list is **`cpp_tests/fork_tests.yaml`** alone: `sdk_abi_check
 payer rule reads it directly. Add a test there, never in a config (the config block had fallen to
 16 of the check's 50 tests). `run_cpp_tests.py` generates the gitignored `cpp_tests/protos` itself
 when a test needs it, but it fails on every accepted mismatch: compare against
-`cpp_tests/abi_baseline.txt` with `sdk_abi_check.sh`. A required output with no reader gets the free preprocessor only: the run skips the
+`cpp_tests/abi_baseline.txt` with `sdk_abi_check.sh`. The client tests (`CNetworkGameClient*`,
+`IVEngineClient2`) read `Wend4r_sourcesdk/`, a shallow submodule of Wend4r/sourcesdk `main`, since
+hl2sdk carries no client interfaces. It is read-only (no fork, never patched) and stays on its pin
+until bumped by hand; its headers disagree with 14192 in 53 places (unkNNN slots, a windows table 2
+short), all in the baseline, so the tests catch change, not correctness. A required output with no reader gets the free preprocessor only: the run skips the
 hunter and the agent (`no reader (plugin, task input or cpp test)`), and pack does not insist on
 it (`artifact_unpaid`, `gamesymbol_snapshot_lib.operations._waived`) but packs it wherever it
 exists. On 14192 that is 1609 of 3921 required outputs; over opencode's ledger up to 2026-10-25,

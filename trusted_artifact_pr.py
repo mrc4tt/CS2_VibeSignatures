@@ -946,7 +946,7 @@ def build_trusted_artifact_plan(*, repo_root: str | Path, trusted_context: dict 
                 for path in (change.old_path, change.new_path)
             ),
             "cpp": any(
-                path and path.startswith(("configs/", "binary_locks/", "bin_artifacts/", "cpp_tests/", "hl2sdk_cs2"))
+                path and path.startswith(("configs/", "binary_locks/", "bin_artifacts/", "cpp_tests/", "hl2sdk_cs2", "Wend4r_sourcesdk"))
                 for change in changes
                 for path in (change.old_path, change.new_path)
             ),
