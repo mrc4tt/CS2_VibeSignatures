@@ -1,5 +1,5 @@
 # Accepted cpp_tests mismatches (sdk_abi_check.sh --accept).
-# gamever 14192, hl2sdk cc5df2f4 Merge remote-tracking branch 'upstream/cs2' into cs2
+# gamever 14192, hl2sdk 06eec0c2 Use __builtin_offsetof for CUtlLeanVectorFixedGrowable's capacity under clang
 CEntityInstance_Linux | Index 11 mismatch: YAML expects 'PostDataUpdateDelta' but compiler reports 'DispatchPostDataUpdate'.
 CEntityInstance_Linux | Index 13 mismatch: YAML expects 'PostDataUpdatePreserve' but compiler reports 'OnDataUnchangedInPVS'.
 CEntityInstance_Linux | Index 30 mismatch: YAML expects 'AddChangeAccessorPathPolymorphic' but compiler reports 'NetworkStateChangedBranch'.
@@ -13,6 +13,14 @@ CEntitySystem_Linux | Member 'm_entityNames' offset mismatch: YAML=0xaf8 vs comp
 CEntitySystem_MSVC | Member 'm_bEnableAutoDeletionExecution' missing in compiler record layout (reference offset: 0xc63, file: server/CEntitySystem_m_bEnableAutoDeletionExecution.windows.yaml).
 CNetworkGameServerBase_Linux | Index 16 mismatch: YAML expects 'ServerSimulate' but compiler reports 'ServerBeginSimulate'.
 CNetworkGameServerBase_MSVC | Index 16 mismatch: YAML expects 'ServerSimulate' but compiler reports 'ServerBeginSimulate'.
+CServerSideClientBase_Linux | Index 10 mismatch: YAML expects 'GetPlayerInfo' but compiler reports 'Create'.
+CServerSideClientBase_Linux | Index 52 mismatch: YAML expects 'SendServerInfo' but compiler reports 'BuildServerInfoMessageAsync'.
+CServerSideClientBase_Linux | Index 77 mismatch: YAML expects 'MarkToKick' but compiler reports 'OnSendJobFinished'.
+CServerSideClientBase_Linux | Index 78 mismatch: YAML expects 'UnmarkToKick' but compiler reports 'OnSendJobStarted'.
+CServerSideClientBase_MSVC | Index 48 mismatch: YAML expects 'SendServerInfo' but compiler reports 'BuildServerInfoMessageAsync'.
+CServerSideClientBase_MSVC | Index 75 mismatch: YAML expects 'MarkToKick' but compiler reports 'OnSendJobFinished'.
+CServerSideClientBase_MSVC | Index 76 mismatch: YAML expects 'UnmarkToKick' but compiler reports 'OnSendJobStarted'.
+CServerSideClientBase_MSVC | Index 9 mismatch: YAML expects 'GetPlayerInfo' but compiler reports 'Create'.
 IFileSystem_Linux | vtable_numvfunc mismatch: YAML=129 vs compiler=114.
 IFileSystem_Linux | vtable_size mismatch: YAML=0x408 vs compiler=0x390 (entry_count=114, ptr_size=8).
 IFileSystem_MSVC | vtable_numvfunc mismatch: YAML=129 vs compiler=114.
@@ -22,6 +30,8 @@ IGameSystem_Linux | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTi
 IGameSystem_Linux | Index 42 mismatch: YAML expects 'OnServerBeginAsyncPostTickWork' but compiler reports 'OnServerGameBeginAsyncPostTickWork'.
 IGameSystem_MSVC | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTickWork' but compiler reports 'OnServerBeginAsyncPostTickWork'.
 IGameSystem_MSVC | Index 42 mismatch: YAML expects 'OnServerBeginAsyncPostTickWork' but compiler reports 'OnServerGameBeginAsyncPostTickWork'.
+INetChannel_Linux | Index 72 mismatch: YAML expects 'ParseMessagesDemo' but compiler reports 'ProcessDemoPacket'.
+INetChannel_MSVC | Index 71 mismatch: YAML expects 'ParseMessagesDemo' but compiler reports 'ProcessDemoPacket'.
 INetworkGameServer_Linux | Index 59 mismatch: YAML expects 'PreWorldUpdate' but compiler reports 'PrepareSendClientUpdatesMainThread'.
 INetworkGameServer_MSVC | Index 59 mismatch: YAML expects 'PreWorldUpdate' but compiler reports 'PrepareSendClientUpdatesMainThread'.
 INetworkMessages_Linux | Index 21 mismatch: YAML expects 'GetNetworkSerializationContextData' but compiler reports 'LookupNetworkSerializationContextDataId'.
