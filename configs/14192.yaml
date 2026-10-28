@@ -7185,6 +7185,15 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-Say_CommandHandler
+        expected_output:
+          - Say_CommandHandler.{platform}.yaml
+      - name: find-SayTeam_CommandHandler
+        expected_output:
+          - SayTeam_CommandHandler.{platform}.yaml
+      - name: find-CCSPlayer_DamageReactServices_TakeDamage
+        expected_output:
+          - CCSPlayer_DamageReactServices_TakeDamage.{platform}.yaml
       - name: find-CSoundSystem_TakeGuid
         expected_output:
           - CSoundSystem_TakeGuid.{platform}.yaml
@@ -10714,6 +10723,12 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: Say_CommandHandler
+        category: func
+      - name: SayTeam_CommandHandler
+        category: func
+      - name: CCSPlayer_DamageReactServices_TakeDamage
+        category: func
       - name: CSoundSystem_TakeGuid
         category: vfunc
       - name: CGameEventManager_FireEvent

@@ -196,8 +196,8 @@ binaries:
       sha256: 'e0b1ed04a652f8268fd9d6b75b5a97910ab57197e2cdb8a0a4966703a5ec8322'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:a9096a4507cf9d3a9acc61aad1a5ef1f1687c3cc01749100ed215e610d9dd3d9
-file_count: 3985
+config_sha256: sha256:e68c11fc53b12e7ea5cc9909a8074e1584cac8cae3785de60ab2c27de634075a
+file_count: 3991
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -29239,6 +29239,18 @@ files:
     vtable_size: '0x18'
     vtable_symbol: ??_7CCSPlayerStateDeathAnim@@6B@
     vtable_va: '0x18179a778'
+  server/CCSPlayer_DamageReactServices_TakeDamage.linux.yaml:
+    func_name: CCSPlayer_DamageReactServices_TakeDamage
+    func_rva: '0x155fa80'
+    func_sig: 55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 89 F3 48 81 EC ?? ?? ?? ?? 4C 8B 67 ??
+    func_size: '0x9f6'
+    func_va: '0x155fa80'
+  server/CCSPlayer_DamageReactServices_TakeDamage.windows.yaml:
+    func_name: CCSPlayer_DamageReactServices_TakeDamage
+    func_rva: '0xa99bf0'
+    func_sig: 48 8B C4 57 41 55
+    func_size: '0x93a'
+    func_va: '0x180a99bf0'
   server/CCSPlayer_ItemServices_CanAcquire.linux.yaml:
     func_name: CCSPlayer_ItemServices_CanAcquire
     func_rva: '0x15b0040'
@@ -47205,6 +47217,30 @@ files:
     func_sig: 40 53 48 83 EC ?? 48 8B 1D ?? ?? ?? ?? 48 85 DB 74 ?? 0F 1F 40 ?? 66 66 0F 1F 84 00 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? 48 8B D3
     func_size: '0x41'
     func_va: '0x1809dd8d0'
+  server/SayTeam_CommandHandler.linux.yaml:
+    func_name: SayTeam_CommandHandler
+    func_rva: '0x187f2c0'
+    func_sig: 55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ?? 48 8D 05 ?? ?? ?? ?? 48 8B 38 48 8B 07 FF 90 ?? ?? ?? ?? 84 C0 74 ?? 48 89 DF E8 ?? ?? ?? ?? 48 89 C3 48 85 C0 74 ??
+    func_size: '0xc1'
+    func_va: '0x187f2c0'
+  server/SayTeam_CommandHandler.windows.yaml:
+    func_name: SayTeam_CommandHandler
+    func_rva: '0xd258d0'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B D9 48 8B FA 48 8B 0D ?? ?? ?? ?? 48 8B 01 FF 90 ?? ?? ?? ?? 84 C0 75 ?? 48 8D 0D ?? ?? ?? ?? 48 8B 5C 24 ?? 48 83 C4 ?? 5F 48 FF 25 ?? ?? ?? ?? 48 8B CB E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 74 ?? F3 0F 10 88 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? F3 0F 58 0D ?? ?? ?? ?? F3 0F 10 41 ?? 0F 2F C1 76 ?? 45 33 C9 48 C7 44 24 ?? ?? ?? ?? ?? 41 B0 ??
+    func_size: '0xa2'
+    func_va: '0x180d258d0'
+  server/Say_CommandHandler.linux.yaml:
+    func_name: Say_CommandHandler
+    func_rva: '0x187f390'
+    func_sig: 55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ?? 48 8D 05 ?? ?? ?? ?? 48 8B 38 48 8B 07 FF 90 ?? ?? ?? ?? 84 C0 74 ?? 48 89 DF E8 ?? ?? ?? ?? 48 89 C3 48 85 C0 0F 84 ?? ?? ?? ??
+    func_size: '0xdb'
+    func_va: '0x187f390'
+  server/Say_CommandHandler.windows.yaml:
+    func_name: Say_CommandHandler
+    func_rva: '0xd25800'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 8B D9 48 8B FA 48 8B 0D ?? ?? ?? ?? 48 8B 01 FF 90 ?? ?? ?? ?? 84 C0 75 ?? 48 8D 0D ?? ?? ?? ?? 48 8B 5C 24 ?? 48 83 C4 ?? 5F 48 FF 25 ?? ?? ?? ?? 48 8B CB E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 74 ?? F3 0F 10 88 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? F3 0F 58 0D ?? ?? ?? ?? F3 0F 10 41 ?? 0F 2F C1 76 ?? 45 33 C9 48 C7 44 24 ?? ?? ?? ?? ?? 45 33 C0
+    func_size: '0xc6'
+    func_va: '0x180d25800'
   server/ScriptBinding_CBaseModelEntity_SetModel.linux.yaml:
     func_name: ScriptBinding_CBaseModelEntity_SetModel
     func_rva: '0xb73570'
@@ -49728,5 +49764,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14192'
-last_publish_time: '2026-10-27T08:03:02Z'
+last_publish_time: '2026-10-27T22:00:40Z'
 schema_version: 5
