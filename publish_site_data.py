@@ -38,6 +38,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 import yaml
 
@@ -441,6 +442,11 @@ PLUGIN_PASS_STATUSES = {"ok", "match", "ok-midfunction", "ok-globalref"}
 PLUGIN_FILE_SUFFIXES = (".json", ".jsonc", ".txt")
 
 
+def _progress(message: str) -> None:
+    """One line to stderr, so a long diagnostics pass shows it is alive; stdout stays the summary."""
+    print(message, file=sys.stderr, flush=True)
+
+
 def build_plugin_checks(build: str) -> dict:
     """Does every file an enabled plugin ships hold against this build's binaries?
 
@@ -450,14 +456,16 @@ def build_plugin_checks(build: str) -> dict:
     build" without re-running anything in the browser.
     """
     files = []
-    for relative in generated_files(build):
-        if not relative.endswith(PLUGIN_FILE_SUFFIXES):
-            continue
+    selected = [relative for relative in generated_files(build) if relative.endswith(PLUGIN_FILE_SUFFIXES)]
+    for number, relative in enumerate(selected, 1):
         path = os.path.join(GAMEDATA_ROOT, build, relative)
+        _progress(f"  [{number}/{len(selected)}] verify_plugin_gamedata {relative}")
+        started = time.monotonic()
         completed = subprocess.run(
             ["uv", "run", "verify_plugin_gamedata.py", "-gamever", build, "-gamedata", path, "-json"],
             capture_output=True, text=True,
         )
+        _progress(f"      done in {time.monotonic() - started:.0f}s")
         entry: dict = {"plugin": relative.split(os.sep)[0], "path": relative.replace(os.sep, "/")}
         try:
             report = json.loads(completed.stdout)
@@ -510,10 +518,14 @@ def build_plugin_checks(build: str) -> dict:
 def build_diagnostics(build: str, *, skip_validator: bool) -> dict:
     validator: dict = {"ran": False}
     if not skip_validator:
+        _progress(f"validate_artifacts.py -gamever {build} (re-reads every artifact against the binaries)")
+        started = time.monotonic()
         completed = subprocess.run(
             ["uv", "run", "validate_artifacts.py", "-gamever", build, "-json"],
             capture_output=True, text=True,
         )
+        _progress(f"  done in {time.monotonic() - started:.0f}s")
+        _progress("verifying the shipped plugin files")
         if completed.returncode == 0 and completed.stdout.strip():
             report = json.loads(completed.stdout)
             by_symbol: dict[str, list[dict]] = collections.defaultdict(list)
