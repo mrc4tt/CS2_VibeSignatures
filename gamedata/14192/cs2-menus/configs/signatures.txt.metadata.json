@@ -1,0 +1,748 @@
+{
+  "entries": [
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 49 89 F6 41 55 41 54 49 89 CC 53 48 89 FB 48 83 EC ? 4C 8B 6F ?",
+          "before": "55 48 89 E5 41 57 41 56 49 89 F6 41 55 41 54 49 89 CC 53 48 89 FB 48 83 EC ? 4C 8B 6F 38",
+          "line": 163,
+          "path": [
+            "Gamedata",
+            "CanAcquire",
+            "linux"
+          ]
+        },
+        {
+          "after": "44 89 44 24 ? 48 89 54 24 ? 48 89 4C 24 ? 55 53 56 57 41 54 41 55 41 56 41 57 48 8B EC",
+          "before": "",
+          "line": 164,
+          "path": [
+            "Gamedata",
+            "CanAcquire",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        163,
+        164
+      ],
+      "name": "CanAcquire",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 53 48 89 FB 48 83 EC ? 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 50 ? 48 89 DF 48 8B 5D ? C9 48 89 C6 E9 ? ? ? ? ? ? ? ? 55",
+          "before": "55 48 89 E5 53 48 89 FB 48 83 EC ? 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 50 ? 48 89 DF",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "CBaseModelEntity_SetModel",
+            "linux"
+          ]
+        },
+        {
+          "after": "40 53 48 83 EC ? 48 8B D9 4C 8B C2 48 8B 0D ? ? ? ? 48 8D 54 24 ? 48 8B 01 FF 50 ? 48 8B 54 24 ? 48 8B CB E8 ? ? ? ? 48 83 C4 ? 5B C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 ?",
+          "before": "",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "CBaseModelEntity_SetModel",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [],
+      "name": "CBaseModelEntity_SetModel",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "105",
+          "before": "",
+          "line": 197,
+          "path": [
+            "Gamedata",
+            "ChangeTeam",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        196,
+        197
+      ],
+      "name": "ChangeTeam",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "188",
+          "before": "",
+          "line": 187,
+          "path": [
+            "Gamedata",
+            "CollisionRulesChanged",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        186,
+        187
+      ],
+      "name": "CollisionRulesChanged",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "387",
+          "before": "",
+          "line": 182,
+          "path": [
+            "Gamedata",
+            "CommitSuicide",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        181,
+        182
+      ],
+      "name": "CommitSuicide",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "28",
+          "before": "",
+          "line": 207,
+          "path": [
+            "Gamedata",
+            "DropWeapon",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        206,
+        207
+      ],
+      "name": "DropWeapon",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 B8 00 00 00 00 FF FF FF FF 55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 81 EC ? ? ? ? 48 89 07 48 8D 05 ? ? ? ? 48 C7 47 08 00 00 00 00",
+          "before": "55 48 89 E5 53 48 89 FB 48 83 EC ? E8 ? ? ? ? 48 89 D8 48 8B 5D ? C9 C3 CC CC CC CC CC CC 48 B8",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "EmitSoundFilter",
+            "linux"
+          ]
+        },
+        {
+          "after": "40 53 48 83 EC ? 4C 89 4C 24 ? 48 8B D9 45 8B C8",
+          "before": "",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "EmitSoundFilter",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [],
+      "name": "EmitSoundFilter",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8D 05 ? ? ? ? 48 8B 38 E8 ? ? ? ? 49 83 7D ? ?",
+          "before": "4C 8D 2D ? ? ? ? 49 8B 7D ? 48 8B 07 FF 50 ? 48 85 C0 74 ? 48 8D 0D ? ? ? ? 48 89 C3 48 8B 00 BA",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "GetGameEventManager",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 8B 0D ? ? ? ? E8 ? ? ? ? 45 33 FF 4C 39 7D ?",
+          "before": "",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "GetGameEventManager",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [],
+      "name": "GetGameEventManager",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B 3D ? ? ? ? E8 ? ? ? ? 5A",
+          "before": "48 8D 05 ? ? ? ? 0F 2E D1",
+          "line": 7,
+          "path": [
+            "Gamedata",
+            "GetGameTraceManager",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 8B 0D ? ? ? ? 4D 8B C6 88 44 24 ?",
+          "before": "",
+          "line": 8,
+          "path": [
+            "Gamedata",
+            "GetGameTraceManager",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        7,
+        8
+      ],
+      "name": "GetGameTraceManager",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B 05 ? ? ? ? 48 85 C0 74 ? 83 FF ? 77 ? 48 63 FF 48 C1 E7 ? 48 8D 44 38 ?",
+          "before": "48 8B 05 ? ? ? ? 48 85 C0 74 ? 83 FF ? 77 ? 48 63 FF 48 C1 E7 ? 48 8D 44 38",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "GetLegacyGameEventListener",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 8B 15 ? ? ? ? 48 85 D2 74 ? 85 C9",
+          "before": "",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "GetLegacyGameEventListener",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [],
+      "name": "GetLegacyGameEventListener",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        66,
+        67
+      ],
+      "name": "IsHearingClient",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "255",
+          "before": "",
+          "line": 177,
+          "path": [
+            "Gamedata",
+            "OnTakeDamage_Alive",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        176,
+        177
+      ],
+      "name": "OnTakeDamage_Alive",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 89 F3 48 81 EC ? ? ? ? 4C 8B 67 ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 4C 8B 6F ? 4D 85 ED 0F 84 ? ? ? ? 41 80 BD",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "OnTakeDamagePre",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 8B C4 57 41 55",
+          "before": "",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "OnTakeDamagePre",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [],
+      "name": "OnTakeDamagePre",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 89 4D ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 89 4D",
+          "line": 170,
+          "path": [
+            "Gamedata",
+            "ProcessUsercmds",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 8B C4 44 88 48 ? 44 89 40 ? 48 89 50 ? 53",
+          "before": "",
+          "line": 171,
+          "path": [
+            "Gamedata",
+            "ProcessUsercmds",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        170,
+        171
+      ],
+      "name": "ProcessUsercmds",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "27",
+          "before": "",
+          "line": 212,
+          "path": [
+            "Gamedata",
+            "RemoveWeapons",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        211,
+        212
+      ],
+      "name": "RemoveWeapons",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "274",
+          "before": "",
+          "line": 202,
+          "path": [
+            "Gamedata",
+            "Respawn",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        201,
+        202
+      ],
+      "name": "Respawn",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 89 D3 48 81 EC ? ? ? ? 40 38 B7 ? ? ? ?",
+          "before": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 89 D3 48 81 EC ? ? ? ? 40 38 B7",
+          "line": 42,
+          "path": [
+            "Gamedata",
+            "SetMoveType",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 41 0F B6 F0",
+          "before": "",
+          "line": 43,
+          "path": [
+            "Gamedata",
+            "SetMoveType",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        42,
+        43
+      ],
+      "name": "SetMoveType",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC 55 48 89 E5 41 54 53 48 89 F3 48 85 D2",
+          "before": "55 48 89 E5 41 56 41 55 41 54 53 48 89 F3 48 83 EC 20 E8 ? ? ? ? 48 85 DB",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "StopSoundEvent",
+            "linux"
+          ]
+        },
+        {
+          "after": "E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC E9 ? ? ? ? CC CC CC CC CC CC CC CC CC CC CC 48 8B 81 ? ? ? ? 48 85 C0",
+          "before": "",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "StopSoundEvent",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [],
+      "name": "StopSoundEvent",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 53 57 48 81 EC ? ? ? ? 48 8B D9 8B FA",
+          "before": "",
+          "line": null,
+          "path": [
+            "Gamedata",
+            "SwitchTeam",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [],
+      "name": "SwitchTeam",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "165",
+          "before": "",
+          "line": 192,
+          "path": [
+            "Gamedata",
+            "Teleport",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        191,
+        192
+      ],
+      "name": "Teleport",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? F3 0F 11 85 ? ? ? ? 89 B5 ? ? ? ?",
+          "before": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? F3 0F 11 85 ? ? ? ? 89 B5",
+          "line": 156,
+          "path": [
+            "Gamedata",
+            "TerminateRound",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 8B C4 4C 89 48 ? 48 89 48 ? 55 41 54",
+          "before": "",
+          "line": 157,
+          "path": [
+            "Gamedata",
+            "TerminateRound",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        156,
+        157
+      ],
+      "name": "TerminateRound",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 49 89 FF 41 56 48 8D BD ? ? ? ? 41 55 4C 8D AD ? ? ? ?",
+          "before": "55 48 89 E5 41 57 49 89 FF 41 56 48 8D BD ? ? ? ? 41 55 4C 8D AD",
+          "line": 114,
+          "path": [
+            "Gamedata",
+            "UTIL_AcceptInput",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 89 5C 24 ? 48 89 6C 24 ? 56 57 41 56 48 81 EC ? ? ? ? 4D 8B F0 48 8B F1",
+          "before": "",
+          "line": 115,
+          "path": [
+            "Gamedata",
+            "UTIL_AcceptInput",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        114,
+        115
+      ],
+      "name": "UTIL_AcceptInput",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8D 05 ? ? ? ? 55 48 89 FA",
+          "before": "48 8D 05 ? ? ? ? 55 48 89 FA 41 89 F0 48 89 E5 48 83 EC 08",
+          "line": 128,
+          "path": [
+            "Gamedata",
+            "UTIL_CreateEntity",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 83 EC ? C6 44 24 ? ? 4C 8B C1",
+          "before": "",
+          "line": 129,
+          "path": [
+            "Gamedata",
+            "UTIL_CreateEntity",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        128,
+        129
+      ],
+      "name": "UTIL_CreateEntity",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 57 48 83 EC ? 48 8B DA 48 8B F9 48 85 C9 0F 84 ? ? ? ? 48 85 D2",
+          "before": "",
+          "line": 121,
+          "path": [
+            "Gamedata",
+            "UTIL_DispatchSpawn",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        120,
+        121
+      ],
+      "name": "UTIL_DispatchSpawn",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 85 C9 74 ? 48 8B D1 48 8B 0D ? ? ? ?",
+          "before": "",
+          "line": 142,
+          "path": [
+            "Gamedata",
+            "UTIL_Remove",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        141,
+        142
+      ],
+      "name": "UTIL_Remove",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 8D 87 ? ? ? ? 48 89 E5 41 57 41 56 41 89 CE",
+          "before": "55 48 8D 87 ? ? ? ? 48 89 E5 41 57 41 56 41 89 CE 41 55 45 89 CD",
+          "line": 18,
+          "path": [
+            "Gamedata",
+            "UTIL_RespawnPlayer",
+            "linux"
+          ]
+        },
+        {
+          "after": "44 88 4C 24 ? 53",
+          "before": "",
+          "line": 19,
+          "path": [
+            "Gamedata",
+            "UTIL_RespawnPlayer",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        18,
+        19
+      ],
+      "name": "UTIL_RespawnPlayer",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 90 ? ? ? ? 84 C0 74 ? 48 89 DF E8 ? ? ? ? 48 89 C3 48 85 C0 0F 84 ? ? ? ?",
+          "before": "55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC 08 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 90 F0 00 00 00 84 C0 74 ? 48 89 DF E8 ? ? ? ? 48 89 C3 48 85 C0",
+          "line": 76,
+          "path": [
+            "Gamedata",
+            "UTIL_Say",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 89 5C 24 ? 57 48 83 EC ? 48 8B D9 48 8B FA 48 8B 0D ? ? ? ? 48 8B 01 FF 90 ? ? ? ? 84 C0 75 ? 48 8D 0D ? ? ? ? 48 8B 5C 24 ? 48 83 C4 ? 5F 48 FF 25 ? ? ? ? 48 8B CB E8 ? ? ? ? 48 8B D8 48 85 C0 74 ? F3 0F 10 88 ? ? ? ? 48 8B 0D ? ? ? ? F3 0F 58 0D ? ? ? ? F3 0F 10 41 ? 0F 2F C1 76 ? 45 33 C9 48 C7 44 24 ? ? ? ? ? 45 33 C0",
+          "before": "",
+          "line": 77,
+          "path": [
+            "Gamedata",
+            "UTIL_Say",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        76,
+        77
+      ],
+      "name": "UTIL_Say",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 90 ? ? ? ? 84 C0 74 ? 48 89 DF E8 ? ? ? ? 48 89 C3 48 85 C0 74 ?",
+          "before": "",
+          "line": 81,
+          "path": [
+            "Gamedata",
+            "UTIL_SayTeam",
+            "linux"
+          ]
+        },
+        {
+          "after": "48 89 5C 24 ? 57 48 83 EC ? 48 8B D9 48 8B FA 48 8B 0D ? ? ? ? 48 8B 01 FF 90 ? ? ? ? 84 C0 75 ? 48 8D 0D ? ? ? ? 48 8B 5C 24 ? 48 83 C4 ? 5F 48 FF 25 ? ? ? ? 48 8B CB E8 ? ? ? ? 48 8B D8 48 85 C0 74 ? F3 0F 10 88 ? ? ? ? 48 8B 0D ? ? ? ? F3 0F 58 0D ? ? ? ? F3 0F 10 41 ? 0F 2F C1 76 ? 45 33 C9 48 C7 44 24 ? ? ? ? ? 41 B0 ?",
+          "before": "",
+          "line": 82,
+          "path": [
+            "Gamedata",
+            "UTIL_SayTeam",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        81,
+        82
+      ],
+      "name": "UTIL_SayTeam",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 54 24 ? 48 89 4C 24 ? 55 53 56 57 41 54 41 56 41 57",
+          "before": "",
+          "line": 13,
+          "path": [
+            "Gamedata",
+            "UTIL_TraceShape",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        12,
+        13
+      ],
+      "name": "UTIL_TraceShape",
+      "updated": true
+    }
+  ],
+  "file": "cs2-menus/configs/signatures.txt",
+  "gamever": "14192",
+  "schema_version": 2,
+  "summary": {
+    "covered": 29,
+    "total": 29,
+    "updated": 28
+  }
+}
