@@ -1,0 +1,5 @@
+func_name: CCSPlayer_MovementServices_MoveInit
+func_va: '0x180ae3010'
+func_rva: '0xae3010'
+func_size: '0x5ba'
+func_sig: 48 8B C4 48 89 58 ?? 48 89 68 ?? 56 57 41 54 48 81 EC ?? ?? ?? ??

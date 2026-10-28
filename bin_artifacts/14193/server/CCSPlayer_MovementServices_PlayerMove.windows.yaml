@@ -1,0 +1,5 @@
+func_name: CCSPlayer_MovementServices_PlayerMove
+func_va: '0x180ae2570'
+func_rva: '0xae2570'
+func_size: '0x4cb'
+func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 48 83 79 ?? ?? 48 8B FA 48 8B D9 75 ?? E8 ?? ?? ?? ?? 48 8B 4B ?? 48 89 74 24 ??

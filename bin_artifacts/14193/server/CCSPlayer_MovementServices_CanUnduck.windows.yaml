@@ -1,0 +1,5 @@
+func_name: CCSPlayer_MovementServices_CanUnduck
+func_va: '0x180ac0d70'
+func_rva: '0xac0d70'
+func_size: '0x46e'
+func_sig: 40 55 56 41 55 48 8D AC 24 ?? ?? ?? ??

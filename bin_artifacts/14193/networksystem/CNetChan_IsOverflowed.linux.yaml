@@ -1,0 +1,9 @@
+func_name: CNetChan_IsOverflowed
+func_va: '0x283070'
+func_rva: '0x283070'
+func_size: '0x8'
+func_sig: 0F B6 87 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 48 8D 47 ??
+func_sig_allow_across_function_boundary: true
+vtable_name: CNetChan
+vfunc_offset: '0x188'
+vfunc_index: 49

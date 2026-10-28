@@ -1,0 +1,5 @@
+struct_name: CEntitySystem
+member_name: m_DataDescKeyUnserializers
+offset: '0xd20'
+offset_sig: 48 8D 99 20 0D 00 00
+offset_sig_disp: 0

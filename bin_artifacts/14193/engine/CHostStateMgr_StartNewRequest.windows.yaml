@@ -1,0 +1,5 @@
+func_name: CHostStateMgr_StartNewRequest
+func_va: '0x18021e4c0'
+func_rva: '0x21e4c0'
+func_size: '0x19a'
+func_sig: 48 89 74 24 ?? 57 48 83 EC ?? 33 F6 48 8B FA 48 39 35 ?? ?? ?? ??

@@ -1,0 +1,1549 @@
+{
+  "entries": [
+    {
+      "changes": [
+        {
+          "after": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74 ?",
+          "before": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74",
+          "line": 101,
+          "path": [
+            "BotNavIgnore1",
+            "windows"
+          ]
+        },
+        {
+          "after": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ?",
+          "before": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ? 45 84 FF 0F 84",
+          "line": 102,
+          "path": [
+            "BotNavIgnore1",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        100,
+        101,
+        102
+      ],
+      "name": "BotNavIgnore1",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74 ?",
+          "before": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74",
+          "line": 107,
+          "path": [
+            "BotNavIgnore2",
+            "windows"
+          ]
+        },
+        {
+          "after": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ?",
+          "before": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ? 45 84 FF 0F 84",
+          "line": 108,
+          "path": [
+            "BotNavIgnore2",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        106,
+        107,
+        108
+      ],
+      "name": "BotNavIgnore2",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74 ?",
+          "before": "0F 84 ? ? ? ? 80 B8 ? ? ? ? ? 0F 84 ? ? ? ? 80 3D ? ? ? ? ? 74",
+          "line": 113,
+          "path": [
+            "BotNavIgnore3",
+            "windows"
+          ]
+        },
+        {
+          "after": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ?",
+          "before": "0F 84 ? ? ? ? 44 0F B6 B8 ? ? ? ? 45 84 FF 0F 84",
+          "line": 114,
+          "path": [
+            "BotNavIgnore3",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        112,
+        113,
+        114
+      ],
+      "name": "BotNavIgnore3",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 49 89 FD 41 54 53 48 89 F3 48 83 EC ? F3 0F 11 85 ? ? ? ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 49 89 FD 41 54 53 48 89 F3 48 83 EC ? F3 0F 11 85",
+          "line": 58,
+          "path": [
+            "CAttributeList::SetOrAddAttributeValueByName",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        56,
+        57,
+        58
+      ],
+      "name": "CAttributeList::SetOrAddAttributeValueByName",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 57 48 83 EC ? 48 8B DA 48 8B F9 48 85 C9 0F 84 ? ? ? ? 48 85 D2",
+          "before": "48 89 5C 24 10 57 48 83 EC 30 48 8B DA 48 8B F9 48 85 C9",
+          "line": 44,
+          "path": [
+            "CBaseEntity::DispatchSpawn",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        43,
+        44,
+        45
+      ],
+      "name": "CBaseEntity::DispatchSpawn",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 55 53 56 57 41 54 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4D 8B E0",
+          "before": "40 55 53 56 57 41 54 48 8D 6C 24 ? 48 81 EC 70 01 00 00",
+          "line": 95,
+          "path": [
+            "CBaseEntity::TakeDamage",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        94,
+        95,
+        96
+      ],
+      "name": "CBaseEntity::TakeDamage",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 53 48 83 EC ? 48 8B D9 4C 8B C2 48 8B 0D ? ? ? ? 48 8D 54 24 ? 48 8B 01 FF 50 ? 48 8B 54 24 ? 48 8B CB E8 ? ? ? ? 48 83 C4 ? 5B C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 ?",
+          "before": "40 53 48 83 EC ? 48 8B D9 4C 8B C2 48 8B 0D ? ? ? ? 48 8D 54 24 ? 48 8B 01 FF 50 ? 48 8B 54 24 ? 48 8B CB E8 ? ? ? ? 48 83 C4 ? 5B C3 CC CC CC CC CC CC CC CC CC CC CC CC CC CC CC 48 89 5C 24",
+          "line": 31,
+          "path": [
+            "CBaseModelEntity::SetModel",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 53 48 89 FB 48 83 EC ? 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 50 ? 48 89 DF 48 8B 5D ? C9 48 89 C6 E9 ? ? ? ? ? ? ? ? 55",
+          "before": "55 48 89 E5 53 48 89 FB 48 83 EC ? 48 8D 05 ? ? ? ? 48 8B 38 48 8B 07 FF 50 ? 48 89 DF 48 8B 5D ? C9 48 89 C6 E9 ? ? ? ? CC CC CC CC 55",
+          "line": 32,
+          "path": [
+            "CBaseModelEntity::SetModel",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        30,
+        31,
+        32
+      ],
+      "name": "CBaseModelEntity::SetModel",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 8D 05 ? ? ? ? 48 8D 35 ? ? ? ? 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 8D 3D ? ? ? ?",
+          "before": "55 48 8D 05 ? ? ? ? 48 8D 35 ? ? ? ? 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 8D 3D ? ? ? ? 48 81 EC ? ? ? ? 48 89 85 ? ? ? ? 48 8D 05 ? ? ? ? C7 85 ? ? ? ? ? ? ? ? 48 89 85 ? ? ? ? 48 8D 85 ? ? ? ? 48 89 C2 48 89 85 ? ? ? ? E8 ? ? ? ? 48 8B BB",
+          "line": 376,
+          "path": [
+            "CBasePlayerController::OnSimulateUserCommands",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        374,
+        375,
+        376
+      ],
+      "name": "CBasePlayerController::OnSimulateUserCommands",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "44 88 4C 24 ? 53",
+          "before": "44 88 4C 24 ? 53 57 41 54 41 56 41 57 48 83 EC",
+          "line": 77,
+          "path": [
+            "CBasePlayerController::SetPawn",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 8D 87 ? ? ? ? 48 89 E5 41 57 41 56 41 89 CE",
+          "before": "55 48 8D 87 ? ? ? ? 48 89 E5 41 57 41 56 41 89 CE 41 55 45 89 CD",
+          "line": 78,
+          "path": [
+            "CBasePlayerController::SetPawn",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        76,
+        77,
+        78
+      ],
+      "name": "CBasePlayerController::SetPawn",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        386,
+        387,
+        388
+      ],
+      "name": "CCSCustomHudLayout::RemoveDialogVariableStringForPlayer",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        392,
+        393,
+        394
+      ],
+      "name": "CCSCustomHudLayout::SetDialogVariableString",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "85 D2 0F 88 ? ? ? ? 53 55 56 48 83 EC ? 48 63 DA 49 8B E9 49 8B C0 48 8B F1 48 89 7C 24 ? 3B 99 ? ? ? ? 0F 8D ? ? ? ? 4C 89 74 24 ? 4C 8D 44 24 ? 45 33 F6 48 8B D0 66 44 89 74 24 ? E8 ? ? ? ? 84 C0 74 ? 4C 8D 44 24 ? 66 44 89 74 24 ? 48 8B D5 48 8B CE E8 ? ? ? ? 84 C0 74 ? 0F B6 86 ? ? ? ? A8 02 74 ? A8 01 75 ? 4C 8D 44 24 ? 48 C7 44 24 ? FF FF FF FF B2 03 48 8D 8E ? ? ? ? E8 ? ? ? ? 4C 8B 4C 24 ?",
+          "before": "85 D2 0F 88 ? ? ? ? 53 55 56 48 83 EC ? 48 63 DA 49 8B E9 49 8B C0 48 8B F1 48 89 7C 24 ? 3B 99 ? ? ? ? 0F 8D ? ? ? ? 4C 89 74 24 ? 4C 8D 44 24 ? 45 33 F6 48 8B D0 66 44 89 74 24 ? E8 ? ? ? ? 84 C0 74 ? 4C 8D 44 24 ? 66 44 89 74 24 ? 48 8B D5 48 8B CE E8 ? ? ? ? 84 C0 74 ? 0F B6 86 ? ? ? ? A8 ? 74 ? A8 ? 75 ? 4C 8D 44 24 ? 48 C7 44 24 ? ? ? ? ? B2 ? 48 8D 8E ? ? ? ? E8 ? ? ? ? 4C 8B 4C 24",
+          "line": 381,
+          "path": [
+            "CCSCustomHudLayout::SetDialogVariableStringForPlayer",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 56 41 55 41 54 53 89 F3 48 83 EC ? 85 F6 78 ? 49 89 FD 39 B7 ? ? ? ? 7F ? 48 83 C4 ? 5B 41 5C 41 5D 41 5E 5D C3 0F 1F 00 48 89 D6 31 D2 49 89 CE 66 89 55 ? 48 8D 55 ? 4D 89 C4",
+          "before": "55 48 89 E5 41 56 41 55 41 54 53 89 F3 48 83 EC ? 85 F6 78 ? 49 89 FD 39 B7 ? ? ? ? 7F ? 48 83 C4 ? 5B 41 5C 41 5D 41 5E 5D C3 ? ? ? 48 89 D6 31 D2 49 89 CE 66 89 55 ? 48 8D 55 ? 4D 89 C4",
+          "line": 382,
+          "path": [
+            "CCSCustomHudLayout::SetDialogVariableStringForPlayer",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        380,
+        381,
+        382
+      ],
+      "name": "CCSCustomHudLayout::SetDialogVariableStringForPlayer",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 49 89 D7 41 56 48 8D 55 ?",
+          "before": "55 48 89 E5 41 57 49 89 D7 41 56 48 8D 55",
+          "line": 406,
+          "path": [
+            "CCSCustomHudLayout::SetHasClass",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        404,
+        405,
+        406
+      ],
+      "name": "CCSCustomHudLayout::SetHasClass",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "85 D2 0F 88 ? ? ? ? 53 55 56 48 83 EC ? 48 63 DA 49 8B E9 49 8B C0 48 8B F1 48 89 7C 24 ? 3B 99 ? ? ? ? 0F 8D ? ? ? ? 4C 89 74 24 ? 4C 8D 44 24 ? 45 33 F6 48 8B D0 66 44 89 74 24 ? E8 ? ? ? ? 84 C0 74 ? 4C 8D 44 24 ? 66 44 89 74 24 ? 48 8B D5 48 8B CE E8 ? ? ? ? 84 C0 74 ? 0F B6 86 ? ? ? ? A8 02 74 ? A8 01 75 ? 4C 8D 44 24 ? 48 C7 44 24 ? FF FF FF FF B2 03 48 8D 8E ? ? ? ? E8 ? ? ? ? 44 8B 4C 24 ?",
+          "before": "85 D2 0F 88 ? ? ? ? 53 55 56 48 83 EC ? 48 63 DA 49 8B E9 49 8B C0 48 8B F1 48 89 7C 24 ? 3B 99 ? ? ? ? 0F 8D ? ? ? ? 4C 89 74 24 ? 4C 8D 44 24 ? 45 33 F6 48 8B D0 66 44 89 74 24 ? E8 ? ? ? ? 84 C0 74 ? 4C 8D 44 24 ? 66 44 89 74 24 ? 48 8B D5 48 8B CE E8 ? ? ? ? 84 C0 74 ? 0F B6 86 ? ? ? ? A8 ? 74 ? A8 ? 75 ? 4C 8D 44 24 ? 48 C7 44 24 ? ? ? ? ? B2 ? 48 8D 8E ? ? ? ? E8 ? ? ? ? 44 8B 4C 24",
+          "line": 399,
+          "path": [
+            "CCSCustomHudLayout::SetHasClassForPlayer",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 56 41 55 41 54 53 89 F3 48 83 EC ? 85 F6 78 ? 49 89 FD 39 B7 ? ? ? ? 7F ? 48 83 C4 ? 5B 41 5C 41 5D 41 5E 5D C3 0F 1F 00 48 89 D6 31 D2 49 89 CE 66 89 55 ? 48 8D 55 ? 45 89 C4",
+          "before": "55 48 89 E5 41 56 41 55 41 54 53 89 F3 48 83 EC ? 85 F6 78 ? 49 89 FD 39 B7 ? ? ? ? 7F ? 48 83 C4 ? 5B 41 5C 41 5D 41 5E 5D C3 ? ? ? 48 89 D6 31 D2 49 89 CE 66 89 55 ? 48 8D 55 ? 45 89 C4",
+          "line": 400,
+          "path": [
+            "CCSCustomHudLayout::SetHasClassForPlayer",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        398,
+        399,
+        400
+      ],
+      "name": "CCSCustomHudLayout::SetHasClassForPlayer",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 55 41 54 53 48 63 DE 48 83 EC ?",
+          "before": "55 48 89 E5 41 55 41 54 53 48 63 DE 48 83 EC",
+          "line": 412,
+          "path": [
+            "CCSCustomHudLayout::SetInputCaptureEnabled",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        410,
+        411,
+        412
+      ],
+      "name": "CCSCustomHudLayout::SetInputCaptureEnabled",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 49 89 F6 41 55 41 54 49 89 CC 53 48 89 FB 48 83 EC ? 4C 8B 6F ?",
+          "before": "55 48 89 E5 41 57 41 56 49 89 F6 41 55 41 54 49 89 CC 53 48 89 FB 48 83 EC 78",
+          "line": 145,
+          "path": [
+            "CCSPlayer_ItemServices::CanAcquire",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        143,
+        144,
+        145
+      ],
+      "name": "CCSPlayer_ItemServices::CanAcquire",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "F3 0F 11 5C 24 ? 53 56 57 48 83 EC ? 48 83 79 ? ?",
+          "before": "F3 0F 11 5C 24 20 53 56 57 48 83 EC 60",
+          "line": 250,
+          "path": [
+            "CCSPlayer_MovementServices::AirAccelerate",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 55 49 89 D5 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 7F ?",
+          "before": "55 48 89 E5 41 55 49 89 D5 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 7F",
+          "line": 251,
+          "path": [
+            "CCSPlayer_MovementServices::AirAccelerate",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        249,
+        250,
+        251
+      ],
+      "name": "CCSPlayer_MovementServices::AirAccelerate",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 55 53 56 57 41 56 48 8D 68 ? 48 81 EC ? ? ? ? 0F 29 70 ? 4C 8D 05 ? ? ? ?",
+          "before": "48 8B C4 55 53 56 57 41 56 48 8D 68 ? 48 81 EC 10 01 00 00",
+          "line": 262,
+          "path": [
+            "CCSPlayer_MovementServices::AirMove",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 8D 15 ? ? ? ? 48 89 E5 41 57 41 56 4C 8D BD ? ? ? ?",
+          "before": "55 48 8D 15 ? ? ? ? 48 89 E5 41 57 41 56 4C 8D BD",
+          "line": 263,
+          "path": [
+            "CCSPlayer_MovementServices::AirMove",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        261,
+        262,
+        263
+      ],
+      "name": "CCSPlayer_MovementServices::AirMove",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 55 56 41 55 48 8D AC 24 ? ? ? ?",
+          "before": "40 55 56 41 55 48 8D AC 24",
+          "line": 302,
+          "path": [
+            "CCSPlayer_MovementServices::CanUnduck",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8B 7F ?",
+          "before": "55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8B 7F",
+          "line": 303,
+          "path": [
+            "CCSPlayer_MovementServices::CanUnduck",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        301,
+        302,
+        303
+      ],
+      "name": "CCSPlayer_MovementServices::CanUnduck",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        225,
+        226,
+        227
+      ],
+      "name": "CCSPlayer_MovementServices::CategorizePosition",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "40 53 55 48 81 EC ? ? ? ? 48 83 79 ? ?",
+          "before": "40 53 55 48 81 EC 88 00 00 00 48 83 79",
+          "line": 220,
+          "path": [
+            "CCSPlayer_MovementServices::CheckFalling",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 48 8B 7F ? 48 85 FF 0F 84 ? ? ? ? 48 8B 07 FF 90 ? ? ? ? 48 85 C0 0F 84 ? ? ? ? F3 0F 10 8B ? ? ? ?",
+          "before": "55 48 89 E5 41 55 41 54 49 89 F4 53 48 89 FB 48 83 EC ? 48 8B 7F ? 48 85 FF 0F 84 ? ? ? ? 48 8B 07 FF 90 ? ? ? ? 48 85 C0 0F 84 ? ? ? ? F3 0F 10 8B",
+          "line": 221,
+          "path": [
+            "CCSPlayer_MovementServices::CheckFalling",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        219,
+        220,
+        221
+      ],
+      "name": "CCSPlayer_MovementServices::CheckFalling",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 4C 8B F2",
+          "before": "48 89 5C 24 ? 48 89 7C 24 ? 41 56 48 83 EC 30 4C 8B F2",
+          "line": 289,
+          "path": [
+            "CCSPlayer_MovementServices::CheckJumpButtonLegacy",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 55 41 54 49 89 F4 BE ? ? ? ? 53 48 89 FB 48 83 EC ? 48 8B 7F ?",
+          "before": "55 48 89 E5 41 55 41 54 49 89 F4 BE 02 00 00 00 53 48 89 FB 48 83 EC 58",
+          "line": 290,
+          "path": [
+            "CCSPlayer_MovementServices::CheckJumpButtonLegacy",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        288,
+        289,
+        290
+      ],
+      "name": "CCSPlayer_MovementServices::CheckJumpButtonLegacy",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 55 53 56 57 41 54 41 55 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 8B 9A ? ? ? ?",
+          "before": "40 55 53 56 57 41 54 41 55 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 8B 9A",
+          "line": 282,
+          "path": [
+            "CCSPlayer_MovementServices::CheckJumpButtonModern",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 89 F3 48 83 EC ? 48 8B 7F ?",
+          "before": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 53 48 89 F3 48 83 EC 78 48 8B 7F",
+          "line": 283,
+          "path": [
+            "CCSPlayer_MovementServices::CheckJumpButtonModern",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        281,
+        282,
+        283
+      ],
+      "name": "CCSPlayer_MovementServices::CheckJumpButtonModern",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 55 53 56 57 41 56 41 57 48 8D 68 ?",
+          "before": "48 8B C4 55 53 56 57 41 56 41 57 48 8D 68 A1",
+          "line": 351,
+          "path": [
+            "CCSPlayer_MovementServices::CheckParameters",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 89 F3 48 81 EC ? ? ? ? E8 ? ? ? ? 49 8B 44 24 ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 89 F3 48 81 EC ? ? ? ? E8 ? ? ? ? 49 8B 44 24",
+          "line": 352,
+          "path": [
+            "CCSPlayer_MovementServices::CheckParameters",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        350,
+        351,
+        352
+      ],
+      "name": "CCSPlayer_MovementServices::CheckParameters",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 48 89 58 ? 4C 89 40 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 68 ?",
+          "before": "48 8B C4 48 89 58 ? 4C 89 40 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 68",
+          "line": 314,
+          "path": [
+            "CCSPlayer_MovementServices::CheckVelocity",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 49 89 F7 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 48 8B 7F ?",
+          "before": "55 48 89 E5 41 57 49 89 F7 41 56 41 55 41 54 53 48 89 FB 48 83 EC 68",
+          "line": 315,
+          "path": [
+            "CCSPlayer_MovementServices::CheckVelocity",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        313,
+        314,
+        315
+      ],
+      "name": "CCSPlayer_MovementServices::CheckVelocity",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 48 89 58 ? 55 48 8D 6C 24 ?",
+          "before": "48 8B C4 48 89 58 ? 55 48 8D 6C 24",
+          "line": 326,
+          "path": [
+            "CCSPlayer_MovementServices::CheckWater",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 48 8B 7F ?",
+          "before": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 48 81 EC 70 01 00 00",
+          "line": 327,
+          "path": [
+            "CCSPlayer_MovementServices::CheckWater",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        325,
+        326,
+        327
+      ],
+      "name": "CCSPlayer_MovementServices::CheckWater",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 55 53 56 41 54 41 56 48 8D A8 ? ? ? ?",
+          "before": "48 8B C4 55 53 56 41 54 41 56 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 80 B9",
+          "line": 308,
+          "path": [
+            "CCSPlayer_MovementServices::Duck",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 89 F3 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? F3 0F 10 05 ? ? ? ?",
+          "before": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 89 F3 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? F3 0F 10 05",
+          "line": 309,
+          "path": [
+            "CCSPlayer_MovementServices::Duck",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        307,
+        308,
+        309
+      ],
+      "name": "CCSPlayer_MovementServices::Duck",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 57 48 81 EC ? ? ? ? 48 83 79 ? ?",
+          "before": "48 89 5C 24 ? 57 48 81 EC A0 00 00 00 48 83 79",
+          "line": 244,
+          "path": [
+            "CCSPlayer_MovementServices::Friction",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 47 ?",
+          "before": "55 48 89 E5 41 54 49 89 FC 53 48 89 F3 48 83 EC ? 48 8B 47",
+          "line": 245,
+          "path": [
+            "CCSPlayer_MovementServices::Friction",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        243,
+        244,
+        245
+      ],
+      "name": "CCSPlayer_MovementServices::Friction",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 57 48 83 EC ? 48 8B FA 48 8B D9 45 84 C0 75 ?",
+          "before": "48 89 5C 24 ? 57 48 83 EC ? 48 8B FA 48 8B D9 45 84 C0 75",
+          "line": 339,
+          "path": [
+            "CCSPlayer_MovementServices::FullWalkMove",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        338,
+        339,
+        340
+      ],
+      "name": "CCSPlayer_MovementServices::FullWalkMove",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 53 41 54 41 55 41 57",
+          "before": "40 53 41 54 41 55 41 57 48 81 EC ? ? ? ? F2 41 0F 10 01",
+          "line": 256,
+          "path": [
+            "CCSPlayer_MovementServices::GroundAccelerate",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        255,
+        256,
+        257
+      ],
+      "name": "CCSPlayer_MovementServices::GroundAccelerate",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        295,
+        296,
+        297
+      ],
+      "name": "CCSPlayer_MovementServices::LadderMove",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 48 89 58 ? 48 89 68 ? 56 57 41 54 48 81 EC ? ? ? ?",
+          "before": "48 8B C4 48 89 58 ? 48 89 68 ? 56 57 41 54 48 81 EC D0 00 00 00",
+          "line": 333,
+          "path": [
+            "CCSPlayer_MovementServices::MoveInit",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 89 F7 48 83 EC ? 48 C7 86 ? ? ? ? ? ? ? ?",
+          "before": "55 48 89 E5 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 89 F7 48 83 EC 70",
+          "line": 334,
+          "path": [
+            "CCSPlayer_MovementServices::MoveInit",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        332,
+        333,
+        334
+      ],
+      "name": "CCSPlayer_MovementServices::MoveInit",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 55 53 56 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 71 ?",
+          "before": "40 55 53 56 57 48 8D 6C 24 ? 48 81 EC A8 00 00 00 48 8B 71",
+          "line": 275,
+          "path": [
+            "CCSPlayer_MovementServices::OnJumpLegacy",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC ? ? ? ? 4C 8B 6F ? 49 8B 7D ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 F4 53 48 89 FB 48 81 EC 88 00 00 00 4C 8B 6F",
+          "line": 276,
+          "path": [
+            "CCSPlayer_MovementServices::OnJumpLegacy",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        274,
+        275,
+        276
+      ],
+      "name": "CCSPlayer_MovementServices::OnJumpLegacy",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 55 56 57 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B 71 ?",
+          "before": "40 55 56 57 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B 71",
+          "line": 269,
+          "path": [
+            "CCSPlayer_MovementServices::OnJumpModern",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 81 EC ? ? ? ? 4C 8B 77 ? 4D 8B 66 ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 53 48 89 FB 48 81 EC ? ? ? ? 4C 8B 77 ? 4D 8B 66",
+          "line": 270,
+          "path": [
+            "CCSPlayer_MovementServices::OnJumpModern",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        268,
+        269,
+        270
+      ],
+      "name": "CCSPlayer_MovementServices::OnJumpModern",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 57 48 83 EC ? 48 83 79 ? ? 48 8B FA 48 8B D9 75 ? E8 ? ? ? ? 48 8B 4B ? 48 89 74 24 ?",
+          "before": "48 89 5C 24 ? 57 48 83 EC 50 48 83 79",
+          "line": 357,
+          "path": [
+            "CCSPlayer_MovementServices::PlayerMove",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        356,
+        357,
+        358
+      ],
+      "name": "CCSPlayer_MovementServices::PlayerMove",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        362,
+        363,
+        364
+      ],
+      "name": "CCSPlayer_MovementServices::ProcessMovement",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB 48 83 EC ? E8 ? ? ? ? 48 8B 43 ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 49 89 F5 41 54 49 89 D4 53 48 89 FB 48 83 EC ? E8 ? ? ? ? 48 8B 43",
+          "line": 370,
+          "path": [
+            "CCSPlayer_MovementServices::SetupMove",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        368,
+        369,
+        370
+      ],
+      "name": "CCSPlayer_MovementServices::SetupMove",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 4C 89 48 ? 4C 89 40 ? 48 89 50 ? 48 89 48 ? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 0F 29 70 ?",
+          "before": "48 8B C4 4C 89 48 ? 4C 89 40 ? 48 89 50 ? 48 89 48 ? 55 53 56 57 41 54 41 55 41 56 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 0F 29 70",
+          "line": 232,
+          "path": [
+            "CCSPlayer_MovementServices::TryPlayerMove",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        231,
+        232,
+        233
+      ],
+      "name": "CCSPlayer_MovementServices::TryPlayerMove",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D BD ? ? ? ? 41 55 49 89 F5",
+          "before": "48 B8 00 00 00 00 00 00 80 3F 55 66 0F EF C0 48 89 E5 41 57 41 56 4C 8D BD ? ? ? ? 41 55 49 89 F5",
+          "line": 239,
+          "path": [
+            "CCSPlayer_MovementServices::WalkMove",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        237,
+        238,
+        239
+      ],
+      "name": "CCSPlayer_MovementServices::WalkMove",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 48 89 58 ? 48 89 70 ? 48 89 78 ? 4C 89 60 ? 55 41 56 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 0F 29 70 ? 48 8B F1",
+          "before": "48 8B C4 48 89 58 ? 48 89 70 ? 48 89 78 ? 4C 89 60 ? 55 41 56 41 57 48 8D A8 ? ? ? ? 48 81 EC 80 02 00 00",
+          "line": 320,
+          "path": [
+            "CCSPlayer_MovementServices::WaterMove",
+            "windows"
+          ]
+        },
+        {
+          "after": "48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56 41 55 4C 8D AD ? ? ? ? 41 54 49 89 FC 4C 89 EF 53 48 89 F3",
+          "before": "48 B8 ? ? ? ? ? ? ? ? 55 66 0F EF C0 48 89 E5 41 57 41 56 41 55 4C 8D AD ? ? ? ? 41 54 49 89 FC 4C 89 EF 53 48 89 F3 48 81 EC ? ? ? ? 48 89 85 ? ? ? ? 48 8B 05 ? ? ? ? 0F 29 85 ? ? ? ? 48 C7 85 ? ? ? ? ? ? ? ? 48 C7 45 ? ? ? ? ? 48 89 85 ? ? ? ? 48 B8 ? ? ? ? ? ? ? ? 48 89 45 ? E8 ? ? ? ? 48 8D 8D",
+          "line": 321,
+          "path": [
+            "CCSPlayer_MovementServices::WaterMove",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        319,
+        320,
+        321
+      ],
+      "name": "CCSPlayer_MovementServices::WaterMove",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 74 24 ? 57 41 54 41 57 48 83 EC ? 45 0F B6 F8",
+          "before": "48 89 74 24 20 57 41 54 41 57 48 83 EC 40 45",
+          "line": 214,
+          "path": [
+            "CCSPlayer_WeaponServices::DropWeapon",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        213,
+        214,
+        215
+      ],
+      "name": "CCSPlayer_WeaponServices::DropWeapon",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 44 88 48 ? 44 89 40 ? 48 89 50 ? 53",
+          "before": "48 8B C4 44 88 48 20 44 89 40 18 48 89 50 10 53",
+          "line": 125,
+          "path": [
+            "CCSPlayerController::ProcessUserCmd",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 89 4D ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? 89 4D",
+          "line": 126,
+          "path": [
+            "CCSPlayerController::ProcessUserCmd",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        124,
+        125,
+        126
+      ],
+      "name": "CCSPlayerController::ProcessUserCmd",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        16,
+        17,
+        18
+      ],
+      "name": "CCSPlayerController::SwitchTeam",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 74 24 ? 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 8B F9 80 78 ? ?",
+          "before": "48 89 74 24 ? 57 48 83 EC 30 48 8B 05 ? ? ? ? 48 8B F9",
+          "line": 345,
+          "path": [
+            "CCSPlayerPawn::CanMove",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 55 41 54 53 48 83 EC ? 48 8B 05 ? ? ? ? 80 78 ? ? 74 ?",
+          "before": "55 48 89 E5 41 55 41 54 53 48 83 EC 08 48 8B 05 ? ? ? ? 80 78 ? ? 74",
+          "line": 346,
+          "path": [
+            "CCSPlayerPawn::CanMove",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        344,
+        345,
+        346
+      ],
+      "name": "CCSPlayerPawn::CanMove",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 55 53 56 57 41 54 48 8B EC 48 83 EC ? 4C 89 AC 24 ? ? ? ?",
+          "before": "40 55 53 56 57 41 54 48 8B EC 48 83 EC 50 4C 89 AC 24",
+          "line": 83,
+          "path": [
+            "CCSPlayerPawn::PostThink",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC ? E8 ? ? ? ? 80 BB ? ? ? ? ? 74 ? C6 83 ? ? ? ? ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 54 53 48 89 FB 48 83 EC 18 E8 ? ? ? ? 80 BB ? ? ? ? ? 74 ? C6 83",
+          "line": 84,
+          "path": [
+            "CCSPlayerPawn::PostThink",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        82,
+        83,
+        84
+      ],
+      "name": "CCSPlayerPawn::PostThink",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "40 55 56 48 83 EC ? 48 89 5C 24 ? 48 8B D9",
+          "before": "40 55 56 48 83 EC 58 48 89 5C 24",
+          "line": 202,
+          "path": [
+            "CDecoyProjectile::EmitGrenade",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        201,
+        202,
+        203
+      ],
+      "name": "CDecoyProjectile::EmitGrenade",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 54 24 ? 48 89 4C 24 ? 55 53 56 57 41 55 41 56 41 57 48 8D 6C 24 ?",
+          "before": "48 89 54 24 ? 48 89 4C 24 ? 55 53 56 57 41 55 41 56 41 57 48 8D 6C 24",
+          "line": 11,
+          "path": [
+            "CEntityIdentity::AcceptInput",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        10,
+        11,
+        12
+      ],
+      "name": "CEntityIdentity::AcceptInput",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 49 89 FF 41 56 48 8D BD ? ? ? ? 41 55 4C 8D AD ? ? ? ?",
+          "before": "55 48 89 E5 41 57 49 89 FF 41 56 48 8D BD ? ? ? ? 41 55 4C 8D AD",
+          "line": 6,
+          "path": [
+            "CEntityInstance::AcceptInput",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6
+      ],
+      "name": "CEntityInstance::AcceptInput",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 49 89 D4 53 48 89 F3 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ?",
+          "before": "55 48 89 E5 41 57 49 89 FF 41 56 41 55 41 54 49 89 D4 53 48 89 F3 48 81 EC ? ? ? ? 48 8D 05",
+          "line": 71,
+          "path": [
+            "CEntityIOOutput::FireOutputInternal",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        69,
+        70,
+        71
+      ],
+      "name": "CEntityIOOutput::FireOutputInternal",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 55 49 89 CD 41 54 49 89 FC 53 BB ? ? ? ?",
+          "before": "55 48 89 E5 41 55 49 89 CD 41 54 49 89 FC 53 BB",
+          "line": 138,
+          "path": [
+            "CEntitySystem::AddEntityIOEvent",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        136,
+        137,
+        138
+      ],
+      "name": "CEntitySystem::AddEntityIOEvent",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B 6C 24 ? 49 8B F8",
+          "before": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B 6C 24 ? 49 8B F8 4C 8B C2 48 8B D9",
+          "line": 190,
+          "path": [
+            "CFlashbangProjectile::EmitGrenade",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        189,
+        190,
+        191
+      ],
+      "name": "CFlashbangProjectile::EmitGrenade",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 81 EC ? ? ? ? 48 8D 05 ? ? ? ? F3 0F 11 85 ? ? ? ? 89 B5 ? ? ? ?",
+          "before": "55 48 89 E5 41 57 41 56 49 89 FE 41 55 41 54 53 48 81 EC C8 00 00 00 48 8D 05",
+          "line": 90,
+          "path": [
+            "CGameRules::TerminateRound",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        88,
+        89,
+        90
+      ],
+      "name": "CGameRules::TerminateRound",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B AC 24 ? ? ? ? 49 8B F8",
+          "before": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC 50 48 8B AC 24 ? ? ? ? 49 8B F8",
+          "line": 196,
+          "path": [
+            "CHEGrenadeProjectile::EmitGrenade",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        195,
+        196,
+        197
+      ],
+      "name": "CHEGrenadeProjectile::EmitGrenade",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "4C 89 4C 24 ? 44 89 44 24 ? 89 54 24 ?",
+          "before": "4C 89 4C 24 ? 44 89 44 24 ? 89 54 24 ? 55",
+          "line": 157,
+          "path": [
+            "CLoggingSystem::LogDirect",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        156,
+        157,
+        158
+      ],
+      "name": "CLoggingSystem::LogDirect",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        162,
+        163,
+        164
+      ],
+      "name": "Cmd_ExecuteCommand",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "48 8B C4 48 89 58 ? 48 89 70 ? 48 89 78 ? 4C 89 40 ? 55 41 54 41 55 41 56 41 57 48 8D 6C 24 ?",
+          "before": "48 8B C4 48 89 58 ? 48 89 70 ? 48 89 78 ? 4C 89 40 ? 55 41 54 41 55 41 56 41 57 48 8D 6C 24",
+          "line": 208,
+          "path": [
+            "CMolotovProjectile::EmitGrenade",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 48 8D 05 ? ? ? ? 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 81 EC ? ? ? ? 4C 8D 35 ? ? ? ?",
+          "before": "55 48 8D 05 ? ? ? ? 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 81 EC ? ? ? ? 4C 8D 35",
+          "line": 209,
+          "path": [
+            "CMolotovProjectile::EmitGrenade",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        207,
+        208,
+        209
+      ],
+      "name": "CMolotovProjectile::EmitGrenade",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 48 8B B4 24 ? ? ? ?",
+          "before": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC 50 48 8B B4 24",
+          "line": 184,
+          "path": [
+            "CSmokeGrenadeProjectile::EmitGrenade",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        183,
+        184,
+        185
+      ],
+      "name": "CSmokeGrenadeProjectile::EmitGrenade",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "41 57 48 83 EC ? 48 83 3D ? ? ? ? ?",
+          "before": "4C 8B 15 ? ? ? ? 33 C0 49 63 4A",
+          "line": 131,
+          "path": [
+            "CSource2Server::g_GameEventManager",
+            "windows"
+          ]
+        },
+        {
+          "after": "48 8D 05 ? ? ? ? 55 48 89 E5 41 56 41 55 49 89 FD 41 54 53",
+          "before": "48 8D 05 ? ? ? ? 49 89 F4 31 C9",
+          "line": 132,
+          "path": [
+            "CSource2Server::g_GameEventManager",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        130,
+        131,
+        132
+      ],
+      "name": "CSource2Server::g_GameEventManager",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 45 33 F6 48 C7 41 ? ? ? ? ? 48 8D 05 ? ? ? ? 4C 89 71 ?",
+          "before": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC 60 45 33 F6",
+          "line": 64,
+          "path": [
+            "CTakeDamageInfo::Constructor",
+            "windows"
+          ]
+        },
+        {
+          "after": "49 BB ? ? ? ? ? ? ? ? 55 48 89 E5",
+          "before": "49 BB 00 00 00 00 00 00 80 3F 55",
+          "line": 65,
+          "path": [
+            "CTakeDamageInfo::Constructor",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        63,
+        64,
+        65
+      ],
+      "name": "CTakeDamageInfo::Constructor",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 41 89 CD 41 54 53 48 81 EC ? ? ? ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 41 89 CD 41 54 53 48 81 EC E8 00 00 00",
+          "line": 179,
+          "path": [
+            "DispatchParticleEffect",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        177,
+        178,
+        179
+      ],
+      "name": "DispatchParticleEffect",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        171,
+        172,
+        173
+      ],
+      "name": "GetWeaponCSDataFromKey",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        118,
+        119,
+        120
+      ],
+      "name": "IGameSystem::InitAllSystems->pFirst",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        150,
+        151,
+        152
+      ],
+      "name": "INetworkMessageProcessingPreFilter::FilterMessage",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "75 ? 48 8B 03 48 8B CB FF 90 ? ? ? ? 84 C0 74 ? 48 8D 05 ? ? ? ?",
+          "before": "75 ? 48 8B 03 48 8B CB FF 90 ? ? ? ? 84 C0 74 ? 48 8D 05",
+          "line": 37,
+          "path": [
+            "SetSchemaHammerUniqueId",
+            "windows"
+          ]
+        },
+        {
+          "after": "75 ? 48 8B 03 48 89 DF FF 90 ? ? ? ? 84 C0 74 ? 48 8D 05 ? ? ? ?",
+          "before": "75 ? 48 8B 03 48 89 DF FF 90 ? ? ? ? 84 C0 74 ? 48 8D 05",
+          "line": 38,
+          "path": [
+            "SetSchemaHammerUniqueId",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        36,
+        37,
+        38
+      ],
+      "name": "SetSchemaHammerUniqueId",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 83 EC ? C6 44 24 ? ? 4C 8B C1",
+          "before": "48 83 EC 48 C6 44 24 30 00",
+          "line": 23,
+          "path": [
+            "UTIL::CreateEntityByName",
+            "windows"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        22,
+        23,
+        24
+      ],
+      "name": "UTIL::CreateEntityByName",
+      "updated": true
+    },
+    {
+      "changes": [
+        {
+          "after": "48 89 FE 48 85 FF",
+          "before": "48 89 FE 48 85 FF 74 ? 48 8D 05 ? ? ? ? 48",
+          "line": 51,
+          "path": [
+            "UTIL::Remove",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        49,
+        50,
+        51
+      ],
+      "name": "UTIL::Remove",
+      "updated": true
+    }
+  ],
+  "file": "swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc",
+  "gamever": "14193",
+  "schema_version": 2,
+  "summary": {
+    "covered": 66,
+    "total": 66,
+    "updated": 56
+  }
+}

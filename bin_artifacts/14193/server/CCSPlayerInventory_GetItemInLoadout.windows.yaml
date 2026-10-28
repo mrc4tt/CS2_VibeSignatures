@@ -1,0 +1,8 @@
+func_name: CCSPlayerInventory_GetItemInLoadout
+func_va: '0x180a3af10'
+func_rva: '0xa3af10'
+func_size: '0x224'
+func_sig: 48 8B C4 56 48 83 EC ?? 49 63 F0
+vtable_name: CCSPlayerInventory
+vfunc_offset: '0x40'
+vfunc_index: 8
