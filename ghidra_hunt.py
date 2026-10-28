@@ -57,7 +57,7 @@ def cmd_facts(args):
     import ghidra_backend
     binary = binary_for(args)
     artifact_dir = REPO / args.artifactdir / args.gamever / args.module
-    out = Path(args.out) if args.out else REPO / "baseline_facts" / args.gamever / f"{args.module}.{args.platform}.json"
+    out = Path(args.out) if args.out else REPO / args.facts_dir / args.gamever / f"{args.module}.{args.platform}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     with open_program(args, binary) as flat:
         backend = ghidra_backend.GhidraBackend(flat, str(binary))
@@ -71,14 +71,13 @@ def cmd_facts(args):
 def cmd_hunt(args):
     import ghidra_backend
     binary = binary_for(args)
-    baseline, facts = hunt_core.load_baseline_facts(str(REPO), args.gamever, args.module, args.platform)
+    baseline, facts = hunt_core.load_baseline_facts(str(REPO), args.gamever, args.module, args.platform, args.facts_dir)
     if not facts:
-        raise SystemExit(f"no baseline facts: run  ghidra_hunt.py facts -gamever <prev> -module {args.module} -platform {args.platform}")
+        raise SystemExit(f"no baseline facts in {args.facts_dir}/: run  ghidra_hunt.py facts -gamever <prev> -module {args.module} -platform {args.platform}")
     out_dir = Path(args.outdir) if args.outdir else REPO / "auto_hunt_out" / args.gamever / args.module
     out_dir.mkdir(parents=True, exist_ok=True)
-    report_dir = REPO / "auto_hunt_reports" / args.gamever
-    report_dir.mkdir(parents=True, exist_ok=True)
-    report_path = report_dir / f"{args.module}.{args.platform}.ghidra.json"
+    report_path = Path(args.report) if args.report else REPO / "auto_hunt_reports" / args.gamever / f"{args.module}.{args.platform}.ghidra.json"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
     with open_program(args, binary) as flat:
         backend = ghidra_backend.GhidraBackend(flat, str(binary))
         hunter = hunt_core.Hunter(backend, args.gamever, args.module, args.platform, facts, str(out_dir), dry_run=args.dry_run, min_score=args.min_score)
@@ -119,9 +118,12 @@ def main():
         p.add_argument("-platform", required=True, choices=("linux", "windows"))
         p.add_argument("-bindir", default="bin"); p.add_argument("-artifactdir", default="bin_artifacts")
         p.add_argument("-project_location"); p.add_argument("-project_name"); p.add_argument("-program_name")
+        # ghidra_verify.py keeps Ghidra's facts in ghidra_facts/: IDA's hunt reads baseline_facts/.
+        p.add_argument("-facts_dir", default="baseline_facts")
     sub.choices["facts"].add_argument("-out")
     h = sub.choices["hunt"]
     h.add_argument("-symbols"); h.add_argument("-outdir"); h.add_argument("-dry_run", action="store_true"); h.add_argument("-min_score", type=float, default=hunt_core.MIN_SCORE)
+    h.add_argument("-report")
     e = sub.choices["emit"]
     e.add_argument("-symbol", required=True); e.add_argument("-kind", required=True, choices=("func", "vfunc", "structmember", "gv", "patch"))
     e.add_argument("-ea"); e.add_argument("-class", dest="cls"); e.add_argument("-index", type=int); e.add_argument("-vtable_name")

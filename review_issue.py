@@ -236,11 +236,19 @@ def render_body(gamever, platform, rows):
     groups = {}
     for row in rows:
         groups.setdefault((row["module"], row["platform"]), []).append(row)
+    # A second opinion from ghidra_verify.py, when it ran: a hint, never an artifact.
+    from ghidra_verify import load_results
+    ghidra = load_results(gamever)
     for (module, platform), items in sorted(groups.items()):
         lines += [f"### {module} - {len(items)}", "",
                   "| Symbol | Kind | Best candidate | Why the run stopped |", "|---|---|---|---|"]
         for row in items:
             candidate = f"`{row['candidate']}`" + (f" ({row['score']})" if row["score"] else "") if row["candidate"] else "-"
+            second = ghidra.get((module, platform, row["symbol"]))
+            if second and second["verdict"] in ("agree", "same-guess"):
+                candidate += f"<br>Ghidra: {second['verdict']}"
+            elif second and second["ghidra"] and second["verdict"] != "open":
+                candidate += f"<br>Ghidra: {second['verdict']} `{second['ghidra']}`"
             why = (", ".join(row["flags"]) + "; " if row["flags"] else "") + row["why"]
             why = why.replace("|", "\\|")[:220]
             lines.append(f"| `{row['symbol']}` | {row['category']} | {candidate} | {why} |")

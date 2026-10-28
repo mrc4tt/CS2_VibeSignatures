@@ -87,3 +87,5 @@ cpp_tests/protos
 tools/gdc/obj/
 tools/gdc/out/
 tools/gdc.Tests/obj/
+ghidra_facts/
+ghidra_verify/

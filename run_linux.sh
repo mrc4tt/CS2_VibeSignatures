@@ -2,7 +2,8 @@
 set -euo pipefail
 
 echo "==> Syncing environment with uv..."
-uv sync
+# --extra ghidra: plain `uv sync` would uninstall pyghidra, which ghidra_verify.py needs.
+uv sync --extra ghidra
 
 # 1. Fetch latest version using curl (bypasses Python SSL cert issues)
 fetch_version() {
@@ -298,5 +299,20 @@ uv run gamesymbol_snapshot.py pack -gamever "$NEW_VER" -snapshot "gamesymbols/${
 
 echo "==> Publishing the review issue (symbols left for a person)..."
 uv run review_issue.py publish -gamever "$NEW_VER" -platform linux || echo "    review issue not published (gh offline?) - run: uv run review_issue.py publish -gamever $NEW_VER"
+
+# Ghidra's second opinion on the symbols just published (ghidra_verify.py): detached, so
+# the ~15 min of a first Ghidra analysis does not hold up autopilot's gamedata and deploy.
+# It only writes ghidra_verify/ and then refreshes the issue with its verdicts; it never
+# writes an artifact. CS2VIBE_GHIDRA_VERIFY=0 skips it; journalctl -u <unit> shows it.
+if [ "${CS2VIBE_GHIDRA_VERIFY:-1}" = "1" ] && command -v systemd-run >/dev/null \
+   && [ -n "$(uv run python -c 'import review_issue as R, sys; print(len(R.read_todo(sys.argv[1], platform=sys.argv[2])) or "")' "$NEW_VER" linux 2>/dev/null)" ]; then
+    unit="cs2vibe-ghidra-verify-${NEW_VER}-linux"
+    echo "==> Ghidra second opinion on open symbols (detached: $unit)..."
+    systemctl reset-failed "$unit" 2>/dev/null || true
+    systemd-run --quiet --collect --unit "$unit" -p WorkingDirectory="$PWD" -p Nice=10 -p RuntimeMaxSec=3h \
+        --setenv=HOME="$HOME" --setenv=PATH="$PATH" \
+        bash -c 'uv run --extra ghidra ghidra_verify.py -gamever "$1" -oldgamever "$2" -platform linux; uv run review_issue.py publish -gamever "$1" -platform linux' _ "$NEW_VER" "$OLD_VER" \
+        || echo "    ghidra_verify not started (already running?) - the review issue goes without it"
+fi
 
 echo "==> Analysis complete for version $NEW_VER!"

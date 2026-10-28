@@ -816,8 +816,8 @@ def facts_path(repo, gamever, module, platform):
     return os.path.join(repo, "baseline_facts", gamever, f"{module}.{platform}.json")
 
 
-def load_baseline_facts(repo, gamever, module, platform):
-    root = os.path.join(repo, "baseline_facts")
+def load_baseline_facts(repo, gamever, module, platform, facts_dir="baseline_facts"):
+    root = os.path.join(repo, facts_dir)
     if not os.path.isdir(root):
         return None, None
     for version in sorted((d for d in os.listdir(root) if version_key(d) < version_key(gamever)), key=version_key, reverse=True):
