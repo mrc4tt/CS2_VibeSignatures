@@ -15237,6 +15237,7 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15262,6 +15263,7 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15309,8 +15311,10 @@ cpp_tests:
       - hl2sdk_cs2/public/networksystem/inetworkmessages.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
+      - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15335,8 +15339,10 @@ cpp_tests:
       - hl2sdk_cs2/public/iloopmode.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
+      - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15360,8 +15366,10 @@ cpp_tests:
       - hl2sdk_cs2/public/iloopmode.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
+      - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15388,6 +15396,7 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15414,6 +15423,7 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15441,6 +15451,7 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15484,8 +15495,10 @@ cpp_tests:
       - hl2sdk_cs2/public/iserver.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
+      - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15510,8 +15523,10 @@ cpp_tests:
       - hl2sdk_cs2/public/iserver.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
+      - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15538,6 +15553,7 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15566,6 +15582,7 @@ cpp_tests:
       - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15590,8 +15607,10 @@ cpp_tests:
       - hl2sdk_cs2/public/iserver.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
+      - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15614,8 +15633,10 @@ cpp_tests:
       - hl2sdk_cs2/public/tier0/icommandline.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
+      - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
@@ -15639,8 +15660,10 @@ cpp_tests:
       - hl2sdk_cs2/public/engine/IEngineService.h  # Used by the fix-cppheaders SKILL
     target: x86_64-pc-windows-msvc
     include_directories:
+      - cpp_tests/stubs
       - hl2sdk_cs2/game/shared
       - hl2sdk_cs2/public
+      - hl2sdk_cs2/common
       - hl2sdk_cs2/public/tier0
       - hl2sdk_cs2/public/tier1
       - hl2sdk_cs2/public/mathlib
