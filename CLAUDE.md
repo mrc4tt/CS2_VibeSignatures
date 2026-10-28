@@ -627,12 +627,14 @@ in `~/customGIT/CleanerCS2` (mrc4tt/CleanerCS2), which xmake packs to that path.
 no `# Seed source:` line on purpose - that file is our own output, so syncing from it is circular.
 
 `multiaddonmanager` is like `stripper` in that the plugin reads no gamedata: MultiAddonManager
-(mrc4tt fork) keeps three signatures and two offsets as `constexpr` literals in
-`src/multiaddonmanager.cpp`. Unlike stripper it is deployed anyway: `deploy_local_plugins.sh` runs
+(mrc4tt fork) keeps three signatures as `constexpr` literals in
+`src/multiaddonmanager.cpp` (its two offsets went in b4353a1: `m_szAddonName` and `m_Clients` are
+read through the hl2sdk header now, so `patch_mam_source.OFFSETS` is empty and a missing literal no
+longer fails the deploy - it did on 14193). Unlike stripper it is deployed anyway: `deploy_local_plugins.sh` runs
 `patch_mam_source.py`, which rewrites only those literals in `~/customGIT/MultiAddonManager` from
 the generated file, then commits and pushes that one path; `check_deploy_drift.py` compares it in
-`source` mode, literal by literal. An offset that differs per platform is refused (it is one
-`constexpr int` for both), and fails the deploy. The plugin still has to be rebuilt for a new value
+`source` mode, literal by literal. Were an offset literal to come back, one that differs per
+platform is refused (it is one `constexpr int` for both) and fails the deploy. The plugin still has to be rebuilt for a new value
 to reach a server. Its symbols are fork-owned:
 `CHostStateMgr_StartNewRequest` and `CNetworkGameServerBase_ReplyConnection` (engine,
 string-anchored), `ScriptGetAddon` (server, relocation only - no string of its own; the agent

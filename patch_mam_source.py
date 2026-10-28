@@ -33,10 +33,13 @@ SIGNATURES = {
     "g_ReplyConnection_Sig": "CNetworkGameServer::ReplyConnection",
     "g_ScriptGetAddon_Sig": "ScriptGetAddon",
 }
-OFFSETS = {
-    "g_iServerAddonsOffset": "CNetworkGameServer::ServerAddons",
-    "g_iClientListOffset": "CNetworkGameServer::ClientList",
-}
+# None since the plugin's b4353a1 (2026-10-26, upstream d2cc398): the server addon
+# string and the client list are read through the SDK's
+# CNetworkGameServerBase::m_szAddonName and m_Clients instead of the 376/616 literals,
+# so they follow the hl2sdk header (sdk_abi_check.sh), not this file. The generator
+# still publishes CNetworkGameServer::ServerAddons/ClientList; requiring the literals
+# failed the 14193 deploy with "expected one 'constexpr int g_iServerAddonsOffset'".
+OFFSETS = {}
 
 
 class PatchError(Exception):

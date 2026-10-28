@@ -24,8 +24,6 @@ constexpr const char *g_ScriptGetAddon_Sig = "55 48 89 E5 41 55";
 
 
 // Offsets
-constexpr int g_iServerAddonsOffset = 376;
-constexpr int g_iClientListOffset = 616;
 """
 
 GAMEDATA = {
@@ -45,26 +43,26 @@ class PatchMamSource(unittest.TestCase):
         # trailing wildcards on ScriptGetAddon are not a difference
         self.assertEqual(
             [(var, platform) for var, platform, _, _ in diffs],
-            [("g_ReplyConnection_Sig", "linux"), ("g_iClientListOffset", None)],
+            [("g_ReplyConnection_Sig", "linux")],
         )
 
     def test_patch_touches_only_the_literals_in_the_right_block(self):
         patched = P.patch(GAMEDATA, SOURCE)
         expected = SOURCE.replace(
             '"55 B9 ? ? ? ? 41 B8"', '"55 B9 ? ? ? ? 41 B8 ? ? ? ? 48 89 E5"'
-        ).replace("g_iClientListOffset = 616", "g_iClientListOffset = 624")
+        )
         self.assertEqual(patched, expected)
         self.assertEqual(P.differences(GAMEDATA, patched), [])
 
-    def test_offsets_that_differ_per_platform_are_refused(self):
-        gamedata = copy.deepcopy(GAMEDATA)
-        gamedata["CNetworkGameServer::ClientList"]["offsets"]["windows"] = 600
-        with self.assertRaises(P.PatchError):
-            P.patch(gamedata, SOURCE)
+    def test_offsets_are_not_required_since_the_sdk_reads_them(self):
+        # b4353a1 dropped the constexpr offsets; their absence must not fail the deploy
+        self.assertNotIn("constexpr int", SOURCE)
+        self.assertEqual(P.OFFSETS, {})
+        P.patch(GAMEDATA, SOURCE)
 
     def test_missing_literal_is_refused(self):
         with self.assertRaises(P.PatchError):
-            P.patch(GAMEDATA, SOURCE.replace("g_iServerAddonsOffset", "g_iRenamedOffset"))
+            P.patch(GAMEDATA, SOURCE.replace("g_ScriptGetAddon_Sig", "g_RenamedSig"))
 
     def test_deploy_script_patches_and_pushes_the_source(self):
         import os
