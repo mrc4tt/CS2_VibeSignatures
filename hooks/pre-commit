@@ -22,7 +22,11 @@ fi
 # committed without refreshing it turns the check-datasets CI job red ("history.json
 # is stale"). Refresh it here and stage it with the commit, so the CI check only ever
 # catches a commit that bypassed this hook. -history-only needs no game binaries.
-if git diff --cached --name-only -- 'gamedata/' | grep -qv '^gamedata/history\.json$'; then
+# Its inputs are wider than gamedata/: the symbol index comes from gamesymbols/<build>.yaml
+# and plugin-owned keys from gamedata-generators/, so a re-pack alone (2d6706c55, retiring
+# the client module) also makes it stale.
+if git diff --cached --name-only -- 'gamedata/' 'gamesymbols/' 'gamedata-generators/' \
+        'publish_site_data.py' 'gamedata_utils.py' | grep -qv '^gamedata/history\.json$'; then
     if command -v uv >/dev/null 2>&1; then
         run_py() { uv run --quiet python "$@"; }
     else
