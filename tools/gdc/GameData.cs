@@ -5,7 +5,10 @@ using System.Text.RegularExpressions;
 
 namespace Gdc;
 
-internal sealed record Entry(string Name, string Kind, string Module, IReadOnlyDictionary<string, object?> Values);
+/// <param name="LibraryGiven">false when the file names no library and Module is the "server"
+/// default: the plugin hard-codes the module (cs2-menus' IsHearingClient is in engine2).</param>
+internal sealed record Entry(string Name, string Kind, string Module, IReadOnlyDictionary<string, object?> Values,
+    bool LibraryGiven = true);
 
 /// <summary>
 /// A plugin's gamedata file read into entries, by the same rules as
@@ -90,15 +93,15 @@ internal static partial class GameData
             if (hint.Contains("patch"))
                 kind = "patch";
 
-            var library = Truthy(node.GetValueOrDefault("library")) ?? Truthy(node.GetValueOrDefault("Library"))
-                ?? Truthy(node.GetValueOrDefault("lib")) ?? "server";
-            var module = LibraryToModule.GetValueOrDefault(library, "server");
+            var named = Truthy(node.GetValueOrDefault("library")) ?? Truthy(node.GetValueOrDefault("Library"))
+                ?? Truthy(node.GetValueOrDefault("lib"));
+            var module = LibraryToModule.GetValueOrDefault(named ?? "server", "server");
 
             var converted = new Dictionary<string, object?>();
             foreach (var (platform, value) in values)
                 converted[platform] = kind == "signature" && value is string text && text.Contains("\\x")
                     ? KeyValueWildcards(text) : value;
-            yield return new Entry(name, kind, module, converted);
+            yield return new Entry(name, kind, module, converted, named is not null);
             yield break;
         }
 
@@ -179,6 +182,9 @@ internal static partial class GameData
         string? pending = null;
         foreach (Match token in KeyValueToken().Matches(text))
         {
+            // a // comment is its own alternative, so quoted words inside it are no keys
+            if (!token.Groups[1].Success && !token.Groups[2].Success)
+                continue;
             var brace = token.Groups[2].Value;
             if (brace == "{")
             {
@@ -214,7 +220,7 @@ internal static partial class GameData
     [GeneratedRegex(@"\A\s*\d+\s*\z")]
     private static partial Regex AllDigits();
 
-    [GeneratedRegex(@"""((?:[^""\\]|\\.)*)""|([{}])")]
+    [GeneratedRegex(@"""((?:[^""\\]|\\.)*)""|([{}])|//[^\n]*")]
     private static partial Regex KeyValueToken();
 
     [GeneratedRegex(@"^\s*[A-Za-z_][A-Za-z0-9_]*\s*=", RegexOptions.Multiline)]

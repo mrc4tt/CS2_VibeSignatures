@@ -73,6 +73,8 @@ def main():
                     ours = {"status": "not-shipped"}
                 else:
                     ours = VPG.check_signature(binaries, row["module"], platform, value)
+                    if not entry.get("library") and ours.get("status") == "broken":
+                        ours = _other_module(binaries, row["module"], platform, value) or ours
                 compared += 1
                 if verdict(ours) != verdict(theirs):
                     disagreements.append(f"{path}: {row['name']}.{platform} reference "
@@ -84,6 +86,20 @@ def main():
     for line in disagreements:
         print(line)
     return 1 if disagreements else 0
+
+
+def _other_module(binaries, module, platform, value):
+    """A file with no library leaves the module to the plugin (cs2-menus hard-codes
+    libengine2 for IsHearingClient): the one other module the pattern resolves in, the
+    rule gdc's Scanner.Check applies. None when it resolves in none or in several."""
+    names = VPG.BIN_LINUX if platform == "linux" else VPG.BIN_WIN
+    found = [(other, info) for other in names if other != module
+             for info in [VPG.check_signature(binaries, other, platform, value)]
+             if info.get("status") in ("ok", "ok-midfunction")]
+    if len(found) != 1:
+        return None
+    other, info = found[0]
+    return dict(info, module=other)
 
 
 def _describe(info):

@@ -50,7 +50,21 @@ internal sealed class Scanner(string buildDir)
             return Status("skipped");
         if (entry.Kind == "patch")
             return Status("patch-unverifiable");
-        return CheckSignature(Binary(entry.Module, platform), GameData.Text(value));
+        var text = GameData.Text(value);
+        var result = CheckSignature(Binary(entry.Module, platform), text);
+        if (entry.LibraryGiven || result["status"] is not "broken")
+            return result;
+        // No library in the file: the plugin hard-codes the module. A pattern that resolves
+        // uniquely in exactly one other module is that entry's; anything else stays broken.
+        var found = (platform == "linux" ? Linux : Windows).Keys
+            .Where(module => module != entry.Module)
+            .Select(module => (module, info: CheckSignature(Binary(module, platform), text)))
+            .Where(hit => hit.info["status"] is "ok" or "ok-midfunction")
+            .ToList();
+        if (found.Count != 1)
+            return result;
+        found[0].info["module"] = found[0].module;
+        return found[0].info;
     }
 
     public static Dictionary<string, object?> CheckSignature(Image? image, string text)
