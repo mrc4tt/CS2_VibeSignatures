@@ -1,5 +1,5 @@
 # Accepted cpp_tests mismatches (sdk_abi_check.sh --accept).
-# gamever 14192, hl2sdk 06eec0c2 Use __builtin_offsetof for CUtlLeanVectorFixedGrowable's capacity under clang
+# gamever 14193, hl2sdk 285a23a2 Merge remote-tracking branch 'upstream/cs2' into cs2
 CEntityInstance_Linux | Index 11 mismatch: YAML expects 'PostDataUpdateDelta' but compiler reports 'DispatchPostDataUpdate'.
 CEntityInstance_Linux | Index 13 mismatch: YAML expects 'PostDataUpdatePreserve' but compiler reports 'OnDataUnchangedInPVS'.
 CEntityInstance_Linux | Index 30 mismatch: YAML expects 'AddChangeAccessorPathPolymorphic' but compiler reports 'NetworkStateChangedBranch'.
@@ -21,10 +21,10 @@ CServerSideClientBase_MSVC | Index 48 mismatch: YAML expects 'SendServerInfo' bu
 CServerSideClientBase_MSVC | Index 75 mismatch: YAML expects 'MarkToKick' but compiler reports 'OnSendJobFinished'.
 CServerSideClientBase_MSVC | Index 76 mismatch: YAML expects 'UnmarkToKick' but compiler reports 'OnSendJobStarted'.
 CServerSideClientBase_MSVC | Index 9 mismatch: YAML expects 'GetPlayerInfo' but compiler reports 'Create'.
-IFileSystem_Linux | vtable_numvfunc mismatch: YAML=129 vs compiler=114.
-IFileSystem_Linux | vtable_size mismatch: YAML=0x408 vs compiler=0x390 (entry_count=114, ptr_size=8).
-IFileSystem_MSVC | vtable_numvfunc mismatch: YAML=129 vs compiler=114.
-IFileSystem_MSVC | vtable_size mismatch: YAML=0x408 vs compiler=0x390 (entry_count=114, ptr_size=8).
+IFileSystem_Linux | vtable_numvfunc mismatch: YAML=128 vs compiler=114.
+IFileSystem_Linux | vtable_size mismatch: YAML=0x400 vs compiler=0x390 (entry_count=114, ptr_size=8).
+IFileSystem_MSVC | vtable_numvfunc mismatch: YAML=128 vs compiler=114.
+IFileSystem_MSVC | vtable_size mismatch: YAML=0x400 vs compiler=0x390 (entry_count=114, ptr_size=8).
 IGameSystem_Linux | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTickWork' but compiler reports 'OnServerBeginAsyncPostTickWork'.
 IGameSystem_Linux | Index 42 mismatch: YAML expects 'OnServerBeginAsyncPostTickWork' but compiler reports 'OnServerGameBeginAsyncPostTickWork'.
 IGameSystem_MSVC | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTickWork' but compiler reports 'OnServerBeginAsyncPostTickWork'.
