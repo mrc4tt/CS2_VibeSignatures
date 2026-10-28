@@ -144,3 +144,40 @@ class TestForkOwnedModules(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+RETIRED = """modules:
+  - name: vphysics2
+    path_windows: game/bin/win64/vphysics2.dll
+    path_linux: game/bin/linuxsteamrt64/libvphysics2.so
+    skills:
+      - name: find-CVPhys2World_vtable
+  - name: server
+    path_windows: game/bin/win64/server.dll
+    path_linux: game/bin/linuxsteamrt64/libserver.so
+  - name: matchmaking
+    path_windows: game/csgo/bin/win64/matchmaking.dll
+    path_linux: game/csgo/bin/linuxsteamrt64/libmatchmaking.so
+cpp_tests:
+  - name: CEntityInstance_MSVC
+    symbol: CEntityInstance
+"""
+
+
+class TestForkOwnedModuleRemovals(unittest.TestCase):
+    def test_drops_retired_modules_and_keeps_the_rest(self):
+        patched, removed = ensure.enforce_fork_owned_module_removals(RETIRED)
+        self.assertEqual(removed, 2)
+        document = yaml.safe_load(patched)
+        self.assertEqual([m["name"] for m in document["modules"]], ["server"])
+        # the last module block must not take cpp_tests: with it
+        self.assertEqual(document["cpp_tests"][0]["name"], "CEntityInstance_MSVC")
+
+    def test_is_idempotent(self):
+        once, _ = ensure.enforce_fork_owned_module_removals(RETIRED)
+        self.assertEqual(ensure.enforce_fork_owned_module_removals(once), (once, 0))
+
+    def test_never_retires_a_module_the_fork_creates(self):
+        created = {name for name, *_ in ensure.FORK_OWNED_MODULES}
+        retired = {name for name, _why in ensure.FORK_OWNED_MODULE_REMOVALS}
+        self.assertFalse(created & retired)

@@ -620,6 +620,17 @@ FORK_OWNED_MOVES = [
 # bin/<VER>/*/). The two hand-maintained module->filename maps do
 # (auto_hunt_headless.py, also imported by validate_artifacts.py, and
 # verify_plugin_gamedata.py).
+FORK_OWNED_MODULE_REMOVALS = [
+    # (module, why) - whole upstream modules this fork stopped analysing. Every artifact
+    # they produce on 14192 is read by nothing (no enabled plugin key, no task input, no
+    # cpp test), yet each build downloads, locks and IDA-analyses both binaries for them.
+    # Re-adding one is deleting its line here and restoring the block from upstream.
+    ("vphysics2", "only CVPhys2World_vtable, read by nothing"),
+    ("scenesystem", "SC_DumpWorld chain, read only inside its own module"),
+    ("matchmaking", "only GameTypes_vtable, read by nothing"),
+]
+
+
 FORK_OWNED_MODULES = [
     # (module, path_windows, path_linux, symbols)
     #   symbols: (symbol_name, category, alias[, task_name]) - a real hunting task named
@@ -717,6 +728,26 @@ def enforce_fork_owned_vtables(text):
             lines[at + 1 : at + 1] = new
             added += 1
     return "\n".join(lines), added
+
+
+def enforce_fork_owned_module_removals(text):
+    """Drop the module blocks FORK_OWNED_MODULE_REMOVALS retires.
+
+    A block ends at the next module or at the first top-level key after it, so the
+    last module never takes cpp_tests: with it."""
+    lines = text.split("\n")
+    removed = 0
+    retired = {module for module, _why in FORK_OWNED_MODULE_REMOVALS}
+    for start, end, name in reversed(_module_blocks(lines)):
+        if name not in retired:
+            continue
+        for i in range(start + 1, end):
+            if lines[i] and not lines[i][0].isspace() and not lines[i].startswith("#"):
+                end = i
+                break
+        del lines[start:end]
+        removed += 1
+    return "\n".join(lines), removed
 
 
 def enforce_fork_owned_modules(text):
@@ -1636,6 +1667,9 @@ def main():
     patched, new_modules = enforce_fork_owned_modules(text)
     if new_modules:
         print(f"  fork-owned modules: {new_modules} block(s), task(s) or symbol(s) added")
+    patched, retired_modules = enforce_fork_owned_module_removals(patched)
+    if retired_modules:
+        print(f"  retired: {retired_modules} module block(s) nothing reads")
 
     patched, reclassified = enforce_category_decisions(patched)
     if reclassified:

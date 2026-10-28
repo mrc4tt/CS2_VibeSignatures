@@ -558,6 +558,7 @@ says what this fork decided and why:
 | `FORK_OWNED_OBSOLETE_TASKS` | tasks whose target no longer exists |
 | `ALIAS_OVERRIDES` | downstream key renames |
 | `FORK_OWNED_MODULES` | whole analysis modules upstream does not have |
+| `FORK_OWNED_MODULE_REMOVALS` | whole upstream modules this fork stopped analysing (vphysics2, scenesystem, matchmaking: read by nothing on 14192, retired 2026-10-28) |
 
 When you change a config by hand, put the same change in the matching table, so the decision is
 recorded and re-asserted rather than surviving only by being copied.
@@ -800,11 +801,10 @@ ships it. The test list is **`cpp_tests/fork_tests.yaml`** alone: `sdk_abi_check
 payer rule reads it directly. Add a test there, never in a config (the config block had fallen to
 16 of the check's 50 tests). `run_cpp_tests.py` generates the gitignored `cpp_tests/protos` itself
 when a test needs it, but it fails on every accepted mismatch: compare against
-`cpp_tests/abi_baseline.txt` with `sdk_abi_check.sh`. The client tests (`CNetworkGameClient*`,
-`IVEngineClient2`) read `Wend4r_sourcesdk/`, a shallow submodule of Wend4r/sourcesdk `main`, since
-hl2sdk carries no client interfaces. It is read-only (no fork, never patched) and stays on its pin
-until bumped by hand; its headers disagree with 14192 in 53 places (unkNNN slots, a windows table 2
-short), all in the baseline, so the tests catch change, not correctness. A required output with no reader gets the free preprocessor only: the run skips the
+`cpp_tests/abi_baseline.txt` with `sdk_abi_check.sh`. No client-interface tests: Wend4r/sourcesdk's
+client headers were tried (2026-10-28) and removed - they disagreed with 14192 in 53 places, no
+enabled plugin ships a client key, and a cpp test is a payer, so they made 27 engine records nobody
+reads cost agent runs. A required output with no reader gets the free preprocessor only: the run skips the
 hunter and the agent (`no reader (plugin, task input or cpp test)`), and pack does not insist on
 it (`artifact_unpaid`, `gamesymbol_snapshot_lib.operations._waived`) but packs it wherever it
 exists. On 14192 that is 1609 of 3921 required outputs; over opencode's ledger up to 2026-10-25,

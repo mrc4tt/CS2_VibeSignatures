@@ -69,14 +69,6 @@ if [ "$UPDATE" = 1 ]; then
 fi
 SDK_HEAD=$(git -C hl2sdk_cs2 log -1 --format='%h %s')
 
-# The client tests (CNetworkGameClient*, IVEngineClient2) read Wend4r/sourcesdk, since
-# hl2sdk carries no client interfaces. It stays on its pinned commit: unlike the fork,
-# a move there is somebody else's change, so it is a submodule bump, not a check run.
-if [ ! -f Wend4r_sourcesdk/public/iclient.h ]; then
-    git submodule update --init --depth 1 Wend4r_sourcesdk \
-        || { echo "could not check out the Wend4r_sourcesdk submodule" >&2; exit 2; }
-fi
-
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
