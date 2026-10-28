@@ -392,6 +392,23 @@ FORK_OWNED_ALIAS_REMOVALS = {
 
 # Fork-owned OBSOLETE tasks: declarations for artifacts that turned out to be wrong.
 FORK_OWNED_OBSOLETE_TASKS = [
+    # Retired with the client module (FORK_OWNED_MODULE_REMOVALS): each of these reads a
+    # client artifact, directly or through another one here. None is a plugin key; three
+    # (CEngineServiceMgr_GetActiveLoopClientServerMode / GetEventDispatcher /
+    # GetEngineWindow, slots 30/28/18) were read only by the IEngineServiceMgr cpp test,
+    # and two of them are 8-byte getters that cannot be signatured, so the client slot
+    # was their only anchor.
+    ("find-CEngineClient_ExecuteClientCmd", "engine", "reads client"),
+    ("find-INetworkGameClient_SendStringCmd", "engine", "reads client"),
+    ("find-CEngineClient_IsPlayingDemo", "engine", "reads client"),
+    ("find-CNetworkClientService_SendNetMessage", "engine", "reads client"),
+    ("find-CEngineServiceMgr_GetActiveLoopClientServerMode", "engine", "reads client"),
+    ("find-CLoopTypeBase_GetClientServerMode", "engine", "reads client"),
+    ("find-CEngineServiceMgr_GetEventDispatcher", "engine", "reads client"),
+    ("find-CPanoramaEngineHandler_OnClientPreOutput", "engine", "reads client"),
+    ("find-IEngineServiceMgr_GetEngineWindow", "engine", "reads client"),
+    ("find-CEngineServiceMgr_GetEngineWindow", "engine", "reads client"),
+    ("find-CSpawnGroupMgrGameSystem_DoesGameSystemReallocate", "server", "reads client"),
     # The GiveNamedItem2 records were withdrawn: 0x1566a70 is the function the
     # binary itself names CCSPlayer_ItemServices_GiveNamedItem, which this repo
     # already analyses, while the records filed under GiveNamedItem2 pointed at
@@ -458,6 +475,18 @@ FORK_OWNED_PLATFORM_PINS = [
 # a plain deletion comes back on the next merge.
 FORK_OWNED_REMOVALS = [
     # (symbol_name, module, why)
+    # Declarations of the engine tasks retired with the client module (see
+    # FORK_OWNED_OBSOLETE_TASKS).
+    ("CEngineClient_ExecuteClientCmd", "engine", "retired with the client module"),
+    ("INetworkGameClient_SendStringCmd", "engine", "retired with the client module"),
+    ("CEngineClient_IsPlayingDemo", "engine", "retired with the client module"),
+    ("CNetworkClientService_SendNetMessage", "engine", "retired with the client module"),
+    ("CEngineServiceMgr_GetActiveLoopClientServerMode", "engine", "retired with the client module"),
+    ("CLoopTypeBase_GetClientServerMode", "engine", "retired with the client module"),
+    ("CEngineServiceMgr_GetEventDispatcher", "engine", "retired with the client module"),
+    ("CPanoramaEngineHandler_OnClientPreOutput", "engine", "retired with the client module"),
+    ("IEngineServiceMgr_GetEngineWindow", "engine", "retired with the client module"),
+    ("CEngineServiceMgr_GetEngineWindow", "engine", "retired with the client module"),
     # The think-function pointer lives at +0x28 in a schema struct that is filled at
     # RUNTIME: there is no .rela.dyn entry and no raw qword anywhere in either binary
     # pointing at the think function, so neither IDA nor a headless pass can read it.
@@ -628,6 +657,11 @@ FORK_OWNED_MODULE_REMOVALS = [
     ("vphysics2", "only CVPhys2World_vtable, read by nothing"),
     ("scenesystem", "SC_DumpWorld chain, read only inside its own module"),
     ("matchmaking", "only GameTypes_vtable, read by nothing"),
+    # client.dll / libclient.so are the second-heaviest IDA databases (1.3 GB together)
+    # and, on 14192, fed one plugin key (ILoopMode_LoopInit, which server carries too).
+    # 363 of its 626 artifacts were read by nothing, the rest by client's own tasks and
+    # by cpp tests that compare the same classes in server and engine.
+    ("client", "one plugin key, which server also produces"),
 ]
 
 
@@ -949,9 +983,15 @@ FORK_OWNED_OPTIONAL_TASKS = [
 
 
 def _module_blocks(lines):
-    """(start, end, name) for every top-level module block."""
+    """(start, end, name) for every top-level module block.
+
+    A later stage of a module carries a comment on its name line
+    (`  - name: engine  # Execute skills for engine2.dll again after client.dll`);
+    the name is what precedes it, so the stage block matches its module."""
     starts = [
-        (i, l[len("  - name: ") :]) for i, l in enumerate(lines) if l.startswith("  - name: ") and l.count(":") == 1
+        (i, l[len("  - name: ") :].split("#", 1)[0].strip())
+        for i, l in enumerate(lines)
+        if l.startswith("  - name: ") and l.count(":") == 1
     ]
     return [(st, starts[k + 1][0] if k + 1 < len(starts) else len(lines), name) for k, (st, name) in enumerate(starts)]
 

@@ -29,7 +29,6 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - server  # bin_artifacts/{gamever}/server/CEntityInstance_*.{platform}.yaml
-      - client  # bin_artifacts/{gamever}/client/CEntityInstance_*.{platform}.yaml
   - name: IGameSystem_MSVC
     symbol: IGameSystem
     cpp: cpp_tests/igamesystem.cpp
@@ -56,7 +55,6 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - server  # bin_artifacts/{gamever}/server/IGameSystem_*.{platform}.yaml
-      - client  # bin_artifacts/{gamever}/client/IGameSystem_*.{platform}.yaml
 
   - name: INetworkMessages_MSVC
     symbol: INetworkMessages
@@ -88,7 +86,6 @@ cpp_tests:
       - networksystem  # bin_artifacts/{gamever}/networksystem/CNetworkMessages_*.{platform}.yaml
       - engine  # bin_artifacts/{gamever}/engine/CNetworkMessages_*.{platform}.yaml
       - server  # bin_artifacts/{gamever}/server/CNetworkMessages_*.{platform}.yaml
-      - client  # bin_artifacts/{gamever}/client/CNetworkMessages_*.{platform}.yaml
   - name: ILoopMode_MSVC
     symbol: ILoopMode
     cpp: cpp_tests/iloopmode.cpp
@@ -114,7 +111,6 @@ cpp_tests:
       - Xclang
       - fdump-vtable-layouts
     reference_modules:
-      - client  # bin_artifacts/{gamever}/client/ILoopModeGame_*.{platform}.yaml
       - server  # bin_artifacts/{gamever}/server/ILoopModeGame_*.{platform}.yaml
       - engine  # bin_artifacts/{gamever}/engine/ILoopModeGame_*.{platform}.yaml
   - name: ILoopType_MSVC
@@ -171,7 +167,6 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - engine  # bin_artifacts/{gamever}/engine/CEngineServer_*.{platform}.yaml
-      - client  # bin_artifacts/{gamever}/client/IVEngineServer2_*.{platform}.yaml
       - server  # bin_artifacts/{gamever}/server/IVEngineServer2_*.{platform}.yaml
   - name: IGameSystemFactory_MSVC
     symbol: IGameSystemFactory
@@ -199,7 +194,6 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - server  # bin_artifacts/{gamever}/server/IGameSystemFactory_*.{platform}.yaml
-      - client  # bin_artifacts/{gamever}/client/IGameSystemFactory_*.{platform}.yaml
   - name: CEntitySystem_MSVC
     symbol: CEntitySystem
     alias_symbols:
@@ -230,7 +224,6 @@ cpp_tests:
       - fdump-record-layouts
     reference_modules:
       - server  # bin_artifacts/{gamever}/server/{CEntitySystem,CGameEntitySystem}_*.{platform}.yaml
-      - client  # bin_artifacts/{gamever}/client/{CEntitySystem,CGameEntitySystem}_*.{platform}.yaml
   - name: SDL_Mouse_MSVC
     symbol: SDL_Mouse
     cpp: cpp_tests/SDL_Mouse.cpp
@@ -336,7 +329,7 @@ cpp_tests:
       - Xclang
       - fdump-vtable-layouts
     reference_modules:
-      - client  # bin_artifacts/{gamever}/client/CGameEventManager_*.{platform}.yaml
+      - server  # bin_artifacts/{gamever}/server/CGameEventManager_*.{platform}.yaml
   - name: ISource2Server_MSVC
     symbol: ISource2Server
     alias_symbols:
@@ -605,7 +598,6 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - server
-      - client
   - name: IGameSystem_Linux
     symbol: IGameSystem
     cpp: cpp_tests/igamesystem.cpp
@@ -641,7 +633,6 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - server
-      - client
   - name: INetworkMessages_Linux
     symbol: INetworkMessages
     alias_symbols:
@@ -681,7 +672,6 @@ cpp_tests:
       - networksystem
       - engine
       - server
-      - client
   - name: ILoopMode_Linux
     symbol: ILoopMode
     cpp: cpp_tests/iloopmode.cpp
@@ -716,7 +706,6 @@ cpp_tests:
       - Xclang
       - fdump-vtable-layouts
     reference_modules:
-      - client
       - server
       - engine
   - name: ILoopType_Linux
@@ -791,7 +780,6 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - engine
-      - client
       - server
   - name: IGameSystemFactory_Linux
     symbol: IGameSystemFactory
@@ -828,7 +816,6 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - server
-      - client
   - name: CEntitySystem_Linux
     symbol: CEntitySystem
     alias_symbols:
@@ -868,7 +855,6 @@ cpp_tests:
       - fdump-record-layouts
     reference_modules:
       - server
-      - client
   - name: SDL_Mouse_Linux
     symbol: SDL_Mouse
     cpp: cpp_tests/SDL_Mouse.cpp
@@ -1010,7 +996,7 @@ cpp_tests:
       - Xclang
       - fdump-vtable-layouts
     reference_modules:
-      - client
+      - server  # bin_artifacts/{gamever}/server/CGameEventManager_*.{platform}.yaml
   - name: ISource2Server_Linux
     symbol: ISource2Server
     alias_symbols:

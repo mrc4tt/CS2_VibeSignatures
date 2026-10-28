@@ -25,7 +25,6 @@ IFileSystem_Linux | vtable_numvfunc mismatch: YAML=129 vs compiler=114.
 IFileSystem_Linux | vtable_size mismatch: YAML=0x408 vs compiler=0x390 (entry_count=114, ptr_size=8).
 IFileSystem_MSVC | vtable_numvfunc mismatch: YAML=129 vs compiler=114.
 IFileSystem_MSVC | vtable_size mismatch: YAML=0x408 vs compiler=0x390 (entry_count=114, ptr_size=8).
-IGameSystem_Linux | Index 24 mismatch: YAML expects 'SetGameSystemGlobalPtrs' but compiler reports 'OnClientPostOutputParallelWithServer'.
 IGameSystem_Linux | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTickWork' but compiler reports 'OnServerBeginAsyncPostTickWork'.
 IGameSystem_Linux | Index 42 mismatch: YAML expects 'OnServerBeginAsyncPostTickWork' but compiler reports 'OnServerGameBeginAsyncPostTickWork'.
 IGameSystem_MSVC | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTickWork' but compiler reports 'OnServerBeginAsyncPostTickWork'.

@@ -558,7 +558,7 @@ says what this fork decided and why:
 | `FORK_OWNED_OBSOLETE_TASKS` | tasks whose target no longer exists |
 | `ALIAS_OVERRIDES` | downstream key renames |
 | `FORK_OWNED_MODULES` | whole analysis modules upstream does not have |
-| `FORK_OWNED_MODULE_REMOVALS` | whole upstream modules this fork stopped analysing (vphysics2, scenesystem, matchmaking: read by nothing on 14192, retired 2026-10-28) |
+| `FORK_OWNED_MODULE_REMOVALS` | whole upstream modules this fork stopped analysing (vphysics2, scenesystem, matchmaking: read by nothing on 14192; client: one plugin key, which server also produces - all retired 2026-10-28, with the 11 engine/server tasks that read client artifacts in `FORK_OWNED_OBSOLETE_TASKS`) |
 
 When you change a config by hand, put the same change in the matching table, so the decision is
 recorded and re-asserted rather than surviving only by being copied.
