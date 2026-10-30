@@ -1,0 +1,8 @@
+func_name: CNetChan_SetInterpolationAmount
+func_va: '0x1800c65c0'
+func_rva: '0xc65c0'
+func_size: '0x11'
+func_sig: F3 0F 11 89 ?? ?? ?? ?? F3 0F 11 91 ?? ?? ?? ??
+vtable_name: CNetChan
+vfunc_offset: '0xe0'
+vfunc_index: 28

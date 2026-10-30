@@ -1,0 +1,5 @@
+func_name: CCSPlayer_DamageReactServices_TakeDamage
+func_va: '0x180a9a710'
+func_rva: '0xa9a710'
+func_size: '0x93a'
+func_sig: 48 8B C4 57 41 55

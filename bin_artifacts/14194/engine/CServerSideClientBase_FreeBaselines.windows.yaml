@@ -1,0 +1,8 @@
+func_name: CServerSideClientBase_FreeBaselines
+func_va: '0x1800c4980'
+func_rva: '0xc4980'
+func_size: '0x7a'
+func_sig: 40 53 48 83 EC ?? 48 8B D9 48 8B 89 ?? ?? ?? ?? 48 85 C9 74 ?? B8 ?? ?? ?? ??
+vtable_name: CServerSideClientBase
+vfunc_offset: '0x1f8'
+vfunc_index: 63

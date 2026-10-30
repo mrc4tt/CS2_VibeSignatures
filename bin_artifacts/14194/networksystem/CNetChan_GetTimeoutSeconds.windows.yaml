@@ -1,0 +1,9 @@
+func_name: CNetChan_GetTimeoutSeconds
+func_va: '0x1800c5a00'
+func_rva: '0xc5a00'
+func_size: '0x9'
+func_sig: F3 0F 10 81 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? F2 0F 10 05 ?? ?? ?? ??
+func_sig_allow_across_function_boundary: true
+vtable_name: CNetChan
+vfunc_offset: '0xb0'
+vfunc_index: 22

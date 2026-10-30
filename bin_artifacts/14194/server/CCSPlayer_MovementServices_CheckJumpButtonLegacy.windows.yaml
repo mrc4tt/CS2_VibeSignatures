@@ -1,0 +1,5 @@
+func_name: CCSPlayer_MovementServices_CheckJumpButtonLegacy
+func_va: '0x180ac1eb0'
+func_rva: '0xac1eb0'
+func_size: '0x1a5'
+func_sig: 48 89 5C 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC ?? 4C 8B F2

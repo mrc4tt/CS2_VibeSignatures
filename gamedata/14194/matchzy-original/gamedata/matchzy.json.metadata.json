@@ -1,6 +1,18 @@
 {
   "entries": [
     {
+      "changes": [
+        {
+          "after": "40 55 56 48 83 EC ? 48 89 5C 24 ? 48 8B D9",
+          "before": "48 8B C4 55 56 48 81 EC ? ? ? ? 48 89 58 ? 48 8B D9",
+          "line": 26,
+          "path": [
+            "CDecoyProjectile_Create",
+            "signatures",
+            "windows"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         25,
@@ -8,7 +20,7 @@
         27
       ],
       "name": "CDecoyProjectile_Create",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -31,6 +43,28 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 48 8B B4 24 ? ? ? ?",
+          "before": "48 8B C4 48 89 58 ? 48 89 68 ? 48 89 70 ? 57 41 56 41 57 48 81 EC ? ? ? ? 48 8B B4 24 ? ? ? ?",
+          "line": 5,
+          "path": [
+            "CSmokeGrenadeProjectile_Create",
+            "signatures",
+            "windows"
+          ]
+        },
+        {
+          "after": "55 4C 89 C1 48 89 E5 41 57 41 56",
+          "before": "55 4C 89 C1 48 89 E5 41 57 49 89 FF 41 56 45 89 CE",
+          "line": 6,
+          "path": [
+            "CSmokeGrenadeProjectile_Create",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         4,
@@ -38,7 +72,7 @@
         6
       ],
       "name": "CSmokeGrenadeProjectile_Create",
-      "updated": false
+      "updated": true
     }
   ],
   "file": "matchzy-original/gamedata/matchzy.json",
@@ -47,6 +81,6 @@
   "summary": {
     "covered": 4,
     "total": 4,
-    "updated": 0
+    "updated": 2
   }
 }

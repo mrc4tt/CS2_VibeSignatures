@@ -1,0 +1,5 @@
+func_name: CCSPlayer_MovementServices_SetupMove
+func_va: '0x180ae84e0'
+func_rva: '0xae84e0'
+func_size: '0x389'
+func_sig: 40 53 56 48 83 EC ?? 48 89 6C 24 ?? 49 8B F0

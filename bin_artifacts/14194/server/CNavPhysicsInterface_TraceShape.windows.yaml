@@ -1,0 +1,8 @@
+func_name: CNavPhysicsInterface_TraceShape
+func_va: '0x1810986e0'
+func_rva: '0x10986e0'
+func_size: '0x24'
+func_sig: 48 8B 44 24 ?? 48 8D 0D ?? ?? ?? ?? 48 85 C0 48 0F 45 C8 48 89 4C 24 ??
+vtable_name: CNavPhysicsInterface
+vfunc_offset: '0x18'
+vfunc_index: 3

@@ -1,0 +1,5 @@
+func_name: ScriptGetAddon
+func_va: '0x18026e3e0'
+func_rva: '0x26e3e0'
+func_size: '0xee'
+func_sig: 40 56 48 83 EC ?? 48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ??

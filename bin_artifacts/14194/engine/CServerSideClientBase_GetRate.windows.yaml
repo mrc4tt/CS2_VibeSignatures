@@ -1,0 +1,9 @@
+func_name: CServerSideClientBase_GetRate
+func_va: '0x1800c3cf0'
+func_rva: '0xc3cf0'
+func_size: '0x13'
+func_sig: 48 8B 49 ?? 48 85 C9 74 ?? 48 8B 01 48 FF 60 ?? 33 C0
+func_sig_allow_across_function_boundary: true
+vtable_name: CServerSideClientBase
+vfunc_offset: '0x60'
+vfunc_index: 12

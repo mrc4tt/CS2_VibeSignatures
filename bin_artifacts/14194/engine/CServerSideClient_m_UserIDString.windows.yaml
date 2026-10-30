@@ -1,0 +1,6 @@
+struct_name: CServerSideClient
+member_name: m_UserIDString
+offset: '0x38'
+size: 8
+offset_sig: 48 8D 4B 38 FF 15 ?? ?? ?? ?? 48 8D 43 ??
+offset_sig_disp: 0
