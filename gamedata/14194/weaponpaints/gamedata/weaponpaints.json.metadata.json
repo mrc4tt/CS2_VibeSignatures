@@ -1,0 +1,138 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6
+      ],
+      "name": "CAttributeList::SetOrAddAttributeValueByName",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        46,
+        47,
+        48
+      ],
+      "name": "CCSPlayer_ItemServices::SetWearables",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        85,
+        86
+      ],
+      "name": "CCSPlayer_WeaponServices::DropWeapon",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        67,
+        68
+      ],
+      "name": "CCSPlayerController_InventoryServices::m_pInventory",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        18,
+        19,
+        20
+      ],
+      "name": "CCSPlayerInventory::GetItemInLoadout",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        73,
+        74
+      ],
+      "name": "CCSPlayerInventory::m_pSOCache",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        39,
+        40,
+        41
+      ],
+      "name": "CCSPlayerInventory::SendInventoryUpdateEvent",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        53,
+        54,
+        55
+      ],
+      "name": "CCSPlayerPawn::SetModelFromClass",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        60,
+        61,
+        62
+      ],
+      "name": "CCSPlayerPawn::SetModelFromLoadout",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        25,
+        26,
+        27
+      ],
+      "name": "CEconItemView::CEconItemView",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        32,
+        33,
+        34
+      ],
+      "name": "CEconItemView::operator=",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        79,
+        80
+      ],
+      "name": "CGCClientSharedObjectCache::m_Owner",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        11,
+        12,
+        13
+      ],
+      "name": "UpdateItemView",
+      "updated": false
+    }
+  ],
+  "file": "weaponpaints/gamedata/weaponpaints.json",
+  "gamever": "14194",
+  "schema_version": 2,
+  "summary": {
+    "covered": 13,
+    "total": 13,
+    "updated": 0
+  }
+}

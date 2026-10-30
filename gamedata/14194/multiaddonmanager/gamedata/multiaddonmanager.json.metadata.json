@@ -1,0 +1,67 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6,
+        8
+      ],
+      "name": "CHostStateMgr::StartNewRequest",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        36,
+        37,
+        38,
+        40
+      ],
+      "name": "CNetworkGameServer::ClientList",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        12,
+        13,
+        14,
+        16
+      ],
+      "name": "CNetworkGameServer::ReplyConnection",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        28,
+        29,
+        30,
+        32
+      ],
+      "name": "CNetworkGameServer::ServerAddons",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        20,
+        21,
+        22,
+        24
+      ],
+      "name": "ScriptGetAddon",
+      "updated": false
+    }
+  ],
+  "file": "multiaddonmanager/gamedata/multiaddonmanager.json",
+  "gamever": "14194",
+  "schema_version": 2,
+  "summary": {
+    "covered": 5,
+    "total": 5,
+    "updated": 0
+  }
+}

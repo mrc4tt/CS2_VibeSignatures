@@ -1,0 +1,52 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        25,
+        26,
+        27
+      ],
+      "name": "CDecoyProjectile_Create",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        11,
+        12,
+        13
+      ],
+      "name": "CHEGrenadeProjectile_Create",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        18,
+        19,
+        20
+      ],
+      "name": "CMolotovProjectile_Create",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6
+      ],
+      "name": "CSmokeGrenadeProjectile_Create",
+      "updated": false
+    }
+  ],
+  "file": "matchzy-original/gamedata/matchzy.json",
+  "gamever": "14194",
+  "schema_version": 2,
+  "summary": {
+    "covered": 4,
+    "total": 4,
+    "updated": 0
+  }
+}

@@ -1,0 +1,8 @@
+func_name: CPlayer_ObserverServices_IsValidObserverTarget
+func_va: '0x17c41a0'
+func_rva: '0x17c41a0'
+func_size: '0x161'
+func_sig: 55 48 89 E5 41 56 41 55 41 54 53 48 85 F6 0F 84 ?? ?? ?? ?? 48 8B 06
+vtable_name: CPlayer_ObserverServices
+vfunc_offset: '0x118'
+vfunc_index: 35

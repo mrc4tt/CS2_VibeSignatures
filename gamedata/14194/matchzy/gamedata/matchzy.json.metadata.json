@@ -1,0 +1,81 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6
+      ],
+      "name": "CBasePlayerController_HandleCommand_JoinTeam",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        11,
+        12,
+        13
+      ],
+      "name": "CCSGameRules_PostCleanUp",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        46,
+        47
+      ],
+      "name": "CCSPlayer_WeaponServices_SelectItem",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        39,
+        40,
+        41
+      ],
+      "name": "CDecoyProjectile_Create",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        25,
+        26,
+        27
+      ],
+      "name": "CHEGrenadeProjectile_Create",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        32,
+        33,
+        34
+      ],
+      "name": "CMolotovProjectile_Create",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        18,
+        19,
+        20
+      ],
+      "name": "CSmokeGrenadeProjectile_Create",
+      "updated": false
+    }
+  ],
+  "file": "matchzy/gamedata/matchzy.json",
+  "gamever": "14194",
+  "schema_version": 2,
+  "summary": {
+    "covered": 7,
+    "total": 7,
+    "updated": 0
+  }
+}

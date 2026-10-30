@@ -1,0 +1,9 @@
+func_name: CNetChan_IsSuppressingTransmit
+func_va: '0x2832e0'
+func_rva: '0x2832e0'
+func_size: '0x8'
+func_sig: 0F B6 87 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 55
+func_sig_allow_across_function_boundary: true
+vtable_name: CNetChan
+vfunc_offset: '0x298'
+vfunc_index: 83

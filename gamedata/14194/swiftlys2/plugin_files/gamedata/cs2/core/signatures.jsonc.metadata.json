@@ -1,0 +1,672 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        100,
+        101,
+        102
+      ],
+      "name": "BotNavIgnore1",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        106,
+        107,
+        108
+      ],
+      "name": "BotNavIgnore2",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        112,
+        113,
+        114
+      ],
+      "name": "BotNavIgnore3",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        56,
+        57,
+        58
+      ],
+      "name": "CAttributeList::SetOrAddAttributeValueByName",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        43,
+        44,
+        45
+      ],
+      "name": "CBaseEntity::DispatchSpawn",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        94,
+        95,
+        96
+      ],
+      "name": "CBaseEntity::TakeDamage",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        30,
+        31,
+        32
+      ],
+      "name": "CBaseModelEntity::SetModel",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        374,
+        375,
+        376
+      ],
+      "name": "CBasePlayerController::OnSimulateUserCommands",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        76,
+        77,
+        78
+      ],
+      "name": "CBasePlayerController::SetPawn",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        386,
+        387,
+        388
+      ],
+      "name": "CCSCustomHudLayout::RemoveDialogVariableStringForPlayer",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        392,
+        393,
+        394
+      ],
+      "name": "CCSCustomHudLayout::SetDialogVariableString",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        380,
+        381,
+        382
+      ],
+      "name": "CCSCustomHudLayout::SetDialogVariableStringForPlayer",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        404,
+        405,
+        406
+      ],
+      "name": "CCSCustomHudLayout::SetHasClass",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        398,
+        399,
+        400
+      ],
+      "name": "CCSCustomHudLayout::SetHasClassForPlayer",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        410,
+        411,
+        412
+      ],
+      "name": "CCSCustomHudLayout::SetInputCaptureEnabled",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        143,
+        144,
+        145
+      ],
+      "name": "CCSPlayer_ItemServices::CanAcquire",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        249,
+        250,
+        251
+      ],
+      "name": "CCSPlayer_MovementServices::AirAccelerate",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        261,
+        262,
+        263
+      ],
+      "name": "CCSPlayer_MovementServices::AirMove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        301,
+        302,
+        303
+      ],
+      "name": "CCSPlayer_MovementServices::CanUnduck",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        225,
+        226,
+        227
+      ],
+      "name": "CCSPlayer_MovementServices::CategorizePosition",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        219,
+        220,
+        221
+      ],
+      "name": "CCSPlayer_MovementServices::CheckFalling",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        288,
+        289,
+        290
+      ],
+      "name": "CCSPlayer_MovementServices::CheckJumpButtonLegacy",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        281,
+        282,
+        283
+      ],
+      "name": "CCSPlayer_MovementServices::CheckJumpButtonModern",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        350,
+        351,
+        352
+      ],
+      "name": "CCSPlayer_MovementServices::CheckParameters",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        313,
+        314,
+        315
+      ],
+      "name": "CCSPlayer_MovementServices::CheckVelocity",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        325,
+        326,
+        327
+      ],
+      "name": "CCSPlayer_MovementServices::CheckWater",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        307,
+        308,
+        309
+      ],
+      "name": "CCSPlayer_MovementServices::Duck",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        243,
+        244,
+        245
+      ],
+      "name": "CCSPlayer_MovementServices::Friction",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        338,
+        339,
+        340
+      ],
+      "name": "CCSPlayer_MovementServices::FullWalkMove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        255,
+        256,
+        257
+      ],
+      "name": "CCSPlayer_MovementServices::GroundAccelerate",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        295,
+        296,
+        297
+      ],
+      "name": "CCSPlayer_MovementServices::LadderMove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        332,
+        333,
+        334
+      ],
+      "name": "CCSPlayer_MovementServices::MoveInit",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        274,
+        275,
+        276
+      ],
+      "name": "CCSPlayer_MovementServices::OnJumpLegacy",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        268,
+        269,
+        270
+      ],
+      "name": "CCSPlayer_MovementServices::OnJumpModern",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        356,
+        357,
+        358
+      ],
+      "name": "CCSPlayer_MovementServices::PlayerMove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        362,
+        363,
+        364
+      ],
+      "name": "CCSPlayer_MovementServices::ProcessMovement",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        368,
+        369,
+        370
+      ],
+      "name": "CCSPlayer_MovementServices::SetupMove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        231,
+        232,
+        233
+      ],
+      "name": "CCSPlayer_MovementServices::TryPlayerMove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        237,
+        238,
+        239
+      ],
+      "name": "CCSPlayer_MovementServices::WalkMove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        319,
+        320,
+        321
+      ],
+      "name": "CCSPlayer_MovementServices::WaterMove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        213,
+        214,
+        215
+      ],
+      "name": "CCSPlayer_WeaponServices::DropWeapon",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        124,
+        125,
+        126
+      ],
+      "name": "CCSPlayerController::ProcessUserCmd",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        16,
+        17,
+        18
+      ],
+      "name": "CCSPlayerController::SwitchTeam",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        344,
+        345,
+        346
+      ],
+      "name": "CCSPlayerPawn::CanMove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        82,
+        83,
+        84
+      ],
+      "name": "CCSPlayerPawn::PostThink",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        201,
+        202,
+        203
+      ],
+      "name": "CDecoyProjectile::EmitGrenade",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        10,
+        11,
+        12
+      ],
+      "name": "CEntityIdentity::AcceptInput",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6
+      ],
+      "name": "CEntityInstance::AcceptInput",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        69,
+        70,
+        71
+      ],
+      "name": "CEntityIOOutput::FireOutputInternal",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        136,
+        137,
+        138
+      ],
+      "name": "CEntitySystem::AddEntityIOEvent",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        189,
+        190,
+        191
+      ],
+      "name": "CFlashbangProjectile::EmitGrenade",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        88,
+        89,
+        90
+      ],
+      "name": "CGameRules::TerminateRound",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        195,
+        196,
+        197
+      ],
+      "name": "CHEGrenadeProjectile::EmitGrenade",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        156,
+        157,
+        158
+      ],
+      "name": "CLoggingSystem::LogDirect",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        162,
+        163,
+        164
+      ],
+      "name": "Cmd_ExecuteCommand",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        207,
+        208,
+        209
+      ],
+      "name": "CMolotovProjectile::EmitGrenade",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        183,
+        184,
+        185
+      ],
+      "name": "CSmokeGrenadeProjectile::EmitGrenade",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        130,
+        131,
+        132
+      ],
+      "name": "CSource2Server::g_GameEventManager",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        63,
+        64,
+        65
+      ],
+      "name": "CTakeDamageInfo::Constructor",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        177,
+        178,
+        179
+      ],
+      "name": "DispatchParticleEffect",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        171,
+        172,
+        173
+      ],
+      "name": "GetWeaponCSDataFromKey",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        118,
+        119,
+        120
+      ],
+      "name": "IGameSystem::InitAllSystems->pFirst",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        150,
+        151,
+        152
+      ],
+      "name": "INetworkMessageProcessingPreFilter::FilterMessage",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        36,
+        37,
+        38
+      ],
+      "name": "SetSchemaHammerUniqueId",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        22,
+        23,
+        24
+      ],
+      "name": "UTIL::CreateEntityByName",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        49,
+        50,
+        51
+      ],
+      "name": "UTIL::Remove",
+      "updated": false
+    }
+  ],
+  "file": "swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc",
+  "gamever": "14194",
+  "schema_version": 2,
+  "summary": {
+    "covered": 66,
+    "total": 66,
+    "updated": 0
+  }
+}

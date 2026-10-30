@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6
+      ],
+      "name": "RunCommand",
+      "updated": false
+    }
+  ],
+  "file": "TeleportFix/addons/counterstrikesharp/gamedata/TeleportFix.json",
+  "gamever": "14194",
+  "schema_version": 2,
+  "summary": {
+    "covered": 1,
+    "total": 1,
+    "updated": 0
+  }
+}

@@ -1,0 +1,531 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        160,
+        161,
+        162
+      ],
+      "name": "CBaseEntity_DispatchSpawn",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        167,
+        168,
+        169
+      ],
+      "name": "CBaseEntity_EmitSoundFilter",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        181,
+        182
+      ],
+      "name": "CBaseEntity_IsPlayerPawn",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        220,
+        221,
+        222
+      ],
+      "name": "CBaseEntity_TakeDamage",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        227,
+        228,
+        229
+      ],
+      "name": "CBaseEntity_TakeDamageOld",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        214,
+        215
+      ],
+      "name": "CBaseEntity_Teleport",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        77,
+        78,
+        79
+      ],
+      "name": "CBaseModelEntity_SetModel",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        37,
+        38,
+        39
+      ],
+      "name": "CBasePlayerController_SetPawn",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        201,
+        202
+      ],
+      "name": "CBasePlayerPawn_CommitSuicide",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        207,
+        208,
+        209
+      ],
+      "name": "CBasePlayerPawn_RemovePlayerItem",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        246,
+        247,
+        248,
+        251,
+        252,
+        253
+      ],
+      "name": "CBaseTrigger_EndTouch",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        234,
+        235,
+        236,
+        239,
+        240,
+        241
+      ],
+      "name": "CBaseTrigger_StartTouch",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        335,
+        336,
+        337
+      ],
+      "name": "CCSCustomHudLayout_SetDialogVariableString",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        342,
+        343,
+        344
+      ],
+      "name": "CCSCustomHudLayout_SetDialogVariableStringForPlayer",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        349,
+        350,
+        351
+      ],
+      "name": "CCSCustomHudLayout_SetHasClass",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        356,
+        357,
+        358
+      ],
+      "name": "CCSCustomHudLayout_SetHasClassForPlayer",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        370,
+        371,
+        372
+      ],
+      "name": "CCSCustomHudLayout_SetInputCaptureEnabled",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        141,
+        142
+      ],
+      "name": "CCSGameRules_FindPickerEntity",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        134,
+        135,
+        136
+      ],
+      "name": "CCSGameRules_TerminateRound",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        328,
+        329,
+        330
+      ],
+      "name": "CCSNavArea_IsValidNavMesh",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        96,
+        97,
+        98
+      ],
+      "name": "CCSPlayer_ItemServices_CanAcquire",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        116,
+        117
+      ],
+      "name": "CCSPlayer_ItemServices_DropActivePlayerWeapon",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        110,
+        111
+      ],
+      "name": "CCSPlayer_ItemServices_GiveNamedItem",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        122,
+        123
+      ],
+      "name": "CCSPlayer_ItemServices_RemoveWeapons",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        84,
+        85,
+        86,
+        89,
+        90,
+        91
+      ],
+      "name": "CCSPlayer_WeaponServices_CanUse",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        25,
+        26
+      ],
+      "name": "CCSPlayerController_ChangeTeam",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        31,
+        32
+      ],
+      "name": "CCSPlayerController_Respawn",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        18,
+        19,
+        20
+      ],
+      "name": "CCSPlayerController_SwitchTeam",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        44,
+        45,
+        46,
+        49,
+        50,
+        51
+      ],
+      "name": "CCSPlayerPawnBase_PostThink",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        363,
+        364,
+        365
+      ],
+      "name": "CCSPointScript_OnCustomHudClicked",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        174,
+        175,
+        176
+      ],
+      "name": "CEntityInstance_AcceptInput",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        264,
+        265,
+        266
+      ],
+      "name": "CEntityIOOutput_FireOutputInternal",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        278,
+        279
+      ],
+      "name": "CEntityResourceManifest_AddResource",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        187,
+        188,
+        189
+      ],
+      "name": "CEntitySystem_AddEntityIOEvent",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        56,
+        57,
+        58
+      ],
+      "name": "CGameEventManager_Init",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        128,
+        129
+      ],
+      "name": "CGameSceneNode_GetSkeletonInstance",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        284,
+        285,
+        286,
+        289,
+        290,
+        291
+      ],
+      "name": "CheckTransmit",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        296,
+        297
+      ],
+      "name": "CheckTransmitPlayerSlot",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        11,
+        12,
+        13
+      ],
+      "name": "ClientPrint",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        147,
+        148
+      ],
+      "name": "CTakeDamageInfo_HitGroup",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        258,
+        259
+      ],
+      "name": "GameEntitySystem",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        103,
+        104,
+        105
+      ],
+      "name": "GetCSWeaponDataFromKey",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        63,
+        64,
+        65
+      ],
+      "name": "GiveNamedItem",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        321,
+        322,
+        323
+      ],
+      "name": "Host_Say",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        271,
+        272,
+        273
+      ],
+      "name": "IGameSystem_InitAllSystems_pFirst",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        315,
+        316
+      ],
+      "name": "ISource2GameEntities::CheckTransmit",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        194,
+        195,
+        196
+      ],
+      "name": "LegacyGameEventListener",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        302,
+        303,
+        304
+      ],
+      "name": "NetworkStateChanged",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        309,
+        310
+      ],
+      "name": "SetStateChanged",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6
+      ],
+      "name": "UTIL_ClientPrintAll",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        153,
+        154,
+        155
+      ],
+      "name": "UTIL_CreateEntityByName",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        70,
+        71,
+        72
+      ],
+      "name": "UTIL_Remove",
+      "updated": false
+    }
+  ],
+  "file": "CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json",
+  "gamever": "14194",
+  "schema_version": 2,
+  "summary": {
+    "covered": 52,
+    "total": 52,
+    "updated": 0
+  }
+}

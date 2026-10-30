@@ -1,0 +1,5 @@
+func_name: CSoundSystem_TakeGuid
+vtable_name: CSoundSystem
+vfunc_offset: '0x268'
+vfunc_index: 77
+vfunc_sig: FF 90 68 02 00 00 F2 0F 10 4D ?? 66 0F EF C0 89 C1

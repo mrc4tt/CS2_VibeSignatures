@@ -1,0 +1,252 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        163,
+        164
+      ],
+      "name": "CanAcquire",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [],
+      "name": "CBaseModelEntity_SetModel",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        196,
+        197
+      ],
+      "name": "ChangeTeam",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        186,
+        187
+      ],
+      "name": "CollisionRulesChanged",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        181,
+        182
+      ],
+      "name": "CommitSuicide",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        206,
+        207
+      ],
+      "name": "DropWeapon",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [],
+      "name": "EmitSoundFilter",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [],
+      "name": "GetGameEventManager",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        7,
+        8
+      ],
+      "name": "GetGameTraceManager",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [],
+      "name": "GetLegacyGameEventListener",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        66,
+        67
+      ],
+      "name": "IsHearingClient",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        176,
+        177
+      ],
+      "name": "OnTakeDamage_Alive",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [],
+      "name": "OnTakeDamagePre",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        170,
+        171
+      ],
+      "name": "ProcessUsercmds",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        211,
+        212
+      ],
+      "name": "RemoveWeapons",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        201,
+        202
+      ],
+      "name": "Respawn",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        42,
+        43
+      ],
+      "name": "SetMoveType",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [],
+      "name": "StopSoundEvent",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [],
+      "name": "SwitchTeam",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        191,
+        192
+      ],
+      "name": "Teleport",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        156,
+        157
+      ],
+      "name": "TerminateRound",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        114,
+        115
+      ],
+      "name": "UTIL_AcceptInput",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        128,
+        129
+      ],
+      "name": "UTIL_CreateEntity",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        120,
+        121
+      ],
+      "name": "UTIL_DispatchSpawn",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        141,
+        142
+      ],
+      "name": "UTIL_Remove",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        18,
+        19
+      ],
+      "name": "UTIL_RespawnPlayer",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        76,
+        77
+      ],
+      "name": "UTIL_Say",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        81,
+        82
+      ],
+      "name": "UTIL_SayTeam",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        12,
+        13
+      ],
+      "name": "UTIL_TraceShape",
+      "updated": false
+    }
+  ],
+  "file": "cs2-menus/configs/signatures.txt",
+  "gamever": "14194",
+  "schema_version": 2,
+  "summary": {
+    "covered": 29,
+    "total": 29,
+    "updated": 0
+  }
+}
