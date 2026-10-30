@@ -91,6 +91,8 @@ UNIT_MODULES = frozenset(
         "test_hunt_strategies",
         "test_hunt_tables_chains",
         "test_review_issue",
+        "test_ghidra_verify",
+        "test_verify_keyvalues",
         "test_css_generator_gv",
         "test_css_generator_vtable",
         "test_css_vtable_slot_verify",
