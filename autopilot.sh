@@ -156,9 +156,9 @@ hint_for() {  # hint_for <failure text>
             printf 'cd %s && uv run publish_site_data.py -check && uv run publish_site_data.py\n' "$repo" ;;
         *"snapshot"*|*"pack"*|*"contract"*)
             printf 'cd %s && uv run gamesymbol_snapshot.py pack -gamever %s -snapshot gamesymbols/%s.yaml\n' "$repo" "$ver" "$ver" ;;
-        push)
-            printf 'autopilot already pulled with --autostash and retried 3 times; see why:\n'
-            printf 'cd %s && git status -sb && git stash list | head -3\n' "$repo" ;;
+        push|*": push")
+            printf 'autopilot pulled with --autostash and retried 3 times; git said:\n%s\n' "${PUSH_ERROR:-(no output captured)}"
+            printf 'cd %s && git status -sb && git log --oneline -3 origin/main HEAD\n' "$repo" ;;
         commit)
             printf 'cd %s && git status --short\n' "$repo" ;;
         *"deploy drift"*)
@@ -226,17 +226,31 @@ $(hint_for "$*")"
 # go through, and the edit is put back untouched; it is never committed here.
 # Three tries with a pause, because a dropped connection or a push that lost a
 # race with another one is gone a minute later.
+#
+# Why it failed is kept in PUSH_ERROR (git's own last lines, and the paths a
+# rebase stopped on) and goes into the failure notice: "push" alone sent someone
+# to SSH in and run git status, which by then shows a clean tree - the rebase was
+# aborted and the stash put back - so the cause was gone before anyone looked.
+PUSH_ERROR=""
 sync_push() {
-    local branch try
+    local branch try out conflicts
     branch=$(git rev-parse --abbrev-ref HEAD)
+    PUSH_ERROR=""
     for try in 1 2 3; do
-        if git pull -q --rebase --autostash origin "$branch"; then
-            git push -q origin HEAD && return 0
+        if out=$(git pull -q --rebase --autostash origin "$branch" 2>&1); then
+            out=$(git push -q origin HEAD 2>&1) && { PUSH_ERROR=""; return 0; }
+            PUSH_ERROR="git push: $(printf '%s\n' "$out" | grep -vE '^hint:|^remote: *$|vulnerabilities|security/dependabot' | tail -4)"
         else
+            conflicts=$(git diff --name-only --diff-filter=U 2>/dev/null | head -10 | tr '\n' ' ')
             git rebase --abort 2>/dev/null
+            PUSH_ERROR="git pull --rebase: $(printf '%s\n' "$out" | grep -vE '^hint:' | tail -4)"
+            [ -n "$conflicts" ] && PUSH_ERROR="$PUSH_ERROR
+conflicting paths: $conflicts"
         fi
-        [ "$try" -lt 3 ] && { log "    push attempt $try failed; retrying in 60s"; sleep 60; }
+        log "    push attempt $try failed: $(printf '%s' "$PUSH_ERROR" | head -1)"
+        [ "$try" -lt 3 ] && { log "    retrying in 60s"; sleep 60; }
     done
+    printf '%s\n' "$PUSH_ERROR" | while IFS= read -r line; do log "    $line"; done
     return 1
 }
 
