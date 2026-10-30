@@ -1202,6 +1202,66 @@ class TestVtableAliasSupport(unittest.IsolatedAsyncioTestCase):
             alias_map["CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem"],
         )
 
+    async def _run_func_sig_with_old_vfunc_sig(self, *, new_slot, vfunc_sig_matches):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            module_dir = Path(temp_dir) / "bin" / "14194" / "engine"
+            old_dir = Path(temp_dir) / "old"
+            module_dir.mkdir(parents=True)
+            old_dir.mkdir(parents=True)
+            name = "CServerSideClient_IsHearingClient"
+            old_path = old_dir / f"{name}.windows.yaml"
+            old_path.write_text(
+                yaml.safe_dump(
+                    {
+                        "func_name": name,
+                        "func_va": "0x1800bd9f0",
+                        "func_sig": "40 53 48 83 EC ??",
+                        "vtable_name": "CServerSideClient",
+                        "vfunc_offset": "0x98",
+                        "vfunc_index": 19,
+                        "vfunc_sig": "FF 90 98 00 00 00 83 4F",
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            (module_dir / "CServerSideClient_vtable.windows.yaml").write_text(
+                yaml.safe_dump({"vtable_entries": {new_slot: "0x1800bd9f0"}}),
+                encoding="utf-8",
+            )
+            session = AsyncMock()
+            session.call_tool.side_effect = [
+                _FakeCallToolResult([{"matches": ["0x1800bd9f0"], "n": 1}]),
+                _py_eval_payload({"func_va": "0x1800bd9f0", "func_size": "0xbb"}),
+                _FakeCallToolResult([{"matches": ["0x1800a7481"] * vfunc_sig_matches, "n": vfunc_sig_matches}]),
+            ]
+            result = await ida_analyze_util.preprocess_func_sig_via_mcp(
+                session=session,
+                new_path=str(module_dir / f"{name}.windows.yaml"),
+                old_path=str(old_path),
+                image_base=0x180000000,
+                new_binary_dir=str(module_dir),
+                platform="windows",
+                func_name=name,
+                debug=True,
+            )
+        return result, session
+
+    async def test_preprocess_func_sig_carries_old_vfunc_sig_when_slot_unchanged(self) -> None:
+        result, _ = await self._run_func_sig_with_old_vfunc_sig(new_slot=19, vfunc_sig_matches=1)
+        self.assertEqual(result["vfunc_index"], 19)
+        self.assertEqual(result["vfunc_sig"], "FF 90 98 00 00 00 83 4F")
+
+    async def test_preprocess_func_sig_drops_old_vfunc_sig_when_not_unique(self) -> None:
+        result, _ = await self._run_func_sig_with_old_vfunc_sig(new_slot=19, vfunc_sig_matches=2)
+        self.assertNotIn("vfunc_sig", result)
+
+    async def test_preprocess_func_sig_drops_old_vfunc_sig_when_slot_moved(self) -> None:
+        result, session = await self._run_func_sig_with_old_vfunc_sig(new_slot=20, vfunc_sig_matches=1)
+        self.assertEqual(result["vfunc_index"], 20)
+        self.assertNotIn("vfunc_sig", result)
+        self.assertEqual(session.call_tool.await_count, 2)
+
     async def test_func_vtable_relations_use_aliases_for_index_enrichment(self) -> None:
         alias_map = {
             "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem": [

@@ -3603,6 +3603,31 @@ async def preprocess_func_sig_via_mcp(
         new_data["vfunc_offset"] = hex(found_index * 8)
         new_data["vfunc_index"] = found_index
 
+        # A record carrying both signatures (a hooked virtual) keeps its call-site
+        # vfunc_sig when the slot did not move and the sig still matches within its
+        # limit; otherwise the field stays absent and the task falls back.
+        if vfunc_sig:
+            try:
+                old_index = old_data.get("vfunc_index")
+                old_index = _parse_int_field(old_index, "vfunc_index") if old_index is not None else None
+                carry_max = _parse_strict_int_field(
+                    old_data.get("vfunc_sig_max_match", 1),
+                    "vfunc_sig_max_match",
+                )
+            except Exception:
+                old_index, carry_max = None, 0
+            if old_index == found_index and carry_max > 0:
+                carried = await _find_match_with_limit(
+                    vfunc_sig,
+                    f"{os.path.basename(old_path)} vfunc_sig",
+                    carry_max,
+                )
+                if carried is not None:
+                    new_data["vfunc_sig"] = vfunc_sig
+                    new_data["vfunc_sig_max_match"] = carry_max
+                elif debug:
+                    print(f"    Preprocess: old vfunc_sig no longer matches for {os.path.basename(new_path)}")
+
     return new_data
 
 
