@@ -29,6 +29,10 @@ case "$OUTCOME" in
     *)        TITLE="CS2 $GAMEVER: $OUTCOME" ;;
 esac
 
+# Which machine sent it: a notice with no trace in this server's journal cost a
+# session hunting for its run (14194's "failed / push"), since every clone with
+# the same webhook sends the same text.
+TITLE="$TITLE [$(hostname -s 2>/dev/null || echo unknown-host)]"
 BODY="$TITLE"$'\n\n'"$DETAIL"
 printf '%s\n' "$BODY"
 
