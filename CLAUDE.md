@@ -18,7 +18,7 @@ bin_artifacts/<gamever>/<module>/<Symbol>.<platform>.yaml
 gamesymbols/<gamever>.yaml      packed snapshot, stamped with the config digest
         |  update_gamedata.py
         v
-gamedata/<gamever>/<plugin>/    one dir per plugin, from gamedata-generators/<plugin>/ (15, 8 enabled)
+gamedata/<gamever>/<plugin>/    one dir per plugin, from gamedata-generators/<plugin>/ (23, 14 enabled)
         |  deploy_local_plugins.sh + update_css_gamedata.sh
         v
 ~/customGIT/*  and  ~/CounterStrikeSharp     (deploy_local_plugins.sh commits and pushes each repo)
@@ -625,6 +625,16 @@ file is **a drop-in**: the plugin (from v2.1) reads `addons/cleanercs2/gamedata.
 to its compiled-in signature, and `deploy_local_plugins.sh` commits it to `package/gamedata.json`
 in `~/customGIT/CleanerCS2` (mrc4tt/CleanerCS2), which xmake packs to that path. The generator has
 no `# Seed source:` line on purpose - that file is our own output, so syncing from it is circular.
+
+`gamebanfix` is a drop-in like `cleanercs2`: GameBanFix (mrc4tt fork of Cruze03's) loads the
+Valve KeyValues `gamedata/gamebanfix.games.txt` (`"Games"/"csgo"/"Signatures"`), in IDA style since
+the fork's `HexToPattern` takes either style. `deploy_local_plugins.sh` copies it into
+`~/customGIT/GameBanFix`, and a plugin release ships it. Two keys, both records CS2Fixes once
+used: `GameSystem_Think_CheckSteamBan` (func_sig) and `CCSGameRules__sm_mapGcBanInformation`
+(gv_sig, which must start at the 7-byte lea with disp at +3: `InitializeBanMap` reads it that way).
+That gv's windows record had been missing since 14191 (the 14190 gv_sig stopped matching) and
+was emitted again on 14194 from `0x1809177c2` (lea of `0x18211e048`, which
+`GameSystem_Think_CheckSteamBan` also loads twice, at `0x180945522`/`0x180945531`).
 
 `multiaddonmanager` is like `stripper` in that the plugin reads no gamedata: MultiAddonManager
 (mrc4tt fork) keeps three signatures as `constexpr` literals in

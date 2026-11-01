@@ -99,6 +99,16 @@ DEPLOY_TARGETS = (
         "deployed_by": "deploy_local_plugins.sh",
     },
     {
+        # KeyValues (Valve "Games" layout), compared byte for byte like cs2-menus.
+        "plugin": "gamebanfix",
+        "dist": "gamedata/gamebanfix.games.txt",
+        "root_env": "CUSTOMGIT_ROOT",
+        "root_default": "~/customGIT",
+        "install": "GameBanFix/gamedata/gamebanfix.games.txt",
+        "mode": "copy",
+        "deployed_by": "deploy_local_plugins.sh",
+    },
+    {
         # No gamedata file in the plugin: patch_mam_source.py writes the values into
         # constexpr literals, so the source is compared literal by literal.
         "plugin": "multiaddonmanager",

@@ -137,7 +137,7 @@ binaries:
       size: 2029720
 config_digest_version: 2
 config_sha256: sha256:48f6d17195adcd09cd9d696336aeedf94dfe214dd78ee313cc4a14283c919f2e
-file_count: 3321
+file_count: 3322
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -20373,6 +20373,15 @@ files:
     gv_sig: 48 8D 35 ?? ?? ?? ?? 89 C2 48 63 46 ??
     gv_sig_va: '0x155e2c0'
     gv_va: '0x295ab60'
+  server/CCSGameRules__sm_mapGcBanInformation.windows.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: CCSGameRules__sm_mapGcBanInformation
+    gv_rva: '0x211e048'
+    gv_sig: 48 8D 0D ?? ?? ?? ?? 45 33 C0 4C 89 74 24 ??
+    gv_sig_va: '0x1809177c2'
+    gv_va: '0x18211e048'
   server/CCSGameRules_vtable.linux.yaml:
     vtable_class: CCSGameRules
     vtable_entries:
@@ -43485,5 +43494,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14194'
-last_publish_time: '2026-10-30T23:19:45Z'
+last_publish_time: '2026-11-01T10:21:38Z'
 schema_version: 5
