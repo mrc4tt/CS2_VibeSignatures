@@ -157,32 +157,9 @@ def _kv_wildcards(raw):
 
 
 def _parse_kv(text):
-    """Minimal Valve KeyValues -> nested dicts. Quoted keys, braces, // comments."""
-    # Comments are their own alternative, not stripped beforehand: a // inside a quoted
-    # value must survive, and a quoted word inside a comment (cs2-menus writes
-    # `// Search: "CBaseEntity::EmitSound"`, and our own header names "linux") must not
-    # become a key - a stray "linux" made the whole root one unparsable entry.
-    stack, root, pending = [{}], {}, None
-    stack[0] = root
-    for match in re.finditer(r'"((?:[^"\\]|\\.)*)"|([{}])|//[^\n]*', text):
-        quoted, brace = match.group(1), match.group(2)
-        if quoted is None and brace is None:
-            continue
-        if brace == "{":
-            child = {}
-            if pending is not None:
-                stack[-1][pending] = child
-                pending = None
-            stack.append(child)
-        elif brace == "}":
-            if len(stack) > 1:
-                stack.pop()
-        elif pending is None:
-            pending = quoted
-        else:
-            stack[-1][pending] = quoted
-            pending = None
-    return root
+    """Minimal Valve KeyValues -> nested dicts (gamedata_utils.parse_keyvalues)."""
+    from gamedata_utils import parse_keyvalues
+    return parse_keyvalues(text)
 
 
 def _walk_entries(node, path=()):

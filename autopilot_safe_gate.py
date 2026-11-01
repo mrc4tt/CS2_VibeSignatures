@@ -73,18 +73,15 @@ def read_keys(path: str) -> dict[str, dict[str, object]] | None:
         return None
     raw = open(path, encoding="utf-8").read()
     out: dict[str, dict[str, object]] = {}
-    if path.endswith(".txt"):
-        for match in re.finditer(r'"([^"]+)"\s*\{(.*?)\n\t*\}', raw, re.S):
-            body = match.group(2)
-            linux = re.search(r'"(?:linux|linuxsteamrt64)"\s+"([^"]*)"', body)
-            windows = re.search(r'"(?:windows|win64)"\s+"([^"]*)"', body)
-            out[match.group(1)] = {
-                "linux": linux.group(1) if linux else None,
-                "windows": windows.group(1) if windows else None,
-            }
-        return out
     try:
-        document = json.loads(strip_jsonc(raw) if path.endswith(".jsonc") else raw)
+        if path.endswith(".txt"):
+            # Valve KeyValues, flat (cs2-menus) or nested "Games"/"csgo"/"Signatures"
+            # (GameBanFix): parsed, then walked like the JSON files. A regex over
+            # `"name" { ... }` read GameBanFix as one "Games" key.
+            from gamedata_utils import parse_keyvalues
+            document = parse_keyvalues(raw)
+        else:
+            document = json.loads(strip_jsonc(raw) if path.endswith(".jsonc") else raw)
     except Exception:
         return None
 

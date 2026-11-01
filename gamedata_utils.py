@@ -18,6 +18,38 @@ from dataclasses import dataclass
 # =============================================================================
 
 
+
+def parse_keyvalues(text):
+    """Minimal Valve KeyValues -> nested dicts. Quoted keys, braces, // comments.
+
+    Comments are their own alternative, not stripped beforehand: a // inside a quoted
+    value must survive, and a quoted word inside a comment (cs2-menus writes
+    `// Search: "CBaseEntity::EmitSound"`, GameBanFix `// "Kicking user %s ..."`) must
+    not become a key. The one KeyValues reader for the verifier, the safe gate and the
+    site's history, so a nested "Games"/"csgo"/"Signatures" file reads the same in all.
+    """
+    stack, root, pending = [{}], {}, None
+    stack[0] = root
+    for match in re.finditer(r'"((?:[^"\\]|\\.)*)"|([{}])|//[^\n]*', text):
+        quoted, brace = match.group(1), match.group(2)
+        if quoted is None and brace is None:
+            continue
+        if brace == "{":
+            child = {}
+            if pending is not None:
+                stack[-1][pending] = child
+                pending = None
+            stack.append(child)
+        elif brace == "}":
+            if len(stack) > 1:
+                stack.pop()
+        elif pending is None:
+            pending = quoted
+        else:
+            stack[-1][pending] = quoted
+            pending = None
+    return root
+
 def convert_sig_to_css(sig):
     """
     Convert YAML signature to CounterStrikeSharp format.

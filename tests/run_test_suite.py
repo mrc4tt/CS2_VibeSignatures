@@ -93,6 +93,7 @@ UNIT_MODULES = frozenset(
         "test_review_issue",
         "test_ghidra_verify",
         "test_verify_keyvalues",
+        "test_keyvalues_readers",
         "test_css_generator_gv",
         "test_css_generator_vtable",
         "test_css_vtable_slot_verify",
