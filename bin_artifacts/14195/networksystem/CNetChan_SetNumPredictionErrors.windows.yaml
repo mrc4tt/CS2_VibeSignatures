@@ -1,0 +1,8 @@
+func_name: CNetChan_SetNumPredictionErrors
+func_va: '0x1800c6240'
+func_rva: '0xc6240'
+func_size: '0x1e'
+func_sig: 8B 81 ?? ?? ?? ?? 83 E0 ?? 4C 6B C0 ??
+vtable_name: CNetChan
+vfunc_offset: '0xe8'
+vfunc_index: 29

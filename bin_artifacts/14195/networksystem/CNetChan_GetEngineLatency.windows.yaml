@@ -1,0 +1,8 @@
+func_name: CNetChan_GetEngineLatency
+func_va: '0x1800c5cd0'
+func_rva: '0xc5cd0'
+func_size: '0x3b'
+func_sig: 48 83 EC ?? F3 0F 10 89 ?? ?? ?? ??
+vtable_name: CNetChan
+vfunc_offset: '0x58'
+vfunc_index: 11

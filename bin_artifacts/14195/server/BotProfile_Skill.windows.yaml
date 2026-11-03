@@ -1,0 +1,6 @@
+struct_name: BotProfile
+member_name: m_skill
+offset: '0xc'
+size: 4
+offset_sig: F3 41 0F 11 47 0C E9 ?? ?? ?? ??
+offset_sig_disp: 0

@@ -1,0 +1,6 @@
+struct_name: CServerSideClientBase
+member_name: m_nBaselineUsed
+offset: '0x9d4'
+size: 4
+offset_sig: C7 83 D4 09 00 00 00 00 00 00
+offset_sig_disp: 0

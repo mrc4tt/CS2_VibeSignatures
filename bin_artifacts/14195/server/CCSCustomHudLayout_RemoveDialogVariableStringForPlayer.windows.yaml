@@ -1,0 +1,5 @@
+func_name: CCSCustomHudLayout_RemoveDialogVariableStringForPlayer
+func_va: '0x1808c7c80'
+func_rva: '0x8c7c80'
+func_size: '0x136'
+func_sig: 85 D2 0F 88 ?? ?? ?? ?? 53 56 41 56
