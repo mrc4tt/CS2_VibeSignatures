@@ -59,7 +59,10 @@ deploy_all() {
     # CSS first: deploy_local_plugins.sh is the one that commits and pushes the
     # CounterStrikeSharp repo, so running it before the merge committed the
     # previous build's file and left this one uncommitted (14186).
-    ./update_css_gamedata.sh "$1" || die "css deploy"
+    # CSS_PREBUILT: the files were generated and verified above. Letting the script
+    # analyse again ran windows' server tasks inside the linux early release, before
+    # run_windows.sh, and failed it (14194, 14195).
+    CSS_PREBUILT=1 ./update_css_gamedata.sh "$1" || die "css deploy"
     ./deploy_local_plugins.sh "$1" || die "deploy"
     uv run check_deploy_drift.py -gamever "$1" || die "deploy drift: a target is still behind the generated gamedata"
     record_deploy "$1"
@@ -168,7 +171,7 @@ hint_for() {  # hint_for <failure text>
             printf 'cd %s && uv run record_deploy.py -gamever %s      # ❌ lines name the target\n' "$repo" "$ver"
             printf 'then: git add deployments/%s.json && git commit -m "chore(%s): record gamedata deploy" && git push\n' "$ver" "$ver" ;;
         *deploy*)
-            printf 'cd %s && ./update_css_gamedata.sh %s && ./deploy_local_plugins.sh %s && uv run record_deploy.py -gamever %s\n' "$repo" "$ver" "$ver" "$ver"
+            printf 'cd %s && CSS_PREBUILT=1 ./update_css_gamedata.sh %s && ./deploy_local_plugins.sh %s && uv run record_deploy.py -gamever %s\n' "$repo" "$ver" "$ver" "$ver"
             printf 'the analysis itself is committed and pushed; only the copy out failed\n' ;;
         *"site publish"*|*AUTOPILOT_PUBLISH*)
             printf 'cd %s/pages && PAGES_RELEASE_INPUT_ROOT=%s npm run build\n' "$repo" "$repo" ;;

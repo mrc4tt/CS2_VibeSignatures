@@ -33,6 +33,12 @@
 #   SNAPSHOT      game-symbol snapshot fed to update_gamedata.py
 #                 (default: gamesymbols/<GAMEVER>.yaml)
 #   DRYRUN=1      do everything except writing the install file
+#   CSS_PREBUILT=1  skip the analysis and the generation: merge the file already in
+#                 gamedata/<GAMEVER>/, as generated and verified by the caller.
+#                 autopilot always sets it. Without it the linux early release
+#                 analysed windows here, before run_windows.sh had run (14194,
+#                 14195: "css deploy" failed on a windows task), and the final
+#                 release regenerated the files after the verify gate had passed.
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -141,15 +147,18 @@ log "install gd  : $INSTALL_GD"
 # Fixes "IDB lock file detected ... another IDA instance has this database open"
 # left by an interrupted prior run. Also reap on exit/interrupt so THIS run
 # never leaves a lock behind for the next one.
-if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet "$SESSION_UNIT" 2>/dev/null; then
-  log "pausing the editor IDA session for this run ($SESSION_UNIT)"
-  systemctl stop "$SESSION_UNIT" || true
+# CSS_PREBUILT runs no IDA, so it leaves the editor session and the IDBs alone.
+if [ "${CSS_PREBUILT:-0}" != "1" ]; then
+  if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet "$SESSION_UNIT" 2>/dev/null; then
+    log "pausing the editor IDA session for this run ($SESSION_UNIT)"
+    systemctl stop "$SESSION_UNIT" || true
+  fi
+  log "preflight: reaping orphaned idalib-mcp servers + unowned IDB aux files under bin/$GAMEVER"
+  reap_idalib
+  sleep 1
+  trap 'reap_idalib; resume_session' EXIT
+  trap 'exit 130' INT TERM
 fi
-log "preflight: reaping orphaned idalib-mcp servers + unowned IDB aux files under bin/$GAMEVER"
-reap_idalib
-sleep 1
-trap 'reap_idalib; resume_session' EXIT
-trap 'exit 130' INT TERM
 
 # --- 2. analyze both binaries (linux+windows) -> per-symbol YAML -----------
 ANALYZE=(uv run ida_analyze_bin.py -gamever="$GAMEVER" -platform=linux,windows -modules=server)
@@ -159,14 +168,18 @@ ANALYZE=(uv run ida_analyze_bin.py -gamever="$GAMEVER" -platform=linux,windows -
 [ -n "${LLM_BASEURL:-}" ]   && ANALYZE+=(-llm_baseurl="$LLM_BASEURL")
 [ -n "${LLM_MODEL:-}" ]     && ANALYZE+=(-llm_model="$LLM_MODEL")
 
-log "running: ${ANALYZE[*]}"
-"${ANALYZE[@]}"
+if [ "${CSS_PREBUILT:-0}" = "1" ]; then
+  log "CSS_PREBUILT=1: using the generated $DIST_GD as is (no analysis, no generation)"
+else
+  log "running: ${ANALYZE[*]}"
+  "${ANALYZE[@]}"
 
-# --- 3. YAML -> dist gamedata.json -----------------------------------------
-[ -f "$SNAPSHOT" ] || die "game-symbol snapshot not found: $SNAPSHOT (pack it first, or set SNAPSHOT=<path>)"
+  # --- 3. YAML -> dist gamedata.json -----------------------------------------
+  [ -f "$SNAPSHOT" ] || die "game-symbol snapshot not found: $SNAPSHOT (pack it first, or set SNAPSHOT=<path>)"
 
-log "running: uv run update_gamedata.py -gamever=$GAMEVER -snapshot=$SNAPSHOT"
-uv run update_gamedata.py -gamever="$GAMEVER" -snapshot="$SNAPSHOT" -outputdir="$REPO/gamedata/$GAMEVER"
+  log "running: uv run update_gamedata.py -gamever=$GAMEVER -snapshot=$SNAPSHOT"
+  uv run update_gamedata.py -gamever="$GAMEVER" -snapshot="$SNAPSHOT" -outputdir="$REPO/gamedata/$GAMEVER"
+fi
 
 [ -f "$DIST_GD" ] || die "dist gamedata not produced: $DIST_GD"
 
