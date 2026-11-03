@@ -1,0 +1,8 @@
+func_name: CServerSideClientBase_SetUpdateRate
+func_va: '0x541120'
+func_rva: '0x541120'
+func_size: '0x1c'
+func_sig: F3 0F 10 0D ?? ?? ?? ?? 0F 28 D1 F3 0F 5F D0
+vtable_name: CServerSideClientBase
+vfunc_offset: '0x60'
+vfunc_index: 12

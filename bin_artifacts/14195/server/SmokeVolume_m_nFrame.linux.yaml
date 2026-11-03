@@ -1,0 +1,6 @@
+struct_name: SmokeVolume
+member_name: m_nFrame
+offset: '0xec'
+size: 4
+offset_sig: 4D 63 B1 EC 00 00 00 89 C8 C1 E8 06 4D 89 F7 49 C1 E7 09
+offset_sig_disp: 0

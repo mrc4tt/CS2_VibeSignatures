@@ -1,0 +1,5 @@
+struct_name: CEntitySystem
+member_name: m_ComponentUnserializerInfoAllocator
+offset: '0xd48'
+offset_sig: 48 8D BB 48 0D 00 00 BE ?? ?? ?? ??
+offset_sig_disp: 0

@@ -1,0 +1,5 @@
+func_name: CServerSideClient_ProcessRespondCvarValue
+vtable_name: CServerSideClient
+vfunc_offset: '0x140'
+vfunc_index: 40
+vfunc_sig: 48 C7 45 ?? 41 01 00 00 48 C7 45 ?? 00 00 00 00 4D 85 C0
