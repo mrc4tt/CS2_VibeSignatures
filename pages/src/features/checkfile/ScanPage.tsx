@@ -19,6 +19,9 @@ import { ScanPanel, type ScanPlatform } from './ScanPanel'
 import { failureText, isLoaded, readGameData, useFileCheck, type Loaded } from './useFileCheck'
 import { agedValue } from './verdict'
 
+/** The published file the scanner opens with until someone drops, pastes or edits their own. */
+const EXAMPLE_PLUGIN = 'CounterStrikeSharp'
+
 /**
  * The scanner: one file, the settings and verdict in a column on the left, the
  * file itself on the right with every verdict on its line.
@@ -110,7 +113,9 @@ export function ScanPage() {
   useEffect(() => {
     if (loaded || userActed.current || !index || !newest) return
     const files = (index.versions.find((version) => version.gameVersion === newest) ?? index.versions[0])?.files ?? []
-    const pick = files.find((entry) => entry.plugin === 'matchzy') ?? files[0]
+    // The file most visitors run: CounterStrikeSharp's own gamedata.json (the mrc4tt fork's
+    // generated one), so the first thing on screen is the scan they came to do.
+    const pick = files.find((entry) => entry.plugin === EXAMPLE_PLUGIN && entry.fileName === 'gamedata.json') ?? files[0]
     if (!pick) return
     let cancelled = false
     void getGameDataFile(pick).then((text) => {

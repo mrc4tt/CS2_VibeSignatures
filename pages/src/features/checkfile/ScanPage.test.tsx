@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../i18n'
 import type { SiteHistory } from '../../api/siteData'
-import { getGameDataFile } from '../gamedata/data'
+import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { clearHandoff, handOff } from './handoff'
 import { ScanPage } from './ScanPage'
 
@@ -94,6 +94,18 @@ describe('Scanner', () => {
     await waitFor(() => expect(screen.queryByText(/^Example:/)).toBeNull(), { timeout: 2000 })
     expect(screen.queryByText('Edited: checked again when you pause')).toBeNull()
     expect(document.querySelector('.annotated .rl.m-bad')).toBeNull()
+  })
+
+  it('opens on CounterStrikeSharp\'s gamedata.json when the build publishes one', async () => {
+    const css = { ...PUBLISHED, id: 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json', plugin: 'CounterStrikeSharp', fileName: 'gamedata.json' }
+    vi.mocked(getGameDataIndex).mockResolvedValueOnce({
+      schemaVersion: 1,
+      versions: [{ gameVersion: '14181', fileCount: 2, metadataFileCount: 0, files: [PUBLISHED, css] }],
+    } as Awaited<ReturnType<typeof getGameDataIndex>>)
+    vi.mocked(getGameDataFile).mockResolvedValueOnce(behindFile)
+    paint()
+    await screen.findByText('Example: CounterStrikeSharp 14181')
+    expect(vi.mocked(getGameDataFile).mock.calls[0][0]).toMatchObject({ plugin: 'CounterStrikeSharp', fileName: 'gamedata.json' })
   })
 
   it('points at the line of a JSON slip, in the editor while typing and above the page on a drop', async () => {
