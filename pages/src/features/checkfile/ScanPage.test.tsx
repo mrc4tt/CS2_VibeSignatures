@@ -246,8 +246,11 @@ describe('Scanner', () => {
       // the bar says what the scan said
       expect(document.querySelector('.scanverdict')?.textContent).toBe('1 value is wrong for build 14192')
 
-      // nothing opens by itself: the bar says the verdict and waits
+      // a scan that found something opens the result by itself
       const sheet = screen.getByRole('region', { name: 'Scan result' })
+      expect(sheet).toHaveAttribute('data-size', 'half')
+      // closed, it is a slim bar with the verdict
+      fireEvent.keyDown(sheet, { key: 'Escape' })
       expect(sheet).toHaveAttribute('data-size', 'min')
       expect(sheet.textContent).toContain('Not ready for 14192.')
       expect(sheet.textContent).toContain('1 error. It can be fixed automatically.')
@@ -302,8 +305,9 @@ describe('Scanner', () => {
       handOff(behindFile, 'matchzy.json')
       paint()
       await userEvent.click(await screen.findByRole('button', { name: 'Scan it' }))
-      await userEvent.click(await screen.findByRole('button', { name: 'Show result' }))
-      const sheet = screen.getByRole('region', { name: 'Scan result' })
+      // a stale value opens the result by itself
+      const sheet = await screen.findByRole('region', { name: 'Scan result' })
+      await waitFor(() => expect(sheet).toHaveAttribute('data-size', 'half'))
       expect(sheet.querySelector('.rsheet-aged')?.textContent).toBe('Your value is the one from build 14180; it changed in 14181.')
 
       await userEvent.click(screen.getByRole('button', { name: 'Use fixed file' }))

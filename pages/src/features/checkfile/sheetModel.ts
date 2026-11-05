@@ -5,13 +5,39 @@ export type SheetSize = 'closed' | 'min' | 'half' | 'full'
 
 const AUTO_OPEN_KEY = 'cs2vibe.scan.autoOpen'
 
-/** Whether the sheet opens by itself after a scan. Only a convenience, so storage that throws reads as "no". */
+/**
+ * Whether the sheet opens by itself after a scan that found something. On unless
+ * someone turned it off: a result that waits in a slim bar at the bottom made
+ * people scroll down and press a button to read what they had just asked for.
+ */
 export function readAutoOpen(): boolean {
   try {
-    return localStorage.getItem(AUTO_OPEN_KEY) === '1'
+    return localStorage.getItem(AUTO_OPEN_KEY) !== '0'
   } catch {
-    return false
+    return true
   }
+}
+
+/** Heights a dragged sheet settles on, as a share of the window, smallest first. */
+export const SHEET_STOPS: Array<[SheetSize, number]> = [['min', 0], ['half', 0.62], ['full', 1]]
+
+/**
+ * The size a drag ends on: the stop nearest the height the sheet was let go at,
+ * or the next one along when it was flicked (moved fast in one direction).
+ */
+export function settleSheet(height: number, viewport: number, velocity: number): SheetSize {
+  const share = Math.max(0, Math.min(1, height / Math.max(1, viewport)))
+  const FLICK = 0.5 // px per ms
+  if (Math.abs(velocity) > FLICK) {
+    const up = velocity < 0
+    const index = SHEET_STOPS.findIndex(([, stop]) => (up ? stop > share : stop >= share))
+    if (up) return SHEET_STOPS[index < 0 ? SHEET_STOPS.length - 1 : index][0]
+    const below = [...SHEET_STOPS].reverse().find(([, stop]) => stop < share)
+    return (below ?? SHEET_STOPS[0])[0]
+  }
+  let best = SHEET_STOPS[0]
+  for (const stop of SHEET_STOPS) if (Math.abs(stop[1] - share) < Math.abs(best[1] - share)) best = stop
+  return best[0]
 }
 
 export function writeAutoOpen(on: boolean): void {

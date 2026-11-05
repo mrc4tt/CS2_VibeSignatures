@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../i18n'
 import type { DeepScanResult } from './deepScan'
 import { ResultSheet } from './ResultSheet'
-import { readAutoOpen, scanLog } from './sheetModel'
+import { readAutoOpen, scanLog, settleSheet } from './sheetModel'
 
 const clean: DeepScanResult = {
   build: '14192',
@@ -32,9 +32,24 @@ describe('ResultSheet', () => {
     expect(screen.queryByRole('region')).toBeNull()
   })
 
-  it('reads storage that throws as "do not open by itself"', () => {
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked') })
+  it('opens by itself unless turned off, and reads storage that throws as on', () => {
+    expect(readAutoOpen()).toBe(true)
+    localStorage.setItem('cs2vibe.scan.autoOpen', '0')
     expect(readAutoOpen()).toBe(false)
+    localStorage.removeItem('cs2vibe.scan.autoOpen')
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked') })
+    expect(readAutoOpen()).toBe(true)
+  })
+
+  it('settles a dragged sheet on the nearest size, or the next one when flicked', () => {
+    expect(settleSheet(80, 1000, 0)).toBe('min')
+    expect(settleSheet(560, 1000, 0)).toBe('half')
+    expect(settleSheet(900, 1000, 0)).toBe('full')
+    // a short fast flick up from the bar opens it; down from half closes it
+    expect(settleSheet(200, 1000, -1)).toBe('half')
+    expect(settleSheet(700, 1000, -1)).toBe('full')
+    expect(settleSheet(500, 1000, 1)).toBe('min')
+    expect(settleSheet(800, 1000, 1)).toBe('half')
   })
 
   it('writes the raw log in the scanner\'s own format', () => {

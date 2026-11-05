@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { copyText } from '../../ui/clipboard'
 import { saveText } from '../../ui/download'
@@ -7,9 +7,22 @@ import { platformTone, rowTone, sortRows, type DeepFix, type DeepPlatform, type 
 import { locateValue } from './lineMarks'
 import { VTABLE_KEY_SUFFIX } from './parse'
 import type { AgedValue } from './verdict'
-import { PLATFORM_LABEL, PLATFORMS, readAutoOpen, scanLog, writeAutoOpen, type SheetSize } from './sheetModel'
+import { PLATFORM_LABEL, PLATFORMS, readAutoOpen, scanLog, settleSheet, writeAutoOpen, type SheetSize } from './sheetModel'
 
 const NEXT_SIZE: Record<SheetSize, SheetSize> = { closed: 'min', min: 'half', half: 'full', full: 'min' }
+/** Room the full-height sheet leaves above it for the site header (CSS: calc(100dvh - 72px)). */
+const TOP_GAP = 72
+/** A drag taller than this shows the open sheet's content while it is still moving. */
+const OPEN_AT = 160
+
+interface Drag {
+  y0: number
+  h0: number
+  lastY: number
+  lastT: number
+  velocity: number
+  moved: boolean
+}
 
 type Filter = 'all' | 'bad' | 'warn' | 'ok'
 
@@ -77,7 +90,9 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
   const [autoOpen, setAutoOpen] = useState(readAutoOpen)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const sheetRef = useRef<HTMLElement>(null)
-  const open = size === 'half' || size === 'full'
+  const dragged = useRef(false)
+  const [dragHeight, setDragHeight] = useState<number | null>(null)
+  const open = size === 'half' || size === 'full' || (dragHeight !== null && dragHeight > OPEN_AT)
 
   const items = useMemo(() => itemsFor(result, text), [result, text])
   const counts = useMemo(() => {
@@ -125,6 +140,50 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
     return item.tone === 'bad' ? t('scan.result.reason.contradicted') : t('scan.result.reason.unverified')
   }
 
+  // The handle and the header drag the sheet up and down, as on a phone; it
+  // settles on the nearest size, or the next one when flicked. The move and the
+  // release are followed on the window, because a finger leaves the grip at
+  // once, and the pointer is not captured, so a press without movement stays
+  // an ordinary click on whatever is under it.
+  function onDragStart(event: PointerEvent<HTMLElement>) {
+    if (event.button !== 0 || !sheetRef.current) return
+    const target = event.target as HTMLElement
+    if (target.closest('button, input, label, a, [role="radiogroup"], [role="group"]') && !target.closest('.rsheet-handle')) return
+    const state: Drag = {
+      y0: event.clientY,
+      h0: sheetRef.current.getBoundingClientRect().height,
+      lastY: event.clientY,
+      lastT: event.timeStamp,
+      velocity: 0,
+      moved: false,
+    }
+    dragged.current = false
+    const max = () => window.innerHeight - TOP_GAP
+    const heightAt = (y: number) => Math.max(56, Math.min(max(), state.h0 - (y - state.y0)))
+    const move = (next: globalThis.PointerEvent) => {
+      if (!state.moved && Math.abs(next.clientY - state.y0) < 5) return
+      state.moved = true
+      next.preventDefault()
+      const dt = Math.max(1, next.timeStamp - state.lastT)
+      state.velocity = (next.clientY - state.lastY) / dt
+      state.lastY = next.clientY
+      state.lastT = next.timeStamp
+      setDragHeight(heightAt(next.clientY))
+    }
+    const end = (last: globalThis.PointerEvent) => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
+      if (!state.moved) return
+      dragged.current = true
+      setDragHeight(null)
+      onSize(settleSheet(heightAt(last.clientY), max(), state.velocity))
+    }
+    window.addEventListener('pointermove', move, { passive: false })
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
+  }
+
   function copyValue(key: string, value: string) {
     void copyText(value, { ok: t('clipboard.ok'), failed: t('clipboard.failed') }).then((done) => setCopiedKey(done ? key : null))
   }
@@ -136,6 +195,8 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
         ref={sheetRef}
         className="rsheet"
         data-size={size}
+        data-dragging={dragHeight !== null || undefined}
+        style={dragHeight !== null ? { height: dragHeight } : undefined}
         aria-label={t('scan.result.title')}
         tabIndex={-1}
         onKeyDown={(event) => {
@@ -145,7 +206,17 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
           }
         }}
       >
-        <button type="button" className="rsheet-handle" aria-label={t('scan.result.size')} onClick={() => onSize(NEXT_SIZE[size])}>
+        <div className="rsheet-grip" onPointerDown={onDragStart}>
+        <button
+          type="button"
+          className="rsheet-handle"
+          aria-label={t('scan.result.size')}
+          onClick={() => {
+            // the click that ends a drag is not a request for the next size
+            if (dragged.current) { dragged.current = false; return }
+            onSize(NEXT_SIZE[size])
+          }}
+        >
           <span />
         </button>
         <div className="rsheet-head">
@@ -215,6 +286,7 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
               </>
             )}
           </span>
+        </div>
         </div>
 
         {open && (

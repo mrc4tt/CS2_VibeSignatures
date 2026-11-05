@@ -8,7 +8,7 @@ import { buttonClass } from '../../ui/buttonStyle'
 import { Alert, Button, Tag } from '../../ui/primitives'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { AnnotatedFile, type BrokenText } from './AnnotatedFile'
-import { fetchScanBuilds, fetchScanHealth, requestDeepScan, type DeepFix } from './deepScan'
+import { fetchScanBuilds, fetchScanHealth, requestDeepScan, rowTone, type DeepFix } from './deepScan'
 import { fileDetails } from './details'
 import { clearHandoff, peekHandoff } from './handoff'
 import { browserMarks, misnamedKeys, problemLines, renameMarks, scanMarks, type KeyRename } from './lineMarks'
@@ -91,7 +91,9 @@ export function ScanPage() {
       setScanMs(performance.now() - scanStarted.current)
       if (data.note) return
       setFocusLine(undefined)
-      setSheet(readAutoOpen() ? 'half' : 'min')
+      // Something to read opens the sheet; a clean file only needs the green bar.
+      const flagged = data.results.some((row) => rowTone(row) === 'bad' || rowTone(row) === 'warn')
+      setSheet(flagged && readAutoOpen() ? 'half' : 'min')
     },
   })
   // A result belongs to the text it was run on; a new file must not inherit the last one's.

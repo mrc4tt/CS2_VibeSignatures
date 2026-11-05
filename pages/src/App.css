@@ -882,3 +882,13 @@ button.rsheet-tr:disabled { cursor: default; }
   .rsheet-tr .kd, .rsheet-tr .num { display: none; }
   .rsheet-why { padding-left: 18px; }
 }
+
+/* The result sheet drags like a phone's bottom sheet: grab the handle or the
+   header. touch-action keeps the page from scrolling under the finger. */
+.rsheet-grip { display: flex; flex-direction: column; touch-action: none; cursor: grab; user-select: none; }
+.rsheet-grip button, .rsheet-grip input, .rsheet-grip label { cursor: pointer; }
+.rsheet[data-dragging] { cursor: grabbing; }
+.rsheet[data-dragging] .rsheet-body { overflow: hidden; }
+.rsheet { transition: height 180ms ease-out; }
+.rsheet[data-dragging] { transition: none; }
+@media (prefers-reduced-motion: reduce) { .rsheet { transition: none; } }
