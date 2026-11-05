@@ -609,6 +609,8 @@ class TestPreprocessIndexBasedVfuncViaMcp(unittest.IsolatedAsyncioTestCase):
                             }
                         ]
                     )
+                if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                    return _py_eval_payload({"ok": True, "seen": []})
                 if name == "py_eval":
                     return _py_eval_payload(
                         {
@@ -718,6 +720,8 @@ class TestPreprocessIndexBasedVfuncViaMcp(unittest.IsolatedAsyncioTestCase):
                     # The stale signature still matches exactly once, but on the
                     # sibling thunk that now occupies slot 20.
                     return _FakeCallToolResult([{"matches": ["0x180001260"], "n": 1}])
+                if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                    return _py_eval_payload({"ok": True, "seen": []})
                 if name == "py_eval":
                     code = str(arguments["code"])
                     if "0x180001260" in code:
@@ -1150,6 +1154,7 @@ class TestVtableAliasSupport(unittest.IsolatedAsyncioTestCase):
             session = AsyncMock()
             session.call_tool.side_effect = [
                 _FakeCallToolResult([{"matches": ["0x180003000"], "n": 1}]),
+                _py_eval_payload({"ok": True, "seen": []}),
                 _py_eval_payload(
                     {
                         "func_va": "0x180004000",
@@ -1611,6 +1616,8 @@ class TestVtableArtifactStemSupport(unittest.IsolatedAsyncioTestCase):
                             }
                         ]
                     )
+                if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                    return _py_eval_payload({"ok": True, "seen": []})
                 if name == "py_eval":
                     return _py_eval_payload(
                         {
@@ -1664,14 +1671,10 @@ class TestVtableArtifactStemSupport(unittest.IsolatedAsyncioTestCase):
             )
 
             session = AsyncMock()
-            session.call_tool.return_value = _FakeCallToolResult(
-                [
-                    {
-                        "matches": ["0x180012340"],
-                        "n": 1,
-                    }
-                ]
-            )
+            session.call_tool.side_effect = [
+                _FakeCallToolResult([{"matches": ["0x180012340"], "n": 1}]),
+                _py_eval_payload({"ok": True, "seen": []}),
+            ]
 
             with patch.object(
                 ida_analyze_util,
@@ -1690,7 +1693,8 @@ class TestVtableArtifactStemSupport(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsNone(result)
         mock_preprocess_vtable.assert_not_awaited()
-        session.call_tool.assert_awaited_once()
+        # find_bytes, then the call-site offset check; nothing after the missing stem YAML
+        self.assertEqual(session.call_tool.await_count, 2)
 
     async def test_preprocess_index_based_vfunc_reads_numbered_artifact_vtable_yaml(
         self,
@@ -7770,6 +7774,8 @@ found_struct_offset: []
                             }
                         ]
                     )
+                if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                    return _py_eval_payload({"ok": True, "seen": []})
                 if name == "py_eval":
                     code = arguments["code"]
                     self.assertIn("offset_sig_disp = 0", code)
@@ -7837,6 +7843,8 @@ found_struct_offset: []
             def _fake_call_tool(*, name: str, arguments: dict[str, object]):
                 if name == "find_bytes":
                     return _FakeCallToolResult([{"matches": ["0xC871B3"], "n": 1}])
+                if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                    return _py_eval_payload({"ok": True, "seen": []})
                 if name == "py_eval":
                     code = arguments["code"]
                     self.assertIn("sig_len = 13", code)
@@ -7901,6 +7909,8 @@ found_struct_offset: []
             def _fake_call_tool(*, name: str, arguments: dict[str, object]):
                 if name == "find_bytes":
                     return _FakeCallToolResult([{"matches": ["0xC871B3"], "n": 1}])
+                if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                    return _py_eval_payload({"ok": True, "seen": []})
                 if name == "py_eval":
                     return _py_eval_payload(
                         {
@@ -7934,6 +7944,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("DecodeInstruction", code)
@@ -8009,6 +8021,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("allow_across_boundary = True", code)
@@ -8092,6 +8106,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("allow_across_boundary = True", code)
@@ -8167,6 +8183,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 self.assertIn("def _resolve_disp_off", arguments["code"])
                 self.assertIn("def _collect_sig_stream", arguments["code"])
@@ -8240,6 +8258,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("allow_across_boundary = True", code)
@@ -8326,6 +8346,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("allow_across_boundary = True", code)
@@ -8405,6 +8427,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("allow_across_boundary = False", code)
@@ -8475,6 +8499,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("allow_across_boundary = True", code)
@@ -8557,6 +8583,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("allow_across_boundary = True", code)
@@ -8760,6 +8788,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("target_vfunc_offset = 120", code)
@@ -8836,6 +8866,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn(
@@ -8917,6 +8949,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 return _py_eval_payload(
                     {
@@ -8966,6 +9000,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 return _py_eval_payload(
                     {
@@ -9014,6 +9050,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 return _py_eval_payload(
                     {
@@ -9123,6 +9161,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 return _py_eval_payload(
                     [
@@ -9455,6 +9495,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("allow_across_boundary = True", code)
@@ -9540,6 +9582,8 @@ found_struct_offset: []
         session = AsyncMock()
 
         def _fake_call_tool(*, name: str, arguments: dict[str, object]):
+            if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                return _py_eval_payload({"ok": True, "seen": []})
             if name == "py_eval":
                 code = arguments["code"]
                 self.assertIn("allow_across_boundary = True", code)
@@ -14025,6 +14069,8 @@ class TestPreprocessFuncSigViaMcpVfuncSigMaxMatch(unittest.IsolatedAsyncioTestCa
                             }
                         ]
                     )
+                if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                    return _py_eval_payload({"ok": True, "seen": []})
                 if name == "py_eval":
                     return _py_eval_payload(
                         {
@@ -14092,6 +14138,8 @@ class TestPreprocessFuncSigViaMcpVfuncSigMaxMatch(unittest.IsolatedAsyncioTestCa
                             }
                         ]
                     )
+                if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                    return _py_eval_payload({"ok": True, "seen": []})
                 if name == "py_eval":
                     return _py_eval_payload(
                         {
@@ -14173,6 +14221,8 @@ class TestPreprocessFuncSigViaMcpVfuncSigMaxMatch(unittest.IsolatedAsyncioTestCa
                             }
                         ]
                     )
+                if name == "py_eval" and "want = " in str(arguments.get("code", "")):
+                    return _py_eval_payload({"ok": True, "seen": []})
                 if name == "py_eval":
                     return _py_eval_payload(
                         {

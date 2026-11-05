@@ -3159,6 +3159,50 @@ _SHRINK_WRAPPED_HEAD_REPAIR = (
 )
 
 
+def build_vcall_offset_check_py(match_addr, sig_len, want_offset, sig_disp=None):
+    """IDA Python that answers whether the call site at `match_addr` really uses `want_offset`.
+
+    The vfunc_sig fallback matched an OLD call-site pattern and used to take the OLD slot
+    index on trust. A pattern whose offset bytes are wildcarded (or that now matches another
+    call with the old shape) still matches after the class layout moved, and the stale index
+    was carried forward with nothing in the run objecting - only validate_artifacts, after
+    the fact. This reads the displacement the matched instructions actually carry: any
+    memory operand `[reg+want]` inside the pattern (only at `sig_disp` when the record names
+    it), or on ELF an Itanium member-function pointer immediate `want + 1`.
+    Result JSON: {"ok": bool, "seen": [displacements]}.
+    """
+    disp = "None" if sig_disp is None else str(int(sig_disp))
+    return (
+        "import ida_ua, ida_ida, json\n"
+        f"start = {int(match_addr)}\n"
+        f"end = start + {int(sig_len)}\n"
+        f"want = {int(want_offset)}\n"
+        f"only = {disp}\n"
+        "elf = ida_ida.inf_get_filetype() == ida_ida.f_ELF\n"
+        "ok, seen, ea = False, [], start\n"
+        "while ea < end and not ok:\n"
+        "    insn = ida_ua.insn_t()\n"
+        "    size = ida_ua.decode_insn(insn, ea)\n"
+        "    if size <= 0:\n"
+        "        break\n"
+        "    if only is None or ea - start == only:\n"
+        "        for op in insn.ops:\n"
+        "            if op.type == ida_ua.o_void:\n"
+        "                break\n"
+        "            if op.type == ida_ua.o_displ:\n"
+        "                value = op.addr & 0xFFFFFFFF\n"
+        "                value = value - 0x100000000 if value >= 0x80000000 else value\n"
+        "                seen.append(value)\n"
+        "                ok = ok or value == want\n"
+        "            elif op.type == ida_ua.o_phrase and want == 0:\n"
+        "                ok = True\n"
+        "            elif op.type == ida_ua.o_imm and elf and op.value == want + 1:\n"
+        "                ok = True\n"
+        "    ea += size\n"
+        "result = json.dumps({'ok': ok, 'seen': seen[:8]})\n"
+    )
+
+
 async def preprocess_func_sig_via_mcp(
     session,
     new_path,
@@ -3334,6 +3378,30 @@ async def preprocess_func_sig_via_mcp(
 
         return matches[0]
 
+    async def _vcall_uses_offset(match_addr, signature, want_offset, sig_disp):
+        try:
+            start = int(str(match_addr), 0)
+            sig_len = len(str(signature).split())
+            disp = None if sig_disp in (None, "") else _parse_int_field(sig_disp, "vfunc_sig_disp")
+        except Exception:
+            return False
+        code = build_vcall_offset_check_py(start, sig_len, want_offset, disp)
+        try:
+            raw = parse_mcp_result(await session.call_tool(name="py_eval", arguments={"code": code}))
+            verdict = json.loads(raw.get("result") or "null") if isinstance(raw, dict) else None
+        except Exception as e:
+            if debug:
+                print(f"    Preprocess: vcall offset check error: {e}")
+            return False
+        if isinstance(verdict, dict) and verdict.get("ok"):
+            return True
+        print(
+            f"    Preprocess: {os.path.basename(old_path)} vfunc_sig matched at {match_addr} but the call "
+            f"there does not use offset {hex(want_offset)} (saw "
+            f"{[hex(v) for v in (verdict or {}).get('seen', [])]}); the old slot is not reused"
+        )
+        return False
+
     async def _get_func_info(addr_expr):
         py_code = (
             f"import idaapi, json\n"
@@ -3501,6 +3569,11 @@ async def preprocess_func_sig_via_mcp(
             vfunc_sig_max_match,
         )
         if vfunc_match_addr is None:
+            return None
+
+        # The old index is only reused when the matched call site still uses it.
+        if not await _vcall_uses_offset(vfunc_match_addr, vfunc_sig, vfunc_offset,
+                                        old_data.get("vfunc_sig_disp")):
             return None
 
         # If the old YAML never had func_va, the vtable is only used as

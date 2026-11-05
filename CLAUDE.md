@@ -1038,6 +1038,12 @@ Two guards now catch the class before the baseline does:
   judged as an address it was always "at None - not an entry", so ~150 tasks (300 slot-only
   artifacts on 14192) threw away their free call-site relocation and paid LLM_DECOMPILE
   every build (fixed 2026-10-25).
+- the vfunc_sig fallback (an old record with no `func_sig`) reuses the old slot index only
+  when the matched call site's own `[reg+disp]` (or linux's member-pointer `disp + 1`) still
+  equals it (`build_vcall_offset_check_py`, `tests/test_vcall_offset_check.py`); otherwise it
+  prints `does not use offset ... the old slot is not reused` and the task's real search runs.
+  Before 2026-11-05 a stale index rode through and only validate_artifacts saw it afterwards.
+  Audited on 14196: all 290 vfunc_sigs pin their offset bytes.
 - `abi_guard.check_symbol` verifies `func_size` as well, which is how four over-measurements
   surfaced that `validate_artifacts` had missed (its swallow check needs a recognisable
   prologue with no branch into it).
