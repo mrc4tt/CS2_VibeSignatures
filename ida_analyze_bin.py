@@ -1599,6 +1599,93 @@ def _remove_broken_packed_databases(binary_path, debug=False):
     return removed
 
 
+LASTGOOD_SUFFIX = ".lastgood"
+# what idalib-mcp's log says when a packed database cannot be opened at all
+# (1228 on 14196's server.dll, 3327 for a .i64 with a valid header and a garbage body)
+UNOPENABLE_LOG_MARKERS = ("Failed to open database", "Oops! internal error")
+
+
+def _lastgood_path(binary_path):
+    return f"{os.fspath(binary_path)}.i64{LASTGOOD_SUFFIX}"
+
+
+def _same_file_stamp(a, b):
+    try:
+        sa, sb = os.stat(a), os.stat(b)
+    except OSError:
+        return False
+    return sa.st_size == sb.st_size and int(sa.st_mtime) == int(sb.st_mtime)
+
+
+def _save_lastgood_idb(binary_path):
+    """Keep a copy of the packed .i64 that just opened and passed the identity check.
+
+    An open database works in .id0/.id1/...; the packed .i64 is not written again
+    until the database closes, so it can be copied while IDA holds it. Twice on
+    14196 the windows server.dll.i64 came out of a stop unopenable ("internal error
+    1228"), and the only way back was a 2-min cold analysis by hand while the run
+    had already failed. With this copy the next start puts it back and opens warm.
+    """
+    source = f"{os.fspath(binary_path)}.i64"
+    if os.environ.get(ida_shards.SHARD_PLAN_ENV) or not _is_ida_database_file(source):
+        return None
+    target = _lastgood_path(binary_path)
+    if _same_file_stamp(source, target):
+        return target
+    temp = f"{target}.tmp"
+    try:
+        shutil.copy2(source, temp)
+        os.replace(temp, target)
+    except OSError as exc:
+        print(f"  Warning: could not keep a last-good copy of {os.path.basename(source)}: {exc}")
+        try:
+            os.remove(temp)
+        except OSError:
+            pass
+        return None
+    return target
+
+
+def _quarantine_unopenable(path):
+    """Set *path* aside as .unopenable-<stamp>, replacing any older such copy (~0.5 GB each)."""
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    directory, name = os.path.split(path)
+    for entry in os.listdir(directory or "."):
+        if not entry.startswith(f"{name}.unopenable-"):
+            continue
+        try:
+            os.remove(os.path.join(directory, entry))
+        except OSError:
+            pass
+    target = f"{path}.unopenable-{stamp}"
+    os.replace(path, target)
+    return target
+
+
+def _restore_lastgood_idb(binary_path, debug=False):
+    """Replace the current database with the last-good copy; True when one was put back."""
+    lastgood = _lastgood_path(binary_path)
+    current = f"{os.fspath(binary_path)}.i64"
+    if not _is_ida_database_file(lastgood):
+        return False
+    if os.path.isfile(current) and _same_file_stamp(current, lastgood) and not os.path.exists(f"{current}.id0") \
+            and not os.path.exists(f"{os.fspath(binary_path)}.id0"):
+        return False  # the copy is what failed to open
+    quarantined = _quarantine_unopenable(current) if os.path.isfile(current) else None
+    _invalidate_ida_database(binary_path, debug=debug)
+    temp = f"{current}.tmp"
+    try:
+        shutil.copy2(lastgood, temp)
+        os.replace(temp, current)
+    except OSError as exc:
+        print(f"  Error: could not restore {os.path.basename(lastgood)}: {exc}")
+        return False
+    stamp = time.strftime("%Y-%m-%d %H:%M", time.localtime(os.stat(lastgood).st_mtime))
+    aside = f" (the failed one is {os.path.basename(quarantined)})" if quarantined else ""
+    print(f"  Restored the last-good {os.path.basename(current)} from {stamp}{aside}")
+    return True
+
+
 def resolve_oldgamever(gamever, artifact_dir):
     """
     Resolve the best oldgamever by searching for the most recent existing version
@@ -3901,6 +3988,7 @@ def start_idalib_mcp(
     debug=False,
     stdout=None,
     stderr=None,
+    _restored=False,
 ):
     """
     Start idalib-mcp as a background process.
@@ -4002,6 +4090,10 @@ def start_idalib_mcp(
             print("  Not retrying: cold analysis exceeded its limit (raise CS2VIBE_IDA_COLD_TIMEOUT)")
             _invalidate_ida_database(binary_path, debug=debug)
             return None
+        if warm and code is not None and any(marker in (tail or "") for marker in UNOPENABLE_LOG_MARKERS):
+            # IDA refuses this file itself; a second try reads the same bytes
+            print("  Not retrying: IDA cannot open this database")
+            break
         if attempt < MCP_STARTUP_ATTEMPTS:
             wait_for_port_release(host, port)
             if not warm:
@@ -4010,21 +4102,29 @@ def start_idalib_mcp(
                 if removed:
                     print(f"  Removed partial IDA database files: {', '.join(removed)}")
             print(f"  Retrying idalib-mcp start ({attempt + 1}/{MCP_STARTUP_ATTEMPTS})")
-    if warm and own_session and "Failed to open database" in (_idalib_mcp_log_tail(binary_path) or ""):
+    log_tail = (_idalib_mcp_log_tail(binary_path) or "") if own_session else ""
+    unopenable = any(marker in log_tail for marker in UNOPENABLE_LOG_MARKERS)
+    if warm and own_session and not _restored and _restore_lastgood_idb(binary_path, debug=debug):
+        # the database that just failed is set aside; the copy kept after the last
+        # verified open goes back, which costs seconds where a cold analysis costs minutes
+        wait_for_port_release(host, port)
+        return start_idalib_mcp(binary_path, host=host, port=port, ida_args=ida_args, debug=debug,
+                                stdout=stdout, stderr=stderr, _restored=True)
+    if warm and own_session and unopenable:
         # A packed database IDA cannot open at all ("Database initialization failed with
-        # error 4") is not going to open on a third try. 14191's libserver.so.i64 was left
-        # that way by an IDA session killed while it packed the database on stop, and the
-        # CSS deploy then died on it. Keep the file for inspection, analyse from scratch.
-        stamp = time.strftime("%Y%m%d-%H%M%S")
+        # error 4", "internal error 1228") is not going to open on a third try. 14191's
+        # libserver.so.i64 was left that way by an IDA session killed while it packed the
+        # database on stop, and the CSS deploy then died on it; 14196's server.dll.i64
+        # twice by a stop after a failed identity check. Keep the file for inspection,
+        # analyse from scratch.
         quarantined = []
         for suffix in (".i64", ".idb"):
             path = binary_path + suffix
             if os.path.isfile(path):
-                os.replace(path, f"{path}.unopenable-{stamp}")
-                quarantined.append(os.path.basename(path))
+                quarantined.append(os.path.basename(_quarantine_unopenable(path)))
         _invalidate_ida_database(binary_path, debug=debug)
         if quarantined:
-            print(f"  IDA cannot open {', '.join(quarantined)}; set aside as .unopenable-{stamp}, "
+            print(f"  IDA cannot open the database; set aside as {', '.join(quarantined)}, "
                   f"analysing {os.path.basename(binary_path)} from scratch")
             wait_for_port_release(host, port)
             return start_idalib_mcp(binary_path, host=host, port=port, ida_args=ida_args, debug=debug,
@@ -4491,6 +4591,29 @@ def _process_binary(
             debug,
             recovery_budget=recovery_budget,
         )
+        if not verified and os.path.isfile(_lastgood_path(binary_path)) and not _same_file_stamp(
+            f"{binary_path}.i64", _lastgood_path(binary_path)
+        ):
+            # 14196's server.dll.i64 failed this check ("IDB input sha256 is unavailable")
+            # and came out of the stop below unopenable; the copy kept after the last
+            # verified open is the database this run should have opened
+            print("  Opened database failed identity verification; trying the last-good copy")
+            stop_idalib_mcp_process(process, debug=debug)
+            wait_for_port_release(host, port)
+            # with no copy put back, reopen what was there and fall through as before
+            _restore_lastgood_idb(binary_path, debug=debug)
+            process = start_idalib_mcp(binary_path, host, port, ida_args, debug, _restored=True)
+            if process is not None:
+                process, verified = verify_owned_mcp_with_single_recovery(
+                    process,
+                    binary_path,
+                    platform,
+                    host,
+                    port,
+                    ida_args,
+                    debug,
+                    recovery_budget=recovery_budget,
+                )
         if not verified:
             if _ida_database_files_present(binary_path) and not require_warm_idb:
                 print(
@@ -4534,6 +4657,8 @@ def _process_binary(
                 "Opened binary verification failed",
             )
             return success_count, fail_count, skip_count
+
+        _save_lastgood_idb(binary_path)
 
         # Process each skill: try preprocess first, then run_skill if needed
         abort_binary_processing = False

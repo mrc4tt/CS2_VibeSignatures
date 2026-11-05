@@ -791,6 +791,16 @@ A failed idalib start no longer costs 1200 s blind: output goes to
 `<binary>.idalib-mcp.log`, the wait ends as soon as the process exits, an existing IDB
 gets 300 s, and one retry follows (14185's engine open stalled 20 min, then opened in 2 s).
 
+**Every warm IDB keeps a last-good copy** (`<binary>.i64.lastgood`, taken after the database
+opened and passed the identity check; the packed `.i64` is not rewritten until close, so the
+copy is consistent). Twice on 14196 windows `server.dll.i64` failed the identity check
+("IDB input sha256 is unavailable"), came out of the stop unopenable ("Oops! internal error
+1228") and failed the run until it was rebuilt by hand. Now a failed identity check, or a
+warm open IDA refuses ("Failed to open database", "Oops! internal error"; not retried, the
+bytes are the same), puts the copy back once and opens again; the failed file is kept as
+`.unopenable-<stamp>` (only the newest). Only with no copy does it fall back to a cold analysis.
+Measured with a garbage-bodied tier0.dll.i64: restored, opened, verified. Shards take no copy.
+
 The aux-file cleanup no longer touches a live database either. `.id0/.id1/.id2/.nam/.til` are what
 an OPEN database works in and `.i64` is the packed form written on close, so a set with no owner is
 the wreckage of an interrupted run while a set with an owner is somebody's working database. The
