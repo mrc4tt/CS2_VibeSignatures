@@ -80,7 +80,31 @@ def fold(name):
     return re.sub(r"[^a-z0-9]", "", str(name).replace("::", "_").replace(".", "_").lower())
 
 
+_CONFIG_DERIVED = {}
+
+
+def _from_config(kind, config_path, build):
+    """One derived table per config file and version of it. The config is a 3 MB YAML
+    that the pure-Python loader takes ~1 s to read; verify_service read it three times
+    per scan (two thirds of a warm request) for tables that only change with the file.
+    Each caller gets its own copy, so nothing can edit the cached one."""
+    try:
+        stat = os.stat(config_path)
+        key = (kind, os.path.abspath(config_path), stat.st_mtime_ns, stat.st_size)
+    except OSError:
+        return build()
+    if key not in _CONFIG_DERIVED:
+        for old in [k for k in _CONFIG_DERIVED if k[:2] == key[:2]]:
+            del _CONFIG_DERIVED[old]
+        _CONFIG_DERIVED[key] = build()
+    return dict(_CONFIG_DERIVED[key])
+
+
 def load_alias_map(config_path):
+    return _from_config("alias_map", config_path, lambda: _load_alias_map(config_path))
+
+
+def _load_alias_map(config_path):
     """{folded downstream key: canonical symbol name} from the analysis config.
 
     A symbol's own name and every entry in its `alias` list are downstream gamedata
@@ -687,7 +711,10 @@ def load_generator_aliases(config_path):
     """{folded key: symbol} exactly as the generators resolve a key: aliases only, the
     last declaration winning (gamedata_symbol_data.build_alias_to_name_map)."""
     from gamedata_symbol_data import build_alias_to_name_map, load_config
-    return {fold(alias): name for alias, name in build_alias_to_name_map(load_config(config_path)).items()}
+
+    def build():
+        return {fold(alias): name for alias, name in build_alias_to_name_map(load_config(config_path)).items()}
+    return _from_config("generator_aliases", config_path, build)
 
 
 def resolve_record(index, name, platform, aliases=None):

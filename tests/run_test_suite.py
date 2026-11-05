@@ -88,6 +88,7 @@ UNIT_MODULES = frozenset(
         "test_ida_shards",
         "test_lastgood_idb",
         "test_shrink_wrapped_head",
+        "test_scan_memo",
         "test_disabled_generator_waiver",
         "test_fork_cpp_tests",
         "test_pipeline_hunt",

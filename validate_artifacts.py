@@ -32,7 +32,7 @@ import os
 import re
 import struct
 import sys
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 
 import yaml
 
@@ -105,7 +105,33 @@ def _longest_literal_run(pat):
     return best
 
 
+# Results of the scans below, per binary. A binary is never edited once loaded, so
+# the same question always has the same answer; verify_service asks the same ones on
+# every scan (most uploads are the same few plugins' files), and the warm request
+# was almost all repeated scanning. Keyed by the blob's identity, with the blob kept
+# in the entry so the identity cannot be reused by another object.
+_SCAN_MEMO = OrderedDict()
+_SCAN_MEMO_SIZE = 20000
+
+
+def _memo(kind, blob, key, compute, extra=None):
+    slot = (kind, id(blob), id(extra) if extra is not None else None, key)
+    hit = _SCAN_MEMO.get(slot)
+    if hit is not None and hit[0] is blob and hit[1] is extra:
+        _SCAN_MEMO.move_to_end(slot)
+        return list(hit[2])
+    value = compute()
+    _SCAN_MEMO[slot] = (blob, extra, tuple(value))
+    while len(_SCAN_MEMO) > _SCAN_MEMO_SIZE:
+        _SCAN_MEMO.popitem(last=False)
+    return list(value)
+
+
 def find_all(blob, pat, limit=64):
+    return _memo("find_all", blob, (tuple(pat), limit), lambda: _find_all(blob, pat, limit))
+
+
+def _find_all(blob, pat, limit=64):
     """Every offset where pat matches, anchored on its longest literal run.
 
     Scanning the whole image with a wildcard regex costs far more than letting
@@ -276,6 +302,10 @@ def in_data(info, va):
 
 def _pointer_sites(blob, info, value, relocs):
     """Every VA whose stored 8-byte pointer equals `value`."""
+    return _memo("pointer_sites", blob, value, lambda: _scan_pointer_sites(blob, info, value, relocs), extra=relocs)
+
+
+def _scan_pointer_sites(blob, info, value, relocs):
     out = []
     if relocs:                                  # PIE: the pointer is a relocation
         out = [site for site, target in relocs.items() if target == value]
@@ -331,6 +361,10 @@ def _rtti_name_offsets(blob, class_name, exact, kind):
     all its arguments and back-references in the binary (...I20CSource2EntitySystemS0_E,
     ...@VCSource2EntitySystem@@V1@@@), so it is matched by its identifiers the way
     hunt_core does; until it was, every template class's slots went unverified."""
+    return _memo("rtti_name", blob, (class_name, exact, kind), lambda: _scan_rtti_name_offsets(blob, class_name, exact, kind))
+
+
+def _scan_rtti_name_offsets(blob, class_name, exact, kind):
     hits = [m.start() for m in re.finditer(re.escape(exact), blob)]
     if hits or "<" not in class_name:
         return hits

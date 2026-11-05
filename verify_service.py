@@ -241,6 +241,23 @@ def worker_init(warm_build, bindir):
         sys.path.insert(0, REPO_ROOT)
     if warm_build:
         _use_build(warm_build, bindir)
+        warm_up(warm_build, bindir)
+
+
+def warm_up(gamever, bindir):
+    """Judge every shipped file once, so the first real request finds the binaries'
+    caches (vtables, pointer sites, function ranges) filled. Measured on 14196: a
+    cold worker took 15.7 s for CounterStrikeSharp's file, a warm one 1.5 s."""
+    for _plugin, path, _entries, _vtables in _STATE.get("shipped", []):
+        try:
+            with open(path, "r", encoding="utf-8-sig") as handle:
+                job_verify(gamever, bindir, handle.read(), os.path.basename(path), ("linux", "windows"))
+        except Exception:  # a warm-up that fails leaves a cold worker, not a broken one
+            traceback.print_exc()
+
+
+def job_ping():
+    return os.getpid()
 
 
 def job_verify(gamever, bindir, text, filename, platforms):
@@ -439,6 +456,10 @@ def main():
     # spawn, not fork: the front process runs threads, and a forked child would inherit their locks.
     executor = cf.ProcessPoolExecutor(max_workers=args.workers, mp_context=multiprocessing.get_context("spawn"),
                                       initializer=worker_init, initargs=(builds[0] if builds else None, args.bindir))
+    # The pool starts its workers on demand, so the first visitors would pay for the
+    # start-up and the warm-up. One ping per worker, all at once, starts them all now.
+    for _ in range(args.workers):
+        executor.submit(job_ping)
     service = Service(executor, args.bindir, args.workers, args.queue, args.timeout)
     server = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     server.daemon_threads = True
