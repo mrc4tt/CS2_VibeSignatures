@@ -104,6 +104,22 @@ class DescribeTarget(unittest.TestCase):
 
         self.assertIn("uncommitted", record_deploy.describe_target(self.target)["error"])
 
+    def test_a_work_branch_checkout_reads_the_deploy_branch(self):
+        # 14196: CounterStrikeSharp sat on test/frame-probe, which has no upstream.
+        main = _out(self.clone, "branch", "--show-current")
+        _git(self.clone, "remote", "set-head", "origin", main)
+        _git(self.clone, "switch", "-q", "-c", "test/work")
+        self._commit('{"work": 1}', "work branch commit")
+
+        entry = record_deploy.describe_target(self.target)
+        self.assertFalse(entry["pushed"], "the work branch's copy is not on the deploy branch")
+
+        with open(self.file, "w", encoding="utf-8") as handle:
+            handle.write("{}")
+        entry = record_deploy.describe_target(self.target)
+        self.assertTrue(entry["pushed"], "the file on disk is what origin's deploy branch carries")
+        self.assertEqual(entry["commit"], _out(self.clone, "rev-parse", f"origin/{main}"))
+
     def test_reports_a_target_missing_on_this_machine(self):
         self.target["install"] = "absent/gamedata/plugin.json"
 

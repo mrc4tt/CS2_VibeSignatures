@@ -509,7 +509,10 @@ if git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1 \
     WINDOWS_PENDING=1
     log "build $TAG: linux is committed, windows is not; resuming at the windows analysis"
 elif git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1; then
-    if [ -f "$STATE/finished-$TAG" ] || [ -f "deployments/$TAG.json" ] \
+    # A record counts only when it says "deployed": record_deploy.py writes a "partial"
+    # one too, and on 14196 that untracked file turned a failed deploy into "already
+    # analysed; nothing to do" on every tick after.
+    if [ -f "$STATE/finished-$TAG" ] || grep -qs '"status": "deployed"' "deployments/$TAG.json" \
             || [ -z "$(git log -1 --format=%h -F --grep="feat($TAG): analysed by autopilot" HEAD)" ]; then
         log "build $TAG is already analysed; nothing to do"
         # Between builds: follow the plugins' own gamedata files (at most every 6 h) and

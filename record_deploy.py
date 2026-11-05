@@ -54,6 +54,17 @@ def web_url(remote):
     return url
 
 
+def deploy_branch(top):
+    """The branch consumers install from: origin's HEAD, else the upstream, else the current one."""
+    for ref in (
+        _git(top, "symbolic-ref", "-q", "--short", "refs/remotes/origin/HEAD"),
+        _git(top, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"),
+    ):
+        if ref and ref.startswith("origin/"):
+            return ref[len("origin/"):]
+    return _git(top, "branch", "--show-current") or "main"
+
+
 def describe_target(target):
     """Where one target's deployed file lives, and the commit that carries it."""
     deployed = os.path.join(check_deploy_drift._root(target), target["install"])
@@ -65,17 +76,27 @@ def describe_target(target):
         return {"error": f"not inside a git repository: {deployed}"}
     path = os.path.relpath(deployed, top).replace(os.sep, "/")
 
-    if _git(top, "status", "--porcelain", "--", path):
-        return {"error": f"uncommitted changes in {path}"}
-
-    commit = _git(top, "log", "-1", "--format=%H", "--", path)
-    if not commit:
-        return {"error": f"{path} has no commit"}
+    branch = deploy_branch(top)
+    remote_ref = f"refs/remotes/origin/{branch}"
+    if _git(top, "branch", "--show-current") == branch:
+        if _git(top, "status", "--porcelain", "--", path):
+            return {"error": f"uncommitted changes in {path}"}
+        commit = _git(top, "log", "-1", "--format=%H", "--", path)
+        if not commit:
+            return {"error": f"{path} has no commit"}
+        # Pushed means reachable from the deploy branch as this clone last saw it,
+        # which deploy_local_plugins.sh's push has just updated.
+        pushed = _git(top, "merge-base", "--is-ancestor", commit, remote_ref) is not None
+    else:
+        # The checkout is on a work branch; deploy_local_plugins.sh committed the file
+        # onto the deploy branch without touching it. What a consumer installs is that
+        # branch's copy, so it is deployed when that copy is the file on disk.
+        commit = _git(top, "log", "-1", "--format=%H", remote_ref, "--", path)
+        if not commit:
+            return {"error": f"{path} has no commit on origin/{branch}"}
+        pushed = _git(top, "rev-parse", f"{remote_ref}:{path}") == _git(top, "hash-object", "--", path)
 
     remote = _git(top, "remote", "get-url", "origin")
-    # Pushed means reachable from the upstream branch as this clone last saw it, which
-    # deploy_local_plugins.sh's push has just updated.
-    pushed = _git(top, "merge-base", "--is-ancestor", commit, "@{u}") is not None
 
     return {
         "repo": web_url(remote) if remote else None,

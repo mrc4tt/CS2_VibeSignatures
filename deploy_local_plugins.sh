@@ -118,18 +118,88 @@ fi
 # pushed fails the deploy at the end, after the others were tried - gamedata
 # that sits committed but unpushed is the state check_deploy_drift cannot see.
 PUSH_FAILED=""
+
+# The branch consumers install from: origin's HEAD (main, or CleanerCS2's master),
+# else the current branch's upstream. A clone left on a work branch must not catch
+# the gamedata commit: CounterStrikeSharp sat on test/frame-probe (no upstream) for
+# 14196, the commit landed there, "origin/<branch>..HEAD" named no ref and read as
+# "nothing to push", and record_deploy failed the build three ticks running.
+deploy_branch() {  # deploy_branch <repo>
+    local ref
+    ref="$(git -C "$1" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null || true)"
+    if [ -z "$ref" ]; then
+        git -C "$1" remote set-head origin -a >/dev/null 2>&1 || true
+        ref="$(git -C "$1" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null || true)"
+    fi
+    [ -z "$ref" ] && ref="$(git -C "$1" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
+    case "$ref" in
+        origin/*) echo "${ref#origin/}" ;;
+        *) git -C "$1" branch --show-current ;;
+    esac
+}
+
+# The checkout is on another branch (somebody's work): commit the working tree's copy
+# of <path> on top of origin/<deploy branch> with plumbing - a private index,
+# commit-tree, push sha:refs/heads/<branch> - so the checkout, its index and its
+# branch are left exactly as they were. Retried once after a fetch when the remote
+# moved in between. The local deploy branch follows when it is a fast-forward.
+commit_push_aside() {  # commit_push_aside <repo> <path> <deploy branch> <checked-out>
+    local repo="$1" path="$2" target="$3" current="$4" try base index tree commit f blob mode
+    echo "  ↪ $repo is on ${current:-a detached HEAD}, not $target: committing $path onto origin/$target, checkout untouched"
+    for try in 1 2; do
+        if ! git -C "$repo" fetch -q origin "$target" 2>/dev/null; then
+            echo "  ❌ could not fetch origin/$target in $repo"
+            PUSH_FAILED="$PUSH_FAILED $repo"
+            return 0
+        fi
+        base="$(git -C "$repo" rev-parse "refs/remotes/origin/$target")"
+        index="$(mktemp)"
+        GIT_INDEX_FILE="$index" git -C "$repo" read-tree "$base"
+        while IFS= read -r f; do
+            [ -f "$repo/$f" ] || continue
+            blob="$(git -C "$repo" hash-object -w -- "$f")"
+            mode=100644; [ -x "$repo/$f" ] && mode=100755
+            GIT_INDEX_FILE="$index" git -C "$repo" update-index --add --cacheinfo "$mode,$blob,$f"
+        done < <(git -C "$repo" ls-files -co --exclude-standard -- "$path")
+        tree="$(GIT_INDEX_FILE="$index" git -C "$repo" write-tree)"
+        rm -f "$index"
+        if [ "$tree" = "$(git -C "$repo" rev-parse "$base^{tree}")" ]; then
+            echo "  = nothing to push: $repo (origin/$target already carries $path)"
+            return 0
+        fi
+        commit="$(git -C "$repo" commit-tree "$tree" -p "$base" \
+                  -m "gamedata: $GAMEVER (auto-generated from CS2_VibeSignatures)")"
+        if git -C "$repo" push -q origin "$commit:refs/heads/$target" 2>/dev/null; then
+            git -C "$repo" update-ref "refs/remotes/origin/$target" "$commit"
+            if git -C "$repo" merge-base --is-ancestor "refs/heads/$target" "$commit" 2>/dev/null; then
+                git -C "$repo" update-ref "refs/heads/$target" "$commit"
+            fi
+            echo "  ✔ pushed onto $target: $repo (${commit:0:12})"
+            return 0
+        fi
+    done
+    echo "  ❌ push failed: cd $repo && git fetch origin && git log --oneline -3 origin/$target"
+    PUSH_FAILED="$PUSH_FAILED $repo"
+}
+
 commit_push() {  # commit_push <repo> <path inside repo>
-    local repo="$1" path="$2" branch
+    local repo="$1" path="$2" branch target
     [ -d "$repo/.git" ] || { echo "  ⚠️  not a git repo: $repo - skipped"; return 0; }
+    target="$(deploy_branch "$repo")"
+    branch="$(git -C "$repo" branch --show-current)"
+    if [ -z "$target" ] || [ "$branch" != "$target" ]; then
+        [ -n "$target" ] || { echo "  ❌ no deploy branch in $repo (no origin/HEAD, detached)"; PUSH_FAILED="$PUSH_FAILED $repo"; return 0; }
+        commit_push_aside "$repo" "$path" "$target" "$branch"
+        return 0
+    fi
     if [ -n "$(git -C "$repo" status --porcelain -- "$path")" ]; then
         git -C "$repo" add -- "$path"
         git -C "$repo" commit -q -m "gamedata: $GAMEVER (auto-generated from CS2_VibeSignatures)" -- "$path"
         echo "  ✔ committed: $repo ($path)"
     fi
-    branch="$(git -C "$repo" branch --show-current)"
-    [ -n "$branch" ] || { echo "  ⚠️  detached HEAD in $repo - not pushed"; PUSH_FAILED="$PUSH_FAILED $repo"; return 0; }
     # also pushes a commit an earlier run made but could not push
-    if [ -z "$(git -C "$repo" log --oneline "origin/$branch..HEAD" -- "$path" 2>/dev/null)" ]; then
+    if git -C "$repo" rev-parse -q --verify "refs/remotes/origin/$branch" >/dev/null \
+       && [ -z "$(git -C "$repo" log --oneline "origin/$branch..HEAD" -- "$path")" ]; then
         echo "  = nothing to push: $repo"
         return 0
     fi
@@ -155,8 +225,9 @@ commit_push "$HOME/customGIT/GameBanFix" gamedata/gamebanfix.games.txt
 commit_push "$HOME/plugins/cs2-retakes-allocator" Resources/RetakesAllocator_gamedata.json
 [ -n "$MAM_FAILED" ] || commit_push "$HOME/customGIT/MultiAddonManager" src/multiaddonmanager.cpp
 # CounterStrikeSharp's file is written by update_css_gamedata.sh, which has to
-# run first; only configs/ is ours there.
-commit_push "$HOME/CounterStrikeSharp" configs/
+# run first; only its gamedata file is ours there (configs/ also holds files a
+# work branch may change, which a commit onto main must not carry along).
+commit_push "$HOME/CounterStrikeSharp" configs/addons/counterstrikesharp/gamedata/gamedata.json
 
 if [ -n "$MAM_FAILED" ]; then
     echo "==> Deployed, but MultiAddonManager's source was not patched"

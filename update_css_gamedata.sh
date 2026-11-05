@@ -198,6 +198,23 @@ if [ "${DRYRUN:-0}" != "1" ] && git -C "$CSS_INSTALL" rev-parse --git-dir >/dev/
     fi
 fi
 
+# A checkout left on a work branch (14196: test/frame-probe) pulls nothing and holds
+# that branch's copy. deploy_local_plugins.sh commits onto origin's HEAD branch, so
+# merge into the file that branch carries - not into whatever the work branch has.
+if [ "${DRYRUN:-0}" != "1" ] && git -C "$CSS_INSTALL" rev-parse --git-dir >/dev/null 2>&1; then
+    CSS_DEPLOY_REF="$(git -C "$CSS_INSTALL" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null || true)"
+    if [ -n "$CSS_DEPLOY_REF" ] && [ "$(git -C "$CSS_INSTALL" branch --show-current)" != "${CSS_DEPLOY_REF#origin/}" ]; then
+        git -C "$CSS_INSTALL" fetch -q origin "${CSS_DEPLOY_REF#origin/}" 2>/dev/null \
+            || log "WARNING: could not fetch $CSS_DEPLOY_REF"
+        if git -C "$CSS_INSTALL" show "$CSS_DEPLOY_REF:$INSTALL_REL" > "$INSTALL_GD.deploy-base" 2>/dev/null; then
+            mv "$INSTALL_GD.deploy-base" "$INSTALL_GD"
+            log "$CSS_INSTALL is on $(git -C "$CSS_INSTALL" branch --show-current), not ${CSS_DEPLOY_REF#origin/}: merging into $CSS_DEPLOY_REF's $INSTALL_REL"
+        else
+            rm -f "$INSTALL_GD.deploy-base"
+        fi
+    fi
+fi
+
 # No .bak: $INSTALL_GD is tracked in the CounterStrikeSharp repo, so the pre-merge
 # version is `git show HEAD:$INSTALL_REL`. Uncommitted edits are the exception, so
 # say so before the merge rewrites them in place.
