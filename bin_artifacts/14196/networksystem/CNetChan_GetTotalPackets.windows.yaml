@@ -1,0 +1,8 @@
+func_name: CNetChan_GetTotalPackets
+func_va: '0x1800c5ba0'
+func_rva: '0xc5ba0'
+func_size: '0x16'
+func_sig: 83 FA ?? B8 ?? ?? ?? ?? 41 B8 ?? ?? ?? ?? 41 0F 45 C0 8B 04 08
+vtable_name: CNetChan
+vfunc_offset: '0x90'
+vfunc_index: 18

@@ -172,13 +172,24 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": 14,
+          "before": 13,
+          "line": 31,
+          "path": [
+            "CGameSceneNode::GetSkeletonInstance",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         30,
         31
       ],
       "name": "CGameSceneNode::GetSkeletonInstance",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -757,85 +768,202 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": 48,
+          "before": 47,
+          "line": 321,
+          "path": [
+            "INetChannel::CanPacket",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         320,
         321
       ],
       "name": "INetChannel::CanPacket",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": 50,
+          "before": 49,
+          "line": 329,
+          "path": [
+            "INetChannel::HasPendingReliableData",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         328,
         329
       ],
       "name": "INetChannel::HasPendingReliableData",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": 49,
+          "before": 48,
+          "line": 325,
+          "path": [
+            "INetChannel::IsOverflowed",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         324,
         325
       ],
       "name": "INetChannel::IsOverflowed",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": 82,
+          "before": 81,
+          "line": 336,
+          "path": [
+            "INetChannel::IsSuppressingTransmit",
+            "windows"
+          ]
+        },
+        {
+          "after": 83,
+          "before": 81,
+          "line": 337,
+          "path": [
+            "INetChannel::IsSuppressingTransmit",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         336,
         337
       ],
       "name": "INetChannel::IsSuppressingTransmit",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": 57,
+          "before": 56,
+          "line": 333,
+          "path": [
+            "INetChannel::IsTimedOut",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         332,
         333
       ],
       "name": "INetChannel::IsTimedOut",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": 55,
+          "before": 54,
+          "line": 345,
+          "path": [
+            "INetChannel::SetMaxDataRate",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         344,
         345
       ],
       "name": "INetChannel::SetMaxDataRate",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": 54,
+          "before": 53,
+          "line": 341,
+          "path": [
+            "INetChannel::SetMinDataRate",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         340,
         341
       ],
       "name": "INetChannel::SetMinDataRate",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": 56,
+          "before": 55,
+          "line": 349,
+          "path": [
+            "INetChannel::SetTimeout",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         348,
         349
       ],
       "name": "INetChannel::SetTimeout",
-      "updated": false
+      "updated": true
     },
     {
+      "changes": [
+        {
+          "after": 81,
+          "before": 80,
+          "line": 352,
+          "path": [
+            "INetChannel::SuppressTransmit",
+            "windows"
+          ]
+        },
+        {
+          "after": 82,
+          "before": 80,
+          "line": 353,
+          "path": [
+            "INetChannel::SuppressTransmit",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         352,
         353
       ],
       "name": "INetChannel::SuppressTransmit",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -856,13 +984,33 @@
       "updated": false
     },
     {
+      "changes": [
+        {
+          "after": 15,
+          "before": 14,
+          "line": 268,
+          "path": [
+            "INetChannelInfo::GetAvgData",
+            "windows"
+          ]
+        },
+        {
+          "after": 15,
+          "before": 14,
+          "line": 269,
+          "path": [
+            "INetChannelInfo::GetAvgData",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         268,
         269
       ],
       "name": "INetChannelInfo::GetAvgData",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -1204,6 +1352,6 @@
   "summary": {
     "covered": 133,
     "total": 133,
-    "updated": 0
+    "updated": 11
   }
 }
