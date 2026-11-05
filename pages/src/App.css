@@ -394,7 +394,11 @@ body.filefull .rawscroll { max-height: calc(100dvh - 104px); }
 .prose { max-width: 68ch; }
 .term { border-bottom: 1px dotted var(--faint); cursor: help; text-decoration: none; }
 
-.wordlist { gap: 18px; }
+.wordlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px 32px; }
+.shortcuts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px 32px; margin: 0; }
+.shortcuts > div { display: flex; align-items: center; gap: 12px; }
+.shortcuts dt { min-width: 64px; }
+.shortcuts dd { margin: 0; font-size: 13.5px; color: var(--ink-2); }
 .wordterm { font-family: var(--mono); font-size: 13.5px; margin-bottom: 4px; }
 
 .app-layout { min-height: 100vh; background: transparent; }

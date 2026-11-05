@@ -205,7 +205,7 @@ export function GameDataPage() {
               </span>
               <span className="fs">
                 <span>{t('gamedata2.keysOf', { covered: file.covered, total: file.total })}</span>
-                {file.updated > 0 && <span className="updn">{t('gamedata2.changed', { count: file.updated })}</span>}
+                {file.updated > 0 && <span className="updn" title={t('gamedata2.changedTitle')}>{t('gamedata2.changed', { count: file.updated })}</span>}
                 {file.gap > 0
                   ? <span className="gapn">{t('gamedata2.missing', { count: file.gap })}</span>
                   : <span>{t('gamedata2.complete')}</span>}

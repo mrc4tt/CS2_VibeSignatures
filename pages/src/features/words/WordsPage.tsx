@@ -1,5 +1,15 @@
 import { useTranslation } from 'react-i18next'
 import { GLOSSARY_TERMS, useGlossary } from '../../components/glossaryTerms'
+import { Key } from '../../ui/primitives'
+
+const SHORTCUTS = [
+  ['↑ ↓', 'words.kbArrows'],
+  ['Enter', 'words.kbEnter'],
+  ['/', 'words.kbSlash'],
+  ['Ctrl K', 'words.kbPalette'],
+  ['?', 'words.kbHelp'],
+  ['Esc', 'words.kbEsc'],
+] as const
 
 export function WordsPage() {
   const { t } = useTranslation()
@@ -29,14 +39,14 @@ export function WordsPage() {
       <section className="panel">
         <header><h2>{t('words.kbH')}</h2></header>
         <div className="panel-body">
-          <div className="steps">
-            {['words.kb1', 'words.kb2', 'words.kb3'].map((key, index) => (
-              <div className="step" key={key}>
-                <span className="i">{index + 1}</span>
-                <span>{t(key)}</span>
+          <dl className="shortcuts">
+            {SHORTCUTS.map(([keys, label]) => (
+              <div key={label}>
+                <dt><Key>{keys}</Key></dt>
+                <dd>{t(label)}</dd>
               </div>
             ))}
-          </div>
+          </dl>
         </div>
       </section>
     </div>
