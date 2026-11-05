@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { copyText } from '../../ui/clipboard'
 import { saveText } from '../../ui/download'
 import { Button, ChipGroup } from '../../ui/primitives'
-import { TokenText } from '../gamedata/FileView'
-import { tokenizeLine } from '../gamedata/fileModel'
+import { TokenLine } from '../gamedata/FileView'
+import { lineBracketDepths } from '../gamedata/fileModel'
 import type { DeepFix } from './deepScan'
 import { changedLines, marksByLine, type KeyRename, type LineMark, type MarkNote } from './lineMarks'
 import type { GameDataFormat } from './parse'
@@ -25,6 +25,8 @@ interface Props {
   marks: LineMark[]
   /** Where the marks came from, said in the status line so nobody mistakes one check for the other. */
   source: 'scan' | 'browser' | null
+  /** Whose layout the file is in (a plugin name), shown beside "valid format". */
+  layout?: string
   problems: number[]
   /** The line to mark and scroll to: a problem stepped to, or a row picked in the scan result. */
   focusLine?: number
@@ -68,7 +70,7 @@ const shortValue = (value: string | number): string => {
  * come from the rows beneath. Once typing pauses the text is checked again; the
  * marks belong to the checked text, so they are hidden while it differs.
  */
-export function AnnotatedFile({ text, fixed, name, format, marks, source, problems, focusLine, onStep, onEdit, blankEdit = 0, broken, onApply, onRename }: Props) {
+export function AnnotatedFile({ text, fixed, name, format, marks, source, layout, problems, focusLine, onStep, onEdit, blankEdit = 0, broken, onApply, onRename }: Props) {
   const { t } = useTranslation()
   const [showFixed, setShowFixed] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -88,6 +90,7 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
   // Only while the editor still holds exactly the text that failed: typing on clears it.
   const brokenHere = dirty && broken?.text === draft ? broken : null
   const lines = useMemo(() => shown.split('\n'), [shown])
+  const depths = useMemo(() => lineBracketDepths(lines, format), [lines, format])
   const byLine = useMemo(() => (dirty ? new Map<number, LineMark[]>() : marksByLine(marks)), [dirty, marks])
   const changed = useMemo(() => (fixed ? changedLines(text, fixed) : new Set<number>()), [text, fixed])
   const focusIndex = focusLine !== undefined ? problems.indexOf(focusLine) : -1
@@ -262,7 +265,7 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
                 <span className="fold"> </span>
                 <span className="st" title={(brokenHere?.line === lineNumber ? brokenHere.message : tip) || undefined} />
                 <span className="lc">
-                  {tokenizeLine(line, format).map((token, tokenIndex) => <TokenText token={token} key={tokenIndex} />)}
+                  <TokenLine line={line} format={format} depth={depths[index] ?? 0} />
                 </span>
               </div>
             )
@@ -271,6 +274,14 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, proble
       </div>
 
       <div className="rawstatus">
+        {brokenHere
+          ? <span className="rawvalid bad"><b aria-hidden="true">✕</b> {t('check.view.invalidFormat')}</span>
+          : (
+            <span className="rawvalid ok">
+              <b aria-hidden="true">✓</b> {t('check.view.validFormat')}
+              {layout && <span className="rawlayout">{layout}</span>}
+            </span>
+          )}
         <span>{format.toUpperCase()}</span>
         <span>{t('check.view.lines', { count: lines.length })}</span>
         {brokenHere ? (

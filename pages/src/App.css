@@ -84,7 +84,7 @@
   font-variant-numeric: tabular-nums; }
 
 .rawscroll { overflow: auto; max-height: calc(100dvh - 210px); min-height: 360px; background: var(--sunk); }
-.raw { font-family: var(--mono); font-size: 11.5px; line-height: 1.62; }
+.raw { font-family: var(--mono); font-size: 13px; line-height: 1.62; }
 .rl { display: flex; }
 .rl .ln { position: sticky; left: 0; z-index: 2; flex: 0 0 52px; padding-right: 9px; text-align: right;
   color: var(--faint); background: var(--sunk); font-variant-numeric: tabular-nums; user-select: none; }
@@ -125,13 +125,13 @@
 .annotated .raw .hex { letter-spacing: 0; }
 .rawinput { position: absolute; z-index: 1; top: 0; left: 80px; right: 0; bottom: 0; margin: 0; padding: 0 16px 0 11px;
   border: 0; outline: none; resize: none; overflow: hidden; background: transparent; color: transparent;
-  caret-color: var(--ink); font-family: var(--mono); font-size: 11.5px; line-height: 1.62; white-space: pre;
+  caret-color: var(--ink); font-family: var(--mono); font-size: 13px; line-height: 1.62; white-space: pre;
   tab-size: 2; overflow-wrap: normal; }
 .rawinput::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: transparent; }
 .rawinput[readonly] { caret-color: transparent; }
 /* The card under a marked line the caret is on. It floats over the lines below
    (top is the line count in line heights) so opening it never moves the text. */
-.annotated .raw { --lh: calc(11.5px * 1.62); }
+.annotated .raw { --lh: calc(13px * 1.62); }
 .linepop { position: absolute; z-index: 5; left: 92px; min-width: 300px; max-width: min(560px, calc(100% - 108px));
   display: flex; flex-direction: column; gap: 6px; padding: 9px 11px; border: 1px solid var(--rule-strong);
   border-radius: 10px; background: var(--card); box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
@@ -157,16 +157,27 @@
 .annotated .legend i.c { border-radius: 2px; }
 .rawedit { display: block; width: 100%; min-height: 360px; height: calc(100dvh - 260px); padding: 10px 16px;
   border: 0; resize: vertical; background: var(--sunk); color: var(--ink); font-family: var(--mono);
-  font-size: 11.5px; line-height: 1.62; white-space: pre; tab-size: 2; outline: none; }
+  font-size: 13px; line-height: 1.62; white-space: pre; tab-size: 2; outline: none; }
 .rawstatus { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 7px 17px; border-top: 1px solid var(--rule-soft);
   background: var(--card-2); font-size: 12px; color: var(--muted); }
-.raw .jk { color: var(--ink); }
-.raw .jp { color: var(--faint); }
-.raw .jn { color: var(--pe); }
-.raw .js { color: var(--ink-2); }
-.raw .jc { color: var(--faint); font-style: italic; }
+/* Editor colours, as VS Code's Dark+ / Light+ paint JSON: keys blue, strings and
+   patterns orange, numbers green, brackets by depth. Readable at a glance, and the
+   colours people already read their gamedata files in. */
+.raw { --syn-key: #9cdcfe; --syn-str: #ce9178; --syn-num: #b5cea8; --syn-punct: #cccccc; --syn-comment: #6a9955;
+  --syn-b0: #ffd700; --syn-b1: #da70d6; --syn-b2: #179fff; }
+html[data-theme="light"] .raw { --syn-key: #0451a5; --syn-str: #a31515; --syn-num: #098658; --syn-punct: #3b3b3b;
+  --syn-comment: #008000; --syn-b0: #0431fa; --syn-b1: #319331; --syn-b2: #7b3814; }
+.raw .jk { color: var(--syn-key); }
+.raw .jp { color: var(--syn-punct); }
+.raw .jq, .raw .js, .raw .hex { color: var(--syn-str); }
+.raw .jn { color: var(--syn-num); }
+.raw .jc { color: var(--syn-comment); font-style: italic; }
+.raw .jb0 { color: var(--syn-b0); }
+.raw .jb1 { color: var(--syn-b1); }
+.raw .jb2 { color: var(--syn-b2); }
 .raw .hex { letter-spacing: 0.02em; }
-.raw .hex .wc { color: var(--ghost); }
+/* a wildcard is part of the pattern: same colour, a little quieter, never faded out */
+.raw .hex .wc { color: var(--syn-str); opacity: 0.62; }
 .folded-hint { color: var(--faint); }
 
 .morelink { display: block; width: 100%; padding: 10px 17px; border: 0; border-top: 1px solid var(--rule-soft);
@@ -892,3 +903,29 @@ button.rsheet-tr:disabled { cursor: default; }
 .rsheet { transition: height 180ms ease-out; }
 .rsheet[data-dragging] { transition: none; }
 @media (prefers-reduced-motion: reduce) { .rsheet { transition: none; } }
+
+/* "Valid gamedata format [CounterStrikeSharp]" at the start of the file's status line */
+.rawvalid { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-family: var(--sans); }
+.rawvalid.ok { color: var(--ok); }
+.rawvalid.bad { color: var(--bad); }
+.rawlayout { padding: 0 7px; border: 1px solid var(--accent-line); border-radius: 5px; color: var(--accent-text);
+  background: var(--accent-2); font-size: 11.5px; font-weight: 600; }
+
+/* open sheet header verdict, and the running state */
+.rsheet-sum { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 13px; color: var(--ink-2); }
+.rsheet-sum i { width: 9px; height: 9px; border-radius: 50%; }
+.rsheet-sum.ok i { background: var(--ok); } .rsheet-sum.ok strong { color: var(--ok); }
+.rsheet-sum.warn i { background: var(--warn); } .rsheet-sum.warn strong { color: var(--warn); }
+.rsheet-sum.bad i { background: var(--bad); } .rsheet-sum.bad strong { color: var(--bad); }
+.rsheet-sum.run { color: var(--accent-text); font-weight: 600; }
+.rsheet-spin { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--accent-line); border-top-color: var(--accent);
+  animation: rsheet-spin .8s linear infinite; }
+@keyframes rsheet-spin { to { transform: rotate(360deg); } }
+.rsheet-running { display: flex; flex-direction: column; gap: 10px; padding: 26px 18px; font-size: 14px; color: var(--ink-2); }
+.rsheet-running p { margin: 0; }
+.rsheet-running .muted { color: var(--muted); font-size: 13px; }
+.rsheet-progress { height: 4px; border-radius: 2px; background: var(--rule-soft); overflow: hidden; }
+.rsheet-progress i { display: block; width: 35%; height: 100%; border-radius: 2px; background: var(--accent);
+  animation: rsheet-slide 1.3s ease-in-out infinite; }
+@keyframes rsheet-slide { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
+@media (prefers-reduced-motion: reduce) { .rsheet-spin, .rsheet-progress i { animation-duration: 4s; } }

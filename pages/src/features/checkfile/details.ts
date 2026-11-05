@@ -28,3 +28,15 @@ export function fileDetails(text: string, values: Map<string, FileValue>): FileD
   for (const hit of text.matchAll(/"(?:library|module)"\s*(?::\s*|\s+)"([\w.-]+)"/g)) libraries.add(hit[1]!)
   return { signatures, offsets, vtables, libraries: [...libraries].sort() }
 }
+
+/**
+ * Which plugin's layout a file is written in, for the status line, when the
+ * file is not one we publish. Only the shapes that say so unambiguously: a
+ * CounterStrikeSharp entry is `"Name": { "signatures": { "library": ... } }`
+ * (or `"offsets"`), a KeyValues file opens with `"Games"`.
+ */
+export function guessLayout(text: string, format: 'json' | 'jsonc' | 'vdf'): string | undefined {
+  if (format === 'vdf') return /^\s*(?:\/\/[^\n]*\n\s*)*"Games"/.test(text) ? 'KeyValues' : undefined
+  if (/"\w+"\s*:\s*\{\s*"(?:signatures|offsets)"\s*:\s*\{\s*"(?:library|windows|linux)"/.test(text)) return 'CounterStrikeSharp'
+  return undefined
+}

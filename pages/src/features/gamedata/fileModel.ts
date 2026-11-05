@@ -126,6 +126,33 @@ export function tokenizeLine(line: string, format: GameDataFileDescriptor['langu
   return tokens
 }
 
+const OPENERS = new Set(['{', '['])
+const CLOSERS = new Set(['}', ']'])
+
+/**
+ * The bracket nesting depth each line starts at, so brackets can be coloured by
+ * depth the way an editor does (gold, purple, blue, repeating). Counted from the
+ * tokens, so a brace inside a string or a comment does not count.
+ */
+export function lineBracketDepths(lines: string[], format: GameDataFileDescriptor['language']): number[] {
+  const out: number[] = []
+  let depth = 0
+  for (const line of lines) {
+    out.push(depth)
+    for (const token of tokenizeLine(line, format)) {
+      if (token.kind !== 'punct') continue
+      if (OPENERS.has(token.text)) depth += 1
+      else if (CLOSERS.has(token.text)) depth = Math.max(0, depth - 1)
+    }
+  }
+  return out
+}
+
+/** The colour slot (0-2) of a bracket at `depth` (an opener's own depth, a closer's after it closes). */
+export function bracketSlot(depth: number): number {
+  return ((depth % 3) + 3) % 3
+}
+
 export interface PluginFile {
   descriptor: GameDataFileDescriptor
   covered: number

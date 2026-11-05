@@ -224,6 +224,14 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
             <>
               <h2>{t('scan.result.title')}</h2>
               <span className="rsheet-meta">{meta}</span>
+              {/* the verdict stays in the header when open, as it is in the bar */}
+              <span className={`rsheet-sum ${flagged ? (counts.bad ? 'bad' : 'warn') : 'ok'}`}>
+                <i aria-hidden="true" />
+                {t('scan.result.passed', { count: counts.ok })}
+                {problems.length > 0 && ` · ${problems.join(t('scan.result.and'))}`}
+                {' · '}
+                <strong>{flagged ? t('scan.result.notReady', { build: result.build }) : t('scan.result.ready', { build: result.build })}</strong>
+              </span>
               <ChipGroup
                 label={t('scan.result.filter.label')}
                 value={filter}
@@ -374,6 +382,44 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
               )}
             </div>
           </>
+        )}
+      </section>
+    </>
+  )
+}
+
+/**
+ * The sheet while a scan runs. It opens at once on "Scan it", so the answer
+ * arrives where the eye already is instead of somewhere below the file.
+ */
+export function ScanningSheet({ keys, build, size, onSize }: { keys: number; build?: string; size: SheetSize; onSize(size: SheetSize): void }) {
+  const { t } = useTranslation()
+  const open = size === 'half' || size === 'full'
+  return (
+    <>
+      {open && <div className="rsheet-dim" aria-hidden="true" onClick={() => onSize('min')} />}
+      <section className="rsheet" data-size={size} aria-label={t('scan.result.title')} aria-busy="true">
+        <button type="button" className="rsheet-handle" aria-label={t('scan.result.size')} onClick={() => onSize(open ? 'min' : 'half')}>
+          <span />
+        </button>
+        <div className="rsheet-head">
+          <h2>{t('scan.result.title')}</h2>
+          <span className="rsheet-sum run" role="status">
+            <span className="rsheet-spin" aria-hidden="true" />
+            {t('scan.result.running')}
+          </span>
+          {open && (
+            <span className="rsheet-acts">
+              <Button size="small" aria-label={t('scan.result.close')} onClick={() => onSize('min')}>✕</Button>
+            </span>
+          )}
+        </div>
+        {open && (
+          <div className="rsheet-running">
+            <div className="rsheet-progress" aria-hidden="true"><i /></div>
+            <p>{t('scan.result.runningSub', { count: keys, build: build || '…' })}</p>
+            <p className="muted">{t('scan.result.runningWait')}</p>
+          </div>
         )}
       </section>
     </>

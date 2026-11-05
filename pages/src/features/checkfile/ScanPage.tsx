@@ -8,12 +8,13 @@ import { buttonClass } from '../../ui/buttonStyle'
 import { Alert, Button, Tag } from '../../ui/primitives'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { AnnotatedFile, type BrokenText } from './AnnotatedFile'
-import { fetchScanBuilds, fetchScanHealth, requestDeepScan, rowTone, type DeepFix } from './deepScan'
-import { fileDetails } from './details'
+import { fetchScanBuilds, fetchScanHealth, requestDeepScan, type DeepFix } from './deepScan'
+import { fileDetails, guessLayout } from './details'
+import { pluginLabel } from '../gamedata/pluginLabel'
 import { clearHandoff, peekHandoff } from './handoff'
 import { browserMarks, misnamedKeys, problemLines, renameMarks, scanMarks, type KeyRename } from './lineMarks'
 import { applyFixes, renameKey } from './patch'
-import { ResultSheet } from './ResultSheet'
+import { ResultSheet, ScanningSheet } from './ResultSheet'
 import { readAutoOpen, type SheetSize } from './sheetModel'
 import { ScanPanel, type ScanPlatform } from './ScanPanel'
 import { failureText, isLoaded, readGameData, useFileCheck, type Loaded } from './useFileCheck'
@@ -80,6 +81,10 @@ export function ScanPage() {
   })
   const details = useMemo(() => (loaded ? fileDetails(loaded.text, loaded.values) : null), [loaded])
   const scan = useMutation({
+    // The result sheet opens the moment the scan starts, with a running state,
+    // like a dialog: nobody has to look for where the answer will appear.
+    onMutate: () => setSheet(readAutoOpen() ? 'half' : 'min'),
+    onError: () => setSheet('closed'),
     mutationFn: (input: Loaded) => {
       scanStarted.current = performance.now()
       return requestDeepScan(input.text, input.name, {
@@ -89,11 +94,13 @@ export function ScanPage() {
     },
     onSuccess: (data) => {
       setScanMs(performance.now() - scanStarted.current)
-      if (data.note) return
+      if (data.note) {
+        setSheet('closed')
+        return
+      }
       setFocusLine(undefined)
-      // Something to read opens the sheet; a clean file only needs the green bar.
-      const flagged = data.results.some((row) => rowTone(row) === 'bad' || rowTone(row) === 'warn')
-      setSheet(flagged && readAutoOpen() ? 'half' : 'min')
+      // The sheet opened when the scan started; it stays where the reader left it.
+      setSheet((current) => (current === 'closed' ? (readAutoOpen() ? 'half' : 'min') : current))
     },
   })
   // A result belongs to the text it was run on; a new file must not inherit the last one's.
@@ -236,7 +243,7 @@ export function ScanPage() {
     <div
       className="scanpage"
       data-dragging={dragging || undefined}
-      data-sheet={scanResult && !scanResult.note && sheet !== 'closed' ? sheet : undefined}
+      data-sheet={(scan.isPending || (scanResult && !scanResult.note)) && sheet !== 'closed' ? sheet : undefined}
       onDragOver={(event) => { event.preventDefault(); setDragging(true) }}
       onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false) }}
       onDrop={(event) => {
@@ -324,6 +331,7 @@ export function ScanPage() {
               format={loaded.format}
               marks={marks}
               source={scanResult && !scanResult.note ? 'scan' : file ? 'browser' : null}
+              layout={file ? pluginLabel(file.split('/')[0]!) : guessLayout(loaded.text, loaded.format)}
               problems={problems}
               focusLine={focusLine}
               onStep={stepProblem}
@@ -354,7 +362,10 @@ export function ScanPage() {
         </div>
       </div>
 
-      {loaded && scanResult && !scanResult.note && (
+      {loaded && scan.isPending && (
+        <ScanningSheet keys={loaded.values.size} build={build || scanBuilds?.[0]} size={sheet === 'closed' ? 'half' : sheet} onSize={setSheet} />
+      )}
+      {loaded && !scan.isPending && scanResult && !scanResult.note && (
         <ResultSheet
           result={scanResult}
           text={loaded.text}

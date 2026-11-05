@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChipToggle } from '../../ui/primitives'
 import {
-  buildLineModel, foldRanges, hiddenLines, tokenizeLine, type Token,
+  bracketSlot, buildLineModel, foldRanges, hiddenLines, lineBracketDepths, tokenizeLine, type Token,
 } from './fileModel'
 import type { GameDataFileDescriptor, GameDataMetadata } from './types'
 
@@ -21,8 +21,32 @@ export function TokenText({ token }: { token: Token }) {
     : token.kind === 'string' ? 'js'
       : token.kind === 'number' ? 'jn'
         : token.kind === 'comment' ? 'jc'
-          : token.kind === 'punct' ? 'jp' : undefined
+          : token.kind === 'punct' ? (token.text === '"' ? 'jq' : 'jp') : undefined
   return <span className={className}>{token.text}</span>
+}
+
+/**
+ * One line's tokens, with brackets coloured by nesting depth (`depth` is the
+ * depth the line starts at, from lineBracketDepths) like an editor.
+ */
+export function TokenLine({ line, format, depth }: { line: string; format: GameDataFileDescriptor['language']; depth: number }) {
+  let level = depth
+  return (
+    <>
+      {tokenizeLine(line, format).map((token, index) => {
+        if (token.kind === 'punct' && (token.text === '{' || token.text === '[')) {
+          const slot = bracketSlot(level)
+          level += 1
+          return <span className={`jb jb${slot}`} key={index}>{token.text}</span>
+        }
+        if (token.kind === 'punct' && (token.text === '}' || token.text === ']')) {
+          level = Math.max(0, level - 1)
+          return <span className={`jb jb${bracketSlot(level)}`} key={index}>{token.text}</span>
+        }
+        return <TokenText token={token} key={index} />
+      })}
+    </>
+  )
 }
 
 interface Props {
@@ -47,6 +71,7 @@ export function FileView({ descriptor, content, metadata, find, marks, focusLine
   const viewRef = useRef<HTMLDivElement>(null)
 
   const lines = useMemo(() => content.split('\n'), [content])
+  const depths = useMemo(() => lineBracketDepths(lines, descriptor.language), [lines, descriptor.language])
   const ranges = useMemo(() => foldRanges(lines), [lines])
   const hidden = useMemo(() => hiddenLines(folded, ranges), [folded, ranges])
   const model = useMemo(() => buildLineModel(marks ? metadata : undefined), [marks, metadata])
@@ -146,9 +171,7 @@ export function FileView({ descriptor, content, metadata, find, marks, focusLine
                 </span>
                 <span className="st" />
                 <span className="lc">
-                  {tokenizeLine(line, descriptor.language).map((token, tokenIndex) => (
-                    <TokenText token={token} key={tokenIndex} />
-                  ))}
+                  <TokenLine line={line} format={descriptor.language} depth={depths[index] ?? 0} />
                   {folded.has(lineNumber) && <span className="folded-hint"> …</span>}
                 </span>
               </div>

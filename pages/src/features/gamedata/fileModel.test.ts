@@ -142,3 +142,12 @@ describe('describing the files of a build', () => {
     expect(formatLabel('jsonc')).toBe('JSONC')
   })
 })
+
+describe('lineBracketDepths', () => {
+  it('counts the depth each line starts at, ignoring braces inside strings', async () => {
+    const { lineBracketDepths, bracketSlot } = await import('./fileModel')
+    const lines = ['{', '  "a": {', '    "s": "{ not a brace [",', '    "l": [1, 2]', '  }', '}']
+    expect(lineBracketDepths(lines, 'json')).toEqual([0, 1, 2, 2, 2, 1])
+    expect([0, 1, 2, 3].map(bracketSlot)).toEqual([0, 1, 2, 0])
+  })
+})
