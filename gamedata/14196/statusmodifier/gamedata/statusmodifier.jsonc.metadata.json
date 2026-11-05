@@ -1,0 +1,61 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        21,
+        22
+      ],
+      "name": "CServerSideClientBase::m_nClientSlot",
+      "updated": false
+    },
+    {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 54 53 48 8B 06 48 89 FB 48 89 F7 FF 50 ? 48 8D 15 ? ? ? ? 31 C9 48 8B 12 48 85 D2 74 ? 48 3B 42 ?",
+          "before": "55 48 89 E5 41 54 53 ? ? ? 48 89 FB 48 89 F7 FF 50 ? 48 8D 15 ? ? ? ? 31 C9 ? ? ? 48 85 D2 74 ? 48 3B 42",
+          "line": 8,
+          "path": [
+            "Signatures",
+            "FilterMessage",
+            "linux"
+          ]
+        }
+      ],
+      "covered": true,
+      "covered_lines": [
+        6,
+        7,
+        8
+      ],
+      "name": "FilterMessage",
+      "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        13,
+        14
+      ],
+      "name": "GameEntitySystem",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        17,
+        18
+      ],
+      "name": "GetPublicAdr",
+      "updated": false
+    }
+  ],
+  "file": "statusmodifier/gamedata/statusmodifier.jsonc",
+  "gamever": "14196",
+  "schema_version": 2,
+  "summary": {
+    "covered": 4,
+    "total": 4,
+    "updated": 1
+  }
+}
