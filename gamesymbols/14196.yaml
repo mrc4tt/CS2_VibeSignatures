@@ -6107,10 +6107,10 @@ files:
     func_va: '0x1800b4dd0'
   engine/CNetworkGameServerBase_OnKickByName.linux.yaml:
     func_name: CNetworkGameServerBase_OnKickByName
-    func_rva: '0x51abed'
-    func_sig: 55 66 0F EF C0 48 8D 35 ?? ?? ?? ??
-    func_size: '0x131'
-    func_va: '0x51abed'
+    func_rva: '0x51abe0'
+    func_sig: 83 BA ?? ?? ?? ?? ?? 0F 8E ?? ?? ?? ?? 55 66 0F EF C0
+    func_size: '0x13e'
+    func_va: '0x51abe0'
   engine/CNetworkGameServerBase_OnKickByName.windows.yaml:
     func_name: CNetworkGameServerBase_OnKickByName
     func_rva: '0x1e49b0'
@@ -43551,5 +43551,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14196'
-last_publish_time: '2026-11-05T08:58:12Z'
+last_publish_time: '2026-11-05T15:11:32Z'
 schema_version: 5

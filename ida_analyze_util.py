@@ -3130,6 +3130,35 @@ async def preprocess_vtable_via_mcp(
     }
 
 
+# A signature that matches code IDA left outside every function, right after padding,
+# that falls through into a function starting a few bytes later: GCC's shrink-wrapping
+# puts an early-out test before the prologue (14196 linux
+# CNetworkGameServerBase_OnKickByName: `cmp [rdx+438h],1; jle` at 0x51abe0, the
+# `push rbp` IDA took for the head at 0x51abed). The real head is the match; move the
+# function there. Run inside IDA after `f = idaapi.get_func(addr)`.
+_SHRINK_WRAPPED_HEAD_REPAIR = (
+    "if f is None:\n"
+    "    import ida_bytes, ida_funcs, ida_ua, idc\n"
+    "    nxt = ida_funcs.get_next_func(addr)\n"
+    "    prev = ida_bytes.prev_head(addr, 0)\n"
+    "    padded = prev != idaapi.BADADDR and (ida_bytes.is_align(ida_bytes.get_flags(prev))\n"
+    "        or ida_bytes.get_byte(addr - 1) in (0xCC, 0x90))\n"
+    "    if nxt and padded and 0 < nxt.start_ea - addr <= 0x40 and ida_bytes.is_flow(ida_bytes.get_flags(nxt.start_ea)):\n"
+    "        ea, linear = addr, True\n"
+    "        while ea < nxt.start_ea:\n"
+    "            if not ida_bytes.is_code(ida_bytes.get_flags(ea)) or ida_funcs.get_func(ea):\n"
+    "                linear = False\n"
+    "                break\n"
+    "            ea = ida_bytes.next_head(ea, nxt.start_ea + 1)\n"
+    "        old_start = nxt.start_ea\n"
+    "        if linear and ea == old_start and ida_funcs.del_func(old_start):\n"
+    "            if ida_funcs.add_func(addr):\n"
+    "                f = idaapi.get_func(addr)\n"
+    "            else:\n"
+    "                ida_funcs.add_func(old_start)\n"
+)
+
+
 async def preprocess_func_sig_via_mcp(
     session,
     new_path,
@@ -3310,6 +3339,7 @@ async def preprocess_func_sig_via_mcp(
             f"import idaapi, json\n"
             f"addr = {addr_expr}\n"
             f"f = idaapi.get_func(addr)\n"
+            f"{_SHRINK_WRAPPED_HEAD_REPAIR}"
             f"if f and f.start_ea == addr:\n"
             f"    result = json.dumps({{'func_va': hex(f.start_ea), 'func_size': hex(f.end_ea - f.start_ea)}})\n"
             f"else:\n"
