@@ -224,14 +224,6 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
             <>
               <h2>{t('scan.result.title')}</h2>
               <span className="rsheet-meta">{meta}</span>
-              {/* the verdict stays in the header when open, as it is in the bar */}
-              <span className={`rsheet-sum ${flagged ? (counts.bad ? 'bad' : 'warn') : 'ok'}`}>
-                <i aria-hidden="true" />
-                {t('scan.result.passed', { count: counts.ok })}
-                {problems.length > 0 && ` · ${problems.join(t('scan.result.and'))}`}
-                {' · '}
-                <strong>{flagged ? t('scan.result.notReady', { build: result.build }) : t('scan.result.ready', { build: result.build })}</strong>
-              </span>
               <ChipGroup
                 label={t('scan.result.filter.label')}
                 value={filter}
@@ -300,6 +292,20 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
 
         {open && (
           <>
+            {/* The verdict first, large and in its colour: the one thing someone
+                opened the scanner to learn. The table below is the detail. */}
+            <div className={`rsheet-banner ${flagged ? (counts.bad ? 'bad' : 'warn') : 'ok'}`} role="status">
+              <span className="rb-icon" aria-hidden="true">{flagged ? (counts.bad ? '✕' : '!') : '✓'}</span>
+              <span className="rb-text">
+                <strong>{flagged ? t('scan.result.notReady', { build: result.build }) : t('scan.result.ready', { build: result.build })}</strong>
+                <span>{flagged ? `${problems.join(t('scan.result.and'))}. ${fixLine}` : t('scan.result.allOk', { count: counts.ok })}</span>
+              </span>
+              <span className="rb-counts">
+                <span className="ok"><b>{counts.ok}</b>{t('scan.result.tone.ok')}</span>
+                <span className="bad"><b>{counts.bad}</b>{t('scan.result.tone.bad')}</span>
+                <span className="warn"><b>{counts.warn}</b>{t('scan.result.tone.warn')}</span>
+              </span>
+            </div>
             <div className="rsheet-legend">
               <span><i className="b" /><strong>{t('scan.result.tone.bad')}</strong> {t('scan.result.legend.bad')}</span>
               <span><i className="w" /><strong>{t('scan.result.tone.warn')}</strong> {t('scan.result.legend.warn')}</span>
@@ -382,6 +388,16 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
                 </div>
               )}
             </div>
+            {/* The tally once more where the list ends, each count in its colour,
+                so it is the last thing read as well as the first. */}
+            <p className="rsheet-foot" role="status">
+              <span className="lbl">{t('scan.result.footLabel')}</span>
+              <span className="ok">{t('scan.result.passed', { count: counts.ok })}</span>
+              <span className="sep">·</span>
+              <span className="bad">{t('scan.result.errors', { count: counts.bad })}</span>
+              <span className="sep">·</span>
+              <span className="warn">{t('scan.result.warnings', { count: counts.warn })}</span>
+            </p>
           </>
         )}
       </section>

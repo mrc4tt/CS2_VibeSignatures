@@ -83,7 +83,7 @@ export function ScanPage() {
   const scan = useMutation({
     // The result sheet opens the moment the scan starts, with a running state,
     // like a dialog: nobody has to look for where the answer will appear.
-    onMutate: () => setSheet(readAutoOpen() ? 'half' : 'min'),
+    onMutate: () => setSheet(readAutoOpen() ? 'full' : 'min'),
     onError: () => setSheet('closed'),
     mutationFn: (input: Loaded) => {
       scanStarted.current = performance.now()
@@ -100,7 +100,7 @@ export function ScanPage() {
       }
       setFocusLine(undefined)
       // The sheet opened when the scan started; it stays where the reader left it.
-      setSheet((current) => (current === 'closed' ? (readAutoOpen() ? 'half' : 'min') : current))
+      setSheet((current) => (current === 'closed' ? (readAutoOpen() ? 'full' : 'min') : current))
     },
   })
   // A result belongs to the text it was run on; a new file must not inherit the last one's.
@@ -363,7 +363,7 @@ export function ScanPage() {
       </div>
 
       {loaded && scan.isPending && (
-        <ScanningSheet keys={loaded.values.size} build={build || scanBuilds?.[0]} size={sheet === 'closed' ? 'half' : sheet} onSize={setSheet} />
+        <ScanningSheet keys={loaded.values.size} build={build || scanBuilds?.[0]} size={sheet === 'closed' ? 'full' : sheet} onSize={setSheet} />
       )}
       {loaded && !scan.isPending && scanResult && !scanResult.note && (
         <ResultSheet

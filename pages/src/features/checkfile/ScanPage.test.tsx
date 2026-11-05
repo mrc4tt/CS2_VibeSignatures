@@ -246,9 +246,9 @@ describe('Scanner', () => {
       // the bar says what the scan said
       expect(document.querySelector('.scanverdict')?.textContent).toBe('1 value is wrong for build 14192')
 
-      // a scan that found something opens the result by itself
+      // a scan opens the result by itself, over most of the page
       const sheet = screen.getByRole('region', { name: 'Scan result' })
-      expect(sheet).toHaveAttribute('data-size', 'half')
+      expect(sheet).toHaveAttribute('data-size', 'full')
       // closed, it is a slim bar with the verdict
       fireEvent.keyDown(sheet, { key: 'Escape' })
       expect(sheet).toHaveAttribute('data-size', 'min')
@@ -307,7 +307,7 @@ describe('Scanner', () => {
       await userEvent.click(await screen.findByRole('button', { name: 'Scan it' }))
       // a stale value opens the result by itself
       const sheet = await screen.findByRole('region', { name: 'Scan result' })
-      await waitFor(() => expect(sheet).toHaveAttribute('data-size', 'half'))
+      await waitFor(() => expect(sheet).toHaveAttribute('data-size', 'full'))
       expect(sheet.querySelector('.rsheet-aged')?.textContent).toBe('Your value is the one from build 14180; it changed in 14181.')
 
       await userEvent.click(screen.getByRole('button', { name: 'Use fixed file' }))
