@@ -564,7 +564,8 @@ body.filefull .rawscroll { max-height: calc(100dvh - 104px); }
   color: var(--faint); font-family: var(--sans); }
 
 /* --- start page and plugin page ----------------------------------------- */
-.home, .pluginpage { display: flex; flex-direction: column; gap: 40px; }
+.home, .pluginpage { display: flex; flex-direction: column; gap: 26px; }
+.home .panel { margin: 0; }
 .pluginpage { gap: 24px; }
 .homehero { display: flex; flex-direction: column; gap: 16px; padding-top: 8px; }
 .homehero h1 { margin: 0; font-size: clamp(32px, 5vw, 50px); line-height: 1.08; letter-spacing: -0.02em; max-width: 24ch; }
@@ -614,6 +615,66 @@ html[data-theme="light"] .starbtn.on { color: var(--accent); }
   .prow .pact { grid-column: 3; grid-row: 1 / span 2; }
   .pfilter { width: 100%; }
 }
+
+/* status header, to-do list, plugin chips and the build timeline */
+.hstatus { display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
+.hstatus-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.hstatus h1 { margin: 0; font-size: clamp(28px, 4.2vw, 42px); line-height: 1.1; letter-spacing: -0.02em; }
+.hstatus-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.hstatus .lede { margin: 0; max-width: 70ch; font-size: 16.5px; line-height: 1.55; color: var(--ink-2); }
+.hpill { display: inline-flex; align-items: center; gap: 5px; justify-self: start; align-self: center; white-space: nowrap;
+  padding: 3px 10px; border: 1px solid var(--rule); border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.hpill.ok { color: var(--ok); background: var(--ok-bg); border-color: var(--ok-line); }
+.hpill.warn { color: var(--warn); background: var(--warn-bg); border-color: var(--warn-line); }
+.hpill.bad { color: var(--bad); background: var(--bad-bg); border-color: var(--bad-line); }
+.home > .panel > header, .hgrid .panel > header { padding: 13px 17px; border-bottom: 1px solid var(--rule-soft); }
+.panel h2 { margin: 0; font-family: var(--serif); font-size: 19px; }
+.todos { list-style: none; margin: 0; padding: 0; }
+.todo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px;
+  padding: 14px 17px 14px 14px; border-top: 1px solid var(--rule-soft); border-left: 3px solid transparent; }
+.todo:first-child { border-top: 0; }
+.todo.warn { border-left-color: var(--warn); }
+.todo.bad { border-left-color: var(--bad); }
+.todo-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 360px; }
+.todo h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-family: var(--sans); }
+.todo h3 a { color: var(--ink); text-decoration: none; }
+.todo h3 a:hover { text-decoration: underline; }
+.todo p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.5; overflow-wrap: anywhere; }
+.todo p code { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+.todo-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.todo-acts a { text-decoration: none; }
+.todo-none { display: flex; align-items: center; gap: 8px; margin: 0; padding: 16px 17px; color: var(--ok); font-weight: 600; }
+.hgrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.hgrid .panel { min-width: 0; }
+.hgrid .hint { padding: 12px 17px 0; }
+.pchips { list-style: none; margin: 0; padding: 8px 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 4px 8px; }
+.pchip { display: flex; align-items: center; gap: 2px; min-width: 0; padding-right: 10px; border-radius: 8px; }
+.pchip:hover { background: var(--card-2); }
+.pchip-name { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; padding: 5px 0; color: var(--ink); text-decoration: none; }
+.pchip-name .pn { font-weight: 600; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pchip-name .pfiles { font-family: var(--mono); font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pchip-name:hover .pn { text-decoration: underline; }
+.pdot { flex: 0 0 auto; width: 9px; height: 9px; border-radius: 50%; background: var(--ok); }
+.pdot.warn { background: var(--warn); }
+.pdot.bad { background: var(--bad); }
+.hrest { border-top: 1px solid var(--rule-soft); }
+.hrest summary { padding: 11px 17px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.hbars { list-style: none; margin: 0; padding: 18px 17px 4px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; height: 190px; }
+.hbars li { display: flex; min-width: 0; }
+.hbar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 5px; min-width: 0;
+  color: var(--muted); text-decoration: none; border-radius: 6px; padding: 2px 0; }
+.hbar i { display: block; width: 70%; max-width: 34px; border-radius: 4px 4px 1px 1px; background: var(--rule); }
+.hbar b { font-size: 12px; font-weight: 600; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.hbar span { font-family: var(--mono); font-size: 10.5px; }
+.hbar:hover i { background: var(--accent-line); }
+.hbar.cur i { background: var(--accent); }
+.hbar.cur span, .hbar.cur b { color: var(--accent-text); }
+.hbars-cap { margin: 0; padding: 4px 17px 0; font-size: 12.5px; color: var(--faint); }
+.hcheck { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px;
+  margin: 14px 17px 17px; padding: 12px 14px; border: 1px dashed var(--rule); border-radius: 9px; font-size: 14px; color: var(--ink-2); }
+.hcheck a { text-decoration: none; }
+@media (max-width: 900px) { .hgrid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { .hbars { gap: 3px; } .hbar span { font-size: 9px; writing-mode: vertical-rl; transform: rotate(180deg); } }
 
 .homecards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
 .hcard { display: flex; flex-direction: column; gap: 8px; padding: 22px; border: 1px solid var(--rule); border-radius: 12px;
