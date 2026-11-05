@@ -198,6 +198,12 @@ FORK_OWNED_SYMBOLS = [
     # 59/58 stores, CNetChan::SendNetMessage/Transmit/CanPacket/SetTimeout strings, and
     # the suppress byte CanPacket tests, which SuppressTransmit stores). INetChannel
     # slots are one higher on linux (two dtor slots).
+    # INetworkSystem::GetPublicAdr (SDK inetworksystem.h order, slot 32 on both platforms,
+    # PollSocket at 20 + 12). Returns &this->m_PublicAdr (this+0x3c), filling it on first
+    # use from SteamGameServer()->GetPublicIP() (vcall +0x108, SetType(NA_IP=3), SetIP):
+    # linux 0x2d28a0, windows 0x1800fb200 on 14196. Slot 33 next to it is GetLocalAdr,
+    # `lea rax,[this+0x30]; ret`. Read by the INetworkSystem cpp tests (CNetworkSystem_*).
+    ("CNetworkSystem_GetPublicAdr", "vfunc", "networksystem", "INetworkSystem_GetPublicAdr"),
     ("CNetChan_GetName", "vfunc", "networksystem", None),
     ("CNetChan_GetAddress", "vfunc", "networksystem", None),
     ("CNetChan_GetRemoteAddress", "vfunc", "networksystem", None),

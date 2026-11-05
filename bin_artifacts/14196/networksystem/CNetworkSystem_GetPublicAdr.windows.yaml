@@ -1,0 +1,8 @@
+func_name: CNetworkSystem_GetPublicAdr
+func_va: '0x1800fb200'
+func_rva: '0xfb200'
+func_size: '0x87'
+func_sig: "40 53 48 83 EC ?? 48 8D 59 ??"
+vtable_name: CNetworkSystem
+vfunc_offset: '0x100'
+vfunc_index: 32
