@@ -1,0 +1,6 @@
+struct_name: CServerSideClientBase
+member_name: m_nAsyncDisconnectFlags
+offset: '0x61'
+size: 1
+offset_sig: 80 7B 61 01
+offset_sig_disp: 0

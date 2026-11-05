@@ -1,0 +1,5 @@
+func_name: CNetworkGameServerBase_OnKickByName
+func_va: '0x51abed'
+func_rva: '0x51abed'
+func_size: '0x131'
+func_sig: 55 66 0F EF C0 48 8D 35 ?? ?? ?? ??

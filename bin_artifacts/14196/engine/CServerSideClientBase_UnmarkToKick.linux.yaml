@@ -1,0 +1,9 @@
+func_name: CServerSideClientBase_UnmarkToKick
+func_va: '0x541150'
+func_rva: '0x541150'
+func_size: '0x5'
+func_sig: C6 47 ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 8B 46 ??
+func_sig_allow_across_function_boundary: true
+vtable_name: CServerSideClientBase
+vfunc_offset: '0x270'
+vfunc_index: 78
