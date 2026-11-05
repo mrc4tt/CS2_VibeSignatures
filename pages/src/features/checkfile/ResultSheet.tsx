@@ -277,7 +277,8 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
                       writeAutoOpen(event.target.checked)
                     }}
                   />
-                  {t('scan.result.autoOpen')}
+                  <span className="rsheet-auto-text">{t('scan.result.autoOpen')}</span>
+                  <span className="rsheet-auto-short" aria-hidden="true">{t('scan.result.autoOpenShort')}</span>
                 </label>
               </>
             )}
@@ -289,8 +290,8 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
             )}
             {open && (
               <>
-                <Button size="small" aria-label={t('scan.result.size')} onClick={() => onSize(NEXT_SIZE[size])}>↕</Button>
-                <Button size="small" aria-label={t('scan.result.close')} onClick={() => onSize('min')}>✕</Button>
+                <Button size="small" className="rsheet-sizebtn" aria-label={t('scan.result.size')} onClick={() => onSize(NEXT_SIZE[size])}>↕</Button>
+                <Button size="small" className="rsheet-close" aria-label={t('scan.result.close')} onClick={() => onSize('min')}>✕</Button>
               </>
             )}
           </span>
@@ -410,7 +411,7 @@ export function ScanningSheet({ keys, build, size, onSize }: { keys: number; bui
           </span>
           {open && (
             <span className="rsheet-acts">
-              <Button size="small" aria-label={t('scan.result.close')} onClick={() => onSize('min')}>✕</Button>
+              <Button size="small" className="rsheet-close" aria-label={t('scan.result.close')} onClick={() => onSize('min')}>✕</Button>
             </span>
           )}
         </div>

@@ -929,3 +929,17 @@ button.rsheet-tr:disabled { cursor: default; }
   animation: rsheet-slide 1.3s ease-in-out infinite; }
 @keyframes rsheet-slide { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
 @media (prefers-reduced-motion: reduce) { .rsheet-spin, .rsheet-progress i { animation-duration: 4s; } }
+
+.rsheet-auto-short { display: none; }
+/* On a phone the open sheet's header is one title row plus one row of filters:
+   the close button sits in the corner, the size button goes (dragging does that),
+   and the "open by itself" switch keeps its box but not its sentence. */
+@media (max-width: 600px) {
+  .rsheet-head { position: relative; padding-right: 54px; gap: 8px 10px; }
+  .rsheet-head .rsheet-close { position: absolute; top: -4px; right: 14px; }
+  .rsheet-head .rsheet-sizebtn { display: none; }
+  .rsheet-acts { margin-left: 0; }
+  .rsheet-auto .rsheet-auto-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .rsheet-auto .rsheet-auto-short { display: inline; }
+  .rsheet-legend { display: none; }
+}
