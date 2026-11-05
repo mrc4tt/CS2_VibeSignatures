@@ -13,8 +13,18 @@ decides a verdict of its own.
   GET  /api/builds  the builds whose binaries are on disk (only those can be scanned)
   GET  /api/health
 
-Uploads are parsed as data (JSON, JSONC, KeyValues, key=value) and never executed,
-never written to disk and never used as a path. The service binds loopback only;
+  POST   /api/files              {"gamedata", "filename"?, "build"?, "webhook"?} store a file,
+                                 answer its read link and manage token (shown once)
+  GET    /api/files/<id>/<name>  the file as user_gamedata.py last brought it up to date
+  GET    /api/files/manage       X-Manage-Token: history, current text
+  PUT    /api/files/manage       X-Manage-Token: replace text / filename / webhook
+  DELETE /api/files/manage       X-Manage-Token: gone, links and all
+
+Stored files live in user_files (systemd StateDirectory), never under the repository.
+
+Uploads are parsed as data (JSON, JSONC, KeyValues, key=value) and never executed or
+used as a path; a /api/verify upload is never written to disk, a /api/files one only
+into the user-file store. The service binds loopback only;
 nginx in front of it owns TLS, the per-IP rate limit and the body cap.
 
 Loading a build's snapshot takes seconds, so workers are long-lived processes that
@@ -36,6 +46,7 @@ import traceback
 from collections import OrderedDict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import user_files as UF
 import verify_plugin_gamedata as VPG
 
 REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -337,11 +348,50 @@ def parse_check(body, builds):
     return _build(body, builds), module, platform, pattern.strip().strip("`")
 
 
+def _file_format(text):
+    stripped = text.lstrip("\ufeff \t\r\n")
+    return "json" if stripped.startswith("{") and '":' in text else "keyvalues"
+
+
+def parse_file_upload(body, builds, partial=False):
+    """-> {text?, filename?, build?, fmt?, webhook?} for POST/PUT /api/files."""
+    out = {}
+    text = body.get("gamedata")
+    if text is not None or not partial:
+        if not isinstance(text, str) or not text.strip():
+            raise BadRequest("gamedata must be the file's text")
+        if len(text.encode()) > MAX_BODY:
+            raise BadRequest(f"gamedata must be at most {MAX_BODY} bytes")
+        entries, note = VPG.load_gamedata_text(text)
+        if note or not entries:
+            raise BadRequest(f"not a gamedata file this service can keep up to date: {note or 'no entries'}")
+        if len(entries) > MAX_ENTRIES:
+            raise BadRequest(f"more than {MAX_ENTRIES} entries")
+        out.update(text=text, fmt=_file_format(text), build=_build(body, builds))
+    filename = body.get("filename")
+    if filename is not None:
+        if not isinstance(filename, str) or len(filename) > 200:
+            raise BadRequest("filename must be a short string")
+        out["filename"] = filename
+    if "webhook" in body:
+        out["webhook"] = body.get("webhook") or None
+    return out
+
+
+class Raw:
+    """A plain-text answer (the read link), not JSON."""
+
+    def __init__(self, text, filename):
+        self.text, self.filename = text, filename
+
+
 # -- front process: HTTP, queue cap, result cache -----------------------------
 
 class Service:
-    def __init__(self, executor, bindir="bin", workers=4, queue=20, timeout=60, cache_size=256):
+    def __init__(self, executor, bindir="bin", workers=4, queue=20, timeout=60, cache_size=256,
+                 files_root=None):
         self.executor, self.bindir, self.timeout = executor, bindir, timeout
+        self.files_root = files_root or UF.ROOT
         self.capacity = workers + queue
         self.inflight = 0
         self.lock = threading.Lock()
@@ -377,10 +427,64 @@ class Service:
                     self.cache.popitem(last=False)
         return status, payload
 
-    def handle(self, method, path, body):
+    def handle_files(self, method, path, body, headers):
+        """/files routes. The store's own refusals are 404 (unknown id or token) or 400."""
+        try:
+            if path == "/files" and method == "POST":
+                request = json.loads(body or b"{}")
+                if not isinstance(request, dict):
+                    raise BadRequest("body must be a JSON object")
+                upload = parse_file_upload(request, self.builds())
+                file_id, token = UF.create(upload["text"], upload.get("filename"), upload["build"],
+                                           fmt=upload["fmt"], webhook=upload.get("webhook"),
+                                           root=self.files_root)
+                filename = UF.load_meta(file_id, self.files_root)["filename"]
+                return 201, {"id": file_id, "manage": token, "filename": filename,
+                             "url": f"/api/files/{file_id}/{filename}", "build": upload["build"]}
+            if path == "/files/manage":
+                token = (headers or {}).get("X-Manage-Token") or ""
+                file_id = UF.resolve_token(token.strip(), self.files_root)
+                if method == "GET":
+                    meta = UF.public_meta(file_id, self.files_root)
+                    return 200, {**meta, "url": f"/api/files/{file_id}/{meta['filename']}",
+                                 "current": UF.current_text(file_id, self.files_root)}
+                if method == "PUT":
+                    request = json.loads(body or b"{}")
+                    if not isinstance(request, dict):
+                        raise BadRequest("body must be a JSON object")
+                    upload = parse_file_upload(request, self.builds(), partial=True)
+                    UF.replace(file_id, text=upload.get("text"), filename=upload.get("filename"),
+                               build=upload.get("build"), fmt=upload.get("fmt"),
+                               webhook=upload["webhook"] if "webhook" in upload else ...,
+                               root=self.files_root)
+                    meta = UF.public_meta(file_id, self.files_root)
+                    return 200, {**meta, "url": f"/api/files/{file_id}/{meta['filename']}",
+                                 "current": UF.current_text(file_id, self.files_root)}
+                if method == "DELETE":
+                    UF.delete(file_id, token=token.strip(), root=self.files_root)
+                    return 200, {"deleted": True}
+                return 404, {"error": "not found"}
+            parts = path.split("/")
+            if method == "GET" and len(parts) in (3, 4) and parts[1] == "files":
+                filename, text = UF.fetch(parts[2], self.files_root)
+                return 200, Raw(text, filename)
+            return 404, {"error": "not found"}
+        except ValueError:
+            return 400, {"error": "body must be JSON"}
+        except BadRequest as error:
+            return 400, {"error": str(error)}
+        except UF.StoreError as error:
+            return (404 if str(error).startswith("unknown") else 400), {"error": str(error)}
+        except OSError:
+            traceback.print_exc()
+            return 503, {"error": "file storage is unavailable"}
+
+    def handle(self, method, path, body, headers=None):
         path = path.split("?", 1)[0]
         if path.startswith("/api/"):
             path = path[4:]
+        if path == "/files" or path.startswith("/files/"):
+            return self.handle_files(method, path, body, headers)
         if method == "GET" and path == "/health":
             return 200, {"ok": True, "inflight": self.inflight, "capacity": self.capacity}
         if method == "GET" and path == "/builds":
@@ -411,9 +515,16 @@ def make_handler(service, max_body=MAX_BODY):
         server_version = "cs2vibe-verify"
 
         def _send(self, status, payload):
-            data = json.dumps(payload, separators=(",", ":")).encode()
-            self.send_response(status)
-            self.send_header("Content-Type", "application/json")
+            if isinstance(payload, Raw):
+                data = payload.text.encode()
+                kind = "application/json" if payload.filename.endswith((".json", ".jsonc")) else "text/plain"
+                self.send_response(status)
+                self.send_header("Content-Type", f"{kind}; charset=utf-8")
+                self.send_header("Content-Disposition", f'inline; filename="{payload.filename}"')
+            else:
+                data = json.dumps(payload, separators=(",", ":")).encode()
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(data)))
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
@@ -422,10 +533,16 @@ def make_handler(service, max_body=MAX_BODY):
             self.end_headers()
             self.wfile.write(data)
 
-        def do_GET(self):
-            self._send(*service.handle("GET", self.path, None))
+        def _headers(self):
+            return {"X-Manage-Token": self.headers.get("X-Manage-Token")}
 
-        def do_POST(self):
+        def do_GET(self):
+            self._send(*service.handle("GET", self.path, None, self._headers()))
+
+        def do_DELETE(self):
+            self._send(*service.handle("DELETE", self.path, None, self._headers()))
+
+        def _with_body(self, method):
             try:
                 length = int(self.headers.get("Content-Length") or 0)
             except ValueError:
@@ -433,7 +550,13 @@ def make_handler(service, max_body=MAX_BODY):
             if length < 0 or length > max_body:
                 self.close_connection = True
                 return self._send(413, {"error": f"body must be at most {max_body} bytes"})
-            self._send(*service.handle("POST", self.path, self.rfile.read(length)))
+            self._send(*service.handle(method, self.path, self.rfile.read(length), self._headers()))
+
+        def do_POST(self):
+            self._with_body("POST")
+
+        def do_PUT(self):
+            self._with_body("PUT")
 
         def log_message(self, fmt, *args):
             # The real client address is nginx's X-Real-IP; the socket peer is always loopback.
@@ -450,6 +573,8 @@ def main():
     parser.add_argument("-queue", type=int, default=20, help="requests waiting beyond the workers before 429")
     parser.add_argument("-timeout", type=int, default=60, help="seconds one request may take")
     parser.add_argument("-bindir", default="bin")
+    parser.add_argument("-files-root", dest="files_root", default=UF.ROOT,
+                        help="user-file store (systemd StateDirectory)")
     args = parser.parse_args()
 
     builds = scannable_builds(REPO_ROOT, args.bindir)
@@ -460,7 +585,7 @@ def main():
     # start-up and the warm-up. One ping per worker, all at once, starts them all now.
     for _ in range(args.workers):
         executor.submit(job_ping)
-    service = Service(executor, args.bindir, args.workers, args.queue, args.timeout)
+    service = Service(executor, args.bindir, args.workers, args.queue, args.timeout, files_root=args.files_root)
     server = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     server.daemon_threads = True
     print(f"verify_service on {args.host}:{args.port}, {args.workers} workers, builds: {', '.join(builds) or 'none'}",

@@ -14,6 +14,7 @@ import { ApiIcon, SearchIcon, SettingsIcon } from '../ui/icons'
 import { Button, Dot, Key, Select, Toaster } from '../ui/primitives'
 import { BuildStatusBanner } from '../components/BuildStatusBanner'
 
+const MyFilePage = lazy(() => import('../features/myfile/MyFilePage').then((module) => ({ default: module.MyFilePage })))
 const RunListPage = lazy(() => import('../features/runs/RunListPage').then((module) => ({ default: module.RunListPage })))
 const RunDetailPage = lazy(() => import('../features/run-detail/RunDetailPage').then((module) => ({ default: module.RunDetailPage })))
 const FindSymbolPage = lazy(() => import('../features/symbols/FindSymbolPage').then((module) => ({ default: module.FindSymbolPage })))
@@ -101,7 +102,7 @@ export function AppShell() {
   // The destinations a server owner comes for. Everything else is a footer
   // link: still one click away, no longer competing for the top bar.
   const tabs: AppView[] = ['start', 'symbols', 'check', 'scan']
-  const footer: AppView[] = ['gamedata', 'diff', 'runs', 'words']
+  const footer: AppView[] = ['gamedata', 'diff', 'myfile', 'runs', 'words']
   const section: AppView = plugin || view === 'gamedata' ? 'start' : view
   const loading = <div className="page-spinner">{t('app.loadingPage')}</div>
 
@@ -156,6 +157,7 @@ export function AppShell() {
         {view === 'check' && <Suspense fallback={loading}><CheckFilePage /></Suspense>}
         {view === 'scan' && <Suspense fallback={loading}><ScanPage /></Suspense>}
         {view === 'words' && <Suspense fallback={loading}><WordsPage /></Suspense>}
+        {view === 'myfile' && <Suspense fallback={loading}><MyFilePage /></Suspense>}
         {view === 'runs' && <Suspense fallback={loading}><RunReportPage /></Suspense>}
         {view === 'runs-live' && (
           <Routes>

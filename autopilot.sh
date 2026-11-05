@@ -477,6 +477,16 @@ finish_build() {
             ;;
     esac
 
+    # ---------------------------------------------------------------- user files
+    # Server owners' stored gamedata files (sig.miksen.me "keep it updated"). After the
+    # deploy decision, because it only reads what the build already published, and
+    # never fatal: a file that cannot be updated keeps its text and says why.
+    if [ "$DRY" != 1 ] && [ "${AUTOPILOT_USER_FILES:-1}" != "0" ]; then
+        log "==> updating stored user gamedata files"
+        ./user_gamedata.sh "$TAG" 2>&1 | while IFS= read -r line; do log "    $line"; done \
+            || log "    user_gamedata.sh failed (not fatal)"
+    fi
+
     : > "$STATE/finished-$TAG"
     rm -f "$ATTEMPTS_FILE" "$STATE/finish-attempts-$TAG"
     log "done with $TAG"

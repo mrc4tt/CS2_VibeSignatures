@@ -989,3 +989,32 @@ button.rsheet-tr:disabled { cursor: default; }
 .rsheet-foot .bad { color: var(--bad); }
 .rsheet-foot .warn { color: var(--warn); }
 .rsheet-foot .sep { color: var(--muted); font-weight: 500; }
+
+/* ---------------------------------------------------------------- stored user files */
+.keepup {
+  border-top: 1px solid var(--rule);
+  padding-top: 14px;
+}
+.linkrow {
+  display: block;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--rule-strong);
+  background: var(--card-2);
+  color: var(--ink);
+}
+.linkrow.secret { border-color: color-mix(in srgb, var(--warn) 55%, var(--rule-strong)); }
+.myhist { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.mylist {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 12px;
+  border-left: 2px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.myfile { max-width: 880px; }

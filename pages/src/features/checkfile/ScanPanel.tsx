@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PlayIcon } from '../../ui/icons'
 import { pluginLabel } from '../gamedata/pluginLabel'
@@ -29,6 +30,8 @@ interface Props {
   summary?: Record<KeyState, number>
   problems: number
   onNext(): void
+  /** Below the verdict: the "keep this file updated" offer. */
+  children?: ReactNode
 }
 
 const VERIFICATION_TONE = { verified: 'ok', contradicted: 'bad', unverified: 'warn', upstream: 'neutral' } as const
@@ -40,7 +43,7 @@ const VERIFICATION_TONE = { verified: 'ok', contradicted: 'bad', unverified: 'wa
  */
 export function ScanPanel({
   plugin, format, details, health, platform, onPlatform, builds, build, onBuild,
-  pending, error, result, onScan, summary, problems, onNext,
+  pending, error, result, onScan, summary, problems, onNext, children,
 }: Props) {
   const { t } = useTranslation()
   const failure = error instanceof DeepScanError ? error : null
@@ -160,6 +163,7 @@ export function ScanPanel({
       ) : null}
 
       {problems > 0 && <Button onClick={onNext}>{t('check.side.next', { count: problems })}</Button>}
+      {children}
     </aside>
   )
 }

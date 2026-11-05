@@ -655,6 +655,37 @@ anchor is the first call in the function printing `Saving existing workshop save
 linux ReplyConnection literal `55 B9 ? ? ? ? 41 B8` matched twice on 14192; the generated one is
 unique.
 
+## STORED USER FILES (sig.miksen.me "keep it updated")
+
+A server owner stores their own gamedata file from the scanner and gets two secret links, no
+account: a **read link** (`sig-api.miksen.me/api/files/<id>/<name>`, what a server fetches) and a
+**manage link** (`sig.miksen.me/my-file#<token>`: history, replace, webhook, delete). The id is the
+read secret; the manage token is stored only as its sha256 (`by_manage/<sha>`), sent only in the
+`X-Manage-Token` header and kept in the URL fragment, so it reaches no access log.
+
+- `user_files.py` - the store, under `/var/lib/cs2vibe-files` (systemd `StateDirectory` of
+  cs2vibe-verify, the only writable path that unit has; `CS2VIBE_USER_FILES` overrides). fcntl
+  lock, atomic writes, root's writes chowned back to the service. Expires a file after 90 days
+  without a fetch or upload; 2000 files at most.
+- `verify_service.py` serves `POST /api/files`, `GET /api/files/<id>/<name>`,
+  `GET|PUT|DELETE /api/files/manage`. nginx (`docs/nginx-sig-api.miksen.me.conf`, the live copy is
+  `/etc/nginx/sites-available/`) has its own 2r/m zone for storing. Cloudflare's bot check answers
+  `curl` with 403, so a game server can only fetch the read link once a Cloudflare skip rule covers
+  `/api/files/*` - that is the user's Cloudflare config, not in this repo.
+- `user_gamedata.sh <VER>` (-> `user_gamedata.py`) runs from autopilot's `finish_build`, never
+  fatal (`AUTOPILOT_USER_FILES=0` off). Each value is replaced only with proof: (1) the value
+  verify_service would offer (shipped file / record pattern), (2) relocation from the file's
+  previous build - a signature that landed on one function head where a record of ours sat takes
+  that record's new, uniquely scanning signature; a bare index on `<Class>_<Method>` whose slot held
+  a record with the same method name takes that record's new primary-vtable slot - (3) the hunter
+  (`ida_user_hunt.py`, idat on COPIES of both IDBs, synthetic `USER_<hash>` symbols, hunt_core's
+  evidence rule) for a function no record names. Measured 14195 -> 14196: 4 values updated, both
+  hunted slots confirmed unchanged, 28 s with the IDA stage. `gamedata_patch.py` places values the
+  way `pages/.../patch.ts` does (plus KeyValues `\x` escapes).
+- What leaves the store: `manual_todo/<VER>/user-uploads.txt` (unresolved keys, hunter proposals
+  for `FORK_OWNED_SYMBOLS` - rule 19 still decides the name - and demand counts of unrecorded keys).
+  Key names and our values only; a user's file text is never published, logged or committed.
+
 ## TAKING A NEW GAMEVER THROUGH
 
 ```bash
@@ -1050,6 +1081,7 @@ Two guards now catch the class before the baseline does:
 | `deploy_local_plugins.sh` | After gamedata generation, after `update_css_gamedata.sh` | → ~/customGIT/weaponpaints + matchzy, then commits and pushes those two and ~/CounterStrikeSharp |
 | `schema_dump.py` | New gamever, or "what is offset X on class Y" | Schema (classes/fields/offsets) read statically from libserver.so/server.dll, no server. `diff` flags a field gone + a field added at one offset with one size as *likely renamed* (classes too). `impact -old <PREV> -new <VER> [-plugins DIR]... [-json]`: which fields CounterStrikeSharp's generated `SchemaMember`s and each plugin .dll (ECMA-335 MemberRefs + `ldstr` class/field pairs, `schema_impact.py`) use are removed/renamed/moved; exit 1 on removed or renamed. Moves are harmless (CSSharp resolves offsets by name at runtime). Also flags a base-class field named on a derived class, which CSSharp's lookup silently resolves to 0 |
 | `update_css_gamedata.sh` | After gamedata generation | → ~/CounterStrikeSharp install |
+| `user_gamedata.sh` | autopilot after every finished build; by hand `<VER> [-dry-run] [-no-ida]` | Brings stored user files up to date with proof only; see STORED USER FILES |
 
 ## IDA PLUGIN HOTKEYS (local PC)
 

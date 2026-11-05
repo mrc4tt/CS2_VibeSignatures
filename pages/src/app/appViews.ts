@@ -1,4 +1,4 @@
-export const APP_VIEWS = ['start', 'symbols', 'gamedata', 'diff', 'check', 'scan', 'runs', 'runs-live', 'words'] as const
+export const APP_VIEWS = ['start', 'symbols', 'gamedata', 'diff', 'check', 'scan', 'runs', 'runs-live', 'words', 'myfile'] as const
 export type AppView = (typeof APP_VIEWS)[number]
 
 const LEGACY_VIEW_KEY = 'cs2vibe.view'
@@ -22,6 +22,7 @@ export const VIEW_PATHS: Record<AppView, string> = {
   check: '/check',
   scan: '/scan',
   words: '/words',
+  myfile: '/my-file',
   runs: '/analysis',
   'runs-live': '/runs',
 }

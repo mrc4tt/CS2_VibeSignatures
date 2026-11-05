@@ -40,6 +40,7 @@ vcall_finder
 # autopilot calls it: the gdc second-opinion scan
 !gdc_check.sh
 !systemd/cs2vibe-verify-acl.sh
+!user_gamedata.sh
 libtier0.so
 libtier0.so.*
 hm

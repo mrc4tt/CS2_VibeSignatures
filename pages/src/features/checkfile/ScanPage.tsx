@@ -17,6 +17,7 @@ import { applyFixes, renameKey } from './patch'
 import { ResultSheet, ScanningSheet } from './ResultSheet'
 import { readAutoOpen, type SheetSize } from './sheetModel'
 import { ScanPanel, type ScanPlatform } from './ScanPanel'
+import { KeepUpdated } from '../myfile/KeepUpdated'
 import { failureText, isLoaded, readGameData, useFileCheck, type Loaded } from './useFileCheck'
 import { agedValue } from './verdict'
 
@@ -320,7 +321,17 @@ export function ScanPage() {
             summary={file ? summary : undefined}
             problems={problems.length}
             onNext={() => stepProblem(1)}
-          />
+          >
+            {!loaded.example && (
+              <KeepUpdated
+                key={loaded.text}
+                text={deepPatched?.applied ? deepPatched.text : loaded.text}
+                filename={loaded.name}
+                build={scanResult?.build ?? (build || scanBuilds?.[0])}
+                fixed={Boolean(deepPatched?.applied)}
+              />
+            )}
+          </ScanPanel>
         ) : null}
         <div className="min-w-0">
           {loaded ? (
