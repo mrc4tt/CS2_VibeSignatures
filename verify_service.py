@@ -226,7 +226,7 @@ def _use_build(gamever, bindir):
     if _STATE["build"] == gamever:
         return _STATE
     for cache in (VPG._SNAPSHOT_INDEX, VPG._STUB_RANGES, VPG._PRIMARY_CACHE, VPG._MEMBERS,
-                  VPG._FUNC_RANGES, VPG.GENERATOR_ALIASES):
+                  VPG._FUNC_RANGES, VPG.GENERATOR_ALIASES, VPG._INFER_CACHE):
         cache.clear()
     _STATE["build"] = None
     # The index is keyed by the platforms in force while it loads; a request's own
@@ -279,8 +279,10 @@ def job_verify(gamever, bindir, text, filename, platforms):
         return {"error": f"more than {MAX_ENTRIES} entries"}
     match = match_shipped(entries, filename, [(p, path, s) for p, path, s, _ in state["shipped"]])
     plugin, path = (match[0], match[1]) if match else (None, None)
+    # infer: a key named after no record is recognised by where its signature lands or by
+    # its method name (VPG.infer_by_*); the deploy gate judges shipped files without it
     results, note = VPG.verify_text(text, state["index"], state["binaries"], state["config"],
-                                    plugin=plugin, output=path)
+                                    plugin=plugin, output=path, infer=True)
     if note:
         return {"build": gamever, "note": note, "results": []}
     unhealthy, tally, _, _ = VPG.summarize(results)
@@ -294,7 +296,8 @@ def job_verify(gamever, bindir, text, filename, platforms):
         aliases = VPG.load_alias_map(state["config"]) if os.path.isfile(state["config"]) else {}
         fixes += record_signature_fixes(
             results, entries, fixes,
-            lambda name, platform: VPG.resolve_record(state["index"], name, platform, aliases),
+            lambda name, platform: (VPG.resolve_record(state["index"], name, platform, aliases)
+                                    or VPG.infer_by_name(state["index"], name, platform, "signature")[0]),
             lambda module, platform, pattern, record: VPG.check_signature(
                 state["binaries"], module, platform, pattern, record))
     return {"build": gamever, "platforms": list(platforms),

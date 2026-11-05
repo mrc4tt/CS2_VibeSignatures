@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { copyText } from '../../ui/clipboard'
 import { saveText } from '../../ui/download'
 import { Button, ChipGroup } from '../../ui/primitives'
-import { platformTone, rowTone, sortRows, type DeepFix, type DeepPlatform, type DeepRow, type DeepScanResult, type DeepTone, type Platform } from './deepScan'
+import { inferredOf, platformTone, rowTone, sortRows, type DeepFix, type DeepPlatform, type DeepRow, type DeepScanResult, type DeepTone, type Platform } from './deepScan'
 import { locateValue } from './lineMarks'
 import { VTABLE_KEY_SUFFIX } from './parse'
 import type { AgedValue } from './verdict'
@@ -349,7 +349,17 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
                           }}
                         >
                           <span className="mk" aria-hidden="true" />
-                          <span className="nm">{item.row.name}</span>
+                          <span className="nm">
+                            {item.row.name}
+                            {(() => {
+                              const seen = inferredOf(item.row)
+                              return seen ? (
+                                <small className="rsheet-inferred" title={t('scan.result.inferredTitle', { how: t(`scan.result.inferredBy.${seen.how.startsWith('address') ? 'address' : 'name'}`) })}>
+                                  {t('scan.result.inferred', { symbol: seen.symbol })}
+                                </small>
+                              ) : null
+                            })()}
+                          </span>
                           <span className="kd">{item.row.kind ?? ''}</span>
                           {PLATFORMS.map((platform) => {
                             const info = item.row.platforms[platform]

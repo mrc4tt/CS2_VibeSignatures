@@ -23,6 +23,13 @@ export interface DeepPlatform {
   at?: string
   count?: number
   vtable?: string
+  /** The key is named after no record; the service recognised it as this one (by method name or by where the signature lands). */
+  inferred?: { symbol: string; how: string }
+}
+
+/** The record a row was recognised as, when the key itself names none. */
+export function inferredOf(row: { platforms: Partial<Record<Platform, DeepPlatform>> }): { symbol: string; how: string } | undefined {
+  return row.platforms.windows?.inferred ?? row.platforms.linux?.inferred
 }
 
 export interface DeepRow {

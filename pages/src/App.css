@@ -866,6 +866,7 @@ button.rsheet-tr:disabled { cursor: default; }
   letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule-soft); }
 .rsheet-tr .num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .rsheet-tr .nm { font-family: var(--mono); font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rsheet-inferred { display: block; font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
 .rsheet-tr .kd { font-size: 12px; color: var(--muted); }
 .rsheet-tr .pc { font-size: 12.5px; }
 .rsheet-tr .pc.t-ok { color: var(--ok); }

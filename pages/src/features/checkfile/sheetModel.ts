@@ -65,6 +65,7 @@ export function scanLog(result: DeepScanResult): string {
       if (info.count) line += ` (${info.count} hits)`
       if (info.reference !== undefined) line += `, build has ${info.reference}`
       if (info.vtable && info.vtable !== 'ok') line += `, vtable ${info.vtable}`
+      if (info.inferred) line += `, recognised as ${info.inferred.symbol} (${info.inferred.how.split(':')[0]})`
       out.push(line)
     }
   }

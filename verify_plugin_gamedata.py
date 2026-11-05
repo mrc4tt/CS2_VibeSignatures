@@ -731,8 +731,79 @@ def resolve_record(index, name, platform, aliases=None):
     return None
 
 
-def check_offset(index, binaries, name, platform, value, aliases=None):
-    record = resolve_record(index, name, platform, aliases)
+_INFER_CACHE = {}
+
+
+def _infer_tables(index):
+    """(by method key, by address) over one snapshot index, built once per index."""
+    cached = _INFER_CACHE.get(id(index))
+    if cached is not None and cached[0] is index:
+        return cached[1], cached[2]
+    by_method, by_va = {}, {}
+    for platforms in index.values():
+        for platform, record in platforms.items():
+            if not isinstance(record, dict) or not record.get("_symbol"):
+                continue
+            symbol = record["_symbol"]
+            # every "<prefix>_<rest>" split: CServerSideClientBase_m_nClientSlot answers
+            # both m_nClientSlot and nClientSlot, CNetworkSystem_GetPublicAdr GetPublicAdr
+            parts = symbol.split("_")
+            for cut in range(1, len(parts)):
+                by_method.setdefault((platform, "_".join(parts[cut:])), []).append(record)
+            va = _int(record.get("func_va"))
+            if va is not None:
+                by_va.setdefault((record.get("_module") or "server", platform, va), []).append(record)
+    _INFER_CACHE.clear()
+    _INFER_CACHE[id(index)] = (index, by_method, by_va)
+    return by_method, by_va
+
+
+def _same_value(records, kind):
+    """The records agree on what this kind of key would ship."""
+    if kind == "offset":
+        values = {r.get("vfunc_index") if r.get("vfunc_index") is not None else r.get("offset") for r in records}
+    else:
+        values = {r.get("func_va") for r in records}
+    return len(values) == 1 and None not in values
+
+
+def infer_by_name(index, name, platform, kind):
+    """(record, how) for a key no record is named after, by its method name alone.
+
+    "GetPublicAdr" or "INetworkSystem::GetPublicAdr" -> the one record <Class>_GetPublicAdr
+    (or several that ship the same value). A name with a class prefix written with "_" is
+    left alone: there the prefix IS the name, and a near miss is a different symbol.
+    """
+    method = name.rsplit("::", 1)[-1] if "::" in name else name
+    if not method or ("::" not in name and "_" in name and not name.startswith("m_")):
+        return None, None
+    by_method, _ = _infer_tables(index)
+    candidates = [r for r in by_method.get((platform, method), [])
+                  if (r.get("vfunc_index") is not None or r.get("offset") is not None)
+                  == (kind == "offset")]
+    if "::" in name:
+        cls = name.rsplit("::", 1)[0].split("::")[-1]
+        exact = [r for r in candidates if r["_symbol"] == f"{cls}_{method}"]
+        candidates = exact or candidates
+    if candidates and _same_value(candidates, kind):
+        names = sorted({r["_symbol"] for r in candidates})
+        return candidates[0], f"name: {', '.join(names[:3])}"
+    return None, None
+
+
+def infer_by_address(index, module, platform, va):
+    """(record, how) for a signature that lands on the head of a function we have a record of."""
+    _, by_va = _infer_tables(index)
+    records = by_va.get((module, platform, va)) or []
+    if not records:
+        return None, None
+    names = sorted({r["_symbol"] for r in records})
+    return records[0], f"address: {', '.join(names[:3])}"
+
+
+def check_offset(index, binaries, name, platform, value, aliases=None, record=None):
+    if record is None:
+        record = resolve_record(index, name, platform, aliases)
     if record is None:
         return {"status": "no-reference"}
     reference = record.get("vfunc_index")
@@ -1139,7 +1210,7 @@ def main():
     return _report(results, args, os.path.basename(args.gamedata))
 
 
-def verify_text(text, index, binaries, config_path, plugin=None, output=None):
+def verify_text(text, index, binaries, config_path, plugin=None, output=None, infer=False):
     """-> (results, note): every entry of one gamedata file judged against this build.
 
     plugin and output name the generator and shipped file the keys were written for, so
@@ -1177,8 +1248,14 @@ def verify_text(text, index, binaries, config_path, plugin=None, output=None):
                 row["platforms"][platform] = {"status": "not-shipped"}
                 continue
             if kind == "offset":
+                inferred, how = (None, None)
+                if infer and resolve_record(index, name, platform, aliases) is None:
+                    inferred, how = infer_by_name(index, name, platform, "offset")
                 row["platforms"][platform] = check_offset(index, binaries, name, platform,
-                                                          value, aliases)
+                                                          value, aliases, record=inferred)
+                if inferred is not None:
+                    row["platforms"][platform]["inferred"] = {"symbol": inferred["_symbol"], "how": how}
+                    continue
                 # A record that carries no index or offset says nothing about this value either:
                 # stock CounterStrikeSharp's GameEventManager (93, read by no code) folds onto one.
                 if (resolve_record(index, name, platform, aliases) is None
@@ -1193,6 +1270,9 @@ def verify_text(text, index, binaries, config_path, plugin=None, output=None):
                 row["platforms"][platform] = {"status": "patch-unverifiable"}
                 continue
             record = resolve_record(index, name, platform, aliases)
+            inferred_how = None
+            if record is None and infer:
+                record, inferred_how = infer_by_name(index, name, platform, "signature")
             if not entry.get("library") and record and record.get("_module"):
                 # The file names no library when the plugin hard-codes it (cs2-menus looks
                 # IsHearingClient up in libengine2 itself): scanning the "server" default
@@ -1200,6 +1280,12 @@ def verify_text(text, index, binaries, config_path, plugin=None, output=None):
                 # func mismatch against the engine record. The record knows its module.
                 module = row["module"] = record["_module"]
             info = check_signature(binaries, module, platform, value, record)
+            if record is None and infer and info.get("status") == "ok":
+                # identity by placement: the pattern lands once, on a function head, and a
+                # record of ours sits exactly there
+                record, inferred_how = infer_by_address(index, module, platform, V._hexint(info["at"]))
+            if inferred_how:
+                info["inferred"] = {"symbol": record["_symbol"], "how": inferred_how}
             if record is None:
                 info["unrecorded"] = True
             if record and info.get("status") == "ok" and record.get("func_va"):
