@@ -668,10 +668,12 @@ read secret; the manage token is stored only as its sha256 (`by_manage/<sha>`), 
   lock, atomic writes, root's writes chowned back to the service. Expires a file after 90 days
   without a fetch or upload; 2000 files at most.
 - `verify_service.py` serves `POST /api/files`, `GET /api/files/<id>/<name>`,
-  `GET|PUT|DELETE /api/files/manage`. nginx (`docs/nginx-sig-api.miksen.me.conf`, the live copy is
-  `/etc/nginx/sites-available/`) has its own 2r/m zone for storing. Cloudflare's bot check answers
-  `curl` with 403, so a game server can only fetch the read link once a Cloudflare skip rule covers
-  `/api/files/*` - that is the user's Cloudflare config, not in this repo.
+  `GET|PUT|DELETE /api/files/manage`. nginx has its own 2r/m zone for storing. The nginx source of
+  truth is `/root/server-ops/etc/nginx/sig-api.miksen.me.conf` (mrc4tt/server-ops): its
+  `42-nginx.sh` rewrites `/etc/nginx/sites-available/` and silently undid a hand edit there within
+  minutes. `docs/nginx-sig-api.miksen.me.conf` is a copy. Cloudflare's Bot Fight Mode (Free plan,
+  cannot be skipped by a rule) challenged every non-browser client with 403, so it was turned off
+  for miksen.me on 2026-11-05; curl/wget now fetch the read link directly.
 - `user_gamedata.sh <VER>` (-> `user_gamedata.py`) runs from autopilot's `finish_build`, never
   fatal (`AUTOPILOT_USER_FILES=0` off). Each value is replaced only with proof: (1) the value
   verify_service would offer (shipped file / record pattern), (2) relocation from the file's
