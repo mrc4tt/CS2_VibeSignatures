@@ -9771,3 +9771,86 @@ async def preprocess_common_skill(
         await _rename_gv_in_ida(session, gv_va_hex, gv_name, debug)
 
     return True
+
+
+async def preprocess_vtable_ref_gv_skill(
+    session,
+    expected_outputs,
+    old_yaml_map,
+    new_binary_dir,
+    platform,
+    image_base,
+    gv_name,
+    vtable_class,
+    generate_yaml_desired_fields,
+    debug=False,
+):
+    """gv record of an instruction that loads a class's vtable (a constructor's
+    ``lea reg, [vtable]``), for plugins that resolve the vtable from a signature.
+
+    gv_va must equal the vtable artifact's vtable_va (RTTI-resolved by the vtable
+    task, an expected_input), so a relocated gv_sig that now loads another address
+    is discarded and a new one is generated from the vtable address itself. That
+    makes the record self-healing: it needs no baseline and no agent.
+    """
+    target = next(
+        (p for p in expected_outputs if os.path.basename(p) == f"{gv_name}.{platform}.yaml"),
+        None,
+    )
+    if target is None:
+        print(f"    Preprocess: {gv_name}.{platform}.yaml is not an expected output")
+        return False
+    vtable_path = os.path.join(new_binary_dir, f"{vtable_class}_vtable.{platform}.yaml")
+    try:
+        with open(vtable_path, "r", encoding="utf-8") as handle:
+            vtable_va = int(str((yaml.safe_load(handle) or {}).get("vtable_va")), 0)
+    except (OSError, TypeError, ValueError):
+        print(f"    Preprocess: {gv_name} needs {vtable_path} (vtable_va)")
+        return False
+
+    gv_data = None
+    old_path = (old_yaml_map or {}).get(target)
+    if old_path:
+        gv_data = await preprocess_gv_sig_via_mcp(
+            session=session,
+            new_path=target,
+            old_path=old_path,
+            image_base=image_base,
+            new_binary_dir=new_binary_dir,
+            platform=platform,
+            debug=debug,
+        )
+        if gv_data is not None and int(str(gv_data.get("gv_va")), 0) != vtable_va:
+            print(
+                f"    Preprocess: {gv_name} relocated to {gv_data.get('gv_va')}, "
+                f"not {vtable_class}'s vtable {hex(vtable_va)} - regenerating"
+            )
+            gv_data = None
+    # A one-store constructor (windows CTraceFilterLOS: lea; mov [rbx],rax; mov rax,rbx;
+    # add rsp,20h; pop rbx; ret) is the same bytes as a hundred others up to its ret, so
+    # the second attempt may run on into the padding and the next head - the bytes that
+    # make it unique, with the displacements still wildcarded.
+    for across in (False, True):
+        if gv_data is not None:
+            break
+        gv_data = await preprocess_gen_gv_sig_via_mcp(
+            session=session,
+            gv_va=vtable_va,
+            image_base=image_base,
+            gv_name=gv_name,
+            allow_across_function_boundary=across,
+            debug=debug,
+        )
+    if gv_data is None:
+        print(f"    Preprocess: no unique instruction loads {vtable_class}'s vtable {hex(vtable_va)}")
+        return False
+    gv_data["gv_name"] = gv_name
+
+    desired_fields_map = _normalize_generate_yaml_desired_fields(generate_yaml_desired_fields, debug=debug)
+    payload = _assemble_symbol_payload(gv_name, "gv", gv_data, desired_fields_map, debug=debug)
+    if payload is None:
+        return False
+    write_gv_yaml(target, payload)
+    if debug:
+        print(f"    Preprocess: generated {gv_name}.{platform}.yaml")
+    return True

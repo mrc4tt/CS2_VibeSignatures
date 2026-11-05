@@ -1086,7 +1086,11 @@ def validate_opened_binary_identity(binary_path, platform, survey_payload):
     normalized_opened_path = normalize_binary_identity_path(opened_path) if isinstance(opened_path, str) else ""
     if not normalized_opened_path:
         reasons.append("path mismatch: opened metadata path is missing")
-    elif normalized_opened_path != expected_path:
+    elif normalized_opened_path != expected_path and normalized_opened_path != normalize_binary_identity_path(
+        os.path.realpath(binary_path)
+    ):
+        # realpath as the second spelling: bin/ is a symlink to /srv/cs2-binaries, and an
+        # IDB reports the resolved path (windows 14196 failed every task on that alone)
         reasons.append(f"path mismatch: expected {expected_path}, opened {normalized_opened_path}")
 
     return not reasons, reasons

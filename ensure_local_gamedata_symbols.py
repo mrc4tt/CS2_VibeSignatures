@@ -272,7 +272,24 @@ FORK_OWNED_SYMBOLS = [
     ("CCSPlayerPawn_CanMove", "func", "server", None),
     ("CCSCustomHudLayout_RemoveDialogVariableStringForPlayer", "func", "server", None),
     ("CFlashbangProjectile_Create", "func", "server", None),
+    # CounterStrikeSharp's CNavPhysicsInterface_vtable / CTraceFilterLOS_vtable keys: a
+    # signature on the constructor's `lea reg, [vtable]`, displacement at +3. A gv record
+    # per class (gv_va = the vtable), checked against the RTTI-resolved <class>_vtable
+    # artifact and regenerated from it every build (preprocess_vtable_ref_gv_skill).
+    # The generator's KEY_SYMBOL_OVERRIDES routes the keys here; the <class>_vtable
+    # records themselves stay vtable-shaped. 14196: linux 0x26de3e0 / 0x2657748,
+    # windows 0x181a175b0 / 0x181945fb0.
+    ("CNavPhysicsInterface_vtable_ref", "gv", "server", None),
+    ("CTraceFilterLOS_vtable_ref", "gv", "server", None),
 ]
+
+# Order edges for fork-owned tasks: optional_input lines the run sorts tasks on
+# (inject() puts a new task at the head of the module, before what it reads).
+FORK_OWNED_TASK_INPUTS = {
+    # (module, task): inputs
+    ("server", "find-CNavPhysicsInterface_vtable_ref"): ["CNavPhysicsInterface_vtable.{platform}.yaml"],
+    ("server", "find-CTraceFilterLOS_vtable_ref"): ["CTraceFilterLOS_vtable.{platform}.yaml"],
+}
 
 # Fork-owned struct members: FORK_OWNED_SYMBOLS has no struct/member slot.
 FORK_OWNED_STRUCTMEMBERS = [
@@ -730,7 +747,35 @@ FORK_OWNED_VTABLES = [
     # (class, module)
     ("CCvar", "tier0"),
     ("CGameEventSystem", "engine"),
+    # read by find-CTraceFilterLOS_vtable_ref (CounterStrikeSharp's CTraceFilterLOS_vtable)
+    ("CTraceFilterLOS", "server"),
 ]
+
+
+def enforce_fork_owned_task_inputs(text):
+    """Give each FORK_OWNED_TASK_INPUTS task its optional_input lines, where missing."""
+    added = 0
+    lines = text.split("\n")
+    for (module, task), inputs in FORK_OWNED_TASK_INPUTS.items():
+        block = next(((s, e) for s, e, name in _module_blocks(lines) if name == module), None)
+        if block is None:
+            continue
+        start, end = block
+        at = next((i for i in range(start, end) if lines[i] == f"      - name: {task}"), None)
+        if at is None:
+            continue
+        stop = next((i for i in range(at + 1, end) if lines[i].startswith("      - name: ") or not lines[i].startswith("        ")), end)
+        body = lines[at + 1:stop]
+        missing = [i for i in inputs if f"          - {i}" not in body]
+        if not missing:
+            continue
+        if "        optional_input:" in body:
+            k = at + 1 + body.index("        optional_input:") + 1
+            lines[k:k] = [f"          - {i}" for i in missing]
+        else:
+            lines[stop:stop] = ["        optional_input:"] + [f"          - {i}" for i in missing]
+        added += len(missing)
+    return "\n".join(lines), added
 
 
 def enforce_fork_owned_vtables(text):
@@ -1746,6 +1791,9 @@ def main():
     patched, tasked = enforce_fork_owned_tasks(patched)
     if tasked:
         print(f"  re-asserted: {tasked} fork-owned find-task(s)")
+    patched, inputs_added = enforce_fork_owned_task_inputs(patched)
+    if inputs_added:
+        print(f"  re-asserted: {inputs_added} fork-owned task input(s)")
     # Again, because inject() runs after the first pass and adds a find-<symbol>
     # task for every symbol it declares. For a symbol whose declaration this fork
     # has deliberately reshaped - CEntityResourceManifest_AddResource is declared

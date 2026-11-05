@@ -4890,6 +4890,19 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CNavPhysicsInterface_vtable_ref
+        expected_output:
+          - CNavPhysicsInterface_vtable_ref.{platform}.yaml
+        optional_input:
+          - CNavPhysicsInterface_vtable.{platform}.yaml
+      - name: find-CTraceFilterLOS_vtable_ref
+        expected_output:
+          - CTraceFilterLOS_vtable_ref.{platform}.yaml
+        optional_input:
+          - CTraceFilterLOS_vtable.{platform}.yaml
+      - name: find-CTraceFilterLOS_vtable
+        optional_output:
+          - CTraceFilterLOS_vtable.{platform}.yaml
       - name: find-Say_CommandHandler
         expected_output:
           - Say_CommandHandler.{platform}.yaml
@@ -8422,6 +8435,12 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CNavPhysicsInterface_vtable_ref
+        category: gv
+      - name: CTraceFilterLOS_vtable_ref
+        category: gv
+      - name: CTraceFilterLOS_vtable
+        category: vtable
       - name: Say_CommandHandler
         category: func
       - name: SayTeam_CommandHandler

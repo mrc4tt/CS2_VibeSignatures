@@ -926,6 +926,22 @@ class TestOpenedBinaryIdentityValidationHashes(unittest.TestCase):
         self.assertFalse(ok)
         self.assertTrue(any("path mismatch" in reason for reason in reasons), reasons)
 
+    def test_accepts_an_idb_reached_through_a_symlinked_bin(self) -> None:
+        # bin/ -> /srv/cs2-binaries: the IDB reports the resolved path (14196 windows)
+        with TemporaryDirectory() as temp_dir:
+            real = Path(temp_dir) / "srv" / "14196" / "server"
+            real.mkdir(parents=True)
+            (real / "server.dll").write_bytes(b"server-binary")
+            (Path(temp_dir) / "bin").symlink_to(Path(temp_dir) / "srv")
+
+            ok, reasons = ida_analyze_bin.validate_opened_binary_identity(
+                str(Path(temp_dir) / "bin" / "14196" / "server" / "server.dll"),
+                "windows",
+                {"metadata": {"path": str(real / "server.dll"), "base_address": "0x180000000"}},
+            )
+
+        self.assertTrue(ok, reasons)
+
     def test_accepts_moved_idb_when_sha256_matches(self) -> None:
         with TemporaryDirectory() as temp_dir:
             binary_path = Path(temp_dir) / "bin" / "14141" / "server" / "server.dll"

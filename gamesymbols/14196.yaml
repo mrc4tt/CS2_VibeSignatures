@@ -136,8 +136,8 @@ binaries:
       sha256: '92659ab5b4f9656d3d69599acf96b128c6e576e3f858fc1b380276785e3b6478'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:48f6d17195adcd09cd9d696336aeedf94dfe214dd78ee313cc4a14283c919f2e
-file_count: 3322
+config_sha256: sha256:e1a73c96c93bb0c954a3ef8bb04b78da03cf695619d7145ee56f444c1ebca3b7
+file_count: 3328
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -32870,6 +32870,24 @@ files:
     vtable_size: '0x48'
     vtable_symbol: ??_7CNavPhysicsInterface@@6B@
     vtable_va: '0x181a175b0'
+  server/CNavPhysicsInterface_vtable_ref.linux.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: CNavPhysicsInterface_vtable_ref
+    gv_rva: '0x26de3e0'
+    gv_sig: 48 8D 05 ?? ?? ?? ?? 48 89 06 E8 ?? ?? ?? ?? BF ?? ?? ?? ?? E8 ?? ?? ?? ?? 66 0F EF C9
+    gv_sig_va: '0x1ce298d'
+    gv_va: '0x26de3e0'
+  server/CNavPhysicsInterface_vtable_ref.windows.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: CNavPhysicsInterface_vtable_ref
+    gv_rva: '0x1a175b0'
+    gv_sig: 48 8D 0D ?? ?? ?? ?? 48 89 08 EB ?? 48 8B C6 48 8B D0 48 8B CF E8 ?? ?? ?? ?? B9 ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8D 2D ?? ?? ?? ??
+    gv_sig_va: '0x18109182d'
+    gv_va: '0x181a175b0'
   server/CNetworkSerializerBindingBuildFilter_GetFieldPriority.linux.yaml:
     func_name: CNetworkSerializerBindingBuildFilter_GetFieldPriority
     func_rva: '0x22a9ae0'
@@ -39225,6 +39243,45 @@ files:
     vtable_size: '0x30'
     vtable_symbol: ??_7CTakeDamageInfo@@6B@
     vtable_va: '0x1819f2840'
+  server/CTraceFilterLOS_vtable.linux.yaml:
+    vtable_class: CTraceFilterLOS
+    vtable_entries:
+      0: '0x170a1f0'
+      1: '0x170aba0'
+      2: '0xa5f290'
+    vtable_numvfunc: 3
+    vtable_rva: '0x2657748'
+    vtable_size: '0x18'
+    vtable_symbol: _ZTV15CTraceFilterLOS + 0x10
+    vtable_va: '0x2657748'
+  server/CTraceFilterLOS_vtable.windows.yaml:
+    vtable_class: CTraceFilterLOS
+    vtable_entries:
+      0: '0x180be3a40'
+      1: '0x1801d6ea0'
+    vtable_numvfunc: 2
+    vtable_rva: '0x1945fb0'
+    vtable_size: '0x10'
+    vtable_symbol: ??_7CTraceFilterLOS@@6B@
+    vtable_va: '0x181945fb0'
+  server/CTraceFilterLOS_vtable_ref.linux.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: CTraceFilterLOS_vtable_ref
+    gv_rva: '0x2657748'
+    gv_sig: 48 8D 05 ?? ?? ?? ?? 49 89 04 24 48 83 C4 ??
+    gv_sig_va: '0x173990a'
+    gv_va: '0x2657748'
+  server/CTraceFilterLOS_vtable_ref.windows.yaml:
+    gv_inst_disp: 3
+    gv_inst_length: 7
+    gv_inst_offset: 0
+    gv_name: CTraceFilterLOS_vtable_ref
+    gv_rva: '0x1945fb0'
+    gv_sig: 48 8D 05 ?? ?? ?? ?? 48 89 03 48 8B C3 48 83 C4 ?? 5B C3 CC CC CC CC 0F B6 41 ??
+    gv_sig_va: '0x180bddf09'
+    gv_va: '0x181945fb0'
   server/CTriggerGravity_GetTouchFunction.linux.yaml:
     func_name: CTriggerGravity_GetTouchFunction
     func_rva: '0x1bdfd60'
@@ -43494,5 +43551,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14196'
-last_publish_time: '2026-11-05T01:39:05Z'
+last_publish_time: '2026-11-05T08:58:12Z'
 schema_version: 5

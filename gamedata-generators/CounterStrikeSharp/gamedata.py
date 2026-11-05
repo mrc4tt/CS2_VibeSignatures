@@ -129,6 +129,11 @@ KEY_SYMBOL_OVERRIDES = {
     # function as CBaseEntity_TakeDamageOldFunc (VirtualFunctions.cs:110). Without the key
     # that binding fails on the server.
     "CBaseEntity_TakeDamage": "CBaseEntity_TakeDamageOld",
+    # Signatures on the constructor's `lea reg, [vtable]` (displacement at +3), not the
+    # vtable records themselves: those carry the table, the *_vtable_ref gv records the
+    # instruction that loads it (gv_va checked against the RTTI vtable every build).
+    "CNavPhysicsInterface_vtable": "CNavPhysicsInterface_vtable_ref",
+    "CTraceFilterLOS_vtable": "CTraceFilterLOS_vtable_ref",
 }
 
 
