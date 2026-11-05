@@ -124,7 +124,7 @@ FORK_OWNED_SYMBOLS = [
     # signatures via emit_artifact.py, see the preprocessor's docstring.
     (
         "CPlayer_ObserverServices_IsValidObserverTarget",
-        "func",
+        "vfunc",
         None,
         "CPlayer_ObserverServices::IsValidObserverTarget",
     ),
@@ -363,6 +363,10 @@ CATEGORY_DECISIONS = {
     # SwiftlyS2's CCSPlayerInventory::GetItemInLoadout offset kept the author's 9/8.
     # It is a CCSPlayerInventory virtual (CPlayerInventory's slot, overridden).
     "CCSPlayerInventory_GetItemInLoadout": ("vfunc", None, None),
+    # Declared func when it was added, while its task writes the slot (vtable_name,
+    # vfunc_index/offset): the finalizer rejected every fresh artifact as "func artifact
+    # has unknown fields", which only showed once a run produced it from scratch.
+    "CPlayer_ObserverServices_IsValidObserverTarget": ("vfunc", None, None),
 }
 
 # Renamed engine symbols: old gamedata keys map to the canonical analyzed symbol via

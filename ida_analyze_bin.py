@@ -45,6 +45,7 @@ import re
 import signal
 import posixpath
 import socket
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -3217,6 +3218,8 @@ def run_pipeline_hunt(*, host, port, binary_path, symbols, artifact_dir, old_art
     return result
 
 
+import ida_shards  # noqa: E402
+from ida_shards import ShardPlan  # noqa: E402
 from manual_todo import describe_unresolved, manual_todo_path, update_manual_todo  # noqa: E402
 
 
@@ -4238,7 +4241,16 @@ def _process_binary(
     skill_map = {skill["name"]: skill for skill in skills}
 
     # Topological sort skills based on inferred dependency tree
-    sorted_skill_names = topological_sort_skills(skills, platform=platform)
+    shard = ShardPlan.from_env()
+    if shard is not None:
+        # one share of a sharded module (ida_shards): the parent planned the order
+        # over every task, this child runs its own and the parent's sweep does the rest
+        sorted_skill_names = [name for name in shard.order if name in skill_map]
+        rename = False
+        vcall_targets = None
+        print(f"  Shard {shard.shard}: {len(sorted_skill_names)} task(s)")
+    else:
+        sorted_skill_names = topological_sort_skills(skills, platform=platform)
 
     # Filter skills that need processing (skip if configured outputs already exist)
     skills_to_process = []
@@ -4525,13 +4537,16 @@ def _process_binary(
 
         # Process each skill: try preprocess first, then run_skill if needed
         abort_binary_processing = False
+        skill_iteration = enumerate(skills_to_process)
+        if shard is not None:
+            skill_iteration = shard.iterate(skill_iteration, lambda item: item[1][0])
         for skill_index, (
             skill_name,
             required_outputs,
             optional_outputs,
             preprocess_outputs,
             skill_max_retries,
-        ) in enumerate(skills_to_process):
+        ) in skill_iteration:
             if should_skip_skill_for_existing_outputs(required_outputs, optional_outputs):
                 _note_skip(skill_name, "all outputs exist")
                 skip_count += 1
@@ -4692,6 +4707,11 @@ def _process_binary(
                 )
                 continue
             missing_inputs = [p for p in expected_inputs if not os.path.exists(p)]
+            if missing_inputs and shard is not None:
+                skip_count += 1
+                missing_names = [os.path.basename(p) for p in missing_inputs]
+                _note_skip(skill_name, "left for the sweep", f"missing input: {', '.join(missing_names)}")
+                continue
             other_module_inputs = [
                 p for p in missing_inputs
                 if os.path.normcase(os.path.dirname(os.path.normpath(p))) != os.path.normcase(os.path.normpath(artifact_dir))
@@ -5025,6 +5045,11 @@ def _process_binary(
                     ProcessPhase.FINISHED,
                     reason=ProcessReason.EXISTING_OUTPUTS,
                 )
+                continue
+            if shard is not None:
+                # hunter, agent and manual_todo belong to the sweep on the primary IDB
+                skip_count += 1
+                _note_skip(skill_name, "left for the sweep", "preprocess did not produce every output")
                 continue
 
             missing_required = [path for path in required_outputs if not os.path.exists(path)]
@@ -6386,6 +6411,10 @@ def _process_platform(args, module, platform, vcall_targets, reporting, found_vc
         _skip_platform_job(reporting, job_id, TaskStatus.SKIPPED, ProcessReason.PLATFORM_MISMATCH, "No selected skill")
         return 0, 0, work_count
 
+    shard = ShardPlan.from_env()
+    if shard is not None and shard.stage != module.get("stage_index", 0):
+        # a shard runs one stage of its module; the other stages are the sweep's
+        return 0, 0, 0
     binary_path = get_binary_path(args.bindir, args.gamever, module["name"], module_path)
     print(f"\n  Platform: {platform}")
     print(f"  Binary: {binary_path}")
@@ -6406,6 +6435,7 @@ def _process_platform(args, module, platform, vcall_targets, reporting, found_vc
     artifact_root = getattr(args, "artifactdir", DEFAULT_ARTIFACTS_DIR)
     artifact_dir = os.path.join(artifact_root, str(args.gamever), module["name"])
     old_artifact_dir = _resolve_old_artifact_dir(args, module["name"])
+    shard_counts = _run_shards(args, module, platform, skills, binary_path, artifact_dir, module_path)
     counts = _invoke_process_binary(
         args,
         {**module, "skills": skills},
@@ -6418,9 +6448,166 @@ def _process_platform(args, module, platform, vcall_targets, reporting, found_vc
         job_id,
         found_vcall_objects,
     )
+    if shard_counts:
+        # the sweep counted each task a shard produced as skipped (outputs exist)
+        counts = (counts[0] + shard_counts, counts[1], max(0, counts[2] - shard_counts))
     job_status = TaskStatus.FAILED if counts[1] else TaskStatus.SUCCEEDED
     reporting.emit_task_status(job_id, job_status, ProcessPhase.FINISHED)
     return counts
+
+
+def _pending_shard_tasks(skills, platform, artifact_dir):
+    """Tasks of *platform* whose outputs do not all exist yet, in config order."""
+    pending = []
+    for skill in skills:
+        if not _skill_runs_on_platform(skill, platform):
+            continue
+        try:
+            required, optional, _ = expand_skill_output_paths(artifact_dir, skill, platform)
+        except ValueError:
+            continue
+        if outputs_target_other_platform(required, optional, platform):
+            continue
+        if should_skip_skill_for_existing_outputs(required, optional):
+            continue
+        pending.append(skill)
+    return pending
+
+
+def _shard_unsupported_reason(args):
+    if os.environ.get(ida_shards.SHARD_PLAN_ENV):
+        return "already a shard"
+    for label, present in (
+        ("-selected_execution", getattr(args, "selected_node_ids", None) is not None),
+        ("-force_all", getattr(args, "force_all", False)),
+        ("-skip_pp", getattr(args, "skip_pp", False)),
+        ("-vcall_finder", args.vcall_finder_filter is not None),
+        ("-process_reporter redis", getattr(args, "process_reporter", "none") != "none"),
+    ):
+        if present:
+            return label
+    return None
+
+
+def _warm_primary_idb(binary_path):
+    """The shards copy the primary .i64, so it has to exist and be analysed first."""
+    if _has_ida_database(binary_path):
+        return True
+    print(f"  Sharding: no warm IDB yet, analysing {os.path.basename(binary_path)} first")
+    started = time.monotonic()
+    code = subprocess.call(
+        [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "warmup_idb_worker.py"), binary_path],
+        stdin=subprocess.DEVNULL,
+    )
+    if code != 0 or not _has_ida_database(binary_path):
+        print(f"  Sharding: warm-up failed (exit {code}); analysing serially")
+        return False
+    print(f"  Sharding: IDB warm in {time.monotonic() - started:.0f}s")
+    return True
+
+
+def _link_or_copy(source, target):
+    try:
+        os.link(source, target)
+    except OSError:
+        shutil.copy2(source, target)
+
+
+def _run_shards(args, module, platform, skills, binary_path, artifact_dir, module_path):
+    """Run the free part of a heavy module on K copies of its IDB (ida_shards).
+
+    Returns how many tasks the shards produced; the caller's ordinary run on the
+    primary IDB is the sweep that does everything they left.
+    """
+    shard_count = ida_shards.configured_shard_count()
+    if shard_count < 2:
+        return 0
+    reason = _shard_unsupported_reason(args)
+    if reason:
+        return 0
+    pending = _pending_shard_tasks(skills, platform, artifact_dir)
+    minimum = ida_shards.configured_min_tasks()
+    if len(pending) < minimum:
+        if pending:
+            print(f"  Sharding: {len(pending)} pending task(s) < {minimum} ({ida_shards.SHARD_MIN_TASKS_ENV}); serial")
+        return 0
+    if os.path.exists(f"{binary_path}.id0"):
+        print("  Sharding: the primary IDB is open elsewhere; serial")
+        return 0
+    if not _warm_primary_idb(binary_path):
+        return 0
+    database = next((path for path in _ida_database_paths(binary_path)[:2] if _is_ida_database_file(path)), None)
+    if database is None:
+        return 0
+
+    platform_skills = [skill for skill in skills if _skill_runs_on_platform(skill, platform)]
+    dependencies, _edges = _build_skill_dependencies(platform_skills, platform)
+    full_order, _blocked = _topological_order_with_fallback(dependencies, platform_skills)
+    pending_names = {skill["name"] for skill in pending}
+    order = [name for name in full_order if name in pending_names]
+    owner = ida_shards.plan_shards(order, dependencies, shard_count)
+    used = sorted(set(owner.values()))
+    speedup = ida_shards.simulated_speedup(order, dependencies, owner)
+    print(f"  Sharding: {len(order)} pending task(s) over {len(used)} IDA instance(s), "
+          f"simulated {speedup:.1f}x ({ida_shards.SHARDS_ENV}={shard_count})")
+
+    shard_root = Path(args.bindir) / ".shards" / f"{args.gamever}-{module['name']}-{platform}-{os.getpid()}"
+    shutil.rmtree(shard_root, ignore_errors=True)
+    state_dir = shard_root / "state"
+    state_dir.mkdir(parents=True)
+    before = {name for name in pending_names}
+    started = time.monotonic()
+    output_lock = threading.Lock()
+    processes = []
+    try:
+        for shard in used:
+            root = shard_root / f"bin-{shard}"
+            target = Path(get_binary_path(os.fspath(root), args.gamever, module["name"], module_path))
+            target.parent.mkdir(parents=True, exist_ok=True)
+            _link_or_copy(binary_path, target)
+            shutil.copy2(database, target.parent / (target.name + Path(database).suffix))
+            plan_path = state_dir / f"plan-{shard}.json"
+            ida_shards.write_plan(plan_path, shard=shard, order=order, dependencies=dependencies,
+                                  owner=owner, state_dir=state_dir, stage=module.get("stage_index", 0))
+            env = dict(os.environ)
+            env[ida_shards.SHARD_PLAN_ENV] = os.fspath(plan_path)
+            env["CS2VIBE_AGENT"] = "none"
+            env["CS2VIBE_PIPELINE_HUNT"] = "0"
+            env["CS2VIBE_JOBS"] = "1"
+            command = _child_command(args, module["name"], platform, os.fspath(state_dir / f"result-{shard}.json"))
+            command += ["-bindir", os.fspath(root)]
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                       stdin=subprocess.DEVNULL, text=True, errors="replace", bufsize=1, env=env)
+            processes.append((shard, process))
+
+        def pump(shard, process):
+            prefix = f"[shard {shard}] "
+            for line in process.stdout:
+                with output_lock:
+                    sys.stdout.write(prefix + line)
+            code = process.wait()
+            ida_shards.exit_marker(state_dir, shard).touch()
+            with output_lock:
+                print(f"{prefix}exited with code {code}")
+
+        threads = [threading.Thread(target=pump, args=item, daemon=True) for item in processes]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+    finally:
+        for shard, process in processes:
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=STOP_TIMEOUT_SHARD)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+        shutil.rmtree(shard_root, ignore_errors=True)
+    produced = len(before - {skill["name"] for skill in _pending_shard_tasks(pending, platform, artifact_dir)})
+    print(f"  Sharding: {produced} of {len(order)} task(s) done in {time.monotonic() - started:.0f}s; "
+          f"sweeping the rest on the primary IDB")
+    return produced
 
 
 def _print_module_header(module, vcall_targets):
@@ -6479,6 +6666,7 @@ def _run_vcall_aggregation(args, object_names, found_object_names=None):
 
 
 _DEFERRED_INPUT_SKILLS = []
+STOP_TIMEOUT_SHARD = 300
 
 
 def _retry_deferred_skills(args, modules, reporting, found_vcall_objects):

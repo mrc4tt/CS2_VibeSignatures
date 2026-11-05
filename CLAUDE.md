@@ -764,6 +764,25 @@ flock'd slot files): they wait on the API, not a core, and the plan's rate limit
 real bound. `-vcall_finder`, `-force_all`, `-selected_execution` and the redis reporter
 stay sequential. `CS2VIBE_JOBS=1` is the old behaviour.
 
+**One heavy module goes over several IDBs** (`ida_shards.py`, `CS2VIBE_SHARDS`, default 4;
+0/1 off). server's ~700 tasks are almost all deterministic preprocessors at ~1.5 s each on
+one core, so server was the long pole however many binaries ran beside it. When a module
+has at least `CS2VIBE_SHARD_MIN_TASKS` (150) tasks without outputs, the module's process
+warms the IDB if needed, copies the `.i64` (binary hardlinked) into
+`bin/.shards/<VER>-<module>-<platform>-<pid>/bin-<k>/`, and starts K children on them. The
+plan is the serial run's dependency graph, list-scheduled: each shard runs its own tasks in
+one global topological order and, before a task, waits for its producers in other shards
+(a done marker, or that shard's exit marker; a producer is always earlier in the order, so
+no wait closes a cycle). A shard does **free work only**: a task with missing inputs or a
+failed preprocessor is left alone (`left for the sweep`), never hunted, agented, deferred
+or written to `manual_todo/` there. Then the ordinary run on the primary IDB is the sweep:
+everything with an artifact skips, the rest gets hunter, agents and deferral as before. The
+shard IDBs are thrown away; the IDA names preprocessors set in them do not reach the
+primary database (artifacts are what count). One stage per shard (`stage_index` in the
+plan). Measured on 14196 server/linux from scratch: 670 of 689 tasks in 442 s on 4 shards
+(serial ~1050 s), the sweep doing the other 19. Off with `-selected_execution`,
+`-force_all`, `-skip_pp`, `-vcall_finder`, the redis reporter, or an open primary IDB.
+
 A failed idalib start no longer costs 1200 s blind: output goes to
 `<binary>.idalib-mcp.log`, the wait ends as soon as the process exits, an existing IDB
 gets 300 s, and one retry follows (14185's engine open stalled 20 min, then opened in 2 s).

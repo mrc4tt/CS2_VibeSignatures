@@ -8502,7 +8502,7 @@ modules:
       - name: ScriptGetAddon
         category: func
       - name: CPlayer_ObserverServices_IsValidObserverTarget
-        category: func
+        category: vfunc
         alias:
           - CPlayer_ObserverServices::IsValidObserverTarget
       - name: DropReleasePose_OuterDrop
