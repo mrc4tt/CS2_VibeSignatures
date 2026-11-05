@@ -3105,6 +3105,8 @@ def _generate_baseline_facts(old_artifact_dir, module_name, platform, gamever=No
         return False
     baseline = gamever or os.path.basename(os.path.dirname(os.path.abspath(old_artifact_dir)))
     repo = os.path.dirname(os.path.abspath(__file__))
+    if gamever and not _wait_for_sister_publish(repo, gamever, platform):
+        return False
     print(f"    Hunter: building baseline facts {baseline}/{module_name}.{platform} from the warm IDB (once)")
     try:
         completed = subprocess.run(
@@ -3123,6 +3125,50 @@ def _generate_baseline_facts(old_artifact_dir, module_name, platform, gamever=No
 
 
 _sister_facts_tried = set()
+
+SISTER_WAIT_ENV = "CS2VIBE_SISTER_FACTS_WAIT"
+
+
+def _sister_analysis_running(gamever, platform):
+    """True while an ida_analyze_bin run for this gamever and platform is alive."""
+    try:
+        pids = [p for p in os.listdir("/proc") if p.isdigit() and int(p) != os.getpid()]
+    except OSError:
+        return False
+    for pid in pids:
+        try:
+            with open(f"/proc/{pid}/cmdline", "rb") as handle:
+                argv = handle.read().decode(errors="replace").split("\0")
+        except OSError:
+            continue
+        if not any(a.endswith("ida_analyze_bin.py") for a in argv):
+            continue
+        def value(flag):
+            return argv[argv.index(flag) + 1] if flag in argv[:-1] else None
+        if value("-gamever") == gamever and value("-platform") == platform:
+            return True
+    return False
+
+
+def _wait_for_sister_publish(repo, gamever, platform, poll=30):
+    """Sister facts are built from the other platform's IDB and its published artifacts
+    (bin_artifacts/<gamever>). autopilot analyses linux and windows side by side, so
+    while that run is alive its IDB is open (a missing .i64 would even be cold-analysed
+    a second time) and its artifacts are not published. Wait for its run script's
+    bin/<gamever>/.published-<platform> marker, up to CS2VIBE_SISTER_FACTS_WAIT seconds
+    (default 3600); with no such run alive, go ahead as before."""
+    marker = os.path.join(repo, "bin", gamever, f".published-{platform}")
+    deadline = time.time() + int(os.environ.get(SISTER_WAIT_ENV, "3600"))
+    announced = False
+    while not os.path.isfile(marker) and _sister_analysis_running(gamever, platform):
+        if time.time() >= deadline:
+            print(f"    Hunter: {platform} analysis of {gamever} still running; no sister facts this run")
+            return False
+        if not announced:
+            print(f"    Hunter: waiting for the {platform} analysis of {gamever} to publish before building sister facts")
+            announced = True
+        time.sleep(poll)
+    return True
 
 
 def run_pipeline_hunt(*, host, port, binary_path, symbols, artifact_dir, old_artifact_dir,

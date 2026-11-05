@@ -15,9 +15,9 @@ når en besked siger `failed` eller `held`, eller når du vil tilføje symboler.
 | 0 | preflight: disk ≥40G, DepotDownloader, agent-CLI; tracked ændringer committes + pushes | stop |
 | 1 | `add_gamever.sh` → download.yaml | stop |
 | 2 | `ensure_local_gamedata_symbols.py` + `ensure_seed_preprocessors.py` | stop |
-| 3 | `run_linux.sh` | resume op til 2× |
+| 3 | `CS2VIBE_RUN_PHASES=prepare ./run_linux.sh` (uv sync, config, depot, binærer, baseline — én gang for begge platforme), så **windows-analysen starter i baggrunden** (`CS2VIBE_RUN_PHASES=analyse ./run_windows.sh`, linjer med `[windows]`-præfiks) og linux kører `analyse publish` ved siden af (`AUTOPILOT_PARALLEL_PLATFORMS=1`, default; 0 = i serie som før) | resume op til 2× hver |
 | 3L | **linux først** (`AUTOPILOT_LINUX_FIRST=1`, default): trin 4–13 for linux alene (`-platform linux` på audits, pack, generering, verify, auto-repair og gate), oven på forrige builds gamedata-filer så windows beholder de værdier der allerede er deployet. Commit `feat(<VER>): linux analysed by autopilot`, push, deploy, Discord `linux-deployed`/`linux-held` | kører i en subshell: fejl giver `linux-failed` og kæden fortsætter — windows-releasen bærer så begge platforme som før |
-| 3W | `run_windows.sh` (aldrig samtidig med linux) | resume op til 2× |
+| 3W | vent på windows-analysen, så `CS2VIBE_RUN_PHASES=publish ./run_windows.sh` — først efter linux-releasen, som pakker og committer kun `*.linux.yaml` | resume op til 2× |
 | 4 | `write_binary_lock.py -check` når låsen findes (bin/ skal være de låste filer), så `abi_guard.py --fix` (ABI-identitet, før pack — regel 21), så `audit_xref_identity.py` (hver funktion skal stadig rumme sit ankers streng/mønster) og `audit_identity_drift.py` (hver funktion mod forrige gamever: strengene skal følge med) | stop |
 | 5 | snapshot `pack` + `check-contract` | stop |
 | 6 | `update_gamedata.py` — 0 warnings krævet | stop |
@@ -143,7 +143,7 @@ Fil: `gamedata-generators/<plugin>/gamedata/<plugin>.json`. Samme flow som A.
 ## HUSKEREGLER
 
 - bin/ er untracked: efter `git pull` på en anden maskine `cp -ru bin_artifacts/<VER>/. bin/<VER>/`
-- KØR ALDRIG `run_linux.sh` og `run_windows.sh` samtidig
+- KØR ALDRIG to hele `run_linux.sh` og `run_windows.sh` samtidig i hånden — autopilots faseopdelte kørsel (regel 10 i CLAUDE.md) er den eneste sikre måde
 - Ændr aldrig et artefakt i hånden — feltet hører i taskens `GENERATE_YAML_DESIRED_FIELDS` (regel 18)
 - Lokale config-ændringer skal også i en tabel i `ensure_local_gamedata_symbols.py`, ellers tabes de ved merge
 - `.claude/skills` er beskyttet (pre-commit guard: `FORCE_SKILL_DELETE=1` for bevidst sletning)

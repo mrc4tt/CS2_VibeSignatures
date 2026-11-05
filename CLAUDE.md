@@ -704,10 +704,20 @@ Applying on spawn or `NextFrame` crashes in native `SetModel`/`SetBodygroup` (pa
 ### 9. NEVER forget to bump `WeaponPaintsConfig.Version` on Config.cs changes
 Without it, `MigrateConfigFile` never rewrites existing user configs and new fields never reach operators.
 
-### 10. NEVER run `run_linux.sh` and `run_windows.sh` simultaneously
-They share IDB locks and both clear `bin/<VER>/**/*.id0|id1|id2|nam|til` for the gamever they are
-analysing, so running them together corrupts each other's databases. Ports are no longer the
-problem: each entry point takes its own (`run_linux.sh` 13400, `run_windows.sh` 13401,
+### 10. NEVER run `run_linux.sh` and `run_windows.sh` simultaneously - except the way autopilot does
+Two whole runs collide: both `uv sync`, rewrite the config, download the depot and pack
+`gamesymbols/<VER>.yaml`. autopilot runs them side by side safely (`AUTOPILOT_PARALLEL_PLATFORMS`,
+default 1, since 2026-11-05; 14196 took 51 min in series, ~25 side by side) by splitting each
+script into `CS2VIBE_RUN_PHASES` (`prepare` / `analyse` / `publish`): `prepare` runs once via
+run_linux.sh, then both `analyse` together, then linux `publish` + the linux release, and windows
+`publish` only after it. What makes the overlap safe: each script clears aux files only for its
+own platform's databases (`.dll` = windows), publishes only `*.<platform>.yaml`, and writes
+`bin/<VER>/.published-<platform>`; windows' sister facts (built from the same build's linux IDB
+and linux artifacts) wait for linux's marker while a linux run of that gamever is alive
+(`CS2VIBE_SISTER_FACTS_WAIT`, 3600 s). The analysis writes straight into `bin_artifacts/<VER>/`,
+so the linux release packs from a copy holding only `*.linux.yaml` and commits only those -
+otherwise it would ship a windows run's unverified records in its snapshot. Ports are no longer
+the problem: each entry point takes its own (`run_linux.sh` 13400, `run_windows.sh` 13401,
 `gen_references.sh` 13402, all overridable with `CS2VIBE_MCP_PORT`), and the reap is scoped to that
 port plus orphaned workers whose parent is gone. The interactive editor session keeps 13337, which
 `.mcp.json` points at, and survives a run — it used to be killed by a blanket

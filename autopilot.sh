@@ -4,8 +4,9 @@
 #
 # Runs on the analysis box (the one with IDA, the depot binaries and the disk).
 # Detection is a Steam query, so there is nothing inbound to expose: the machine
-# asks, nobody tells it. One instance at a time, because run_linux.sh and
-# run_windows.sh reap each other's idalib-mcp sessions (CLAUDE.md rule 10).
+# asks, nobody tells it. One instance at a time: within it, linux and windows are
+# analysed side by side (AUTOPILOT_PARALLEL_PLATFORMS), which is safe because each
+# run reaps only its own port and cleans only its own platform's databases.
 #
 # The verification battery is a gate, not a report: anything red stops the chain
 # before a single file reaches a plugin repo. Deploying is decided separately by
@@ -41,6 +42,7 @@
 #                                    pushing the tracked changes before a run
 #   AUTOPILOT_LINUX_FIRST=0          analyse both platforms before releasing anything,
 #                                    instead of releasing linux while windows still runs
+#   AUTOPILOT_PARALLEL_PLATFORMS=0   analyse windows after linux instead of beside it
 #   DEPOTDOWNLOADER_STEAM_USERNAME / _PASSWORD
 #   CS2VIBE_AGENT, CS2VIBE_LLM_APIKEY ...
 set -uo pipefail
@@ -49,6 +51,13 @@ REPO="$PWD"
 
 DEPLOY_MODE="${AUTOPILOT_DEPLOY:-safe}"
 LINUX_FIRST="${AUTOPILOT_LINUX_FIRST:-1}"
+# Analyse windows alongside linux instead of after it. server is one database per
+# platform and takes ~20 of each platform's ~25 minutes on one core, so side by side
+# a build's analysis takes about as long as linux's alone (14196: 51 min in series).
+# The linux release is unchanged: it starts when linux is analysed, and windows is
+# published to bin_artifacts/ only after it, so it never sees half a windows run.
+PARALLEL_PLATFORMS="${AUTOPILOT_PARALLEL_PLATFORMS:-1}"
+WINDOWS_BG_PID=""
 
 # Deploy, then prove it landed. Running the scripts is not evidence that the files
 # moved: update_css_gamedata.sh merges by key and deploy_local_plugins.sh skips a
@@ -213,6 +222,12 @@ $(hint_for "$*")"
 
 what to run:
 $(hint_for "$*")"
+    # A windows analysis running beside linux is left to finish: its artifacts are what
+    # the next tick resumes from, and the service stopping would kill IDA mid-save.
+    if [ -n "${WINDOWS_BG_PID:-}" ] && [ "${BASHPID:-$$}" = "$$" ]; then
+        log "    the windows analysis is still running; waiting for it before exiting"
+        wait "$WINDOWS_BG_PID" || true
+    fi
     # Only once the run has really started (the status file says "started"):
     # a refusal in the preflight is not news for the site.
     if [ -n "${STATUS_PUBLISHED:-}" ]; then site_status failed; fi
@@ -694,9 +709,17 @@ linux_release() {
         fi
         step "linux: checking each artifact against its task's fields (artifact contract)" uv run audit_artifact_contract.py -gamever "$TAG" -platform linux
     fi
-    # run_linux.sh packed already, but --fix and the heal above may have rewritten artifacts
+    # run_linux.sh packed already, but --fix and the heal above may have rewritten artifacts.
+    # From a copy holding only the linux YAMLs: windows may be mid-analysis
+    # beside this release, writing into the same bin_artifacts/$TAG, and its records are
+    # not verified until the windows release - they must not reach this snapshot.
+    local view="$STATE/linux-view-$TAG"
+    rm -rf "$view" && mkdir -p "$view/$TAG"
+    (cd bin_artifacts && find "$TAG" -name '*.linux.yaml' -print0 | xargs -0 -r cp -p --parents -t "$view") \
+        || die "linux: building the linux-only artifact view"
     step "linux: packing the snapshot" uv run gamesymbol_snapshot.py pack -gamever "$TAG" \
-        -snapshot "gamesymbols/$TAG.yaml" -platform linux
+        -snapshot "gamesymbols/$TAG.yaml" -platform linux -artifactdir "$view"
+    rm -rf "$view"
 
     # update_gamedata -platform linux starts each file from the one already in the output
     # directory. A new build has none, so it would start from the templates and ship their
@@ -761,7 +784,8 @@ linux_release() {
     fi
 
     log "==> linux: committing"
-    git add -A -- "configs/$TAG.yaml" "bin_artifacts/$TAG" "gamesymbols/$TAG.yaml" "gamedata/$TAG" \
+    # linux artifacts only, for the same reason as the pack above
+    git add -A -- "configs/$TAG.yaml" ":(glob)bin_artifacts/$TAG/**/*.linux.yaml" "gamesymbols/$TAG.yaml" "gamedata/$TAG" \
         gamedata/history.json "diagnostics/$TAG.json" gamedata-generators/*/gamedata \
         "binary_locks/$TAG.json" download.yaml ida_preprocessor_scripts .claude/skills 2>/dev/null || true
     git diff --cached --quiet && die "linux: nothing to commit"
@@ -808,6 +832,36 @@ linux_finish() {
     log "linux release of $TAG done; windows next"
 }
 
+# The windows analysis beside linux: the same resume rule as step_resume, in the
+# background, its lines prefixed [windows]. Only the analyse phase - prepare ran once
+# before both, and the publish phase waits for the linux release.
+start_windows_analysis() {
+    WINDOWS_STATUS_FILE="$STATE/windows-analysis-$TAG.status"
+    rm -f "$WINDOWS_STATUS_FILE"
+    log "==> analysing windows alongside linux (its lines are prefixed [windows])"
+    (
+        n=0
+        until CS2VIBE_RUN_PHASES=analyse ./run_windows.sh "$TAG"; do
+            n=$((n + 1))
+            if [ "$n" -gt "$STEP_RESUMES" ]; then
+                echo 1 > "$WINDOWS_STATUS_FILE"
+                exit 1
+            fi
+            echo "analysing windows failed; resuming ($n of $STEP_RESUMES)"
+            sleep 30
+        done
+        echo 0 > "$WINDOWS_STATUS_FILE"
+    ) > >(sed -u 's/^/[windows] /') 2>&1 &
+    WINDOWS_BG_PID=$!
+}
+
+wait_windows_analysis() {  # 0 when the background windows analysis succeeded
+    log "==> waiting for the windows analysis"
+    wait "$WINDOWS_BG_PID" || true
+    WINDOWS_BG_PID=""
+    [ "$(cat "$WINDOWS_STATUS_FILE" 2>/dev/null)" = 0 ]
+}
+
 # ---------------------------------------------------------------- the chain
 if [ "$WINDOWS_PENDING" = 1 ]; then
     if [ "$LINUX_FIRST" != 0 ] && [ ! -f "$STATE/linux-finished-$TAG" ]; then
@@ -817,13 +871,24 @@ else
     step "registering $TAG in download.yaml" ./add_gamever.sh "$TAG"
     step "re-asserting this fork's config decisions" uv run ensure_local_gamedata_symbols.py
     step "seeding relocation preprocessors" uv run ensure_seed_preprocessors.py
-    step_resume "analysing linux" ./run_linux.sh "$TAG"
+    if [ "$PARALLEL_PLATFORMS" != 0 ]; then
+        step_resume "preparing $TAG (depot, binaries, baseline)" env CS2VIBE_RUN_PHASES=prepare ./run_linux.sh "$TAG"
+        start_windows_analysis
+        step_resume "analysing linux" env CS2VIBE_RUN_PHASES="analyse publish" ./run_linux.sh "$TAG"
+    else
+        step_resume "analysing linux" ./run_linux.sh "$TAG"
+    fi
     if [ "$LINUX_FIRST" != 0 ]; then
         log "==> linux first: releasing linux before the windows analysis"
         ( linux_release ) || log "    linux release stopped; the windows release carries both platforms"
     fi
 fi
-step_resume "analysing windows" ./run_windows.sh "$TAG"
+if [ -n "$WINDOWS_BG_PID" ]; then
+    wait_windows_analysis || die "analysing windows (after $STEP_RESUMES resume(s))"
+    step "publishing the windows analysis" env CS2VIBE_RUN_PHASES=publish ./run_windows.sh "$TAG"
+else
+    step_resume "analysing windows" ./run_windows.sh "$TAG"
+fi
 # What this run's agents cost, from opencode's own ledger: billed, and what the same
 # tokens cost at the API list price. Kept beside the run's logs, sent nowhere; one file
 # per run, since a resumed build starts a new run. Never a gate.

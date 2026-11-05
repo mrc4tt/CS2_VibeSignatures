@@ -1,9 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# CS2VIBE_RUN_PHASES picks the parts of the run (default: all three, in order):
+#   prepare  uv sync, config tables, depot download, binaries, baseline hydration
+#   analyse  the IDA analysis into bin/<VER>/
+#   publish  this platform's artifacts to bin_artifacts/, pack, review issue
+# autopilot prepares once and then analyses linux and windows side by side, so
+# the two never download, sync or rewrite the config at the same time, and
+# publishes windows only after the linux release has committed.
+PHASES=" ${CS2VIBE_RUN_PHASES:-prepare analyse publish} "
+phase() { [[ "$PHASES" == *" $1 "* ]]; }
+
+if phase prepare; then
 echo "==> Syncing environment with uv..."
 # --extra ghidra: plain `uv sync` would uninstall pyghidra, which ghidra_verify.py needs.
 uv sync --extra ghidra
+fi
 
 # 1. Fetch latest version using curl (bypasses Python SSL cert issues)
 fetch_version() {
@@ -85,6 +97,7 @@ if [ ! -f "configs/${NEW_VER}.yaml" ]; then
     fi
 fi
 
+if phase prepare; then
 # WeaponPaints gamedata (gamedata-generators/weaponpaints/) needs every
 # weaponpaints.json entry analyzed per gamever. Configs are hand-authored and
 # don't inherit, so inject them into configs/${NEW_VER}.yaml (idempotent per
@@ -120,6 +133,7 @@ if [ ! -d "bin/${OLD_VER}" ] || [ -z "$(find "bin/${OLD_VER}" -name '*.yaml' -pr
 else
     echo "==> Baseline bin/${OLD_VER} already hydrated"
 fi
+fi  # phase prepare
 
 # Analyzer-version guard: en forældet ida_analyze_bin.py (fx efter delvis pull) giver
 # kun kryptiske argparse-fejl - fejl tidligt og tydeligt i stedet.
@@ -179,6 +193,12 @@ warn_if_session_holds() {
     fi
 }
 
+if phase analyse; then
+# A new analysis makes this platform's published state stale; the marker comes back
+# with the publish below, and a windows run waits for linux's before it builds sister
+# facts from the linux IDB (ida_analyze_bin._generate_baseline_facts).
+rm -f "bin/${NEW_VER}/.published-windows"
+
 # The editor's IDA session (systemd/cs2vibe-ida-session.service, 13337) is paused
 # for the length of the run and started again on exit, so it never holds a
 # database this run needs; starting it again also moves it to the build this run
@@ -228,6 +248,12 @@ clear_free_idb_aux() {
     while IFS= read -r file; do
         [ -n "$file" ] || continue
         base="${file%.*}"
+        # only this platform's databases: the other run may be opening one right now,
+        # before any process holds it (a .dll base is windows, everything else linux)
+        case "$base" in
+            *.dll|*.dll.i64) [ "windows" = windows ] || continue ;;
+            *)               [ "windows" = linux ] || continue ;;
+        esac
         if printf '%s\n' "$held" | grep -qxF "$(readlink -f "$base" 2>/dev/null || echo "$base")" \
            || printf '%s\n' "$held" | grep -qxF "$base"; then
             kept=$((kept + 1))
@@ -261,6 +287,9 @@ LLM_ARGS=()
 export CS2VIBE_JOBS="${CS2VIBE_JOBS:-auto}"
 uv run ida_analyze_bin.py -gamever "$NEW_VER" -oldgamever "$OLD_VER" -platform windows "${EXTRA_ANALYZE[@]}" ${LLM_ARGS[@]+"${LLM_ARGS[@]}"}
 
+fi  # phase analyse
+
+if phase publish; then
 # Publish analysis artifacts (bin/<ver>/<module>/*.yaml -> bin_artifacts/<ver>/...) so
 # signature reuse, snapshot pack/restore and future baselines survive local bin/ cleanup.
 # cp -u keeps newer existing artifacts. Must run BEFORE the snapshot pack below, which
@@ -271,7 +300,8 @@ if [ -d "bin/${NEW_VER}" ]; then
         [ -d "$module_dir" ] || continue
         module="$(basename "$module_dir")"
         mkdir -p "bin_artifacts/${NEW_VER}/${module}"
-        cp -u "$module_dir"*.yaml "bin_artifacts/${NEW_VER}/${module}/" 2>/dev/null || true
+        # this platform's only: the other one may be mid-analysis in the same bin/ dir
+        cp -u "$module_dir"*.windows.yaml "bin_artifacts/${NEW_VER}/${module}/" 2>/dev/null || true
     done
     echo "==> Published $(find "bin_artifacts/${NEW_VER}" -name '*.yaml' | wc -l) artifact file(s)."
 fi
@@ -297,5 +327,8 @@ if [ "${CS2VIBE_GHIDRA_VERIFY:-1}" = "1" ] && command -v systemd-run >/dev/null 
         bash -c 'uv run --extra ghidra ghidra_verify.py -gamever "$1" -oldgamever "$2" -platform windows; uv run review_issue.py publish -gamever "$1" -platform windows' _ "$NEW_VER" "$OLD_VER" \
         || echo "    ghidra_verify not started (already running?) - the review issue goes without it"
 fi
+
+: > "bin/${NEW_VER}/.published-windows"
+fi  # phase publish
 
 echo "==> Analysis complete for version $NEW_VER!"
