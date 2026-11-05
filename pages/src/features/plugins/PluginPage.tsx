@@ -1,44 +1,73 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getSiteMeta } from '../../api/siteMeta'
 import { buildDate, getSiteHistory, lastChangedIn, type SiteHistory } from '../../api/siteData'
 import { formatAgo, formatDay } from '../../components/whenText'
 import { Explain } from '../../components/Explain'
+import { ValueChange } from '../../components/ValueChange'
 import { VIEW_PATHS } from '../../app/appViews'
-import { getGameDataIndex } from '../gamedata/data'
+import { getGameDataFile, getGameDataIndex, getGameDataMetadata } from '../gamedata/data'
 import { describeFiles, formatLabel, type PluginFile } from '../gamedata/fileModel'
+import { FileView } from '../gamedata/FileView'
 import { pluginLabel } from '../gamedata/pluginLabel'
-import { Pattern } from '../symbols/Pattern'
-import { buildChanges, curlCommand, groupByPlugin, installPath, latestUrl, readStarred, withBuildChanges, writeStarred } from './pluginModel'
+import { buildChanges, curlCommand, groupByPlugin, installPath, latestUrl, readStarred, withBuildChanges, writeStarred, type BuildChange } from './pluginModel'
 import { StarButton } from './StarButton'
 import { copyText } from '../../ui/clipboard'
 import { buttonClass } from '../../ui/buttonStyle'
-import { CheckIcon, CopyIcon, DownloadIcon, WarningIcon } from '../../ui/icons'
+import { CheckIcon, CopyIcon, DownloadIcon } from '../../ui/icons'
 import { Alert, Button, Empty, Skeleton } from '../../ui/primitives'
 
-const SHOWN_CHANGES = 8
+/** Keys listed before "show all"; the busiest come first, so these are the ones that matter. */
+const SHOWN_KEYS = 15
 
-function Value({ value }: { value: unknown }) {
-  if (value === null || value === undefined) return <em>—</em>
-  const text = typeof value === 'string' ? value : JSON.stringify(value)
-  return /^[0-9A-Fa-f?\s]{8,}$/.test(text) ? <Pattern pattern={text} /> : <span>{text}</span>
+interface KeyRow {
+  key: string
+  changes: number
+  last?: string
 }
 
-/** How many keys of these files changed in each published build, oldest first. */
-function changesPerBuild(history: SiteHistory | undefined, ids: string[]): Array<{ build: string; count: number }> {
-  if (!history) return []
-  const counts = new Map<string, number>()
-  for (const id of ids) {
-    for (const entry of Object.values(history.files[id] ?? {})) {
-      for (const build of entry.changes) counts.set(build, (counts.get(build) ?? 0) + 1)
-    }
-  }
-  return history.builds.map((build) => ({ build: build.gameVersion, count: counts.get(build.gameVersion) ?? 0 }))
+/** Every key (and sub-value, such as `.vtable`) still in one file, with how often it moved in the published history, busiest first. */
+function keyRows(history: SiteHistory | undefined, id: string): KeyRow[] {
+  const entries = Object.entries(history?.files[id] ?? {})
+  const order = history?.builds.map((item) => item.gameVersion) ?? []
+  const at = (build: string | undefined) => (build ? order.indexOf(build) : -1)
+  return entries
+    // A key the file dropped stays in the history; it is gone when its last
+    // removal came after its last value.
+    .filter(([, entry]) => at(entry.gone?.[entry.gone.length - 1]) <= at(entry.points[entry.points.length - 1]?.[0]))
+    .map(([key, entry]) => ({ key, changes: entry.changes.length, last: entry.changes[entry.changes.length - 1] }))
+    .sort((left, right) =>
+      right.changes - left.changes
+      || order.indexOf(right.last ?? '') - order.indexOf(left.last ?? '')
+      || left.key.localeCompare(right.key))
 }
 
-function FileCard({ file, build }: { file: PluginFile; build: string }) {
+/** One changed key: its platforms side by side, old value over new. */
+function ChangedKey({ rows, previous, build }: { rows: BuildChange[]; previous: string; build: string }) {
+  const { t } = useTranslation()
+  const moved = new Set(rows.map((row) => row.platform))
+  return (
+    <div className="pdiff">
+      <div className="pdiff-key">{rows[0].key}</div>
+      {rows.map((row) => (
+        <div className="pdiff-plat" key={row.platform}>
+          <span className="platchip">{row.platform}</span>
+          <ValueChange before={row.before} after={row.after} beforeLabel={previous} afterLabel={build} copyable />
+        </div>
+      ))}
+      {(['linux', 'windows'] as const).filter((platform) => !moved.has(platform)).map((platform) => (
+        <div className="pdiff-plat quiet" key={platform}>
+          <span className="platchip">{platform}</span>
+          <span className="muted">{t('plugin2.unchanged')}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function GetFile({ file }: { file: PluginFile }) {
   const { t } = useTranslation()
   const origin = window.location.origin
   const base = import.meta.env.BASE_URL
@@ -46,27 +75,9 @@ function FileCard({ file, build }: { file: PluginFile; build: string }) {
   const command = curlCommand(file, origin, base)
   const messages = { ok: t('clipboard.ok'), failed: t('clipboard.failed') }
   return (
-    <section className="filebox">
-      <div className="filebox-head">
-        <div className="filebox-name">
-          <span className="fname">{file.descriptor.fileName}</span>
-          <span className="fmeta">
-            {formatLabel(file.descriptor.language)} · {t('plugin.values', { covered: file.covered, total: file.total })}
-            {file.gap > 0 && <span className="warnc"> · {t('plugin.missing', { count: file.gap })}</span>}
-          </span>
-        </div>
-        <div className="filebox-acts">
-          <a className={buttonClass('primary', 'middle')} href={url} download={file.descriptor.fileName}>
-            <DownloadIcon size={15} /> {t('plugin.download', { file: file.descriptor.fileName })}
-          </a>
-          <Link className={buttonClass('default', 'middle')} to={`${VIEW_PATHS.gamedata}?file=${encodeURIComponent(file.descriptor.id)}&build=${encodeURIComponent(build)}`}>
-            {t('plugin.view')}
-          </Link>
-        </div>
-      </div>
+    <details className="pget">
+      <summary>{t('plugin2.otherWays')}</summary>
       <dl className="filebox-rows">
-        <dt>{t('plugin.where')}</dt>
-        <dd><code>{installPath(file)}</code></dd>
         <dt>{t('plugin.link')}</dt>
         <dd className="copyrow">
           <code>{url}</code>
@@ -82,15 +93,19 @@ function FileCard({ file, build }: { file: PluginFile; build: string }) {
           </Button>
         </dd>
       </dl>
-    </section>
+    </details>
   )
 }
 
 export function PluginPage({ plugin }: { plugin: string }) {
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? 'en'
+  const [params, setParams] = useSearchParams()
   const [starred, setStarred] = useState(readStarred)
-  const [allChanges, setAllChanges] = useState(false)
+  const [allKeys, setAllKeys] = useState(false)
+  const [showFile, setShowFile] = useState(false)
+  const [find, setFind] = useState('')
+  const [marks, setMarks] = useState(false)
   const metaQuery = useQuery({ queryKey: ['site-meta'], queryFn: ({ signal }) => getSiteMeta(signal), staleTime: 5 * 60 * 1000 })
   const indexQuery = useQuery({ queryKey: ['gamedata', 'index'], queryFn: ({ signal }) => getGameDataIndex(signal), staleTime: 5 * 60 * 1000 })
   const historyQuery = useQuery({ queryKey: ['history'], queryFn: ({ signal }) => getSiteHistory(signal), staleTime: Infinity })
@@ -104,20 +119,36 @@ export function PluginPage({ plugin }: { plugin: string }) {
     [version, plugin, history, build],
   )
   const files = group?.files ?? []
-  const ids = files.map((file) => file.descriptor.id)
-  const fileNames = new Map(files.map((file) => [file.descriptor.id, file.descriptor.fileName]))
-  // Build-to-build movement comes from the history dataset; see buildChanges.
-  const changes = useMemo(() => buildChanges(history, ids, build), [history, ids.join('|'), build]) // eslint-disable-line react-hooks/exhaustive-deps
-  const loadingChanges = historyQuery.isLoading
+  // A plugin with several files shows one at a time; the choice is in the URL so
+  // a link can point at the second file.
+  const file = files.find((item) => item.descriptor.id === params.get('file')) ?? files[0]
+  const id = file?.descriptor.id ?? ''
+  const order = history?.builds.map((item) => item.gameVersion) ?? []
+  const previous = order[order.indexOf(build) - 1] ?? ''
 
-  const timeline = useMemo(() => changesPerBuild(history, ids), [history, ids.join('|')]) // eslint-disable-line react-hooks/exhaustive-deps
-  const lastChanged = ids
-    .map((id) => lastChangedIn(history, id))
-    .filter((value): value is string => Boolean(value))
-    .sort((left, right) => (history?.builds.findIndex((b) => b.gameVersion === right) ?? 0) - (history?.builds.findIndex((b) => b.gameVersion === left) ?? 0))[0]
-  const lastChangedAt = buildDate(history, lastChanged) ?? undefined
-  const maxCount = Math.max(1, ...timeline.map((point) => point.count))
-  const changedBuilds = timeline.filter((point) => point.count > 0).length
+  const changes = useMemo(() => (id ? buildChanges(history, [id], build) : []), [history, id, build])
+  const changedKeys = useMemo(() => {
+    const byKey = new Map<string, BuildChange[]>()
+    for (const row of changes) byKey.set(row.key, [...(byKey.get(row.key) ?? []), row])
+    return [...byKey.values()]
+  }, [changes])
+  const keys = useMemo(() => keyRows(history, id), [history, id])
+  const lastChanged = id ? lastChangedIn(history, id) : undefined
+  const lastChangedAt = buildDate(history, lastChanged)
+
+  const fileQuery = useQuery({
+    queryKey: ['gamedata', build, id, file?.descriptor.content.url],
+    queryFn: ({ signal }) => getGameDataFile(file!.descriptor, signal),
+    enabled: Boolean(file && showFile),
+    staleTime: Infinity,
+  })
+  const lineCount = fileQuery.data?.split('\n').length ?? 0
+  const metadataQuery = useQuery({
+    queryKey: ['gamedata', build, id, file?.descriptor.metadata?.url, lineCount],
+    queryFn: ({ signal }) => getGameDataMetadata(file!.descriptor, lineCount, build, signal),
+    enabled: Boolean(file?.descriptor.metadata && fileQuery.data && build),
+    staleTime: Infinity,
+  })
 
   function toggleStar(): void {
     const next = new Set(starred)
@@ -127,9 +158,16 @@ export function PluginPage({ plugin }: { plugin: string }) {
     writeStarred(next)
   }
 
+  function pickFile(next: string): void {
+    const copy = new URLSearchParams(params)
+    copy.set('file', next)
+    setParams(copy, { replace: true })
+    setFind('')
+  }
+
   if (indexQuery.isLoading) return <div className="pluginpage"><Skeleton rows={8} /></div>
   if (indexQuery.error) return <Alert tone="bad" title={t('gamedata.indexError')} description={indexQuery.error.message} />
-  if (!group) {
+  if (!group || !file) {
     return (
       <div className="pluginpage">
         <Empty description={t('plugin.notFound', { plugin })}>
@@ -139,91 +177,157 @@ export function PluginPage({ plugin }: { plugin: string }) {
     )
   }
 
-  const shownChanges = allChanges ? changes : changes.slice(0, SHOWN_CHANGES)
+  const url = latestUrl(file, window.location.origin, import.meta.env.BASE_URL)
+  const shownKeys = allKeys ? keys : keys.slice(0, SHOWN_KEYS)
 
   return (
     <div className="pluginpage">
       <Link to={VIEW_PATHS.start} className="backlink">← {t('plugin.back')}</Link>
 
-      <header className="pluginhead">
-        <div className="pluginhead-title">
-          <h1>{pluginLabel(plugin)}</h1>
-          <StarButton starred={starred.has(plugin)} plugin={pluginLabel(plugin)} onToggle={toggleStar} />
+      <header className="phead">
+        <div className="phead-title">
+          <code className="ppath">{installPath(file)}</code>
+          <div className="pluginhead-title">
+            <h1>{pluginLabel(plugin)}</h1>
+            <StarButton starred={starred.has(plugin)} plugin={pluginLabel(plugin)} onToggle={toggleStar} />
+          </div>
         </div>
-        <p className="pluginstate">
-          {group.gap > 0
-            ? <span className="warnc"><WarningIcon size={16} /> {t('plugin.partial', { count: group.gap, build })}</span>
-            : <span className="okc"><CheckIcon size={16} /> {t('plugin.ready', { build })}</span>}
-          <span className="muted">
-            {t('plugin.values', { covered: group.covered, total: group.total })}
-            {' · '}
-            {group.updated > 0 ? t('home.changed', { count: group.updated }) : t('home.unchanged')}
-          </span>
-        </p>
+        <div className="phead-acts">
+          <a className={buttonClass('primary', 'middle')} href={url} download={file.descriptor.fileName}>
+            <DownloadIcon size={15} /> {t('plugin.download', { file: file.descriptor.fileName })}
+          </a>
+        </div>
       </header>
 
-      {files.map((file) => <FileCard key={file.descriptor.id} file={file} build={build} />)}
+      {files.length > 1 && (
+        <div className="pfiletabs" role="tablist" aria-label={t('plugin2.filesLabel')}>
+          {files.map((item) => (
+            <button
+              type="button"
+              role="tab"
+              key={item.descriptor.id}
+              aria-selected={item === file}
+              onClick={() => pickFile(item.descriptor.id)}
+            >
+              {item.descriptor.fileName}
+              {item.gap > 0 && <span className="pdot bad" aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <section className="psection">
-        <h2>{t('plugin.changesH', { build })}</h2>
-        {loadingChanges && <Skeleton rows={4} />}
-        {!loadingChanges && changes.length === 0 && <p className="plain">{t('plugin.noChanges')}</p>}
-        {changes.length > 0 && (
+      <section className="panel pfacts" aria-label={t('plugin2.factsLabel')}>
+        <div>
+          <b className={file.gap > 0 ? 'warnc' : undefined}>{file.covered}/{file.total}</b>
+          <span>{file.gap > 0 ? t('plugin2.factMissing', { count: file.gap }) : t('plugin2.factCovered')}</span>
+        </div>
+        <div>
+          <b className={changedKeys.length ? 'warnc' : undefined}>{changedKeys.length}</b>
+          <span>{t('plugin2.factChanged', { build })}</span>
+        </div>
+        <div>
+          <b>{lastChanged ?? '–'}</b>
+          <span>
+            {lastChanged
+              ? t('plugin2.factLast', { ago: formatAgo(lastChangedAt, language) || formatDay(lastChangedAt, language) })
+              : t('plugin.neverChanged')}
+          </span>
+        </div>
+        <div>
+          <b className="okc"><CheckIcon size={18} /></b>
+          <span>{t('plugin2.factVerified')}</span>
+        </div>
+      </section>
+
+      <GetFile file={file} />
+
+      <section className="panel" aria-labelledby="pchanges-h">
+        <header>
+          <h2 id="pchanges-h">{t('plugin2.sinceH')}</h2>
+          {previous && <span className="sub">{t('plugin2.sinceSub', { previous, build })}</span>}
+          {previous && (
+            <Link className="pright" to={`${VIEW_PATHS.diff}?from=${encodeURIComponent(previous)}&to=${encodeURIComponent(build)}&plugins=${encodeURIComponent(plugin)}`}>
+              {t('plugin2.olderBuild')}
+            </Link>
+          )}
+        </header>
+        {historyQuery.isLoading && <div className="panel-body"><Skeleton rows={3} /></div>}
+        {history && changedKeys.length === 0 && <p className="pnone"><CheckIcon size={15} /> {t('plugin.noChanges')}</p>}
+        {changedKeys.length > 0 && (
+          <div className="pdiffs">
+            {changedKeys.map((rows) => <ChangedKey key={rows[0].key} rows={rows} previous={previous} build={build} />)}
+          </div>
+        )}
+      </section>
+
+      {keys.length > 0 && (
+        <section className="panel" aria-labelledby="pkeys-h">
+          <header>
+            <h2 id="pkeys-h">{t('plugin2.keysH')}</h2>
+            <span className="sub">{t('plugin2.keysSub', { count: order.length })}</span>
+          </header>
           <div className="tablewrap">
-            <table className="chgtable">
+            <table className="keytab">
               <thead>
                 <tr>
                   <th>{t('plugin.key')}</th>
-                  <th>{t('plugin.platform')}</th>
-                  <th>{t('plugin.beforeAfter')}</th>
+                  <th className="num">{t('plugin2.changes')}</th>
+                  <th className="num">{t('plugin2.lastCol')}</th>
                 </tr>
               </thead>
               <tbody>
-                {shownChanges.map((change, index) => (
-                  <tr key={`${change.file}:${change.key}:${change.platform}:${index}`}>
-                    <td className="mono">{change.key}{files.length > 1 && <span className="fileof"> {fileNames.get(change.file)}</span>}</td>
-                    <td><span className="platchip">{change.platform}</span></td>
-                    <td className="mono vals">
-                      <span className="old"><Value value={change.before} /></span>
-                      <span className="arrow">→</span>
-                      <span className="new"><Value value={change.after} /></span>
+                {shownKeys.map((row) => (
+                  <tr key={row.key} className={row.last === build ? 'cur' : undefined}>
+                    <td className="mono">{row.key}</td>
+                    <td className="num">
+                      {row.changes
+                        ? <span className={row.changes > 4 ? 'hpill warn' : 'hpill'}>{row.changes}</span>
+                        : <span className="muted">{t('plugin2.never')}</span>}
                     </td>
+                    <td className="num mono">{row.last ?? '–'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
-        {changes.length > SHOWN_CHANGES && (
-          <Button variant="link" onClick={() => setAllChanges(!allChanges)}>
-            {allChanges ? t('plugin.fewer') : t('plugin.allChanges', { count: changes.length })}
-          </Button>
-        )}
-      </section>
-
-      {history && (
-        <section className="psection">
-          <h2>{t('plugin.historyH')}</h2>
-          <p className="plain">
-            {lastChanged
-              ? t('plugin.lastChanged', {
-                  build: lastChanged,
-                  ago: formatAgo(lastChangedAt, language) || formatDay(lastChangedAt, language),
-                })
-              : t('plugin.neverChanged')}
-            {lastChanged && ' '}
-            {lastChanged && t('plugin.changedIn', { count: changedBuilds, total: timeline.length })}
-          </p>
-          <div className="timeline" role="img" aria-label={t('plugin.timelineLabel', { count: changedBuilds, total: timeline.length })}>
-            {timeline.map((point) => (
-              <span className={point.count > 0 ? 'tlb has' : 'tlb'} key={point.build} title={`${point.build}: ${point.count}`}>
-                <i style={{ height: point.count > 0 ? Math.max(4, Math.round((26 * point.count) / maxCount)) : 2 }} />
-                <span className="lv">{point.build}</span>
-              </span>
-            ))}
-          </div>
+          {keys.length > SHOWN_KEYS && (
+            <div className="pmore">
+              <Button variant="link" onClick={() => setAllKeys(!allKeys)}>
+                {allKeys ? t('plugin.fewer') : t('plugin2.allKeys', { count: keys.length })}
+              </Button>
+            </div>
+          )}
         </section>
       )}
+
+      <section className="panel pfile" aria-labelledby="pfile-h">
+        <header>
+          <h2 id="pfile-h">{t('plugin2.fileH')}</h2>
+          <span className="sub">{formatLabel(file.descriptor.language)} · {t('plugin.values', { covered: file.covered, total: file.total })}</span>
+          <span className="pright">
+            <Button size="small" onClick={() => setShowFile(!showFile)} aria-expanded={showFile}>
+              {showFile ? t('plugin2.hideFile') : t('plugin2.showFile')}
+            </Button>
+          </span>
+        </header>
+        {showFile && (
+          <>
+            {fileQuery.error && <Alert tone="bad" title={t('gamedata.fileError')} description={fileQuery.error.message} />}
+            {fileQuery.isLoading && <div className="panel-body"><Skeleton rows={12} /></div>}
+            {fileQuery.data && (
+              <FileView
+                descriptor={file.descriptor}
+                content={fileQuery.data}
+                metadata={metadataQuery.data}
+                find={find}
+                marks={marks}
+                onFind={setFind}
+                onMarks={setMarks}
+              />
+            )}
+          </>
+        )}
+      </section>
 
       <Explain summary={t('plugin.whatH')} html={t('plugin.what')} />
     </div>

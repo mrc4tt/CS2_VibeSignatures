@@ -683,6 +683,57 @@ html[data-theme="light"] .starbtn.on { color: var(--accent); }
 .hcard .q { font-family: var(--serif); font-weight: 600; font-size: 18px; color: var(--ink); }
 .hcard .d { font-size: 14px; color: var(--muted); line-height: 1.5; }
 
+/* plugin page: header, facts, the diff since the previous build, the key table */
+.phead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 24px; }
+.phead-title { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.phead h1 { margin: 0; font-size: clamp(28px, 4.2vw, 40px); letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.ppath { font-family: var(--mono); font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+.phead-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.phead-acts a { text-decoration: none; }
+.pfiletabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.pfiletabs button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--rule);
+  border-radius: 8px; background: var(--card); color: var(--ink-2); font-family: var(--mono); font-size: 13px; cursor: pointer; }
+.pfiletabs button[aria-selected="true"] { border-color: var(--accent); color: var(--ink); background: var(--card-2); }
+.pfacts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pfacts > div { display: flex; flex-direction: column; gap: 4px; padding: 14px 17px; border-left: 1px solid var(--rule-soft); min-width: 0; }
+.pfacts > div:first-child { border-left: 0; }
+.pfacts b { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.1; display: inline-flex; }
+.pfacts span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+@media (max-width: 760px) {
+  .pfacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pfacts > div:nth-child(3) { border-left: 0; }
+  .pfacts > div:nth-child(n+3) { border-top: 1px solid var(--rule-soft); }
+}
+.pget { margin-top: -12px; }
+.pget summary { cursor: pointer; font-size: 13.5px; color: var(--muted); padding: 2px 0; }
+.pget .filebox-rows { margin-top: 8px; border: 1px solid var(--rule); border-radius: 9px; background: var(--card); }
+.pget .filebox-rows dt:first-of-type, .pget .filebox-rows dd:first-of-type { border-top: 0; }
+.panel > header .pright { margin-left: auto; font-size: 13.5px; }
+.pnone { display: flex; align-items: center; gap: 8px; margin: 0; padding: 16px 17px; color: var(--ok); font-weight: 600; font-size: 14.5px; }
+.pdiffs { display: flex; flex-direction: column; }
+.pdiff { display: flex; flex-direction: column; gap: 8px; padding: 14px 17px; border-top: 1px solid var(--rule-soft); }
+.pdiff:first-child { border-top: 0; }
+.pdiff-key { font-family: var(--mono); font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+.pdiff-plat { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 10px; align-items: start; }
+.pdiff-plat .platchip { justify-self: start; margin-top: 3px; }
+.pdiff-plat.quiet { align-items: center; font-size: 13px; }
+.pluginpage .muted { color: var(--muted); }
+.keytab { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.keytab th { text-align: left; font-weight: 600; font-size: 12px; color: var(--muted); padding: 9px 17px; border-bottom: 1px solid var(--rule-soft); }
+.keytab td { padding: 7px 17px; border-top: 1px solid var(--rule-soft); }
+.keytab td.mono { font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+.keytab .num { text-align: right; white-space: nowrap; }
+.keytab tr.cur td.mono:first-child { color: var(--warn); }
+.pmore { padding: 6px 12px 10px; border-top: 1px solid var(--rule-soft); }
+.pluginpage .panel { margin: 0; }
+@media (max-width: 600px) {
+  .pdiff { padding: 12px; }
+  .pdiff-plat { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .pdiff-plat.quiet { grid-template-columns: auto 1fr; }
+  .keytab th, .keytab td { padding-left: 10px; padding-right: 10px; }
+  .keytab td.mono { overflow-wrap: normal; word-break: break-all; }
+}
+
 .pluginhead { display: flex; flex-direction: column; gap: 10px; }
 .pluginhead-title { display: flex; align-items: center; gap: 6px; }
 .pluginhead h1 { margin: 0; font-size: clamp(30px, 4.5vw, 44px); letter-spacing: -0.02em; overflow-wrap: anywhere; }
