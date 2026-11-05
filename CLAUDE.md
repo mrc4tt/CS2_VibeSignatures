@@ -779,7 +779,11 @@ or written to `manual_todo/` there. Then the ordinary run on the primary IDB is 
 everything with an artifact skips, the rest gets hunter, agents and deferral as before. The
 shard IDBs are thrown away; the IDA names preprocessors set in them do not reach the
 primary database (artifacts are what count). One stage per shard (`stage_index` in the
-plan). Measured on 14196 server/linux from scratch: 670 of 689 tasks in 442 s on 4 shards
+plan). The graph is the whole module's, other-platform tasks included, collapsed onto the
+pending ones (`collapse_dependencies`): on linux `...Spawn_NetworkStateChangedNotify` must
+precede `...NetworkStateChanged-inlined`, and the only edge saying so runs through the
+windows-only `-noinline` task - planning over the platform's tasks alone lost the artifact
+in one run of two. Measured on 14196 server/linux from scratch: 670 of 689 tasks in 442 s on 4 shards
 (serial ~1050 s), the sweep doing the other 19. Off with `-selected_execution`,
 `-force_all`, `-skip_pp`, `-vcall_finder`, the redis reporter, or an open primary IDB.
 

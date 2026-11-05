@@ -39,6 +39,16 @@ class Planning(unittest.TestCase):
         owner = ida_shards.plan_shards(["x", "y"], {"x": {"done"}, "y": {"done"}}, 2)
         self.assertEqual(sorted(owner.values()), [0, 1])
 
+    def test_an_ordering_through_a_task_that_does_not_run_survives(self):
+        # notify -> noinline (windows only) -> inlined: on linux only notify and inlined run
+        deps = {"noinline": {"notify"}, "inlined": {"noinline", "vtable"}, "notify": set()}
+        collapsed = ida_shards.collapse_dependencies(deps, {"notify", "inlined"})
+        self.assertEqual(collapsed, {"notify": set(), "inlined": {"notify"}})
+
+    def test_collapse_survives_a_cycle_outside_the_kept_set(self):
+        deps = {"a": {"x"}, "x": {"y"}, "y": {"x", "b"}}
+        self.assertEqual(ida_shards.collapse_dependencies(deps, {"a", "b"})["a"], {"b"})
+
     def test_env_knobs(self):
         self.assertEqual(ida_shards.configured_shard_count({}), ida_shards.DEFAULT_SHARDS)
         self.assertEqual(ida_shards.configured_shard_count({"CS2VIBE_SHARDS": "0"}), 1)

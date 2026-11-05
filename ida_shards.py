@@ -83,6 +83,35 @@ def plan_shards(order, dependencies, shard_count):
     return owner
 
 
+def collapse_dependencies(dependencies, keep):
+    """Dependencies among *keep*, carried through every task outside it.
+
+    The serial run orders all of a module's tasks, other-platform and finished
+    ones included, and some orderings exist only through them: on linux,
+    ``find-CFlashbangProjectile_Spawn_NetworkStateChangedNotify`` must run before
+    ``find-CBaseEntity_NetworkStateChanged-inlined`` (whose output it skips on),
+    and the one edge saying so goes through the windows-only ``-noinline`` task.
+    Dropping such a task drops the ordering, and a shard then runs the two in
+    whichever order it reaches them.
+    """
+    keep = set(keep)
+    memo = {}
+
+    def reach(name, trail):
+        if name in memo:
+            return memo[name]
+        found = set()
+        for dep in dependencies.get(name, ()):
+            if dep in keep:
+                found.add(dep)
+            elif dep not in trail:
+                found |= reach(dep, trail | {dep})
+        memo[name] = found
+        return found
+
+    return {name: reach(name, frozenset({name})) - {name} for name in keep}
+
+
 def simulated_speedup(order, dependencies, owner):
     """Serial task count over the simulated makespan of *owner* (for the log)."""
     finish = {}

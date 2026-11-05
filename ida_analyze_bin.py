@@ -6540,11 +6540,13 @@ def _run_shards(args, module, platform, skills, binary_path, artifact_dir, modul
     if database is None:
         return 0
 
-    platform_skills = [skill for skill in skills if _skill_runs_on_platform(skill, platform)]
-    dependencies, _edges = _build_skill_dependencies(platform_skills, platform)
-    full_order, _blocked = _topological_order_with_fallback(dependencies, platform_skills)
+    # the whole module's graph, as the serial run sorts it: an ordering between two
+    # pending tasks can exist only through an other-platform or finished task
+    all_dependencies, _edges = _build_skill_dependencies(skills, platform)
+    full_order, _blocked = _topological_order_with_fallback(all_dependencies, skills)
     pending_names = {skill["name"] for skill in pending}
     order = [name for name in full_order if name in pending_names]
+    dependencies = ida_shards.collapse_dependencies(all_dependencies, pending_names)
     owner = ida_shards.plan_shards(order, dependencies, shard_count)
     used = sorted(set(owner.values()))
     speedup = ida_shards.simulated_speedup(order, dependencies, owner)
