@@ -139,7 +139,40 @@ export function looksLikeJson(text: string): boolean {
  * the page can always point at a line.
  */
 export function findJsonError(text: string): JsonSyntaxError | null {
+  const walked = walkJson(text, text.charCodeAt(0) === 0xfeff ? 1 : 0)
+  if (walked instanceof JsonSyntaxError) return walked
+  return walked < text.length ? positioned(text, walked, 'extra') : null
+}
+
+function positioned(text: string, where: number, problem: JsonProblem): JsonSyntaxError {
+  const before = text.slice(0, where).split('\n')
+  return new JsonSyntaxError(before.length, before[before.length - 1]!.length + 1, problem)
+}
+
+/**
+ * Several whole JSON documents back to back - the same file pasted twice, most
+ * often - as one text per document, each running up to where the next begins.
+ * Null when the text is one document, or when any part of it does not read.
+ */
+export function splitJsonDocuments(text: string): string[] | null {
+  const parts: string[] = []
+  let start = 0
   let at = text.charCodeAt(0) === 0xfeff ? 1 : 0
+  while (at < text.length) {
+    const end = walkJson(text, at)
+    if (end instanceof JsonSyntaxError) return null
+    // a document keeps its own trailing whitespace, so its last line ends as typed
+    const next = text.slice(end).search(/\S/)
+    const stop = next < 0 ? text.length : end + next
+    parts.push(text.slice(start, stop))
+    start = at = stop
+  }
+  return parts.length > 1 ? parts : null
+}
+
+/** Reads one JSONC value from `start` (comments around it included); its end, or the first error. */
+function walkJson(text: string, start: number): number | JsonSyntaxError {
+  let at = start
   const fail = (problem: JsonProblem, where = at): never => {
     const before = text.slice(0, where).split('\n')
     throw new JsonSyntaxError(before.length, before[before.length - 1]!.length + 1, problem)
@@ -207,8 +240,7 @@ export function findJsonError(text: string): JsonSyntaxError | null {
   try {
     value()
     skip()
-    if (at < text.length) fail('extra')
-    return null
+    return at
   } catch (error) {
     if (error instanceof JsonSyntaxError) return error
     throw error

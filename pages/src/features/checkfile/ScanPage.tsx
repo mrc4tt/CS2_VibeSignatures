@@ -265,6 +265,13 @@ export function ScanPage() {
           <span className="flex min-w-0 items-center gap-2">
             <span className="truncate font-mono text-[14px] text-ink">{loaded?.name ?? t('scan.noFile')}</span>
             {loaded?.example && <Tag tone="qualify">{t('scan.example', { plugin: loaded.example.plugin, build: loaded.example.build })}</Tag>}
+            {loaded?.documents && (
+              <span title={t('check.documents.detail')}>
+                <Tag tone="warn">
+                  {t(loaded.documents.identical ? 'check.documents.twice' : 'check.documents.several', { count: loaded.documents.count })}
+                </Tag>
+              </span>
+            )}
           </span>
           <span className="text-[12px] text-muted-foreground">
             {loaded ? t('check.readAs', { format: loaded.format.toUpperCase(), keys: loaded.values.size }) : t('scan.dropHint')}

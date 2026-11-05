@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { getSiteHistory } from '../../api/siteData'
 import type { TFunction } from 'i18next'
-import { JsonSyntaxError, parseGameData, type FileValue, type GameDataFormat, type JsonProblem } from './parse'
+import { JsonSyntaxError, parseGameData, splitJsonDocuments, type FileValue, type GameDataFormat, type JsonProblem } from './parse'
 import { patchFile } from './patch'
 import { bestFit, identifyFile, keyVerdicts, scoreBuilds, summarise } from './verdict'
 
@@ -14,6 +14,8 @@ export interface Loaded {
   values: Map<string, FileValue>
   /** Set when the page filled itself with a published file, so it can say so. */
   example?: { plugin: string; build: string }
+  /** The text held several JSON documents back to back; only the first was kept. */
+  documents?: { count: number; identical: boolean }
 }
 
 /** Why a text could not be taken. */
@@ -48,7 +50,19 @@ export function readGameData(text: string, name: string): Loaded | ReadFailure {
     if (parsed.values.size === 0) return { reason: 'noEntries', format: parsed.format }
     return { name, format: parsed.format, text, values: parsed.values }
   } catch (error) {
-    if (error instanceof JsonSyntaxError) return { reason: 'badJson', line: error.line, column: error.column, problem: error.problem }
+    if (error instanceof JsonSyntaxError) {
+      // The same file pasted twice reads as one document and then "text after the
+      // end". When every part is a whole document, take the first and say so.
+      const parts = error.problem === 'extra' ? splitJsonDocuments(text) : null
+      if (parts) {
+        const first = readGameData(parts[0]!, name)
+        if (isLoaded(first)) {
+          const same = (part: string) => part.replace(/\s+/g, '') === parts[0]!.replace(/\s+/g, '')
+          return { ...first, documents: { count: parts.length, identical: parts.every(same) } }
+        }
+      }
+      return { reason: 'badJson', line: error.line, column: error.column, problem: error.problem }
+    }
     return { reason: 'unreadable' }
   }
 }

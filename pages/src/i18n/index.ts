@@ -529,6 +529,11 @@ const resources = {
         explain: 'Plugins find functions by searching the game files for a byte pattern. An update moves the code, the old pattern no longer matches, and the plugin breaks. This compares every pattern and offset in your file against the ones measured for the newest build.',
         unreadable: 'That file could not be read as JSON, JSONC or Valve KeyValues.',
         badJson: 'Invalid JSON at line {{line}}, column {{column}}: {{problem}}.',
+        documents: {
+          twice: 'Pasted {{count}} times: first copy read',
+          several: '{{count}} files in one: first read',
+          detail: 'The text holds several whole JSON files back to back. Only the first is checked and scanned.',
+        },
         jsonProblem: {
           end: 'the file ends too early, a closing } or ] is missing',
           comma: 'a comma is missing before this',
@@ -1191,6 +1196,11 @@ const resources = {
         explain: 'Plugins finder funktioner ved at søge efter et byte-mønster i spilfilerne. En opdatering flytter koden, det gamle mønster passer ikke længere, og pluginet holder op med at virke. Her sammenlignes hvert mønster og offset i din fil med dem der er målt for den nyeste build.',
         unreadable: 'Filen kunne ikke læses som JSON, JSONC eller Valve KeyValues.',
         badJson: 'Ugyldig JSON i linje {{line}}, kolonne {{column}}: {{problem}}.',
+        documents: {
+          twice: 'Indsat {{count}} gange: første kopi læst',
+          several: '{{count}} filer i én: den første læst',
+          detail: 'Teksten indeholder flere hele JSON-filer efter hinanden. Kun den første bliver tjekket og scannet.',
+        },
         jsonProblem: {
           end: 'filen slutter for tidligt, der mangler en afsluttende } eller ]',
           comma: 'der mangler et komma før dette',

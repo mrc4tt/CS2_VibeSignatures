@@ -3,7 +3,7 @@ import { FileCheckIcon, PlayIcon } from '../../ui/icons'
 import { buttonClass } from '../../ui/buttonStyle'
 import { copyText } from '../../ui/clipboard'
 import { saveText } from '../../ui/download'
-import { Alert, Button, Select, Skeleton, Tabs } from '../../ui/primitives'
+import { Alert, Button, Select, Skeleton, Tabs, Tag } from '../../ui/primitives'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Explain } from '../../components/Explain'
@@ -197,6 +197,13 @@ jq -n --rawfile g gamedata/matchzy.json '{gamedata: $g, filename: "matchzy.json"
                 <span className="text-[12px] text-muted-foreground">
                   {t('check.readAs', { format: loaded.format.toUpperCase(), keys: loaded.values.size })}
                 </span>
+                {loaded.documents && (
+                  <span className="self-start" title={t('check.documents.detail')}>
+                    <Tag tone="warn">
+                      {t(loaded.documents.identical ? 'check.documents.twice' : 'check.documents.several', { count: loaded.documents.count })}
+                    </Tag>
+                  </span>
+                )}
               </span>
             </div>
             {file && fit && (

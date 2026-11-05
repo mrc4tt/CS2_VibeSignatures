@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { findJsonError, JsonSyntaxError, keyName, parseGameData, stripJsonc } from './parse'
+import { findJsonError, JsonSyntaxError, keyName, parseGameData, splitJsonDocuments, stripJsonc } from './parse'
+import { isLoaded, readGameData } from './useFileCheck'
 
 describe('reading a dropped gamedata file', () => {
   it('takes the entry name from the innermost segment that is not a kind word', () => {
@@ -129,5 +130,38 @@ describe('pointing at broken JSON', () => {
   it('still takes JSONC comments and trailing commas, and still reads KeyValues', () => {
     expect(findJsonError('// x\n{ "A": { "linux": "55", }, /* y */ }')).toBeNull()
     expect(parseGameData('"Games"\n{\n\t"csgo"\n\t{\n\t\t"linux"\t"55"\n\t}\n}').format).toBe('vdf')
+  })
+})
+
+describe('several JSON documents in one text', () => {
+  const doc = '{\n  // note\n  "Signatures": { "A": { "linux": "55 ?" } }\n}'
+
+  it('splits a file pasted twice into its two copies', () => {
+    const parts = splitJsonDocuments(`${doc}${doc}\n`)
+    expect(parts).toHaveLength(2)
+    expect(parts![0]).toBe(doc)
+    expect(parts![1]!.trim()).toBe(doc)
+  })
+
+  it('is null for one document or for trailing junk', () => {
+    expect(splitJsonDocuments(doc)).toBeNull()
+    expect(splitJsonDocuments(`${doc} }`)).toBeNull()
+  })
+})
+
+describe('readGameData on a doubled paste', () => {
+  const doc = '{ "Offsets": { "GetPublicAdr": { "windows": 32, "linux": 32 } } }'
+
+  it('reads the first copy and says the text held two', () => {
+    const read = readGameData(`${doc}\n${doc}`, 'x.jsonc')
+    expect(isLoaded(read)).toBe(true)
+    if (!isLoaded(read)) return
+    expect(read.text).toBe(`${doc}\n`)
+    expect(read.documents).toEqual({ count: 2, identical: true })
+    expect(read.values.size).toBe(1)
+  })
+
+  it('still reports a real syntax error', () => {
+    expect(readGameData(`${doc} }`, 'x.jsonc')).toMatchObject({ reason: 'badJson', problem: 'extra' })
   })
 })
