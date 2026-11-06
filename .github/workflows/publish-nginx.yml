@@ -46,7 +46,16 @@ jobs:
     env:
       # Override with a repository variable if the nginx root lives elsewhere.
       SITE_ROOT: ${{ vars.SITE_ROOT || '/srv/sig' }}
-      RELEASES_KEPT: '5'
+      RELEASES_KEPT: '10'
+      PAGES_RELEASE_INPUT_ROOT: ${{ github.workspace }}
+      # latest/manifest.json.sig (pages/gameDataPlugin.ts). The private key is a
+      # file on this machine, not a repository secret: this runner gets no secret
+      # it does not need (docs/selfhosted-runner.md). Ed25519 is deterministic, so
+      # the Pages mirror (deploy-pages.yml, signing with the GAMEDATA_SIGNING_KEY
+      # secret) publishes the very same .sig. A missing or wrong key fails the
+      # build or verify:gamedata, so an unsigned site is never published.
+      GAMEDATA_SIGNATURE_REQUIRED: '1'
+      GAMEDATA_SIGNING_KEY_FILE: ${{ vars.GAMEDATA_SIGNING_KEY_FILE || '/etc/cs2vibe/gamedata-signing.pem' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -71,9 +80,11 @@ jobs:
 
       - name: Build
         working-directory: pages
-        env:
-          PAGES_RELEASE_INPUT_ROOT: ${{ github.workspace }}
-        run: npm run build
+        run: |
+          set -euo pipefail
+          GAMEDATA_SIGNING_KEY="$(cat "$GAMEDATA_SIGNING_KEY_FILE")"
+          export GAMEDATA_SIGNING_KEY
+          npm run build
 
       - name: Verify the emitted assets
         working-directory: pages
