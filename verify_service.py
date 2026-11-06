@@ -20,6 +20,10 @@ decides a verdict of its own.
   PUT    /api/files/manage       X-Manage-Token: replace text / filename / webhook
   DELETE /api/files/manage       X-Manage-Token: gone, links and all
 
+  POST   /api/report             what a CounterStrikeSharp server runs (names, key names, sha256,
+                                 no file text): each file known / plugin / unknown, and the
+                                 unknown ones recorded as demand (plugin_reports.py)
+
 Stored files live in user_files (systemd StateDirectory), never under the repository.
 
 Uploads are parsed as data (JSON, JSONC, KeyValues, key=value) and never executed or
@@ -47,6 +51,7 @@ import traceback
 from collections import OrderedDict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import plugin_reports as PR
 import user_files as UF
 import verify_plugin_gamedata as VPG
 
@@ -441,6 +446,7 @@ class Service:
         # executor: one pool for every build (the tests); pools: a BuildPools, one per build.
         self.executor, self.pools, self.bindir, self.timeout = executor, pools, bindir, timeout
         self.files_root = files_root or UF.ROOT
+        self.published = PR.Published()
         self.capacity = workers + queue
         self.inflight = 0
         self.lock = threading.Lock()
@@ -539,6 +545,18 @@ class Service:
             path = path[4:]
         if path == "/files" or path.startswith("/files/"):
             return self.handle_files(method, path, body, headers)
+        if path == "/report":
+            if method != "POST":
+                return 404, {"error": "not found"}
+            try:
+                return 200, PR.handle_report(json.loads(body or b"{}"), self.published.get(), root=self.files_root)
+            except ValueError:
+                return 400, {"error": "body must be JSON"}
+            except PR.BadReport as error:
+                return 400, {"error": str(error)}
+            except OSError:
+                traceback.print_exc()
+                return 503, {"error": "report storage is unavailable"}
         if method == "GET" and path == "/health":
             return 200, {"ok": True, "inflight": self.inflight, "capacity": self.capacity}
         if method == "GET" and path == "/builds":

@@ -688,6 +688,27 @@ read secret; the manage token is stored only as its sha256 (`by_manage/<sha>`), 
   for `FORK_OWNED_SYMBOLS` - rule 19 still decides the name - and demand counts of unrecorded keys).
   Key names and our values only; a user's file text is never published, logged or committed.
 
+## SERVER REPORTS (what CounterStrikeSharp servers run)
+
+A CounterStrikeSharp server with `GamedataReportEnabled` (off by default, fork CSSharp
+`update::ReportGamedata`) posts one report per start to `POST /api/report`: build, platform, a
+random install id, and per plugin gamedata file its name, sha256, key names and the keys that
+don't resolve. **No file text.** `plugin_reports.py` answers each file:
+
+- `known` - the sha256 is a file under `gamedata/<build>/<plugin>/` (any build, disabled
+  plugins included). The answer names `<plugin>/<file>`; CSSharp keeps it in
+  `gamedata/plugin-gamedata.report` and its plugin update uses it to identify the file.
+- `plugin` - not a copy we made, but at least half its keys (and 2) are a plugin we generate:
+  another release of it. Same answer shape.
+- `unknown` - stored as demand under `<user-file store>/reports/<sha256>.json` (name, key names,
+  broken keys per build, distinct servers as a truncated sha256 of the install id, first/last
+  seen; 5000 records at most). `uv run plugin_reports.py list` ranks them by servers: the list of
+  generators worth writing. Nothing here is published.
+
+`Published` re-hashes `gamedata/` when a build directory appears or changes (checked at most every
+5 minutes). nginx: `location = /api/report` with its own `sigapi_report` zone, 6r/m burst 20, no
+CORS (game servers only) - in `docs/nginx-sig-api.miksen.me.conf`; the live copy is server-ops'.
+
 ## TAKING A NEW GAMEVER THROUGH
 
 ```bash
