@@ -55,9 +55,9 @@ const shortValue = (value: string | number): string => {
  * The scan result answers "what is wrong"; this answers "where in my file",
  * which is what someone fixing it by hand needs. It reuses the published-file
  * viewer's look and tokenizer and adds a marker in the gutter: a dot for wrong,
- * a diamond for unconfirmed, a thin bar for holds, so the three differ by shape
- * and not only by colour. What a marker means is in its tooltip and in the
- * result sheet; lines are never pushed apart by notes, so the file reads as itself.
+ * a diamond for unconfirmed, nothing for a line that holds, so the two differ by
+ * shape and not only by colour. What a marker means is in its tooltip and the
+ * counts are in the result sheet's footer; lines are never pushed apart by notes, so the file reads as itself.
  *
  * Putting the caret on a wrong or unconfirmed line opens a small card under it:
  * what each platform's verdict is, and, where a replacement is confirmed, a
@@ -165,12 +165,11 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, layout
             <button type="button" onClick={() => onStep(1)} aria-label={t('check.view.next')}>▼</button>
           </span>
         )}
-        <span className="legend">
-          <span><i className="b" />{t('check.view.legendBad')}</span>
-          <span><i className="w" />{t('check.view.legendWarn')}</span>
-          <span><i className="c" />{t('check.view.legendOk')}</span>
-          {showFixed && <span><i className="u" />{t('check.view.legendChanged')}</span>}
-        </span>
+        {showFixed && (
+          <span className="legend">
+            <span><i className="u" />{t('check.view.legendChanged')}</span>
+          </span>
+        )}
         {fixed && (
           <span className="flex gap-2">
             <Button size="small" onClick={() => saveText(fixed, name)}>{t('check.view.download')}</Button>
@@ -255,7 +254,8 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, layout
               return `${mark.platform ? t(`check.platform.${mark.platform}`) : t('check.pop.keyName')}: ${what}`
             }).join('\n')
             const classes = ['rl']
-            if (worst) classes.push(`m-${worst}`)
+            // A line that holds gets no marker: bars on only the value lines read as gaps beside the line numbers.
+            if (worst && worst !== 'ok') classes.push(`m-${worst}`)
             if (isChanged) classes.push('upd')
             if (focusLine === lineNumber) classes.push('foc')
             if (brokenHere?.line === lineNumber) classes.push('m-bad')
