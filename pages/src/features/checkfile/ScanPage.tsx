@@ -328,7 +328,6 @@ export function ScanPage() {
       <div className={loaded ? 'scangrid' : undefined}>
         {loaded && details ? (
           <ScanPanel
-            origin={origin ?? undefined}
             format={loaded.format}
             details={details}
             health={health}

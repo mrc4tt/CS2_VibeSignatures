@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { SiteHistory } from '../../api/siteData'
 import type { GameDataFileDescriptor, GameDataIndex } from '../gamedata/types'
-import { detectLayout, fileOrigin, pluginOrigin, publishedCopy, textHashes } from './origin'
+import { detectLayout, fileOrigin, publishedCopy, textHashes } from './origin'
 import { parseGameData } from './parse'
 import { identifyFile } from './verdict'
 
@@ -196,23 +196,5 @@ describe('whose file', () => {
   it('says unknown rather than guess', () => {
     const text = JSON.stringify({ Thing: { lib: 'server', linux: '55', windows: '48' } })
     expect(originOf(text, 'thing.json')).toMatchObject({ plugin: undefined, framework: undefined, evidence: undefined, layout: 'flat', coverage: 'unknown', feeds: [] })
-  })
-})
-
-describe('a published file, for the plugin page', () => {
-  const idx = index([descriptor(CSS_FILE), descriptor(MATCHZY), descriptor(MAM), descriptor(BANFIX)])
-
-  it("answers for a CounterStrikeSharp plugin's file without anything to scan", () => {
-    expect(pluginOrigin('matchzy', 'matchzy.json', idx)).toMatchObject({
-      plugin: 'matchzy', framework: 'cssharp', coverage: 'plugin', install: 'addons/counterstrikesharp/gamedata/matchzy.json',
-    })
-  })
-
-  it('says a Metamod file is not updated by CounterStrikeSharp', () => {
-    expect(pluginOrigin('gamebanfix', 'gamebanfix.games.txt', idx)).toMatchObject({ framework: 'metamod', coverage: 'otherFramework' })
-  })
-
-  it('and that MultiAddonManager compiles its values in', () => {
-    expect(pluginOrigin('multiaddonmanager', 'multiaddonmanager.json', idx)).toMatchObject({ coverage: 'compiled' })
   })
 })

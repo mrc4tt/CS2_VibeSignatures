@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PlayIcon } from '../../ui/icons'
-import { OriginCard } from './OriginCard'
-import type { Origin } from './origin'
 import { Alert, Button, Dot, Select } from '../../ui/primitives'
 import { DEEP_SCAN_API, DeepScanError, type DeepScanResult, type Platform, type ScanHealth } from './deepScan'
 import type { FileDetails } from './details'
@@ -12,8 +10,6 @@ import type { KeyState } from './verdict'
 export type ScanPlatform = Platform | 'both'
 
 interface Props {
-  /** Whose file it is; see origin.ts. */
-  origin?: Origin
   format: GameDataFormat
   details: FileDetails
   /** The scan server's load; the row hides when it cannot be reached. */
@@ -44,7 +40,7 @@ const VERIFICATION_TONE = { verified: 'ok', contradicted: 'bad', unverified: 'wa
  * build and both platforms, which is what almost every visitor wants.
  */
 export function ScanPanel({
-  origin, format, details, health, platform, onPlatform, builds, build, onBuild,
+  format, details, health, platform, onPlatform, builds, build, onBuild,
   pending, error, result, onScan, summary, problems, onNext, children,
 }: Props) {
   const { t } = useTranslation()
@@ -89,8 +85,6 @@ export function ScanPanel({
           </Select>
         </div>
       )}
-
-      {origin && <OriginCard origin={origin} />}
 
       <div className="flex flex-col gap-2 rounded-[10px] bg-card-2 p-3.5">
         <strong className="text-[13px] text-ink">{t('check.side.details')}</strong>

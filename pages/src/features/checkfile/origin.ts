@@ -278,11 +278,3 @@ function describe({ plugin, candidates, framework, evidence, layout, build, publ
     published,
   }
 }
-
-/**
- * The same answer for a published file, where the plugin is known up front:
- * the plugin page shows it without anything to scan.
- */
-export function pluginOrigin(plugin: string, fileName: string, index?: GameDataIndex): Origin {
-  return describe({ plugin, framework: pluginInfo(plugin)?.framework, name: fileName, index })
-}

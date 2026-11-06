@@ -84,11 +84,8 @@ describe('Scanner', () => {
     await waitFor(() => expect(document.querySelector('.annotated .rl.m-bad .st')?.getAttribute('title')).toBe('linux: should be NEW-L'))
     // the details read off the file itself
     await waitFor(() => expect([...document.querySelectorAll('.details dd')].map((n) => n.textContent)).toEqual(['14192', 'JSON', '3', '1', '-', '0 / 24 busy']))
-    // whose file it is: a CounterStrikeSharp plugin's, which the fork's updater patches from its feed
-    expect([...document.querySelectorAll('.origin-rows dd')].map((n) => n.textContent)).toEqual([
-      'matchzy (mrc4tt fork)', 'CounterStrikeSharp', 'addons/counterstrikesharp/gamedata/matchzy.json', 'Its keys', 'Signatures only',
-    ])
-    expect(screen.getByRole('link', { name: 'latest/matchzy/matchzy.json' })).toBeTruthy()
+    // whose file it is, in the status line
+    expect(document.querySelector('.rawlayout')?.textContent).toBe('CounterStrikeSharp plugin: matchzy (mrc4tt fork)')
 
     // typed straight into, no edit mode: the marks step aside until the pause re-checks it
     fireEvent.change(screen.getByLabelText('The file, editable'), {
@@ -186,23 +183,17 @@ describe('Scanner', () => {
     expect(document.querySelector('.linepop')).toBeNull()
   })
 
-  it('says a dropped Metamod KeyValues file is not one CounterStrikeSharp updates, and where it goes', async () => {
+  it('names the plugin of a dropped Metamod KeyValues file in the status line', async () => {
     paint()
     const gamesTxt = '"Games"\n{\n\t"csgo"\n\t{\n\t\t"Signatures"\n\t\t{\n\t\t\t"GameSystem_Think_CheckSteamBan"\n\t\t\t{\n\t\t\t\t"library"\t"server"\n\t\t\t\t"linux"\t"55 48"\n\t\t\t}\n\t\t}\n\t}\n}\n'
     await drop(gamesTxt, 'gamebanfix.games.txt')
-    await waitFor(() => expect([...document.querySelectorAll('.origin-rows dd')].map((n) => n.textContent)).toEqual([
-      'gamebanfix', 'Metamod:Source', 'addons/gamebanfix/bin/<platform>/gamedata/gamebanfix.games.txt', 'Its file name', 'No',
-    ]))
-    expect(screen.getByRole('region', { name: 'What this file is' })).toHaveTextContent('CounterStrikeSharp only updates files in addons/counterstrikesharp/gamedata/')
-    expect(document.querySelector('.rawlayout')?.textContent).toBe('Metamod:Source plugin: gamebanfix')
+    await waitFor(() => expect(document.querySelector('.rawlayout')?.textContent).toBe('Metamod:Source plugin: gamebanfix'))
   })
 
-  it('says not identified for a file nothing points at', async () => {
+  it('names no plugin for a file nothing points at', async () => {
     paint()
     await drop(JSON.stringify({ Thing: { lib: 'server', linux: '55', windows: '48' } }), 'thing.json')
-    await waitFor(() => expect([...document.querySelectorAll('.origin-rows dd')].map((n) => n.textContent)).toEqual([
-      'Not identified', 'Not identified', 'Not recorded here', 'Not identified',
-    ]))
+    await waitFor(() => expect(document.querySelector('.details')).not.toBeNull())
     expect(document.querySelector('.rawlayout')).toBeNull()
   })
 
