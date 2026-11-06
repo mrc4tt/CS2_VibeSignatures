@@ -1,9 +1,9 @@
-import { createHash } from 'node:crypto'
+import { createHash, generateKeyPairSync } from 'node:crypto'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { buildLatestGameData, loadGameDataAssets } from './gameDataPlugin'
+import { buildLatestGameData, loadGameDataAssets, manifestSignature } from './gameDataPlugin'
 
 const temporaryRoots: string[] = []
 
@@ -141,5 +141,15 @@ describe('gameDataPlugin asset loading', () => {
 
     expect(() => buildLatestGameData({ index: { schemaVersion: 1, versions: [] }, assets: new Map() })).toThrow(/no versions/)
     await expect(loadGameDataAssets(root).then(buildLatestGameData)).rejects.toThrow(/basename collides/)
+  })
+
+  it('signs latest/manifest.json only with a key, and refuses to go unsigned when required', () => {
+    const bytes = new TextEncoder().encode('{}\n')
+    expect(manifestSignature(bytes, {})).toBeUndefined()
+    expect(() => manifestSignature(bytes, { GAMEDATA_SIGNATURE_REQUIRED: '1' })).toThrow(/refusing to publish an unsigned/)
+    const pem = generateKeyPairSync('ed25519').privateKey.export({ format: 'pem', type: 'pkcs8' }).toString()
+    expect(Buffer.from(manifestSignature(bytes, { GAMEDATA_SIGNING_KEY: pem })!.trim(), 'base64')).toHaveLength(64)
+    const rsa = generateKeyPairSync('rsa', { modulusLength: 1024 }).privateKey.export({ format: 'pem', type: 'pkcs8' }).toString()
+    expect(() => manifestSignature(bytes, { GAMEDATA_SIGNING_KEY: rsa })).toThrow(/expected ed25519/)
   })
 })

@@ -1,12 +1,13 @@
-import { createHash } from 'node:crypto'
+import { createHash, generateKeyPairSync } from 'node:crypto'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { buildLatestGameData, loadGameDataAssets } from './gameDataPlugin'
+import { buildLatestGameData, loadGameDataAssets, signManifest } from './gameDataPlugin'
 import {
   verifyGameDataAssetDirectory,
   verifyLatestGameDataDirectory,
+  verifyManifestSignature,
   verifyRemoteGameDataAssets,
   writeGameDataVerificationManifest,
 } from './verifyGameDataAssets.mjs'
@@ -150,5 +151,38 @@ describe('gamedata asset verification', () => {
 
     await put(join(dist, 'latest'), 'manifest.json', JSON.stringify({ ...latest.manifest, gameVersion: '14178b' }))
     await expect(verify()).rejects.toThrow(/is not the newest build 14180/)
+  })
+
+  it('checks latest/manifest.json.sig against the signing key, and can require one', async () => {
+    const root = await temporaryRoot()
+    const source = join(root, 'source')
+    const dist = join(root, 'dist')
+    const put = async (base, path, text) => {
+      await mkdir(dirname(join(base, ...path.split('/'))), { recursive: true })
+      await writeFile(join(base, ...path.split('/')), text)
+    }
+    await put(source, '14180/CounterStrikeSharp/gamedata.json', '{"Sym":"NEW"}\n')
+    const loaded = await loadGameDataAssets(source)
+    for (const asset of loaded.assets.values()) await put(join(dist, 'gamedata'), asset.url, asset.bytes)
+    await put(join(dist, 'gamedata'), 'index.json', JSON.stringify(loaded.index))
+    const latest = buildLatestGameData(loaded)
+    for (const [url, bytes] of latest.files) await put(join(dist, 'latest'), url, bytes)
+    const manifestText = JSON.stringify(latest.manifest)
+    await put(join(dist, 'latest'), 'manifest.json', manifestText)
+    const verify = (options) => verifyLatestGameDataDirectory(join(dist, 'latest'), join(dist, 'gamedata'), source, options)
+
+    await expect(verify()).resolves.toEqual(expect.objectContaining({ signed: false }))
+    await expect(verify({ requireSignature: true })).rejects.toThrow(/no manifest.json.sig/)
+
+    const { privateKey, publicKey } = generateKeyPairSync('ed25519')
+    const pem = privateKey.export({ format: 'pem', type: 'pkcs8' }).toString()
+    const rawPublic = publicKey.export({ format: 'der', type: 'spki' }).subarray(-32).toString('base64')
+    const signature = signManifest(Buffer.from(manifestText), pem)
+    expect(verifyManifestSignature(Buffer.from(manifestText), signature, rawPublic)).toBe(true)
+    expect(verifyManifestSignature(Buffer.from(`${manifestText} `), signature, rawPublic)).toBe(false)
+
+    // Signed with a key that is not the published one.
+    await put(join(dist, 'latest'), 'manifest.json.sig', signature)
+    await expect(verify()).rejects.toThrow(/does not verify against GAMEDATA_SIGNING_PUBLIC_KEY/)
   })
 })

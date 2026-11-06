@@ -27,6 +27,10 @@ jobs:
     # upstream pages app's PAGES_RELEASE_INPUT_ROOT gate without release staging.
     env:
       PAGES_RELEASE_INPUT_ROOT: ${{ github.workspace }}
+      # latest/manifest.json.sig (gameDataPlugin.ts): CounterStrikeSharp refuses
+      # an unsigned or wrongly signed manifest, so a missing secret must fail
+      # the build rather than publish a site every server would ignore.
+      GAMEDATA_SIGNATURE_REQUIRED: '1'
     defaults:
       run:
         working-directory: pages
@@ -61,6 +65,8 @@ jobs:
       - name: Lint Pages application
         run: npm run lint
       - name: Build Pages artifact
+        env:
+          GAMEDATA_SIGNING_KEY: ${{ secrets.GAMEDATA_SIGNING_KEY }}
         run: npm run build
       - name: Verify current game-symbol bytes
         run: npm run verify:gamesymbols

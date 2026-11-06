@@ -1,3 +1,4 @@
+import { createPrivateKey, sign } from 'node:crypto'
 import { readFile, readdir } from 'node:fs/promises'
 import { basename, dirname, extname, join, relative, sep } from 'node:path'
 import type { Plugin } from 'vite'
@@ -239,6 +240,36 @@ export function buildLatestGameData(loaded: Pick<LoadedGameData, 'index' | 'asse
   return { manifest: { schemaVersion: 1, gameVersion: newest.gameVersion, files: entries }, files }
 }
 
+/**
+ * latest/manifest.json.sig: base64 Ed25519 signature over the exact bytes of
+ * latest/manifest.json. CounterStrikeSharp's updater only applies a file whose
+ * sha256 is in a manifest that verifies against the public key it is built with
+ * (GAMEDATA_SIGNING_PUBLIC_KEY in verifyGameDataAssets.mjs), so whoever can
+ * change what sig.miksen.me serves still cannot make servers load signatures
+ * this repo did not publish.
+ *
+ * The private key is the PEM in $GAMEDATA_SIGNING_KEY (the deploy workflow's
+ * secret). Without it no .sig is emitted, which is fine for local builds; the
+ * deploy sets GAMEDATA_SIGNATURE_REQUIRED=1 so a missing secret fails the build
+ * instead of publishing an unsigned site that every server would refuse.
+ */
+export const MANIFEST_SIGNATURE_FILE = 'manifest.json.sig'
+
+export function signManifest(manifestBytes: Uint8Array, privateKeyPem: string): string {
+  const key = createPrivateKey(privateKeyPem)
+  if (key.asymmetricKeyType !== 'ed25519') throw new Error(`GAMEDATA_SIGNING_KEY is a ${key.asymmetricKeyType} key, expected ed25519`)
+  return `${sign(null, manifestBytes, key).toString('base64')}\n`
+}
+
+export function manifestSignature(manifestBytes: Uint8Array, env: NodeJS.ProcessEnv = process.env): string | undefined {
+  const pem = env.GAMEDATA_SIGNING_KEY?.trim()
+  if (pem) return signManifest(manifestBytes, pem)
+  if (env.GAMEDATA_SIGNATURE_REQUIRED === '1') {
+    throw new Error('GAMEDATA_SIGNATURE_REQUIRED=1 but GAMEDATA_SIGNING_KEY is empty: refusing to publish an unsigned latest/manifest.json')
+  }
+  return undefined
+}
+
 export function gameDataPlugin(gamedataDirectory: string): Plugin {
   return {
     name: 'gamedata-assets',
@@ -308,7 +339,10 @@ export function gameDataPlugin(gamedataDirectory: string): Plugin {
       for (const [url, bytes] of latest.files) {
         this.emitFile({ type: 'asset', fileName: `${LATEST_DIRECTORY}/${url}`, source: bytes })
       }
-      this.emitFile({ type: 'asset', fileName: `${LATEST_DIRECTORY}/manifest.json`, source: `${JSON.stringify(latest.manifest, null, 2)}\n` })
+      const manifestBytes = new TextEncoder().encode(`${JSON.stringify(latest.manifest, null, 2)}\n`)
+      this.emitFile({ type: 'asset', fileName: `${LATEST_DIRECTORY}/manifest.json`, source: manifestBytes })
+      const signature = manifestSignature(manifestBytes)
+      if (signature) this.emitFile({ type: 'asset', fileName: `${LATEST_DIRECTORY}/${MANIFEST_SIGNATURE_FILE}`, source: signature })
     },
   }
 }

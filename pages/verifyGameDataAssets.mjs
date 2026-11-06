@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, createPublicKey, verify as cryptoVerify } from 'node:crypto'
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -164,7 +164,24 @@ function compareGameVersionsNewestFirst(left, right) {
  * the build was made from, so a served file can never differ from
  * gamedata/<newest>/<plugin>/.../<file>.
  */
-export async function verifyLatestGameDataDirectory(latestDirectory, gamedataDirectory, sourceGamedataDirectory) {
+/**
+ * Raw 32-byte Ed25519 public key (base64) that latest/manifest.json.sig must
+ * verify against. CounterStrikeSharp embeds the same value
+ * (src/core/gamedata_signature.h); change both together, and only with a
+ * CounterStrikeSharp release that ships the new key.
+ */
+export const GAMEDATA_SIGNING_PUBLIC_KEY = 'FKRxMgGEAIoWuRBmwgG/yAA9FxvcBkA44SAKxg7bfUo='
+
+export function verifyManifestSignature(manifestBytes, signatureText, publicKeyBase64 = GAMEDATA_SIGNING_PUBLIC_KEY) {
+  const raw = Buffer.from(publicKeyBase64, 'base64')
+  if (raw.length !== 32) throw new Error('gamedata signing public key is not 32 bytes')
+  // SPKI DER prefix for an Ed25519 key, then the raw key.
+  const key = createPublicKey({ key: Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), raw]), format: 'der', type: 'spki' })
+  const signature = Buffer.from(String(signatureText).trim(), 'base64')
+  return signature.length === 64 && cryptoVerify(null, Buffer.from(manifestBytes), key, signature)
+}
+
+export async function verifyLatestGameDataDirectory(latestDirectory, gamedataDirectory, sourceGamedataDirectory, { requireSignature = false } = {}) {
   const latestRoot = resolve(latestDirectory)
   const indexPath = join(resolve(gamedataDirectory), 'index.json')
   const { index } = validateGameDataIndex(parseJson(await readFile(indexPath), indexPath), indexPath)
@@ -179,7 +196,8 @@ export async function verifyLatestGameDataDirectory(latestDirectory, gamedataDir
   }
 
   const manifestPath = join(latestRoot, 'manifest.json')
-  const manifest = parseJson(await readFile(manifestPath), manifestPath)
+  const manifestBytes = await readFile(manifestPath)
+  const manifest = parseJson(manifestBytes, manifestPath)
   if (!isObject(manifest) || manifest.schemaVersion !== 1 || !Array.isArray(manifest.files)) {
     throw new Error(`${manifestPath}: expected latest manifest schema v1`)
   }
@@ -195,7 +213,16 @@ export async function verifyLatestGameDataDirectory(latestDirectory, gamedataDir
   }
 
   const actualFiles = await recursiveFileNames(latestRoot)
-  const expectedFiles = new Set(['manifest.json', ...expected.keys()])
+  const signed = actualFiles.includes('manifest.json.sig')
+  if (signed) {
+    const signaturePath = join(latestRoot, 'manifest.json.sig')
+    if (!verifyManifestSignature(manifestBytes, await readFile(signaturePath, 'utf8'))) {
+      throw new Error(`${signaturePath}: does not verify against GAMEDATA_SIGNING_PUBLIC_KEY (wrong GAMEDATA_SIGNING_KEY secret?)`)
+    }
+  } else if (requireSignature) {
+    throw new Error(`${latestRoot}: no manifest.json.sig; CounterStrikeSharp refuses an unsigned manifest`)
+  }
+  const expectedFiles = new Set(['manifest.json', ...(signed ? ['manifest.json.sig'] : []), ...expected.keys()])
   if (actualFiles.length !== expectedFiles.size || actualFiles.some((file) => !expectedFiles.has(file))) {
     throw new Error(`${latestRoot}: emitted latest inventory does not match manifest`)
   }
@@ -209,7 +236,7 @@ export async function verifyLatestGameDataDirectory(latestDirectory, gamedataDir
     const sourceBytes = await readFile(sourcePath)
     if (!Buffer.from(bytes).equals(sourceBytes)) throw new Error(`${path}: bytes differ from ${sourcePath}`)
   }
-  return { gameVersion: newest.gameVersion, files: [...expected.values()] }
+  return { gameVersion: newest.gameVersion, files: [...expected.values()], signed }
 }
 
 export function validateGameDataVerificationManifest(value, source = 'gamedata-verification.json') {
@@ -318,8 +345,10 @@ async function main(args) {
       const inputRoot = process.env.PAGES_RELEASE_INPUT_ROOT
       const source = sourceArgument ?? (inputRoot ? join(inputRoot, 'gamedata') : undefined)
       if (!source) throw new Error('--latest needs --source <gamedata dir> or PAGES_RELEASE_INPUT_ROOT')
-      const latest = await verifyLatestGameDataDirectory(latestDirectory, directory, source)
-      console.log(`Verified ${latest.files.length} latest gamedata files for ${latest.gameVersion} against ${resolve(source)}.`)
+      const latest = await verifyLatestGameDataDirectory(latestDirectory, directory, source, {
+        requireSignature: process.env.GAMEDATA_SIGNATURE_REQUIRED === '1',
+      })
+      console.log(`Verified ${latest.files.length} latest gamedata files for ${latest.gameVersion} against ${resolve(source)}${latest.signed ? ', manifest signature valid' : ', manifest unsigned'}.`)
     }
     return
   }
