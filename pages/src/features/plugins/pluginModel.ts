@@ -141,7 +141,7 @@ export function installPath(file: PluginFile): string {
  * The fixed URL of the newest build's copy of this file, see LATEST_DIRECTORY in
  * gameDataPlugin.ts: latest/<plugin>/<basename>, always the newest published build.
  */
-export function latestUrl(file: PluginFile, origin: string, base: string): string {
+export function latestUrl(file: { descriptor: { plugin: string; fileName: string } }, origin: string, base: string): string {
   const root = `${origin}${base.endsWith('/') ? base : `${base}/`}`
   return `${root}latest/${encodeURIComponent(file.descriptor.plugin)}/${encodeURIComponent(file.descriptor.fileName)}`
 }

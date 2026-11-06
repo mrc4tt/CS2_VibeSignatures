@@ -4,6 +4,8 @@ import { getSiteHistory } from '../../api/siteData'
 import type { TFunction } from 'i18next'
 import { JsonSyntaxError, parseGameData, splitJsonDocuments, type FileValue, type GameDataFormat, type JsonProblem } from './parse'
 import { patchFile } from './patch'
+import { fileOrigin } from './origin'
+import type { GameDataIndex } from '../gamedata/types'
 import { bestFit, identifyFile, keyVerdicts, scoreBuilds, summarise } from './verdict'
 
 export interface Loaded {
@@ -76,7 +78,7 @@ export function isLoaded(value: Loaded | ReadFailure): value is Loaded {
  * to, which build it fits, and every key's state against the newest build.
  * Nothing in here leaves the browser.
  */
-export function useFileCheck(loaded: Loaded | null) {
+export function useFileCheck(loaded: Loaded | null, evidence: { index?: GameDataIndex; hashes?: string[]; scanMatch?: string } = {}) {
   const { data: history, isLoading } = useQuery({ queryKey: ['site-history'], queryFn: ({ signal }) => getSiteHistory(signal) })
   const [chosenFile, setChosenFile] = useState<string | null>(null)
 
@@ -85,7 +87,25 @@ export function useFileCheck(loaded: Loaded | null) {
     () => (loaded ? identifyFile(loaded.values, history) : null),
     [loaded, history],
   )
-  const file = chosenFile ?? (identification?.decisive ? identification.best?.file : undefined)
+  const { index, hashes, scanMatch } = evidence
+  const origin = useMemo(
+    () => (loaded
+      ? fileOrigin({
+        name: loaded.name,
+        text: loaded.text,
+        format: loaded.format,
+        hashes,
+        index,
+        historyFiles: history ? Object.keys(history.files) : [],
+        identification,
+        scanMatch,
+      })
+      : null),
+    [loaded, hashes, index, history, identification, scanMatch],
+  )
+  // A file the keys alone cannot pin (one key, CleanerCS2's or TeleportFix's) is still
+  // compared with its published counterpart when its bytes or its name name it.
+  const file = chosenFile ?? (identification?.decisive ? identification.best?.file : undefined) ?? origin?.published
   const scores = useMemo(
     () => (loaded && file ? scoreBuilds(loaded.values, history, file) : []),
     [loaded, history, file],
@@ -104,5 +124,5 @@ export function useFileCheck(loaded: Loaded | null) {
     ? history.builds.length - 1 - history.builds.findIndex((entry) => entry.gameVersion === fit.build)
     : 0
 
-  return { history, isLoading, newest, identification, chosenFile, setChosenFile, file, fit, verdicts, summary, patched, behind }
+  return { history, isLoading, newest, identification, origin, chosenFile, setChosenFile, file, fit, verdicts, summary, patched, behind }
 }

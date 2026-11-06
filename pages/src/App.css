@@ -941,6 +941,13 @@ button.rsheet-tr:disabled { cursor: default; }
   .rsheet-legend { display: none; }
 }
 
+.rsheet-origin { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 18px 10px; font-size: 13px; color: var(--ink-2); }
+.rsheet-origin strong { color: var(--ink); font-weight: 600; }
+.rsheet-origin .sep { color: var(--faint); }
+.rsheet-origin .t-ok { color: var(--ok); font-weight: 600; }
+.rsheet-origin .t-warn { color: var(--warn); font-weight: 600; }
+.rsheet-origin .why { flex-basis: 100%; font-size: 12px; color: var(--muted); }
+
 /* The verdict banner at the top of the open result */
 .rsheet-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin: 0 18px 12px; padding: 14px 18px;
   border: 1px solid; border-radius: 12px; }

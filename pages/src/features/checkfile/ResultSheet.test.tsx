@@ -27,6 +27,25 @@ describe('ResultSheet', () => {
     expect(sheet.querySelector('.rsheet-verdict.ok')).not.toBeNull()
   })
 
+  it('says under the verdict whose file it is and whether CounterStrikeSharp keeps it current', () => {
+    render(
+      <ResultSheet
+        result={clean}
+        text={'{"A":{"signatures":{"windows":"x"}}}'}
+        name="multiaddonmanager.json"
+        fixed={null}
+        size="half"
+        onSize={() => undefined}
+        onJump={() => undefined}
+        origin={{ plugin: 'multiaddonmanager', framework: 'metamod', evidence: 'name', reads: 'source', sourceFile: 'src/multiaddonmanager.cpp', coverage: 'compiled', feeds: [] }}
+      />,
+    )
+    const note = screen.getByRole('note')
+    expect(note).toHaveTextContent('Metamod:Source plugin: multiaddonmanager')
+    expect(note).toHaveTextContent('CounterStrikeSharp auto-update: No')
+    expect(note).toHaveTextContent('its signatures are literals in src/multiaddonmanager.cpp')
+  })
+
   it('renders nothing before a scan', () => {
     render(<ResultSheet result={clean} text="{}" name="a.json" fixed={null} size="closed" onSize={() => undefined} onJump={() => undefined} />)
     expect(screen.queryByRole('region')).toBeNull()

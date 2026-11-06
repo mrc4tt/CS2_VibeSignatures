@@ -7,6 +7,8 @@ import { inferredOf, platformTone, rowTone, sortRows, type DeepFix, type DeepPla
 import { locateValue } from './lineMarks'
 import { VTABLE_KEY_SUFFIX } from './parse'
 import type { AgedValue } from './verdict'
+import type { Origin } from './origin'
+import { coverageAnswer, originSummary } from './originText'
 import { PLATFORM_LABEL, PLATFORMS, readAutoOpen, scanLog, settleSheet, writeAutoOpen, type SheetSize } from './sheetModel'
 
 const NEXT_SIZE: Record<SheetSize, SheetSize> = { closed: 'min', min: 'half', half: 'full', full: 'min' }
@@ -72,6 +74,8 @@ interface Props {
   onUseFixed?(): void
   /** Which build an entry's wrong value is from, when the published history knows it. */
   aged?(key: string, platform: Platform): AgedValue | null
+  /** Whose file it is, for the line under the verdict. */
+  origin?: Origin
 }
 
 /**
@@ -83,7 +87,7 @@ interface Props {
  * worst first, each with what is wrong in plain words and the value that fixes
  * it. A row click marks its line in the file above.
  */
-export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJump, onUseFixed, aged }: Props) {
+export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJump, onUseFixed, aged, origin }: Props) {
   const { t, i18n } = useTranslation()
   const [filter, setFilter] = useState<Filter>('all')
   const [view, setView] = useState<'table' | 'log'>('table')
@@ -306,6 +310,24 @@ export function ResultSheet({ result, text, name, fixed, size, onSize, ms, onJum
                 <span className="warn"><b>{counts.warn}</b>{t('scan.result.tone.warn')}</span>
               </span>
             </div>
+            {/* Whose file this is and whether CounterStrikeSharp's updater keeps it
+                current: a Metamod plugin's file that scans clean today is still one
+                nobody will update after the next game update. */}
+            {(() => {
+              const kind = originSummary(origin, t)
+              if (!origin || !kind) return null
+              const { answer, tone } = coverageAnswer(origin)
+              return (
+                <p className="rsheet-origin" role="note">
+                  <strong>{kind}</strong>
+                  <span className="sep">·</span>
+                  <span className={`t-${tone}`}>
+                    {t('scan.origin.update')}: {answer === 'unknown' ? t('scan.origin.unknown') : t(`scan.origin.${answer}`)}
+                  </span>
+                  <span className="why">{t(`scan.origin.coverage.${origin.coverage}`, { file: origin.sourceFile })}</span>
+                </p>
+              )
+            })()}
             <div className="rsheet-legend">
               <span><i className="b" /><strong>{t('scan.result.tone.bad')}</strong> {t('scan.result.legend.bad')}</span>
               <span><i className="w" /><strong>{t('scan.result.tone.warn')}</strong> {t('scan.result.legend.warn')}</span>

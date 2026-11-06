@@ -9,8 +9,10 @@ import { Alert, Button, Tag } from '../../ui/primitives'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { AnnotatedFile, type BrokenText } from './AnnotatedFile'
 import { fetchScanBuilds, fetchScanHealth, requestDeepScan, type DeepFix } from './deepScan'
-import { fileDetails, guessLayout } from './details'
+import { fileDetails } from './details'
 import { pluginLabel } from '../gamedata/pluginLabel'
+import { originSummary } from './originText'
+import { textHashes } from './origin'
 import { clearHandoff, peekHandoff } from './handoff'
 import { browserMarks, misnamedKeys, problemLines, renameMarks, scanMarks, type KeyRename } from './lineMarks'
 import { applyFixes, renameKey } from './patch'
@@ -55,17 +57,26 @@ export function ScanPage() {
   const [pasted, setPasted] = useState('')
   // Once someone drops, pastes or edits, the example must never land on top of it.
   const userActed = useRef(loaded !== null)
-  const { history, newest, file, verdicts, summary, patched } = useFileCheck(loaded)
+  const [hashes, setHashes] = useState<{ text: string; values: string[] } | null>(null)
   // Set when the text was replaced by its fixed copy: that copy is scanned as soon as it is in.
   const rescan = useRef(false)
 
   useEffect(clearHandoff, [])
 
+  // Read with a file loaded too: its content hashes are what says a dropped file is
+  // a published one, the strongest evidence of whose it is.
   const { data: index } = useQuery({
     queryKey: ['gamedata-index'],
     queryFn: ({ signal }) => getGameDataIndex(signal),
-    enabled: !loaded,
   })
+  useEffect(() => {
+    if (!loaded) return
+    let cancelled = false
+    void textHashes(loaded.text).then((values) => {
+      if (!cancelled) setHashes({ text: loaded.text, values })
+    }).catch(() => undefined)
+    return () => { cancelled = true }
+  }, [loaded])
   // Asking which builds it can scan against sends nothing about the file; the
   // file itself only goes on a click.
   const { data: scanBuilds } = useQuery({
@@ -106,6 +117,11 @@ export function ScanPage() {
   })
   // A result belongs to the text it was run on; a new file must not inherit the last one's.
   const scanResult = scan.data && scan.variables?.text === loaded?.text ? scan.data : undefined
+  const { history, newest, file, verdicts, summary, patched, origin } = useFileCheck(loaded, {
+    index,
+    hashes: hashes && hashes.text === loaded?.text ? hashes.values : undefined,
+    scanMatch: scanResult && !scanResult.note ? scanResult.matched?.plugin : undefined,
+  })
   const deepPatched = useMemo(
     () => (loaded && scanResult?.fixes?.length ? applyFixes(loaded.text, scanResult.fixes) : null),
     [loaded, scanResult],
@@ -312,7 +328,7 @@ export function ScanPage() {
       <div className={loaded ? 'scangrid' : undefined}>
         {loaded && details ? (
           <ScanPanel
-            plugin={file?.split('/')[0]}
+            origin={origin ?? undefined}
             format={loaded.format}
             details={details}
             health={health}
@@ -349,7 +365,7 @@ export function ScanPage() {
               format={loaded.format}
               marks={marks}
               source={scanResult && !scanResult.note ? 'scan' : file ? 'browser' : null}
-              layout={file ? pluginLabel(file.split('/')[0]!) : guessLayout(loaded.text, loaded.format)}
+              layout={originSummary(origin, t) ?? (file ? pluginLabel(file.split('/')[0]!) : undefined)}
               problems={problems}
               focusLine={focusLine}
               onStep={stepProblem}
@@ -395,6 +411,7 @@ export function ScanPage() {
           onJump={setFocusLine}
           onUseFixed={deepPatched?.applied ? () => placeFixed(deepPatched.text) : undefined}
           aged={(key, platform) => agedValue(history, file, key, platform, loaded.values.get(key)?.[platform])}
+          origin={origin ?? undefined}
         />
       )}
     </div>

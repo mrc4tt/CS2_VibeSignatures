@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PlayIcon } from '../../ui/icons'
-import { pluginLabel } from '../gamedata/pluginLabel'
+import { OriginCard } from './OriginCard'
+import type { Origin } from './origin'
 import { Alert, Button, Dot, Select } from '../../ui/primitives'
 import { DEEP_SCAN_API, DeepScanError, type DeepScanResult, type Platform, type ScanHealth } from './deepScan'
 import type { FileDetails } from './details'
@@ -11,7 +12,8 @@ import type { KeyState } from './verdict'
 export type ScanPlatform = Platform | 'both'
 
 interface Props {
-  plugin?: string
+  /** Whose file it is; see origin.ts. */
+  origin?: Origin
   format: GameDataFormat
   details: FileDetails
   /** The scan server's load; the row hides when it cannot be reached. */
@@ -42,13 +44,12 @@ const VERIFICATION_TONE = { verified: 'ok', contradicted: 'bad', unverified: 'wa
  * build and both platforms, which is what almost every visitor wants.
  */
 export function ScanPanel({
-  plugin, format, details, health, platform, onPlatform, builds, build, onBuild,
+  origin, format, details, health, platform, onPlatform, builds, build, onBuild,
   pending, error, result, onScan, summary, problems, onNext, children,
 }: Props) {
   const { t } = useTranslation()
   const failure = error instanceof DeepScanError ? error : null
   const host = new URL(DEEP_SCAN_API).host
-  const pluginName = result?.matched?.plugin ?? plugin
 
   return (
     <aside className="scanpanel flex flex-col gap-4 self-start rounded-[12px] border border-rule-strong bg-card p-4">
@@ -89,11 +90,11 @@ export function ScanPanel({
         </div>
       )}
 
+      {origin && <OriginCard origin={origin} />}
+
       <div className="flex flex-col gap-2 rounded-[10px] bg-card-2 p-3.5">
         <strong className="text-[13px] text-ink">{t('check.side.details')}</strong>
         <dl className="details grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-[13px]">
-          <dt className="text-muted-foreground">{t('check.side.plugin')}</dt>
-          <dd className="m-0 text-right font-mono text-ink [overflow-wrap:anywhere]">{pluginName ? pluginLabel(pluginName) : t('check.side.unknown')}</dd>
           <dt className="text-muted-foreground">{t('check.side.version')}</dt>
           <dd className="m-0 text-right font-mono text-ink">{result?.build ?? (build || builds[0] || '-')}</dd>
           <dt className="text-muted-foreground">{t('check.side.format')}</dt>

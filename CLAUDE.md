@@ -25,7 +25,11 @@ gamedata/<gamever>/<plugin>/    one dir per plugin, from gamedata-generators/<pl
 
 One generator module per plugin lives in `gamedata-generators/<plugin>/`; it decides which keys
 that plugin ships and in what format. Adding a plugin means adding a generator there, not touching
-the snapshot.
+the snapshot - plus one entry in `pages/src/features/gamedata/pluginCatalog.ts` (framework, file
+names, where the plugin reads the file on a server, compiled-in or not). The scanner's "What this
+file is" card reads it to tell a Metamod plugin's file from a CounterStrikeSharp plugin's and to say
+whether CounterStrikeSharp's updater covers it; `pluginCatalog.test.ts` fails on a generator
+directory without an entry or a written file name the entry does not list.
 ```
 
 `bin/<gamever>/` is an untracked working copy hydrated from `bin_artifacts/` — it is not a
