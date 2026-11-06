@@ -211,18 +211,53 @@ export interface LatestGameDataManifest {
   files: LatestGameDataFile[]
 }
 
-export function buildLatestGameData(loaded: Pick<LoadedGameData, 'index' | 'assets'>): {
-  manifest: LatestGameDataManifest
-  files: Map<string, Uint8Array>
-} {
+type BuiltGameData = { manifest: LatestGameDataManifest; files: Map<string, Uint8Array> }
+
+export function buildLatestGameData(loaded: Pick<LoadedGameData, 'index' | 'assets'>): BuiltGameData {
   const newest = loaded.index.versions[0]
   if (!newest) throw new Error('gamedata index has no versions to publish as latest')
+  return buildVersionGameData(loaded, newest, LATEST_DIRECTORY)
+}
+
+/**
+ * Per-build copies of latest/, for a server that has not taken the newest game
+ * update yet (latest/manifest.json then names a build it is not running, and the
+ * updater would otherwise skip):
+ *
+ *   builds/<build>/manifest.json(.sig)   same schema and signing as latest/
+ *   builds/<build>/<plugin>/<basename>   that build's files
+ *
+ * <build> is the game version without its rebuild suffix, which is what a server
+ * derives from steam.inf; when a build was re-run (14178 and 14178b) the newest
+ * rebuild is the one published, the same rule latest/ follows.
+ */
+export const BUILDS_DIRECTORY = 'builds'
+
+export function buildKey(gameVersion: string): string {
+  return gameVersion.replace(/[a-z]+$/, '')
+}
+
+export function buildPerBuildGameData(loaded: Pick<LoadedGameData, 'index' | 'assets'>): Map<string, BuiltGameData> {
+  const out = new Map<string, BuiltGameData>()
+  // index.versions is newest first, so the first version seen for a key is its newest rebuild.
+  for (const version of loaded.index.versions) {
+    const key = buildKey(version.gameVersion)
+    if (!out.has(key)) out.set(key, buildVersionGameData(loaded, version, `${BUILDS_DIRECTORY}/${key}`))
+  }
+  return out
+}
+
+function buildVersionGameData(
+  loaded: Pick<LoadedGameData, 'index' | 'assets'>,
+  newest: LoadedGameData['index']['versions'][number],
+  directory: string,
+): BuiltGameData {
   const files = new Map<string, Uint8Array>()
   const entries: LatestGameDataFile[] = []
   for (const descriptor of newest.files) {
     const url = `${descriptor.plugin}/${descriptor.fileName}`
     if (files.has(url)) {
-      throw new Error(`${newest.gameVersion}/${descriptor.id}: basename collides with another ${descriptor.plugin} file in ${LATEST_DIRECTORY}/`)
+      throw new Error(`${newest.gameVersion}/${descriptor.id}: basename collides with another ${descriptor.plugin} file in ${directory}/`)
     }
     const asset = loaded.assets.get(descriptor.content.url)
     if (!asset) throw new Error(`${newest.gameVersion}/${descriptor.id}: payload missing from asset map`)
@@ -343,6 +378,14 @@ export function gameDataPlugin(gamedataDirectory: string): Plugin {
       this.emitFile({ type: 'asset', fileName: `${LATEST_DIRECTORY}/manifest.json`, source: manifestBytes })
       const signature = manifestSignature(manifestBytes)
       if (signature) this.emitFile({ type: 'asset', fileName: `${LATEST_DIRECTORY}/${MANIFEST_SIGNATURE_FILE}`, source: signature })
+      for (const [key, built] of buildPerBuildGameData(loaded)) {
+        const directory = `${BUILDS_DIRECTORY}/${key}`
+        for (const [url, bytes] of built.files) this.emitFile({ type: 'asset', fileName: `${directory}/${url}`, source: bytes })
+        const bytes = new TextEncoder().encode(`${JSON.stringify(built.manifest, null, 2)}\n`)
+        this.emitFile({ type: 'asset', fileName: `${directory}/manifest.json`, source: bytes })
+        const buildSignature = manifestSignature(bytes)
+        if (buildSignature) this.emitFile({ type: 'asset', fileName: `${directory}/${MANIFEST_SIGNATURE_FILE}`, source: buildSignature })
+      }
     },
   }
 }

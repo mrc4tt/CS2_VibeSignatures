@@ -182,12 +182,43 @@ export function verifyManifestSignature(manifestBytes, signatureText, publicKeyB
 }
 
 export async function verifyLatestGameDataDirectory(latestDirectory, gamedataDirectory, sourceGamedataDirectory, { requireSignature = false } = {}) {
-  const latestRoot = resolve(latestDirectory)
   const indexPath = join(resolve(gamedataDirectory), 'index.json')
   const { index } = validateGameDataIndex(parseJson(await readFile(indexPath), indexPath), indexPath)
   const newest = [...index.versions].sort((left, right) => compareGameVersionsNewestFirst(left.gameVersion, right.gameVersion))[0]
   if (!newest) throw new Error(`${indexPath}: no versions`)
+  return verifyVersionDirectory(latestDirectory, newest, indexPath, sourceGamedataDirectory, { requireSignature, label: 'newest' })
+}
 
+/**
+ * builds/<build>/ holds one latest/-shaped directory per build (see
+ * BUILDS_DIRECTORY in gameDataPlugin.ts), <build> being the game version
+ * without its rebuild suffix. Re-derived here like latest/: every build in the
+ * index has its directory, a re-run build serves its newest rebuild, and
+ * nothing else is there.
+ */
+export async function verifyBuildsGameDataDirectory(buildsDirectory, gamedataDirectory, sourceGamedataDirectory, { requireSignature = false } = {}) {
+  const indexPath = join(resolve(gamedataDirectory), 'index.json')
+  const { index } = validateGameDataIndex(parseJson(await readFile(indexPath), indexPath), indexPath)
+  const wanted = new Map()
+  for (const version of [...index.versions].sort((left, right) => compareGameVersionsNewestFirst(left.gameVersion, right.gameVersion))) {
+    const key = version.gameVersion.replace(/[a-z]+$/, '')
+    if (!wanted.has(key)) wanted.set(key, version)
+  }
+  const root = resolve(buildsDirectory)
+  const present = new Set((await readdir(root, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name))
+  const keys = [...wanted.keys()]
+  if (present.size !== keys.length || keys.some((key) => !present.has(key))) {
+    throw new Error(`${root}: build directories [${[...present].sort()}] do not match the index [${keys.sort()}]`)
+  }
+  const results = []
+  for (const [key, version] of wanted) {
+    results.push(await verifyVersionDirectory(join(root, key), version, indexPath, sourceGamedataDirectory, { requireSignature, label: `build ${key}` }))
+  }
+  return results
+}
+
+async function verifyVersionDirectory(latestDirectory, newest, indexPath, sourceGamedataDirectory, { requireSignature, label }) {
+  const latestRoot = resolve(latestDirectory)
   const expected = new Map()
   for (const file of newest.files) {
     const url = `${file.plugin}/${file.fileName}`
@@ -202,7 +233,7 @@ export async function verifyLatestGameDataDirectory(latestDirectory, gamedataDir
     throw new Error(`${manifestPath}: expected latest manifest schema v1`)
   }
   if (manifest.gameVersion !== newest.gameVersion) {
-    throw new Error(`${manifestPath}: gameVersion ${manifest.gameVersion} is not the newest build ${newest.gameVersion}`)
+    throw new Error(`${manifestPath}: gameVersion ${manifest.gameVersion} is not the ${label} build ${newest.gameVersion}`)
   }
   if (manifest.files.length !== expected.size) throw new Error(`${manifestPath}: file inventory does not match ${newest.gameVersion}`)
   for (const file of manifest.files) {
@@ -349,6 +380,13 @@ async function main(args) {
         requireSignature: process.env.GAMEDATA_SIGNATURE_REQUIRED === '1',
       })
       console.log(`Verified ${latest.files.length} latest gamedata files for ${latest.gameVersion} against ${resolve(source)}${latest.signed ? ', manifest signature valid' : ', manifest unsigned'}.`)
+      const buildsDirectory = argumentValue(args, '--builds')
+      if (buildsDirectory) {
+        const builds = await verifyBuildsGameDataDirectory(buildsDirectory, directory, source, {
+          requireSignature: process.env.GAMEDATA_SIGNATURE_REQUIRED === '1',
+        })
+        console.log(`Verified ${builds.length} per-build gamedata directories${builds.every((build) => build.signed) ? ', every manifest signature valid' : ''}.`)
+      }
     }
     return
   }

@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { buildLatestGameData, loadGameDataAssets, manifestSignature } from './gameDataPlugin'
+import { buildKey, buildLatestGameData, buildPerBuildGameData, loadGameDataAssets, manifestSignature } from './gameDataPlugin'
 
 const temporaryRoots: string[] = []
 
@@ -132,6 +132,27 @@ describe('gameDataPlugin asset loading', () => {
       sha256: createHash('sha256').update(newer).digest('hex'),
       size: Buffer.byteLength(newer),
     })
+  })
+
+  it('publishes every build under builds/<build>/, the newest rebuild for a re-run build', async () => {
+    const root = await temporaryRoot()
+    const first = '{\n  "Sym": "A"\n}\n'
+    const rebuilt = '{\n  "Sym": "B"\n}\n'
+    const newest = '{\n  "Sym": "C"\n}\n'
+    const path = 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json'
+    await writePayload(root, '14178', path, first)
+    await writePayload(root, '14178b', path, rebuilt)
+    await writePayload(root, '14180', path, newest)
+
+    const builds = buildPerBuildGameData(await loadGameDataAssets(root))
+
+    expect([...builds.keys()]).toEqual(['14180', '14178'])
+    const old = builds.get('14178')!
+    expect(old.manifest.gameVersion).toBe('14178b')
+    expect(Buffer.from(old.files.get('CounterStrikeSharp/gamedata.json')!).toString('utf8')).toBe(rebuilt)
+    expect(old.manifest.files[0]?.source).toBe(`14178b/${path}`)
+    expect(buildKey('14178b')).toBe('14178')
+    expect(buildKey('14196')).toBe('14196')
   })
 
   it('refuses to flatten two files of one plugin onto the same latest URL', async () => {

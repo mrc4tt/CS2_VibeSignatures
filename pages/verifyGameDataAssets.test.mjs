@@ -3,8 +3,9 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { buildLatestGameData, loadGameDataAssets, signManifest } from './gameDataPlugin'
+import { buildLatestGameData, buildPerBuildGameData, loadGameDataAssets, signManifest } from './gameDataPlugin'
 import {
+  verifyBuildsGameDataDirectory,
   verifyGameDataAssetDirectory,
   verifyLatestGameDataDirectory,
   verifyManifestSignature,
@@ -151,6 +152,38 @@ describe('gamedata asset verification', () => {
 
     await put(join(dist, 'latest'), 'manifest.json', JSON.stringify({ ...latest.manifest, gameVersion: '14178b' }))
     await expect(verify()).rejects.toThrow(/is not the newest build 14180/)
+  })
+
+  it('requires builds/<build>/ for every build, the newest rebuild in each', async () => {
+    const root = await temporaryRoot()
+    const source = join(root, 'source')
+    const dist = join(root, 'dist')
+    const cssFile = 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json'
+    const put = async (base, path, text) => {
+      await mkdir(dirname(join(base, ...path.split('/'))), { recursive: true })
+      await writeFile(join(base, ...path.split('/')), text)
+    }
+    await put(source, `14178/${cssFile}`, '{"Sym":"A"}\n')
+    await put(source, `14178b/${cssFile}`, '{"Sym":"B"}\n')
+    await put(source, `14180/${cssFile}`, '{"Sym":"C"}\n')
+    const loaded = await loadGameDataAssets(source)
+    await put(join(dist, 'gamedata'), 'index.json', JSON.stringify(loaded.index))
+    for (const [key, built] of buildPerBuildGameData(loaded)) {
+      for (const [url, bytes] of built.files) await put(join(dist, 'builds', key), url, bytes)
+      await put(join(dist, 'builds', key), 'manifest.json', JSON.stringify(built.manifest))
+    }
+    const verify = () => verifyBuildsGameDataDirectory(join(dist, 'builds'), join(dist, 'gamedata'), source)
+
+    await expect(verify()).resolves.toHaveLength(2)
+
+    // 14178 must serve the 14178b rebuild, not the first run.
+    const manifest = JSON.parse(await readFile(join(dist, 'builds', '14178', 'manifest.json'), 'utf8'))
+    await put(join(dist, 'builds', '14178'), 'manifest.json', JSON.stringify({ ...manifest, gameVersion: '14178' }))
+    await expect(verify()).rejects.toThrow(/is not the build 14178 build 14178b/)
+    await put(join(dist, 'builds', '14178'), 'manifest.json', JSON.stringify(manifest))
+
+    await rm(join(dist, 'builds', '14178'), { recursive: true })
+    await expect(verify()).rejects.toThrow(/do not match the index/)
   })
 
   it('checks latest/manifest.json.sig against the signing key, and can require one', async () => {
