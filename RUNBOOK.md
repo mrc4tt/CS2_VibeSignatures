@@ -28,6 +28,7 @@ når en besked siger `failed` eller `held`, eller når du vil tilføje symboler.
 | 10 | `publish_site_data.py` (history + diagnostics), `write_binary_lock.py` | stop |
 | 11 | `schema_dump.py impact` (info, linje i beskeden) | — |
 | 12 | commit `feat(<VER>): analysed by autopilot`; derefter `publish_site_data.py -history-only` + commit `chore(<VER>): record publish date` (publishedAt kræver at commit'en findes); `-check`; push | stop |
+| 12b | `systemctl try-restart cs2vibe-verify.service`, så scanneren har en varm pool for den nye build (ellers ~13 s første scanning); `AUTOPILOT_VERIFY_RESTART=0` slår det fra | — (aldrig fatal) |
 | 13 | deploy efter `AUTOPILOT_DEPLOY` (`verified` her): `update_css_gamedata.sh` → `deploy_local_plugins.sh` (commit + push i plugin-repos) → `check_deploy_drift.py` | stop |
 
 Trin 4–13 kører derefter for begge platforme med fuld regenerering fra templates — slutresultatet er

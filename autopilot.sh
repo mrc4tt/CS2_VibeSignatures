@@ -437,6 +437,18 @@ finish_build() {
         *) die "unknown AUTOPILOT_PUBLISH: $PUBLISH_MODE" ;;
     esac
 
+    # ---------------------------------------------------------------- scanner pools
+    # verify_service warms one worker pool per build at start-up and only for the
+    # builds on disk then (BuildPools), so the new build would start cold: ~13 s
+    # for its first scan, against 0.1-0.2 s warm. A restart warms it now and drops
+    # the oldest pool. Before the deploy decision, so a deploy that dies cannot skip
+    # it; try-restart leaves a stopped service stopped. Never fatal.
+    if [ "$DRY" != 1 ] && [ "${AUTOPILOT_VERIFY_RESTART:-1}" != "0" ]; then
+        log "==> restarting the scanner so $TAG is warm"
+        systemctl try-restart cs2vibe-verify.service \
+            || log "    restarting cs2vibe-verify.service failed (not fatal)"
+    fi
+
     # ---------------------------------------------------------------- deploy decision
     GATE_OUT="$STATE/gate-$TAG.txt"
     uv run autopilot_safe_gate.py -gamever "$TAG" > "$GATE_OUT" 2>&1
