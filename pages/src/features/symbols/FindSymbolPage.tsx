@@ -101,6 +101,7 @@ export function FindSymbolPage() {
     all: pool.length,
     onePlatform: pool.filter((item) => verdictOf(item) === 'onePlatform').length,
     caveat: pool.filter((item) => verdictOf(item) === 'caveat').length,
+    clientOnly: pool.filter((item) => verdictOf(item) === 'clientOnly').length,
   }), [pool])
 
   const modules = useMemo(
@@ -147,7 +148,7 @@ export function FindSymbolPage() {
             label={t('chips.symbolState')}
             value={filters.state}
             onValueChange={(state) => setParam('state', state === 'all' ? undefined : state)}
-            items={(['all', 'caveat', 'onePlatform'] as const).map((state) => ({
+            items={(['all', 'caveat', 'onePlatform', 'clientOnly'] as const).map((state) => ({
               value: state,
               label: t(`symbols2.filter.${state}`),
               count: counts[state],

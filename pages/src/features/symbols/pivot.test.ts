@@ -40,6 +40,16 @@ describe('pivoting the snapshot into one entry per symbol', () => {
     expect(entries[0].windows).toBeUndefined()
   })
 
+  it('calls Windows-only game-client code client-only, not a gap', () => {
+    const sdl = pivotRecords([record('SDL_GetMouse', 'windows', { func_size: '0x10' }, { module: 'SDL3' })])
+    expect(verdictOf(sdl[0])).toBe('clientOnly')
+    const demo = pivotRecords([record('CDemoPlayer_PlayDemo', 'windows', { func_size: '0x80' }, { module: 'engine' })])
+    expect(verdictOf(demo[0])).toBe('clientOnly')
+    const server = pivotRecords([record('CBaseTrigger_PassesTriggerFilters', 'windows', { func_size: '0x80' })])
+    expect(verdictOf(server[0])).toBe('onePlatform')
+    expect(filterEntries([...sdl, ...demo, ...server], { query: '', state: 'onePlatform' })).toHaveLength(1)
+  })
+
   it('flags a pattern that runs past the end of a short function', () => {
     const entries = pivotRecords([
       record('SetBeamOrigin', 'linux', { func_sig: '45 31 C0', func_sig_allow_across_function_boundary: true, func_size: '0x0' }),
@@ -114,7 +124,9 @@ describe('filtering', () => {
 
   it('narrows to the symbols only one platform publishes', () => {
     const single = filterEntries(entries, { query: '', state: 'onePlatform' }).map((e) => e.symbolName)
-    expect(single).toEqual(['CBaseTrigger_EndTouch', 'SDL_GetMouse'])
+    expect(single).toEqual(['CBaseTrigger_EndTouch'])
+    const client = filterEntries(entries, { query: '', state: 'clientOnly' }).map((e) => e.symbolName)
+    expect(client).toEqual(['SDL_GetMouse'])
   })
 
   it('sorts by module when asked', () => {

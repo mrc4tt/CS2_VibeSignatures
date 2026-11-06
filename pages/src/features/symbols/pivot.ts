@@ -20,7 +20,23 @@ export interface SymbolEntry {
   windows?: GameSymbolRecord
 }
 
-export type Verdict = 'checked' | 'caveat' | 'onePlatform'
+export type Verdict = 'checked' | 'caveat' | 'onePlatform' | 'clientOnly'
+
+/**
+ * Game-client code. The Linux build VibeSignatures analyses is the dedicated
+ * server, which ships no SDL3 and none of these classes, so a Windows-only entry
+ * here has no Linux counterpart to find. Showing it as "one platform only" read
+ * as a gap to fix; it is not one.
+ */
+const CLIENT_MODULES = new Set(['SDL3'])
+const CLIENT_PREFIXES = [
+  'CDemoPlayer_', 'CEngineClient_', 'CInputService_', 'CNetworkClientService_',
+  'CNetworkGameClient_', 'CNetworkGameClientBase_', 'CRenderingWorldSession_', 'ISource2Client_',
+]
+
+export function isClientOnly(entry: Pick<SymbolEntry, 'module' | 'symbolName'>): boolean {
+  return CLIENT_MODULES.has(entry.module) || CLIENT_PREFIXES.some((prefix) => entry.symbolName.startsWith(prefix))
+}
 
 export function pivotRecords(records: GameSymbolRecord[]): SymbolEntry[] {
   const entries = new Map<string, SymbolEntry>()
@@ -65,6 +81,7 @@ export function patternOf(record?: GameSymbolRecord): string | undefined {
 }
 
 export function verdictOf(entry: SymbolEntry): Verdict {
+  if (entry.windows && !entry.linux && isClientOnly(entry)) return 'clientOnly'
   if (!entry.linux || !entry.windows) return 'onePlatform'
   const soft = [entry.linux, entry.windows].some((record) => {
     const payload = payloadOf(record)
@@ -131,7 +148,7 @@ export function factsOf(record?: GameSymbolRecord): SymbolFacts {
 export interface SymbolFilters {
   query: string
   module?: string
-  state?: 'all' | 'onePlatform' | 'caveat'
+  state?: 'all' | 'onePlatform' | 'caveat' | 'clientOnly'
   sort?: 'name' | 'module'
 }
 
@@ -141,6 +158,7 @@ export function filterEntries(entries: SymbolEntry[], filters: SymbolFilters): S
     if (filters.module && entry.module !== filters.module) return false
     if (filters.state === 'onePlatform' && verdictOf(entry) !== 'onePlatform') return false
     if (filters.state === 'caveat' && verdictOf(entry) !== 'caveat') return false
+    if (filters.state === 'clientOnly' && verdictOf(entry) !== 'clientOnly') return false
     if (!query) return true
     const haystack = [
       entry.symbolName, entry.artifact, entry.module, entry.className ?? '', entry.aliases.join(' '),

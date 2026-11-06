@@ -250,6 +250,7 @@ body.filefull .rawscroll { max-height: calc(100dvh - 104px); }
 .verdict.checked { color: var(--ok); }
 .verdict.caveat { color: var(--warn); }
 .verdict.onePlatform { color: var(--muted); }
+.verdict.clientOnly { color: var(--muted); }
 
 .platpair { display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 1px;
   background: var(--rule-soft); border: 1px solid var(--rule-soft); border-radius: 6px; overflow: hidden; }

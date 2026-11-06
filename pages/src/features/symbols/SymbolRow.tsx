@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Dot, Tag } from '../../ui/primitives'
 import { adviceKind, slotPair, verdictOf, type SymbolEntry } from './pivot'
 
-const VERDICT_TONE = { checked: 'ok', caveat: 'warn', onePlatform: 'neutral' } as const
+const VERDICT_TONE = { checked: 'ok', caveat: 'warn', onePlatform: 'neutral', clientOnly: 'neutral' } as const
 
 /**
  * One line in the result list of the split view.
