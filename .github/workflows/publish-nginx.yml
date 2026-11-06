@@ -75,7 +75,9 @@ jobs:
 
       - name: Refresh the published history dataset
         run: |
-          python3 -m pip install --quiet --user pyyaml
+          # The box's python3 is externally managed (PEP 668), so pip --user is
+          # refused; Debian's python3-yaml is what it uses.
+          python3 -c 'import yaml' || { echo "install python3-yaml on the runner host"; exit 1; }
           python3 publish_site_data.py -history-only
 
       - name: Build
