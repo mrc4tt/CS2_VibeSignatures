@@ -103,6 +103,125 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(service.handle("POST", "/api/report", b"not json")[0], 400)
         self.assertEqual(service.handle("POST", "/api/report", b"{}")[0], 400)
 
+    def test_broken_keys_are_tallied_per_feed_file_and_server(self):
+        known = {"name": "matchzy.json", "sha256": sha(MATCHZY_NEW), "keys": ["A", "B", "C", "D"], "broken": ["A"]}
+        other = {"name": "secret.json", "sha256": sha("x"), "keys": ["X", "Y"], "broken": ["X", "Y"]}
+        get = self.published.get()
+        self.assertTrue(PR.handle_report(self.report([known, other]), get, root=self.store, now=10) is not None)
+        PR.handle_report(self.report([{**known, "broken": ["A", "B"]}], install="a" * 32), get, root=self.store, now=20)
+        PR.handle_report(self.report([{**known, "broken": ["A", "B"]}], install="a" * 32), get, root=self.store, now=30)
+
+        tally = PR.load_tally("14196", self.store)
+        matchzy = tally["files"]["matchzy/matchzy.json"]
+        self.assertEqual(matchzy["status"], "known")
+        self.assertEqual(len(matchzy["installs"]), 2)
+        self.assertEqual({k: len(v) for k, v in matchzy["broken"].items()}, {"A": 2, "B": 1})
+        self.assertIn(f"sha256:{sha('x')}", tally["files"])
+
+        # a server's newer report replaces its older one: B fixed there, gone from the tally
+        PR.handle_report(self.report([{**known, "broken": []}], install="a" * 32), get, root=self.store, now=40)
+        matchzy = PR.load_tally("14196", self.store)["files"]["matchzy/matchzy.json"]
+        self.assertEqual({k: len(v) for k, v in matchzy["broken"].items()}, {"A": 1})
+
+        summary = PR.summarize(PR.load_tally("14196", self.store))
+        self.assertEqual(summary["servers"], 2)
+        self.assertEqual(summary["files"][0]["file"], "secret.json (" + sha("x")[:12] + ")")
+        self.assertEqual(summary["files"][0]["broken"][0], {"key": "X", "servers": 1, "linux": 1, "windows": 0})
+        self.assertNotIn(PR.install_hash(INSTALL), json.dumps(summary))
+        for folder, _dirs, names in os.walk(self.store):
+            for name in names:
+                with open(os.path.join(folder, name), encoding="utf-8") as handle:
+                    self.assertNotIn(INSTALL, handle.read())
+
+    def test_tally_keeps_the_newest_builds_and_refuses_far_ahead_ones(self):
+        get = self.published.get()
+        entry = {"name": "matchzy.json", "sha256": sha(MATCHZY_NEW), "keys": ["A"], "broken": ["A"]}
+        self.assertFalse(PR.record_tally(PR.parse_report(self.report([entry], build="14299")),
+                                         [PR.classify(entry, get)], get, root=self.store))
+        self.assertEqual(PR.tally_builds(self.store), [])
+        for build in range(14190, 14200):
+            PR.handle_report(self.report([entry], build=str(build)), get, root=self.store)
+        self.assertEqual(PR.tally_builds(self.store), [str(b) for b in range(14199, 14199 - PR.TALLY_BUILDS, -1)])
+        # an old build no longer kept does not come back
+        PR.handle_report(self.report([entry], build="14180"), get, root=self.store)
+        self.assertNotIn("14180", PR.tally_builds(self.store))
+
+    def test_tally_size_caps(self):
+        get = self.published.get()
+        many = {"name": "secret.json", "sha256": sha("x"), "keys": [],
+                "broken": [f"K{i}" for i in range(PR.TALLY_MAX_KEYS + 50)]}
+        PR.handle_report(self.report([many]), get, root=self.store)
+        item = PR.load_tally("14196", self.store)["files"][f"sha256:{sha('x')}"]
+        self.assertEqual(len(item["broken"]), PR.TALLY_MAX_KEYS)
+        files = [{"name": f"f{i}.json", "sha256": sha(str(i)), "keys": []} for i in range(PR.MAX_FILES_PER_REPORT)]
+        PR.handle_report(self.report(files), get, root=self.store)
+        PR.handle_report(self.report([{**f, "sha256": sha("b" + f["name"])} for f in files]), get, root=self.store)
+        self.assertEqual(len(PR.load_tally("14196", self.store)["files"]), PR.TALLY_MAX_FILES)
+
+    def test_digest_only_when_it_matters_and_debounced(self):
+        sent, clock = [], [1000.0]
+        digest = PR.Digest("http://bot", "s", root=self.store, debounce=1800, settle=60,
+                           send=sent.append, clock=lambda: clock[0])
+        pokes = []
+        digest.poke = lambda build, _poke=digest.poke: (pokes.append(build), _poke(build))
+        get = self.published.get()
+        entry = {"name": "matchzy.json", "sha256": sha(MATCHZY_NEW), "keys": ["A"], "broken": ["A"]}
+
+        PR.handle_report(self.report([entry]), get, root=self.store, digest=digest)
+        self.assertEqual(pokes, ["14196"])
+        self.assertEqual(digest.due["14196"], 1060.0)  # settles before the first send
+        # nothing new until it was sent: still one pending digest
+        PR.handle_report(self.report([entry], install="b" * 32), get, root=self.store, digest=digest)
+        self.assertEqual(len(digest.due), 1)
+
+        # the worker's send: what the bot gets carries counts, never install hashes
+        del digest.due["14196"]
+        digest.sent["14196"] = clock[0]
+        self.assertTrue(digest.flush("14196"))
+        payload = sent[-1]
+        self.assertEqual((payload["outcome"], payload["gamever"]), ("server-reports", "14196"))
+        self.assertEqual(payload["reports"]["files"][0]["broken"][0]["servers"], 2)
+        self.assertNotIn(PR.install_hash(INSTALL), json.dumps(payload))
+
+        # same key, 3rd and 4th server: below the next level (5), no digest
+        pokes.clear()
+        for who in "cd":
+            PR.handle_report(self.report([entry], install=who * 32), get, root=self.store, digest=digest)
+        self.assertEqual(pokes, [])
+        # the 5th crosses a level; the next send waits for the debounce
+        PR.handle_report(self.report([entry], install="e" * 32), get, root=self.store, digest=digest)
+        self.assertEqual(pokes, ["14196"])
+        self.assertEqual(digest.due["14196"], 1000.0 + 1800)
+        # a key broken for the first time is news too
+        digest.due.clear()
+        pokes.clear()
+        PR.handle_report(self.report([{**entry, "broken": ["A", "B"]}]), get, root=self.store, digest=digest)
+        self.assertEqual(pokes, ["14196"])
+        # an older build's tally never sends
+        pokes.clear()
+        PR.handle_report(self.report([{**entry, "broken": ["Z"]}], build="14195"), get, root=self.store, digest=digest)
+        self.assertEqual(pokes, [])
+
+    def test_digest_worker_sends_and_survives_a_dead_bot(self):
+        import threading
+        done = threading.Event()
+        calls = []
+
+        def send(payload):
+            calls.append(payload)
+            done.set()
+            raise OSError("bot down")
+
+        digest = PR.Digest("http://bot", "s", root=self.store, settle=0, send=send)
+        entry = {"name": "matchzy.json", "sha256": sha(MATCHZY_NEW), "keys": ["A"], "broken": ["A"]}
+        PR.handle_report(self.report([entry]), self.published.get(), root=self.store, digest=digest)
+        self.assertTrue(done.wait(5))
+        self.assertEqual(calls[0]["gamever"], "14196")
+        # not accepted, so nothing counts as notified: the next report that matters retries
+        self.assertEqual(PR.load_tally("14196", self.store)["notified"], {})
+        self.assertIsNone(PR.Digest.from_env(environ={}))
+        self.assertIsNotNone(PR.Digest.from_env(environ={"AUTOPILOT_BOT_URL": "u", "AUTOPILOT_BOT_SECRET": "s"}))
+
     def test_list_command_survives_an_empty_store(self):
         self.assertEqual(PR.load_records(os.path.join(self.tmp.name, "nothing")), [])
 

@@ -4,6 +4,7 @@
 import crypto from "node:crypto";
 import http from "node:http";
 import { isKnownOutcome, type AutopilotEvent } from "./announce.ts";
+import { parseReports } from "./reports.ts";
 import { GAMEVER_RE } from "./repo.ts";
 
 const MAX_BODY = 64 * 1024;
@@ -22,11 +23,18 @@ export function parseEvent(body: string): AutopilotEvent | null {
         return null;
     }
     if (typeof data !== "object" || data === null) return null;
-    const { outcome, gamever, detail } = data as Record<string, unknown>;
+    const { outcome, gamever, detail, reports } = data as Record<string, unknown>;
     if (typeof outcome !== "string" || !isKnownOutcome(outcome)) return null;
     // "unknown": autopilot refused before it knew the build; admin channel only.
     if (typeof gamever !== "string" || !(GAMEVER_RE.test(gamever) || gamever === "unknown")) return null;
-    return { outcome, gamever, detail: typeof detail === "string" ? detail : "", at: Date.now() };
+    const event: AutopilotEvent = { outcome, gamever, detail: typeof detail === "string" ? detail : "", at: Date.now() };
+    // plugin_reports.py's digest: only with its counts, and only for a real build.
+    if (outcome === "server-reports") {
+        const parsed = parseReports(reports);
+        if (!parsed || !GAMEVER_RE.test(gamever)) return null;
+        event.reports = parsed;
+    }
+    return event;
 }
 
 export function startServer(port: number, secret: string, onEvent: (event: AutopilotEvent) => void): http.Server {

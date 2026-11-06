@@ -11,6 +11,10 @@ WorkingDirectory=/root/CS2_VibeSignatures
 # itself: it would try to sync the venv, and this unit cannot write to the repository.
 ExecStart=/root/CS2_VibeSignatures/.venv/bin/python verify_service.py -host 127.0.0.1 -port 8787 -workers 4 -queue 20 -timeout 60
 Environment=PYTHONDONTWRITEBYTECODE=1
+# The broken-key digest to the Discord bot (plugin_reports.Digest): AUTOPILOT_BOT_URL and
+# AUTOPILOT_BOT_SECRET, the same values as the repository's .env, which this unit cannot read.
+# Root-only file, read by systemd; without it the digest is simply off.
+EnvironmentFile=-/etc/cs2vibe/verify-bot.env
 Restart=on-failure
 RestartSec=10
 # It serves uploads from the internet, so it only reads: the repository, the binaries

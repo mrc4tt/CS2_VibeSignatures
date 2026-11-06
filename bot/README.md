@@ -22,6 +22,12 @@ writes is `bot/state.json` (which message belongs to which build).
   "Apply now" re-attaches to the newest build's message.
 - **Announcement channel**: when `#gamedata-updates` is one, each build message is
   published, so other servers can follow the channel.
+- **Server reports** (event `server-reports`, from `plugin_reports.py` in the verify
+  service): which gamedata keys CounterStrikeSharp servers report broken on a build,
+  per feed file, with server counts. Admin channel only, one message per build,
+  edited as the numbers change (no edit when nothing changed). The sender already
+  debounces (at most once per 30 min per build, only on a newly broken key or a count
+  crossing 1/5/20).
 - **Failures** go in full (hint commands, log paths) to `DISCORD_ADMIN_CHANNEL_ID` only;
   the public message just says the previous gamedata stays in place.
 
@@ -42,6 +48,7 @@ Each rule is covered by `test/announce.test.ts` against a fake Discord.
   for 12 h instead of posting again.
 - **Command answers are visible to the asker only** unless `share:true`, and never
   public in the updates channel. 3 s cooldown per user.
+- **Server reports never post twice for a build**: the build's admin message is edited.
 - **No mentions.** `allowedMentions` is empty, so no relayed text can ping anyone.
 
 ## Status line

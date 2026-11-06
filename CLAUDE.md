@@ -705,6 +705,18 @@ don't resolve. **No file text.** `plugin_reports.py` answers each file:
   seen; 5000 records at most). `uv run plugin_reports.py list` ranks them by servers: the list of
   generators worth writing. Nothing here is published.
 
+Every file, known ones too, also counts in a broken-key tally per build,
+`<user-file store>/reports/broken/<build>.json`: per feed file (`<plugin>/<file>`, or
+`sha256:<hash>` for an unknown one) the servers running it (truncated hash + platform) and which
+of them report each key broken, each server with its latest report only. Newest 6 builds; a build
+more than 3 past the newest under `gamedata/` is refused; size caps in `TALLY_MAX_*`. When the
+newest build's tally gets a key broken for the first time or a key's server count crosses 1/5/20,
+`Digest` (own thread, 60 s settle, at most once per 30 min per build) posts the counts - never the
+hashes - to the Discord bot as event `server-reports`: one admin-channel message per build, edited.
+It needs `AUTOPILOT_BOT_URL`/`AUTOPILOT_BOT_SECRET` in `/etc/cs2vibe/verify-bot.env` (the unit's
+`EnvironmentFile=`; the service cannot read `.env`), and is off without them.
+`uv run plugin_reports.py broken [build] [-all] [-json]` prints the tally.
+
 `Published` re-hashes `gamedata/` when a build directory appears or changes (checked at most every
 5 minutes). nginx: `location = /api/report` with its own `sigapi_report` zone, 6r/m burst 20, no
 CORS (game servers only) - in `docs/nginx-sig-api.miksen.me.conf`; the live copy is server-ops'.

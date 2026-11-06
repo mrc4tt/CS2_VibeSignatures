@@ -1,5 +1,6 @@
 // One message per build in the updates channel, edited as autopilot reports
 // each stage, with a thread underneath for the per-plugin detail.
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import {
@@ -8,9 +9,10 @@ import {
 import { config } from "./config.ts";
 import { GAMEVER_RE, type Repo } from "./repo.ts";
 import { changesEmbed } from "./render.ts";
+import { reportsEmbed, type ServerReports } from "./reports.ts";
 import { loadSettings } from "./settings.ts";
 
-export type AutopilotEvent = { outcome: string; gamever: string; detail: string; at: number };
+export type AutopilotEvent = { outcome: string; gamever: string; detail: string; at: number; reports?: ServerReports };
 
 type BuildState = {
     messageId: string;
@@ -19,7 +21,10 @@ type BuildState = {
     events: { outcome: string; at: number }[];
 };
 type AdminState = { messageId: string; count: number; first: number; last: number };
-type State = { builds: Record<string, BuildState>; admin?: Record<string, AdminState> };
+type ReportsState = { messageId: string; digest: string; count: number; first: number; last: number };
+type State = {
+    builds: Record<string, BuildState>; admin?: Record<string, AdminState>; reports?: Record<string, ReportsState>;
+};
 
 // What reaches the public channel. Anything else autopilot sends (sdk-abi, an
 // outcome added later) goes to the admin channel only.
@@ -43,6 +48,8 @@ const ADMIN_FORGET_MS = 7 * 24 * 3600 * 1000;
 const RERUN_NEW_MESSAGE_MS = 6 * 3600 * 1000;
 const TIMELINE_KEEP = 30;
 const TIMELINE_SHOW = 12;
+// Server-report messages kept in state.json: the newest builds' only.
+const REPORTS_KEEP = 10;
 
 export function isKnownOutcome(outcome: string): boolean {
     return OUTCOME_RE.test(outcome);
@@ -142,6 +149,10 @@ export class Announcer {
     private async apply(event: AutopilotEvent): Promise<void> {
         const state = loadState();
         try {
+            if (event.outcome === "server-reports") {
+                if (event.reports && GAMEVER_RE.test(event.gamever)) await this.serverReports(state, event, event.reports);
+                return;
+            }
             const spec = OUTCOMES[event.outcome];
             const last = state.builds[event.gamever]?.events.at(-1);
             // Not a build stage, no real build, or a refusal while no run of this
@@ -242,6 +253,29 @@ export class Announcer {
         // state.json lost or stale: the message may already carry its thread.
         if (message.thread) return message.thread;
         return message.startThread({ name: `CS2 ${gamever} gamedata`, autoArchiveDuration: 10080 });
+    }
+
+    // What servers report broken on a build: admin channel only, one message per
+    // build, edited (silently) each time the numbers change; never a new post.
+    private async serverReports(state: State, event: AutopilotEvent, reports: ServerReports): Promise<void> {
+        if (!config.adminChannelId) return;
+        const channel = await this.client.channels.fetch(config.adminChannelId).catch(() => null);
+        if (!channel?.isSendable()) return;
+
+        const all = (state.reports ??= {});
+        const content = { embeds: [reportsEmbed(event.gamever, reports)] };
+        const digest = crypto.createHash("sha1").update(JSON.stringify(content.embeds[0].toJSON())).digest("hex");
+        const entry = all[event.gamever];
+        const message = entry ? await channel.messages.fetch(entry.messageId).catch(() => null) : null;
+        if (entry && message) {
+            if (entry.digest !== digest) await message.edit(content);
+            Object.assign(entry, { digest, count: entry.count + 1, last: event.at });
+        } else {
+            const sent = await channel.send(content);
+            all[event.gamever] = { messageId: sent.id, digest, count: 1, first: event.at, last: event.at };
+        }
+        const keep = new Set(Object.keys(all).sort((a, b) => parseInt(b) - parseInt(a) || b.localeCompare(a)).slice(0, REPORTS_KEEP));
+        for (const build of Object.keys(all)) if (!keep.has(build)) delete all[build];
     }
 
     // Failure text carries hint commands and server log paths: admin channel only.

@@ -104,3 +104,23 @@ test("the status line names the newest build, or the one being analysed", async 
     assert.ok(presenceText(repo, { gamever: "99999", outcome: "started" }).startsWith("Analysing CS2 99999"));
     assert.ok(presenceText(repo, { gamever: "99999", outcome: "linux-deployed" }).length <= 128);
 });
+
+test("the server-reports embed fits Discord's limits however much is reported", async () => {
+    const { parseReports, reportsEmbed } = await import("../src/reports.ts");
+    const huge = parseReports({
+        servers: 4000, files_seen: 300, files_broken: 300, more_files: 250, last_seen: 1767225600,
+        files: Array.from({ length: 80 }, (_, f) => ({
+            file: `plugin${f}/${"x".repeat(200)}.json`, status: "known", servers: 500, broken_servers: 400, more_keys: 185,
+            broken: Array.from({ length: 80 }, (_, k) => ({ key: `\`${"K".repeat(300)}${k}`, servers: 400, linux: 300, windows: 100 })),
+        })),
+    })!;
+    assert.equal(huge.files.length, 50);
+    const embed = reportsEmbed("14192", huge);
+    assert.ok(size(embed) <= 6000);
+    const description = embed.toJSON().description!;
+    assert.ok(description.length <= 4096);
+    assert.match(description, /more file\(s\)/);
+    assert.ok(!description.includes("@everyone"));
+    const empty = reportsEmbed("14192", parseReports({ servers: 2, files: [] })!);
+    assert.match(empty.toJSON().description!, /2 server\(s\) reported, 0 of 0/);
+});

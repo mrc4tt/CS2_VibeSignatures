@@ -447,6 +447,8 @@ class Service:
         self.executor, self.pools, self.bindir, self.timeout = executor, pools, bindir, timeout
         self.files_root = files_root or UF.ROOT
         self.published = PR.Published()
+        # The broken-key digest to the Discord bot; off without AUTOPILOT_BOT_URL/_SECRET.
+        self.digest = PR.Digest.from_env(self.files_root)
         self.capacity = workers + queue
         self.inflight = 0
         self.lock = threading.Lock()
@@ -549,7 +551,8 @@ class Service:
             if method != "POST":
                 return 404, {"error": "not found"}
             try:
-                return 200, PR.handle_report(json.loads(body or b"{}"), self.published.get(), root=self.files_root)
+                return 200, PR.handle_report(json.loads(body or b"{}"), self.published.get(), root=self.files_root,
+                                             digest=self.digest)
             except ValueError:
                 return 400, {"error": "body must be JSON"}
             except PR.BadReport as error:

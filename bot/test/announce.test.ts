@@ -138,3 +138,43 @@ test("settings never name a file outside the shipped list", async () => {
     await send("deployed");
     assert.equal(pub.files, 0);
 });
+
+function reports(servers: number, keys = 1): object {
+    return {
+        servers, files_seen: 3, files_broken: 1, more_files: 0, last_seen: 1767225600,
+        files: [{
+            file: "matchzy/matchzy.json", status: "known", servers, broken_servers: servers, more_keys: 0,
+            broken: Array.from({ length: keys }, (_, i) => ({ key: `Key${i}`, servers, linux: servers, windows: 0 })),
+        }],
+    };
+}
+
+async function sendReports(body: object, gamever = "14192") {
+    const { parseEvent } = await import("../src/server.ts");
+    const event = parseEvent(JSON.stringify({ outcome: "server-reports", gamever, reports: body }));
+    assert.ok(event);
+    clock += 30 * 60000;
+    announcer.handle({ ...event, at: clock });
+    await (announcer as unknown as { queue: Promise<void> }).queue;
+}
+
+test("server reports edit one admin message per build and never post publicly", async () => {
+    await sendReports(reports(1));
+    await sendReports(reports(5));
+    await sendReports(reports(5)); // nothing changed: not even an edit
+    await sendReports(reports(20, 3));
+    assert.deepEqual(counts(pub), { sends: 0, edits: 0 });
+    assert.deepEqual(counts(admin), { sends: 1, edits: 2 });
+    await sendReports(reports(1), "14193"); // the next build gets its own
+    assert.deepEqual(counts(admin), { sends: 2, edits: 2 });
+    // a build stage of that build still goes to the public channel as before
+    await send("started", "14193");
+    assert.equal(pub.sends, 1);
+});
+
+test("a server-reports event without its counts or for no real build is refused", async () => {
+    const { parseEvent } = await import("../src/server.ts");
+    assert.equal(parseEvent(JSON.stringify({ outcome: "server-reports", gamever: "14192" })), null);
+    assert.equal(parseEvent(JSON.stringify({ outcome: "server-reports", gamever: "unknown", reports: reports(1) })), null);
+    assert.equal(parseEvent(JSON.stringify({ outcome: "server-reports", gamever: "14192", reports: { files: "x" } })), null);
+});
