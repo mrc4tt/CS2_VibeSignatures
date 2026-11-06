@@ -10,7 +10,7 @@
  * every key as unknown.
  */
 
-export type GameDataFormat = 'json' | 'jsonc' | 'vdf'
+export type GameDataFormat = 'json' | 'jsonc' | 'vdf' | 'flat'
 
 export interface FileValue {
   linux: string | number | null
@@ -84,6 +84,30 @@ function flattenJson(document: unknown): Map<string, FileValue> {
     }
   }
   walk(document, [])
+  return out
+}
+
+/**
+ * CS2FOW's `name_linux=value` / `name_windows=value` file. Only a text whose
+ * every non-comment line has that shape counts, so KeyValues never reads as it.
+ * Mirrors publish_site_data.read_flat_values: same keys, decimal values as numbers.
+ */
+const FLAT_LINE = /^([A-Za-z0-9_]+)_(linux|windows)=(.*)$/
+
+export function flattenFlat(text: string): Map<string, FileValue> {
+  const out = new Map<string, FileValue>()
+  for (const raw of text.replace(/^\uFEFF/, '').split(/\r?\n/)) {
+    const line = raw.trim()
+    if (!line || line.startsWith('//')) continue
+    const match = FLAT_LINE.exec(line)
+    if (!match) throw new Error('not a flat file')
+    const [, name, platform, rawValue] = match
+    const value = rawValue.trim()
+    const entry = out.get(name) ?? { linux: null, windows: null }
+    entry[platform as 'linux' | 'windows'] = /^-?\d+$/.test(value) ? Number(value) : value
+    out.set(name, entry)
+  }
+  if (out.size === 0) throw new Error('not a flat file')
   return out
 }
 
@@ -267,6 +291,7 @@ export function parseGameData(text: string): ParsedGameData {
     ['json', () => flattenJson(JSON.parse(text))],
     ['jsonc', () => flattenJson(JSON.parse(stripJsonc(text)))],
     ['vdf', () => flattenVdf(text)],
+    ['flat', () => flattenFlat(text)],
   ]
   let best: ParsedGameData | null = null
   for (const [format, read] of attempts) {

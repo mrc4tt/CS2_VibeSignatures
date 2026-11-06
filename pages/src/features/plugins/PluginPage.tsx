@@ -14,6 +14,8 @@ import { FileView } from '../gamedata/FileView'
 import { pluginLabel } from '../gamedata/pluginLabel'
 import { buildChanges, curlCommand, groupByPlugin, installPath, latestUrl, readStarred, withBuildChanges, writeStarred, type BuildChange } from './pluginModel'
 import { StarButton } from './StarButton'
+import { OriginCard } from '../checkfile/OriginCard'
+import { pluginOrigin } from '../checkfile/origin'
 import { copyText } from '../../ui/clipboard'
 import { buttonClass } from '../../ui/buttonStyle'
 import { CheckIcon, CopyIcon, DownloadIcon } from '../../ui/icons'
@@ -238,6 +240,8 @@ export function PluginPage({ plugin }: { plugin: string }) {
           <span>{t('plugin2.factVerified')}</span>
         </div>
       </section>
+
+      <OriginCard origin={pluginOrigin(plugin, file.descriptor.fileName, indexQuery.data)} showFeeds={false} />
 
       <GetFile file={file} />
 

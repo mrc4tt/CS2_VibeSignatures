@@ -90,6 +90,18 @@ describe('reading a dropped gamedata file', () => {
     expect(values.size).toBe(0)
   })
 
+  it("reads CS2FOW's flat name_platform=value file", () => {
+    const text = '// CS2FOW data\nrecipient_slot_offset_windows=576\nrecipient_slot_offset_linux=576\n\nlookup_bone_rva_linux=22924928\n'
+    const { format, values } = parseGameData(text)
+    expect(format).toBe('flat')
+    expect(values.get('recipient_slot_offset')).toEqual({ linux: 576, windows: 576 })
+    expect(values.get('lookup_bone_rva')).toEqual({ linux: 22924928, windows: null })
+  })
+
+  it('does not read KeyValues as a flat file', () => {
+    expect(parseGameData('"Games"\n{\n}\n').format).toBe('vdf')
+  })
+
   it('reads an empty KeyValues block the way the pipeline does', () => {
     // read_values yields {"Games": [None, None]} for this, so this reader must
     // too - the two have to name the same keys or every key reads as unknown.

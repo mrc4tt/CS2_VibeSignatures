@@ -135,6 +135,31 @@ def key_name(path: tuple[str, ...]) -> str:
     return path[-1]
 
 
+FLAT_LINE = re.compile(r"^([A-Za-z0-9_]+)_(linux|windows)=(.*)$")
+
+
+def read_flat_values(raw: str) -> dict[str, list[object]] | None:
+    """CS2FOW's ``name_linux=value`` / ``name_windows=value`` file, or None if it is not one.
+
+    Only a file whose every non-comment line has that shape counts, so a KeyValues file
+    is never read as one. ``name`` is the key; decimal values become ints, like the JSON
+    files' numbers. pages/src/features/checkfile/parse.ts (flattenFlat) must agree.
+    """
+    out: dict[str, list[object]] = {}
+    for line in raw.lstrip("\ufeff").splitlines():
+        line = line.strip()
+        if not line or line.startswith("//"):
+            continue
+        match = FLAT_LINE.match(line)
+        if not match:
+            return None
+        name, platform, value = match.groups()
+        value = value.strip()
+        parsed: object = int(value) if re.fullmatch(r"-?\d+", value) else value
+        out.setdefault(name, [None, None])[0 if platform == "linux" else 1] = parsed
+    return out or None
+
+
 def read_values(path: str) -> dict[str, list[object]] | None:
     """key -> [linux, windows]; None when the file is absent or unparsable."""
     if not os.path.exists(path):
@@ -142,6 +167,9 @@ def read_values(path: str) -> dict[str, list[object]] | None:
     raw = open(path, encoding="utf-8").read()
     out: dict[str, list[object]] = {}
     try:
+        flat = read_flat_values(raw) if path.endswith(".txt") else None
+        if flat is not None:
+            return flat
         if path.endswith(".txt"):
             # Valve KeyValues, flat (cs2-menus) or nested "Games"/"csgo"/"Signatures"
             # (GameBanFix): parsed, then walked like the JSON files. A regex over

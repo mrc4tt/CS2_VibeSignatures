@@ -51,6 +51,27 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class FlatFileTests(unittest.TestCase):
+    """CS2FOW's name_platform=value file; pages/src/features/checkfile/parse.ts must agree."""
+
+    def test_reads_name_platform_value_lines(self):
+        raw = "// CS2FOW\nrecipient_slot_offset_windows=576\nrecipient_slot_offset_linux=576\n\nlookup_bone_rva_linux=22924928\n"
+        self.assertEqual(
+            {"recipient_slot_offset": [576, 576], "lookup_bone_rva": [22924928, None]},
+            P.read_flat_values(raw),
+        )
+
+    def test_keyvalues_is_not_a_flat_file(self):
+        self.assertIsNone(P.read_flat_values('"Games"\n{\n}\n'))
+
+    def test_read_values_uses_it_for_txt_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "cs2fow.games.txt")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write("a_linux=1\na_windows=2\n")
+            self.assertEqual({"a": [1, 2]}, P.read_values(path))
+
+
 class VtableKeyTests(unittest.TestCase):
     """A CounterStrikeSharp "vtable" block is published as "<entry>.vtable", so the site can
     show when a slot moved and patch a stale index, and it maps to the entry's symbol."""

@@ -10,7 +10,7 @@ import { coverageAnswer } from './originText'
  * whether CounterStrikeSharp's updater will keep it current. Laid out like the
  * Details card beside it; every row says what it rests on.
  */
-export function OriginCard({ origin }: { origin: Origin }) {
+export function OriginCard({ origin, showFeeds = true }: { origin: Origin; showFeeds?: boolean }) {
   const { t } = useTranslation()
   const { answer, tone } = coverageAnswer(origin)
   const base = import.meta.env.BASE_URL
@@ -56,7 +56,7 @@ export function OriginCard({ origin }: { origin: Origin }) {
       <p className="m-0 text-[12px] leading-relaxed text-muted-foreground">
         {t(`scan.origin.coverage.${origin.coverage}`, { file: origin.sourceFile })}
       </p>
-      {origin.feeds.length > 0 && (
+      {showFeeds && origin.feeds.length > 0 && (
         <div className="flex flex-col gap-1 text-[12px]">
           <span className="text-muted-foreground">{t(origin.reads === 'source' ? 'scan.origin.latestReference' : 'scan.origin.latest')}</span>
           {origin.feeds.map((feed) => {

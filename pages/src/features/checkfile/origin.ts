@@ -183,7 +183,7 @@ export function fileOrigin({ name, text, format, hashes = [], index, historyFile
   const fits = (plugin: string) => {
     const known = pluginInfo(plugin)?.framework
     if (!known) return true
-    if (known === 'cssharp' && format === 'vdf') return false
+    if (known === 'cssharp' && (format === 'vdf' || format === 'flat')) return false
     return !proven || known === proven
   }
 
@@ -231,6 +231,24 @@ export function fileOrigin({ name, text, format, hashes = [], index, historyFile
     ?? layoutFramework
   if (!evidence && framework) evidence = 'layout'
 
+  return describe({ plugin, candidates, framework, evidence, layout, build, published, name, index })
+}
+
+interface Described {
+  plugin?: string
+  candidates?: string[]
+  framework?: Framework
+  evidence?: Evidence
+  layout?: Layout
+  build?: string
+  published?: string
+  name: string
+  index?: GameDataIndex
+}
+
+/** Coverage, install path and feeds once it is settled whose file this is. */
+function describe({ plugin, candidates, framework, evidence, layout, build, published, name, index }: Described): Origin {
+  const info = pluginInfo(plugin)
   const newest = index?.versions[0]
   const publishing = plugin ? (newest?.files ?? []).filter((file) => file.plugin === plugin) : []
   const sameName = publishing.filter((file) => file.fileName === baseName(name))
@@ -259,4 +277,12 @@ export function fileOrigin({ name, text, format, hashes = [], index, historyFile
     feeds,
     published,
   }
+}
+
+/**
+ * The same answer for a published file, where the plugin is known up front:
+ * the plugin page shows it without anything to scan.
+ */
+export function pluginOrigin(plugin: string, fileName: string, index?: GameDataIndex): Origin {
+  return describe({ plugin, framework: pluginInfo(plugin)?.framework, name: fileName, index })
 }
