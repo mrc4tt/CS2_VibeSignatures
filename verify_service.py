@@ -27,8 +27,9 @@ used as a path; a /api/verify upload is never written to disk, a /api/files one 
 into the user-file store. The service binds loopback only;
 nginx in front of it owns TLS, the per-IP rate limit and the body cap.
 
-Loading a build's snapshot takes seconds, so workers are long-lived processes that
-keep the last build they judged and only reload when a request names another one.
+Loading a build's snapshot takes seconds, so workers are long-lived processes, and
+each recent build has a pool of its own, warmed on that build at start-up
+(BuildPools): a request never makes a worker reload another build.
 
   uv run verify_service.py -port 8787 -workers 4
 """
@@ -390,10 +391,55 @@ class Raw:
 
 # -- front process: HTTP, queue cap, result cache -----------------------------
 
+class BuildPools:
+    """One process pool per build, each warmed on its own build.
+
+    A worker holds one build: asking it for another clears every cache and loads
+    that build's snapshot and binaries cold. With one shared pool warmed on the
+    newest build only, every scan of an older build, and the first newest scan
+    after one, paid that load - measured on 14196: 0.2 s warm, ~13 s for 14195,
+    14194, and for 14196 again right after them. Workers are ~300-400 MB each,
+    so a small pool per recent build costs a few GB and keeps every one warm."""
+
+    def __init__(self, bindir, newest_workers=4, older_workers=2, max_pools=8):
+        self.bindir, self.newest_workers, self.older_workers = bindir, newest_workers, older_workers
+        self.max_pools = max(1, max_pools)
+        self.pools = OrderedDict()
+        self.lock = threading.Lock()
+
+    def get(self, build, newest=None):
+        with self.lock:
+            pool = self.pools.get(build)
+            if pool is not None:
+                self.pools.move_to_end(build)
+                return pool
+            workers = self.newest_workers if build == newest else self.older_workers
+            # spawn, not fork: the front process runs threads, and a forked child would inherit their locks.
+            pool = cf.ProcessPoolExecutor(max_workers=workers, mp_context=multiprocessing.get_context("spawn"),
+                                          initializer=worker_init, initargs=(build, self.bindir))
+            # The pool starts its workers on demand, so the first visitor would pay for the
+            # start-up and the warm-up. One ping per worker, all at once, starts them all now.
+            for _ in range(workers):
+                pool.submit(job_ping)
+            self.pools[build] = pool
+            while len(self.pools) > self.max_pools:
+                # Jobs already queued on an evicted pool still finish; only new ones go elsewhere.
+                _, old = self.pools.popitem(last=False)
+                old.shutdown(wait=False)
+            return pool
+
+    def shutdown(self):
+        with self.lock:
+            for pool in self.pools.values():
+                pool.shutdown(cancel_futures=True)
+            self.pools.clear()
+
+
 class Service:
     def __init__(self, executor, bindir="bin", workers=4, queue=20, timeout=60, cache_size=256,
-                 files_root=None):
-        self.executor, self.bindir, self.timeout = executor, bindir, timeout
+                 files_root=None, pools=None):
+        # executor: one pool for every build (the tests); pools: a BuildPools, one per build.
+        self.executor, self.pools, self.bindir, self.timeout = executor, pools, bindir, timeout
         self.files_root = files_root or UF.ROOT
         self.capacity = workers + queue
         self.inflight = 0
@@ -403,7 +449,12 @@ class Service:
     def builds(self):
         return scannable_builds(REPO_ROOT, self.bindir)
 
-    def run(self, cache_key, fn, *args):
+    def executor_for(self, build, builds):
+        if self.pools is None:
+            return self.executor
+        return self.pools.get(build, builds[0] if builds else None)
+
+    def run(self, cache_key, fn, *args, executor=None):
         """-> (http status, payload). Identical requests are answered from the cache."""
         with self.lock:
             if cache_key in self.cache:
@@ -413,7 +464,7 @@ class Service:
                 return 429, {"error": "busy, try again shortly"}
             self.inflight += 1
         try:
-            payload = self.executor.submit(fn, *args).result(timeout=self.timeout)
+            payload = (executor or self.executor).submit(fn, *args).result(timeout=self.timeout)
         except cf.TimeoutError:
             return 504, {"error": "the scan took too long"}
         except Exception:  # noqa: BLE001 - a crashed job is the service's fault, not the caller's
@@ -505,10 +556,12 @@ class Service:
             if path == "/verify":
                 build, text, filename, platforms = parse_verify(request, builds)
                 key = ("verify", build, platforms, filename, hashlib.sha256(text.encode()).hexdigest())
-                return self.run(key, job_verify, build, self.bindir, text, filename, platforms)
+                return self.run(key, job_verify, build, self.bindir, text, filename, platforms,
+                                executor=self.executor_for(build, builds))
             build, module, platform, pattern = parse_check(request, builds)
             return self.run(("check", build, module, platform, pattern), job_check,
-                            build, self.bindir, module, platform, pattern)
+                            build, self.bindir, module, platform, pattern,
+                            executor=self.executor_for(build, builds))
         except BadRequest as error:
             return 400, {"error": str(error)}
 
@@ -572,7 +625,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-host", default="127.0.0.1")
     parser.add_argument("-port", type=int, default=8787)
-    parser.add_argument("-workers", type=int, default=4)
+    parser.add_argument("-workers", type=int, default=4, help="workers for the newest build")
+    parser.add_argument("-older-workers", dest="older_workers", type=int, default=2,
+                        help="workers for each older build")
+    parser.add_argument("-warm-builds", dest="warm_builds", type=int, default=6,
+                        help="newest builds whose pools start (and warm) at start-up; older ones start on first use")
+    parser.add_argument("-max-pools", dest="max_pools", type=int, default=8,
+                        help="pools kept at once; the least recently used one goes")
     parser.add_argument("-queue", type=int, default=20, help="requests waiting beyond the workers before 429")
     parser.add_argument("-timeout", type=int, default=60, help="seconds one request may take")
     parser.add_argument("-bindir", default="bin")
@@ -581,22 +640,20 @@ def main():
     args = parser.parse_args()
 
     builds = scannable_builds(REPO_ROOT, args.bindir)
-    # spawn, not fork: the front process runs threads, and a forked child would inherit their locks.
-    executor = cf.ProcessPoolExecutor(max_workers=args.workers, mp_context=multiprocessing.get_context("spawn"),
-                                      initializer=worker_init, initargs=(builds[0] if builds else None, args.bindir))
-    # The pool starts its workers on demand, so the first visitors would pay for the
-    # start-up and the warm-up. One ping per worker, all at once, starts them all now.
-    for _ in range(args.workers):
-        executor.submit(job_ping)
-    service = Service(executor, args.bindir, args.workers, args.queue, args.timeout, files_root=args.files_root)
+    pools = BuildPools(args.bindir, args.workers, args.older_workers, max(args.max_pools, args.warm_builds))
+    for build in builds[:args.warm_builds]:
+        pools.get(build, builds[0])
+    service = Service(None, args.bindir, args.workers, args.queue, args.timeout, files_root=args.files_root,
+                      pools=pools)
     server = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     server.daemon_threads = True
-    print(f"verify_service on {args.host}:{args.port}, {args.workers} workers, builds: {', '.join(builds) or 'none'}",
+    print(f"verify_service on {args.host}:{args.port}, {args.workers} workers for the newest build, "
+          f"{args.older_workers} each for older ones, warm: {', '.join(builds[:args.warm_builds]) or 'none'}",
           flush=True)
     try:
         server.serve_forever()
     finally:
-        executor.shutdown(cancel_futures=True)
+        pools.shutdown()
 
 
 if __name__ == "__main__":

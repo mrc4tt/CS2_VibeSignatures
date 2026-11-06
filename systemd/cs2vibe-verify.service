@@ -34,8 +34,10 @@ IPAddressAllow=localhost
 RestrictNamespaces=true
 LockPersonality=true
 SystemCallArchitectures=native
-# Each worker holds one build's snapshot and binaries in memory.
-MemoryMax=4G
+# Each worker holds one build's snapshot and binaries in memory (~300-400 MB), and
+# every recent build has its own warm pool: 4 workers for the newest, 2 for each of
+# the five before it (verify_service.BuildPools).
+MemoryMax=10G
 Nice=5
 StandardOutput=journal
 StandardError=journal

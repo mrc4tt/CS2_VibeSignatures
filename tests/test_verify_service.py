@@ -212,5 +212,61 @@ class EndToEndTests(unittest.TestCase):
         self.assertEqual((status, body["status"]), (200, "no-binary"))
 
 
+class BuildRoutingTests(unittest.TestCase):
+    """Each build's request goes to that build's own pool, never to a pool warmed on another."""
+
+    class Pools:
+        def __init__(self):
+            self.asked, self.executors = [], {}
+
+        def get(self, build, newest=None):
+            self.asked.append((build, newest))
+            return self.executors.setdefault(build, cf.ThreadPoolExecutor(max_workers=1))
+
+    def test_requests_reach_their_own_builds_pool(self):
+        pools = self.Pools()
+
+        class Routed(S.Service):
+            def builds(self):
+                return ["14196", "14195"]
+
+        service = Routed(None, bindir="bin-absent-in-tests", workers=1, queue=0, timeout=10, pools=pools)
+        try:
+            for build in ("14195", "14196"):
+                status, body = service.handle("POST", "/check", json.dumps(
+                    {"signature": "48 8B ?? 00", "platform": "linux", "build": build}).encode())
+                self.assertEqual(pools.asked[-1], (build, "14196"))
+            self.assertEqual(sorted(pools.executors), ["14195", "14196"])
+        finally:
+            for executor in pools.executors.values():
+                executor.shutdown()
+
+    def test_lru_pool_is_evicted(self):
+        pools = S.BuildPools("bin-absent-in-tests", 1, 1, max_pools=1)
+        created = []
+
+        class FakePool:
+            def __init__(self, *a, **k):
+                created.append(self)
+                self.down = False
+
+            def submit(self, *a):
+                return None
+
+            def shutdown(self, **k):
+                self.down = True
+
+        original = S.cf.ProcessPoolExecutor
+        S.cf.ProcessPoolExecutor = FakePool
+        try:
+            first = pools.get("14195", "14196")
+            self.assertIs(pools.get("14195", "14196"), first)
+            pools.get("14196", "14196")
+            self.assertTrue(first.down)
+            self.assertEqual(list(pools.pools), ["14196"])
+        finally:
+            S.cf.ProcessPoolExecutor = original
+
+
 if __name__ == "__main__":
     unittest.main()
