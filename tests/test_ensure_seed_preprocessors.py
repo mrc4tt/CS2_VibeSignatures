@@ -47,3 +47,37 @@ class VtableRenderTests(unittest.TestCase):
             with open(path, "w") as handle:
                 handle.write("vtable_class: CFoo_CBar\nvtable_symbol: _ZTV4CFooI4CBarE + 0x10\n")
             self.assertEqual(["_ZTV4CFooI4CBarE"], E.mangled_names([path]))
+
+
+class ExistingPreprocessorTests(unittest.TestCase):
+    """The runner loads ida_preprocessor_scripts/<task>.py only. A sibling task's
+    find-X-linux.py counted as covering find-X, so the windows DestroyGameSystem task
+    never got a script and its artifact went missing from 14193 on."""
+
+    def test_only_the_task_name_counts(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ("find-X-linux.py", "find-X-decompiles.py"):
+                open(os.path.join(tmp, name), "w").close()
+            self.assertIsNone(E.existing_preprocessor(tmp, "X"))
+            self.assertEqual(os.path.join(tmp, "find-X-linux.py"), E.existing_preprocessor(tmp, "X-linux"))
+            open(os.path.join(tmp, "find-X.py"), "w").close()
+            self.assertEqual(os.path.join(tmp, "find-X.py"), E.existing_preprocessor(tmp, "X"))
+
+    def test_every_task_of_the_newest_config_has_its_own_script(self):
+        import yaml
+
+        repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        config = E.newest_config()
+        if not config:
+            self.skipTest("no config")
+        cfg = yaml.safe_load(open(os.path.join(repo, config), encoding="utf-8"))
+        missing = [
+            task["name"]
+            for module in cfg.get("modules", [])
+            for task in module.get("skills", [])
+            if task.get("name", "").startswith("find-")
+            and not os.path.exists(os.path.join(repo, "ida_preprocessor_scripts", f"{task['name']}.py"))
+        ]
+        self.assertEqual([], missing)

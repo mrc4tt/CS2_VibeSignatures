@@ -1498,6 +1498,21 @@ class TestVtableArtifactStemSupport(unittest.IsolatedAsyncioTestCase):
             ),
         )
 
+    def test_template_vtable_name_finds_the_flattened_vtable_artifact(self) -> None:
+        # the windows DestroyGameSystem record names its vtable
+        # CGameSystemReallocatingFactory<CSpawnGroupMgrGameSystem>, the vtable artifact
+        # is filed as ..._CSpawnGroupMgrGameSystem_vtable: relocation found nothing
+        name = "CGameSystemReallocatingFactory<CSpawnGroupMgrGameSystem>"
+        flat = "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.windows.yaml"
+        with tempfile.TemporaryDirectory() as tmp:
+            literal = os.path.join(tmp, f"{name}_vtable.windows.yaml")
+            self.assertEqual(literal, ida_analyze_util._build_vtable_yaml_path(tmp, name, "windows"))
+            Path(tmp, flat).write_text("vtable_class: x\n")
+            self.assertEqual(
+                os.path.join(tmp, flat),
+                ida_analyze_util._build_vtable_yaml_path(tmp, name, "windows"),
+            )
+
     async def test_func_vtable_relation_reads_numbered_vtable_artifact(self) -> None:
         func_name = "CSpawnGroupMgrGameSystem_DoesGameSystemReallocate"
         artifact_stem = "CSpawnGroupMgrGameSystem_vtable2"

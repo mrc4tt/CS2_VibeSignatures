@@ -77,10 +77,17 @@ def _index(doc):
 
 
 def _vtable_length(directory, vtable_name, platform):
-    stem = vtable_name if vtable_name.endswith("_vtable") else f"{vtable_name}_vtable"  # as the run names it
-    doc = _load(os.path.join(directory, f"{stem}.{platform}.yaml"))
-    entries = (doc or {}).get("vtable_entries")
-    return len(entries) if entries else None
+    # A template's vtable_name (CGameSystemReallocatingFactory<CSpawnGroupMgrGameSystem>)
+    # is filed as the flattened ..._CSpawnGroupMgrGameSystem_vtable: try both spellings,
+    # or every template-class virtual is skipped as "no vtable".
+    from hunt_core import vtable_artifact_stems
+
+    for stem in vtable_artifact_stems(vtable_name):
+        doc = _load(os.path.join(directory, f"{stem}_vtable.{platform}.yaml"))
+        entries = (doc or {}).get("vtable_entries")
+        if entries:
+            return len(entries)
+    return None
 
 
 def slot_shift_verdict(old_index, new_index, old_length, new_length, neighbours=(), twin_shift=None):

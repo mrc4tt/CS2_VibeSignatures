@@ -36,6 +36,14 @@ GENERATE_YAML_DESIRED_FIELDS = [
             "func_rva",
             "func_size",
             "vfunc_sig",
+            # The vcall is read in CBaseTrigger::StartTouch, which on linux is a
+            # 0x2f-byte wrapper (call [rax+0x880]; test al,al; jne; tail jmp) whose
+            # bytes from the call to its end occur elsewhere too, so a body-only
+            # pattern from the call is never unique there. Without this the LLM
+            # fallback found the right call site and still failed, and the linux
+            # artifact was missing from 14184 to 14196. Shortest-unique wins, so
+            # windows' pattern (a 0x225-byte StartTouch) is unchanged.
+            "vfunc_sig_allow_across_function_boundary:true",
             "vfunc_offset",
             "vfunc_index",
             "vtable_name",

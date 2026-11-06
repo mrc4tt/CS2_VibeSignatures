@@ -738,11 +738,28 @@ def _normalize_vtable_artifact_stem(vtable_name):
 
 
 def _build_vtable_yaml_path(binary_dir, vtable_name, platform):
+    """Path of the <Class>_vtable artifact a vfunc's vtable_name refers to.
+
+    A template class is spelled CGameSystemReallocatingFactory<CSpawnGroupMgrGameSystem>
+    in a vfunc's vtable_name but its vtable artifact is filed under the flattened
+    CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable, so the literal
+    spelling found nothing and relocating such a vfunc failed with "vtable YAML not
+    found" (the windows DestroyGameSystem record, 14192 -> 14196). The literal name
+    still wins when it exists; every caller only reads the path.
+    """
     artifact_stem = _normalize_vtable_artifact_stem(vtable_name)
-    return os.path.join(
+    literal = os.path.join(
         os.fspath(binary_dir),
         f"{artifact_stem}.{platform}.yaml",
     )
+    if isinstance(vtable_name, str) and "<" in vtable_name and not os.path.exists(literal):
+        from hunt_core import vtable_artifact_stems
+
+        for stem in vtable_artifact_stems(vtable_name):
+            candidate = os.path.join(os.fspath(binary_dir), f"{stem}_vtable.{platform}.yaml")
+            if os.path.exists(candidate):
+                return candidate
+    return literal
 
 
 def build_remote_text_export_py_eval(

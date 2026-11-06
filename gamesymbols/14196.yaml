@@ -137,7 +137,7 @@ binaries:
       size: 2029720
 config_digest_version: 2
 config_sha256: sha256:4e445ee52383a492c3ce07e6e279f5efe792eaef49c3991b5dc047e91c92956d
-file_count: 3330
+file_count: 3332
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -18712,6 +18712,16 @@ files:
     vfunc_index: 152
     vfunc_offset: '0x4c0'
     vtable_name: CBaseTrigger
+  server/CBaseTrigger_PassesTriggerFilters.linux.yaml:
+    func_name: CBaseTrigger_PassesTriggerFilters
+    func_rva: '0xd532f0'
+    func_size: '0x2f5'
+    func_va: '0xd532f0'
+    vfunc_index: 272
+    vfunc_offset: '0x880'
+    vfunc_sig: FF 90 80 08 00 00 84 C0 75 ?? 5B 41 5C 5D C3 90 4C 89 E6 48 89 DF 5B 41 5C 5D E9 ?? ?? ?? ?? CC 49 8B 40 ??
+    vfunc_sig_allow_across_function_boundary: true
+    vtable_name: CBaseTrigger
   server/CBaseTrigger_PassesTriggerFilters.windows.yaml:
     func_name: CBaseTrigger_PassesTriggerFilters
     func_rva: '0x3e5db0'
@@ -31318,6 +31328,15 @@ files:
     vfunc_index: 4
     vfunc_offset: '0x20'
     vtable_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
+  server/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem.windows.yaml:
+    func_name: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_DestroyGameSystem
+    func_rva: '0x561e50'
+    func_sig: 48 89 5C 24 ?? 57 48 83 EC ?? 33 C0 48 8D 7A ??
+    func_size: '0x55'
+    func_va: '0x180561e50'
+    vfunc_index: 4
+    vfunc_offset: '0x20'
+    vtable_name: CGameSystemReallocatingFactory<CSpawnGroupMgrGameSystem>
   server/CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable.linux.yaml:
     vtable_class: CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem
     vtable_entries:
@@ -43569,5 +43588,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14196'
-last_publish_time: '2026-11-05T21:09:18Z'
+last_publish_time: '2026-11-06T17:37:11Z'
 schema_version: 5

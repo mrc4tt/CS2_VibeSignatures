@@ -138,6 +138,15 @@ class TestOnDisk(unittest.TestCase):
         self.assertEqual(slots._vtable_length(str(self.new), "CGameMoney_vtable", "linux"), 50)
         self.assertEqual(slots._vtable_length(str(self.new), "CGameMoney", "linux"), 50)
 
+    def test_template_vtable_name_reads_the_flattened_artifact(self):
+        # windows DestroyGameSystem names CGameSystemReallocatingFactory<CSpawnGroupMgrGameSystem>,
+        # its vtable artifact is CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem_vtable
+        self._vtable(self.new, "CGameSystemReallocatingFactory_CSpawnGroupMgrGameSystem", "windows", 10)
+        self.assertEqual(
+            slots._vtable_length(str(self.new), "CGameSystemReallocatingFactory<CSpawnGroupMgrGameSystem>", "windows"),
+            10,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

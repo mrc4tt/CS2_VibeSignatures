@@ -96,12 +96,18 @@ def newest_config():
 
 
 def existing_preprocessor(pp_dir, short):
-    """A platform-suffixed or staged variant counts as covered."""
-    for suffix in ("", "-linux", "-windows", "-decompiles", "-inlined", "-noinline"):
-        path = os.path.join(pp_dir, f"find-{short}{suffix}.py")
-        if os.path.exists(path):
-            return path
-    return None
+    """The task's own script, ``find-<task>.py``, or None.
+
+    Only the exact name counts: the runner loads ida_preprocessor_scripts/<task>.py and
+    nothing else (ida_skill_preprocessor). This used to accept a platform-suffixed or
+    staged variant as "covered" too, so find-CGameSystemReallocatingFactory_
+    CSpawnGroupMgrGameSystem_DestroyGameSystem (the windows task, literal .windows.yaml
+    output) counted as covered by its -linux sibling's script and never got one. With no
+    free path it was hunted by an agent every build until rule 11's payer gate stopped
+    paying for it (nothing reads it), and the windows artifact was missing from 14193 on.
+    """
+    path = os.path.join(pp_dir, f"find-{short}.py")
+    return path if os.path.exists(path) else None
 
 
 def newest_baseline(module, short, gamever):
