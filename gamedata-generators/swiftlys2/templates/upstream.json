@@ -5,7 +5,7 @@
     {
       "source_path": "plugin_files/gamedata/cs2/core/offsets.jsonc",
       "template": "offsets.jsonc",
-      "sha256": "47ed5aebb00549cad9d5079e239dde3f90b0a11da9faef690bddede35151d831"
+      "sha256": "03bdac83df13b4364eb424297fc36427c34a36f85bc382f639caf8167a711bd5"
     },
     {
       "source_path": "plugin_files/gamedata/cs2/core/signatures.jsonc",
