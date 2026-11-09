@@ -92,7 +92,10 @@ def main():
         print(f"template_refresh {tag}: held back, unhealthy: {', '.join(unhealthy)}")
         return 1
 
-    run([sys.executable, "publish_site_data.py", "-skip-validator"])
+    # No -skip-validator: it keeps the previous plugins section, which describes the
+    # files before this refresh (on 14196 the site still listed swiftlys2's removed
+    # CNetworkGameServer::m_Clients and lacked the key that replaced it).
+    run([sys.executable, "publish_site_data.py"])
     paths = ["gamedata-generators", gamedata, os.path.join("gamedata", "history.json"),
              os.path.join("diagnostics", f"{tag}.json")]
     run(["git", "add", "-A", "--"] + paths)
