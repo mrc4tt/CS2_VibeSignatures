@@ -191,8 +191,12 @@ def compare(gamever, prev):
             old = (old_index.get(P.fold(name)) or {}).get(platform)
             if not new or not old or not new.get("func_va") or not old.get("func_va"):
                 continue
-            nb, ni, _ = new_bins.get(module, platform)
-            ob, oi, _ = old_bins.get(module, platform)
+            # The index is keyed by name alone, so a symbol filed in two modules comes back
+            # as whichever packed last: server's slot-only CSoundSystem_TakeGuid returns
+            # soundsystem's record. Read each func_va in the binary its record came from,
+            # or the server binary is disassembled at a soundsystem address.
+            nb, ni, _ = new_bins.get(new.get("_module") or module, platform)
+            ob, oi, _ = old_bins.get(old.get("_module") or module, platform)
             if nb is None or ob is None:
                 continue
             a = fingerprint(ob, oi, V._hexint(old["func_va"]), platform)

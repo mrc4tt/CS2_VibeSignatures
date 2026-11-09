@@ -62,5 +62,29 @@ class FingerprintTests(unittest.TestCase):
         self.assertEqual((A.arity(before), A.arity(after)), (1, 2))
 
 
+class CompareModuleTests(unittest.TestCase):
+    def test_func_va_is_read_in_the_module_its_record_came_from(self):
+        # server/CSoundSystem_TakeGuid is slot-only; the name index hands back
+        # soundsystem's record, so its func_va must be read in soundsystem's binary.
+        from unittest import mock
+        record = {"func_va": "0x3922a0", "_module": "soundsystem"}
+        index = {A.P.fold("CSoundSystem_TakeGuid"): {"linux": record}}
+        asked = []
+
+        class Bins:
+            def __init__(self, *_):
+                pass
+
+            def get(self, module, platform):
+                asked.append(module)
+                return None, None, None
+
+        with mock.patch.object(A, "shipped_symbols", return_value={"server/CSoundSystem_TakeGuid": ["x:y"]}), \
+                mock.patch.object(A.P, "load_snapshot_index", return_value=index), \
+                mock.patch.object(A.P, "Binaries", Bins):
+            A.compare("2", "1")
+        self.assertEqual(set(asked), {"soundsystem"})
+
+
 if __name__ == "__main__":
     unittest.main()
