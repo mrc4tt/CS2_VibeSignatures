@@ -1265,8 +1265,11 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
+      "covered": true,
+      "covered_lines": [
+        137,
+        138
+      ],
       "name": "IServerGameClients::ClientSettingsChanged",
       "updated": false
     },
@@ -1338,7 +1341,7 @@
   "gamever": "14196",
   "schema_version": 2,
   "summary": {
-    "covered": 131,
+    "covered": 132,
     "total": 132,
     "updated": 11
   }

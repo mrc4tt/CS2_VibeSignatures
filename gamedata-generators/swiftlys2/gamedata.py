@@ -55,6 +55,8 @@ KEY_SYMBOL_OVERRIDES = {
     "IServerGameClients::ClientConnect": "CSource2GameClients_ClientConnect",
     "IServerGameClients::ClientDisconnect": "CSource2GameClients_ClientDisconnect",
     "IServerGameClients::ClientPutInServer": "CSource2GameClients_ClientPutInServer",
+    # added by swiftlys2 after 14192; slot 19 on both platforms on 14196, as the author has it
+    "IServerGameClients::ClientSettingsChanged": "CSource2GameClients_ClientSettingsChanged",
     "IServerGameClients::OnClientConnected": "CSource2GameClients_OnClientConnected",
     "IServerGameDLL::GameFrame": "CSource2Server_GameFrame",
     "IServerGameDLL::GameServerSteamAPIActivated": "CSource2Server_GameServerSteamAPIActivated",
