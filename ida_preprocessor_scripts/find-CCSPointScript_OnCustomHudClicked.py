@@ -30,6 +30,12 @@ FUNC_XREFS = [
     },
 ]
 
+# A generated func_sig is at least this long. The shortest unique prefix on windows 14196
+# was the 9-byte register-save prologue (4C 89 4C 24 ?? 55 53 41 54), which the next
+# function with the same saves would match too; 35 bytes carry the frame setup, the
+# TLS-index load and `mov r14, rcx` (RIP displacements stay wildcarded).
+FUNC_SIG_MIN_BYTES = 35
+
 GENERATE_YAML_DESIRED_FIELDS = [
     (
         "CCSPointScript_OnCustomHudClicked",
@@ -65,5 +71,6 @@ async def preprocess_skill(
         func_names=TARGETS,
         func_xrefs=FUNC_XREFS,
         generate_yaml_desired_fields=GENERATE_YAML_DESIRED_FIELDS,
+        func_sig_min_bytes=FUNC_SIG_MIN_BYTES,
         debug=debug,
     )

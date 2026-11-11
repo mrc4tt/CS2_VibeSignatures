@@ -24513,7 +24513,7 @@ files:
   server/CCSPointScript_OnCustomHudClicked.windows.yaml:
     func_name: CCSPointScript_OnCustomHudClicked
     func_rva: '0x22eea0'
-    func_sig: 4C 89 4C 24 ?? 55 53 41 54
+    func_sig: 4C 89 4C 24 ?? 55 53 41 54 41 55 41 56 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 44 8B 15 ?? ?? ?? ?? 4C 8B F1
     func_size: '0x2f1'
     func_va: '0x18022eea0'
   server/CCSWeaponBase_ItemPostFrame_ProcessReloadAction.linux.yaml:
@@ -43588,5 +43588,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14196'
-last_publish_time: '2026-11-06T17:37:11Z'
+last_publish_time: '2026-11-11T13:53:42Z'
 schema_version: 5

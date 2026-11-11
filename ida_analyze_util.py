@@ -9,6 +9,7 @@ import posixpath
 import re
 import tempfile
 import textwrap
+from contextvars import ContextVar
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
@@ -3820,6 +3821,13 @@ def _build_signature_boundary_py_eval_helpers() -> str:
     )
 
 
+# Floor on min_sig_bytes for function-head signatures generated while one skill runs
+# (preprocess_common_skill(func_sig_min_bytes=N)). The generator otherwise stops at the
+# shortest unique prefix, which for a register-save prologue can be 9 bytes that any
+# later function with the same saves will also match.
+_FUNC_SIG_MIN_BYTES = ContextVar("func_sig_min_bytes", default=0)
+
+
 async def preprocess_gen_func_sig_via_mcp(
     session,
     func_va,
@@ -4074,7 +4082,7 @@ async def preprocess_gen_func_sig_via_mcp(
             print(f"    Preprocess: empty signature token stream at {hex(func_va_int)}")
         return None
 
-    search_start = min_sig_bytes
+    search_start = max(min_sig_bytes, _FUNC_SIG_MIN_BYTES.get())
 
     best_sig = None
     for prefix_len in inst_boundaries:
@@ -8474,7 +8482,21 @@ def _can_probe_future_func_fast_path(
     return True
 
 
-async def preprocess_common_skill(
+async def preprocess_common_skill(*args, func_sig_min_bytes=0, **kwargs):
+    """preprocess_common_skill with an optional floor on generated func_sig length.
+
+    ``func_sig_min_bytes``: a func_sig this skill generates is at least this many bytes
+    (rounded up to the next instruction). A relocated func_sig is kept as it is, so the
+    floor only applies when a signature is (re)generated.
+    """
+    token = _FUNC_SIG_MIN_BYTES.set(max(0, int(func_sig_min_bytes or 0)))
+    try:
+        return await _preprocess_common_skill_impl(*args, **kwargs)
+    finally:
+        _FUNC_SIG_MIN_BYTES.reset(token)
+
+
+async def _preprocess_common_skill_impl(
     session,
     expected_outputs,
     old_yaml_map=None,
