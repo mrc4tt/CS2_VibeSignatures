@@ -94,6 +94,11 @@ FORK_OWNED_SYMBOLS = [
     # (jnz) it rewrites to EB to force the branch, so it is a patch site rather than a
     # function head - hence category patch with patch_bytes, not func.
     ("SetSchemaHammerUniqueId", "patch", None, None),
+    # MatchZy's spectator coach: the jump in the voice/team-chat permission core that
+    # limits a coach to warmup/timeouts/halftime (CS:GO's sv_coach_comm_unrestricted
+    # bypass is gone in CS2). Made unconditional at runtime by the plugin; the record
+    # keeps the site tracked. Anchor and evidence in the preprocessor's docstring.
+    ("CCSGameRules_CanPlayerHear_CoachCommGate", "patch", None, None),
     # CounterStrikeSharp's key is offsets-only, so it carries no signatures.library,
     # and the config declared the artifact through per-platform declaration tasks
     # without ever adding a symbols: entry - so build_function_library_map had no

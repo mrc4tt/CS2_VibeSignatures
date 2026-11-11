@@ -4897,6 +4897,9 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-CCSGameRules_CanPlayerHear_CoachCommGate
+        expected_output:
+          - CCSGameRules_CanPlayerHear_CoachCommGate.{platform}.yaml
       - name: find-CNavPhysicsInterface_vtable_ref
         expected_output:
           - CNavPhysicsInterface_vtable_ref.{platform}.yaml
@@ -8442,6 +8445,8 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: CCSGameRules_CanPlayerHear_CoachCommGate
+        category: patch
       - name: CNavPhysicsInterface_vtable_ref
         category: gv
       - name: CTraceFilterLOS_vtable_ref

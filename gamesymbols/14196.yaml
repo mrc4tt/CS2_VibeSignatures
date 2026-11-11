@@ -136,8 +136,8 @@ binaries:
       sha256: '92659ab5b4f9656d3d69599acf96b128c6e576e3f858fc1b380276785e3b6478'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:4e445ee52383a492c3ce07e6e279f5efe792eaef49c3991b5dc047e91c92956d
-file_count: 3332
+config_sha256: sha256:154dc13410a66b67fa19bc142524e886746949b69e34f0190dec3de2b6aae3ea
+file_count: 3334
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -20282,6 +20282,18 @@ files:
     func_sig: 48 89 4C 24 ?? 53 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ?? 4C 8B F9
     func_size: '0x439'
     func_va: '0x180923fb0'
+  server/CCSGameRules_CanPlayerHear_CoachCommGate.linux.yaml:
+    patch_bytes: 90 E9
+    patch_name: CCSGameRules_CanPlayerHear_CoachCommGate
+    patch_rva: '0x1416e94'
+    patch_sig: 0F 85 ?? ?? ?? ?? 80 B8 ?? ?? ?? ?? ?? 0F 85 ?? ?? ?? ?? 80 B8 ?? ?? ?? ?? ?? 0F 85 ?? ?? ?? ?? 83 B8 ?? ?? ?? ?? ??
+    patch_va: '0x1416e94'
+  server/CCSGameRules_CanPlayerHear_CoachCommGate.windows.yaml:
+    patch_bytes: EB
+    patch_name: CCSGameRules_CanPlayerHear_CoachCommGate
+    patch_rva: '0x913410'
+    patch_sig: 75 ?? 80 B8 ?? ?? ?? ?? ?? 75 ?? 80 B8 ?? ?? ?? ?? ??
+    patch_va: '0x180913410'
   server/CCSGameRules_FindPickerEntity.linux.yaml:
     func_name: CCSGameRules_FindPickerEntity
     func_rva: '0x19c1720'
@@ -43588,5 +43600,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x180029dd0'
 game_version: '14196'
-last_publish_time: '2026-11-11T13:53:42Z'
+last_publish_time: '2026-11-11T21:49:12Z'
 schema_version: 5

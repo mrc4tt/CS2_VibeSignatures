@@ -97,11 +97,16 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
                 skipped_symbols.append({"name": func_name, "reason": "no matching YAML data"})
             continue
 
-        # Update signatures
+        # Update signatures. A patch record (CCSGameRules_CanPlayerHear_CoachCommGate)
+        # ships its patch_sig: the plugin resolves the site with it and writes the
+        # bytes itself (jcc -> jmp), so the key needs no patch_bytes field, which
+        # CounterStrikeSharp's gamedata loader would not carry anyway.
         if "signatures" in entry:
             for platform in platforms:
-                if platform in yaml_entry and "func_sig" in yaml_entry[platform]:
-                    sig = convert_sig_to_css(yaml_entry[platform]["func_sig"])
+                payload = yaml_entry.get(platform) or {}
+                raw = payload.get("func_sig") or payload.get("patch_sig")
+                if raw:
+                    sig = convert_sig_to_css(raw)
                     entry["signatures"][platform] = sig
                     updated_count += 1
                     if debug:
