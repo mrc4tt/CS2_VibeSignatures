@@ -273,8 +273,13 @@ def _diff_flat(before_text, after_text, yaml_data, alias_map):
     return entries
 
 
-def compute_file_metadata(*, before_text, after_text, rel_path, gamever, yaml_data, alias_to_name_map):
-    """Compute the metadata document for one gamedata output file."""
+def compute_file_metadata(*, before_text, after_text, rel_path, gamever, yaml_data, alias_to_name_map,
+                          unread_keys=()):
+    """Compute the metadata document for one gamedata output file.
+
+    ``unread_keys`` names entries the plugin carries but never reads; they are left out
+    of the entries and the summary (see gamedata_utils.generator_unread_keys).
+    """
     before = _normalize_text(before_text)
     after = _normalize_text(after_text)
     suffix = Path(rel_path).suffix.lower()
@@ -288,7 +293,8 @@ def compute_file_metadata(*, before_text, after_text, rel_path, gamever, yaml_da
     else:
         raise ValueError(f"unsupported gamedata output suffix: {rel_path}")
 
-    finalized = _finalize_entries(entries)
+    unread = set(unread_keys or ())
+    finalized = [entry for entry in _finalize_entries(entries) if entry["name"] not in unread]
     covered = sum(1 for entry in finalized if entry["covered"])
     updated = sum(1 for entry in finalized if entry.get("updated"))
     metadata = {
@@ -467,6 +473,7 @@ def write_file_metadata(
     yaml_data,
     alias_to_name_map,
     metadata_path,
+    unread_keys=(),
 ):
     """Compute and atomically write ``<file>.metadata.json`` for one output."""
     metadata = compute_file_metadata(
@@ -476,6 +483,7 @@ def write_file_metadata(
         gamever=gamever,
         yaml_data=yaml_data,
         alias_to_name_map=alias_to_name_map,
+        unread_keys=unread_keys,
     )
     _atomic_write_json(Path(metadata_path), metadata)
     return metadata

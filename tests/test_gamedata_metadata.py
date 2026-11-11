@@ -69,6 +69,26 @@ class TestJsoncMetadata(unittest.TestCase):
         self.assertEqual({"CServerSideClient", "CLuaVM"}, set(_by_name(meta)))
         self.assertEqual({"total": 2, "covered": 0, "updated": 0}, meta["summary"])
 
+    def test_unread_keys_leave_entries_and_summary(self) -> None:
+        payload = '{"GameEventManager": {"offsets": {"windows": 93}}, "Other": {"offsets": {"windows": 1}}}'
+        meta = compute_file_metadata(
+            before_text=payload,
+            after_text=payload,
+            rel_path="fixture/gamedata.json",
+            gamever="1",
+            yaml_data={},
+            alias_to_name_map={},
+            unread_keys={"GameEventManager": "unread"},
+        )
+        self.assertEqual({"Other"}, set(_by_name(meta)))
+        self.assertEqual({"total": 1, "covered": 0, "updated": 0}, meta["summary"])
+
+    def test_roflmuffin_declares_game_event_manager_unread(self) -> None:
+        from gamedata_utils import generator_unread_keys
+
+        self.assertIn("GameEventManager", generator_unread_keys("CounterStrikeSharp-roflmuffin"))
+        self.assertEqual({}, generator_unread_keys("CounterStrikeSharp"))
+
     def test_three_way_classification(self) -> None:
         before = '{\n  "Changed": {"lib": "server", "windows": "AA", "linux": "BB"},\n  "Same": {"lib": "server", "windows": "CC"},\n  "UpstreamOnly": {"lib": "server", "windows": "DD"}\n}\n'
         after = '{\n  "Changed": {"lib": "server", "windows": "AA2", "linux": "BB"},\n  "Same": {"lib": "server", "windows": "CC"},\n  "UpstreamOnly": {"lib": "server", "windows": "DD"}\n}\n'

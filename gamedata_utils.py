@@ -168,6 +168,28 @@ def generator_key_overrides(plugin, generators_dir="gamedata-generators", output
     return out
 
 
+def generator_unread_keys(plugin, generators_dir="gamedata-generators"):
+    """{plugin key: reason} from one generator's UNREAD_KEYS.
+
+    Keys the plugin's own file still carries but its code no longer reads (stock
+    CounterStrikeSharp's GameEventManager offset, unread since cafc4e23 in May 2024).
+    They stay in the shipped file as the author wrote them, and the per-file metadata
+    leaves them out of covered/total: a key nothing reads is not a key this build lacks.
+    Read from the source, like generator_key_overrides.
+    """
+    path = os.path.join(generators_dir, plugin or "", "gamedata.py")
+    if not plugin or not os.path.isfile(path):
+        return {}
+    with open(path, "r", encoding="utf-8") as handle:
+        tree = ast.parse(handle.read(), path)
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "UNREAD_KEYS":
+                    return dict(ast.literal_eval(node.value))
+    return {}
+
+
 def enabled_generator_key_overrides(generators_dir="gamedata-generators"):
     """{plugin: KEY_SYMBOL_OVERRIDES} for every generator not switched off."""
     out = {}

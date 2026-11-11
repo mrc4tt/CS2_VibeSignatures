@@ -701,12 +701,6 @@
       "updated": false
     },
     {
-      "covered": false,
-      "covered_lines": [],
-      "name": "GameEventManager",
-      "updated": false
-    },
-    {
       "covered": true,
       "covered_lines": [
         103,
@@ -922,7 +916,7 @@
   "schema_version": 2,
   "summary": {
     "covered": 44,
-    "total": 45,
+    "total": 44,
     "updated": 22
   }
 }

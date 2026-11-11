@@ -436,7 +436,7 @@ def generate_gamedata(
                 continue
             rel_path = f"{contract.directory}/{path}"
             # a generator's own key routing (KEY_SYMBOL_OVERRIDES) counts as covered too
-            from gamedata_utils import generator_key_overrides
+            from gamedata_utils import generator_key_overrides, generator_unread_keys
             own_keys = generator_key_overrides(
                 contract.directory, os.path.dirname(contract.source_dir), output=path
             )
@@ -450,6 +450,7 @@ def generate_gamedata(
                     yaml_data=yaml_data,
                     alias_to_name_map={**alias_map, **own_keys},
                     metadata_path=metadata_path,
+                    unread_keys=generator_unread_keys(contract.directory, os.path.dirname(contract.source_dir)),
                 )
             except Exception as exc:
                 if strict:

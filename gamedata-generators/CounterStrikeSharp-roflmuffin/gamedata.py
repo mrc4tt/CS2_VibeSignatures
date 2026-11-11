@@ -31,6 +31,15 @@ OUTPUT_PATHS = (GAMEDATA_PATH,)
 
 STATIC_SOURCES = ((GAMEDATA_PATH, GAMEDATA_PATH),)
 
+# Keys roflmuffin's file still carries that no code of stock CSS reads. Shipped as the
+# author wrote them, left out of the file's covered/total (gamedata_utils.generator_unread_keys).
+UNREAD_KEYS = {
+    # mm_plugin.cpp read it as an ISource2Server slot until cafc4e23 (2024-05-25), which
+    # replaced it with a hook on CGameEventManager_Init; `git grep GameEventManager\"`
+    # on upstream/main finds only the gamedata entry.
+    "GameEventManager": "unread since cafc4e23; CGameEventManager_Init hook replaced it",
+}
+
 
 def _css():
     path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "CounterStrikeSharp", "gamedata.py")
