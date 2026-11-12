@@ -691,23 +691,18 @@ OK	event	INetworkMessages::FindNetworkMessage("CMsgSource1LegacyGameEvent")
 OK	event	INetworkMessages::FindNetworkMessage("CMsgSource1LegacyGameEventList")
 OK	event	INetworkMessages::FindNetworkMessage("CMsgSource1LegacyListenEvents")
 OK	event	INetworkMessages::FindNetworkMessagePartial
-OK	event	IProtobufBinding::GetBufType
-OK	event	IProtobufBinding::GetGroup
-OK	event	IProtobufBinding::GetGroupColor
-OK	event	IProtobufBinding::GetName
-OK	event	IProtobufBinding::GetSize
-OK	event	IProtobufBinding::OkToRedispatch
 OK	event	NetMessageInfo_t (fetch)
 OK	event	NetMessageInfo_t::<hexdump past end>
 OK	event	NetMessageInfo_t::<hexdump>
 OK	event	NetMessageInfo_t::m_GroupId
 OK	event	NetMessageInfo_t::m_MessageId
-OK	event	NetMessageInfo_t::m_bOkayToRedispatch
 OK	event	NetMessageInfo_t::m_nBufType/m_bCannotBeNetworked/m_unk001 (packed byte)
 OK	event	NetMessageInfo_t::m_nCategories
 OK	event	NetMessageInfo_t::m_nRequiredHandlerCategories
-OK	event	NetMessageInfo_t::m_pBinding
+OK	event	NetMessageInfo_t::m_pfnAllocate
 OK	event	NetMessageInfo_t::m_szGroup
+OK	event	NetMessageInfo_t::m_szName
+OK	event	NetMessageInfo_t::m_szName#2
 OK	filesystem	IAppSystem::GetBuildType
 OK	filesystem	IAppSystem::GetDependencies
 OK	filesystem	IAppSystem::GetTier
@@ -875,30 +870,25 @@ OK	netmessages	CLoggingSystem::LoggingChannel_t::m_bLastLineComplete
 OK	netmessages	CLoggingSystem::LoggingChannel_t::m_nIndent
 OK	netmessages	CLoggingSystem::LoggingChannel_t::m_nModifiedFields
 OK	netmessages	CLoggingSystem::LoggingChannel_t::m_pFirstTag
+OK	netmessages	CNETMsg_Tick::descriptor (generated header)
 OK	netmessages	CNetMessage::AsProto
 OK	netmessages	CNetMessage::AsProto2
 OK	netmessages	CNetMessage::CopyConstruct
 OK	netmessages	CNetMessage::GetMargin
 OK	netmessages	CNetMessage::GetMessageId
-OK	netmessages	CNetMessage::GetName
 OK	netmessages	CNetMessage::GetNetMessage
+OK	netmessages	CNetMessage::~CNetMessage
+OK	netmessages	CNetMessage::~CNetMessage (copy)
+OK	netmessages	CNetMessage::~CNetMessage (filled)
+OK	netmessages	CNetMessage::~CNetMessage (typed)
 OK	netmessages	CNetMessagePB<CNETMsg_Tick>::set_tick
-OK	netmessages	CNetMessagePB<CNETMsg_Tick>::tick (forwarded read)
 OK	netmessages	CNetMessagePB<CNETMsg_Tick>::tick (typed read)
 OK	netmessages	INetworkMessageInternal::AllocateMessage
 OK	netmessages	INetworkMessageInternal::AllocateMessage (round trip)
 OK	netmessages	INetworkMessageInternal::GetNetMessageInfo
 OK	netmessages	INetworkMessageInternal::GetNetMessageInfo (binding fetch)
 OK	netmessages	INetworkMessageInternal::GetUnscopedName
-OK	netmessages	INetworkMessageInternal::Serialize
-OK	netmessages	INetworkMessageInternal::Unserialize
-OK	netmessages	INetworkMessages::AllocateAndCopyConstructNetMessageAbstract
 OK	netmessages	INetworkMessages::ComputeOrderForPriority
-OK	netmessages	INetworkMessages::DeallocateNetMessageAbstract
-OK	netmessages	INetworkMessages::DeallocateNetMessageAbstract (copy)
-OK	netmessages	INetworkMessages::DeallocateNetMessageAbstract (filled)
-OK	netmessages	INetworkMessages::DeallocateNetMessageAbstract (forwarded)
-OK	netmessages	INetworkMessages::DeallocateNetMessageAbstract (typed)
 OK	netmessages	INetworkMessages::FindNetworkGroup
 OK	netmessages	INetworkMessages::FindNetworkGroup (nonexistent)
 OK	netmessages	INetworkMessages::FindNetworkMessage (nonexistent name)
@@ -909,7 +899,6 @@ OK	netmessages	INetworkMessages::FindNetworkMessage("CSVCMsg_GameEvent")
 OK	netmessages	INetworkMessages::FindNetworkMessageById
 OK	netmessages	INetworkMessages::FindNetworkMessageById (unused id)
 OK	netmessages	INetworkMessages::FindNetworkMessagePartial
-OK	netmessages	INetworkMessages::FindOrCreateNetMessage (lookup, no create)
 OK	netmessages	INetworkMessages::GetCoordSizeParams
 OK	netmessages	INetworkMessages::GetFieldChangeCallbackOrderCount
 OK	netmessages	INetworkMessages::GetFieldChangeCallbackPriorities
@@ -924,21 +913,14 @@ OK	netmessages	INetworkMessages::GetNetworkSerializationContextData
 OK	netmessages	INetworkMessages::GetNetworkSerializationContextData#2
 OK	netmessages	INetworkMessages::IsAdditionalMessageRegistrationAllowed
 OK	netmessages	INetworkMessages::Serialize (public)
-OK	netmessages	INetworkMessages::SerializeAbstract
 OK	netmessages	INetworkMessages::SerializeMessageInternal
 OK	netmessages	INetworkMessages::UnserializeFromStream
 OK	netmessages	INetworkMessages::UnserializeMessageInternal
-OK	netmessages	IProtobufBinding::GetBufType
-OK	netmessages	IProtobufBinding::GetGroup
-OK	netmessages	IProtobufBinding::GetGroupColor
-OK	netmessages	IProtobufBinding::GetName
-OK	netmessages	IProtobufBinding::GetSize
-OK	netmessages	IProtobufBinding::OkToRedispatch
-OK	netmessages	IProtobufBinding::ToString
-OK	netmessages	IProtobufBinding::descriptor (generated header)
 OK	netmessages	LoggingChannel_t::m_Name (read)
 OK	netmessages	LoggingChannel_t::m_bLastLineComplete vs LoggingSystem_GetLastChannelLineComplete
 OK	netmessages	LoggingSystem_GetChannel (tier0)
+OK	netmessages	NetMessageInfo_t::GetBufType
+OK	netmessages	NetMessageInfo_t::m_szGroup
 OK	netserver	CNetworkGameServerBase -> IConVarListener (base adjustment)
 OK	netserver	CNetworkGameServerBase::GetHostName
 OK	netserver	CNetworkGameServerBase::GetNetStats
@@ -1423,8 +1405,8 @@ OK	serverconfig	ISource2ServerConfig::IsCommandQueueEnabled [slot 23, bool]
 OK	serverconfig	ISource2ServerConfig::ShouldAllocateNewClients [slot 26, bool]
 OK	serverconfig	ISource2ServerConfig::ShouldMapCommandChangeLevel [slot 25, bool]
 OK	serverconfig	ISource2ServerConfig::ShouldNotifyLocalClientConnectionStateChanges
+OK	serverconfig	ISource2ServerConfig::ShouldSendSerializedEntities [slot 22, bool]
 OK	serverconfig	ISource2ServerConfig::Uses64TickInterval [slot 27, bool]
-OK	serverconfig	ISource2ServerConfig::unk101 [slot 22, bool]
 SKIP	clients	IAppSystem::Connect
 SKIP	clients	IAppSystem::Disconnect
 SKIP	clients	IAppSystem::Init
@@ -1573,9 +1555,7 @@ SKIP	event	INetworkMessageInternal::SetMessageId
 SKIP	event	INetworkMessageInternal::SwitchMode
 SKIP	event	INetworkMessageInternal::Unserialize
 SKIP	event	INetworkMessageInternal::~INetworkMessageInternal
-SKIP	event	IProtobufBinding::AllocateMessage
-SKIP	event	IProtobufBinding::ToString
-SKIP	event	IProtobufBinding::unk001
+SKIP	event	IProtobufBinding
 SKIP	filesystem	IAppSystem::Connect
 SKIP	filesystem	IAppSystem::Disconnect
 SKIP	filesystem	IAppSystem::Init
@@ -1613,15 +1593,19 @@ SKIP	metamod	ISmmAPI::RegisterConVar
 SKIP	metamod	ISmmAPI::UnregisterConCommand
 SKIP	metamod	ISmmAPI::UnregisterConCommandBase
 SKIP	metamod	ISmmAPI::UnregisterConVar
-SKIP	netmessages	CNetMessage::~CNetMessage
+SKIP	netmessages	CNetMessage::GetName
 SKIP	netmessages	INetworkMessageInternal::AddCategoryMask
+SKIP	netmessages	INetworkMessageInternal::Serialize
 SKIP	netmessages	INetworkMessageInternal::SetMessageId
 SKIP	netmessages	INetworkMessageInternal::SwitchMode
+SKIP	netmessages	INetworkMessageInternal::Unserialize
 SKIP	netmessages	INetworkMessageInternal::~INetworkMessageInternal
+SKIP	netmessages	INetworkMessages::AllocateAndCopyConstructNetMessageAbstract
 SKIP	netmessages	INetworkMessages::AllowAdditionalMessageRegistration
 SKIP	netmessages	INetworkMessages::AssociateNetMessageGroupIdWithChannelCategory
 SKIP	netmessages	INetworkMessages::AssociateNetMessageWithChannelCategoryAbstract
 SKIP	netmessages	INetworkMessages::FindOrCreateNetMessage (create)
+SKIP	netmessages	INetworkMessages::FindOrCreateNetMessage (lookup, no create)
 SKIP	netmessages	INetworkMessages::RegisterFieldChangeCallbackPriority
 SKIP	netmessages	INetworkMessages::RegisterNetworkArrayFieldSerializer
 SKIP	netmessages	INetworkMessages::RegisterNetworkCategory
@@ -1629,11 +1613,14 @@ SKIP	netmessages	INetworkMessages::RegisterNetworkChangeTagCallback
 SKIP	netmessages	INetworkMessages::RegisterNetworkFieldChangeCallbackInternal
 SKIP	netmessages	INetworkMessages::RegisterNetworkFieldSerializer
 SKIP	netmessages	INetworkMessages::RegisterSchemaTypeOverride
+SKIP	netmessages	INetworkMessages::SerializeAbstract
 SKIP	netmessages	INetworkMessages::SetCoordSizeParams
 SKIP	netmessages	INetworkMessages::SetIsForServer
 SKIP	netmessages	INetworkMessages::SetNetworkSerializationContextData
 SKIP	netmessages	INetworkMessages::~INetworkMessages
+SKIP	netmessages	IProtobufBinding
 SKIP	netmessages	IProtobufBinding::AllocateMessage
+SKIP	netmessages	IProtobufBinding::ToString
 SKIP	netmessages	IProtobufBinding::unk001
 SKIP	netserver	CNetworkGameServerBase::CalculateCPUUsage
 SKIP	netserver	CNetworkGameServerBase::CheckPassword

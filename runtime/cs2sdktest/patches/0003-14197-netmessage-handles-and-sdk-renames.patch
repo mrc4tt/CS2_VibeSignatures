@@ -1,0 +1,593 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 043b026..070ae30 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -221,6 +221,11 @@ set(CS2SDKTEST_HEADERS
+ set(CS2SDKTEST_SDK_SOURCES
+   "${S2SDK_ROOT}/entity2/entitysystem.cpp"
+   "${S2SDK_ROOT}/entity2/entityidentity.cpp"
++  # entitysystem.cpp's CreateEntityKeyValues/SpawnEntities need these since
++  # the fork's 2026-11 SDK; without them the plugin fails dlopen on
++  # CEntityKeyValues::SetString.
++  "${S2SDK_ROOT}/entity2/entitykeyvalues.cpp"
++  "${S2SDK_ROOT}/tier0_perproject/keyvalues3.cpp"
+ )
+ if(CS2SDKTEST_USE_MEMOVERRIDE)
+   list(APPEND CS2SDKTEST_SDK_SOURCES "${S2SDK_ROOT}/public/tier0/memoverride.cpp")
+diff --git a/src/suites/GameEventSuite.cpp b/src/suites/GameEventSuite.cpp
+index 3856eb7..5376ed4 100644
+--- a/src/suites/GameEventSuite.cpp
++++ b/src/suites/GameEventSuite.cpp
+@@ -688,7 +688,8 @@ void GameEventSuite::InspectNetMessageInfo(TestContext& context)
+ 	StructInspector inspect(context, "NetMessageInfo_t", info, sizeof(NetMessageInfo_t));
+ 
+ 	inspect.Int32  ("m_nCategories",       offsetof(NetMessageInfo_t, m_nCategories));
+-	inspect.Pointer("m_pBinding",          offsetof(NetMessageInfo_t, m_pBinding));
++	inspect.String ("m_szName",            offsetof(NetMessageInfo_t, m_szName));
++	inspect.Pointer("m_pfnAllocate",       offsetof(NetMessageInfo_t, m_pfnAllocate));
+ 	// CUtlString's whole representation is one char*, so the string check
+ 	// applies to the member directly: plausible pointer, printable, terminated.
+ 	inspect.String ("m_szGroup",           offsetof(NetMessageInfo_t, m_szGroup));
+@@ -707,107 +708,21 @@ void GameEventSuite::InspectNetMessageInfo(TestContext& context)
+ 	                                       sizeof(uint8));
+ 	inspect.Int32  ("m_nRequiredHandlerCategories",
+ 	                                       offsetof(NetMessageInfo_t, m_nRequiredHandlerCategories));
+-	// The sharpest probe in the struct: one byte with two legal values, sitting
+-	// past every field above it.
+-	inspect.Bool   ("m_bOkayToRedispatch", offsetof(NetMessageInfo_t, m_bOkayToRedispatch));
+ 
+ 	inspect.Summarize();
+ 	inspect.HexDump();
+ 
+-	// ---- IProtobufBinding, and the three oracles it gives ------------------
+-
+-	IProtobufBinding* binding = info->m_pBinding;
+-
+-	if (!LooksLikeObjectPointer(binding))
+-	{
+-		context.UnavailableCall("IProtobufBinding",
+-			"m_pBinding is %p, which is not an object pointer",
+-			static_cast<void*>(binding));
+-		return;
+-	}
+-
+-	context.Note("[IProtobufBinding] the same descriptor read down a vtable instead of "
+-	             "by offset - where the two disagree, one of them is wrong");
+-
+-	CS2ST_CALL(context, "IProtobufBinding::GetName", {
+-		const char* binding_name = binding->GetName();
+-		const char* message_name = legacy_event_message_->GetUnscopedName();
+-		context.Detail("-> \"%s\" vs INetworkMessageInternal::GetUnscopedName \"%s\"",
+-			binding_name != nullptr ? binding_name : "(null)",
+-			message_name != nullptr ? message_name : "(null)");
+-		if (binding_name == nullptr)
+-		{
+-			context.Fail("the binding a registered message points at has no name");
+-		}
+-	});
+-
+-	CS2ST_CALL(context, "IProtobufBinding::GetSize", {
+-		const int size = binding->GetSize();
+-		context.Detail("-> %d", size);
+-		// A negative size is impossible whatever the number means; zero is not,
+-		// because the SDK never says whether this is the C++ object or the
+-		// serialised payload, and an empty message has an empty payload.
+-		if (size < 0)
+-		{
+-			context.Fail("a size cannot be negative");
+-		}
+-	});
+-
+-	CS2ST_CALL(context, "IProtobufBinding::GetGroup", {
+-		// The group name down the binding's vtable against the m_szGroup the
+-		// descriptor stores by value: two descriptions of one fact that share
+-		// no code. Recorded as Suspect rather than Fail on a mismatch - the SDK
+-		// never says the descriptor's copy comes from the binding, and inventing
+-		// that contract is how this project has produced false alarms before.
+-		const char* group = binding->GetGroup();
+-		const char* stored = info->m_szGroup.Get();
+-		context.Detail("-> \"%s\" vs NetMessageInfo_t::m_szGroup \"%s\"",
+-			group != nullptr ? group : "(null)", stored != nullptr ? stored : "(null)");
+-		if (group != nullptr && stored != nullptr && std::strcmp(group, stored) != 0)
+-		{
+-			context.Suspect("the binding and the descriptor disagree on the group");
+-		}
+-	});
+-
+-	CS2ST_CALL(context, "IProtobufBinding::GetGroupColor", {
+-		const Color color = binding->GetGroupColor();
+-		context.Detail("-> r=%d g=%d b=%d a=%d", color.r(), color.g(), color.b(), color.a());
+-	});
+-
+-	CS2ST_CALL(context, "IProtobufBinding::GetBufType", {
+-		const NetChannelBufType_t buf_type = binding->GetBufType();
+-		context.Detail("-> %s (%d)", BufTypeName(buf_type), static_cast<int>(buf_type));
+-		if (buf_type < BUF_DEFAULT || buf_type > BUF_VOICE)
+-		{
+-			context.Fail("outside NetChannelBufType_t's four enumerators");
+-		}
++	// ---- IProtobufBinding ----------------------------------------------------
++	// 14197 removed IProtobufBinding: the handle IS the NetMessageInfo_t now,
++	// with the allocator stored in m_pfnAllocate. Nothing is left to read down
++	// a binding vtable, so the old oracles are reported as gone.
++	CS2ST_CALL(context, "NetMessageInfo_t::m_szName", {
++		const char* name = info->m_szName.Get();
++		context.Detail("-> \"%s\"", name != nullptr ? name : "(null)");
++		if (name == nullptr || name[0] == '\0')
++			context.Fail("a registered message has no name");
+ 	});
+-
+-	CS2ST_CALL(context, "IProtobufBinding::OkToRedispatch", {
+-		// The sharpest of the three: a bool read two ways, and the descriptor's
+-		// byte was already checked for being 0 or 1 above, so this asks whether
+-		// it is the *same* 0 or 1 the binding reports.
+-		//
+-		// Still Suspect and not Fail. These are two objects, not a getter and
+-		// the field behind it: the names line up exactly and the engine almost
+-		// certainly copies one into the other at registration, but "almost
+-		// certainly" is not something the SDK states, and a FAIL that turns out
+-		// to be our inference teaches people to skip the column.
+-		const bool from_binding = binding->OkToRedispatch();
+-		const bool from_descriptor = info->m_bOkayToRedispatch;
+-		context.Detail("-> %s vs NetMessageInfo_t::m_bOkayToRedispatch %s",
+-			from_binding ? "true" : "false", from_descriptor ? "true" : "false");
+-		if (from_binding != from_descriptor)
+-		{
+-			context.Suspect("the binding and the descriptor disagree on redispatch");
+-		}
+-	});
+-
+-	context.SkipCall("IProtobufBinding::ToString",
+-		"needs a filled message to render, and this suite never allocates one");
+-	context.SkipCall("IProtobufBinding::AllocateMessage",
+-		"allocates an engine-owned CNetMessage with no matching free on this interface");
+-	context.SkipCall("IProtobufBinding::unk001", "unidentified in the SDK");
++	context.SkipCall("IProtobufBinding", "removed from the engine in 14197");
+ }
+ 
+ // -----------------------------------------------------------------------------
+diff --git a/src/suites/NetworkMessagesSuite.cpp b/src/suites/NetworkMessagesSuite.cpp
+index 75f160e..b26f99d 100644
+--- a/src/suites/NetworkMessagesSuite.cpp
++++ b/src/suites/NetworkMessagesSuite.cpp
+@@ -326,31 +326,11 @@ void NetworkMessagesSuite::ExerciseRegistryLookups(TestContext& context)
+ 		}
+ 	});
+ 
+-	CS2ST_CALL(context, "INetworkMessages::FindOrCreateNetMessage (lookup, no create)", {
+-		// The creating method with bCreateIfNotFound=false is a fourth
+-		// read-only path to the table, and the only one that takes the
+-		// binding and the size alongside the id. Passing the exact
+-		// descriptor-reported id (not -1, which auto-assigns by name hash)
+-		// asks whether the creating path agrees with the lookups about which
+-		// entry an id means.
+-		INetworkMessageInternal* found = messages_->FindOrCreateNetMessage(
+-			message_id, info->m_pBinding, sizeof(CNETMsg_Tick), nullptr, false, false);
+-		context.Detail("-> %p for id %d with bCreateIfNotFound=false",
+-			static_cast<void*>(found), message_id);
+-		if (found != nullptr && found != tick_message_)
+-		{
+-			context.Fail("the creating path and the name lookup disagree on id %d",
+-				message_id);
+-		}
+-		if (found == nullptr)
+-		{
+-			// Suspect: the SDK never says the no-create form must return an
+-			// existing entry rather than null; printed because four paths to
+-			// one table agreeing is the point of this section.
+-			context.Suspect("the no-create lookup returned null for an id the "
+-			                "descriptor reports");
+-		}
+-	});
++	// 14197 dropped bCreateIfNotFound: FindOrCreateNetMessage always registers
++	// a miss, and registering after serialization started is a fatal error, so
++	// it is no longer a read-only path to probe on a live server.
++	context.SkipCall("INetworkMessages::FindOrCreateNetMessage (lookup, no create)",
++		"no non-creating form since 14197");
+ 
+ 	CS2ST_CALL(context, "INetworkMessages::GetNetMessageInfo", {
+ 		NetMessageInfo_t* via_registry = messages_->GetNetMessageInfo(tick_message_);
+@@ -388,17 +368,18 @@ void NetworkMessagesSuite::ExerciseBindingMatrix(TestContext& context)
+ 		context.Detail("-> %p", static_cast<void*>(info));
+ 	});
+ 
+-	if (info == nullptr || !LooksLikeObjectPointer(info->m_pBinding))
++	if (info == nullptr)
+ 	{
+-		context.UnavailableCall("IProtobufBinding",
+-			"no descriptor or no binding to call anything on");
++		context.UnavailableCall("NetMessageInfo_t", "no descriptor to read anything from");
+ 		return;
+ 	}
+ 
+-	IProtobufBinding* binding = info->m_pBinding;
+-
+-	// NetMessageInfo_t's layout is registered by GameEventSuite (see
+-	// scripts/list-struct-coverage.sh); it is read here, not re-inspected.
++	// 14197 removed IProtobufBinding: the registry handle IS the
++	// NetMessageInfo_t, so the binding's questions are answered by the
++	// descriptor's own fields now. NetMessageInfo_t's layout is registered by
++	// GameEventSuite (see scripts/list-struct-coverage.sh); it is read here,
++	// not re-inspected.
++	context.SkipCall("IProtobufBinding", "removed from the engine in 14197");
+ 
+ 	CS2ST_CALL(context, "INetworkMessageInternal::GetUnscopedName", {
+ 		const char* unscoped = tick_message_->GetUnscopedName();
+@@ -408,69 +389,23 @@ void NetworkMessagesSuite::ExerciseBindingMatrix(TestContext& context)
+ 		{
+ 			context.Fail("a registered message with no name cannot be looked up");
+ 		}
+-	});
+-
+-	CS2ST_CALL(context, "IProtobufBinding::GetName", {
+-		const char* name = binding->GetName();
+-		context.Detail("-> \"%s\"", name != nullptr ? name : "(null)");
+-		if (name == nullptr)
+-		{
+-			context.Fail("the binding a registered message points at has no name");
+-		}
+-		else if (!RegistryNameIs(name, "CNETMsg_Tick"))
+-		{
+-			// The binding's name is the protobuf's, the unscoped name is the
+-			// registry's, and neither is defined to be the other - so Suspect,
+-			// printed, because the day they diverge is the day a lookup by
+-			// one name stops finding a message known by the other.
+-			context.Suspect("the binding's name is not CNETMsg_Tick");
+-		}
+-	});
+-
+-	CS2ST_CALL(context, "IProtobufBinding::GetSize", {
+-		const int size = binding->GetSize();
+-		context.Detail("-> %d (sizeof(CNETMsg_Tick) as compiled here = %zu, plus the %zu-byte "
+-		               "CNetMessage header = %zu)",
+-			size, sizeof(CNETMsg_Tick), kNetMessageHeaderSize,
+-			sizeof(CNETMsg_Tick) + kNetMessageHeaderSize);
+-		if (size <= 0)
+-		{
+-			context.Fail("a protobuf C++ object cannot have size %d", size);
+-		}
+-		else if (static_cast<std::size_t>(size) != sizeof(CNETMsg_Tick) &&
+-		         static_cast<std::size_t>(size) != sizeof(CNETMsg_Tick) + kNetMessageHeaderSize)
++		else if (!RegistryNameIs(unscoped, "CNETMsg_Tick"))
+ 		{
+-			// The engine reports the whole CNetMessagePB (header + protobuf);
+-			// either that or the bare protobuf size is the expected answer.
+-			// The engine's protobuf runtime laid this object out; this build
+-			// compiles the same .proto with the SDK's own protoc. A mismatch
+-			// means the descriptor or the runtime moved - the thing target #8
+-			// exists to catch. Suspect rather than Fail because one ABI knob
+-			// (which CRT owns the internal arena) legitimately differs.
+-			context.Suspect("the engine's CNETMsg_Tick is %d bytes; ours is %zu",
+-				size, sizeof(CNETMsg_Tick));
++			context.Suspect("the registry's name for CNETMsg_Tick is not CNETMsg_Tick");
+ 		}
+ 	});
+ 
+-	CS2ST_CALL(context, "IProtobufBinding::GetGroup", {
+-		const char* group = binding->GetGroup();
++	CS2ST_CALL(context, "NetMessageInfo_t::m_szGroup", {
+ 		const char* stored = info->m_szGroup.Get();
+-		context.Detail("-> \"%s\" vs NetMessageInfo_t::m_szGroup \"%s\"",
+-			group != nullptr ? group : "(null)",
+-			stored != nullptr ? stored : "(null)");
+-		if (group != nullptr && stored != nullptr && std::strcmp(group, stored) != 0)
++		context.Detail("-> \"%s\"", stored != nullptr ? stored : "(null)");
++		if (stored == nullptr)
+ 		{
+-			context.Suspect("the binding and the descriptor disagree on the group");
++			context.Suspect("a registered message has no group name");
+ 		}
+ 	});
+ 
+-	CS2ST_CALL(context, "IProtobufBinding::GetGroupColor", {
+-		const Color color = binding->GetGroupColor();
+-		context.Detail("-> r=%d g=%d b=%d a=%d", color.r(), color.g(), color.b(), color.a());
+-	});
+-
+-	CS2ST_CALL(context, "IProtobufBinding::GetBufType", {
+-		const NetChannelBufType_t buf_type = binding->GetBufType();
++	CS2ST_CALL(context, "NetMessageInfo_t::GetBufType", {
++		const NetChannelBufType_t buf_type = info->GetBufType();
+ 		context.Detail("-> %d", static_cast<int>(buf_type));
+ 		if (buf_type < BUF_DEFAULT || buf_type > BUF_VOICE)
+ 		{
+@@ -478,22 +413,7 @@ void NetworkMessagesSuite::ExerciseBindingMatrix(TestContext& context)
+ 		}
+ 	});
+ 
+-	CS2ST_CALL(context, "IProtobufBinding::OkToRedispatch", {
+-		// The sharpest binding oracle, same as GameEventSuite runs on the
+-		// event message: one bool read two ways that share no code. A bool
+-		// and its descriptor copy disagreeing on CNETMsg_Tick is a different
+-		// message's finding than the event suite's, not a duplicate of it.
+-		const bool from_binding = binding->OkToRedispatch();
+-		const bool from_descriptor = info->m_bOkayToRedispatch;
+-		context.Detail("-> %s vs NetMessageInfo_t::m_bOkayToRedispatch %s",
+-			from_binding ? "true" : "false", from_descriptor ? "true" : "false");
+-		if (from_binding != from_descriptor)
+-		{
+-			context.Suspect("the binding and the descriptor disagree on redispatch");
+-		}
+-	});
+-
+-	CS2ST_CALL(context, "IProtobufBinding::descriptor (generated header)", {
++	CS2ST_CALL(context, "CNETMsg_Tick::descriptor (generated header)", {
+ 		// The third, protobuf-side reading: what the SDK's .proto says, as
+ 		// this build compiled it. Read through the generated code's own
+ 		// Reflection surface so the row is computed from the same header the
+@@ -701,16 +621,7 @@ void NetworkMessagesSuite::ExerciseAllocation(TestContext& context)
+ 		}
+ 	});
+ 
+-	CS2ST_CALL(context, "CNetMessage::GetName", {
+-		// Same rework, same shape of oracle: the message's name against the
+-		// binding's own GetName, reached down two different vtables.
+-		const char* name = allocated->GetName();
+-		context.Detail("-> \"%s\"", name != nullptr ? name : "(null)");
+-		if (!RegistryNameIs(name, "CNETMsg_Tick"))
+-		{
+-			context.Fail("a CNETMsg_Tick allocation reports a different name");
+-		}
+-	});
++	context.SkipCall("CNetMessage::GetName", "removed from CNetMessage in 14197");
+ 
+ 	CS2ST_CALL(context, "CNetMessage::GetMargin", {
+ 		// A plain load of an inline float member, not a virtual call - the
+@@ -721,41 +632,40 @@ void NetworkMessagesSuite::ExerciseAllocation(TestContext& context)
+ 		context.Detail("-> %.3f", static_cast<double>(allocated->GetMargin()));
+ 	});
+ 
+-	CS2ST_CALL(context, "INetworkMessages::AllocateAndCopyConstructNetMessageAbstract", {
+-		copy = messages_->AllocateAndCopyConstructNetMessageAbstract(
+-			tick_message_, allocated);
++	// 14197 removed AllocateAndCopyConstructNetMessageAbstract and
++	// DeallocateNetMessageAbstract: a message copies itself (CopyConstruct) and
++	// is freed through its virtual destructor, whose deleting variant lives in
++	// the module that allocated it.
++	context.SkipCall("INetworkMessages::AllocateAndCopyConstructNetMessageAbstract",
++		"removed from INetworkMessages in 14197");
++
++	CS2ST_CALL(context, "CNetMessage::CopyConstruct", {
++		// The SDK reworked this slot from CopyConstruct(const CNetMessage*) to
++		// a nullary copy: the source is the object it is called on.
++		copy = allocated->CopyConstruct();
+ 		context.Detail("-> %p (copy of %p)", static_cast<void*>(copy),
+ 			static_cast<void*>(allocated));
+ 		if (copy == nullptr)
+ 		{
+ 			context.Fail("copy-constructing an engine-allocated message returned null");
+ 		}
+-	});
+-
+-	CS2ST_CALL(context, "CNetMessage::CopyConstruct", {
+-		// The message's own copy path, on the same object - the vtable slot
+-		// the registry helper presumably ends up inside. The SDK reworked this
+-		// slot from CopyConstruct(const CNetMessage*) to a nullary copy: the
+-		// source is the object it is called on.
+-		CNetMessage* via_message = allocated->CopyConstruct();
+-		context.Detail("-> %p", static_cast<void*>(via_message));
+-		if (via_message != nullptr)
++		else if (copy->GetNetMessage() != allocated->GetNetMessage())
+ 		{
+-			messages_->DeallocateNetMessageAbstract(tick_message_, via_message);
++			context.Fail("the copy carries a different registry entry");
+ 		}
+ 	});
+ 
+ 	if (copy != nullptr)
+ 	{
+-		CS2ST_CALL(context, "INetworkMessages::DeallocateNetMessageAbstract (copy)", {
+-			messages_->DeallocateNetMessageAbstract(tick_message_, copy);
++		CS2ST_CALL(context, "CNetMessage::~CNetMessage (copy)", {
++			delete copy;
+ 			context.Detail("-> freed %p", static_cast<void*>(copy));
+ 		});
+ 		copy = nullptr;
+ 	}
+ 
+-	CS2ST_CALL(context, "INetworkMessages::DeallocateNetMessageAbstract", {
+-		messages_->DeallocateNetMessageAbstract(tick_message_, allocated);
++	CS2ST_CALL(context, "CNetMessage::~CNetMessage", {
++		delete allocated;
+ 		context.Detail("-> freed %p", static_cast<void*>(allocated));
+ 	});
+ 	allocated = nullptr;
+@@ -875,7 +785,7 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 				context.Detail("-> no target message to read into");
+ 				return;
+ 			}
+-			const bool ok = messages_->UnserializeMessageInternal(reader, typed_target);
++			const bool ok = messages_->UnserializeMessageInternal(reader, typed_target, 0, nullptr);
+ 			context.Detail("-> %s into %p", ok ? "true" : "false",
+ 				static_cast<void*>(typed_target));
+ 			if (!ok)
+@@ -909,7 +819,7 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 		CUtlString err_reason;
+ 		bf_read reader(buffer, written);
+ 		CS2ST_CALL(context, "INetworkMessages::UnserializeFromStream", {
+-			from_stream = messages_->UnserializeFromStream(reader, err_reason);
++			from_stream = messages_->UnserializeFromStream(reader, 0, err_reason);
+ 			context.Detail("-> %p, err \"%s\"", static_cast<void*>(from_stream),
+ 				err_reason.Get());
+ 		});
+@@ -951,23 +861,10 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 
+ 	// ---- the entry's forwarding pair ------------------------------------------
+ 
+-	{
+-		bf_read reader(buffer, written);
+-		CS2ST_CALL(context, "INetworkMessageInternal::Unserialize", {
+-			// The SDK's own comment: this forwards to
+-			// INetworkMessages::UnserializeMessageInternal. Called on the
+-			// entry so the forwarding vtable slot itself is exercised.
+-			forwarded_target = tick_message_->AllocateMessage();
+-			if (forwarded_target == nullptr)
+-			{
+-				context.Detail("-> no target message to read into");
+-				return;
+-			}
+-			const bool ok = tick_message_->Unserialize(reader, forwarded_target);
+-			context.Detail("-> %s into %p", ok ? "true" : "false",
+-				static_cast<void*>(forwarded_target));
+-		});
+-	}
++	// 14197 turned INetworkMessageInternal into a plain NetMessageInfo_t
++	// record with no vtable, so there is no forwarding slot left to call.
++	context.SkipCall("INetworkMessageInternal::Unserialize",
++		"INetworkMessageInternal has no vtable since 14197");
+ 
+ 	if (forwarded_target != nullptr)
+ 	{
+@@ -993,53 +890,11 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 		});
+ 	}
+ 
+-	{
+-		unsigned char sink[512] = {};
+-		bf_write writer(sink, static_cast<int>(sizeof(sink)));
+-		CS2ST_CALL(context, "INetworkMessages::SerializeAbstract", {
+-			const bool ok = messages_->SerializeAbstract(writer, tick_message_, message);
+-			context.Detail("-> %s, %d bytes", ok ? "true" : "false",
+-				writer.GetNumBytesWritten());
+-		});
+-	}
+-
+-	{
+-		unsigned char sink[512] = {};
+-		bf_write writer(sink, static_cast<int>(sizeof(sink)));
+-		CS2ST_CALL(context, "INetworkMessageInternal::Serialize", {
+-			const bool ok = tick_message_->Serialize(writer, message);
+-			context.Detail("-> %s, %d bytes", ok ? "true" : "false",
+-				writer.GetNumBytesWritten());
+-		});
+-	}
+-
+-	{
+-		CUtlString rendered;
+-		CS2ST_CALL(context, "IProtobufBinding::ToString", {
+-			// The fourth reading of the payload: the engine's own renderer.
+-			// Its pData is the CNetMessage itself, not the protobuf inside it:
+-			// the engine reads the protobuf at pData + 0x30 (the stub header's
+-			// size, the same 0x30 AsProto sits at). Handing it AsProto()'s
+-			// address, as the first version did, adds 0x30 twice and faults
+-			// at a small offset off a wild pointer.
+-			// CUtlString's heap lives in tier0 on both platforms, so the
+-			// engine writing into a stack CUtlString of ours frees through
+-			// the same allocator it allocated with.
+-			NetMessageInfo_t* info = tick_message_->GetNetMessageInfo();
+-			const char* text = info->m_pBinding->ToString(message, rendered);
+-			const char* shown = text != nullptr ? text : rendered.Get();
+-			context.Detail("-> %.96s", shown != nullptr ? shown : "(null)");
+-			if (shown != nullptr && std::strstr(shown, kRoundTripTickDecimal) == nullptr)
+-			{
+-				// Suspect: the engine may render protobuf text format with
+-				// hex or field-number prefixes, so absence of the decimal is
+-				// not proof - but presence is the oracle, and its absence
+-				// after three successful readers above is worth a row.
+-				context.Suspect("the engine's rendering does not contain the "
+-				                "planted tick value");
+-			}
+-		});
+-	}
++	context.SkipCall("INetworkMessages::SerializeAbstract",
++		"removed from INetworkMessages in 14197");
++	context.SkipCall("INetworkMessageInternal::Serialize",
++		"INetworkMessageInternal has no vtable since 14197");
++	context.SkipCall("IProtobufBinding::ToString", "removed from the engine in 14197");
+ 
+ 	message_free_section(context, message, typed_target, from_stream,
+ 		forwarded_target);
+@@ -1358,8 +1213,6 @@ void NetworkMessagesSuite::NoteSkippedWrites(TestContext& context)
+ 		"flips the registry entry between server and client serialisation");
+ 	context.SkipCall("INetworkMessageInternal::~INetworkMessageInternal",
+ 		"would destroy a registry entry the engine still owns");
+-	context.SkipCall("CNetMessage::~CNetMessage",
+-		"would destroy a message only DeallocateNetMessageAbstract may free");
+ 	context.SkipCall("IProtobufBinding::AllocateMessage",
+ 		"allocates an engine-owned CNetMessage with no matching free on this "
+ 		"interface; INetworkMessageInternal::AllocateMessage is the covered pair");
+@@ -1383,30 +1236,30 @@ void NetworkMessagesSuite::message_free_section(TestContext& context,
+ {
+ 	if (typed_target != nullptr)
+ 	{
+-		CS2ST_CALL(context, "INetworkMessages::DeallocateNetMessageAbstract (typed)", {
+-			messages_->DeallocateNetMessageAbstract(tick_message_, typed_target);
++		CS2ST_CALL(context, "CNetMessage::~CNetMessage (typed)", {
++			delete typed_target;
+ 			context.Detail("-> freed %p", static_cast<void*>(typed_target));
+ 		});
+ 	}
+ 	if (from_stream != nullptr)
+ 	{
+-		CS2ST_CALL(context, "INetworkMessages::DeallocateNetMessageAbstract (stream)", {
+-			messages_->DeallocateNetMessageAbstract(tick_message_, from_stream);
++		CS2ST_CALL(context, "CNetMessage::~CNetMessage (stream)", {
++			delete from_stream;
+ 			context.Detail("-> freed %p", static_cast<void*>(from_stream));
+ 		});
+ 	}
+ 	if (forwarded_target != nullptr)
+ 	{
+ 		CS2ST_CALL(context,
+-			"INetworkMessages::DeallocateNetMessageAbstract (forwarded)", {
+-			messages_->DeallocateNetMessageAbstract(tick_message_, forwarded_target);
++			"CNetMessage::~CNetMessage (forwarded)", {
++			delete forwarded_target;
+ 			context.Detail("-> freed %p", static_cast<void*>(forwarded_target));
+ 		});
+ 	}
+ 	if (message != nullptr)
+ 	{
+-		CS2ST_CALL(context, "INetworkMessages::DeallocateNetMessageAbstract (filled)", {
+-			messages_->DeallocateNetMessageAbstract(tick_message_, message);
++		CS2ST_CALL(context, "CNetMessage::~CNetMessage (filled)", {
++			delete message;
+ 			context.Detail("-> freed %p", static_cast<void*>(message));
+ 		});
+ 	}
+diff --git a/src/suites/SchemaSystemSuite.cpp b/src/suites/SchemaSystemSuite.cpp
+index 4b2d02a..2b57c77 100644
+--- a/src/suites/SchemaSystemSuite.cpp
++++ b/src/suites/SchemaSystemSuite.cpp
+@@ -1962,7 +1962,7 @@ void SchemaSystemSuite::ExerciseClassGraph(TestContext& context)
+ 		CUtlVector<const CSchemaClassInfo*> descendents;
+ 		UtlVectorGuard<decltype(descendents)> descendents_guard(descendents);
+ 		schema_->FindDescendentsOfClass(probe_class_,
+-			static_cast<int>(SCHEMA_ITER_NONE), &descendents, false);
++			static_cast<SchemaSubclassTraversalDepth_t>(SCHEMA_ITER_NONE), &descendents, false);
+ 
+ 		const int count = descendents.Count();
+ 		context.Detail("-> %d descendent(s) of %s", count, probe_class_name_);
+diff --git a/src/suites/ServerConfigSuite.cpp b/src/suites/ServerConfigSuite.cpp
+index 81ea582..a21062a 100644
+--- a/src/suites/ServerConfigSuite.cpp
++++ b/src/suites/ServerConfigSuite.cpp
+@@ -504,8 +504,8 @@ void ServerConfigSuite::ExerciseConfigQueries(TestContext& context)
+ 
+ void ServerConfigSuite::ExerciseTailSlots(TestContext& context)
+ {
+-	CS2ST_CALL(context, "ISource2ServerConfig::unk101 [slot 22, bool]", {
+-		context.Detail("-> %s", config_->unk101() ? "true" : "false");
++	CS2ST_CALL(context, "ISource2ServerConfig::ShouldSendSerializedEntities [slot 22, bool]", {
++		context.Detail("-> %s", config_->ShouldSendSerializedEntities() ? "true" : "false");
+ 	});
+ 
+ 	CS2ST_CALL(context, "ISource2ServerConfig::IsCommandQueueEnabled [slot 23, bool]", {
+diff --git a/src/suites/Source2GameClientsSuite.cpp b/src/suites/Source2GameClientsSuite.cpp
+index d1322bb..61d5557 100644
+--- a/src/suites/Source2GameClientsSuite.cpp
++++ b/src/suites/Source2GameClientsSuite.cpp
+@@ -551,8 +551,11 @@ void Source2GameClientsSuite::ExerciseMessageCalls(TestContext& context, CPlayer
+ 		}
+ 	});
+ 
+-	CS2ST_CALL(context, "INetworkMessages::DeallocateNetMessageAbstract (CCLCMsg_Move)", {
+-		messages->DeallocateNetMessageAbstract(binding, allocated);
++	// 14197 removed INetworkMessages::DeallocateNetMessageAbstract; a message is
++	// freed through its virtual destructor, whose deleting variant lives in the
++	// module that allocated it.
++	CS2ST_CALL(context, "CNetMessage::~CNetMessage (CCLCMsg_Move)", {
++		delete allocated;
+ 		context.Detail("-> freed %p", static_cast<void*>(allocated));
+ 	});
+ }
