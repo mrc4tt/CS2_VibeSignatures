@@ -3,8 +3,8 @@
     {
       "covered": true,
       "covered_lines": [
-        21,
-        22
+        17,
+        18
       ],
       "name": "CServerSideClientBase::m_nClientSlot",
       "updated": false
@@ -37,15 +37,6 @@
         13,
         14
       ],
-      "name": "GameEntitySystem",
-      "updated": false
-    },
-    {
-      "covered": true,
-      "covered_lines": [
-        17,
-        18
-      ],
       "name": "GetPublicAdr",
       "updated": false
     }
@@ -54,8 +45,8 @@
   "gamever": "14197",
   "schema_version": 2,
   "summary": {
-    "covered": 4,
-    "total": 4,
+    "covered": 3,
+    "total": 3,
     "updated": 1
   }
 }
