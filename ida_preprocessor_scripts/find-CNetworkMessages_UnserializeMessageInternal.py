@@ -10,7 +10,7 @@ TARGET_FUNCTION_NAMES = [
 FUNC_XREFS = [
     {
         "func_name": "CNetworkMessages_UnserializeMessageInternal",
-        "xref_strings": ["size_exceeded_max", "netmessage"],
+        "xref_strings": ["%d bytes is too big."],
         "xref_gvs": [],
         "xref_signatures": [],
         "xref_funcs": [],

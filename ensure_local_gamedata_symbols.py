@@ -462,6 +462,14 @@ FORK_OWNED_OBSOLETE_TASKS = [
     # declaration tasks and the name must say which platform the artifact was made
     # for, so the two per-platform entries replace it.
     ("find-CEntityResourceManifest_AddResource", "engine", "replaced by the -linux and -windows declaration tasks"),
+    # Valve removed both virtuals from INetworkMessages in 14197 (the net message
+    # handle became a plain NetMessageInfo_t record, IProtobufBinding is gone): the
+    # vtable is 35 slots + dtor on both platforms and their anchor strings no longer
+    # exist. Slot 8, which relocation and an agent filed as AllocateAndCopy..., is now
+    # GetNetMessageInfo. No plugin key reads either symbol; the INetworkMessages cpp
+    # test follows the hl2sdk header, which dropped them too (mrc4tt/hl2sdk 6c3f0eb6).
+    ("find-CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract", "networksystem", "removed from INetworkMessages in 14197"),
+    ("find-CNetworkMessages_DeallocateNetMessageAbstract", "networksystem", "removed from INetworkMessages in 14197"),
     # (task_name, module, why)
     # CNetChan has no RTTI in engine2 on either platform, so the single match a
     # 7-byte signature found there was a false positive.
@@ -610,6 +618,10 @@ FORK_OWNED_REMOVALS = [
     # as one entry in its data/symbol_aliases.json:
     #     "ClientPrint": "ClientPrintToController"
     ("ClientPrint", "server", "key belongs to ClientPrintToController (controller variant; 0x17c8840 takes the pawn)"),
+    # Declarations of the two INetworkMessages virtuals Valve removed in 14197 (see
+    # FORK_OWNED_OBSOLETE_TASKS).
+    ("CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract", "networksystem", "removed from INetworkMessages in 14197"),
+    ("CNetworkMessages_DeallocateNetMessageAbstract", "networksystem", "removed from INetworkMessages in 14197"),
     # Upstream labels engine vfunc slot 0xb8 on the receiver at 0x180613ca8
     # INetworkSystem::RemoveNetChannel. A headless IDA pass read the registration
     # verbatim - (**v136)(v136, "LegacyGameUI001", qword_180613CA8) - and the slot map

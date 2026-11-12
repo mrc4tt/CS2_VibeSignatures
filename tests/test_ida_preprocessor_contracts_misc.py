@@ -192,6 +192,7 @@ class TestFindCNetworkMessagesGetIsForServer(unittest.IsolatedAsyncioTestCase):
                         "func_rva",
                         "func_size",
                         "func_sig",
+                        "func_sig_allow_across_function_boundary:true",
                         "vtable_name",
                         "vfunc_offset",
                         "vfunc_index",

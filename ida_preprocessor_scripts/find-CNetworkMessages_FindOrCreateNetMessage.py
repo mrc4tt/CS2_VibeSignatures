@@ -11,7 +11,7 @@ FUNC_XREFS = [
     {
         "func_name": "CNetworkMessages_FindOrCreateNetMessage",
         "xref_strings": [
-            "CNetworkMessages::FindOrCreateNetMessage: Message %s is expected to have already been registered!"
+            "CNetworkMessages::FindOrCreateNetMessage: It is illegal to register new net messages after serialization!"
         ],
         "xref_gvs": [],
         "xref_signatures": [],
