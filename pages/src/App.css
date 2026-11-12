@@ -132,6 +132,11 @@
 /* The card under a marked line the caret is on. It floats over the lines below
    (top is the line count in line heights) so opening it never moves the text. */
 .annotated .raw { --lh: calc(13px * 1.62); }
+/* Lines off screen skip layout and paint: with ~400 lines of tokens a window resize
+   re-laid out every one of them each frame (p90 ~200 ms at 6x CPU throttle). The
+   height placeholder is exactly one line, so the textarea above stays aligned with
+   lines that were never rendered; the width is remembered once a line was seen. */
+.annotated .rl { content-visibility: auto; contain-intrinsic-size: auto 0px var(--lh); }
 .linepop { position: absolute; z-index: 5; left: 92px; min-width: 300px; max-width: min(560px, calc(100% - 108px));
   display: flex; flex-direction: column; gap: 6px; padding: 9px 11px; border: 1px solid var(--rule-strong);
   border-radius: 10px; background: var(--card); box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
@@ -979,7 +984,8 @@ button.rsheet-tr:disabled { cursor: default; }
 .rsheet-tr .pc.t-ok { background: var(--ok-bg); border-color: var(--ok-line); }
 .rsheet-tr .pc.t-bad { background: var(--bad-bg); border-color: var(--bad-line); }
 .rsheet-tr .pc.t-warn { background: var(--warn-bg); border-color: var(--warn-line); }
-.rsheet-dim { background: rgb(5 7 10 / 0.6); backdrop-filter: blur(2px); }
+/* no backdrop blur: it re-blurred the whole editor on every resize/drag frame */
+.rsheet-dim { background: rgb(5 7 10 / 0.6); }
 @media (max-width: 600px) {
   .rsheet-banner { margin: 0 12px 10px; padding: 12px; gap: 10px 12px; }
   .rb-icon { width: 32px; height: 32px; font-size: 16px; }
