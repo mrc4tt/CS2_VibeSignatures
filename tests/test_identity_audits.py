@@ -81,6 +81,43 @@ class CompareTest(unittest.TestCase):
         self.assertEqual(verdict, "SKIP")
 
 
+class OutlinedWrapperBinary:
+    """A wrapper at 0x1000 that tail-jumps to 0x2000, whose cold chunk at 0x1f00 holds the string."""
+
+    def __init__(self, wrapper_size):
+        self.wrapper_size = wrapper_size
+
+    def flow_end(self, va):
+        return va + (self.wrapper_size if va == 0x1000 else 0x80)
+
+    def cold_chunks(self, va, size):
+        return [(0x2000, 0x2080)] if va == 0x1000 else [(0x1f00, 0x1f40)]
+
+    def direct_callees(self, regions):
+        return [0x2000]
+
+    def string_ref_sites(self, text):
+        return [0x1f10]
+
+    def va_to_off(self, va):
+        return None
+
+
+class OutlinedWrapperTest(unittest.TestCase):
+    def judge(self, wrapper_size):
+        return xref._judge_one(OutlinedWrapperBinary(wrapper_size), {}, "1", "", "m", "linux", "X",
+                               {}, 0x1000, wrapper_size, ["anchor"], [])
+
+    def test_thin_wrapper_around_holder_is_ok(self):
+        verdict, message = self.judge(0x8)
+        self.assertEqual(verdict, "OK")
+        self.assertIn("outlined into 0x2000", message)
+
+    def test_long_body_calling_holder_is_still_bad(self):
+        verdict, _ = self.judge(0x400)
+        self.assertEqual(verdict, "BAD")
+
+
 class LoadSpecsTest(unittest.TestCase):
     def test_noinline_and_inlined_are_alternatives(self):
         specs, _ = xref.load_specs("CMsgSource2NetworkFlowQuality_PrintStats")

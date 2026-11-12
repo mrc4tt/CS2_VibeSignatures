@@ -48,6 +48,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PREPROCESSOR_DIR = os.path.join(SCRIPT_DIR, "ida_preprocessor_scripts")
 PE_IMAGE_BASE = 0x180000000
 COLD_CHUNK_LIMIT = 0x2000
+# a function this small whose anchor sits in a direct callee is an outlined wrapper
+OUTLINED_WRAPPER_MAX = 0x100
 
 # rip-relative lea r64, [rip+disp32]: REX.W (48) or REX.WR (4C), 8D, modrm mod=00 rm=101
 LEA_RIP = re.compile(rb"[\x48\x4c]\x8d[\x05\x0d\x15\x1d\x25\x2d\x35\x3d]")
@@ -336,6 +338,34 @@ class Binary:
         return chunks
 
 
+    def direct_callees(self, regions) -> list[int]:
+        """Targets of every direct call/jmp rel32 inside the given regions, or [] without capstone."""
+        try:
+            import capstone
+        except Exception:
+            return []
+        md = getattr(self, "_md", None)
+        if md is None:
+            md = self._md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+        targets = []
+        for lo, hi in regions:
+            off = self.va_to_off(lo)
+            if off is None:
+                continue
+            for insn in md.disasm(self.data[off : off + (hi - lo)], lo):
+                if insn.mnemonic in ("call", "jmp") and insn.op_str.startswith("0x"):
+                    try:
+                        target = int(insn.op_str, 16)
+                    except ValueError:
+                        continue
+                    # a tail jmp also shows up as a "cold chunk" region, so only the
+                    # function's own head region decides what is internal
+                    head_lo, head_hi = regions[0]
+                    if not head_lo <= target < head_hi and target not in targets:
+                        targets.append(target)
+        return targets
+
+
 def locate_binary(folder: str, platform: str):
     """(path, gamever, module, bindir) of the binary for an artifact folder <x>/<ver>/<module>.
 
@@ -530,6 +560,22 @@ def _judge_one(binary, schemas, gamever, bindir, module, platform, name, doc, fu
                         f"functions now - relocation is unverified and the xref fallback would fail")
     if proof:
         return "OK", f"@ {func_va:#x}: anchor {strings[0]!r} not referenced from it, but {proof}"
+
+    # A thin wrapper whose body was outlined into a helper (14197 turned
+    # CNetworkMessages' field-serializer / change-callback slots into forwarders to
+    # the internal registrar): the anchor sits in a function it calls or tail-jumps
+    # to. Only a small body qualifies, so a wrong function that merely calls the
+    # holder somewhere along a long body is still BAD. audit_identity_drift
+    # accepts the same shape ("body outlined into ...").
+    if body_end - func_va <= OUTLINED_WRAPPER_MAX:
+        for target in binary.direct_callees(regions):
+            t_end = max(binary.flow_end(target) or 0, target + 1)
+            t_regions = [(target, t_end)] + binary.cold_chunks(target, t_end - target)
+            for s, sites in referenced.items():
+                hit = next((x for x in sites if any(lo <= x < hi for lo, hi in t_regions)), None)
+                if hit is not None:
+                    return "OK", (f"@ {func_va:#x}: body outlined into {target:#x}, which it calls; "
+                                  f"{s!r} at {hit:#x}{size_note}")
 
     s, sites = next((s, v) for s, v in referenced.items() if v)
     shown = ", ".join(f"{v:#x}" for v in sites[:4]) + (" ..." if len(sites) > 4 else "")
