@@ -1,0 +1,169 @@
+animationsystem
+	AnimationSystemUtils_001
+	AnimationSystem_001
+
+client
+	ClientToolsInfo_001
+	EmptyWorldService001_Client
+	GameClientExports001
+	LegacyGameUI001
+	Source2Client002
+	Source2ClientConfig001
+	Source2ClientPrediction001
+	Source2ClientUI001
+
+engine2
+	BenchmarkService001
+	BugBugService001
+	BugService001
+	ClientServerEngineLoopService_001
+	ClientServerSharedHandleSystem001
+	EngineGameUI001
+	EngineServiceMgr001
+	GameEventSystemClientV001
+	GameEventSystemServerV001
+	GameResourceServiceClientV001
+	GameResourceServiceServerV001
+	GameUIService_001
+	HostStateMgr001
+	INETSUPPORT_001
+	InputService_001
+	KeyValueCache001
+	MapListService_001
+	NetworkClientService_001
+	NetworkP2PService_001
+	NetworkServerService_001
+	NetworkService_001
+	RenderService_001
+	ScreenshotService001
+	SimpleEngineLoopService_001
+	SoundService_001
+	Source2EngineToClient001
+	Source2EngineToClientStringTable001
+	Source2EngineToServer001
+	Source2EngineToServerStringTable001
+	SplitScreenService_001
+	StatsService_001
+	ToolService_001
+	VENGINE_GAMEUIFUNCS_VERSION005
+	VProfService_001
+
+filesystem_stdio
+	VAsyncFileSystem2_001
+	VFileSystem017
+
+host
+	DebugDrawQueueManager001
+	GameModelInfo001
+	GameSystem2HostHook
+	HostUtils001
+	PredictionDiffManager001
+	SaveRestoreDataVersion001
+	SinglePlayerSharedMemory001
+	Source2Host001
+
+inputsystem
+	InputStackSystemVersion001
+	InputSystemVersion001
+
+localize
+	Localize_001
+
+matchmaking
+	GameTypes001
+	MATCHFRAMEWORK_001
+
+materialsystem2
+	FontManager_001
+	MaterialUtils_001
+	PostProcessingSystem_001
+	TextLayout_001
+	VMaterialSystem2_001
+
+meshsystem
+	MeshSystem001
+
+networksystem
+	FlattenedSerializersVersion001
+	NetworkMessagesVersion001
+	NetworkSystemVersion001
+	SerializedEntitiesVersion001
+
+panorama
+	PanoramaUIEngine001
+
+panoramauiclient
+	PanoramaUIClient001
+
+particles
+	ParticleSystemMgr003
+
+pulse_system
+	IPulseSystem_001
+
+rendersystemempty
+	RenderDeviceMgr001
+	RenderUtils_001
+
+rendersystemvulkan
+	RenderDeviceMgr001
+	RenderUtils_001
+
+resourcesystem
+	ResourceSystem013
+
+scenefilecache
+	ResponseRulesCache001
+	SceneFileCache002
+
+scenesystem
+	RenderingPipelines_001
+	SceneSystem_002
+	SceneUtils_001
+
+schemasystem
+	SchemaSystem_001
+
+server
+	EmptyWorldService001_Server
+	EntitySubclassUtilsV001
+	NavGameTest001
+	ServerToolsInfo_001
+	Source2GameClients001
+	Source2GameDirector001
+	Source2GameEntities001
+	Source2Server001
+	Source2ServerConfig001
+	customnavsystem001
+
+soundsystem
+	SoundBugBugService001_Client
+	SoundOpSystem001
+	SoundOpSystemEdit001
+	SoundSystem001
+	VMixEditTool001
+
+steamaudio
+	SteamAudio001
+
+tier0
+	TestScriptMgr001
+	VEngineCvar007
+	VProcessUtils002
+	VStringTokenSystem001
+
+v8system
+	Source2V8System001
+
+vconcomm
+	VConComm001
+
+vphysics2
+	VPhysics2_Interface_001
+
+vscript
+	VScriptManager010
+
+worldrenderer
+	WorldRendererMgr001
+

@@ -356,10 +356,29 @@ else:
 PYEOF
 }
 
+# The convar/command lines of the notification from source2_dump.py's output: its summary,
+# then what a server config or plugin trips over first (renamed and removed), then the
+# names of what is new. The full list stays in source2dumps/<VER>/ and the state file.
+source2_line() {  # source2_line <source2_dump.py output>
+    local f=$1 last
+    [ -s "$f" ] || return 0
+    last=$(tail -1 "$f")
+    case "$last" in
+        "source2 "*) ;;
+        *) printf 'source2 dump skipped: %s\n' "$last"; return 0 ;;
+    esac
+    printf '%s\n' "$last"
+    grep -E '^  [~-] ' "$f" | head -10
+    local added
+    added=$(grep -E '^  \+ ' "$f" | awk '{print $2}' | head -15 | paste -sd' ' -)
+    [ -n "$added" ] && printf '  new: %s\n' "$added"
+    return 0
+}
+
 # printf, not a quoted "\n\n": inside double quotes those are two literal
 # characters, which is exactly how the first version reached Discord.
 final_body() {
-    printf '%s\n%s\n%s\n%s\n\n%s\n\n%s\n' "$(changed_keys_block)" "$IMPACT_LINE" "${ARGS_LINE:-}" "${TEMPLATES_LINE:-}" "$(cat "$GATE_OUT")" "$(site_links)"
+    printf '%s\n%s\n%s\n%s\n%s\n\n%s\n\n%s\n' "$(changed_keys_block)" "$IMPACT_LINE" "${SOURCE2_LINE:-}" "${ARGS_LINE:-}" "${TEMPLATES_LINE:-}" "$(cat "$GATE_OUT")" "$(site_links)"
 }
 
 site_links() {
@@ -577,6 +596,7 @@ elif git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1; then
     dispatch_pages
     IMPACT_LINE=""
     [ -f "$STATE/impact-$TAG.txt" ] && IMPACT_LINE="schema: $(grep -m1 '^summary:' "$STATE/impact-$TAG.txt" | sed 's/^summary: //')"
+    SOURCE2_LINE=$(source2_line "$STATE/source2-$TAG.txt")
     # A resumed build rebuilds every summary line from the files the analysed run left,
     # so its message says what a fresh run's would (14191's resume said only "arguments").
     ARGS_LINE=""
@@ -1180,6 +1200,21 @@ if [ -n "${OLD_TAG:-}" ]; then
     log "    $IMPACT_LINE"
 fi
 
+# Source2 dump: every convar and command (flags, default, range, help), the interfaces,
+# logging channels and networked classes of this build, read by DumpSource2 from the Linux
+# binaries (source2_dump.py, tools/build_dumpsource2.sh), stored in source2dumps/<VER>/ and
+# compared with the previous dump. A renamed or removed convar breaks server configs and
+# plugins that set it, which no gamedata check sees. Informational and never fatal: a
+# missing tool or a failed download only says so in the notification.
+SOURCE2_OUT="$STATE/source2-$TAG.txt"
+SOURCE2_LINE=""
+if [ "$DRY" != 1 ] && [ "${AUTOPILOT_SOURCE2:-1}" != "0" ]; then
+    log "==> source2 dump (convars, commands, networked classes)"
+    uv run source2_dump.py run -gamever "$TAG" > "$SOURCE2_OUT" 2>&1 || true
+    SOURCE2_LINE=$(source2_line "$SOURCE2_OUT")
+    log "    $(printf '%s' "$SOURCE2_LINE" | head -1)"
+fi
+
 # Argument fingerprints: did a shipped function's parameters change? Every check above
 # proves an address names the right function; none sees Valve add or drop a parameter,
 # after which the plugin calls it the old way and the server crashes. Informational like
@@ -1230,7 +1265,7 @@ fi
 # ---------------------------------------------------------------- record it
 log "==> committing"
 git add -A -- "configs/$TAG.yaml" "bin_artifacts/$TAG" "gamesymbols/$TAG.yaml" "gamedata/$TAG" \
-    gamedata/history.json "diagnostics/$TAG.json" gamedata-generators/*/gamedata \
+    "source2dumps/$TAG" gamedata/history.json "diagnostics/$TAG.json" gamedata-generators/*/gamedata \
     "binary_locks/$TAG.json" download.yaml ida_preprocessor_scripts .claude/skills 2>/dev/null || true
 if git diff --cached --quiet; then
     log "    nothing to commit"

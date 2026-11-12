@@ -27,6 +27,7 @@ når en besked siger `failed` eller `held`, eller når du vil tilføje symboler.
 | 9 | `detect_aliases`, `missing_report` (info) | — |
 | 10 | `publish_site_data.py` (history + diagnostics), `write_binary_lock.py` | stop |
 | 11 | `schema_dump.py impact` (info, linje i beskeden) | — |
+| 11b | `source2_dump.py run` (info, linjer i beskeden): DumpSource2 på buildets linux-binærer (depot 2347773, ~350 MB i `source2_depot/`) → `source2dumps/<VER>/` (convars, commands, interfaces, logging channels, network), diff mod forrige dump: omdøbte/fjernede convars og kommandoer. `AUTOPILOT_SOURCE2=0` slår det fra; værktøjet bygges med `tools/build_dumpsource2.sh` (kræver `libva2` + `libvdpau1`) | — (aldrig fatal) |
 | 12 | commit `feat(<VER>): analysed by autopilot`; derefter `publish_site_data.py -history-only` + commit `chore(<VER>): record publish date` (publishedAt kræver at commit'en findes); `-check`; push | stop |
 | 12b | `systemctl try-restart cs2vibe-verify.service`, så scanneren har en varm pool for den nye build (ellers ~13 s første scanning); `AUTOPILOT_VERIFY_RESTART=0` slår det fra | — (aldrig fatal) |
 | 13 | deploy efter `AUTOPILOT_DEPLOY` (`verified` her): `update_css_gamedata.sh` → `deploy_local_plugins.sh` (commit + push i plugin-repos) → `check_deploy_drift.py` | stop |
@@ -52,7 +53,7 @@ rm -f .autopilot/attempts-<VER>                   # nulstil efter 2 fejlede fors
 rm -f .autopilot/finish-attempts-<VER>            # nulstil efter 6 fejlede push/deploy-genoptag
 ```
 
-Logs: `.autopilot/{gamedata,verify,gate,impact,missing}-<VER>.*` (linux-releasen: `-<VER>-linux.*`). En `failed`-besked indeholder
+Logs: `.autopilot/{gamedata,verify,gate,impact,source2,missing}-<VER>.*` (linux-releasen: `-<VER>-linux.*`). En `failed`-besked indeholder
 allerede de 2–3 kommandoer der skal køres (`hint_for()` i autopilot.sh) — start der.
 
 Indstillinger i `.env` (se `systemd/README.md`): `AUTOPILOT_DEPLOY`, `AUTOPILOT_NOTIFY_URL`,

@@ -90,3 +90,7 @@ tools/gdc/out/
 tools/gdc.Tests/obj/
 ghidra_facts/
 ghidra_verify/
+
+# DumpSource2 input: the Linux binaries of the newest dumped build (source2_dump.py)
+source2_depot/
+!tools/build_dumpsource2.sh
