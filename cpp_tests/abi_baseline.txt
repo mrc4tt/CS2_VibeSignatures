@@ -1,5 +1,5 @@
 # Accepted cpp_tests mismatches (sdk_abi_check.sh --accept).
-# gamever 14193, hl2sdk 285a23a2 Merge remote-tracking branch 'upstream/cs2' into cs2
+# gamever 14197, hl2sdk 765d3449 INetChannel: 14197 replaced SetQueuedMessageLimitConVar with a limit-type setter/getter pair
 CEntityInstance_Linux | Index 11 mismatch: YAML expects 'PostDataUpdateDelta' but compiler reports 'DispatchPostDataUpdate'.
 CEntityInstance_Linux | Index 13 mismatch: YAML expects 'PostDataUpdatePreserve' but compiler reports 'OnDataUnchangedInPVS'.
 CEntityInstance_Linux | Index 30 mismatch: YAML expects 'AddChangeAccessorPathPolymorphic' but compiler reports 'NetworkStateChangedBranch'.
@@ -33,8 +33,8 @@ INetChannel_Linux | Index 72 mismatch: YAML expects 'ParseMessagesDemo' but comp
 INetChannel_MSVC | Index 71 mismatch: YAML expects 'ParseMessagesDemo' but compiler reports 'ProcessDemoPacket'.
 INetworkGameServer_Linux | Index 59 mismatch: YAML expects 'PreWorldUpdate' but compiler reports 'PrepareSendClientUpdatesMainThread'.
 INetworkGameServer_MSVC | Index 59 mismatch: YAML expects 'PreWorldUpdate' but compiler reports 'PrepareSendClientUpdatesMainThread'.
-INetworkMessages_Linux | Index 21 mismatch: YAML expects 'GetNetworkSerializationContextData' but compiler reports 'LookupNetworkSerializationContextDataId'.
-INetworkMessages_MSVC | Index 21 mismatch: YAML expects 'GetNetworkSerializationContextData' but compiler reports 'LookupNetworkSerializationContextDataId'.
+INetworkMessages_Linux | Index 17 mismatch: YAML expects 'GetNetworkSerializationContextData' but compiler reports 'LookupNetworkSerializationContextDataId'.
+INetworkMessages_MSVC | Index 17 mismatch: YAML expects 'GetNetworkSerializationContextData' but compiler reports 'LookupNetworkSerializationContextDataId'.
 INetworkServerService_Linux | Index 33 mismatch: YAML expects 'SetFinalSimulationTickThisFrame' but compiler reports 'GetServerNetworkAddress'.
 INetworkServerService_Linux | Index 42 mismatch: YAML expects 'GetServerSerializersCRC' but compiler reports 'GetServerSerializersMsg'.
 INetworkServerService_Linux | vtable_numvfunc mismatch: YAML=53 vs compiler=52.
