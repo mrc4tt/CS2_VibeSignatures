@@ -622,6 +622,15 @@ FORK_OWNED_REMOVALS = [
     # FORK_OWNED_OBSOLETE_TASKS).
     ("CNetworkMessages_AllocateAndCopyConstructNetMessageAbstract", "networksystem", "removed from INetworkMessages in 14197"),
     ("CNetworkMessages_DeallocateNetMessageAbstract", "networksystem", "removed from INetworkMessages in 14197"),
+    # find-CDemoRecorder_ParseMessage-decompiles read this slot off a vcall in
+    # ParseMessage. In 14197 the net message handle is the NetMessageInfo_t itself,
+    # GetNetMessageInfo (slot 8 on both platforms) just returns its argument, and
+    # ParseMessage no longer calls it: the vcall the LLM picked, [rax+0x20] linux /
+    # [rax+0x18] windows, is CNetMessage::GetNetMessage (linux has two dtor slots),
+    # which filed slot 4/3 under this name. The task's output line was dropped from
+    # configs/14197.yaml by hand (it carries forward); no plugin key reads it, only
+    # the INetworkMessages cpp test, which now simply has no record for that slot.
+    ("INetworkMessages_GetNetMessageInfo", "engine", "no call site left in 14197; old anchor names CNetMessage::GetNetMessage"),
     # Upstream labels engine vfunc slot 0xb8 on the receiver at 0x180613ca8
     # INetworkSystem::RemoveNetChannel. A headless IDA pass read the registration
     # verbatim - (**v136)(v136, "LegacyGameUI001", qword_180613CA8) - and the slot map
