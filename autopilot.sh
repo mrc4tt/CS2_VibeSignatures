@@ -575,6 +575,11 @@ elif git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1; then
         # republish this build when one changed and the result still verifies.
         [ "$DRY" = 1 ] || [ "${AUTOPILOT_TEMPLATE_REFRESH:-1}" = "0" ] \
             || uv run template_refresh.py -gamever "$TAG" 2>&1 | while IFS= read -r line; do log "    $line"; done
+        # Gamedata other people propose upstream (open CounterStrikeSharp PRs), scanned in
+        # this build: a wrong or new signature reaches the admin channel once per PR head.
+        # Read only, never posts upstream. At most hourly.
+        [ "$DRY" = 1 ] || [ "${AUTOPILOT_UPSTREAM_WATCH:-1}" = "0" ] \
+            || uv run upstream_watch.py -gamever "$TAG" -notify -every 1 2>&1 | tail -1 | while IFS= read -r line; do log "    $line"; done
         exit 0
     fi
     FINISH_FILE="$STATE/finish-attempts-$TAG"

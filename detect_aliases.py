@@ -142,6 +142,10 @@ def main():
     ap.add_argument("-gamever", required=True)
     ap.add_argument("-platform", required=True, choices=("windows", "linux"))
     ap.add_argument("-artifactdir", default="bin_artifacts")
+    # Nothing reads the result back: autopilot keeps the printed report in its journal.
+    # A file per gamever and platform piled up in the repo root (32 by 14197), so it is
+    # written only when asked for.
+    ap.add_argument("-out", help="also write the result as JSON to this path")
     args = ap.parse_args()
 
     ext = "windows" if args.platform == "windows" else "linux"
@@ -192,10 +196,10 @@ def main():
     for k, n in nofind:
         print(f"    {k} ({n} match(es))")
 
-    out = f"alias_candidates_{args.gamever}_{args.platform}.json"
-    json.dump({"aliases": aliases, "ambiguous": ambiguous, "no_analysis": nofind},
-              open(out, "w"), indent=1)
-    print(f"resultat: {out}")
+    if args.out:
+        with open(args.out, "w") as handle:
+            json.dump({"aliases": aliases, "ambiguous": ambiguous, "no_analysis": nofind}, handle, indent=1)
+        print(f"resultat: {args.out}")
 
 
 if __name__ == "__main__":

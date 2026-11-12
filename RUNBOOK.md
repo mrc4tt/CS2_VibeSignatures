@@ -37,6 +37,11 @@ det samme som uden linux-først. En build med linux-commit men ingen `feat(<VER>
 autopilot` er ikke færdig: næste tick genoptager ved `run_windows.sh` (og prøver linux-deployet
 igen hvis det fejlede), også selvom `deployments/<VER>.json` findes fra linux-releasen.
 
+Mellem builds (tick uden ny build): `template_refresh.py` (højst hver 6. time) og
+`upstream_watch.py -notify -every 1` (højst hver time): åbne PR'er i roflmuffin/CounterStrikeSharp
+der ændrer gamedata.json scannes i nyeste build; `WRONG`/`broken`/`new` går til admin-kanalen én
+gang pr. PR-head. Kun læsning - intet postes upstream. `AUTOPILOT_UPSTREAM_WATCH=0` slår det fra.
+
 Sitet (sig.miksen.me) bygges af `deploy-pages.yml` fra push'et; `check-datasets`-jobbet fejler hvis
 history.json er stale.
 
