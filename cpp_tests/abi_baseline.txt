@@ -1,5 +1,5 @@
 # Accepted cpp_tests mismatches (sdk_abi_check.sh --accept).
-# gamever 14197, hl2sdk 765d3449 INetChannel: 14197 replaced SetQueuedMessageLimitConVar with a limit-type setter/getter pair
+# gamever 14197, hl2sdk 90ce13e7 Merge alliedmodders/s2sdk cs2: 14197 net message handles
 CEntityInstance_Linux | Index 11 mismatch: YAML expects 'PostDataUpdateDelta' but compiler reports 'DispatchPostDataUpdate'.
 CEntityInstance_Linux | Index 13 mismatch: YAML expects 'PostDataUpdatePreserve' but compiler reports 'OnDataUnchangedInPVS'.
 CEntityInstance_Linux | Index 30 mismatch: YAML expects 'AddChangeAccessorPathPolymorphic' but compiler reports 'NetworkStateChangedBranch'.
@@ -25,6 +25,8 @@ IFileSystem_Linux | vtable_numvfunc mismatch: YAML=128 vs compiler=114.
 IFileSystem_Linux | vtable_size mismatch: YAML=0x400 vs compiler=0x390 (entry_count=114, ptr_size=8).
 IFileSystem_MSVC | vtable_numvfunc mismatch: YAML=128 vs compiler=114.
 IFileSystem_MSVC | vtable_size mismatch: YAML=0x400 vs compiler=0x390 (entry_count=114, ptr_size=8).
+IFlattenedSerializers_Linux | Index 36 mismatch: YAML expects 'CreateFieldChangedEventQueue' but compiler reports 'CreateNetworkFieldChangedEventQueue'.
+IFlattenedSerializers_MSVC | Index 36 mismatch: YAML expects 'CreateFieldChangedEventQueue' but compiler reports 'CreateNetworkFieldChangedEventQueue'.
 IGameSystem_Linux | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTickWork' but compiler reports 'OnServerBeginAsyncPostTickWork'.
 IGameSystem_Linux | Index 42 mismatch: YAML expects 'OnServerBeginAsyncPostTickWork' but compiler reports 'OnServerGameBeginAsyncPostTickWork'.
 IGameSystem_MSVC | Index 41 mismatch: YAML expects 'OnServerPreBeginAsyncPostTickWork' but compiler reports 'OnServerBeginAsyncPostTickWork'.
