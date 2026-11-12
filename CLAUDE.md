@@ -741,6 +741,39 @@ uv run schema_dump.py impact -old <PREV> -new <VER> -plugins <plugins dir>   # u
 Order matters: everything cheap and deterministic runs before any agent or LLM work, so a symbol
 that simply moved costs nothing.
 
+### When Valve reshapes an interface (learned on 14197, three failed autopilot runs)
+
+14197 removed three `INetworkMessages` virtuals and turned others into thin forwarders. Fixing
+it one gate at a time cost a run per gate. Do all of this **before** restarting autopilot:
+
+1. **Find every record of the interface in every module**, not only the module whose task
+   failed: `ls bin_artifacts/<VER>/*/ | grep -E '(I|C)<Interface>_'`. Records read off a
+   *call site* in another module (engine's `INetworkMessages_*` from
+   `find-CDemoRecorder_ParseMessage-decompiles`) are the dangerous ones: when the callee
+   disappears, the LLM picks the nearest vcall and files a different class's slot under the
+   old name (`CNetMessage::GetNetMessage` as `INetworkMessages_GetNetMessageInfo`, 4/3).
+2. **Compare each record's slot with the new vtable** (RTTI). A slot that moved unlike its
+   neighbours, or differently on linux and windows for an interface with no dtor at the
+   front, is wrong. Relocation also keeps a removed function's name on whatever now sits in
+   its slot (`AllocateAndCopy...` on slot 8, now `GetNetMessageInfo`).
+3. **Retire through the tables, never by deleting the declaration alone**:
+   `FORK_OWNED_OBSOLETE_TASKS` for the task, `FORK_OWNED_REMOVALS` for the symbol; for one
+   output of a multi-output task, drop that line from the newest config by hand (it carries
+   forward) and from the preprocessor. Then delete the wrong artifacts from
+   `bin_artifacts/<VER>/` **and** `bin/<VER>/`.
+4. **Re-anchor tasks whose string disappeared** with a string that is unique in both
+   binaries (`grep -c -a -F "<text>" <binary>` = 1 each).
+5. **Run every pre-pack gate locally** and get them all green, then a trial pack to the
+   scratchpad - not just the gate that failed:
+   `audit_xref_identity`, `audit_identity_drift`, `audit_vtable_slots`,
+   `audit_artifact_contract`, `gamesymbol_snapshot.py pack -snapshot <scratch>`,
+   `validate_artifacts -json`, then the full test suite.
+6. Then `rm -f .autopilot/attempts-<VER>` and `systemctl start --no-block cs2vibe-autopilot.service`.
+
+An outlined wrapper (a vtable slot that only forwards to an internal function) is not a wrong
+artifact: `audit_xref_identity` accepts a body of at most `OUTLINED_WRAPPER_MAX` (0x100) whose
+direct call/jmp target holds the anchor. A longer body calling the holder is still BAD.
+
 ## NEVER DO
 
 ### 1. NEVER run `fix_duplicate_symbols.py -all`
