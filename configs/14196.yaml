@@ -4897,6 +4897,11 @@ modules:
     path_windows: game/csgo/bin/win64/server.dll
     path_linux: game/csgo/bin/linuxsteamrt64/libserver.so
     skills:
+      - name: find-KickBotFromTeam
+        expected_output:
+          - KickBotFromTeam.{platform}.yaml
+        optional_input:
+          - CCSBotManager_MaintainBotQuota.{platform}.yaml
       - name: find-CCSGameRules_CanPlayerHear_CoachCommGate
         expected_output:
           - CCSGameRules_CanPlayerHear_CoachCommGate.{platform}.yaml
@@ -8445,6 +8450,8 @@ modules:
         expected_input:
           - CEntitySystem_FindComponentTypeByName.{platform}.yaml
     symbols:
+      - name: KickBotFromTeam
+        category: func
       - name: CCSGameRules_CanPlayerHear_CoachCommGate
         category: patch
       - name: CNavPhysicsInterface_vtable_ref

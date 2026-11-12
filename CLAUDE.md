@@ -1117,6 +1117,33 @@ Two guards now catch the class before the baseline does:
 - `abi_guard.check_symbol` verifies `func_size` as well, which is how four over-measurements
   surfaced that `validate_artifacts` had missed (its swallow check needs a recognisable
   prologue with no branch into it).
+### 22. NEVER let a scoped change touch files outside its scope
+Adding one key (one symbol, one plugin) must change only that symbol's files and that plugin's
+output. Three repo tools do more than their name suggests when pointed at an OLDER gamever, and
+one IDA habit damages databases. Learned adding `KickBotFromTeam` on 14196/14197 (2026-11-12):
+
+- `ensure_local_gamedata_symbols.py -config configs/<older>.yaml` replays EVERY table, not only
+  the entry you added: on 14196 it dropped three `INetworkMessages`/`CNetworkMessages`
+  declarations that `FORK_OWNED_OBSOLETE_TASKS` retired for 14197, and re-asserted `cpp_tests:`.
+  Run it only on the newest config. For an older one, `git checkout` the config and hand-insert
+  exactly the task + symbol lines the newest config got (same position), then re-read it.
+- `update_gamedata.py` on an older gamever regenerates every plugin, so template drift since that
+  build lands in unrelated files (14196: statusmodifier, swiftlys2, CounterStrikeSharp metadata).
+  Afterwards `git status --short gamedata/` and `git checkout --` every plugin directory you did
+  not mean to change, before verifying and committing.
+- `gamesymbols/<VER>.yaml` and `diagnostics/<VER>.json` re-pack/regenerate whole, which is
+  expected; plugin output and configs are not.
+- Never open a warm IDB under `/srv/cs2-binaries/<VER>/` with `ida-nexus python` (or idat) for
+  ad-hoc RE: it writes the database back on close, and 14196 `libserver.so.i64` came out
+  "Database is empty" (open error 4) and failed the next run. Copy `<binary>` + `<binary>.i64`
+  to the scratchpad and work on the copy; a pipeline run on such copies works with
+  `-bindir <scratch>/bin`. If it already happened: move the file to `.unopenable-<stamp>` and
+  restore `.i64.lastgood`.
+- A database the session service holds (14197 on 2026-11-12) is not yours to stop: run on copies
+  via `-bindir` instead of `systemctl stop cs2vibe-ida-session.service`.
+
+Before committing a scoped change, every path in `git status --short` must be explainable by that
+change; anything else is reverted, not swept in.
 
 ## ALWAYS DO
 

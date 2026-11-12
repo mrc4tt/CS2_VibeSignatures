@@ -136,8 +136,8 @@ binaries:
       sha256: 'ffad0bc72f64228a36aa2e370b8e6e3b29ae6b0747d42436d40b2ce25be5723d'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:defce9f2be0ff94b1d92bd05f0a6dcbe7438f0af9a745df6c75f679b5947627c
-file_count: 3328
+config_sha256: sha256:0ca3a4d92f8bee13ca2ab374b74c9c3145be069997688b6e27c4657f62473ddd
+file_count: 3330
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -41347,6 +41347,18 @@ files:
     func_sig: 48 83 EC ?? 48 8B 0D ?? ?? ?? ?? 48 85 C9 74 ?? 48 8B 01 FF 50 ?? 84 C0
     func_size: '0x51'
     func_va: '0x180c51060'
+  server/KickBotFromTeam.linux.yaml:
+    func_name: KickBotFromTeam
+    func_rva: '0xbe9e80'
+    func_sig: 55 48 89 E5 41 57 41 56 41 55 41 89 FD 41 54 53 48 83 EC ??
+    func_size: '0x98e'
+    func_va: '0xbe9e80'
+  server/KickBotFromTeam.windows.yaml:
+    func_name: KickBotFromTeam
+    func_rva: '0x2e4390'
+    func_sig: 48 89 5C 24 ?? 55 56 57 41 56 41 57 48 8B EC 48 83 EC ?? 8B F9
+    func_size: '0x5bc'
+    func_va: '0x1802e4390'
   server/LegacyGameEventListener.linux.yaml:
     func_name: LegacyGameEventListener
     func_rva: '0x1716160'
@@ -43543,5 +43555,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x18002a010'
 game_version: '14197'
-last_publish_time: '2026-11-12T04:27:39Z'
+last_publish_time: '2026-11-12T20:46:24Z'
 schema_version: 5

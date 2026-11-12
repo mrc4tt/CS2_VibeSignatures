@@ -200,14 +200,24 @@
       ],
       "name": "CSmokeGrenadeProjectile_Create",
       "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        70,
+        71,
+        72
+      ],
+      "name": "KickBotFromTeam",
+      "updated": false
     }
   ],
   "file": "matchzy/gamedata/matchzy.json",
   "gamever": "14197",
   "schema_version": 2,
   "summary": {
-    "covered": 9,
-    "total": 9,
+    "covered": 10,
+    "total": 10,
     "updated": 5
   }
 }

@@ -292,6 +292,14 @@ FORK_OWNED_SYMBOLS = [
     # windows 0x181a175b0 / 0x181945fb0.
     ("CNavPhysicsInterface_vtable_ref", "gv", "server", None),
     ("CTraceFilterLOS_vtable_ref", "gv", "server", None),
+    # MatchZy: KickBotFromTeam(int team) -> bool, a free function only
+    # CCSBotManager::MaintainBotQuota calls. It kicks the first FL_FAKECLIENT controller
+    # on the team through IVEngineServer2::KickClient(slot, nullptr, 39), and the quota
+    # calls it with team 0 first - which removes SourceTV (team 0, fake client, no pawn).
+    # MatchZy hooks it and skips team 0. Anchored on that KickBotFromTeam(0) call in
+    # MaintainBotQuota (see the preprocessor's docstring). 14196: linux 0xc09c40,
+    # windows 0x1802e7800.
+    ("KickBotFromTeam", "func", "server", None),
 ]
 
 # Order edges for fork-owned tasks: optional_input lines the run sorts tasks on
@@ -300,6 +308,7 @@ FORK_OWNED_TASK_INPUTS = {
     # (module, task): inputs
     ("server", "find-CNavPhysicsInterface_vtable_ref"): ["CNavPhysicsInterface_vtable.{platform}.yaml"],
     ("server", "find-CTraceFilterLOS_vtable_ref"): ["CTraceFilterLOS_vtable.{platform}.yaml"],
+    ("server", "find-KickBotFromTeam"): ["CCSBotManager_MaintainBotQuota.{platform}.yaml"],
 }
 
 # Fork-owned struct members: FORK_OWNED_SYMBOLS has no struct/member slot.
