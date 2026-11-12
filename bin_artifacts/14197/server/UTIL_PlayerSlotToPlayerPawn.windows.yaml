@@ -1,0 +1,5 @@
+func_name: UTIL_PlayerSlotToPlayerPawn
+func_va: '0x180caecd0'
+func_rva: '0xcaecd0'
+func_size: '0x48'
+func_sig: 48 83 EC ?? 8B 41 ?? 83 F8 ??

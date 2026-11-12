@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [],
+      "name": "CCSGameRules__sm_mapGcBanInformation",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [],
+      "name": "GameSystem_Think_CheckSteamBan",
+      "updated": false
+    }
+  ],
+  "file": "gamebanfix/gamedata/gamebanfix.games.txt",
+  "gamever": "14197",
+  "schema_version": 2,
+  "summary": {
+    "covered": 2,
+    "total": 2,
+    "updated": 0
+  }
+}

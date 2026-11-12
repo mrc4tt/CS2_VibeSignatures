@@ -1,0 +1,10 @@
+vtable_class: CTraceFilterLOS
+vtable_symbol: _ZTV15CTraceFilterLOS + 0x10
+vtable_va: '0x26217b8'
+vtable_rva: '0x26217b8'
+vtable_size: '0x18'
+vtable_numvfunc: 3
+vtable_entries:
+  0: '0x16e7860'
+  1: '0x16e7ec0'
+  2: '0xa410f0'

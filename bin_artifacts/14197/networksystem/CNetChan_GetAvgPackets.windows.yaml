@@ -1,0 +1,8 @@
+func_name: CNetChan_GetAvgPackets
+func_va: '0x1800cce70'
+func_rva: '0xcce70'
+func_size: '0xa0'
+func_sig: 40 57 48 83 EC ?? 48 89 74 24 ?? 48 8B F9 8B F2 8B 91 ?? ?? ?? ?? 85 D2 74 ?? F2 0F 10 05 06 ?? ?? ??
+vtable_name: CNetChan
+vfunc_offset: '0x80'
+vfunc_index: 16

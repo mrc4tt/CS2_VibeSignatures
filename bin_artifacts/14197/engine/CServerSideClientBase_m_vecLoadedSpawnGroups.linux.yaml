@@ -1,0 +1,7 @@
+struct_name: CServerSideClientBase
+member_name: m_vecLoadedSpawnGroups
+offset: '0x178'
+size: 4
+offset_sig: 41 8B 8D 78 01 00 00 4C 63 E1 85 C9 0F 8E ?? ?? ?? ?? 49 8B 95 ?? ?? ?? ?? 4C 63 E1 31 C0 EB ?? 66 0F 1F 44 00
+  ??
+offset_sig_disp: 0

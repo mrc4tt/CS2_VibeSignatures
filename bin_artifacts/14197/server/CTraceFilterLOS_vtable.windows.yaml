@@ -1,0 +1,9 @@
+vtable_class: CTraceFilterLOS
+vtable_symbol: ??_7CTraceFilterLOS@@6B@
+vtable_va: '0x1819344a0'
+vtable_rva: '0x19344a0'
+vtable_size: '0x10'
+vtable_numvfunc: 2
+vtable_entries:
+  0: '0x180bdb460'
+  1: '0x1801d5770'

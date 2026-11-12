@@ -1,0 +1,10 @@
+func_name: CNetworkMessages_AllowAdditionalMessageRegistration
+func_va: '0x2b45a0'
+func_rva: '0x2b45a0'
+func_size: '0x8'
+func_sig: 40 88 B7 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 0F B6 87 ?? ?? ?? ?? C3 CC CC CC CC CC CC CC CC 48 8D 05 ?? ?? ??
+  ??
+func_sig_allow_across_function_boundary: true
+vtable_name: CNetworkMessages
+vfunc_offset: '0xb0'
+vfunc_index: 22
