@@ -1,0 +1,56 @@
+{
+  "gameVersion": "14197",
+  "recordedAt": "2026-11-12T04:33:48Z",
+  "schemaVersion": 1,
+  "status": "deployed",
+  "targets": {
+    "CounterStrikeSharp": {
+      "commit": "d4b586f440d3f77616910467801e78e3ad0ba929",
+      "path": "configs/addons/counterstrikesharp/gamedata/gamedata.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/CounterStrikeSharp"
+    },
+    "cleanercs2": {
+      "commit": "87cebf3c14afe98b2a218bb9a60ff0152f0c136b",
+      "path": "package/gamedata.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/CleanerCS2"
+    },
+    "cs2-menus": {
+      "commit": "e27f2eb2c210856a6b68012a5136c537dd2ddb15",
+      "path": "configs/signatures.ini",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/cs2-menus"
+    },
+    "cs2-retakes-allocator": {
+      "commit": "cfc4a7d9ceb76115f0d428369e4d71b4abe0e441",
+      "path": "Resources/RetakesAllocator_gamedata.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/cs2-retakes-allocator"
+    },
+    "gamebanfix": {
+      "commit": "b57d1decd4e2397fe74b253bcdf23808c19f953b",
+      "path": "gamedata/gamebanfix.games.txt",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/GameBanFix"
+    },
+    "matchzy": {
+      "commit": "45e11c7fa1d7639ef8d487fad6c3084399265ed2",
+      "path": "gamedata/matchzy.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/MatchZy"
+    },
+    "multiaddonmanager": {
+      "commit": "45adee8ae8f0bdf073971d20fc03cd1d2ecf0fe3",
+      "path": "src/multiaddonmanager.cpp",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/MultiAddonManager"
+    },
+    "weaponpaints": {
+      "commit": "16a2c4457cebcae9ff446a79cb68331c07d2997a",
+      "path": "gamedata/weaponpaints.json",
+      "pushed": true,
+      "repo": "https://github.com/mrc4tt/cs2-WeaponPaints"
+    }
+  }
+}
