@@ -320,7 +320,7 @@
       "changes": [
         {
           "after": "48 83 3D 90 39 56 ? ?",
-          "before": "48 83 3D ? ? ? ? ? 0F 95 C0 C3 CC CC CC CC C2",
+          "before": "48 83 3D 90 39 56 01 00 0F 95 C0 C3",
           "line": 316,
           "path": [
             "CCSNavArea_IsValidNavMesh",
