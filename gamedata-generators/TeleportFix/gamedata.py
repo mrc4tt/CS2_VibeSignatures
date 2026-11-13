@@ -15,6 +15,13 @@ the file it ships cannot hook on current builds.
 The path mirrors where the plugin's release puts it:
 addons/counterstrikesharp/gamedata/TeleportFix.json (its build copies
 TeleportFix/TeleportFix.json.gamedata there).
+
+Signature style follows the plugin's own file (the template): the plugin switched to
+code-style escapes ("\\x48\\x8D\\x2A...", \\x2A = wildcard) on 2026-11-13, so a value
+the template writes that way is generated that way, and an IDA-style one ("48 8D ?")
+stays IDA-style. The template decides rather than the output, because an output written
+before the switch would otherwise keep the old style for ever. CounterStrikeSharp
+accepts both.
 """
 
 import json
@@ -23,10 +30,9 @@ import sys
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from gamedata_utils import convert_sig_to_css, normalize_func_name_colons_to_underscore
+from gamedata_utils import convert_sig_to_css, convert_sig_to_cs2fixes, normalize_func_name_colons_to_underscore
 
-# Seed source (the plugin's last published file, stale signatures included):
-#   https://github.com/HvH-gg/TeleportFix/blob/main/TeleportFix/TeleportFix.json.gamedata
+# Seed source: https://raw.githubusercontent.com/HvH-gg/TeleportFix/master/TeleportFix/TeleportFix.json.gamedata
 
 # Module metadata
 MODULE_NAME = "TeleportFix"
@@ -39,6 +45,24 @@ OUTPUT_PATHS = (GAMEDATA_PATH,)
 # Seed new output roots with the plugin's file; only signatures/offsets of symbols
 # with analysis YAML data are rewritten.
 STATIC_SOURCES = ((GAMEDATA_PATH, GAMEDATA_PATH),)
+
+
+def _template_signatures():
+    """{key: {platform: value}} from the plugin's own file, the source of each value's style."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), GAMEDATA_PATH)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            template = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    return {key: entry.get("signatures") or {} for key, entry in template.items() if isinstance(entry, dict)}
+
+
+def convert_sig(sig, style_from):
+    """The YAML signature in the style of style_from: code-style when it has \\x escapes."""
+    if isinstance(style_from, str) and "\\x" in style_from:
+        return convert_sig_to_cs2fixes(sig)
+    return convert_sig_to_css(sig)
 
 
 def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, debug=False):
@@ -69,6 +93,8 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
     # Load existing gamedata
     with open(gamedata_path, "r", encoding="utf-8") as f:
         gamedata = json.load(f)
+
+    template_sigs = _template_signatures()
 
     updated_count = 0
     skipped_count = 0
@@ -105,7 +131,8 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
         if "signatures" in entry:
             for platform in platforms:
                 if platform in yaml_entry and "func_sig" in yaml_entry[platform]:
-                    sig = convert_sig_to_css(yaml_entry[platform]["func_sig"])
+                    style_from = (template_sigs.get(func_name) or {}).get(platform, entry["signatures"].get(platform))
+                    sig = convert_sig(yaml_entry[platform]["func_sig"], style_from)
                     entry["signatures"][platform] = sig
                     updated_count += 1
                     if debug:

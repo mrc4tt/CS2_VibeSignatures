@@ -93,15 +93,28 @@ def fetch(url, timeout=30):
         return response.read().decode("utf-8")
 
 
+def _ida_style(value):
+    r"""A code-style signature ("\x48\x2A...", \x2A = wildcard; TeleportFix since 2026-11-13)
+    as the IDA style the scan and the comparison read; anything else unchanged."""
+    if isinstance(value, str) and "\\x" in value:
+        return P._kv_wildcards(value).replace("??", "?")
+    return value
+
+
 def _values(entry):
     for kind in ("signatures", "offsets"):
         if isinstance(entry.get(kind), dict):
-            return kind, {p: entry[kind].get(p) for p in ("linux", "windows")}, entry[kind].get("library")
+            values = {p: entry[kind].get(p) for p in ("linux", "windows")}
+            if kind == "signatures":
+                values = {p: _ida_style(v) for p, v in values.items()}
+            return kind, values, entry[kind].get("library")
     # flat {"lib", "linux", "windows"} (SwiftlyS2): the value type names the kind
     values = {p: entry.get(p) for p in ("linux", "windows") if entry.get(p) is not None}
     if values:
         sample = next(iter(values.values()))
         kind = "offsets" if isinstance(sample, int) and not isinstance(sample, bool) else "signatures"
+        if kind == "signatures":
+            values = {p: _ida_style(v) for p, v in values.items()}
         return kind, values, entry.get("lib") or entry.get("library")
     return None, {}, None
 
