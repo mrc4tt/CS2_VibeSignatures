@@ -21,14 +21,24 @@
       ],
       "name": "CAttributeList_SetOrAddAttributeValueByName",
       "updated": true
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        11,
+        12,
+        13
+      ],
+      "name": "UpdateItemView",
+      "updated": false
     }
   ],
   "file": "weaponpaints-nereziel/gamedata/weaponpaints.json",
   "gamever": "14197",
   "schema_version": 2,
   "summary": {
-    "covered": 1,
-    "total": 1,
+    "covered": 2,
+    "total": 2,
     "updated": 1
   }
 }
