@@ -1,0 +1,25 @@
+"Games"
+{
+	"csgo"
+	{
+		"Signatures"
+		{
+			// "Kicking user %s (sv_kick_players_with_cooldown=%d)\n"
+			"GameSystem_Think_CheckSteamBan"
+			{
+				"library"		"server"
+				"windows"		"41 54 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 44 8B 60 ?"
+				"linux"			"55 48 89 E5 41 57 41 56 41 55 41 54 53 48 83 EC ? 48 8B 05 ? ? ? ? 44 8B 68 ? 45 85 ED 0F 8E ? ? ? ? 8B 15 ? ? ? ?"
+			}
+			// Location to CUtlMap unk that is referenced on Windows by function with "Notification about user penalty: %u/%u (%u sec)\n" string
+			// On Linux, a qword appears twice in GameSystem_Think_CheckSteamBan, and thrice in a sub-function of the function used for Windows (1 top, 2 bottom), the only other reference to this qword is some convar registration function with two unks above, sm_mapGcBanInformation is the unk further away
+			// The signature starts AT the lea: the plugin reads the rip-relative displacement at +3 of the 7-byte instruction.
+			"CCSGameRules__sm_mapGcBanInformation"
+			{
+				"library"		"server"
+				"windows"		"48 8D 0D ? ? ? ? 45 33 C0 4C 89 74 24 ?"
+				"linux"			"48 8D 35 ? ? ? ? 89 C2 48 63 46 ?"
+			}
+		}
+	}
+}
