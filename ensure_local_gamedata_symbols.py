@@ -153,15 +153,14 @@ FORK_OWNED_SYMBOLS = [
     ("Say_CommandHandler", "func", "server", None),
     ("SayTeam_CommandHandler", "func", "server", None),
     ("CCSPlayer_DamageReactServices_TakeDamage", "func", "server", None),
-    # SwiftlyS2 (core/offsets.jsonc + core/signatures.jsonc). Each identified on 14192
-    # on both platforms by its body, not only by the author's value; the generator's
-    # KEY_SYMBOL_OVERRIDES routes SwiftlyS2's interface spellings onto these.
+    # Engine and network interface records, read by the hl2sdk ABI check (cpp tests).
+    # Each identified on 14192 on both platforms by its body.
     # CServerSideClientBase slots (SDK serversideclientbase.h order; linux has two
     # dtor slots, windows one): Reconnect prints "Forcing client reconnect", SetRate
     # "setting rate to %d", ShouldSendMessages names itself, SetUpdateRate writes the
     # snapshot interval, FreeBaselines frees "BaseLine", MarkToKick/UnmarkToKick set and
     # clear one byte. Slot 58/56 re-reads "rate" from userinfo: the SDK's
-    # UpdateRateFromUserInfo, which SwiftlyS2 calls ResetUserSettings.
+    # UpdateRateFromUserInfo.
     ("CServerSideClientBase_Reconnect", "vfunc", "engine", None),
     ("CServerSideClientBase_SetRate", "vfunc", "engine", None),
     ("CServerSideClientBase_SetUpdateRate", "vfunc", "engine", None),
@@ -179,16 +178,9 @@ FORK_OWNED_SYMBOLS = [
     # CCLCMsg_RespondCvarValue (message 25) is bound - a member pointer 0x141 on linux
     # (Itanium offset + 1), the only `jmp [rax+0x130]` vcall thunk in engine2.dll.
     ("CServerSideClient_ProcessRespondCvarValue", "vfunc", "engine", None),
-    # SoundSystem001's guid counter (linux slot 77 increments [this+0x3c] and returns
-    # it, wrapping to 0); SwiftlyS2 calls it to stamp a sound event. Read where the
-    # server takes a guid for EmitSoundFilter's result - linux sub_F97520 calls
-    # g_pSoundSystem [rax+0x268] and passes eax on as the guid, windows sub_1805CAD20
-    # [rax+0x270] returns it by pointer - so it lives in server, where the call is,
-    # and no soundsystem module is needed. Slot-only: vtable_name is metadata here.
-    ("CSoundSystem_TakeGuid", "vfunc", "server", None),
     # CServerSideClientBase's FilterMessage as reached through its
     # INetworkMessageProcessingPreFilter subobject (this-48 copy, RebroadcastSourceId
-    # check), which SwiftlyS2 hooks by signature: linux 0x5430d0, windows 0x1800c4210.
+    # check): linux 0x5430d0, windows 0x1800c4210.
     ("INetworkMessageProcessingPreFilter_FilterMessage", "func", "engine", None),
     # Interface slots filed under the implementing class. SetClientListening writes the
     # VoiceStreams bit vector (SetClientProximity, one later, writes VoiceProximity);
@@ -244,24 +236,17 @@ FORK_OWNED_SYMBOLS = [
     ("CNetChan_IsTimedOut", "vfunc", "networksystem", None),
     ("CNetChan_SuppressTransmit", "vfunc", "networksystem", None),
     ("CNetChan_IsSuppressingTransmit", "vfunc", "networksystem", None),
-    # FireEvent prints "Game Event Fired: %s"; GetViewVectors returns the static
-    # CViewVectors (view 64, hull 16/72, duck 54/46, dead 14); ClientVoice is
-    # ISource2GameClients slot 27 (26 is GetBugReportInfo); CNavPhysicsInterface's
-    # TraceShape forwards to TraceShape(g_GameTraceManager, ...).
+    # FireEvent prints "Game Event Fired: %s"; CNavPhysicsInterface's TraceShape
+    # forwards to TraceShape(g_GameTraceManager, ...).
     ("CGameEventManager_FireEvent", "vfunc", "server", None),
-    ("CCSGameRules_GetViewVectors", "vfunc", "server", None),
-    ("CSource2GameClients_ClientVoice", "vfunc", "server", None),
     ("CNavPhysicsInterface_TraceShape", "vfunc", "server", None),
-    # Movement functions: SwiftlyS2's signatures, and cs2kz's where they still resolve,
-    # land on the same heads; each pair carries the same strings and float constants on
-    # both platforms (CategorizePosition 140, CheckFalling 580/350/250, GroundAccelerate
-    # "flAccelSpeed", AirMove "PreSource1AirMove", PlayerMove "Can't move", TryPlayerMove
+    # Movement functions: cs2kz's signatures, where they still resolve, land on the
+    # same heads; each pair carries the same strings and float constants on
+    # both platforms (CategorizePosition 140, CheckFalling 580/350/250, AirMove "PreSource1AirMove", PlayerMove "Can't move", TryPlayerMove
     # 1/32 and the overbounce); CheckJumpButtonLegacy calls the "player_jump" function
     # upstream files as CCSPlayer_MovementServices_CheckJumpButton (OnJumpLegacy there),
     # SetupMove calls CPlayer_MovementServices_ForceButtons. Relocation preprocessors,
-    # 14192 baseline. CFlashbangProjectile_Create is the flashbang twin of the
-    # C*Projectile_Create factories, but its string is also used by an inlined copy, so
-    # it relocates instead of string-anchoring like CHEGrenadeProjectile_Create.
+    # 14192 baseline.
     ("CCSPlayer_MovementServices_AirAccelerate", "func", "server", None),
     ("CCSPlayer_MovementServices_AirMove", "func", "server", None),
     ("CCSPlayer_MovementServices_CanUnduck", "func", "server", None),
@@ -273,7 +258,6 @@ FORK_OWNED_SYMBOLS = [
     ("CCSPlayer_MovementServices_CheckWater", "func", "server", None),
     ("CCSPlayer_MovementServices_Duck", "func", "server", None),
     ("CCSPlayer_MovementServices_Friction", "func", "server", None),
-    ("CCSPlayer_MovementServices_GroundAccelerate", "func", "server", None),
     ("CCSPlayer_MovementServices_LadderMove", "func", "server", None),
     ("CCSPlayer_MovementServices_MoveInit", "func", "server", None),
     ("CCSPlayer_MovementServices_OnJumpModern", "func", "server", None),
@@ -281,8 +265,6 @@ FORK_OWNED_SYMBOLS = [
     ("CCSPlayer_MovementServices_SetupMove", "func", "server", None),
     ("CCSPlayer_MovementServices_TryPlayerMove", "func", "server", None),
     ("CCSPlayerPawn_CanMove", "func", "server", None),
-    ("CCSCustomHudLayout_RemoveDialogVariableStringForPlayer", "func", "server", None),
-    ("CFlashbangProjectile_Create", "func", "server", None),
     # CounterStrikeSharp's CNavPhysicsInterface_vtable / CTraceFilterLOS_vtable keys: a
     # signature on the constructor's `lea reg, [vtable]`, displacement at +3. A gv record
     # per class (gv_va = the vtable), checked against the RTTI-resolved <class>_vtable
@@ -318,11 +300,11 @@ FORK_OWNED_STRUCTMEMBERS = [
     # "[addons:'%s']"; MultiAddonManager swaps it per client. 0x178 on both platforms
     # on 14192, read in ReplyConnection: linux 0x515b92, windows 0x1800a5aeb.
     ("CNetworkGameServer_ServerAddons", "CNetworkGameServer", "ServerAddons", "engine", None),
-    # SwiftlyS2's CServerSideClientBase members, each anchored on an instruction of a
+    # CServerSideClientBase members, each anchored on an instruction of a
     # function identified above or by its own string (m_fAuthenticatedTime and
     # m_bFullyAuthenticated in the Steam auth-ticket handlers, m_nAddr where
     # netadr_t::IsLocalhost reads it, m_Trace in the message-trace printf). Offsets agree
-    # with SwiftlyS2's and the SDK's on both platforms on 14192.
+    # with the SDK's on both platforms on 14192.
     ("CServerSideClientBase_m_AuthTicketSteamID", "CServerSideClientBase", "m_AuthTicketSteamID", "engine", None),
     ("CServerSideClientBase_m_BaselinesSent", "CServerSideClientBase", "m_BaselinesSent", "engine", None),
     ("CServerSideClientBase_m_bConVarsChanged", "CServerSideClientBase", "m_bConVarsChanged", "engine", None),
@@ -379,8 +361,7 @@ CATEGORY_DECISIONS = {
     # (CCSBot::m_profile, offset 0x8, size 8; windows write is "mov [rdi+8], rax").
     # As vfunc, generation takes the vfunc path for a structmember payload.
     "CCSBot_Profile": ("structmember", "CCSBot", "m_profile"),
-    # Upstream files it as a plain func, so the record had a signature but no slot and
-    # SwiftlyS2's CCSPlayerInventory::GetItemInLoadout offset kept the author's 9/8.
+    # Upstream files it as a plain func, so the record had a signature but no slot.
     # It is a CCSPlayerInventory virtual (CPlayerInventory's slot, overridden).
     "CCSPlayerInventory_GetItemInLoadout": ("vfunc", None, None),
     # Declared func when it was added, while its task writes the slot (vtable_name,
@@ -433,6 +414,14 @@ FORK_OWNED_ALIAS_REMOVALS = {
 
 # Fork-owned OBSOLETE tasks: declarations for artifacts that turned out to be wrong.
 FORK_OWNED_OBSOLETE_TASKS = [
+    # Fork-owned records whose only reader (one plugin's file) was removed on 2026-11-17;
+    # no other generator, task input or cpp test names them.
+    ("find-CSoundSystem_TakeGuid", "server", "its one reader was removed on 2026-11-17"),
+    ("find-CCSGameRules_GetViewVectors", "server", "its one reader was removed on 2026-11-17"),
+    ("find-CSource2GameClients_ClientVoice", "server", "its one reader was removed on 2026-11-17"),
+    ("find-CCSPlayer_MovementServices_GroundAccelerate", "server", "its one reader was removed on 2026-11-17"),
+    ("find-CCSCustomHudLayout_RemoveDialogVariableStringForPlayer", "server", "its one reader was removed on 2026-11-17"),
+    ("find-CFlashbangProjectile_Create", "server", "its one reader was removed on 2026-11-17"),
     # Retired with the client module (FORK_OWNED_MODULE_REMOVALS): each of these reads a
     # client artifact, directly or through another one here. None is a plugin key; three
     # (CEngineServiceMgr_GetActiveLoopClientServerMode / GetEventDispatcher /
@@ -524,6 +513,12 @@ FORK_OWNED_PLATFORM_PINS = [
 # a plain deletion comes back on the next merge.
 FORK_OWNED_REMOVALS = [
     # (symbol_name, module, why)
+    ("CSoundSystem_TakeGuid", "server", "its one reader was removed on 2026-11-17"),
+    ("CCSGameRules_GetViewVectors", "server", "its one reader was removed on 2026-11-17"),
+    ("CSource2GameClients_ClientVoice", "server", "its one reader was removed on 2026-11-17"),
+    ("CCSPlayer_MovementServices_GroundAccelerate", "server", "its one reader was removed on 2026-11-17"),
+    ("CCSCustomHudLayout_RemoveDialogVariableStringForPlayer", "server", "its one reader was removed on 2026-11-17"),
+    ("CFlashbangProjectile_Create", "server", "its one reader was removed on 2026-11-17"),
     # Declarations of the engine tasks retired with the client module (see
     # FORK_OWNED_OBSOLETE_TASKS).
     ("CEngineClient_ExecuteClientCmd", "engine", "retired with the client module"),
@@ -724,6 +719,9 @@ FORK_OWNED_MODULE_REMOVALS = [
     # 363 of its 626 artifacts were read by nothing, the rest by client's own tasks and
     # by cpp tests that compare the same classes in server and engine.
     ("client", "one plugin key, which server also produces"),
+    # Fork-owned from 2026-10-24 to 2026-11-17: it existed only to check one slot
+    # (CSoundSystem_TakeGuid), whose single reader was removed.
+    ("soundsystem", "only CSoundSystem_TakeGuid's slot, read by nothing"),
 ]
 
 
@@ -761,24 +759,6 @@ FORK_OWNED_MODULES = [
         "game/bin/win64/filesystem_stdio.dll",
         "game/bin/linuxsteamrt64/libfilesystem_stdio.so",
         [("CFileSystem_Stdio_vtable", "vtable", None)],
-    ),
-    # soundsystem carries CSoundSystem's vtable, the object behind SoundSystem001.
-    # SwiftlyS2's CSoundSystem::TakeGuid slot is read in server (the call site), and
-    # this is the binary that slot points into: without the module the depot filelist
-    # never fetches it, and cs2_depot/ kept a May soundsystem whose slot 77 is a
-    # different function.
-    (
-        "soundsystem",
-        "game/bin/win64/soundsystem.dll",
-        "game/bin/linuxsteamrt64/libsoundsystem.so",
-        [
-            ("CSoundSystem_vtable", "vtable", None),
-            # TakeGuid again, found here by its own body (linux slot 77 bumps [this+0x3c]
-            # and returns it, windows slot 78 writes it through rdx) and placed by RTTI.
-            # Server reads the same slot off a call site; validate_artifacts'
-            # cross-module check fails the build when the two disagree.
-            ("CSoundSystem_TakeGuid", "vfunc", None, "find-CSoundSystem_TakeGuid-soundsystem"),
-        ],
     ),
 ]
 
@@ -1526,7 +1506,6 @@ LIB_MODULE = {
     "schemasystem": "schemasystem",
     "filesystem_stdio": "filesystem_stdio",
     "networksystem": "networksystem",
-    "soundsystem": "soundsystem",
 }
 ENGINE_CLASSES = (
     "CNetworkGameServerBase",

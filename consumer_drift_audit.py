@@ -4,7 +4,7 @@ consumer projects' own upstream gamedata?
 
 Why: `audit_duplicate_va.py` and sig uniqueness cannot catch a wrong *identification*
 (right-looking, unique sig on the wrong function). But every consumer (CounterStrikeSharp,
-CS2Fixes, cs2kz, cs2surf, modsharp, plugify, swiftlys2) maintains its own gamedata, hand-
+CS2Fixes, cs2kz, cs2surf, modsharp, plugify) maintains its own gamedata, hand-
 verified by its authors. Resolving both their sig and ours on the same binary and comparing
 the resulting addresses turns that into a free, deterministic cross-check. This is exactly
 how the EmitSoundFilter / NetworkStateChanged / ProcessMovement / EndTouch misidentifications

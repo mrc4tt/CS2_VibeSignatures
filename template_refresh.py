@@ -93,7 +93,7 @@ def main():
         return 1
 
     # No -skip-validator: it keeps the previous plugins section, which describes the
-    # files before this refresh (on 14196 the site still listed swiftlys2's removed
+    # files before this refresh (on 14196 the site still listed a plugin's removed
     # CNetworkGameServer::m_Clients and lacked the key that replaced it).
     run([sys.executable, "publish_site_data.py"])
     paths = ["gamedata-generators", gamedata, os.path.join("gamedata", "history.json"),

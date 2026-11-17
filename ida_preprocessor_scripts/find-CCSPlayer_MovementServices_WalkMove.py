@@ -8,7 +8,7 @@ TARGET_FUNCTION_NAMES = [
 ]
 
 # The old xref_strings anchor ("PlayerMove_PostMove") selected the small helper that *references*
-# that string, not WalkMove (IDA-verified 14181; swiftlys2/cs2kz/modsharp all agree on the real
+# that string, not WalkMove (IDA-verified 14181; cs2kz/modsharp agree on the real
 # body). Anchor on WalkMove's own head bytes per platform; abi_guard.py enforces the identity.
 FUNC_XREFS_BY_PLATFORM = {
     "linux": [

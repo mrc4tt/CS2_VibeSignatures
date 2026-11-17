@@ -10,7 +10,7 @@ import sys
 
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from gamedata_utils import convert_sig_to_swiftly, normalize_func_name_colons_to_underscore, load_jsonc, save_jsonc
+from gamedata_utils import convert_sig_to_single_wildcard, normalize_func_name_colons_to_underscore, load_jsonc, save_jsonc
 
 # Module metadata
 MODULE_NAME = "Plugify"
@@ -96,7 +96,7 @@ def update(yaml_data, func_lib_map, platforms, output_dir, alias_to_name_map, de
             if not plugify_platform:
                 continue
             if platform in yaml_entry and "func_sig" in yaml_entry[platform]:
-                sig = convert_sig_to_swiftly(yaml_entry[platform]["func_sig"])
+                sig = convert_sig_to_single_wildcard(yaml_entry[platform]["func_sig"])
                 entry[plugify_platform] = sig
                 updated_count += 1
                 if debug:

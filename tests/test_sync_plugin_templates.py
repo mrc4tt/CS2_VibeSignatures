@@ -28,8 +28,8 @@ class SourcesTests(unittest.TestCase):
 
     def test_a_generator_with_two_files_names_each(self):
         with tempfile.TemporaryDirectory() as root:
-            os.makedirs(os.path.join(root, "swiftlys2"))
-            with open(os.path.join(root, "swiftlys2", "gamedata.py"), "w") as handle:
+            os.makedirs(os.path.join(root, "twofiles"))
+            with open(os.path.join(root, "twofiles", "gamedata.py"), "w") as handle:
                 handle.write("MODULE_ENABLED = True\n"
                              "# Seed source: https://h/x/signatures.jsonc template=templates/s.jsonc output=core/signatures.jsonc\n"
                              "# Seed source: https://h/x/offsets.jsonc template=templates/o.jsonc output=core/offsets.jsonc\n")

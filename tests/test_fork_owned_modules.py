@@ -9,6 +9,7 @@ module is not in the config at all.
 """
 
 import unittest
+from unittest import mock
 
 import yaml
 
@@ -103,27 +104,31 @@ class TestForkOwnedModules(unittest.TestCase):
         self.assertEqual(twice, once)
 
     def test_completes_a_block_built_before_its_entry_was_listed(self):
-        full, _ = ensure.enforce_fork_owned_modules(UPSTREAM)
-        lines = full.split("\n")
-        # drop the last symbol and task of soundsystem, as an older config would lack them
-        symbol_name, _category, _alias, task_name = next(
-            symbols for name, _w, _l, symbols in ensure.FORK_OWNED_MODULES if name == "soundsystem"
-        )[-1]
-        at = lines.index(f"      - name: {task_name}")
-        del lines[at:at + 3]
-        at = lines.index(f"      - name: {symbol_name}", lines.index("  - name: soundsystem"))
-        del lines[at:at + 2]
-        stale = "\n".join(lines)
+        # a module with two entries, the second naming its own task
+        table = list(ensure.FORK_OWNED_MODULES) + [(
+            "examplemod", "game/bin/win64/examplemod.dll", "game/bin/linuxsteamrt64/libexamplemod.so",
+            [("CExample_vtable", "vtable", None),
+             ("CExample_Method", "vfunc", None, "find-CExample_Method-examplemod")],
+        )]
+        with mock.patch.object(ensure, "FORK_OWNED_MODULES", table):
+            full, _ = ensure.enforce_fork_owned_modules(UPSTREAM)
+            lines = full.split("\n")
+            # drop the module's last symbol and task, as an older config would lack them
+            at = lines.index("      - name: find-CExample_Method-examplemod")
+            del lines[at:at + 3]
+            at = lines.index("      - name: CExample_Method", lines.index("  - name: examplemod"))
+            del lines[at:at + 2]
+            stale = "\n".join(lines)
 
-        completed, added = ensure.enforce_fork_owned_modules(stale)
-        self.assertEqual(added, 2)
-        def by_name(text):
-            return {m["name"]: {key: sorted(map(repr, m[key])) if isinstance(m[key], list) else m[key]
-                                for key in m}
-                    for m in yaml.safe_load(text)["modules"]}
-        self.assertEqual(by_name(completed), by_name(full))
-        again, more = ensure.enforce_fork_owned_modules(completed)
-        self.assertEqual((again, more), (completed, 0))
+            completed, added = ensure.enforce_fork_owned_modules(stale)
+            self.assertEqual(added, 2)
+            def by_name(text):
+                return {m["name"]: {key: sorted(map(repr, m[key])) if isinstance(m[key], list) else m[key]
+                                    for key in m}
+                        for m in yaml.safe_load(text)["modules"]}
+            self.assertEqual(by_name(completed), by_name(full))
+            again, more = ensure.enforce_fork_owned_modules(completed)
+            self.assertEqual((again, more), (completed, 0))
 
     def test_every_fork_owned_module_routes_and_resolves_to_a_binary(self):
         for name, path_windows, path_linux, _ in ensure.FORK_OWNED_MODULES:

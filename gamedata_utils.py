@@ -89,12 +89,12 @@ def convert_sig_to_cs2fixes(sig):
     return "".join(result)
 
 
-def convert_sig_to_swiftly(sig):
+def convert_sig_to_single_wildcard(sig):
     """
-    Convert YAML signature to Swiftly format.
+    Convert YAML signature to one "?" per wildcard byte.
 
     YAML: "48 89 5C 24 ?? 48 8B D9"
-    Swiftly: "48 89 5C 24 ? 48 8B D9"
+    Out:  "48 89 5C 24 ? 48 8B D9"
 
     Args:
         sig: Signature string from YAML
@@ -142,8 +142,8 @@ def generator_key_overrides(plugin, generators_dir="gamedata-generators", output
     imported, so a tool can ask about a generator without loading it.
 
     KEY_SYMBOL_OVERRIDES_BY_OUTPUT ({file name: {key: symbol}}) holds routing that applies
-    to one of the plugin's files only - SwiftlyS2 uses one key for the handler in
-    signatures.jsonc and for the vtable slot in offsets.jsonc. With ``output`` (a path to
+    to one of the plugin's files only, for a plugin that uses one key for a handler in
+    one file and for the vtable slot in another. With ``output`` (a path to
     that file) only its table is added; without it every file's table is, which is what a
     "does anything read this symbol" question needs.
     """

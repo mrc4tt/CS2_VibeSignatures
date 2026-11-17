@@ -33,7 +33,7 @@ permalink: cs2-vibesignatures/func-sig
 - Important behavior: if old YAML already has `func_sig`, preprocessing chooses this path first and does not auto-fallback to `vfunc_sig` on failure.
 
 ## Downstream Use
-- Dist gamedata modules mainly consume `func_sig` (converted to target pattern formats like CSS/VDF/Swiftly variants).
+- Dist gamedata modules mainly consume `func_sig` (converted to target pattern formats like CSS/VDF variants).
 
 ## Practical Notes
 - Keep uniqueness strict (`==1` match); multi-hit signatures are invalid.

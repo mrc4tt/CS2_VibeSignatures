@@ -9,7 +9,7 @@ SameMapTeardown to EndMatchState), and its author fixes values. Our file then sh
 the plugin no longer reads and lacks the ones it does.
 
 For every generator that names its source with a "# Seed source: <url>" line (one per file;
-a generator whose template lives apart from its output, like SwiftlyS2's two files, writes
+a generator whose template lives apart from its output, one with several files, writes
 "# Seed source: <url> template=<path> output=<path>") this fetches
 the plugin's current file and reports, per plugin:
 
@@ -83,7 +83,7 @@ def record_provenance(template_path, text):
 
 
 def _load(path):
-    """JSON or JSONC (SwiftlyS2 comments its files)."""
+    """JSON or JSONC (some plugins comment their files)."""
     return json.loads(P._strip_jsonc(open(path, encoding="utf-8").read()))
 
 
@@ -108,7 +108,7 @@ def _values(entry):
             if kind == "signatures":
                 values = {p: _ida_style(v) for p, v in values.items()}
             return kind, values, entry[kind].get("library")
-    # flat {"lib", "linux", "windows"} (SwiftlyS2): the value type names the kind
+    # flat {"lib", "linux", "windows"}: the value type names the kind
     values = {p: entry.get(p) for p in ("linux", "windows") if entry.get(p) is not None}
     if values:
         sample = next(iter(values.values()))

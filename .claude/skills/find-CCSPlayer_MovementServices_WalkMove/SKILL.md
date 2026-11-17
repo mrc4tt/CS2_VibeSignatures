@@ -21,7 +21,7 @@ Target: `CCSPlayer_MovementServices::WalkMove` (func) in the module loaded in TH
 
 `CCSPlayer_MovementServices::WalkMove(CMoveData*)` is the ~4 KB SIMD body (14181: linux 0x15b69a0,
 windows RVA 0xab4820), head linux `48 B8 ?? ?? ?? ?? ?? ?? ?? ?? 55 66 0F EF C0 48 89 E5 41 57 41 56`,
-windows `48 8B C4 48 89 70 ?? 48 89 78 ?? 55 41 54 41 55 41 56 41 57`. swiftlys2, cs2kz and modsharp all
+windows `48 8B C4 48 89 70 ?? 48 89 78 ?? 55 41 54 41 55 41 56 41 57`. cs2kz and modsharp both
 agree. **Reject** the small 3-argument helper that references "PlayerMove_PostMove" (14181 linux
 0x15b61d0 / windows RVA 0xaa6cd0) - the old xref_strings anchor selected it. Note: the pipeline
 previously shipped this body under FullWalkMove; FullWalkMove is the small `(CMoveData*, bool)`

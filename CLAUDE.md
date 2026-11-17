@@ -446,61 +446,40 @@ run that looks unusually quiet.
 The counts move whenever symbols are added or retired, so re-measure rather than trusting a stale
 table: the numbers above replace an earlier set (775/767/778 updates, 25/42/42 warnings) that was
 two sessions old and made new advisories look like regressions. The update counts dropped by roughly 320 when five generators were disabled
-(`MODULE_ENABLED = False` for swiftlys2, plugify, modsharp, cs2surf, cs2kz — 620 of 871 keys), so
-they are no longer comparable with the 800-ish numbers above them. **swiftlys2 was removed entirely on
-2026-11-17** (generator, every `gamedata/<VER>/swiftlys2/`, the site's catalog entry and framework, its
-diagnostics rows): what follows about it is history. Its fork-owned records stay declared but have no
-reader any more, so rule 11 gives them the free preprocessor only. swiftlys2 was re-enabled on
-2026-10-23 (14192: 525 updates, its two files verify with `-require-verified`); its templates follow
-swiftlys2 master through two `# Seed source: <url> template=<path> output=<path>` lines, and its
-`KEY_SYMBOL_OVERRIDES` (DropWeapon is the non-virtual HandleDropWeapon there, plus its own
-spellings GetWeaponCSDataFromKey and C*Projectile::EmitGrenade) is read by the verifier, the template
-sync and the metadata coverage as well. A key only one plugin uses belongs in that plugin's
+(`MODULE_ENABLED = False` for plugify, modsharp, cs2surf, cs2kz and one generator since removed — 620 of 871 keys), so
+they are no longer comparable with the 800-ish numbers above them. A key only one plugin uses belongs in that plugin's
 `KEY_SYMBOL_OVERRIDES`, not in the shared `ALIAS_OVERRIDES`, so it can reach no other plugin's file.
-On 2026-10-24 swiftlys2 went from 57 to all 199 of its keys produced here: 107 new fork-owned
-records (CServerSideClientBase members and slots, CNetChan's INetChannel(Info) slots, the movement
-functions) plus overrides onto records that existed under other names. The binary disagreed with the
-author on 14192 for every linux INetChannel slot (linux has two dtor slots), the
-SuppressTransmit pair on both platforms and GetAvgData - ours ships. The last three are slot-only
-records read off a **call site** (`vfunc_sig`, no `func_va`), the answer for a slot whose function
-cannot be signatured or lives in a module we do not analyse:
-- `CServerSideClient_ProcessRespondCvarValue` (40/38): linux's override is `return 1`, windows folds
+On 2026-11-17 one plugin was removed whole: generator, every `gamedata/<VER>/<plugin>/`, the site's
+catalog entry and framework, its diagnostics rows. Of the fork-owned records added for it, the six no
+other generator, task input or cpp test names were retired through `FORK_OWNED_REMOVALS` /
+`FORK_OWNED_OBSOLETE_TASKS`, and the `soundsystem` module (one slot check) through
+`FORK_OWNED_MODULE_REMOVALS`; the CServerSideClientBase and CNetChan records stay, because the hl2sdk
+ABI check (cpp tests) reads them. What that work taught:
+- A slot whose function cannot be signatured, or lives in a module we do not analyse, is a slot-only
+  record read off a **call site** (`vfunc_sig`, no `func_va`).
+  `CServerSideClient_ProcessRespondCvarValue` (40/38): linux's override is `return 1`, windows folds
   it into a shared `mov al,1; ret`. Read where CServerSideClientBase binds message 25's handler -
   windows' only `jmp [rax+0x130]` vcall thunk, and on linux an Itanium member pointer, which is
   offset **+ 1** (`mov qword ptr [rbp-0x38], 0x141`); `vfunc_sig_calls_offset` accepts that form
   on ELF only.
-- `CSoundSystem_TakeGuid` (77/78) sits in **server**, where EmitSoundFilter's guid helper calls
-  `g_pSoundSystem` (SoundSystem001). The slot points into `soundsystem`, a fork-owned module that
-  carries only `CSoundSystem_vtable` (like schemasystem), so the binary is downloaded and locked
-  every build: linux slot 77 (`0x391ee0` on 14192) and windows slot 78 (`0x18005b290`) both bump
-  a counter at `[this+0x3c]` and wrap it to 0, windows writing it through the out pointer.
-  soundsystem carries its own `CSoundSystem_TakeGuid` too (task
-  `find-CSoundSystem_TakeGuid-soundsystem`), found by the function's body and placed by RTTI,
-  so `cross_platform_vfunc_check` compares the server call site's slot with the real one every
-  build and errors when they part. A `FORK_OWNED_MODULES` symbol may name its task (4th
-  element) when another module already uses `find-<Symbol>`, and an existing module block is
-  completed with entries added to the table later. `emit_artifact.py` now takes its binary
-  names from `auto_hunt_headless`, so it covers every module the validator does.
+- Every linux INetChannel slot is one higher than windows (linux has two dtor slots).
+- A `FORK_OWNED_MODULES` symbol may name its task (4th element) when another module already uses
+  `find-<Symbol>`, and an existing module block is completed with entries added to the table later.
+  `emit_artifact.py` takes its binary names from `auto_hunt_headless`, so it covers every module
+  the validator does.
 - **`download_depot.py` passes `-validate`.** DepotDownloader otherwise diffs the manifest against
   the one it stored last time, so a file the previous filelist never fetched stays whatever build
-  it came from: `cs2_depot/` held a May soundsystem through 14192 (slot 77 there is a void flag
-  setter), and `binary_locks/14192.json` never pinned schemasystem or filesystem_stdio.
+  it came from, and `binary_locks/14192.json` never pinned schemasystem or filesystem_stdio.
 - **`download_depot.py` prunes `cs2_depot/game/` to the filelist** after every successful download
   (`-no-prune` keeps it, `-prune-only` prunes without downloading). A file outside the filelist is
   never read and never fetched again, so it stayed for ever: one full download on 2026-05-03 left
   2.6 GB of community maps and shader packs, and 139 May binaries no module lists (544 MB). Kept:
   `game/csgo/steam.inf` (`bump_download.py` reads it) and everything outside `game/`
   (`.DepotDownloader/`).
-- `INetChannelInfo::GetAvgPacketBytes` routes to `CNetChan_GetAvgData` (15). SwiftlyS2 has no
-  GetPeakJitter, so its names from slot 14 on are one early: 14 is a running `maxss` of 0.1 ms
-  frame-time samples feeding the jitter histogram, 15 is bytes/sec. Both keys ship 15.
-- `CCSPlayerInventory_GetItemInLoadout` was upstream's plain `func`: the metadata called the key
+- `CCSPlayerInventory_GetItemInLoadout` was upstream's plain `func`: the metadata called a key
   covered while the offset was the author's 9/8. `CATEGORY_DECISIONS` makes it a vfunc, its task
   asks for the slot (RTTI-confirmed 9/8). Coverage in `*.metadata.json` means "a record exists",
   not "the field this key needs exists" - `verify_plugin_gamedata`'s `upstream:` list is the test.
-  Its one remaining entry, `CSource2Server::g_GameEventManager`, is a false alarm: the alias sits
-  in the generator's own `config.yaml`, which the verifier does not read, and the shipped
-  signature is `CSource2Server_Init`'s byte for byte.
 bot-hider, bot-controller and CS2FOW were disabled the same day.
 bot-controller (GetSlot, vtidx::DropWeapon), bot-hider (EndMatchState), cs2-retakes-allocator
 (GiveNamedItem2) and CounterStrikeSharp (CBaseEntity_TakeDamage) moved there on 2026-10-23 with
@@ -943,7 +922,7 @@ three agent attempts, so a baseline-backed symbol is only paid for when a genera
 names it as a key (in the plugin's own `CClass::Method` spelling, resolved through the symbol's
 `alias` list) or another task takes it as `expected_input`. Measured on 14182:
 `INetworkSystem_PollSocket` is read by `networksystem/find-CNetworkSystem_PollSocket` and
-`CEntityResourceManifest_AddResource` ships in CounterStrikeSharp and swiftlys2, so both are hunted;
+`CEntityResourceManifest_AddResource` ships in CounterStrikeSharp, so both are hunted;
 `IGameResourceService_SetEntityResourceManifestHandler` and `g_pGameEntitySystem` reach the snapshot
 and stop there, so they are skipped with the reason printed. Beware the near-miss that makes
 `g_pGameEntitySystem` look consumed: CounterStrikeSharp ships a `GameEntitySystem` key, but it
@@ -1131,7 +1110,7 @@ one IDA habit damages databases. Learned adding `KickBotFromTeam` on 14196/14197
   Run it only on the newest config. For an older one, `git checkout` the config and hand-insert
   exactly the task + symbol lines the newest config got (same position), then re-read it.
 - `update_gamedata.py` on an older gamever regenerates every plugin, so template drift since that
-  build lands in unrelated files (14196: statusmodifier, swiftlys2, CounterStrikeSharp metadata).
+  build lands in unrelated files (14196: statusmodifier, CounterStrikeSharp metadata).
   Afterwards `git status --short gamedata/` and `git checkout --` every plugin directory you did
   not mean to change, before verifying and committing.
 - `gamesymbols/<VER>.yaml` and `diagnostics/<VER>.json` re-pack/regenerate whole, which is

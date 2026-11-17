@@ -4901,18 +4901,9 @@ modules:
       - name: find-CCSPlayer_DamageReactServices_TakeDamage
         expected_output:
           - CCSPlayer_DamageReactServices_TakeDamage.{platform}.yaml
-      - name: find-CSoundSystem_TakeGuid
-        expected_output:
-          - CSoundSystem_TakeGuid.{platform}.yaml
       - name: find-CGameEventManager_FireEvent
         expected_output:
           - CGameEventManager_FireEvent.{platform}.yaml
-      - name: find-CCSGameRules_GetViewVectors
-        expected_output:
-          - CCSGameRules_GetViewVectors.{platform}.yaml
-      - name: find-CSource2GameClients_ClientVoice
-        expected_output:
-          - CSource2GameClients_ClientVoice.{platform}.yaml
       - name: find-CNavPhysicsInterface_TraceShape
         expected_output:
           - CNavPhysicsInterface_TraceShape.{platform}.yaml
@@ -4949,9 +4940,6 @@ modules:
       - name: find-CCSPlayer_MovementServices_Friction
         expected_output:
           - CCSPlayer_MovementServices_Friction.{platform}.yaml
-      - name: find-CCSPlayer_MovementServices_GroundAccelerate
-        expected_output:
-          - CCSPlayer_MovementServices_GroundAccelerate.{platform}.yaml
       - name: find-CCSPlayer_MovementServices_LadderMove
         expected_output:
           - CCSPlayer_MovementServices_LadderMove.{platform}.yaml
@@ -4973,12 +4961,6 @@ modules:
       - name: find-CCSPlayerPawn_CanMove
         expected_output:
           - CCSPlayerPawn_CanMove.{platform}.yaml
-      - name: find-CCSCustomHudLayout_RemoveDialogVariableStringForPlayer
-        expected_output:
-          - CCSCustomHudLayout_RemoveDialogVariableStringForPlayer.{platform}.yaml
-      - name: find-CFlashbangProjectile_Create
-        expected_output:
-          - CFlashbangProjectile_Create.{platform}.yaml
       - name: find-ScriptGetAddon
         expected_output:
           - ScriptGetAddon.{platform}.yaml
@@ -8440,13 +8422,7 @@ modules:
         category: func
       - name: CCSPlayer_DamageReactServices_TakeDamage
         category: func
-      - name: CSoundSystem_TakeGuid
-        category: vfunc
       - name: CGameEventManager_FireEvent
-        category: vfunc
-      - name: CCSGameRules_GetViewVectors
-        category: vfunc
-      - name: CSource2GameClients_ClientVoice
         category: vfunc
       - name: CNavPhysicsInterface_TraceShape
         category: vfunc
@@ -8472,8 +8448,6 @@ modules:
         category: func
       - name: CCSPlayer_MovementServices_Friction
         category: func
-      - name: CCSPlayer_MovementServices_GroundAccelerate
-        category: func
       - name: CCSPlayer_MovementServices_LadderMove
         category: func
       - name: CCSPlayer_MovementServices_MoveInit
@@ -8487,10 +8461,6 @@ modules:
       - name: CCSPlayer_MovementServices_TryPlayerMove
         category: func
       - name: CCSPlayerPawn_CanMove
-        category: func
-      - name: CCSCustomHudLayout_RemoveDialogVariableStringForPlayer
-        category: func
-      - name: CFlashbangProjectile_Create
         category: func
       - name: ScriptGetAddon
         category: func
@@ -12843,21 +12813,6 @@ modules:
     symbols:
       - name: CFileSystem_Stdio_vtable
         category: vtable
-  - name: soundsystem
-    path_windows: game/bin/win64/soundsystem.dll
-    path_linux: game/bin/linuxsteamrt64/libsoundsystem.so
-    skills:
-      - name: find-CSoundSystem_TakeGuid-soundsystem
-        optional_output:
-          - CSoundSystem_TakeGuid.{platform}.yaml
-      - name: find-CSoundSystem_vtable
-        optional_output:
-          - CSoundSystem_vtable.{platform}.yaml
-    symbols:
-      - name: CSoundSystem_TakeGuid
-        category: vfunc
-      - name: CSoundSystem_vtable
-        category: vtable
 cpp_tests:
   - name: CEntityInstance_MSVC
     symbol: CEntityInstance
@@ -14549,3 +14504,68 @@ cpp_tests:
       - fdump-vtable-layouts
     reference_modules:
       - networksystem  # bin_artifacts/{gamever}/networksystem/CNetworkSystem_*.{platform}.yaml
+  - name: IFlattenedSerializers_MSVC
+    symbol: IFlattenedSerializers
+    alias_symbols:
+      - CFlattenedSerializers
+    cpp: cpp_tests/iflattenedserializers.cpp
+    headers:
+      - hl2sdk_cs2/public/networksystem/iflattenedserializers.h  # Used by the fix-cppheaders SKILL
+    target: x86_64-pc-windows-msvc
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_MSVC=1
+      - COMPILER_MSVC64=1
+      - _MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION
+      - _CRT_USE_BUILTIN_OFFSETOF
+    additional_compiler_options:
+      - fms-extensions
+      - fms-compatibility
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - networksystem  # bin_artifacts/{gamever}/networksystem/CFlattenedSerializers_*.{platform}.yaml
+  - name: IFlattenedSerializers_Linux
+    symbol: IFlattenedSerializers
+    alias_symbols:
+      - CFlattenedSerializers
+    cpp: cpp_tests/iflattenedserializers.cpp
+    headers:
+      - hl2sdk_cs2/public/networksystem/iflattenedserializers.h
+    target: x86_64-pc-linux-gnu
+    include_directories:
+      - cpp_tests/stubs
+      - hl2sdk_cs2/game/shared
+      - hl2sdk_cs2/public
+      - hl2sdk_cs2/public/tier0
+      - hl2sdk_cs2/public/tier1
+      - hl2sdk_cs2/public/mathlib
+      - hl2sdk_cs2/common
+    defines:
+      - COMPILER_GCC
+      - _LINUX
+      - LINUX
+      - POSIX
+      - GNUC
+      - PLATFORM_64BITS
+      - X64BITS
+      - _finite=finite
+      - stricmp=strcasecmp
+      - _stricmp=strcasecmp
+      - strnicmp=strncasecmp
+      - _strnicmp=strncasecmp
+      - strcmpi=strcasecmp
+      - _vsnprintf=vsnprintf
+      - _alloca=alloca
+    additional_compiler_options:
+      - Xclang
+      - fdump-vtable-layouts
+    reference_modules:
+      - networksystem

@@ -90,21 +90,6 @@ binaries:
       path: game/csgo/bin/win64/server.dll
       sha256: '84d596644ad574ac70f427777c89f9006a8023f493c46f4c215f40bceef13cbb'
       size: 34539672
-  soundsystem:
-    linux:
-      crc32: 'dad664b3'
-      crc64: '39af2bce1241855f'
-      md5: '7c5e5476ad2eb6281e7dc5580cc242a6'
-      path: game/bin/linuxsteamrt64/libsoundsystem.so
-      sha256: 'bec026c5633e18ac5fee1cb85a97d11456136b18fbaf1f3a4838204bbb70f609'
-      size: 7955252
-    windows:
-      crc32: '2752708a'
-      crc64: 'dec84e0d6c4c23da'
-      md5: '2438d5091fd716ce7bd197dd1cb9b429'
-      path: game/bin/win64/soundsystem.dll
-      sha256: 'd5eb6daf6aa555d4085f74f4ffef639e745d7b366eb367d2a34687dfe9f49cd5'
-      size: 5837464
   tier0:
     linux:
       crc32: '6fa3e5ad'
@@ -136,8 +121,8 @@ binaries:
       sha256: 'ffad0bc72f64228a36aa2e370b8e6e3b29ae6b0747d42436d40b2ce25be5723d'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:0ca3a4d92f8bee13ca2ab374b74c9c3145be069997688b6e27c4657f62473ddd
-file_count: 3330
+config_sha256: sha256:20a4bc5c9cf7b708972f12a069f21b58c2447274b0207409dc05961531a21b3e
+file_count: 3314
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -20143,18 +20128,6 @@ files:
     func_sig: 48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ??
     func_size: '0x5dc'
     func_va: '0x1802ea090'
-  server/CCSCustomHudLayout_RemoveDialogVariableStringForPlayer.linux.yaml:
-    func_name: CCSCustomHudLayout_RemoveDialogVariableStringForPlayer
-    func_rva: '0x131c170'
-    func_sig: 55 48 89 E5 41 55 41 54 53 89 F3 48 83 EC ?? 85 F6
-    func_size: '0xb7'
-    func_va: '0x131c170'
-  server/CCSCustomHudLayout_RemoveDialogVariableStringForPlayer.windows.yaml:
-    func_name: CCSCustomHudLayout_RemoveDialogVariableStringForPlayer
-    func_rva: '0x8ba430'
-    func_sig: 85 D2 0F 88 ?? ?? ?? ?? 53 56 41 56
-    func_size: '0x136'
-    func_va: '0x1808ba430'
   server/CCSCustomHudLayout_SetDialogVariableString.linux.yaml:
     func_name: CCSCustomHudLayout_SetDialogVariableString
     func_rva: '0x13211e0'
@@ -20256,26 +20229,6 @@ files:
     func_va: '0x180dd9fd0'
     vfunc_index: 25
     vfunc_offset: '0xc8'
-    vtable_name: CCSGameRules
-  server/CCSGameRules_GetViewVectors.linux.yaml:
-    func_name: CCSGameRules_GetViewVectors
-    func_rva: '0x1338a70'
-    func_sig: 48 8D 05 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? 31 C0 C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? B8 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ??
-    func_sig_allow_across_function_boundary: true
-    func_size: '0x8'
-    func_va: '0x1338a70'
-    vfunc_index: 33
-    vfunc_offset: '0x108'
-    vtable_name: CCSGameRules
-  server/CCSGameRules_GetViewVectors.windows.yaml:
-    func_name: CCSGameRules_GetViewVectors
-    func_rva: '0x923c60'
-    func_sig: 48 8D 05 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? B8 ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 33 C0
-    func_sig_allow_across_function_boundary: true
-    func_size: '0x8'
-    func_va: '0x180923c60'
-    vfunc_index: 32
-    vfunc_offset: '0x100'
     vtable_name: CCSGameRules
   server/CCSGameRules_GoToIntermission.linux.yaml:
     func_name: CCSGameRules_GoToIntermission
@@ -23862,18 +23815,6 @@ files:
     patch_bytes: E9 B0 00 00 00 90
     patch_name: CCSPlayer_MovementServices_FullWalkMove_SpeedClamp
     patch_sig: 0F 86 ?? ?? ?? ?? 0F 57 C0 0F 2E C2
-  server/CCSPlayer_MovementServices_GroundAccelerate.linux.yaml:
-    func_name: CCSPlayer_MovementServices_GroundAccelerate
-    func_rva: '0x1588770'
-    func_sig: 55 0F 28 F9 48 89 E5
-    func_size: '0x6c9'
-    func_va: '0x1588770'
-  server/CCSPlayer_MovementServices_GroundAccelerate.windows.yaml:
-    func_name: CCSPlayer_MovementServices_GroundAccelerate
-    func_rva: '0xaaf510'
-    func_sig: 40 53 41 54 41 55 41 57
-    func_size: '0x565'
-    func_va: '0x180aaf510'
   server/CCSPlayer_MovementServices_LadderMove.linux.yaml:
     func_name: CCSPlayer_MovementServices_LadderMove
     func_rva: '0x15a9b30'
@@ -28805,18 +28746,6 @@ files:
     vtable_size: '0x770'
     vtable_symbol: ??_7CEnvShake@@6B@
     vtable_va: '0x1819732c0'
-  server/CFlashbangProjectile_Create.linux.yaml:
-    func_name: CFlashbangProjectile_Create
-    func_rva: '0xd222b0'
-    func_sig: 55 4C 89 C1 48 89 E5 41 57 45 89 CF 41 56 49 89 FE 41 55 49 89 D5 48 89 F2 48 89 FE 41 54 48 8D 3D ?? ?? ?? ?? 4D 89 C4 53 48 83 EC ?? E8 ?? ?? ?? ?? 4C 89 EE
-    func_size: '0xa3'
-    func_va: '0xd222b0'
-  server/CFlashbangProjectile_Create.windows.yaml:
-    func_name: CFlashbangProjectile_Create
-    func_rva: '0x3a1310'
-    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B 6C 24 ?? 49 8B F8
-    func_size: '0xaf'
-    func_va: '0x1803a1310'
   server/CFlashbangProjectile_Detonate.linux.yaml:
     func_name: CFlashbangProjectile_Detonate
     func_rva: '0xd254b0'
@@ -37521,18 +37450,6 @@ files:
     vtable_size: '0xa20'
     vtable_symbol: ??_7CSmokeGrenadeProjectile@@6B@
     vtable_va: '0x1818d7658'
-  server/CSoundSystem_TakeGuid.linux.yaml:
-    func_name: CSoundSystem_TakeGuid
-    vfunc_index: 77
-    vfunc_offset: '0x268'
-    vfunc_sig: FF 90 68 02 00 00 F2 0F 10 4D ?? 66 0F EF C0 89 C1
-    vtable_name: CSoundSystem
-  server/CSoundSystem_TakeGuid.windows.yaml:
-    func_name: CSoundSystem_TakeGuid
-    vfunc_index: 78
-    vfunc_offset: '0x270'
-    vfunc_sig: FF 90 70 02 00 00 F2 0F 10 84 24 ?? ?? ?? ?? 66 0F 2E C6 8B 18 7A
-    vtable_name: CSoundSystem
   server/CSource2EntitySystem_StaticInit.linux.yaml:
     func_name: CSource2EntitySystem_StaticInit
     func_rva: '0x176a940'
@@ -37723,24 +37640,6 @@ files:
     vfunc_index: 20
     vfunc_offset: '0xa0'
     vtable_name: CSource2GameClients_vtable
-  server/CSource2GameClients_ClientVoice.linux.yaml:
-    func_name: CSource2GameClients_ClientVoice
-    func_rva: '0x19802f0'
-    func_sig: 55 89 F7 48 89 E5 53 48 83 EC ?? E8 ?? ?? ?? ?? 48 85 C0 74 ?? 48 89 C3 E8 ?? ?? ?? ??
-    func_size: '0x36'
-    func_va: '0x19802f0'
-    vfunc_index: 27
-    vfunc_offset: '0xd8'
-    vtable_name: CSource2GameClients
-  server/CSource2GameClients_ClientVoice.windows.yaml:
-    func_name: CSource2GameClients_ClientVoice
-    func_rva: '0xdd8260'
-    func_sig: 40 53 48 83 EC ?? 8B CA E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 74 ?? E8 ?? ?? ?? ??
-    func_size: '0x30'
-    func_va: '0x180dd8260'
-    vfunc_index: 27
-    vfunc_offset: '0xd8'
-    vtable_name: CSource2GameClients
   server/CSource2GameClients_GetBugReportInfo.linux.yaml:
     func_name: CSource2GameClients_GetBugReportInfo
     func_rva: '0x1981ee0'
@@ -43097,313 +42996,6 @@ files:
     vfunc_index: 25
     vfunc_offset: '0xc8'
     vtable_name: CCSPlayer_MovementServices
-  soundsystem/CSoundSystem_TakeGuid.linux.yaml:
-    func_name: CSoundSystem_TakeGuid
-    func_rva: '0x391d60'
-    func_sig: 8B 47 ?? BA ?? ?? ?? ?? 83 C0 ?? 0F 49 D0 89 57 ?? C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 83 3D ?? ?? ?? ?? ??
-    func_sig_allow_across_function_boundary: true
-    func_size: '0x12'
-    func_va: '0x391d60'
-    vfunc_index: 77
-    vfunc_offset: '0x268'
-    vtable_name: CSoundSystem
-  soundsystem/CSoundSystem_TakeGuid.windows.yaml:
-    func_name: CSoundSystem_TakeGuid
-    func_rva: '0x5b230'
-    func_sig: FF 41 ?? 8B 41 ?? 3D ?? ?? ?? ?? 89 02 48 8B C2 72 ?? C7 41 ?? ?? ?? ?? ?? C3 ?? ?? ?? ?? ?? ?? 48 83 3D ?? ?? ?? ?? ??
-    func_sig_allow_across_function_boundary: true
-    func_size: '0x1a'
-    func_va: '0x18005b230'
-    vfunc_index: 78
-    vfunc_offset: '0x270'
-    vtable_name: CSoundSystem
-  soundsystem/CSoundSystem_vtable.linux.yaml:
-    vtable_class: CSoundSystem
-    vtable_entries:
-      0: '0x3936b0'
-      1: '0x3936f0'
-      10: '0x391fb0'
-      100: '0x392e70'
-      101: '0x392640'
-      102: '0x392660'
-      103: '0x392680'
-      104: '0x3926f0'
-      105: '0x394880'
-      106: '0x392710'
-      107: '0x392740'
-      108: '0x3926d0'
-      109: '0x3926a0'
-      11: '0x394530'
-      110: '0x392f30'
-      111: '0x395390'
-      112: '0x392500'
-      113: '0x391de0'
-      114: '0x3926b0'
-      115: '0x391e40'
-      116: '0x391e50'
-      117: '0x393510'
-      118: '0x391e60'
-      119: '0x392350'
-      12: '0x393af0'
-      120: '0x392360'
-      121: '0x3925b0'
-      122: '0x3925c0'
-      123: '0x391e10'
-      124: '0x392370'
-      125: '0x3923a0'
-      126: '0x3923f0'
-      127: '0x392400'
-      128: '0x392410'
-      129: '0x391db0'
-      13: '0x393540'
-      130: '0x392d30'
-      131: '0x392e80'
-      132: '0x392e40'
-      133: '0x391f10'
-      134: '0x3930c0'
-      135: '0x392980'
-      14: '0x392c80'
-      15: '0x3921a0'
-      16: '0x3921b0'
-      17: '0x392190'
-      18: '0x3921c0'
-      19: '0x3921e0'
-      2: '0x391f70'
-      20: '0x391fd0'
-      21: '0x392010'
-      22: '0x396a90'
-      23: '0x392460'
-      24: '0x392470'
-      25: '0x395200'
-      26: '0x393e80'
-      27: '0x3924d0'
-      28: '0x3924e0'
-      29: '0x394410'
-      3: '0x3921f0'
-      30: '0x395120'
-      31: '0x3942e0'
-      32: '0x394750'
-      33: '0x392530'
-      34: '0x392db0'
-      35: '0x392de0'
-      36: '0x394ca0'
-      37: '0x394cc0'
-      38: '0x392540'
-      39: '0x392550'
-      4: '0x3928b0'
-      40: '0x392560'
-      41: '0x392570'
-      42: '0x391dc0'
-      43: '0x391dd0'
-      44: '0x394f10'
-      45: '0x392130'
-      46: '0x391df0'
-      47: '0x392580'
-      48: '0x392760'
-      49: '0x392770'
-      5: '0x391f80'
-      50: '0x392780'
-      51: '0x392790'
-      52: '0x3927a0'
-      53: '0x3927b0'
-      54: '0x3927c0'
-      55: '0x3927d0'
-      56: '0x3927e0'
-      57: '0x392800'
-      58: '0x392810'
-      59: '0x392820'
-      6: '0x391da0'
-      60: '0x392830'
-      61: '0x392860'
-      62: '0x393730'
-      63: '0x393240'
-      64: '0x3924f0'
-      65: '0x392ce0'
-      66: '0x392cf0'
-      67: '0x393c80'
-      68: '0x393d70'
-      69: '0x393bb0'
-      7: '0x391f90'
-      70: '0x392d00'
-      71: '0x392d10'
-      72: '0x392d20'
-      73: '0x3937c0'
-      74: '0x391d00'
-      75: '0x391d20'
-      76: '0x391d40'
-      77: '0x391d60'
-      78: '0x3925d0'
-      79: '0x3925f0'
-      8: '0x392020'
-      80: '0x391e20'
-      81: '0x392610'
-      82: '0x394d10'
-      83: '0x3924a0'
-      84: '0x394e10'
-      85: '0x292300'
-      86: '0x393660'
-      87: '0x391e90'
-      88: '0x391eb0'
-      89: '0x391ec0'
-      9: '0x391fa0'
-      90: '0x392c50'
-      91: '0x392ec0'
-      92: '0x3941e0'
-      93: '0x392c60'
-      94: '0x392c70'
-      95: '0x392420'
-      96: '0x3927f0'
-      97: '0x391ed0'
-      98: '0x391ef0'
-      99: '0x394970'
-    vtable_numvfunc: 136
-    vtable_rva: '0x73d848'
-    vtable_size: '0x440'
-    vtable_symbol: _ZTV12CSoundSystem + 0x10
-    vtable_va: '0x73d848'
-  soundsystem/CSoundSystem_vtable.windows.yaml:
-    vtable_class: CSoundSystem
-    vtable_entries:
-      0: '0x18005ba20'
-      1: '0x18005ba60'
-      10: '0x18003c200'
-      100: '0x180060ed0'
-      101: '0x18005e140'
-      102: '0x18005e150'
-      103: '0x18005e170'
-      104: '0x18005e5f0'
-      105: '0x18005e620'
-      106: '0x18005e6e0'
-      107: '0x18005e700'
-      108: '0x18005e4e0'
-      109: '0x18005e2a0'
-      11: '0x18005f7a0'
-      110: '0x18005c570'
-      111: '0x18005c5a0'
-      112: '0x18005d6f0'
-      113: '0x18005daa0'
-      114: '0x18005e470'
-      115: '0x18005e490'
-      116: '0x18005e4a0'
-      117: '0x18005e4b0'
-      118: '0x18005e4c0'
-      119: '0x18005bab0'
-      12: '0x18005fa70'
-      120: '0x18005bc00'
-      121: '0x18005ddf0'
-      122: '0x18005ded0'
-      123: '0x18005dfc0'
-      124: '0x18005bc10'
-      125: '0x18005bce0'
-      126: '0x18005bdd0'
-      127: '0x18005be20'
-      128: '0x18005be40'
-      129: '0x18005bea0'
-      13: '0x18005f580'
-      130: '0x180061150'
-      131: '0x180060c00'
-      132: '0x180060bd0'
-      133: '0x180061000'
-      134: '0x180061040'
-      14: '0x18005fa90'
-      15: '0x18005af40'
-      16: '0x18005af50'
-      17: '0x18005af30'
-      18: '0x18005b050'
-      19: '0x18005b080'
-      2: '0x1800196d0'
-      20: '0x18005ae90'
-      21: '0x18005aed0'
-      22: '0x18005beb0'
-      23: '0x18005cc30'
-      24: '0x18005cc40'
-      25: '0x18005cd30'
-      26: '0x18005cff0'
-      27: '0x18005cea0'
-      28: '0x18005cfd0'
-      29: '0x18005d0a0'
-      3: '0x18005b660'
-      30: '0x18005d320'
-      31: '0x18005d260'
-      32: '0x18005d340'
-      33: '0x18005d750'
-      34: '0x18005d8f0'
-      35: '0x1800608c0'
-      36: '0x180060890'
-      37: '0x180060910'
-      38: '0x180060a80'
-      39: '0x18005d9b0'
-      4: '0x18005b820'
-      40: '0x18005da50'
-      41: '0x180039bf0'
-      42: '0x180039c60'
-      43: '0x18005da80'
-      44: '0x18005da90'
-      45: '0x18005dab0'
-      46: '0x18005dc30'
-      47: '0x18005dca0'
-      48: '0x18005dcc0'
-      49: '0x18005e740'
-      5: '0x180019360'
-      50: '0x18005e830'
-      51: '0x18005e840'
-      52: '0x18005e850'
-      53: '0x18005e860'
-      54: '0x18005e870'
-      55: '0x18005e880'
-      56: '0x18005e890'
-      57: '0x18005e8a0'
-      58: '0x18005e8c0'
-      59: '0x18005e8d0'
-      6: '0x18005baa0'
-      60: '0x18005e8f0'
-      61: '0x18005e990'
-      62: '0x18005ea30'
-      63: '0x18005ea70'
-      64: '0x18005eae0'
-      65: '0x18005d250'
-      66: '0x18005faf0'
-      67: '0x18005fb00'
-      68: '0x18005fbf0'
-      69: '0x18005fd80'
-      7: '0x18003c200'
-      70: '0x18005fed0'
-      71: '0x180060020'
-      72: '0x180060160'
-      73: '0x180060170'
-      74: '0x1800607a0'
-      75: '0x18005b1d0'
-      76: '0x18005b1f0'
-      77: '0x18005b210'
-      78: '0x18005b230'
-      79: '0x18005dfd0'
-      8: '0x180061800'
-      80: '0x18005e070'
-      81: '0x18005e110'
-      82: '0x18005e130'
-      83: '0x18005d420'
-      84: '0x18005cd20'
-      85: '0x18005d550'
-      86: '0x1800617f0'
-      87: '0x18005e710'
-      88: '0x18005e730'
-      89: '0x180060cd0'
-      9: '0x180019560'
-      90: '0x18005f150'
-      91: '0x18005f170'
-      92: '0x18005d830'
-      93: '0x18005f350'
-      94: '0x18005f460'
-      95: '0x18005f540'
-      96: '0x18005e8b0'
-      97: '0x180060ce0'
-      98: '0x180060d00'
-      99: '0x180060d20'
-    vtable_numvfunc: 135
-    vtable_rva: '0x4918c8'
-    vtable_size: '0x438'
-    vtable_symbol: CSoundSystem_vtable
-    vtable_va: '0x1804918c8'
   tier0/CCvar_DispatchConCommand.linux.yaml:
     func_name: CCvar_DispatchConCommand
     func_rva: '0x15a2c0'
@@ -43555,5 +43147,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x18002a010'
 game_version: '14197'
-last_publish_time: '2026-11-12T20:46:24Z'
+last_publish_time: '2026-11-17T18:48:02Z'
 schema_version: 5

@@ -45,7 +45,6 @@ LIBRARY_TO_MODULE = {
     "vphysics2": "vphysics2", "sdl3": "SDL3", "SDL3": "SDL3",
     "worldrenderer": "worldrenderer", "tier0": "tier0",
     "schemasystem": "schemasystem", "filesystem_stdio": "filesystem_stdio",
-    "soundsystem": "soundsystem",
 }
 
 BIN_LINUX = {"server": "libserver.so", "engine": "libengine2.so", "client": "libclient.so",
@@ -53,15 +52,13 @@ BIN_LINUX = {"server": "libserver.so", "engine": "libengine2.so", "client": "lib
              "matchmaking": "libmatchmaking.so", "vphysics2": "libvphysics2.so",
              "SDL3": "libSDL3.so.0", "worldrenderer": "libworldrenderer.so",
              "tier0": "libtier0.so",
-             "schemasystem": "libschemasystem.so", "filesystem_stdio": "libfilesystem_stdio.so",
-             "soundsystem": "libsoundsystem.so"}
+             "schemasystem": "libschemasystem.so", "filesystem_stdio": "libfilesystem_stdio.so"}
 BIN_WIN = {"server": "server.dll", "engine": "engine2.dll", "client": "client.dll",
            "networksystem": "networksystem.dll", "scenesystem": "scenesystem.dll",
            "matchmaking": "matchmaking.dll", "vphysics2": "vphysics2.dll",
            "SDL3": "SDL3.dll", "worldrenderer": "worldrenderer.dll",
            "tier0": "tier0.dll",
-           "schemasystem": "schemasystem.dll", "filesystem_stdio": "filesystem_stdio.dll",
-           "soundsystem": "soundsystem.dll"}
+           "schemasystem": "schemasystem.dll", "filesystem_stdio": "filesystem_stdio.dll"}
 
 PLATFORMS = ("linux", "windows")
 
@@ -231,7 +228,7 @@ def _walk_entries(node, path=()):
         elif hint and "sig" in hint:
             kind = "signature" if kind == "signature" else kind
         yield name, {"kind": kind,
-                     # SwiftlyS2 spells it "lib"
+                     # some files spell it "lib"
                      "library": node.get("library") or node.get("Library") or node.get("lib"),
                      "values": platform_values}
         return
@@ -1292,7 +1289,7 @@ def verify_text(text, index, binaries, config_path, plugin=None, output=None, in
                 # func: the plugin's pattern lands on the function this repo identified
                 info["func"] = "ok" if V._hexint(info["at"]) == _int(record["func_va"]) else "mismatch"
             elif record and info.get("status") in ("ok", "ok-midfunction") and record.get("patch_va"):
-                # a plugin may scan for a patch site as a plain signature (SwiftlyS2's
+                # a plugin may scan for a patch site as a plain signature (e.g.
                 # SetSchemaHammerUniqueId): it must land on the patch this repo recorded
                 info["func"] = "ok" if V._hexint(info["at"]) == _int(record["patch_va"]) else "mismatch"
             if record and info.get("status") in PASSING:

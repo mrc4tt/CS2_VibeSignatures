@@ -131,7 +131,7 @@ ABI_GUARDS = {
             "bad_heads": ["48 8B C4 48 89 58 ? 55 56 57 41 54 41 55 41 56 41 57"],
         },
     },
-    # CCSPlayer_MovementServices::WalkMove(CMoveData*). Three consumers (swiftlys2, cs2kz, modsharp)
+    # CCSPlayer_MovementServices::WalkMove(CMoveData*). Two consumers (cs2kz, modsharp)
     # agree on the 0xfce-byte SIMD body; our finder's "PlayerMove_PostMove" string anchor selected a
     # small 3-argument helper instead (IDA-verified 14181).
     "CCSPlayer_MovementServices_WalkMove": {
@@ -175,7 +175,7 @@ ABI_GUARDS = {
         },
     },
     # CCSPlayer_MovementServices::FullWalkMove(CMoveData*, bool). Small dispatcher (`test dl`), NOT the
-    # ~4 KB SIMD WalkMove body the pipeline shipped under this name (swiftlys2 + cs2kz agree).
+    # ~4 KB SIMD WalkMove body the pipeline shipped under this name (cs2kz agrees).
     "CCSPlayer_MovementServices_FullWalkMove": {
         "linux": {
             "good_sig": "55 48 89 E5 41 54 49 89 F4 53 48 89 FB 84 D2",

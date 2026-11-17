@@ -46,7 +46,6 @@ export const BINARIES: Record<string, { linux: string; windows: string }> = {
     tier0: { linux: "libtier0.so", windows: "tier0.dll" },
     schemasystem: { linux: "libschemasystem.so", windows: "schemasystem.dll" },
     filesystem_stdio: { linux: "libfilesystem_stdio.so", windows: "filesystem_stdio.dll" },
-    soundsystem: { linux: "libsoundsystem.so", windows: "soundsystem.dll" },
     worldrenderer: { linux: "libworldrenderer.so", windows: "worldrenderer.dll" },
 };
 
