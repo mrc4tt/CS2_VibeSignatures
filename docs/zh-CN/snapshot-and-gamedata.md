@@ -74,15 +74,6 @@ gamedata/<GAMEVER>/CS2FOW/gamedata/cs2fow.games.txt
 
 * 完整支持，所有符号均支持自动更新
 
-### [swiftlys2](https://github.com/swiftly-solution/swiftlys2)
-
-```text
-gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/offsets.jsonc
-gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc
-```
-
-* 仅限部分支持
-
 ### [plugify](https://github.com/untrustedmodders/plugify-plugin-s2sdk)
 
 ```text

@@ -38,4 +38,4 @@ Release-derived assets and are not tracked on `main`.
 
 ## Supported gamedata
 
-Versioned gamedata is generated for CounterStrikeSharp, CS2Fixes, CS2FOW, swiftlys2, plugify, cs2kz-metamod, modsharp, and CS2Surf/Timer. See [supported gamedata paths and exceptions](docs/en/snapshot-and-gamedata.md#supported-gamedata).
+Versioned gamedata is generated for CounterStrikeSharp, CS2Fixes, CS2FOW, plugify, cs2kz-metamod, modsharp, and CS2Surf/Timer. See [supported gamedata paths and exceptions](docs/en/snapshot-and-gamedata.md#supported-gamedata).

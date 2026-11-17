@@ -13,7 +13,7 @@
  */
 
 /** The framework a plugin is loaded by. CounterStrikeSharp itself is `cssharp` too. */
-export type Framework = 'cssharp' | 'metamod' | 'swiftlys2' | 'modsharp' | 'plugify'
+export type Framework = 'cssharp' | 'metamod' | 'modsharp' | 'plugify'
 
 export interface PluginInfo {
   framework: Framework
@@ -68,7 +68,6 @@ export const PLUGIN_CATALOG: Record<string, PluginInfo> = {
   cs2surf: { framework: 'metamod', files: ['cs2surf-core.games.jsonc'], reads: 'file' },
   CS2FOW: { framework: 'metamod', files: ['cs2fow.games.txt'], reads: 'file' },
 
-  swiftlys2: { framework: 'swiftlys2', files: ['signatures.jsonc', 'offsets.jsonc'], reads: 'file' },
   'modsharp-public': {
     framework: 'modsharp',
     files: ['core.games.jsonc', 'engine.games.jsonc', 'EntityEnhancement.games.jsonc', 'log.games.jsonc', 'server.games.jsonc', 'tier0.games.jsonc'],

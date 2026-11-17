@@ -34,7 +34,7 @@ export type Layout =
   | 'modsharp'
   /** JSON naming the Plugify s2sdk schema */
   | 'plugify'
-  /** One object per key with the platform values directly in it (SwiftlyS2) */
+  /** One object per key with the platform values directly in it */
   | 'flat'
 
 /**

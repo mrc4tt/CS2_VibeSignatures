@@ -73,7 +73,6 @@ PROTECTED_PATHS=(
     # Generators this fork disabled (MODULE_ENABLED = False). A silent flip back
     # to True would put five unwanted plugins back into every gamedata run
     # without anything failing.
-    gamedata-generators/swiftlys2/gamedata.py
     gamedata-generators/plugify-plugin-s2sdk/gamedata.py
     gamedata-generators/modsharp-public/gamedata.py
     gamedata-generators/cs2surf/gamedata.py

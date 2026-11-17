@@ -18,14 +18,14 @@ function file(plugin: string, id: string, numbers: Partial<Pick<PluginFile, 'cov
 describe('plugin grouping', () => {
   it('shows a plugin with two files as one entry carrying both sets of numbers', () => {
     const groups = groupByPlugin([
-      file('swiftlys2', 'swiftlys2/plugin_files/gamedata/cs2/core/offsets.jsonc', { covered: 19, total: 133, updated: 1, gap: 114 }),
-      file('swiftlys2', 'swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc', { covered: 38, total: 67, updated: 33, gap: 29 }),
+      file('two-files', 'two-files/core/offsets.jsonc', { covered: 19, total: 133, updated: 1, gap: 114 }),
+      file('two-files', 'two-files/core/signatures.jsonc', { covered: 38, total: 67, updated: 33, gap: 29 }),
       file('bot-hider', 'bot-hider/gamedata/bot-hider.json'),
     ])
     expect(groups).toHaveLength(2)
-    const swiftly = groups.find((group) => group.plugin === 'swiftlys2')!
-    expect(swiftly.files).toHaveLength(2)
-    expect([swiftly.covered, swiftly.total, swiftly.gap]).toEqual([57, 200, 143])
+    const twoFiles = groups.find((group) => group.plugin === 'two-files')!
+    expect(twoFiles.files).toHaveLength(2)
+    expect([twoFiles.covered, twoFiles.total, twoFiles.gap]).toEqual([57, 200, 143])
   })
 
   it('puts starred plugins first, then the ones this build changed, then the rest by name', () => {

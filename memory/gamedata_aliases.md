@@ -46,7 +46,6 @@ Per-generator extras currently in `gamedata-generators/*/config.yaml`:
 - CS2Fixes: `CTakeDamageInfo_ctor`→`CTakeDamageInfo`; `CBaseEntity_Teleport`→`Teleport`; `ScriptBinding_CBaseModelEntity_SetModel`→`CS_Script_SetModel`
 - cs2kz / cs2surf: `s_GameEventManager`→`GameEventManager`
 - modsharp: `gameeventmanager`→`g_GameEventManager`
-- swiftlys2: `CSource2Server_Init`→`CSource2Server::g_GameEventManager`
 
 ## Involved Files
 - `gamedata_symbol_config.py` — `downstream_aliases`, `source_candidate_names`, `PATCH_COMPAT_ALIASES`.

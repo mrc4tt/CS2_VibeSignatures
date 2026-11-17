@@ -447,7 +447,10 @@ The counts move whenever symbols are added or retired, so re-measure rather than
 table: the numbers above replace an earlier set (775/767/778 updates, 25/42/42 warnings) that was
 two sessions old and made new advisories look like regressions. The update counts dropped by roughly 320 when five generators were disabled
 (`MODULE_ENABLED = False` for swiftlys2, plugify, modsharp, cs2surf, cs2kz — 620 of 871 keys), so
-they are no longer comparable with the 800-ish numbers above them. swiftlys2 was re-enabled on
+they are no longer comparable with the 800-ish numbers above them. **swiftlys2 was removed entirely on
+2026-11-17** (generator, every `gamedata/<VER>/swiftlys2/`, the site's catalog entry and framework, its
+diagnostics rows): what follows about it is history. Its fork-owned records stay declared but have no
+reader any more, so rule 11 gives them the free preprocessor only. swiftlys2 was re-enabled on
 2026-10-23 (14192: 525 updates, its two files verify with `-require-verified`); its templates follow
 swiftlys2 master through two `# Seed source: <url> template=<path> output=<path>` lines, and its
 `KEY_SYMBOL_OVERRIDES` (DropWeapon is the non-virtual HandleDropWeapon there, plus its own

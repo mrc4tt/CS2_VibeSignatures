@@ -121,10 +121,10 @@ describe('describing the files of a build', () => {
 
   it('computes the gap and the percentage, and sorts by plugin', () => {
     const described = describeFiles([
-      file('swiftlys2', 'offsets.jsonc', { total: 132, covered: 18, updated: 1 }),
+      file('two-files', 'offsets.jsonc', { total: 132, covered: 18, updated: 1 }),
       file('CS2Fixes', 'cs2fixes.jsonc', { total: 75, covered: 74, updated: 38 }),
     ])
-    expect(described.map((item) => item.descriptor.plugin)).toEqual(['CS2Fixes', 'swiftlys2'])
+    expect(described.map((item) => item.descriptor.plugin)).toEqual(['CS2Fixes', 'two-files'])
     expect(described[1].gap).toBe(114)
     expect(described[1].percent).toBe(14)
   })

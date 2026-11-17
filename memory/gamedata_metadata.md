@@ -26,7 +26,7 @@ permalink: cs2-vibesignatures/gamedata-metadata
 {
   "schema_version": 2,
   "gamever": "14176",
-  "file": "swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc",
+  "file": "CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json",
   "summary": {"total": 63, "covered": 24, "updated": 16},
   "entries": [
     {"name": "CBaseEntity::DispatchSpawn", "covered": true, "covered_lines": [43, 44], "updated": true,

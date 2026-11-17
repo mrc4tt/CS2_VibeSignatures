@@ -54,7 +54,7 @@ export function changedKeyCount(history: SiteHistory | undefined, ids: string[],
  * One plugin as a server owner thinks of it: a name and the files it needs.
  *
  * The published index is per file, which is right for the file viewer but not
- * for "is my plugin ready": SwiftlyS2 ships offsets.jsonc and signatures.jsonc,
+ * for "is my plugin ready": a plugin may ship offsets.jsonc and signatures.jsonc,
  * and two rows for one plugin read as two plugins. The numbers here are the sums
  * over its files, so the row says the same thing the files say together.
  */

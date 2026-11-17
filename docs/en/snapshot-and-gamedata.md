@@ -74,15 +74,6 @@ gamedata/<GAMEVER>/CS2FOW/gamedata/cs2fow.games.txt
 
 * Full support
 
-### [swiftlys2](https://github.com/swiftly-solution/swiftlys2)
-
-```text
-gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/offsets.jsonc
-gamedata/<GAMEVER>/swiftlys2/plugin_files/gamedata/cs2/core/signatures.jsonc
-```
-
-* Partial support
-
 ### [plugify](https://github.com/untrustedmodders/plugify-plugin-s2sdk)
 
 ```text

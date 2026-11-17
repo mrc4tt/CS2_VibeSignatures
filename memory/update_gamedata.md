@@ -39,7 +39,7 @@ validated bin_artifacts -> release-local symbol snapshot + exact config
 ## Notes
 - `OUTPUT_PATHS`, not extension globs, authorizes files; version roots reject Python/YAML/cache/link/undeclared content.
 - `update_gamedata.py` requires explicit `-outputdir` and `-snapshot`.
-- Enabled generators include CounterStrikeSharp, CS2Fixes, CS2FOW, swiftlys2, plugify, cs2kz, modsharp, and cs2surf.
+- Enabled generators include CounterStrikeSharp, CS2Fixes, CS2FOW, plugify, cs2kz, modsharp, and cs2surf.
 - Build locally only from a candidate created from `bin_artifacts`; never fall back to tracked `gamesymbols/` or per-symbol YAML in `bin/`.
 ## Callers
 - `pr-self-runner.yml` for release-local downstream evidence after exact artifact validation.
