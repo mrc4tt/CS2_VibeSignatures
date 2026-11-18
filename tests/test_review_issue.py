@@ -46,6 +46,15 @@ class ListTests(unittest.TestCase):
         self.assertIn("/confirm <Symbol> 0x<address>", body)
         self.assertNotEqual(R.title_for("14182", "linux"), R.title_for("14182", "windows"))
 
+    def test_a_file_that_is_not_a_review_list_is_skipped(self):
+        # user_gamedata.py writes user-uploads.txt beside the lists; it crashed apply on 14198
+        folder = Path(self.tmp.name) / "manual_todo" / "14182"
+        (folder / "user-uploads.txt").write_text("SomeKey  demand 3\n", encoding="utf-8")
+        (folder / "notes.backup.txt").write_text("SomeKey  x\n", encoding="utf-8")
+        self.assertEqual(R.read_todo("14182", root=self.tmp.name), self.rows)
+        self.assertEqual({p.name for p, _, _ in R.todo_files("14182", root=self.tmp.name)},
+                         {Path(r["path"]).name for r in self.rows})
+
     def test_empty_list_says_so(self):
         self.assertIn("Nothing left", R.render_body("14182", "linux", []))
 

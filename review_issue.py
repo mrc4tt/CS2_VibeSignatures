@@ -153,11 +153,21 @@ def parse_detail(detail):
     return {"flags": flags, "category": category, "candidate": va, "score": score, "why": " | ".join(parts)}
 
 
-def read_todo(gamever, root=REPO, platform=None):
-    rows = []
+def todo_files(gamever, root=REPO):
+    """(path, module, platform) of each review list, <module>.<platform>.txt.
+
+    user_gamedata.py's user-uploads.txt lives in the same folder and is not one: it names
+    no module and no platform, and nothing in it is an artifact to confirm."""
     folder = Path(root) / "manual_todo" / str(gamever)
     for path in sorted(folder.glob("*.txt")) if folder.is_dir() else ():
-        module, file_platform = path.stem.rsplit(".", 1)
+        module, _, file_platform = path.stem.rpartition(".")
+        if module and file_platform in PLATFORMS:
+            yield path, module, file_platform
+
+
+def read_todo(gamever, root=REPO, platform=None):
+    rows = []
+    for path, module, file_platform in todo_files(gamever, root):
         if platform and file_platform != platform:
             continue
         platform_of_file = file_platform
@@ -580,8 +590,7 @@ def apply(gamever, commit=False, dry_run=False, platform=None):
         # the todo list drops entries whose artifact now exists; refresh the issues from it
         import ida_analyze_bin
 
-        for path in (REPO / "manual_todo" / str(gamever)).glob("*.txt"):
-            module, file_platform = path.stem.rsplit(".", 1)
+        for path, module, file_platform in todo_files(gamever):
             ida_analyze_bin.update_manual_todo(str(path), str(REPO / "bin_artifacts" / str(gamever) / module),
                                                file_platform, {})
         for one in (platform,) if platform else PLATFORMS:
