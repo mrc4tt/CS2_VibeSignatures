@@ -1,0 +1,40 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        17,
+        18
+      ],
+      "name": "CServerSideClientBase::m_nClientSlot",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        6,
+        7,
+        8
+      ],
+      "name": "FilterMessage",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        13,
+        14
+      ],
+      "name": "GetPublicAdr",
+      "updated": false
+    }
+  ],
+  "file": "statusmodifier/gamedata/statusmodifier.jsonc",
+  "gamever": "14199",
+  "schema_version": 2,
+  "summary": {
+    "covered": 3,
+    "total": 3,
+    "updated": 0
+  }
+}
