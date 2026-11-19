@@ -71,6 +71,13 @@ describe('the browser Back button', () => {
     await waitFor(() => expect(screen.getByRole('link', { name: 'Plugins' })).toHaveAttribute('aria-current', 'page'))
   })
 
+  it('marks the footer link, not a top-bar tab, on a footer page', async () => {
+    window.history.pushState({}, '', '/game-data')
+    paint()
+    await waitFor(() => expect(screen.getByRole('link', { name: 'All Game Data files' })).toHaveAttribute('aria-current', 'page'))
+    expect(screen.getByRole('link', { name: 'Plugins' })).not.toHaveAttribute('aria-current')
+  })
+
   it('keeps the top bar to four destinations and files a plugin page under Plugins', async () => {
     window.history.pushState({}, '', '/plugins/CounterStrikeSharp')
     paint()

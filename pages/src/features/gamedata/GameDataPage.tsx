@@ -179,7 +179,7 @@ export function GameDataPage() {
           {shown.map((file) => (
             <button
               type="button"
-              className="filecard"
+              className={lastChangedIn(history, file.descriptor.id) === version ? 'filecard fresh' : 'filecard'}
               key={file.descriptor.id}
               onClick={() => setParam('file', file.descriptor.id, true)}
             >
@@ -188,10 +188,13 @@ export function GameDataPage() {
                 <span className="fmt">{formatLabel(file.descriptor.language)}</span>
               </span>
               <span className="fn">{file.descriptor.fileName}</span>
-              <span className="meter">
-                <i style={{ width: `${file.percent}%` }} />
-                {file.gap > 0 && <i className="gapbar" style={{ width: `${100 - file.percent}%` }} />}
-              </span>
+              {/* A full bar on every complete file says nothing; the meter appears only when keys are missing. */}
+              {file.gap > 0 && (
+                <span className="meter">
+                  <i style={{ width: `${file.percent}%` }} />
+                  <i className="gapbar" style={{ width: `${100 - file.percent}%` }} />
+                </span>
+              )}
               <span className="fw">
                 {(() => {
                   const changed = lastChangedIn(history, file.descriptor.id)

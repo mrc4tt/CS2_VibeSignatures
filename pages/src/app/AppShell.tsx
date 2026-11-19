@@ -103,7 +103,7 @@ export function AppShell() {
   // link: still one click away, no longer competing for the top bar.
   const tabs: AppView[] = ['start', 'symbols', 'check', 'scan']
   const footer: AppView[] = ['gamedata', 'diff', 'myfile', 'runs', 'words']
-  const section: AppView = plugin || view === 'gamedata' ? 'start' : view
+  const section: AppView = plugin ? 'start' : view
   const loading = <div className="page-spinner">{t('app.loadingPage')}</div>
 
   return (
