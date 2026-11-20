@@ -1,6 +1,18 @@
 {
   "entries": [
     {
+      "changes": [
+        {
+          "after": "40 55 56 48 83 EC ? 48 89 5C 24 ? 48 8B D9",
+          "before": "48 8B C4 55 56 48 81 EC ? ? ? ? 48 89 58 ? 48 8B D9",
+          "line": 26,
+          "path": [
+            "CDecoyProjectile_Create",
+            "signatures",
+            "windows"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         25,
@@ -8,7 +20,7 @@
         27
       ],
       "name": "CDecoyProjectile_Create",
-      "updated": false
+      "updated": true
     },
     {
       "covered": true,
@@ -47,6 +59,6 @@
   "summary": {
     "covered": 4,
     "total": 4,
-    "updated": 0
+    "updated": 1
   }
 }

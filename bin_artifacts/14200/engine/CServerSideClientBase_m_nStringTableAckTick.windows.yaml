@@ -1,0 +1,6 @@
+struct_name: CServerSideClientBase
+member_name: m_nStringTableAckTick
+offset: '0x164'
+size: 4
+offset_sig: 89 87 64 01 00 00 B0 ??
+offset_sig_disp: 0
