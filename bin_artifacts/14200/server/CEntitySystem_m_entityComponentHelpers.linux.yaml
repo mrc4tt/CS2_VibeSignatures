@@ -1,0 +1,5 @@
+struct_name: CEntitySystem
+member_name: m_entityComponentHelpers
+offset: '0xad0'
+offset_sig: 48 81 C7 D0 0A 00 00
+offset_sig_disp: 0

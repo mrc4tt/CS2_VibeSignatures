@@ -1,0 +1,113 @@
+{
+  "entries": [
+    {
+      "covered": true,
+      "covered_lines": [
+        4,
+        5,
+        6
+      ],
+      "name": "CBasePlayerController_HandleCommand_JoinTeam",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        52,
+        53,
+        54
+      ],
+      "name": "CCSGameRules_CanPlayerHear_CoachCommGate",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        11,
+        12,
+        13
+      ],
+      "name": "CCSGameRules_PostCleanUp",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        46,
+        47
+      ],
+      "name": "CCSPlayer_WeaponServices_SelectItem",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        39,
+        40,
+        41
+      ],
+      "name": "CDecoyProjectile_Create",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        25,
+        26,
+        27
+      ],
+      "name": "CHEGrenadeProjectile_Create",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        32,
+        33,
+        34
+      ],
+      "name": "CMolotovProjectile_Create",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        59,
+        60,
+        61,
+        64,
+        65
+      ],
+      "name": "CPlayer_ObserverServices::IsValidObserverTarget",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        18,
+        19,
+        20
+      ],
+      "name": "CSmokeGrenadeProjectile_Create",
+      "updated": false
+    },
+    {
+      "covered": true,
+      "covered_lines": [
+        70,
+        71,
+        72
+      ],
+      "name": "KickBotFromTeam",
+      "updated": false
+    }
+  ],
+  "file": "matchzy/gamedata/matchzy.json",
+  "gamever": "14200",
+  "schema_version": 2,
+  "summary": {
+    "covered": 10,
+    "total": 10,
+    "updated": 0
+  }
+}
