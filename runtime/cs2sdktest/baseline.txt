@@ -684,8 +684,6 @@ OK	event	IAppSystem::GetTier
 OK	event	IAppSystem::IsSingleton
 OK	event	IAppSystem::QueryInterface
 OK	event	IGameEventSystem::GetEventSource
-OK	event	INetworkMessageInternal::GetNetMessageInfo
-OK	event	INetworkMessageInternal::GetUnscopedName
 OK	event	INetworkMessages::FindNetworkMessage (nonexistent name)
 OK	event	INetworkMessages::FindNetworkMessage("CMsgSource1LegacyGameEvent")
 OK	event	INetworkMessages::FindNetworkMessage("CMsgSource1LegacyGameEventList")
@@ -694,12 +692,14 @@ OK	event	INetworkMessages::FindNetworkMessagePartial
 OK	event	NetMessageInfo_t (fetch)
 OK	event	NetMessageInfo_t::<hexdump past end>
 OK	event	NetMessageInfo_t::<hexdump>
+OK	event	NetMessageInfo_t::GetNetMessageInfo
+OK	event	NetMessageInfo_t::GetUnscopedName
 OK	event	NetMessageInfo_t::m_GroupId
 OK	event	NetMessageInfo_t::m_MessageId
 OK	event	NetMessageInfo_t::m_nBufType/m_bCannotBeNetworked/m_unk001 (packed byte)
 OK	event	NetMessageInfo_t::m_nCategories
 OK	event	NetMessageInfo_t::m_nRequiredHandlerCategories
-OK	event	NetMessageInfo_t::m_pfnAllocate
+OK	event	NetMessageInfo_t::m_pfnAllocateMessage
 OK	event	NetMessageInfo_t::m_szGroup
 OK	event	NetMessageInfo_t::m_szName
 OK	event	NetMessageInfo_t::m_szName#2
@@ -883,11 +883,6 @@ OK	netmessages	CNetMessage::~CNetMessage (filled)
 OK	netmessages	CNetMessage::~CNetMessage (typed)
 OK	netmessages	CNetMessagePB<CNETMsg_Tick>::set_tick
 OK	netmessages	CNetMessagePB<CNETMsg_Tick>::tick (typed read)
-OK	netmessages	INetworkMessageInternal::AllocateMessage
-OK	netmessages	INetworkMessageInternal::AllocateMessage (round trip)
-OK	netmessages	INetworkMessageInternal::GetNetMessageInfo
-OK	netmessages	INetworkMessageInternal::GetNetMessageInfo (binding fetch)
-OK	netmessages	INetworkMessageInternal::GetUnscopedName
 OK	netmessages	INetworkMessages::ComputeOrderForPriority
 OK	netmessages	INetworkMessages::FindNetworkGroup
 OK	netmessages	INetworkMessages::FindNetworkGroup (nonexistent)
@@ -919,7 +914,12 @@ OK	netmessages	INetworkMessages::UnserializeMessageInternal
 OK	netmessages	LoggingChannel_t::m_Name (read)
 OK	netmessages	LoggingChannel_t::m_bLastLineComplete vs LoggingSystem_GetLastChannelLineComplete
 OK	netmessages	LoggingSystem_GetChannel (tier0)
+OK	netmessages	NetMessageInfo_t::AllocateMessage
+OK	netmessages	NetMessageInfo_t::AllocateMessage (round trip)
 OK	netmessages	NetMessageInfo_t::GetBufType
+OK	netmessages	NetMessageInfo_t::GetNetMessageInfo
+OK	netmessages	NetMessageInfo_t::GetNetMessageInfo (binding fetch)
+OK	netmessages	NetMessageInfo_t::GetUnscopedName
 OK	netmessages	NetMessageInfo_t::m_szGroup
 OK	netserver	CNetworkGameServerBase -> IConVarListener (base adjustment)
 OK	netserver	CNetworkGameServerBase::GetHostName
@@ -1375,10 +1375,10 @@ OK	server	ISource2Server::ServerConVarChanged
 OK	server	ISource2Server::ShouldHideFromMasterServer
 OK	server	ISource2Server::ShouldHoldGameServerReservation
 OK	server	ISource2Server::ShouldTimeoutClient
-OK	server	ISource2Server::unk_301
-OK	server	ISource2Server::unk_302
-OK	server	ISource2Server::unk_303
-OK	server	ISource2Server::unk_304
+OK	server	ISource2Server::unk_401
+OK	server	ISource2Server::unk_402
+OK	server	ISource2Server::unk_403
+OK	server	ISource2Server::unk_404
 OK	serverconfig	IAppSystem::GetBuildType
 OK	serverconfig	IAppSystem::GetDependencies
 OK	serverconfig	IAppSystem::GetTier
@@ -1548,14 +1548,14 @@ SKIP	event	IGameEventSystem::PurgeQueuedEvents
 SKIP	event	IGameEventSystem::RegisterGameEvent
 SKIP	event	IGameEventSystem::RegisterGameEventHandlerAbstract
 SKIP	event	IGameEventSystem::UnregisterGameEventHandlerAbstract
-SKIP	event	INetworkMessageInternal::AddCategoryMask
-SKIP	event	INetworkMessageInternal::AllocateMessage
-SKIP	event	INetworkMessageInternal::Serialize
-SKIP	event	INetworkMessageInternal::SetMessageId
-SKIP	event	INetworkMessageInternal::SwitchMode
-SKIP	event	INetworkMessageInternal::Unserialize
-SKIP	event	INetworkMessageInternal::~INetworkMessageInternal
 SKIP	event	IProtobufBinding
+SKIP	event	NetMessageInfo_t::AddCategoryMask
+SKIP	event	NetMessageInfo_t::AllocateMessage
+SKIP	event	NetMessageInfo_t::Serialize
+SKIP	event	NetMessageInfo_t::SetMessageId
+SKIP	event	NetMessageInfo_t::SwitchMode
+SKIP	event	NetMessageInfo_t::Unserialize
+SKIP	event	NetMessageInfo_t::~NetMessageInfo_t
 SKIP	filesystem	IAppSystem::Connect
 SKIP	filesystem	IAppSystem::Disconnect
 SKIP	filesystem	IAppSystem::Init
@@ -1594,12 +1594,6 @@ SKIP	metamod	ISmmAPI::UnregisterConCommand
 SKIP	metamod	ISmmAPI::UnregisterConCommandBase
 SKIP	metamod	ISmmAPI::UnregisterConVar
 SKIP	netmessages	CNetMessage::GetName
-SKIP	netmessages	INetworkMessageInternal::AddCategoryMask
-SKIP	netmessages	INetworkMessageInternal::Serialize
-SKIP	netmessages	INetworkMessageInternal::SetMessageId
-SKIP	netmessages	INetworkMessageInternal::SwitchMode
-SKIP	netmessages	INetworkMessageInternal::Unserialize
-SKIP	netmessages	INetworkMessageInternal::~INetworkMessageInternal
 SKIP	netmessages	INetworkMessages::AllocateAndCopyConstructNetMessageAbstract
 SKIP	netmessages	INetworkMessages::AllowAdditionalMessageRegistration
 SKIP	netmessages	INetworkMessages::AssociateNetMessageGroupIdWithChannelCategory
@@ -1622,6 +1616,12 @@ SKIP	netmessages	IProtobufBinding
 SKIP	netmessages	IProtobufBinding::AllocateMessage
 SKIP	netmessages	IProtobufBinding::ToString
 SKIP	netmessages	IProtobufBinding::unk001
+SKIP	netmessages	NetMessageInfo_t::AddCategoryMask
+SKIP	netmessages	NetMessageInfo_t::Serialize
+SKIP	netmessages	NetMessageInfo_t::SetMessageId
+SKIP	netmessages	NetMessageInfo_t::SwitchMode
+SKIP	netmessages	NetMessageInfo_t::Unserialize
+SKIP	netmessages	NetMessageInfo_t::~NetMessageInfo_t
 SKIP	netserver	CNetworkGameServerBase::CalculateCPUUsage
 SKIP	netserver	CNetworkGameServerBase::CheckPassword
 SKIP	netserver	CNetworkGameServerBase::ConnectClient
@@ -1798,6 +1798,7 @@ SKIP	server	ISource2Server::WriteSignonMessages
 SKIP	server	ISource2Server::WriteStatusJson
 SKIP	server	ISource2Server::unk_101
 SKIP	server	ISource2Server::unk_201
+SKIP	server	ISource2Server::unk_301
 SKIP	serverconfig	IAppSystem::Connect
 SKIP	serverconfig	IAppSystem::Disconnect
 SKIP	serverconfig	IAppSystem::Init

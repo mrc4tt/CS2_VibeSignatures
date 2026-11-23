@@ -1,0 +1,832 @@
+diff --git a/src/suites/GameEventSuite.cpp b/src/suites/GameEventSuite.cpp
+index 5376ed4..2c77009 100644
+--- a/src/suites/GameEventSuite.cpp
++++ b/src/suites/GameEventSuite.cpp
+@@ -520,7 +520,7 @@ void GameEventSuite::ExerciseEventSystem(TestContext& context)
+ // -----------------------------------------------------------------------------
+ //  The message registry, reached through INetworkMessages
+ //
+-//  Everything IGameEventSystem takes is an INetworkMessageInternal*, and the
++//  Everything IGameEventSystem takes is an NetMessageInfo_t*, and the
+ //  only read-only way to obtain one by name is INetworkMessages. It is used
+ //  here the way the clients suite uses IVEngineServer2 for maxClients: as a
+ //  tool. Its own coverage is docs/TEST_TARGETS.md #8 and is not attempted.
+@@ -551,12 +551,12 @@ void GameEventSuite::ResolveEventMessages(TestContext& context)
+ 			// The registry key is "Name [id]" on this build, so the bare name
+ 			// can miss; the helper falls back to the id and the partial lookup.
+ 			const char* how = "";
+-			INetworkMessageInternal* message =
++			NetMessageInfo_t* message =
+ 				FindRegisteredMessage(messages, probe.name, probe.id, &how);
+ 			context.Detail("-> %p  (%s)", static_cast<void*>(message), probe.what);
+ 			if (message != nullptr && std::strcmp(how, "by name") != 0)
+ 			{
+-				context.Detail("   found %s as \"%s\"", how, message->GetUnscopedName());
++				context.Detail("   found %s as \"%s\"", how, message->GetName());
+ 			}
+ 			if (probe.primary)
+ 			{
+@@ -568,7 +568,7 @@ void GameEventSuite::ResolveEventMessages(TestContext& context)
+ 	CS2ST_CALL(context, "INetworkMessages::FindNetworkMessage (nonexistent name)", {
+ 		// A matcher that only ever says yes is as broken as one that only ever
+ 		// says no, and this is the half that costs nothing to check.
+-		INetworkMessageInternal* message = messages->FindNetworkMessage(kNoSuchMessage);
++		NetMessageInfo_t* message = messages->FindNetworkMessage(kNoSuchMessage);
+ 		context.Detail("-> %p for \"%s\"", static_cast<void*>(message), kNoSuchMessage);
+ 		if (message != nullptr)
+ 		{
+@@ -580,7 +580,7 @@ void GameEventSuite::ResolveEventMessages(TestContext& context)
+ 		// The second entry point to the same registry. It is allowed to return
+ 		// any of the three Source1Legacy messages, so the check is that it
+ 		// returns one of them at all - not which.
+-		INetworkMessageInternal* message = messages->FindNetworkMessagePartial(kEventMessagePartial);
++		NetMessageInfo_t* message = messages->FindNetworkMessagePartial(kEventMessagePartial);
+ 		context.Detail("-> %p for \"%s\"", static_cast<void*>(message), kEventMessagePartial);
+ 		if (message == nullptr && legacy_event_message_ != nullptr)
+ 		{
+@@ -595,16 +595,16 @@ void GameEventSuite::ResolveEventMessages(TestContext& context)
+ 
+ 	if (legacy_event_message_ == nullptr)
+ 	{
+-		context.UnavailableCall("INetworkMessageInternal",
++		context.UnavailableCall("NetMessageInfo_t",
+ 			"no Source1Legacy game event message is registered, so there is no "
+ 			"engine-built instance to call anything on");
+ 		return;
+ 	}
+ 
+-	context.Note("[INetworkMessageInternal] on the CMsgSource1LegacyGameEvent registry entry");
++	context.Note("[NetMessageInfo_t] on the CMsgSource1LegacyGameEvent registry entry");
+ 
+-	CS2ST_CALL(context, "INetworkMessageInternal::GetUnscopedName", {
+-		const char* name = legacy_event_message_->GetUnscopedName();
++	CS2ST_CALL(context, "NetMessageInfo_t::GetUnscopedName", {
++		const char* name = legacy_event_message_->GetName();
+ 		context.Detail("-> %s", name != nullptr ? name : "(null)");
+ 		if (name == nullptr)
+ 		{
+@@ -612,11 +612,11 @@ void GameEventSuite::ResolveEventMessages(TestContext& context)
+ 		}
+ 	});
+ 
+-	CS2ST_CALL(context, "INetworkMessageInternal::GetNetMessageInfo", {
++	CS2ST_CALL(context, "NetMessageInfo_t::GetNetMessageInfo", {
+ 		// The oracle: the same descriptor asked for down two vtables that share
+ 		// no code - the message's own, and the registry's. Disagreement means
+ 		// one of the two slots is not the method its name says.
+-		NetMessageInfo_t* direct = legacy_event_message_->GetNetMessageInfo();
++		NetMessageInfo_t* direct = legacy_event_message_;
+ 		NetMessageInfo_t* via_registry = messages->GetNetMessageInfo(legacy_event_message_);
+ 		context.Detail("-> %p, INetworkMessages says %p", static_cast<void*>(direct),
+ 			static_cast<void*>(via_registry));
+@@ -630,21 +630,21 @@ void GameEventSuite::ResolveEventMessages(TestContext& context)
+ 		}
+ 	});
+ 
+-	context.SkipCall("INetworkMessageInternal::SetMessageId",
++	context.SkipCall("NetMessageInfo_t::SetMessageId",
+ 		"renumbers a message the engine has already handed to clients");
+-	context.SkipCall("INetworkMessageInternal::AddCategoryMask",
++	context.SkipCall("NetMessageInfo_t::AddCategoryMask",
+ 		"changes how the engine routes every message of this type");
+-	context.SkipCall("INetworkMessageInternal::SwitchMode",
++	context.SkipCall("NetMessageInfo_t::SwitchMode",
+ 		"flips the registry between server and client serialisation");
+-	context.SkipCall("INetworkMessageInternal::AllocateMessage",
++	context.SkipCall("NetMessageInfo_t::AllocateMessage",
+ 		"allocates an engine-owned CNetMessage that only "
+ 		"INetworkMessages::DeallocateNetMessageAbstract can return");
+-	context.SkipCall("INetworkMessageInternal::Serialize",
++	context.SkipCall("NetMessageInfo_t::Serialize",
+ 		"needs a bf_write and a filled CNetMessage; tier1/bitbuf.cpp is not in "
+ 		"this build (CS2SDKTEST_TIER1_BITBUF is off)");
+-	context.SkipCall("INetworkMessageInternal::Unserialize",
++	context.SkipCall("NetMessageInfo_t::Unserialize",
+ 		"the same buffer, plus a message to write the result into");
+-	context.SkipCall("INetworkMessageInternal::~INetworkMessageInternal",
++	context.SkipCall("NetMessageInfo_t::~NetMessageInfo_t",
+ 		"would destroy a registry entry the engine still owns");
+ }
+ 
+@@ -670,7 +670,7 @@ void GameEventSuite::InspectNetMessageInfo(TestContext& context)
+ 	NetMessageInfo_t* info = nullptr;
+ 
+ 	CS2ST_CALL(context, "NetMessageInfo_t (fetch)", {
+-		info = legacy_event_message_->GetNetMessageInfo();
++		info = legacy_event_message_;
+ 		context.Detail("-> %p, %zu bytes as the SDK declares it",
+ 			static_cast<void*>(info), sizeof(NetMessageInfo_t));
+ 	});
+@@ -689,7 +689,7 @@ void GameEventSuite::InspectNetMessageInfo(TestContext& context)
+ 
+ 	inspect.Int32  ("m_nCategories",       offsetof(NetMessageInfo_t, m_nCategories));
+ 	inspect.String ("m_szName",            offsetof(NetMessageInfo_t, m_szName));
+-	inspect.Pointer("m_pfnAllocate",       offsetof(NetMessageInfo_t, m_pfnAllocate));
++	inspect.Pointer("m_pfnAllocateMessage",       offsetof(NetMessageInfo_t, m_pfnAllocateMessage));
+ 	// CUtlString's whole representation is one char*, so the string check
+ 	// applies to the member directly: plausible pointer, printable, terminated.
+ 	inspect.String ("m_szGroup",           offsetof(NetMessageInfo_t, m_szGroup));
+@@ -714,7 +714,7 @@ void GameEventSuite::InspectNetMessageInfo(TestContext& context)
+ 
+ 	// ---- IProtobufBinding ----------------------------------------------------
+ 	// 14197 removed IProtobufBinding: the handle IS the NetMessageInfo_t now,
+-	// with the allocator stored in m_pfnAllocate. Nothing is left to read down
++	// with the allocator stored in m_pfnAllocateMessage. Nothing is left to read down
+ 	// a binding vtable, so the old oracles are reported as gone.
+ 	CS2ST_CALL(context, "NetMessageInfo_t::m_szName", {
+ 		const char* name = info->m_szName.Get();
+@@ -736,7 +736,7 @@ void GameEventSuite::InspectNetMessageInfo(TestContext& context)
+ 
+ void GameEventSuite::ReportObservedMessages(TestContext& context)
+ {
+-	context.Note("[hooks] %zu distinct INetworkMessageInternal pointer(s) seen so far%s",
++	context.Note("[hooks] %zu distinct NetMessageInfo_t pointer(s) seen so far%s",
+ 		observed_message_count_,
+ 		observed_message_overflow_ > 0 ? " (further ones dropped; the cap is deliberate)" : "");
+ 
+@@ -749,12 +749,12 @@ void GameEventSuite::ReportObservedMessages(TestContext& context)
+ 
+ 	for (std::size_t i = 0; i < observed_message_count_; ++i)
+ 	{
+-		INetworkMessageInternal* message = observed_messages_[i];
++		NetMessageInfo_t* message = observed_messages_[i];
+ 
+ 		char index_text[24];
+ 		std::snprintf(index_text, sizeof(index_text), " (observed #%zu)", i);
+ 		const std::string target =
+-			std::string("INetworkMessageInternal::GetUnscopedName") + index_text;
++			std::string("NetMessageInfo_t::GetUnscopedName") + index_text;
+ 
+ 		CS2ST_CALL(context, target, {
+ 			// Re-vetted even though the hook vetted it: these have sat in a
+@@ -765,7 +765,7 @@ void GameEventSuite::ReportObservedMessages(TestContext& context)
+ 				context.Fail("a hook recorded something that is not a message");
+ 				return;
+ 			}
+-			const char* name = message->GetUnscopedName();
++			const char* name = message->GetName();
+ 			context.Detail("%p -> %s", static_cast<void*>(message),
+ 				name != nullptr ? name : "(null)");
+ 		});
+@@ -972,7 +972,7 @@ void GameEventSuite::RemoveHooks(TestContext& context)
+ //  Every one answers Action::Ignore, the KHook equivalent of MRES_IGNORED.
+ // -----------------------------------------------------------------------------
+ 
+-void GameEventSuite::NoteObservedMessage(INetworkMessageInternal* message)
++void GameEventSuite::NoteObservedMessage(NetMessageInfo_t* message)
+ {
+ 	if (!LooksLikeObjectPointer(message))
+ 	{
+@@ -996,7 +996,7 @@ void GameEventSuite::NoteObservedMessage(INetworkMessageInternal* message)
+ 	observed_messages_[observed_message_count_++] = message;
+ }
+ 
+-KHook::Return<void> GameEventSuite::Pre_RegisterGameEvent(IGameEventSystem*, INetworkMessageInternal* pEvent)
++KHook::Return<void> GameEventSuite::Pre_RegisterGameEvent(IGameEventSystem*, NetMessageInfo_t* pEvent)
+ {
+ 	// Fires while the engine builds its event registry, which on a server this
+ 	// plugin loads late into has usually already happened. A count of zero here
+@@ -1007,7 +1007,7 @@ KHook::Return<void> GameEventSuite::Pre_RegisterGameEvent(IGameEventSystem*, INe
+ 	return { KHook::Action::Ignore };
+ }
+ 
+-KHook::Return<void> GameEventSuite::Post_RegisterGameEvent(IGameEventSystem*, INetworkMessageInternal*)
++KHook::Return<void> GameEventSuite::Post_RegisterGameEvent(IGameEventSystem*, NetMessageInfo_t*)
+ {
+ 	CS2ST_HOOK_LEAVE(kRegisterGameEvent);
+ 	return { KHook::Action::Ignore };
+@@ -1015,7 +1015,7 @@ KHook::Return<void> GameEventSuite::Post_RegisterGameEvent(IGameEventSystem*, IN
+ 
+ KHook::Return<void> GameEventSuite::Pre_RegisterGameEventHandlerAbstract(IGameEventSystem*, CUtlSlot* nSlot,
+                                                                          const CUtlAbstractDelegate& delegate,
+-                                                                         INetworkMessageInternal* pEvent,
++                                                                         NetMessageInfo_t* pEvent,
+                                                                          int nPriority)
+ {
+ 	// The delegate is passed by reference and its members are private, so only
+@@ -1031,7 +1031,7 @@ KHook::Return<void> GameEventSuite::Pre_RegisterGameEventHandlerAbstract(IGameEv
+ 
+ KHook::Return<void> GameEventSuite::Post_RegisterGameEventHandlerAbstract(IGameEventSystem*, CUtlSlot*,
+                                                                           const CUtlAbstractDelegate&,
+-                                                                          INetworkMessageInternal*, int)
++                                                                          NetMessageInfo_t*, int)
+ {
+ 	CS2ST_HOOK_LEAVE(kRegisterGameEventHandlerAbstract);
+ 	return { KHook::Action::Ignore };
+@@ -1039,7 +1039,7 @@ KHook::Return<void> GameEventSuite::Post_RegisterGameEventHandlerAbstract(IGameE
+ 
+ KHook::Return<void> GameEventSuite::Pre_UnregisterGameEventHandlerAbstract(IGameEventSystem*, CUtlSlot* nSlot,
+                                                                            const CUtlAbstractDelegate& delegate,
+-                                                                           INetworkMessageInternal* pEvent)
++                                                                           NetMessageInfo_t* pEvent)
+ {
+ 	NoteObservedMessage(pEvent);
+ 	CS2ST_HOOK_ENTER_ARGS(kUnregisterGameEventHandlerAbstract,
+@@ -1051,14 +1051,14 @@ KHook::Return<void> GameEventSuite::Pre_UnregisterGameEventHandlerAbstract(IGame
+ 
+ KHook::Return<void> GameEventSuite::Post_UnregisterGameEventHandlerAbstract(IGameEventSystem*, CUtlSlot*,
+                                                                             const CUtlAbstractDelegate&,
+-                                                                            INetworkMessageInternal*)
++                                                                            NetMessageInfo_t*)
+ {
+ 	CS2ST_HOOK_LEAVE(kUnregisterGameEventHandlerAbstract);
+ 	return { KHook::Action::Ignore };
+ }
+ 
+ KHook::Return<void> GameEventSuite::Pre_PostEventAbstract_Local(IGameEventSystem*, CSplitScreenSlot nSlot,
+-                                                                INetworkMessageInternal* pEvent,
++                                                                NetMessageInfo_t* pEvent,
+                                                                 const CNetMessage* pData, unsigned long nSize)
+ {
+ 	NoteObservedMessage(pEvent);
+@@ -1071,7 +1071,7 @@ KHook::Return<void> GameEventSuite::Pre_PostEventAbstract_Local(IGameEventSystem
+ 	return { KHook::Action::Ignore };
+ }
+ 
+-KHook::Return<void> GameEventSuite::Post_PostEventAbstract_Local(IGameEventSystem*, CSplitScreenSlot, INetworkMessageInternal*,
++KHook::Return<void> GameEventSuite::Post_PostEventAbstract_Local(IGameEventSystem*, CSplitScreenSlot, NetMessageInfo_t*,
+                                                                  const CNetMessage*, unsigned long)
+ {
+ 	CS2ST_HOOK_LEAVE(kPostEventAbstractLocal);
+@@ -1080,7 +1080,7 @@ KHook::Return<void> GameEventSuite::Post_PostEventAbstract_Local(IGameEventSyste
+ 
+ KHook::Return<void> GameEventSuite::Pre_PostEventAbstract(IGameEventSystem*, CSplitScreenSlot nSlot, bool bLocalOnly,
+                                                           int nClientCount, const uint64* clients,
+-                                                          INetworkMessageInternal* pEvent,
++                                                          NetMessageInfo_t* pEvent,
+                                                           const CNetMessage* pData, unsigned long nSize,
+                                                           NetChannelBufType_t bufType)
+ {
+@@ -1105,7 +1105,7 @@ KHook::Return<void> GameEventSuite::Pre_PostEventAbstract(IGameEventSystem*, CSp
+ }
+ 
+ KHook::Return<void> GameEventSuite::Post_PostEventAbstract(IGameEventSystem*, CSplitScreenSlot, bool, int, const uint64*,
+-                                                           INetworkMessageInternal*, const CNetMessage*,
++                                                           NetMessageInfo_t*, const CNetMessage*,
+                                                            unsigned long, NetChannelBufType_t)
+ {
+ 	CS2ST_HOOK_LEAVE(kPostEventAbstract);
+@@ -1114,7 +1114,7 @@ KHook::Return<void> GameEventSuite::Post_PostEventAbstract(IGameEventSystem*, CS
+ 
+ KHook::Return<void> GameEventSuite::Pre_PostEventAbstractFiltered(IGameEventSystem*, CSplitScreenSlot nSlot, bool bLocalOnly,
+                                                                   IRecipientFilter* pFilter,
+-                                                                  INetworkMessageInternal* pEvent,
++                                                                  NetMessageInfo_t* pEvent,
+                                                                   const CNetMessage* pData, unsigned long nSize)
+ {
+ 	NoteObservedMessage(pEvent);
+@@ -1134,7 +1134,7 @@ KHook::Return<void> GameEventSuite::Pre_PostEventAbstractFiltered(IGameEventSyst
+ }
+ 
+ KHook::Return<void> GameEventSuite::Post_PostEventAbstractFiltered(IGameEventSystem*, CSplitScreenSlot, bool, IRecipientFilter*,
+-                                                                   INetworkMessageInternal*,
++                                                                   NetMessageInfo_t*,
+                                                                    const CNetMessage*, unsigned long)
+ {
+ 	CS2ST_HOOK_LEAVE(kPostEventAbstractFiltered);
+@@ -1142,7 +1142,7 @@ KHook::Return<void> GameEventSuite::Post_PostEventAbstractFiltered(IGameEventSys
+ }
+ 
+ KHook::Return<void> GameEventSuite::Pre_PostEntityEventAbstract(IGameEventSystem*, const CBaseHandle& hndl,
+-                                                                INetworkMessageInternal* pEvent,
++                                                                NetMessageInfo_t* pEvent,
+                                                                 const CNetMessage* pData, unsigned long nSize,
+                                                                 NetChannelBufType_t bufType, bool bAllClients)
+ {
+@@ -1165,7 +1165,7 @@ KHook::Return<void> GameEventSuite::Pre_PostEntityEventAbstract(IGameEventSystem
+ 	return { KHook::Action::Ignore };
+ }
+ 
+-KHook::Return<void> GameEventSuite::Post_PostEntityEventAbstract(IGameEventSystem*, const CBaseHandle&, INetworkMessageInternal*,
++KHook::Return<void> GameEventSuite::Post_PostEntityEventAbstract(IGameEventSystem*, const CBaseHandle&, NetMessageInfo_t*,
+                                                                  const CNetMessage*, unsigned long,
+                                                                  NetChannelBufType_t, bool)
+ {
+@@ -1231,13 +1231,13 @@ GameEventSuite::GameEventSuite() :
+ 		&GameEventSuite::Pre_PostEventAbstract_Local,
+ 		&GameEventSuite::Post_PostEventAbstract_Local),
+ 	hook_PostEventAbstract_(static_cast<void (IGameEventSystem::*)(
+-		CSplitScreenSlot, bool, int, const uint64*, INetworkMessageInternal*,
++		CSplitScreenSlot, bool, int, const uint64*, NetMessageInfo_t*,
+ 		const CNetMessage*, unsigned long, NetChannelBufType_t)>(
+ 		&IGameEventSystem::PostEventAbstract), this,
+ 		&GameEventSuite::Pre_PostEventAbstract,
+ 		&GameEventSuite::Post_PostEventAbstract),
+ 	hook_PostEventAbstractFiltered_(static_cast<void (IGameEventSystem::*)(
+-		CSplitScreenSlot, bool, IRecipientFilter*, INetworkMessageInternal*,
++		CSplitScreenSlot, bool, IRecipientFilter*, NetMessageInfo_t*,
+ 		const CNetMessage*, unsigned long)>(
+ 		&IGameEventSystem::PostEventAbstract), this,
+ 		&GameEventSuite::Pre_PostEventAbstractFiltered,
+diff --git a/src/suites/GameEventSuite.h b/src/suites/GameEventSuite.h
+index 1d37e90..ae86a6c 100644
+--- a/src/suites/GameEventSuite.h
++++ b/src/suites/GameEventSuite.h
+@@ -32,7 +32,7 @@
+  *
+  * Two things make the hook output more than a tick count:
+  *
+- *   - Each hook that carries an INetworkMessageInternal* remembers the distinct
++ *   - Each hook that carries an NetMessageInfo_t* remembers the distinct
+  *     pointers it has seen (no allocation, fixed array, capped). A later call
+  *     sweep resolves those to names *under the fault guard*, which is where
+  *     walking an engine object belongs - not in the engine's own frame.
+@@ -44,7 +44,7 @@
+  * INetworkMessages ("NetworkMessagesVersion001" @ networksystem) is used here
+  * as a *tool*, the way Source2GameClientsSuite uses IVEngineServer2 for
+  * maxClients: it is the only read-only way to get hold of an
+- * INetworkMessageInternal for a named message, and that is what unlocks
++ * NetMessageInfo_t for a named message, and that is what unlocks
+  * NetMessageInfo_t - the descriptor struct behind every game event - plus three
+  * oracles between that struct and the IProtobufBinding it points at. Its own
+  * coverage is a separate target and is not attempted here.
+@@ -57,7 +57,7 @@
+ #include <string>
+ 
+ // The hook handlers below have to spell out IGameEventSystem's exact parameter
+-// types - CSplitScreenSlot, INetworkMessageInternal*, CNetMessage*,
++// types - CSplitScreenSlot, NetMessageInfo_t*, CNetMessage*,
+ // NetChannelBufType_t, CBaseHandle, IRecipientFilter*, CUtlSlot* and
+ // CUtlAbstractDelegate - and a paraphrase would compile and then hand every
+ // handler garbage. This header is where the SDK assembles that set.
+@@ -100,26 +100,26 @@ public:
+ 	// not fail to compile - it would silently misread every argument after it,
+ 	// which is the exact drift this suite exists to catch.
+ 
+-	KHook::Return<void> Pre_RegisterGameEvent(IGameEventSystem*, INetworkMessageInternal* pEvent);
+-	KHook::Return<void> Post_RegisterGameEvent(IGameEventSystem*, INetworkMessageInternal* pEvent);
++	KHook::Return<void> Pre_RegisterGameEvent(IGameEventSystem*, NetMessageInfo_t* pEvent);
++	KHook::Return<void> Post_RegisterGameEvent(IGameEventSystem*, NetMessageInfo_t* pEvent);
+ 
+ 	KHook::Return<void> Pre_RegisterGameEventHandlerAbstract(IGameEventSystem*, CUtlSlot* nSlot,
+ 	                                                         const CUtlAbstractDelegate& delegate,
+-	                                                         INetworkMessageInternal* pEvent, int nPriority);
++	                                                         NetMessageInfo_t* pEvent, int nPriority);
+ 	KHook::Return<void> Post_RegisterGameEventHandlerAbstract(IGameEventSystem*, CUtlSlot* nSlot,
+ 	                                                          const CUtlAbstractDelegate& delegate,
+-	                                                          INetworkMessageInternal* pEvent, int nPriority);
++	                                                          NetMessageInfo_t* pEvent, int nPriority);
+ 
+ 	KHook::Return<void> Pre_UnregisterGameEventHandlerAbstract(IGameEventSystem*, CUtlSlot* nSlot,
+ 	                                                           const CUtlAbstractDelegate& delegate,
+-	                                                           INetworkMessageInternal* pEvent);
++	                                                           NetMessageInfo_t* pEvent);
+ 	KHook::Return<void> Post_UnregisterGameEventHandlerAbstract(IGameEventSystem*, CUtlSlot* nSlot,
+ 	                                                            const CUtlAbstractDelegate& delegate,
+-	                                                            INetworkMessageInternal* pEvent);
++	                                                            NetMessageInfo_t* pEvent);
+ 
+-	KHook::Return<void> Pre_PostEventAbstract_Local(IGameEventSystem*, CSplitScreenSlot nSlot, INetworkMessageInternal* pEvent,
++	KHook::Return<void> Pre_PostEventAbstract_Local(IGameEventSystem*, CSplitScreenSlot nSlot, NetMessageInfo_t* pEvent,
+ 	                                                const CNetMessage* pData, unsigned long nSize);
+-	KHook::Return<void> Post_PostEventAbstract_Local(IGameEventSystem*, CSplitScreenSlot nSlot, INetworkMessageInternal* pEvent,
++	KHook::Return<void> Post_PostEventAbstract_Local(IGameEventSystem*, CSplitScreenSlot nSlot, NetMessageInfo_t* pEvent,
+ 	                                                 const CNetMessage* pData, unsigned long nSize);
+ 
+ 	// The two PostEventAbstract overloads are distinct vtable slots, so they get
+@@ -128,27 +128,27 @@ public:
+ 	// disambiguates it with a static_cast per overload, and from there each
+ 	// member tracks its own slot.
+ 	KHook::Return<void> Pre_PostEventAbstract(IGameEventSystem*, CSplitScreenSlot nSlot, bool bLocalOnly, int nClientCount,
+-	                                          const uint64* clients, INetworkMessageInternal* pEvent,
++	                                          const uint64* clients, NetMessageInfo_t* pEvent,
+ 	                                          const CNetMessage* pData, unsigned long nSize,
+ 	                                          NetChannelBufType_t bufType);
+ 	KHook::Return<void> Post_PostEventAbstract(IGameEventSystem*, CSplitScreenSlot nSlot, bool bLocalOnly, int nClientCount,
+-	                                           const uint64* clients, INetworkMessageInternal* pEvent,
++	                                           const uint64* clients, NetMessageInfo_t* pEvent,
+ 	                                           const CNetMessage* pData, unsigned long nSize,
+ 	                                           NetChannelBufType_t bufType);
+ 
+ 	KHook::Return<void> Pre_PostEventAbstractFiltered(IGameEventSystem*, CSplitScreenSlot nSlot, bool bLocalOnly,
+ 	                                                  IRecipientFilter* pFilter,
+-	                                                  INetworkMessageInternal* pEvent,
++	                                                  NetMessageInfo_t* pEvent,
+ 	                                                  const CNetMessage* pData, unsigned long nSize);
+ 	KHook::Return<void> Post_PostEventAbstractFiltered(IGameEventSystem*, CSplitScreenSlot nSlot, bool bLocalOnly,
+ 	                                                   IRecipientFilter* pFilter,
+-	                                                   INetworkMessageInternal* pEvent,
++	                                                   NetMessageInfo_t* pEvent,
+ 	                                                   const CNetMessage* pData, unsigned long nSize);
+ 
+-	KHook::Return<void> Pre_PostEntityEventAbstract(IGameEventSystem*, const CBaseHandle& hndl, INetworkMessageInternal* pEvent,
++	KHook::Return<void> Pre_PostEntityEventAbstract(IGameEventSystem*, const CBaseHandle& hndl, NetMessageInfo_t* pEvent,
+ 	                                                const CNetMessage* pData, unsigned long nSize,
+ 	                                                NetChannelBufType_t bufType, bool bAllClients);
+-	KHook::Return<void> Post_PostEntityEventAbstract(IGameEventSystem*, const CBaseHandle& hndl, INetworkMessageInternal* pEvent,
++	KHook::Return<void> Post_PostEntityEventAbstract(IGameEventSystem*, const CBaseHandle& hndl, NetMessageInfo_t* pEvent,
+ 	                                                 const CNetMessage* pData, unsigned long nSize,
+ 	                                                 NetChannelBufType_t bufType, bool bAllClients);
+ 
+@@ -163,15 +163,15 @@ public:
+ 	// One KHook::Virtual per vtable slot, bound in the constructor below;
+ 	// template parameters are the interface, the return type, then the SDK's
+ 	// argument list. PostEventAbstract appears twice because it *is* two slots.
+-	KHook::Virtual<IGameEventSystem, void, INetworkMessageInternal*> hook_RegisterGameEvent_;
+-	KHook::Virtual<IGameEventSystem, void, CUtlSlot*, const CUtlAbstractDelegate&, INetworkMessageInternal*, int> hook_RegisterGameEventHandlerAbstract_;
+-	KHook::Virtual<IGameEventSystem, void, CUtlSlot*, const CUtlAbstractDelegate&, INetworkMessageInternal*> hook_UnregisterGameEventHandlerAbstract_;
+-	KHook::Virtual<IGameEventSystem, void, CSplitScreenSlot, INetworkMessageInternal*, const CNetMessage*, unsigned long> hook_PostEventAbstract_Local_;
+-	KHook::Virtual<IGameEventSystem, void, CSplitScreenSlot, bool, int, const uint64*, INetworkMessageInternal*,
++	KHook::Virtual<IGameEventSystem, void, NetMessageInfo_t*> hook_RegisterGameEvent_;
++	KHook::Virtual<IGameEventSystem, void, CUtlSlot*, const CUtlAbstractDelegate&, NetMessageInfo_t*, int> hook_RegisterGameEventHandlerAbstract_;
++	KHook::Virtual<IGameEventSystem, void, CUtlSlot*, const CUtlAbstractDelegate&, NetMessageInfo_t*> hook_UnregisterGameEventHandlerAbstract_;
++	KHook::Virtual<IGameEventSystem, void, CSplitScreenSlot, NetMessageInfo_t*, const CNetMessage*, unsigned long> hook_PostEventAbstract_Local_;
++	KHook::Virtual<IGameEventSystem, void, CSplitScreenSlot, bool, int, const uint64*, NetMessageInfo_t*,
+ 	               const CNetMessage*, unsigned long, NetChannelBufType_t> hook_PostEventAbstract_;
+-	KHook::Virtual<IGameEventSystem, void, CSplitScreenSlot, bool, IRecipientFilter*, INetworkMessageInternal*,
++	KHook::Virtual<IGameEventSystem, void, CSplitScreenSlot, bool, IRecipientFilter*, NetMessageInfo_t*,
+ 	               const CNetMessage*, unsigned long> hook_PostEventAbstractFiltered_;
+-	KHook::Virtual<IGameEventSystem, void, const CBaseHandle&, INetworkMessageInternal*, const CNetMessage*, unsigned long,
++	KHook::Virtual<IGameEventSystem, void, const CBaseHandle&, NetMessageInfo_t*, const CNetMessage*, unsigned long,
+ 	               NetChannelBufType_t, bool> hook_PostEntityEventAbstract_;
+ 	KHook::Virtual<IGameEventSystem, void> hook_ProcessQueuedEvents_;
+ 	KHook::Virtual<IGameEventSystem, void> hook_PurgeQueuedEvents_;
+@@ -180,7 +180,7 @@ public:
+ 
+ private:
+ 	/**
+-	 * How many distinct INetworkMessageInternal pointers the hooks remember.
++	 * How many distinct NetMessageInfo_t pointers the hooks remember.
+ 	 *
+ 	 * Capped and fixed-size on purpose: this is filled from inside the engine's
+ 	 * frame, where an allocation per event would be a real cost and a container
+@@ -189,7 +189,7 @@ private:
+ 	static constexpr std::size_t kMaxObservedMessages = 24;
+ 
+ 	/** Cheap, allocation-free, called from hooks. Duplicates are dropped. */
+-	void NoteObservedMessage(INetworkMessageInternal* message);
++	void NoteObservedMessage(NetMessageInfo_t* message);
+ 
+ 	void ExerciseAppSystem(TestContext& context);
+ 	void ExerciseEventSystem(TestContext& context);
+@@ -224,9 +224,9 @@ private:
+ 	 * per-event temporaries, so they outlive the call that produced them. They
+ 	 * are still re-vetted before use.
+ 	 */
+-	INetworkMessageInternal* legacy_event_message_ = nullptr;
++	NetMessageInfo_t* legacy_event_message_ = nullptr;
+ 
+-	INetworkMessageInternal* observed_messages_[kMaxObservedMessages] = {};
++	NetMessageInfo_t* observed_messages_[kMaxObservedMessages] = {};
+ 	std::size_t observed_message_count_ = 0;
+ 	std::size_t observed_message_overflow_ = 0;
+ 
+diff --git a/src/suites/NetworkMessagesSuite.cpp b/src/suites/NetworkMessagesSuite.cpp
+index b26f99d..f81cf42 100644
+--- a/src/suites/NetworkMessagesSuite.cpp
++++ b/src/suites/NetworkMessagesSuite.cpp
+@@ -186,12 +186,12 @@ void NetworkMessagesSuite::ResolveMessages(TestContext& context)
+ 			// falls back to the id and the partial lookup, and checks the name
+ 			// of whatever they hand back.
+ 			const char* how = "";
+-			INetworkMessageInternal* message =
++			NetMessageInfo_t* message =
+ 				FindRegisteredMessage(messages_, probe.name, probe.id, &how);
+ 			context.Detail("-> %p  (%s)", static_cast<void*>(message), probe.what);
+ 			if (message != nullptr && std::strcmp(how, "by name") != 0)
+ 			{
+-				context.Detail("   found %s as \"%s\"", how, message->GetUnscopedName());
++				context.Detail("   found %s as \"%s\"", how, message->GetName());
+ 			}
+ 
+ 			if (message == nullptr)
+@@ -221,7 +221,7 @@ void NetworkMessagesSuite::ResolveMessages(TestContext& context)
+ 		// The negative half. A registry that only ever says yes is as broken
+ 		// as one that only ever says no, and this is the half that costs
+ 		// nothing to check.
+-		INetworkMessageInternal* message = messages_->FindNetworkMessage(kNoSuchMessage);
++		NetMessageInfo_t* message = messages_->FindNetworkMessage(kNoSuchMessage);
+ 		context.Detail("-> %p for \"%s\"", static_cast<void*>(message), kNoSuchMessage);
+ 		if (message != nullptr)
+ 		{
+@@ -230,7 +230,7 @@ void NetworkMessagesSuite::ResolveMessages(TestContext& context)
+ 	});
+ 
+ 	CS2ST_CALL(context, "INetworkMessages::FindNetworkMessagePartial", {
+-		INetworkMessageInternal* message = messages_->FindNetworkMessagePartial(kPartialPrefix);
++		NetMessageInfo_t* message = messages_->FindNetworkMessagePartial(kPartialPrefix);
+ 		context.Detail("-> %p for \"%s\"", static_cast<void*>(message), kPartialPrefix);
+ 
+ 		if (message == nullptr)
+@@ -249,7 +249,7 @@ void NetworkMessagesSuite::ResolveMessages(TestContext& context)
+ 		{
+ 			// "CNETMsg_Ti" prefixes exactly one registered name, whichever way
+ 			// partial matching is defined, so the answer is checkable.
+-			const char* name = message->GetUnscopedName();
++			const char* name = message->GetName();
+ 			context.Detail("   resolves to \"%s\"", name != nullptr ? name : "(null)");
+ 			if (!RegistryNameIs(name, "CNETMsg_Tick"))
+ 			{
+@@ -283,8 +283,8 @@ void NetworkMessagesSuite::ExerciseRegistryLookups(TestContext& context)
+ 
+ 	NetMessageInfo_t* info = nullptr;
+ 
+-	CS2ST_CALL(context, "INetworkMessageInternal::GetNetMessageInfo", {
+-		info = tick_message_->GetNetMessageInfo();
++	CS2ST_CALL(context, "NetMessageInfo_t::GetNetMessageInfo", {
++		info = tick_message_;
+ 		context.Detail("-> %p", static_cast<void*>(info));
+ 	});
+ 
+@@ -298,7 +298,7 @@ void NetworkMessagesSuite::ExerciseRegistryLookups(TestContext& context)
+ 	const int message_id = static_cast<int>(info->m_MessageId);
+ 
+ 	CS2ST_CALL(context, "INetworkMessages::FindNetworkMessageById", {
+-		INetworkMessageInternal* by_id = messages_->FindNetworkMessageById(message_id);
++		NetMessageInfo_t* by_id = messages_->FindNetworkMessageById(message_id);
+ 		context.Detail("-> %p for id %d (the descriptor's own id)",
+ 			static_cast<void*>(by_id), message_id);
+ 		if (by_id == nullptr)
+@@ -316,7 +316,7 @@ void NetworkMessagesSuite::ExerciseRegistryLookups(TestContext& context)
+ 		// Sounding the id space from the top: the SDK promises no count API
+ 		// and no bound, and 40000 is far above any plausible message count.
+ 		const int unused_id = 40000;
+-		INetworkMessageInternal* by_id = messages_->FindNetworkMessageById(unused_id);
++		NetMessageInfo_t* by_id = messages_->FindNetworkMessageById(unused_id);
+ 		context.Detail("-> %p for id %d", static_cast<void*>(by_id), unused_id);
+ 		if (by_id != nullptr)
+ 		{
+@@ -363,8 +363,8 @@ void NetworkMessagesSuite::ExerciseBindingMatrix(TestContext& context)
+ 
+ 	NetMessageInfo_t* info = nullptr;
+ 
+-	CS2ST_CALL(context, "INetworkMessageInternal::GetNetMessageInfo (binding fetch)", {
+-		info = tick_message_->GetNetMessageInfo();
++	CS2ST_CALL(context, "NetMessageInfo_t::GetNetMessageInfo (binding fetch)", {
++		info = tick_message_;
+ 		context.Detail("-> %p", static_cast<void*>(info));
+ 	});
+ 
+@@ -381,8 +381,8 @@ void NetworkMessagesSuite::ExerciseBindingMatrix(TestContext& context)
+ 	// not re-inspected.
+ 	context.SkipCall("IProtobufBinding", "removed from the engine in 14197");
+ 
+-	CS2ST_CALL(context, "INetworkMessageInternal::GetUnscopedName", {
+-		const char* unscoped = tick_message_->GetUnscopedName();
++	CS2ST_CALL(context, "NetMessageInfo_t::GetUnscopedName", {
++		const char* unscoped = tick_message_->GetName();
+ 		context.Detail("-> \"%s\" (the registry's key for this entry)",
+ 			unscoped != nullptr ? unscoped : "(null)");
+ 		if (unscoped == nullptr)
+@@ -536,7 +536,7 @@ void NetworkMessagesSuite::ExerciseAllocation(TestContext& context)
+ 	CNetMessage* allocated = nullptr;
+ 	CNetMessage* copy = nullptr;
+ 
+-	CS2ST_CALL(context, "INetworkMessageInternal::AllocateMessage", {
++	CS2ST_CALL(context, "NetMessageInfo_t::AllocateMessage", {
+ 		allocated = tick_message_->AllocateMessage();
+ 		context.Detail("-> %p", static_cast<void*>(allocated));
+ 		if (allocated == nullptr)
+@@ -592,7 +592,7 @@ void NetworkMessagesSuite::ExerciseAllocation(TestContext& context)
+ 		// The registry entry an allocated message carries, against the entry
+ 		// it was allocated through: an oracle the engine cannot get wrong
+ 		// twice, because both sides of it come out of the engine.
+-		INetworkMessageInternal* entry = allocated->GetNetMessage();
++		NetMessageInfo_t* entry = allocated->GetNetMessage();
+ 		context.Detail("-> %p (allocated through %p)",
+ 			static_cast<void*>(entry), static_cast<void*>(tick_message_));
+ 		if (entry == nullptr)
+@@ -613,9 +613,9 @@ void NetworkMessagesSuite::ExerciseAllocation(TestContext& context)
+ 		const NetworkMessageId id = allocated->GetMessageId();
+ 		context.Detail("-> %u (descriptor says %u)",
+ 			static_cast<unsigned>(id),
+-			static_cast<unsigned>(tick_message_->GetNetMessageInfo()->m_MessageId));
+-		if (tick_message_->GetNetMessageInfo() != nullptr
+-			&& id != tick_message_->GetNetMessageInfo()->m_MessageId)
++			static_cast<unsigned>(tick_message_->m_MessageId));
++		if (tick_message_ != nullptr
++			&& id != tick_message_->m_MessageId)
+ 		{
+ 			context.Fail("the message and its registry descriptor report different ids");
+ 		}
+@@ -703,7 +703,7 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 
+ 	// ---- allocate and fill --------------------------------------------------
+ 
+-	CS2ST_CALL(context, "INetworkMessageInternal::AllocateMessage (round trip)", {
++	CS2ST_CALL(context, "NetMessageInfo_t::AllocateMessage (round trip)", {
+ 		message = tick_message_->AllocateMessage();
+ 		context.Detail("-> %p", static_cast<void*>(message));
+ 	});
+@@ -785,7 +785,7 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 				context.Detail("-> no target message to read into");
+ 				return;
+ 			}
+-			const bool ok = messages_->UnserializeMessageInternal(reader, typed_target, 0, nullptr);
++			const bool ok = messages_->UnserializeMessageInternal(reader, typed_target, NET_RECV_LIMIT_MODE_DEFAULT, nullptr);
+ 			context.Detail("-> %s into %p", ok ? "true" : "false",
+ 				static_cast<void*>(typed_target));
+ 			if (!ok)
+@@ -819,7 +819,7 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 		CUtlString err_reason;
+ 		bf_read reader(buffer, written);
+ 		CS2ST_CALL(context, "INetworkMessages::UnserializeFromStream", {
+-			from_stream = messages_->UnserializeFromStream(reader, 0, err_reason);
++			from_stream = messages_->UnserializeFromStream(reader, NET_RECV_LIMIT_MODE_DEFAULT, err_reason);
+ 			context.Detail("-> %p, err \"%s\"", static_cast<void*>(from_stream),
+ 				err_reason.Get());
+ 		});
+@@ -841,7 +841,7 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 			// checks itself!", says the SDK), so the entry is verified before
+ 			// the payload is touched: the message the stream produced has to
+ 			// belong to the same registry entry the planted one did.
+-			INetworkMessageInternal* entry = from_stream->GetNetMessage();
++			NetMessageInfo_t* entry = from_stream->GetNetMessage();
+ 			context.Detail("-> entry %p (planted through %p)",
+ 				static_cast<void*>(entry), static_cast<void*>(tick_message_));
+ 			if (entry != tick_message_)
+@@ -861,10 +861,10 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 
+ 	// ---- the entry's forwarding pair ------------------------------------------
+ 
+-	// 14197 turned INetworkMessageInternal into a plain NetMessageInfo_t
++	// 14197 turned NetMessageInfo_t into a plain NetMessageInfo_t
+ 	// record with no vtable, so there is no forwarding slot left to call.
+-	context.SkipCall("INetworkMessageInternal::Unserialize",
+-		"INetworkMessageInternal has no vtable since 14197");
++	context.SkipCall("NetMessageInfo_t::Unserialize",
++		"NetMessageInfo_t has no vtable since 14197");
+ 
+ 	if (forwarded_target != nullptr)
+ 	{
+@@ -892,8 +892,8 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 
+ 	context.SkipCall("INetworkMessages::SerializeAbstract",
+ 		"removed from INetworkMessages in 14197");
+-	context.SkipCall("INetworkMessageInternal::Serialize",
+-		"INetworkMessageInternal has no vtable since 14197");
++	context.SkipCall("NetMessageInfo_t::Serialize",
++		"NetMessageInfo_t has no vtable since 14197");
+ 	context.SkipCall("IProtobufBinding::ToString", "removed from the engine in 14197");
+ 
+ 	message_free_section(context, message, typed_target, from_stream,
+@@ -907,8 +907,8 @@ void NetworkMessagesSuite::ExerciseRoundTrip(TestContext& context)
+ 	context.SkipCall("INetworkMessages::UnserializeFromStream", "%s", kBitbufSkipReason);
+ 	context.SkipCall("INetworkMessages::Serialize (public)", "%s", kBitbufSkipReason);
+ 	context.SkipCall("INetworkMessages::SerializeAbstract", "%s", kBitbufSkipReason);
+-	context.SkipCall("INetworkMessageInternal::Serialize", "%s", kBitbufSkipReason);
+-	context.SkipCall("INetworkMessageInternal::Unserialize", "%s", kBitbufSkipReason);
++	context.SkipCall("NetMessageInfo_t::Serialize", "%s", kBitbufSkipReason);
++	context.SkipCall("NetMessageInfo_t::Unserialize", "%s", kBitbufSkipReason);
+ 	context.SkipCall("CNetMessagePB<CNETMsg_Tick>::set_tick / tick",
+ 		"no message is allocated without the round trip to put it through");
+ 	context.SkipCall("IProtobufBinding::ToString",
+@@ -1205,17 +1205,17 @@ void NetworkMessagesSuite::NoteSkippedWrites(TestContext& context)
+ 		"getter is exercised above");
+ 	context.SkipCall("INetworkMessages::~INetworkMessages",
+ 		"would destroy the registry every message on the server depends on");
+-	context.SkipCall("INetworkMessageInternal::SetMessageId",
++	context.SkipCall("NetMessageInfo_t::SetMessageId",
+ 		"renumbers a message the engine has already handed to clients");
+-	context.SkipCall("INetworkMessageInternal::AddCategoryMask",
++	context.SkipCall("NetMessageInfo_t::AddCategoryMask",
+ 		"changes how the engine routes every message of this type");
+-	context.SkipCall("INetworkMessageInternal::SwitchMode",
++	context.SkipCall("NetMessageInfo_t::SwitchMode",
+ 		"flips the registry entry between server and client serialisation");
+-	context.SkipCall("INetworkMessageInternal::~INetworkMessageInternal",
++	context.SkipCall("NetMessageInfo_t::~NetMessageInfo_t",
+ 		"would destroy a registry entry the engine still owns");
+ 	context.SkipCall("IProtobufBinding::AllocateMessage",
+ 		"allocates an engine-owned CNetMessage with no matching free on this "
+-		"interface; INetworkMessageInternal::AllocateMessage is the covered pair");
++		"interface; NetMessageInfo_t::AllocateMessage is the covered pair");
+ 	context.SkipCall("IProtobufBinding::unk001", "unidentified in the SDK");
+ }
+ 
+diff --git a/src/suites/NetworkMessagesSuite.h b/src/suites/NetworkMessagesSuite.h
+index 1e1dd4f..7cb7738 100644
+--- a/src/suites/NetworkMessagesSuite.h
++++ b/src/suites/NetworkMessagesSuite.h
+@@ -19,7 +19,7 @@
+  * (FindNetworkMessagePartial), by id (FindNetworkMessageById), and by
+  * id-plus-descriptor (FindOrCreateNetMessage with bCreateIfNotFound false,
+  * which turns the creating method into a fourth read-only lookup). All four
+- * hand back the same INetworkMessageInternal*, and the descriptor it carries
++ * hand back the same NetMessageInfo_t*, and the descriptor it carries
+  * answers the same id, group and binding however it is read. The protobuf
+  * side adds the deepest check this suite can make: an allocated CNETMsg_Tick
+  * with a known field value is serialised through SerializeMessageInternal and
+@@ -53,7 +53,7 @@
+ // type in its own declaration. The interface pointer is stored as the
+ // forward-declared class below; every other SDK type lives in the .cpp.
+ class INetworkMessages;
+-class INetworkMessageInternal;
++class NetMessageInfo_t;
+ class CNetMessage;
+ 
+ namespace cs2st
+@@ -110,7 +110,7 @@ private:
+ 	 * the sweep, but each sweep re-resolves rather than caching across runs -
+ 	 * a pointer held from a previous run says nothing about this one.
+ 	 */
+-	INetworkMessageInternal* tick_message_ = nullptr;
++	NetMessageInfo_t* tick_message_ = nullptr;
+ 
+ 	/**
+ 	 * Whether AsProto() - the engine's own pointer to the protobuf
+diff --git a/src/suites/Source2EngineSuite.cpp b/src/suites/Source2EngineSuite.cpp
+index bd53698..4c55fc7 100644
+--- a/src/suites/Source2EngineSuite.cpp
++++ b/src/suites/Source2EngineSuite.cpp
+@@ -1161,7 +1161,7 @@ void Source2EngineSuite::NoteSideEffectingCalls(TestContext& context)
+ 	context.SkipCall("IVEngineServer2::StopRecordingDemo",
+ 		"needs a CGameInfo the SDK gives no way to construct");
+ 	context.SkipCall("IVEngineServer2::BroadcastEvent",
+-		"needs an INetworkMessageInternal and a matching CNetMessage; would be "
++		"needs an NetMessageInfo_t and a matching CNetMessage; would be "
+ 		"sent to every client");
+ 	context.SkipCall("IVEngineServer2::unk101",
+ 		"unnamed; extends matchmaking reservation timeouts and sends packets");
+diff --git a/src/suites/Source2GameClientsSuite.cpp b/src/suites/Source2GameClientsSuite.cpp
+index 61d5557..4288811 100644
+--- a/src/suites/Source2GameClientsSuite.cpp
++++ b/src/suites/Source2GameClientsSuite.cpp
+@@ -490,9 +490,9 @@ void Source2GameClientsSuite::ExerciseMessageCalls(TestContext& context, CPlayer
+ 		return;
+ 	}
+ 
+-	INetworkMessageInternal* binding = nullptr;
++	NetMessageInfo_t* binding = nullptr;
+ 	CNetMessage* allocated = nullptr;
+-	CS2ST_CALL(context, "INetworkMessageInternal::AllocateMessage (CCLCMsg_Move)", {
++	CS2ST_CALL(context, "NetMessageInfo_t::AllocateMessage (CCLCMsg_Move)", {
+ 		const char* how = nullptr;
+ 		binding = FindRegisteredMessage(messages, "CCLCMsg_Move", -1, &how);
+ 		if (binding == nullptr)
+@@ -523,7 +523,7 @@ void Source2GameClientsSuite::ExerciseMessageCalls(TestContext& context, CPlayer
+ 		context.Detail("returned for the empty slot (empty CCLCMsg_Move, not paused)");
+ 	});
+ 
+-	NetMessageInfo_t* info = binding->GetNetMessageInfo();
++	NetMessageInfo_t* info = binding;
+ 
+ 	CS2ST_CALL(context, "ISource2GameClients::ShouldSendMessageDuringHltvReplay", {
+ 		if (info == nullptr)
+diff --git a/src/suites/Source2ServerSuite.cpp b/src/suites/Source2ServerSuite.cpp
+index cd1ad40..f2bbd60 100644
+--- a/src/suites/Source2ServerSuite.cpp
++++ b/src/suites/Source2ServerSuite.cpp
+@@ -574,10 +574,10 @@ void Source2ServerSuite::ExerciseLookups(TestContext& context)
+ 
+ 	// SDK: all four do nothing in CS2. Called anyway - a slot that starts doing
+ 	// something is the kind of change a rename in the SDK would otherwise hide.
+-	CS2ST_CALL(context, "ISource2Server::unk_301", { server_->unk_301(); context.Detail("returned"); });
+-	CS2ST_CALL(context, "ISource2Server::unk_302", { server_->unk_302(); context.Detail("returned"); });
+-	CS2ST_CALL(context, "ISource2Server::unk_303", { server_->unk_303(); context.Detail("returned"); });
+-	CS2ST_CALL(context, "ISource2Server::unk_304", { server_->unk_304(); context.Detail("returned"); });
++	CS2ST_CALL(context, "ISource2Server::unk_401", { server_->unk_401(); context.Detail("returned"); });
++	CS2ST_CALL(context, "ISource2Server::unk_402", { server_->unk_402(); context.Detail("returned"); });
++	CS2ST_CALL(context, "ISource2Server::unk_403", { server_->unk_403(); context.Detail("returned"); });
++	CS2ST_CALL(context, "ISource2Server::unk_404", { server_->unk_404(); context.Detail("returned"); });
+ }
+ 
+ // -----------------------------------------------------------------------------
+@@ -652,8 +652,10 @@ void Source2ServerSuite::NoteSideEffectingCalls(TestContext& context)
+ 	context.SkipCall("ISource2Server::ReportGCQueuedMatchStart",
+ 		"feeds a GC match-start reservation with account ids");
+ 	context.SkipCall("ISource2Server::unk_101",
+-		"unidentified; two void* arguments the game may dereference");
++		"clears the game's network string table pointers");
+ 	context.SkipCall("ISource2Server::unk_201",
++		"unidentified; two void* arguments the game may dereference");
++	context.SkipCall("ISource2Server::unk_301",
+ 		"unidentified; a void* argument the game may dereference");
+ 	context.SkipCall("ISource2Server::OnBroadcastRelayRequestSucceeded",
+ 		"engine-to-game notification taking an unidentified pointer");
+diff --git a/src/testkit/NetworkMessageLookup.h b/src/testkit/NetworkMessageLookup.h
+index 4253655..ac83abd 100644
+--- a/src/testkit/NetworkMessageLookup.h
++++ b/src/testkit/NetworkMessageLookup.h
+@@ -55,11 +55,11 @@ inline bool RegistryNameIs(const char* key, const char* wanted)
+  *
+  * @param how  Set to the step that found it, or left untouched when none did.
+  */
+-inline INetworkMessageInternal* FindRegisteredMessage(INetworkMessages* messages,
++inline NetMessageInfo_t* FindRegisteredMessage(INetworkMessages* messages,
+                                                       const char* name, int id,
+                                                       const char** how)
+ {
+-	INetworkMessageInternal* message = messages->FindNetworkMessage(name);
++	NetMessageInfo_t* message = messages->FindNetworkMessage(name);
+ 	if (message != nullptr)
+ 	{
+ 		*how = "by name";
+@@ -69,7 +69,7 @@ inline INetworkMessageInternal* FindRegisteredMessage(INetworkMessages* messages
+ 	if (id >= 0)
+ 	{
+ 		message = messages->FindNetworkMessageById(id);
+-		if (message != nullptr && RegistryNameIs(message->GetUnscopedName(), name))
++		if (message != nullptr && RegistryNameIs(message->GetName(), name))
+ 		{
+ 			*how = "by id (the registry key carries an id suffix)";
+ 			return message;
+@@ -77,7 +77,7 @@ inline INetworkMessageInternal* FindRegisteredMessage(INetworkMessages* messages
+ 	}
+ 
+ 	message = messages->FindNetworkMessagePartial(name);
+-	if (message != nullptr && RegistryNameIs(message->GetUnscopedName(), name))
++	if (message != nullptr && RegistryNameIs(message->GetName(), name))
+ 	{
+ 		*how = "through the partial lookup (the registry key carries an id suffix)";
+ 		return message;
