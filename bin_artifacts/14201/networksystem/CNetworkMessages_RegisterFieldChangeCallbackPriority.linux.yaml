@@ -1,0 +1,9 @@
+func_name: CNetworkMessages_RegisterFieldChangeCallbackPriority
+func_va: '0x2b4d40'
+func_rva: '0x2b4d40'
+func_size: '0x7'
+func_sig: 89 F7 E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC E9 ?? ?? ?? ??
+func_sig_allow_across_function_boundary: true
+vtable_name: CNetworkMessages
+vfunc_offset: '0xd0'
+vfunc_index: 26

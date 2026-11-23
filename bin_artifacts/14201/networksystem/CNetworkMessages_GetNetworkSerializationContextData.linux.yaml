@@ -1,0 +1,9 @@
+func_name: CNetworkMessages_GetNetworkSerializationContextData
+func_va: '0x2b4c10'
+func_rva: '0x2b4c10'
+func_size: '0x8'
+func_sig: 48 89 F7 E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC 0F B7 FE
+func_sig_allow_across_function_boundary: true
+vtable_name: CNetworkMessages
+vfunc_offset: '0x88'
+vfunc_index: 17

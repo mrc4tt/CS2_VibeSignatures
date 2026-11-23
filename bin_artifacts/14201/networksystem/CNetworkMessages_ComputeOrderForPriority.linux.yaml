@@ -1,0 +1,9 @@
+func_name: CNetworkMessages_ComputeOrderForPriority
+func_va: '0x2b4d70'
+func_rva: '0x2b4d70'
+func_size: '0x7'
+func_sig: 89 F7 E9 ?? ?? ?? ?? CC CC CC CC CC CC CC CC CC 55
+func_sig_allow_across_function_boundary: true
+vtable_name: CNetworkMessages
+vfunc_offset: '0xf8'
+vfunc_index: 31
