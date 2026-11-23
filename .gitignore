@@ -30,6 +30,7 @@ vcall_finder
 !deploy_local_plugins.sh
 # autopilot calls it: the hl2sdk fork's ABI check
 !sdk_abi_check.sh
+!sdk_abi_fix.sh
 !run_linux.sh
 !run_windows.sh
 !gen_references.sh

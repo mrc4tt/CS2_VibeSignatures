@@ -38,6 +38,8 @@
 #   AUTOPILOT_IMPACT_CSS=path        CounterStrikeSharp checkout, default /root/CounterStrikeSharp
 #   AUTOPILOT_HL2SDK=0               do not bump hl2sdk_cs2 to the fork's cs2 head, nor
 #                                    report CounterStrikeSharp's hl2sdk lagging behind it
+#   AUTOPILOT_SDK_ABI_FIX=0          only report an hl2sdk header the build broke; do not
+#                                    have sdk_abi_fix.sh open the pull request that fixes it
 #   AUTOPILOT_AUTOCOMMIT=0           refuse a dirty tree instead of committing and
 #                                    pushing the tracked changes before a run
 #   AUTOPILOT_LINUX_FIRST=0          analyse both platforms before releasing anything,
@@ -521,6 +523,18 @@ finish_build() {
     : > "$STATE/finished-$TAG"
     rm -f "$ATTEMPTS_FILE" "$STATE/finish-attempts-$TAG"
     log "done with $TAG"
+
+    # Last, after the build is marked finished: an agent fixes the header and opens the
+    # pull request on mrc4tt/hl2sdk (sdk_abi_fix.sh checks its work; nothing is merged).
+    # It can take an hour and moves the hl2sdk_cs2 checkout while it runs, so it must not
+    # sit in front of the gamedata, and its outcome never fails the build.
+    if [ -f "$STATE/sdk-abi-fix-wanted-$TAG" ]; then
+        rm -f "$STATE/sdk-abi-fix-wanted-$TAG"
+        if [ "$DRY" != 1 ]; then
+            log "==> fixing the hl2sdk headers for $TAG"
+            ./sdk_abi_fix.sh "$TAG" 2>&1 | while IFS= read -r line; do log "    $line"; done
+        fi
+    fi
 }
 
 # ---------------------------------------------------------------- single instance
@@ -1021,8 +1035,9 @@ fi
 # The hl2sdk fork's headers against this build's vtables. Not a gate: gamedata does not
 # depend on the SDK, but a plugin built against a header with a moved slot calls the
 # wrong function (1.41.9.2: IVEngineServer2::GetClientSteamID returned the app id). A
-# new mismatch is reported so the header is fixed in mrc4tt/hl2sdk the same day.
-# AUTOPILOT_SDK_ABI=0 turns it off.
+# new mismatch is reported so the header is fixed in mrc4tt/hl2sdk the same day, and
+# sdk_abi_fix.sh is queued for the end of the run (finish_build) to open the pull request
+# with the fix. AUTOPILOT_SDK_ABI=0 turns the check off, AUTOPILOT_SDK_ABI_FIX=0 the fix.
 if [ "${AUTOPILOT_SDK_ABI:-1}" != "0" ]; then
     SDK_ABI_OUT="$STATE/sdk-abi-$TAG.txt"
     log "==> checking the hl2sdk fork's headers against the binaries"
@@ -1030,7 +1045,10 @@ if [ "${AUTOPILOT_SDK_ABI:-1}" != "0" ]; then
     case $? in
         0) log "    $(head -1 "$SDK_ABI_OUT")" ;;
         1) log "    $(head -1 "$SDK_ABI_OUT")"
-           notify "sdk-abi" "$(cut -c1-200 "$SDK_ABI_OUT" | head -16)" ;;
+           notify "sdk-abi" "$(cut -c1-200 "$SDK_ABI_OUT" | head -16)"
+           if [ "${AUTOPILOT_SDK_ABI_FIX:-1}" != "0" ] && [ -x ./sdk_abi_fix.sh ]; then
+               : > "$STATE/sdk-abi-fix-wanted-$TAG"
+           fi ;;
         *) log "    sdk abi check could not run: $(head -1 "$SDK_ABI_OUT")" ;;
     esac
 fi
