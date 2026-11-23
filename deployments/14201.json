@@ -1,11 +1,11 @@
 {
   "gameVersion": "14201",
-  "recordedAt": "2026-11-23T23:25:54Z",
+  "recordedAt": "2026-11-23T23:31:07Z",
   "schemaVersion": 1,
   "status": "deployed",
   "targets": {
     "CounterStrikeSharp": {
-      "commit": "8fa136b2275a50b43d64c07a77f08a4a9593a58f",
+      "commit": "739731d5257fed90ef414de16d87f0f25d90343a",
       "path": "configs/addons/counterstrikesharp/gamedata/gamedata.json",
       "pushed": true,
       "repo": "https://github.com/mrc4tt/CounterStrikeSharp"
