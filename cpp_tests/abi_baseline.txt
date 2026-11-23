@@ -1,5 +1,5 @@
 # Accepted cpp_tests mismatches (sdk_abi_check.sh --accept).
-# gamever 14197, hl2sdk 90ce13e7 Merge alliedmodders/s2sdk cs2: 14197 net message handles
+# gamever 14201, hl2sdk 533a4c78 Update ISource2Server
 CEntityInstance_Linux | Index 11 mismatch: YAML expects 'PostDataUpdateDelta' but compiler reports 'DispatchPostDataUpdate'.
 CEntityInstance_Linux | Index 13 mismatch: YAML expects 'PostDataUpdatePreserve' but compiler reports 'OnDataUnchangedInPVS'.
 CEntityInstance_Linux | Index 30 mismatch: YAML expects 'AddChangeAccessorPathPolymorphic' but compiler reports 'NetworkStateChangedBranch'.
@@ -51,13 +51,13 @@ INetworkSystem_Linux | vtable_size mismatch: YAML=0x1c8 vs compiler=0x1c0 (entry
 INetworkSystem_MSVC | Index 18 mismatch: YAML expects 'EnableLoopbackBetweenSockets' but compiler reports 'ConnectLoopback'.
 INetworkSystem_MSVC | Index 25 mismatch: YAML expects 'PrintNetworkStats' but compiler reports 'SetTime'.
 INetworkSystem_MSVC | Index 51 mismatch: YAML expects 'InitNetworkSystem' but compiler reports 'InitSteamNetworking'.
-ISource2Server_Linux | Index 57 mismatch: YAML expects 'Save' but compiler reports 'SaveGame'.
-ISource2Server_Linux | Index 80 mismatch: YAML expects 'BroadcastServerFrameTime' but compiler reports 'SendServerFrameTime'.
-ISource2Server_Linux | Index 83 mismatch: YAML expects 'GetEntityReport' but compiler reports 'FormatSerializerFieldValue'.
-ISource2Server_Linux | vtable_numvfunc mismatch: YAML=104 vs compiler=103.
-ISource2Server_Linux | vtable_size mismatch: YAML=0x340 vs compiler=0x338 (entry_count=103, ptr_size=8).
-ISource2Server_MSVC | Index 57 mismatch: YAML expects 'Save' but compiler reports 'SaveGame'.
-ISource2Server_MSVC | Index 80 mismatch: YAML expects 'BroadcastServerFrameTime' but compiler reports 'SendServerFrameTime'.
-ISource2Server_MSVC | Index 83 mismatch: YAML expects 'GetEntityReport' but compiler reports 'FormatSerializerFieldValue'.
+ISource2Server_Linux | Index 58 mismatch: YAML expects 'Save' but compiler reports 'SaveGame'.
+ISource2Server_Linux | Index 81 mismatch: YAML expects 'BroadcastServerFrameTime' but compiler reports 'SendServerFrameTime'.
+ISource2Server_Linux | Index 84 mismatch: YAML expects 'GetEntityReport' but compiler reports 'FormatSerializerFieldValue'.
+ISource2Server_Linux | vtable_numvfunc mismatch: YAML=105 vs compiler=104.
+ISource2Server_Linux | vtable_size mismatch: YAML=0x348 vs compiler=0x340 (entry_count=104, ptr_size=8).
+ISource2Server_MSVC | Index 58 mismatch: YAML expects 'Save' but compiler reports 'SaveGame'.
+ISource2Server_MSVC | Index 81 mismatch: YAML expects 'BroadcastServerFrameTime' but compiler reports 'SendServerFrameTime'.
+ISource2Server_MSVC | Index 84 mismatch: YAML expects 'GetEntityReport' but compiler reports 'FormatSerializerFieldValue'.
 IVEngineServer2_Linux | Index 60 mismatch: YAML expects 'UnloadSpawnGroup' but compiler reports 'LoadSpawnGroup'.
 IVEngineServer2_MSVC | Index 60 mismatch: YAML expects 'UnloadSpawnGroup' but compiler reports 'LoadSpawnGroup'.
