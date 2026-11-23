@@ -1,0 +1,6 @@
+struct_name: CServerSideClient
+member_name: m_bIsHLTV
+offset: '0x142'
+size: 1
+offset_sig: 88 81 42 01 00 00
+offset_sig_disp: 0

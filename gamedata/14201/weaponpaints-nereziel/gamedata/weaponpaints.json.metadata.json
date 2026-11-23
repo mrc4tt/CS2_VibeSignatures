@@ -1,6 +1,18 @@
 {
   "entries": [
     {
+      "changes": [
+        {
+          "after": "55 48 89 E5 41 57 41 56 41 55 49 89 FD 41 54 53 48 89 F3 48 83 EC ? F3 0F 11 85 ? ? ? ?",
+          "before": "55 48 89 E5 41 57 41 56 41 55 49 89 FD 41 54 53 48 89 F3 48 83 EC ? F3 0F 11 85",
+          "line": 6,
+          "path": [
+            "CAttributeList_SetOrAddAttributeValueByName",
+            "signatures",
+            "linux"
+          ]
+        }
+      ],
       "covered": true,
       "covered_lines": [
         4,
@@ -8,7 +20,7 @@
         6
       ],
       "name": "CAttributeList_SetOrAddAttributeValueByName",
-      "updated": false
+      "updated": true
     }
   ],
   "file": "weaponpaints-nereziel/gamedata/weaponpaints.json",
@@ -17,6 +29,6 @@
   "summary": {
     "covered": 1,
     "total": 1,
-    "updated": 0
+    "updated": 1
   }
 }

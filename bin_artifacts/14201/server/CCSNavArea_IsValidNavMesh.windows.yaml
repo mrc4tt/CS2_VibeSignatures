@@ -1,0 +1,5 @@
+func_name: CCSNavArea_IsValidNavMesh
+func_va: '0x180dd0460'
+func_rva: '0xdd0460'
+func_size: '0xc'
+func_sig: 48 83 3D E0 4F 56 ?? ??
