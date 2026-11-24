@@ -40,6 +40,8 @@
 #                                    report CounterStrikeSharp's hl2sdk lagging behind it
 #   AUTOPILOT_SDK_ABI_FIX=0          only report an hl2sdk header the build broke; do not
 #                                    have sdk_abi_fix.sh open the pull request that fixes it
+#   AUTOPILOT_SDK_ABI_MERGE=0        open that pull request but leave the merge to a person
+#                                    (also: touch .autopilot/sdk-abi-fix.pause)
 #   AUTOPILOT_AUTOCOMMIT=0           refuse a dirty tree instead of committing and
 #                                    pushing the tracked changes before a run
 #   AUTOPILOT_LINUX_FIRST=0          analyse both platforms before releasing anything,
@@ -525,14 +527,17 @@ finish_build() {
     log "done with $TAG"
 
     # Last, after the build is marked finished: an agent fixes the header and opens the
-    # pull request on mrc4tt/hl2sdk (sdk_abi_fix.sh checks its work; nothing is merged).
+    # pull request on mrc4tt/hl2sdk; sdk_abi_fix.sh checks its work and, with --merge,
+    # merges it when every check and the live-server test pass.
     # It can take an hour and moves the hl2sdk_cs2 checkout while it runs, so it must not
     # sit in front of the gamedata, and its outcome never fails the build.
     if [ -f "$STATE/sdk-abi-fix-wanted-$TAG" ]; then
         rm -f "$STATE/sdk-abi-fix-wanted-$TAG"
         if [ "$DRY" != 1 ]; then
             log "==> fixing the hl2sdk headers for $TAG"
-            ./sdk_abi_fix.sh "$TAG" 2>&1 | while IFS= read -r line; do log "    $line"; done
+            fix_args=("$TAG")
+            [ "${AUTOPILOT_SDK_ABI_MERGE:-1}" != "0" ] && fix_args+=(--merge)
+            ./sdk_abi_fix.sh "${fix_args[@]}" 2>&1 | while IFS= read -r line; do log "    $line"; done
         fi
     fi
 }
