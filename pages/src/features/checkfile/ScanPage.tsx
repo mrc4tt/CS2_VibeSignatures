@@ -13,7 +13,6 @@ import { fileDetails } from './details'
 import { pluginLabel } from '../gamedata/pluginLabel'
 import { originSummary } from './originText'
 import { textHashes } from './origin'
-import { clearHandoff, peekHandoff } from './handoff'
 import { browserMarks, misnamedKeys, problemLines, renameMarks, scanMarks, type KeyRename } from './lineMarks'
 import { applyFixes, renameKey } from './patch'
 import { ResultSheet, ScanningSheet } from './ResultSheet'
@@ -46,12 +45,9 @@ export function ScanPage() {
   const [params, setParams] = useSearchParams()
   // The published file on screen (its id), or '' for a file of the visitor's own.
   const [picked, setPicked] = useState('')
-  const [loaded, setLoaded] = useState<Loaded | null>(() => {
-    const carried = peekHandoff()
-    if (!carried) return null
-    const read = readGameData(carried.text, carried.name)
-    return isLoaded(read) ? read : null
-  })
+  // Asked for by name (the list, or a ?file= link) rather than the file the page opens with.
+  const [chosen, setChosen] = useState(false)
+  const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [broken, setBroken] = useState<BrokenText | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -64,12 +60,10 @@ export function ScanPage() {
   const [blankEdit, setBlankEdit] = useState(0)
   const [pasted, setPasted] = useState('')
   // Once someone drops, pastes or edits, the example must never land on top of it.
-  const userActed = useRef(loaded !== null)
+  const userActed = useRef(false)
   const [hashes, setHashes] = useState<{ text: string; values: string[] } | null>(null)
   // Set when the text was replaced by its fixed copy: that copy is scanned as soon as it is in.
   const rescan = useRef(false)
-
-  useEffect(clearHandoff, [])
 
   // Read with a file loaded too: its content hashes are what says a dropped file is
   // a published one, the strongest evidence of whose it is.
@@ -166,6 +160,7 @@ export function ScanPage() {
       if (!isLoaded(read)) return
       setLoaded({ ...read, example: { plugin: pick.plugin, build: newest } })
       setPicked(pick.id)
+      setChosen(Boolean(asked && findPublished(published, asked) === pick))
     }).catch(() => undefined)
     return () => { cancelled = true }
   }, [index, newest, loaded, published, params])
@@ -181,6 +176,7 @@ export function ScanPage() {
     setSheet('closed')
     scan.reset()
     setPicked(id)
+    setChosen(true)
     setParams({ file: `${entry.plugin}/${entry.fileName}` }, { replace: true })
     try {
       const read = readGameData(await getGameDataFile(entry), entry.fileName)
@@ -321,7 +317,7 @@ export function ScanPage() {
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="flex min-w-0 items-center gap-2">
             <span className="truncate font-mono text-[14px] text-ink">{loaded?.name ?? t('scan.noFile')}</span>
-            {loaded?.example && <Tag tone="qualify">{t('scan.example', { plugin: loaded.example.plugin, build: loaded.example.build })}</Tag>}
+            {loaded?.example && <Tag tone="qualify">{t(chosen ? 'scan.published' : 'scan.example', { plugin: loaded.example.plugin, build: loaded.example.build })}</Tag>}
             {loaded?.documents && (
               <span title={t('check.documents.detail')}>
                 <Tag tone="warn">

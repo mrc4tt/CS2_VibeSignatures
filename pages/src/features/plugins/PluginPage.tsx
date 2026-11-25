@@ -266,7 +266,10 @@ export function PluginPage({ plugin }: { plugin: string }) {
         <header>
           <h2 id="pfile-h">{t('plugin2.fileH')}</h2>
           <span className="sub">{formatLabel(file.descriptor.language)} · {t('plugin.values', { covered: file.covered, total: file.total })}</span>
-          <span className="pright">
+          <span className="pright flex flex-wrap gap-2">
+            <Link className={buttonClass('default', 'small')} to={`${VIEW_PATHS.scan}?file=${encodeURIComponent(`${file.descriptor.plugin}/${file.descriptor.fileName}`)}`}>
+              {t('plugin2.scanFile')}
+            </Link>
             <Button size="small" onClick={() => setShowFile(!showFile)} aria-expanded={showFile}>
               {showFile ? t('plugin2.hideFile') : t('plugin2.showFile')}
             </Button>

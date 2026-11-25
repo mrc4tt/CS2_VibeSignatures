@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../i18n'
 import type { SiteHistory } from '../../api/siteData'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
-import { clearHandoff, handOff } from './handoff'
 import { ScanPage } from './ScanPage'
 
 const MATCHZY = 'matchzy/gamedata/matchzy.json'
@@ -75,7 +74,6 @@ describe('Scanner', () => {
     await i18n.changeLanguage('en')
   })
   afterEach(() => {
-    clearHandoff()
     cleanup()
   })
 
@@ -200,14 +198,6 @@ describe('Scanner', () => {
     expect(document.querySelector('.rawlayout')).toBeNull()
   })
 
-  it('opens on a file handed over from another page, not the example', async () => {
-    handOff(behindFile, 'mine.json')
-    paint()
-    await waitFor(() => expect(document.querySelector('.scanbar')?.textContent).toContain('mine.json'))
-    expect(screen.queryByText(/^Example:/)).toBeNull()
-    expect(getGameDataFile).not.toHaveBeenCalled()
-  })
-
   it('lists every published file, and puts the one picked on screen', async () => {
     const css = { ...PUBLISHED, id: 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json', plugin: 'CounterStrikeSharp', fileName: 'gamedata.json' }
     vi.mocked(getGameDataIndex).mockResolvedValue({
@@ -222,7 +212,7 @@ describe('Scanner', () => {
     expect(list.value).toBe(css.id)
 
     await userEvent.selectOptions(list, MATCHZY)
-    await screen.findByText('Example: matchzy 14181')
+    await screen.findByText('Published: matchzy 14181')
     expect(vi.mocked(getGameDataFile).mock.calls.at(-1)?.[0]).toMatchObject({ plugin: 'matchzy' })
     expect(list.value).toBe(MATCHZY)
   })
@@ -235,7 +225,7 @@ describe('Scanner', () => {
     } as Awaited<ReturnType<typeof getGameDataIndex>>)
     vi.mocked(getGameDataFile).mockResolvedValue(behindFile)
     paint('/scan?file=matchzy/matchzy.json')
-    await screen.findByText('Example: matchzy 14181')
+    await screen.findByText('Published: matchzy 14181')
   })
 
   it('never puts the example over a file someone dropped', async () => {
@@ -249,8 +239,8 @@ describe('Scanner', () => {
   })
 
   it('opens the editor empty for a paste', async () => {
-    handOff(behindFile, 'mine.json')
     paint()
+    await drop(behindFile, 'mine.json')
     await waitFor(() => expect(document.querySelector('.scanbar')?.textContent).toContain('mine.json'))
     await userEvent.click(screen.getByRole('button', { name: 'Paste' }))
     expect(screen.getByLabelText('The file, editable')).toHaveValue('')
@@ -279,8 +269,8 @@ describe('Scanner', () => {
     const scans = () => fetch.mock.calls.filter(([url]) => String(url).endsWith('/verify')).length
     vi.stubGlobal('fetch', fetch)
     try {
-      handOff(behindFile, 'matchzy.json')
       paint()
+      await drop(behindFile, 'matchzy.json')
       await screen.findByRole('button', { name: 'Scan it' })
       // opening a file sends nothing anywhere
       expect(scans()).toBe(0)
@@ -351,8 +341,8 @@ describe('Scanner', () => {
     })
     vi.stubGlobal('fetch', fetch)
     try {
-      handOff(behindFile, 'matchzy.json')
       paint()
+      await drop(behindFile, 'matchzy.json')
       await userEvent.click(await screen.findByRole('button', { name: 'Scan it' }))
       // a stale value opens the result by itself
       const sheet = await screen.findByRole('region', { name: 'Scan result' })
@@ -375,8 +365,8 @@ describe('Scanner', () => {
     ))
     vi.stubGlobal('fetch', fetch)
     try {
-      handOff(behindFile, 'matchzy.json')
       paint()
+      await drop(behindFile, 'matchzy.json')
       await userEvent.click(await screen.findByRole('radio', { name: 'Linux' }))
       expect(screen.getByRole('radio', { name: 'Linux' })).toHaveAttribute('aria-checked', 'true')
       await userEvent.click(screen.getByRole('button', { name: 'Scan it' }))

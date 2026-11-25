@@ -130,6 +130,7 @@ const resources = {
         allKeys: 'Show all {{count}} keys',
         fileH: 'The file',
         showFile: 'Show the whole file',
+        scanFile: 'Scan this file',
         hideFile: 'Hide the file',
       },
       plugin: {
@@ -500,6 +501,7 @@ const resources = {
           summaryNamed: '{{kind}}: {{plugin}}',
         },
         example: 'Example: {{plugin}} {{build}}',
+        published: 'Published: {{plugin}} {{build}}',
         dropHint: 'Drop a file anywhere on this page',
         open: 'Open file',
         paste: 'Paste',
@@ -878,6 +880,7 @@ const resources = {
         allKeys: 'Vis alle {{count}} nøgler',
         fileH: 'Filen',
         showFile: 'Vis hele filen',
+        scanFile: 'Scan denne fil',
         hideFile: 'Skjul filen',
       },
       plugin: {
@@ -1222,6 +1225,7 @@ const resources = {
           summaryNamed: '{{kind}}: {{plugin}}',
         },
         example: 'Eksempel: {{plugin}} {{build}}',
+        published: 'Publiceret: {{plugin}} {{build}}',
         dropHint: 'Slip en fil hvor som helst på siden',
         open: 'Åbn fil',
         paste: 'Indsæt',

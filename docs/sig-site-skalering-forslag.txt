@@ -1,0 +1,191 @@
+sig.miksen.me: forslag til opgradering, hvis der kommer mange flere gamedata-filer
+================================================================================
+Skrevet 2026-11-25, gennemlæst mod sitet samme dag.
+Mærket [LAVET] = live på sig.miksen.me. Alt andet er forslag.
+
+STATUS I DAG (målt på /srv/sig/current og repoet)
+-------------------------------------------------
+- 19 generatorer i gamedata-generators/, hver en håndskrevet gamedata.py.
+- 13 plugins / 14 filer publiceret i latest/ for build 14201.
+- 36 builds i gamedata/index.json (124 KB), 37 under builds/.
+- gamesymbols 55 MB, symbols 14 MB, gamedata 2,8 MB.
+- Plugin-fakta står tre steder: generatorens docstring, PLUGIN_CATALOG
+  (pages/src/features/gamedata/pluginCatalog.ts) og pluginLabel.ts.
+- Forsiden viser alle plugins som chips med stjerne, uden søgefelt.
+- Menu: 3 punkter øverst (Plugins, Find et symbol, Scanner) + 5 links i
+  bunden (alle Game Data-filer, mellem builds, min gemte fil,
+  analysekørsler, ordliste).
+- Ét signeret manifest.json dækker alle filer.
+
+Det holder fint til ca. 30-40 plugins. Over det begynder punkterne herunder
+at gøre ondt, i den rækkefølge de står.
+
+
+DEL A: FEED OG PIPELINE
+=======================
+
+A1. Ét plugin-register som eneste kilde                              (først)
+    Ny fil, fx plugins.yaml: id, visningsnavn, framework, filnavne,
+    installationssti, repo-URL, familie (fork af hvad), status
+    (aktiv/deaktiveret/kun reference), vedligeholder.
+    PLUGIN_CATALOG, pluginLabel og MODULE_ENABLED læses/genereres herfra.
+    I dag kræver et nyt plugin rettelser tre steder, og testen
+    pluginCatalog.test.ts er det eneste der fanger en glemt.
+
+A2. Deklarative generatorer
+    De fleste generatorer er "skabelon + symbol -> nøgle". Lav én generisk
+    generator, der tager en skabelonfil og en mapping (yaml), så et nyt plugin
+    er en datafil og ikke Python. Behold gamedata.py som undtagelse for de
+    plugins, der har speciel logik (games.txt, jsonc, kildekode-literals).
+    Skal undersøges først: hvor mange af de 19 kan faktisk udtrykkes sådan.
+
+A3. Familier i stedet for løse forks
+    matchzy / matchzy-original og weaponpaints / weaponpaints-nereziel har
+    samme filnavn. CounterStrikeSharp-klienten afviser ved uafgjort match
+    (filnavn + flest fælles nøgler). Flere plugins = flere uafgjorte.
+    Forslag: familie-felt i registeret; index.json får familie med, så
+    klienten kan vælge inden for familien og sitet kan vise varianter samlet.
+
+A4. gamedata/index.json vokser med builds x filer
+    124 KB ved 36 x 14. Ved 100 filer og 60 builds ca. 1,5 MB, hentet af hver
+    server der går på nettet. Muligheder (vælg én):
+      a) opslag pr. hash: gamedata/by-sha256/<2 hex>/<sha256>.json
+      b) index pr. plugin: gamedata/index/<plugin>.json + lille rod-index
+      c) loft: kun de seneste N builds i index.json
+    a) er billigst for klienten, men kræver klientændring i CounterStrikeSharp.
+    Det gamle index.json skal blive liggende for ældre klienter.
+
+A5. Manifestet
+    Ét manifest er fint til nogle hundrede filer (ca. 250 bytes pr. fil).
+    Først ved 1000+ filer: manifest pr. plugin, hver signeret. Ikke nu.
+
+A6. Efterspørgsel styrer hvad der bliver lavet
+    plugin_reports.py gemmer allerede "unknown"-filer rangeret efter antal
+    servere, og GamedataUpload sender filteksten. Mangler: en kø-side (admin)
+    der viser top-ukendte, med knap "opret generator-udkast" som fylder
+    register + mapping ud fra den uploadede fil og matcher nøglerne mod
+    gamesymbols. Menneske godkender.
+
+A7. Sundhed pr. plugin pr. build
+    Publicér status pr. plugin: resolver linux/windows, antal nøgler fyldt,
+    antal ændret siden sidste build, antal servere der melder nøgle brudt
+    (fra reports/broken/<build>.json). Én lille json pr. plugin, så sitet og
+    badges læser samme tal.
+
+A8. Tillidsniveauer synlige
+    Klienten skelner allerede: signeret feed (hel fil mulig) mod upload
+    (usigneret, kun signaturer). Sitet bør vise samme niveau pr. fil:
+    "genereret og verificeret i IDA" / "community-upload" / "kun reference".
+
+A9. Opbevaring
+    builds/ og gamesymbols/ vokser pr. build. Regel: fuldt sæt for de seneste
+    N builds, ældre kun som indholdsadresserede payloads. Mål først; 55 MB er
+    ikke et problem endnu.
+
+A10. Drift
+    Cloudflare rate limit og cache-regler for /api/report og /api/files,
+    alarm når latest/manifest.json er ældre end nyeste steam build
+    (sig-feed-check.timer findes; udvid den).
+
+
+DEL B: REDESIGN AF SITET
+========================
+
+Mål: sitet skal være så enkelt som muligt at bruge.
+Problemet: forsiden er bygget til en håndfuld plugins. Chips uden søgning
+bliver en væg ved 50+.
+
+B1. Forside = katalog med søgning
+    - Søgefelt øverst (plugin, filnavn, nøgle).
+    - Filtre: framework (CounterStrikeSharp / Metamod / ModSharp / Plugify),
+      status i dette build (OK / ændret / brudt), læser fil / kildekode,
+      tillidsniveau (A8).
+    - Tabelrækker i stedet for chips: navn, framework, filer, status linux,
+      status windows, ændret i build, servere (fra reports), download.
+    - Sortering: mine (stjerne) først, derefter flest servere.
+    - "Kræver handling i dette build" bliver øverst som i dag.
+
+B2. Familier foldes sammen
+    Én række pr. familie, varianter foldes ud (matchzy -> fork / original).
+
+B3. Plugin-side
+    Findes allerede: installationssti, download-knap, tal for nøgler med
+    værdi / ændret i build / verificeret, "always-newest"-link med
+    curl-kommando (foldet sammen), ændringer siden forrige build med valg af
+    ældre build, nøgletabel.
+    Mangler: status pr. platform (linux / windows hver for sig), færdig
+    PluginGamedataFeeds-linje til core.json, tillidsniveau (A8), varianter
+    (A3). "Always-newest"-linket bør stå åbent, ikke foldet.
+
+B3a. Plugin-siden viser selve filen                        (tilføjet 2026-11-25)
+    Ønske: trykker man på et plugin, skal man se hele filen, præcis som den
+    står, i dens eget format (json, jsonc, games.txt, signatures.txt).
+
+    [LAVET] Filen er åben fra start og står over nøgletabellen
+    (commit 0a0cd0c62). Før lå den nederst bag knappen "vis hele filen".
+    Filvisningen har allerede: farver, foldning, søgefelt, markering af hvor
+    en linje kommer fra, og viser teksten som publiceret.
+
+    Stadig forslag:
+    - Flyt filen helt op under hovedet, over "siden forrige build".
+    - Flere filer i ét plugin = faner med filnavn.
+    - Build-vælger over filen (standard: nyeste). Skift build = samme fil
+      for det build.
+    - Linjer der er ændret siden forrige build markeres i margen, med gammel
+      værdi ved hover. Knap "kun ændringer".
+    - Platform-knap linux / windows / begge, som dæmper den anden platforms
+      linjer i stedet for at fjerne dem (filen skal stadig være hele filen).
+    - Knapper: kopiér hele filen, download, kopiér feed-URL, rå fil i ny fane.
+    - Klik på en nøgle = link til symbolets side (/symbols/<nøgle>) og en
+      delbar adresse til linjen (/plugins/<id>#<nøgle>).
+    - For plugins der læser fra kildekode (reads: source): vis referencefilen
+      på samme måde, med tydelig tekst om at den skal indsættes i
+      kildefilen og bygges, og hvilken fil (sourceFile fra registeret).
+    - Lange filer: fuld højde med fast søgefelt, ikke en lille scroll-boks.
+    - Mobil: vandret scroll i filen, ikke linjeombrydning af signaturer.
+
+B4. Build-matrix
+    Plugins x seneste 5-10 builds, grøn/gul/rød. Svarer på "hvad gik i
+    stykker ved sidste opdatering" uden at åbne hvert plugin.
+
+B5. Menuen
+    [LAVET] Topmenu er 3 punkter: Plugins | Find et symbol | Scanner.
+    "Tjek min fil" er lagt ind i Scanneren (B8); /check åbner Scanneren.
+    Stadig forslag: de 5 links i bunden samles til 2. "Mellem builds",
+    "analysekørsler" og "ordliste" under ét punkt "Status"; "alle Game
+    Data-filer" udgår, når forsiden er et katalog (B1) og plugin-siden viser
+    filen; "min gemte fil" ind i Scanneren.
+
+B6. "Efterspurgt"-side (valgfri)
+    Offentlig liste over ukendte filer servere kører: filnavn og antal
+    servere, intet andet. Viser hvad der mangler, og hvor man bidrager.
+    Afklar først om filnavne må vises offentligt.
+
+B7. Side med maskin-endpoints
+    latest/, builds/<build>/, manifest + .sig, index.json, /api/report,
+    /api/files på én side. I dag står det kun i README og i klientkoden.
+
+
+B8. Scanner
+    [LAVET] (commit 851c6a777)
+    - Liste i toppen med alle publicerede filer for nyeste build; vælg én og
+      scan den. Egne filer som før: åbn, indsæt, træk-og-slip, redigér.
+    - Delbart link: /scan?file=<plugin>/<filnavn>.
+    - Tom kolonne mellem linjenumre og tekst fjernet.
+    - Knap "Scan denne fil" på plugin-siden, åbner /scan?file=...
+    - Mærket hedder "Publiceret: <plugin> <build>" for en fil valgt fra
+      listen eller et link; "Eksempel" kun for den fil siden åbner med.
+    - handoff.ts fjernet (ingen side brugte den længere).
+    Stadig forslag:
+    - Build-vælger for den publicerede fil (i dag kun nyeste build).
+
+RÆKKEFØLGE
+==========
+1. A1 register + B1 katalog-forside (søgning, filtre, tabel).  Størst effekt.
+2. A3 familier + B2.
+3. A7 status-json + B3 (det der mangler) + B4 matrix.
+   Små ting der kan tages når som helst: B3a-resten, B5-bunden, B8-resten.
+4. A6 kø-side, når reports viser reel efterspørgsel.
+5. A2 deklarative generatorer, når nr. 20-25 skal skrives.
+6. A4 index-opdeling, når index.json passerer ca. 500 KB.
+A5, A9: vent til tallene kræver det.
