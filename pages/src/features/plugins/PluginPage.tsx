@@ -103,7 +103,9 @@ export function PluginPage({ plugin }: { plugin: string }) {
   const [params, setParams] = useSearchParams()
   const [starred, setStarred] = useState(readStarred)
   const [allKeys, setAllKeys] = useState(false)
-  const [showFile, setShowFile] = useState(false)
+  // Open from the start: the file is what people come to a plugin's page to see, and it used
+  // to sit folded at the bottom behind a button nobody scrolled to.
+  const [showFile, setShowFile] = useState(true)
   const [find, setFind] = useState('')
   const [marks, setMarks] = useState(false)
   const metaQuery = useQuery({ queryKey: ['site-meta'], queryFn: ({ signal }) => getSiteMeta(signal), staleTime: 5 * 60 * 1000 })
@@ -260,6 +262,35 @@ export function PluginPage({ plugin }: { plugin: string }) {
         )}
       </section>
 
+      <section className="panel pfile" aria-labelledby="pfile-h">
+        <header>
+          <h2 id="pfile-h">{t('plugin2.fileH')}</h2>
+          <span className="sub">{formatLabel(file.descriptor.language)} · {t('plugin.values', { covered: file.covered, total: file.total })}</span>
+          <span className="pright">
+            <Button size="small" onClick={() => setShowFile(!showFile)} aria-expanded={showFile}>
+              {showFile ? t('plugin2.hideFile') : t('plugin2.showFile')}
+            </Button>
+          </span>
+        </header>
+        {showFile && (
+          <>
+            {fileQuery.error && <Alert tone="bad" title={t('gamedata.fileError')} description={fileQuery.error.message} />}
+            {fileQuery.isLoading && <div className="panel-body"><Skeleton rows={12} /></div>}
+            {fileQuery.data && (
+              <FileView
+                descriptor={file.descriptor}
+                content={fileQuery.data}
+                metadata={metadataQuery.data}
+                find={find}
+                marks={marks}
+                onFind={setFind}
+                onMarks={setMarks}
+              />
+            )}
+          </>
+        )}
+      </section>
+
       {keys.length > 0 && (
         <section className="panel" aria-labelledby="pkeys-h">
           <header>
@@ -299,35 +330,6 @@ export function PluginPage({ plugin }: { plugin: string }) {
           )}
         </section>
       )}
-
-      <section className="panel pfile" aria-labelledby="pfile-h">
-        <header>
-          <h2 id="pfile-h">{t('plugin2.fileH')}</h2>
-          <span className="sub">{formatLabel(file.descriptor.language)} · {t('plugin.values', { covered: file.covered, total: file.total })}</span>
-          <span className="pright">
-            <Button size="small" onClick={() => setShowFile(!showFile)} aria-expanded={showFile}>
-              {showFile ? t('plugin2.hideFile') : t('plugin2.showFile')}
-            </Button>
-          </span>
-        </header>
-        {showFile && (
-          <>
-            {fileQuery.error && <Alert tone="bad" title={t('gamedata.fileError')} description={fileQuery.error.message} />}
-            {fileQuery.isLoading && <div className="panel-body"><Skeleton rows={12} /></div>}
-            {fileQuery.data && (
-              <FileView
-                descriptor={file.descriptor}
-                content={fileQuery.data}
-                metadata={metadataQuery.data}
-                find={find}
-                marks={marks}
-                onFind={setFind}
-                onMarks={setMarks}
-              />
-            )}
-          </>
-        )}
-      </section>
 
       <Explain summary={t('plugin.whatH')} html={t('plugin.what')} />
     </div>
