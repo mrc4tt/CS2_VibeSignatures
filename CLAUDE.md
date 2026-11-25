@@ -707,6 +707,19 @@ It needs `AUTOPILOT_BOT_URL`/`AUTOPILOT_BOT_SECRET` in `/etc/cs2vibe/verify-bot.
 5 minutes). nginx: `location = /api/report` with its own `sigapi_report` zone, 6r/m burst 20, no
 CORS (game servers only) - in `docs/nginx-sig-api.miksen.me.conf`; the live copy is server-ops'.
 
+## NATIVE STATUS (what is released, booted on the current CS2 build)
+
+`https://sig-api.miksen.me/api/native/<steamVersion>.json` tells the fshost panel whether the
+released Metamod, CounterStrikeSharp (release + the gamedata feed on its main) and five native
+plugins boot on the build Steam requires, so it can start servers vanilla, or without
+CounterStrikeSharp, before one crashed. Nothing of it lives in this repo: server-ops'
+`cs2-native-status` (5-minute timer) writes `/var/lib/cs2-native-status/<steamVersion>.json` and
+nginx serves it statically (the location is in `docs/nginx-sig-api.miksen.me.conf`). Statuses
+`untested` / `testing` / `ok` / `degraded` / `broken` / `blocked`; `broken` needs two failed boots
+and a passing control boot. A gamedata deploy from here is picked up by itself: the feed's blob
+changes and CounterStrikeSharp is booted again within 5 minutes. `/root/server-ops` is the live
+checkout - repo-autosync installs its working tree within minutes, committed or not.
+
 ## TAKING A NEW GAMEVER THROUGH
 
 ```bash
