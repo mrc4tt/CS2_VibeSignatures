@@ -1,5 +1,5 @@
 /**
- * A file carried from Check my file into the scanner.
+ * A file carried from another page into the scanner.
  *
  * Held in memory only, for one navigation: the text never touches storage, and
  * a reload of /scan simply opens on the example instead. The scanner clears it

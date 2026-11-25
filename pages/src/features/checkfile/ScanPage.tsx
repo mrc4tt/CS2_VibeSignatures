@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { requestNavigation } from '../../app/navigate'
-import { ArrowLeftIcon, EditIcon, FileCheckIcon } from '../../ui/icons'
+import { EditIcon, FileCheckIcon } from '../../ui/icons'
 import { buttonClass } from '../../ui/buttonStyle'
-import { Alert, Button, Tag } from '../../ui/primitives'
+import { Alert, Button, Select, Tag } from '../../ui/primitives'
 import { getGameDataFile, getGameDataIndex } from '../gamedata/data'
 import { AnnotatedFile, type BrokenText } from './AnnotatedFile'
 import { fetchScanBuilds, fetchScanHealth, requestDeepScan, type DeepFix } from './deepScan'
@@ -26,6 +26,11 @@ import { agedValue } from './verdict'
 /** The published file the scanner opens with until someone drops, pastes or edits their own. */
 const EXAMPLE_PLUGIN = 'CounterStrikeSharp'
 
+/** The published file a `?file=` link asks for: its id (`<plugin>/.../<name>`) or `<plugin>/<name>`. */
+function findPublished<T extends { id: string; plugin: string; fileName: string }>(files: T[], wanted: string): T | undefined {
+  return files.find((entry) => entry.id === wanted) ?? files.find((entry) => `${entry.plugin}/${entry.fileName}` === wanted)
+}
+
 /**
  * The scanner: one file, the settings and verdict in a column on the left, the
  * file itself on the right with every verdict on its line.
@@ -38,6 +43,9 @@ const EXAMPLE_PLUGIN = 'CounterStrikeSharp'
  */
 export function ScanPage() {
   const { t } = useTranslation()
+  const [params, setParams] = useSearchParams()
+  // The published file on screen (its id), or '' for a file of the visitor's own.
+  const [picked, setPicked] = useState('')
   const [loaded, setLoaded] = useState<Loaded | null>(() => {
     const carried = peekHandoff()
     if (!carried) return null
@@ -122,6 +130,11 @@ export function ScanPage() {
     hashes: hashes && hashes.text === loaded?.text ? hashes.values : undefined,
     scanMatch: scanResult && !scanResult.note ? scanResult.matched?.plugin : undefined,
   })
+  // Every file this build publishes, by plugin name: what the list in the bar offers.
+  const published = useMemo(() => {
+    const files = (index?.versions.find((version) => version.gameVersion === newest) ?? index?.versions[0])?.files ?? []
+    return [...files].sort((a, b) => pluginLabel(a.plugin).localeCompare(pluginLabel(b.plugin)) || a.fileName.localeCompare(b.fileName))
+  }, [index, newest])
   const deepPatched = useMemo(
     () => (loaded && scanResult?.fixes?.length ? applyFixes(loaded.text, scanResult.fixes) : null),
     [loaded, scanResult],
@@ -138,20 +151,45 @@ export function ScanPage() {
 
   useEffect(() => {
     if (loaded || userActed.current || !index || !newest) return
-    const files = (index.versions.find((version) => version.gameVersion === newest) ?? index.versions[0])?.files ?? []
-    // The file most visitors run: CounterStrikeSharp's own gamedata.json (the mrc4tt fork's
-    // generated one), so the first thing on screen is the scan they came to do.
-    const pick = files.find((entry) => entry.plugin === EXAMPLE_PLUGIN && entry.fileName === 'gamedata.json') ?? files[0]
+    // A link from a plugin's page names its file (?file=); otherwise the file most visitors
+    // run: CounterStrikeSharp's own gamedata.json (the mrc4tt fork's generated one), so the
+    // first thing on screen is the scan they came to do.
+    const asked = params.get('file')
+    const pick = (asked ? findPublished(published, asked) : undefined)
+      ?? published.find((entry) => entry.plugin === EXAMPLE_PLUGIN && entry.fileName === 'gamedata.json') ?? published[0]
     if (!pick) return
     let cancelled = false
     void getGameDataFile(pick).then((text) => {
       if (cancelled || userActed.current) return
       const read = readGameData(text, pick.fileName)
       // an example that does not parse is simply not shown
-      if (isLoaded(read)) setLoaded({ ...read, example: { plugin: pick.plugin, build: newest } })
+      if (!isLoaded(read)) return
+      setLoaded({ ...read, example: { plugin: pick.plugin, build: newest } })
+      setPicked(pick.id)
     }).catch(() => undefined)
     return () => { cancelled = true }
-  }, [index, newest, loaded])
+  }, [index, newest, loaded, published, params])
+
+  /** Puts a published file on screen, picked from the list: the same as opening one's own. */
+  async function pickPublished(id: string) {
+    const entry = published.find((file) => file.id === id)
+    if (!entry || !newest) return
+    userActed.current = true
+    setError(null)
+    setBroken(null)
+    setFocusLine(undefined)
+    setSheet('closed')
+    scan.reset()
+    setPicked(id)
+    setParams({ file: `${entry.plugin}/${entry.fileName}` }, { replace: true })
+    try {
+      const read = readGameData(await getGameDataFile(entry), entry.fileName)
+      if (isLoaded(read)) setLoaded({ ...read, example: { plugin: entry.plugin, build: newest } })
+      else setError(failureText(read, t))
+    } catch {
+      setError(t('gamedata.fileError'))
+    }
+  }
 
   function stepProblem(direction: 1 | -1): void {
     if (problems.length === 0) return
@@ -222,6 +260,9 @@ export function ScanPage() {
 
   async function accept(input: File | string, name: string, fromEditor = false) {
     userActed.current = true
+    // From here on the text is the visitor's own, also when it began as a published file.
+    setPicked('')
+    if (params.has('file')) setParams({}, { replace: true })
     setError(null)
     setBroken(null)
     setFocusLine(undefined)
@@ -294,7 +335,18 @@ export function ScanPage() {
           </span>
         </span>
         {verdict && <span className={`scanverdict ${verdict.tone}`}>{verdict.text}</span>}
-        <span className="ml-auto flex flex-wrap gap-2">
+        <span className="ml-auto flex flex-wrap items-center gap-2">
+          {published.length > 0 && (
+            <>
+              <label className="sr-only" htmlFor="scan-pick">{t('scan.pick')}</label>
+              <Select id="scan-pick" value={picked} onChange={(event) => void pickPublished(event.target.value)}>
+                <option value="">{t(loaded && !picked ? 'scan.pickOwn' : 'scan.pick')}</option>
+                {published.map((entry) => (
+                  <option key={entry.id} value={entry.id}>{pluginLabel(entry.plugin)} · {entry.fileName}</option>
+                ))}
+              </Select>
+            </>
+          )}
           <label className={buttonClass('primary')}>
             {t('scan.open')}
             <input
@@ -315,10 +367,6 @@ export function ScanPage() {
           >
             <EditIcon size={13} />
             {t('scan.paste')}
-          </Button>
-          <Button variant="text" onClick={() => requestNavigation({ view: 'check' })}>
-            <ArrowLeftIcon size={13} />
-            {t('scan.back')}
           </Button>
         </span>
       </div>

@@ -123,10 +123,16 @@
 .annotated .rl .lc { white-space: pre; }
 /* The editor: a transparent textarea over the rows, metric for metric, so
    typing happens in the browser's own control while the colours show through.
-   It starts after the 80px gutter and sits under the sticky gutter cells. */
+   It starts after the 58px gutter and sits under the sticky gutter cells.
+   The gutter here is the line number and the verdict mark, nothing else: the
+   shared .rl gutter also reserves a fold column this view never used, which
+   left a blank strip between the numbers and the text. */
+.annotated .rl .ln { flex-basis: 44px; }
+.annotated .rl .st { left: 44px; }
+.annotated .rl .lc { padding-left: 8px; }
 .annotated .raw { position: relative; tab-size: 2; }
 .annotated .raw .hex { letter-spacing: 0; }
-.rawinput { position: absolute; z-index: 1; top: 0; left: 80px; right: 0; bottom: 0; margin: 0; padding: 0 16px 0 11px;
+.rawinput { position: absolute; z-index: 1; top: 0; left: 58px; right: 0; bottom: 0; margin: 0; padding: 0 16px 0 8px;
   border: 0; outline: none; resize: none; overflow: hidden; background: transparent; color: transparent;
   caret-color: var(--ink); font-family: var(--mono); font-size: 13px; line-height: 1.62; white-space: pre;
   tab-size: 2; overflow-wrap: normal; }
@@ -140,7 +146,7 @@
    height placeholder is exactly one line, so the textarea above stays aligned with
    lines that were never rendered; the width is remembered once a line was seen. */
 .annotated .rl { content-visibility: auto; contain-intrinsic-size: auto 0px var(--lh); }
-.linepop { position: absolute; z-index: 5; left: 92px; min-width: 300px; max-width: min(560px, calc(100% - 108px));
+.linepop { position: absolute; z-index: 5; left: 70px; min-width: 300px; max-width: min(560px, calc(100% - 86px));
   display: flex; flex-direction: column; gap: 6px; padding: 9px 11px; border: 1px solid var(--rule-strong);
   border-radius: 10px; background: var(--card); box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
   font-family: var(--sans, inherit); font-size: 12.5px; line-height: 1.4; white-space: normal; }

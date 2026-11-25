@@ -21,7 +21,6 @@ const FindSymbolPage = lazy(() => import('../features/symbols/FindSymbolPage').t
 const GameDataPage = lazy(() => import('../features/gamedata/GameDataPage').then((module) => ({ default: module.GameDataPage })))
 const DiffPage = lazy(() => import('../features/diff/DiffPage').then((module) => ({ default: module.DiffPage })))
 const ScanPage = lazy(() => import('../features/checkfile/ScanPage').then((module) => ({ default: module.ScanPage })))
-const CheckFilePage = lazy(() => import('../features/checkfile/CheckFilePage').then((module) => ({ default: module.CheckFilePage })))
 const RunReportPage = lazy(() => import('../features/runs2/RunReportPage').then((module) => ({ default: module.RunReportPage })))
 const StartPage = lazy(() => import('../features/start/StartPage').then((module) => ({ default: module.StartPage })))
 const PluginPage = lazy(() => import('../features/plugins/PluginPage').then((module) => ({ default: module.PluginPage })))
@@ -101,7 +100,7 @@ export function AppShell() {
 
   // The destinations a server owner comes for. Everything else is a footer
   // link: still one click away, no longer competing for the top bar.
-  const tabs: AppView[] = ['start', 'symbols', 'check', 'scan']
+  const tabs: AppView[] = ['start', 'symbols', 'scan']
   const footer: AppView[] = ['gamedata', 'diff', 'myfile', 'runs', 'words']
   const section: AppView = plugin ? 'start' : view
   const loading = <div className="page-spinner">{t('app.loadingPage')}</div>
@@ -154,7 +153,6 @@ export function AppShell() {
         {view === 'symbols' && <Suspense fallback={loading}><FindSymbolPage /></Suspense>}
         {view === 'gamedata' && <Suspense fallback={loading}><GameDataPage /></Suspense>}
         {view === 'diff' && <Suspense fallback={loading}><DiffPage /></Suspense>}
-        {view === 'check' && <Suspense fallback={loading}><CheckFilePage /></Suspense>}
         {view === 'scan' && <Suspense fallback={loading}><ScanPage /></Suspense>}
         {view === 'words' && <Suspense fallback={loading}><WordsPage /></Suspense>}
         {view === 'myfile' && <Suspense fallback={loading}><MyFilePage /></Suspense>}

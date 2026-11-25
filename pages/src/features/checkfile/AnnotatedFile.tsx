@@ -262,7 +262,6 @@ export function AnnotatedFile({ text, fixed, name, format, marks, source, layout
             return (
               <div className={classes.join(' ')} key={lineNumber} data-line={lineNumber}>
                 <span className="ln">{lineNumber}</span>
-                <span className="fold"> </span>
                 <span className="st" title={(brokenHere?.line === lineNumber ? brokenHere.message : tip) || undefined} />
                 <span className="lc">
                   <TokenLine line={line} format={format} depth={depths[index] ?? 0} />

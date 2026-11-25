@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../i18n'
 import type { SiteHistory } from '../../api/siteData'
@@ -44,11 +45,13 @@ vi.mock('../../api/siteData', async (importOriginal) => {
   return { ...original, getSiteHistory: vi.fn(async () => history) }
 })
 
-function paint() {
+function paint(path = '/scan') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <ScanPage />
+      <MemoryRouter initialEntries={[path]}>
+        <ScanPage />
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }
@@ -197,12 +200,42 @@ describe('Scanner', () => {
     expect(document.querySelector('.rawlayout')).toBeNull()
   })
 
-  it('opens on the file handed over from Check my file, not the example', async () => {
+  it('opens on a file handed over from another page, not the example', async () => {
     handOff(behindFile, 'mine.json')
     paint()
     await waitFor(() => expect(document.querySelector('.scanbar')?.textContent).toContain('mine.json'))
     expect(screen.queryByText(/^Example:/)).toBeNull()
     expect(getGameDataFile).not.toHaveBeenCalled()
+  })
+
+  it('lists every published file, and puts the one picked on screen', async () => {
+    const css = { ...PUBLISHED, id: 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json', plugin: 'CounterStrikeSharp', fileName: 'gamedata.json' }
+    vi.mocked(getGameDataIndex).mockResolvedValue({
+      schemaVersion: 1,
+      versions: [{ gameVersion: '14181', fileCount: 2, metadataFileCount: 0, files: [PUBLISHED, css] }],
+    } as Awaited<ReturnType<typeof getGameDataIndex>>)
+    vi.mocked(getGameDataFile).mockResolvedValue(behindFile)
+    paint()
+    await screen.findByText('Example: CounterStrikeSharp 14181')
+    const list = screen.getByLabelText('Pick a published file…') as HTMLSelectElement
+    expect([...list.options].map((option) => option.value)).toEqual(['', css.id, MATCHZY])
+    expect(list.value).toBe(css.id)
+
+    await userEvent.selectOptions(list, MATCHZY)
+    await screen.findByText('Example: matchzy 14181')
+    expect(vi.mocked(getGameDataFile).mock.calls.at(-1)?.[0]).toMatchObject({ plugin: 'matchzy' })
+    expect(list.value).toBe(MATCHZY)
+  })
+
+  it('opens on the published file a link names', async () => {
+    const css = { ...PUBLISHED, id: 'CounterStrikeSharp/config/addons/counterstrikesharp/gamedata/gamedata.json', plugin: 'CounterStrikeSharp', fileName: 'gamedata.json' }
+    vi.mocked(getGameDataIndex).mockResolvedValue({
+      schemaVersion: 1,
+      versions: [{ gameVersion: '14181', fileCount: 2, metadataFileCount: 0, files: [PUBLISHED, css] }],
+    } as Awaited<ReturnType<typeof getGameDataIndex>>)
+    vi.mocked(getGameDataFile).mockResolvedValue(behindFile)
+    paint('/scan?file=matchzy/matchzy.json')
+    await screen.findByText('Example: matchzy 14181')
   })
 
   it('never puts the example over a file someone dropped', async () => {

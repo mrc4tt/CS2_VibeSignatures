@@ -1,4 +1,4 @@
-export const APP_VIEWS = ['start', 'symbols', 'gamedata', 'diff', 'check', 'scan', 'runs', 'runs-live', 'words', 'myfile'] as const
+export const APP_VIEWS = ['start', 'symbols', 'gamedata', 'diff', 'scan', 'runs', 'runs-live', 'words', 'myfile'] as const
 export type AppView = (typeof APP_VIEWS)[number]
 
 const LEGACY_VIEW_KEY = 'cs2vibe.view'
@@ -19,7 +19,6 @@ export const VIEW_PATHS: Record<AppView, string> = {
   // route and reloading printed raw JSON instead of the page.
   gamedata: '/game-data',
   diff: '/diff',
-  check: '/check',
   scan: '/scan',
   words: '/words',
   myfile: '/my-file',
@@ -59,6 +58,9 @@ export function pluginFromPath(pathname: string): string | undefined {
 export function viewFromPath(pathname: string): AppView {
   const path = `/${pathname.replace(/^\/+|\/+$/g, '')}`
   if (path === '/runs' || path.startsWith('/runs/')) return 'runs-live'
+  // Check my file was folded into the scanner, which does the same check on the same file.
+  // Its address is in bookmarks and plugin channels, so it opens the scanner.
+  if (path === '/check') return 'scan'
   // /symbols/<key> is a permalink to one symbol, so it is still the symbols view.
   if (path.startsWith('/symbols/')) return 'symbols'
   const found = (Object.keys(VIEW_PATHS) as AppView[]).find(

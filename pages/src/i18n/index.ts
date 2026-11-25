@@ -66,7 +66,7 @@ const resources = {
         main: 'Main',
         more: 'More',
         whatIsThis: 'What does this mean?',
-        nav: { start: 'Plugins', symbols: 'Find a symbol', check: 'Check my file', scan: 'Scanner', gamedata: 'All Game Data files', diff: 'Between builds', runs: 'Analysis runs', words: 'Glossary', myfile: 'My stored file' },
+        nav: { start: 'Plugins', symbols: 'Find a symbol', scan: 'Scanner', gamedata: 'All Game Data files', diff: 'Between builds', runs: 'Analysis runs', words: 'Glossary', myfile: 'My stored file' },
       },
       buildStatus: {
         updated: 'CS2 updated to build {{build}}.',
@@ -503,7 +503,8 @@ const resources = {
         dropHint: 'Drop a file anywhere on this page',
         open: 'Open file',
         paste: 'Paste',
-        back: 'Quick check',
+        pick: 'Pick a published file…',
+        pickOwn: 'Your own file',
         result: {
           title: 'Scan result',
           running: 'Scanning…',
@@ -813,7 +814,7 @@ const resources = {
         main: 'Hovedmenu',
         more: 'Mere',
         whatIsThis: 'Hvad betyder det?',
-        nav: { start: 'Plugins', symbols: 'Find et symbol', check: 'Tjek min fil', scan: 'Scanner', gamedata: 'Alle Game Data-filer', diff: 'Mellem builds', runs: 'Analysekørsler', words: 'Ordliste', myfile: 'Min gemte fil' },
+        nav: { start: 'Plugins', symbols: 'Find et symbol', scan: 'Scanner', gamedata: 'Alle Game Data-filer', diff: 'Mellem builds', runs: 'Analysekørsler', words: 'Ordliste', myfile: 'Min gemte fil' },
       },
       buildStatus: {
         updated: 'CS2 er opdateret til build {{build}}.',
@@ -1224,7 +1225,8 @@ const resources = {
         dropHint: 'Slip en fil hvor som helst på siden',
         open: 'Åbn fil',
         paste: 'Indsæt',
-        back: 'Hurtigt tjek',
+        pick: 'Vælg en publiceret fil…',
+        pickOwn: 'Din egen fil',
         result: {
           title: 'Scanresultat',
           running: 'Scanner…',

@@ -41,8 +41,8 @@ describe('the browser Back button', () => {
     await userEvent.click(screen.getByRole('link', { name: 'All Game Data files' }))
     await waitFor(() => expect(window.location.pathname).toBe('/game-data'))
 
-    await userEvent.click(screen.getByRole('link', { name: 'Check my file' }))
-    await waitFor(() => expect(window.location.pathname).toBe('/check'))
+    await userEvent.click(screen.getByRole('link', { name: 'Scanner' }))
+    await waitFor(() => expect(window.location.pathname).toBe('/scan'))
 
     window.history.back()
     await waitFor(() => expect(window.location.pathname).toBe('/game-data'))
@@ -78,11 +78,11 @@ describe('the browser Back button', () => {
     expect(screen.getByRole('link', { name: 'Plugins' })).not.toHaveAttribute('aria-current')
   })
 
-  it('keeps the top bar to four destinations and files a plugin page under Plugins', async () => {
+  it('keeps the top bar to three destinations and files a plugin page under Plugins', async () => {
     window.history.pushState({}, '', '/plugins/CounterStrikeSharp')
     paint()
     const main = screen.getByRole('navigation', { name: 'Main' })
-    expect(main.querySelectorAll('a')).toHaveLength(4)
+    expect(main.querySelectorAll('a')).toHaveLength(3)
     await waitFor(() => expect(screen.getByRole('link', { name: 'Plugins' })).toHaveAttribute('aria-current', 'page'))
   })
 })

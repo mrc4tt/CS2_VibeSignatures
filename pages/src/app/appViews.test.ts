@@ -16,8 +16,9 @@ describe('which page the app opens on', () => {
     expect(localStorage.getItem('cs2vibe.view')).toBeNull()
   })
 
-  it('lists Check my file among the views', () => {
-    expect(APP_VIEWS).toContain('check')
+  it('has no separate Check my file view: the scanner does that check', () => {
+    expect(APP_VIEWS).not.toContain('check')
+    expect(APP_VIEWS).toContain('scan')
   })
 })
 
@@ -31,13 +32,15 @@ describe('every view has its own URL', () => {
   it('reads the view back out of a pathname', () => {
     expect(viewFromPath('/')).toBe('start')
     expect(viewFromPath('/game-data')).toBe('gamedata')
-    expect(viewFromPath('/check')).toBe('check')
+    expect(viewFromPath('/scan')).toBe('scan')
+    // the old Check my file address, still in bookmarks and plugin channels
+    expect(viewFromPath('/check')).toBe('scan')
     expect(viewFromPath('/words')).toBe('words')
     expect(viewFromPath('/analysis')).toBe('runs')
   })
 
   it('tolerates a trailing slash, because a pasted link often has one', () => {
-    expect(viewFromPath('/check/')).toBe('check')
+    expect(viewFromPath('/scan/')).toBe('scan')
     expect(viewFromPath('game-data')).toBe('gamedata')
   })
 

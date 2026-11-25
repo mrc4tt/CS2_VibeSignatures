@@ -285,7 +285,7 @@ export function StartPage({ onGo }: { onGo(view: AppView): void }) {
             <p className="hbars-cap">{t('start2.buildsCap')}</p>
             <div className="hcheck">
               <span>{t('start2.checkQ')}</span>
-              <Link className={buttonClass('default', 'small')} to={VIEW_PATHS.check} onClick={() => onGo('check')}>{t('start2.checkGo')}</Link>
+              <Link className={buttonClass('default', 'small')} to={VIEW_PATHS.scan} onClick={() => onGo('scan')}>{t('start2.checkGo')}</Link>
             </div>
           </section>
         </div>
