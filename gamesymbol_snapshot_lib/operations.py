@@ -66,6 +66,30 @@ def _actual_yaml_keys(contract) -> set[str]:
     }
 
 
+_CONFIG_DIGESTS: dict = {}
+
+
+def _is_contract_config(contract, config_path: Path) -> bool:
+    """True when config_path is the config this contract was built from (same digest).
+
+    The payer rule is asked of the repo's configs/<gamever>.yaml, but a contract can come
+    from any file: a scratch config for a trial pack, a test's own. Judging such a
+    contract by another file's readers waived outputs its own config requires - which is
+    how a missing required YAML stopped failing the candidate build once a real config
+    for that gamever existed.
+    """
+    from .config import _digest, _load_raw_config, _normalized_contract
+
+    version = contract.config_digest_version
+    try:
+        key = (str(config_path), config_path.stat().st_mtime_ns, version)
+        if key not in _CONFIG_DIGESTS:
+            _CONFIG_DIGESTS[key] = _digest(_normalized_contract(_load_raw_config(config_path), version), version)
+        return _CONFIG_DIGESTS[key] == contract.config_sha256
+    except Exception:
+        return False
+
+
 def _waived(contract, path: str) -> bool:
     """A required output nothing reads: no enabled plugin, task input or cpp test.
 
@@ -75,7 +99,7 @@ def _waived(contract, path: str) -> bool:
     import ida_analyze_bin
 
     config_path = Path(ida_analyze_bin.__file__).resolve().parent / "configs" / f"{contract.game_version}.yaml"
-    if not config_path.is_file():
+    if not config_path.is_file() or not _is_contract_config(contract, config_path):
         return False
     platform = "windows" if path.endswith(".windows.yaml") else "linux"
     try:

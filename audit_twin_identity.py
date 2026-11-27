@@ -24,8 +24,11 @@ MAX_TWIN_SIZE bytes:
 
 Verdicts:
   OK       no twin, or the operands are the ones the previous build's function had
-  SWAPPED  the operands changed AND a twin carries exactly the previous operands: the
-           function the old record named still exists, and the new record is not it
+  SWAPPED  the operands changed AND exactly one twin carries the previous operands: the
+           function the old record named still exists, and the new record is not it.
+           The run applies the same judgement to every relocation and moves the record
+           to that twin (CS2VIBE_RELOC_TWIN_CHECK=0 off), so this gate is the backstop
+           for records that came from an agent or the hunter
   MOVED    the operands changed and no twin has the old ones (a layout change moved
            them all) - reported with -v, never a failure
   SKIP     no previous artifact, unknown size, too long, or the skeleton itself changed
@@ -49,7 +52,7 @@ import re
 import sys
 
 from audit_identity_drift import NON_FUNC_KEYS, previous_gamever
-from audit_xref_identity import Binary, as_int, find_binary, read_artifact
+from audit_xref_identity import Binary, as_int, find_binary, locate_binary, read_artifact
 
 try:
     import capstone
@@ -164,9 +167,55 @@ def twin_verdict(new_bin: Binary, new_va: int, new_size: int, old_bin: Binary, o
             changed = [f"{kind} {old_value.hex()} -> {new_value.hex()}"
                        for (_i, kind, old_value), (_j, _k, new_value) in zip(old_operands, new_operands)
                        if old_value != new_value]
+            holders = [t for t in twins
+                       if (decode(read_body(new_bin, t, new_size) or b"", t) or (None, None))[1] == old_operands]
+            if len(holders) != 1:
+                return "MOVED", f"operands changed, {len(holders)} twins carry the previous ones - undecided"
             return "SWAPPED", (f"the previous build's function is at {twin:#x} (same operands); "
                                f"this record differs in {', '.join(changed[:4])}")
     return "MOVED", f"operands changed, none of {len(twins)} twin(s) has the previous ones"
+
+
+def swapped_twin_address(why: str):
+    """The address a SWAPPED verdict names as the previous build's function."""
+    found = re.search(r"function is at (0x[0-9a-f]+)", why)
+    return int(found.group(1), 16) if found else None
+
+
+_BIN_CACHE: dict = {}
+
+
+def _cached_binary(path, platform):
+    key = (path, platform)
+    if key not in _BIN_CACHE:
+        if len(_BIN_CACHE) >= 2:  # the run compares one module, old and new
+            _BIN_CACHE.clear()
+        _BIN_CACHE[key] = Binary(path, platform)
+    return _BIN_CACHE[key]
+
+
+def relocation_twin_verdict(platform, func_va, func_size, new_binary_dir, old_yaml_path):
+    """Judge a fresh relocation against the previous gamever's artifact, inside a run.
+
+    ('swapped', twin_va) when the relocated function is a twin of the one the previous
+    record named and exactly one other twin still carries that record's operands -
+    twin_va is where the function really is. Otherwise (verdict, None) with 'ok',
+    'moved' or 'skip', or (None, None) when it cannot be judged.
+    """
+    va = as_int(func_va)
+    if va is None or not new_binary_dir or not old_yaml_path or not os.path.exists(old_yaml_path):
+        return None, None
+    old_doc = read_artifact(old_yaml_path)
+    old_va = as_int(old_doc.get("func_va"))
+    if old_va is None or any(k in old_doc for k in NON_FUNC_KEYS):
+        return None, None
+    new_path, *_ = locate_binary(new_binary_dir, platform)
+    old_path, *_ = locate_binary(os.path.dirname(os.path.abspath(old_yaml_path)), platform)
+    if not new_path or not old_path:
+        return None, None
+    verdict, why = twin_verdict(_cached_binary(new_path, platform), va, as_int(func_size) or 0,
+                                _cached_binary(old_path, platform), old_va, as_int(old_doc.get("func_size")) or 0)
+    return verdict.lower(), swapped_twin_address(why) if verdict == "SWAPPED" else None
 
 
 def audit(gamever, old, platforms, bindir, artifactdir, symbol_filter, verbose):

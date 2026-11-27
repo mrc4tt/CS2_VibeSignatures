@@ -8348,6 +8348,69 @@ async def _try_preprocess_func_without_llm(
             )
             func_data = None
 
+    # The twin question, for every relocated function: some functions exist several
+    # times with one instruction stream and other operands (CCSBot::Idle and
+    # ::EscapeFromBomb differ in one struct displacement), and a signature wildcards
+    # exactly those, so it tells them apart by what FOLLOWS the function and can slide
+    # to the twin next door on a rebuild. audit_twin_identity says "swapped" only when
+    # the relocated body's operands changed and exactly one other twin still carries
+    # the previous record's: that twin is the function, so the record moves there.
+    # CCSBot_Idle.linux sat on the wrong twin from 14190 to 14201.
+    # CS2VIBE_RELOC_TWIN_CHECK=0 turns it off.
+    if (
+        func_data is not None
+        and old_path
+        and os.environ.get("CS2VIBE_RELOC_TWIN_CHECK", "1") != "0"
+    ):
+        try:
+            from audit_twin_identity import relocation_twin_verdict
+        except Exception:
+            relocation_twin_verdict = None
+        verdict, twin_va = None, None
+        if relocation_twin_verdict is not None:
+            try:
+                verdict, twin_va = relocation_twin_verdict(
+                    platform,
+                    func_data.get("func_va"),
+                    func_data.get("func_size"),
+                    new_binary_dir,
+                    old_path,
+                )
+            except Exception as exc:
+                if debug:
+                    print(f"    Preprocess: twin check for {func_name} failed: {exc}")
+        if verdict == "swapped" and twin_va is not None:
+            regenerated = None
+            # A virtual keeps its slot fields from the relocation, which belong to the
+            # wrong twin: leave those to the task's own search instead of mixing them.
+            if func_data.get("vfunc_index") is None:
+                try:
+                    regenerated = await preprocess_gen_func_sig_via_mcp(
+                        session=session,
+                        func_va=twin_va,
+                        image_base=image_base,
+                        allow_across_function_boundary=True,
+                        debug=debug,
+                    )
+                except Exception as exc:
+                    if debug:
+                        print(f"    Preprocess: twin signature for {func_name} failed: {exc}")
+            if regenerated and regenerated.get("func_sig"):
+                print(
+                    f"    Preprocess: relocation for {func_name} landed on a twin at"
+                    f" {func_data.get('func_va')}; the previous build's operands are at"
+                    f" {hex(twin_va)} - record moved there"
+                )
+                func_data.update(regenerated)
+                func_data["func_sig_allow_across_function_boundary"] = True
+            else:
+                print(
+                    f"    Preprocess: discarding relocation for {func_name} at"
+                    f" {func_data.get('func_va')} - it is a twin of the previous build's"
+                    f" function, which is at {hex(twin_va)}"
+                )
+                func_data = None
+
     # The slot question, for every relocated virtual. A slot only moves when
     # virtuals are added or removed before it, and then with its neighbours; a sig
     # that drifted onto the NEXT virtual still lands in the class vtable, so the

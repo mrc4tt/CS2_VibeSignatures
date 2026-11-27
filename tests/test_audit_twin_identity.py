@@ -74,3 +74,24 @@ def test_accepted_entries_name_a_pair_and_carry_a_reason():
         assert new and old
         for label, why in entries.items():
             assert "/" in label and label.rsplit(".", 1)[1] in ("linux", "windows") and len(why) > 20
+
+
+def test_two_twins_with_the_previous_operands_decide_nothing():
+    old, new = binary(0x210, 0x498), binary(0x210, 0x498, 0x210)
+    verdict, why = T.twin_verdict(new, va(1), SIZE, old, va(0), SIZE)
+    assert verdict == "MOVED" and "undecided" in why
+
+
+def test_swapped_twin_address_reads_the_verdict():
+    old, new = binary(0x210, 0x498), binary(0x210, 0x498, rip=0x55667788)
+    _verdict, why = T.twin_verdict(new, va(1), SIZE, old, va(0), SIZE)
+    assert T.swapped_twin_address(why) == va(0)
+    assert T.swapped_twin_address("same operands") is None
+
+
+def test_relocation_twin_verdict_cannot_judge_without_a_previous_function(tmp_path):
+    assert T.relocation_twin_verdict("linux", "0x1000", "0x1a", str(tmp_path), str(tmp_path / "none.yaml")) == (None, None)
+    record = tmp_path / "X.linux.yaml"
+    record.write_text("vtable_va: '0x10'\nfunc_va: '0x20'\n")
+    assert T.relocation_twin_verdict("linux", "0x1000", "0x1a", str(tmp_path), str(record)) == (None, None)
+    assert T.relocation_twin_verdict("linux", None, "0x1a", str(tmp_path), str(record)) == (None, None)
