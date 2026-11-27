@@ -506,6 +506,16 @@ FORK_OWNED_PLATFORM_PINS = [
     # windows-only in every gamever that has it (14172 onward); upstream added the
     # pin itself from 14180, so this only backports it to 14178b
     ("SendViolationReport", "client", "windows", "no linux artifact in any gamever"),
+    # m_entityNames is a CUtlOrderedMap whose comparator (CDefLess, empty) is the first
+    # member, so the tree behind it starts 8 bytes in. Windows passes the map itself
+    # (`lea rcx,[r14+0xaf0]`, 14201 0x181371367); GCC inlines everything that takes the
+    # map and only ever addresses the tree: `lea rdi,[r12+0xaf8]`, words at 0xaf8/0xafa,
+    # the memory pointer at 0xb00 - the same inner offsets windows reads. No linux
+    # instruction in the entity system holds 0xaf0, so the linux record was the tree's
+    # 0xaf8 from 14190 on, and cpp_tests/abi_baseline.txt carried the mismatch with the
+    # header (compiler 0xaf0) as accepted. Found by upstream_artifact_check.py on 14201.
+    # The task carries `platform: windows` in the config for the same reason.
+    ("CEntitySystem_m_entityNames", "server", "windows", "linux only addresses the map's inner tree (+8), never the member start"),
 ]
 # Fork-owned symbol REMOVALS. Upstream declares these, but the binary evidence says
 # they cannot be produced, so every run logged a missing_yaml warning and nothing

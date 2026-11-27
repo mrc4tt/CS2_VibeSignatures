@@ -599,6 +599,12 @@ elif git ls-files --error-unmatch "gamesymbols/$TAG.yaml" >/dev/null 2>&1; then
         # Read only, never posts upstream. At most hourly.
         [ "$DRY" = 1 ] || [ "${AUTOPILOT_UPSTREAM_WATCH:-1}" = "0" ] \
             || uv run upstream_watch.py -gamever "$TAG" -notify -every 1 2>&1 | tail -1 | while IFS= read -r line; do log "    $line"; done
+        # HLND2T's artifacts for this build against ours: a shared record with another
+        # address, slot or offset means one side named the wrong thing - the defect no
+        # gate of ours sees. Fetch only, results only; the admin channel gets a new set of
+        # differences once. Upstream lands after us, hence here and not in the run.
+        [ "$DRY" = 1 ] || [ "${AUTOPILOT_UPSTREAM_ARTIFACTS:-1}" = "0" ] \
+            || uv run upstream_artifact_check.py -gamever "$TAG" -notify -every 6 2>&1 | tail -1 | while IFS= read -r line; do log "    $line"; done
         exit 0
     fi
     FINISH_FILE="$STATE/finish-attempts-$TAG"

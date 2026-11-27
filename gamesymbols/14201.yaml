@@ -121,8 +121,8 @@ binaries:
       sha256: '6fb802d58cb40411c10e3d1c85c8502078f5111a11b720809479d180e052343c'
       size: 2029720
 config_digest_version: 2
-config_sha256: sha256:20a4bc5c9cf7b708972f12a069f21b58c2447274b0207409dc05961531a21b3e
-file_count: 3314
+config_sha256: sha256:0e07c4b659df488bd989b98a1ebf145e5546b1fe84621af32c08fcb79515aa33
+file_count: 3312
 files:
   SDL3/SDL_GetMouse.windows.yaml:
     func_name: SDL_GetMouse
@@ -19997,10 +19997,11 @@ files:
     func_va: '0x1802c1f30'
   server/CCSBot_Idle.linux.yaml:
     func_name: CCSBot_Idle
-    func_rva: '0xc18410'
-    func_sig: 48 8B 05 ?? ?? ?? ?? 48 8D B7 ?? ?? ?? ?? 48 89 87 ?? ?? ?? ?? E9 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 89 F0
+    func_rva: '0xc183f0'
+    func_sig: 48 8B 05 ?? ?? ?? ?? 48 8D B7 ?? ?? ?? ?? 48 89 87 ?? ?? ?? ?? E9 ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
     func_size: '0x1a'
-    func_va: '0xc18410'
+    func_va: '0xc183f0'
   server/CCSBot_Idle.windows.yaml:
     func_name: CCSBot_Idle
     func_rva: '0x2cbe70'
@@ -25240,10 +25241,11 @@ files:
     vtable_name: CEngineServer
   server/CEngineServiceRegistry_UnregisterEngineServices.linux.yaml:
     func_name: CEngineServiceRegistry_UnregisterEngineServices
-    func_rva: '0x21a9f70'
-    func_sig: 55 48 89 E5 41 54 53 48 8B 1D ?? ?? ?? ?? 48 85 DB 74 ?? 4C 8D 25 ?? ?? ?? ?? 66 0F 1F 44 00 ?? 49 8B 3C 24 48 8B 53 ?? 48 8B 73 ?? 48 8B 07 FF 50 ?? 48 8B 1B 48 85 DB 75 ?? 5B 41 5C 5D C3 ?? 55
+    func_rva: '0x21a9fb0'
+    func_sig: 55 48 89 E5 41 54 53 48 8B 1D ?? ?? ?? ?? 48 85 DB 74 ?? 4C 8D 25 ?? ?? ?? ?? 66 0F 1F 44 00 ?? 49 8B 3C 24 48 8B 53 ?? 48 8B 73 ?? 48 8B 07 FF 50 ?? 48 8B 1B 48 85 DB 75 ?? 5B 41 5C 5D C3 ?? 80 3D ?? ?? ?? ?? ??
+    func_sig_allow_across_function_boundary: true
     func_size: '0x3f'
-    func_va: '0x21a9f70'
+    func_va: '0x21a9fb0'
   server/CEngineServiceRegistry_UnregisterEngineServices.windows.yaml:
     func_name: CEngineServiceRegistry_UnregisterEngineServices
     func_rva: '0x13677c0'
@@ -27437,13 +27439,6 @@ files:
     offset_sig: 4C 63 B3 ?? ?? ?? ?? 44 3B B3 ?? ?? ?? ?? 0F 85 ?? ?? ?? ?? F7 83 ?? ?? ?? ?? ?? ?? ?? ?? 0F 85 ?? ?? ?? ?? 8B 8B ?? ?? ?? ?? 81 F9 ?? ?? ?? ?? 7E ?? BA ?? ?? ?? ?? FF 15 ?? ?? ?? ?? 8B 8B ?? ?? ?? ?? 41 B9 ?? ?? ?? ?? 8B 93 ?? ?? ?? ?? 81 E2 ?? ?? ?? ?? 8D 71 ?? 44 8B C6 FF 15 ?? ?? ?? ?? 8B F8 3B C6 7D ?? 85 C0 75 ?? 83 FE ?? 7F ?? BF ?? ?? ?? ?? EB ?? 0F 1F 00
     offset_sig_allow_across_function_boundary: true
     offset_sig_disp: 0
-    struct_name: CEntitySystem
-  server/CEntitySystem_m_entityNames.linux.yaml:
-    member_name: m_entityNames
-    offset: '0xaf8'
-    offset_sig: 49 8D BC 24 F8 0A 00 00 E8 ?? ?? ?? ?? 66 41 83 84 24 ?? ?? ?? ?? ??
-    offset_sig_disp: 0
-    size: 8
     struct_name: CEntitySystem
   server/CEntitySystem_m_entityNames.windows.yaml:
     member_name: m_entityNames
@@ -31803,10 +31798,11 @@ files:
     func_va: '0x21a9ec0'
   server/CLoopModeRegistry_UnregisterLoopModes.windows.yaml:
     func_name: CLoopModeRegistry_UnregisterLoopModes
-    func_rva: '0x1110f30'
-    func_sig: 40 53 48 83 EC ?? 48 8B 1D ?? ?? ?? ?? 48 85 DB 74 ?? 48 8B 03 48 8B CB FF 50 ?? 48 8B 5B ?? 48 85 DB 75 ?? 48 83 C4 ?? 5B C3 ?? ?? ?? ?? ?? ?? 40 53
-    func_size: '0x2a'
-    func_va: '0x181110f30'
+    func_rva: '0x1367890'
+    func_sig: 40 53 48 83 EC ?? 48 8B 1D ?? ?? ?? ?? 48 85 DB 74 ?? 0F 1F 40 ?? 66 66 0F 1F 84 00 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? 4C 8B 4B ?? 4C 8B 43 ?? 48 8B 53 ?? 48 8B 01 FF 50 ?? 48 8B 1B 48 85 DB 75 ?? 48 83 C4 ?? 5B C3 ?? ?? ?? ?? ?? ?? ?? ?? ?? 40 55
+    func_sig_allow_across_function_boundary: true
+    func_size: '0x47'
+    func_va: '0x181367890'
   server/CMolotovProjectile_Create.linux.yaml:
     func_name: CMolotovProjectile_Create
     func_rva: '0x14571e0'
@@ -36767,12 +36763,6 @@ files:
     func_sig: 48 85 FF 74 ?? 55 48 89 E5 E8 ?? ?? ?? ?? 48 85 C0 74 ?? 48 8B B0 60 02 00 00 BF 01 00 00 00 5D E9 ?? ?? ??
     func_size: '0x33'
     func_va: '0x144b8b0'
-  server/CSmokeGrenadeProjectile_GetCSWeaponData.windows.yaml:
-    func_name: CSmokeGrenadeProjectile_GetCSWeaponData
-    func_rva: '0x9cd9b0'
-    func_sig: 48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? F3 0F 10 02 48 8D 99 ?? ?? ?? ??
-    func_size: '0xcc'
-    func_va: '0x1809cd9b0'
   server/CSmokeGrenadeProjectile_m_SmokeVolume.linux.yaml:
     member_name: m_SmokeVolume
     offset: '0xe98'
@@ -43150,5 +43140,5 @@ files:
     func_size: '0x2fd'
     func_va: '0x18002a010'
 game_version: '14201'
-last_publish_time: '2026-11-23T23:26:01Z'
+last_publish_time: '2026-11-27T23:06:20Z'
 schema_version: 5

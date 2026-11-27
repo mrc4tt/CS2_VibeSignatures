@@ -1,0 +1,30 @@
+# Symbols where HLND2T/CS2_VibeSignatures' record differs from ours and ours stands.
+# Read by upstream_artifact_check.py. Key: `Symbol` (both platforms) or `Symbol.platform`.
+# Value: the evidence, checked in the binary - not "we think so". An entry that no longer
+# differs is reported as stale; remove it then.
+
+# Identities abi_guard.py enforces on every build (see its docstring and ABI_GUARDS).
+CBaseEntity_EmitSoundFilter: abi_guard - ours has the sret head CounterStrikeSharp's caller ABI needs (movabs 0xFFFFFFFF00000000 first); upstream's is another function
+CBasePlayerController_HandleCommand_JoinTeam: abi_guard - ours is the only function referencing "HandleCommand_JoinTeam( %d ) - invalid team"
+NetworkStateChanged: abi_guard - ours is CEntityInstance::NetworkStateChanged (checks the entity identity flags); upstream's is another function
+CCSPlayer_MovementServices_ProcessMovement: abi_guard - ours is in the class vtable (29 linux / 28 windows), upstream's helper is in no slot
+CCSPlayer_MovementServices_WalkMove: abi_guard - upstream's is the small helper referencing "PlayerMove_PostMove"; ours is the body FullWalkMove calls
+
+# Two overloads; MSVC reverses overload order. Ours is the client-array overload
+# (count + uint64*), linux 15 / windows 16 - FORK_OWNED_SYMBOLS documents it, and the
+# IGameEventSystem cpp test holds the hl2sdk header to it.
+CGameEventSystem_PostEventAbstract: overload naming - ours is the client-array overload, upstream files the other one
+
+# 14201 linux CBasePlayerPawn::OnTakeDamage (0x161a760) dispatches on the life state:
+# 0 -> [vtable+0x800], 1 -> [vtable+0x810], else -> [vtable+0x820], i.e. Alive 256,
+# Dying 258, Dead 260. Windows is linux - 1 (257 / 259). Upstream has 255/257 on linux
+# and Dying 257 / Dead 256 on windows, an order that contradicts its own linux record.
+CBasePlayerPawn_OnTakeDamage_Dying: life-state dispatch in CBasePlayerPawn::OnTakeDamage reads slot 258 linux / 257 windows
+CBasePlayerPawn_OnTakeDamage_Dead: life-state dispatch in CBasePlayerPawn::OnTakeDamage reads slot 260 linux / 259 windows
+CCSPlayerPawn_OnTakeDamage_Dying: same slots as CBasePlayerPawn_OnTakeDamage_Dying (258 / 257)
+CCSPlayerPawn_OnTakeDamage_Dead: same slots as CBasePlayerPawn_OnTakeDamage_Dead (260 / 259)
+
+# The windows function both sides agree on (0x1800acfa0 on 14201) references exactly one
+# string, "Kicked to free up slot". On linux that string is in ours (0x50af60); upstream's
+# 0x502cc0 holds the "reconnecting, disconnecting prior connection" strings instead.
+CNetworkGameServer_GetFreeClient.linux: carries "Kicked to free up slot" like the agreed windows function; upstream's is the reconnect check

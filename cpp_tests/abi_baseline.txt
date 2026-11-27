@@ -9,7 +9,6 @@ CEntityInstance_MSVC | Index 12 mismatch: YAML expects 'PostDataUpdatePreserve' 
 CEntityInstance_MSVC | Index 29 mismatch: YAML expects 'AddChangeAccessorPathPolymorphic' but compiler reports 'NetworkStateChangedBranch'.
 CEntityInstance_MSVC | Index 30 mismatch: YAML expects 'AssignChangeAccessorPathIdsPolymorphic' but compiler reports 'NetworkStateChangedRemove'.
 CEntitySystem_Linux | Member 'm_bEnableAutoDeletionExecution' missing in compiler record layout (reference offset: 0xc63, file: server/CEntitySystem_m_bEnableAutoDeletionExecution.linux.yaml).
-CEntitySystem_Linux | Member 'm_entityNames' offset mismatch: YAML=0xaf8 vs compiler=0xaf0.
 CEntitySystem_MSVC | Member 'm_bEnableAutoDeletionExecution' missing in compiler record layout (reference offset: 0xc63, file: server/CEntitySystem_m_bEnableAutoDeletionExecution.windows.yaml).
 CNetworkGameServerBase_Linux | Index 16 mismatch: YAML expects 'ServerSimulate' but compiler reports 'ServerBeginSimulate'.
 CNetworkGameServerBase_MSVC | Index 16 mismatch: YAML expects 'ServerSimulate' but compiler reports 'ServerBeginSimulate'.
