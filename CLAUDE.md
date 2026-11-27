@@ -309,6 +309,11 @@ uv run audit_vtable_slots.py -gamever $VER
 #     CBasePlayerPawn_OnTakeDamage, from an agent. The run strips undeclared fields
 #     from hunter/agent output and rejects the rest (artifact_contract.py).
 uv run audit_artifact_contract.py -gamever $VER
+# 0f. every function that has a twin (one instruction stream, other operands) is still
+#     the twin it was. A signature wildcards the operands, so the record can slide to
+#     the twin next door: unique, head-aligned, no string, no slot. 0 swapped.
+#     CCSBot_Idle.linux named EscapeFromBomb's setter from 14190 to 14201.
+uv run audit_twin_identity.py -gamever $VER
 # 1. artifacts -> snapshot (every artifact or config change needs this)
 uv run gamesymbol_snapshot.py pack -gamever $VER -snapshot gamesymbols/$VER.yaml
 uv run gamesymbol_snapshot.py check-contract -gamever $VER -snapshot gamesymbols/$VER.yaml
@@ -760,7 +765,7 @@ it one gate at a time cost a run per gate. Do all of this **before** restarting 
    binaries (`grep -c -a -F "<text>" <binary>` = 1 each).
 5. **Run every pre-pack gate locally** and get them all green, then a trial pack to the
    scratchpad - not just the gate that failed:
-   `audit_xref_identity`, `audit_identity_drift`, `audit_vtable_slots`,
+   `audit_xref_identity`, `audit_identity_drift`, `audit_vtable_slots`, `audit_twin_identity`,
    `audit_artifact_contract`, `gamesymbol_snapshot.py pack -snapshot <scratch>`,
    `validate_artifacts -json`, then the full test suite.
 6. Then `rm -f .autopilot/attempts-<VER>` and `systemctl start --no-block cs2vibe-autopilot.service`.
@@ -1160,6 +1165,8 @@ change; anything else is reverted, not swept in.
 | `abi_guard.py` | After every run, before every pack | Catches a wrong *identification* that relocated cleanly; `--fix` rewrites the artifact. Also verifies `func_size` |
 | `audit_xref_identity.py` | After every run, before pack | Each anchored function must still reference its finder's string / byte pattern (or, for an `m_*` anchor, access the schema offset). The run applies the same judgement to every relocation and discards a `bad` one |
 | `audit_vtable_slots.py` | After every run, before pack | Every virtual's `vfunc_index` against the previous gamever. SHIFTED = moved unlike its neighbours / the vtable's length / the other platform; decide which build is wrong by the other platform (most vtables: linux = windows + 1). Still flags, on old builds nothing ships from: 14183 windows `OnTakeDamage_Dead`/`_Dying` swapped, 14182-14183 linux `CEntityInstance_GetDataDescMap` on `ReloadPrivateScripts`' slot, `CNetworkGameServerBase_CheckPassword.linux` / `CBaseTrigger_PassesTriggerFilters.linux` from 14182 |
+| `audit_twin_identity.py` | After every run, before pack (autopilot gate "twin swap") | Functions up to 0x100 bytes whose instruction stream occurs more than once: the operands a signature masks (struct displacements, vtable offsets, constants - not rip-relative ones) must be the previous build's. SWAPPED = they changed and a twin carries exactly the old ones; MOVED (layout change, no twin has them) is not a failure. Fixing a record whose PREVIOUS build was the wrong twin reports SWAPPED once: add it to `ACCEPTED` for that gamever pair with the evidence. 0 swapped on 14195-14201, 1.6 s |
+| `upstream_artifact_check.py` | autopilot's idle tick, at most every 6 h (`AUTOPILOT_UPSTREAM_ARTIFACTS=0` off); by hand `-gamever <VER> [-accepted]` | A second opinion per build: HLND2T/CS2_VibeSignatures' `bin_artifacts/<VER>/` (read from the fetched ref, results only - their finders are not read, nothing is merged) against ours, `func_va` / `gv_va` / `vfunc_index` / `offset` of every shared record. A difference means one side named the wrong thing. Decide each in the binary on both platforms, then fix ours (its task, or `emit_artifact.py`) or add the symbol to `upstream_artifact_accept.yaml` with the evidence; `stale` = an accepted entry that no longer differs. Never blocks (upstream lands hours to a day after us). First run, 14201: 2921 shared, 29 differing - 4 of ours wrong since 14190 (`CCSBot_Idle.linux`, `CEngineServiceRegistry_UnregisterEngineServices.linux`, `CLoopModeRegistry_UnregisterLoopModes.windows`, `CEntitySystem_m_entityNames.linux`), 18 of theirs |
 | `audit_identity_drift.py` | After every run, before pack | Every function artifact against the previous gamever: strings must carry over. DRIFT names the function that now holds them. Recognises outlining (the new body calls the holder). The run discards a drifting relocation |
 | `audit_artifact_contract.py` | After every run, before pack | Every artifact against its task's declared fields and the previous gamever's name/class. The run applies the same rule to hunter and agent output: undeclared fields are stripped, a wrong name/class or a dropped field is rejected (the agent is told why and retries; a final failure's files are removed, not packed). Fix a finding by re-running its task, never by editing |
 | `validate_artifacts.py` | After every artifact change | Re-checks every artifact against the binary; `-strict` fails on warnings. Needs `capstone` — degrades silently without it |

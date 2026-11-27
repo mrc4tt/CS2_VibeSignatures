@@ -41,6 +41,15 @@ Mellem builds (tick uden ny build): `template_refresh.py` (højst hver 6. time) 
 `upstream_watch.py -notify -every 1` (højst hver time): åbne PR'er i roflmuffin/CounterStrikeSharp
 der ændrer gamedata.json scannes i nyeste build; `WRONG`/`broken`/`new` går til admin-kanalen én
 gang pr. PR-head. Kun læsning - intet postes upstream. `AUTOPILOT_UPSTREAM_WATCH=0` slår det fra.
+Samme tick, højst hver 6. time: `upstream_artifact_check.py -notify -every 6` sammenligner vores
+artifacts med HLND2T/CS2_VibeSignatures' for samme build (adresse, slot, offset pr. fælles record).
+En forskel = en af siderne har navngivet det forkerte; den går til admin-kanalen én gang. Afgør i
+binæren på begge platforme, ret vores (task eller `emit_artifact.py`) eller skriv symbolet i
+`upstream_artifact_accept.yaml` med beviset. Blokerer aldrig. `AUTOPILOT_UPSTREAM_ARTIFACTS=0` slår det fra.
+
+Før pack stopper gaten "twin swap" (`audit_twin_identity.py`) et build, hvor en record er gledet over
+på sin tvillingefunktion (samme instruktioner, andre operander). Er det den FORRIGE build der var
+forkert, og denne der er rettet: tilføj recorden til `ACCEPTED` i scriptet for det gamever-par.
 
 Sitet (sig.miksen.me) bygges af `deploy-pages.yml` fra push'et; `check-datasets`-jobbet fejler hvis
 history.json er stale.

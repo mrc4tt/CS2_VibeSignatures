@@ -157,6 +157,11 @@ hint_for() {  # hint_for <failure text>
         *"slot shift"*)
             printf 'cd %s && uv run audit_vtable_slots.py -gamever %s      # SHIFTED lines name the symbol and both slots\n' "$repo" "$ver"
             printf 'decide which build is wrong with the other platform (most vtables: linux = windows + 1), then add an abi_guard.py rule and run it with --fix\n' ;;
+        *"twin swap"*)
+            printf 'cd %s && uv run audit_twin_identity.py -gamever %s      # SWAPPED lines name the record and the twin that kept the old operands
+' "$repo" "$ver"
+            printf 'decide which build names the right twin in the binary, then: uv run emit_artifact.py -gamever %s -module <m> -platform <p> -symbol <name> -kind func -ea <right address>
+' "$ver" ;;
         *"anchor drift"*)
             printf 'cd %s && uv run audit_identity_drift.py -gamever %s      # DRIFT lines name the symbol and where its strings went\n' "$repo" "$ver"
             printf 'decide which build is wrong: uv run audit_identity_drift.py -gamever %s -old <an earlier VER> -symbol <name> -v\n' "$ver" ;;
@@ -773,6 +778,7 @@ linux_release() {
     step "linux: checking each function still holds its anchor" uv run audit_xref_identity.py -gamever "$TAG" -platform linux
     step "linux: checking each function against the previous gamever (anchor drift)" uv run audit_identity_drift.py -gamever "$TAG" -platform linux
     step "linux: checking each virtual's slot against the previous gamever (slot shift)" uv run audit_vtable_slots.py -gamever "$TAG" -platform linux
+    step "linux: checking each twin function is the twin it was (twin swap)" uv run audit_twin_identity.py -gamever "$TAG" -platform linux
     log "==> linux: checking each artifact against its task's fields (artifact contract)"
     if ! uv run audit_artifact_contract.py -gamever "$TAG" -platform linux; then
         if [ "${AUTOPILOT_HEAL_CONTRACT:-1}" != "0" ] && [ -n "${OLD_TAG:-}" ]; then
@@ -998,6 +1004,11 @@ step "checking each function against the previous gamever (anchor drift)" uv run
 # 14186-14188 and every other check passed it, because that slot does hold that
 # function. The run already discards such a relocation (CS2VIBE_RELOC_SLOT_CHECK=0).
 step "checking each virtual's slot against the previous gamever (slot shift)" uv run audit_vtable_slots.py -gamever "$TAG"
+# And every function that has a twin (one instruction stream, other operands): the
+# signature wildcards the operands, so a record can slide to the twin next door and stay
+# unique, head-aligned and string-free. CCSBot_Idle.linux named EscapeFromBomb's setter
+# from 14190 to 14201. SWAPPED = a twin still carries exactly the previous operands.
+step "checking each twin function is the twin it was (twin swap)" uv run audit_twin_identity.py -gamever "$TAG"
 # And every artifact against its task's declared fields: a record that names
 # another symbol, another class's vtable, or carries fields its task never writes
 # resolves cleanly in the binary, so nothing above sees it. 14190 shipped thirteen
