@@ -1,0 +1,66 @@
+# Identity of function records that no automatic evidence covers.
+# Read by audit_identity_evidence.py. Key: `Symbol` (both platforms) or `Symbol.platform`.
+#
+# confirmed: someone proved in the binary that the record is the function it is named
+#            after, and the value says how. Not "the signature matches" - that is placement.
+#            Once confirmed, the relocation gates (drift, slot, twin) carry it forward.
+# unproven:  records an enabled plugin ships that have NO identity evidence yet. Known
+#            debt, listed so the gate can refuse every NEW one. Each works on live
+#            servers, which is why it was never questioned - and is not proof. To clear
+#            one: verify it on that platform (rule 12), move it to confirmed with the
+#            evidence, or give its finder an anchor so it needs no entry at all.
+#            Never add to this list to make a gate pass: a new shipped record is verified.
+
+confirmed:
+  # The plugin author's own signature - the definition of what the key hooks - resolves
+  # uniquely to our record's address on 14201, both platforms. Independent of our analysis.
+  CAttributeList_SetOrAddAttributeValueByName: "Nereziel/cs2-WeaponPaints@02224fbc32: its own 'CAttributeList_SetOrAddAttributeValueByName' signature lands on our func_va, linux and windows (14201)"
+  CBaseModelEntity_SetModel: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'CBaseModelEntity_SetModel' signature lands on our func_va, linux and windows (14201)"
+  CBasePlayerController_SetPawn: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'CBasePlayerController_SetPawn' signature lands on our func_va, linux and windows (14201)"
+  CEntityIOOutput_FireOutputInternal: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'CEntityIOOutput_FireOutputInternal' signature lands on our func_va, linux and windows (14201)"
+  CEntityInstance_AcceptInput: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'CEntityInstance_AcceptInput' signature lands on our func_va, linux and windows (14201)"
+  CEntitySystem_AddEntityIOEvent: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'CEntitySystem_AddEntityIOEvent' signature lands on our func_va, linux and windows (14201)"
+  GetCSWeaponDataFromKey: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'GetCSWeaponDataFromKey' signature lands on our func_va, linux and windows (14201)"
+  LegacyGameEventListener: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'LegacyGameEventListener' signature lands on our func_va, linux and windows (14201)"
+  UTIL_ClientPrintAll: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'UTIL_ClientPrintAll' signature lands on our func_va, linux and windows (14201)"
+  UTIL_CreateEntityByName: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'UTIL_CreateEntityByName' signature lands on our func_va, linux and windows (14201)"
+  UTIL_Remove: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'UTIL_Remove' signature lands on our func_va, linux and windows (14201)"
+
+unproven:
+  - CBaseEntity_EmitSound.linux
+  - CBaseEntity_EmitSound.windows
+  - CBaseEntity_ScriptStopSound.linux
+  - CBaseEntity_SetMoveType.linux
+  - CBaseEntity_SetMoveType.windows
+  - CBasePlayerPawn_RemovePlayerItem.linux
+  - CBasePlayerPawn_RemovePlayerItem.windows
+  - CCSCustomHudLayout_SetDialogVariableString.linux
+  - CCSCustomHudLayout_SetDialogVariableString.windows
+  - CCSCustomHudLayout_SetDialogVariableStringForPlayer.linux
+  - CCSCustomHudLayout_SetDialogVariableStringForPlayer.windows
+  - CCSCustomHudLayout_SetHasClass.linux
+  - CCSCustomHudLayout_SetHasClass.windows
+  - CCSCustomHudLayout_SetHasClassForPlayer.linux
+  - CCSCustomHudLayout_SetHasClassForPlayer.windows
+  - CCSCustomHudLayout_SetInputCaptureEnabled.linux
+  - CCSCustomHudLayout_SetInputCaptureEnabled.windows
+  - CCSPlayerInventory_SendInventoryUpdateEvent.linux
+  - CCSPlayerInventory_SendInventoryUpdateEvent.windows
+  - CCSPlayerPawn_SetModelFromLoadout.linux
+  - CCSPlayerPawn_SetModelFromLoadout.windows
+  - CCSPlayer_DamageReactServices_TakeDamage.linux
+  - CCSPlayer_DamageReactServices_TakeDamage.windows
+  - CEconItemView_CEconItemView.linux
+  - CEconItemView_CEconItemView.windows
+  - ClientPrint.linux
+  - ClientPrint.windows
+  - ClientPrintToController.linux
+  - ClientPrintToController.windows
+  - INetworkMessageProcessingPreFilter_FilterMessage.linux
+  - INetworkMessageProcessingPreFilter_FilterMessage.windows
+  - KickBotFromTeam.linux
+  - KickBotFromTeam.windows
+  - ScriptGetAddon.linux
+  - ScriptGetAddon.windows
+  - UpdateItemView.linux
+  - UpdateItemView.windows

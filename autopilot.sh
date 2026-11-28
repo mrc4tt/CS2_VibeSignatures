@@ -162,6 +162,11 @@ hint_for() {  # hint_for <failure text>
 ' "$repo" "$ver"
             printf 'decide which build names the right twin in the binary, then: uv run emit_artifact.py -gamever %s -module <m> -platform <p> -symbol <name> -kind func -ea <right address>
 ' "$ver" ;;
+        *"identity evidence"*)
+            printf 'cd %s && uv run audit_identity_evidence.py -gamever %s -shipped      # UNCONFIRMED (shipped) lines: a plugin ships a function record nothing identifies
+' "$repo" "$ver"
+            printf 'verify each in the binary on its platform (string set, call graph, decompile), then add it to identity_confirmed.yaml under confirmed: with the evidence, or give its finder an anchor - never under unproven:
+' ;;
         *"anchor drift"*)
             printf 'cd %s && uv run audit_identity_drift.py -gamever %s      # DRIFT lines name the symbol and where its strings went\n' "$repo" "$ver"
             printf 'decide which build is wrong: uv run audit_identity_drift.py -gamever %s -old <an earlier VER> -symbol <name> -v\n' "$ver" ;;
@@ -779,6 +784,7 @@ linux_release() {
     step "linux: checking each function against the previous gamever (anchor drift)" uv run audit_identity_drift.py -gamever "$TAG" -platform linux
     step "linux: checking each virtual's slot against the previous gamever (slot shift)" uv run audit_vtable_slots.py -gamever "$TAG" -platform linux
     step "linux: checking each twin function is the twin it was (twin swap)" uv run audit_twin_identity.py -gamever "$TAG" -platform linux
+    step "linux: checking every shipped function record is identified (identity evidence)" uv run audit_identity_evidence.py -gamever "$TAG" -platform linux -shipped
     log "==> linux: checking each artifact against its task's fields (artifact contract)"
     if ! uv run audit_artifact_contract.py -gamever "$TAG" -platform linux; then
         if [ "${AUTOPILOT_HEAL_CONTRACT:-1}" != "0" ] && [ -n "${OLD_TAG:-}" ]; then
@@ -1009,6 +1015,12 @@ step "checking each virtual's slot against the previous gamever (slot shift)" uv
 # unique, head-aligned and string-free. CCSBot_Idle.linux named EscapeFromBomb's setter
 # from 14190 to 14201. SWAPPED = a twin still carries exactly the previous operands.
 step "checking each twin function is the twin it was (twin swap)" uv run audit_twin_identity.py -gamever "$TAG"
+# And what says each function record IS the function it is named after: an anchor
+# string, its own name in a string or a registration, a vtable slot, an ABI guard, the
+# other platform agreeing, or a written confirmation. A unique signature is placement,
+# not identity. A record a plugin ships with none of these stops the build, unless it is
+# the debt identity_confirmed.yaml already lists as unproven.
+step "checking every shipped function record is identified (identity evidence)" uv run audit_identity_evidence.py -gamever "$TAG" -shipped
 # And every artifact against its task's declared fields: a record that names
 # another symbol, another class's vtable, or carries fields its task never writes
 # resolves cleanly in the binary, so nothing above sees it. 14190 shipped thirteen

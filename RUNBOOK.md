@@ -51,6 +51,12 @@ Før pack stopper gaten "twin swap" (`audit_twin_identity.py`) et build, hvor en
 på sin tvillingefunktion (samme instruktioner, andre operander). Er det den FORRIGE build der var
 forkert, og denne der er rettet: tilføj recorden til `ACCEPTED` i scriptet for det gamever-par.
 
+Gaten "identity evidence" (`audit_identity_evidence.py -shipped`) stopper et build, hvor en plugin
+leverer en function-record uden identitetsbevis (anker-streng, eget navn i streng/registrering,
+vtable-slot, abi_guard, linux og windows enige, eller skriftlig bekræftelse). Verificér recorden i
+binæren og skriv den under `confirmed:` i `identity_confirmed.yaml` med beviset - aldrig under
+`unproven:`, som kun er gælden fra 14201 (37 records) og skal skrumpe.
+
 Sitet (sig.miksen.me) bygges af `deploy-pages.yml` fra push'et; `check-datasets`-jobbet fejler hvis
 history.json er stale.
 
