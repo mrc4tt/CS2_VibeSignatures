@@ -16,22 +16,35 @@ Evidence that counts, each independent of the record's own signature:
   selfname   it references a string that spells its own method name
   slot       it sits in a named class's vtable at a recorded slot (validate_artifacts
              confirms the slot through RTTI, audit_vtable_slots that it did not shift)
+  vtable     a plain function record (no slot fields) named Class_Method whose address
+             is an entry of Class's RTTI vtable: it is a virtual of that class
+  ctor       named Class_Class / Class_ctor, takes the address of Class's RTTI vtable
+             and is not itself an entry of it (a destructor is)
   guard      abi_guard.py holds its head bytes and ABI
   xplat      the linux and the windows record, found separately, reference at least
              two of the same strings
-  registered the function's address is taken (a rip-relative lea, or a pointer in data)
-             right beside a string that is its own name: a script binding, a ConCommand
-             (`say` beside Say_CommandHandler), a registration table
+  registered the function's address is taken together with a string that is its own
+             name: in the same call's arguments, or as the nearest name in a data table.
+             A script binding, a ConCommand (`say` beside Say_CommandHandler). Also when
+             the function's ONLY caller is registered that way (the binding thunk)
   xcalls     the linux and the windows record directly call at least two of the same
              named functions (records of this build)
+  xcallers   ... are directly called from at least two of the same named functions
+  xmixed     ... share two things across those kinds (one string and one named caller,
+             one named callee and one named caller) without two of any one kind
+  carried    only while the other platform has not been analysed yet (the linux-first
+             release): the same record had evidence on the previous gamever, and the
+             relocation gates (drift, slot, twin) are what carry an identity forward
   confirmed  identity_confirmed.yaml: someone verified it in the binary and wrote down how
 
 A record with none of these is UNCONFIRMED. That is no defect while nothing reads it.
 A record an enabled plugin ships must have evidence: `-shipped` exits 1 naming each
-shipped unconfirmed record that is not already listed as `unproven` in
-identity_confirmed.yaml (the debt known when the gate was introduced, 37 records on
-14201), and autopilot runs it as a gate before pack. So a new plugin key cannot start
-shipping a record nobody ever identified.
+shipped unconfirmed record that is not listed as `unproven` in identity_confirmed.yaml
+(a debt list that is empty and meant to stay so), and autopilot runs it as a gate before
+pack. So a new plugin key cannot start shipping a record nobody ever identified.
+
+The x* kinds prove the two platforms name the same function, which rules out one
+platform being wrong - not both being wrong the same way.
 To clear one, verify it in the binary on that platform (rule 12: string set, call graph
 or decompile - not size, not the signature) and either give its finder an anchor or add
 it to identity_confirmed.yaml with the evidence. Once confirmed, the relocation gates
@@ -55,7 +68,7 @@ import sys
 
 import yaml
 
-from audit_identity_drift import NON_FUNC_KEYS, body_regions, fingerprint
+from audit_identity_drift import NON_FUNC_KEYS, body_regions, fingerprint, previous_gamever
 from audit_xref_identity import LEA_RIP, Binary, as_int, find_binary, judge, load_specs, read_artifact
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -87,7 +100,9 @@ def names_itself(symbol: str, strings) -> bool:
     return any(pattern.search(text) for text in strings)
 
 
-REGISTER_RADIUS = 0x60  # bytes of code, or of a data table, around the place the address is taken
+REGISTER_RADIUS = 0x60  # bytes of a data table around the pointer, or of code to resynchronise in
+IDENTIFIER = re.compile(rb"[A-Za-z_][A-Za-z0-9_]*\Z")
+REL32_BRANCH = re.compile(rb"[\xe8\xe9]")
 
 
 def registration_names(symbol: str):
@@ -103,7 +118,7 @@ def registration_names(symbol: str):
     return {name.encode() for name in names}
 
 
-def _c_string(binary: Binary, va: int):
+def _c_string(binary, va: int):
     off = binary.va_to_off(va)
     if off is None or off == 0:
         return None
@@ -111,38 +126,62 @@ def _c_string(binary: Binary, va: int):
     return binary.data[off:end] if end > off else None
 
 
-def _strings_around_code(binary: Binary, site_va: int):
-    lo = site_va - REGISTER_RADIUS
-    off = binary.va_to_off(lo)
-    if off is None:
-        return set()
-    chunk = binary.data[off: off + 2 * REGISTER_RADIUS]
+def _call_setup(binary, site_va: int):
+    """Instructions of the argument block the lea at site_va belongs to: from the call
+    before it to the call after it. [] without capstone or when no decode lines up."""
+    try:
+        import capstone
+    except ImportError:
+        return []
+    md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+    # From the head of the enclosing function first: a decode started mid-code can fall
+    # into step with the site a few instructions late and miss what stands before it.
+    head = binary.enclosing(site_va)[0]
+    starts = ([head] if head <= site_va else []) + [site_va - back for back in range(REGISTER_RADIUS, -1, -1)]
+    for start in starts:
+        off = binary.va_to_off(start)
+        if off is None:
+            continue
+        insns = list(md.disasm(binary.data[off: off + (site_va - start) + REGISTER_RADIUS], start))
+        at = next((i for i, insn in enumerate(insns) if insn.address == site_va), None)
+        if at is None:
+            continue  # this start is not on an instruction boundary that reaches the site
+        first = at
+        while first > 0 and insns[first - 1].mnemonic != "call":
+            first -= 1
+        last = at
+        while last < len(insns) - 1 and insns[last].mnemonic != "call":
+            last += 1
+        return insns[first: last + 1]
+    return []
+
+
+def _names_in_call_setup(binary, site_va: int):
     found = set()
-    for match in LEA_RIP.finditer(chunk):
-        pos = match.start()
-        if pos + 7 <= len(chunk):
-            text = _c_string(binary, lo + pos + 7 + struct.unpack_from("<i", chunk, pos + 3)[0])
+    for insn in _call_setup(binary, site_va):
+        raw = bytes(insn.bytes)
+        if insn.address != site_va and len(raw) == 7 and LEA_RIP.match(raw):
+            text = _c_string(binary, insn.address + 7 + struct.unpack_from("<i", raw, 3)[0])
             if text:
                 found.add(text)
     return found
 
 
-def _strings_around_pointer(binary: Binary, off: int):
-    found = set()
-    for slot in range(max(0, off - REGISTER_RADIUS), off + REGISTER_RADIUS, 8):
-        if slot + 8 <= len(binary.data):
-            text = _c_string(binary, struct.unpack_from("<Q", binary.data, slot)[0])
-            if text:
-                found.add(text)
-    return found
+def _nearest_name_in_table(binary, off: int):
+    """The identifier-like string whose pointer sits closest to the pointer at off."""
+    best = None
+    for slot in range(max(0, off - REGISTER_RADIUS), off + REGISTER_RADIUS + 8, 8):
+        if slot == off or slot + 8 > len(binary.data):
+            continue
+        text = _c_string(binary, struct.unpack_from("<Q", binary.data, slot)[0])
+        if text and IDENTIFIER.match(text) and (best is None or abs(slot - off) < best[0]):
+            best = (abs(slot - off), text)
+    return best[1] if best else None
 
 
-def is_registered(binary: Binary, symbol: str, func_va: int) -> bool:
-    names = registration_names(symbol)
-    if not names or binary is None:
-        return False
+def _registered_here(binary, names, func_va: int) -> bool:
     for site in binary.lea_targets().get(func_va, ()):
-        if names & _strings_around_code(binary, site):
+        if names & _names_in_call_setup(binary, site):
             return True
     needle = struct.pack("<Q", func_va)
     start = 0
@@ -150,10 +189,95 @@ def is_registered(binary: Binary, symbol: str, func_va: int) -> bool:
         off = binary.data.find(needle, start)
         if off < 0:
             break
-        if off % 8 == 0 and names & _strings_around_pointer(binary, off):
+        if off % 8 == 0 and _nearest_name_in_table(binary, off) in names:
             return True
         start = off + 1
     return False
+
+
+def branch_sources(binary):
+    """{target_va: [site_va]} of every call/jmp rel32 in executable code (byte scan: a
+    stray E8/E9 inside another instruction only ever ADDS a source, which can cost a
+    function its "only caller", never invent one)."""
+    table = getattr(binary, "_branch_sources", None)
+    if table is None:
+        table = {}
+        for seg_va, size, seg_off, executable in getattr(binary, "segments", ()):
+            if not executable:
+                continue
+            chunk = binary.data[seg_off: seg_off + size]
+            for match in REL32_BRANCH.finditer(chunk):
+                pos = match.start()
+                if pos + 5 <= len(chunk):
+                    table.setdefault(seg_va + pos + 5 + struct.unpack_from("<i", chunk, pos + 1)[0], []).append(seg_va + pos)
+        binary._branch_sources = table
+    return table
+
+
+def is_registered(binary, symbol: str, func_va: int) -> bool:
+    """The function's address is taken beside its own name - or, when it has exactly one
+    caller, that caller's is: a script binding is a thunk registered under the name, and
+    the function it alone calls is what the name runs."""
+    names = registration_names(symbol)
+    if not names or binary is None:
+        return False
+    if _registered_here(binary, names, func_va):
+        return True
+    callers = {binary.enclosing(site)[0] for site in branch_sources(binary).get(func_va, ())}
+    callers.discard(func_va)
+    return len(callers) == 1 and _registered_here(binary, names, next(iter(callers)))
+
+
+_RTTI = {}
+
+
+def class_vtables(bindir, gamever, module, platform, class_name):
+    """[(vtable_va, [slot targets])] of a class through RTTI, [] when it has none."""
+    import validate_artifacts as V
+    from auto_hunt_headless import BIN_LINUX, BIN_WIN, load_binary
+
+    key = (module, platform)
+    if key not in _RTTI:
+        name = (BIN_LINUX if platform == "linux" else BIN_WIN).get(module)
+        path = os.path.join(bindir, gamever, module, name) if name else None
+        if not path or not os.path.exists(path):
+            _RTTI[key] = None
+        else:
+            blob, info = load_binary(path)
+            _RTTI[key] = (blob, info, V.elf_relocations(blob) if info["type"] == "elf" else None, {})
+    if _RTTI[key] is None:
+        return []
+    blob, info, relocs, cache = _RTTI[key]
+    if class_name not in cache:
+        try:
+            cache[class_name] = V.resolve_vtable(blob, info, relocs, class_name)
+        except Exception:  # noqa: BLE001 - no RTTI for this name is simply no evidence
+            cache[class_name] = []
+    return cache[class_name]
+
+
+def class_evidence(bindir, gamever, module, platform, symbol, func_va, binary, size):
+    """'vtable' | 'ctor' | None for a plain function record named Class_Method."""
+    class_name, _, method = symbol.rpartition("_")
+    if not class_name or not method:
+        return None
+    is_ctor = method in ("ctor", class_name)
+    tables = class_vtables(bindir, gamever, module, platform, class_name)
+    if not tables:
+        return None
+    in_table = any(func_va in slots for _vt, slots in tables)
+    if not is_ctor:
+        return "vtable" if in_table else None
+    if in_table or binary is None or size <= 0:
+        return None
+    off = binary.va_to_off(func_va)
+    body = binary.data[off: off + size] if off is not None else b""
+    starts = {vt for vt, _slots in tables}
+    for match in LEA_RIP.finditer(body):
+        pos = match.start()
+        if pos + 7 <= len(body) and func_va + pos + 7 + struct.unpack_from("<i", body, pos + 3)[0] in starts:
+            return "ctor"
+    return None
 
 
 def shipped_names(config_path):
@@ -170,7 +294,7 @@ def shipped_names(config_path):
     return is_shipped
 
 
-def classify(gamever, platforms, bindir, artifactdir, confirmed):
+def classify(gamever, platforms, bindir, artifactdir, confirmed, carry=True):
     """{(module, symbol, platform): [evidence kinds]} for every function record."""
     specs, _unreadable = load_specs(None)
     try:
@@ -211,6 +335,26 @@ def classify(gamever, platforms, bindir, artifactdir, confirmed):
         targets = binary.direct_callees(body_regions(binary, va, size)) if binary is not None else []
         callees_of[key] = {by_va[t] for t in targets if t in by_va and by_va[t] != symbol}
 
+    # and of the functions that call it: a call site belongs to the record whose body holds it
+    callers_of = {}
+    spans = {}
+    for (module, symbol, platform), (_doc, va, size, _binary) in records.items():
+        if size > 0:
+            spans.setdefault((module, platform), []).append((va, va + size, symbol))
+    for group in spans.values():
+        group.sort()
+    import bisect
+    for key, (_doc, va, _size, binary) in records.items():
+        module, symbol, platform = key
+        group = spans.get((module, platform), [])
+        starts = [span[0] for span in group]
+        found = set()
+        for site in (branch_sources(binary).get(va, ()) if binary is not None else ()):
+            at = bisect.bisect_right(starts, site) - 1
+            if at >= 0 and group[at][0] <= site < group[at][1] and group[at][2] != symbol:
+                found.add(group[at][2])
+        callers_of[key] = found
+
     out = {}
     for key, (doc, va, size, binary) in records.items():
         module, symbol, platform = key
@@ -230,16 +374,39 @@ def classify(gamever, platforms, bindir, artifactdir, confirmed):
             evidence.append("registered")
         if doc.get("vtable_name") and doc.get("vfunc_index") is not None:
             evidence.append("slot")
+        elif not evidence:
+            kind = class_evidence(bindir, gamever, module, platform, symbol, va, binary, size)
+            if kind:
+                evidence.append(kind)
         if symbol in ABI_GUARDS and platform in ABI_GUARDS[symbol]:
             evidence.append("guard")
         other = (module, symbol, "windows" if platform == "linux" else "linux")
         if other in strings_of and len(strings_of[key] & strings_of[other]) >= XPLAT_MIN_SHARED:
             evidence.append("xplat")
-        if other in callees_of and len(callees_of[key] & callees_of[other]) >= XPLAT_MIN_SHARED:
-            evidence.append("xcalls")
+        if other in strings_of:
+            shared = (len(strings_of[key] & strings_of[other]), len(callees_of[key] & callees_of[other]),
+                      len(callers_of[key] & callers_of[other]))
+            if shared[1] >= XPLAT_MIN_SHARED:
+                evidence.append("xcalls")
+            if shared[2] >= XPLAT_MIN_SHARED:
+                evidence.append("xcallers")
+            if max(shared) < XPLAT_MIN_SHARED <= sum(shared):
+                evidence.append("xmixed")
         if confirmed.get(f"{symbol}.{platform}") or confirmed.get(symbol):
             evidence.append("confirmed")
         out[key] = evidence
+    # Linux-first: this build has no windows records yet, so nothing can agree across
+    # platforms. A record that had evidence on the previous build keeps it until the
+    # other platform arrives and the full gate judges it again.
+    waiting = [key for key, found in out.items()
+               if not found and (key[0], key[1], "windows" if key[2] == "linux" else "linux") not in records]
+    if waiting and carry:
+        old = previous_gamever(artifactdir, gamever, bindir)
+        if old:
+            before = classify(old, ["linux", "windows"], bindir, artifactdir, confirmed, carry=False)
+            for key in waiting:
+                if before.get(key):
+                    out[key] = ["carried"]
     return out
 
 

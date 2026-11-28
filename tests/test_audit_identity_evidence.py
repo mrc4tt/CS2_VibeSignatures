@@ -27,6 +27,11 @@ class FakeBinary:
         self.data = bytes(data)
         self._lea = lea or {}
 
+        self.segments = [(self.BASE, len(self.data), 0, True)]
+
+    def enclosing(self, va, limit=0x8000):
+        return va & ~0xF, (va & ~0xF) + 0x10
+
     def va_to_off(self, va):
         return va - self.BASE if self.BASE <= va < self.BASE + len(self.data) else None
 
@@ -73,3 +78,44 @@ def test_confirmed_file_is_well_formed_and_disjoint():
 
 def test_load_confirmed_missing_file(tmp_path):
     assert E.load_confirmed(str(tmp_path / "none.yaml")) == ({}, set())
+
+
+def test_class_evidence_vtable_and_ctor(monkeypatch):
+    vtable_va, method_va, ctor_va, dtor_va = 0x1100, 0x1040, 0x1060, 0x1010
+    blob = bytearray(0x200)
+    # ctor body: lea rax,[rip+vtable]
+    blob[0x60:0x67] = b"\x48\x8d\x05" + struct.pack("<i", vtable_va - (ctor_va + 7))
+    binary = FakeBinary(blob)
+    monkeypatch.setattr(E, "class_vtables", lambda *a: [(vtable_va, [dtor_va, method_va])] if a[4] == "CThing" else [])
+    args = ("bin", "1", "server", "linux")
+    assert E.class_evidence(*args, "CThing_Method", method_va, binary, 0x10) == "vtable"
+    assert E.class_evidence(*args, "CThing_Method", 0x1080, binary, 0x10) is None
+    assert E.class_evidence(*args, "CThing_CThing", ctor_va, binary, 0x10) == "ctor"
+    assert E.class_evidence(*args, "CThing_ctor", ctor_va, binary, 0x10) == "ctor"
+    # a destructor also stores the vtable, but is an entry of it
+    assert E.class_evidence(*args, "CThing_CThing", dtor_va, binary, 0x10) is None
+    assert E.class_evidence(*args, "COther_Method", method_va, binary, 0x10) is None
+    assert E.class_evidence(*args, "FreeFunction", method_va, binary, 0x10) is None
+
+
+def test_call_setup_separates_neighbouring_registrations():
+    # lea rdx,f1; lea rsi,"NameOne"; call; lea rdx,f2; lea rsi,"NameTwo"; call
+    blob = bytearray(0x200)
+    blob[0x100:0x108] = b"NameOne\0"
+    blob[0x110:0x118] = b"NameTwo\0"
+    f1, f2 = 0x1180, 0x1190
+
+    def lea(reg, at, target):
+        return b"\x48\x8d" + bytes([reg]) + struct.pack("<i", target - (at + 7))
+
+    code, at = b"", 0x1080
+    site1 = at; code += lea(0x15, at, f1); at += 7
+    code += lea(0x35, at, 0x1100); at += 7
+    code += b"\xe8\x00\x00\x00\x00"; at += 5
+    site2 = at; code += lea(0x15, at, f2); at += 7
+    code += lea(0x35, at, 0x1110); at += 7
+    code += b"\xe8\x00\x00\x00\x00"
+    blob[0x80:0x80 + len(code)] = code
+    binary = FakeBinary(blob, lea={f1: [site1], f2: [site2]})
+    assert E._names_in_call_setup(binary, site1) == {b"NameOne"}
+    assert E._names_in_call_setup(binary, site2) == {b"NameTwo"}

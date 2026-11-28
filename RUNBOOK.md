@@ -55,7 +55,7 @@ Gaten "identity evidence" (`audit_identity_evidence.py -shipped`) stopper et bui
 leverer en function-record uden identitetsbevis (anker-streng, eget navn i streng/registrering,
 vtable-slot, abi_guard, linux og windows enige, eller skriftlig bekræftelse). Verificér recorden i
 binæren og skriv den under `confirmed:` i `identity_confirmed.yaml` med beviset - aldrig under
-`unproven:`, som kun er gælden fra 14201 (37 records) og skal skrumpe.
+`unproven:`, som er tom og skal forblive tom.
 
 Sitet (sig.miksen.me) bygges af `deploy-pages.yml` fra push'et; `check-datasets`-jobbet fejler hvis
 history.json er stale.

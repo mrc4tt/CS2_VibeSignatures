@@ -5,11 +5,10 @@
 #            after, and the value says how. Not "the signature matches" - that is placement.
 #            Once confirmed, the relocation gates (drift, slot, twin) carry it forward.
 # unproven:  records an enabled plugin ships that have NO identity evidence yet. Known
-#            debt, listed so the gate can refuse every NEW one. Each works on live
-#            servers, which is why it was never questioned - and is not proof. To clear
-#            one: verify it on that platform (rule 12), move it to confirmed with the
-#            evidence, or give its finder an anchor so it needs no entry at all.
-#            Never add to this list to make a gate pass: a new shipped record is verified.
+#            debt, listed so the gate can refuse every NEW one. Empty since 2026-11-28
+#            (37 records on 14201 when the gate was introduced, all since proven) and
+#            meant to stay empty: a shipped record without evidence is verified on that
+#            platform (rule 12) and written under confirmed, or its finder gets an anchor.
 
 confirmed:
   # The plugin author's own signature - the definition of what the key hooks - resolves
@@ -26,41 +25,9 @@ confirmed:
   UTIL_CreateEntityByName: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'UTIL_CreateEntityByName' signature lands on our func_va, linux and windows (14201)"
   UTIL_Remove: "roflmuffin/CounterStrikeSharp@832d3893ee: its own 'UTIL_Remove' signature lands on our func_va, linux and windows (14201)"
 
-unproven:
-  - CBaseEntity_EmitSound.linux
-  - CBaseEntity_EmitSound.windows
-  - CBaseEntity_ScriptStopSound.linux
-  - CBaseEntity_SetMoveType.linux
-  - CBaseEntity_SetMoveType.windows
-  - CBasePlayerPawn_RemovePlayerItem.linux
-  - CBasePlayerPawn_RemovePlayerItem.windows
-  - CCSCustomHudLayout_SetDialogVariableString.linux
-  - CCSCustomHudLayout_SetDialogVariableString.windows
-  - CCSCustomHudLayout_SetDialogVariableStringForPlayer.linux
-  - CCSCustomHudLayout_SetDialogVariableStringForPlayer.windows
-  - CCSCustomHudLayout_SetHasClass.linux
-  - CCSCustomHudLayout_SetHasClass.windows
-  - CCSCustomHudLayout_SetHasClassForPlayer.linux
-  - CCSCustomHudLayout_SetHasClassForPlayer.windows
-  - CCSCustomHudLayout_SetInputCaptureEnabled.linux
-  - CCSCustomHudLayout_SetInputCaptureEnabled.windows
-  - CCSPlayerInventory_SendInventoryUpdateEvent.linux
-  - CCSPlayerInventory_SendInventoryUpdateEvent.windows
-  - CCSPlayerPawn_SetModelFromLoadout.linux
-  - CCSPlayerPawn_SetModelFromLoadout.windows
-  - CCSPlayer_DamageReactServices_TakeDamage.linux
-  - CCSPlayer_DamageReactServices_TakeDamage.windows
-  - CEconItemView_CEconItemView.linux
-  - CEconItemView_CEconItemView.windows
-  - ClientPrint.linux
-  - ClientPrint.windows
-  - ClientPrintToController.linux
-  - ClientPrintToController.windows
-  - INetworkMessageProcessingPreFilter_FilterMessage.linux
-  - INetworkMessageProcessingPreFilter_FilterMessage.windows
-  - KickBotFromTeam.linux
-  - KickBotFromTeam.windows
-  - ScriptGetAddon.linux
-  - ScriptGetAddon.windows
-  - UpdateItemView.linux
-  - UpdateItemView.windows
+  # Verified in the binaries of 14201, linux and windows, 2026-11-28.
+  CCSPlayer_DamageReactServices_TakeDamage: "its only caller on each platform is CCSPlayerPawn's vtable slot 254 linux / 253 windows (0x1591aa0 / 0x180ad8700), which tail-calls it with this = [pawn + m_pDamageReactServices] - the schema's offset, 0x1128 linux / 0xe60 windows - and the damage info as the argument"
+  ScriptGetAddon: "exactly two callers on each platform, the workshop save functions: the one printing 'Loaded existing workshop save file from %s' (0xb7e5e0 / 0x18027f7d0, its first call) and the one printing 'Saving existing workshop save file from %s' (0xb7eb20 / 0x18028dce0)"
+  INetworkMessageProcessingPreFilter_FilterMessage: "slot 0 of the secondary vtable that follows the primary vtable of CServerSideClientBase, CServerSideClient and CHLTVClient on both platforms (linux 0xa5c3d0 / 0xa5cb38 / 0xa5e978 with offset-to-top -48; windows 0x1805e0200 / 0x1805dcd78 / 0x1805eac18); the binary carries the RTTI name INetworkMessageProcessingPreFilter, whose first virtual this is"
+
+unproven: []
